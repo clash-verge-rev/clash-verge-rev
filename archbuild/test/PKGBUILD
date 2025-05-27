@@ -14,9 +14,9 @@ options=('!strip' '!emptydirs')
 conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "clash-verge-rev" "clash-verge-rev-alpha" "clash-verge-rev-alpha-bin" "clash-verge" "clash-verge-bin" "clash-nyanpasu" "clash-nyanpasu-bin" "clash-nyanpasu-git" "clash-meta")
 install=clash-verge.install
 
-source_x86_64=("clash-verge_${_pkgver}_amd64.deb")
+source_x86_64=("amd64.deb")
 
-sha256sums_x86_64=("15386db621b2dc755b0375d5d82b59b53546614914e89655f2009eb334d8cbcb")
+sha256sums_x86_64=('81e72af54c806d2c57c6774192f5e972f9a768954e177e5a137157b2910d25f3')
 
 package() {
 	# Extract package data

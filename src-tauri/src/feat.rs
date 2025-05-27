@@ -18,6 +18,7 @@ use tauri::AppHandle;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::MessageDialogButtons;
 use tauri_plugin_dialog::MessageDialogKind;
+use tauri_plugin_mihomo::Protocol;
 use verge_log::VergeLog;
 
 /// 打开面板
@@ -286,14 +287,14 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             .split_once(':')
             .ok_or(anyhow!("invalid external controller"))?;
         let mut mihomo = handle::Handle::get_mihomo_write().await;
-        mihomo.update_external_host(host);
-        mihomo.update_external_port(port.parse()?);
+        mihomo.update_external_host(Some(host.to_string()));
+        mihomo.update_external_port(Some(port.parse()?));
     }
     if patch.get("secret").is_some() {
         let secret = patch.get("secret").unwrap().as_str().unwrap();
         handle::Handle::get_mihomo_write()
             .await
-            .update_secret(secret);
+            .update_secret(Some(secret.to_string()));
     }
 
     Config::clash()
@@ -452,6 +453,7 @@ pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
 }
 
 async fn resolve_config_settings(patch: IVerge) -> Result<()> {
+    let enable_external_controller = patch.enable_external_controller;
     let auto_launch = patch.enable_auto_launch;
     let system_proxy = patch.enable_system_proxy;
     let pac = patch.proxy_auto_config;
@@ -469,13 +471,28 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     #[cfg(target_os = "macos")]
     let show_in_dock = patch.show_in_dock;
 
+    if let Some(enable_external_controller) = enable_external_controller {
+        if enable_external_controller {
+            handle::Handle::get_mihomo_write()
+                .await
+                .update_protocol(Protocol::Http);
+        } else {
+            handle::Handle::get_mihomo_write()
+                .await
+                .update_protocol(Protocol::LocalSocket);
+        }
+        tracing::info!("enable external controller: {}", enable_external_controller);
+        Config::generate()?;
+        CoreManager::global().run_core().await?;
+    }
+
     if log_level.is_some() {
         let log_level = Config::verge().latest().get_log_level();
         VergeLog::update_log_level(log_level)?;
     }
 
-    if service_mode.is_some() {
-        tracing::debug!("change service mode to {}", service_mode.unwrap());
+    if let Some(service_mode) = service_mode {
+        tracing::debug!("change service mode to {}", service_mode);
         Config::generate()?;
         CoreManager::global().run_core().await?;
     }

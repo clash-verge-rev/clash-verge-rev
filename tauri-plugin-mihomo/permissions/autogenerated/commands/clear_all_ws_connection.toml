@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-clear-all-ws-connection"
+description = "Enables the clear_all_ws_connection command without any pre-configured scope."
+commands.allow = ["clear_all_ws_connection"]
+
+[[permission]]
+identifier = "deny-clear-all-ws-connection"
+description = "Denies the clear_all_ws_connection command without any pre-configured scope."
+commands.deny = ["clear_all_ws_connection"]

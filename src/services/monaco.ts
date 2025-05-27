@@ -1,5 +1,5 @@
-import mergeSchema from "@/assets/schema/clash-verge-merge-json-schema.json";
-import metaSchema from "@/assets/schema/meta-json-schema.json";
+import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
+import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
 import { t } from "i18next";
 import * as monaco from "monaco-editor";
 import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
@@ -102,8 +102,7 @@ const generateTemplate = (props: GenerateProps) => {
 
   // 增强脚本模板生成
   return monaco.languages.registerCodeLensProvider(languageSelector, {
-    provideCodeLenses(model, token) {
-      const uriPath = model.uri.path;
+    provideCodeLenses(_model, _token) {
       if (!showCondition) {
         return null;
       }
@@ -127,7 +126,7 @@ const generateTemplate = (props: GenerateProps) => {
         dispose: () => {},
       };
     },
-    resolveCodeLens(model, codeLens, token) {
+    resolveCodeLens(_model, codeLens, _token) {
       return codeLens;
     },
   });

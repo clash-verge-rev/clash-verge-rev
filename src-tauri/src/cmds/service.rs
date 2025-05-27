@@ -3,7 +3,7 @@ use crate::{core::service, wrap_err};
 use super::CmdResult;
 
 #[tauri::command]
-pub async fn check_service() -> CmdResult<service::JsonResponse> {
+pub async fn check_service() -> CmdResult<service::JsonResponse<service::ClashStatus>> {
     wrap_err!(service::check_service().await)
 }
 

@@ -25,7 +25,6 @@ const LogPage = () => {
   const [clashLog, setClashLog] = useClashLog();
   const [match, setMatch] = useState(() => (_: string) => true);
   const logState = clashLog.logFilter;
-
   const filterLogs = useMemo(() => {
     return logData.filter(
       (data) =>
@@ -33,7 +32,6 @@ const LogPage = () => {
         match(data.payload),
     );
   }, [logData, logState, match]);
-
   return (
     <BasePage
       full
@@ -54,13 +52,12 @@ const LogPage = () => {
               <PlayCircleOutlineRounded />
             )}
           </IconButton>
-
           <Button
             size="small"
             variant="contained"
             // useSWRSubscription adds a prefix "$sub$" to the cache key
             // https://github.com/vercel/swr/blob/1585a3e37d90ad0df8097b099db38f1afb43c95d/src/subscription/index.ts#L37
-            onClick={() => refreshGetClashLog()}>
+            onClick={() => refreshGetClashLog(true)}>
             {t("Clear")}
           </Button>
         </Box>
@@ -87,7 +84,6 @@ const LogPage = () => {
         </BaseStyledSelect>
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
-
       <Box
         height="calc(100% - 50px)"
         sx={(theme) => ({

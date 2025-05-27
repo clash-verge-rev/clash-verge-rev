@@ -53,24 +53,24 @@ sed -i "s/^pkgver=.*/pkgver=${AUR_VERSION}/" ${CURRENT_SCRIPT_DIR}/PKGBUILD
 # update checksums
 sed -i "s/sha256sums_x86_64=.*/sha256sums_x86_64=(\"$(sha256sum "${DEB_FILE}" | awk '{print $1}')\")/" ${CURRENT_SCRIPT_DIR}/PKGBUILD
 
-paru -Bi .
-# # starting build arch package
-# makepkg -fc
-#
-# # check if arch bundle package exist
-# if [[ -f "./${ARCH_BUNDLE_NAME}" ]]; then
-#     echo -e "\e[32m build success."
-# else
-#     echo -e "\e[31m not found arch bundle package, exit."
-#     exit 0
-# fi
-#
-# # ask for install
-# read -p "install now? (y/n): " yay_install
-# if [[ "$yay_install" =~ ^[Yy]$ || -z $yay_install ]]; then
-#     echo "installing..."
-#     yay -U $ARCH_BUNDLE_NAME
-#     echo -e "\e[32m install finished."
-# else
-#     echo -e "\e[32m skip install."
-# fi
+# paru -Bi .
+# starting build arch package
+makepkg -fc
+
+# check if arch bundle package exist
+if [[ -f "./${ARCH_BUNDLE_NAME}" ]]; then
+    echo -e "\e[32m build success."
+else
+    echo -e "\e[31m not found arch bundle package, exit."
+    exit 0
+fi
+
+# ask for install
+read -p "install now? (y/n): " yay_install
+if [[ "$yay_install" =~ ^[Yy]$ || -z $yay_install ]]; then
+    echo "installing..."
+    paru -U $ARCH_BUNDLE_NAME
+    echo -e "\e[32m install finished."
+else
+    echo -e "\e[32m skip install."
+fi

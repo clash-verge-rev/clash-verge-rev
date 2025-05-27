@@ -3,7 +3,6 @@ import {
   getRuntimeConfig,
   patchClashConfig,
 } from "@/services/cmds";
-import { path } from "@tauri-apps/api";
 import { useLockFn } from "ahooks";
 import useSWR, { mutate } from "swr";
 import { getVersion } from "tauri-plugin-mihomo-api";
@@ -54,6 +53,7 @@ export const useClashInfo = () => {
         | "redir-port"
         | "tproxy-port"
         | "external-controller"
+        | "external-controller-cors"
         | "secret"
       >
     >,

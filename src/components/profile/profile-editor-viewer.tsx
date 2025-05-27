@@ -242,7 +242,6 @@ export const ProfileEditorViewer = (props: Props) => {
   const handleChainDeleteCallBack = async (item: IProfileItem) => {
     if (item.uid === editProfile.uid) {
       setEditProfile(profileItem);
-      const content = await readProfileFile(profileUid);
     }
     mutate("getRuntimeLogs");
     await refreshChain();

@@ -2,7 +2,11 @@ use std::{collections::HashMap, fmt::Display};
 
 use futures_util::stream::SplitSink;
 use serde::{Deserialize, Serialize};
+#[cfg(windows)]
+use tokio::net::windows::named_pipe::NamedPipeClient;
 use tokio::net::TcpStream;
+#[cfg(unix)]
+use tokio::net::UnixStream;
 use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -10,14 +14,20 @@ use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
 pub enum Protocol {
     #[default]
     Http,
-    Https,
+    LocalSocket,
 }
 
 impl Display for Protocol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let protocol_str = match self {
             Protocol::Http => "http",
-            Protocol::Https => "https",
+            Protocol::LocalSocket => {
+                if cfg!(windows) {
+                    "named pipe"
+                } else {
+                    "unix socket"
+                }
+            }
         };
         write!(f, "{}", protocol_str)
     }
@@ -85,7 +95,7 @@ pub struct MihomoVersion {
 }
 
 /// clash mode enum
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum ClashMode {
     Rule,
@@ -304,8 +314,13 @@ pub struct ConnectionMetaData {
 }
 
 pub(crate) type ConnectionId = u32;
-pub(crate) type WebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
-pub(crate) type WebSocketWriter = SplitSink<WebSocket, Message>;
+pub(crate) enum WebSocketWriter {
+    TcpStreamWriter(SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>),
+    #[cfg(unix)]
+    UnixStreamWriter(SplitSink<WebSocketStream<UnixStream>, Message>),
+    #[cfg(windows)]
+    NamedPipeWriter(SplitSink<WebSocketStream<NamedPipeClient>, Message>),
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Log {

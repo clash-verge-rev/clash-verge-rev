@@ -22,7 +22,6 @@ ManifestDPIAwareness PerMonitorV2
 !include "Win\COM.nsh"
 !include "Win\Propkey.nsh"
 !include "StrFunc.nsh"
-; !addplugindir "$%AppData%\Local\NSIS\"
 ${StrCase}
 ${StrLoc}
 

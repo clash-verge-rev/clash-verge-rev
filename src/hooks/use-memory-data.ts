@@ -1,54 +1,33 @@
 import { listen } from "@tauri-apps/api/event";
-import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
 import { useEffect, useRef } from "react";
 import { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
-import { useClashLog } from "../services/states";
-import { getClashLogs } from "@/services/cmds";
 
-const MAX_LOG_NUM = 1000;
-
-export const useLogData = () => {
-  const [clashLog] = useClashLog();
-  const enableLog = clashLog.enable;
-  const logLevel = clashLog.logLevel;
-
-  const [date, setDate] = useLocalStorage("mihomo_logs_date", Date.now());
-  const subscriptKey = enableLog ? `getClashLog-${date}-${logLevel}` : null;
+export const useMemoryData = () => {
+  const [date, setDate] = useLocalStorage("mihomo_memory_date", Date.now());
+  const subscriptKey = `getClashMemory-${date}`;
 
   const ws = useRef<MihomoWebSocket | null>(null);
   const ws_first_connection = useRef<boolean>(true);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const response = useSWRSubscription<ILogItem[], any, string | null>(
+  const response = useSWRSubscription<IMemoryUsageItem, any, string | null>(
     subscriptKey,
     (_key, { next }) => {
-      // populate the initial logs
-
       const connect = () =>
-        MihomoWebSocket.connect_logs(logLevel)
+        MihomoWebSocket.connect_memory()
           .then((ws_) => {
             ws.current = ws_;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            getClashLogs().then(
-              (logs) => next(null, logs),
-              (err) => next(err),
-            );
             ws_.addListener((msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
-                  next(msg.data);
+                  next(msg, { inuse: 0 });
                 } else {
-                  const data = JSON.parse(msg.data) as ILogItem;
-                  // append new log item on socket message
-                  next(null, (l = []) => {
-                    const time = dayjs().format("MM-DD HH:mm:ss");
-                    if (l.length >= MAX_LOG_NUM) l.shift();
-                    const newList = [...l, { ...data, time }];
-                    return newList;
-                  });
+                  const data = JSON.parse(msg.data) as IMemoryUsageItem;
+                  next(null, data);
                 }
               }
             });
@@ -70,14 +49,13 @@ export const useLogData = () => {
       };
     },
     {
-      fallbackData: [],
+      fallbackData: { inuse: 0 },
       keepPreviousData: true,
     },
   );
 
   useEffect(() => {
     const unlistenRefreshWebsocket = listen("verge://refresh-websocket", () => {
-      console.log("[logs] refresh-websocket");
       setDate(Date.now());
     });
 
@@ -90,13 +68,9 @@ export const useLogData = () => {
     mutate(`$sub$${subscriptKey}`);
   }, [date]);
 
-  const refreshGetClashLog = (clear = false) => {
-    if (clear) {
-      mutate(`$sub$${subscriptKey}`, []);
-    } else {
-      setDate(Date.now());
-    }
+  const refreshGetClashMemory = () => {
+    setDate(Date.now());
   };
 
-  return { response, refreshGetClashLog };
+  return { response, refreshGetClashMemory };
 };

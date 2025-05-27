@@ -11,16 +11,13 @@ use tauri::{
 pub use models::*;
 
 mod commands;
+mod enhance_request;
 mod error;
 mod mihomo;
 pub mod models;
-#[cfg(target_os = "windows")]
-mod named_pipe;
-#[cfg(target_os = "linux")]
-mod unix_sock;
-mod ws_utils;
+mod utils;
 
-pub use error::{Error, Result};
+pub use error::{MihomoError, Result};
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the mihomo APIs.
 pub trait MihomoExt<R: Runtime> {
@@ -35,18 +32,20 @@ impl<R: Runtime, T: Manager<R>> crate::MihomoExt<R> for T {
 
 pub struct Builder {
     protocol: Protocol,
-    external_host: String,
-    external_port: u32,
+    external_host: Option<String>,
+    external_port: Option<u32>,
     secret: Option<String>,
+    socket_path: Option<String>,
 }
 
 impl Default for Builder {
     fn default() -> Self {
         Self {
             protocol: Protocol::Http,
-            external_host: String::from("127.0.0.1"),
-            external_port: 9090,
+            external_host: Some(String::from("127.0.0.1")),
+            external_port: Some(9090),
             secret: None,
+            socket_path: None,
         }
     }
 }
@@ -61,12 +60,12 @@ impl Builder {
         self
     }
 
-    pub fn external_host(mut self, external_host: String) -> Self {
+    pub fn external_host(mut self, external_host: Option<String>) -> Self {
         self.external_host = external_host;
         self
     }
 
-    pub fn external_port(mut self, external_port: u32) -> Self {
+    pub fn external_port(mut self, external_port: Option<u32>) -> Self {
         self.external_port = external_port;
         self
     }
@@ -76,11 +75,17 @@ impl Builder {
         self
     }
 
+    pub fn socket_path(mut self, socket_path: Option<String>) -> Self {
+        self.socket_path = socket_path;
+        self
+    }
+
     pub fn build<R: Runtime>(self) -> TauriPlugin<R> {
         let protocol = self.protocol;
         let external_host = self.external_host;
         let external_port = self.external_port;
         let secret = self.secret;
+        let socket_path = self.socket_path;
 
         PluginBuilder::new("mihomo")
             .invoke_handler(tauri::generate_handler![
@@ -123,13 +128,13 @@ impl Builder {
                 commands::upgrade_ui,
                 commands::upgrade_geo,
                 // ws
-                commands::ws_connect,
                 commands::ws_traffic,
                 commands::ws_memory,
                 commands::ws_connections,
                 commands::ws_logs,
                 commands::ws_disconnect,
-                commands::ws_send,
+                commands::clear_all_ws_connection,
+                // commands::ws_send,
             ])
             .setup(move |app, _api| {
                 app.manage(RwLock::new(Mihomo {
@@ -137,6 +142,7 @@ impl Builder {
                     external_host,
                     external_port,
                     secret,
+                    socket_path,
                     connection_manager: Arc::new(ConnectionManager::default()),
                 }));
                 Ok(())

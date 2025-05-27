@@ -116,8 +116,8 @@ export const ProfileEditor = (props: Props) => {
     // 创建 monaco
     const model = monaco.editor.createModel("", language);
     instanceRef.current = monaco.editor.create(dom, {
-      model: model,
       ...defaultOptions,
+      model: model,
       theme: themeMode === "dark" ? "vs-dark" : "light",
       minimap: { enabled: size.width >= 1000 },
     });
@@ -209,7 +209,7 @@ export const ProfileEditor = (props: Props) => {
       label: "save profile",
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
       keybindingContext: "textInputFocus",
-      run: async (ed) => {
+      run: async (_ed) => {
         await handleSave();
       },
     });

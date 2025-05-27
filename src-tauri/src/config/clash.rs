@@ -55,6 +55,13 @@ impl IClashConfig {
         map.insert("mode".into(), "rule".into());
         map.insert("external-controller".into(), "127.0.0.1:9090".into());
         map.insert("secret".into(), nanoid!().into());
+        let mut cors = Mapping::new();
+        cors.insert("allow-private-network".into(), false.into());
+        cors.insert(
+            "allow-origins".into(),
+            vec!["https://metacubex.github.io", "https://yacd.metacubex.one"].into(),
+        );
+        map.insert("external-controller-cors".into(), cors.into());
         map.insert("tun".into(), tun.into());
         map.insert("unified-delay".into(), true.into());
         // default store selected
@@ -75,6 +82,7 @@ impl IClashConfig {
         let socks_port = Self::guard_socks_port(&config);
         let port = Self::guard_port(&config);
         let ctrl = Self::guard_server_ctrl(&config);
+        let cors = Self::guard_ctrl_cors(&config);
         #[cfg(not(target_os = "windows"))]
         config.insert("redir-port".into(), redir_port.into());
         #[cfg(target_os = "linux")]
@@ -83,6 +91,13 @@ impl IClashConfig {
         config.insert("socks-port".into(), socks_port.into());
         config.insert("port".into(), port.into());
         config.insert("external-controller".into(), ctrl.into());
+        let mut cors_map = Mapping::new();
+        cors_map.insert(
+            "allow-private-network".into(),
+            cors.allow_private_network.into(),
+        );
+        cors_map.insert("allow-origins".into(), cors.allow_origins.into());
+        config.insert("external-controller-cors".into(), cors_map.into());
         config
     }
 
@@ -184,6 +199,7 @@ impl IClashConfig {
                 Value::Number(val_num) => Some(val_num.to_string()),
                 _ => None,
             }),
+            cors: Self::guard_ctrl_cors(config),
         }
     }
     #[cfg(not(target_os = "windows"))]
@@ -281,6 +297,35 @@ impl IClashConfig {
             Err(_) => "127.0.0.1:9090".into(),
         }
     }
+
+    pub fn guard_ctrl_cors(config: &Mapping) -> Cors {
+        let cors = config
+            .get("external-controller-cors")
+            .and_then(|value| match value {
+                Value::Mapping(val_map) => {
+                    let allow_private_network = match val_map.get("allow-private-network") {
+                        Some(Value::Bool(val_bool)) => val_bool.to_owned(),
+                        _ => false,
+                    };
+                    let allow_origins = match val_map.get("allow-origins") {
+                        Some(Value::Sequence(val_seq)) => val_seq
+                            .to_owned()
+                            .iter()
+                            .map(|i| i.as_str().unwrap_or_default().to_owned())
+                            .collect(),
+                        _ => Vec::new(),
+                    };
+
+                    Some(Cors {
+                        allow_private_network,
+                        allow_origins,
+                    })
+                }
+                _ => None,
+            })
+            .unwrap_or_default();
+        cors
+    }
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -299,6 +344,25 @@ pub struct ClashInfo {
     pub server: String,
     /// clash secret
     pub secret: Option<String>,
+    pub cors: Cors,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct Cors {
+    allow_private_network: bool,
+    allow_origins: Vec<String>,
+}
+
+impl Default for Cors {
+    fn default() -> Self {
+        Cors {
+            allow_private_network: false,
+            allow_origins: vec![
+                "https://yacd.metacubex.one".to_string(),
+                "https://metacubex.github.io".to_string(),
+            ],
+        }
+    }
 }
 
 #[test]
@@ -323,6 +387,7 @@ fn test_clash_info() {
             port: 0,
             server: server.into(),
             secret: None,
+            cors: Cors::default(),
         }
     }
 

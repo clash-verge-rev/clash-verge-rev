@@ -1,8 +1,9 @@
 use crate::config::Config;
 use crate::utils::dirs;
 use anyhow::{bail, Result};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
 use std::{env::current_exe, process::Command as StdCommand};
 use tipsy::ServerId;
@@ -12,6 +13,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 pub enum SocketCommand {
     GetVersion,
     GetClash,
+    GetLogs,
     StartClash(StartBody),
     StopClash,
     StopService,
@@ -28,7 +30,7 @@ pub struct StartBody {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct ResponseBody {
+pub struct ClashStatus {
     auto_restart: bool,
     restart_retry_count: u32,
     info: Option<ClashInfo>,
@@ -44,13 +46,23 @@ struct ClashInfo {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct JsonResponse {
+pub struct JsonResponse<T> {
     pub code: u64,
     pub msg: String,
-    pub data: Option<ResponseBody>,
+    pub data: Option<T>,
 }
 
-async fn send_command(cmd: SocketCommand) -> Result<JsonResponse> {
+impl<T> JsonResponse<T>
+where
+    T: serde::de::DeserializeOwned, // 关键约束：T 必须可被反序列化
+{
+    // 定义 from_str 方法，返回 Result 类型
+    pub fn from_str(json_str: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json_str)
+    }
+}
+
+async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonResponse<T>> {
     let path = ServerId::new("verge-server").parent_folder(std::env::temp_dir());
     let client = tipsy::Endpoint::connect(path).await?;
     let mut reader = BufReader::new(client);
@@ -59,7 +71,7 @@ async fn send_command(cmd: SocketCommand) -> Result<JsonResponse> {
     reader.write_all(data.as_bytes()).await?;
     let mut response = String::new();
     reader.read_line(&mut response).await?;
-    let res = serde_json::from_str(&response)?;
+    let res = JsonResponse::from_str(&response)?;
     Ok(res)
 }
 
@@ -296,8 +308,8 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 /// check the windows service status
-pub async fn check_service() -> Result<JsonResponse> {
-    match send_command(SocketCommand::GetClash).await {
+pub async fn check_service() -> Result<JsonResponse<ClashStatus>> {
+    match send_command::<ClashStatus>(SocketCommand::GetClash).await {
         Ok(res) => {
             tracing::info!("connect to service success");
             Ok(res)
@@ -314,8 +326,14 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
     check_service().await?;
     stop_core_by_service().await?;
 
-    let clash_core = Config::verge().latest().clash_core.clone();
-    let clash_core = clash_core.unwrap_or("verge-mihomo".into());
+    let (clash_core, enable_external_controller) = {
+        let verge = Config::verge();
+        let verge = verge.latest();
+        (
+            verge.clash_core.clone().unwrap_or("verge-mihomo".into()),
+            verge.enable_external_controller.unwrap_or_default(),
+        )
+    };
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let clash_bin = format!("{clash_core}{bin_ext}");
@@ -343,11 +361,12 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
         config_dir: config_dir.to_string(),
         config_file: config_file.to_string(),
         log_file: log_path.to_string(),
-        use_local_socket: false,
+        use_local_socket: !enable_external_controller,
     };
-    let res = send_command(SocketCommand::StartClash(body)).await?;
+    tracing::debug!("send start clash socket command, body: {:?}", body);
+    let res = send_command::<()>(SocketCommand::StartClash(body)).await?;
     if res.code != 0 {
-        bail!(res.msg);
+        bail!("start clash socket command return error: {}", res.msg);
     }
 
     Ok(())
@@ -355,14 +374,23 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
 
 /// stop the clash by service
 pub(super) async fn stop_core_by_service() -> Result<()> {
-    let res = send_command(SocketCommand::StopClash).await?;
+    let res = send_command::<()>(SocketCommand::StopClash).await?;
     if res.code != 0 {
         bail!(res.msg);
     }
     Ok(())
 }
 
+pub async fn get_logs() -> Result<JsonResponse<VecDeque<String>>> {
+    let res = send_command::<VecDeque<String>>(SocketCommand::GetLogs).await?;
+    if res.code != 0 {
+        bail!(res.msg);
+    }
+    Ok(res)
+}
+
+/// stop the service
 pub async fn stop_service() -> Result<()> {
-    let _ = send_command(SocketCommand::StopService).await?;
+    let _ = send_command::<()>(SocketCommand::StopService).await?;
     Ok(())
 }

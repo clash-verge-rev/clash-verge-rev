@@ -1,0 +1,116 @@
+name: Test Build
+
+on:
+  push:
+    branches: [websocket]
+    tags-ignore: [updater, alpha]
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: write-all
+env:
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add Rust Target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Install Packages (Linux)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Get Version (Linux)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        id: get_version
+        run: |
+          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> "$GITHUB_OUTPUT"
+
+      - name: Tauri build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          pnpm i
+          pnpm check ${{ matrix.target }} --alpha
+          pnpm build --target ${{ matrix.target }}
+
+      - name: Update Checksums (Arch Linux PKG)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: |
+          echo "version: ${{ steps.get_version.outputs.VERSION }}"
+          cp src-tauri/target/${{ matrix.target }}/release/bundle/deb/clash-verge_${{ steps.get_version.outputs.VERSION }}_amd64.deb archbuild/test/amd64.deb
+          sed -i "s/sha256sums_x86_64=.*/sha256sums_x86_64=(\"$(sha256sum archbuild/test/amd64.deb | awk '{print $1}')\")/" archbuild/test/PKGBUILD
+
+      - name: Makepkg Build and Check (Arch Linux PKG)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        id: makepkg
+        uses: CachyOS/pkgbuild-action@master
+        with:
+          pkgdir: archbuild/test
+
+      - name: Upload artifact
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.exe
+
+      - name: Upload artifact
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.dmg
+
+      - name: Upload artifact
+        if: matrix.os == 'ubuntu-22.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.deb
+            ${{ steps.makepkg.outputs.pkgfile0 }}

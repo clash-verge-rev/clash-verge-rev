@@ -35,13 +35,12 @@ Default permissions for the plugin
 - `allow-upgrade-core`
 - `allow-upgrade-ui`
 - `allow-upgrade-geo`
-- `allow-ws-connect`
 - `allow-ws-traffic`
 - `allow-ws-memory`
 - `allow-ws-connections`
 - `allow-ws-logs`
-- `allow-ws-send`
 - `allow-ws-disconnect`
+- `allow-clear-all-ws-connection`
 
 ## Permission Table
 
@@ -74,6 +73,32 @@ Enables the clean_fakeip command without any pre-configured scope.
 <td>
 
 Denies the clean_fakeip command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-clear-all-ws-connection`
+
+</td>
+<td>
+
+Enables the clear_all_ws_connection command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-clear-all-ws-connection`
+
+</td>
+<td>
+
+Denies the clear_all_ws_connection command without any pre-configured scope.
 
 </td>
 </tr>
@@ -289,32 +314,6 @@ Denies the get_groups command without any pre-configured scope.
 <tr>
 <td>
 
-`mihomo:allow-get-providers-proxy-by-name`
-
-</td>
-<td>
-
-Enables the get_providers_proxy_by_name command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-get-providers-proxy-by-name`
-
-</td>
-<td>
-
-Denies the get_providers_proxy_by_name command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 `mihomo:allow-get-proxies`
 
 </td>
@@ -334,32 +333,6 @@ Enables the get_proxies command without any pre-configured scope.
 <td>
 
 Denies the get_proxies command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:allow-get-proxies-providers`
-
-</td>
-<td>
-
-Enables the get_proxies_providers command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-get-proxies-providers`
-
-</td>
-<td>
-
-Denies the get_proxies_providers command without any pre-configured scope.
 
 </td>
 </tr>
@@ -497,32 +470,6 @@ Denies the get_rules command without any pre-configured scope.
 <tr>
 <td>
 
-`mihomo:allow-get-rules-providers`
-
-</td>
-<td>
-
-Enables the get_rules_providers command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-get-rules-providers`
-
-</td>
-<td>
-
-Denies the get_rules_providers command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 `mihomo:allow-get-version`
 
 </td>
@@ -568,58 +515,6 @@ Enables the healthcheck_node_in_provider command without any pre-configured scop
 <td>
 
 Denies the healthcheck_node_in_provider command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:allow-healthcheck-providers`
-
-</td>
-<td>
-
-Enables the healthcheck_providers command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-healthcheck-providers`
-
-</td>
-<td>
-
-Denies the healthcheck_providers command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:allow-healthcheck-providers-proxies`
-
-</td>
-<td>
-
-Enables the healthcheck_providers_proxies command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-healthcheck-providers-proxies`
-
-</td>
-<td>
-
-Denies the healthcheck_providers_proxies command without any pre-configured scope.
 
 </td>
 </tr>
@@ -835,32 +730,6 @@ Denies the update_geo command without any pre-configured scope.
 <tr>
 <td>
 
-`mihomo:allow-update-proxies-providers`
-
-</td>
-<td>
-
-Enables the update_proxies_providers command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-update-proxies-providers`
-
-</td>
-<td>
-
-Denies the update_proxies_providers command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 `mihomo:allow-update-proxy-provider`
 
 </td>
@@ -906,32 +775,6 @@ Enables the update_rule_provider command without any pre-configured scope.
 <td>
 
 Denies the update_rule_provider command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:allow-update-rules-providers`
-
-</td>
-<td>
-
-Enables the update_rules_providers command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-update-rules-providers`
-
-</td>
-<td>
-
-Denies the update_rules_providers command without any pre-configured scope.
 
 </td>
 </tr>
@@ -1043,32 +886,6 @@ Denies the upgrade_ui command without any pre-configured scope.
 <tr>
 <td>
 
-`mihomo:allow-ws-connect`
-
-</td>
-<td>
-
-Enables the ws_connect command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-ws-connect`
-
-</td>
-<td>
-
-Denies the ws_connect command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 `mihomo:allow-ws-connections`
 
 </td>
@@ -1166,32 +983,6 @@ Enables the ws_memory command without any pre-configured scope.
 <td>
 
 Denies the ws_memory command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:allow-ws-send`
-
-</td>
-<td>
-
-Enables the ws_send command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-ws-send`
-
-</td>
-<td>
-
-Denies the ws_send command without any pre-configured scope.
 
 </td>
 </tr>

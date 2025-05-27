@@ -387,56 +387,45 @@ export type Message =
   | MessageKind<"Ping", number[]>
   | MessageKind<"Pong", number[]>
   | MessageKind<"Close", CloseFrame | null>;
-export declare class WebSocket {
+export declare class MihomoWebSocket {
   id: number;
   private readonly listeners;
   private static instances;
   constructor(id: number, listeners: Set<(arg: Message) => void>);
   /**
-   * 创建一个新的 WebSocket 连接
-   * @param url 要连接的 url
-   * @returns WebSocket 实例
-   */
-  static connect(url: string): Promise<WebSocket>;
-  /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的流量监控
    * @returns WebSocket 实例
    */
-  static connect_traffic(): Promise<WebSocket>;
+  static connect_traffic(): Promise<MihomoWebSocket>;
   /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的内存监控
    * @returns WebSocket 实例
    */
-  static connect_memory(): Promise<WebSocket>;
+  static connect_memory(): Promise<MihomoWebSocket>;
   /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的连接监控
    * @returns WebSocket 实例
    */
-  static connect_connections(): Promise<WebSocket>;
+  static connect_connections(): Promise<MihomoWebSocket>;
   /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的日志监控
    * @returns WebSocket 实例
    */
   static connect_logs(
-    level: "debug" | "info" | "warn" | "error",
-  ): Promise<WebSocket>;
+    level: "debug" | "info" | "warning" | "error" | "silent",
+  ): Promise<MihomoWebSocket>;
   /**
    * 添加处理 WebSocket 连接后接受的数据的回调函数
    * @param cb 回调函数
    */
   addListener(cb: (arg: Message) => void): () => void;
   /**
-   * 发送消息到 WebSocket 连接
-   * @param message 发送的消息
-   */
-  send(message: Message | string | number[]): Promise<void>;
-  /**
    * 关闭 WebSocket 连接
-   * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认超时 10 秒
+   * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认为 0
    */
-  close(forceTimeout?: number): Promise<void>;
+  close(): Promise<void>;
   /**
    * 清理全部的 websocket 连接资源
    */
-  static cleanupAll(): void;
+  static cleanupAll(): Promise<void>;
 }

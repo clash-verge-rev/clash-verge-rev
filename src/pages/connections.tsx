@@ -10,17 +10,15 @@ import {
 } from "@/components/connection/connection-detail";
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
-import { useClashInfo } from "@/hooks/use-clash";
+import { useConnectionData } from "@/hooks/use-connection-data";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
-import { createSockette } from "@/utils/websocket";
 import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
-import useSWRSubscription from "swr/subscription";
 import { closeAllConnections, closeConnections } from "tauri-plugin-mihomo-api";
 
 const initConn: IConnections = {
@@ -33,7 +31,6 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
 const ConnectionsPage = () => {
   const { t } = useTranslation();
-  const { clashInfo } = useClashInfo();
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
 
@@ -53,66 +50,9 @@ const ConnectionsPage = () => {
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   };
 
-  const subscriptConnKey = clashInfo
-    ? `getClashConnections-${clashInfo.server}-${clashInfo.secret}`
-    : null;
-
-  const { data: connData = initConn } = useSWRSubscription<
-    IConnections,
-    any,
-    string | null
-  >(subscriptConnKey, (_key, { next }) => {
-    const { server = "", secret = "" } = clashInfo!;
-
-    const s = createSockette(
-      `ws://${server}/connections?token=${encodeURIComponent(secret)}`,
-      {
-        onmessage(event) {
-          // meta v1.15.0 出现 data.connections 为 null 的情况
-          const data = JSON.parse(event.data) as IConnections;
-          // 尽量与前一次 connections 的展示顺序保持一致
-          next(null, (old = initConn) => {
-            const oldConn = old.connections;
-            const maxLen = data.connections?.length;
-
-            const connections: IConnectionsItem[] = [];
-
-            const rest = (data.connections || []).filter((each) => {
-              const index = oldConn.findIndex((o) => o.id === each.id);
-
-              if (index >= 0 && index < maxLen) {
-                const old = oldConn[index];
-                each.curUpload = each.upload - old.upload;
-                each.curDownload = each.download - old.download;
-
-                connections[index] = each;
-                return false;
-              }
-              return true;
-            });
-
-            for (let i = 0; i < maxLen; ++i) {
-              if (!connections[i] && rest.length > 0) {
-                connections[i] = rest.shift()!;
-                connections[i].curUpload = 0;
-                connections[i].curDownload = 0;
-              }
-            }
-
-            return { ...data, connections };
-          });
-        },
-        onerror(event) {
-          next(event);
-        },
-      },
-      3,
-    );
-
-    return () => {
-      if (s) s.close();
-    };
-  });
+  const {
+    response: { data: connData = initConn },
+  } = useConnectionData();
 
   const [filterConn] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
@@ -134,27 +74,6 @@ const ConnectionsPage = () => {
   });
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
-
-  // const wsRef = useRef<WebSocket | null>(null);
-  // const firstToConn = useRef<boolean>(true);
-  // useEffect(() => {
-  //   if (firstToConn.current) {
-  //     firstToConn.current = false;
-  //     WebSocket.connect_traffic().then((ws) => {
-  //       wsRef.current = ws;
-  //       console.log("connect success", ws);
-  //       ws.addListener((msg) => {
-  //         console.log(msg.data);
-  //       });
-  //     });
-  //   }
-
-  //   return () => {
-  //     if (wsRef.current) {
-  //       wsRef.current.close(0);
-  //     }
-  //   };
-  // }, []);
 
   return (
     <BasePage

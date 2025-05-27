@@ -1,6 +1,6 @@
 import { DialogRef, EditorViewer } from "@/components/base";
 import { getRuntimeYaml } from "@/services/cmds";
-import { Box, Chip } from "@mui/material";
+import { Chip } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 

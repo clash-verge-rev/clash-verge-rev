@@ -18,6 +18,7 @@ import {
   ListItemText,
   Tooltip,
 } from "@mui/material";
+import { emit } from "@tauri-apps/api/event";
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -112,6 +113,9 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
       await upgradeCore();
       setUpgrading(false);
       notice("success", t(`Core Version Updated`), 1000);
+      setTimeout(async () => {
+        await emit("verge://refresh-websocket");
+      }, 2000);
     } catch (err: any) {
       setUpgrading(false);
       if (err.includes("already using latest version")) {
@@ -166,7 +170,11 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
             </ListItemIcon>
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
             {changingCore && each.core !== currentCore && (
-              <PulseLoader size={6} color="var(--primary-main)" />
+              <PulseLoader
+                className="mr-4"
+                size={6}
+                color="var(--primary-main)"
+              />
             )}
 
             {(OS === "macos" || OS === "linux") && !serviceActive && (

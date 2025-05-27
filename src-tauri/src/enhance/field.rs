@@ -1,7 +1,7 @@
 use serde_yaml::{Mapping, Value};
 use std::collections::HashSet;
 
-pub const HANDLE_FIELDS: [&str; 15] = [
+pub const HANDLE_FIELDS: [&str; 16] = [
     "mode",
     "mixed-port",
     "port",
@@ -13,6 +13,7 @@ pub const HANDLE_FIELDS: [&str; 15] = [
     "log-level",
     "unified-delay",
     "external-controller",
+    "external-controller-cors",
     "secret",
     "profile",
     "tun",

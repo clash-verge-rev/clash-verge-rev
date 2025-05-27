@@ -34,6 +34,10 @@ interface IConfigData {
   "enable-random-port": boolean;
   "external-controller": string;
   secret: string;
+  "external-controller-cors": {
+    "allow-private-network": boolean;
+    "allow-origins": string[];
+  };
   "unified-delay": boolean;
   tun: {
     enable?: boolean;
@@ -107,6 +111,11 @@ interface ITrafficItem {
   down: number;
 }
 
+interface IMemoryUsageItem {
+  inuse: number;
+  oslimit?: number;
+}
+
 interface ILogItem {
   type: string;
   time?: string;
@@ -157,6 +166,10 @@ interface IClashInfo {
   port?: number; // clash http port
   server?: string; // external-controller
   secret?: string;
+  cors?: {
+    allow_private_network: boolean;
+    allow_origins: string[];
+  };
 }
 
 interface IProfileItem {
@@ -293,6 +306,7 @@ interface IVergeConfig {
   webdav_password?: string;
   enable_tray?: boolean;
   show_in_dock?: boolean;
+  enable_external_controller?: boolean;
 }
 
 type IClashConfigValue = any;

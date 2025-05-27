@@ -25,7 +25,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEREMTBCNUIyQzA3OEU2QzQKUldURTVuakFzclVRM2Y3Tk9kblFHVWZvTjlDNGF1cUVhUEJpR05OVWc4MVNTTk1IeE9ReThmeFEK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERGMkQyMTQ4Q0E1QUU3MDAKUldRQTUxcktTQ0V0MzV4V25ncGY1MVNBSVMvQXJ2aHpTMmlqQmxZSEdPclNKVGtmNU5lei9jRSsK",
       "endpoints": [
         "https://ghp.ci/https://github.com/oomeow/clash-verge-self/releases/download/updater/update-proxy.json",
         "https://github.com/oomeow/clash-verge-self/releases/download/updater/update.json"

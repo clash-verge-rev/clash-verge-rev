@@ -156,6 +156,9 @@ pub struct IVerge {
 
     /// show in dock
     pub show_in_dock: Option<bool>,
+
+    /// enable external controller, such as 127.0.0.1:8080
+    pub enable_external_controller: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -228,6 +231,7 @@ impl IVerge {
             auto_log_clean: Some(3),
             enable_tray: Some(true),
             show_in_dock: Some(true),
+            enable_external_controller: Some(true),
             ..Self::default()
         }
     }
@@ -299,6 +303,7 @@ impl IVerge {
         patch!(webdav_password);
         patch!(enable_tray);
         patch!(show_in_dock);
+        patch!(enable_external_controller);
     }
 
     /// 在初始化前尝试拿到单例端口的值

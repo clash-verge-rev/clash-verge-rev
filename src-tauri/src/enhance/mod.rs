@@ -144,9 +144,25 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     }
 
     // 合并 verge 配置的 clash 配置
+    tracing::info!("merge clash config file");
     for (key, value) in clash_config.into_iter() {
         config.insert(key, value);
     }
+
+    let enable_external_controller = {
+        Config::verge()
+            .latest()
+            .enable_external_controller
+            .unwrap_or_default()
+    };
+    tracing::info!("external controller enable: {}", enable_external_controller);
+    if !enable_external_controller {
+        config.remove("external-controller");
+        config.remove("external-controller-cors");
+        config.remove("secret");
+    }
+    config.remove("external-controller-unix");
+    config.remove("external-controller-pipe");
 
     tracing::info!("setting tun");
     let enable_tun = Config::clash().latest().get_enable_tun();

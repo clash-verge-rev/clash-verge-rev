@@ -14,12 +14,12 @@ import { SnackbarProvider } from "notistack";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
+import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
-import { WebSocket } from "tauri-plugin-mihomo-api";
 
 if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
@@ -62,8 +62,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // 页面关闭/刷新事件
-window.addEventListener("beforeunload", () => {
-  WebSocket.cleanupAll(); // 强制清理所有 WebSocket 实例
+window.addEventListener("beforeunload", async () => {
+  await MihomoWebSocket.cleanupAll(); // 强制清理所有 WebSocket 实例
 });
 
 const contexts = [

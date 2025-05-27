@@ -1,5 +1,6 @@
 import { useWindowSize } from "@/hooks/use-window-size";
 import {
+  defaultOptions,
   generateTemplate,
   monaco,
   registerPacCompletion,
@@ -68,26 +69,13 @@ export const EditorViewer = (props: Props) => {
       const model = monaco.editor.createModel(data, language, uri);
 
       instanceRef.current = monaco.editor.create(editorDomRef.current, {
+        ...defaultOptions,
         model: model,
         language: language,
-        readOnly: readonly,
-        readOnlyMessage: { value: t("ReadOnlyMessage") },
         tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4,
-        theme: themeMode === "light" ? "vs" : "vs-dark",
-        minimap: { enabled: dom.clientWidth >= 1000 },
-        mouseWheelZoom: true,
-        renderValidationDecorations: "on", // 只读模式下显示校验信息
-        quickSuggestions: {
-          strings: true,
-          comments: true,
-          other: true,
-        },
-        fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-          getSystem() === "windows" ? ", twemoji mozilla" : ""
-        }`,
-        automaticLayout: true,
-        fontLigatures: true,
-        smoothScrolling: true,
+        readOnly: readonly,
+        theme: themeMode === "dark" ? "vs-dark" : "light",
+        minimap: { enabled: size.width >= 1000 },
       });
 
       if (scope && "pac" === scope) {

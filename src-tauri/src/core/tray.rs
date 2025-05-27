@@ -269,11 +269,11 @@ impl Tray {
             let mut current_profile_name = "None".to_string();
             let profiles = Config::profiles().latest().clone();
             if let Some(current_profile_uid) = profiles.get_current() {
-                let current_profile = profiles.get_item(&current_profile_uid);
-                current_profile_name = match &current_profile.unwrap().name {
-                    Some(profile_name) => profile_name.to_string(),
-                    None => current_profile_name,
-                };
+                if let Ok(current_profile) = profiles.get_item(&current_profile_uid) {
+                    if let Some(profile_name) = &current_profile.name {
+                        current_profile_name = profile_name.to_string();
+                    }
+                }
             };
             let switch_map = |status| {
                 if status {

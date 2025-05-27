@@ -558,10 +558,10 @@ export type Message =
   | MessageKind<"Pong", number[]>
   | MessageKind<"Close", CloseFrame | null>;
 
-export class WebSocket {
+export class MihomoWebSocket {
   id: number;
   private readonly listeners: Set<(arg: Message) => void>;
-  private static instances = new Set<WebSocket>();
+  private static instances = new Set<MihomoWebSocket>();
 
   constructor(id: number, listeners: Set<(arg: Message) => void>) {
     this.id = id;
@@ -569,32 +569,10 @@ export class WebSocket {
   }
 
   /**
-   * 创建一个新的 WebSocket 连接
-   * @param url 要连接的 url
-   * @returns WebSocket 实例
-   */
-  static async connect(url: string): Promise<WebSocket> {
-    const listeners: Set<(arg: Message) => void> = new Set();
-    const onMessage = new Channel<Message>();
-    onMessage.onmessage = (message: Message): void => {
-      listeners.forEach((l) => {
-        l(message);
-      });
-    };
-    const id = await invoke<number>("plugin:mihomo|ws_connect", {
-      url,
-      onMessage,
-    });
-    const instance = new WebSocket(id, listeners);
-    WebSocket.instances.add(instance);
-    return instance;
-  }
-
-  /**
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的流量监控
    * @returns WebSocket 实例
    */
-  static async connect_traffic(): Promise<WebSocket> {
+  static async connect_traffic(): Promise<MihomoWebSocket> {
     const listeners: Set<(arg: Message) => void> = new Set();
     const onMessage = new Channel<Message>();
     onMessage.onmessage = (message: Message): void => {
@@ -605,8 +583,8 @@ export class WebSocket {
     const id = await invoke<number>("plugin:mihomo|ws_traffic", {
       onMessage,
     });
-    const instance = new WebSocket(id, listeners);
-    WebSocket.instances.add(instance);
+    const instance = new MihomoWebSocket(id, listeners);
+    MihomoWebSocket.instances.add(instance);
     return instance;
   }
 
@@ -614,7 +592,7 @@ export class WebSocket {
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的内存监控
    * @returns WebSocket 实例
    */
-  static async connect_memory(): Promise<WebSocket> {
+  static async connect_memory(): Promise<MihomoWebSocket> {
     const listeners: Set<(arg: Message) => void> = new Set();
     const onMessage = new Channel<Message>();
     onMessage.onmessage = (message: Message): void => {
@@ -625,8 +603,8 @@ export class WebSocket {
     const id = await invoke<number>("plugin:mihomo|ws_memory", {
       onMessage,
     });
-    const instance = new WebSocket(id, listeners);
-    WebSocket.instances.add(instance);
+    const instance = new MihomoWebSocket(id, listeners);
+    MihomoWebSocket.instances.add(instance);
     return instance;
   }
 
@@ -634,7 +612,7 @@ export class WebSocket {
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的连接监控
    * @returns WebSocket 实例
    */
-  static async connect_connections(): Promise<WebSocket> {
+  static async connect_connections(): Promise<MihomoWebSocket> {
     const listeners: Set<(arg: Message) => void> = new Set();
     const onMessage = new Channel<Message>();
     onMessage.onmessage = (message: Message): void => {
@@ -645,8 +623,8 @@ export class WebSocket {
     const id = await invoke<number>("plugin:mihomo|ws_connections", {
       onMessage,
     });
-    const instance = new WebSocket(id, listeners);
-    WebSocket.instances.add(instance);
+    const instance = new MihomoWebSocket(id, listeners);
+    MihomoWebSocket.instances.add(instance);
     return instance;
   }
 
@@ -655,8 +633,8 @@ export class WebSocket {
    * @returns WebSocket 实例
    */
   static async connect_logs(
-    level: "debug" | "info" | "warn" | "error",
-  ): Promise<WebSocket> {
+    level: "debug" | "info" | "warning" | "error" | "silent",
+  ): Promise<MihomoWebSocket> {
     const listeners: Set<(arg: Message) => void> = new Set();
     const onMessage = new Channel<Message>();
     onMessage.onmessage = (message: Message): void => {
@@ -668,8 +646,8 @@ export class WebSocket {
       level,
       onMessage,
     });
-    const instance = new WebSocket(id, listeners);
-    WebSocket.instances.add(instance);
+    const instance = new MihomoWebSocket(id, listeners);
+    MihomoWebSocket.instances.add(instance);
     return instance;
   }
 
@@ -684,43 +662,44 @@ export class WebSocket {
     };
   }
 
-  /**
-   * 发送消息到 WebSocket 连接
-   * @param message 发送的消息
-   */
-  async send(message: Message | string | number[]): Promise<void> {
-    let m: Message;
-    if (typeof message === "string") {
-      m = { type: "Text", data: message };
-    } else if (typeof message === "object" && "type" in message) {
-      m = message;
-    } else if (Array.isArray(message)) {
-      m = { type: "Binary", data: message };
-    } else {
-      throw new Error(
-        "invalid `message` type, expected a `{ type: string, data: any }` object, a string or a numeric array",
-      );
-    }
-    await invoke("plugin:mihomo|ws_send", { id: this.id, message: m });
-  }
+  // /**
+  //  * 发送消息到 WebSocket 连接
+  //  * @param message 发送的消息
+  //  */
+  // async send(message: Message | string | number[]): Promise<void> {
+  //   let m: Message;
+  //   if (typeof message === "string") {
+  //     m = { type: "Text", data: message };
+  //   } else if (typeof message === "object" && "type" in message) {
+  //     m = message;
+  //   } else if (Array.isArray(message)) {
+  //     m = { type: "Binary", data: message };
+  //   } else {
+  //     throw new Error(
+  //       "invalid `message` type, expected a `{ type: string, data: any }` object, a string or a numeric array",
+  //     );
+  //   }
+  //   await invoke("plugin:mihomo|ws_send", { id: this.id, message: m });
+  // }
 
   /**
    * 关闭 WebSocket 连接
-   * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认超时 10 秒
+   * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认为 0
    */
-  async close(forceTimeout: number = 10000): Promise<void> {
+  async close(): Promise<void> {
     await invoke("plugin:mihomo|ws_disconnect", {
       id: this.id,
-      forceTimeout,
+      forceTimeout: 0,
     });
-    WebSocket.instances.delete(this);
+    MihomoWebSocket.instances.delete(this);
   }
 
   /**
    * 清理全部的 websocket 连接资源
    */
-  static cleanupAll() {
-    this.instances.forEach((instance) => instance.close(0));
+  static async cleanupAll() {
+    this.instances.forEach((instance) => instance.close());
     this.instances.clear();
+    await invoke("plugin:mihomo|clear_all_ws_connection");
   }
 }

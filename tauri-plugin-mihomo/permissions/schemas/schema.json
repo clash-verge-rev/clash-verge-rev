@@ -307,6 +307,18 @@
           "markdownDescription": "Denies the clean_fakeip command without any pre-configured scope."
         },
         {
+          "description": "Enables the clear_all_ws_connection command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-clear-all-ws-connection",
+          "markdownDescription": "Enables the clear_all_ws_connection command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the clear_all_ws_connection command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-clear-all-ws-connection",
+          "markdownDescription": "Denies the clear_all_ws_connection command without any pre-configured scope."
+        },
+        {
           "description": "Enables the close_all_connections command without any pre-configured scope.",
           "type": "string",
           "const": "allow-close-all-connections",
@@ -403,18 +415,6 @@
           "markdownDescription": "Denies the get_groups command without any pre-configured scope."
         },
         {
-          "description": "Enables the get_providers_proxy_by_name command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-get-providers-proxy-by-name",
-          "markdownDescription": "Enables the get_providers_proxy_by_name command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the get_providers_proxy_by_name command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-get-providers-proxy-by-name",
-          "markdownDescription": "Denies the get_providers_proxy_by_name command without any pre-configured scope."
-        },
-        {
           "description": "Enables the get_proxies command without any pre-configured scope.",
           "type": "string",
           "const": "allow-get-proxies",
@@ -425,18 +425,6 @@
           "type": "string",
           "const": "deny-get-proxies",
           "markdownDescription": "Denies the get_proxies command without any pre-configured scope."
-        },
-        {
-          "description": "Enables the get_proxies_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-get-proxies-providers",
-          "markdownDescription": "Enables the get_proxies_providers command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the get_proxies_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-get-proxies-providers",
-          "markdownDescription": "Denies the get_proxies_providers command without any pre-configured scope."
         },
         {
           "description": "Enables the get_proxy_by_name command without any pre-configured scope.",
@@ -499,18 +487,6 @@
           "markdownDescription": "Denies the get_rules command without any pre-configured scope."
         },
         {
-          "description": "Enables the get_rules_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-get-rules-providers",
-          "markdownDescription": "Enables the get_rules_providers command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the get_rules_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-get-rules-providers",
-          "markdownDescription": "Denies the get_rules_providers command without any pre-configured scope."
-        },
-        {
           "description": "Enables the get_version command without any pre-configured scope.",
           "type": "string",
           "const": "allow-get-version",
@@ -533,30 +509,6 @@
           "type": "string",
           "const": "deny-healthcheck-node-in-provider",
           "markdownDescription": "Denies the healthcheck_node_in_provider command without any pre-configured scope."
-        },
-        {
-          "description": "Enables the healthcheck_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-healthcheck-providers",
-          "markdownDescription": "Enables the healthcheck_providers command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the healthcheck_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-healthcheck-providers",
-          "markdownDescription": "Denies the healthcheck_providers command without any pre-configured scope."
-        },
-        {
-          "description": "Enables the healthcheck_providers_proxies command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-healthcheck-providers-proxies",
-          "markdownDescription": "Enables the healthcheck_providers_proxies command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the healthcheck_providers_proxies command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-healthcheck-providers-proxies",
-          "markdownDescription": "Denies the healthcheck_providers_proxies command without any pre-configured scope."
         },
         {
           "description": "Enables the healthcheck_proxy_provider command without any pre-configured scope.",
@@ -655,18 +607,6 @@
           "markdownDescription": "Denies the update_geo command without any pre-configured scope."
         },
         {
-          "description": "Enables the update_proxies_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-update-proxies-providers",
-          "markdownDescription": "Enables the update_proxies_providers command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the update_proxies_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-update-proxies-providers",
-          "markdownDescription": "Denies the update_proxies_providers command without any pre-configured scope."
-        },
-        {
           "description": "Enables the update_proxy_provider command without any pre-configured scope.",
           "type": "string",
           "const": "allow-update-proxy-provider",
@@ -689,18 +629,6 @@
           "type": "string",
           "const": "deny-update-rule-provider",
           "markdownDescription": "Denies the update_rule_provider command without any pre-configured scope."
-        },
-        {
-          "description": "Enables the update_rules_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-update-rules-providers",
-          "markdownDescription": "Enables the update_rules_providers command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the update_rules_providers command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-update-rules-providers",
-          "markdownDescription": "Denies the update_rules_providers command without any pre-configured scope."
         },
         {
           "description": "Enables the update_secret command without any pre-configured scope.",
@@ -751,18 +679,6 @@
           "markdownDescription": "Denies the upgrade_ui command without any pre-configured scope."
         },
         {
-          "description": "Enables the ws_connect command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-ws-connect",
-          "markdownDescription": "Enables the ws_connect command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the ws_connect command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-ws-connect",
-          "markdownDescription": "Denies the ws_connect command without any pre-configured scope."
-        },
-        {
           "description": "Enables the ws_connections command without any pre-configured scope.",
           "type": "string",
           "const": "allow-ws-connections",
@@ -811,18 +727,6 @@
           "markdownDescription": "Denies the ws_memory command without any pre-configured scope."
         },
         {
-          "description": "Enables the ws_send command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-ws-send",
-          "markdownDescription": "Enables the ws_send command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the ws_send command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-ws-send",
-          "markdownDescription": "Denies the ws_send command without any pre-configured scope."
-        },
-        {
           "description": "Enables the ws_traffic command without any pre-configured scope.",
           "type": "string",
           "const": "allow-ws-traffic",
@@ -835,10 +739,10 @@
           "markdownDescription": "Denies the ws_traffic command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-clean-fakeip`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`\n- `allow-ws-connect`\n- `allow-ws-traffic`\n- `allow-ws-memory`\n- `allow-ws-connections`\n- `allow-ws-logs`\n- `allow-ws-send`\n- `allow-ws-disconnect`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-clean-fakeip`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`\n- `allow-ws-traffic`\n- `allow-ws-memory`\n- `allow-ws-connections`\n- `allow-ws-logs`\n- `allow-ws-disconnect`\n- `allow-clear-all-ws-connection`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-clean-fakeip`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`\n- `allow-ws-connect`\n- `allow-ws-traffic`\n- `allow-ws-memory`\n- `allow-ws-connections`\n- `allow-ws-logs`\n- `allow-ws-send`\n- `allow-ws-disconnect`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-clean-fakeip`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`\n- `allow-ws-traffic`\n- `allow-ws-memory`\n- `allow-ws-connections`\n- `allow-ws-logs`\n- `allow-ws-disconnect`\n- `allow-clear-all-ws-connection`"
         }
       ]
     }

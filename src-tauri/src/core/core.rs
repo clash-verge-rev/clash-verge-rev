@@ -1,9 +1,9 @@
 use super::verge_log::VergeLog;
 use crate::core::{handle, logger::Logger, service};
-use crate::log_err;
 use crate::utils::dirs;
 use crate::utils::help::find_unused_port;
 use crate::{config::*, utils};
+use crate::{log_err, SOCKET_PATH};
 use anyhow::{bail, Result};
 
 use once_cell::sync::OnceCell;
@@ -35,6 +35,7 @@ impl CoreManager {
             sidecar: Arc::new(Mutex::new(None)),
             use_service_mode: Arc::new(Mutex::new(false)),
             need_restart_core: Arc::new(Mutex::new(true)),
+            // ws_traffic_id: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -94,7 +95,11 @@ impl CoreManager {
     }
 
     /// 启动核心
+    /// TODO: 通过 service 启动的内核，Logger会丢失, 无法通过 Logger::global().set_log() 方法更新日志
     pub async fn run_core(&self) -> Result<()> {
+        // clear logs
+        Logger::global().clear_log();
+
         let config_path = Config::generate_file(ConfigType::Run)?;
 
         let mut disable = Mapping::new();
@@ -119,10 +124,14 @@ impl CoreManager {
         }
 
         // 服务模式
-        let enable = Config::verge().latest().enable_service_mode;
+        let enable = { Config::verge().latest().enable_service_mode };
         let enable = enable.unwrap_or(false);
         *self.use_service_mode.lock() = enable;
 
+        handle::Handle::get_mihomo_read()
+            .await
+            .clear_all_ws_connection()
+            .await?;
         let mut system = System::new();
         system.refresh_all();
         let procs = system.processes_by_name("verge-mihomo".as_ref());
@@ -141,6 +150,7 @@ impl CoreManager {
                     log_path
                 }
                 None => {
+                    tracing::info!("creating service log file");
                     let log_path = verge_log.create_service_log_file()?;
                     tracing::info!("service log file: {log_path}");
                     log_path
@@ -149,11 +159,14 @@ impl CoreManager {
 
             let res = service::run_core_by_service(&config_path, &PathBuf::from(log_path)).await;
             match res {
-                Ok(_) => return Ok(()),
+                Ok(_) => {
+                    handle::Handle::refresh_websocket();
+                    return Ok(());
+                }
                 Err(err) => {
                     // 修改这个值，免得stop出错
                     *self.use_service_mode.lock() = false;
-                    tracing::error!("{err}");
+                    tracing::error!("failed to run core by service, {err}");
                 }
             }
         } else {
@@ -172,11 +185,29 @@ impl CoreManager {
 
         let app_dir = dirs::app_home_dir()?;
         let app_dir = dirs::path_to_str(&app_dir)?;
-        let clash_core = { Config::verge().latest().clash_core.clone() };
-        let clash_core = clash_core.unwrap_or("verge-mihomo".into());
+        let (clash_core, enable_externale_controller) = {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            (
+                verge.clash_core.clone().unwrap_or("verge-mihomo".into()),
+                verge.enable_external_controller.unwrap_or_default(),
+            )
+        };
 
         let config_path = dirs::path_to_str(&config_path)?;
-        let args = vec!["-d", app_dir, "-f", config_path];
+        let mut args = vec!["-d", app_dir, "-f", config_path];
+        tracing::info!(
+            "run core with external controller: {}",
+            enable_externale_controller
+        );
+        if !enable_externale_controller {
+            if cfg!(unix) {
+                args.push("-ext-ctl-unix");
+            } else {
+                args.push("-ext-ctl-pipe");
+            }
+            args.push(SOCKET_PATH);
+        }
 
         let app_handle = handle::Handle::get_app_handle();
         let cmd = app_handle.shell().sidecar(clash_core)?;
@@ -212,6 +243,7 @@ impl CoreManager {
             }
         });
 
+        handle::Handle::refresh_websocket();
         Ok(())
     }
 
@@ -275,6 +307,13 @@ impl CoreManager {
         for proc in procs {
             tracing::debug!("kill all clash process");
             proc.kill();
+        }
+        #[cfg(unix)]
+        {
+            tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+            if std::path::Path::new(SOCKET_PATH).exists() {
+                tokio::fs::remove_file(SOCKET_PATH).await?;
+            }
         }
         Ok(())
     }

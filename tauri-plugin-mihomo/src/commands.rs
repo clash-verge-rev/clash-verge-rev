@@ -3,14 +3,14 @@ use tauri::async_runtime::RwLock;
 use tauri::ipc::Channel;
 use tauri::{command, State};
 
-use crate::mihomo::{Mihomo, WebSocketMessage};
+use crate::mihomo::Mihomo;
 use crate::{models::*, Result};
 
 #[command]
 pub(crate) async fn update_controller(
     state: State<'_, RwLock<Mihomo>>,
-    host: String,
-    port: u32,
+    host: Option<String>,
+    port: Option<u32>,
 ) -> Result<()> {
     let mut mihomo = state.write().await;
     mihomo.update_external_host(host);
@@ -19,7 +19,10 @@ pub(crate) async fn update_controller(
 }
 
 #[command]
-pub(crate) async fn update_secret(state: State<'_, RwLock<Mihomo>>, secret: String) -> Result<()> {
+pub(crate) async fn update_secret(
+    state: State<'_, RwLock<Mihomo>>,
+    secret: Option<String>,
+) -> Result<()> {
     state.write().await.update_secret(secret);
     Ok(())
 }
@@ -261,16 +264,7 @@ pub(crate) async fn upgrade_geo(state: State<'_, RwLock<Mihomo>>) -> Result<()> 
     state.read().await.upgrade_geo().await
 }
 
-// websocket
-#[command]
-pub(crate) async fn ws_connect(
-    state: State<'_, RwLock<Mihomo>>,
-    url: String,
-    on_message: Channel<serde_json::Value>,
-) -> Result<ConnectionId> {
-    state.read().await.connect(url, on_message).await
-}
-
+// mihomo websocket
 #[command]
 pub(crate) async fn ws_traffic(
     state: State<'_, RwLock<Mihomo>>,
@@ -301,17 +295,18 @@ pub(crate) async fn ws_logs(
     level: String,
     on_message: Channel<serde_json::Value>,
 ) -> Result<ConnectionId> {
-    state.read().await.ws_logs(level, on_message).await
+    state.read().await.ws_logs(&level, on_message).await
 }
 
-#[command]
-pub(crate) async fn ws_send(
-    state: State<'_, RwLock<Mihomo>>,
-    id: u32,
-    message: WebSocketMessage,
-) -> Result<()> {
-    state.read().await.send(id, message).await
-}
+// mihomo 的 websocket 应该只读取数据，没必要发送数据
+// #[command]
+// pub(crate) async fn ws_send(
+//     state: State<'_, RwLock<Mihomo>>,
+//     id: u32,
+//     message: WebSocketMessage,
+// ) -> Result<()> {
+//     state.read().await.send(id, message).await
+// }
 
 #[command]
 pub(crate) async fn ws_disconnect(
@@ -320,4 +315,9 @@ pub(crate) async fn ws_disconnect(
     force_timeout: Option<u64>,
 ) -> Result<()> {
     state.read().await.disconnect(id, force_timeout).await
+}
+
+#[command]
+pub(crate) async fn clear_all_ws_connection(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
+    state.read().await.clear_all_ws_connection().await
 }

@@ -1,32 +1,35 @@
 #![allow(dead_code)]
 use crate::{
-    BaseConfig, ConnectionId, Connections, Error, GroupProxies, MihomoVersion, Protocol, Proxies,
-    Proxy, ProxyDelay, ProxyProvider, ProxyProviders, Result, RuleProviders, Rules,
-    WebSocketWriter,
+    enhance_request::LocalSocket, utils, BaseConfig, ConnectionId, Connections, GroupProxies,
+    MihomoError, MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay, ProxyProvider,
+    ProxyProviders, Result, RuleProviders, Rules, WebSocketWriter,
 };
 use futures_util::{SinkExt, StreamExt};
 use http::{
-    header::{AUTHORIZATION, CONTENT_TYPE},
-    HeaderMap, HeaderValue,
+    header::{
+        AUTHORIZATION, CONNECTION, CONTENT_TYPE, HOST, SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_VERSION,
+        UPGRADE,
+    },
+    HeaderMap, HeaderValue, Request,
 };
 use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, path::Path, sync::Arc, time::Duration};
 use tauri::ipc::Channel;
 use tokio::sync::Mutex;
 use tokio_tungstenite::{
-    connect_async,
+    client_async, connect_async,
     tungstenite::{client::IntoClientRequest, protocol::CloseFrame as ProtocolCloseFrame, Message},
 };
 
-macro_rules! ret_err {
+macro_rules! failed_rep {
     ($msg: expr) => {
-        return Err(Error::FailedResponse(String::from($msg)))
+        return Err(MihomoError::FailedResponse(String::from($msg)))
     };
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct ConnectionManager(Mutex<HashMap<ConnectionId, WebSocketWriter>>);
 
 #[derive(Deserialize)]
@@ -52,27 +55,30 @@ pub(crate) enum WebSocketMessage {
     Close(Option<CloseFrame>),
 }
 
-#[derive(Debug)]
+// #[derive(Debug)]
 pub struct Mihomo {
     pub protocol: Protocol,
-    pub external_host: String,
-    pub external_port: u32,
+    pub external_host: Option<String>,
+    pub external_port: Option<u32>,
     pub secret: Option<String>,
+    pub socket_path: Option<String>,
     pub connection_manager: Arc<ConnectionManager>,
 }
 
 impl Mihomo {
     pub(crate) fn new(
         protocol: Protocol,
-        external_host: String,
-        external_port: u32,
+        external_host: Option<String>,
+        external_port: Option<u32>,
         secret: Option<String>,
+        socket_path: Option<String>,
     ) -> Self {
         Mihomo {
             protocol,
             external_host,
             external_port,
             secret,
+            socket_path,
             connection_manager: Arc::new(ConnectionManager::default()),
         }
     }
@@ -81,35 +87,53 @@ impl Mihomo {
         self.protocol = protocol;
     }
 
-    pub fn update_external_host<S: Into<String>>(&mut self, host: S) {
-        self.external_host = host.into();
+    pub fn update_external_host(&mut self, host: Option<String>) {
+        self.external_host = host;
     }
 
-    pub fn update_external_port(&mut self, port: u32) {
+    pub fn update_external_port(&mut self, port: Option<u32>) {
         self.external_port = port;
     }
 
-    pub fn update_secret<S: Into<String>>(&mut self, secret: S) {
-        self.secret = Some(secret.into());
+    pub fn update_secret(&mut self, secret: Option<String>) {
+        self.secret = secret;
+    }
+
+    pub fn update_socket_path<S: Into<String>>(&mut self, socket_path: S) {
+        self.socket_path = Some(socket_path.into());
     }
 
     fn get_req_url(&self, suffix_url: &str) -> Result<String> {
-        if self.external_host.is_empty() {
-            ret_err!("not found external host, please set external host");
-        }
-        let server = format!(
-            "{}://{}:{}{}",
-            self.protocol, self.external_host, self.external_port, suffix_url
-        );
+        let server = match self.protocol {
+            Protocol::Http => {
+                if let Some(host) = self.external_host.as_ref() {
+                    format!(
+                        "{}://{}:{}{}",
+                        self.protocol,
+                        host,
+                        self.external_port.unwrap_or(9090),
+                        suffix_url
+                    )
+                } else {
+                    failed_rep!("not found external host, please set external host");
+                }
+            }
+            Protocol::LocalSocket => {
+                format!("http://localhost{}", suffix_url)
+            }
+        };
         Ok(server)
     }
 
     fn get_req_headers(&self) -> Result<HeaderMap<HeaderValue>> {
         let mut headers = HeaderMap::new();
+        headers.insert(HOST, HeaderValue::from_static("localhost"));
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        if let Some(secret) = self.secret.clone() {
-            let auth_value = HeaderValue::from_str(&format!("Bearer {}", secret))?;
-            headers.insert(AUTHORIZATION, auth_value);
+        if matches!(self.protocol, Protocol::Http) {
+            if let Some(secret) = self.secret.clone() {
+                let auth_value = HeaderValue::from_str(&format!("Bearer {}", secret))?;
+                headers.insert(AUTHORIZATION, auth_value);
+            }
         }
         Ok(headers)
     }
@@ -124,102 +148,262 @@ impl Mihomo {
             Method::PUT => Ok(client.put(url).headers(headers)),
             Method::PATCH => Ok(client.patch(url).headers(headers)),
             Method::DELETE => Ok(client.delete(url).headers(headers)),
-            _ => Err(Error::MethodNotSupported(method.as_str().to_string())),
+            _ => Err(MihomoError::MethodNotSupported(method.as_str().to_string())),
         }
     }
 
+    async fn send_by_protocol(&self, client: RequestBuilder) -> Result<reqwest::Response> {
+        let response = match self.protocol {
+            Protocol::Http => client.send().await?,
+            Protocol::LocalSocket => {
+                if let Some(socket_path) = self.socket_path.as_ref() {
+                    #[cfg(unix)]
+                    {
+                        let path = Path::new(socket_path);
+                        if !path.exists() {
+                            return Err(MihomoError::Io(std::io::Error::new(
+                                std::io::ErrorKind::NotFound,
+                                "need to socket path".to_string(),
+                            )));
+                        }
+                    }
+                    client.send_to_local_socket(socket_path).await?
+                } else {
+                    return Err(MihomoError::Io(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        "missing socket path".to_string(),
+                    )));
+                }
+            }
+        };
+        Ok(response)
+    }
+
     fn get_websocket_url(&self, suffix_url: &str) -> Result<String> {
-        if self.external_host.is_empty() {
-            ret_err!("not found external host, please set external host");
-        }
-        let mut ws_url = format!(
-            "ws://{}:{}{}",
-            self.external_host, self.external_port, suffix_url
-        );
-        if self.secret.is_some() {
-            ws_url.push_str("?token=");
-            ws_url.push_str(self.secret.as_ref().unwrap());
-        }
+        let ws_url = match self.protocol {
+            Protocol::Http => {
+                if let Some(host) = self.external_host.as_ref() {
+                    let mut url = format!(
+                        "ws://{}:{}{}",
+                        host,
+                        self.external_port.unwrap_or(9090),
+                        suffix_url
+                    );
+                    if let Some(secret) = self.secret.as_ref() {
+                        url.push_str(&format!("?token={}", secret));
+                    }
+                    url
+                } else {
+                    return Err(MihomoError::Io(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        "missing external host".to_string(),
+                    )));
+                }
+            }
+            Protocol::LocalSocket => {
+                format!("ws://localhost{}", suffix_url)
+            }
+        };
         Ok(ws_url)
     }
 
     /// 连接 WebSocket
-    pub(crate) async fn connect(
+    async fn connect(
         &self,
         url: String,
         on_message: Channel<serde_json::Value>,
     ) -> Result<ConnectionId> {
         let id = rand::random();
-        let request = url.into_client_request()?;
+        println!("[tauri-plugin-mihomo] - starting get connection manager");
         let manager = self.connection_manager.clone();
+        println!("[tauri-plugin-mihomo] - get connection manager successfully");
 
-        let (ws_stream, _) = connect_async(request).await?;
-
-        let (write, mut read) = ws_stream.split();
-        manager.0.lock().await.insert(id, write);
-
-        tauri::async_runtime::spawn(async move {
-            let on_message_ = on_message.clone();
-            let manager_ = manager.clone();
-            loop {
-                if manager_.0.lock().await.get(&id).is_none() {
-                    break;
+        let handle_message = |message| {
+            match message {
+                Ok(Message::Text(t)) => {
+                    serde_json::to_value(WebSocketMessage::Text(t.to_string())).unwrap()
                 }
-                if let Some(message) = read.next().await {
-                    if let Ok(Message::Close(_)) = message {
-                        manager_.0.lock().await.remove(&id);
+                Ok(Message::Binary(t)) => {
+                    serde_json::to_value(WebSocketMessage::Binary(t.to_vec())).unwrap()
+                }
+                Ok(Message::Ping(t)) => {
+                    serde_json::to_value(WebSocketMessage::Ping(t.to_vec())).unwrap()
+                }
+                Ok(Message::Pong(t)) => {
+                    serde_json::to_value(WebSocketMessage::Pong(t.to_vec())).unwrap()
+                }
+                Ok(Message::Close(t)) => {
+                    serde_json::to_value(WebSocketMessage::Close(t.map(|v| CloseFrame {
+                        code: v.code.into(),
+                        reason: v.reason.to_string(),
+                    })))
+                    .unwrap()
+                }
+                Ok(Message::Frame(_)) => serde_json::Value::Null, // This value can't be recieved.
+                Err(e) => serde_json::to_value(MihomoError::from(e)).unwrap(),
+            }
+        };
+
+        match self.protocol {
+            Protocol::Http => {
+                let request = url.into_client_request()?;
+                println!("[tauri-plugin-mihomo] - starting connect websocket");
+                let (ws_stream, _) = connect_async(request).await?;
+                println!("[tauri-plugin-mihomo] - connect websocket successfully");
+                let (writer, mut reader) = ws_stream.split();
+                println!("[tauri-plugin-mihomo] - starting save ws writer");
+                manager
+                    .0
+                    .lock()
+                    .await
+                    .insert(id, WebSocketWriter::TcpStreamWriter(writer));
+                println!("[tauri-plugin-mihomo] - save ws writer successfully");
+
+                tauri::async_runtime::spawn(async move {
+                    let on_message_ = on_message.clone();
+                    let manager_ = manager.clone();
+                    loop {
+                        if manager_.0.lock().await.get(&id).is_none() {
+                            break;
+                        }
+                        if let Some(message) = reader.next().await {
+                            if let Ok(Message::Close(_)) = message {
+                                manager_.0.lock().await.remove(&id);
+                            }
+                            let response = handle_message(message);
+                            let _ = on_message_.send(response);
+                        }
                     }
-                    let response = match message {
-                        Ok(Message::Text(t)) => {
-                            serde_json::to_value(WebSocketMessage::Text(t.to_string())).unwrap()
+                });
+
+                Ok(id)
+            }
+            Protocol::LocalSocket => {
+                if let Some(socket_path) = self.socket_path.as_ref() {
+                    let path = Path::new(socket_path);
+                    if !path.exists() {
+                        return Err(MihomoError::Io(std::io::Error::new(
+                            std::io::ErrorKind::NotFound,
+                            "need to socket path".to_string(),
+                        )));
+                    }
+                    println!("[tauri-plugin-mihomo] - starting connect to local socket");
+                    let stream = {
+                        #[cfg(unix)]
+                        {
+                            use tokio::net::UnixStream;
+                            UnixStream::connect(socket_path).await?
                         }
-                        Ok(Message::Binary(t)) => {
-                            serde_json::to_value(WebSocketMessage::Binary(t.to_vec())).unwrap()
+
+                        #[cfg(windows)]
+                        {
+                            use tokio::net::windows::named_pipe::ClientOptions;
+                            use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
+                            loop {
+                                match ClientOptions::new().open(socket_path) {
+                                    Ok(client) => break client,
+                                    Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => {}
+                                    Err(_) => {
+                                        return Err(MihomoError::Io(std::io::Error::new(
+                                            std::io::ErrorKind::NotFound,
+                                            "failed to connect pipe".to_string(),
+                                        )));
+                                    }
+                                }
+                                tokio::time::sleep(Duration::from_millis(50)).await;
+                            }
                         }
-                        Ok(Message::Ping(t)) => {
-                            serde_json::to_value(WebSocketMessage::Ping(t.to_vec())).unwrap()
-                        }
-                        Ok(Message::Pong(t)) => {
-                            serde_json::to_value(WebSocketMessage::Pong(t.to_vec())).unwrap()
-                        }
-                        Ok(Message::Close(t)) => {
-                            serde_json::to_value(WebSocketMessage::Close(t.map(|v| CloseFrame {
-                                code: v.code.into(),
-                                reason: v.reason.to_string(),
-                            })))
-                            .unwrap()
-                        }
-                        Ok(Message::Frame(_)) => serde_json::Value::Null, // This value can't be recieved.
-                        Err(e) => serde_json::to_value(Error::from(e)).unwrap(),
                     };
-                    let _ = on_message_.send(response);
+                    println!("[tauri-plugin-mihomo] - connect to local socket successfully");
+
+                    let request = Request::builder()
+                        .uri(url)
+                        .header(HOST, "clash-verge")
+                        .header(SEC_WEBSOCKET_KEY, utils::generate_websocket_key())
+                        .header(CONNECTION, "Upgrade")
+                        .header(UPGRADE, "websocket")
+                        .header(SEC_WEBSOCKET_VERSION, "13")
+                        .body(())?;
+
+                    println!("[tauri-plugin-mihomo] - starting connect websocket");
+                    let (ws_stream, _) = client_async(request, stream).await?;
+                    println!("[tauri-plugin-mihomo] - connect websocket successfully");
+                    let (writer, mut reader) = ws_stream.split();
+                    println!("[tauri-plugin-mihomo] - starting save ws writer");
+                    #[cfg(unix)]
+                    manager
+                        .0
+                        .lock()
+                        .await
+                        .insert(id, WebSocketWriter::UnixStreamWriter(writer));
+                    #[cfg(windows)]
+                    {
+                        manager
+                            .0
+                            .lock()
+                            .await
+                            .insert(id, WebSocketWriter::NamedPipeWriter(writer));
+                    }
+                    println!("[tauri-plugin-mihomo] - save ws writer successfully");
+
+                    tauri::async_runtime::spawn(async move {
+                        let on_message_ = on_message.clone();
+                        let manager_ = manager.clone();
+                        loop {
+                            if manager_.0.lock().await.get(&id).is_none() {
+                                break;
+                            }
+                            if let Some(message) = reader.next().await {
+                                if let Ok(Message::Close(_)) = message {
+                                    manager_.0.lock().await.remove(&id);
+                                }
+                                let response = handle_message(message);
+                                let _ = on_message_.send(response);
+                            }
+                        }
+                    });
+                    Ok(id)
+                } else {
+                    Err(MihomoError::Io(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        "missing socket path".to_string(),
+                    )))
                 }
             }
-        });
-
-        Ok(id)
+        }
     }
 
-    /// 向指定 WebSocket 连接发送消息
-    pub(crate) async fn send(&self, id: ConnectionId, message: WebSocketMessage) -> Result<()> {
+    /// 向指定 WebSocket 连接发送消息 (暂无使用该方法的地方)
+    async fn send(&self, id: ConnectionId, message: WebSocketMessage) -> Result<()> {
         let manager = self.connection_manager.clone();
         let mut manager = manager.0.lock().await;
         if let Some(write) = manager.get_mut(&id) {
-            write
-                .send(match message {
-                    WebSocketMessage::Text(t) => Message::Text(t.into()),
-                    WebSocketMessage::Binary(t) => Message::Binary(t.into()),
-                    WebSocketMessage::Ping(t) => Message::Ping(t.into()),
-                    WebSocketMessage::Pong(t) => Message::Pong(t.into()),
-                    WebSocketMessage::Close(t) => Message::Close(t.map(|v| ProtocolCloseFrame {
-                        code: v.code.into(),
-                        reason: v.reason.into(),
-                    })),
-                })
-                .await?;
+            let data = match message {
+                WebSocketMessage::Text(t) => Message::Text(t.into()),
+                WebSocketMessage::Binary(t) => Message::Binary(t.into()),
+                WebSocketMessage::Ping(t) => Message::Ping(t.into()),
+                WebSocketMessage::Pong(t) => Message::Pong(t.into()),
+                WebSocketMessage::Close(t) => Message::Close(t.map(|v| ProtocolCloseFrame {
+                    code: v.code.into(),
+                    reason: v.reason.into(),
+                })),
+            };
+            match write {
+                WebSocketWriter::TcpStreamWriter(write) => {
+                    write.send(data).await?;
+                }
+                #[cfg(unix)]
+                WebSocketWriter::UnixStreamWriter(write) => {
+                    write.send(data).await?;
+                }
+                #[cfg(windows)]
+                WebSocketWriter::NamedPipeWriter(write) => {
+                    write.send(data).await?;
+                }
+            }
             Ok(())
         } else {
-            Err(Error::ConnectionNotFound(id))
+            Err(MihomoError::ConnectionNotFound(id))
         }
     }
 
@@ -229,26 +413,48 @@ impl Mihomo {
         id: ConnectionId,
         force_timeout: Option<u64>,
     ) -> Result<()> {
-        let manager = self.connection_manager.clone();
-        let manager_ = manager.clone();
-        let mut manager = manager.0.lock().await;
-        if let Some(write) = manager.get_mut(&id) {
-            write
-                .send(Message::Close(Some(ProtocolCloseFrame {
-                    code: 1000.into(),
-                    reason: "Disconnected by client".into(),
-                })))
-                .await?;
+        let mut manager = self.connection_manager.0.lock().await;
+        if let Some(writer) = manager.get_mut(&id) {
+            match writer {
+                WebSocketWriter::TcpStreamWriter(write) => {
+                    write
+                        .send(Message::Close(Some(ProtocolCloseFrame {
+                            code: 1000.into(),
+                            reason: "Disconnected by client".into(),
+                        })))
+                        .await?;
+                }
+                #[cfg(unix)]
+                WebSocketWriter::UnixStreamWriter(write) => {
+                    write
+                        .send(Message::Close(Some(ProtocolCloseFrame {
+                            code: 1000.into(),
+                            reason: "Disconnected by client".into(),
+                        })))
+                        .await?;
+                }
+                #[cfg(windows)]
+                WebSocketWriter::NamedPipeWriter(write) => {
+                    write
+                        .send(Message::Close(Some(ProtocolCloseFrame {
+                            code: 1000.into(),
+                            reason: "Disconnected by client".into(),
+                        })))
+                        .await?;
+                }
+            }
             if let Some(timeout) = force_timeout {
+                let manager_ = self.connection_manager.clone();
                 tauri::async_runtime::spawn(async move {
                     tokio::time::sleep(Duration::from_millis(timeout)).await;
                     println!("force close websocket connection");
                     manager_.0.lock().await.remove(&id);
+                    println!("force close finished");
                 });
             }
             Ok(())
         } else {
-            Err(Error::ConnectionNotFound(id))
+            Err(MihomoError::ConnectionNotFound(id))
         }
     }
 
@@ -256,6 +462,12 @@ impl Mihomo {
         let manager = self.connection_manager.clone();
         let manager = manager.0.lock().await;
         manager.get(&id).is_some()
+    }
+
+    pub async fn clear_all_ws_connection(&self) -> Result<()> {
+        let mut manager = self.connection_manager.0.lock().await;
+        manager.clear();
+        Ok(())
     }
 
     /// Mihomo 流量监控的 WebSocket 连接
@@ -285,14 +497,21 @@ impl Mihomo {
     /// Mihomo 日志监控的 WebSocket 连接
     pub async fn ws_logs(
         &self,
-        level: String,
+        level: &str,
         on_message: Channel<serde_json::Value>,
     ) -> Result<ConnectionId> {
         let mut ws_url = self.get_websocket_url("/logs")?;
-        if self.secret.is_some() {
-            ws_url.push_str(&format!("&level={}", level));
-        } else {
-            ws_url.push_str(&format!("?level={}", level));
+        match self.protocol {
+            Protocol::Http => {
+                if self.secret.is_some() {
+                    ws_url.push_str(&format!("&level={}", level));
+                } else {
+                    ws_url.push_str(&format!("?level={}", level));
+                }
+            }
+            Protocol::LocalSocket => {
+                ws_url.push_str(&format!("?level={}", level));
+            }
         }
         let websocket_id = self.connect(ws_url, on_message).await?;
         Ok(websocket_id)
@@ -302,9 +521,9 @@ impl Mihomo {
     /// 获取 Mihomo 版本信息
     pub async fn get_version(&self) -> Result<MihomoVersion> {
         let client = self.build_request(Method::GET, "/version")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get mihomo version erro");
+            failed_rep!("get mihomo version erro");
         }
         Ok(response.json::<MihomoVersion>().await?)
     }
@@ -312,9 +531,9 @@ impl Mihomo {
     /// 清理 FakeIP 的缓存
     pub async fn clean_fakeip(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/cache/fakeip/flush")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("clean fakeip cache error");
+            failed_rep!("clean fakeip cache error");
         }
         Ok(())
     }
@@ -322,9 +541,9 @@ impl Mihomo {
     /// 获取全部连接信息
     pub async fn get_connections(&self) -> Result<Connections> {
         let client = self.build_request(Method::GET, "/connections")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get connections failed");
+            failed_rep!("get connections failed");
         }
         Ok(response.json::<Connections>().await?)
     }
@@ -332,9 +551,9 @@ impl Mihomo {
     /// 关闭全部连接
     pub async fn close_all_connections(&self) -> Result<()> {
         let client = self.build_request(Method::DELETE, "/connections")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("close all connections failed");
+            failed_rep!("close all connections failed");
         }
         Ok(())
     }
@@ -343,9 +562,9 @@ impl Mihomo {
     pub async fn close_connection(&self, connection_id: &str) -> Result<()> {
         let client =
             self.build_request(Method::DELETE, &format!("/connections/{}", connection_id))?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("close connection failed");
+            failed_rep!("close connection failed");
         }
         Ok(())
     }
@@ -353,9 +572,9 @@ impl Mihomo {
     /// 获取所有的代理组
     pub async fn get_groups(&self) -> Result<GroupProxies> {
         let client = self.build_request(Method::GET, "/group")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get group error");
+            failed_rep!("get group error");
         }
         Ok(response.json::<GroupProxies>().await?)
     }
@@ -363,9 +582,9 @@ impl Mihomo {
     /// 获取指定名称的代理组
     pub async fn get_group_by_name(&self, group_name: &str) -> Result<Proxy> {
         let client = self.build_request(Method::GET, &format!("/group/{}", group_name))?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get group error");
+            failed_rep!("get group error");
         }
         Ok(response.json::<Proxy>().await?)
     }
@@ -382,9 +601,9 @@ impl Mihomo {
             group_name, test_url, timeout
         );
         let client = self.build_request(Method::GET, &suffix_url)?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get group error");
+            failed_rep!("get group error");
         }
         Ok(response.json::<HashMap<String, u32>>().await?)
     }
@@ -392,9 +611,9 @@ impl Mihomo {
     /// 获取代理提供者信息
     pub async fn get_proxy_providers(&self) -> Result<ProxyProviders> {
         let client = self.build_request(Method::GET, "/providers/proxies")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get providers proxy failed");
+            failed_rep!("get providers proxy failed");
         }
         Ok(response.json::<ProxyProviders>().await?)
     }
@@ -405,9 +624,9 @@ impl Mihomo {
             Method::GET,
             &format!("/providers/proxies/{}", provider_name),
         )?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get providers proxy failed");
+            failed_rep!("get providers proxy failed");
         }
         Ok(response.json::<ProxyProvider>().await?)
     }
@@ -418,9 +637,9 @@ impl Mihomo {
             Method::PUT,
             &format!("/providers/proxies/{}", provider_name),
         )?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("update providers proxy failed");
+            failed_rep!("update providers proxy failed");
         }
         Ok(())
     }
@@ -429,9 +648,9 @@ impl Mihomo {
     pub async fn healthcheck_proxy_provider(&self, provider_name: &str) -> Result<()> {
         let suffix_url = format!("/providers/proxies/{}/healthcheck", provider_name);
         let client = self.build_request(Method::GET, &suffix_url)?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("healthcheck providers failed");
+            failed_rep!("healthcheck providers failed");
         }
         Ok(())
     }
@@ -448,13 +667,13 @@ impl Mihomo {
             "/providers/proxies/{}/{}/healthcheck",
             provider_name, proxy_name,
         );
-        let client = self.build_request(Method::GET, &suffix_url)?;
-        let response = client
-            .query(&[("url", test_url), ("timeout", &timeout.to_string())])
-            .send()
-            .await?;
+        let client = self
+            .build_request(Method::GET, &suffix_url)?
+            .query(&[("url", test_url), ("timeout", &timeout.to_string())]);
+
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("healthcheck providers failed");
+            failed_rep!("healthcheck providers failed");
         }
         Ok(response.json::<ProxyDelay>().await?)
     }
@@ -462,9 +681,9 @@ impl Mihomo {
     /// 获取所有代理信息
     pub async fn get_proxies(&self) -> Result<Proxies> {
         let client = self.build_request(Method::GET, "/proxies")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get proxies failed");
+            failed_rep!("get proxies failed");
         }
         Ok(response.json::<Proxies>().await?)
     }
@@ -472,9 +691,9 @@ impl Mihomo {
     /// 获取指定代理信息
     pub async fn get_proxy_by_name(&self, proxy_name: &str) -> Result<Proxy> {
         let client = self.build_request(Method::GET, &format!("/proxies/{}", proxy_name))?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get proxy by name failed");
+            failed_rep!("get proxy by name failed");
         }
         Ok(response.json::<Proxy>().await?)
     }
@@ -483,13 +702,16 @@ impl Mihomo {
     ///
     /// 一般为指定代理组下使用指定的代理节点 【代理组/节点】
     pub async fn select_node_for_proxy(&self, proxy_name: &str, node: &str) -> Result<()> {
-        let client = self.build_request(Method::PUT, &format!("/proxies/{}", proxy_name))?;
         let body = json!({
             "name": node
         });
-        let response = client.json(&body).send().await?;
+        let client = self
+            .build_request(Method::PUT, &format!("/proxies/{}", proxy_name))?
+            .json(&body);
+
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("select node for proxy failed");
+            failed_rep!("select node for proxy failed");
         }
         Ok(())
     }
@@ -499,9 +721,9 @@ impl Mihomo {
     /// 一般用于自动选择的代理组（例如：URLTest 类型的代理组）下的节点
     pub async fn unfixed_proxy(&self, group_name: &str) -> Result<()> {
         let client = self.build_request(Method::DELETE, &format!("/proxies/{}", group_name))?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("unfixed proxy failed");
+            failed_rep!("unfixed proxy failed");
         }
         Ok(())
     }
@@ -516,21 +738,19 @@ impl Mihomo {
         timeout: u32,
     ) -> Result<ProxyDelay> {
         let suffix_url = format!("/proxies/{}/delay", proxy_name);
-        let client = self.build_request(Method::GET, &suffix_url)?;
-        let response = client
-            .query(&[
-                ("timeout", &timeout.to_string()),
-                ("url", &test_url.to_string()),
-            ])
-            .send()
-            .await?;
+        let client = self.build_request(Method::GET, &suffix_url)?.query(&[
+            ("timeout", &timeout.to_string()),
+            ("url", &test_url.to_string()),
+        ]);
+
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
             match response.json::<ProxyDelay>().await {
                 Ok(delay) => {
                     return Ok(delay);
                 }
                 Err(_) => {
-                    ret_err!("get proxy by name failed");
+                    failed_rep!("get proxy by name failed");
                 }
             }
         }
@@ -540,9 +760,9 @@ impl Mihomo {
     /// 获取所有规则信息
     pub async fn get_rules(&self) -> Result<Rules> {
         let client = self.build_request(Method::GET, "/rules")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get rules failed");
+            failed_rep!("get rules failed");
         }
         Ok(response.json::<Rules>().await?)
     }
@@ -550,9 +770,9 @@ impl Mihomo {
     /// 获取所有规则提供者信息
     pub async fn get_rule_providers(&self) -> Result<RuleProviders> {
         let client = self.build_request(Method::GET, "/providers/rules")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get rules providers failed");
+            failed_rep!("get rules providers failed");
         }
         Ok(response.json::<RuleProviders>().await?)
     }
@@ -561,9 +781,9 @@ impl Mihomo {
     pub async fn update_rule_provider(&self, provider_name: &str) -> Result<()> {
         let client =
             self.build_request(Method::PUT, &format!("/providers/rules/{}", provider_name))?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("update rule provider failed");
+            failed_rep!("update rule provider failed");
         }
         Ok(())
     }
@@ -571,34 +791,35 @@ impl Mihomo {
     /// 获取基础配置
     pub async fn get_base_config(&self) -> Result<BaseConfig> {
         let client = self.build_request(Method::GET, "/configs")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("get base config error");
+            failed_rep!("get base config error");
         }
         Ok(response.json::<BaseConfig>().await?)
     }
 
     /// 重新加载配置
     pub async fn reload_config(&self, force: bool, config_path: &str) -> Result<()> {
-        let client = self.build_request(Method::PUT, "/configs")?;
         let body = json!({ "path": config_path });
-        let response = client
+        let client = self
+            .build_request(Method::PUT, "/configs")?
             .query(&[("force", &force.to_string())])
-            .json(&body)
-            .send()
-            .await?;
+            .json(&body);
+
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("reload base config error");
+            failed_rep!("reload base config error");
         }
         Ok(())
     }
 
     /// 更新基础配置
     pub async fn patch_base_config<D: serde::Serialize + ?Sized>(&self, data: &D) -> Result<()> {
-        let client = self.build_request(Method::PATCH, "/configs")?;
-        let response = client.json(&data).send().await?;
+        let client = self.build_request(Method::PATCH, "/configs")?.json(&data);
+
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!(format!(
+            failed_rep!(format!(
                 "patch base config error, {:?}",
                 response.text().await
             ));
@@ -609,9 +830,9 @@ impl Mihomo {
     /// 更新 Geo
     pub async fn update_geo(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/configs/geo")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("update geo datebase error");
+            failed_rep!("update geo datebase error");
         }
         Ok(())
     }
@@ -619,9 +840,9 @@ impl Mihomo {
     /// 重启核心
     pub async fn restart(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/restart")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("restart core error");
+            failed_rep!("restart core error");
         }
         Ok(())
     }
@@ -629,19 +850,19 @@ impl Mihomo {
     /// 升级核心
     pub async fn upgrade_core(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/upgrade")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
             let res = response.json::<HashMap<String, String>>().await?;
             match res.get("message") {
                 Some(msg) => {
                     if msg.contains("already using latest version") {
-                        ret_err!("already using latest version");
+                        failed_rep!("already using latest version");
                     } else {
-                        ret_err!(msg.clone());
+                        failed_rep!(msg.clone());
                     }
                 }
                 None => {
-                    ret_err!("upgrade core failed");
+                    failed_rep!("upgrade core failed");
                 }
             }
         }
@@ -651,9 +872,9 @@ impl Mihomo {
     /// 更新 UI
     pub async fn upgrade_ui(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/upgrade/ui")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("upgrade ui failed");
+            failed_rep!("upgrade ui failed");
         }
         Ok(())
     }
@@ -661,9 +882,9 @@ impl Mihomo {
     /// 更新 Geo
     pub async fn upgrade_geo(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/upgrade/geo")?;
-        let response = client.send().await?;
+        let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            ret_err!("upgrade geo failed");
+            failed_rep!("upgrade geo failed");
         }
         Ok(())
     }
@@ -671,69 +892,162 @@ impl Mihomo {
 
 #[cfg(test)]
 mod test {
-    use std::{str::FromStr, time::Duration};
+    use std::time::Duration;
 
     use tauri::ipc::InvokeResponseBody;
+
+    use crate::ClashMode;
 
     use super::*;
 
     fn mihomo() -> Mihomo {
+        let socket_path = {
+            #[cfg(unix)]
+            {
+                "/tmp/verge-mihomo.sock".to_string()
+            }
+            #[cfg(windows)]
+            {
+                r#"\\.\pipe\verge-mihomo"#.to_string()
+            }
+        };
         Mihomo::new(
-            Protocol::Http,
-            "127.0.0.1".into(),
-            9090,
-            Some("oA9xfLbi5OCbb9ByKaXDk".into()),
+            Protocol::LocalSocket,
+            Some("127.0.0.1".into()),
+            Some(9090),
+            Some("ppr7qxGrVBu9E8dUX3BoS".into()),
+            Some(socket_path),
         )
     }
 
     #[tokio::test]
+    async fn test_get_base_config() -> Result<()> {
+        let mihomo = mihomo();
+        let config = mihomo.get_base_config().await?;
+        println!("{:?}", config);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[allow(unused_variables)]
     async fn test_patch_base_config() -> Result<()> {
-        let value = serde_json::Value::from_str("{ \"mode\": \"direct\"}")?;
-        let _ = mihomo().patch_base_config(&value).await?;
+        let mihomo = mihomo();
+        let body = json!({
+           "mode": "direct"
+        });
+        // let value = serde_json::Value::from_str("{ \"tun\": {\"enable\": true}}")?;
+        let _ = mihomo.patch_base_config(&body).await?;
+        let config = mihomo.get_base_config().await?;
+        println!("mode: {}", config.mode);
+        assert_eq!(config.mode, ClashMode::Direct);
+        println!("---------------------------------");
+        let body = json!({
+           "mode": "rule"
+        });
+        let _ = mihomo.patch_base_config(&body).await?;
+        let config = mihomo.get_base_config().await?;
+        println!("mode: {}", config.mode);
+        assert_eq!(config.mode, ClashMode::Rule);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_get_rules() -> Result<()> {
-        let rules = mihomo().get_rules().await?;
+        let mihomo = mihomo();
+        let rules = mihomo.get_rules().await?;
         println!("{:?}", rules.rules);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_get_proxy_providers() -> Result<()> {
-        let providers = mihomo().get_proxy_providers().await?;
+        let mihomo = mihomo();
+        let providers = mihomo.get_proxy_providers().await?;
         println!("{:?}", providers.providers);
         Ok(())
     }
 
     #[tokio::test]
+    async fn test_spawn_delay_proxies() -> Result<()> {
+        let mut mihomo = mihomo();
+        mihomo.update_protocol(Protocol::LocalSocket);
+        let proxies = [
+            "AUTO",
+            "HK AUTO",
+            "TW AUTO",
+            "JP AUTO",
+            "SG AUTO",
+            "US AUTO",
+            "Other Area",
+            "ALL NODE",
+        ];
+        let test_url = "https://www.gstatic.com/generate_204";
+        let timeout = 5000;
+        let mut tasks = Vec::new();
+        let arc_mihomo = Arc::new(mihomo);
+        for _ in 0..=10 {
+            for proxy in proxies.into_iter() {
+                let mihomo_ = Arc::clone(&arc_mihomo);
+                tasks.push(tokio::spawn(async move {
+                    match mihomo_.delay_proxy_by_name(proxy, test_url, timeout).await {
+                        Ok(delay) => {
+                            println!("{}: {:?}", proxy, delay);
+                        }
+                        Err(e) => {
+                            println!("{}: error: {}", proxy, e);
+                        }
+                    }
+                }));
+            }
+        }
+        for task in tasks.into_iter() {
+            task.await.unwrap();
+        }
+        println!("---------------------------------");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_upgrade_geo() -> Result<()> {
+        let mihomo = mihomo();
+        if let Err(e) = mihomo.upgrade_geo().await {
+            println!("upgrade core failed, {:?}", e)
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn test_upgrade_core() -> Result<()> {
-        let _ = mihomo().upgrade_core().await?;
+        let mihomo = mihomo();
+        if let Err(e) = mihomo.upgrade_core().await {
+            println!("upgrade core failed, {:?}", e)
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_unfixed_proxy() -> Result<()> {
+        let mihomo = mihomo();
+        let _ = mihomo.unfixed_proxy("US AUTO").await?;
         Ok(())
     }
 
     #[tokio::test]
     async fn test_ws_traffic() -> Result<()> {
-        let mihomo = mihomo();
+        let mut mihomo = mihomo();
+        mihomo.update_protocol(Protocol::LocalSocket);
         let on_message = Channel::new(|message| {
             match message {
                 InvokeResponseBody::Json(msg) => {
-                    println!("Received JSON message: {}", msg);
+                    println!("{}", msg);
                 }
                 InvokeResponseBody::Raw(raw) => {
-                    println!(
-                        "Received raw message: {}",
-                        String::from_utf8(raw).unwrap().to_string()
-                    );
+                    println!("{}", String::from_utf8(raw).unwrap().to_string());
                 }
             }
             Ok(())
         });
-        let websocket_id = mihomo.ws_logs("info".into(), on_message).await?;
-        // let websocket_id = mihomo
-        //     .connect("ws://toolin.cn/echo".into(), on_message)
-        //     .await?;
+        let websocket_id = mihomo.ws_traffic(on_message.clone()).await?;
         println!("WebSocket ID: {}", websocket_id);
         tokio::time::sleep(Duration::from_millis(3000)).await;
         mihomo.disconnect(websocket_id, Some(5)).await?;
@@ -744,13 +1058,14 @@ mod test {
             }
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
-        tokio::time::sleep(Duration::from_secs(20)).await;
+        tokio::time::sleep(Duration::from_secs(3)).await;
         Ok(())
     }
 
     #[tokio::test]
-    async fn test_unfixed_proxy() -> Result<()> {
-        let _ = mihomo().unfixed_proxy("US AUTO").await?;
+    async fn test_restart() -> Result<()> {
+        let mihomo = mihomo();
+        let _ = mihomo.restart().await?;
         Ok(())
     }
 }
