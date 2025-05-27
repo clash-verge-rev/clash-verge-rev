@@ -127,8 +127,8 @@ impl Mihomo {
 
     fn get_req_headers(&self) -> Result<HeaderMap<HeaderValue>> {
         let mut headers = HeaderMap::new();
-        headers.insert(HOST, HeaderValue::from_static("localhost"));
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        headers.insert(HOST, HeaderValue::from_str("localhost")?);
+        headers.insert(CONTENT_TYPE, HeaderValue::from_str("application/json")?);
         if matches!(self.protocol, Protocol::Http) {
             if let Some(secret) = self.secret.clone() {
                 let auth_value = HeaderValue::from_str(&format!("Bearer {}", secret))?;
@@ -214,9 +214,9 @@ impl Mihomo {
         on_message: Channel<serde_json::Value>,
     ) -> Result<ConnectionId> {
         let id = rand::random();
-        println!("[tauri-plugin-mihomo] - starting get connection manager");
+        // println!("[tauri-plugin-mihomo] - starting get connection manager");
         let manager = self.connection_manager.clone();
-        println!("[tauri-plugin-mihomo] - get connection manager successfully");
+        // println!("[tauri-plugin-mihomo] - get connection manager successfully");
 
         let handle_message = |message| {
             match message {
@@ -247,17 +247,17 @@ impl Mihomo {
         match self.protocol {
             Protocol::Http => {
                 let request = url.into_client_request()?;
-                println!("[tauri-plugin-mihomo] - starting connect websocket");
+                // println!("[tauri-plugin-mihomo] - starting connect websocket");
                 let (ws_stream, _) = connect_async(request).await?;
-                println!("[tauri-plugin-mihomo] - connect websocket successfully");
+                // println!("[tauri-plugin-mihomo] - connect websocket successfully");
                 let (writer, mut reader) = ws_stream.split();
-                println!("[tauri-plugin-mihomo] - starting save ws writer");
+                // println!("[tauri-plugin-mihomo] - starting save ws writer");
                 manager
                     .0
                     .lock()
                     .await
                     .insert(id, WebSocketWriter::TcpStreamWriter(writer));
-                println!("[tauri-plugin-mihomo] - save ws writer successfully");
+                // println!("[tauri-plugin-mihomo] - save ws writer successfully");
 
                 tauri::async_runtime::spawn(async move {
                     let on_message_ = on_message.clone();
@@ -287,7 +287,7 @@ impl Mihomo {
                             "need to socket path".to_string(),
                         )));
                     }
-                    println!("[tauri-plugin-mihomo] - starting connect to local socket");
+                    // println!("[tauri-plugin-mihomo] - starting connect to local socket");
                     let stream = {
                         #[cfg(unix)]
                         {
@@ -314,7 +314,7 @@ impl Mihomo {
                             }
                         }
                     };
-                    println!("[tauri-plugin-mihomo] - connect to local socket successfully");
+                    // println!("[tauri-plugin-mihomo] - connect to local socket successfully");
 
                     let request = Request::builder()
                         .uri(url)
@@ -325,11 +325,11 @@ impl Mihomo {
                         .header(SEC_WEBSOCKET_VERSION, "13")
                         .body(())?;
 
-                    println!("[tauri-plugin-mihomo] - starting connect websocket");
+                    // println!("[tauri-plugin-mihomo] - starting connect websocket");
                     let (ws_stream, _) = client_async(request, stream).await?;
-                    println!("[tauri-plugin-mihomo] - connect websocket successfully");
+                    // println!("[tauri-plugin-mihomo] - connect websocket successfully");
                     let (writer, mut reader) = ws_stream.split();
-                    println!("[tauri-plugin-mihomo] - starting save ws writer");
+                    // println!("[tauri-plugin-mihomo] - starting save ws writer");
                     #[cfg(unix)]
                     manager
                         .0
@@ -344,7 +344,7 @@ impl Mihomo {
                             .await
                             .insert(id, WebSocketWriter::NamedPipeWriter(writer));
                     }
-                    println!("[tauri-plugin-mihomo] - save ws writer successfully");
+                    // println!("[tauri-plugin-mihomo] - save ws writer successfully");
 
                     tauri::async_runtime::spawn(async move {
                         let on_message_ = on_message.clone();
@@ -447,9 +447,9 @@ impl Mihomo {
                 let manager_ = self.connection_manager.clone();
                 tauri::async_runtime::spawn(async move {
                     tokio::time::sleep(Duration::from_millis(timeout)).await;
-                    println!("force close websocket connection");
+                    // println!("force close websocket connection");
                     manager_.0.lock().await.remove(&id);
-                    println!("force close finished");
+                    // println!("force close finished");
                 });
             }
             Ok(())
