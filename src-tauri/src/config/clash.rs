@@ -20,6 +20,12 @@ impl IClashTemp {
                         map.insert(key.clone(), template.0.get(key).unwrap().clone());
                     }
                 });
+                // 确保 secret 字段存在且不为空
+                if let Some(Value::String(s)) = map.get_mut("secret") {
+                    if s.is_empty() {
+                        *s = "set-your-secret".to_string();
+                    }
+                }
                 Self(Self::guard(map))
             }
             Err(err) => {
@@ -64,7 +70,7 @@ impl IClashTemp {
             ]
             .into(),
         );
-        map.insert("secret".into(), "".into());
+        map.insert("secret".into(), "set-your-secret".into());
         map.insert("tun".into(), tun.into());
         map.insert("external-controller-cors".into(), cors_map.into());
         map.insert("unified-delay".into(), true.into());

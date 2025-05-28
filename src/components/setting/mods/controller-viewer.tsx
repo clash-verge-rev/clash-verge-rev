@@ -42,7 +42,12 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   // 保存配置
   const onSave = useLockFn(async () => {
     if (!controller.trim()) {
-      showNotice('info', t("Controller address cannot be empty"), 3000);
+      showNotice('error', t("Controller address cannot be empty"), 3000);
+      return;
+    }
+
+    if (!secret.trim()) {
+      showNotice('error', t("Secret cannot be empty"), 3000);
       return;
     }
 
@@ -95,14 +100,13 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               size="small"
               sx={{
                 width: 175,
-                opacity: 0.7,
-                pointerEvents: 'none'
+                opacity: 1,
+                pointerEvents: 'auto'
               }}
               value={controller}
               placeholder="Required"
-              onChange={() => {}}
-              disabled={true}
-              inputProps={{ readOnly: true }}
+              onChange={e => setController(e.target.value)}
+              disabled={isSaving}
             />
             <Tooltip title={t("Copy to clipboard")}>
               <IconButton
@@ -124,14 +128,13 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               size="small"
               sx={{
                 width: 175,
-                opacity: 0.7,
-                pointerEvents: 'none'
+                opacity: 1,
+                pointerEvents: 'auto'
               }}
               value={secret}
               placeholder={t("Recommended")}
-              onChange={() => {}}
-              disabled={true}
-              inputProps={{ readOnly: true }}
+              onChange={e => setSecret(e.target.value)}
+              disabled={isSaving}
             />
             <Tooltip title={t("Copy to clipboard")}>
               <IconButton
