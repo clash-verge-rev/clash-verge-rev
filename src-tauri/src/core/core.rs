@@ -142,7 +142,7 @@ impl CoreManager {
 
         if enable {
             // 服务模式启动失败就直接运行 sidecar
-            // tracing::debug!( "try to run core in service mode");
+            tracing::debug!("try to run core in service mode");
             let verge_log = VergeLog::global();
             let log_path = match verge_log.get_service_log_file() {
                 Some(log_path) => {
@@ -328,13 +328,8 @@ impl CoreManager {
             bail!("invalid clash core name \"{clash_core}\"");
         }
 
-        tracing::debug!("change core to `{clash_core}`");
+        tracing::info!("change core to `{clash_core}`");
         Config::verge().draft().clash_core = Some(clash_core);
-        // 更新订阅
-        Config::generate()?;
-        self.check_config(ConfigType::RuntimeCheck).await?;
-        // 清掉旧日志
-        Logger::global().clear_log();
 
         match self.run_core().await {
             Ok(_) => {

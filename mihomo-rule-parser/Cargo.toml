@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["oomeow"]
 description = "Mihomo Rule Parser"
-license = "MIT"
+license = "GPL-3.0-only"
 
 [lib]
 name = "mihomo_rule_parser"
