@@ -33,8 +33,7 @@ impl PlatformSpecification {
         let system_arch = System::cpu_arch();
 
         let handler = handle::Handle::global().app_handle().unwrap();
-        let config = handler.config();
-        let verge_version = config.version.clone().unwrap_or("Null".into());
+        let verge_version = handler.package_info().version.to_string();
 
         // 使用默认值避免在同步上下文中执行异步操作
         let running_mode = "NotRunning".to_string();
