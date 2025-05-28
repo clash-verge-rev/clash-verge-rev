@@ -1,6 +1,6 @@
 use super::{Draft, IClashConfig, IProfiles, IRuntime, IVerge};
 use crate::{
-    core::service,
+    core::{service, sysopt::get_default_bypass},
     enhance, feat,
     utils::{dirs, help},
 };
@@ -126,9 +126,25 @@ impl Config {
         // generate runtime config
         Self::init_config()?;
 
-        let enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);
+        // resolve sysproxy bypass value
+        let mut sysproxy_bypass = verge_config
+            .latest()
+            .system_proxy_bypass
+            .clone()
+            .unwrap_or(get_default_bypass());
+        if cfg!(windows) {
+            sysproxy_bypass = sysproxy_bypass.replace(",", ";");
+        } else {
+            sysproxy_bypass = sysproxy_bypass.replace(";", ",");
+        }
+        feat::patch_verge(IVerge {
+            system_proxy_bypass: Some(sysproxy_bypass),
+            ..IVerge::default()
+        })
+        .await?;
 
-        // resolve auto launch file
+        // resolve auto launch
+        let enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);
         if old_enable_auto_launch != enable_auto_launch {
             feat::patch_verge(IVerge {
                 enable_auto_launch: Some(enable_auto_launch),
@@ -137,7 +153,7 @@ impl Config {
             .await?;
         }
 
-        // Check if Clash Verge Service is installed and patch configuration values ​​if not
+        // resolve service mode
         let enable_service_mode = verge_config.latest().enable_service_mode.unwrap_or(false);
         if enable_service_mode && service::check_service().await.is_err() {
             feat::patch_verge(IVerge {
