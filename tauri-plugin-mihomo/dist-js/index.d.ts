@@ -20,7 +20,7 @@ export interface Connection {
 }
 export interface ConnectionMetaData {
   network: string;
-  connectionType: string;
+  type: string;
   sourceIp: string;
   destinationIp: string;
   sourceGeoIp: string | null;
@@ -61,7 +61,7 @@ export interface Proxy {
   now: string;
   testUrl: string;
   tfo: boolean;
-  type: string;
+  type: ProxyType;
   udp: boolean;
   xudp: boolean;
 }
@@ -72,6 +72,34 @@ export interface Extra {
 export interface DelayHistory {
   time: string;
   delay: number;
+}
+export declare enum ProxyType {
+  Direct = "Direct",
+  Reject = "Reject",
+  RejectDrop = "RejectDrop",
+  Compatible = "Compatible",
+  Pass = "Pass",
+  Dns = "Dns",
+  Shadowsocks = "Shadowsocks",
+  ShadowsocksR = "ShadowsocksR",
+  Snell = "Snell",
+  Socks5 = "Socks5",
+  Http = "Http",
+  Vmess = "Vmess",
+  Vless = "Vless",
+  Trojan = "Trojan",
+  Hysteria = "Hysteria",
+  Hysteria2 = "Hysteria2",
+  WireGuard = "WireGuard",
+  Tuic = "Tuic",
+  Ssh = "Ssh",
+  Mieru = "Mieru",
+  AnyTLS = "AnyTLS",
+  Relay = "Relay",
+  Selector = "Selector",
+  Fallback = "Fallback",
+  URLTest = "URLTest",
+  LoadBalance = "LoadBalance",
 }
 export interface ProxyProviders {
   providers: Record<string, ProxyProvider>;
@@ -104,10 +132,44 @@ export interface Rules {
   rules: Rule[];
 }
 export interface Rule {
-  type: string;
+  type: RuleType;
   payload: string;
   proxy: string;
   size: number;
+}
+export declare enum RuleType {
+  Domain = "Domain",
+  DomainSuffix = "DomainSuffix",
+  DomainKeyword = "DomainKeyword",
+  DomainRegex = "DomainRegex",
+  GeoSite = "GeoSite",
+  GeoIP = "GeoIP",
+  SrcGeoIP = "SrcGeoIP",
+  IPASN = "IPASN",
+  SrcIPASN = "SrcIPASN",
+  IPCIDR = "IPCIDR",
+  SrcIPCIDR = "SrcIPCIDR",
+  IPSuffix = "IPSuffix",
+  SrcIPSuffix = "SrcIPSuffix",
+  SrcPort = "SrcPort",
+  DstPort = "DstPort",
+  InPort = "InPort",
+  InUser = "InUser",
+  InName = "InName",
+  InType = "InType",
+  ProcessName = "ProcessName",
+  ProcessPath = "ProcessPath",
+  ProcessNameRegex = "ProcessNameRegex",
+  ProcessPathRegex = "ProcessPathRegex",
+  Match = "Match",
+  RuleSet = "RuleSet",
+  Network = "Network",
+  DSCP = "DSCP",
+  Uid = "Uid",
+  SubRules = "SubRules",
+  AND = "AND",
+  OR = "OR",
+  NOT = "NOT",
 }
 export interface RuleProviders {
   providers: Record<string, RuleProvider>;
@@ -173,6 +235,18 @@ export declare enum ClashMode {
   Rule = "rule",
   Global = "global",
   Direct = "direct",
+}
+export interface Traffic {
+  up: number;
+  down: number;
+}
+export interface Memory {
+  inuse: number;
+  oslimit: number;
+}
+export interface Log {
+  type: string;
+  payload: string;
 }
 /**
  * 更新控制器地址

@@ -158,9 +158,39 @@ pub struct Proxy {
     pub test_url: Option<String>,
     pub tfo: bool,
     #[serde(rename = "type")]
-    pub group_type: String,
+    pub proxy_type: ProxyType,
     pub udp: bool,
     pub xudp: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ProxyType {
+    Direct,
+    Reject,
+    RejectDrop,
+    Compatible,
+    Pass,
+    Dns,
+    Shadowsocks,
+    ShadowsocksR,
+    Snell,
+    Socks5,
+    Http,
+    Vmess,
+    Vless,
+    Trojan,
+    Hysteria,
+    Hysteria2,
+    WireGuard,
+    Tuic,
+    Ssh,
+    Mieru,
+    AnyTLS,
+    Relay,
+    Selector,
+    Fallback,
+    URLTest,
+    LoadBalance,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -174,10 +204,6 @@ pub struct DelayHistory {
     pub time: String,
     pub delay: u16,
 }
-
-// pub enum GroupType {
-//     URLTest("URLTest"),
-// }
 
 /// proxies
 #[derive(Debug, Serialize, Deserialize)]
@@ -205,7 +231,7 @@ pub struct ProxyProvider {
     pub proxies: Vec<Proxy>,
     pub test_url: String,
     #[serde(rename = "type")]
-    pub proxy_type: String,
+    pub proxy_provider_type: String,
     pub vehicle_type: String,
     pub subscription_info: Option<SubScriptionInfo>,
     pub updated_at: Option<String>,
@@ -229,10 +255,46 @@ pub struct Rules {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Rule {
     #[serde(rename = "type")]
-    pub rule_type: String,
+    pub rule_type: RuleType,
     pub payload: String,
     pub proxy: String,
     pub size: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum RuleType {
+    Domain,
+    DomainSuffix,
+    DomainKeyword,
+    DomainRegex,
+    GeoSite,
+    GeoIP,
+    SrcGeoIP,
+    IPASN,
+    SrcIPASN,
+    IPCIDR,
+    SrcIPCIDR,
+    IPSuffix,
+    SrcIPSuffix,
+    SrcPort,
+    DstPort,
+    InPort,
+    InUser,
+    InName,
+    InType,
+    ProcessName,
+    ProcessPath,
+    ProcessNameRegex,
+    ProcessPathRegex,
+    Match,
+    RuleSet,
+    Network,
+    DSCP,
+    Uid,
+    SubRules,
+    AND,
+    OR,
+    NOT,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -313,6 +375,25 @@ pub struct ConnectionMetaData {
     pub sniff_host: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Traffic {
+    pub up: u64,
+    pub down: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Memory {
+    pub inuse: u32,
+    pub oslimit: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Log {
+    #[serde(rename = "type")]
+    pub log_type: String,
+    pub payload: String,
+}
+
 pub(crate) type ConnectionId = u32;
 pub(crate) enum WebSocketWriter {
     TcpStreamWriter(SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>),
@@ -320,10 +401,4 @@ pub(crate) enum WebSocketWriter {
     UnixStreamWriter(SplitSink<WebSocketStream<UnixStream>, Message>),
     #[cfg(windows)]
     NamedPipeWriter(SplitSink<WebSocketStream<NamedPipeClient>, Message>),
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub(crate) struct Log {
-    r#type: String,
-    payload: String,
 }

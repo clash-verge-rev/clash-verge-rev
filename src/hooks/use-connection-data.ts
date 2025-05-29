@@ -3,7 +3,7 @@ import { useLocalStorage } from "foxact/use-local-storage";
 import { useEffect, useRef } from "react";
 import { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
-import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
+import { Connections, MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 const initData: IConnections = {
   uploadTotal: 0,
@@ -30,7 +30,9 @@ export const useConnectionData = () => {
             ws_.addListener((msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
-                  next(null);
+                  next(msg.data);
+                  ws.current?.close();
+                  timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as IConnections;
                   next(null, (old = initData) => {
@@ -61,7 +63,7 @@ export const useConnectionData = () => {
               }
             });
           })
-          .catch((e) => {
+          .catch((_) => {
             timeoutRef.current = setTimeout(() => connect(), 500);
           });
 

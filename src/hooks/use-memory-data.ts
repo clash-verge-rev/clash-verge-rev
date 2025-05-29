@@ -24,7 +24,9 @@ export const useMemoryData = () => {
             ws_.addListener((msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
-                  next(msg, { inuse: 0 });
+                  next(msg.data, { inuse: 0 });
+                  ws.current?.close();
+                  timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as IMemoryUsageItem;
                   next(null, data);
@@ -32,7 +34,7 @@ export const useMemoryData = () => {
               }
             });
           })
-          .catch((e) => {
+          .catch((_) => {
             timeoutRef.current = setTimeout(() => connect(), 500);
           });
 

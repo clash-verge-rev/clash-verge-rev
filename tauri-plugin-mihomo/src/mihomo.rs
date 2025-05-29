@@ -32,13 +32,6 @@ macro_rules! failed_rep {
 #[derive(Default)]
 pub struct ConnectionManager(Mutex<HashMap<ConnectionId, WebSocketWriter>>);
 
-#[derive(Deserialize)]
-#[serde(untagged, rename_all = "camelCase")]
-pub(crate) enum Max {
-    None,
-    Number(usize),
-}
-
 #[derive(Deserialize, Serialize)]
 pub(crate) struct CloseFrame {
     pub code: u16,
@@ -240,7 +233,10 @@ impl Mihomo {
                     .unwrap()
                 }
                 Ok(Message::Frame(_)) => serde_json::Value::Null, // This value can't be recieved.
-                Err(e) => serde_json::to_value(MihomoError::from(e)).unwrap(),
+                Err(e) => {
+                    serde_json::to_value(WebSocketMessage::Text(MihomoError::from(e).to_string()))
+                        .unwrap()
+                }
             }
         };
 
@@ -896,7 +892,7 @@ mod test {
 
     use tauri::ipc::InvokeResponseBody;
 
-    use crate::ClashMode;
+    use crate::{ClashMode, Traffic};
 
     use super::*;
 
@@ -956,6 +952,21 @@ mod test {
         let mihomo = mihomo();
         let rules = mihomo.get_rules().await?;
         println!("{:?}", rules.rules);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_groups() -> Result<()> {
+        let mihomo = mihomo();
+        let groups = mihomo.get_groups().await?;
+        println!("{:?}", groups);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_unfixed_proxy() -> Result<()> {
+        let mihomo = mihomo();
+        let _ = mihomo.unfixed_proxy("US AUTO").await?;
         Ok(())
     }
 
@@ -1026,20 +1037,26 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_unfixed_proxy() -> Result<()> {
+    async fn test_restart() -> Result<()> {
         let mihomo = mihomo();
-        let _ = mihomo.unfixed_proxy("US AUTO").await?;
+        let _ = mihomo.restart().await?;
         Ok(())
     }
 
     #[tokio::test]
     async fn test_ws_traffic() -> Result<()> {
-        let mut mihomo = mihomo();
-        mihomo.update_protocol(Protocol::LocalSocket);
+        let mihomo = mihomo();
         let on_message = Channel::new(|message| {
             match message {
                 InvokeResponseBody::Json(msg) => {
-                    println!("{}", msg);
+                    if let Ok(WebSocketMessage::Text(data)) = serde_json::from_str(&msg) {
+                        if data.starts_with("websocket error") {
+                            println!("received error: {}", data);
+                        } else {
+                            let data = serde_json::from_str::<Traffic>(&data).unwrap();
+                            println!("{:?}", data);
+                        }
+                    }
                 }
                 InvokeResponseBody::Raw(raw) => {
                     println!("{}", String::from_utf8(raw).unwrap().to_string());
@@ -1049,8 +1066,8 @@ mod test {
         });
         let websocket_id = mihomo.ws_traffic(on_message.clone()).await?;
         println!("WebSocket ID: {}", websocket_id);
-        tokio::time::sleep(Duration::from_millis(3000)).await;
-        mihomo.disconnect(websocket_id, Some(5)).await?;
+        tokio::time::sleep(Duration::from_millis(5000)).await;
+        mihomo.disconnect(websocket_id, Some(0)).await?;
         for i in 0..10 {
             println!("check connection exist {}", i);
             if !mihomo.get_connection(websocket_id).await {
@@ -1059,13 +1076,6 @@ mod test {
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
         tokio::time::sleep(Duration::from_secs(3)).await;
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_restart() -> Result<()> {
-        let mihomo = mihomo();
-        let _ = mihomo.restart().await?;
         Ok(())
     }
 }

@@ -17,7 +17,7 @@ export const useTrafficData = () => {
 
   const response = useSWRSubscription<ITrafficItem, any, string | null>(
     subscriptKey,
-    (key, { next }) => {
+    (_key, { next }) => {
       const connect = async () => {
         MihomoWebSocket.connect_traffic()
           .then((ws_) => {
@@ -26,7 +26,9 @@ export const useTrafficData = () => {
             ws_.addListener((msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
-                  next(msg, { up: 0, down: 0 });
+                  next(msg.data, { up: 0, down: 0 });
+                  ws.current?.close();
+                  timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as ITrafficItem;
                   trafficRef.current?.appendData(data);
@@ -35,7 +37,7 @@ export const useTrafficData = () => {
               }
             });
           })
-          .catch((e) => {
+          .catch((_) => {
             timeoutRef.current = setTimeout(() => connect(), 500);
           });
       };

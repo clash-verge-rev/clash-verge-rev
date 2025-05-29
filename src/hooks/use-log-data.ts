@@ -40,6 +40,8 @@ export const useLogData = () => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
                   next(msg.data);
+                  ws.current?.close();
+                  timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as ILogItem;
                   // append new log item on socket message
@@ -53,7 +55,7 @@ export const useLogData = () => {
               }
             });
           })
-          .catch((e) => {
+          .catch((_) => {
             timeoutRef.current = setTimeout(() => connect(), 500);
           });
 
@@ -77,7 +79,6 @@ export const useLogData = () => {
 
   useEffect(() => {
     const unlistenRefreshWebsocket = listen("verge://refresh-websocket", () => {
-      console.log("[logs] refresh-websocket");
       setDate(Date.now());
     });
 

@@ -1,5 +1,69 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
 
+var ProxyType;
+(function (ProxyType) {
+  ProxyType["Direct"] = "Direct";
+  ProxyType["Reject"] = "Reject";
+  ProxyType["RejectDrop"] = "RejectDrop";
+  ProxyType["Compatible"] = "Compatible";
+  ProxyType["Pass"] = "Pass";
+  ProxyType["Dns"] = "Dns";
+  ProxyType["Shadowsocks"] = "Shadowsocks";
+  ProxyType["ShadowsocksR"] = "ShadowsocksR";
+  ProxyType["Snell"] = "Snell";
+  ProxyType["Socks5"] = "Socks5";
+  ProxyType["Http"] = "Http";
+  ProxyType["Vmess"] = "Vmess";
+  ProxyType["Vless"] = "Vless";
+  ProxyType["Trojan"] = "Trojan";
+  ProxyType["Hysteria"] = "Hysteria";
+  ProxyType["Hysteria2"] = "Hysteria2";
+  ProxyType["WireGuard"] = "WireGuard";
+  ProxyType["Tuic"] = "Tuic";
+  ProxyType["Ssh"] = "Ssh";
+  ProxyType["Mieru"] = "Mieru";
+  ProxyType["AnyTLS"] = "AnyTLS";
+  ProxyType["Relay"] = "Relay";
+  ProxyType["Selector"] = "Selector";
+  ProxyType["Fallback"] = "Fallback";
+  ProxyType["URLTest"] = "URLTest";
+  ProxyType["LoadBalance"] = "LoadBalance";
+})(ProxyType || (ProxyType = {}));
+var RuleType;
+(function (RuleType) {
+  RuleType["Domain"] = "Domain";
+  RuleType["DomainSuffix"] = "DomainSuffix";
+  RuleType["DomainKeyword"] = "DomainKeyword";
+  RuleType["DomainRegex"] = "DomainRegex";
+  RuleType["GeoSite"] = "GeoSite";
+  RuleType["GeoIP"] = "GeoIP";
+  RuleType["SrcGeoIP"] = "SrcGeoIP";
+  RuleType["IPASN"] = "IPASN";
+  RuleType["SrcIPASN"] = "SrcIPASN";
+  RuleType["IPCIDR"] = "IPCIDR";
+  RuleType["SrcIPCIDR"] = "SrcIPCIDR";
+  RuleType["IPSuffix"] = "IPSuffix";
+  RuleType["SrcIPSuffix"] = "SrcIPSuffix";
+  RuleType["SrcPort"] = "SrcPort";
+  RuleType["DstPort"] = "DstPort";
+  RuleType["InPort"] = "InPort";
+  RuleType["InUser"] = "InUser";
+  RuleType["InName"] = "InName";
+  RuleType["InType"] = "InType";
+  RuleType["ProcessName"] = "ProcessName";
+  RuleType["ProcessPath"] = "ProcessPath";
+  RuleType["ProcessNameRegex"] = "ProcessNameRegex";
+  RuleType["ProcessPathRegex"] = "ProcessPathRegex";
+  RuleType["Match"] = "Match";
+  RuleType["RuleSet"] = "RuleSet";
+  RuleType["Network"] = "Network";
+  RuleType["DSCP"] = "DSCP";
+  RuleType["Uid"] = "Uid";
+  RuleType["SubRules"] = "SubRules";
+  RuleType["AND"] = "AND";
+  RuleType["OR"] = "OR";
+  RuleType["NOT"] = "NOT";
+})(RuleType || (RuleType = {}));
 var TunStack;
 (function (TunStack) {
   TunStack["Mixed"] = "Mixed";
@@ -430,6 +494,8 @@ MihomoWebSocket.instances = new Set();
 export {
   ClashMode,
   MihomoWebSocket,
+  ProxyType,
+  RuleType,
   TunStack,
   cleanFakeIp,
   closeAllConnections,
