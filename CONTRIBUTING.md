@@ -33,9 +33,14 @@ npm install pnpm -g
 ```
 
 ### Install Dependencies
-
+Install node packages
 ```shell
 pnpm install
+```
+
+Install apt packages ONLY for Ubuntu
+```shell
+apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 ```
 
 ### Download the Mihomo Core Binary
