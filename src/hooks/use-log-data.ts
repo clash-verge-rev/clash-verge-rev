@@ -1,3 +1,4 @@
+import { getClashLogs } from "@/services/cmds";
 import { listen } from "@tauri-apps/api/event";
 import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
@@ -6,7 +7,6 @@ import { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 import { useClashLog } from "../services/states";
-import { getClashLogs } from "@/services/cmds";
 
 const MAX_LOG_NUM = 1000;
 

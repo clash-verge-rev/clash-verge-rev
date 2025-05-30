@@ -3,7 +3,7 @@ import { useLocalStorage } from "foxact/use-local-storage";
 import { useEffect, useRef } from "react";
 import { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
-import { Connections, MihomoWebSocket } from "tauri-plugin-mihomo-api";
+import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 const initData: IConnections = {
   uploadTotal: 0,
