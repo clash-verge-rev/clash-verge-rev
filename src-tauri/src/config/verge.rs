@@ -308,7 +308,7 @@ impl IVerge {
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
-            enable_dns_settings: Some(true),
+            enable_dns_settings: Some(false),
             home_cards: None,
             service_state: None,
             ..Self::default()
