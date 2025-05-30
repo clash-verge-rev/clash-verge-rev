@@ -180,16 +180,27 @@ export const GroupsEditorViewer = (props: Props) => {
     setDeleteSeq(obj?.delete || []);
   }, [visualization]);
 
+  // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
-    if (prependSeq && appendSeq && deleteSeq)
-      setCurrData(
-        yaml.dump(
-          { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
-          {
-            forceQuotes: true,
-          }
-        )
-      );
+    if (prependSeq && appendSeq && deleteSeq) {
+      const serialize = () => {
+        try {
+          setCurrData(
+            yaml.dump(
+              { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
+              { forceQuotes: true }
+            )
+          );
+        } catch (e) {
+          // 防止异常导致UI卡死
+        }
+      };
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(serialize);
+      } else {
+        setTimeout(serialize, 0);
+      }
+    }
   }, [prependSeq, appendSeq, deleteSeq]);
 
   const fetchProxyPolicy = async () => {
@@ -486,11 +497,11 @@ export const GroupsEditorViewer = (props: Props) => {
                         }}
                         slotProps={{
                           input: {
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              {t("seconds")}
-                            </InputAdornment>
-                          ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                {t("seconds")}
+                              </InputAdornment>
+                            ),
                           }
                         }}
                       />
@@ -895,9 +906,8 @@ export const GroupsEditorViewer = (props: Props) => {
               padding: {
                 top: 33, // 顶部padding防止遮挡snippets
               },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                getSystem() === "windows" ? ", twemoji mozilla" : ""
-              }`,
+              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${getSystem() === "windows" ? ", twemoji mozilla" : ""
+                }`,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}

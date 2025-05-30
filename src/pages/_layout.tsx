@@ -132,8 +132,8 @@ const handleNoticeMessage = (
       showNotice('error', `${t("Failed to Change Core")}: ${msg}`);
       break;
     default: // Optional: Log unhandled statuses
-        console.warn(`[通知监听 V2] 未处理的状态: ${status}`);
-        break;
+      console.warn(`[通知监听 V2] 未处理的状态: ${status}`);
+      break;
   }
 };
 
@@ -151,6 +151,11 @@ const Layout = () => {
   const routersEles = useRoutes(routers);
   const { addListener, setupCloseListener } = useListen();
   const initRef = useRef(false);
+  const [themeReady, setThemeReady] = useState(false);
+
+  useEffect(() => {
+    setThemeReady(true);
+  }, [theme]);
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {
@@ -271,7 +276,7 @@ const Layout = () => {
         return unlisten;
       } catch (err) {
         console.error("[Layout] 监听启动完成事件失败:", err);
-        return () => {};
+        return () => { };
       }
     };
 
@@ -288,7 +293,7 @@ const Layout = () => {
         }, 100);
       }, 100);
     }, 100);
-    
+
     // 启动监听器
     const unlistenPromise = listenStartupCompleted();
 
@@ -311,13 +316,39 @@ const Layout = () => {
     }
   }, [start_page]);
 
+  if (!themeReady) {
+    return (
+      <div
+        style={{
+          width: "100vw",
+          height: "100vh",
+          background: mode === "light" ? "#fff" : "#181a1b",
+          transition: "background 0.2s",
+        }}
+      />
+    );
+  }
+
   if (!routersEles) return null;
 
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
       <ThemeProvider theme={theme}>
         <NoticeManager />
-
+        <div
+          style={{
+            animation: "fadeIn 0.5s",
+            WebkitAnimation: "fadeIn 0.5s",
+          }}
+        />
+        <style>
+          {`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+          `}
+        </style>
         <Paper
           square
           elevation={0}
@@ -337,11 +368,11 @@ const Layout = () => {
             ({ palette }) => ({ bgcolor: palette.background.paper }),
             OS === "linux"
               ? {
-                  borderRadius: "8px",
-                  border: "1px solid var(--divider-color)",
-                  width: "calc(100vw - 4px)",
-                  height: "calc(100vh - 4px)",
-                }
+                borderRadius: "8px",
+                border: "1px solid var(--divider-color)",
+                width: "calc(100vw - 4px)",
+                height: "calc(100vh - 4px)",
+              }
               : {},
           ]}
         >

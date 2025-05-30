@@ -75,7 +75,7 @@ const CompactStatCard = memo(({
   onClick,
 }: StatCardProps) => {
   const theme = useTheme();
-  
+
   // 获取调色板颜色 - 使用useMemo避免重复计算
   const colorValue = useMemo(() => {
     const palette = theme.palette;
@@ -88,7 +88,7 @@ const CompactStatCard = memo(({
     }
     return palette.primary.main;
   }, [theme.palette, color]);
-  
+
   return (
     <Paper
       elevation={0}
@@ -157,10 +157,10 @@ export const EnhancedTrafficStats = () => {
   const trafficRef = useRef<EnhancedTrafficGraphRef>(null);
   const pageVisible = useVisibility();
   const [isDebug, setIsDebug] = useState(false);
-  
+
   // 使用AppDataProvider
   const { connections, uptime } = useAppData();
-  
+
   // 使用单一状态对象减少状态更新次数
   const [stats, setStats] = useState({
     traffic: { up: 0, down: 0 },
@@ -169,7 +169,7 @@ export const EnhancedTrafficStats = () => {
 
   // 创建一个标记来追踪最后更新时间，用于节流
   const lastUpdateRef = useRef({ traffic: 0 });
-  
+
   // 是否显示流量图表
   const trafficGraph = verge?.traffic_graph ?? true;
 
@@ -199,38 +199,31 @@ export const EnhancedTrafficStats = () => {
         // 使用节流控制更新频率
         const now = Date.now();
         if (now - lastUpdateRef.current.traffic < THROTTLE_TRAFFIC_UPDATE) {
-          // 如果距离上次更新时间小于阈值，只更新图表不更新状态
-          if (trafficRef.current) {
-            trafficRef.current.appendData({
+          try {
+            trafficRef.current?.appendData({
               up: data.up,
               down: data.down,
               timestamp: now,
             });
-          }
+          } catch { }
           return;
         }
-        
-        // 更新最后更新时间
         lastUpdateRef.current.traffic = now;
-        
-        // 验证数据有效性，防止NaN
         const safeUp = isNaN(data.up) ? 0 : data.up;
         const safeDown = isNaN(data.down) ? 0 : data.down;
-        
-        // 批量更新状态
-        setStats(prev => ({
-          ...prev,
-          traffic: { up: safeUp, down: safeDown }
-        }));
-
-        // 更新图表数据
-        if (trafficRef.current) {
-          trafficRef.current.appendData({
+        try {
+          setStats(prev => ({
+            ...prev,
+            traffic: { up: safeUp, down: safeDown }
+          }));
+        } catch { }
+        try {
+          trafficRef.current?.appendData({
             up: safeUp,
             down: safeDown,
             timestamp: now,
           });
-        }
+        } catch { }
       }
     } catch (err) {
       console.error("[Traffic] 解析数据错误:", err, event.data);
@@ -294,7 +287,7 @@ export const EnhancedTrafficStats = () => {
         }
       },
     });
-    
+
     console.log(`[Memory][${EnhancedTrafficStats.name}] 正在连接: ${server}/memory`);
     socketRefs.current.memory = createAuthSockette(`${server}/memory`, secret, {
       onmessage: handleMemoryUpdate,
@@ -317,6 +310,18 @@ export const EnhancedTrafficStats = () => {
     return cleanupSockets;
   }, [clashInfo, pageVisible, handleTrafficUpdate, handleMemoryUpdate]);
 
+  // 组件卸载时清理所有定时器/引用
+  useEffect(() => {
+    return () => {
+      try {
+        Object.values(socketRefs.current).forEach(socket => {
+          if (socket) socket.close();
+        });
+        socketRefs.current = { traffic: null, memory: null };
+      } catch { }
+    };
+  }, []);
+
   // 执行垃圾回收
   const handleGarbageCollection = useCallback(async () => {
     if (isDebug) {
@@ -336,7 +341,7 @@ export const EnhancedTrafficStats = () => {
     const [inuse, inuseUnit] = parseTraffic(stats.memory.inuse);
     const [uploadTotal, uploadTotalUnit] = parseTraffic(connections.uploadTotal);
     const [downloadTotal, downloadTotalUnit] = parseTraffic(connections.downloadTotal);
-    
+
     return {
       up, upUnit, down, downUnit, inuse, inuseUnit,
       uploadTotal, uploadTotalUnit, downloadTotal, downloadTotalUnit,

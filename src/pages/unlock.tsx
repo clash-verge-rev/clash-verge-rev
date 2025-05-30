@@ -24,6 +24,7 @@ import {
   RefreshRounded,
   AccessTimeOutlined,
 } from "@mui/icons-material";
+import { showNotice } from "@/services/noticeService";
 
 // 定义流媒体检测项类型
 interface UnlockItem {
@@ -121,61 +122,67 @@ const UnlockPage = () => {
     }
   };
 
+  // invoke加超时，防止后端卡死
+  const invokeWithTimeout = async <T,>(
+    cmd: string,
+    args?: any,
+    timeout = 15000,
+  ): Promise<T> => {
+    return Promise.race([
+      invoke<T>(cmd, args),
+      new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout)),
+    ]);
+  };
+
   // 执行全部项目检测
   const checkAllMedia = useLockFn(async () => {
     try {
       setIsCheckingAll(true);
-      const result = await invoke<UnlockItem[]>("check_media_unlock");
+      const result = await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
       const sortedItems = sortItemsByName(result);
 
-      // 更新UI
       setUnlockItems(sortedItems);
       const currentTime = new Date().toLocaleString();
       setLastCheckTime(currentTime);
 
-      // 保存结果到本地存储
       saveResultsToStorage(sortedItems, currentTime);
 
       setIsCheckingAll(false);
     } catch (err: any) {
       setIsCheckingAll(false);
+      showNotice('error', err?.message || err?.toString() || '检测超时或失败');
+      alert("检测超时或失败: " + (err?.message || err));
       console.error("Failed to check media unlock:", err);
     }
   });
 
-  // 根据项目名称检测单个流媒体服务
+  // 检测单个流媒体服务
   const checkSingleMedia = useLockFn(async (name: string) => {
     try {
-      // 将该项目添加到加载状态
       setLoadingItems((prev) => [...prev, name]);
+      const result = await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
 
-      // 执行检测
-      const result = await invoke<UnlockItem[]>("check_media_unlock");
-
-      // 找到对应的检测结果
       const targetItem = result.find((item: UnlockItem) => item.name === name);
 
       if (targetItem) {
-        // 更新单个检测项结果并按名称排序
         const updatedItems = sortItemsByName(
           unlockItems.map((item: UnlockItem) =>
             item.name === name ? targetItem : item,
           ),
         );
 
-        // 更新UI
         setUnlockItems(updatedItems);
         const currentTime = new Date().toLocaleString();
         setLastCheckTime(currentTime);
 
-        // 保存结果到本地存储
         saveResultsToStorage(updatedItems, currentTime);
       }
 
-      // 移除加载状态
       setLoadingItems((prev) => prev.filter((item) => item !== name));
     } catch (err: any) {
       setLoadingItems((prev) => prev.filter((item) => item !== name));
+      showNotice('error', err?.message || err?.toString() || `检测${name}失败`);
+      alert("检测超时或失败: " + (err?.message || err));
       console.error(`Failed to check ${name}:`, err);
     }
   });

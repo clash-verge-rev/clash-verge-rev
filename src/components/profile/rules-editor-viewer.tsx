@@ -76,161 +76,161 @@ const rules: {
   noResolve?: boolean;
   validator?: (value: string) => boolean;
 }[] = [
-  {
-    name: "DOMAIN",
-    example: "example.com",
-  },
-  {
-    name: "DOMAIN-SUFFIX",
-    example: "example.com",
-  },
-  {
-    name: "DOMAIN-KEYWORD",
-    example: "example",
-  },
-  {
-    name: "DOMAIN-REGEX",
-    example: "example.*",
-  },
-  {
-    name: "GEOSITE",
-    example: "youtube",
-  },
-  {
-    name: "GEOIP",
-    example: "CN",
-    noResolve: true,
-  },
-  {
-    name: "SRC-GEOIP",
-    example: "CN",
-  },
-  {
-    name: "IP-ASN",
-    example: "13335",
-    noResolve: true,
-    validator: (value) => (+value ? true : false),
-  },
-  {
-    name: "SRC-IP-ASN",
-    example: "9808",
-    validator: (value) => (+value ? true : false),
-  },
-  {
-    name: "IP-CIDR",
-    example: "127.0.0.0/8",
-    noResolve: true,
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-  },
-  {
-    name: "IP-CIDR6",
-    example: "2620:0:2d0:200::7/32",
-    noResolve: true,
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-  },
-  {
-    name: "SRC-IP-CIDR",
-    example: "192.168.1.201/32",
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-  },
-  {
-    name: "IP-SUFFIX",
-    example: "8.8.8.8/24",
-    noResolve: true,
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-  },
-  {
-    name: "SRC-IP-SUFFIX",
-    example: "192.168.1.201/8",
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-  },
-  {
-    name: "SRC-PORT",
-    example: "7777",
-    validator: (value) => portValidator(value),
-  },
-  {
-    name: "DST-PORT",
-    example: "80",
-    validator: (value) => portValidator(value),
-  },
-  {
-    name: "IN-PORT",
-    example: "7890",
-    validator: (value) => portValidator(value),
-  },
-  {
-    name: "DSCP",
-    example: "4",
-  },
-  {
-    name: "PROCESS-NAME",
-    example: getSystem() === "windows" ? "chrome.exe" : "curl",
-  },
-  {
-    name: "PROCESS-PATH",
-    example:
-      getSystem() === "windows"
-        ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-        : "/usr/bin/wget",
-  },
-  {
-    name: "PROCESS-NAME-REGEX",
-    example: ".*telegram.*",
-  },
-  {
-    name: "PROCESS-PATH-REGEX",
-    example:
-      getSystem() === "windows" ? "(?i).*Application\\chrome.*" : ".*bin/wget",
-  },
-  {
-    name: "NETWORK",
-    example: "udp",
-    validator: (value) => ["tcp", "udp"].includes(value),
-  },
-  {
-    name: "UID",
-    example: "1001",
-    validator: (value) => (+value ? true : false),
-  },
-  {
-    name: "IN-TYPE",
-    example: "SOCKS/HTTP",
-  },
-  {
-    name: "IN-USER",
-    example: "mihomo",
-  },
-  {
-    name: "IN-NAME",
-    example: "ss",
-  },
-  {
-    name: "SUB-RULE",
-    example: "(NETWORK,tcp)",
-  },
-  {
-    name: "RULE-SET",
-    example: "providername",
-    noResolve: true,
-  },
-  {
-    name: "AND",
-    example: "((DOMAIN,baidu.com),(NETWORK,UDP))",
-  },
-  {
-    name: "OR",
-    example: "((NETWORK,UDP),(DOMAIN,baidu.com))",
-  },
-  {
-    name: "NOT",
-    example: "((DOMAIN,baidu.com))",
-  },
-  {
-    name: "MATCH",
-    required: false,
-  },
-];
+    {
+      name: "DOMAIN",
+      example: "example.com",
+    },
+    {
+      name: "DOMAIN-SUFFIX",
+      example: "example.com",
+    },
+    {
+      name: "DOMAIN-KEYWORD",
+      example: "example",
+    },
+    {
+      name: "DOMAIN-REGEX",
+      example: "example.*",
+    },
+    {
+      name: "GEOSITE",
+      example: "youtube",
+    },
+    {
+      name: "GEOIP",
+      example: "CN",
+      noResolve: true,
+    },
+    {
+      name: "SRC-GEOIP",
+      example: "CN",
+    },
+    {
+      name: "IP-ASN",
+      example: "13335",
+      noResolve: true,
+      validator: (value) => (+value ? true : false),
+    },
+    {
+      name: "SRC-IP-ASN",
+      example: "9808",
+      validator: (value) => (+value ? true : false),
+    },
+    {
+      name: "IP-CIDR",
+      example: "127.0.0.0/8",
+      noResolve: true,
+      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    },
+    {
+      name: "IP-CIDR6",
+      example: "2620:0:2d0:200::7/32",
+      noResolve: true,
+      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    },
+    {
+      name: "SRC-IP-CIDR",
+      example: "192.168.1.201/32",
+      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    },
+    {
+      name: "IP-SUFFIX",
+      example: "8.8.8.8/24",
+      noResolve: true,
+      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    },
+    {
+      name: "SRC-IP-SUFFIX",
+      example: "192.168.1.201/8",
+      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    },
+    {
+      name: "SRC-PORT",
+      example: "7777",
+      validator: (value) => portValidator(value),
+    },
+    {
+      name: "DST-PORT",
+      example: "80",
+      validator: (value) => portValidator(value),
+    },
+    {
+      name: "IN-PORT",
+      example: "7890",
+      validator: (value) => portValidator(value),
+    },
+    {
+      name: "DSCP",
+      example: "4",
+    },
+    {
+      name: "PROCESS-NAME",
+      example: getSystem() === "windows" ? "chrome.exe" : "curl",
+    },
+    {
+      name: "PROCESS-PATH",
+      example:
+        getSystem() === "windows"
+          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+          : "/usr/bin/wget",
+    },
+    {
+      name: "PROCESS-NAME-REGEX",
+      example: ".*telegram.*",
+    },
+    {
+      name: "PROCESS-PATH-REGEX",
+      example:
+        getSystem() === "windows" ? "(?i).*Application\\chrome.*" : ".*bin/wget",
+    },
+    {
+      name: "NETWORK",
+      example: "udp",
+      validator: (value) => ["tcp", "udp"].includes(value),
+    },
+    {
+      name: "UID",
+      example: "1001",
+      validator: (value) => (+value ? true : false),
+    },
+    {
+      name: "IN-TYPE",
+      example: "SOCKS/HTTP",
+    },
+    {
+      name: "IN-USER",
+      example: "mihomo",
+    },
+    {
+      name: "IN-NAME",
+      example: "ss",
+    },
+    {
+      name: "SUB-RULE",
+      example: "(NETWORK,tcp)",
+    },
+    {
+      name: "RULE-SET",
+      example: "providername",
+      noResolve: true,
+    },
+    {
+      name: "AND",
+      example: "((DOMAIN,baidu.com),(NETWORK,UDP))",
+    },
+    {
+      name: "OR",
+      example: "((NETWORK,UDP),(DOMAIN,baidu.com))",
+    },
+    {
+      name: "NOT",
+      example: "((DOMAIN,baidu.com))",
+    },
+    {
+      name: "MATCH",
+      required: false,
+    },
+  ];
 
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
@@ -325,16 +325,27 @@ export const RulesEditorViewer = (props: Props) => {
     setDeleteSeq(obj?.delete || []);
   }, [visualization]);
 
+  // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
-    if (prependSeq && appendSeq && deleteSeq)
-      setCurrData(
-        yaml.dump(
-          { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
-          {
-            forceQuotes: true,
-          }
-        )
-      );
+    if (prependSeq && appendSeq && deleteSeq) {
+      const serialize = () => {
+        try {
+          setCurrData(
+            yaml.dump(
+              { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
+              { forceQuotes: true }
+            )
+          );
+        } catch (e: any) {
+          showNotice('error', e?.message || e?.toString() || 'YAML dump error');
+        }
+      };
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(serialize);
+      } else {
+        setTimeout(serialize, 0);
+      }
+    }
   }, [prependSeq, appendSeq, deleteSeq]);
 
   const fetchProfile = async () => {
@@ -407,9 +418,8 @@ export const RulesEditorViewer = (props: Props) => {
     }
 
     const condition = ruleType.required ?? true ? ruleContent : "";
-    return `${ruleType.name}${condition ? "," + condition : ""},${proxyPolicy}${
-      ruleType.noResolve && noResolve ? ",no-resolve" : ""
-    }`;
+    return `${ruleType.name}${condition ? "," + condition : ""},${proxyPolicy}${ruleType.noResolve && noResolve ? ",no-resolve" : ""
+      }`;
   };
 
   const handleSave = useLockFn(async () => {
@@ -701,9 +711,8 @@ export const RulesEditorViewer = (props: Props) => {
               padding: {
                 top: 33, // 顶部padding防止遮挡snippets
               },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                getSystem() === "windows" ? ", twemoji mozilla" : ""
-              }`,
+              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${getSystem() === "windows" ? ", twemoji mozilla" : ""
+                }`,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}

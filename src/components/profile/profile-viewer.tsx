@@ -184,8 +184,10 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           setTimeout(() => formIns.reset(), 500);
           fileDataRef.current = null;
 
-          // 只传递当前配置激活状态，让父组件决定是否需要触发配置重载
-          props.onChange(isActivating);
+          // 优化：UI先关闭，异步通知父组件
+          setTimeout(() => {
+            props.onChange(isActivating);
+          }, 0);
         } catch (err: any) {
           showNotice("error", err.message || err.toString());
         } finally {
@@ -195,9 +197,11 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     );
 
     const handleClose = () => {
-      setOpen(false);
-      fileDataRef.current = null;
-      setTimeout(() => formIns.reset(), 500);
+      try {
+        setOpen(false);
+        fileDataRef.current = null;
+        setTimeout(() => formIns.reset(), 500);
+      } catch { }
     };
 
     const text = {

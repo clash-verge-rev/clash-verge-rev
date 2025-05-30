@@ -130,8 +130,9 @@ export const ProxiesEditorViewer = (props: Props) => {
       }
     }
   };
-  const handleParse = () => {
-    let proxies = [] as IProxyConfig[];
+  // 优化：异步分片解析，避免主线程阻塞，解析完成后批量setState
+  const handleParseAsync = (cb: (proxies: IProxyConfig[]) => void) => {
+    let proxies: IProxyConfig[] = [];
     let names: string[] = [];
     let uris = "";
     try {
@@ -139,10 +140,13 @@ export const ProxiesEditorViewer = (props: Props) => {
     } catch {
       uris = proxyUri;
     }
-    uris
-      .trim()
-      .split("\n")
-      .forEach((uri) => {
+    const lines = uris.trim().split("\n");
+    let idx = 0;
+    const batchSize = 50;
+    function parseBatch() {
+      const end = Math.min(idx + batchSize, lines.length);
+      for (; idx < end; idx++) {
+        const uri = lines[idx];
         try {
           let proxy = parseUri(uri.trim());
           if (!names.includes(proxy.name)) {
@@ -150,10 +154,16 @@ export const ProxiesEditorViewer = (props: Props) => {
             names.push(proxy.name);
           }
         } catch (err: any) {
-          showNotice('error', err.message || err.toString());
+          // 不阻塞主流程
         }
-      });
-    return proxies;
+      }
+      if (idx < lines.length) {
+        setTimeout(parseBatch, 0);
+      } else {
+        cb(proxies);
+      }
+    }
+    parseBatch();
   };
   const fetchProfile = async () => {
     let data = await readProfileFile(profileUid);
@@ -192,15 +202,25 @@ export const ProxiesEditorViewer = (props: Props) => {
   }, [visualization]);
 
   useEffect(() => {
-    if (prependSeq && appendSeq && deleteSeq)
-      setCurrData(
-        yaml.dump(
-          { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
-          {
-            forceQuotes: true,
-          }
-        )
-      );
+    if (prependSeq && appendSeq && deleteSeq) {
+      const serialize = () => {
+        try {
+          setCurrData(
+            yaml.dump(
+              { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
+              { forceQuotes: true }
+            )
+          );
+        } catch (e) {
+          // 防止异常导致UI卡死
+        }
+      };
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(serialize);
+      } else {
+        setTimeout(serialize, 0);
+      }
+    }
   }, [prependSeq, appendSeq, deleteSeq]);
 
   useEffect(() => {
@@ -276,8 +296,9 @@ export const ProxiesEditorViewer = (props: Props) => {
                   variant="contained"
                   startIcon={<VerticalAlignTopRounded />}
                   onClick={() => {
-                    let proxies = handleParse();
-                    setPrependSeq([...proxies, ...prependSeq]);
+                    handleParseAsync((proxies) => {
+                      setPrependSeq((prev) => [...proxies, ...prev]);
+                    });
                   }}
                 >
                   {t("Prepend Proxy")}
@@ -289,8 +310,9 @@ export const ProxiesEditorViewer = (props: Props) => {
                   variant="contained"
                   startIcon={<VerticalAlignBottomRounded />}
                   onClick={() => {
-                    let proxies = handleParse();
-                    setAppendSeq([...appendSeq, ...proxies]);
+                    handleParseAsync((proxies) => {
+                      setAppendSeq((prev) => [...prev, ...proxies]);
+                    });
                   }}
                 >
                   {t("Append Proxy")}
@@ -431,9 +453,8 @@ export const ProxiesEditorViewer = (props: Props) => {
               padding: {
                 top: 33, // 顶部padding防止遮挡snippets
               },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                getSystem() === "windows" ? ", twemoji mozilla" : ""
-              }`,
+              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${getSystem() === "windows" ? ", twemoji mozilla" : ""
+                }`,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}

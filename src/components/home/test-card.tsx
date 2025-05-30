@@ -85,11 +85,11 @@ export const TestCard = () => {
         mutateVerge();
         return;
       }
-      
-      const newList = testList.map((x) => 
+
+      const newList = testList.map((x) =>
         x.uid === uid ? { ...x, ...patch } : x
       );
-      
+
       mutateVerge({ ...verge, test_list: newList }, false);
     },
     [testList, verge, mutateVerge]
@@ -108,17 +108,27 @@ export const TestCard = () => {
     async (event: DragEndEvent) => {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
-      
+
       const old_index = testList.findIndex((x) => x.uid === active.id);
       const new_index = testList.findIndex((x) => x.uid === over.id);
-      
+
       if (old_index >= 0 && new_index >= 0) {
         const newList = [...testList];
         const [removed] = newList.splice(old_index, 1);
         newList.splice(new_index, 0, removed);
 
-        await mutateVerge({ ...verge, test_list: newList }, false);
-        await patchVerge({ test_list: newList });
+        // 优化：先本地更新，再异步 patch，避免UI卡死
+        mutateVerge({ ...verge, test_list: newList }, false);
+        const patchFn = () => {
+          try {
+            patchVerge({ test_list: newList });
+          } catch { }
+        };
+        if (window.requestIdleCallback) {
+          window.requestIdleCallback(patchFn);
+        } else {
+          setTimeout(patchFn, 0);
+        }
       }
     },
     [testList, verge, mutateVerge, patchVerge]

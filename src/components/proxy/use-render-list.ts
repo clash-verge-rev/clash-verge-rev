@@ -198,3 +198,5 @@ export const useRenderList = (mode: string) => {
     currentColumns: col,
   };
 };
+
+// 优化建议：如有大数据量，建议用虚拟滚动（已在 ProxyGroups 组件中实现），此处无需额外处理。
