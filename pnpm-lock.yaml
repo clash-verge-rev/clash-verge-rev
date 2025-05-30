@@ -76,7 +76,7 @@ importers:
         version: 0.2.45(react@19.1.0)
       framer-motion:
         specifier: ^12.7.4
-        version: 12.14.0(@emotion/is-prop-valid@1.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 12.15.0(@emotion/is-prop-valid@1.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       i18next:
         specifier: ^25.0.0
         version: 25.2.1(typescript@5.8.3)
@@ -382,8 +382,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  '@babel/parser@7.27.3':
-    resolution: {integrity: sha512-xyYxRj6+tLNDTWi0KCBcZ9V7yg3/lwL9DWh9Uwh/RIVlIfFidggcgxKX3GCXwCiswwcGRawBKbEg2LG/Y8eJhw==}
+  '@babel/parser@7.27.4':
+    resolution: {integrity: sha512-BRmLHGwpUqLFR2jzx9orBuX/ABDkj2jLKOXrHDTN2aOKL+jFDDKaRNo9nyYsIl9h/UE/7lMKdDjKQQyxKKDZ7g==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -772,8 +772,8 @@ packages:
     resolution: {integrity: sha512-1x3D2xEk2fRo3PAhwQwu5UubzgiVWSXTBfWpVd2Mx2AzRqJuDJCsgaDVZ7HB5iGzDW1Hl1sWN2mFyKjmR9uAog==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/runtime@7.27.3':
-    resolution: {integrity: sha512-7EYtGezsdiDMyY80+65EzwiGmcJqpmcZCojSXaRgdrBaGtWTgDZKq69cPIVped6MkIM78cTQ2GOiEYjwOlG4xw==}
+  '@babel/runtime@7.27.4':
+    resolution: {integrity: sha512-t3yaEOuGu9NlIZ+hIeGbBjFtZT7j2cb2tg0fuaJKeGotchRjjLfrBA9Kwf8quhpP1EUuxModQg04q/mBwyg8uA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.0':
@@ -788,8 +788,8 @@ packages:
     resolution: {integrity: sha512-19lYZFzYVQkkHkl4Cy4WrAVcqBkgvV2YM2TU3xG6DIwO7O3ecbDPfW3yM3bjAGcqcQHi+CCtjMR3dIEHxsd6bA==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/traverse@7.27.3':
-    resolution: {integrity: sha512-lId/IfN/Ye1CIu8xG7oKBHXd2iNb2aW1ilPszzGcJug6M8RCKfVNcYhpI5+bMvFYjK7lXIM0R+a+6r8xhHp2FQ==}
+  '@babel/traverse@7.27.4':
+    resolution: {integrity: sha512-oNcu2QbHqts9BtOWJosOVJapWjBDSxGCpFvikNR5TGDYDQf3JwpIoMzIKrvfoti93cLfPJEG4tH9SPVeyCGgdA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/types@7.27.0':
@@ -2401,8 +2401,8 @@ packages:
       react:
         optional: true
 
-  framer-motion@12.14.0:
-    resolution: {integrity: sha512-P/CLiA+YLc0GL1nB2bgtRBFAbRh0aawU5KPLqnXi6QEZQE2BEwqgIH8qUIT7cMN+4a4nj0iZ2uWTKOrzcYsyGQ==}
+  framer-motion@12.15.0:
+    resolution: {integrity: sha512-XKg/LnKExdLGugZrDILV7jZjI599785lDIJZLxMiiIFidCsy0a4R2ZEf+Izm67zyOuJgQYTHOmodi7igQsw3vg==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -4012,7 +4012,7 @@ snapshots:
 
   '@babel/generator@7.27.3':
     dependencies:
-      '@babel/parser': 7.27.3
+      '@babel/parser': 7.27.4
       '@babel/types': 7.27.3
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
@@ -4078,7 +4078,7 @@ snapshots:
 
   '@babel/helper-module-imports@7.27.1':
     dependencies:
-      '@babel/traverse': 7.27.3
+      '@babel/traverse': 7.27.4
       '@babel/types': 7.27.3
     transitivePeerDependencies:
       - supports-color
@@ -4155,7 +4155,7 @@ snapshots:
     dependencies:
       '@babel/types': 7.27.1
 
-  '@babel/parser@7.27.3':
+  '@babel/parser@7.27.4':
     dependencies:
       '@babel/types': 7.27.3
     optional: true
@@ -4632,7 +4632,7 @@ snapshots:
 
   '@babel/runtime@7.27.1': {}
 
-  '@babel/runtime@7.27.3':
+  '@babel/runtime@7.27.4':
     optional: true
 
   '@babel/template@7.27.0':
@@ -4644,7 +4644,7 @@ snapshots:
   '@babel/template@7.27.2':
     dependencies:
       '@babel/code-frame': 7.27.1
-      '@babel/parser': 7.27.3
+      '@babel/parser': 7.27.4
       '@babel/types': 7.27.3
     optional: true
 
@@ -4660,11 +4660,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/traverse@7.27.3':
+  '@babel/traverse@7.27.4':
     dependencies:
       '@babel/code-frame': 7.27.1
       '@babel/generator': 7.27.3
-      '@babel/parser': 7.27.3
+      '@babel/parser': 7.27.4
       '@babel/template': 7.27.2
       '@babel/types': 7.27.3
       debug: 4.4.1
@@ -4731,7 +4731,7 @@ snapshots:
   '@emotion/babel-plugin@11.13.5':
     dependencies:
       '@babel/helper-module-imports': 7.27.1
-      '@babel/runtime': 7.27.3
+      '@babel/runtime': 7.27.4
       '@emotion/hash': 0.9.2
       '@emotion/memoize': 0.9.0
       '@emotion/serialize': 1.3.3
@@ -4799,7 +4799,7 @@ snapshots:
 
   '@emotion/react@11.13.0(@types/react@19.1.6)(react@19.1.0)':
     dependencies:
-      '@babel/runtime': 7.27.3
+      '@babel/runtime': 7.27.4
       '@emotion/babel-plugin': 11.13.5
       '@emotion/cache': 11.14.0
       '@emotion/serialize': 1.3.3
@@ -4854,7 +4854,7 @@ snapshots:
 
   '@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.6)(react@19.1.0))(@types/react@19.1.6)(react@19.1.0)':
     dependencies:
-      '@babel/runtime': 7.27.3
+      '@babel/runtime': 7.27.4
       '@emotion/babel-plugin': 11.13.5
       '@emotion/is-prop-valid': 1.3.0
       '@emotion/react': 11.13.0(@types/react@19.1.6)(react@19.1.0)
@@ -5744,7 +5744,7 @@ snapshots:
 
   babel-plugin-macros@3.1.0:
     dependencies:
-      '@babel/runtime': 7.27.3
+      '@babel/runtime': 7.27.4
       cosmiconfig: 7.1.0
       resolve: 1.22.10
     optional: true
@@ -6282,7 +6282,7 @@ snapshots:
     optionalDependencies:
       react: 19.1.0
 
-  framer-motion@12.14.0(@emotion/is-prop-valid@1.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  framer-motion@12.15.0(@emotion/is-prop-valid@1.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       motion-dom: 12.15.0
       motion-utils: 12.12.1
