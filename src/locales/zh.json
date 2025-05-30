@@ -625,7 +625,7 @@
   "Generate Random Secret": "随机API密钥",
   "Generate Random Port": "随机API端口",
   "Port Config": "端口设置",
-  "Configuration saved successfully": "随机配置，保存完成",
+  "Configuration saved successfully": "配置保存完成",
   "Last generated": "记录生成",
   "External Controller Config": "API配置",
   "Enable one-click random API port and key. Click to randomize the port and key": "开启一键随机API端口和密钥，点进去就可以随机端口和密钥",
