@@ -32,6 +32,13 @@ function getAllSourceContent() {
   return files.map(f => fs.readFileSync(f, 'utf8')).join('\n');
 }
 
+// 白名单 key，不检查这些 key 是否被使用
+const WHITELIST_KEYS = [
+  'theme.light',
+  'theme.dark',
+  'theme.system'
+];
+
 // 主流程
 function processI18nFile(i18nPath, lang, allSource) {
   const i18n = JSON.parse(fs.readFileSync(i18nPath, 'utf8'));
@@ -43,12 +50,16 @@ function processI18nFile(i18nPath, lang, allSource) {
   let checked = 0;
   const total = keys.length;
   keys.forEach(key => {
-    // 只查找一次
-    const regex = new RegExp(`["'\`]${key}["'\`]`);
-    if (regex.test(allSource)) {
+    if (WHITELIST_KEYS.includes(key)) {
       used[key] = i18n[key];
     } else {
-      unused.push(key);
+      // 只查找一次
+      const regex = new RegExp(`["'\`]${key}["'\`]`);
+      if (regex.test(allSource)) {
+        used[key] = i18n[key];
+      } else {
+        unused.push(key);
+      }
     }
     checked++;
     if (checked % 20 === 0 || checked === total) {
