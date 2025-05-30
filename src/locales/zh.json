@@ -561,5 +561,7 @@
   "Enable one-click random API port and key. Click to randomize the port and key": "开启一键随机API端口和密钥，点进去就可以随机端口和密钥",
   "Saving...": "保存中...",
   "Port settings saved": "端口设置已保存",
-  "Failed to save settings": "端口设置失败"
+  "Failed to save settings": "端口设置失败",
+  "TCP Concurrency": "TCP并发",
+  "TCP ConcurrencyWhen accessing a web page, DNS resolution generally results in multiple IP addresses.": "TCP 并发性当访问网页时，DNS 解析通常会产生多个 IP 地址。"
 }
