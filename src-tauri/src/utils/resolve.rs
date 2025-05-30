@@ -26,7 +26,7 @@ use tauri::Url;
 pub static VERSION: OnceCell<String> = OnceCell::new();
 
 // 定义默认窗口尺寸常量
-const DEFAULT_WIDTH: u32 = 900;
+const DEFAULT_WIDTH: u32 = 940;
 const DEFAULT_HEIGHT: u32 = 700;
 
 // 添加全局UI准备就绪标志
