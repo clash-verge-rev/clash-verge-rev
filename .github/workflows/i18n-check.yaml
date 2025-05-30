@@ -44,6 +44,7 @@ jobs:
         if: |
           always() && (hashFiles('i18n-missing/*.txt') != '')
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore(i18n): report missing translation keys"
           title: "chore(i18n): report missing translation keys"
           body: |
