@@ -458,7 +458,12 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     let system_proxy = patch.enable_system_proxy;
     let pac = patch.proxy_auto_config;
     let pac_content = patch.pac_file_content;
+    // bypass
     let proxy_bypass = patch.system_proxy_bypass;
+    let windows_bypass = patch.windows_bypass;
+    let macos_bypass = patch.macos_bypass;
+    let linux_bypass = patch.linux_bypass;
+
     let language = patch.language;
     #[cfg(target_os = "macos")]
     let tray_icon = patch.tray_icon;
@@ -499,7 +504,14 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     if auto_launch.is_some() {
         sysopt::Sysopt::global().update_launch()?;
     }
-    if system_proxy.is_some() || proxy_bypass.is_some() || pac.is_some() || pac_content.is_some() {
+    if system_proxy.is_some()
+        || proxy_bypass.is_some()
+        || windows_bypass.is_some()
+        || macos_bypass.is_some()
+        || linux_bypass.is_some()
+        || pac.is_some()
+        || pac_content.is_some()
+    {
         sysopt::Sysopt::global().update_sysproxy()?;
     }
 

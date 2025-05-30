@@ -83,7 +83,16 @@ pub struct IVerge {
     pub enable_proxy_guard: Option<bool>,
 
     /// set system proxy bypass
+    ///
+    /// *即将弃用*
     pub system_proxy_bypass: Option<String>,
+
+    /// system proxy bypass for windows
+    pub windows_bypass: Option<String>,
+    /// system proxy bypass for macos
+    pub macos_bypass: Option<String>,
+    /// system proxy bypass for linux
+    pub linux_bypass: Option<String>,
 
     /// proxy guard duration
     pub proxy_guard_duration: Option<u64>,
@@ -188,7 +197,34 @@ pub struct IVergeTheme {
 impl IVerge {
     pub fn new() -> Self {
         match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
-            Ok(config) => config,
+            Ok(mut config) => {
+                // 将 system_proxy_bypass 设置到对应的平台，后续将移除 system_proxy_bypass
+                if let Some(bypass) = config.system_proxy_bypass.clone() {
+                    if bypass.contains(";") {
+                        #[cfg(target_os = "windows")]
+                        {
+                            if config.windows_bypass.is_none() {
+                                config.windows_bypass = Some(bypass);
+                            }
+                        }
+                    } else if bypass.contains(",") {
+                        #[cfg(target_os = "macos")]
+                        {
+                            if config.macos_bypass.is_none() {
+                                config.macos_bypass = Some(bypass);
+                            }
+                        }
+                        #[cfg(target_os = "linux")]
+                        {
+                            if config.linux_bypass.is_none() {
+                                config.linux_bypass = Some(bypass);
+                            }
+                        }
+                    }
+                }
+
+                config
+            }
             Err(err) => {
                 tracing::error!("{err}");
                 Self::template()
@@ -278,7 +314,12 @@ impl IVerge {
         patch!(enable_random_port);
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
+        // bypass
         patch!(system_proxy_bypass);
+        patch!(windows_bypass);
+        patch!(macos_bypass);
+        patch!(linux_bypass);
+
         patch!(proxy_guard_duration);
         patch!(proxy_auto_config);
         patch!(pac_file_content);

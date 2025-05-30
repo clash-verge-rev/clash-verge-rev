@@ -209,7 +209,16 @@ export async function checkPortAvailable(port: number) {
 }
 
 export async function getVergeConfig() {
-  return invoke<IVergeConfig>("get_verge_config");
+  const verge = await invoke<IVergeConfig>("get_verge_config");
+  const OS = getSystem();
+  if (OS === "windows") {
+    verge.bypass = verge.windows_bypass;
+  } else if (OS === "macos") {
+    verge.bypass = verge.macos_bypass;
+  } else if (OS === "linux") {
+    verge.bypass = verge.linux_bypass;
+  }
+  return verge;
 }
 
 export async function patchVergeConfig(payload: IVergeConfig) {

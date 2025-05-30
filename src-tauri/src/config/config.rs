@@ -1,6 +1,6 @@
 use super::{Draft, IClashConfig, IProfiles, IRuntime, IVerge};
 use crate::{
-    core::{service, sysopt::get_default_bypass},
+    core::service,
     enhance, feat,
     utils::{dirs, help},
 };
@@ -125,23 +125,6 @@ impl Config {
 
         // generate runtime config
         Self::init_config()?;
-
-        // resolve sysproxy bypass value
-        let mut sysproxy_bypass = verge_config
-            .latest()
-            .system_proxy_bypass
-            .clone()
-            .unwrap_or(get_default_bypass());
-        if cfg!(windows) {
-            sysproxy_bypass = sysproxy_bypass.replace(",", ";");
-        } else {
-            sysproxy_bypass = sysproxy_bypass.replace(";", ",");
-        }
-        feat::patch_verge(IVerge {
-            system_proxy_bypass: Some(sysproxy_bypass),
-            ..IVerge::default()
-        })
-        .await?;
 
         // resolve auto launch
         let enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);

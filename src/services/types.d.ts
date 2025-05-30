@@ -253,7 +253,10 @@ interface IVergeConfig {
   enable_random_port?: boolean;
   enable_proxy_guard?: boolean;
   proxy_guard_duration?: number;
-  system_proxy_bypass?: string;
+  bypass?: string;
+  windows_bypass?: string;
+  macos_bypass?: string;
+  linux_bypass?: string;
   web_ui_list?: string[];
   hotkeys?: string[];
   // not a verge config, only use it to set the current theme of app

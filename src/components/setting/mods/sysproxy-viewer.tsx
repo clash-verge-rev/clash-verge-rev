@@ -36,6 +36,8 @@ const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY 127.0.0.1:%mixed-port%; SOCKS5 127.0.0.1:%mixed-port%; DIRECT;";
 }`;
 
+const OS = getSystem();
+
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const { notice } = useNotice();
@@ -49,7 +51,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const [bypassInput, setBypassInput] = useState("");
 
   const [sysproxy, setSysproxy] = useState<SysProxy>();
-
   const [autoproxy, setAutoproxy] = useState<AutoProxy>();
 
   const {
@@ -57,7 +58,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     proxy_auto_config,
     pac_file_content,
     enable_proxy_guard,
-    system_proxy_bypass,
+    bypass: verge_bypass,
     proxy_guard_duration,
   } = verge ?? {};
 
@@ -79,11 +80,25 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       });
       getSystemProxy().then((p) => setSysproxy(p));
       getAutotemProxy().then((p) => setAutoproxy(p));
-      setBypass(verge?.system_proxy_bypass?.split(separator) ?? []);
+      const bypassList = verge_bypass?.split(separator) ?? [];
+      if (bypassList.length > 0) {
+        setBypass(bypassList);
+      } else {
+        getDefaultBypass().then((value) => {
+          setBypass(value.split(separator));
+        });
+      }
     },
     close: () => {
       setOpen(false);
-      setBypass(verge?.system_proxy_bypass?.split(separator) ?? []);
+      const bypassList = verge_bypass?.split(separator) ?? [];
+      if (bypassList.length > 0) {
+        setBypass(bypassList);
+      } else {
+        getDefaultBypass().then((value) => {
+          setBypass(value.split(separator));
+        });
+      }
     },
   }));
 
@@ -102,8 +117,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       patch.proxy_guard_duration = value.duration;
     }
     const bypassStr = bypass.join(separator);
-    if (bypassStr !== system_proxy_bypass) {
-      patch.system_proxy_bypass = bypassStr;
+    if (bypassStr !== verge_bypass) {
+      if (OS === "windows") {
+        patch.windows_bypass = bypassStr;
+      } else if (OS === "macos") {
+        patch.macos_bypass = bypassStr;
+      } else if (OS === "linux") {
+        patch.linux_bypass = bypassStr;
+      }
     }
     if (value.pac !== proxy_auto_config) {
       patch.proxy_auto_config = value.pac;

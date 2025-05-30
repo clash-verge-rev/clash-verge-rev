@@ -50,7 +50,18 @@ fn get_bypass() -> String {
     let res = {
         let verge = Config::verge();
         let verge = verge.latest();
-        verge.system_proxy_bypass.clone()
+        #[cfg(target_os = "windows")]
+        {
+            verge.windows_bypass.clone()
+        }
+        #[cfg(target_os = "linux")]
+        {
+            verge.linux_bypass.clone()
+        }
+        #[cfg(target_os = "macos")]
+        {
+            verge.macos_bypass.clone()
+        }
     };
     match res {
         Some(custom_bypass) => custom_bypass,
