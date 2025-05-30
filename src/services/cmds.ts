@@ -217,18 +217,11 @@ export async function patchVergeConfig(payload: IVergeConfig) {
 }
 
 export async function getSystemProxy() {
-  return invoke<{
-    enable: boolean;
-    server: string;
-    bypass: string;
-  }>("get_sys_proxy");
+  return invoke<SysProxy>("get_sys_proxy");
 }
 
 export async function getAutotemProxy() {
-  return invoke<{
-    enable: boolean;
-    url: string;
-  }>("get_auto_proxy");
+  return invoke<AutoProxy>("get_auto_proxy");
 }
 
 export async function changeClashCore(clashCore: string) {

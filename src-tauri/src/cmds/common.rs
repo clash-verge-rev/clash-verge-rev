@@ -195,7 +195,7 @@ pub fn is_wayland() -> CmdResult<bool> {
 
 #[tauri::command]
 pub fn restart_app(app_handle: tauri::AppHandle) {
-    utils::server::shutdown_embed_server();
+    utils::server::shutdown_embedded_server();
     let _ = resolve::save_window_size_position(&app_handle, false);
     tauri::async_runtime::block_on(async {
         let _ = CoreManager::global().stop_core().await;
@@ -205,7 +205,7 @@ pub fn restart_app(app_handle: tauri::AppHandle) {
 
 #[tauri::command]
 pub fn exit_app(app_handle: tauri::AppHandle) {
-    utils::server::shutdown_embed_server();
+    utils::server::shutdown_embedded_server();
     let _ = resolve::save_window_size_position(&app_handle, true);
     tauri::async_runtime::block_on(async {
         resolve::resolve_reset().await;

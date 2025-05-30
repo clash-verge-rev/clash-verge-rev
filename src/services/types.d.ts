@@ -404,3 +404,14 @@ type RulePayload = {
   count: number;
   rules: string[];
 };
+
+type SysProxy = {
+  enable: boolean;
+  server: string;
+  bypass: string;
+};
+
+type AutoProxy = {
+  enable: boolean;
+  url: string;
+};

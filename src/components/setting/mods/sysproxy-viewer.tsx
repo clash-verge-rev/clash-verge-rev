@@ -48,10 +48,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const [bypass, setBypass] = useState<string[]>([]);
   const [bypassInput, setBypassInput] = useState("");
 
-  type SysProxy = Awaited<ReturnType<typeof getSystemProxy>>;
   const [sysproxy, setSysproxy] = useState<SysProxy>();
 
-  type AutoProxy = Awaited<ReturnType<typeof getAutotemProxy>>;
   const [autoproxy, setAutoproxy] = useState<AutoProxy>();
 
   const {
@@ -79,15 +77,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         pac: proxy_auto_config,
         pac_content: pac_file_content ?? DEFAULT_PAC,
       });
-      getSystemProxy().then((p) => {
-        setSysproxy(p);
-        setBypass(p.bypass.split(separator) ?? []);
-      });
+      getSystemProxy().then((p) => setSysproxy(p));
       getAutotemProxy().then((p) => setAutoproxy(p));
+      setBypass(verge?.system_proxy_bypass?.split(separator) ?? []);
     },
     close: () => {
       setOpen(false);
-      setBypass(sysproxy?.bypass.split(separator) ?? []);
+      setBypass(verge?.system_proxy_bypass?.split(separator) ?? []);
     },
   }));
 
@@ -161,6 +157,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                   {sysproxy?.server ? sysproxy.server : t("Not available")}
                 </Typography>
               </FlexBox>
+              <FlexBox>
+                <Typography className="label">{t("Bypass")}</Typography>
+                <Typography className="value wrap-anywhere">
+                  {sysproxy?.bypass ? sysproxy.bypass : t("Not available")}
+                </Typography>
+              </FlexBox>
             </>
           )}
           {value.pac && (
@@ -228,7 +230,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                     <Tooltip title={t("Reset Default Bypass")}>
                       <span>
                         <IconButton
-                          disabled={!enabled}
+                          // disabled={!enabled}
                           color="primary"
                           size="small"
                           onClick={async () => {
@@ -244,7 +246,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               />
             </ListItem>
             <TextField
-              disabled={!enabled}
+              // disabled={!enabled}
               size="small"
               autoComplete="off"
               sx={{ width: "100%" }}
@@ -270,7 +272,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 input: {
                   endAdornment: (
                     <IconButton
-                      disabled={!enabled}
+                      // disabled={!enabled}
                       color="primary"
                       size="small"
                       onClick={() => {
@@ -302,7 +304,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                   <ListItemText primary={item} />
                   {!["localhost", "127.0.0.1"].includes(item) && (
                     <IconButton
-                      disabled={!enabled}
+                      // disabled={!enabled}
                       size="small"
                       color="warning"
                       onClick={() => {

@@ -43,3 +43,6 @@ config.parse.failed: Failed to parse config to yaml file
 config.convert.failed: Failed to convert config to yaml
 runtime.config.get.failed: Failed to get runtime config
 clash.restart.failed: Clash Core Restart Failed
+
+sysproxy.update.failed: Failed to update system proxy
+sysproxy.pac.update.failed: Failed to update PAC proxy

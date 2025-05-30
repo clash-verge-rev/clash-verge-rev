@@ -2,10 +2,11 @@ use crate::{
     config::{Config, IVerge},
     log_err,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
+use rust_i18n::t;
 use std::env::current_exe;
 use std::sync::Arc;
 use sysproxy::{Autoproxy, Sysproxy};
@@ -73,7 +74,7 @@ impl Sysopt {
 
     /// init the sysproxy
     pub fn init_sysproxy(&self) -> Result<()> {
-        let port = Config::clash().latest().get_mixed_port();
+        let port = { Config::clash().latest().get_mixed_port() };
         let pac_port = IVerge::get_singleton_port();
 
         let (enable, pac) = {
@@ -97,25 +98,37 @@ impl Sysopt {
         if pac {
             sys.enable = false;
             let old = Sysproxy::get_system_proxy().ok();
-            sys.set_system_proxy()?;
-            *self.old_sysproxy.lock() = old;
-            *self.cur_sysproxy.lock() = Some(sys);
+            if sys.set_system_proxy().is_ok() {
+                *self.old_sysproxy.lock() = old;
+                *self.cur_sysproxy.lock() = Some(sys);
+            } else {
+                bail!(t!("sysproxy.update.failed"));
+            }
 
             let old = Autoproxy::get_auto_proxy().ok();
-            auto.set_auto_proxy()?;
-            *self.old_autoproxy.lock() = old;
-            *self.cur_autoproxy.lock() = Some(auto);
+            if auto.set_auto_proxy().is_ok() {
+                *self.cur_autoproxy.lock() = Some(auto);
+                *self.old_autoproxy.lock() = old;
+            } else {
+                bail!(t!("sysproxy.pac.update.failed"));
+            }
         } else {
             auto.enable = false;
             let old = Autoproxy::get_auto_proxy().ok();
-            auto.set_auto_proxy()?;
-            *self.old_autoproxy.lock() = old;
-            *self.cur_autoproxy.lock() = Some(auto);
+            if auto.set_auto_proxy().is_ok() {
+                *self.old_autoproxy.lock() = old;
+                *self.cur_autoproxy.lock() = Some(auto);
+            } else {
+                bail!(t!("sysproxy.update.failed"));
+            }
 
             let old = Sysproxy::get_system_proxy().ok();
-            sys.set_system_proxy()?;
-            *self.old_sysproxy.lock() = old;
-            *self.cur_sysproxy.lock() = Some(sys);
+            if sys.set_system_proxy().is_ok() {
+                *self.old_sysproxy.lock() = old;
+                *self.cur_sysproxy.lock() = Some(sys);
+            } else {
+                bail!(t!("sysproxy.update.failed"));
+            }
         }
 
         // run the system proxy guard
@@ -126,9 +139,9 @@ impl Sysopt {
     /// update the system proxy
     pub fn update_sysproxy(&self) -> Result<()> {
         let mut cur_sysproxy = self.cur_sysproxy.lock();
-        let old_sysproxy = self.old_sysproxy.lock();
+        let old_sysproxy = { self.old_sysproxy.lock().clone() };
         let mut cur_autoproxy = self.cur_autoproxy.lock();
-        let old_autoproxy = self.old_autoproxy.lock();
+        let old_autoproxy = { self.old_autoproxy.lock().clone() };
 
         let (enable, pac) = {
             let verge = Config::verge();
@@ -139,41 +152,62 @@ impl Sysopt {
             )
         };
         if pac && (cur_autoproxy.is_none() || old_autoproxy.is_none()) {
+            tracing::info!("init pac proxy");
             drop(cur_autoproxy);
             drop(old_autoproxy);
             return self.init_sysproxy();
         }
 
         if !pac && (cur_sysproxy.is_none() || old_sysproxy.is_none()) {
+            tracing::info!("init system proxy");
             drop(cur_sysproxy);
             drop(old_sysproxy);
             return self.init_sysproxy();
         }
 
+        tracing::info!("update system proxy");
         let port = Config::clash().latest().get_mixed_port();
         let pac_port = IVerge::get_singleton_port();
 
         let mut sysproxy = cur_sysproxy.take().unwrap();
+        let sysproxy_ = sysproxy.clone();
         sysproxy.bypass = get_bypass();
         sysproxy.port = port;
 
         let mut autoproxy = cur_autoproxy.take().unwrap();
+        let autoproxy_ = autoproxy.clone();
         autoproxy.url = format!("http://127.0.0.1:{pac_port}/commands/pac");
 
         if pac {
             sysproxy.enable = false;
-            sysproxy.set_system_proxy()?;
-            *cur_sysproxy = Some(sysproxy);
-            autoproxy.enable = enable;
-            autoproxy.set_auto_proxy()?;
-            *cur_autoproxy = Some(autoproxy);
+            if sysproxy.set_system_proxy().is_ok() {
+                *cur_sysproxy = Some(sysproxy);
+                autoproxy.enable = enable;
+                if autoproxy.set_auto_proxy().is_ok() {
+                    *cur_autoproxy = Some(autoproxy);
+                } else {
+                    *cur_autoproxy = Some(autoproxy_);
+                    bail!(t!("sysproxy.pac.update.failed"));
+                }
+            } else {
+                *cur_sysproxy = Some(sysproxy_);
+                bail!(t!("sysproxy.update.failed"));
+            }
         } else {
             autoproxy.enable = false;
-            autoproxy.set_auto_proxy()?;
-            *cur_autoproxy = Some(autoproxy);
-            sysproxy.enable = enable;
-            sysproxy.set_system_proxy()?;
-            *cur_sysproxy = Some(sysproxy);
+            if autoproxy.set_auto_proxy().is_ok() {
+                *cur_autoproxy = Some(autoproxy);
+                sysproxy.enable = enable;
+                if sysproxy.set_system_proxy().is_ok() {
+                    *cur_sysproxy = Some(sysproxy);
+                } else {
+                    *cur_sysproxy = Some(sysproxy_);
+                    bail!(t!("sysproxy.update.failed"));
+                }
+            } else {
+                *cur_autoproxy = Some(autoproxy_);
+                bail!(t!("sysproxy.pac.update.failed"));
+            }
         }
 
         Ok(())

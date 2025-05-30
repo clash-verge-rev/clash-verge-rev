@@ -43,3 +43,6 @@ config.parse.failed: 无法将配置解析为 yaml 文件
 config.convert.failed: 无法将配置转换为 yaml
 runtime.config.get.failed: 无法获取运行时配置
 clash.restart.failed: Clash 核心重启失败
+
+sysproxy.update.failed: 无法更新系统代理
+sysproxy.pac.update.failed: 无法更新 PAC 代理设置

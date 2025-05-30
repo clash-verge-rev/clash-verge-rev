@@ -92,6 +92,7 @@ pub async fn embed_server() {
             .body(content)
             .unwrap_or_default()
     });
+    
     let scheme = warp::path!("commands" / "scheme")
         .and(warp::query::<QueryParam>())
         .and_then(scheme_handler);
@@ -100,6 +101,7 @@ pub async fn embed_server() {
         resolve::resolve_scheme(query.param).await;
         Ok("ok")
     }
+
     let commands = ping.or(visible).or(pac).or(scheme);
     let (_addr, server) =
         warp::serve(commands).bind_with_graceful_shutdown(([127, 0, 0, 1], port), async {
@@ -108,7 +110,7 @@ pub async fn embed_server() {
     tokio::task::spawn(server);
 }
 
-pub fn shutdown_embed_server() {
+pub fn shutdown_embedded_server() {
     tracing::info!("Shutting down embedded server");
     if let Some(sender) = SHUTDOWN_SENDER.get() {
         if let Some(sender) = sender.lock().unwrap().take() {
