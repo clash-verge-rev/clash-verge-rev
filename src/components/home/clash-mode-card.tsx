@@ -70,15 +70,15 @@ export const ClashModeCard = () => {
     },
     "&::after": mode === currentMode
       ? {
-          content: '""',
-          position: "absolute",
-          bottom: -16,
-          left: "50%",
-          width: 2,
-          height: 16,
-          bgcolor: "primary.main",
-          transform: "translateX(-50%)",
-        }
+        content: '""',
+        position: "absolute",
+        bottom: -16,
+        left: "50%",
+        width: 2,
+        height: 16,
+        bgcolor: "primary.main",
+        transform: "translateX(-50%)",
+      }
       : {},
   });
 
@@ -148,7 +148,7 @@ export const ClashModeCard = () => {
           component="div"
           sx={descriptionStyles}
         >
-          {t(`${currentMode} Mode Description`)}
+          {t(`${currentMode?.charAt(0).toUpperCase()}${currentMode?.slice(1)} Mode Description`)}
         </Typography>
       </Box>
     </Box>
