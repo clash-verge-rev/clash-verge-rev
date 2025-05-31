@@ -69,7 +69,7 @@
   },
   "devDependencies": {
     "@actions/github": "6.0.1",
-    "@tailwindcss/vite": "4.1.7",
+    "@tailwindcss/vite": "4.1.8",
     "@tauri-apps/cli": "2.5.0",
     "@types/cli-color": "2.0.6",
     "@types/fs-extra": "11.0.4",
@@ -97,7 +97,7 @@
     "pretty-quick": "4.1.1",
     "react-devtools": "6.1.2",
     "tailwind-merge": "3.3.0",
-    "tailwindcss": "4.1.7",
+    "tailwindcss": "4.1.8",
     "tar": "7.4.3",
     "terser": "5.40.0",
     "typescript": "5.8.3",
