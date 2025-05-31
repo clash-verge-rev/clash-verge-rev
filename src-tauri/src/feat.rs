@@ -18,7 +18,6 @@ use tauri::AppHandle;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::MessageDialogButtons;
 use tauri_plugin_dialog::MessageDialogKind;
-use tauri_plugin_mihomo::Protocol;
 use verge_log::VergeLog;
 
 /// 打开面板
@@ -477,15 +476,6 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
     let show_in_dock = patch.show_in_dock;
 
     if let Some(enable_external_controller) = enable_external_controller {
-        if enable_external_controller {
-            handle::Handle::get_mihomo_write()
-                .await
-                .update_protocol(Protocol::Http);
-        } else {
-            handle::Handle::get_mihomo_write()
-                .await
-                .update_protocol(Protocol::LocalSocket);
-        }
         tracing::info!("enable external controller: {}", enable_external_controller);
         Config::generate()?;
         CoreManager::global().run_core().await?;

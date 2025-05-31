@@ -34,9 +34,9 @@ pub static APP_VERSION: OnceCell<String> = OnceCell::new();
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
 #[cfg(unix)]
-pub const SOCKET_PATH: &str = "/tmp/verge-mihomo.sock";
+pub const MIHOMO_SOCKET_PATH: &str = "/tmp/verge-mihomo.sock";
 #[cfg(windows)]
-pub const SOCKET_PATH: &str = r#"\\.\pipe\verge-mihomo"#;
+pub const MIHOMO_SOCKET_PATH: &str = r#"\\.\pipe\verge-mihomo"#;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<()> {
@@ -109,19 +109,7 @@ pub fn run() -> Result<()> {
         }
     }));
 
-    let enable_external_controller = { verge.enable_external_controller.unwrap_or_default() };
-    let protocol = if enable_external_controller {
-        Protocol::Http
-    } else {
-        Protocol::LocalSocket
-    };
-    let info = Config::clash().latest().get_client_info();
-    let server = info.server;
-    let (host, port) = server.split_once(':').unwrap();
-    let secret = info.secret;
-
-    #[allow(unused_mut)]
-    let mut builder = tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
@@ -132,11 +120,8 @@ pub fn run() -> Result<()> {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_mihomo::Builder::new()
-            .protocol(protocol)
-            .external_host(Some(host.into()))
-            .external_port(Some(port.parse()?))
-            .secret(secret)
-            .socket_path(Some(SOCKET_PATH.into()))
+            .protocol(Protocol::LocalSocket)
+            .socket_path(Some(MIHOMO_SOCKET_PATH.into()))
             .build())
         .setup(|app| {
             #[cfg(target_os = "macos")]

@@ -26,7 +26,6 @@ pub struct StartBody {
     pub config_dir: String,
     pub config_file: String,
     pub log_file: String,
-    pub use_local_socket: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -62,8 +61,10 @@ where
     }
 }
 
+const SERVER_ID: &str = "verge-service-server";
+
 async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonResponse<T>> {
-    let path = ServerId::new("verge-server").parent_folder(std::env::temp_dir());
+    let path = ServerId::new(SERVER_ID).parent_folder(std::env::temp_dir());
     let client = tipsy::Endpoint::connect(path).await?;
     let mut reader = BufReader::new(client);
     let cmd_json = serde_json::to_string(&cmd)?;
@@ -326,13 +327,10 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
     check_service().await?;
     stop_core_by_service().await?;
 
-    let (clash_core, enable_external_controller) = {
+    let clash_core = {
         let verge = Config::verge();
         let verge = verge.latest();
-        (
-            verge.clash_core.clone().unwrap_or("verge-mihomo".into()),
-            verge.enable_external_controller.unwrap_or_default(),
-        )
+        verge.clash_core.clone().unwrap_or("verge-mihomo".into())
     };
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
@@ -361,7 +359,6 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
         config_dir: config_dir.to_string(),
         config_file: config_file.to_string(),
         log_file: log_path.to_string(),
-        use_local_socket: !enable_external_controller,
     };
     tracing::debug!("send start clash socket command, body: {:?}", body);
     let res = send_command::<()>(SocketCommand::StartClash(body)).await?;
