@@ -306,9 +306,8 @@ impl CoreManager {
         }
         #[cfg(unix)]
         {
-            tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
             if std::path::Path::new(MIHOMO_SOCKET_PATH).exists() {
-                tokio::fs::remove_file(MIHOMO_SOCKET_PATH).await?;
+                std::fs::remove_file(MIHOMO_SOCKET_PATH)?;
             }
         }
         Ok(())
