@@ -410,8 +410,8 @@ async function getLatestClashVergeServices() {
   //   downloadURL: downloadItem.browser_download_url,
   // };
   const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
-  ("https://github.com/oomeow/clash-verge-service/releases/download/v1.0.1/clash-verge-service-aarch64-unknown-linux-gnu.tar.gz");
-  const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/v1.0.1/${fileName}`;
+  ("https://github.com/oomeow/clash-verge-service/releases/download/v1.1.0/clash-verge-service-aarch64-unknown-linux-gnu.tar.gz");
+  const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/v1.1.0/${fileName}`;
   return {
     file: fileName,
     downloadURL: downloadURL,
