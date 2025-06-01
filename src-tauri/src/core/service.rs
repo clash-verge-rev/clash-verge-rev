@@ -316,9 +316,6 @@ pub async fn uninstall_service() -> Result<()> {
 pub async fn check_service() -> Result<JsonResponse<ClashStatus>> {
     match send_command::<ClashStatus>(SocketCommand::GetClash).await {
         Ok(res) => {
-            if res.code != 0 {
-                bail!("socket command [GetClash] return error: {}", res.msg);
-            }
             tracing::info!("connect to service success");
             Ok(res)
         }
