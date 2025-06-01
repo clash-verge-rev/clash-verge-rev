@@ -72,8 +72,7 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      refreshInterval: 30000,
-      dedupingInterval: 10000,
+      dedupingInterval: 3000,
       suspense: false,
       errorRetryCount: 3
     }
