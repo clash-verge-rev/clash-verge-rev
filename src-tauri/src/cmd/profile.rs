@@ -6,11 +6,53 @@ use crate::{
     utils::{dirs, help, logging::Type},
     wrap_err,
 };
+use std::time::Duration;
+use tokio::sync::Mutex;
+
+// 添加全局互斥锁防止并发配置更新
+static PROFILE_UPDATE_MUTEX: Mutex<()> = Mutex::const_new(());
 
 /// 获取配置文件列表
 #[tauri::command]
-pub fn get_profiles() -> CmdResult<IProfiles> {
-    Ok(Config::profiles().data().clone())
+pub async fn get_profiles() -> CmdResult<IProfiles> {
+    let profiles_result = tokio::time::timeout(
+        Duration::from_secs(3), // 3秒超时
+        tokio::task::spawn_blocking(move || Config::profiles().data().clone()),
+    )
+    .await;
+
+    match profiles_result {
+        Ok(Ok(profiles)) => Ok(profiles),
+        Ok(Err(join_err)) => {
+            logging!(error, Type::Cmd, true, "获取配置列表任务失败: {}", join_err);
+            Ok(IProfiles {
+                current: None,
+                items: Some(vec![]),
+            })
+        }
+        Err(_) => {
+            // 超时情况
+            logging!(
+                error,
+                Type::Cmd,
+                true,
+                "获取配置列表超时(3秒)，可能存在锁竞争"
+            );
+            match tokio::task::spawn_blocking(move || Config::profiles().latest().clone()).await {
+                Ok(profiles) => {
+                    logging!(info, Type::Cmd, true, "使用latest()成功获取配置");
+                    Ok(profiles)
+                }
+                Err(_) => {
+                    logging!(error, Type::Cmd, true, "fallback获取配置也失败，返回空配置");
+                    Ok(IProfiles {
+                        current: None,
+                        items: Some(vec![]),
+                    })
+                }
+            }
+        }
+    }
 }
 
 /// 增强配置文件
@@ -61,6 +103,9 @@ pub async fn delete_profile(index: String) -> CmdResult {
 /// 修改profiles的配置
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
+    // 获取互斥锁，防止并发执行
+    let _guard = PROFILE_UPDATE_MUTEX.lock().await;
+
     logging!(info, Type::Cmd, true, "开始修改配置文件");
 
     // 保存当前配置，以便在验证失败时恢复
@@ -73,20 +118,22 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             logging!(info, Type::Cmd, true, "正在切换到新配置: {}", new_profile);
 
             // 获取目标配置文件路径
-            let profiles_config = Config::profiles();
-            let profiles_data = profiles_config.latest();
-            let config_file_result = match profiles_data.get_item(new_profile) {
-                Ok(item) => {
-                    if let Some(file) = &item.file {
-                        let path = dirs::app_profiles_dir().map(|dir| dir.join(file));
-                        path.ok()
-                    } else {
+            let config_file_result = {
+                let profiles_config = Config::profiles();
+                let profiles_data = profiles_config.latest();
+                match profiles_data.get_item(new_profile) {
+                    Ok(item) => {
+                        if let Some(file) = &item.file {
+                            let path = dirs::app_profiles_dir().map(|dir| dir.join(file));
+                            path.ok()
+                        } else {
+                            None
+                        }
+                    }
+                    Err(e) => {
+                        logging!(error, Type::Cmd, true, "获取目标配置信息失败: {}", e);
                         None
                     }
-                }
-                Err(e) => {
-                    logging!(error, Type::Cmd, true, "获取目标配置信息失败: {}", e);
-                    None
                 }
             };
 
@@ -107,32 +154,64 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                     return Ok(false);
                 }
 
-                match std::fs::read_to_string(&file_path) {
-                    Ok(content) => match serde_yaml::from_str::<serde_yaml::Value>(&content) {
-                        Ok(_) => {
-                            logging!(info, Type::Cmd, true, "目标配置文件语法正确");
+                // 超时保护
+                let file_read_result = tokio::time::timeout(
+                    Duration::from_secs(5),
+                    tokio::fs::read_to_string(&file_path),
+                )
+                .await;
+
+                match file_read_result {
+                    Ok(Ok(content)) => {
+                        let yaml_parse_result = tokio::task::spawn_blocking(move || {
+                            serde_yaml::from_str::<serde_yaml::Value>(&content)
+                        })
+                        .await;
+
+                        match yaml_parse_result {
+                            Ok(Ok(_)) => {
+                                logging!(info, Type::Cmd, true, "目标配置文件语法正确");
+                            }
+                            Ok(Err(err)) => {
+                                let error_msg = format!(" {}", err);
+                                logging!(
+                                    error,
+                                    Type::Cmd,
+                                    true,
+                                    "目标配置文件存在YAML语法错误:{}",
+                                    error_msg
+                                );
+                                handle::Handle::notice_message(
+                                    "config_validate::yaml_syntax_error",
+                                    &error_msg,
+                                );
+                                return Ok(false);
+                            }
+                            Err(join_err) => {
+                                let error_msg = format!("YAML解析任务失败: {}", join_err);
+                                logging!(error, Type::Cmd, true, "{}", error_msg);
+                                handle::Handle::notice_message(
+                                    "config_validate::yaml_parse_error",
+                                    &error_msg,
+                                );
+                                return Ok(false);
+                            }
                         }
-                        Err(err) => {
-                            let error_msg = format!(" {}", err);
-                            logging!(
-                                error,
-                                Type::Cmd,
-                                true,
-                                "目标配置文件存在YAML语法错误:{}",
-                                error_msg
-                            );
-                            handle::Handle::notice_message(
-                                "config_validate::yaml_syntax_error",
-                                &error_msg,
-                            );
-                            return Ok(false);
-                        }
-                    },
-                    Err(err) => {
+                    }
+                    Ok(Err(err)) => {
                         let error_msg = format!("无法读取目标配置文件: {}", err);
                         logging!(error, Type::Cmd, true, "{}", error_msg);
                         handle::Handle::notice_message(
                             "config_validate::file_read_error",
+                            &error_msg,
+                        );
+                        return Ok(false);
+                    }
+                    Err(_) => {
+                        let error_msg = "读取配置文件超时(5秒)".to_string();
+                        logging!(error, Type::Cmd, true, "{}", error_msg);
+                        handle::Handle::notice_message(
+                            "config_validate::file_read_timeout",
                             &error_msg,
                         );
                         return Ok(false);
@@ -149,9 +228,16 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     let _ = Config::profiles().draft().patch_config(profiles);
 
+    // 为配置更新添加超时保护
+    let update_result = tokio::time::timeout(
+        Duration::from_secs(30), // 30秒超时
+        CoreManager::global().update_config(),
+    )
+    .await;
+
     // 更新配置并进行验证
-    match CoreManager::global().update_config().await {
-        Ok((true, _)) => {
+    match update_result {
+        Ok(Ok((true, _))) => {
             logging!(info, Type::Cmd, true, "配置更新成功");
             Config::profiles().apply();
             handle::Handle::refresh_clash();
@@ -179,7 +265,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
             Ok(true)
         }
-        Ok((false, error_msg)) => {
+        Ok(Ok((false, error_msg))) => {
             logging!(warn, Type::Cmd, true, "配置验证失败: {}", error_msg);
             Config::profiles().discard();
             // 如果验证失败，恢复到之前的配置
@@ -212,10 +298,35 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             handle::Handle::notice_message("config_validate::error", &error_msg);
             Ok(false)
         }
-        Err(e) => {
+        Ok(Err(e)) => {
             logging!(warn, Type::Cmd, true, "更新过程发生错误: {}", e);
             Config::profiles().discard();
             handle::Handle::notice_message("config_validate::boot_error", e.to_string());
+            Ok(false)
+        }
+        Err(_) => {
+            // 超时处理
+            let timeout_msg = "配置更新超时(30秒)，可能是配置验证或核心通信阻塞";
+            logging!(error, Type::Cmd, true, "{}", timeout_msg);
+            Config::profiles().discard();
+
+            if let Some(prev_profile) = current_profile {
+                logging!(
+                    info,
+                    Type::Cmd,
+                    true,
+                    "超时后尝试恢复到之前的配置: {}",
+                    prev_profile
+                );
+                let restore_profiles = IProfiles {
+                    current: Some(prev_profile),
+                    items: None,
+                };
+                wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
+                Config::profiles().apply();
+            }
+
+            handle::Handle::notice_message("config_validate::timeout", timeout_msg);
             Ok(false)
         }
     }
