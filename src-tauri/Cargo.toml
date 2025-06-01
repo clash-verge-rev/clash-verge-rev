@@ -66,6 +66,11 @@ tracing-appender = "0.2.3"
 time = { version = "0.3.41", features = ["macros", "parsing"] }
 tipsy = "0.6.0"
 futures-util = "0.3.31"
+base64 = "0.22.1"
+rand = "0.8"
+rsa = "0.9.8"
+sha2 = "0.10.9"
+aes-gcm = "0.10.3"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2"

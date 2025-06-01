@@ -1,5 +1,6 @@
 use crate::config::Config;
-use crate::utils::dirs;
+use crate::utils::crypto::load_keys;
+use crate::utils::{crypto, dirs};
 use anyhow::{bail, Result};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -67,12 +68,17 @@ async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonRes
     let path = ServerId::new(SERVER_ID).parent_folder(std::env::temp_dir());
     let client = tipsy::Endpoint::connect(path).await?;
     let mut reader = BufReader::new(client);
+    // send request
     let cmd_json = serde_json::to_string(&cmd)?;
-    let data = format!("{}\n", cmd_json);
-    reader.write_all(data.as_bytes()).await?;
+    let (private_key, public_key) = load_keys()?;
+    let combined = crypto::encrypt_socket_data(&public_key, &cmd_json)?;
+    reader.write_all(combined.as_bytes()).await?;
+    // receive response
     let mut response = String::new();
     reader.read_line(&mut response).await?;
+    response = crypto::decrypt_socket_data(&private_key, &response)?;
     let res = JsonResponse::from_str(&response)?;
+
     Ok(res)
 }
 
