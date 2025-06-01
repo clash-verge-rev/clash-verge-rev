@@ -264,8 +264,8 @@ jobs:
           LABEL="release changelog"
 
           git checkout -b $BRANCH
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add CHANGELOG.md UPDATELOG.md
           git commit -m "docs: update CHANGELOG.md and UPDATELOG.md"
           git push --set-upstream origin $BRANCH
