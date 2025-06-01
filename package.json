@@ -91,7 +91,7 @@
     "husky": "9.1.7",
     "meta-json-schema": "1.19.9",
     "node-fetch": "3.3.2",
-    "postcss": "8.5.3",
+    "postcss": "8.5.4",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "0.6.11",
     "pretty-quick": "4.1.1",
