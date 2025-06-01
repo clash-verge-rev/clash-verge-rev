@@ -1,4 +1,4 @@
-use crate::{core::service, wrap_err};
+use crate::{core::service, utils, wrap_err};
 
 use super::CmdResult;
 
@@ -9,7 +9,8 @@ pub async fn check_service() -> CmdResult<service::JsonResponse<service::ClashSt
 
 #[tauri::command]
 pub async fn install_service() -> CmdResult {
-    wrap_err!(service::install_service().await)
+    wrap_err!(service::install_service().await)?;
+    wrap_err!(utils::crypto::reload_keys())
 }
 
 #[tauri::command]

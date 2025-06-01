@@ -69,7 +69,6 @@ futures-util = "0.3.31"
 base64 = "0.22.1"
 rand = "0.8"
 rsa = "0.9.8"
-sha2 = "0.10.9"
 aes-gcm = "0.10.3"
 
 [target.'cfg(windows)'.dependencies]

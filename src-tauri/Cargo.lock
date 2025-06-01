@@ -993,7 +993,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "sha2 0.10.9",
  "signal-hook 0.3.18",
  "sysinfo",
  "sysproxy",

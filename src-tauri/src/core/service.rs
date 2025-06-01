@@ -1,6 +1,5 @@
 use crate::config::Config;
-use crate::utils::crypto::load_keys;
-use crate::utils::{crypto, dirs};
+use crate::utils::{self, crypto, dirs};
 use anyhow::{bail, Result};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -69,15 +68,23 @@ async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonRes
     let mut reader = BufReader::new(client);
     // send request
     let cmd_json = serde_json::to_string(&cmd)?;
-    let (private_key, public_key) = load_keys()?;
-    let combined = crypto::encrypt_socket_data(&public_key, &cmd_json)?;
-    reader.write_all(combined.as_bytes()).await?;
+    // let (private_key, public_key) = load_keys()?;
+    if let Some(public_key) = utils::crypto::get_public_key() {
+        let combined = crypto::encrypt_socket_data(&public_key, &cmd_json)?;
+        reader.write_all(combined.as_bytes()).await?;
+    } else {
+        bail!("failed to get rsa public key")
+    }
     // receive response
     let mut response = String::new();
     reader.read_line(&mut response).await?;
-    response = crypto::decrypt_socket_data(&private_key, &response)?;
-    let res = JsonResponse::from_str(&response)?;
-    Ok(res)
+    if let Some(private_key) = utils::crypto::get_private_key() {
+        response = crypto::decrypt_socket_data(&private_key, &response)?;
+        let res = JsonResponse::from_str(&response)?;
+        Ok(res)
+    } else {
+        bail!("failed to get rsa private key")
+    }
 }
 
 /// Install the Clash Verge Service

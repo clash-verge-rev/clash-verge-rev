@@ -5,11 +5,10 @@ use crate::{
     utils::init,
     utils::server,
 };
-use crate::{log_err, trace_err};
+use crate::{log_err, trace_err, utils};
 use anyhow::Result;
 use rust_i18n::t;
 use tauri::{AppHandle, CloseRequestApi, Manager};
-
 
 /// handle something when start app
 pub async fn resolve_setup() {
@@ -20,6 +19,8 @@ pub async fn resolve_setup() {
     tracing::trace!("init startup script");
     log_err!(init::startup_script().await);
     // 启动核心
+    tracing::trace!("load rsa keys");
+    log_err!(utils::crypto::load_keys());
     tracing::trace!("init config");
     log_err!(Config::init_config());
     tracing::trace!("launch core");
