@@ -1,5 +1,3 @@
-use std::io::Read;
-
 use aes_gcm::aead::{Aead, KeyInit, OsRng};
 use aes_gcm::{AeadCore, Aes256Gcm, Nonce};
 use anyhow::{anyhow, bail, Ok, Result};
@@ -9,32 +7,10 @@ use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::Pkcs1v15Encrypt;
 use rsa::{pkcs1::DecodeRsaPublicKey, RsaPrivateKey, RsaPublicKey};
 use sha2::digest::generic_array::GenericArray;
+use std::io::Read;
 
 pub const PRI_KEY_PEM_FILE: &str = ".private.pem";
 pub const PUB_KEY_PEM_FILE: &str = ".public.pem";
-
-// pub fn init_rsa_keys() -> Result<()> {
-//     let private_key_path = Path::new(&PRI_KEY_PEM_PATH);
-//     let public_key_path = Path::new(&PUB_KEY_PEM_PATH);
-//     if !private_key_path.exists() || !public_key_path.exists() {
-//         generate_rsa_keys()?;
-//     }
-//     Ok(())
-// }
-
-// pub fn generate_rsa_keys() -> Result<(RsaPrivateKey, RsaPublicKey)> {
-//     let private_key = RsaPrivateKey::new(&mut rand::thread_rng(), 2048)?;
-//     let public_key = RsaPublicKey::from(&private_key);
-//     std::fs::write(
-//         PRI_KEY_PEM_FILE,
-//         &private_key.to_pkcs1_pem(Default::default())?,
-//     )?;
-//     std::fs::write(
-//         PUB_KEY_PEM_FILE,
-//         &public_key.to_pkcs1_pem(Default::default())?,
-//     )?;
-//     Ok((private_key, public_key))
-// }
 
 pub fn load_keys() -> Result<(RsaPrivateKey, RsaPublicKey)> {
     let private_key_path = crate::utils::dirs::app_resources_dir()?.join(PRI_KEY_PEM_FILE);

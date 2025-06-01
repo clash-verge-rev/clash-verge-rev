@@ -277,7 +277,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         handle::Handle::refresh_verge();
         handle::Handle::refresh_clash();
         handle::Handle::notice_message("set_config::ok", "ok");
-        return Result::<()>::Ok(());
+        return Ok(());
     }
 
     if patch.get("external-controller").is_some() {

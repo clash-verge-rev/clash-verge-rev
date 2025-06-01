@@ -54,9 +54,8 @@ pub struct JsonResponse<T> {
 
 impl<T> JsonResponse<T>
 where
-    T: serde::de::DeserializeOwned, // 关键约束：T 必须可被反序列化
+    T: serde::de::DeserializeOwned,
 {
-    // 定义 from_str 方法，返回 Result 类型
     pub fn from_str(json_str: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json_str)
     }
@@ -78,7 +77,6 @@ async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonRes
     reader.read_line(&mut response).await?;
     response = crypto::decrypt_socket_data(&private_key, &response)?;
     let res = JsonResponse::from_str(&response)?;
-
     Ok(res)
 }
 
@@ -318,6 +316,9 @@ pub async fn uninstall_service() -> Result<()> {
 pub async fn check_service() -> Result<JsonResponse<ClashStatus>> {
     match send_command::<ClashStatus>(SocketCommand::GetClash).await {
         Ok(res) => {
+            if res.code != 0 {
+                bail!("socket command [GetClash] return error: {}", res.msg);
+            }
             tracing::info!("connect to service success");
             Ok(res)
         }
@@ -354,8 +355,6 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
     map.insert("bin_path", bin_path);
     map.insert("config_dir", config_dir);
     map.insert("config_file", config_file);
-
-    // let log_path = dirs::service_log_file()?;
     let log_path = dirs::path_to_str(log_path)?;
     map.insert("log_file", log_path);
 
@@ -369,7 +368,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
     tracing::debug!("send start clash socket command, body: {:?}", body);
     let res = send_command::<()>(SocketCommand::StartClash(body)).await?;
     if res.code != 0 {
-        bail!("start clash socket command return error: {}", res.msg);
+        bail!("socket command [StartClash] return error: {}", res.msg);
     }
 
     Ok(())
@@ -379,7 +378,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
 pub(super) async fn stop_core_by_service() -> Result<()> {
     let res = send_command::<()>(SocketCommand::StopClash).await?;
     if res.code != 0 {
-        bail!(res.msg);
+        bail!("socket command [StopClash] return error: {}", res.msg);
     }
     Ok(())
 }
@@ -387,13 +386,16 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 pub async fn get_logs() -> Result<JsonResponse<VecDeque<String>>> {
     let res = send_command::<VecDeque<String>>(SocketCommand::GetLogs).await?;
     if res.code != 0 {
-        bail!(res.msg);
+        bail!("socket command [GetLogs] return error: {}", res.msg);
     }
     Ok(res)
 }
 
 /// stop the service
 pub async fn stop_service() -> Result<()> {
-    let _ = send_command::<()>(SocketCommand::StopService).await?;
+    let res = send_command::<()>(SocketCommand::StopService).await?;
+    if res.code != 0 {
+        bail!("socket command [StopService] return error: {}", res.msg);
+    }
     Ok(())
 }
