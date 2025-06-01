@@ -66,7 +66,7 @@ export const ProfileItem = (props: Props) => {
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const loadingCache = useLoadingCache();
   const setLoadingCache = useSetLoadingCache();
-  
+
   // 新增状态：是否显示下次更新时间
   const [showNextUpdate, setShowNextUpdate] = useState(false);
   const [nextUpdateTime, setNextUpdateTime] = useState("");
@@ -78,27 +78,27 @@ export const ProfileItem = (props: Props) => {
     if (itemData.option?.update_interval && itemData.option.update_interval > 0) {
       try {
         console.log(`尝试获取配置 ${itemData.uid} 的下次更新时间`);
-        
+
         // 如果需要强制刷新，先触发Timer.refresh()
         if (forceRefresh) {
           // 这里可以通过一个新的API来触发刷新，但目前我们依赖patch_profile中的刷新
           console.log(`强制刷新定时器任务`);
         }
-        
+
         const nextUpdate = await getNextUpdateTime(itemData.uid);
         console.log(`获取到下次更新时间结果:`, nextUpdate);
-        
+
         if (nextUpdate) {
           const nextUpdateDate = dayjs(nextUpdate * 1000);
           const now = dayjs();
-          
+
           // 如果已经过期，显示"更新失败"
           if (nextUpdateDate.isBefore(now)) {
             setNextUpdateTime(t("Last Update failed"));
           } else {
             // 否则显示剩余时间
             const diffMinutes = nextUpdateDate.diff(now, 'minute');
-            
+
             if (diffMinutes < 60) {
               if (diffMinutes <= 0) {
                 setNextUpdateTime(`${t("Next Up")} <1m`);
@@ -128,11 +128,11 @@ export const ProfileItem = (props: Props) => {
   // 切换显示模式的函数
   const toggleUpdateTimeDisplay = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!showNextUpdate) {
       fetchNextUpdateTime();
     }
-    
+
     setShowNextUpdate(!showNextUpdate);
   };
 
@@ -148,7 +148,7 @@ export const ProfileItem = (props: Props) => {
     // 处理定时器更新事件 - 这个事件专门用于通知定时器变更
     const handleTimerUpdate = (event: any) => {
       const updatedUid = event.payload as string;
-      
+
       // 只有当更新的是当前配置时才刷新显示
       if (updatedUid === itemData.uid && showNextUpdate) {
         console.log(`收到定时器更新事件: uid=${updatedUid}`);
@@ -300,7 +300,7 @@ export const ProfileItem = (props: Props) => {
     try {
       // 调用后端更新（后端会自动处理回退逻辑）
       await updateProfile(itemData.uid, option);
-      
+
       // 更新成功，刷新列表
       showNotice('success', t("Update subscription successfully"));
       mutate("getProfiles");
@@ -345,7 +345,7 @@ export const ProfileItem = (props: Props) => {
     },
     { label: "Open File", handler: onOpenFile, disabled: false },
     { label: "Update", handler: () => onUpdate(0), disabled: false },
-    { label: "Update(Proxy)", handler: () => onUpdate(2), disabled: false },
+    { label: "Update via proxy", handler: () => onUpdate(2), disabled: false },
     {
       label: "Delete",
       handler: () => {
@@ -548,7 +548,7 @@ export const ProfileItem = (props: Props) => {
                     fontSize={14}
                     textAlign="right"
                     title={showNextUpdate ? t("Click to show last update time") : `${t("Update Time")}: ${parseExpire(updated)}\n${t("Click to show next update")}`}
-                    sx={{ 
+                    sx={{
                       cursor: "pointer",
                       display: "inline-block",
                       borderBottom: "1px dashed transparent",
@@ -560,7 +560,7 @@ export const ProfileItem = (props: Props) => {
                     }}
                     onClick={toggleUpdateTimeDisplay}
                   >
-                    {showNextUpdate 
+                    {showNextUpdate
                       ? nextUpdateTime
                       : (updated > 0 ? dayjs(updated * 1000).fromNow() : "")}
                   </Typography>

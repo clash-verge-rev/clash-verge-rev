@@ -153,6 +153,7 @@
   "Edit File": "编辑文件",
   "Open File": "打开文件",
   "Update": "更新",
+  "Update via proxy": "更新(通过代理)",
   "Confirm deletion": "确认删除",
   "This operation is not reversible": "此操作不可逆",
   "Script Console": "脚本控制台输出",
