@@ -68,7 +68,6 @@ async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonRes
     let mut reader = BufReader::new(client);
     // send request
     let cmd_json = serde_json::to_string(&cmd)?;
-    // let (private_key, public_key) = load_keys()?;
     if let Some(public_key) = utils::crypto::get_public_key() {
         let combined = crypto::encrypt_socket_data(&public_key, &cmd_json)?;
         reader.write_all(combined.as_bytes()).await?;

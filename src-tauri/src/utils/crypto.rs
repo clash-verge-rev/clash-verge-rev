@@ -77,16 +77,16 @@ pub fn rsa_decrypt(private_key: &RsaPrivateKey, enc_data: &[u8]) -> Result<Vec<u
 
 pub fn aes_encrypt(key: &[u8], nonce: &[u8], data: &[u8]) -> Result<Vec<u8>> {
     let cipher = Aes256Gcm::new(key.into());
-    Ok(cipher
+    cipher
         .encrypt(Nonce::from_slice(nonce), data)
-        .map_err(|e| anyhow::anyhow!("aes encrypt failed, error {:?}", e))?)
+        .map_err(|e| anyhow::anyhow!("aes encrypt failed, error {:?}", e))
 }
 
 pub fn aes_decrypt(key: &[u8], nonce: &[u8], data: &[u8]) -> Result<Vec<u8>> {
     let cipher = Aes256Gcm::new(key.into());
-    Ok(cipher
+    cipher
         .decrypt(Nonce::from_slice(nonce), data)
-        .map_err(|e| anyhow::anyhow!("aes decrypt failed, error {:?}", e))?)
+        .map_err(|e| anyhow::anyhow!("aes decrypt failed, error {:?}", e))
 }
 
 pub fn gen_aes_key_and_nonce() -> (Vec<u8>, Vec<u8>) {
