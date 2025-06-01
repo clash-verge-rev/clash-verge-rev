@@ -1,7 +1,3 @@
-<!--
-### 🚨 Breaking Changes
--->
-
 ### ✨ Features
 
 - 与 Clash Verge Service 的通信改用 IPC 通信，**需要卸载旧版本服务**（Macos 未验证）
