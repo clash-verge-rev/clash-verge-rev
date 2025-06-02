@@ -1,5 +1,5 @@
 name: Release Build
-
+# TODO: 参照 alpha.yml 修改，实现稳定版发布，只允许通过 git tag 触发
 on:
   workflow_dispatch:
 permissions: write-all
