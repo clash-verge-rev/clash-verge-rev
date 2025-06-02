@@ -270,6 +270,7 @@
   "Support %host, %port, %secret": "Support %host, %port, %secret",
   "Clash Core": "Clash Core",
   "Upgrade": "Upgrade",
+  "Already Using Latest Core Version": "Already Using Latest Core Version",
   "Restart": "Restart",
   "Release Version": "Release Version",
   "Alpha Version": "Alpha Version",

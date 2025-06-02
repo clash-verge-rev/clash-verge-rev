@@ -36,7 +36,8 @@ function getAllSourceContent() {
 const WHITELIST_KEYS = [
   'theme.light',
   'theme.dark',
-  'theme.system'
+  'theme.system',
+  "Already Using Latest Core Version"
 ];
 
 // 主流程

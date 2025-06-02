@@ -270,6 +270,7 @@
   "Support %host, %port, %secret": "支持 %host, %port, %secret",
   "Clash Core": "Clash 内核",
   "Upgrade": "升级内核",
+  "Already Using Latest Core Version": "已使用最新内核版本",
   "Restart": "重启内核",
   "Release Version": "正式版",
   "Alpha Version": "预览版",

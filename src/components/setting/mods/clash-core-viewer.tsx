@@ -50,13 +50,13 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       setChangingCore(core);
       closeAllConnections();
       const errorMsg = await changeClashCore(core);
-      
+
       if (errorMsg) {
         showNotice('error', errorMsg);
         setChangingCore(null);
         return;
       }
-      
+
       mutateVerge();
       setTimeout(() => {
         mutate("getClashConfig");
@@ -89,7 +89,11 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       showNotice('success', t(`Core Version Updated`));
     } catch (err: any) {
       setUpgrading(false);
-      showNotice('error', err.response?.data?.message || err.toString());
+      const errMsg = err.response?.data?.message || err.toString();
+      const showMsg = errMsg.includes("already using latest version")
+        ? "Already Using Latest Core Version"
+        : errMsg;
+      showNotice('error', t(showMsg));
     }
   });
 
