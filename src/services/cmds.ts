@@ -183,7 +183,7 @@ export async function cmdGetProxyDelay(
   url?: string,
 ) {
   // 确保URL不为空
-  const testUrl = url || "https://www.gstatic.com/generate_204";
+  const testUrl = url || "https://cp.cloudflare.com/generate_204";
   console.log(
     `[API] 调用延迟测试API，代理: ${name}, 超时: ${timeout}ms, URL: ${testUrl}`,
   );

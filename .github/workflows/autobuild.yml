@@ -424,9 +424,7 @@ jobs:
 
   autobuild-x86-arm-windows_webview2:
     name: Autobuild x86 and ARM Windows with WebView2
-    needs: check_commit
-    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    # needs: update_tag
+    needs: update_tag
     strategy:
       fail-fast: false
       matrix:

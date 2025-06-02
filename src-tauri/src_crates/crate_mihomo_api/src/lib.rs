@@ -150,7 +150,7 @@ impl MihomoManager {
         test_url: Option<String>,
         timeout: i32,
     ) -> Result<serde_json::Value, String> {
-        let test_url = test_url.unwrap_or("https://www.gstatic.com/generate_204".to_string());
+        let test_url = test_url.unwrap_or("https://cp.cloudflare.com/generate_204".to_string());
         let url = format!(
             "{}/proxies/{}/delay?url={}&timeout={}",
             self.mihomo_server, name, test_url, timeout
