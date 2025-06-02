@@ -201,8 +201,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version ${{ env.TAG_NAME }}
+      # - name: Release ${{ env.TAG_CHANNEL }} Version
+      #   run: pnpm release-version ${{ env.TAG_NAME }}
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
@@ -271,8 +271,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version ${{ env.TAG_NAME }}
+      # - name: Release ${{ env.TAG_CHANNEL }} Version
+      #   run: pnpm release-version ${{ env.TAG_NAME }}
 
       - name: Setup for linux
         run: |
@@ -400,8 +400,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version ${{ env.TAG_NAME }}
+      # - name: Release ${{ env.TAG_CHANNEL }} Version
+      #   run: pnpm release-version ${{ env.TAG_NAME }}
 
       - name: Download WebView2 Runtime
         run: |
