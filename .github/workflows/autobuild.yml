@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   check_commit:
+    name: Check Commit Needs Build
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.check.outputs.should_run }}
@@ -414,8 +415,8 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
+          tag_name: autobuild
+          name: "Clash Verge Rev AutoBuild"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
