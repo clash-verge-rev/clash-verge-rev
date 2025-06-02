@@ -16,51 +16,106 @@ concurrency:
 
 jobs:
   delete_old_assets:
-    name: Delete Old Alpha Release Assets
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete Old Alpha Release Assets
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const releaseTag = 'alpha';
+  name: Delete Old Alpha Release Assets and Tags
+  runs-on: ubuntu-latest
+  steps:
+    - name: Delete Old Alpha Tags Except Latest
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const tagPattern = /-alpha.*/; // 匹配带有 -alpha 的 tag
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
 
-            try {
-              // Get the release by tag name
-              const { data: release } = await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag: releaseTag
+          try {
+            // 获取所有 tag
+            const { data: tags } = await github.rest.repos.listTags({
+              owner,
+              repo,
+              per_page: 100 // 调整 per_page 以获取更多 tag
+            });
+
+            // 过滤出包含 -alpha 的 tag
+            const alphaTags = tags
+              .filter(tag => tagPattern.test(tag.name))
+              .sort((a, b) => {
+                // 按 commit 日期降序排序（最新的在前面）
+                return new Date(b.commit.committer.date) - new Date(a.commit.committer.date);
               });
 
-              console.log(`Found release with ID: ${release.id}`);
+            console.log(`Found ${alphaTags.length} alpha tags`);
 
-              // Delete each asset
-              if (release.assets && release.assets.length > 0) {
-                console.log(`Deleting ${release.assets.length} assets`);
+            if (alphaTags.length === 0) {
+              console.log('No alpha tags found');
+              return;
+            }
 
-                for (const asset of release.assets) {
-                  console.log(`Deleting asset: ${asset.name} (${asset.id})`);
-                  await github.rest.repos.deleteReleaseAsset({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    asset_id: asset.id
-                  });
+            // 保留最新的 tag
+            const latestTag = alphaTags[0];
+            console.log(`Keeping latest alpha tag: ${latestTag.name}`);
+
+            // 处理其他旧的 alpha tag
+            for (const tag of alphaTags.slice(1)) {
+              console.log(`Processing tag: ${tag.name}`);
+
+              // 获取与 tag 关联的 release
+              try {
+                const { data: release } = await github.rest.repos.getReleaseByTag({
+                  owner,
+                  repo,
+                  tag: tag.name
+                });
+
+                // 删除 release 下的所有资产
+                if (release.assets && release.assets.length > 0) {
+                  console.log(`Deleting ${release.assets.length} assets for release ${tag.name}`);
+                  for (const asset of release.assets) {
+                    console.log(`Deleting asset: ${asset.name} (${asset.id})`);
+                    await github.rest.repos.deleteReleaseAsset({
+                      owner,
+                      repo,
+                      asset_id: asset.id
+                    });
+                  }
                 }
 
-                console.log('All assets deleted successfully');
-              } else {
-                console.log('No assets found to delete');
-              }
-            } catch (error) {
-              if (error.status === 404) {
-                console.log('Release not found, nothing to delete');
-              } else {
-                console.error('Error:', error);
-                throw error;
+                // 删除 release
+                console.log(`Deleting release for tag: ${tag.name}`);
+                await github.rest.repos.deleteRelease({
+                  owner,
+                  repo,
+                  release_id: release.id
+                });
+
+                // 删除 tag
+                console.log(`Deleting tag: ${tag.name}`);
+                await github.rest.git.deleteRef({
+                  owner,
+                  repo,
+                  ref: `tags/${tag.name}`
+                });
+
+              } catch (error) {
+                if (error.status === 404) {
+                  console.log(`No release found for tag ${tag.name}, deleting tag directly`);
+                  await github.rest.git.deleteRef({
+                    owner,
+                    repo,
+                    ref: `tags/${tag.name}`
+                  });
+                } else {
+                  console.error(`Error processing tag ${tag.name}:`, error);
+                  throw error;
+                }
               }
             }
+
+            console.log('Old alpha tags and releases deleted successfully');
+          } catch (error) {
+            console.error('Error:', error);
+            throw error;
+          }
 
   update_tag:
     name: Update tag
