@@ -88,6 +88,7 @@
  - 配置文件缺失 secret 字段时自动填充默认值 set-your-secret
  - 优化异步处理，防止部分组件 UI 阻塞
  - 关闭 DNS 启用
+ - 延迟测试链接更换为 Https 协议 https://www.gstatic.com/generate_204
 
 #### 移除了：
  - 窗口状态管理器

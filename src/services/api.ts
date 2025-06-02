@@ -83,7 +83,7 @@ export const getProxyDelay = async (
 ) => {
   const params = {
     timeout: timeout || 10000,
-    url: url || "http://cp.cloudflare.com/generate_204",
+    url: url || "https://www.gstatic.com/generate_204",
   };
   const instance = await getAxios();
   const result = await instance.get(
@@ -274,7 +274,7 @@ export const getGroupProxyDelays = async (
 ) => {
   const params = {
     timeout: timeout || 10000,
-    url: url || "http://cp.cloudflare.com/generate_204",
+    url: url || "https://www.gstatic.com/generate_204",
   };
 
   console.log(
