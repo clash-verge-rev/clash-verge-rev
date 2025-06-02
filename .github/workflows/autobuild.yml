@@ -67,57 +67,10 @@ jobs:
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
 
-  delete_old_assets:
-    name: Delete Old Autobuild Release Assets
-    needs: check_commit
-    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete Old Autobuild Release Assets
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const releaseTag = '${{ env.TAG_NAME }}';
-
-            try {
-              const { data: release } = await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag: releaseTag
-              });
-
-              console.log(`Found release with ID: ${release.id}`);
-
-              if (release.assets && release.assets.length > 0) {
-                console.log(`Deleting ${release.assets.length} assets`);
-
-                for (const asset of release.assets) {
-                  console.log(`Deleting asset: ${asset.name} (${asset.id})`);
-                  await github.rest.repos.deleteReleaseAsset({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    asset_id: asset.id
-                  });
-                }
-
-                console.log('All assets deleted successfully');
-              } else {
-                console.log('No assets found to delete');
-              }
-            } catch (error) {
-              if (error.status === 404) {
-                console.log('Release not found, nothing to delete');
-              } else {
-                console.error('Error:', error);
-                throw error;
-              }
-            }
-
   update_tag:
     name: Update tag
     runs-on: ubuntu-latest
-    needs: [check_commit, delete_old_assets]
+    needs: check_commit
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     steps:
       - name: Checkout repository
