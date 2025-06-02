@@ -13,12 +13,10 @@ env:
   RUST_BACKTRACE: short
 concurrency:
   group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
-  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' }}
 
 jobs:
   delete_old_assets:
     name: Delete Old Alpha Release Assets
-    if: ${{ github.ref == 'refs/heads/dev' }}
     runs-on: ubuntu-latest
     steps:
       - name: Delete Old Alpha Release Assets
