@@ -37,12 +37,25 @@ jobs:
               });
 
               // 过滤出包含 -alpha 的 tag
-              const alphaTags = tags
-                .filter(tag => tagPattern.test(tag.name))
-                .sort((a, b) => {
-                  // 按 commit 日期降序排序（最新的在前面）
-                  return new Date(b.commit.committer.date) - new Date(a.commit.committer.date);
-                });
+              const alphaTags = (await Promise.all(
+                tags
+                  .filter(tag => tagPattern.test(tag.name))
+                  .map(async tag => {
+                    // 获取每个 tag 的 commit 信息以获得日期
+                    const { data: commit } = await github.rest.repos.getCommit({
+                      owner,
+                      repo,
+                      ref: tag.commit.sha
+                    });
+                    return {
+                      ...tag,
+                      commitDate: commit.committer && commit.committer.date ? commit.committer.date : commit.commit.author.date
+                    };
+                  })
+              )).sort((a, b) => {
+                // 按 commit 日期降序排序（最新的在前面）
+                return new Date(b.commitDate) - new Date(a.commitDate);
+              });
 
               console.log(`Found ${alphaTags.length} alpha tags`);
 
