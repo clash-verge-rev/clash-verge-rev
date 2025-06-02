@@ -1,10 +1,10 @@
-name: Alpha Build
+name: Auto Build
 
 on:
   workflow_dispatch:
-  # schedule:
-  # UTC+8 0,6,12,18
-  # - cron: "0 16,22,4,10 * * *"
+  schedule:
+    # UTC+8 0,6,12,18
+    # - cron: "0 16,22,4,10 * * *"
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -72,58 +72,59 @@ jobs:
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
 
-  delete_old_assets:
-    needs: check_commit
-    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete Old Alpha Release Assets
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const releaseTag = 'alpha';
+  #   delete_old_assets:
+  #     needs: check_commit
+  #     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #       - name: Delete Old Alpha Release Assets
+  #         uses: actions/github-script@v7
+  #         with:
+  #           github-token: ${{ secrets.GITHUB_TOKEN }}
+  #           script: |
+  #             const releaseTag = 'alpha';
 
-            try {
-              // Get the release by tag name
-              const { data: release } = await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag: releaseTag
-              });
+  #             try {
+  #               // Get the release by tag name
+  #               const { data: release } = await github.rest.repos.getReleaseByTag({
+  #                 owner: context.repo.owner,
+  #                 repo: context.repo.repo,
+  #                 tag: releaseTag
+  #               });
 
-              console.log(`Found release with ID: ${release.id}`);
+  #               console.log(`Found release with ID: ${release.id}`);
 
-              // Delete each asset
-              if (release.assets && release.assets.length > 0) {
-                console.log(`Deleting ${release.assets.length} assets`);
+  #               // Delete each asset
+  #               if (release.assets && release.assets.length > 0) {
+  #                 console.log(`Deleting ${release.assets.length} assets`);
 
-                for (const asset of release.assets) {
-                  console.log(`Deleting asset: ${asset.name} (${asset.id})`);
-                  await github.rest.repos.deleteReleaseAsset({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    asset_id: asset.id
-                  });
-                }
+  #                 for (const asset of release.assets) {
+  #                   console.log(`Deleting asset: ${asset.name} (${asset.id})`);
+  #                   await github.rest.repos.deleteReleaseAsset({
+  #                     owner: context.repo.owner,
+  #                     repo: context.repo.repo,
+  #                     asset_id: asset.id
+  #                   });
+  #                 }
 
-                console.log('All assets deleted successfully');
-              } else {
-                console.log('No assets found to delete');
-              }
-            } catch (error) {
-              if (error.status === 404) {
-                console.log('Release not found, nothing to delete');
-              } else {
-                console.error('Error:', error);
-                throw error;
-              }
-            }
+  #                 console.log('All assets deleted successfully');
+  #               } else {
+  #                 console.log('No assets found to delete');
+  #               }
+  #             } catch (error) {
+  #               if (error.status === 404) {
+  #                 console.log('Release not found, nothing to delete');
+  #               } else {
+  #                 console.error('Error:', error);
+  #                 throw error;
+  #               }
+  #             }
 
   update_tag:
     name: Update tag
     runs-on: ubuntu-latest
-    needs: delete_old_assets
+    needs: check_commit
+    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -201,14 +202,15 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
+          tag_name: autobuild
+          name: "Clash Verge Rev AutoBuild"
           body_path: release.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
 
-  alpha:
+  autobuild-x86-windows-macos-linux:
+    name: Autobuild x86 Windows, MacOS and Linux
     needs: update_tag
     strategy:
       fail-fast: false
@@ -264,11 +266,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release Alpha Version
-        run: pnpm release-alpha-version
-
-      - name: Patch Alpha Hash
-        run: pnpm fix-alpha-version
+      - name: Release Autobuild Version
+        run: pnpm release-version autobuild
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
@@ -292,7 +291,8 @@ jobs:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
 
-  alpha-for-linux-arm:
+  autobuild-arm-linux:
+    name: Autobuild ARM Linux
     needs: update_tag
     strategy:
       fail-fast: false
@@ -336,11 +336,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release Alpha Version
-        run: pnpm release-alpha-version
-
-      - name: Patch Alpha Hash
-        run: pnpm fix-alpha-version
+      - name: Release Autobuild Version
+        run: pnpm release-version autobuild
 
       - name: "Setup for linux"
         run: |-
@@ -425,8 +422,11 @@ jobs:
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
-  alpha-for-fixed-webview2:
-    needs: update_tag
+  autobuild-x86-arm-windows_webview2:
+    name: Autobuild x86 and ARM Windows with WebView2
+    needs: check_commit
+    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
+    # needs: update_tag
     strategy:
       fail-fast: false
       matrix:
@@ -467,11 +467,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release Alpha Version
-        run: pnpm release-alpha-version
-
-      - name: Patch Alpha Hash
-        run: pnpm fix-alpha-version
+      - name: Release Autobuild Version
+        run: pnpm release-version autobuild
 
       - name: Download WebView2 Runtime
         run: |
@@ -515,13 +512,13 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: alpha
-          name: "Clash Verge Rev Alpha"
+          tag_name: autobuild
+          name: "Clash Verge Rev AutoBuild"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle
-        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --alpha
+        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --autobuild
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "2.2.4-alpha.2",
+  "version": "2.3.0",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 tauri dev -f verge-dev",
@@ -17,7 +17,7 @@
     "portable": "node scripts/portable.mjs",
     "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
     "fix-alpha-version": "node scripts/fix-alpha_version.mjs",
-    "release-version": "node scripts/release_version.mjs",
+    "release-version": "node scripts/release-version.mjs",
     "release-alpha-version": "node scripts/release-alpha_version.mjs",
     "prepare": "husky",
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
@@ -89,6 +89,7 @@
     "@vitejs/plugin-legacy": "^6.0.2",
     "@vitejs/plugin-react": "4.4.1",
     "adm-zip": "^0.5.16",
+    "commander": "^14.0.0",
     "cross-env": "^7.0.3",
     "https-proxy-agent": "^7.0.6",
     "husky": "^9.1.7",
