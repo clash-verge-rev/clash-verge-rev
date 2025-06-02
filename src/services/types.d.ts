@@ -33,7 +33,6 @@ interface IConfigData {
   "external-controller": string;
   secret: string;
   "unified-delay": boolean;
-  "tcp-concurrent": boolean;
   tun: {
     stack: string;
     device: string;

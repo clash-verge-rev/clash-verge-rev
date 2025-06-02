@@ -39,7 +39,6 @@ const SettingClash = ({ onError }: Props) => {
 
   const {
     ipv6,
-    "tcp-concurrent": tcp,
     "allow-lan": allowLan,
     "log-level": logLevel,
     "unified-delay": unifiedDelay,
@@ -176,27 +175,6 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ "unified-delay": e })}
           onGuard={(e) => patchClash({ "unified-delay": e })}
-        >
-          <Switch edge="end" />
-        </GuardState>
-      </SettingItem>
-
-      <SettingItem
-        label={t("TCP Concurrency")}
-        extra={
-          <TooltipIcon
-            title={t("TCP ConcurrencyWhen accessing a web page, DNS resolution generally results in multiple IP addresses.")}
-            sx={{ opacity: "0.7" }}
-          />
-        }
-      >
-        <GuardState
-          value={tcp ?? false}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ "tcp-concurrent": e })}
-          onGuard={(e) => patchClash({ "tcp-concurrent": e })}
         >
           <Switch edge="end" />
         </GuardState>
