@@ -8,6 +8,7 @@ on:
 permissions: write-all
 env:
   TAG_NAME: autobuild
+  TAG_CHANNEL: AutoBuild
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
 concurrency:
@@ -143,7 +144,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev AutoBuild"
+          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
           body_path: release.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -205,8 +206,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release Autobuild Version
-        run: pnpm release-version autobuild
+      - name: Release ${{ env.TAG_CHANNEL }} Version
+        run: pnpm release-version ${{ env.TAG_NAME }}
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
@@ -223,7 +224,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ env.TAG_NAME }}
-          releaseName: "Clash Verge Rev AutoBuild"
+          releaseName: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
           releaseBody: "More new features are now supported."
           releaseDraft: false
           prerelease: true
@@ -275,8 +276,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release Autobuild Version
-        run: pnpm release-version autobuild
+      - name: Release ${{ env.TAG_CHANNEL }} Version
+        run: pnpm release-version ${{ env.TAG_NAME }}
 
       - name: Setup for linux
         run: |
@@ -354,7 +355,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev AutoBuild"
+          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
@@ -404,8 +405,8 @@ jobs:
           pnpm i
           pnpm check ${{ matrix.target }}
 
-      - name: Release Autobuild Version
-        run: pnpm release-version autobuild
+      - name: Release ${{ env.TAG_CHANNEL }} Version
+        run: pnpm release-version ${{ env.TAG_NAME }}
 
       - name: Download WebView2 Runtime
         run: |
@@ -450,12 +451,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev AutoBuild"
+          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle
-        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --autobuild
+        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
