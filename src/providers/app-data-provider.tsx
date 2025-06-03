@@ -41,30 +41,30 @@ const AppDataContext = createContext<AppDataContextType | null>(null);
 export const AppDataProvider = ({ children }: { children: React.ReactNode }) => {
   const { clashInfo } = useClashInfo();
   const pageVisible = useVisibility();
-  
+
   // 基础数据 - 中频率更新 (5秒)
   const { data: proxiesData, mutate: refreshProxy } = useSWR(
-    "getProxies", 
-    getProxies, 
-    { 
-      refreshInterval: 5000, 
+    "getProxies",
+    getProxies,
+    {
+      refreshInterval: 5000,
       revalidateOnFocus: false,
       suspense: false,
       errorRetryCount: 3
     }
   );
-  
+
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
-    "getClashConfig", 
-    getClashConfig, 
-    { 
-      refreshInterval: 5000, 
+    "getClashConfig",
+    getClashConfig,
+    {
+      refreshInterval: 5000,
       revalidateOnFocus: false,
       suspense: false,
-      errorRetryCount: 3 
+      errorRetryCount: 3
     }
   );
-  
+
   // 提供者数据
   const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
     "getProxyProviders",
@@ -72,12 +72,13 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 3000,
+      refreshInterval: 30000,
+      dedupingInterval: 10000,
       suspense: false,
       errorRetryCount: 3
     }
   );
-  
+
   const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
     "getRuleProviders",
     getRuleProviders,
@@ -87,59 +88,59 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
       errorRetryCount: 3
     }
   );
-  
+
   // 低频率更新数据
   const { data: rulesData, mutate: refreshRules } = useSWR(
-    "getRules", 
+    "getRules",
     getRules,
-    { 
+    {
       revalidateOnFocus: false,
       suspense: false,
       errorRetryCount: 3
     }
   );
-  
+
   const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
-    "getSystemProxy", 
+    "getSystemProxy",
     getSystemProxy,
-    { 
+    {
       revalidateOnFocus: false,
       suspense: false,
       errorRetryCount: 3
     }
   );
-  
+
   const { data: runningMode } = useSWR(
-    "getRunningMode", 
+    "getRunningMode",
     getRunningMode,
-    { 
+    {
       revalidateOnFocus: false,
       suspense: false,
       errorRetryCount: 3
     }
   );
-  
+
   // 高频率更新数据 (2秒)
   const { data: uptimeData } = useSWR(
-    "appUptime", 
-    getAppUptime, 
-    { 
-      refreshInterval: 2000, 
+    "appUptime",
+    getAppUptime,
+    {
+      refreshInterval: 2000,
       revalidateOnFocus: false,
       suspense: false
     }
   );
-  
+
   // 连接数据 - 使用WebSocket实时更新
-  const { data: connectionsData = { connections: [], uploadTotal: 0, downloadTotal: 0 } } = 
+  const { data: connectionsData = { connections: [], uploadTotal: 0, downloadTotal: 0 } } =
     useSWRSubscription(
       clashInfo && pageVisible ? "connections" : null,
       (_key, { next }) => {
         if (!clashInfo || !pageVisible) return () => {};
-        
+
         const { server = "", secret = "" } = clashInfo;
         if (!server) return () => {};
-        
+
         console.log(`[Connections][${AppDataProvider.name}] 正在连接: ${server}/connections`);
         const socket = createAuthSockette(`${server}/connections`, secret, {
           timeout: 5000,
@@ -150,7 +151,7 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
               next(null, (prev: any = { connections: [], uploadTotal: 0, downloadTotal: 0 }) => {
                 const oldConns = prev.connections || [];
                 const newConns = data.connections || [];
-                
+
                 // 计算当前速度
                 const processedConns = newConns.map((conn: any) => {
                   const oldConn = oldConns.find((old: any) => old.id === conn.id);
@@ -163,7 +164,7 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
                   }
                   return { ...conn, curUpload: 0, curDownload: 0 };
                 });
-                
+
                 return {
                   ...data,
                   connections: processedConns
@@ -188,23 +189,23 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
              }
           }
         });
-        
+
         return () => {
           console.log(`[Connections][${AppDataProvider.name}] 清理WebSocket连接`);
           socket.close();
         };
       }
     );
-  
+
   // 流量和内存数据 - 通过WebSocket获取实时流量数据
   const { data: trafficData = { up: 0, down: 0 } } = useSWRSubscription(
     clashInfo && pageVisible ? "traffic" : null,
     (_key, { next }) => {
       if (!clashInfo || !pageVisible) return () => {};
-      
+
       const { server = "", secret = "" } = clashInfo;
       if (!server) return () => {};
-      
+
       console.log(`[Traffic][${AppDataProvider.name}] 正在连接: ${server}/traffic`);
       const socket = createAuthSockette(`${server}/traffic`, secret, {
         onmessage(event) {
@@ -234,22 +235,22 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
            }
         }
       });
-      
+
       return () => {
         console.log(`[Traffic][${AppDataProvider.name}] 清理WebSocket连接`);
         socket.close();
       };
     }
   );
-  
+
   const { data: memoryData = { inuse: 0 } } = useSWRSubscription(
     clashInfo && pageVisible ? "memory" : null,
     (_key, { next }) => {
       if (!clashInfo || !pageVisible) return () => {};
-      
+
       const { server = "", secret = "" } = clashInfo;
       if (!server) return () => {};
-      
+
       console.log(`[Memory][${AppDataProvider.name}] 正在连接: ${server}/memory`);
       const socket = createAuthSockette(`${server}/memory`, secret, {
         onmessage(event) {
@@ -279,14 +280,14 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
           }
         }
       });
-      
+
       return () => {
         console.log(`[Memory][${AppDataProvider.name}] 清理WebSocket连接`);
         socket.close();
       };
     }
   );
-  
+
   // 提供统一的刷新方法
   const refreshAll = async () => {
     await Promise.all([
@@ -298,7 +299,7 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
       refreshRuleProviders()
     ]);
   };
-  
+
   // 聚合所有数据
   const value = useMemo(() => ({
     // 数据
@@ -308,11 +309,11 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
     sysproxy,
     runningMode,
     uptime: uptimeData || 0,
-    
+
     // 提供者数据
     proxyProviders: proxyProviders || {},
     ruleProviders: ruleProviders || {},
-    
+
     // 连接数据
     connections: {
       data: connectionsData.connections || [],
@@ -320,11 +321,11 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
       uploadTotal: connectionsData.uploadTotal || 0,
       downloadTotal: connectionsData.downloadTotal || 0
     },
-    
+
     // 实时流量数据
     traffic: trafficData,
     memory: memoryData,
-    
+
     // 刷新方法
     refreshProxy,
     refreshClashConfig,
@@ -334,7 +335,7 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
     refreshRuleProviders,
     refreshAll
   }), [
-    proxiesData, clashConfig, rulesData, sysproxy, 
+    proxiesData, clashConfig, rulesData, sysproxy,
     runningMode, uptimeData, connectionsData,
     trafficData, memoryData, proxyProviders, ruleProviders,
     refreshProxy, refreshClashConfig, refreshRules, refreshSysproxy,
@@ -351,10 +352,10 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
 // 自定义Hook访问全局数据
 export const useAppData = () => {
   const context = useContext(AppDataContext);
-  
+
   if (!context) {
     throw new Error("useAppData必须在AppDataProvider内使用");
   }
-  
+
   return context;
-}; 
+};

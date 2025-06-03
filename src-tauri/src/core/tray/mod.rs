@@ -23,13 +23,11 @@ use parking_lot::Mutex;
 use parking_lot::RwLock;
 #[cfg(target_os = "macos")]
 pub use speed_rate::{SpeedRate, Traffic};
+use std::fs;
+use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(target_os = "macos")]
 use std::sync::Arc;
-use std::{
-    fs,
-    sync::atomic::{AtomicBool, Ordering},
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconEvent},

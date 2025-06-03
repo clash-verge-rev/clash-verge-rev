@@ -202,7 +202,7 @@ export const getProxyProviders = async () => {
     console.warn("getProxyProviders: Invalid response structure, returning empty object");
     return {};
   }
-  
+
   const providers = response.providers as Record<string, IProxyProviderItem>;
 
   return Object.fromEntries(
@@ -418,43 +418,43 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
 function shuffleServices() {
   // 过滤无效服务并确保每个元素符合ServiceConfig接口
   const validServices = IP_CHECK_SERVICES.filter(
-    (service): service is ServiceConfig => 
-      service !== null && 
-      service !== undefined && 
+    (service): service is ServiceConfig =>
+      service !== null &&
+      service !== undefined &&
       typeof service.url === 'string' &&
       typeof service.mapping === 'function' // 添加对mapping属性的检查
   );
-  
+
   if (validServices.length === 0) {
     console.error('No valid services found in IP_CHECK_SERVICES');
     return [];
   }
-  
+
   // 使用单一Fisher-Yates洗牌算法，增强随机性
   const shuffled = [...validServices];
   const length = shuffled.length;
-  
+
   // 使用多个种子进行多次洗牌
   const seeds = [
     Math.random(),
     Date.now() / 1000,
     performance.now() / 1000
   ];
-  
+
   for (const seed of seeds) {
     const prng = createPrng(seed);
-    
+
     // Fisher-Yates洗牌算法
     for (let i = length - 1; i > 0; i--) {
       const j = Math.floor(prng() * (i + 1));
-      
+
       // 使用临时变量进行交换，避免解构赋值可能的问题
       const temp = shuffled[i];
       shuffled[i] = shuffled[j];
       shuffled[j] = temp;
     }
   }
-  
+
   return shuffled;
 }
 
@@ -462,10 +462,10 @@ function shuffleServices() {
 function createPrng(seed: number): () => number {
   // 使用xorshift32算法
   let state = seed >>> 0;
-  
+
   // 如果种子为0，设置一个默认值
   if (state === 0) state = 123456789;
-  
+
   return function() {
     state ^= state << 13;
     state ^= state >>> 17;

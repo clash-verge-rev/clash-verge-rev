@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { 
+import {
   Button,
   Box,
   Dialog,
@@ -65,22 +65,22 @@ export const ProviderButton = () => {
   const [open, setOpen] = useState(false);
   const { proxyProviders, refreshProxy, refreshProxyProviders } = useAppData();
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
-  
+
   // 检查是否有提供者
   const hasProviders = Object.keys(proxyProviders || {}).length > 0;
-  
+
   // 更新单个代理提供者
   const updateProvider = useLockFn(async (name: string) => {
     try {
       // 设置更新状态
       setUpdating(prev => ({ ...prev, [name]: true }));
-      
+
       await proxyProviderUpdate(name);
-      
+
       // 刷新数据
       await refreshProxy();
       await refreshProxyProviders();
-      
+
       showNotice('success', `${name} 更新成功`);
     } catch (err: any) {
       showNotice('error', `${name} 更新失败: ${err?.message || err.toString()}`);
@@ -89,7 +89,7 @@ export const ProviderButton = () => {
       setUpdating(prev => ({ ...prev, [name]: false }));
     }
   });
-  
+
   // 更新所有代理提供者
   const updateAllProviders = useLockFn(async () => {
     try {
@@ -99,14 +99,14 @@ export const ProviderButton = () => {
         showNotice('info', "没有可更新的代理提供者");
         return;
       }
-      
+
       // 设置所有provider为更新中状态
       const newUpdating = allProviders.reduce((acc, key) => {
         acc[key] = true;
         return acc;
       }, {} as Record<string, boolean>);
       setUpdating(newUpdating);
-      
+
       // 改为串行逐个更新所有provider
       for (const name of allProviders) {
         try {
@@ -118,11 +118,11 @@ export const ProviderButton = () => {
           // 继续执行下一个，不中断整体流程
         }
       }
-      
+
       // 刷新数据
       await refreshProxy();
       await refreshProxyProviders();
-      
+
       showNotice('success', "全部代理提供者更新成功");
     } catch (err: any) {
       showNotice('error', `更新失败: ${err?.message || err.toString()}`);
@@ -131,11 +131,11 @@ export const ProviderButton = () => {
       setUpdating({});
     }
   });
-  
+
   const handleClose = () => {
     setOpen(false);
   };
-  
+
   if (!hasProviders) return null;
 
   return (
@@ -149,7 +149,7 @@ export const ProviderButton = () => {
       >
         {t("Proxy Provider")}
       </Button>
-      
+
       <Dialog
         open={open}
         onClose={handleClose}
@@ -170,14 +170,14 @@ export const ProviderButton = () => {
             </Box>
           </Box>
         </DialogTitle>
-        
+
         <DialogContent>
           <List sx={{ py: 0, minHeight: 250 }}>
             {Object.entries(proxyProviders || {}).map(([key, item]) => {
               const provider = item as ProxyProviderItem;
               const time = dayjs(provider.updatedAt);
               const isUpdating = updating[key];
-              
+
               // 订阅信息
               const sub = provider.subscriptionInfo;
               const hasSubInfo = !!sub;
@@ -185,17 +185,17 @@ export const ProviderButton = () => {
               const download = sub?.Download || 0;
               const total = sub?.Total || 0;
               const expire = sub?.Expire || 0;
-              
+
               // 流量使用进度
               const progress = total > 0
                 ? Math.min(Math.round(((download + upload) * 100) / total) + 1, 100)
                 : 0;
-              
+
               return (
                 <ListItem
                   key={key}
                   sx={[
-                    { 
+                    {
                       p: 0,
                       mb: "8px",
                       borderRadius: 2,
@@ -204,10 +204,10 @@ export const ProviderButton = () => {
                     },
                     ({ palette: { mode, primary } }) => {
                       const bgcolor = mode === "light" ? "#ffffff" : "#24252f";
-                      const hoverColor = mode === "light" 
+                      const hoverColor = mode === "light"
                         ? alpha(primary.main, 0.1)
                         : alpha(primary.main, 0.2);
-                      
+
                       return {
                         backgroundColor: bgcolor,
                         "&:hover": {
@@ -220,10 +220,10 @@ export const ProviderButton = () => {
                   <ListItemText
                     sx={{ px: 2, py: 1 }}
                     primary={
-                      <Box sx={{ 
-                        display: "flex", 
+                      <Box sx={{
+                        display: "flex",
                         justifyContent: "space-between",
-                        alignItems: "center", 
+                        alignItems: "center",
                       }}>
                         <Typography
                           variant="subtitle1"
@@ -232,7 +232,7 @@ export const ProviderButton = () => {
                           title={key}
                           sx={{ display: "flex", alignItems: "center" }}
                         >
-                          <span style={{ marginRight: "8px" }}>{key}</span> 
+                          <span style={{ marginRight: "8px" }}>{key}</span>
                           <TypeBox component="span">
                             {provider.proxies.length}
                           </TypeBox>
@@ -240,7 +240,7 @@ export const ProviderButton = () => {
                             {provider.vehicleType}
                           </TypeBox>
                         </Typography>
-                        
+
                         <Typography variant="body2" color="text.secondary" noWrap>
                           <small>{t("Update At")}: </small>{time.fromNow()}
                         </Typography>
@@ -251,7 +251,7 @@ export const ProviderButton = () => {
                         {/* 订阅信息 */}
                         {hasSubInfo && (
                           <>
-                            <Box sx={{ 
+                            <Box sx={{
                               mb: 1,
                               display: "flex",
                               alignItems: "center",
@@ -264,13 +264,13 @@ export const ProviderButton = () => {
                                 {parseExpire(expire)}
                               </span>
                             </Box>
-                            
+
                             {/* 进度条 */}
                             <LinearProgress
                               variant="determinate"
                               value={progress}
-                              sx={{ 
-                                height: 6, 
+                              sx={{
+                                height: 6,
                                 borderRadius: 3,
                                 opacity: total > 0 ? 1 : 0,
                               }}
@@ -281,9 +281,9 @@ export const ProviderButton = () => {
                     }
                   />
                   <Divider orientation="vertical" flexItem />
-                  <Box sx={{ 
-                    width: 40, 
-                    display: "flex", 
+                  <Box sx={{
+                    width: 40,
+                    display: "flex",
                     justifyContent: "center",
                     alignItems: "center"
                   }}>
@@ -311,7 +311,7 @@ export const ProviderButton = () => {
             })}
           </List>
         </DialogContent>
-        
+
         <DialogActions>
           <Button onClick={handleClose} variant="outlined">
             {t("Close")}

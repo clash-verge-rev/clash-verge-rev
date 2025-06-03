@@ -17,6 +17,7 @@ use crate::{logging, utils::logging::Type};
 enum FrontendEvent {
     RefreshClash,
     RefreshVerge,
+    RefreshProvidersProxies,
     NoticeMessage { status: String, message: String },
     ProfileChanged { current_profile_id: String },
     TimerUpdated { profile_index: String },
@@ -120,6 +121,9 @@ impl NotificationSystem {
                                         }
                                         FrontendEvent::RefreshVerge => {
                                             ("verge://refresh-verge-config", Ok(serde_json::json!("yes")))
+                                        }
+                                        FrontendEvent::RefreshProvidersProxies => {
+                                            ("verge://refresh-providers-proxies", Ok(serde_json::json!("yes")))
                                         }
                                         FrontendEvent::NoticeMessage { status, message } => {
                                             match serde_json::to_value((status, message)) {
@@ -306,6 +310,18 @@ impl Handle {
         let system_opt = handle.notification_system.read();
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::RefreshVerge);
+        }
+    }
+
+    pub fn refresh_providers_proxies() {
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        let system_opt = handle.notification_system.read();
+        if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::RefreshProvidersProxies);
         }
     }
 
