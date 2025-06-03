@@ -1,7 +1,15 @@
 name: Release Build
-# TODO: 参照 alpha.yml 修改，实现稳定版发布，只允许通过 git tag 触发
+
 on:
-  workflow_dispatch:
+  # ! 为了避免重复发布版本，应当通过独特 git tag 触发。
+  # ! 不再使用 workflow_dispatch 触发。
+  # workflow_dispatch:
+  push:
+    # ? 应当限制在 main 分支上触发发布。
+    # branches:
+    #   - main
+    tags:
+      - "v*.*.*"
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -13,6 +21,7 @@ concurrency:
 
 jobs:
   release:
+    name: Release Build
     strategy:
       fail-fast: false
       matrix:
@@ -88,6 +97,7 @@ jobs:
           args: --target ${{ matrix.target }}
 
   release-for-linux-arm:
+    name: Release Build for Linux ARM
     strategy:
       fail-fast: false
       matrix:
@@ -209,6 +219,7 @@ jobs:
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   release-for-fixed-webview2:
+    name: Release Build for Fixed WebView2
     strategy:
       fail-fast: false
       matrix:
@@ -303,6 +314,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-update:
+    name: Release Update
     runs-on: ubuntu-latest
     needs: [release, release-for-linux-arm]
     steps:
@@ -353,6 +365,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   submit-to-winget:
+    name: Submit to Winget
     runs-on: ubuntu-latest
     needs: [release-update]
     steps:
