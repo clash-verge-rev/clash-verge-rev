@@ -21,6 +21,13 @@
     }
   },
   "app": {
-    "windows": []
+    "windows": [],
+    "security": {
+      "capabilities": [
+        "desktop-capability",
+        "desktop-windows-capability",
+        "migrated"
+      ]
+    }
   }
 }
