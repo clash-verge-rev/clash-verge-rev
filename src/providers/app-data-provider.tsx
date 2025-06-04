@@ -1,11 +1,11 @@
+import { useClashInfo } from "@/hooks/use-clash";
+import { useVisibility } from "@/hooks/use-visibility";
+import { getClashConfig, getProxies, getProxyProviders, getRuleProviders, getRules } from "@/services/api";
+import { getAppUptime, getRunningMode, getSystemProxy } from "@/services/cmds";
+import { createAuthSockette } from "@/utils/websocket";
 import { createContext, useContext, useMemo } from "react";
 import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
-import { getProxies, getRules, getClashConfig, getProxyProviders, getRuleProviders } from "@/services/api";
-import { getSystemProxy, getRunningMode, getAppUptime } from "@/services/cmds";
-import { useClashInfo } from "@/hooks/use-clash";
-import { createAuthSockette } from "@/utils/websocket";
-import { useVisibility } from "@/hooks/use-visibility";
 
 // 定义AppDataContext类型 - 使用宽松类型
 interface AppDataContextType {
@@ -70,9 +70,7 @@ export const AppDataProvider = ({ children }: { children: React.ReactNode }) => 
     "getProxyProviders",
     getProxyProviders,
     {
-      revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      refreshInterval: 30000,
       dedupingInterval: 10000,
       suspense: false,
       errorRetryCount: 3
