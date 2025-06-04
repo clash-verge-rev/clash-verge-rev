@@ -131,8 +131,8 @@ pub fn run() -> Result<()> {
 
             // app version info
             let version = app_handle.package_info().version.to_string();
-            APP_VERSION.get_or_init(|| version.clone());
-            APP_HANDLE.get_or_init(|| app_handle.clone());
+            let _ = APP_VERSION.set(version.clone());
+            let _ = APP_HANDLE.set(app_handle.clone());
 
             tracing::trace!("init system tray");
             log_err!(tray::Tray::init(app_handle));
