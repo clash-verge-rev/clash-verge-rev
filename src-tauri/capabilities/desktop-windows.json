@@ -1,0 +1,6 @@
+{
+  "permissions": [
+    "core:webview:allow-create-webview",
+    "core:webview:allow-create-webview-window"
+  ]
+}
