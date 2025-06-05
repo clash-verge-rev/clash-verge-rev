@@ -60,16 +60,16 @@ rfd = { version = "0.15", default-features = false, features = [
   "gtk3",
   "common-controls-v6",
 ] }
-tracing = "0.1.41"
+tracing = "0.1"
 tracing-subscriber = { version = "0.3.19", features = ["local-time"] }
-tracing-appender = "0.2.3"
-time = { version = "0.3.41", features = ["macros", "parsing"] }
-tipsy = "0.6.0"
-futures-util = "0.3.31"
-base64 = "0.22.1"
+tracing-appender = "0.2"
+time = { version = "0.3", features = ["macros", "parsing"] }
+tipsy = "0.6"
+futures-util = "0.3"
+base64 = "0.22"
 rand = "0.8"
 rsa = "0.9.8"
-aes-gcm = "0.10.3"
+aes-gcm = "0.10"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2"
@@ -85,7 +85,7 @@ users = "0.11"
 openssl = { version = "0.10", features = ["vendored"] }
 
 [target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
-signal-hook = "0.3.17"
+signal-hook = "0.3"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"

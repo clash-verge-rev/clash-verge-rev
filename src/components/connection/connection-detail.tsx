@@ -89,7 +89,7 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
   return (
     <Box sx={{ userSelect: "text", maxWidth: 500, minWidth: 300 }}>
       {information.map((each) => (
-        <div key={each.label} className="grid grid-cols-6 gap-1 break-words">
+        <div key={each.label} className="grid grid-cols-6 gap-1 break-all">
           <div className="text-primary-main col-span-1 text-right font-bold">
             {each.label}
           </div>

@@ -1,3 +1,4 @@
+use crate::error::Result;
 use crate::{error::RuleParseError, utils, Parser, RuleBehavior, RuleFormat, RulePayload};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{Cursor, Read};
@@ -10,7 +11,7 @@ use std::{
 pub(crate) struct IpCidrParseStrategy;
 
 impl Parser for IpCidrParseStrategy {
-    fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload, RuleParseError> {
+    fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload> {
         match format {
             RuleFormat::Mrs => parse_from_mrs(buf),
             RuleFormat::Yaml => utils::parse_from_yaml(buf),
@@ -204,7 +205,7 @@ impl IpCidrTransform for IpAddr {
     }
 }
 
-fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
+fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload> {
     // create ZSTD decoder
     let mut reader = zstd::Decoder::new(Cursor::new(buf))?;
 
@@ -252,7 +253,8 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
 #[cfg(test)]
 #[allow(deprecated)]
 mod tests {
-    use anyhow::Result;
+
+    use crate::error::Result;
 
     use super::*;
 

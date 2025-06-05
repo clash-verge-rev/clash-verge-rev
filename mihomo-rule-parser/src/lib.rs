@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use anyhow::Result;
 use classical::ClassicalParseStrategy;
 use domain::DomainParseStrategy;
 use ipcidr::IpCidrParseStrategy;
@@ -7,6 +6,8 @@ use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path};
 
 pub use error::RuleParseError;
+
+use crate::error::Result;
 
 mod bitmap;
 mod utils;
@@ -36,7 +37,7 @@ impl Display for RuleBehavior {
 impl TryFrom<String> for RuleBehavior {
     type Error = RuleParseError;
 
-    fn try_from(behavior: String) -> Result<Self, Self::Error> {
+    fn try_from(behavior: String) -> Result<Self> {
         match behavior.as_str() {
             "domain" => Ok(RuleBehavior::Domain),
             "ipcidr" => Ok(RuleBehavior::IpCidr),
@@ -66,7 +67,7 @@ impl Display for RuleFormat {
 impl TryFrom<String> for RuleFormat {
     type Error = RuleParseError;
 
-    fn try_from(format: String) -> Result<Self, Self::Error> {
+    fn try_from(format: String) -> Result<Self> {
         match format.as_str() {
             "mrs" => Ok(RuleFormat::Mrs),
             "yaml" => Ok(RuleFormat::Yaml),
@@ -99,14 +100,14 @@ impl From<YamlPayload> for RulePayload {
 }
 
 trait Parser {
-    fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload, RuleParseError>;
+    fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload>;
 }
 
 pub fn parse<P: AsRef<Path>>(
     file_path: P,
     behavior: RuleBehavior,
     format: RuleFormat,
-) -> Result<RulePayload, RuleParseError> {
+) -> Result<RulePayload> {
     let buf = std::fs::read(file_path)?;
     match behavior {
         RuleBehavior::Domain => DomainParseStrategy::parse(&buf, format),
@@ -118,13 +119,12 @@ pub fn parse<P: AsRef<Path>>(
 #[cfg(test)]
 #[allow(deprecated)] // for std::env::home_dir() method, I develop on Linux, so it can get home dir
 mod tests {
-    use crate::{error::RuleParseError, parse, RuleBehavior, RuleFormat};
-    use anyhow::{bail, Result};
+    use crate::{error::{Result, RuleParseError}, parse, RuleBehavior, RuleFormat};
     use std::io::{Read, Write};
 
     /// Test public parse method
     #[test]
-    fn test_public_parse_method() -> Result<(), RuleParseError> {
+    fn test_public_parse_method() -> Result<()> {
         let home_dir = std::env::home_dir().expect("failed to get home dir");
 
         // domain
@@ -312,7 +312,7 @@ mod tests {
             let behavior = match check_behavior {
                 "domain" => RuleBehavior::Domain,
                 "ipcidr" => RuleBehavior::IpCidr,
-                _ => bail!("Invalid test behavior"),
+                _ => return Err(RuleParseError::InvalidBehavior(check_behavior.to_string())),
             };
             let rule_payload = parse(&mrs_file_path, behavior, RuleFormat::Mrs)?;
 

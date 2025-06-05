@@ -3521,7 +3521,6 @@ dependencies = [
 name = "mihomo-rule-parser"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "byteorder",
  "serde",
  "serde_yaml",
@@ -6480,7 +6479,6 @@ dependencies = [
 name = "tauri-plugin-mihomo"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "base64 0.22.1",
  "futures-util",
  "http 1.3.1",

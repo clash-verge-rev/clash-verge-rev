@@ -2,6 +2,8 @@ use crate::{RuleBehavior, RuleFormat};
 use std::io;
 use thiserror::Error;
 
+pub type Result<T> = std::result::Result<T, RuleParseError>;
+
 // 错误类型定义
 #[derive(Debug, Error)]
 pub enum RuleParseError {

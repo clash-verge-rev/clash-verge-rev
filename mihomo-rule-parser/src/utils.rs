@@ -1,5 +1,4 @@
-use crate::{error::RuleParseError, RuleBehavior, RulePayload, YamlPayload};
-use anyhow::Result;
+use crate::{error::{Result, RuleParseError}, RuleBehavior, RulePayload, YamlPayload};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{BufRead, BufReader, Read};
 
@@ -19,7 +18,7 @@ fn get_rule_behavior(behavior: u8) -> RuleBehavior {
 pub(crate) fn validate_mrs<R: Read>(
     reader: &mut R,
     expected_behavior: RuleBehavior,
-) -> Result<i64, RuleParseError> {
+) -> Result<i64> {
     // 读取并校验 Magic Number
     let mut magic = [0u8; 4];
     reader.read_exact(&mut magic)?;
@@ -60,13 +59,13 @@ pub(crate) fn validate_mrs<R: Read>(
 }
 
 /// Parse YAML format
-pub(crate) fn parse_from_yaml(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
+pub(crate) fn parse_from_yaml(buf: &[u8]) -> Result<RulePayload> {
     let payload: YamlPayload = serde_yaml::from_reader(buf)?;
     Ok(RulePayload::from(payload))
 }
 
 /// Parse text format
-pub(crate) fn parse_from_text(buf: &[u8]) -> Result<RulePayload, RuleParseError> {
+pub(crate) fn parse_from_text(buf: &[u8]) -> Result<RulePayload> {
     let reader = BufReader::new(buf);
     let mut count = 0;
     let mut rules: Vec<String> = vec![];

@@ -1,4 +1,4 @@
-use crate::{error::RuleParseError, utils, Parser, RuleBehavior, RuleFormat};
+use crate::{error::{Result, RuleParseError}, utils, Parser, RuleBehavior, RuleFormat};
 
 /// classical parse strategy
 pub(crate) struct ClassicalParseStrategy;
@@ -7,7 +7,7 @@ impl Parser for ClassicalParseStrategy {
     fn parse(
         buf: &[u8],
         format: crate::RuleFormat,
-    ) -> anyhow::Result<crate::RulePayload, crate::error::RuleParseError> {
+    ) -> Result<crate::RulePayload> {
         match format {
             RuleFormat::Mrs => Err(RuleParseError::UnsupportedFormat(
                 RuleBehavior::Classical,
@@ -22,7 +22,6 @@ impl Parser for ClassicalParseStrategy {
 #[cfg(test)]
 #[allow(deprecated)]
 mod tests {
-    use anyhow::Result;
 
     use super::*;
 
