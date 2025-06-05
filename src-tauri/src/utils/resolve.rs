@@ -105,7 +105,7 @@ pub fn create_window() {
             }
         }
         _ => {
-            builder = builder.inner_size(800.0, 642.0).center();
+            builder = builder.inner_size(1100.0, 750.0).center();
         }
     };
     #[cfg(target_os = "windows")]
