@@ -16,33 +16,33 @@ identifier = "io.github.clash-verge-rev.clash-verge-rev"
 tauri-build = { version = "2.2.0", features = [] }
 
 [dependencies]
-warp = "0.3"
+warp = "0.3.7"
 anyhow = "1.0.98"
 dirs = "6.0"
-open = "5.3"
-log = "0.4"
-dunce = "1.0"
-log4rs = "1"
+open = "5.3.2"
+log = "0.4.27"
+dunce = "1.0.5"
+log4rs = "1.3.0"
 nanoid = "0.4"
 chrono = "0.4.41"
-sysinfo = "0.35.0"
+sysinfo = "0.35.2"
 boa_engine = "0.20.0"
 serde_json = "1.0.140"
-serde_yaml = "0.9.34"
+serde_yaml = "0.9.34-deprecated"
 once_cell = "1.21.3"
 lazy_static = "1.5.0"
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
-parking_lot = "0.12.3"
+parking_lot = "0.12.4"
 percent-encoding = "2.3.1"
-tokio = { version = "1.44.2", features = [
+tokio = { version = "1.45.1", features = [
   "rt-multi-thread",
   "macros",
   "time",
   "sync",
 ] }
 serde = { version = "1.0.219", features = ["derive"] }
-reqwest = { version = "0.12.15", features = ["json", "rustls-tls", "cookies"] }
+reqwest = { version = "0.12.19", features = ["json", "rustls-tls", "cookies"] }
 regex = "1.11.1"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
 image = "0.25.6"
@@ -56,18 +56,18 @@ tauri = { version = "2.5.1", features = [
 ] }
 network-interface = { version = "2.0.1", features = ["serde"] }
 tauri-plugin-shell = "2.2.1"
-tauri-plugin-dialog = "2.2.1"
-tauri-plugin-fs = "2.2.1"
+tauri-plugin-dialog = "2.2.2"
+tauri-plugin-fs = "2.3.0"
 tauri-plugin-process = "2.2.1"
 tauri-plugin-clipboard-manager = "2.2.2"
-tauri-plugin-deep-link = "2.2.1"
+tauri-plugin-deep-link = "2.3.0"
 tauri-plugin-devtools = "2.0.0"
 tauri-plugin-window-state = "2.2.2"
-zip = "2.6.1"
+zip = "4.0.0"
 reqwest_dav = "0.2.1"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
-getrandom = "0.3.2"
+getrandom = "0.3.3"
 tokio-tungstenite = "0.26.2"
 futures = "0.3.31"
 sys-locale = "0.3.2"
@@ -85,7 +85,7 @@ hex = "0.4.3"
 runas = "=1.2.0"
 deelevate = "0.2.0"
 winreg = "0.55.0"
-winapi = { version = "0.3", features = [
+winapi = { version = "0.3.9", features = [
   "winbase",
   "fileapi",
   "winnt",
@@ -100,7 +100,7 @@ users = "0.11.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
-tauri-plugin-global-shortcut = "2.2.0"
+tauri-plugin-global-shortcut = "2.2.1"
 tauri-plugin-updater = "2.7.1"
 
 [features]
@@ -136,7 +136,7 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
-tempfile = "3.19.1"
+tempfile = "3.20.0"
 
 [workspace]
 members = ["src_crates/crate_mihomo_api"]

@@ -15,7 +15,6 @@ use crate::{
 use config::Config;
 use std::sync::{Mutex, Once};
 use tauri::AppHandle;
-#[cfg(target_os = "macos")]
 use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;

@@ -1,11 +1,8 @@
 use reqwest::{Method, header::HeaderMap};
-use serde_json::json;
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use serde_json::{Value, json};
+use std::time::Duration;
 pub mod model;
-pub use model::{MihomoData, MihomoManager};
+pub use model::MihomoManager;
 
 impl MihomoManager {
     pub fn new(mihomo_server: String, headers: HeaderMap) -> Self {
@@ -20,36 +17,8 @@ impl MihomoManager {
 
         Self {
             mihomo_server,
-            data: Arc::new(Mutex::new(MihomoData {
-                proxies: serde_json::Value::Null,
-                providers_proxies: serde_json::Value::Null,
-            })),
             client,
         }
-    }
-
-    fn update_proxies(&self, proxies: serde_json::Value) {
-        let mut data = self.data.lock().expect("Mutex poisoned");
-        data.proxies = proxies;
-    }
-
-    fn update_providers_proxies(&self, providers_proxies: serde_json::Value) {
-        let mut data = self.data.lock().expect("Mutex poisoned");
-        data.providers_proxies = providers_proxies;
-    }
-
-    pub fn get_mihomo_server(&self) -> String {
-        self.mihomo_server.clone()
-    }
-
-    pub fn get_proxies(&self) -> serde_json::Value {
-        let data = self.data.lock().expect("Mutex poisoned");
-        data.proxies.clone()
-    }
-
-    pub fn get_providers_proxies(&self) -> serde_json::Value {
-        let data = self.data.lock().expect("Mutex poisoned");
-        data.providers_proxies.clone()
     }
 
     async fn send_request(
@@ -87,18 +56,16 @@ impl MihomoManager {
         Ok(response)
     }
 
-    pub async fn refresh_proxies(&self) -> Result<&Self, String> {
+    pub async fn get_refresh_proxies(&self) -> Result<Value, String> {
         let url = format!("{}/proxies", self.mihomo_server);
         let proxies = self.send_request(Method::GET, url, None).await?;
-        self.update_proxies(proxies);
-        Ok(self)
+        Ok(proxies)
     }
 
-    pub async fn refresh_providers_proxies(&self) -> Result<&Self, String> {
+    pub async fn get_providers_proxies(&self) -> Result<Value, String> {
         let url = format!("{}/providers/proxies", self.mihomo_server);
         let providers_proxies = self.send_request(Method::GET, url, None).await?;
-        self.update_providers_proxies(providers_proxies);
-        Ok(self)
+        Ok(providers_proxies)
     }
 
     pub async fn close_all_connections(&self) -> Result<(), String> {

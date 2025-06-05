@@ -1,0 +1,42 @@
+{
+  "extends": ["config:recommended"],
+  "baseBranches": ["dev"],
+  "enabledManagers": ["cargo", "npm"],
+  "labels": ["dependencies"],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+    "**/crate/**",
+    "shared/**"
+  ],
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "semanticCommitType": "chore",
+      "matchPackageNames": ["*"]
+    },
+    {
+      "description": "Disable node/pnpm version updates",
+      "matchPackageNames": ["node", "pnpm"],
+      "matchDepTypes": ["engines", "packageManager"],
+      "enabled": false
+    },
+    {
+      "description": "Group all cargo dependencies into a single PR",
+      "matchManagers": ["cargo"],
+      "groupName": "cargo dependencies"
+    },
+    {
+      "description": "Group all npm dependencies into a single PR",
+      "matchManagers": ["npm"],
+      "groupName": "npm dependencies"
+    }
+  ],
+  "postUpdateOptions": ["pnpmDedupe"],
+  "ignoreDeps": ["serde_yaml"]
+}
