@@ -2,14 +2,15 @@ import { useVerge } from "@/hooks/use-verge";
 import { cn } from "@/utils";
 import {
   alpha,
-  IconButton,
+  Box,
   ListItem,
   ListItemButton,
   Tooltip,
   Typography,
 } from "@mui/material";
+import { Link, useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useMatch, useNavigate, useResolvedPath } from "react-router-dom";
+
 interface Props {
   to: string;
   children: string;
@@ -19,9 +20,9 @@ interface Props {
 export const LayoutItem = (props: Props) => {
   const { to, children, icon, open } = props;
   const { verge } = useVerge();
+  const matchRoute = useMatchRoute();
+  const match = !!matchRoute({ to });
   const { menu_icon } = verge ?? {};
-  const resolved = useResolvedPath(to);
-  const match = useMatch({ path: resolved.pathname, end: true });
   const navigate = useNavigate();
   const enableMenuIcon = menu_icon && menu_icon !== "disable";
 
@@ -64,23 +65,17 @@ export const LayoutItem = (props: Props) => {
               "&.Mui-selected .MuiListItemIcon-root": { color },
             };
           }}
-          onClick={() => navigate(to)}>
+          onClick={() => navigate({ to })}>
           <div
             className={cn("flex items-center text-center", { "w-full": open })}>
-            <div className="flex w-full items-center justify-center">
+            <div className="flex h-8 w-full items-center justify-center">
               <motion.div layout className={cn({ "relative left-4": open })}>
                 {enableMenuIcon && menu_icon === "monochrome" && (
-                  <IconButton
-                    sx={{ color: match ? "primary.main" : "text.primary" }}
-                    size="small">
+                  <Box sx={{ color: match ? "primary.main" : "text.primary" }}>
                     {icon[0]}
-                  </IconButton>
+                  </Box>
                 )}
-                {enableMenuIcon && menu_icon === "colorful" && (
-                  <IconButton className="m-0 p-0" size="small">
-                    {icon[1]}
-                  </IconButton>
-                )}
+                {enableMenuIcon && menu_icon === "colorful" && icon[1]}
               </motion.div>
               {(open || !enableMenuIcon) && (
                 <div className="w-full">

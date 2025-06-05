@@ -10,6 +10,8 @@ import { getPortableFlag } from "@/services/cmds";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
 import { Paper, ThemeProvider } from "@mui/material";
+import { Outlet } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
@@ -19,7 +21,6 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import i18next from "i18next";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
 
 const appWindow = getCurrentWebviewWindow();
@@ -133,7 +134,12 @@ const Layout = () => {
   }, [language, visible]);
 
   return (
-    <SWRConfig value={{ errorRetryCount: 3 }}>
+    <SWRConfig
+      value={{
+        errorRetryCount: 3,
+        revalidateOnFocus: true,
+        revalidateOnMount: true,
+      }}>
       <ThemeProvider theme={theme}>
         <Paper
           square
@@ -179,7 +185,7 @@ const Layout = () => {
                 <Outlet />
               </Suspense>
             </div>
-
+            <TanStackRouterDevtools />
             <TailwindIndicator />
           </div>
         </Paper>

@@ -4,7 +4,7 @@ import {
   WebDavFilesViewerRef,
 } from "@/components/setting/mods/webdav-files-viewer";
 import { useVerge } from "@/hooks/use-verge";
-import { routers } from "@/pages/_routers";
+import { routes } from "@/routes/__root";
 import {
   applyLocalBackup,
   createAndUploadBackup,
@@ -266,10 +266,10 @@ const SettingVerge = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ start_page: e })}
           onGuard={(e) => patchVerge({ start_page: e })}>
           <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
-            {routers.map((page: { label: string; path: string }) => {
+            {routes.map((route) => {
               return (
-                <MenuItem key={page.path} value={page.path}>
-                  {t(page.label)}
+                <MenuItem key={route.path} value={route.path}>
+                  {t(route.label)}
                 </MenuItem>
               );
             })}

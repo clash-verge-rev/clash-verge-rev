@@ -16,7 +16,7 @@ install=clash-verge.install
 
 source_x86_64=("clash-verge_${_pkgver}_amd64.deb")
 
-sha256sums_x86_64=("e17e39c9442872797d071568776e4671b362061a4ba69217df851f007e0b575a")
+sha256sums_x86_64=("7da44bacf3988a271bf5115b018dcf74434e8218b56c19f2c75ff689a56cb54f")
 
 package() {
 	# Extract package data

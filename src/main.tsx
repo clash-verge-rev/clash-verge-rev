@@ -4,22 +4,33 @@ import {
   NoticeProvider,
 } from "@/components/base";
 import "@/index.css";
-import router from "@/pages/_routers";
 import "@/services/i18n";
+import {
+  LoadingCacheProvider,
+  ThemeModeProvider,
+  UpdateStateProvider,
+} from "@/services/states";
 import { ResizeObserver } from "@juggle/resize-observer";
 import { StyledEngineProvider } from "@mui/material";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { SnackbarProvider } from "notistack";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { RouterProvider } from "react-router-dom";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
-import {
-  LoadingCacheProvider,
-  ThemeModeProvider,
-  UpdateStateProvider,
-} from "./services/states";
+
+import { routeTree } from "@/routeTree.gen";
+
+// Create a new router instance
+const router = createRouter({ routeTree });
+
+// Register the router instance for type safety
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
@@ -63,7 +74,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // 页面关闭/刷新事件
 window.addEventListener("beforeunload", async () => {
-  await MihomoWebSocket.cleanupAll(); // 强制清理所有 WebSocket 实例
+  // 强制清理所有 WebSocket 实例
+  await MihomoWebSocket.cleanupAll();
 });
 
 const contexts = [

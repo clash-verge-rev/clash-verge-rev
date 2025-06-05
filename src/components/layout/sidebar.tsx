@@ -1,11 +1,11 @@
-import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { LogoTitle } from "@/components/layout/logo-title";
 import { useWindowSize } from "@/hooks/use-window-size";
-import { routers } from "@/pages/_routers";
+import { routes } from "@/routes/__root";
 import { cn } from "@/utils";
 import { List } from "@mui/material";
-import { t } from "i18next";
+import { useTranslation } from "react-i18next";
+import { LayoutItem } from "./layout-item";
 
 interface Props {
   enableSystemTitleBar: boolean;
@@ -14,6 +14,7 @@ interface Props {
 export const Sidebar = (props: Props) => {
   const { enableSystemTitleBar } = props;
   const { size } = useWindowSize();
+  const { t } = useTranslation();
   const open = size.width >= 650;
 
   return (
@@ -36,13 +37,13 @@ export const Sidebar = (props: Props) => {
         data-tauri-drag-region="true"></div>
 
       <List className="box-border flex-auto overflow-y-auto">
-        {routers.map((router) => (
+        {routes.map((route) => (
           <LayoutItem
             open={open}
-            key={router.label}
-            to={router.path}
-            icon={router.icon}>
-            {t(router.label)}
+            key={route.label}
+            to={route.path}
+            icon={route.icon}>
+            {t(route.label)}
           </LayoutItem>
         ))}
       </List>
@@ -50,9 +51,7 @@ export const Sidebar = (props: Props) => {
       <div
         className={cn(
           "flex shrink-0 grow-0 items-center justify-center px-4 py-2",
-          {
-            hidden: !open,
-          },
+          { hidden: !open },
         )}>
         <LayoutTraffic />
       </div>

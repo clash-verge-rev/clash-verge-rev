@@ -2,7 +2,7 @@ name: Test Build
 
 on:
   push:
-    branches: [websocket]
+    branches: [tanstack/router]
     tags-ignore: [updater, alpha]
   workflow_dispatch:
 
