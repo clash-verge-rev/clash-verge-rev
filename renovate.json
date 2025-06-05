@@ -1,0 +1,30 @@
+{
+  "extends": ["config:recommended"],
+  "baseBranches": ["dev"],
+  "enabledManagers": ["cargo", "npm"],
+  "labels": ["dependencies"],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+    "shared/**"
+  ],
+  "rangeStrategy": "replace",
+  "packageRules": [
+    {
+      "semanticCommitType": "chore",
+      "matchPackageNames": ["*"]
+    },
+    {
+      "description": "Disable node/pnpm version updates",
+      "matchPackageNames": ["node", "pnpm"],
+      "matchDepTypes": ["engines", "packageManager"],
+      "enabled": false
+    }
+  ],
+  "postUpdateOptions": ["pnpmDedupe"]
+}
