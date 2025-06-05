@@ -14,7 +14,7 @@
     "**/crate/**",
     "shared/**"
   ],
-  "rangeStrategy": "replace",
+  "rangeStrategy": "bump",
   "packageRules": [
     {
       "semanticCommitType": "chore",
@@ -37,5 +37,6 @@
       "groupName": "npm dependencies"
     }
   ],
-  "postUpdateOptions": ["pnpmDedupe"]
+  "postUpdateOptions": ["pnpmDedupe"],
+  "ignoreDeps": ["serde_yaml"]
 }
