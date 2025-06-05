@@ -29,7 +29,7 @@ const runRelease = () =>
 
 // 2. 判断是否需要打 tag
 function isSemver(version) {
-  return /^v?\d+\.\d+\.\d+(-alpha)?$/.test(version);
+  return /^v?\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/.test(version);
 }
 
 async function run() {

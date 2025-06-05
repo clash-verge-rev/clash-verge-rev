@@ -6,6 +6,10 @@ on:
   # 应当通过 git tag 来触发构建
   # workflow_dispatch:
   push:
+    # 应当限制在 dev 分支上触发发布。
+    branches:
+      - dev
+    # 应当限制 v*.*.*-alpha* 的 tag 来触发发布。
     tags:
       - "v*.*.*-alpha*"
 permissions: write-all
@@ -18,8 +22,37 @@ concurrency:
   group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
 
 jobs:
+  check_alpha_tag:
+    name: Check Alpha Tag package.json Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check tag and package.json version
+        id: check_tag
+        run: |
+          TAG_REF="${GITHUB_REF##*/}"
+          echo "Current tag: $TAG_REF"
+          if [[ ! "$TAG_REF" =~ -alpha ]]; then
+            echo "Current tag is not an alpha tag."
+            exit 1
+          fi
+          PKG_VERSION=$(jq -r .version package.json)
+          echo "package.json version: $PKG_VERSION"
+          if [[ "$PKG_VERSION" != *alpha* ]]; then
+            echo "package.json version is not an alpha version."
+            exit 1
+          fi
+          if [[ "$TAG_REF" != "v$PKG_VERSION" ]]; then
+            echo "Tag ($TAG_REF) does not match package.json version (v$PKG_VERSION)."
+            exit 1
+          fi
+          echo "Alpha tag and package.json version are consistent."
+
   delete_old_assets:
     name: Delete Old Alpha Release Assets and Tags
+    needs: check_alpha_tag
     runs-on: ubuntu-latest
     steps:
       - name: Delete Old Alpha Tags Except Latest
