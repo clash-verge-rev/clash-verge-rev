@@ -28,12 +28,12 @@
     },
     {
       "description": "Group all cargo dependencies into a single PR",
-      "managers": ["cargo"],
+      "matchManagers": ["cargo"],
       "groupName": "cargo dependencies"
     },
     {
       "description": "Group all npm dependencies into a single PR",
-      "managers": ["npm"],
+      "matchManagers": ["npm"],
       "groupName": "npm dependencies"
     }
   ],
