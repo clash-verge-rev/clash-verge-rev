@@ -70,7 +70,7 @@
     "react-i18next": "15.5.1",
     "react-markdown": "10.1.0",
     "react-monaco-editor": "0.58.0",
-    "react-router-dom": "7.6.0",
+    "react-router-dom": "7.6.2",
     "react-virtuoso": "^4.12.7",
     "sockette": "^2.0.6",
     "swr": "^2.3.3",
