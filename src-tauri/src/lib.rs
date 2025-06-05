@@ -2,10 +2,10 @@ mod cmd;
 mod config;
 mod core;
 mod enhance;
-mod error;
 mod feat;
 mod module;
 mod process;
+mod state;
 mod utils;
 use crate::{
     core::hotkey,
@@ -204,6 +204,8 @@ pub fn run() {
             if let Err(e) = utils::init::init_resources() {
                 logging!(error, Type::Setup, true, "初始化资源失败: {}", e);
             }
+
+            app.manage(Mutex::new(state::proxy::CmdProxyState::default()));
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())
