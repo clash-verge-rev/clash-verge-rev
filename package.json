@@ -80,7 +80,7 @@
   },
   "devDependencies": {
     "@actions/github": "^6.0.0",
-    "@tauri-apps/cli": "2.2.7",
+    "@tauri-apps/cli": "2.5.0",
     "@types/js-cookie": "^3.0.6",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
