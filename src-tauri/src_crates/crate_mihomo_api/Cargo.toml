@@ -2,9 +2,6 @@
 name = "mihomo_api"
 edition = "2024"
 
-[features]
-debug = []
-
 [dependencies]
 reqwest = { version = "0.12.19", features = ["json"] }
 serde = { version = "1.0.219", features = ["derive"] }

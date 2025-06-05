@@ -1,0 +1,50 @@
+name: Cross Platform Cargo Check
+
+on:
+  workflow_dispatch:
+#   pull_request:
+#   push:
+# branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-check:
+    # Treat all Rust compiler warnings as errors
+    env:
+      RUSTFLAGS: "-D warnings"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Add Rust Target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-all-crates: true
+          cache-on-failure: true
+
+      - name: Cargo Check (deny warnings)
+        working-directory: src-tauri
+        run: |
+          cargo check --target ${{ matrix.target }} --workspace --all-features
