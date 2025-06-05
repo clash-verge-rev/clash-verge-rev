@@ -33,7 +33,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@juggle/resize-observer": "^3.4.0",
     "@mui/icons-material": "^7.0.2",
-    "@mui/lab": "7.0.0-beta.12",
+    "@mui/lab": "7.0.0-beta.13",
     "@mui/material": "^7.0.2",
     "@mui/x-data-grid": "^7.29.0",
     "@tanstack/react-router": "^1.120.15",
@@ -99,7 +99,7 @@
     "postcss": "8.5.4",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "0.6.12",
-    "pretty-quick": "4.2.0",
+    "pretty-quick": "4.2.2",
     "react-devtools": "6.1.2",
     "tailwind-merge": "3.3.0",
     "tailwindcss": "4.1.8",
@@ -121,5 +121,5 @@
       "prettier-plugin-tailwindcss"
     ]
   },
-  "packageManager": "pnpm@10.11.0"
+  "packageManager": "pnpm@10.11.1"
 }
