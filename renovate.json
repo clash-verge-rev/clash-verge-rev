@@ -26,5 +26,6 @@
       "enabled": false
     }
   ],
-  "postUpdateOptions": ["pnpmDedupe"]
+  "postUpdateOptions": ["pnpmDedupe"],
+  "schedule": ["at 04:00"]
 }
