@@ -25,7 +25,6 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
 
     const onClose = () => setOpen(false);
 
-    // TODO: snackbar content style
     return (
       <Snackbar
         autoHideDuration={6000}
@@ -57,6 +56,7 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     : `${metadata.destinationIP}:${metadata.destinationPort}`;
 
   const information = [
+    { label: t("Type"), value: `${metadata.type}(${metadata.network})` },
     { label: t("Host"), value: host },
     { label: t("Downloaded"), value: parseTraffic(data.download).join(" ") },
     { label: t("Uploaded"), value: parseTraffic(data.upload).join(" ") },
@@ -76,22 +76,24 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
         metadata.processPath ? `(${metadata.processPath})` : ""
       }`,
     },
-    { label: t("Time"), value: dayjs(data.start).fromNow() },
     {
       label: t("Source"),
       value: `${metadata.sourceIP}:${metadata.sourcePort}`,
     },
     { label: t("Destination IP"), value: metadata.destinationIP },
-    { label: t("Type"), value: `${metadata.type}(${metadata.network})` },
+    { label: t("Time"), value: dayjs(data.start).fromNow() },
   ];
 
   const onDelete = useLockFn(async () => closeConnections(data.id));
 
   return (
-    <Box sx={{ userSelect: "text" }}>
+    <Box sx={{ userSelect: "text", maxWidth: 500, minWidth: 300 }}>
       {information.map((each) => (
-        <div key={each.label}>
-          <b>{each.label}</b>: <span>{each.value}</span>
+        <div key={each.label} className="grid grid-cols-6 gap-1 break-words">
+          <div className="text-primary-main col-span-1 text-right font-bold">
+            {each.label}
+          </div>
+          <div className="col-span-5">{each.value}</div>
         </div>
       ))}
 
