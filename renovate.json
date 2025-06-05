@@ -11,6 +11,7 @@
     "**/test/**",
     "**/tests/**",
     "**/__fixtures__/**",
+    "**/crate/**",
     "shared/**"
   ],
   "rangeStrategy": "replace",
@@ -24,6 +25,16 @@
       "matchPackageNames": ["node", "pnpm"],
       "matchDepTypes": ["engines", "packageManager"],
       "enabled": false
+    },
+    {
+      "description": "Group all cargo dependencies into a single PR",
+      "managers": ["cargo"],
+      "groupName": "cargo dependencies"
+    },
+    {
+      "description": "Group all npm dependencies into a single PR",
+      "managers": ["npm"],
+      "groupName": "npm dependencies"
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"]
