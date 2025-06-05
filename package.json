@@ -94,7 +94,7 @@
     "postcss": "8.5.4",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "0.6.12",
-    "pretty-quick": "4.1.1",
+    "pretty-quick": "4.2.0",
     "react-devtools": "6.1.2",
     "tailwind-merge": "3.3.0",
     "tailwindcss": "4.1.8",
