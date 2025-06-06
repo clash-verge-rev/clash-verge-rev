@@ -30,7 +30,7 @@ pub async fn get_proxies() -> CmdResult<serde_json::Value> {
         let proxies = manager.get_refresh_proxies().await?;
         {
             let mut state = cmd_proxy_state.lock().unwrap();
-            state.proxies = proxies;
+            state.proxies = Box::new(proxies);
             state.need_refresh = false;
         }
         log::debug!(target: "app", "proxies刷新成功");
@@ -40,7 +40,7 @@ pub async fn get_proxies() -> CmdResult<serde_json::Value> {
         let state = cmd_proxy_state.lock().unwrap();
         state.proxies.clone()
     };
-    Ok(proxies)
+    Ok(*proxies)
 }
 
 #[tauri::command]
@@ -63,7 +63,7 @@ pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
         let providers = manager.get_providers_proxies().await?;
         {
             let mut state = cmd_proxy_state.lock().unwrap();
-            state.providers_proxies = providers;
+            state.providers_proxies = Box::new(providers);
             state.need_refresh = false;
         }
         log::debug!(target: "app", "providers_proxies刷新成功");
@@ -73,5 +73,5 @@ pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
         let state = cmd_proxy_state.lock().unwrap();
         state.providers_proxies.clone()
     };
-    Ok(providers_proxies)
+    Ok(*providers_proxies)
 }
