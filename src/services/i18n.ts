@@ -9,12 +9,8 @@ import id from "@/locales/id.json";
 import ar from "@/locales/ar.json";
 import ko from "@/locales/ko.json";
 import tr from "@/locales/tr.json";
-import jp from "@/locales/jp.json";
-import de from "@/locales/de.json";
-import es from "@/locales/es.json";
-import zhtw from "@/locales/zhtw.json";
 
-export const languages = { en, ru, zh, fa, tt, id, ar, ko, tr, jp, de, es, zhtw };
+export const languages = { en, ru, zh, fa, tt, id, ar, ko, tr };
 
 const resources = Object.fromEntries(
   Object.entries(languages).map(([key, value]) => [
@@ -26,7 +22,7 @@ const resources = Object.fromEntries(
 i18n.use(initReactI18next).init({
   resources,
   lng: "zh",
-  fallbackLng: "en",
+  fallbackLng: "zh",
   interpolation: {
     escapeValue: false,
   },
