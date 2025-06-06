@@ -19,19 +19,6 @@ const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
   ? monacoEditorPluginModule.default
   : monacoEditorPluginModule;
 
-const devtools = () => {
-  return {
-    name: "react-devtools",
-    transformIndexHtml(html: string) {
-      return html.replace(
-        `<head>`,
-        `<head>
-    <script src="http://localhost:8097"></script>`,
-      );
-    },
-  };
-};
-
 export default defineConfig({
   root: "src",
   // prevent vite from obscuring rust errors
@@ -68,7 +55,6 @@ export default defineConfig({
         },
       ],
     }),
-    !!process.env.TAURI_ENV_DEBUG && devtools(),
   ],
   build: {
     outDir: "../src-tauri/frontend/dist",
