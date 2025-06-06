@@ -4,14 +4,21 @@ on:
   # 因为 alpha 不再负责频繁构建，且需要相对于 autobuild 更稳定使用环境
   # 所以不再使用 workflow_dispatch 触发
   # 应当通过 git tag 来触发构建
-  # workflow_dispatch:
-  push:
-    # 应当限制在 dev 分支上触发发布。
-    branches:
-      - dev
-    # 应当限制 v*.*.*-alpha* 的 tag 来触发发布。
-    tags:
-      - "v*.*.*-alpha*"
+  # TODO 手动控制版本号
+  workflow_dispatch:
+    # inputs:
+    #   tag_name:
+    #     description: "Alpha tag name (e.g. v1.2.3-alpha.1)"
+    #     required: true
+    #     type: string
+
+  # push:
+  #   # 应当限制在 dev 分支上触发发布。
+  #   branches:
+  #     - dev
+  #   # 应当限制 v*.*.*-alpha* 的 tag 来触发发布。
+  #   tags:
+  #     - "v*.*.*-alpha*"
 permissions: write-all
 env:
   TAG_NAME: alpha
