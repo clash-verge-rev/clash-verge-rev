@@ -59,7 +59,13 @@ const DEFAULT_DNS_CONFIG = {
     "*.msftncsi.com",
     "www.msftconnecttest.com",
   ],
-  "default-nameserver": ["system", "223.6.6.6", "8.8.8.8", "2400:3200::1", "2001:4860:4860::8888"],
+  "default-nameserver": [
+    "system",
+    "223.6.6.6",
+    "8.8.8.8",
+    "2400:3200::1",
+    "2001:4860:4860::8888",
+  ],
   nameserver: [
     "8.8.8.8",
     "https://doh.pub/dns-query",
@@ -70,7 +76,7 @@ const DEFAULT_DNS_CONFIG = {
   "proxy-server-nameserver": [
     "https://doh.pub/dns-query",
     "https://dns.alidns.com/dns-query",
-    "tls://223.5.5.5"
+    "tls://223.5.5.5",
   ],
   "direct-nameserver": [],
   "direct-nameserver-follow-policy": false,
@@ -219,8 +225,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
         dnsConfig["respect-rules"] ?? DEFAULT_DNS_CONFIG["respect-rules"],
       useHosts: dnsConfig["use-hosts"] ?? DEFAULT_DNS_CONFIG["use-hosts"],
       useSystemHosts:
-        dnsConfig["use-system-hosts"] ??
-        DEFAULT_DNS_CONFIG["use-system-hosts"],
+        dnsConfig["use-system-hosts"] ?? DEFAULT_DNS_CONFIG["use-system-hosts"],
       ipv6: dnsConfig.ipv6 ?? DEFAULT_DNS_CONFIG.ipv6,
       fakeIpFilter:
         dnsConfig["fake-ip-filter"]?.join(", ") ??
@@ -229,7 +234,8 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
         dnsConfig.nameserver?.join(", ") ??
         DEFAULT_DNS_CONFIG.nameserver.join(", "),
       fallback:
-        dnsConfig.fallback?.join(", ") ?? DEFAULT_DNS_CONFIG.fallback.join(", "),
+        dnsConfig.fallback?.join(", ") ??
+        DEFAULT_DNS_CONFIG.fallback.join(", "),
       defaultNameserver:
         dnsConfig["default-nameserver"]?.join(", ") ??
         DEFAULT_DNS_CONFIG["default-nameserver"].join(", "),
@@ -299,9 +305,8 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
 
   // 从表单值更新YAML内容
   const updateYamlFromValues = () => {
-
     const config: Record<string, any> = {};
-    
+
     const dnsConfig = generateDnsConfig();
     if (Object.keys(dnsConfig).length > 0) {
       config.dns = dnsConfig;
@@ -311,7 +316,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
     if (Object.keys(hosts).length > 0) {
       config.hosts = hosts;
     }
-    
+
     setYamlContent(yaml.dump(config, { forceQuotes: true }));
   };
 
@@ -320,10 +325,10 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       const parsedYaml = yaml.load(yamlContent) as any;
       if (!parsedYaml) return;
-      
+
       updateValuesFromConfig(parsedYaml);
     } catch (err: any) {
-      showNotice('error', t("Invalid YAML format"));
+      showNotice("error", t("Invalid YAML format"));
     }
   };
 
@@ -505,7 +510,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
         if (Object.keys(dnsConfig).length > 0) {
           config.dns = dnsConfig;
         }
-        
+
         const hosts = parseHosts(values.hosts);
         if (Object.keys(hosts).length > 0) {
           config.hosts = hosts;
@@ -521,30 +526,41 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
 
       // 保存配置
       await invoke("save_dns_config", { dnsConfig: config });
-      
+
       // 验证配置
-      const [isValid, errorMsg] = await invoke<[boolean, string]>("validate_dns_config", {});
-      
+      const [isValid, errorMsg] = await invoke<[boolean, string]>(
+        "validate_dns_config",
+        {},
+      );
+
       if (!isValid) {
         let cleanErrorMsg = errorMsg;
-        
+
         // 提取关键错误信息
         if (errorMsg.includes("level=error")) {
-          const errorLines = errorMsg.split('\n').filter(line => 
-            line.includes("level=error") || 
-            line.includes("level=fatal") || 
-            line.includes("failed")
-          );
-          
+          const errorLines = errorMsg
+            .split("\n")
+            .filter(
+              (line) =>
+                line.includes("level=error") ||
+                line.includes("level=fatal") ||
+                line.includes("failed"),
+            );
+
           if (errorLines.length > 0) {
-            cleanErrorMsg = errorLines.map(line => {
-              const msgMatch = line.match(/msg="([^"]+)"/);
-              return msgMatch ? msgMatch[1] : line;
-            }).join(", ");
+            cleanErrorMsg = errorLines
+              .map((line) => {
+                const msgMatch = line.match(/msg="([^"]+)"/);
+                return msgMatch ? msgMatch[1] : line;
+              })
+              .join(", ");
           }
         }
-        
-        showNotice('error', t("DNS configuration error") + ": " + cleanErrorMsg);
+
+        showNotice(
+          "error",
+          t("DNS configuration error") + ": " + cleanErrorMsg,
+        );
         return;
       }
 
@@ -555,9 +571,9 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
       }
 
       setOpen(false);
-      showNotice('success', t("DNS settings saved"));
+      showNotice("success", t("DNS settings saved"));
     } catch (err: any) {
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 

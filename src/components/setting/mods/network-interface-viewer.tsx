@@ -129,7 +129,7 @@ const AddressDisplay = (props: { label: string; content: string }) => {
           size="small"
           onClick={async () => {
             await writeText(props.content);
-            showNotice('success', t("Copy Success"));
+            showNotice("success", t("Copy Success"));
           }}
         >
           <ContentCopyRounded sx={{ fontSize: "18px" }} />

@@ -23,7 +23,7 @@
         if (eventType !== "change" || typeof listener !== "function") {
           console.error(
             "Invalid arguments for removeEventListener:",
-            arguments
+            arguments,
           );
           return;
         }

@@ -88,7 +88,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onError = (err: any) => {
-    showNotice('error', err.message || err.toString());
+    showNotice("error", err.message || err.toString());
   };
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);

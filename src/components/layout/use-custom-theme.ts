@@ -1,6 +1,9 @@
 import { useEffect, useMemo } from "react";
 import { alpha, createTheme, Shadows, Theme as MuiTheme } from "@mui/material";
-import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  getCurrentWebviewWindow,
+  WebviewWindow,
+} from "@tauri-apps/api/webviewWindow";
 import { useSetThemeMode, useThemeMode } from "@/services/states";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { useVerge } from "@/hooks/use-verge";
@@ -51,13 +54,16 @@ export const useCustomTheme = () => {
 
     const timerId = setTimeout(() => {
       if (!isMounted) return;
-      appWindow.theme().then((systemTheme) => {
-        if (isMounted && systemTheme) {
-          setMode(systemTheme);
-        }
-      }).catch(err => {
-        console.error("Failed to get initial system theme:", err);
-      });
+      appWindow
+        .theme()
+        .then((systemTheme) => {
+          if (isMounted && systemTheme) {
+            setMode(systemTheme);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to get initial system theme:", err);
+        });
     }, 0);
 
     const unlistenPromise = appWindow.onThemeChanged(({ payload }) => {
@@ -69,13 +75,15 @@ export const useCustomTheme = () => {
     return () => {
       isMounted = false;
       clearTimeout(timerId);
-      unlistenPromise.then((unlistenFn) => {
-        if (typeof unlistenFn === 'function') {
-          unlistenFn();
-        }
-      }).catch(err => {
-        console.error("Failed to unlisten from theme changes:", err);
-      });
+      unlistenPromise
+        .then((unlistenFn) => {
+          if (typeof unlistenFn === "function") {
+            unlistenFn();
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to unlisten from theme changes:", err);
+        });
     };
   }, [theme_mode, appWindow, setMode]);
 
@@ -86,7 +94,10 @@ export const useCustomTheme = () => {
 
     if (theme_mode === "system") {
       appWindow.setTheme(null).catch((err) => {
-        console.error("Failed to set window theme to follow system (setTheme(null)):", err);
+        console.error(
+          "Failed to set window theme to follow system (setTheme(null)):",
+          err,
+        );
       });
     } else if (mode) {
       appWindow.setTheme(mode as TauriOsTheme).catch((err) => {
@@ -153,21 +164,24 @@ export const useCustomTheme = () => {
 
     const rootEle = document.documentElement;
     if (rootEle) {
-        const backgroundColor = mode === "light" ? "#ECECEC" : "#2e303d";
-        const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
-        const scrollColor = mode === "light" ? "#90939980" : "#3E3E3Eee";
-        const dividerColor =
+      const backgroundColor = mode === "light" ? "#ECECEC" : "#2e303d";
+      const selectColor = mode === "light" ? "#f5f5f5" : "#d5d5d5";
+      const scrollColor = mode === "light" ? "#90939980" : "#3E3E3Eee";
+      const dividerColor =
         mode === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)";
 
-        rootEle.style.setProperty("--divider-color", dividerColor);
-        rootEle.style.setProperty("--background-color", backgroundColor);
-        rootEle.style.setProperty("--selection-color", selectColor);
-        rootEle.style.setProperty("--scroller-color", scrollColor);
-        rootEle.style.setProperty("--primary-main", muiTheme.palette.primary.main);
-        rootEle.style.setProperty(
+      rootEle.style.setProperty("--divider-color", dividerColor);
+      rootEle.style.setProperty("--background-color", backgroundColor);
+      rootEle.style.setProperty("--selection-color", selectColor);
+      rootEle.style.setProperty("--scroller-color", scrollColor);
+      rootEle.style.setProperty(
+        "--primary-main",
+        muiTheme.palette.primary.main,
+      );
+      rootEle.style.setProperty(
         "--background-color-alpha",
         alpha(muiTheme.palette.primary.main, 0.1),
-        );
+      );
     }
     // inject css
     let styleElement = document.querySelector("style#verge-theme");

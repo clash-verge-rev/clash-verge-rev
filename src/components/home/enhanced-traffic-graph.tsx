@@ -30,7 +30,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   Tooltip,
-  Filler
+  Filler,
 );
 
 // 流量数据项接口
@@ -54,8 +54,8 @@ type DataPoint = ITrafficItem & { name: string; timestamp: number };
 /**
  * 增强型流量图表组件
  */
-export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
-  (props, ref) => {
+export const EnhancedTrafficGraph = memo(
+  forwardRef<EnhancedTrafficGraphRef>((props, ref) => {
     const theme = useTheme();
     const { t } = useTranslation();
 
@@ -63,20 +63,20 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
     const [timeRange, setTimeRange] = useState<TimeRange>(10);
     const [chartStyle, setChartStyle] = useState<"line" | "area">("area");
     const [displayData, setDisplayData] = useState<DataPoint[]>([]);
-    
+
     // 数据缓冲区
     const dataBufferRef = useRef<DataPoint[]>([]);
 
     // 根据时间范围计算保留的数据点数量
     const getMaxPointsByTimeRange = useCallback(
       (minutes: TimeRange): number => minutes * 60,
-      []
+      [],
     );
 
     // 最大数据点数量
     const MAX_BUFFER_SIZE = useMemo(
       () => getMaxPointsByTimeRange(10),
-      [getMaxPointsByTimeRange]
+      [getMaxPointsByTimeRange],
     );
 
     // 颜色配置
@@ -89,23 +89,28 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
         text: theme.palette.text.primary,
         tooltipBorder: theme.palette.divider,
       }),
-      [theme]
+      [theme],
     );
 
     // 切换时间范围
-    const handleTimeRangeClick = useCallback((event: React.MouseEvent<SVGTextElement>) => {
-      event.stopPropagation(); 
-      setTimeRange((prevRange) => {
-        return prevRange === 1 ? 5 : prevRange === 5 ? 10 : 1;
-      });
-    }, []);
-    
-    // 点击图表主体或图例时切换样式
-    const handleToggleStyleClick = useCallback((event: React.MouseEvent<SVGTextElement | HTMLDivElement>) => {
-      event.stopPropagation();
-      setChartStyle((prev) => (prev === "line" ? "area" : "line"));
-    }, []);
+    const handleTimeRangeClick = useCallback(
+      (event: React.MouseEvent<SVGTextElement>) => {
+        event.stopPropagation();
+        setTimeRange((prevRange) => {
+          return prevRange === 1 ? 5 : prevRange === 5 ? 10 : 1;
+        });
+      },
+      [],
+    );
 
+    // 点击图表主体或图例时切换样式
+    const handleToggleStyleClick = useCallback(
+      (event: React.MouseEvent<SVGTextElement | HTMLDivElement>) => {
+        event.stopPropagation();
+        setChartStyle((prev) => (prev === "line" ? "area" : "line"));
+      },
+      [],
+    );
 
     // 初始化数据缓冲区
     useEffect(() => {
@@ -121,7 +126,9 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
           let nameValue: string;
           try {
             if (isNaN(date.getTime())) {
-              console.warn(`Initial data generation: Invalid date for timestamp ${pointTime}`);
+              console.warn(
+                `Initial data generation: Invalid date for timestamp ${pointTime}`,
+              );
               nameValue = "??:??:??";
             } else {
               nameValue = date.toLocaleTimeString("en-US", {
@@ -132,7 +139,14 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
               });
             }
           } catch (e) {
-            console.error("Error in toLocaleTimeString during initial data gen:", e, "Date:", date, "Timestamp:", pointTime);
+            console.error(
+              "Error in toLocaleTimeString during initial data gen:",
+              e,
+              "Date:",
+              date,
+              "Timestamp:",
+              pointTime,
+            );
             nameValue = "Err:Time";
           }
 
@@ -142,55 +156,66 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
             timestamp: pointTime,
             name: nameValue,
           };
-        }
+        },
       );
 
       dataBufferRef.current = initialBuffer;
-      
+
       // 更新显示数据
       const pointsToShow = getMaxPointsByTimeRange(timeRange);
       setDisplayData(initialBuffer.slice(-pointsToShow));
     }, [MAX_BUFFER_SIZE, getMaxPointsByTimeRange]);
     // 添加数据点方法
-    const appendData = useCallback((data: ITrafficItem) => {
-      const safeData = {
-        up: typeof data.up === "number" && !isNaN(data.up) ? data.up : 0,
-        down: typeof data.down === "number" && !isNaN(data.down) ? data.down : 0,
-      };
+    const appendData = useCallback(
+      (data: ITrafficItem) => {
+        const safeData = {
+          up: typeof data.up === "number" && !isNaN(data.up) ? data.up : 0,
+          down:
+            typeof data.down === "number" && !isNaN(data.down) ? data.down : 0,
+        };
 
-      const timestamp = data.timestamp || Date.now();
-      const date = new Date(timestamp);
+        const timestamp = data.timestamp || Date.now();
+        const date = new Date(timestamp);
 
-      let nameValue: string;
-      try {
-        if (isNaN(date.getTime())) {
-          console.warn(`appendData: Invalid date for timestamp ${timestamp}`);
-          nameValue = "??:??:??";
-        } else {
-          nameValue = date.toLocaleTimeString("en-US", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          });
+        let nameValue: string;
+        try {
+          if (isNaN(date.getTime())) {
+            console.warn(`appendData: Invalid date for timestamp ${timestamp}`);
+            nameValue = "??:??:??";
+          } else {
+            nameValue = date.toLocaleTimeString("en-US", {
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            });
+          }
+        } catch (e) {
+          console.error(
+            "Error in toLocaleTimeString in appendData:",
+            e,
+            "Date:",
+            date,
+            "Timestamp:",
+            timestamp,
+          );
+          nameValue = "Err:Time";
         }
-      } catch (e) {
-        console.error("Error in toLocaleTimeString in appendData:", e, "Date:", date, "Timestamp:", timestamp);
-        nameValue = "Err:Time";
-      }
-      // 带时间标签的新数据点
-      const newPoint: DataPoint = {
-        ...safeData,
-        name: nameValue,
-        timestamp: timestamp,
-      };
+        // 带时间标签的新数据点
+        const newPoint: DataPoint = {
+          ...safeData,
+          name: nameValue,
+          timestamp: timestamp,
+        };
 
-      const newBuffer = [...dataBufferRef.current.slice(1), newPoint];
-      dataBufferRef.current = newBuffer;
+        const newBuffer = [...dataBufferRef.current.slice(1), newPoint];
+        dataBufferRef.current = newBuffer;
 
-      const pointsToShow = getMaxPointsByTimeRange(timeRange);
-      setDisplayData(newBuffer.slice(-pointsToShow));
-    }, [timeRange, getMaxPointsByTimeRange]);
+        const pointsToShow = getMaxPointsByTimeRange(timeRange);
+        setDisplayData(newBuffer.slice(-pointsToShow));
+      },
+      [timeRange, getMaxPointsByTimeRange],
+    );
 
     // 监听时间范围变化
     useEffect(() => {
@@ -202,7 +227,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
 
     // 切换图表样式
     const toggleStyle = useCallback(() => {
-      setChartStyle((prev) => prev === "line" ? "area" : "line");
+      setChartStyle((prev) => (prev === "line" ? "area" : "line"));
     }, []);
 
     // 暴露方法给父组件
@@ -212,30 +237,31 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
         appendData,
         toggleStyle,
       }),
-      [appendData, toggleStyle]
+      [appendData, toggleStyle],
     );
 
-
     const formatYAxis = useCallback((value: number | string): string => {
-      if (typeof value !== 'number') return String(value);
+      if (typeof value !== "number") return String(value);
       const [num, unit] = parseTraffic(value);
       return `${num}${unit}`;
     }, []);
 
-    const formatXLabel = useCallback((tickValue: string | number, index: number, ticks: any[]) => {
-      const dataPoint = displayData[index as number];
-      if (dataPoint && dataPoint.name) {
-        const parts = dataPoint.name.split(":");
-        return `${parts[0]}:${parts[1]}`;
-      }
-      if(typeof tickValue === 'string') {
-        const parts = tickValue.split(":");
-        if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
-        return tickValue;
-      }
-      return '';
-    }, [displayData]);
-
+    const formatXLabel = useCallback(
+      (tickValue: string | number, index: number, ticks: any[]) => {
+        const dataPoint = displayData[index as number];
+        if (dataPoint && dataPoint.name) {
+          const parts = dataPoint.name.split(":");
+          return `${parts[0]}:${parts[1]}`;
+        }
+        if (typeof tickValue === "string") {
+          const parts = tickValue.split(":");
+          if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+          return tickValue;
+        }
+        return "";
+      },
+      [displayData],
+    );
 
     // 获取当前时间范围文本
     const getTimeRangeText = useCallback(() => {
@@ -243,13 +269,13 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
     }, [timeRange, t]);
 
     const chartData = useMemo(() => {
-      const labels = displayData.map(d => d.name);
+      const labels = displayData.map((d) => d.name);
       return {
         labels,
         datasets: [
           {
             label: t("Upload"),
-            data: displayData.map(d => d.up),
+            data: displayData.map((d) => d.up),
             borderColor: colors.up,
             backgroundColor: chartStyle === "area" ? colors.up : colors.up,
             fill: chartStyle === "area",
@@ -260,7 +286,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
           },
           {
             label: t("Download"),
-            data: displayData.map(d => d.down),
+            data: displayData.map((d) => d.down),
             borderColor: colors.down,
             backgroundColor: chartStyle === "area" ? colors.down : colors.down,
             fill: chartStyle === "area",
@@ -268,113 +294,130 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
             pointRadius: 0,
             pointHoverRadius: 4,
             borderWidth: 2,
-          }
-        ]
+          },
+        ],
       };
     }, [displayData, colors.up, colors.down, t, chartStyle]);
 
-    const chartOptions = useMemo(() => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false as false,
-      scales: {
-        x: {
-          display: true,
-          type: 'category' as const,
-          labels: displayData.map(d => d.name),
-          ticks: {
+    const chartOptions = useMemo(
+      () => ({
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false as false,
+        scales: {
+          x: {
             display: true,
-            color: colors.text,
-            font: { size: 10 },
-            callback: function(this: Scale, tickValue: string | number, index: number, ticks: Tick[]): string | undefined {
-              let labelToFormat: string | undefined = undefined;
+            type: "category" as const,
+            labels: displayData.map((d) => d.name),
+            ticks: {
+              display: true,
+              color: colors.text,
+              font: { size: 10 },
+              callback: function (
+                this: Scale,
+                tickValue: string | number,
+                index: number,
+                ticks: Tick[],
+              ): string | undefined {
+                let labelToFormat: string | undefined = undefined;
 
-              const currentDisplayTick = ticks[index];
-              if (currentDisplayTick && typeof currentDisplayTick.label === 'string') {
-                labelToFormat = currentDisplayTick.label;
-              } else {
-                const sourceLabels = displayData.map(d => d.name); 
-                if (typeof tickValue === 'number' && tickValue >= 0 && tickValue < sourceLabels.length) {
-                  labelToFormat = sourceLabels[tickValue];
-                } else if (typeof tickValue === 'string') {
-                  labelToFormat = tickValue;
+                const currentDisplayTick = ticks[index];
+                if (
+                  currentDisplayTick &&
+                  typeof currentDisplayTick.label === "string"
+                ) {
+                  labelToFormat = currentDisplayTick.label;
+                } else {
+                  const sourceLabels = displayData.map((d) => d.name);
+                  if (
+                    typeof tickValue === "number" &&
+                    tickValue >= 0 &&
+                    tickValue < sourceLabels.length
+                  ) {
+                    labelToFormat = sourceLabels[tickValue];
+                  } else if (typeof tickValue === "string") {
+                    labelToFormat = tickValue;
+                  }
                 }
-              }
 
-              if (typeof labelToFormat !== 'string') {
-                return undefined;
-              }
+                if (typeof labelToFormat !== "string") {
+                  return undefined;
+                }
 
-              const parts: string[] = labelToFormat.split(':');
-              return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : labelToFormat;
+                const parts: string[] = labelToFormat.split(":");
+                return parts.length >= 2
+                  ? `${parts[0]}:${parts[1]}`
+                  : labelToFormat;
+              },
+              autoSkip: true,
+              maxTicksLimit: Math.max(
+                5,
+                Math.floor(displayData.length / (timeRange * 2)),
+              ),
+              minRotation: 0,
+              maxRotation: 0,
             },
-            autoSkip: true,
-            maxTicksLimit: Math.max(5, Math.floor(displayData.length / (timeRange * 2))),
-            minRotation: 0,
-            maxRotation: 0,
+            grid: {
+              display: true,
+              drawOnChartArea: false,
+              drawTicks: true,
+              tickLength: 2,
+              color: colors.text,
+            },
           },
-          grid: {
-            display: true,
-            drawOnChartArea: false,
-            drawTicks: true,
-            tickLength: 2,
-            color: colors.text,
-
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: colors.text,
+              font: { size: 10 },
+              callback: formatYAxis,
+            },
+            grid: {
+              display: true,
+              drawTicks: true,
+              tickLength: 3,
+              color: colors.grid,
+            },
           },
         },
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: colors.text,
-            font: { size: 10 },
-            callback: formatYAxis,
-          },
-          grid: {
-            display: true,
-            drawTicks: true,
-            tickLength: 3,
-            color: colors.grid,
-
-          },
-        }
-      },
-      plugins: {
-        tooltip: {
-          enabled: true,
-          mode: 'index' as const,
-          intersect: false,
-          backgroundColor: colors.tooltipBg,
-          titleColor: colors.text,
-          bodyColor: colors.text,
-          borderColor: colors.tooltipBorder,
-          borderWidth: 1,
-          cornerRadius: 4,
-          padding: 8,
-          callbacks: {
-            title: (tooltipItems: any[]) => {
-              return `${t("Time")}: ${tooltipItems[0].label}`;
+        plugins: {
+          tooltip: {
+            enabled: true,
+            mode: "index" as const,
+            intersect: false,
+            backgroundColor: colors.tooltipBg,
+            titleColor: colors.text,
+            bodyColor: colors.text,
+            borderColor: colors.tooltipBorder,
+            borderWidth: 1,
+            cornerRadius: 4,
+            padding: 8,
+            callbacks: {
+              title: (tooltipItems: any[]) => {
+                return `${t("Time")}: ${tooltipItems[0].label}`;
+              },
+              label: (context: any): string => {
+                const label = context.dataset.label || "";
+                const value = context.parsed.y;
+                const [num, unit] = parseTraffic(value);
+                return `${label}: ${num} ${unit}/s`;
+              },
             },
-            label: (context: any): string => {
-              const label = context.dataset.label || '';
-              const value = context.parsed.y;
-              const [num, unit] = parseTraffic(value);
-              return `${label}: ${num} ${unit}/s`;
-            }
-          }
+          },
+          legend: {
+            display: false,
+          },
         },
-        legend: {
-          display: false
-        }
-      },
-      layout: {
-        padding: {
-          top: 16,
-          right: 7,
-          left: 3,
-        }
-      }
-    }), [colors, t, formatYAxis, timeRange, displayData]);
-
+        layout: {
+          padding: {
+            top: 16,
+            right: 7,
+            left: 3,
+          },
+        },
+      }),
+      [colors, t, formatYAxis, timeRange, displayData],
+    );
 
     return (
       <Box
@@ -392,8 +435,17 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
           {displayData.length > 0 && (
             <ChartJsLine data={chartData} options={chartOptions} />
           )}
-        
-          <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+
+          <svg
+            width="100%"
+            height="100%"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              pointerEvents: "none",
+            }}
+          >
             <text
               x="3.5%"
               y="10%"
@@ -402,11 +454,11 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
               fontSize={11}
               fontWeight="bold"
               onClick={handleTimeRangeClick}
-              style={{ cursor: "pointer", pointerEvents: 'all' }}
+              style={{ cursor: "pointer", pointerEvents: "all" }}
             >
               {getTimeRangeText()}
             </text>
-            
+
             <text
               x="99%"
               y="10%"
@@ -415,7 +467,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
               fontSize={12}
               fontWeight="bold"
               onClick={handleToggleStyleClick}
-              style={{ cursor: "pointer", pointerEvents: 'all' }}
+              style={{ cursor: "pointer", pointerEvents: "all" }}
             >
               {t("Upload")}
             </text>
@@ -428,7 +480,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
               fontSize={12}
               fontWeight="bold"
               onClick={handleToggleStyleClick}
-              style={{ cursor: "pointer", pointerEvents: 'all' }}
+              style={{ cursor: "pointer", pointerEvents: "all" }}
             >
               {t("Download")}
             </text>
@@ -436,7 +488,7 @@ export const EnhancedTrafficGraph = memo(forwardRef<EnhancedTrafficGraphRef>(
         </div>
       </Box>
     );
-  },
-));
+  }),
+);
 
 EnhancedTrafficGraph.displayName = "EnhancedTrafficGraph";

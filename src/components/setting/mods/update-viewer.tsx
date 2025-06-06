@@ -1,5 +1,11 @@
 import useSWR from "swr";
-import { forwardRef, useImperativeHandle, useState, useMemo, useEffect } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
 import { useLockFn } from "ahooks";
 import { Box, LinearProgress, Button } from "@mui/material";
 import { useTranslation } from "react-i18next";
@@ -18,7 +24,8 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const [currentProgressListener, setCurrentProgressListener] = useState<UnlistenFn | null>(null);
+  const [currentProgressListener, setCurrentProgressListener] =
+    useState<UnlistenFn | null>(null);
 
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
@@ -55,12 +62,12 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onUpdate = useLockFn(async () => {
     if (portableFlag) {
-      showNotice('error', t("Portable Updater Error"));
+      showNotice("error", t("Portable Updater Error"));
       return;
     }
     if (!updateInfo?.body) return;
     if (breakChangeFlag) {
-      showNotice('error', t("Break Change Update Error"));
+      showNotice("error", t("Break Change Update Error"));
       return;
     }
     if (updateState) return;
@@ -86,7 +93,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       await updateInfo.downloadAndInstall();
       await relaunch();
     } catch (err: any) {
-      showNotice('error', err?.message || err.toString());
+      showNotice("error", err?.message || err.toString());
     } finally {
       setUpdateState(false);
       if (progressListener) {

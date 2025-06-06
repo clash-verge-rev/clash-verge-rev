@@ -105,7 +105,7 @@ export const CurrentProxyCard = () => {
   // 添加排序类型状态
   const [sortType, setSortType] = useState<ProxySortType>(() => {
     const savedSortType = localStorage.getItem(STORAGE_KEY_SORT_TYPE);
-    return savedSortType ? Number(savedSortType) as ProxySortType : 0;
+    return savedSortType ? (Number(savedSortType) as ProxySortType) : 0;
   });
 
   // 定义状态类型
@@ -156,7 +156,8 @@ export const CurrentProxyCard = () => {
           primaryKeywords.some((keyword) =>
             group.name.toLowerCase().includes(keyword.toLowerCase()),
           ),
-        ) || proxies.groups.filter((g: { name: string }) => g.name !== "GLOBAL")[0];
+        ) ||
+        proxies.groups.filter((g: { name: string }) => g.name !== "GLOBAL")[0];
 
       return primaryGroup?.name || "";
     };
@@ -200,11 +201,13 @@ export const CurrentProxyCard = () => {
       // 只保留 Selector 类型的组用于选择
       const filteredGroups = proxies.groups
         .filter((g: { name: string; type?: string }) => g.type === "Selector")
-        .map((g: { name: string; now: string; all: Array<{ name: string }> }) => ({
-          name: g.name,
-          now: g.now || "",
-          all: g.all.map((p: { name: string }) => p.name),
-        }));
+        .map(
+          (g: { name: string; now: string; all: Array<{ name: string }> }) => ({
+            name: g.name,
+            now: g.now || "",
+            all: g.all.map((p: { name: string }) => p.name),
+          }),
+        );
 
       let newProxy = "";
       let newDisplayProxy = null;
@@ -230,12 +233,12 @@ export const CurrentProxyCard = () => {
           if (selectorGroup) {
             newGroup = selectorGroup.name;
             newProxy = selectorGroup.now || selectorGroup.all[0] || "";
-          newDisplayProxy = proxies.records?.[newProxy] || null;
+            newDisplayProxy = proxies.records?.[newProxy] || null;
 
-          if (!isGlobalMode && !isDirectMode) {
-            localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
-            if (newProxy) {
-              localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
+            if (!isGlobalMode && !isDirectMode) {
+              localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+              if (newProxy) {
+                localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
               }
             }
           }
@@ -280,7 +283,9 @@ export const CurrentProxyCard = () => {
       localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
 
       setState((prev) => {
-        const group = prev.proxyData.groups.find((g: { name: string }) => g.name === newGroup);
+        const group = prev.proxyData.groups.find(
+          (g: { name: string }) => g.name === newGroup,
+        );
         if (group) {
           return {
             ...prev,
@@ -368,14 +373,16 @@ export const CurrentProxyCard = () => {
   }, [state.displayProxy]);
 
   // 获取当前节点的延迟（增加非空校验）
-  const currentDelay = currentProxy && state.selection.group
-    ? delayManager.getDelayFix(currentProxy, state.selection.group)
-    : -1;
+  const currentDelay =
+    currentProxy && state.selection.group
+      ? delayManager.getDelayFix(currentProxy, state.selection.group)
+      : -1;
 
   // 信号图标（增加非空校验）
-  const signalInfo = currentProxy && state.selection.group
-    ? getSignalIcon(currentDelay)
-    : { icon: <SignalNone />, text: "未初始化", color: "text.secondary" };
+  const signalInfo =
+    currentProxy && state.selection.group
+      ? getSignalIcon(currentDelay)
+      : { icon: <SignalNone />, text: "未初始化", color: "text.secondary" };
 
   // 自定义渲染选择框中的值
   const renderProxyValue = useCallback(
@@ -384,7 +391,7 @@ export const CurrentProxyCard = () => {
 
       const delayValue = delayManager.getDelayFix(
         state.proxyData.records[selected],
-        state.selection.group
+        state.selection.group,
       );
 
       return (
@@ -441,7 +448,7 @@ export const CurrentProxyCard = () => {
 
       return list;
     },
-    [sortType, state.proxyData.records, state.selection.group]
+    [sortType, state.proxyData.records, state.selection.group],
   );
 
   // 计算要显示的代理选项（增加非空校验）
@@ -452,11 +459,11 @@ export const CurrentProxyCard = () => {
     if (isGlobalMode && proxies?.global) {
       const options = proxies.global.all
         .filter((p: any) => {
-          const name = typeof p === 'string' ? p : p.name;
+          const name = typeof p === "string" ? p : p.name;
           return name !== "DIRECT" && name !== "REJECT";
         })
         .map((p: any) => ({
-          name: typeof p === 'string' ? p : p.name
+          name: typeof p === "string" ? p : p.name,
         }));
 
       return sortProxies(options);
@@ -464,7 +471,7 @@ export const CurrentProxyCard = () => {
 
     // 规则模式
     const group = state.selection.group
-      ? state.proxyData.groups.find(g => g.name === state.selection.group)
+      ? state.proxyData.groups.find((g) => g.name === state.selection.group)
       : null;
 
     if (group) {
@@ -473,7 +480,14 @@ export const CurrentProxyCard = () => {
     }
 
     return [];
-  }, [isDirectMode, isGlobalMode, proxies, state.proxyData, state.selection.group, sortProxies]);
+  }, [
+    isDirectMode,
+    isGlobalMode,
+    proxies,
+    state.proxyData,
+    state.selection.group,
+    sortProxies,
+  ]);
 
   // 获取排序图标
   const getSortIcon = () => {
@@ -660,12 +674,14 @@ export const CurrentProxyCard = () => {
               {isDirectMode
                 ? null
                 : proxyOptions.map((proxy, index) => {
-                    const delayValue = state.proxyData.records[proxy.name] && state.selection.group
-                      ? delayManager.getDelayFix(
-                          state.proxyData.records[proxy.name],
-                          state.selection.group,
-                        )
-                      : -1;
+                    const delayValue =
+                      state.proxyData.records[proxy.name] &&
+                      state.selection.group
+                        ? delayManager.getDelayFix(
+                            state.proxyData.records[proxy.name],
+                            state.selection.group,
+                          )
+                        : -1;
                     return (
                       <MenuItem
                         key={`${proxy.name}-${index}`}
@@ -706,4 +722,4 @@ export const CurrentProxyCard = () => {
       )}
     </EnhancedCard>
   );
-};  
+};

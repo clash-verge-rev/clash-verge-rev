@@ -70,8 +70,8 @@ export const GroupItem = (props: Props) => {
               ? alpha(palette.background.paper, 0.3)
               : alpha(palette.grey[400], 0.3)
             : type === "delete"
-            ? alpha(palette.error.main, 0.3)
-            : alpha(palette.success.main, 0.3),
+              ? alpha(palette.error.main, 0.3)
+              : alpha(palette.success.main, 0.3),
         height: "100%",
         margin: "8px 0",
         borderRadius: "8px",

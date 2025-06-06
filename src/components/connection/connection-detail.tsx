@@ -107,7 +107,14 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
       {information.map((each) => (
         <div key={each.label}>
           <b>{each.label}</b>
-          <span style={{ wordBreak: "break-all", color: theme.palette.text.primary }}>: {each.value}</span>
+          <span
+            style={{
+              wordBreak: "break-all",
+              color: theme.palette.text.primary,
+            }}
+          >
+            : {each.value}
+          </span>
         </div>
       ))}
 

@@ -127,7 +127,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       currData.current = value;
       onChange?.(prevData.current, currData.current);
     } catch (err: any) {
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -136,7 +136,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       !readOnly && onSave?.(prevData.current, currData.current);
       onClose();
     } catch (err: any) {
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -144,7 +144,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     try {
       onClose();
     } catch (err: any) {
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 

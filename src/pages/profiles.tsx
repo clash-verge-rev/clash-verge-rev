@@ -80,7 +80,7 @@ const ProfilePage = () => {
 
           for (let file of paths) {
             if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-              showNotice('error', t("Only YAML Files Supported"));
+              showNotice("error", t("Only YAML Files Supported"));
               continue;
             }
             const item = {
@@ -145,31 +145,34 @@ const ProfilePage = () => {
     try {
       // 尝试正常导入
       await importProfile(url);
-      showNotice('success', t("Profile Imported Successfully"));
+      showNotice("success", t("Profile Imported Successfully"));
       setUrl("");
       mutateProfiles();
       await onEnhance(false);
     } catch (err: any) {
       // 首次导入失败，尝试使用自身代理
       const errmsg = err.message || err.toString();
-      showNotice('info', t("Import failed, retrying with Clash proxy..."));
-      
+      showNotice("info", t("Import failed, retrying with Clash proxy..."));
+
       try {
         // 使用自身代理尝试导入
         await importProfile(url, {
           with_proxy: false,
-          self_proxy: true
+          self_proxy: true,
         });
-        
+
         // 回退导入成功
-        showNotice('success', t("Profile Imported with Clash proxy"));
+        showNotice("success", t("Profile Imported with Clash proxy"));
         setUrl("");
         mutateProfiles();
         await onEnhance(false);
       } catch (retryErr: any) {
         // 回退导入也失败
         const retryErrmsg = retryErr?.message || retryErr.toString();
-        showNotice('error', `${t("Import failed even with Clash proxy")}: ${retryErrmsg}`);
+        showNotice(
+          "error",
+          `${t("Import failed even with Clash proxy")}: ${retryErrmsg}`,
+        );
       }
     } finally {
       setDisabled(false);
@@ -199,10 +202,10 @@ const ProfilePage = () => {
       closeAllConnections();
       await activateSelected();
       if (notifySuccess && success) {
-        showNotice('success', t("Profile Switched"), 1000);
+        showNotice("success", t("Profile Switched"), 1000);
       }
     } catch (err: any) {
-      showNotice('error', err?.message || err.toString(), 4000);
+      showNotice("error", err?.message || err.toString(), 4000);
     } finally {
       clearTimeout(reset);
       setActivatings([]);
@@ -228,10 +231,10 @@ const ProfilePage = () => {
       await enhanceProfiles();
       mutateLogs();
       if (notifySuccess) {
-        showNotice('success', t("Profile Reactivated"), 1000);
+        showNotice("success", t("Profile Reactivated"), 1000);
       }
     } catch (err: any) {
-      showNotice('error', err.message || err.toString(), 3000);
+      showNotice("error", err.message || err.toString(), 3000);
     } finally {
       setActivatings([]);
     }
@@ -246,7 +249,7 @@ const ProfilePage = () => {
       mutateLogs();
       current && (await onEnhance(false));
     } catch (err: any) {
-      showNotice('error', err?.message || err.toString());
+      showNotice("error", err?.message || err.toString());
     } finally {
       setActivatings([]);
     }
@@ -300,12 +303,12 @@ const ProfilePage = () => {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     const setupListener = async () => {
-      unlistenPromise = listen<string>('profile-changed', (event) => {
-        console.log('Profile changed event received:', event.payload);
+      unlistenPromise = listen<string>("profile-changed", (event) => {
+        console.log("Profile changed event received:", event.payload);
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
-        
+
         timeoutId = setTimeout(() => {
           mutateProfiles();
           timeoutId = undefined;
@@ -319,7 +322,7 @@ const ProfilePage = () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      unlistenPromise?.then(unlisten => unlisten());
+      unlistenPromise?.then((unlisten) => unlisten());
     };
   }, [mutateProfiles, t]);
 
@@ -398,7 +401,7 @@ const ProfilePage = () => {
                   <ClearRounded fontSize="inherit" />
                 </IconButton>
               ),
-            }
+            },
           }}
         />
         <LoadingButton

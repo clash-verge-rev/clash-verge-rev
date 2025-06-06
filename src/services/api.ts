@@ -199,10 +199,12 @@ export const getProxyProviders = async () => {
     providers: Record<string, IProxyProviderItem>;
   }>("get_providers_proxies");
   if (!response || !response.providers) {
-    console.warn("getProxyProviders: Invalid response structure, returning empty object");
+    console.warn(
+      "getProxyProviders: Invalid response structure, returning empty object",
+    );
     return {};
   }
-  
+
   const providers = response.providers as Record<string, IProxyProviderItem>;
 
   return Object.fromEntries(
@@ -351,65 +353,65 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
   {
     url: "https://api.ip.sb/geoip",
     mapping: (data) => ({
-      ip: data.ip || '',
-      country_code: data.country_code || '',
-      country: data.country || '',
-      region: data.region || '',
-      city: data.city || '',
-      organization: data.organization || data.isp || '',
+      ip: data.ip || "",
+      country_code: data.country_code || "",
+      country: data.country || "",
+      region: data.region || "",
+      city: data.city || "",
+      organization: data.organization || data.isp || "",
       asn: data.asn || 0,
-      asn_organization: data.asn_organization || '',
+      asn_organization: data.asn_organization || "",
       longitude: data.longitude || 0,
       latitude: data.latitude || 0,
-      timezone: data.timezone || '',
+      timezone: data.timezone || "",
     }),
   },
   {
     url: "https://ipapi.co/json",
     mapping: (data) => ({
-      ip: data.ip || '',
-      country_code: data.country_code || '',
-      country: data.country_name || '',
-      region: data.region || '',
-      city: data.city || '',
-      organization: data.org || '',
-      asn: data.asn? parseInt(data.asn.replace('AS', '')) : 0,
-      asn_organization: data.org || '',
+      ip: data.ip || "",
+      country_code: data.country_code || "",
+      country: data.country_name || "",
+      region: data.region || "",
+      city: data.city || "",
+      organization: data.org || "",
+      asn: data.asn ? parseInt(data.asn.replace("AS", "")) : 0,
+      asn_organization: data.org || "",
       longitude: data.longitude || 0,
       latitude: data.latitude || 0,
-      timezone: data.timezone || '',
+      timezone: data.timezone || "",
     }),
   },
   {
     url: "https://api.ipapi.is/",
     mapping: (data) => ({
-      ip: data.ip || '',
-      country_code: data.location?.country_code || '',
-      country: data.location?.country || '',
-      region: data.location?.state || '',
-      city: data.location?.city || '',
-      organization: data.asn?.org || data.company?.name || '',
+      ip: data.ip || "",
+      country_code: data.location?.country_code || "",
+      country: data.location?.country || "",
+      region: data.location?.state || "",
+      city: data.location?.city || "",
+      organization: data.asn?.org || data.company?.name || "",
       asn: data.asn?.asn || 0,
-      asn_organization: data.asn?.org || '',
+      asn_organization: data.asn?.org || "",
       longitude: data.location?.longitude || 0,
       latitude: data.location?.latitude || 0,
-      timezone: data.location?.timezone || '',
+      timezone: data.location?.timezone || "",
     }),
   },
   {
     url: "https://ipwho.is/",
     mapping: (data) => ({
-      ip: data.ip || '',
-      country_code: data.country_code || '',
-      country: data.country || '',
-      region: data.region || '',
-      city: data.city || '',
-      organization: data.connection?.org || data.connection?.isp || '',
+      ip: data.ip || "",
+      country_code: data.country_code || "",
+      country: data.country || "",
+      region: data.region || "",
+      city: data.city || "",
+      organization: data.connection?.org || data.connection?.isp || "",
       asn: data.connection?.asn || 0,
-      asn_organization: data.connection?.isp || '',
+      asn_organization: data.connection?.isp || "",
       longitude: data.longitude || 0,
       latitude: data.latitude || 0,
-      timezone: data.timezone?.id || '',
+      timezone: data.timezone?.id || "",
     }),
   },
 ];
@@ -418,43 +420,39 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
 function shuffleServices() {
   // 过滤无效服务并确保每个元素符合ServiceConfig接口
   const validServices = IP_CHECK_SERVICES.filter(
-    (service): service is ServiceConfig => 
-      service !== null && 
-      service !== undefined && 
-      typeof service.url === 'string' &&
-      typeof service.mapping === 'function' // 添加对mapping属性的检查
+    (service): service is ServiceConfig =>
+      service !== null &&
+      service !== undefined &&
+      typeof service.url === "string" &&
+      typeof service.mapping === "function", // 添加对mapping属性的检查
   );
-  
+
   if (validServices.length === 0) {
-    console.error('No valid services found in IP_CHECK_SERVICES');
+    console.error("No valid services found in IP_CHECK_SERVICES");
     return [];
   }
-  
+
   // 使用单一Fisher-Yates洗牌算法，增强随机性
   const shuffled = [...validServices];
   const length = shuffled.length;
-  
+
   // 使用多个种子进行多次洗牌
-  const seeds = [
-    Math.random(),
-    Date.now() / 1000,
-    performance.now() / 1000
-  ];
-  
+  const seeds = [Math.random(), Date.now() / 1000, performance.now() / 1000];
+
   for (const seed of seeds) {
     const prng = createPrng(seed);
-    
+
     // Fisher-Yates洗牌算法
     for (let i = length - 1; i > 0; i--) {
       const j = Math.floor(prng() * (i + 1));
-      
+
       // 使用临时变量进行交换，避免解构赋值可能的问题
       const temp = shuffled[i];
       shuffled[i] = shuffled[j];
       shuffled[j] = temp;
     }
   }
-  
+
   return shuffled;
 }
 
@@ -462,11 +460,11 @@ function shuffleServices() {
 function createPrng(seed: number): () => number {
   // 使用xorshift32算法
   let state = seed >>> 0;
-  
+
   // 如果种子为0，设置一个默认值
   if (state === 0) state = 123456789;
-  
-  return function() {
+
+  return function () {
     state ^= state << 13;
     state ^= state >>> 17;
     state ^= state << 5;
@@ -522,7 +520,7 @@ export const getIpInfo = async (): Promise<IpInfo> => {
           lastError = error;
           console.log(
             `尝试 ${attempt + 1}/${maxRetries} 失败 (${service.url}):`,
-            error.message
+            error.message,
           );
 
           if (error.name === "AbortError") {
@@ -530,7 +528,7 @@ export const getIpInfo = async (): Promise<IpInfo> => {
           }
 
           if (attempt < maxRetries - 1) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
         }
       }
@@ -539,7 +537,7 @@ export const getIpInfo = async (): Promise<IpInfo> => {
     if (lastError) {
       throw new Error(`所有IP检测服务都失败: ${lastError.message}`);
     } else {
-      throw new Error('没有可用的IP检测服务');
+      throw new Error("没有可用的IP检测服务");
     }
   } finally {
     clearTimeout(overallTimeoutId);

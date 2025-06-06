@@ -13,7 +13,7 @@ import {
   ListItemText,
   Snackbar,
   TextField,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
@@ -42,58 +42,72 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   // 保存配置
   const onSave = useLockFn(async () => {
     if (!controller.trim()) {
-      showNotice('error', t("Controller address cannot be empty"), 3000);
+      showNotice("error", t("Controller address cannot be empty"), 3000);
       return;
     }
 
     if (!secret.trim()) {
-      showNotice('error', t("Secret cannot be empty"), 3000);
+      showNotice("error", t("Secret cannot be empty"), 3000);
       return;
     }
 
     try {
       setIsSaving(true);
       await patchInfo({ "external-controller": controller, secret });
-      showNotice('success', t("Configuration saved successfully"), 2000);
+      showNotice("success", t("Configuration saved successfully"), 2000);
       setOpen(false);
     } catch (err: any) {
-      showNotice('error', err.message || t("Failed to save configuration"), 4000);
+      showNotice(
+        "error",
+        err.message || t("Failed to save configuration"),
+        4000,
+      );
     } finally {
       setIsSaving(false);
     }
   });
 
   // 复制到剪贴板
-  const handleCopyToClipboard = useLockFn(async (text: string, type: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopySuccess(type);
-      setTimeout(() => setCopySuccess(null), 2000);
-    } catch (err) {
-      showNotice('error', t("Failed to copy"), 2000);
-    }
-  });
+  const handleCopyToClipboard = useLockFn(
+    async (text: string, type: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopySuccess(type);
+        setTimeout(() => setCopySuccess(null), 2000);
+      } catch (err) {
+        showNotice("error", t("Failed to copy"), 2000);
+      }
+    },
+  );
 
   return (
     <BaseDialog
       open={open}
       title={t("External Controller")}
       contentSx={{ width: 400 }}
-      okBtn={isSaving ? (
-        <Box display="flex" alignItems="center" gap={1}>
-          <CircularProgress size={16} color="inherit" />
-          {t("Saving...")}
-        </Box>
-      ) : (
-        t("Save")
-      )}
+      okBtn={
+        isSaving ? (
+          <Box display="flex" alignItems="center" gap={1}>
+            <CircularProgress size={16} color="inherit" />
+            {t("Saving...")}
+          </Box>
+        ) : (
+          t("Save")
+        )
+      }
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <List>
-        <ListItem sx={{ padding: "5px 2px", display: "flex", justifyContent: "space-between" }}>
+        <ListItem
+          sx={{
+            padding: "5px 2px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
           <ListItemText primary={t("External Controller")} />
           <Box display="flex" alignItems="center" gap={1}>
             <TextField
@@ -101,11 +115,11 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               sx={{
                 width: 175,
                 opacity: 1,
-                pointerEvents: 'auto'
+                pointerEvents: "auto",
               }}
               value={controller}
               placeholder="Required"
-              onChange={e => setController(e.target.value)}
+              onChange={(e) => setController(e.target.value)}
               disabled={isSaving}
             />
             <Tooltip title={t("Copy to clipboard")}>
@@ -121,7 +135,13 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
           </Box>
         </ListItem>
 
-        <ListItem sx={{ padding: "5px 2px", display: "flex", justifyContent: "space-between" }}>
+        <ListItem
+          sx={{
+            padding: "5px 2px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
           <ListItemText primary={t("Core Secret")} />
           <Box display="flex" alignItems="center" gap={1}>
             <TextField
@@ -129,11 +149,11 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               sx={{
                 width: 175,
                 opacity: 1,
-                pointerEvents: 'auto'
+                pointerEvents: "auto",
               }}
               value={secret}
               placeholder={t("Recommended")}
-              onChange={e => setSecret(e.target.value)}
+              onChange={(e) => setSecret(e.target.value)}
               disabled={isSaving}
             />
             <Tooltip title={t("Copy to clipboard")}>
@@ -153,13 +173,12 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
       <Snackbar
         open={copySuccess !== null}
         autoHideDuration={2000}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert severity="success">
           {copySuccess === "controller"
             ? t("Controller address copied to clipboard")
-            : t("Secret copied to clipboard")
-          }
+            : t("Secret copied to clipboard")}
         </Alert>
       </Snackbar>
     </BaseDialog>

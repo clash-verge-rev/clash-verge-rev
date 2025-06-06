@@ -50,86 +50,95 @@ const handleNoticeMessage = (
   switch (status) {
     case "import_sub_url::ok":
       navigate("/profile", { state: { current: msg } });
-      showNotice('success', t("Import Subscription Successful"));
+      showNotice("success", t("Import Subscription Successful"));
       break;
     case "import_sub_url::error":
       navigate("/profile");
-      showNotice('error', msg);
+      showNotice("error", msg);
       break;
     case "set_config::error":
-      showNotice('error', msg);
+      showNotice("error", msg);
       break;
     case "update_with_clash_proxy":
-      showNotice('success', `${t("Update with Clash proxy successfully")} ${msg}`);
+      showNotice(
+        "success",
+        `${t("Update with Clash proxy successfully")} ${msg}`,
+      );
       break;
     case "update_retry_with_clash":
-      showNotice('info', t("Update failed, retrying with Clash proxy..."));
+      showNotice("info", t("Update failed, retrying with Clash proxy..."));
       break;
     case "update_failed_even_with_clash":
-      showNotice('error', `${t("Update failed even with Clash proxy")}: ${msg}`);
+      showNotice(
+        "error",
+        `${t("Update failed even with Clash proxy")}: ${msg}`,
+      );
       break;
     case "update_failed":
-      showNotice('error', msg);
+      showNotice("error", msg);
       break;
     case "config_validate::boot_error":
-      showNotice('error', `${t("Boot Config Validation Failed")} ${msg}`);
+      showNotice("error", `${t("Boot Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::core_change":
-      showNotice('error', `${t("Core Change Config Validation Failed")} ${msg}`);
+      showNotice(
+        "error",
+        `${t("Core Change Config Validation Failed")} ${msg}`,
+      );
       break;
     case "config_validate::error":
-      showNotice('error', `${t("Config Validation Failed")} ${msg}`);
+      showNotice("error", `${t("Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::process_terminated":
-      showNotice('error', t("Config Validation Process Terminated"));
+      showNotice("error", t("Config Validation Process Terminated"));
       break;
     case "config_validate::stdout_error":
-      showNotice('error', `${t("Config Validation Failed")} ${msg}`);
+      showNotice("error", `${t("Config Validation Failed")} ${msg}`);
       break;
     case "config_validate::script_error":
-      showNotice('error', `${t("Script File Error")} ${msg}`);
+      showNotice("error", `${t("Script File Error")} ${msg}`);
       break;
     case "config_validate::script_syntax_error":
-      showNotice('error', `${t("Script Syntax Error")} ${msg}`);
+      showNotice("error", `${t("Script Syntax Error")} ${msg}`);
       break;
     case "config_validate::script_missing_main":
-      showNotice('error', `${t("Script Missing Main")} ${msg}`);
+      showNotice("error", `${t("Script Missing Main")} ${msg}`);
       break;
     case "config_validate::file_not_found":
-      showNotice('error', `${t("File Not Found")} ${msg}`);
+      showNotice("error", `${t("File Not Found")} ${msg}`);
       break;
     case "config_validate::yaml_syntax_error":
-      showNotice('error', `${t("YAML Syntax Error")} ${msg}`);
+      showNotice("error", `${t("YAML Syntax Error")} ${msg}`);
       break;
     case "config_validate::yaml_read_error":
-      showNotice('error', `${t("YAML Read Error")} ${msg}`);
+      showNotice("error", `${t("YAML Read Error")} ${msg}`);
       break;
     case "config_validate::yaml_mapping_error":
-      showNotice('error', `${t("YAML Mapping Error")} ${msg}`);
+      showNotice("error", `${t("YAML Mapping Error")} ${msg}`);
       break;
     case "config_validate::yaml_key_error":
-      showNotice('error', `${t("YAML Key Error")} ${msg}`);
+      showNotice("error", `${t("YAML Key Error")} ${msg}`);
       break;
     case "config_validate::yaml_error":
-      showNotice('error', `${t("YAML Error")} ${msg}`);
+      showNotice("error", `${t("YAML Error")} ${msg}`);
       break;
     case "config_validate::merge_syntax_error":
-      showNotice('error', `${t("Merge File Syntax Error")} ${msg}`);
+      showNotice("error", `${t("Merge File Syntax Error")} ${msg}`);
       break;
     case "config_validate::merge_mapping_error":
-      showNotice('error', `${t("Merge File Mapping Error")} ${msg}`);
+      showNotice("error", `${t("Merge File Mapping Error")} ${msg}`);
       break;
     case "config_validate::merge_key_error":
-      showNotice('error', `${t("Merge File Key Error")} ${msg}`);
+      showNotice("error", `${t("Merge File Key Error")} ${msg}`);
       break;
     case "config_validate::merge_error":
-      showNotice('error', `${t("Merge File Error")} ${msg}`);
+      showNotice("error", `${t("Merge File Error")} ${msg}`);
       break;
     case "config_core::change_success":
-      showNotice('success', `${t("Core Changed Successfully")}: ${msg}`);
+      showNotice("success", `${t("Core Changed Successfully")}: ${msg}`);
       break;
     case "config_core::change_error":
-      showNotice('error', `${t("Failed to Change Core")}: ${msg}`);
+      showNotice("error", `${t("Failed to Change Core")}: ${msg}`);
       break;
     default: // Optional: Log unhandled statuses
       console.warn(`[通知监听 V2] 未处理的状态: ${status}`);
@@ -189,7 +198,6 @@ const Layout = () => {
         mutate("getSystemProxy");
         mutate("getAutotemProxy");
       }),
-
 
       addListener("verge://notice-message", ({ payload }) =>
         handleNotice(payload as [string, string]),
@@ -276,7 +284,7 @@ const Layout = () => {
         return unlisten;
       } catch (err) {
         console.error("[Layout] 监听启动完成事件失败:", err);
-        return () => { };
+        return () => {};
       }
     };
 
@@ -298,7 +306,7 @@ const Layout = () => {
     const unlistenPromise = listenStartupCompleted();
 
     return () => {
-      unlistenPromise.then(unlisten => unlisten());
+      unlistenPromise.then((unlisten) => unlisten());
     };
   }, []);
 
@@ -368,11 +376,11 @@ const Layout = () => {
             ({ palette }) => ({ bgcolor: palette.background.paper }),
             OS === "linux"
               ? {
-                borderRadius: "8px",
-                border: "1px solid var(--divider-color)",
-                width: "calc(100vw - 4px)",
-                height: "calc(100vh - 4px)",
-              }
+                  borderRadius: "8px",
+                  border: "1px solid var(--divider-color)",
+                  width: "calc(100vw - 4px)",
+                  height: "calc(100vh - 4px)",
+                }
               : {},
           ]}
         >
@@ -420,8 +428,7 @@ const Layout = () => {
           </div>
 
           <div className="layout__right">
-            <div className="the-bar">
-            </div>
+            <div className="the-bar"></div>
 
             <div className="the-content">
               {React.cloneElement(routersEles, { key: location.pathname })}

@@ -130,7 +130,9 @@ const UnlockPage = () => {
   ): Promise<T> => {
     return Promise.race([
       invoke<T>(cmd, args),
-      new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout)),
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), timeout),
+      ),
     ]);
   };
 
@@ -138,7 +140,8 @@ const UnlockPage = () => {
   const checkAllMedia = useLockFn(async () => {
     try {
       setIsCheckingAll(true);
-      const result = await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
+      const result =
+        await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
       const sortedItems = sortItemsByName(result);
 
       setUnlockItems(sortedItems);
@@ -150,7 +153,7 @@ const UnlockPage = () => {
       setIsCheckingAll(false);
     } catch (err: any) {
       setIsCheckingAll(false);
-      showNotice('error', err?.message || err?.toString() || '检测超时或失败');
+      showNotice("error", err?.message || err?.toString() || "检测超时或失败");
       alert("检测超时或失败: " + (err?.message || err));
       console.error("Failed to check media unlock:", err);
     }
@@ -160,7 +163,8 @@ const UnlockPage = () => {
   const checkSingleMedia = useLockFn(async (name: string) => {
     try {
       setLoadingItems((prev) => [...prev, name]);
-      const result = await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
+      const result =
+        await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
 
       const targetItem = result.find((item: UnlockItem) => item.name === name);
 
@@ -181,7 +185,7 @@ const UnlockPage = () => {
       setLoadingItems((prev) => prev.filter((item) => item !== name));
     } catch (err: any) {
       setLoadingItems((prev) => prev.filter((item) => item !== name));
-      showNotice('error', err?.message || err?.toString() || `检测${name}失败`);
+      showNotice("error", err?.message || err?.toString() || `检测${name}失败`);
       alert("检测超时或失败: " + (err?.message || err));
       console.error(`Failed to check ${name}:`, err);
     }

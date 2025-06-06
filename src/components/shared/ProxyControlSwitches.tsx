@@ -246,7 +246,10 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               onFormat={onSwitchFormat}
               onChange={(e) => {
                 if (isSidecarMode) {
-                  showNotice('error', t("TUN requires Service Mode or Admin Mode"));
+                  showNotice(
+                    "error",
+                    t("TUN requires Service Mode or Admin Mode"),
+                  );
                   return Promise.reject(
                     new Error(t("TUN requires Service Mode or Admin Mode")),
                   );
@@ -255,7 +258,10 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               }}
               onGuard={(e) => {
                 if (isSidecarMode) {
-                  showNotice('error', t("TUN requires Service Mode or Admin Mode"));
+                  showNotice(
+                    "error",
+                    t("TUN requires Service Mode or Admin Mode"),
+                  );
                   return Promise.reject(
                     new Error(t("TUN requires Service Mode or Admin Mode")),
                   );

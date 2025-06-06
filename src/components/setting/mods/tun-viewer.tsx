@@ -77,13 +77,13 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       );
       try {
         await enhanceProfiles();
-        showNotice('success', t("Settings Applied"));
+        showNotice("success", t("Settings Applied"));
       } catch (err: any) {
-        showNotice('error', err.message || err.toString());
+        showNotice("error", err.message || err.toString());
       }
       setOpen(false);
     } catch (err: any) {
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 

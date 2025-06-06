@@ -25,7 +25,7 @@ export const ClashInfoCard = () => {
   // 使用备忘录组件内容，减少重新渲染
   const cardContent = useMemo(() => {
     if (!clashConfig) return null;
-    
+
     return (
       <Stack spacing={1.5}>
         <Stack direction="row" justifyContent="space-between">

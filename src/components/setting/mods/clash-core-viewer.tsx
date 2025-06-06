@@ -52,7 +52,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       const errorMsg = await changeClashCore(core);
 
       if (errorMsg) {
-        showNotice('error', errorMsg);
+        showNotice("error", errorMsg);
         setChangingCore(null);
         return;
       }
@@ -65,7 +65,7 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       }, 500);
     } catch (err: any) {
       setChangingCore(null);
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -73,11 +73,11 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       setRestarting(true);
       await restartCore();
-      showNotice('success', t(`Clash Core Restarted`));
+      showNotice("success", t(`Clash Core Restarted`));
       setRestarting(false);
     } catch (err: any) {
       setRestarting(false);
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -86,14 +86,14 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      showNotice('success', t(`Core Version Updated`));
+      showNotice("success", t(`Core Version Updated`));
     } catch (err: any) {
       setUpgrading(false);
       const errMsg = err.response?.data?.message || err.toString();
       const showMsg = errMsg.includes("already using latest version")
         ? "Already Using Latest Core Version"
         : errMsg;
-      showNotice('error', t(showMsg));
+      showNotice("error", t(showMsg));
     }
   });
 
