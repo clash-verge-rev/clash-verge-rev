@@ -61,7 +61,7 @@ export const BackupTableViewer = memo(
 
     const handleRestore = useLockFn(async (filename: string) => {
       await restoreWebDavBackup(filename).then(() => {
-        showNotice('success', t("Restore Success, App will restart in 1s"));
+        showNotice("success", t("Restore Success, App will restart in 1s"));
       });
       await restartApp();
     });

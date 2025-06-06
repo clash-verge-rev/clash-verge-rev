@@ -33,12 +33,15 @@ npm install pnpm -g
 ```
 
 ### Install Dependencies
+
 Install node packages
+
 ```shell
 pnpm install
 ```
 
 Install apt packages ONLY for Ubuntu
+
 ```shell
 apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 ```
@@ -105,19 +108,24 @@ pnpm portable
 
 If you changed the rust code, it's recommanded to execute code style formatting and quailty checks.
 
-1. Code style formatting
+1. Code quailty checks
 
 ```bash
+# For rust backend
+$ clash-verge-rev: pnpm clippy
+# For frontend (not yet).
+```
+
+2. Code style formatting
+
+```bash
+# For rust backend
 $ clash-verge-rev: cd src-tauri
 $ clash-verge-rev/src-tauri: cargo fmt
+# For frontend
+$ clash-verge-rev: pnpm format:check
+$ clash-verge-rev: pnpm format
 ```
-
-2. Code quailty checks
-
-```bash
-$ clash-verge-rev: pnpm clippy
-```
-
 
 Once you have made your changes:
 

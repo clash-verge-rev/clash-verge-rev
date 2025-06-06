@@ -75,7 +75,10 @@ export const ProfileItem = (props: Props) => {
 
   // 获取下次更新时间的函数
   const fetchNextUpdateTime = useLockFn(async (forceRefresh = false) => {
-    if (itemData.option?.update_interval && itemData.option.update_interval > 0) {
+    if (
+      itemData.option?.update_interval &&
+      itemData.option.update_interval > 0
+    ) {
       try {
         console.log(`尝试获取配置 ${itemData.uid} 的下次更新时间`);
 
@@ -97,7 +100,7 @@ export const ProfileItem = (props: Props) => {
             setNextUpdateTime(t("Last Update failed"));
           } else {
             // 否则显示剩余时间
-            const diffMinutes = nextUpdateDate.diff(now, 'minute');
+            const diffMinutes = nextUpdateDate.diff(now, "minute");
 
             if (diffMinutes < 60) {
               if (diffMinutes <= 0) {
@@ -159,11 +162,17 @@ export const ProfileItem = (props: Props) => {
     };
 
     // 只注册定时器更新事件监听
-    window.addEventListener('verge://timer-updated', handleTimerUpdate as EventListener);
+    window.addEventListener(
+      "verge://timer-updated",
+      handleTimerUpdate as EventListener,
+    );
 
     return () => {
       // 清理事件监听
-      window.removeEventListener('verge://timer-updated', handleTimerUpdate as EventListener);
+      window.removeEventListener(
+        "verge://timer-updated",
+        handleTimerUpdate as EventListener,
+      );
     };
   }, [showNextUpdate, itemData.uid]);
 
@@ -271,7 +280,7 @@ export const ProfileItem = (props: Props) => {
     try {
       await viewProfile(itemData.uid);
     } catch (err: any) {
-      showNotice('error', err?.message || err.toString());
+      showNotice("error", err?.message || err.toString());
     }
   });
 
@@ -302,7 +311,7 @@ export const ProfileItem = (props: Props) => {
       await updateProfile(itemData.uid, option);
 
       // 更新成功，刷新列表
-      showNotice('success', t("Update subscription successfully"));
+      showNotice("success", t("Update subscription successfully"));
       mutate("getProfiles");
     } catch (err: any) {
       // 更新完全失败（包括后端的回退尝试）
@@ -421,13 +430,25 @@ export const ProfileItem = (props: Props) => {
     };
 
     // 注册事件监听
-    window.addEventListener('profile-update-started', handleUpdateStarted as EventListener);
-    window.addEventListener('profile-update-completed', handleUpdateCompleted as EventListener);
+    window.addEventListener(
+      "profile-update-started",
+      handleUpdateStarted as EventListener,
+    );
+    window.addEventListener(
+      "profile-update-completed",
+      handleUpdateCompleted as EventListener,
+    );
 
     return () => {
       // 清理事件监听
-      window.removeEventListener('profile-update-started', handleUpdateStarted as EventListener);
-      window.removeEventListener('profile-update-completed', handleUpdateCompleted as EventListener);
+      window.removeEventListener(
+        "profile-update-started",
+        handleUpdateStarted as EventListener,
+      );
+      window.removeEventListener(
+        "profile-update-completed",
+        handleUpdateCompleted as EventListener,
+      );
     };
   }, [itemData.uid, showNextUpdate]);
 
@@ -541,13 +562,23 @@ export const ProfileItem = (props: Props) => {
                 )
               )}
               {hasUrl && (
-                <Box sx={{ display: "flex", justifyContent: "flex-end", ml: "auto" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    ml: "auto",
+                  }}
+                >
                   <Typography
                     noWrap
                     component="span"
                     fontSize={14}
                     textAlign="right"
-                    title={showNextUpdate ? t("Click to show last update time") : `${t("Update Time")}: ${parseExpire(updated)}\n${t("Click to show next update")}`}
+                    title={
+                      showNextUpdate
+                        ? t("Click to show last update time")
+                        : `${t("Update Time")}: ${parseExpire(updated)}\n${t("Click to show next update")}`
+                    }
                     sx={{
                       cursor: "pointer",
                       display: "inline-block",
@@ -556,13 +587,15 @@ export const ProfileItem = (props: Props) => {
                       "&:hover": {
                         borderBottomColor: "primary.main",
                         color: "primary.main",
-                      }
+                      },
                     }}
                     onClick={toggleUpdateTimeDisplay}
                   >
                     {showNextUpdate
                       ? nextUpdateTime
-                      : (updated > 0 ? dayjs(updated * 1000).fromNow() : "")}
+                      : updated > 0
+                        ? dayjs(updated * 1000).fromNow()
+                        : ""}
                   </Typography>
                 </Box>
               )}

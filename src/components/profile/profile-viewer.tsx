@@ -201,7 +201,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         setOpen(false);
         fileDataRef.current = null;
         setTimeout(() => formIns.reset(), 500);
-      } catch { }
+      } catch {}
     };
 
     const text = {

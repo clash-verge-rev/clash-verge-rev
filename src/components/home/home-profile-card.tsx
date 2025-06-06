@@ -78,12 +78,16 @@ const truncateStyle = {
   maxWidth: "calc(100% - 28px)",
   overflow: "hidden",
   textOverflow: "ellipsis",
-  whiteSpace: "nowrap"
+  whiteSpace: "nowrap",
 };
 
 // 提取独立组件减少主组件复杂度
-const ProfileDetails = ({ current, onUpdateProfile, updating }: { 
-  current: ProfileItem; 
+const ProfileDetails = ({
+  current,
+  onUpdateProfile,
+  updating,
+}: {
+  current: ProfileItem;
   onUpdateProfile: () => void;
   updating: boolean;
 }) => {
@@ -99,7 +103,7 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
     if (!current.extra || !current.extra.total) return 1;
     return Math.min(
       Math.round((usedTraffic * 100) / (current.extra.total + 0.01)) + 1,
-      100
+      100,
     );
   }, [current.extra, usedTraffic]);
 
@@ -109,19 +113,24 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
         {current.url && (
           <Stack direction="row" alignItems="center" spacing={1}>
             <DnsOutlined fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary" noWrap sx={{ display: "flex", alignItems: "center" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              noWrap
+              sx={{ display: "flex", alignItems: "center" }}
+            >
               <span style={{ flexShrink: 0 }}>{t("From")}: </span>
               {current.home ? (
                 <Link
                   component="button"
                   fontWeight="medium"
                   onClick={() => current.home && openWebUrl(current.home)}
-                  sx={{ 
+                  sx={{
                     display: "inline-flex",
                     alignItems: "center",
                     minWidth: 0,
                     maxWidth: "calc(100% - 40px)",
-                    ml: 0.5
+                    ml: 0.5,
                   }}
                   title={parseUrl(current.url)}
                 >
@@ -132,14 +141,19 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
                       minWidth: 0,
-                      flex: 1
+                      flex: 1,
                     }}
                   >
                     {parseUrl(current.url)}
                   </Typography>
                   <LaunchOutlined
                     fontSize="inherit"
-                    sx={{ ml: 0.5, fontSize: "0.8rem", opacity: 0.7, flexShrink: 0 }}
+                    sx={{
+                      ml: 0.5,
+                      fontSize: "0.8rem",
+                      opacity: 0.7,
+                      flexShrink: 0,
+                    }}
                   />
                 </Link>
               ) : (
@@ -152,7 +166,7 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
                     whiteSpace: "nowrap",
                     minWidth: 0,
                     flex: 1,
-                    ml: 0.5
+                    ml: 0.5,
                   }}
                   title={parseUrl(current.url)}
                 >
@@ -195,7 +209,8 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
               <Typography variant="body2" color="text.secondary">
                 {t("Used / Total")}:{" "}
                 <Box component="span" fontWeight="medium">
-                  {parseTraffic(usedTraffic)} / {parseTraffic(current.extra.total)}
+                  {parseTraffic(usedTraffic)} /{" "}
+                  {parseTraffic(current.extra.total)}
                 </Box>
               </Typography>
             </Stack>
@@ -240,7 +255,7 @@ const ProfileDetails = ({ current, onUpdateProfile, updating }: {
 // 提取空配置组件
 const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation();
-  
+
   return (
     <Box
       sx={{
@@ -268,27 +283,30 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardProps) => {
+export const HomeProfileCard = ({
+  current,
+  onProfileUpdated,
+}: HomeProfileCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { refreshAll } = useAppData();
 
   // 更新当前订阅
   const [updating, setUpdating] = useState(false);
-  
+
   const onUpdateProfile = useLockFn(async () => {
     if (!current?.uid) return;
 
     setUpdating(true);
     try {
       await updateProfile(current.uid, current.option);
-      showNotice('success', t("Update subscription successfully"), 1000);
+      showNotice("success", t("Update subscription successfully"), 1000);
       onProfileUpdated?.();
-      
+
       // 刷新首页数据
       refreshAll();
     } catch (err: any) {
-      showNotice('error', err.message || err.toString(), 3000);
+      showNotice("error", err.message || err.toString(), 3000);
     } finally {
       setUpdating(false);
     }
@@ -302,9 +320,9 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
   // 卡片标题
   const cardTitle = useMemo(() => {
     if (!current) return t("Profiles");
-    
+
     if (!current.home) return current.name;
-    
+
     return (
       <Link
         component="button"
@@ -323,19 +341,19 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            flex: 1
-          }
+            flex: 1,
+          },
         }}
         title={current.name}
       >
         <span>{current.name}</span>
         <LaunchOutlined
           fontSize="inherit"
-          sx={{ 
-            ml: 0.5, 
-            fontSize: "0.8rem", 
+          sx={{
+            ml: 0.5,
+            fontSize: "0.8rem",
             opacity: 0.7,
-            flexShrink: 0 
+            flexShrink: 0,
           }}
         />
       </Link>
@@ -345,7 +363,7 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
   // 卡片操作按钮
   const cardAction = useMemo(() => {
     if (!current) return null;
-    
+
     return (
       <Button
         variant="outlined"
@@ -367,10 +385,10 @@ export const HomeProfileCard = ({ current, onProfileUpdated }: HomeProfileCardPr
       action={cardAction}
     >
       {current ? (
-        <ProfileDetails 
-          current={current} 
-          onUpdateProfile={onUpdateProfile} 
-          updating={updating} 
+        <ProfileDetails
+          current={current}
+          onUpdateProfile={onUpdateProfile}
+          updating={updating}
         />
       ) : (
         <EmptyProfile onClick={goToProfiles} />

@@ -157,7 +157,7 @@ export const BaseSearchBox = (props: SearchProps) => {
                 </Tooltip>
               </Box>
             ),
-          }
+          },
         }}
       />
     </Tooltip>

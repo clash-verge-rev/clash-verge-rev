@@ -1,5 +1,3 @@
-
-
 /**
  * CLI tool to update version numbers in package.json, src-tauri/Cargo.toml, and src-tauri/tauri.conf.json.
  *
@@ -51,7 +49,9 @@ function generateShortTimestamp() {
  * @returns {boolean}
  */
 function isValidVersion(version) {
-  return /^v?\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/i.test(version);
+  return /^v?\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/i.test(
+    version,
+  );
 }
 
 /**
@@ -69,8 +69,8 @@ function normalizeVersion(version) {
  * @returns {string}
  */
 function getBaseVersion(version) {
-  let base = version.replace(/-(alpha|beta|rc)(\.\d+)?/i, '');
-  base = base.replace(/\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*/g, '');
+  let base = version.replace(/-(alpha|beta|rc)(\.\d+)?/i, "");
+  base = base.replace(/\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*/g, "");
   return base;
 }
 
@@ -85,10 +85,21 @@ async function updatePackageVersion(newVersion) {
     const data = await fs.readFile(packageJsonPath, "utf8");
     const packageJson = JSON.parse(data);
 
-    console.log("[INFO]: Current package.json version is: ", packageJson.version);
-    packageJson.version = newVersion.startsWith("v") ? newVersion.slice(1) : newVersion;
-    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2), "utf8");
-    console.log(`[INFO]: package.json version updated to: ${packageJson.version}`);
+    console.log(
+      "[INFO]: Current package.json version is: ",
+      packageJson.version,
+    );
+    packageJson.version = newVersion.startsWith("v")
+      ? newVersion.slice(1)
+      : newVersion;
+    await fs.writeFile(
+      packageJsonPath,
+      JSON.stringify(packageJson, null, 2),
+      "utf8",
+    );
+    console.log(
+      `[INFO]: package.json version updated to: ${packageJson.version}`,
+    );
   } catch (error) {
     console.error("Error updating package.json version:", error);
     throw error;
@@ -105,12 +116,17 @@ async function updateCargoVersion(newVersion) {
   try {
     const data = await fs.readFile(cargoTomlPath, "utf8");
     const lines = data.split("\n");
-    const versionWithoutV = newVersion.startsWith("v") ? newVersion.slice(1) : newVersion;
+    const versionWithoutV = newVersion.startsWith("v")
+      ? newVersion.slice(1)
+      : newVersion;
     const baseVersion = getBaseVersion(versionWithoutV);
 
     const updatedLines = lines.map((line) => {
       if (line.trim().startsWith("version =")) {
-        return line.replace(/version\s*=\s*"[^"]+"/, `version = "${baseVersion}"`);
+        return line.replace(
+          /version\s*=\s*"[^"]+"/,
+          `version = "${baseVersion}"`,
+        );
       }
       return line;
     });
@@ -133,12 +149,21 @@ async function updateTauriConfigVersion(newVersion) {
   try {
     const data = await fs.readFile(tauriConfigPath, "utf8");
     const tauriConfig = JSON.parse(data);
-    const versionWithoutV = newVersion.startsWith("v") ? newVersion.slice(1) : newVersion;
+    const versionWithoutV = newVersion.startsWith("v")
+      ? newVersion.slice(1)
+      : newVersion;
     const baseVersion = getBaseVersion(versionWithoutV);
 
-    console.log("[INFO]: Current tauri.conf.json version is: ", tauriConfig.version);
+    console.log(
+      "[INFO]: Current tauri.conf.json version is: ",
+      tauriConfig.version,
+    );
     tauriConfig.version = baseVersion;
-    await fs.writeFile(tauriConfigPath, JSON.stringify(tauriConfig, null, 2), "utf8");
+    await fs.writeFile(
+      tauriConfigPath,
+      JSON.stringify(tauriConfig, null, 2),
+      "utf8",
+    );
     console.log(`[INFO]: tauri.conf.json version updated to: ${baseVersion}`);
   } catch (error) {
     console.error("Error updating tauri.conf.json version:", error);
@@ -210,4 +235,3 @@ program
   .argument("<version>", "version tag or full version")
   .action(main)
   .parse(process.argv);
-

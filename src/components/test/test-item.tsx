@@ -72,7 +72,7 @@ export const TestItem = (props: Props) => {
     try {
       onDeleteItem(uid);
     } catch (err: any) {
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -97,7 +97,9 @@ export const TestItem = (props: Props) => {
 
     return () => {
       if (unlistenFn) {
-        console.log(`TestItem for ${props.id} unmounting or url changed, cleaning up test-all listener.`);
+        console.log(
+          `TestItem for ${props.id} unmounting or url changed, cleaning up test-all listener.`,
+        );
         unlistenFn();
       }
     };

@@ -24,7 +24,7 @@ export const UpdateButton = (props: Props) => {
       errorRetryCount: 2,
       revalidateIfStale: false,
       focusThrottleInterval: 36e5, // 1 hour
-    }
+    },
   );
 
   if (!updateInfo?.available) return null;

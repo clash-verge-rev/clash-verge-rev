@@ -578,8 +578,8 @@ function URI_VLESS(line: string): IProxyVlessConfig {
     proxy.network = "ws";
     httpupgrade = true;
   } else {
-    proxy.network = ["tcp", "ws", "http", "grpc", "h2"].includes(params.type) 
-      ? (params.type as NetworkType) 
+    proxy.network = ["tcp", "ws", "http", "grpc", "h2"].includes(params.type)
+      ? (params.type as NetworkType)
       : "tcp";
   }
   if (!proxy.network && isShadowrocket && params.obfs) {

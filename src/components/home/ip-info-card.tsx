@@ -83,28 +83,28 @@ export const IpInfoCard = () => {
   // 组件加载时获取IP信息
   useEffect(() => {
     fetchIpInfo();
-    
+
     // 倒计时实现优化，减少不必要的重渲染
     let timer: number | null = null;
     let currentCount = IP_REFRESH_SECONDS;
-    
+
     // 只在必要时更新状态，减少重渲染次数
     const startCountdown = () => {
       timer = window.setInterval(() => {
         currentCount -= 1;
-        
+
         if (currentCount <= 0) {
           fetchIpInfo();
           currentCount = IP_REFRESH_SECONDS;
         }
-        
+
         // 每5秒或倒计时结束时才更新UI
         if (currentCount % 5 === 0 || currentCount <= 0) {
           setCountdown(currentCount);
         }
       }, 1000);
     };
-    
+
     startCountdown();
     return () => {
       if (timer) clearInterval(timer);
@@ -112,7 +112,7 @@ export const IpInfoCard = () => {
   }, [fetchIpInfo]);
 
   const toggleShowIp = useCallback(() => {
-    setShowIp(prev => !prev);
+    setShowIp((prev) => !prev);
   }, []);
 
   // 渲染加载状态
@@ -282,9 +282,7 @@ export const IpInfoCard = () => {
             <InfoItem label={t("ORG")} value={ipInfo?.asn_organization} />
             <InfoItem
               label={t("Location")}
-              value={[ipInfo?.city, ipInfo?.region]
-                .filter(Boolean)
-                .join(", ")}
+              value={[ipInfo?.city, ipInfo?.region].filter(Boolean).join(", ")}
             />
             <InfoItem label={t("Timezone")} value={ipInfo?.timezone} />
           </Box>

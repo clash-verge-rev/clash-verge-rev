@@ -38,7 +38,9 @@ async function run() {
   let tag = null;
   if (versionArg === "alpha") {
     // 读取 package.json 里的主版本
-    const pkg = await import(path.join(rootDir, "package.json"), { assert: { type: "json" } });
+    const pkg = await import(path.join(rootDir, "package.json"), {
+      assert: { type: "json" },
+    });
     tag = `v${pkg.default.version}-alpha`;
   } else if (isSemver(versionArg)) {
     // 1.2.3 或 v1.2.3

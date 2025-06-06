@@ -20,8 +20,8 @@ const ProxyPage = () => {
       revalidateOnFocus: false,
       revalidateIfStale: true,
       dedupingInterval: 1000,
-      errorRetryInterval: 5000
-    }
+      errorRetryInterval: 5000,
+    },
   );
 
   const { verge } = useVerge();

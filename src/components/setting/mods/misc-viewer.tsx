@@ -62,7 +62,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       });
       setOpen(false);
     } catch (err: any) {
-      showNotice('error', err.toString());
+      showNotice("error", err.toString());
     }
   });
 
@@ -246,7 +246,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 endAdornment: (
                   <InputAdornment position="end">{t("millis")}</InputAdornment>
                 ),
-              }
+              },
             }}
           />
         </ListItem>

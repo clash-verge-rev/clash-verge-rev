@@ -55,17 +55,17 @@ interface Props {
 
 const portValidator = (value: string): boolean => {
   return new RegExp(
-    "^(?:[1-9]\\d{0,3}|[1-5]\\d{4}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])$"
+    "^(?:[1-9]\\d{0,3}|[1-5]\\d{4}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])$",
   ).test(value);
 };
 const ipv4CIDRValidator = (value: string): boolean => {
   return new RegExp(
-    "^(?:(?:[1-9]?[0-9]|1[0-9][0-9]|2(?:[0-4][0-9]|5[0-5]))\\.){3}(?:[1-9]?[0-9]|1[0-9][0-9]|2(?:[0-4][0-9]|5[0-5]))(?:\\/(?:[12]?[0-9]|3[0-2]))$"
+    "^(?:(?:[1-9]?[0-9]|1[0-9][0-9]|2(?:[0-4][0-9]|5[0-5]))\\.){3}(?:[1-9]?[0-9]|1[0-9][0-9]|2(?:[0-4][0-9]|5[0-5]))(?:\\/(?:[12]?[0-9]|3[0-2]))$",
   ).test(value);
 };
 const ipv6CIDRValidator = (value: string): boolean => {
   return new RegExp(
-    "^([0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4}){7}|::|:(?::[0-9a-fA-F]{1,4}){1,6}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,5}|(?:[0-9a-fA-F]{1,4}:){2}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){3}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){4}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){5}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,6}:)\\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9])$"
+    "^([0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4}){7}|::|:(?::[0-9a-fA-F]{1,4}){1,6}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,5}|(?:[0-9a-fA-F]{1,4}:){2}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){3}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){4}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){5}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,6}:)\\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9])$",
   ).test(value);
 };
 
@@ -76,161 +76,161 @@ const rules: {
   noResolve?: boolean;
   validator?: (value: string) => boolean;
 }[] = [
-    {
-      name: "DOMAIN",
-      example: "example.com",
-    },
-    {
-      name: "DOMAIN-SUFFIX",
-      example: "example.com",
-    },
-    {
-      name: "DOMAIN-KEYWORD",
-      example: "example",
-    },
-    {
-      name: "DOMAIN-REGEX",
-      example: "example.*",
-    },
-    {
-      name: "GEOSITE",
-      example: "youtube",
-    },
-    {
-      name: "GEOIP",
-      example: "CN",
-      noResolve: true,
-    },
-    {
-      name: "SRC-GEOIP",
-      example: "CN",
-    },
-    {
-      name: "IP-ASN",
-      example: "13335",
-      noResolve: true,
-      validator: (value) => (+value ? true : false),
-    },
-    {
-      name: "SRC-IP-ASN",
-      example: "9808",
-      validator: (value) => (+value ? true : false),
-    },
-    {
-      name: "IP-CIDR",
-      example: "127.0.0.0/8",
-      noResolve: true,
-      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-    },
-    {
-      name: "IP-CIDR6",
-      example: "2620:0:2d0:200::7/32",
-      noResolve: true,
-      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-    },
-    {
-      name: "SRC-IP-CIDR",
-      example: "192.168.1.201/32",
-      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-    },
-    {
-      name: "IP-SUFFIX",
-      example: "8.8.8.8/24",
-      noResolve: true,
-      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-    },
-    {
-      name: "SRC-IP-SUFFIX",
-      example: "192.168.1.201/8",
-      validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
-    },
-    {
-      name: "SRC-PORT",
-      example: "7777",
-      validator: (value) => portValidator(value),
-    },
-    {
-      name: "DST-PORT",
-      example: "80",
-      validator: (value) => portValidator(value),
-    },
-    {
-      name: "IN-PORT",
-      example: "7890",
-      validator: (value) => portValidator(value),
-    },
-    {
-      name: "DSCP",
-      example: "4",
-    },
-    {
-      name: "PROCESS-NAME",
-      example: getSystem() === "windows" ? "chrome.exe" : "curl",
-    },
-    {
-      name: "PROCESS-PATH",
-      example:
-        getSystem() === "windows"
-          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-          : "/usr/bin/wget",
-    },
-    {
-      name: "PROCESS-NAME-REGEX",
-      example: ".*telegram.*",
-    },
-    {
-      name: "PROCESS-PATH-REGEX",
-      example:
-        getSystem() === "windows" ? "(?i).*Application\\chrome.*" : ".*bin/wget",
-    },
-    {
-      name: "NETWORK",
-      example: "udp",
-      validator: (value) => ["tcp", "udp"].includes(value),
-    },
-    {
-      name: "UID",
-      example: "1001",
-      validator: (value) => (+value ? true : false),
-    },
-    {
-      name: "IN-TYPE",
-      example: "SOCKS/HTTP",
-    },
-    {
-      name: "IN-USER",
-      example: "mihomo",
-    },
-    {
-      name: "IN-NAME",
-      example: "ss",
-    },
-    {
-      name: "SUB-RULE",
-      example: "(NETWORK,tcp)",
-    },
-    {
-      name: "RULE-SET",
-      example: "providername",
-      noResolve: true,
-    },
-    {
-      name: "AND",
-      example: "((DOMAIN,baidu.com),(NETWORK,UDP))",
-    },
-    {
-      name: "OR",
-      example: "((NETWORK,UDP),(DOMAIN,baidu.com))",
-    },
-    {
-      name: "NOT",
-      example: "((DOMAIN,baidu.com))",
-    },
-    {
-      name: "MATCH",
-      required: false,
-    },
-  ];
+  {
+    name: "DOMAIN",
+    example: "example.com",
+  },
+  {
+    name: "DOMAIN-SUFFIX",
+    example: "example.com",
+  },
+  {
+    name: "DOMAIN-KEYWORD",
+    example: "example",
+  },
+  {
+    name: "DOMAIN-REGEX",
+    example: "example.*",
+  },
+  {
+    name: "GEOSITE",
+    example: "youtube",
+  },
+  {
+    name: "GEOIP",
+    example: "CN",
+    noResolve: true,
+  },
+  {
+    name: "SRC-GEOIP",
+    example: "CN",
+  },
+  {
+    name: "IP-ASN",
+    example: "13335",
+    noResolve: true,
+    validator: (value) => (+value ? true : false),
+  },
+  {
+    name: "SRC-IP-ASN",
+    example: "9808",
+    validator: (value) => (+value ? true : false),
+  },
+  {
+    name: "IP-CIDR",
+    example: "127.0.0.0/8",
+    noResolve: true,
+    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+  },
+  {
+    name: "IP-CIDR6",
+    example: "2620:0:2d0:200::7/32",
+    noResolve: true,
+    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+  },
+  {
+    name: "SRC-IP-CIDR",
+    example: "192.168.1.201/32",
+    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+  },
+  {
+    name: "IP-SUFFIX",
+    example: "8.8.8.8/24",
+    noResolve: true,
+    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+  },
+  {
+    name: "SRC-IP-SUFFIX",
+    example: "192.168.1.201/8",
+    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+  },
+  {
+    name: "SRC-PORT",
+    example: "7777",
+    validator: (value) => portValidator(value),
+  },
+  {
+    name: "DST-PORT",
+    example: "80",
+    validator: (value) => portValidator(value),
+  },
+  {
+    name: "IN-PORT",
+    example: "7890",
+    validator: (value) => portValidator(value),
+  },
+  {
+    name: "DSCP",
+    example: "4",
+  },
+  {
+    name: "PROCESS-NAME",
+    example: getSystem() === "windows" ? "chrome.exe" : "curl",
+  },
+  {
+    name: "PROCESS-PATH",
+    example:
+      getSystem() === "windows"
+        ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+        : "/usr/bin/wget",
+  },
+  {
+    name: "PROCESS-NAME-REGEX",
+    example: ".*telegram.*",
+  },
+  {
+    name: "PROCESS-PATH-REGEX",
+    example:
+      getSystem() === "windows" ? "(?i).*Application\\chrome.*" : ".*bin/wget",
+  },
+  {
+    name: "NETWORK",
+    example: "udp",
+    validator: (value) => ["tcp", "udp"].includes(value),
+  },
+  {
+    name: "UID",
+    example: "1001",
+    validator: (value) => (+value ? true : false),
+  },
+  {
+    name: "IN-TYPE",
+    example: "SOCKS/HTTP",
+  },
+  {
+    name: "IN-USER",
+    example: "mihomo",
+  },
+  {
+    name: "IN-NAME",
+    example: "ss",
+  },
+  {
+    name: "SUB-RULE",
+    example: "(NETWORK,tcp)",
+  },
+  {
+    name: "RULE-SET",
+    example: "providername",
+    noResolve: true,
+  },
+  {
+    name: "AND",
+    example: "((DOMAIN,baidu.com),(NETWORK,UDP))",
+  },
+  {
+    name: "OR",
+    example: "((NETWORK,UDP),(DOMAIN,baidu.com))",
+  },
+  {
+    name: "NOT",
+    example: "((DOMAIN,baidu.com))",
+  },
+  {
+    name: "MATCH",
+    required: false,
+  },
+];
 
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
@@ -260,22 +260,22 @@ export const RulesEditorViewer = (props: Props) => {
 
   const filteredPrependSeq = useMemo(
     () => prependSeq.filter((rule) => match(rule)),
-    [prependSeq, match]
+    [prependSeq, match],
   );
   const filteredRuleList = useMemo(
     () => ruleList.filter((rule) => match(rule)),
-    [ruleList, match]
+    [ruleList, match],
   );
   const filteredAppendSeq = useMemo(
     () => appendSeq.filter((rule) => match(rule)),
-    [appendSeq, match]
+    [appendSeq, match],
   );
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
   const reorder = (list: string[], startIndex: number, endIndex: number) => {
     const result = Array.from(list);
@@ -333,11 +333,11 @@ export const RulesEditorViewer = (props: Props) => {
           setCurrData(
             yaml.dump(
               { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
-              { forceQuotes: true }
-            )
+              { forceQuotes: true },
+            ),
           );
         } catch (e: any) {
-          showNotice('error', e?.message || e?.toString() || 'YAML dump error');
+          showNotice("error", e?.message || e?.toString() || "YAML dump error");
         }
       };
       if (window.requestIdleCallback) {
@@ -371,7 +371,7 @@ export const RulesEditorViewer = (props: Props) => {
           return !moreDeleteGroups.includes(group);
         }
       }),
-      moreAppendGroups
+      moreAppendGroups,
     );
 
     let originRuleSetObj = yaml.load(data) as { "rule-providers": {} } | null;
@@ -396,7 +396,7 @@ export const RulesEditorViewer = (props: Props) => {
     let globalSubRule = globalSubRuleObj?.["sub-rules"] || {};
     let subRule = Object.assign({}, originSubRule, moreSubRule, globalSubRule);
     setProxyPolicyList(
-      builtinProxyPolicies.concat(groups.map((group: any) => group.name))
+      builtinProxyPolicies.concat(groups.map((group: any) => group.name)),
     );
     setRuleSetList(Object.keys(ruleSet));
     setSubRuleList(Object.keys(subRule));
@@ -417,19 +417,20 @@ export const RulesEditorViewer = (props: Props) => {
       throw new Error(t("Invalid Rule"));
     }
 
-    const condition = ruleType.required ?? true ? ruleContent : "";
-    return `${ruleType.name}${condition ? "," + condition : ""},${proxyPolicy}${ruleType.noResolve && noResolve ? ",no-resolve" : ""
-      }`;
+    const condition = (ruleType.required ?? true) ? ruleContent : "";
+    return `${ruleType.name}${condition ? "," + condition : ""},${proxyPolicy}${
+      ruleType.noResolve && noResolve ? ",no-resolve" : ""
+    }`;
   };
 
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice('success', t("Saved Successfully"));
+      showNotice("success", t("Saved Successfully"));
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
-      showNotice('error', err.toString());
+      showNotice("error", err.toString());
     }
   });
 
@@ -557,7 +558,7 @@ export const RulesEditorViewer = (props: Props) => {
                       if (prependSeq.includes(raw)) return;
                       setPrependSeq([raw, ...prependSeq]);
                     } catch (err: any) {
-                      showNotice('error', err.message || err.toString());
+                      showNotice("error", err.message || err.toString());
                     }
                   }}
                 >
@@ -575,7 +576,7 @@ export const RulesEditorViewer = (props: Props) => {
                       if (appendSeq.includes(raw)) return;
                       setAppendSeq([...appendSeq, raw]);
                     } catch (err: any) {
-                      showNotice('error', err.message || err.toString());
+                      showNotice("error", err.message || err.toString());
                     }
                   }}
                 >
@@ -621,7 +622,7 @@ export const RulesEditorViewer = (props: Props) => {
                                 ruleRaw={item}
                                 onDelete={() => {
                                   setPrependSeq(
-                                    prependSeq.filter((v) => v !== item)
+                                    prependSeq.filter((v) => v !== item),
                                   );
                                 }}
                               />
@@ -645,8 +646,8 @@ export const RulesEditorViewer = (props: Props) => {
                           if (deleteSeq.includes(filteredRuleList[newIndex])) {
                             setDeleteSeq(
                               deleteSeq.filter(
-                                (v) => v !== filteredRuleList[newIndex]
-                              )
+                                (v) => v !== filteredRuleList[newIndex],
+                              ),
                             );
                           } else {
                             setDeleteSeq((prev) => [
@@ -677,7 +678,7 @@ export const RulesEditorViewer = (props: Props) => {
                                 ruleRaw={item}
                                 onDelete={() => {
                                   setAppendSeq(
-                                    appendSeq.filter((v) => v !== item)
+                                    appendSeq.filter((v) => v !== item),
                                   );
                                 }}
                               />
@@ -711,8 +712,9 @@ export const RulesEditorViewer = (props: Props) => {
               padding: {
                 top: 33, // 顶部padding防止遮挡snippets
               },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${getSystem() === "windows" ? ", twemoji mozilla" : ""
-                }`,
+              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
+                getSystem() === "windows" ? ", twemoji mozilla" : ""
+              }`,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}

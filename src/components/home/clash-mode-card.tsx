@@ -24,11 +24,14 @@ export const ClashModeCard = () => {
   const currentMode = clashConfig?.mode?.toLowerCase();
 
   // 模式图标映射
-  const modeIcons = useMemo(() => ({
-    rule: <MultipleStopRounded fontSize="small" />,
-    global: <LanguageRounded fontSize="small" />,
-    direct: <DirectionsRounded fontSize="small" />
-  }), []);
+  const modeIcons = useMemo(
+    () => ({
+      rule: <MultipleStopRounded fontSize="small" />,
+      global: <LanguageRounded fontSize="small" />,
+      direct: <DirectionsRounded fontSize="small" />,
+    }),
+    [],
+  );
 
   // 切换模式的处理函数
   const onChangeMode = useLockFn(async (mode: string) => {
@@ -68,18 +71,19 @@ export const ClashModeCard = () => {
     "&:active": {
       transform: "translateY(1px)",
     },
-    "&::after": mode === currentMode
-      ? {
-        content: '""',
-        position: "absolute",
-        bottom: -16,
-        left: "50%",
-        width: 2,
-        height: 16,
-        bgcolor: "primary.main",
-        transform: "translateX(-50%)",
-      }
-      : {},
+    "&::after":
+      mode === currentMode
+        ? {
+            content: '""',
+            position: "absolute",
+            bottom: -16,
+            left: "50%",
+            width: 2,
+            height: 16,
+            bgcolor: "primary.main",
+            transform: "translateX(-50%)",
+          }
+        : {},
   });
 
   // 描述样式
@@ -143,12 +147,10 @@ export const ClashModeCard = () => {
           overflow: "visible",
         }}
       >
-        <Typography
-          variant="caption"
-          component="div"
-          sx={descriptionStyles}
-        >
-          {t(`${currentMode?.charAt(0).toUpperCase()}${currentMode?.slice(1)} Mode Description`)}
+        <Typography variant="caption" component="div" sx={descriptionStyles}>
+          {t(
+            `${currentMode?.charAt(0).toUpperCase()}${currentMode?.slice(1)} Mode Description`,
+          )}
         </Typography>
       </Box>
     </Box>

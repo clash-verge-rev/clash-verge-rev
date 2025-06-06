@@ -49,7 +49,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       await patchVerge({ theme_setting: theme });
       setOpen(false);
     } catch (err: any) {
-      showNotice('error', err.toString());
+      showNotice("error", err.toString());
     }
   });
 

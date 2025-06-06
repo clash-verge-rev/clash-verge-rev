@@ -31,7 +31,10 @@ interface RenderProps {
   onLocation: (group: IRenderItem["group"]) => void;
   onCheckAll: (groupName: string) => void;
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void;
-  onChangeProxy: (group: IRenderItem["group"], proxy: IRenderItem["proxy"] & { name: string }) => void;
+  onChangeProxy: (
+    group: IRenderItem["group"],
+    proxy: IRenderItem["proxy"] & { name: string },
+  ) => void;
 }
 
 export const ProxyRender = (props: RenderProps) => {
@@ -129,14 +132,15 @@ export const ProxyRender = (props: RenderProps) => {
         />
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Tooltip title={t("Proxy Count")} arrow>
-            <Chip 
-              size="small" 
-              label={`${group.all.length}`} 
-              sx={{ 
-                mr: 1, 
-                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+            <Chip
+              size="small"
+              label={`${group.all.length}`}
+              sx={{
+                mr: 1,
+                backgroundColor: (theme) =>
+                  alpha(theme.palette.primary.main, 0.1),
                 color: (theme) => theme.palette.primary.main,
-              }} 
+              }}
             />
           </Tooltip>
           {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}

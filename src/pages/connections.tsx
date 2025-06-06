@@ -43,7 +43,7 @@ const ConnectionsPage = () => {
   const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
-  
+
   // 使用全局数据
   const { connections } = useAppData();
 
@@ -69,19 +69,21 @@ const ConnectionsPage = () => {
   // 使用全局连接数据
   const displayData = useMemo(() => {
     if (!pageVisible) return initConn;
-    
+
     if (isPaused) {
-      return frozenData ?? {
-        uploadTotal: connections.uploadTotal,
-        downloadTotal: connections.downloadTotal,
-        connections: connections.data
-      };
+      return (
+        frozenData ?? {
+          uploadTotal: connections.uploadTotal,
+          downloadTotal: connections.downloadTotal,
+          connections: connections.data,
+        }
+      );
     }
-    
+
     return {
       uploadTotal: connections.uploadTotal,
       downloadTotal: connections.downloadTotal,
-      connections: connections.data
+      connections: connections.data,
     };
   }, [isPaused, frozenData, connections, pageVisible]);
 
@@ -113,7 +115,7 @@ const ConnectionsPage = () => {
         setFrozenData({
           uploadTotal: connections.uploadTotal,
           downloadTotal: connections.downloadTotal,
-          connections: connections.data
+          connections: connections.data,
         });
       } else {
         setFrozenData(null);

@@ -47,18 +47,18 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        showNotice('success', t("Currently on the Latest Version"));
+        showNotice("success", t("Currently on the Latest Version"));
       } else {
         updateRef.current?.open();
       }
     } catch (err: any) {
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   };
 
   const onExportDiagnosticInfo = useCallback(async () => {
     await exportDiagnosticInfo();
-    showNotice('success', t("Copy Success"), 1000);
+    showNotice("success", t("Copy Success"), 1000);
   }, []);
 
   return (
@@ -110,7 +110,10 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
       <SettingItem
         label={t("LightWeight Mode Settings")}
         extra={
-          <TooltipIcon title={t("LightWeight Mode Info")} sx={{ opacity: "0.7" }} />
+          <TooltipIcon
+            title={t("LightWeight Mode Info")}
+            sx={{ opacity: "0.7" }}
+          />
         }
         onClick={() => liteModeRef.current?.open()}
       />

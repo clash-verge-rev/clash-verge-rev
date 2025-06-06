@@ -82,21 +82,21 @@ export const BackupConfigViewer = memo(
 
       if (!url) {
         urlRef.current?.focus();
-        showNotice('error', t("WebDAV URL Required"));
+        showNotice("error", t("WebDAV URL Required"));
         throw new Error(t("WebDAV URL Required"));
       } else if (!isValidUrl(url)) {
         urlRef.current?.focus();
-        showNotice('error', t("Invalid WebDAV URL"));
+        showNotice("error", t("Invalid WebDAV URL"));
         throw new Error(t("Invalid WebDAV URL"));
       }
       if (!username) {
         usernameRef.current?.focus();
-        showNotice('error', t("WebDAV URL Required"));
+        showNotice("error", t("WebDAV URL Required"));
         throw new Error(t("Username Required"));
       }
       if (!password) {
         passwordRef.current?.focus();
-        showNotice('error', t("WebDAV URL Required"));
+        showNotice("error", t("WebDAV URL Required"));
         throw new Error(t("Password Required"));
       }
     };
@@ -110,11 +110,11 @@ export const BackupConfigViewer = memo(
           data.username.trim(),
           data.password,
         ).then(() => {
-          showNotice('success', t("WebDAV Config Saved"));
+          showNotice("success", t("WebDAV Config Saved"));
           onSaveSuccess();
         });
       } catch (error) {
-        showNotice('error', t("WebDAV Config Save Failed", { error }), 3000);
+        showNotice("error", t("WebDAV Config Save Failed", { error }), 3000);
       } finally {
         setLoading(false);
       }
@@ -125,11 +125,11 @@ export const BackupConfigViewer = memo(
       try {
         setLoading(true);
         await createWebdavBackup().then(async () => {
-          showNotice('success', t("Backup Created"));
+          showNotice("success", t("Backup Created"));
           await onBackupSuccess();
         });
       } catch (error) {
-        showNotice('error', t("Backup Failed", { error }));
+        showNotice("error", t("Backup Failed", { error }));
       } finally {
         setLoading(false);
       }

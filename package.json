@@ -21,7 +21,9 @@
     "publish-version": "node scripts/publish-version.mjs",
     "prepare": "husky",
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
-    "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml"
+    "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

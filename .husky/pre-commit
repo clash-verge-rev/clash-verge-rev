@@ -2,15 +2,23 @@
 
 #pnpm pretty-quick --staged
 
-# 运行 clippy fmt
-cd src-tauri
-cargo fmt
-
-if [ $? -ne 0 ]; then
-    echo "rustfmt failed to format the code. Please fix the issues and try again."
-    exit 1
+if git diff --cached --name-only | grep -q '^src/'; then
+    pnpm format:check
+    if [ $? -ne 0 ]; then
+        echo "Code format check failed in src/. Please fix formatting issues."
+        exit 1
+    fi
 fi
-cd ..
+
+if git diff --cached --name-only | grep -q '^src-tauri/'; then
+    cd src-tauri
+    cargo fmt
+    if [ $? -ne 0 ]; then
+        echo "rustfmt failed to format the code. Please fix the issues and try again."
+        exit 1
+    fi
+    cd ..
+fi
 
 git add .
 

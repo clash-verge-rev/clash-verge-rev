@@ -100,7 +100,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         setLoading(false);
         setTimeout(() => formIns.reset(), 500);
       } catch (err: any) {
-        showNotice('error', err.message || err.toString());
+        showNotice("error", err.message || err.toString());
         setLoading(false);
       }
     }),

@@ -1,8 +1,8 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 export interface NoticeItem {
   id: number;
-  type: 'success' | 'error' | 'info';
+  type: "success" | "error" | "info";
   message: ReactNode;
   duration: number;
   timerId?: ReturnType<typeof setTimeout>;
@@ -21,13 +21,13 @@ function notifyListeners() {
 // Shows a notification.
 
 export function showNotice(
-  type: 'success' | 'error' | 'info',
+  type: "success" | "error" | "info",
   message: ReactNode,
   duration?: number,
 ): number {
   const id = nextId++;
   const effectiveDuration =
-    duration ?? (type === 'error' ? 8000 : type === 'info' ? 5000 : 3000); // Longer defaults
+    duration ?? (type === "error" ? 8000 : type === "info" ? 5000 : 3000); // Longer defaults
 
   const newNotice: NoticeItem = {
     id,
@@ -38,11 +38,10 @@ export function showNotice(
 
   // Auto-hide timer (only if duration is not null/0)
   if (effectiveDuration > 0) {
-      newNotice.timerId = setTimeout(() => {
-          hideNotice(id);
-      }, effectiveDuration);
+    newNotice.timerId = setTimeout(() => {
+      hideNotice(id);
+    }, effectiveDuration);
   }
-
 
   notices = [...notices, newNotice];
   notifyListeners();
@@ -54,7 +53,7 @@ export function showNotice(
 export function hideNotice(id: number) {
   const notice = notices.find((n) => n.id === id);
   if (notice?.timerId) {
-      clearTimeout(notice.timerId); // Clear timeout if manually closed
+    clearTimeout(notice.timerId); // Clear timeout if manually closed
   }
   notices = notices.filter((n) => n.id !== id);
   notifyListeners();
@@ -72,9 +71,9 @@ export function subscribeNotices(listener: Listener): () => void {
 
 // Function to clear all notices at once
 export function clearAllNotices() {
-    notices.forEach(n => {
-        if (n.timerId) clearTimeout(n.timerId);
-    });
-    notices = [];
-    notifyListeners();
-} 
+  notices.forEach((n) => {
+    if (n.timerId) clearTimeout(n.timerId);
+  });
+  notices = [];
+  notifyListeners();
+}

@@ -26,7 +26,7 @@ const container = document.getElementById(mainElementId);
 
 if (!container) {
   throw new Error(
-    `No container '${mainElementId}' found to render application`
+    `No container '${mainElementId}' found to render application`,
   );
 }
 
@@ -37,7 +37,7 @@ document.addEventListener("keydown", (event) => {
     (event.altKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) ||
     ((event.ctrlKey || event.metaKey) &&
       ["F", "G", "H", "J", "P", "Q", "R", "U"].includes(
-        event.key.toUpperCase()
+        event.key.toUpperCase(),
       ));
   disabledShortcuts && event.preventDefault();
 });
@@ -59,5 +59,5 @@ createRoot(container).render(
         </AppDataProvider>
       </BaseErrorBoundary>
     </ComposeContextProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

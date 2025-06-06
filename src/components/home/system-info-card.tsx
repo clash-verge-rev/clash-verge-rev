@@ -1,19 +1,24 @@
 import { useTranslation } from "react-i18next";
-import { Typography, Stack, Divider, Chip, IconButton, Tooltip } from "@mui/material";
-import { 
-  InfoOutlined, 
-  SettingsOutlined, 
-  WarningOutlined, 
+import {
+  Typography,
+  Stack,
+  Divider,
+  Chip,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import {
+  InfoOutlined,
+  SettingsOutlined,
+  WarningOutlined,
   AdminPanelSettingsOutlined,
   DnsOutlined,
-  ExtensionOutlined
+  ExtensionOutlined,
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { EnhancedCard } from "./enhanced-card";
 import useSWR from "swr";
-import { 
-  getSystemInfo, 
-} from "@/services/cmds";
+import { getSystemInfo } from "@/services/cmds";
 import { useNavigate } from "react-router-dom";
 import { version as appVersion } from "@root/package.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -30,32 +35,35 @@ export const SystemInfoCard = () => {
   const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
   const { installServiceAndRestartCore } = useServiceInstaller();
 
-// 系统信息状态
-const [systemState, setSystemState] = useState({
-  osInfo: "",
-  lastCheckUpdate: "-",
-});
+  // 系统信息状态
+  const [systemState, setSystemState] = useState({
+    osInfo: "",
+    lastCheckUpdate: "-",
+  });
 
-// 初始化系统信息
-useEffect(() => {
-  getSystemInfo()
-    .then((info) => {
-      const lines = info.split("\n");
-      if (lines.length > 0) {
-        const sysName = lines[0].split(": ")[1] || "";
-        let sysVersion = lines[1].split(": ")[1] || "";
+  // 初始化系统信息
+  useEffect(() => {
+    getSystemInfo()
+      .then((info) => {
+        const lines = info.split("\n");
+        if (lines.length > 0) {
+          const sysName = lines[0].split(": ")[1] || "";
+          let sysVersion = lines[1].split(": ")[1] || "";
 
-        if (sysName && sysVersion.toLowerCase().startsWith(sysName.toLowerCase())) {
-          sysVersion = sysVersion.substring(sysName.length).trim();
+          if (
+            sysName &&
+            sysVersion.toLowerCase().startsWith(sysName.toLowerCase())
+          ) {
+            sysVersion = sysVersion.substring(sysName.length).trim();
+          }
+
+          setSystemState((prev) => ({
+            ...prev,
+            osInfo: `${sysName} ${sysVersion}`,
+          }));
         }
-        
-        setSystemState((prev) => ({
-          ...prev,
-          osInfo: `${sysName} ${sysVersion}`,
-        }));
-      }
-    })
-    .catch(console.error);
+      })
+      .catch(console.error);
 
     // 获取最后检查更新时间
     const lastCheck = localStorage.getItem("last_check_update");
@@ -122,7 +130,6 @@ useEffect(() => {
     }
   }, [verge, patchVerge]);
 
-
   // 点击运行模式处理,Sidecar或纯管理员模式允许安装服务
   const handleRunningModeClick = useCallback(() => {
     if (isSidecarMode || (isAdminMode && isSidecarMode)) {
@@ -135,13 +142,13 @@ useEffect(() => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        showNotice('success', t("Currently on the Latest Version"));
+        showNotice("success", t("Currently on the Latest Version"));
       } else {
-        showNotice('info', t("Update Available"), 2000);
+        showNotice("info", t("Update Available"), 2000);
         goToSettings();
       }
     } catch (err: any) {
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -155,13 +162,15 @@ useEffect(() => {
   const runningModeStyle = useMemo(
     () => ({
       // Sidecar或纯管理员模式允许安装服务
-      cursor: (isSidecarMode || (isAdminMode && isSidecarMode)) ? "pointer" : "default",
-      textDecoration: (isSidecarMode || (isAdminMode && isSidecarMode)) ? "underline" : "none",
+      cursor:
+        isSidecarMode || (isAdminMode && isSidecarMode) ? "pointer" : "default",
+      textDecoration:
+        isSidecarMode || (isAdminMode && isSidecarMode) ? "underline" : "none",
       display: "flex",
       alignItems: "center",
       gap: 0.5,
       "&:hover": {
-        opacity: (isSidecarMode || (isAdminMode && isSidecarMode)) ? 0.7 : 1,
+        opacity: isSidecarMode || (isAdminMode && isSidecarMode) ? 0.7 : 1,
       },
     }),
     [isSidecarMode, isAdminMode],
@@ -174,34 +183,34 @@ useEffect(() => {
       if (!isSidecarMode) {
         return (
           <>
-            <AdminPanelSettingsOutlined 
-              sx={{ color: "primary.main", fontSize: 16 }} 
+            <AdminPanelSettingsOutlined
+              sx={{ color: "primary.main", fontSize: 16 }}
               titleAccess={t("Administrator Mode")}
             />
-            <DnsOutlined 
-              sx={{ color: "success.main", fontSize: 16, ml: 0.5 }} 
+            <DnsOutlined
+              sx={{ color: "success.main", fontSize: 16, ml: 0.5 }}
               titleAccess={t("Service Mode")}
             />
           </>
         );
       }
       return (
-        <AdminPanelSettingsOutlined 
-          sx={{ color: "primary.main", fontSize: 16 }} 
+        <AdminPanelSettingsOutlined
+          sx={{ color: "primary.main", fontSize: 16 }}
           titleAccess={t("Administrator Mode")}
         />
       );
     } else if (isSidecarMode) {
       return (
-        <ExtensionOutlined 
-          sx={{ color: "info.main", fontSize: 16 }} 
+        <ExtensionOutlined
+          sx={{ color: "info.main", fontSize: 16 }}
           titleAccess={t("Sidecar Mode")}
         />
       );
     } else {
       return (
-        <DnsOutlined 
-          sx={{ color: "success.main", fontSize: 16 }} 
+        <DnsOutlined
+          sx={{ color: "success.main", fontSize: 16 }}
           titleAccess={t("Service Mode")}
         />
       );
@@ -247,13 +256,19 @@ useEffect(() => {
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Typography variant="body2" color="text.secondary">
             {t("Auto Launch")}
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
             {isAdminMode && (
-              <Tooltip title={t("Administrator mode may not support auto launch")}>
+              <Tooltip
+                title={t("Administrator mode may not support auto launch")}
+              >
                 <WarningOutlined sx={{ color: "warning.main", fontSize: 20 }} />
               </Tooltip>
             )}
@@ -268,7 +283,11 @@ useEffect(() => {
           </Stack>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Typography variant="body2" color="text.secondary">
             {t("Running Mode")}
           </Typography>

@@ -202,11 +202,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
-      showNotice('error', t("Proxy Daemon Duration Cannot be Less than 1 Second"));
+      showNotice(
+        "error",
+        t("Proxy Daemon Duration Cannot be Less than 1 Second"),
+      );
       return;
     }
     if (value.bypass && !validReg.test(value.bypass)) {
-      showNotice('error', t("Invalid Bypass Format"));
+      showNotice("error", t("Invalid Bypass Format"));
       return;
     }
 
@@ -223,7 +226,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       !ipv6Regex.test(value.proxy_host) &&
       !hostnameRegex.test(value.proxy_host)
     ) {
-      showNotice('error', t("Invalid Proxy Host Format"));
+      showNotice("error", t("Invalid Proxy Host Format"));
       return;
     }
 
@@ -271,41 +274,44 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       }
 
       // 判断是否需要重置系统代理
-      const needResetProxy = 
-        value.pac !== proxy_auto_config || 
-        proxyHost !== proxy_host || 
-        pacContent !== pac_file_content || 
+      const needResetProxy =
+        value.pac !== proxy_auto_config ||
+        proxyHost !== proxy_host ||
+        pacContent !== pac_file_content ||
         value.bypass !== system_proxy_bypass ||
         value.use_default !== use_default_bypass;
 
       await patchVerge(patch);
-      
+
       // 更新系统代理状态，以便UI立即反映变化
       await Promise.all([mutate("getSystemProxy"), mutate("getAutotemProxy")]);
-      
+
       // 只有在修改了影响系统代理的配置且系统代理当前启用时，才重置系统代理
       if (needResetProxy) {
         const currentSysProxy = await getSystemProxy();
         const currentAutoProxy = await getAutotemProxy();
-        
+
         if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
           // 临时关闭系统代理
           await patchVergeConfig({ enable_system_proxy: false });
-          
+
           // 减少等待时间
           await new Promise((resolve) => setTimeout(resolve, 200));
-          
+
           // 重新开启系统代理
           await patchVergeConfig({ enable_system_proxy: true });
-          
+
           // 更新UI状态
-          await Promise.all([mutate("getSystemProxy"), mutate("getAutotemProxy")]);
+          await Promise.all([
+            mutate("getSystemProxy"),
+            mutate("getAutotemProxy"),
+          ]);
         }
       }
 
       setOpen(false);
     } catch (err: any) {
-      showNotice('error', err.toString());
+      showNotice("error", err.toString());
     } finally {
       setSaving(false);
     }
@@ -415,7 +421,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             slotProps={{
               input: {
                 endAdornment: <InputAdornment position="end">s</InputAdornment>,
-              }
+              },
             }}
             onChange={(e) => {
               setValue((v) => ({
@@ -432,12 +438,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               edge="end"
               disabled={!enabled}
               checked={value.use_default}
-              onChange={(_, e) => setValue((v) => ({
-                ...v,
-                use_default: e,
-                // 当取消选择use_default且当前bypass为空时，填充默认值
-                bypass: (!e && !v.bypass) ? defaultBypass() : v.bypass
-              }))}
+              onChange={(_, e) =>
+                setValue((v) => ({
+                  ...v,
+                  use_default: e,
+                  // 当取消选择use_default且当前bypass为空时，填充默认值
+                  bypass: !e && !v.bypass ? defaultBypass() : v.bypass,
+                }))
+              }
             />
           </ListItem>
         )}

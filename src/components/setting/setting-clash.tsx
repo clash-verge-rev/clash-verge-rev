@@ -7,10 +7,7 @@ import { updateGeoData } from "@/services/api";
 import { invoke_uwp_tool } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
-import {
-  LanRounded,
-  SettingsRounded
-} from "@mui/icons-material";
+import { LanRounded, SettingsRounded } from "@mui/icons-material";
 import { MenuItem, Select, TextField, Typography } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
@@ -71,9 +68,9 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeoData();
-      showNotice('success', t("GeoData Updated"));
+      showNotice("success", t("GeoData Updated"));
     } catch (err: any) {
-      showNotice('error', err?.response.data.message || err.toString());
+      showNotice("error", err?.response.data.message || err.toString());
     }
   };
 
@@ -90,7 +87,7 @@ const SettingClash = ({ onError }: Props) => {
     } catch (err: any) {
       setDnsSettingsEnabled(!enable);
       localStorage.setItem("dns_settings_enabled", String(!enable));
-      showNotice('error', err.message || err.toString());
+      showNotice("error", err.message || err.toString());
       await patchVerge({ enable_dns_settings: !enable }).catch(() => {});
       throw err;
     }
@@ -203,9 +200,7 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem
-        label={t("Port Config")}
-      >
+      <SettingItem label={t("Port Config")}>
         <TextField
           autoComplete="new-password"
           disabled={false}
@@ -225,7 +220,9 @@ const SettingClash = ({ onError }: Props) => {
           <>
             {t("External")}
             <TooltipIcon
-              title={t("Enable one-click random API port and key. Click to randomize the port and key")}
+              title={t(
+                "Enable one-click random API port and key. Click to randomize the port and key",
+              )}
               sx={{ opacity: "0.7" }}
             />
           </>
