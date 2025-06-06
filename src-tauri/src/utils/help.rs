@@ -204,8 +204,8 @@ pub fn format_bytes_speed(speed: u64) -> String {
 #[cfg(target_os = "macos")]
 #[test]
 fn test_format_bytes_speed() {
-    assert_eq!(format_bytes_speed(0), "0B/s");
-    assert_eq!(format_bytes_speed(1023), "1023B/s");
+    assert_eq!(format_bytes_speed(0), "0.0B/s");
+    assert_eq!(format_bytes_speed(1023), "1.0KB/s");
     assert_eq!(format_bytes_speed(1024), "1.0KB/s");
     assert_eq!(format_bytes_speed(1024 * 1024), "1.0MB/s");
     assert_eq!(format_bytes_speed(1024 * 1024 * 1024), "1.0GB/s");

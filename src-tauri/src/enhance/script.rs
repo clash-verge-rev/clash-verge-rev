@@ -104,6 +104,10 @@ fn test_script() {
     let (config, results) = use_script(script.into(), config, "".to_string()).unwrap();
 
     let _ = serde_yaml::to_string(&config).unwrap();
-
+    let origin_size = std::mem::size_of_val(&config);
+    dbg!(origin_size);
+    let box_size = std::mem::size_of_val(&Box::new(config));
+    dbg!(box_size);
     dbg!(results);
+    assert!(origin_size > box_size);
 }
