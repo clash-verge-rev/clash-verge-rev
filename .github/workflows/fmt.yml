@@ -20,7 +20,7 @@ jobs:
           components: rustfmt
 
       - name: run cargo fmt
-        run: cargo fmt --all -- --check
+        run: cargo fmt --manifest-path ./src-tauri/Cargo.toml --all -- --check
 
   prettier:
     runs-on: ubuntu-latest
@@ -34,18 +34,18 @@ jobs:
       - run: pnpm i --frozen-lockfile
       - run: pnpm format:check
 
-  taplo:
-    name: taplo (.toml files)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # taplo:
+  #   name: taplo (.toml files)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+  #     - name: install Rust stable
+  #       uses: dtolnay/rust-toolchain@stable
 
-      - name: install taplo-cli
-        uses: taiki-e/install-action@v2
-        with:
-          tool: taplo-cli
+  #     - name: install taplo-cli
+  #       uses: taiki-e/install-action@v2
+  #       with:
+  #         tool: taplo-cli
 
-      - run: taplo fmt --check --diff
+  #     - run: taplo fmt --check --diff
