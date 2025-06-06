@@ -22,7 +22,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
     .await;
 
     match profiles_result {
-        Ok(Ok(profiles)) => Ok(profiles),
+        Ok(Ok(profiles)) => Ok(*profiles),
         Ok(Err(join_err)) => {
             logging!(error, Type::Cmd, true, "获取配置列表任务失败: {}", join_err);
             Ok(IProfiles {
@@ -41,7 +41,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
             match tokio::task::spawn_blocking(move || Config::profiles().latest().clone()).await {
                 Ok(profiles) => {
                     logging!(info, Type::Cmd, true, "使用latest()成功获取配置");
-                    Ok(profiles)
+                    Ok(*profiles)
                 }
                 Err(_) => {
                     logging!(error, Type::Cmd, true, "fallback获取配置也失败，返回空配置");

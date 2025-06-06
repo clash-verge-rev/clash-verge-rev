@@ -140,11 +140,11 @@ impl CoreManager {
     /// 使用默认配置
     pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
-        *Config::runtime().draft() = IRuntime {
+        *Config::runtime().draft() = Box::new(IRuntime {
             config: Some(Config::clash().latest().0.clone()),
             exists_keys: vec![],
             chain_logs: Default::default(),
-        };
+        });
         help::save_yaml(
             &runtime_path,
             &Config::clash().latest().0,
