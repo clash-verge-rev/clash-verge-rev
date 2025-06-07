@@ -5,29 +5,38 @@ use crate::{
     utils::init,
     utils::server,
 };
-use crate::{log_err, trace_err, utils};
+use crate::{log_err, shutdown, trace_err, utils};
 use anyhow::Result;
 use rust_i18n::t;
 use tauri::{AppHandle, CloseRequestApi, Manager};
 
 /// handle something when start app
-pub async fn resolve_setup() {
+pub fn resolve_setup() {
     tracing::trace!("init resources");
     log_err!(init::init_resources());
     tracing::trace!("init scheme");
     log_err!(init::init_scheme());
     tracing::trace!("init startup script");
-    log_err!(init::startup_script().await);
-    // 启动核心
+    log_err!(init::startup_script());
     tracing::trace!("load rsa keys");
     log_err!(utils::crypto::load_keys());
     tracing::trace!("init config");
     log_err!(Config::init_config());
     tracing::trace!("launch core");
     log_err!(CoreManager::global().init());
-    // setup a simple http server for singleton
+    tracing::trace!("init system tray");
+    log_err!(tray::Tray::init());
+    let silent_start = {
+        Config::verge()
+            .latest()
+            .enable_silent_start
+            .unwrap_or_default()
+    };
+    if !silent_start {
+        create_window();
+    }
     tracing::trace!("launch embed server");
-    server::embed_server().await;
+    server::embed_server();
     tracing::trace!("init autolaunch");
     log_err!(sysopt::Sysopt::global().init_launch());
     tracing::trace!("init system proxy");
@@ -36,18 +45,23 @@ pub async fn resolve_setup() {
     log_err!(handle::Handle::update_systray_part());
     tracing::trace!("init hotkey");
     log_err!(hotkey::Hotkey::global().init());
-    tracing::trace!("init webdav config");
-    log_err!(backup::WebDav::global().init().await);
     tracing::trace!("init timer");
     log_err!(timer::Timer::global().init());
+    tracing::trace!("register os shutdown handler");
+    shutdown::register();
 
-    let argvs = std::env::args().collect::<Vec<String>>();
-    if argvs.len() > 1 {
-        let param = argvs[1].as_str();
-        if param.starts_with("clash:") {
-            resolve_scheme(argvs[1].to_owned()).await;
+    tauri::async_runtime::block_on(async move {
+        tracing::trace!("init webdav config");
+        log_err!(backup::WebDav::global().init().await);
+
+        let argvs = std::env::args().collect::<Vec<String>>();
+        if argvs.len() > 1 {
+            let param = argvs[1].as_str();
+            if param.starts_with("clash:") {
+                resolve_scheme(argvs[1].to_owned()).await;
+            }
         }
-    }
+    });
 }
 
 /// reset system proxy
@@ -71,13 +85,13 @@ pub fn create_window() {
 
     let mut builder = tauri::WebviewWindowBuilder::new(
         app_handle,
-        "main".to_string(),
+        "main",
         tauri::WebviewUrl::App(start_page.into()),
     )
     .title("Clash Verge")
     .fullscreen(false)
     .maximized(verge.window_is_maximized.unwrap_or(false))
-    .min_inner_size(600.0, 520.0);
+    .min_inner_size(600.0, 550.0);
 
     let _decoration = verge.enable_system_title_bar.unwrap_or(false);
     #[cfg(not(target_os = "macos"))]
@@ -90,7 +104,7 @@ pub fn create_window() {
             let size = (size_pos[0], size_pos[1]);
             let pos = (size_pos[2], size_pos[3]);
             let w = size.0.clamp(600.0, f64::INFINITY);
-            let h = size.1.clamp(520.0, f64::INFINITY);
+            let h = size.1.clamp(550.0, f64::INFINITY);
             builder = builder.inner_size(w, h).position(pos.0, pos.1);
             // adjust window size on wayland when it is enable decoration
             #[cfg(target_os = "linux")]
@@ -177,7 +191,7 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
         let pos = pos.to_logical::<f64>(scale);
         let is_maximized = win.is_maximized()?;
         verge.window_is_maximized = Some(is_maximized);
-        if !is_maximized && size.width >= 600.0 && size.height >= 520.0 {
+        if !is_maximized && size.width >= 600.0 && size.height >= 550.0 {
             verge.window_size_position = Some(vec![size.width, size.height, pos.x, pos.y]);
         }
     }
@@ -211,16 +225,16 @@ pub async fn resolve_scheme(param: String) {
 }
 
 pub fn handle_window_close(api: CloseRequestApi, app_handle: &AppHandle) {
-    let verge = Config::verge();
-    let verge = verge.latest();
-
-    let keep_ui_active = verge.enable_keep_ui_active.unwrap_or(false);
+    let keep_ui_active = {
+        Config::verge()
+            .latest()
+            .enable_keep_ui_active
+            .unwrap_or_default()
+    };
     if keep_ui_active {
-        app_handle
-            .get_webview_window("main")
-            .unwrap()
-            .hide()
-            .unwrap();
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let _ = window.hide();
+        }
         api.prevent_close();
     }
 }

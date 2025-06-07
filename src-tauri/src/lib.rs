@@ -16,13 +16,10 @@ use crate::{
     utils::{init, resolve, server},
 };
 use anyhow::Result;
-use core::{tray, verge_log::VergeLog};
+use core::verge_log::VergeLog;
 use once_cell::sync::OnceCell;
 use rust_i18n::t;
-use std::{
-    backtrace::{Backtrace, BacktraceStatus},
-    time::Duration,
-};
+use std::backtrace::{Backtrace, BacktraceStatus};
 use tauri::AppHandle;
 use tauri_plugin_mihomo::Protocol;
 
@@ -119,72 +116,26 @@ pub fn run() -> Result<()> {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_mihomo::Builder::new()
-            .protocol(Protocol::LocalSocket)
-            .socket_path(Some(MIHOMO_SOCKET_PATH.into()))
-            .build())
+        .plugin(
+            tauri_plugin_mihomo::Builder::new()
+                .protocol(Protocol::LocalSocket)
+                .socket_path(Some(MIHOMO_SOCKET_PATH.into()))
+                .build(),
+        )
         .setup(|app| {
-            #[cfg(target_os = "macos")]
-            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-
             let app_handle = app.handle();
-
-            // app version info
             let version = app_handle.package_info().version.to_string();
             let _ = APP_VERSION.set(version.clone());
             let _ = APP_HANDLE.set(app_handle.clone());
 
-            tracing::trace!("init system tray");
-            log_err!(tray::Tray::init(app_handle));
-
-            let verge = Config::verge().data().clone();
             #[cfg(target_os = "macos")]
             {
-                let show_in_dock = verge.show_in_dock.unwrap_or(true);
+                app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
+                let show_in_dock = { Config::verge().latest().show_in_dock.unwrap_or(true) };
                 let _ = app_handle.set_dock_visibility(show_in_dock);
             }
 
-            let enable_splashscreen = verge.enable_splashscreen;
-            let enable_splashscreen = enable_splashscreen.unwrap_or(true);
-            let silent_start = verge.enable_silent_start;
-            let silent_start = silent_start.unwrap_or(false);
-            if enable_splashscreen && !silent_start {
-                let mut builder = tauri::WebviewWindowBuilder::new(
-                    app_handle,
-                    "splashscreen",
-                    tauri::WebviewUrl::App("splashscreen.html".into()),
-                )
-                .shadow(false)
-                .title("splashscreen")
-                .decorations(false)
-                .center()
-                .resizable(false)
-                .inner_size(100.0, 100.0);
-                #[cfg(not(target_os = "macos"))]
-                {
-                    builder = builder.transparent(true);
-                }
-                #[cfg(target_os = "windows")]
-                {
-                    builder = builder.additional_browser_args("--enable-features=msWebView2EnableDraggableRegions --disable-features=OverscrollHistoryNavigation,msExperimentalScrolling");
-                }
-                builder.build()?;
-            }
-
-            // we perform the initialization code on a new task so the app doesn't freeze
-            tauri::async_runtime::spawn(async move {
-                // initialize your app here instead of sleeping :
-                resolve::resolve_setup().await;
-                // wait 2 seconds for clash core to init profile
-                tokio::time::sleep(Duration::from_secs(2)).await;
-                // create main window
-                if !silent_start {
-                    resolve::create_window();
-                }
-            });
-
-            tracing::trace!("register os shutdown handler");
-            shutdown::register();
+            resolve::resolve_setup();
 
             Ok(())
         })

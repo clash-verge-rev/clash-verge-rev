@@ -1,7 +1,7 @@
-use crate::config::*;
 use crate::core::handle;
 use crate::core::verge_log::VergeLog;
 use crate::utils::{dirs, help};
+use crate::{config::*, trace_err};
 use anyhow::Result;
 use std::fs::{self};
 use std::path::PathBuf;
@@ -153,7 +153,7 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 
-pub async fn startup_script() -> Result<()> {
+pub fn startup_script() -> Result<()> {
     let path = {
         let verge = Config::verge();
         let verge = verge.latest();
@@ -178,27 +178,15 @@ pub async fn startup_script() -> Result<()> {
         if !current_dir.exists() {
             return Err(anyhow::anyhow!("script not found: {path}"));
         }
-        let current_dir = current_dir.parent();
-        let app_handle = handle::Handle::get_app_handle();
-        match current_dir {
-            Some(dir) => {
-                let _ = app_handle
-                    .shell()
-                    .command(shell)
-                    .current_dir(dir)
-                    .args([path])
-                    .output()
-                    .await;
+        tauri::async_runtime::block_on(async move {
+            let current_dir = current_dir.parent();
+            let app_handle = handle::Handle::get_app_handle();
+            let mut cmd = app_handle.shell().command(shell);
+            if let Some(dir) = current_dir {
+                cmd = cmd.current_dir(dir);
             }
-            None => {
-                let _ = app_handle
-                    .shell()
-                    .command(shell)
-                    .args([path])
-                    .output()
-                    .await;
-            }
-        }
+            trace_err!(cmd.args([path]).output().await, "run startup script failed");
+        });
     }
     Ok(())
 }

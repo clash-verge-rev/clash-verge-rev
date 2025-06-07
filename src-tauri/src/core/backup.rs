@@ -1,4 +1,4 @@
-use crate::{config::Config, utils::dirs};
+use crate::{config::Config, trace_err, utils::dirs};
 use anyhow::{anyhow, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -114,7 +114,10 @@ impl WebDav {
             )
         };
         if let (Some(url), Some(username), Some(password)) = (url, username, password) {
-            self.update_webdav_info(url, username, password).await?;
+            trace_err!(
+                self.update_webdav_info(url, username, password).await,
+                "failed to update webdav info"
+            );
         } else {
             tracing::trace!("webdav info config is empty, skip init webdav");
         }

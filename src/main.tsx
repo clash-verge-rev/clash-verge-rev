@@ -63,15 +63,6 @@ document.addEventListener("keydown", (event) => {
   disabledShortcuts && event.preventDefault();
 });
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const splashscreenWindow = await WebviewWindow.getByLabel("splashscreen");
-  if (splashscreenWindow) {
-    setTimeout(() => {
-      splashscreenWindow.close();
-    }, 1000);
-  }
-});
-
 // 页面关闭/刷新事件
 window.addEventListener("beforeunload", async () => {
   // 强制清理所有 WebSocket 实例

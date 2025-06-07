@@ -23,13 +23,12 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SWRConfig, mutate } from "swr";
 
-const appWindow = getCurrentWebviewWindow();
-
 export let portableFlag = false;
 dayjs.extend(relativeTime);
 const OS = getSystem();
 
 const Layout = () => {
+  const appWindow = getCurrentWebviewWindow();
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
   const { notice } = useNotice();
@@ -44,17 +43,6 @@ const Layout = () => {
   } = verge;
   const keepUIActive = useRef(enable_keep_ui_active);
 
-  appWindow.isMaximized().then((maximized) => {
-    setIsMaximized(maximized);
-  });
-  const unlistenResize = appWindow.onResized(() => {
-    appWindow.isMaximized().then((value) => {
-      if (isMaximized !== value) {
-        setIsMaximized(value);
-      }
-    });
-  });
-
   const handleClose = (keepUIActive: boolean) => {
     if (keepUIActive) {
       appWindow.hide();
@@ -64,6 +52,18 @@ const Layout = () => {
   };
 
   useEffect(() => {
+    appWindow.isMaximized().then((maximized) => {
+      setIsMaximized(maximized);
+    });
+
+    const unlistenResize = appWindow.onResized(() => {
+      appWindow.isMaximized().then((value) => {
+        if (isMaximized !== value) {
+          setIsMaximized(value);
+        }
+      });
+    });
+
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && OS !== "macos") {
         handleClose(keepUIActive.current);

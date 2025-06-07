@@ -66,48 +66,48 @@ pub fn check_singleton() -> Result<()> {
 
 /// The embed server only be used to implement singleton process
 /// maybe it can be used as pac server later
-pub async fn embed_server() {
+pub fn embed_server() {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
-    SHUTDOWN_SENDER.get_or_init(|| Mutex::new(Some(shutdown_tx)));
-
+    let _ = SHUTDOWN_SENDER.set(Mutex::new(Some(shutdown_tx)));
     let port = IVerge::get_singleton_port();
+    tauri::async_runtime::spawn(async move {
+        let ping = warp::path!("commands" / "ping").map(move || "ok");
 
-    let ping = warp::path!("commands" / "ping").map(move || "ok");
-
-    let visible = warp::path!("commands" / "visible").map(move || {
-        resolve::create_window();
-        "ok"
-    });
-
-    let pac = warp::path!("commands" / "pac").map(move || {
-        let content = Config::verge()
-            .latest()
-            .pac_file_content
-            .clone()
-            .unwrap_or(DEFAULT_PAC.to_string());
-        let port = Config::clash().latest().get_mixed_port();
-        let content = content.replace("%mixed-port%", &format!("{}", port));
-        warp::http::Response::builder()
-            .header("Content-Type", "application/x-ns-proxy-autoconfig")
-            .body(content)
-            .unwrap_or_default()
-    });
-    
-    let scheme = warp::path!("commands" / "scheme")
-        .and(warp::query::<QueryParam>())
-        .and_then(scheme_handler);
-
-    async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
-        resolve::resolve_scheme(query.param).await;
-        Ok("ok")
-    }
-
-    let commands = ping.or(visible).or(pac).or(scheme);
-    let (_addr, server) =
-        warp::serve(commands).bind_with_graceful_shutdown(([127, 0, 0, 1], port), async {
-            shutdown_rx.await.ok();
+        let visible = warp::path!("commands" / "visible").map(move || {
+            resolve::create_window();
+            "ok"
         });
-    tokio::task::spawn(server);
+
+        let pac = warp::path!("commands" / "pac").map(move || {
+            let content = Config::verge()
+                .latest()
+                .pac_file_content
+                .clone()
+                .unwrap_or(DEFAULT_PAC.to_string());
+            let port = Config::clash().latest().get_mixed_port();
+            let content = content.replace("%mixed-port%", &format!("{}", port));
+            warp::http::Response::builder()
+                .header("Content-Type", "application/x-ns-proxy-autoconfig")
+                .body(content)
+                .unwrap_or_default()
+        });
+
+        let scheme = warp::path!("commands" / "scheme")
+            .and(warp::query::<QueryParam>())
+            .and_then(scheme_handler);
+
+        async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
+            resolve::resolve_scheme(query.param).await;
+            Ok("ok")
+        }
+
+        let commands = ping.or(visible).or(pac).or(scheme);
+        let (_addr, server) =
+            warp::serve(commands).bind_with_graceful_shutdown(([127, 0, 0, 1], port), async {
+                shutdown_rx.await.ok();
+            });
+        tokio::task::spawn(server);
+    });
 }
 
 pub fn shutdown_embedded_server() {

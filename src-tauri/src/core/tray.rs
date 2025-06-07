@@ -166,7 +166,8 @@ impl Tray {
         Ok(menu.build()?)
     }
 
-    pub fn init(app_handle: &AppHandle) -> Result<()> {
+    pub fn init() -> Result<()> {
+        let app_handle = handle::Handle::get_app_handle();
         let menu = Self::tray_menu(app_handle)?;
         let tray = TrayIconBuilder::with_id(TRAY_ID)
             .icon(Self::get_tray_icon())

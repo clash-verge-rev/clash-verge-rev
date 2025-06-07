@@ -44,11 +44,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const [commonIcon, setCommonIcon] = useState("");
   const [sysproxyIcon, setSysproxyIcon] = useState("");
   const [tunIcon, setTunIcon] = useState("");
-  const {
-    enable_system_title_bar,
-    enable_keep_ui_active,
-    enable_splashscreen,
-  } = verge || {};
+  const { enable_system_title_bar, enable_keep_ui_active } = verge || {};
   const [wayland, setWayland] = useState(false);
 
   useEffect(() => {
@@ -106,18 +102,6 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
       hideCancelBtn
       onClose={() => setOpen(false)}>
       <List>
-        <Item>
-          <ListItemText primary={t("Splashscreen")} />
-          <GuardState
-            value={enable_splashscreen ?? true}
-            valueProps="checked"
-            onCatch={onError}
-            onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ enable_splashscreen: e })}
-            onGuard={(e) => patchVerge({ enable_splashscreen: e })}>
-            <SwitchLovely edge="end" />
-          </GuardState>
-        </Item>
         {show_title_setting && (
           <Item>
             <ListItemText
