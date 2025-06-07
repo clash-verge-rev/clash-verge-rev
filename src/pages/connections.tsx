@@ -1,6 +1,13 @@
 import { useMemo, useRef, useState, useCallback } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, MenuItem } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  MenuItem,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import { Virtuoso } from "react-virtuoso";
 import { useTranslation } from "react-i18next";
 import {
@@ -43,6 +50,9 @@ const ConnectionsPage = () => {
   const isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
+  const [activeFilter, setActiveFilter] = useState<
+    "active" | "inactive" | "all"
+  >("all");
 
   // 使用全局数据
   const { connections } = useAppData();
@@ -61,6 +71,10 @@ const ConnectionsPage = () => {
     "Upload Speed": (list) => list.sort((a, b) => b.curUpload! - a.curUpload!),
     "Download Speed": (list) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
+    // 新增排序方式
+    下载量: (list) =>
+      list.sort((a, b) => (b.download ?? 0) - (a.download ?? 0)),
+    上传量: (list) => list.sort((a, b) => (b.upload ?? 0) - (a.upload ?? 0)),
   };
 
   const [isPaused, setIsPaused] = useState(false);
@@ -91,15 +105,23 @@ const ConnectionsPage = () => {
     const orderFunc = orderOpts[curOrderOpt];
     let conns = displayData.connections.filter((conn) => {
       const { host, destinationIP, process } = conn.metadata;
-      return (
-        match(host || "") || match(destinationIP || "") || match(process || "")
-      );
+      let matchResult =
+        match(host || "") || match(destinationIP || "") || match(process || "");
+      if (activeFilter === "active") {
+        matchResult =
+          matchResult &&
+          ((conn.curUpload && conn.curUpload > 0) ||
+            (conn.curDownload && conn.curDownload > 0));
+      } else if (activeFilter === "inactive") {
+        matchResult = matchResult && !conn.curUpload && !conn.curDownload;
+      }
+      return matchResult;
     });
 
     if (orderFunc) conns = orderFunc(conns);
 
     return [conns];
-  }, [displayData, match, curOrderOpt]);
+  }, [displayData, match, curOrderOpt, activeFilter]);
 
   const onCloseAll = useLockFn(closeAllConnections);
 
@@ -137,6 +159,29 @@ const ConnectionsPage = () => {
       }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {/* 替换 ToggleButtonGroup 为 Button 组件 */}
+          <Button
+            size="small"
+            variant={activeFilter === "active" ? "contained" : "outlined"}
+            color={activeFilter === "active" ? "primary" : "inherit"}
+            onClick={() =>
+              setActiveFilter(activeFilter === "active" ? "all" : "active")
+            }
+            sx={{ minWidth: 64 }}
+          >
+            {t("活动")}
+          </Button>
+          <Button
+            size="small"
+            variant={activeFilter === "inactive" ? "contained" : "outlined"}
+            color={activeFilter === "inactive" ? "primary" : "inherit"}
+            onClick={() =>
+              setActiveFilter(activeFilter === "inactive" ? "all" : "inactive")
+            }
+            sx={{ minWidth: 64 }}
+          >
+            {t("未活动")}
+          </Button>
           <Box sx={{ mx: 1 }}>
             {t("Downloaded")}: {parseTraffic(displayData.downloadTotal)}
           </Box>
