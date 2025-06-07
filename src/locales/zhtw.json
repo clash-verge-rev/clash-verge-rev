@@ -257,7 +257,7 @@
   "Random Port": "隨機端口",
   "Mixed Port": "混合代理端口",
   "Socks Port": "SOCKS 代理端口",
-  "HTTP Port": "HTTP(S) 代理端口",
+  "Http Port": "HTTP(S) 代理端口",
   "Redir Port": "Redir 透明代理端口",
   "Tproxy Port": "TPROXY 透明代理端口",
   "External": "外部控制",
