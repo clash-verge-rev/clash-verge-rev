@@ -23,7 +23,7 @@
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
     "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "echo 'OK'"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

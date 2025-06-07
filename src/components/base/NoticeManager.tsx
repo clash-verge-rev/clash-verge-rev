@@ -1,24 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useSyncExternalStore } from "react";
 import { Snackbar, Alert, IconButton, Box } from "@mui/material";
 import { CloseRounded } from "@mui/icons-material";
 import {
   subscribeNotices,
   hideNotice,
-  NoticeItem,
+  getSnapshotNotices,
 } from "@/services/noticeService";
 
 export const NoticeManager: React.FC = () => {
-  const [currentNotices, setCurrentNotices] = useState<NoticeItem[]>([]);
-
-  useEffect(() => {
-    const unsubscribe = subscribeNotices((notices) => {
-      setCurrentNotices(notices);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+  const currentNotices = useSyncExternalStore(
+    subscribeNotices,
+    getSnapshotNotices,
+  );
 
   const handleClose = (id: number) => {
     hideNotice(id);
