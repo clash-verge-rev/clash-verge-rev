@@ -1,7 +1,6 @@
 import { BaseDialog, DialogRef, SwitchLovely } from "@/components/base";
 import { useNotice } from "@/components/base/notifice";
 import { useClashInfo } from "@/hooks/use-clash";
-import { useVerge } from "@/hooks/use-verge";
 import { Add, Remove, RotateLeft, Shuffle } from "@mui/icons-material";
 import {
   Box,
@@ -16,7 +15,6 @@ import { useLockFn } from "ahooks";
 import { nanoid } from "nanoid";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { GuardState } from "./guard-state";
 
 const DEFAULT_ALLOW_ORIGINS = [
   "https://metacubex.github.io",
@@ -26,11 +24,9 @@ const DEFAULT_ALLOW_ORIGINS = [
 export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const { notice } = useNotice();
-  const { verge, patchVerge } = useVerge();
   const [open, setOpen] = useState(false);
   const { clashInfo, patchInfo } = useClashInfo();
   const { cors } = clashInfo || {};
-  const { enable_external_controller = false } = verge;
 
   const [controller, setController] = useState(clashInfo?.server || "");
   const [secret, setSecret] = useState(clashInfo?.secret || "");
@@ -50,11 +46,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
     },
     close: () => setOpen(false),
   }));
-
-  const onSwitchFormat = (_e: any, value: boolean) => value;
-  const onError = (err: any) => {
-    notice("error", err.message || err.toString());
-  };
 
   const onSave = useLockFn(async () => {
     try {
@@ -76,29 +67,8 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={
-        <div className="flex items-center justify-between">
-          {t("External Controller")}
-          <GuardState
-            value={enable_external_controller}
-            valueProps="checked"
-            onCatch={onError}
-            onFormat={onSwitchFormat}
-            onGuard={(e) => patchVerge({ enable_external_controller: e })}
-            onSuccess={(v) => {
-              if (v) {
-                notice("success", t("External Controller Enabled"), 1000);
-              } else {
-                notice("success", t("External Controller Disabled"), 1000);
-              }
-            }}>
-            <SwitchLovely edge="end" />
-          </GuardState>
-        </div>
-      }
+      title={t("External Controller")}
       contentStyle={{ maxWidth: 500, width: "fit-content", minWidth: 400 }}
-      hideCancelBtn={!enable_external_controller}
-      hideOkBtn={!enable_external_controller}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
@@ -108,7 +78,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("External Controller Host")} />
           <TextField
-            disabled={!enable_external_controller}
             size="small"
             autoComplete="off"
             sx={{ width: 175 }}
@@ -129,7 +98,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                 }}>
                 <span>{t("External Controller Secret")}</span>
                 <IconButton
-                  disabled={!enable_external_controller}
                   color="inherit"
                   size="small"
                   onClick={() => setSecret(nanoid())}>
@@ -139,7 +107,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
             }
           />
           <TextField
-            disabled={!enable_external_controller}
             size="small"
             autoComplete="off"
             sx={{ width: 175 }}
@@ -154,7 +121,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Allow Private Network")} />
           <SwitchLovely
-            disabled={!enable_external_controller}
             checked={allowPrivateNetwork}
             onChange={(e) => {
               const value = e.target.checked;
@@ -171,7 +137,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
                 <Tooltip title={t("Reset Default Allow Origins")}>
                   <span>
                     <IconButton
-                      disabled={!enable_external_controller}
                       color="primary"
                       size="small"
                       onClick={async () => {
@@ -187,7 +152,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <TextField
-          disabled={!enable_external_controller}
           size="small"
           autoComplete="off"
           sx={{ width: "100%", padding: "5px 2px" }}
@@ -213,7 +177,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
             input: {
               endAdornment: (
                 <IconButton
-                  disabled={!enable_external_controller}
                   color="primary"
                   size="small"
                   onClick={() => {
@@ -248,7 +211,6 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
             }}>
             <ListItemText primary={item} />
             <IconButton
-              disabled={!enable_external_controller}
               size="small"
               color="warning"
               onClick={() => {

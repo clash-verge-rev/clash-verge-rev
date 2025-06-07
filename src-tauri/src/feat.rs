@@ -363,7 +363,17 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 update_core_config().await?;
             }
             // 激活订阅
-            if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
+            let enable_external_controller = {
+                Config::verge()
+                    .latest()
+                    .enable_external_controller
+                    .unwrap_or_default()
+            };
+            if enable_external_controller
+                && (patch.get("secret").is_some()
+                    || patch.get("external-controller").is_some()
+                    || patch.get("external-controller-cors").is_some())
+            {
                 Config::generate()?;
                 CoreManager::global().run_core().await?;
             }

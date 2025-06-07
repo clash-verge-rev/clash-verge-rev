@@ -59,7 +59,11 @@ const SettingClash = ({ onError }: Props) => {
     "unified-delay": unifiedDelay,
     tun,
   } = clash ?? {};
-  const { enable_random_port = false, enable_service_mode } = verge ?? {};
+  const {
+    enable_random_port = false,
+    enable_service_mode = false,
+    enable_external_controller = false,
+  } = verge ?? {};
 
   const webRef = useRef<DialogRef>(null);
   const portRef = useRef<DialogRef>(null);
@@ -68,7 +72,7 @@ const SettingClash = ({ onError }: Props) => {
   const tunRef = useRef<DialogRef>(null);
   const serviceRef = useRef<DialogRef>(null);
 
-  const [clashLog, setClashLog] = useClashLog();
+  const [_clashLog, setClashLog] = useClashLog();
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
@@ -269,9 +273,24 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        onClick={() => ctrlRef.current?.open()}
         label={t("External Controller")}
-      />
+        extra={
+          <IconButton
+            color="inherit"
+            size="small"
+            onClick={() => ctrlRef.current?.open()}>
+            <Settings fontSize="inherit" style={{ opacity: 0.75 }} />
+          </IconButton>
+        }>
+        <GuardState
+          value={enable_external_controller}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onGuard={(e) => patchVerge({ enable_external_controller: e })}>
+          <SwitchLovely edge="end" />
+        </GuardState>
+      </SettingItem>
 
       <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
 
