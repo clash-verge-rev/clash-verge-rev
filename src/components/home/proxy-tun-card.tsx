@@ -9,9 +9,8 @@ import {
   useTheme,
   Fade,
 } from "@mui/material";
-import { useState, useMemo, memo, FC } from "react";
+import { useState, useMemo, memo, FC, useEffect } from "react";
 import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
-import { Notice } from "@/components/base";
 import {
   ComputerRounded,
   TroubleshootRounded,
@@ -20,6 +19,9 @@ import {
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { useSystemState } from "@/hooks/use-system-state";
+import { showNotice } from "@/services/noticeService";
+import { getRunningMode } from "@/services/cmds";
+import { mutate } from "swr";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
 
@@ -31,7 +33,7 @@ interface TabButtonProps {
   hasIndicator?: boolean;
 }
 
-// 抽取Tab组件以减少重复代码
+// Tab组件
 const TabButton: FC<TabButtonProps> = memo(
   ({ isActive, onClick, icon: Icon, label, hasIndicator = false }) => (
     <Paper
@@ -96,7 +98,7 @@ interface TabDescriptionProps {
   tooltipTitle: string;
 }
 
-// 抽取描述文本组件
+// 描述文本组件
 const TabDescription: FC<TabDescriptionProps> = memo(
   ({ description, tooltipTitle }) => (
     <Fade in={true} timeout={200}>
@@ -139,28 +141,42 @@ export const ProxyTunCard: FC = () => {
     () => localStorage.getItem(LOCAL_STORAGE_TAB_KEY) || "system",
   );
 
-  // 获取代理状态信息
+  const [localServiceOk, setLocalServiceOk] = useState(false);
+
   const { verge } = useVerge();
-  const { isSidecarMode, isAdminMode } = useSystemState();
+  const { isAdminMode } = useSystemState();
 
-  // 从verge配置中获取开关状态
   const { enable_system_proxy, enable_tun_mode } = verge ?? {};
-  
-  // 判断Tun模式是否可用 - 当处于服务模式或管理员模式时可用
-  const isTunAvailable = !isSidecarMode || isAdminMode;
 
-  // 处理错误
-  const handleError = (err: Error) => {
-    Notice.error(err.message || err.toString(), 3000);
+  const updateLocalStatus = async () => {
+    try {
+      const runningMode = await getRunningMode();
+      const serviceStatus = runningMode === "Service";
+      setLocalServiceOk(serviceStatus);
+      mutate("isServiceAvailable", serviceStatus, false);
+    } catch (error) {
+      console.error("更新TUN状态失败:", error);
+    }
   };
 
-  // 处理标签切换并保存到localStorage
+  useEffect(() => {
+    updateLocalStatus();
+  }, []);
+
+  const isTunAvailable = localServiceOk || isAdminMode;
+
+  const handleError = (err: Error) => {
+    showNotice("error", err.message || err.toString());
+  };
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     localStorage.setItem(LOCAL_STORAGE_TAB_KEY, tab);
+    if (tab === "tun") {
+      updateLocalStatus();
+    }
   };
 
-  // 用户提示文本 - 使用useMemo避免重复计算
   const tabDescription = useMemo(() => {
     if (activeTab === "system") {
       return {
@@ -183,7 +199,6 @@ export const ProxyTunCard: FC = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
-      {/* 选项卡 */}
       <Stack
         direction="row"
         spacing={1}
@@ -210,7 +225,6 @@ export const ProxyTunCard: FC = () => {
         />
       </Stack>
 
-      {/* 说明文本区域 */}
       <Box
         sx={{
           width: "100%",
@@ -227,7 +241,6 @@ export const ProxyTunCard: FC = () => {
         />
       </Box>
 
-      {/* 控制开关部分 */}
       <Box
         sx={{
           mt: 0,

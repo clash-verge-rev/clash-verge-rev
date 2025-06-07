@@ -38,7 +38,7 @@ export const EnhancedCard = ({
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    display: "block"
+    display: "block",
   };
 
   return (
@@ -62,13 +62,15 @@ export const EnhancedCard = ({
           borderColor: "divider",
         }}
       >
-        <Box sx={{ 
-          display: "flex", 
-          alignItems: "center", 
-          minWidth: 0, 
-          flex: 1,
-          overflow: "hidden"
-        }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            minWidth: 0,
+            flex: 1,
+            overflow: "hidden",
+          }}
+        >
           <Box
             sx={{
               display: "flex",
@@ -87,9 +89,9 @@ export const EnhancedCard = ({
           </Box>
           <Box sx={{ minWidth: 0, flex: 1 }}>
             {typeof title === "string" ? (
-              <Typography 
-                variant="h6" 
-                fontWeight="medium" 
+              <Typography
+                variant="h6"
+                fontWeight="medium"
                 fontSize={18}
                 sx={titleTruncateStyle}
                 title={title}
@@ -97,9 +99,7 @@ export const EnhancedCard = ({
                 {title}
               </Typography>
             ) : (
-              <Box sx={titleTruncateStyle}>
-                {title}
-              </Box>
+              <Box sx={titleTruncateStyle}>{title}</Box>
             )}
           </Box>
         </Box>

@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { TextField } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, Notice } from "@/components/base";
+import { BaseDialog } from "@/components/base";
 import { nanoid } from "nanoid";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   onChange: (uid: string, patch?: Partial<IVergeTestItem>) => void;
@@ -99,7 +100,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         setLoading(false);
         setTimeout(() => formIns.reset(), 500);
       } catch (err: any) {
-        Notice.error(err.message || err.toString());
+        showNotice("error", err.message || err.toString());
         setLoading(false);
       }
     }),

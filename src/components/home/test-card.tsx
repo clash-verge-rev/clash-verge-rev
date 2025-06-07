@@ -1,7 +1,6 @@
 import { useEffect, useRef, useMemo, useCallback } from "react";
 import { useVerge } from "@/hooks/use-verge";
-import { Box, IconButton, Tooltip, alpha, styled } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import { Box, IconButton, Tooltip, alpha, styled, Grid } from "@mui/material";
 import {
   DndContext,
   closestCenter,
@@ -86,14 +85,14 @@ export const TestCard = () => {
         mutateVerge();
         return;
       }
-      
-      const newList = testList.map((x) => 
-        x.uid === uid ? { ...x, ...patch } : x
+
+      const newList = testList.map((x) =>
+        x.uid === uid ? { ...x, ...patch } : x,
       );
-      
+
       mutateVerge({ ...verge, test_list: newList }, false);
     },
-    [testList, verge, mutateVerge]
+    [testList, verge, mutateVerge],
   );
 
   const onDeleteTestListItem = useCallback(
@@ -102,27 +101,37 @@ export const TestCard = () => {
       patchVerge({ test_list: newList });
       mutateVerge({ ...verge, test_list: newList }, false);
     },
-    [testList, verge, patchVerge, mutateVerge]
+    [testList, verge, patchVerge, mutateVerge],
   );
 
   const onDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
-      
+
       const old_index = testList.findIndex((x) => x.uid === active.id);
       const new_index = testList.findIndex((x) => x.uid === over.id);
-      
+
       if (old_index >= 0 && new_index >= 0) {
         const newList = [...testList];
         const [removed] = newList.splice(old_index, 1);
         newList.splice(new_index, 0, removed);
 
-        await mutateVerge({ ...verge, test_list: newList }, false);
-        await patchVerge({ test_list: newList });
+        // 优化：先本地更新，再异步 patch，避免UI卡死
+        mutateVerge({ ...verge, test_list: newList }, false);
+        const patchFn = () => {
+          try {
+            patchVerge({ test_list: newList });
+          } catch {}
+        };
+        if (window.requestIdleCallback) {
+          window.requestIdleCallback(patchFn);
+        } else {
+          setTimeout(patchFn, 0);
+        }
       }
     },
-    [testList, verge, mutateVerge, patchVerge]
+    [testList, verge, mutateVerge, patchVerge],
   );
 
   // 仅在verge首次加载时初始化测试列表
@@ -133,22 +142,25 @@ export const TestCard = () => {
   }, [verge, patchVerge]);
 
   // 使用useMemo优化UI内容，减少渲染计算
-  const renderTestItems = useMemo(() => (
-    <Grid container spacing={1} columns={12}>
-      <SortableContext items={testList.map((x) => x.uid)}>
-        {testList.map((item) => (
-          <Grid key={item.uid} size={3}>
-            <TestItem
-              id={item.uid}
-              itemData={item}
-              onEdit={() => viewerRef.current?.edit(item)}
-              onDelete={onDeleteTestListItem}
-            />
-          </Grid>
-        ))}
-      </SortableContext>
-    </Grid>
-  ), [testList, onDeleteTestListItem]);
+  const renderTestItems = useMemo(
+    () => (
+      <Grid container spacing={1} columns={12}>
+        <SortableContext items={testList.map((x) => x.uid)}>
+          {testList.map((item) => (
+            <Grid key={item.uid} size={3}>
+              <TestItem
+                id={item.uid}
+                itemData={item}
+                onEdit={() => viewerRef.current?.edit(item)}
+                onDelete={onDeleteTestListItem}
+              />
+            </Grid>
+          ))}
+        </SortableContext>
+      </Grid>
+    ),
+    [testList, onDeleteTestListItem],
+  );
 
   const handleTestAll = useCallback(() => {
     emit("verge://test-all");

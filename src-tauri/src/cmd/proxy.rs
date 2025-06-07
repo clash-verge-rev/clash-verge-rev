@@ -1,24 +1,77 @@
 use super::CmdResult;
-use crate::module::mihomo::MihomoManager;
+use crate::{core::handle, module::mihomo::MihomoManager, state::proxy::CmdProxyState};
+use std::{
+    sync::Mutex,
+    time::{Duration, Instant},
+};
+use tauri::Manager;
+
+const PROVIDERS_REFRESH_INTERVAL: Duration = Duration::from_secs(3);
+const PROXIES_REFRESH_INTERVAL: Duration = Duration::from_secs(1);
 
 #[tauri::command]
 pub async fn get_proxies() -> CmdResult<serde_json::Value> {
-    let mannager = MihomoManager::global();
+    let manager = MihomoManager::global();
 
-    mannager
-        .refresh_proxies()
-        .await
-        .map(|_| mannager.get_proxies())
-        .or_else(|_| Ok(mannager.get_proxies()))
+    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let cmd_proxy_state = app_handle.state::<Mutex<CmdProxyState>>();
+
+    let should_refresh = {
+        let mut state = cmd_proxy_state.lock().unwrap();
+        let now = Instant::now();
+        if now.duration_since(state.last_refresh_time) > PROXIES_REFRESH_INTERVAL {
+            state.need_refresh = true;
+            state.last_refresh_time = now;
+        }
+        state.need_refresh
+    };
+
+    if should_refresh {
+        let proxies = manager.get_refresh_proxies().await?;
+        {
+            let mut state = cmd_proxy_state.lock().unwrap();
+            state.proxies = Box::new(proxies);
+            state.need_refresh = false;
+        }
+        log::debug!(target: "app", "proxies刷新成功");
+    }
+
+    let proxies = {
+        let state = cmd_proxy_state.lock().unwrap();
+        state.proxies.clone()
+    };
+    Ok(*proxies)
 }
 
 #[tauri::command]
 pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
-    let mannager = MihomoManager::global();
+    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let cmd_proxy_state = app_handle.state::<Mutex<CmdProxyState>>();
 
-    mannager
-        .refresh_providers_proxies()
-        .await
-        .map(|_| mannager.get_providers_proxies())
-        .or_else(|_| Ok(mannager.get_providers_proxies()))
+    let should_refresh = {
+        let mut state = cmd_proxy_state.lock().unwrap();
+        let now = Instant::now();
+        if now.duration_since(state.last_refresh_time) > PROVIDERS_REFRESH_INTERVAL {
+            state.need_refresh = true;
+            state.last_refresh_time = now;
+        }
+        state.need_refresh
+    };
+
+    if should_refresh {
+        let manager = MihomoManager::global();
+        let providers = manager.get_providers_proxies().await?;
+        {
+            let mut state = cmd_proxy_state.lock().unwrap();
+            state.providers_proxies = Box::new(providers);
+            state.need_refresh = false;
+        }
+        log::debug!(target: "app", "providers_proxies刷新成功");
+    }
+
+    let providers_proxies = {
+        let state = cmd_proxy_state.lock().unwrap();
+        state.providers_proxies.clone()
+    };
+    Ok(*providers_proxies)
 }

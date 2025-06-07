@@ -1,6 +1,47 @@
+/**
+ * CLI tool to update version numbers in package.json, src-tauri/Cargo.toml, and src-tauri/tauri.conf.json.
+ *
+ * Usage:
+ *   pnpm release-version <version>
+ *
+ * <version> can be:
+ *   - A full semver version (e.g., 1.2.3, v1.2.3, 1.2.3-beta, v1.2.3+build)
+ *   - A tag: "alpha", "beta", "rc", or "autobuild"
+ *     - "alpha", "beta", "rc": Appends the tag to the current base version (e.g., 1.2.3-beta)
+ *     - "autobuild": Appends a timestamped autobuild tag (e.g., 1.2.3+autobuild.2406101530)
+ *
+ * Examples:
+ *   pnpm release-version 1.2.3
+ *   pnpm release-version v1.2.3-beta
+ *   pnpm release-version beta
+ *   pnpm release-version autobuild
+ *
+ * The script will:
+ *   - Validate and normalize the version argument
+ *   - Update the version field in package.json
+ *   - Update the version field in src-tauri/Cargo.toml
+ *   - Update the version field in src-tauri/tauri.conf.json
+ *
+ * Errors are logged and the process exits with code 1 on failure.
+ */
+
 import fs from "fs/promises";
 import path from "path";
 import { program } from "commander";
+
+/**
+ * 生成短时间戳（格式：YYMMDDHHMM）
+ * @returns {string}
+ */
+function generateShortTimestamp() {
+  const now = new Date();
+  const year = String(now.getFullYear()).slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${year}${month}${day}${hours}${minutes}`;
+}
 
 /**
  * 验证版本号格式
@@ -8,11 +49,13 @@ import { program } from "commander";
  * @returns {boolean}
  */
 function isValidVersion(version) {
-  return /^v?\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?$/i.test(version);
+  return /^v?\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/i.test(
+    version,
+  );
 }
 
 /**
- * 标准化版本号（确保v前缀可选）
+ * 标准化版本号
  * @param {string} version
  * @returns {string}
  */
@@ -21,8 +64,19 @@ function normalizeVersion(version) {
 }
 
 /**
- * 更新 package.json 文件中的版本号
- * @param {string} newVersion 新版本号
+ * 提取基础版本号（去掉所有 -tag 和 +build 部分）
+ * @param {string} version
+ * @returns {string}
+ */
+function getBaseVersion(version) {
+  let base = version.replace(/-(alpha|beta|rc)(\.\d+)?/i, "");
+  base = base.replace(/\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*/g, "");
+  return base;
+}
+
+/**
+ * 更新 package.json 版本号
+ * @param {string} newVersion
  */
 async function updatePackageVersion(newVersion) {
   const _dirname = process.cwd();
@@ -46,7 +100,6 @@ async function updatePackageVersion(newVersion) {
     console.log(
       `[INFO]: package.json version updated to: ${packageJson.version}`,
     );
-    return packageJson.version;
   } catch (error) {
     console.error("Error updating package.json version:", error);
     throw error;
@@ -54,8 +107,8 @@ async function updatePackageVersion(newVersion) {
 }
 
 /**
- * 更新 Cargo.toml 文件中的版本号
- * @param {string} newVersion 新版本号
+ * 更新 Cargo.toml 版本号
+ * @param {string} newVersion
  */
 async function updateCargoVersion(newVersion) {
   const _dirname = process.cwd();
@@ -63,23 +116,23 @@ async function updateCargoVersion(newVersion) {
   try {
     const data = await fs.readFile(cargoTomlPath, "utf8");
     const lines = data.split("\n");
-
     const versionWithoutV = newVersion.startsWith("v")
       ? newVersion.slice(1)
       : newVersion;
+    const baseVersion = getBaseVersion(versionWithoutV);
 
     const updatedLines = lines.map((line) => {
       if (line.trim().startsWith("version =")) {
         return line.replace(
           /version\s*=\s*"[^"]+"/,
-          `version = "${versionWithoutV}"`,
+          `version = "${baseVersion}"`,
         );
       }
       return line;
     });
 
     await fs.writeFile(cargoTomlPath, updatedLines.join("\n"), "utf8");
-    console.log(`[INFO]: Cargo.toml version updated to: ${versionWithoutV}`);
+    console.log(`[INFO]: Cargo.toml version updated to: ${baseVersion}`);
   } catch (error) {
     console.error("Error updating Cargo.toml version:", error);
     throw error;
@@ -87,8 +140,8 @@ async function updateCargoVersion(newVersion) {
 }
 
 /**
- * 更新 tauri.conf.json 文件中的版本号
- * @param {string} newVersion 新版本号
+ * 更新 tauri.conf.json 版本号
+ * @param {string} newVersion
  */
 async function updateTauriConfigVersion(newVersion) {
   const _dirname = process.cwd();
@@ -96,24 +149,22 @@ async function updateTauriConfigVersion(newVersion) {
   try {
     const data = await fs.readFile(tauriConfigPath, "utf8");
     const tauriConfig = JSON.parse(data);
-
     const versionWithoutV = newVersion.startsWith("v")
       ? newVersion.slice(1)
       : newVersion;
+    const baseVersion = getBaseVersion(versionWithoutV);
 
     console.log(
       "[INFO]: Current tauri.conf.json version is: ",
       tauriConfig.version,
     );
-    tauriConfig.version = versionWithoutV;
+    tauriConfig.version = baseVersion;
     await fs.writeFile(
       tauriConfigPath,
       JSON.stringify(tauriConfig, null, 2),
       "utf8",
     );
-    console.log(
-      `[INFO]: tauri.conf.json version updated to: ${versionWithoutV}`,
-    );
+    console.log(`[INFO]: tauri.conf.json version updated to: ${baseVersion}`);
   } catch (error) {
     console.error("Error updating tauri.conf.json version:", error);
     throw error;
@@ -121,7 +172,7 @@ async function updateTauriConfigVersion(newVersion) {
 }
 
 /**
- * 获取当前版本号（从package.json）
+ * 获取当前版本号
  */
 async function getCurrentVersion() {
   const _dirname = process.cwd();
@@ -137,8 +188,7 @@ async function getCurrentVersion() {
 }
 
 /**
- * 主函数，更新所有文件的版本号
- * @param {string} versionArg 版本参数（可以是标签或完整版本号）
+ * 主函数
  */
 async function main(versionArg) {
   if (!versionArg) {
@@ -148,23 +198,21 @@ async function main(versionArg) {
 
   try {
     let newVersion;
-    const validTags = ["alpha", "beta", "rc"];
+    const validTags = ["alpha", "beta", "rc", "autobuild"];
 
-    // 判断参数是标签还是完整版本号
     if (validTags.includes(versionArg.toLowerCase())) {
-      // 标签模式：在当前版本基础上添加标签
       const currentVersion = await getCurrentVersion();
-      const baseVersion = currentVersion.replace(
-        /-(alpha|beta|rc)(\.\d+)?$/i,
-        "",
-      );
-      newVersion = `${baseVersion}-${versionArg.toLowerCase()}`;
+      const baseVersion = getBaseVersion(currentVersion);
+
+      if (versionArg.toLowerCase() === "autobuild") {
+        const timestamp = generateShortTimestamp();
+        newVersion = `${baseVersion}+autobuild.${timestamp}`;
+      } else {
+        newVersion = `${baseVersion}-${versionArg.toLowerCase()}`;
+      }
     } else {
-      // 完整版本号模式
       if (!isValidVersion(versionArg)) {
-        console.error(
-          "Error: Invalid version format. Expected format: vX.X.X or vX.X.X-tag (e.g. v2.2.3 or v2.2.3-alpha)",
-        );
+        console.error("Error: Invalid version format");
         process.exit(1);
       }
       newVersion = normalizeVersion(versionArg);
@@ -181,17 +229,9 @@ async function main(versionArg) {
   }
 }
 
-// Example:
-// pnpm release-version 2.2.3-alpha
-// 设置命令行界面
 program
   .name("pnpm release-version")
-  .description(
-    "Update project version numbers. Can add tag (alpha/beta/rc) or set full version (e.g. v2.2.3 or v2.2.3-alpha)",
-  )
-  .argument(
-    "<version>",
-    "version tag (alpha/beta/rc) or full version (e.g. v2.2.3 or v2.2.3-alpha)",
-  )
+  .description("Update project version numbers")
+  .argument("<version>", "version tag or full version")
   .action(main)
   .parse(process.argv);

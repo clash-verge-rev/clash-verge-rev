@@ -9,7 +9,7 @@ import { getProxies, updateProxy } from "@/services/api";
 export const useProfiles = () => {
   const { data: profiles, mutate: mutateProfiles } = useSWR(
     "getProfiles",
-    getProfiles
+    getProfiles,
   );
 
   const patchProfiles = async (value: Partial<IProfilesConfig>) => {
@@ -32,7 +32,7 @@ export const useProfiles = () => {
     if (!profileData || !proxiesData) return;
 
     const current = profileData.items?.find(
-      (e) => e && e.uid === profileData.current
+      (e) => e && e.uid === profileData.current,
     );
 
     if (!current) return;
@@ -40,7 +40,7 @@ export const useProfiles = () => {
     // init selected array
     const { selected = [] } = current;
     const selectedMap = Object.fromEntries(
-      selected.map((each) => [each.name!, each.now!])
+      selected.map((each) => [each.name!, each.now!]),
     );
 
     let hasChange = false;

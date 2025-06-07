@@ -8,7 +8,7 @@ export default function useFilterSort(
   proxies: IProxyItem[],
   groupName: string,
   filterText: string,
-  sortType: ProxySortType
+  sortType: ProxySortType,
 ) {
   const [refresh, setRefresh] = useState({});
 
@@ -40,7 +40,7 @@ export function filterSort(
   proxies: IProxyItem[],
   groupName: string,
   filterText: string,
-  sortType: ProxySortType
+  sortType: ProxySortType,
 ) {
   const fp = filterProxies(proxies, groupName, filterText);
   const sp = sortProxies(fp, groupName, sortType);
@@ -60,7 +60,7 @@ const regex2 = /type=(.*)/i;
 function filterProxies(
   proxies: IProxyItem[],
   groupName: string,
-  filterText: string
+  filterText: string,
 ) {
   if (!filterText) return proxies;
 
@@ -100,7 +100,7 @@ function filterProxies(
 function sortProxies(
   proxies: IProxyItem[],
   groupName: string,
-  sortType: ProxySortType
+  sortType: ProxySortType,
 ) {
   if (!proxies) return [];
   if (sortType === 0) return proxies;

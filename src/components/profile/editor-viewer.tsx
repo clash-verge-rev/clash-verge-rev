@@ -16,9 +16,9 @@ import {
   CloseFullscreenRounded,
 } from "@mui/icons-material";
 import { useThemeMode } from "@/services/states";
-import { Notice } from "@/components/base";
 import { nanoid } from "nanoid";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
 import debounce from "@/utils/debounce";
 
@@ -97,7 +97,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     onClose,
   } = props;
 
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(undefined);
   const prevData = useRef<string | undefined>("");
   const currData = useRef<string | undefined>("");
 
@@ -127,7 +127,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       currData.current = value;
       onChange?.(prevData.current, currData.current);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -136,7 +136,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       !readOnly && onSave?.(prevData.current, currData.current);
       onClose();
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -144,7 +144,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     try {
       onClose();
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 

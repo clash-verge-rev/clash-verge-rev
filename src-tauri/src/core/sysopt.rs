@@ -1,7 +1,10 @@
+#[cfg(target_os = "windows")]
+use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
-    logging_error,
+    logging, logging_error,
+    process::AsyncHandler,
     utils::logging::Type,
 };
 use anyhow::Result;
@@ -16,8 +19,6 @@ use tokio::time::{sleep, Duration};
 pub struct Sysopt {
     update_sysproxy: Arc<TokioMutex<bool>>,
     reset_sysproxy: Arc<TokioMutex<bool>>,
-    /// helps to auto launch the app
-    auto_launch: Arc<Mutex<bool>>,
     /// record whether the guard async is running or not
     guard_state: Arc<Mutex<bool>>,
 }
@@ -58,7 +59,6 @@ impl Sysopt {
         SYSOPT.get_or_init(|| Sysopt {
             update_sysproxy: Arc::new(TokioMutex::new(false)),
             reset_sysproxy: Arc::new(TokioMutex::new(false)),
-            auto_launch: Arc::new(Mutex::new(false)),
             guard_state: Arc::new(false.into()),
         })
     }
@@ -78,12 +78,16 @@ impl Sysopt {
             .unwrap_or(Config::clash().data().get_mixed_port());
         let pac_port = IVerge::get_singleton_port();
 
-        let (sys_enable, pac_enable) = {
+        let (sys_enable, pac_enable, proxy_host) = {
             let verge = Config::verge();
             let verge = verge.latest();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
+                verge
+                    .proxy_host
+                    .clone()
+                    .unwrap_or_else(|| String::from("127.0.0.1")),
             )
         };
 
@@ -91,13 +95,13 @@ impl Sysopt {
         {
             let mut sys = Sysproxy {
                 enable: false,
-                host: String::from("127.0.0.1"),
+                host: proxy_host.clone(),
                 port,
                 bypass: get_bypass(),
             };
             let mut auto = Autoproxy {
                 enable: false,
-                url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
+                url: format!("http://{}:{}/commands/pac", proxy_host, pac_port),
             };
 
             if !sys_enable {
@@ -141,7 +145,7 @@ impl Sysopt {
 
             let shell = app_handle.shell();
             let output = if pac_enable {
-                let address = format!("http://{}:{}/commands/pac", "127.0.0.1", pac_port);
+                let address = format!("http://{}:{}/commands/pac", proxy_host, pac_port);
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
                     .args(["pac", address.as_str()])
@@ -150,7 +154,7 @@ impl Sysopt {
                     .unwrap();
                 output
             } else {
-                let address = format!("{}:{}", "127.0.0.1", port);
+                let address = format!("{}:{}", proxy_host, port);
                 let bypass = get_bypass();
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
@@ -216,40 +220,69 @@ impl Sysopt {
 
     /// update the startup
     pub fn update_launch(&self) -> Result<()> {
-        let _lock = self.auto_launch.lock();
-        let enable = { Config::verge().latest().enable_auto_launch };
-        let enable = enable.unwrap_or(false);
-        let app_handle = Handle::global().app_handle().unwrap();
-        let autostart_manager = app_handle.autolaunch();
+        let enable_auto_launch = { Config::verge().latest().enable_auto_launch };
+        let is_enable = enable_auto_launch.unwrap_or(false);
+        logging!(info, true, "Setting auto-launch state to: {:?}", is_enable);
 
-        log::info!(target: "app", "Setting auto launch to: {}", enable);
+        // 首先尝试使用快捷方式方法
+        #[cfg(target_os = "windows")]
+        {
+            if is_enable {
+                if let Err(e) = startup_shortcut::create_shortcut() {
+                    log::error!(target: "app", "创建启动快捷方式失败: {}", e);
+                    // 如果快捷方式创建失败，回退到原来的方法
+                    self.try_original_autostart_method(is_enable);
+                } else {
+                    return Ok(());
+                }
+            } else {
+                if let Err(e) = startup_shortcut::remove_shortcut() {
+                    log::error!(target: "app", "删除启动快捷方式失败: {}", e);
+                    self.try_original_autostart_method(is_enable);
+                } else {
+                    return Ok(());
+                }
+            }
+        }
 
-        match enable {
-            true => {
-                let result = autostart_manager.enable();
-                if let Err(ref e) = result {
-                    log::error!(target: "app", "Failed to enable auto launch: {}", e);
-                } else {
-                    log::info!(target: "app", "Auto launch enabled successfully");
-                }
-                logging_error!(Type::System, true, result);
-            }
-            false => {
-                let result = autostart_manager.disable();
-                if let Err(ref e) = result {
-                    log::error!(target: "app", "Failed to disable auto launch: {}", e);
-                } else {
-                    log::info!(target: "app", "Auto launch disabled successfully");
-                }
-                logging_error!(Type::System, true, result);
-            }
-        };
+        #[cfg(not(target_os = "windows"))]
+        {
+            // 非Windows平台使用原来的方法
+            self.try_original_autostart_method(is_enable);
+        }
 
         Ok(())
     }
 
+    /// 尝试使用原来的自启动方法
+    fn try_original_autostart_method(&self, is_enable: bool) {
+        let app_handle = Handle::global().app_handle().unwrap();
+        let autostart_manager = app_handle.autolaunch();
+
+        if is_enable {
+            logging_error!(Type::System, true, "{:?}", autostart_manager.enable());
+        } else {
+            logging_error!(Type::System, true, "{:?}", autostart_manager.disable());
+        }
+    }
+
     /// 获取当前自启动的实际状态
     pub fn get_launch_status(&self) -> Result<bool> {
+        // 首先尝试检查快捷方式是否存在
+        #[cfg(target_os = "windows")]
+        {
+            match startup_shortcut::is_shortcut_enabled() {
+                Ok(enabled) => {
+                    log::info!(target: "app", "快捷方式自启动状态: {}", enabled);
+                    return Ok(enabled);
+                }
+                Err(e) => {
+                    log::error!(target: "app", "检查快捷方式失败，尝试原来的方法: {}", e);
+                }
+            }
+        }
+
+        // 回退到原来的方法
         let app_handle = Handle::global().app_handle().unwrap();
         let autostart_manager = app_handle.autolaunch();
 
@@ -268,14 +301,14 @@ impl Sysopt {
     fn guard_proxy(&self) {
         let _lock = self.guard_state.lock();
 
-        tauri::async_runtime::spawn(async move {
+        AsyncHandler::spawn(move || async move {
             // default duration is 10s
             let mut wait_secs = 10u64;
 
             loop {
                 sleep(Duration::from_secs(wait_secs)).await;
 
-                let (enable, guard, guard_duration, pac) = {
+                let (enable, guard, guard_duration, pac, proxy_host) = {
                     let verge = Config::verge();
                     let verge = verge.latest();
                     (
@@ -283,6 +316,10 @@ impl Sysopt {
                         verge.enable_proxy_guard.unwrap_or(false),
                         verge.proxy_guard_duration.unwrap_or(10),
                         verge.proxy_auto_config.unwrap_or(false),
+                        verge
+                            .proxy_host
+                            .clone()
+                            .unwrap_or_else(|| String::from("127.0.0.1")),
                     )
                 };
 
@@ -296,85 +333,130 @@ impl Sysopt {
 
                 log::debug!(target: "app", "try to guard the system proxy");
 
-                let sysproxy = Sysproxy::get_system_proxy();
-                let autoproxy = Autoproxy::get_auto_proxy();
-                if sysproxy.is_err() || autoproxy.is_err() {
-                    log::error!(target: "app", "failed to get the system proxy");
-                    continue;
-                }
-
-                let sysproxy_enable = sysproxy.ok().map(|s| s.enable).unwrap_or(false);
-                let autoproxy_enable = autoproxy.ok().map(|s| s.enable).unwrap_or(false);
-
-                if sysproxy_enable || autoproxy_enable {
-                    continue;
-                }
-
-                let port = {
-                    Config::verge()
-                        .latest()
-                        .verge_mixed_port
-                        .unwrap_or(Config::clash().data().get_mixed_port())
-                };
+                // 获取期望的代理端口
+                let port = Config::verge()
+                    .latest()
+                    .verge_mixed_port
+                    .unwrap_or(Config::clash().data().get_mixed_port());
                 let pac_port = IVerge::get_singleton_port();
-                #[cfg(not(target_os = "windows"))]
-                {
-                    if pac {
-                        let autoproxy = Autoproxy {
-                            enable: true,
-                            url: format!("http://127.0.0.1:{pac_port}/commands/pac"),
-                        };
-                        logging_error!(Type::System, true, autoproxy.set_auto_proxy());
-                    } else {
-                        let sysproxy = Sysproxy {
-                            enable: true,
-                            host: "127.0.0.1".into(),
-                            port,
-                            bypass: get_bypass(),
-                        };
+                let bypass = get_bypass();
 
-                        logging_error!(Type::System, true, sysproxy.set_system_proxy());
+                // 检查系统代理配置
+                if pac {
+                    // 检查 PAC 代理设置
+                    let expected_url = format!("http://{}:{}/commands/pac", proxy_host, pac_port);
+                    let autoproxy = match Autoproxy::get_auto_proxy() {
+                        Ok(ap) => ap,
+                        Err(e) => {
+                            log::error!(target: "app", "failed to get the auto proxy: {}", e);
+                            continue;
+                        }
+                    };
+
+                    // 检查自动代理是否启用且URL是否正确
+                    if !autoproxy.enable || autoproxy.url != expected_url {
+                        log::info!(target: "app", "auto proxy settings changed, restoring...");
+                        #[cfg(not(target_os = "windows"))]
+                        {
+                            let new_autoproxy = Autoproxy {
+                                enable: true,
+                                url: expected_url,
+                            };
+                            logging_error!(Type::System, true, new_autoproxy.set_auto_proxy());
+                        }
+
+                        #[cfg(target_os = "windows")]
+                        {
+                            use crate::{core::handle::Handle, utils::dirs};
+                            use tauri_plugin_shell::ShellExt;
+
+                            let app_handle = Handle::global().app_handle().unwrap();
+                            let binary_path = match dirs::service_path() {
+                                Ok(path) => path,
+                                Err(e) => {
+                                    log::error!(target: "app", "failed to get service path: {}", e);
+                                    continue;
+                                }
+                            };
+
+                            let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
+                            if !sysproxy_exe.exists() {
+                                log::error!(target: "app", "sysproxy.exe not found");
+                                continue;
+                            }
+
+                            let shell = app_handle.shell();
+                            let output = shell
+                                .command(sysproxy_exe.as_path().to_str().unwrap())
+                                .args(["pac", expected_url.as_str()])
+                                .output()
+                                .await
+                                .unwrap();
+
+                            if !output.status.success() {
+                                log::error!(target: "app", "failed to set auto proxy");
+                            }
+                        }
+                    }
+                } else {
+                    // 检查常规系统代理设置
+                    let sysproxy = match Sysproxy::get_system_proxy() {
+                        Ok(sp) => sp,
+                        Err(e) => {
+                            log::error!(target: "app", "failed to get the system proxy: {}", e);
+                            continue;
+                        }
+                    };
+
+                    // 检查系统代理是否启用且配置是否匹配
+                    if !sysproxy.enable || sysproxy.host != proxy_host || sysproxy.port != port {
+                        log::info!(target: "app", "system proxy settings changed, restoring...");
+                        #[cfg(not(target_os = "windows"))]
+                        {
+                            let new_sysproxy = Sysproxy {
+                                enable: true,
+                                host: proxy_host.clone(),
+                                port,
+                                bypass: bypass.clone(),
+                            };
+                            logging_error!(Type::System, true, new_sysproxy.set_system_proxy());
+                        }
+
+                        #[cfg(target_os = "windows")]
+                        {
+                            use crate::{core::handle::Handle, utils::dirs};
+                            use tauri_plugin_shell::ShellExt;
+
+                            let app_handle = Handle::global().app_handle().unwrap();
+                            let binary_path = match dirs::service_path() {
+                                Ok(path) => path,
+                                Err(e) => {
+                                    log::error!(target: "app", "failed to get service path: {}", e);
+                                    continue;
+                                }
+                            };
+
+                            let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
+                            if !sysproxy_exe.exists() {
+                                log::error!(target: "app", "sysproxy.exe not found");
+                                continue;
+                            }
+
+                            let address = format!("{}:{}", proxy_host, port);
+                            let shell = app_handle.shell();
+                            let output = shell
+                                .command(sysproxy_exe.as_path().to_str().unwrap())
+                                .args(["global", address.as_str(), bypass.as_ref()])
+                                .output()
+                                .await
+                                .unwrap();
+
+                            if !output.status.success() {
+                                log::error!(target: "app", "failed to set system proxy");
+                            }
+                        }
                     }
                 }
-
-                #[cfg(target_os = "windows")]
-                {
-                    use crate::{core::handle::Handle, utils::dirs};
-                    use tauri_plugin_shell::ShellExt;
-
-                    let app_handle = Handle::global().app_handle().unwrap();
-
-                    let binary_path = dirs::service_path().unwrap();
-                    let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
-                    if !sysproxy_exe.exists() {
-                        break;
-                    }
-
-                    let shell = app_handle.shell();
-                    let output = if pac {
-                        let address = format!("http://{}:{}/commands/pac", "127.0.0.1", pac_port);
-
-                        shell
-                            .command(sysproxy_exe.as_path().to_str().unwrap())
-                            .args(["pac", address.as_str()])
-                            .output()
-                            .await
-                            .unwrap()
-                    } else {
-                        let address = format!("{}:{}", "127.0.0.1", port);
-                        let bypass = get_bypass();
-
-                        shell
-                            .command(sysproxy_exe.as_path().to_str().unwrap())
-                            .args(["global", address.as_str(), bypass.as_ref()])
-                            .output()
-                            .await
-                            .unwrap()
-                    };
-                    if !output.status.success() {
-                        break;
-                    }
-                };
             }
         });
     }

@@ -4,6 +4,7 @@ use super::resolve;
 use crate::{
     config::{Config, IVerge, DEFAULT_PAC},
     logging_error,
+    process::AsyncHandler,
     utils::logging::Type,
 };
 use anyhow::{bail, Result};
@@ -47,7 +48,7 @@ pub async fn check_singleton() -> Result<()> {
 pub fn embed_server() {
     let port = IVerge::get_singleton_port();
 
-    tauri::async_runtime::spawn(async move {
+    AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").map(move || {
             resolve::create_window(false);
             "ok"

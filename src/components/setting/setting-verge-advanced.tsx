@@ -12,7 +12,7 @@ import {
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
-import { DialogRef, Notice } from "@/components/base";
+import { DialogRef } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { ConfigViewer } from "./mods/config-viewer";
 import { HotkeyViewer } from "./mods/hotkey-viewer";
@@ -24,6 +24,7 @@ import { BackupViewer } from "./mods/backup-viewer";
 import { LiteModeViewer } from "./mods/lite-mode-viewer";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { ContentCopyRounded } from "@mui/icons-material";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -46,18 +47,18 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        Notice.success(t("Currently on the Latest Version"));
+        showNotice("success", t("Currently on the Latest Version"));
       } else {
         updateRef.current?.open();
       }
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   };
 
   const onExportDiagnosticInfo = useCallback(async () => {
     await exportDiagnosticInfo();
-    Notice.success(t("Copy Success"), 1000);
+    showNotice("success", t("Copy Success"), 1000);
   }, []);
 
   return (
@@ -109,7 +110,10 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
       <SettingItem
         label={t("LightWeight Mode Settings")}
         extra={
-          <TooltipIcon title={t("LightWeight Mode Info")} sx={{ opacity: "0.7" }} />
+          <TooltipIcon
+            title={t("LightWeight Mode Info")}
+            sx={{ opacity: "0.7" }}
+          />
         }
         onClick={() => liteModeRef.current?.open()}
       />

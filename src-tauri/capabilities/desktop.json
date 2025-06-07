@@ -14,8 +14,9 @@
     "updater:allow-download-and-install",
     "process:allow-restart",
     "deep-link:default",
-    "window-state:default",
-    "window-state:default",
-    "autostart:default"
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "core:window:allow-set-theme"
   ]
 }

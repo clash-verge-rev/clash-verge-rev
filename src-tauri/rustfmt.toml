@@ -11,4 +11,3 @@ merge_derives = true
 use_try_shorthand = false
 use_field_init_shorthand = false
 force_explicit_abi = true
-imports_granularity = "Crate"

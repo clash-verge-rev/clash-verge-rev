@@ -13,8 +13,8 @@ import {
   FormControlLabel,
   Checkbox,
   Tooltip,
+  Grid,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
 import { useVerge } from "@/hooks/use-verge";
 import { useProfiles } from "@/hooks/use-profiles";
 import {
@@ -252,9 +252,13 @@ export const HomePage = () => {
     setSettingsOpen(true);
   };
 
-  // 新增：保存设置
+  // 新增：保存设置时用requestIdleCallback/setTimeout
   const handleSaveSettings = (newCards: HomeCardsSettings) => {
-    setHomeCards(newCards);
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => setHomeCards(newCards));
+    } else {
+      setTimeout(() => setHomeCards(newCards), 0);
+    }
   };
 
   return (

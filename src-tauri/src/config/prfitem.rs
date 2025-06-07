@@ -1,10 +1,13 @@
-use crate::utils::{dirs, help, resolve::VERSION, tmpl};
+use crate::utils::{
+    dirs, help,
+    network::{NetworkManager, ProxyType},
+    tmpl,
+};
 use anyhow::{bail, Context, Result};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::fs;
-use sysproxy::Sysproxy;
+use std::{fs, time::Duration};
 
 use super::Config;
 
@@ -90,6 +93,12 @@ pub struct PrfOption {
     pub update_interval: Option<u64>,
 
     /// for `remote` profile
+    /// HTTP request timeout in seconds
+    /// default is 60 seconds
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout_seconds: Option<u64>,
+
+    /// for `remote` profile
     /// disable certificate validation
     /// default is `false`
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -122,6 +131,7 @@ impl PrfOption {
                 a.rules = b.rules.or(a.rules);
                 a.proxies = b.proxies.or(a.proxies);
                 a.groups = b.groups.or(a.groups);
+                a.timeout_seconds = b.timeout_seconds.or(a.timeout_seconds);
                 Some(a)
             }
             t => t.0.or(t.1),
@@ -240,58 +250,39 @@ impl PrfItem {
             opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
+        let timeout = opt_ref.and_then(|o| o.timeout_seconds).unwrap_or(20);
         let mut merge = opt_ref.and_then(|o| o.merge.clone());
         let mut script = opt_ref.and_then(|o| o.script.clone());
         let mut rules = opt_ref.and_then(|o| o.rules.clone());
         let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
-        let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 
-        // 使用软件自己的代理
-        if self_proxy {
-            let port = Config::verge()
-                .latest()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().data().get_mixed_port());
-
-            let proxy_scheme = format!("http://127.0.0.1:{port}");
-
-            if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
-            if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
-            if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
-                builder = builder.proxy(proxy);
-            }
-        }
-        // 使用系统代理
-        else if with_proxy {
-            if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
-                let proxy_scheme = format!("http://{}:{}", p.host, p.port);
-
-                if let Ok(proxy) = reqwest::Proxy::http(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-                if let Ok(proxy) = reqwest::Proxy::https(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-                if let Ok(proxy) = reqwest::Proxy::all(&proxy_scheme) {
-                    builder = builder.proxy(proxy);
-                }
-            }
-        }
-
-        let version = match VERSION.get() {
-            Some(v) => format!("clash-verge/v{}", v),
-            None => "clash-verge/unknown".to_string(),
+        // 选择代理类型
+        let proxy_type = if self_proxy {
+            ProxyType::Localhost
+        } else if with_proxy {
+            ProxyType::System
+        } else {
+            ProxyType::None
         };
 
-        builder = builder.danger_accept_invalid_certs(accept_invalid_certs);
-        builder = builder.user_agent(user_agent.unwrap_or(version));
-
-        let resp = builder.build()?.get(url).send().await?;
+        // 使用网络管理器发送请求
+        let resp = match NetworkManager::global()
+            .get_with_interrupt(
+                url,
+                proxy_type,
+                Some(timeout),
+                user_agent.clone(),
+                accept_invalid_certs,
+            )
+            .await
+        {
+            Ok(r) => r,
+            Err(e) => {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                bail!("failed to fetch remote profile: {}", e);
+            }
+        };
 
         let status_code = resp.status();
         if !StatusCode::is_success(&status_code) {

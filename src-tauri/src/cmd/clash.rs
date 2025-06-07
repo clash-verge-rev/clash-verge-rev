@@ -1,5 +1,7 @@
 use super::CmdResult;
-use crate::{config::*, core::*, feat, module::mihomo::MihomoManager, wrap_err};
+use crate::{
+    config::*, core::*, feat, module::mihomo::MihomoManager, process::AsyncHandler, wrap_err,
+};
 use serde_yaml::Mapping;
 
 /// 复制Clash环境变量
@@ -38,10 +40,21 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
         .await
     {
         Ok(_) => {
-            log::info!(target: "app", "core changed to {clash_core}");
-            handle::Handle::notice_message("config_core::change_success", &clash_core);
-            handle::Handle::refresh_clash();
-            Ok(None)
+            // 切换内核后重启内核
+            match CoreManager::global().restart_core().await {
+                Ok(_) => {
+                    log::info!(target: "app", "core changed and restarted to {clash_core}");
+                    handle::Handle::notice_message("config_core::change_success", &clash_core);
+                    handle::Handle::refresh_clash();
+                    Ok(None)
+                }
+                Err(err) => {
+                    let error_msg = format!("Core changed but failed to restart: {}", err);
+                    log::error!(target: "app", "{}", error_msg);
+                    handle::Handle::notice_message("config_core::change_error", &error_msg);
+                    Ok(Some(error_msg))
+                }
+            }
         }
         Err(err) => {
             let error_msg = err.to_string();
@@ -50,6 +63,18 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
             Ok(Some(error_msg))
         }
     }
+}
+
+/// 启动核心
+#[tauri::command]
+pub async fn start_core() -> CmdResult {
+    wrap_err!(CoreManager::global().start_core().await)
+}
+
+/// 关闭核心
+#[tauri::command]
+pub async fn stop_core() -> CmdResult {
+    wrap_err!(CoreManager::global().stop_core().await)
 }
 
 /// 重启核心
@@ -104,10 +129,9 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
         core::{handle, CoreManager},
         utils::dirs,
     };
-    use tauri::async_runtime;
 
     // 使用spawn来处理异步操作
-    async_runtime::spawn(async move {
+    AsyncHandler::spawn(move || async move {
         if apply {
             // 读取DNS配置文件
             let dns_path = match dirs::app_home_dir() {
@@ -220,4 +244,26 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
 
     let content = fs::read_to_string(&dns_path).map_err(|e| e.to_string())?;
     Ok(content)
+}
+
+/// 验证DNS配置文件
+#[tauri::command]
+pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
+    use crate::{core::CoreManager, utils::dirs};
+
+    let app_dir = dirs::app_home_dir().map_err(|e| e.to_string())?;
+    let dns_path = app_dir.join("dns_config.yaml");
+    let dns_path_str = dns_path.to_str().unwrap_or_default();
+
+    if !dns_path.exists() {
+        return Ok((false, "DNS config file not found".to_string()));
+    }
+
+    match CoreManager::global()
+        .validate_config_file(dns_path_str, None)
+        .await
+    {
+        Ok(result) => Ok(result),
+        Err(e) => Err(e.to_string()),
+    }
 }

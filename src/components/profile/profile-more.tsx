@@ -12,10 +12,10 @@ import {
 } from "@mui/material";
 import { FeaturedPlayListRounded } from "@mui/icons-material";
 import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
-import { Notice } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { ProfileBox } from "./profile-box";
 import { LogViewer } from "./log-viewer";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   logInfo?: [string, string][];
@@ -43,7 +43,7 @@ export const ProfileMore = (props: Props) => {
     try {
       await viewProfile(id);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice("error", err?.message || err.toString());
     }
   });
 

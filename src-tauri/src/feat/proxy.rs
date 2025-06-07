@@ -1,6 +1,7 @@
 use crate::{
     config::{Config, IVerge},
     core::handle,
+    process::AsyncHandler,
 };
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -9,8 +10,22 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 pub fn toggle_system_proxy() {
     let enable = Config::verge().draft().enable_system_proxy;
     let enable = enable.unwrap_or(false);
+    let auto_close_connection = Config::verge()
+        .data()
+        .auto_close_connection
+        .unwrap_or(false);
 
-    tauri::async_runtime::spawn(async move {
+    AsyncHandler::spawn(move || async move {
+        // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
+        if enable && auto_close_connection {
+            if let Err(err) = crate::module::mihomo::MihomoManager::global()
+                .close_all_connections()
+                .await
+            {
+                log::error!(target: "app", "Failed to close all connections: {}", err);
+            }
+        }
+
         match super::patch_verge(
             IVerge {
                 enable_system_proxy: Some(!enable),
@@ -28,23 +43,10 @@ pub fn toggle_system_proxy() {
 
 /// Toggle TUN mode on/off
 pub fn toggle_tun_mode(not_save_file: Option<bool>) {
-    // tauri::async_runtime::spawn(async move {
-    //     logging!(
-    //         info,
-    //         Type::Service,
-    //         true,
-    //         "Toggle TUN mode need install service"
-    //     );
-    //     if is_service_available().await.is_err() {
-    //         logging_error!(Type::Service, true, install_service().await);
-    //     }
-    //     logging_error!(Type::Core, true, CoreManager::global().restart_core().await);
-    // });
-
     let enable = Config::verge().data().enable_tun_mode;
     let enable = enable.unwrap_or(false);
 
-    tauri::async_runtime::spawn(async move {
+    AsyncHandler::spawn(async move || {
         match super::patch_verge(
             IVerge {
                 enable_tun_mode: Some(!enable),
@@ -62,9 +64,14 @@ pub fn toggle_tun_mode(not_save_file: Option<bool>) {
 
 /// Copy proxy environment variables to clipboard
 pub fn copy_clash_env() {
-    // 从环境变量获取IP地址，默认127.0.0.1
-    let clash_verge_rev_ip =
-        env::var("CLASH_VERGE_REV_IP").unwrap_or_else(|_| "127.0.0.1".to_string());
+    // 从环境变量获取IP地址，如果没有则从配置中获取 proxy_host，默认为 127.0.0.1
+    let clash_verge_rev_ip = env::var("CLASH_VERGE_REV_IP").unwrap_or_else(|_| {
+        Config::verge()
+            .latest()
+            .proxy_host
+            .clone()
+            .unwrap_or_else(|| "127.0.0.1".to_string())
+    });
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };

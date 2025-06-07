@@ -4,7 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { Button, MenuItem, Select, Input } from "@mui/material";
 import { copyClashEnv } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
-import { DialogRef, Notice } from "@/components/base";
+import { DialogRef } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { ThemeModeSwitch } from "./mods/theme-mode-switch";
 import { ConfigViewer } from "./mods/config-viewer";
@@ -20,6 +20,7 @@ import { routers } from "@/pages/_routers";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { ContentCopyRounded } from "@mui/icons-material";
 import { languages } from "@/services/i18n";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -36,6 +37,8 @@ const languageOptions = Object.entries(languages).map(([code, _]) => {
     tt: "Татар",
     id: "Bahasa Indonesia",
     ar: "العربية",
+    ko: "한국어",
+    tr: "Türkçe",
   };
   return { code, label: labels[code] };
 });
@@ -66,7 +69,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
 
   const onCopyClashEnv = useCallback(async () => {
     await copyClashEnv();
-    Notice.success(t("Copy Success"), 1000);
+    showNotice("success", t("Copy Success"), 1000);
   }, []);
 
   return (
@@ -182,6 +185,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
           <Input
             value={startup_script}
             disabled
+            disableUnderline
             sx={{ width: 230 }}
             endAdornment={
               <>

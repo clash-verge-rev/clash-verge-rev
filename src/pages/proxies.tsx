@@ -4,7 +4,7 @@ import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { closeAllConnections, getClashConfig } from "@/services/api";
-import { patchClashConfig, patchClashMode } from "@/services/cmds";
+import { patchClashMode } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { BasePage } from "@/components/base";
 import { ProxyGroups } from "@/components/proxy/proxy-groups";
@@ -20,8 +20,8 @@ const ProxyPage = () => {
       revalidateOnFocus: false,
       revalidateIfStale: true,
       dedupingInterval: 1000,
-      errorRetryInterval: 5000
-    }
+      errorRetryInterval: 5000,
+    },
   );
 
   const { verge } = useVerge();

@@ -1,7 +1,16 @@
 name: Release Build
 
 on:
-  workflow_dispatch:
+  # ! 为了避免重复发布版本，应当通过独特 git tag 触发。
+  # ! 不再使用 workflow_dispatch 触发。
+  # workflow_dispatch:
+  push:
+    # 应当限制在 main 分支上触发发布。
+    branches:
+      - main
+    # 应当限制 v*.*.* 的 tag 触发发布。
+    tags:
+      - "v*.*.*"
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -12,7 +21,28 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  check_tag_version:
+    name: Check Release Tag and package.json Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check tag and package.json version
+        run: |
+          TAG_REF="${GITHUB_REF##*/}"
+          echo "Current tag: $TAG_REF"
+          PKG_VERSION=$(jq -r .version package.json)
+          echo "package.json version: $PKG_VERSION"
+          if [[ "$TAG_REF" != "v$PKG_VERSION" ]]; then
+            echo "Tag ($TAG_REF) does not match package.json version (v$PKG_VERSION)."
+            exit 1
+          fi
+          echo "Tag and package.json version are consistent."
+
   release:
+    name: Release Build
+    needs: check_tag_version
     strategy:
       fail-fast: false
       matrix:
@@ -88,6 +118,7 @@ jobs:
           args: --target ${{ matrix.target }}
 
   release-for-linux-arm:
+    name: Release Build for Linux ARM
     strategy:
       fail-fast: false
       matrix:
@@ -209,6 +240,7 @@ jobs:
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   release-for-fixed-webview2:
+    name: Release Build for Fixed WebView2
     strategy:
       fail-fast: false
       matrix:
@@ -303,6 +335,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-update:
+    name: Release Update
     runs-on: ubuntu-latest
     needs: [release, release-for-linux-arm]
     steps:
@@ -353,6 +386,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   submit-to-winget:
+    name: Submit to Winget
     runs-on: ubuntu-latest
     needs: [release-update]
     steps:

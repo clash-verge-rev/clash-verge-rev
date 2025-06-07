@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { Notice } from "@/components/base";
+import { showNotice } from "@/services/noticeService";
 
 export async function copyClashEnv() {
   return invoke<void>("copy_clash_env");
@@ -131,6 +131,14 @@ export async function changeClashCore(clashCore: string) {
   return invoke<string | null>("change_clash_core", { clashCore });
 }
 
+export async function startCore() {
+  return invoke<void>("start_core");
+}
+
+export async function stopCore() {
+  return invoke<void>("stop_core");
+}
+
 export async function restartCore() {
   return invoke<void>("restart_core");
 }
@@ -145,25 +153,29 @@ export async function getAppDir() {
 
 export async function openAppDir() {
   return invoke<void>("open_app_dir").catch((err) =>
-    Notice.error(err?.message || err.toString(), 1500),
+    showNotice("error", err?.message || err.toString()),
   );
 }
 
 export async function openCoreDir() {
   return invoke<void>("open_core_dir").catch((err) =>
-    Notice.error(err?.message || err.toString(), 1500),
+    showNotice("error", err?.message || err.toString()),
   );
 }
 
 export async function openLogsDir() {
   return invoke<void>("open_logs_dir").catch((err) =>
-    Notice.error(err?.message || err.toString(), 1500),
+    showNotice("error", err?.message || err.toString()),
   );
 }
 
-export async function openWebUrl(url: string) {
-  return invoke<void>("open_web_url", { url });
-}
+export const openWebUrl = async (url: string) => {
+  try {
+    await invoke("open_web_url", { url });
+  } catch (err: any) {
+    showNotice("error", err.toString());
+  }
+};
 
 export async function cmdGetProxyDelay(
   name: string,
@@ -171,7 +183,7 @@ export async function cmdGetProxyDelay(
   url?: string,
 ) {
   // 确保URL不为空
-  const testUrl = url || "http://cp.cloudflare.com/generate_204";
+  const testUrl = url || "https://cp.cloudflare.com/generate_204";
   console.log(
     `[API] 调用延迟测试API，代理: ${name}, 超时: ${timeout}ms, URL: ${testUrl}`,
   );
@@ -214,7 +226,7 @@ export async function cmdTestDelay(url: string) {
 
 export async function invoke_uwp_tool() {
   return invoke<void>("invoke_uwp_tool").catch((err) =>
-    Notice.error(err?.message || err.toString(), 1500),
+    showNotice("error", err?.message || err.toString(), 1500),
   );
 }
 
@@ -263,6 +275,10 @@ export async function downloadIconCache(url: string, name: string) {
 
 export async function getNetworkInterfaces() {
   return invoke<string[]>("get_network_interfaces");
+}
+
+export async function getSystemHostname() {
+  return invoke<string>("get_system_hostname");
 }
 
 export async function getNetworkInterfacesInfo() {
@@ -339,6 +355,15 @@ export const repairService = async () => {
   return invoke<void>("repair_service");
 };
 
+// 系统服务是否可用
+export const isServiceAvailable = async () => {
+  try {
+    return await invoke<boolean>("is_service_available");
+  } catch (error) {
+    console.error("Service check failed:", error);
+    return false;
+  }
+};
 export const entry_lightweight_mode = async () => {
   return invoke<void>("entry_lightweight_mode");
 };
@@ -355,3 +380,7 @@ export const isAdmin = async () => {
     return false;
   }
 };
+
+export async function getNextUpdateTime(uid: string) {
+  return invoke<number | null>("get_next_update_time", { uid });
+}

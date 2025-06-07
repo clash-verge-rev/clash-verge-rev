@@ -38,6 +38,17 @@ async function updatePackageVersion(newVersion) {
     const packageJson = JSON.parse(data);
     // 获取键值替换
     let result = packageJson.version.replace("alpha", newVersion);
+    // 检查当前版本号是否已经包含了 alpha- 后缀
+    if (!packageJson.version.includes(`alpha-`)) {
+      // 如果只有 alpha 而没有 alpha-，则替换为 alpha-newVersion
+      result = packageJson.version.replace("alpha", `alpha-${newVersion}`);
+    } else {
+      // 如果已经是 alpha-xxx 格式，则更新 xxx 部分
+      result = packageJson.version.replace(
+        /alpha-[^-]*/,
+        `alpha-${newVersion}`,
+      );
+    }
     console.log("[INFO]: Current version is: ", result);
     packageJson.version = result;
     // 写入版本号

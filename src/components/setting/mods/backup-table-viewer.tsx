@@ -12,7 +12,6 @@ import {
   TableRow,
   TablePagination,
 } from "@mui/material";
-import { Notice } from "@/components/base";
 import { Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
@@ -24,6 +23,7 @@ import {
 } from "@/services/cmds";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RestoreIcon from "@mui/icons-material/Restore";
+import { showNotice } from "@/services/noticeService";
 
 export type BackupFile = IWebDavFile & {
   platform: string;
@@ -61,7 +61,7 @@ export const BackupTableViewer = memo(
 
     const handleRestore = useLockFn(async (filename: string) => {
       await restoreWebDavBackup(filename).then(() => {
-        Notice.success(t("Restore Success, App will restart in 1s"));
+        showNotice("success", t("Restore Success, App will restart in 1s"));
       });
       await restartApp();
     });

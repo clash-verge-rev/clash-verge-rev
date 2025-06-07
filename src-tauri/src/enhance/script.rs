@@ -104,6 +104,10 @@ fn test_script() {
     let (config, results) = use_script(script.into(), config, "".to_string()).unwrap();
 
     let _ = serde_yaml::to_string(&config).unwrap();
-
+    let yaml_config_size = std::mem::size_of_val(&config);
+    dbg!(yaml_config_size);
+    let box_yaml_config_size = std::mem::size_of_val(&Box::new(config));
+    dbg!(box_yaml_config_size);
     dbg!(results);
+    assert!(box_yaml_config_size < yaml_config_size);
 }

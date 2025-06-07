@@ -3,8 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { styled, Typography, Switch } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
 import { HotkeyInput } from "./hotkey-input";
+import { showNotice } from "@/services/noticeService";
 
 const ItemWrapper = styled("div")`
   display: flex;
@@ -79,7 +80,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
       });
       setOpen(false);
     } catch (err: any) {
-      Notice.error(err.message || err.toString());
+      showNotice("error", err.toString());
     }
   });
 

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
 import {
@@ -15,8 +15,7 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
-import { DialogRef, Notice, Switch } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { DialogRef, Switch } from "@/components/base";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
@@ -26,9 +25,13 @@ import {
   getAutotemProxy,
   getRunningMode,
   installService,
+  restartCore,
+  isServiceAvailable,
 } from "@/services/cmds";
 import { useLockFn } from "ahooks";
-import { SettingItem } from "@/components/setting/mods/setting-comp";
+import { closeAllConnections } from "@/services/api";
+import { showNotice } from "@/services/noticeService";
+import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 
 interface ProxySwitchProps {
   label?: string;
@@ -43,6 +46,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const { t } = useTranslation();
   const { verge, mutateVerge, patchVerge } = useVerge();
   const theme = useTheme();
+  const { installServiceAndRestartCore } = useServiceInstaller();
 
   const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
   const { data: autoproxy } = useSWR("getAutotemProxy", getAutotemProxy);
@@ -70,24 +74,13 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   };
 
   const updateProxyStatus = async () => {
-    // 等待一小段时间让系统代理状态变化
     await new Promise((resolve) => setTimeout(resolve, 100));
     await mutate("getSystemProxy");
     await mutate("getAutotemProxy");
   };
 
   // 安装系统服务
-  const onInstallService = useLockFn(async () => {
-    try {
-      Notice.info(t("Installing Service..."), 1000);
-      await installService();
-      Notice.success(t("Service Installed Successfully"), 2000);
-      // 重新获取运行模式
-      await mutateRunningMode();
-    } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
-    }
-  });
+  const onInstallService = installServiceAndRestartCore;
 
   return (
     <Box>
@@ -97,7 +90,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
             fontSize: "15px",
             fontWeight: "500",
             mb: 0.5,
-            display: "none", // 隐藏标签，因为在父组件中已经有标签了
+            display: "none",
           }}
         >
           {label}
@@ -168,6 +161,9 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               onFormat={onSwitchFormat}
               onChange={(e) => onChangeData({ enable_system_proxy: e })}
               onGuard={async (e) => {
+                if (!e && verge?.auto_close_connection) {
+                  closeAllConnections();
+                }
                 await patchVerge({ enable_system_proxy: e });
                 await updateProxyStatus();
               }}
@@ -211,12 +207,6 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               >
                 {t("Tun Mode")}
               </Typography>
-              {/*               <Typography variant="caption" color="text.secondary">
-                {isSidecarMode
-                  ? t("TUN requires Service Mode")
-                  : t("For special applications")
-                }
-              </Typography> */}
             </Box>
           </Box>
 
@@ -255,16 +245,25 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               onCatch={onError}
               onFormat={onSwitchFormat}
               onChange={(e) => {
-                // 当在sidecar模式下禁用切换
-                if (isSidecarMode) return;
+                if (isSidecarMode) {
+                  showNotice(
+                    "error",
+                    t("TUN requires Service Mode or Admin Mode"),
+                  );
+                  return Promise.reject(
+                    new Error(t("TUN requires Service Mode or Admin Mode")),
+                  );
+                }
                 onChangeData({ enable_tun_mode: e });
               }}
               onGuard={(e) => {
-                // 当在sidecar模式下禁用切换
                 if (isSidecarMode) {
-                  Notice.error(t("TUN requires Service Mode"), 2000);
+                  showNotice(
+                    "error",
+                    t("TUN requires Service Mode or Admin Mode"),
+                  );
                   return Promise.reject(
-                    new Error(t("TUN requires Service Mode")),
+                    new Error(t("TUN requires Service Mode or Admin Mode")),
                   );
                 }
                 return patchVerge({ enable_tun_mode: e });

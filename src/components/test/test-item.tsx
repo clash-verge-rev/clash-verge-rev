@@ -6,21 +6,20 @@ import { CSS } from "@dnd-kit/utilities";
 import { Box, Divider, MenuItem, Menu, styled, alpha } from "@mui/material";
 import { BaseLoading } from "@/components/base";
 import { LanguageRounded } from "@mui/icons-material";
-import { Notice } from "@/components/base";
+import { showNotice } from "@/services/noticeService";
 import { TestBox } from "./test-box";
 import delayManager from "@/services/delay";
 import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useListen } from "@/hooks/use-listen";
+
 interface Props {
   id: string;
   itemData: IVergeTestItem;
   onEdit: () => void;
   onDelete: (uid: string) => void;
 }
-
-let eventListener: UnlistenFn = () => {};
 
 export const TestItem = (props: Props) => {
   const { itemData, onEdit, onDelete: onDeleteItem } = props;
@@ -41,6 +40,12 @@ export const TestItem = (props: Props) => {
   const [iconCachePath, setIconCachePath] = useState("");
   const { addListener } = useListen();
 
+  const onDelay = async () => {
+    setDelay(-2);
+    const result = await cmdTestDelay(url);
+    setDelay(result);
+  };
+
   useEffect(() => {
     initIconCachePath();
   }, [icon]);
@@ -57,12 +62,6 @@ export const TestItem = (props: Props) => {
     return url.substring(url.lastIndexOf("/") + 1);
   }
 
-  const onDelay = async () => {
-    setDelay(-2);
-    const result = await cmdTestDelay(url);
-    setDelay(result);
-  };
-
   const onEditTest = () => {
     setAnchorEl(null);
     onEdit();
@@ -73,7 +72,7 @@ export const TestItem = (props: Props) => {
     try {
       onDeleteItem(uid);
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
@@ -82,16 +81,29 @@ export const TestItem = (props: Props) => {
     { label: "Delete", handler: onDelete },
   ];
 
-  const listenTsetEvent = async () => {
-    eventListener();
-    eventListener = await addListener("verge://test-all", () => {
-      onDelay();
-    });
-  };
-
   useEffect(() => {
-    listenTsetEvent();
-  }, [url]);
+    let unlistenFn: UnlistenFn | null = null;
+
+    const setupListener = async () => {
+      if (unlistenFn) {
+        unlistenFn();
+      }
+      unlistenFn = await addListener("verge://test-all", () => {
+        onDelay();
+      });
+    };
+
+    setupListener();
+
+    return () => {
+      if (unlistenFn) {
+        console.log(
+          `TestItem for ${props.id} unmounting or url changed, cleaning up test-all listener.`,
+        );
+        unlistenFn();
+      }
+    };
+  }, [url, addListener, onDelay, props.id]);
 
   return (
     <Box

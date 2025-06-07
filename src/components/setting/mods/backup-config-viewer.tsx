@@ -2,14 +2,12 @@ import { useState, useRef, memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { useVerge } from "@/hooks/use-verge";
-import { Notice } from "@/components/base";
 import { isValidUrl } from "@/utils/helper";
 import { useLockFn } from "ahooks";
 import {
   TextField,
   Button,
-  Grid2,
-  Box,
+  Grid,
   Stack,
   IconButton,
   InputAdornment,
@@ -17,6 +15,7 @@ import {
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { saveWebdavConfig, createWebdavBackup } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
 
 export interface BackupConfigViewerProps {
   onBackupSuccess: () => Promise<void>;
@@ -83,21 +82,21 @@ export const BackupConfigViewer = memo(
 
       if (!url) {
         urlRef.current?.focus();
-        Notice.error(t("WebDAV URL Required"));
+        showNotice("error", t("WebDAV URL Required"));
         throw new Error(t("WebDAV URL Required"));
       } else if (!isValidUrl(url)) {
         urlRef.current?.focus();
-        Notice.error(t("Invalid WebDAV URL"));
+        showNotice("error", t("Invalid WebDAV URL"));
         throw new Error(t("Invalid WebDAV URL"));
       }
       if (!username) {
         usernameRef.current?.focus();
-        Notice.error(t("WebDAV URL Required"));
+        showNotice("error", t("WebDAV URL Required"));
         throw new Error(t("Username Required"));
       }
       if (!password) {
         passwordRef.current?.focus();
-        Notice.error(t("WebDAV URL Required"));
+        showNotice("error", t("WebDAV URL Required"));
         throw new Error(t("Password Required"));
       }
     };
@@ -111,11 +110,11 @@ export const BackupConfigViewer = memo(
           data.username.trim(),
           data.password,
         ).then(() => {
-          Notice.success(t("WebDAV Config Saved"));
+          showNotice("success", t("WebDAV Config Saved"));
           onSaveSuccess();
         });
       } catch (error) {
-        Notice.error(t("WebDAV Config Save Failed", { error }), 3000);
+        showNotice("error", t("WebDAV Config Save Failed", { error }), 3000);
       } finally {
         setLoading(false);
       }
@@ -126,11 +125,11 @@ export const BackupConfigViewer = memo(
       try {
         setLoading(true);
         await createWebdavBackup().then(async () => {
+          showNotice("success", t("Backup Created"));
           await onBackupSuccess();
-          Notice.success(t("Backup Created"));
         });
       } catch (error) {
-        Notice.error(t("Backup Failed", { error }));
+        showNotice("error", t("Backup Failed", { error }));
       } finally {
         setLoading(false);
       }
@@ -138,10 +137,10 @@ export const BackupConfigViewer = memo(
 
     return (
       <form onSubmit={(e) => e.preventDefault()}>
-        <Grid2 container spacing={2}>
-          <Grid2 size={{ xs: 12, sm: 9 }}>
-            <Grid2 container spacing={2}>
-              <Grid2 size={{ xs: 12 }}>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, sm: 9 }}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={t("WebDAV Server URL")}
@@ -153,8 +152,8 @@ export const BackupConfigViewer = memo(
                   spellCheck="false"
                   inputRef={urlRef}
                 />
-              </Grid2>
-              <Grid2 size={{ xs: 6 }}>
+              </Grid>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   label={t("Username")}
                   variant="outlined"
@@ -165,8 +164,8 @@ export const BackupConfigViewer = memo(
                   spellCheck="false"
                   inputRef={usernameRef}
                 />
-              </Grid2>
-              <Grid2 size={{ xs: 6 }}>
+              </Grid>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   label={t("Password")}
                   type={showPassword ? "text" : "password"}
@@ -192,10 +191,10 @@ export const BackupConfigViewer = memo(
                     },
                   }}
                 />
-              </Grid2>
-            </Grid2>
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 3 }}>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 3 }}>
             <Stack
               direction="column"
               justifyContent="space-between"
@@ -237,8 +236,8 @@ export const BackupConfigViewer = memo(
                 </>
               )}
             </Stack>
-          </Grid2>
-        </Grid2>
+          </Grid>
+        </Grid>
       </form>
     );
   },

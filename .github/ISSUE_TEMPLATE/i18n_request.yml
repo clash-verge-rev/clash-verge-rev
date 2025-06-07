@@ -1,0 +1,58 @@
+name: I18N / 多语言相关
+title: "[I18N] "
+description: 用于多语言翻译、国际化相关问题或建议 / For issues or suggestions related to translations and internationalization
+labels: ["I18n"]
+type: "Task"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## I18N 相关问题/建议
+        请用此模板提交翻译错误、缺失、建议或新增语言请求。
+        Please use this template for translation errors, missing translations, suggestions, or new language requests.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述 / Description
+      description: 详细描述你的 I18N 问题或建议 / Please describe your I18N issue or suggestion in detail
+    validations:
+      required: true
+
+  - type: input
+    id: language
+    attributes:
+      label: 相关语言 / Language
+      description: 例如 zh, en, jp, ru, ... / e.g. zh, en, jp, ru, ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 建议或修正内容 / Suggestion or Correction
+      description: 如果是翻译修正或建议，请填写建议的内容 / If this is a translation correction or suggestion, please provide the suggested content
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: i18n-type
+    attributes:
+      label: 问题类型 / Issue Type
+      description: 请选择适用类型（可多选） / Please select the applicable type(s)
+      options:
+        - label: 翻译错误 / Translation error
+        - label: 翻译缺失 / Missing translation
+        - label: 建议优化 / Suggestion
+        - label: 新增语言 / New language
+    validations:
+      required: true
+
+  - type: input
+    id: verge-version
+    attributes:
+      label: 软件版本 / Verge Version
+      description: 请提供你使用的 Verge 具体版本 / Please provide the specific version of Verge you are using
+    validations:
+      required: true

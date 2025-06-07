@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, Stack, Divider, Grid2 } from "@mui/material";
+import { Box, Button, IconButton, Stack, Divider, Grid } from "@mui/material";
 import {
   DndContext,
   closestCenter,
@@ -36,7 +36,7 @@ import {
 } from "@/services/cmds";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import { closeAllConnections } from "@/services/api";
-import { BasePage, DialogRef, Notice } from "@/components/base";
+import { BasePage, DialogRef } from "@/components/base";
 import {
   ProfileViewer,
   ProfileViewerRef,
@@ -53,6 +53,7 @@ import { useLocation } from "react-router-dom";
 import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";
 import { TauriEvent } from "@tauri-apps/api/event";
+import { showNotice } from "@/services/noticeService";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -79,7 +80,7 @@ const ProfilePage = () => {
 
           for (let file of paths) {
             if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-              Notice.error(t("Only YAML Files Supported"));
+              showNotice("error", t("Only YAML Files Supported"));
               continue;
             }
             const item = {
@@ -144,31 +145,32 @@ const ProfilePage = () => {
     try {
       // 尝试正常导入
       await importProfile(url);
-      Notice.success(t("Profile Imported Successfully"));
+      showNotice("success", t("Profile Imported Successfully"));
       setUrl("");
       mutateProfiles();
       await onEnhance(false);
     } catch (err: any) {
       // 首次导入失败，尝试使用自身代理
       const errmsg = err.message || err.toString();
-      Notice.info(t("Import failed, retrying with Clash proxy..."));
-      
+      showNotice("info", t("Import failed, retrying with Clash proxy..."));
+
       try {
         // 使用自身代理尝试导入
         await importProfile(url, {
           with_proxy: false,
-          self_proxy: true
+          self_proxy: true,
         });
-        
+
         // 回退导入成功
-        Notice.success(t("Profile Imported with Clash proxy"));
+        showNotice("success", t("Profile Imported with Clash proxy"));
         setUrl("");
         mutateProfiles();
         await onEnhance(false);
       } catch (retryErr: any) {
         // 回退导入也失败
         const retryErrmsg = retryErr?.message || retryErr.toString();
-        Notice.error(
+        showNotice(
+          "error",
           `${t("Import failed even with Clash proxy")}: ${retryErrmsg}`,
         );
       }
@@ -200,10 +202,10 @@ const ProfilePage = () => {
       closeAllConnections();
       await activateSelected();
       if (notifySuccess && success) {
-        Notice.success(t("Profile Switched"), 1000);
+        showNotice("success", t("Profile Switched"), 1000);
       }
     } catch (err: any) {
-      Notice.error(err?.message || err.toString(), 4000);
+      showNotice("error", err?.message || err.toString(), 4000);
     } finally {
       clearTimeout(reset);
       setActivatings([]);
@@ -229,10 +231,10 @@ const ProfilePage = () => {
       await enhanceProfiles();
       mutateLogs();
       if (notifySuccess) {
-        Notice.success(t("Profile Reactivated"), 1000);
+        showNotice("success", t("Profile Reactivated"), 1000);
       }
     } catch (err: any) {
-      Notice.error(err.message || err.toString(), 3000);
+      showNotice("error", err.message || err.toString(), 3000);
     } finally {
       setActivatings([]);
     }
@@ -247,7 +249,7 @@ const ProfilePage = () => {
       mutateLogs();
       current && (await onEnhance(false));
     } catch (err: any) {
-      Notice.error(err?.message || err.toString());
+      showNotice("error", err?.message || err.toString());
     } finally {
       setActivatings([]);
     }
@@ -263,6 +265,8 @@ const ProfilePage = () => {
       try {
         await updateProfile(uid);
         throttleMutate();
+      } catch (err: any) {
+        console.error(`更新订阅 ${uid} 失败:`, err);
       } finally {
         setLoadingCache((cache) => ({ ...cache, [uid]: false }));
       }
@@ -292,6 +296,35 @@ const ProfilePage = () => {
   const dividercolor = islight
     ? "rgba(0, 0, 0, 0.06)"
     : "rgba(255, 255, 255, 0.06)";
+
+  // 监听后端配置变更
+  useEffect(() => {
+    let unlistenPromise: Promise<() => void> | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const setupListener = async () => {
+      unlistenPromise = listen<string>("profile-changed", (event) => {
+        console.log("Profile changed event received:", event.payload);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        timeoutId = setTimeout(() => {
+          mutateProfiles();
+          timeoutId = undefined;
+        }, 300);
+      });
+    };
+
+    setupListener();
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      unlistenPromise?.then((unlisten) => unlisten());
+    };
+  }, [mutateProfiles, t]);
 
   return (
     <BasePage
@@ -346,27 +379,29 @@ const ProfilePage = () => {
           variant="outlined"
           onChange={(e) => setUrl(e.target.value)}
           placeholder={t("Profile URL")}
-          InputProps={{
-            sx: { pr: 1 },
-            endAdornment: !url ? (
-              <IconButton
-                size="small"
-                sx={{ p: 0.5 }}
-                title={t("Paste")}
-                onClick={onCopyLink}
-              >
-                <ContentPasteRounded fontSize="inherit" />
-              </IconButton>
-            ) : (
-              <IconButton
-                size="small"
-                sx={{ p: 0.5 }}
-                title={t("Clear")}
-                onClick={() => setUrl("")}
-              >
-                <ClearRounded fontSize="inherit" />
-              </IconButton>
-            ),
+          slotProps={{
+            input: {
+              sx: { pr: 1 },
+              endAdornment: !url ? (
+                <IconButton
+                  size="small"
+                  sx={{ p: 0.5 }}
+                  title={t("Paste")}
+                  onClick={onCopyLink}
+                >
+                  <ContentPasteRounded fontSize="inherit" />
+                </IconButton>
+              ) : (
+                <IconButton
+                  size="small"
+                  sx={{ p: 0.5 }}
+                  title={t("Clear")}
+                  onClick={() => setUrl("")}
+                >
+                  <ClearRounded fontSize="inherit" />
+                </IconButton>
+              ),
+            },
           }}
         />
         <LoadingButton
@@ -403,14 +438,14 @@ const ProfilePage = () => {
           }}
         >
           <Box sx={{ mb: 1.5 }}>
-            <Grid2 container spacing={{ xs: 1, lg: 1 }}>
+            <Grid container spacing={{ xs: 1, lg: 1 }}>
               <SortableContext
                 items={profileItems.map((x) => {
                   return x.uid;
                 })}
               >
                 {profileItems.map((item) => (
-                  <Grid2 size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
                     <ProfileItem
                       id={item.uid}
                       selected={profiles.current === item.uid}
@@ -427,10 +462,10 @@ const ProfilePage = () => {
                       }}
                       onDelete={() => onDelete(item.uid)}
                     />
-                  </Grid2>
+                  </Grid>
                 ))}
               </SortableContext>
-            </Grid2>
+            </Grid>
           </Box>
           <Divider
             variant="middle"
@@ -438,8 +473,8 @@ const ProfilePage = () => {
             sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
           ></Divider>
           <Box sx={{ mt: 1.5, mb: "10px" }}>
-            <Grid2 container spacing={{ xs: 1, lg: 1 }}>
-              <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
+            <Grid container spacing={{ xs: 1, lg: 1 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
                 <ProfileMore
                   id="Merge"
                   onSave={async (prev, curr) => {
@@ -448,8 +483,8 @@ const ProfilePage = () => {
                     }
                   }}
                 />
-              </Grid2>
-              <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
                 <ProfileMore
                   id="Script"
                   logInfo={chainLogs["Script"]}
@@ -459,17 +494,20 @@ const ProfilePage = () => {
                     }
                   }}
                 />
-              </Grid2>
-            </Grid2>
+              </Grid>
+            </Grid>
           </Box>
         </Box>
       </DndContext>
 
       <ProfileViewer
         ref={viewerRef}
-        onChange={async () => {
+        onChange={async (isActivating) => {
           mutateProfiles();
-          await onEnhance(false);
+          // 只有更改当前激活的配置时才触发全局重新加载
+          if (isActivating) {
+            await onEnhance(false);
+          }
         }}
       />
       <ConfigViewer ref={configRef} />

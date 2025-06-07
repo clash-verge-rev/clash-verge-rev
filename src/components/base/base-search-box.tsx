@@ -118,44 +118,46 @@ export const BaseSearchBox = (props: SearchProps) => {
         placeholder={props.placeholder ?? t("Filter conditions")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
-        InputProps={{
-          sx: { pr: 1 },
-          endAdornment: (
-            <Box display="flex">
-              <Tooltip title={t("Match Case")}>
-                <div>
-                  <SvgIcon
-                    component={matchCaseIcon}
-                    {...iconStyle}
-                    aria-label={matchCase ? "active" : "inactive"}
-                    onClick={() => setMatchCase(!matchCase)}
-                  />
-                </div>
-              </Tooltip>
-              <Tooltip title={t("Match Whole Word")}>
-                <div>
-                  <SvgIcon
-                    component={matchWholeWordIcon}
-                    {...iconStyle}
-                    aria-label={matchWholeWord ? "active" : "inactive"}
-                    onClick={() => setMatchWholeWord(!matchWholeWord)}
-                  />
-                </div>
-              </Tooltip>
-              <Tooltip title={t("Use Regular Expression")}>
-                <div>
-                  <SvgIcon
-                    component={useRegularExpressionIcon}
-                    aria-label={useRegularExpression ? "active" : "inactive"}
-                    {...iconStyle}
-                    onClick={() =>
-                      setUseRegularExpression(!useRegularExpression)
-                    }
-                  />{" "}
-                </div>
-              </Tooltip>
-            </Box>
-          ),
+        slotProps={{
+          input: {
+            sx: { pr: 1 },
+            endAdornment: (
+              <Box display="flex">
+                <Tooltip title={t("Match Case")}>
+                  <div>
+                    <SvgIcon
+                      component={matchCaseIcon}
+                      {...iconStyle}
+                      aria-label={matchCase ? "active" : "inactive"}
+                      onClick={() => setMatchCase(!matchCase)}
+                    />
+                  </div>
+                </Tooltip>
+                <Tooltip title={t("Match Whole Word")}>
+                  <div>
+                    <SvgIcon
+                      component={matchWholeWordIcon}
+                      {...iconStyle}
+                      aria-label={matchWholeWord ? "active" : "inactive"}
+                      onClick={() => setMatchWholeWord(!matchWholeWord)}
+                    />
+                  </div>
+                </Tooltip>
+                <Tooltip title={t("Use Regular Expression")}>
+                  <div>
+                    <SvgIcon
+                      component={useRegularExpressionIcon}
+                      aria-label={useRegularExpression ? "active" : "inactive"}
+                      {...iconStyle}
+                      onClick={() =>
+                        setUseRegularExpression(!useRegularExpression)
+                      }
+                    />{" "}
+                  </div>
+                </Tooltip>
+              </Box>
+            ),
+          },
         }}
       />
     </Tooltip>
