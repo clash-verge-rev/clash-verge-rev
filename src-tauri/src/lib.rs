@@ -156,6 +156,7 @@ pub fn run() -> Result<()> {
             cmds::common::invoke_uwp_tool,
             cmds::common::check_port_available,
             cmds::common::copy_icon_file,
+            cmds::common::copy_clash_env,
             cmds::common::download_icon_cache,
             cmds::common::open_devtools,
             cmds::common::set_tray_visible,

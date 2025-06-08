@@ -7,6 +7,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { routes } from "@/routes/__root";
 import {
   applyLocalBackup,
+  copyClashEnv,
   createAndUploadBackup,
   createLocalBackup,
   exitApp,
@@ -21,6 +22,11 @@ import getSystem from "@/utils/get-system";
 import {
   Check,
   CloudUpload,
+  ContentCopy,
+  ContentCopyOutlined,
+  ContentCopySharp,
+  CopyAll,
+  CopyAllRounded,
   Refresh,
   Visibility,
   VisibilityOff,
@@ -243,7 +249,19 @@ const SettingVerge = ({ onError }: Props) => {
         </SettingItem>
       )}
 
-      <SettingItem label={t("Copy Env Type")}>
+      <SettingItem
+        label={t("Copy Env Type")}
+        extra={
+          <IconButton
+            color="inherit"
+            size="small"
+            onClick={() => {
+              copyClashEnv();
+              notice("success", t("Copy Env Successfully"));
+            }}>
+            <ContentCopy fontSize="inherit" style={{ opacity: 0.75 }} />
+          </IconButton>
+        }>
         <GuardState
           value={env_type ?? (OS === "windows" ? "powershell" : "bash")}
           onCatch={onError}

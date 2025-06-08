@@ -4,8 +4,8 @@ use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
 
 use crate::{
-    core::{sysopt, tray::Tray, CoreManager},
-    ret_err,
+    core::{handle, sysopt, tray::Tray, CoreManager},
+    feat, ret_err,
     utils::{self, dirs, help, resolve},
     wrap_err,
 };
@@ -121,7 +121,7 @@ pub async fn invoke_uwp_tool() -> CmdResult {
 }
 
 #[tauri::command]
-pub fn open_devtools(app_handle: tauri::AppHandle) {
+pub fn open_devtools(app_handle: tauri::AppHandle) -> CmdResult {
     if let Some(window) = app_handle.get_webview_window("main") {
         if !window.is_devtools_open() {
             window.open_devtools();
@@ -129,6 +129,13 @@ pub fn open_devtools(app_handle: tauri::AppHandle) {
             window.close_devtools();
         }
     }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn copy_clash_env() -> CmdResult {
+    feat::copy_clash_env(handle::Handle::get_app_handle());
+    Ok(())
 }
 
 #[tauri::command]

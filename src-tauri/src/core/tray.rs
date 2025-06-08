@@ -369,7 +369,7 @@ impl Tray {
             "open_app_dir" => crate::log_err!(cmds::common::open_app_dir(app_handle_)),
             "open_core_dir" => crate::log_err!(cmds::common::open_core_dir(app_handle_)),
             "open_logs_dir" => crate::log_err!(cmds::common::open_logs_dir(app_handle_)),
-            "open_devtools" => cmds::common::open_devtools(app_handle_),
+            "open_devtools" => crate::log_err!(cmds::common::open_devtools(app_handle_)),
             "restart_clash" => feat::restart_clash_core(),
             "restart_app" => cmds::common::restart_app(app_handle_),
             "quit" => cmds::common::exit_app(app_handle_),
