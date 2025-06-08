@@ -205,7 +205,7 @@ export const ProxyGroups = (props: Props) => {
   const { current, patchCurrent } = useProfiles();
 
   // 获取自动滚动开关状态，默认为 true
-  const enableAutoScroll = verge?.enable_proxy_auto_scroll ?? true;
+  const enableAutoScroll = verge?.enable_hover_jump_navigator ?? true;
   const timeout = verge?.default_latency_timeout || 10000;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);

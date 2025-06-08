@@ -58,7 +58,7 @@ const SettingSystem = ({ onError }: Props) => {
     enable_silent_start,
     enable_system_proxy,
     proxy_auto_config,
-    enable_proxy_auto_scroll,
+    enable_hover_jump_navigator,
   } = verge ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
@@ -286,27 +286,6 @@ const SettingSystem = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ enable_silent_start: e })}
           onGuard={(e) => patchVerge({ enable_silent_start: e })}
-        >
-          <Switch edge="end" />
-        </GuardState>
-      </SettingItem>
-
-      <SettingItem
-        label={t("Proxy Auto Scroll")}
-        extra={
-          <TooltipIcon
-            title={t("Proxy Auto Scroll Info")}
-            sx={{ opacity: "0.7" }}
-          />
-        }
-      >
-        <GuardState
-          value={enable_proxy_auto_scroll ?? true}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_proxy_auto_scroll: e })}
-          onGuard={(e) => patchVerge({ enable_proxy_auto_scroll: e })}
         >
           <Switch edge="end" />
         </GuardState>

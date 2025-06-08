@@ -792,7 +792,7 @@ interface IVergeConfig {
   webdav_username?: string;
   webdav_password?: string;
   home_cards?: Record<string, boolean>;
-  enable_proxy_auto_scroll?: boolean;
+  enable_hover_jump_navigator?: boolean;
 }
 
 interface IWebDavFile {

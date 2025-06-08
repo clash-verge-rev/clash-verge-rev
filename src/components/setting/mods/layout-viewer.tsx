@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { GuardState } from "./guard-state";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -142,6 +143,28 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             onFormat={onSwitchFormat}
             onChange={(e) => onChangeData({ enable_group_icon: e })}
             onGuard={(e) => patchVerge({ enable_group_icon: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+
+        <Item>
+          <ListItemText
+            primary={t("Hover Jump Navigator")}
+            secondary={
+              <TooltipIcon
+                title={t("Hover Jump Navigator Info")}
+                sx={{ opacity: "0.7" }}
+              />
+            }
+          />
+          <GuardState
+            value={verge?.enable_hover_jump_navigator ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_hover_jump_navigator: e })}
+            onGuard={(e) => patchVerge({ enable_hover_jump_navigator: e })}
           >
             <Switch edge="end" />
           </GuardState>
