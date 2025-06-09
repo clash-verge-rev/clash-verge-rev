@@ -3,7 +3,7 @@ use crate::utils::{dirs, help};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::{fs, io::Write};
+use std::{collections::HashSet, fs, io::Write};
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -13,6 +13,14 @@ pub struct IProfiles {
 
     /// profile list
     pub items: Option<Vec<PrfItem>>,
+}
+
+/// 清理结果
+#[derive(Debug, Clone)]
+pub struct CleanupResult {
+    pub total_files: usize,
+    pub deleted_files: Vec<String>,
+    pub failed_deletions: Vec<String>,
 }
 
 macro_rules! patch {
@@ -484,5 +492,198 @@ impl IProfiles {
                 })
                 .collect()
         })
+    }
+
+    /// 以 app 中的 profile 列表为准，删除不再需要的文件
+    pub fn cleanup_orphaned_files(&self) -> Result<CleanupResult> {
+        let profiles_dir = dirs::app_profiles_dir()?;
+
+        if !profiles_dir.exists() {
+            return Ok(CleanupResult {
+                total_files: 0,
+                deleted_files: vec![],
+                failed_deletions: vec![],
+            });
+        }
+
+        // 获取所有 active profile 的文件名集合
+        let active_files = self.get_all_active_files();
+
+        // 添加全局扩展配置文件到保护列表
+        let protected_files = self.get_protected_global_files();
+
+        // 扫描 profiles 目录下的所有文件
+        let mut total_files = 0;
+        let mut deleted_files = vec![];
+        let mut failed_deletions = vec![];
+
+        for entry in std::fs::read_dir(&profiles_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if !path.is_file() {
+                continue;
+            }
+
+            total_files += 1;
+
+            if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                if Self::is_profile_file(file_name) {
+                    // 检查是否为全局扩展文件
+                    if protected_files.contains(file_name) {
+                        log::debug!(target: "app", "保护全局扩展配置文件: {}", file_name);
+                        continue;
+                    }
+
+                    // 检查是否为活跃文件
+                    if !active_files.contains(file_name) {
+                        match std::fs::remove_file(&path) {
+                            Ok(_) => {
+                                deleted_files.push(file_name.to_string());
+                                log::info!(target: "app", "已清理冗余文件: {}", file_name);
+                            }
+                            Err(e) => {
+                                failed_deletions.push(format!("{}: {}", file_name, e));
+                                log::warn!(target: "app", "清理文件失败: {} - {}", file_name, e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        let result = CleanupResult {
+            total_files,
+            deleted_files,
+            failed_deletions,
+        };
+
+        log::info!(
+            target: "app",
+            "Profile 文件清理完成: 总文件数={}, 删除文件数={}, 失败数={}",
+            result.total_files,
+            result.deleted_files.len(),
+            result.failed_deletions.len()
+        );
+
+        Ok(result)
+    }
+
+    /// 不删除全局扩展配置
+    fn get_protected_global_files(&self) -> HashSet<String> {
+        let mut protected_files = HashSet::new();
+
+        protected_files.insert("Merge.yaml".to_string());
+        protected_files.insert("Script.js".to_string());
+
+        protected_files
+    }
+
+    /// 获取所有 active profile 关联的文件名
+    fn get_all_active_files(&self) -> HashSet<String> {
+        let mut active_files = HashSet::new();
+
+        if let Some(items) = &self.items {
+            for item in items {
+                // 收集所有类型 profile 的文件
+                if let Some(file) = &item.file {
+                    active_files.insert(file.clone());
+                }
+
+                // 对于主 profile 类型（remote/local），还需要收集其关联的扩展文件
+                if let Some(itype) = &item.itype {
+                    if itype == "remote" || itype == "local" {
+                        if let Some(option) = &item.option {
+                            // 收集关联的扩展文件
+                            if let Some(merge_uid) = &option.merge {
+                                if let Ok(merge_item) = self.get_item(merge_uid) {
+                                    if let Some(file) = &merge_item.file {
+                                        active_files.insert(file.clone());
+                                    }
+                                }
+                            }
+
+                            if let Some(script_uid) = &option.script {
+                                if let Ok(script_item) = self.get_item(script_uid) {
+                                    if let Some(file) = &script_item.file {
+                                        active_files.insert(file.clone());
+                                    }
+                                }
+                            }
+
+                            if let Some(rules_uid) = &option.rules {
+                                if let Ok(rules_item) = self.get_item(rules_uid) {
+                                    if let Some(file) = &rules_item.file {
+                                        active_files.insert(file.clone());
+                                    }
+                                }
+                            }
+
+                            if let Some(proxies_uid) = &option.proxies {
+                                if let Ok(proxies_item) = self.get_item(proxies_uid) {
+                                    if let Some(file) = &proxies_item.file {
+                                        active_files.insert(file.clone());
+                                    }
+                                }
+                            }
+
+                            if let Some(groups_uid) = &option.groups {
+                                if let Ok(groups_item) = self.get_item(groups_uid) {
+                                    if let Some(file) = &groups_item.file {
+                                        active_files.insert(file.clone());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        active_files
+    }
+
+    /// 检查文件名是否符合 profile 文件的命名规则
+    fn is_profile_file(filename: &str) -> bool {
+        // 匹配各种 profile 文件格式
+        // R12345678.yaml (remote)
+        // L12345678.yaml (local)
+        // m12345678.yaml (merge)
+        // s12345678.js (script)
+        // r12345678.yaml (rules)
+        // p12345678.yaml (proxies)
+        // g12345678.yaml (groups)
+
+        let patterns = [
+            r"^[RL][a-zA-Z0-9]+\.yaml$",  // Remote/Local profiles
+            r"^m[a-zA-Z0-9]+\.yaml$",     // Merge files
+            r"^s[a-zA-Z0-9]+\.js$",       // Script files
+            r"^[rpg][a-zA-Z0-9]+\.yaml$", // Rules/Proxies/Groups files
+        ];
+
+        patterns.iter().any(|pattern| {
+            regex::Regex::new(pattern)
+                .map(|re| re.is_match(filename))
+                .unwrap_or(false)
+        })
+    }
+
+    pub fn auto_cleanup(&self) -> Result<()> {
+        match self.cleanup_orphaned_files() {
+            Ok(result) => {
+                if !result.deleted_files.is_empty() {
+                    log::info!(
+                        target: "app",
+                        "自动清理完成，删除了 {} 个冗余文件",
+                        result.deleted_files.len()
+                    );
+                }
+                Ok(())
+            }
+            Err(e) => {
+                log::warn!(target: "app", "自动清理失败: {}", e);
+                Ok(())
+            }
+        }
     }
 }

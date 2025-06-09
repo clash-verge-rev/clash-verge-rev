@@ -93,6 +93,10 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
     let should_update = wrap_err!({ Config::profiles().data().delete_item(index) })?;
+
+    // 删除后自动清理冗余文件
+    let _ = Config::profiles().latest().auto_cleanup();
+
     if should_update {
         wrap_err!(CoreManager::global().update_config().await)?;
         handle::Handle::refresh_clash();
