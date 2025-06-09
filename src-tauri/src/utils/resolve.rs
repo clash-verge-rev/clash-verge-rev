@@ -169,6 +169,15 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     logging!(trace, Type::Config, true, "初始化配置...");
     logging_error!(Type::Config, true, Config::init_config().await);
 
+    // 启动时清理冗余的 Profile 文件
+    logging!(info, Type::Setup, true, "清理冗余的Profile文件...");
+    let profiles = Config::profiles();
+    if let Err(e) = profiles.latest().auto_cleanup() {
+        logging!(warn, Type::Setup, true, "启动时清理Profile文件失败: {}", e);
+    } else {
+        logging!(info, Type::Setup, true, "启动时Profile文件清理完成");
+    }
+
     logging!(trace, Type::Core, true, "启动核心管理器...");
     logging_error!(Type::Core, true, CoreManager::global().init().await);
 

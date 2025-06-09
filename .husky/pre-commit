@@ -20,7 +20,7 @@ if git diff --cached --name-only | grep -q '^src-tauri/'; then
     cd ..
 fi
 
-git add .
+#git add .
 
 # 允许提交
 exit 0
