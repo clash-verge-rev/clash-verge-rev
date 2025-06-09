@@ -38,7 +38,7 @@ const Layout = () => {
   const { verge } = useVerge();
   const {
     language,
-    enable_system_title_bar,
+    enable_system_title_bar = false,
     enable_keep_ui_active = false,
   } = verge;
   const keepUIActive = useRef(enable_keep_ui_active);
@@ -54,14 +54,6 @@ const Layout = () => {
   useEffect(() => {
     appWindow.isMaximized().then((maximized) => {
       setIsMaximized(maximized);
-    });
-
-    const unlistenResize = appWindow.onResized(() => {
-      appWindow.isMaximized().then((value) => {
-        if (isMaximized !== value) {
-          setIsMaximized(value);
-        }
-      });
     });
 
     window.addEventListener("keydown", (e) => {
@@ -122,9 +114,22 @@ const Layout = () => {
       unlistenRefreshClash.then((fn) => fn());
       unlistenRefreshVerge.then((fn) => fn());
       unlistenNotice.then((fn) => fn());
-      unlistenResize.then((fn) => fn());
     };
   }, []);
+
+  useEffect(() => {
+    const unlistenResize = appWindow.onResized(() => {
+      appWindow.isMaximized().then((value) => {
+        if (isMaximized !== value) {
+          setIsMaximized(value);
+        }
+      });
+    });
+
+    return () => {
+      unlistenResize.then((fn) => fn());
+    };
+  }, [isMaximized]);
 
   useEffect(() => {
     if (language) {
