@@ -150,12 +150,14 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
 
         <Item>
           <ListItemText
-            primary={t("Hover Jump Navigator")}
-            secondary={
-              <TooltipIcon
-                title={t("Hover Jump Navigator Info")}
-                sx={{ opacity: "0.7" }}
-              />
+            primary={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <span>{t("Hover Jump Navigator")}</span>
+                <TooltipIcon
+                  title={t("Hover Jump Navigator Info")}
+                  sx={{ opacity: "0.7" }}
+                />
+              </Box>
             }
           />
           <GuardState
