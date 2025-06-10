@@ -257,7 +257,7 @@ export const ClashPortViewer = forwardRef<
 
         <ListItem sx={{ padding: "4px 0", minHeight: 36 }}>
           <ListItemText
-            primary={t("HTTP Port")}
+            primary={t("Http Port")}
             primaryTypographyProps={{ fontSize: 12 }}
           />
           <div style={{ display: "flex", alignItems: "center" }}>
