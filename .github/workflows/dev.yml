@@ -58,7 +58,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm check ${{ matrix.target }}
+          pnpm prepare ${{ matrix.target }}
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
