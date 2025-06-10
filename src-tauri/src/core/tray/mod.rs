@@ -384,7 +384,7 @@ impl Tray {
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
-        let (is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
+        let (_is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
             (true, true) => TrayState::get_tun_tray_icon(),
             (true, false) => TrayState::get_sysproxy_tray_icon(),
             (false, true) => TrayState::get_tun_tray_icon(),
