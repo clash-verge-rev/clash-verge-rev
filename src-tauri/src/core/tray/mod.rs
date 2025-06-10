@@ -617,6 +617,12 @@ impl Tray {
         let icon_bytes = TrayState::get_common_tray_icon().1;
         let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
 
+        #[cfg(target_os = "linux")]
+        let builder = TrayIconBuilder::with_id("main")
+            .icon(icon)
+            .icon_as_template(false);
+
+        #[cfg(not(target_os = "linux"))]
         let mut builder = TrayIconBuilder::with_id("main")
             .icon(icon)
             .icon_as_template(false);
