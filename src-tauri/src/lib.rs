@@ -16,6 +16,7 @@ use config::Config;
 use std::sync::{Mutex, Once};
 use tauri::AppHandle;
 use tauri::Manager;
+#[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
 use tokio::time::{timeout, Duration};

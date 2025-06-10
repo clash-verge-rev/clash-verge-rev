@@ -3,8 +3,10 @@ use crate::{
     core::{handle, timer::Timer},
     log_err, logging, logging_error,
     utils::logging::Type,
-    AppHandleManager,
 };
+
+#[cfg(target_os = "macos")]
+use crate::AppHandleManager;
 
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
@@ -112,6 +114,7 @@ pub fn exit_lightweight_mode() {
     exit_lock.0 = false;
 }
 
+#[cfg(target_os = "macos")]
 pub fn add_light_weight_timer() {
     logging_error!(Type::Lightweight, setup_light_weight_timer());
 }
