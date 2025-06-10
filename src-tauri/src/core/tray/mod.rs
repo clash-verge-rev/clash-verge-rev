@@ -270,7 +270,7 @@ impl Tray {
         match app_handle.tray_by_id("main") {
             Some(tray) => {
                 let _ = tray.set_menu(Some(create_tray_menu(
-                    &app_handle,
+                    app_handle,
                     Some(mode.as_str()),
                     *system_proxy,
                     *tun_mode,

@@ -845,11 +845,9 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
         }
     };
 
-    if version_check {
-        if is_service_available().await.is_ok() {
-            log::info!(target: "app", "服务已在运行且版本匹配，尝试使用");
-            return start_with_existing_service(config_file).await;
-        }
+    if version_check && is_service_available().await.is_ok() {
+        log::info!(target: "app", "服务已在运行且版本匹配，尝试使用");
+        return start_with_existing_service(config_file).await;
     }
 
     if !version_check {
