@@ -50,7 +50,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm check ${{ matrix.target }}
+          pnpm prepare ${{ matrix.target }}
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2

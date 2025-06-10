@@ -288,6 +288,7 @@ impl Tray {
     }
 
     /// 更新托盘图标
+    #[cfg(target_os = "macos")]
     pub fn update_icon(&self, rate: Option<Rate>) -> Result<()> {
         let app_handle = match handle::Handle::global().app_handle() {
             Some(handle) => handle,
@@ -315,58 +316,83 @@ impl Tray {
             (false, true) => TrayState::get_tun_tray_icon(),
             (false, false) => TrayState::get_common_tray_icon(),
         };
-        #[cfg(target_os = "macos")]
-        {
-            let enable_tray_speed = verge.enable_tray_speed.unwrap_or(false);
-            let enable_tray_icon = verge.enable_tray_icon.unwrap_or(true);
-            let colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
-            let is_colorful = colorful == "colorful";
 
-            if !enable_tray_speed {
-                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
-                let _ = tray.set_icon_as_template(!is_colorful);
-                return Ok(());
-            }
+        let enable_tray_speed = verge.enable_tray_speed.unwrap_or(false);
+        let enable_tray_icon = verge.enable_tray_icon.unwrap_or(true);
+        let colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
+        let is_colorful = colorful == "colorful";
 
-            let rate = if let Some(rate) = rate {
-                Some(rate)
-            } else {
-                let guard = self.speed_rate.lock();
-                if let Some(guard) = guard.as_ref() {
-                    if let Some(rate) = guard.get_curent_rate() {
-                        Some(rate)
-                    } else {
-                        Some(Rate::default())
-                    }
+        if !enable_tray_speed {
+            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
+            let _ = tray.set_icon_as_template(!is_colorful);
+            return Ok(());
+        }
+
+        let rate = if let Some(rate) = rate {
+            Some(rate)
+        } else {
+            let guard = self.speed_rate.lock();
+            if let Some(guard) = guard.as_ref() {
+                if let Some(rate) = guard.get_curent_rate() {
+                    Some(rate)
                 } else {
                     Some(Rate::default())
                 }
+            } else {
+                Some(Rate::default())
+            }
+        };
+
+        let mut rate_guard = self.rate_cache.lock();
+        if *rate_guard != rate {
+            *rate_guard = rate;
+
+            let bytes = if enable_tray_icon {
+                Some(icon_bytes)
+            } else {
+                None
             };
 
-            let mut rate_guard = self.rate_cache.lock();
-            if *rate_guard != rate {
-                *rate_guard = rate;
-
-                let bytes = if enable_tray_icon {
-                    Some(icon_bytes)
-                } else {
-                    None
-                };
-
-                let rate = rate_guard.as_ref();
-                if let Ok(rate_bytes) = SpeedRate::add_speed_text(is_custom_icon, bytes, rate) {
-                    let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
-                    let _ = tray.set_icon_as_template(!is_custom_icon && !is_colorful);
-                }
+            let rate = rate_guard.as_ref();
+            if let Ok(rate_bytes) = SpeedRate::add_speed_text(is_custom_icon, bytes, rate) {
+                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
+                let _ = tray.set_icon_as_template(!is_custom_icon && !is_colorful);
             }
-            Ok(())
         }
+        Ok(())
+    }
 
-        #[cfg(not(target_os = "macos"))]
-        {
-            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
-            Ok(())
-        }
+    #[cfg(not(target_os = "macos"))]
+    pub fn update_icon(&self, _rate: Option<Rate>) -> Result<()> {
+        let app_handle = match handle::Handle::global().app_handle() {
+            Some(handle) => handle,
+            None => {
+                log::warn!(target: "app", "更新托盘图标失败: app_handle不存在");
+                return Ok(());
+            }
+        };
+
+        let tray = match app_handle.tray_by_id("main") {
+            Some(tray) => tray,
+            None => {
+                log::warn!(target: "app", "更新托盘图标失败: 托盘不存在");
+                return Ok(());
+            }
+        };
+
+        let verge = Config::verge().latest().clone();
+        let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
+        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+
+        let (is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
+            (true, true) => TrayState::get_tun_tray_icon(),
+            (true, false) => TrayState::get_sysproxy_tray_icon(),
+            (false, true) => TrayState::get_tun_tray_icon(),
+            (false, false) => TrayState::get_common_tray_icon(),
+        };
+
+        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
+        Ok(())
     }
 
     /// 更新托盘提示

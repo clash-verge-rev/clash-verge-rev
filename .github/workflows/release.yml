@@ -95,7 +95,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm check ${{ matrix.target }}
+          pnpm prepare ${{ matrix.target }}
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
@@ -159,7 +159,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm check ${{ matrix.target }}
+          pnpm prepare ${{ matrix.target }}
 
       - name: "Setup for linux"
         run: |-
@@ -279,7 +279,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm check ${{ matrix.target }}
+          pnpm prepare ${{ matrix.target }}
 
       - name: Download WebView2 Runtime
         run: |
