@@ -1,10 +1,12 @@
 use crate::{
     config::Config,
     core::{handle, timer::Timer},
-    log_err, logging, logging_error,
+    log_err, logging,
     utils::logging::Type,
 };
 
+#[cfg(target_os = "macos")]
+use crate::logging_error;
 #[cfg(target_os = "macos")]
 use crate::AppHandleManager;
 
