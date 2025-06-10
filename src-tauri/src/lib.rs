@@ -206,6 +206,7 @@ pub fn run() {
             }
 
             app.manage(Mutex::new(state::proxy::CmdProxyState::default()));
+            app.manage(Mutex::new(state::lightweight::LightWeightState::default()));
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())
