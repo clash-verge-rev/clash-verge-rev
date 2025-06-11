@@ -13,8 +13,12 @@ use crate::AppHandleManager;
 
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
+use once_cell::sync::Lazy;
 use std::sync::Mutex;
 use tauri::{Listener, Manager};
+
+pub static GLOBAL_LIGHTWEIGHT_STATE: Lazy<Mutex<LightWeightState>> =
+    Lazy::new(|| Mutex::new(LightWeightState::default()));
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
 
@@ -29,7 +33,7 @@ where
 }
 
 pub fn run_once_auto_lightweight() {
-    LightWeightState::default().run_once_time(|| {
+    GLOBAL_LIGHTWEIGHT_STATE.lock().unwrap().run_once_time(|| {
         let is_silent_start = Config::verge().data().enable_silent_start.unwrap_or(false);
         let enable_auto = Config::verge()
             .data()
@@ -54,12 +58,12 @@ pub fn auto_lightweight_mode_init() {
         let _ = app_handle.state::<Mutex<LightWeightState>>();
         let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
         let enable_auto = { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
-        if enable_auto && is_silent_start {
+        if enable_auto && !is_silent_start {
             logging!(
                 info,
                 Type::Lightweight,
                 true,
-                "Add timer listener when creating window in silent start mode"
+                "Add timer listener when creating window normally"
             );
             set_lightweight_mode(true);
             enable_auto_light_weight_mode();
