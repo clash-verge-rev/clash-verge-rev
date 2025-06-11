@@ -261,6 +261,8 @@
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Silent Start": "Silent Start",
   "Silent Start Info": "Start the program in background mode without displaying the panel",
+  "Hover Jump Navigator": "Hover Jump Navigator",
+  "Hover Jump Navigator Info": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
   "TG Channel": "Telegram Channel",
   "Manual": "Manual",
   "Github Repo": "Github Repo",

@@ -200,6 +200,9 @@ pub struct IVerge {
     /// 自动进入轻量模式的延迟（分钟）
     pub auto_light_weight_minutes: Option<u64>,
 
+    /// 启用代理页面自动滚动
+    pub enable_hover_jump_navigator: Option<bool>,
+
     /// 服务状态跟踪
     pub service_state: Option<crate::core::service::ServiceState>,
 }
@@ -275,6 +278,7 @@ impl IVerge {
             tun_tray_icon: Some(false),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
+            enable_hover_jump_navigator: Some(true),
             enable_system_proxy: Some(false),
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
@@ -351,6 +355,7 @@ impl IVerge {
         patch!(enable_tun_mode);
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
+        patch!(enable_hover_jump_navigator);
         patch!(enable_random_port);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);
@@ -492,6 +497,7 @@ pub struct IVergeResponse {
     pub auto_light_weight_minutes: Option<u64>,
     pub enable_dns_settings: Option<bool>,
     pub home_cards: Option<serde_json::Value>,
+    pub enable_hover_jump_navigator: Option<bool>,
     pub service_state: Option<crate::core::service::ServiceState>,
 }
 
@@ -561,6 +567,7 @@ impl From<IVerge> for IVergeResponse {
             auto_light_weight_minutes: verge.auto_light_weight_minutes,
             enable_dns_settings: verge.enable_dns_settings,
             home_cards: verge.home_cards,
+            enable_hover_jump_navigator: verge.enable_hover_jump_navigator,
             service_state: verge.service_state,
         }
     }

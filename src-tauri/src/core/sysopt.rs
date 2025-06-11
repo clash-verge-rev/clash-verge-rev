@@ -235,13 +235,11 @@ impl Sysopt {
                 } else {
                     return Ok(());
                 }
+            } else if let Err(e) = startup_shortcut::remove_shortcut() {
+                log::error!(target: "app", "删除启动快捷方式失败: {}", e);
+                self.try_original_autostart_method(is_enable);
             } else {
-                if let Err(e) = startup_shortcut::remove_shortcut() {
-                    log::error!(target: "app", "删除启动快捷方式失败: {}", e);
-                    self.try_original_autostart_method(is_enable);
-                } else {
-                    return Ok(());
-                }
+                return Ok(());
             }
         }
 

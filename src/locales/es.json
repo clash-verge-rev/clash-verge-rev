@@ -257,7 +257,7 @@
   "Random Port": "Puerto aleatorio",
   "Mixed Port": "Puerto de proxy mixto",
   "Socks Port": "Puerto de proxy SOCKS",
-  "HTTP Port": "Puerto de proxy HTTP(S)",
+  "Http Port": "Puerto de proxy HTTP(S)",
   "Redir Port": "Puerto de proxy transparente Redir",
   "Tproxy Port": "Puerto de proxy transparente TPROXY",
   "External": "Control externo",

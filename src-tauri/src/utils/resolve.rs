@@ -2,7 +2,7 @@ use crate::{
     config::{Config, IVerge, PrfItem},
     core::*,
     logging, logging_error,
-    module::lightweight,
+    module::lightweight::{self, auto_lightweight_mode_init},
     process::AsyncHandler,
     utils::{init, logging::Type, server},
     wrap_err,
@@ -223,11 +223,7 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     logging_error!(Type::System, true, timer::Timer::global().init());
 
     // 自动进入轻量模式
-    let enable_auto_light_weight_mode =
-        { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
-    if enable_auto_light_weight_mode && !is_silent_start {
-        lightweight::enable_auto_light_weight_mode();
-    }
+    auto_lightweight_mode_init();
 
     logging_error!(Type::Tray, true, tray::Tray::global().update_part());
 
@@ -334,6 +330,8 @@ pub fn create_window(is_show: bool) -> bool {
                     let _ = window_clone.show();
                     let _ = window_clone.set_focus();
                     logging!(debug, Type::Window, true, "窗口已尝试显示和聚焦");
+
+                    lightweight::run_once_auto_lightweight();
 
                     tokio::time::sleep(Duration::from_millis(100)).await; // Crucial delay
 

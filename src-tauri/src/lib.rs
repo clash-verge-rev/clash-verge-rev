@@ -16,6 +16,7 @@ use config::Config;
 use std::sync::{Mutex, Once};
 use tauri::AppHandle;
 use tauri::Manager;
+#[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
 use tokio::time::{timeout, Duration};
@@ -205,6 +206,7 @@ pub fn run() {
             }
 
             app.manage(Mutex::new(state::proxy::CmdProxyState::default()));
+            app.manage(Mutex::new(state::lightweight::LightWeightState::default()));
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())

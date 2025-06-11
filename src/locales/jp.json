@@ -257,7 +257,7 @@
   "Random Port": "ランダムポート",
   "Mixed Port": "混合プロキシポート",
   "Socks Port": "SOCKSプロキシポート",
-  "HTTP Port": "HTTP(S)プロキシポート",
+  "Http Port": "HTTP(S)プロキシポート",
   "Redir Port": "Redir透明プロキシポート",
   "Tproxy Port": "TPROXY透明プロキシポート",
   "External": "外部制御",

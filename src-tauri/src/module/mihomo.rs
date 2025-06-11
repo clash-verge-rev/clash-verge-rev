@@ -3,7 +3,9 @@ use mihomo_api;
 use once_cell::sync::Lazy;
 use parking_lot::{Mutex, RwLock};
 use std::time::{Duration, Instant};
-use tauri::http::{HeaderMap, HeaderValue};
+use tauri::http::HeaderMap;
+#[cfg(target_os = "macos")]
+use tauri::http::HeaderValue;
 
 // 缓存的最大有效期（5秒）
 const CACHE_TTL: Duration = Duration::from_secs(5);
@@ -105,6 +107,7 @@ impl MihomoManager {
     }
 
     // 提供默认值的版本，避免在connection_info为None时panic
+    #[cfg(target_os = "macos")]
     fn get_clash_client_info_or_default() -> (String, HeaderMap) {
         Self::get_clash_client_info().unwrap_or_else(|| {
             let mut headers = HeaderMap::new();
