@@ -11,21 +11,29 @@ use rust_i18n::t;
 use tauri::{AppHandle, CloseRequestApi, Manager};
 
 /// handle something when start app
-pub fn resolve_setup() {
+pub async fn resolve_setup() {
+    tracing::trace!("init system tray");
+    log_err!(tray::Tray::init());
     tracing::trace!("init resources");
     log_err!(init::init_resources());
     tracing::trace!("init scheme");
     log_err!(init::init_scheme());
     tracing::trace!("init startup script");
-    log_err!(init::startup_script());
+    log_err!(init::startup_script().await);
     tracing::trace!("load rsa keys");
     log_err!(utils::crypto::load_keys());
     tracing::trace!("init config");
     log_err!(Config::init_config());
     tracing::trace!("launch core");
-    log_err!(CoreManager::global().init());
-    tracing::trace!("init system tray");
-    log_err!(tray::Tray::init());
+    log_err!(CoreManager::global().init().await);
+    tracing::trace!("launch embed server");
+    server::embed_server().await;
+    tracing::trace!("init autolaunch");
+    log_err!(sysopt::Sysopt::global().init_launch());
+    tracing::trace!("init system proxy");
+    log_err!(sysopt::Sysopt::global().init_sysproxy());
+    tracing::trace!("update system tray");
+    log_err!(handle::Handle::update_systray_part());
     let silent_start = {
         Config::verge()
             .latest()
@@ -35,33 +43,22 @@ pub fn resolve_setup() {
     if !silent_start {
         create_window();
     }
-    tracing::trace!("launch embed server");
-    server::embed_server();
-    tracing::trace!("init autolaunch");
-    log_err!(sysopt::Sysopt::global().init_launch());
-    tracing::trace!("init system proxy");
-    log_err!(sysopt::Sysopt::global().init_sysproxy());
-    tracing::trace!("update system tray");
-    log_err!(handle::Handle::update_systray_part());
     tracing::trace!("init hotkey");
     log_err!(hotkey::Hotkey::global().init());
+    tracing::trace!("init webdav config");
+    log_err!(backup::WebDav::global().init().await);
     tracing::trace!("init timer");
     log_err!(timer::Timer::global().init());
     tracing::trace!("register os shutdown handler");
     shutdown::register();
 
-    tauri::async_runtime::block_on(async move {
-        tracing::trace!("init webdav config");
-        log_err!(backup::WebDav::global().init().await);
-
-        let argvs = std::env::args().collect::<Vec<String>>();
-        if argvs.len() > 1 {
-            let param = argvs[1].as_str();
-            if param.starts_with("clash:") {
-                resolve_scheme(argvs[1].to_owned()).await;
-            }
+    let argvs = std::env::args().collect::<Vec<String>>();
+    if argvs.len() > 1 {
+        let param = argvs[1].as_str();
+        if param.starts_with("clash:") {
+            resolve_scheme(argvs[1].to_owned()).await;
         }
-    });
+    }
 }
 
 /// reset system proxy

@@ -39,25 +39,23 @@ impl CoreManager {
         })
     }
 
-    pub fn init(&self) -> Result<()> {
-        tauri::async_runtime::spawn(async {
-            let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
-            if enable_random_port {
-                let port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
-                let mut port_mapping = Mapping::new();
-                port_mapping.insert("mixed-port".into(), port.into());
-                port_mapping.insert("port".into(), 0.into());
-                port_mapping.insert("socks-port".into(), 0.into());
-                port_mapping.insert("redir-port".into(), 0.into());
-                port_mapping.insert("tproxy-port".into(), 0.into());
-                // patch config
-                Config::clash().latest().patch_config(port_mapping.clone());
-                log_err!(Config::clash().latest().save_config());
-                Config::runtime().latest().patch_config(port_mapping);
-            }
-            // 启动 clash
-            log_err!(Self::global().run_core().await);
-        });
+    pub async fn init(&self) -> Result<()> {
+        let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or(false);
+        if enable_random_port {
+            let port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
+            let mut port_mapping = Mapping::new();
+            port_mapping.insert("mixed-port".into(), port.into());
+            port_mapping.insert("port".into(), 0.into());
+            port_mapping.insert("socks-port".into(), 0.into());
+            port_mapping.insert("redir-port".into(), 0.into());
+            port_mapping.insert("tproxy-port".into(), 0.into());
+            // patch config
+            Config::clash().latest().patch_config(port_mapping.clone());
+            log_err!(Config::clash().latest().save_config());
+            Config::runtime().latest().patch_config(port_mapping);
+        }
+        // 启动 clash
+        log_err!(Self::global().run_core().await);
 
         Ok(())
     }

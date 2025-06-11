@@ -153,7 +153,7 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 
-pub fn startup_script() -> Result<()> {
+pub async fn startup_script() -> Result<()> {
     let path = {
         let verge = Config::verge();
         let verge = verge.latest();
@@ -178,15 +178,13 @@ pub fn startup_script() -> Result<()> {
         if !current_dir.exists() {
             return Err(anyhow::anyhow!("script not found: {path}"));
         }
-        tauri::async_runtime::block_on(async move {
-            let current_dir = current_dir.parent();
-            let app_handle = handle::Handle::get_app_handle();
-            let mut cmd = app_handle.shell().command(shell);
-            if let Some(dir) = current_dir {
-                cmd = cmd.current_dir(dir);
-            }
-            trace_err!(cmd.args([path]).output().await, "run startup script failed");
-        });
+        let current_dir = current_dir.parent();
+        let app_handle = handle::Handle::get_app_handle();
+        let mut cmd = app_handle.shell().command(shell);
+        if let Some(dir) = current_dir {
+            cmd = cmd.current_dir(dir);
+        }
+        trace_err!(cmd.args([path]).output().await, "run startup script failed");
     }
     Ok(())
 }

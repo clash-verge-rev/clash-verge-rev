@@ -124,9 +124,9 @@ pub fn run() -> Result<()> {
         )
         .setup(|app| {
             let app_handle = app.handle();
-            let version = app_handle.package_info().version.to_string();
-            let _ = APP_VERSION.set(version.clone());
             let _ = APP_HANDLE.set(app_handle.clone());
+            let version = app_handle.package_info().version.to_string();
+            let _ = APP_VERSION.set(version);
 
             #[cfg(target_os = "macos")]
             {
@@ -135,7 +135,9 @@ pub fn run() -> Result<()> {
                 let _ = app_handle.set_dock_visibility(show_in_dock);
             }
 
-            resolve::resolve_setup();
+            tauri::async_runtime::block_on(async {
+                resolve::resolve_setup().await;
+            });
 
             Ok(())
         })
