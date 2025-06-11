@@ -261,6 +261,8 @@
   "Administrator mode may not support auto launch": "管理员模式可能不支持开机自启",
   "Silent Start": "静默启动",
   "Silent Start Info": "程序启动时以后台模式运行，不显示程序面板",
+  "Hover Jump Navigator": "悬浮跳转导航",
+  "Hover Jump Navigator Info": "鼠标悬停在字母上时自动滚动到对应代理组",
   "TG Channel": "Telegram 频道",
   "Manual": "使用手册",
   "Github Repo": "GitHub 项目地址",

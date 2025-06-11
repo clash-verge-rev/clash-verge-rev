@@ -58,6 +58,7 @@ const SettingSystem = ({ onError }: Props) => {
     enable_silent_start,
     enable_system_proxy,
     proxy_auto_config,
+    enable_hover_jump_navigator,
   } = verge ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;

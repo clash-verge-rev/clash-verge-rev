@@ -106,10 +106,12 @@ const LetterItem = memo(
     name,
     onClick,
     getFirstChar,
+    enableAutoScroll = true,
   }: {
     name: string;
     onClick: (name: string) => void;
     getFirstChar: (str: string) => string;
+    enableAutoScroll?: boolean;
   }) => {
     const [showTooltip, setShowTooltip] = useState(false);
     const letterRef = useRef<HTMLDivElement>(null);
@@ -136,11 +138,14 @@ const LetterItem = memo(
 
     const handleMouseEnter = useCallback(() => {
       setShowTooltip(true);
-      // 添加 200ms 的延迟，避免鼠标快速划过时触发滚动
-      hoverTimeoutRef.current = setTimeout(() => {
-        onClick(name);
-      }, 100);
-    }, [name, onClick]);
+      // 只有在启用自动滚动时才触发滚动
+      if (enableAutoScroll) {
+        // 添加 100ms 的延迟，避免鼠标快速划过时触发滚动
+        hoverTimeoutRef.current = setTimeout(() => {
+          onClick(name);
+        }, 100);
+      }
+    }, [name, onClick, enableAutoScroll]);
 
     const handleMouseLeave = useCallback(() => {
       setShowTooltip(false);
@@ -198,6 +203,9 @@ export const ProxyGroups = (props: Props) => {
 
   const { verge } = useVerge();
   const { current, patchCurrent } = useProfiles();
+
+  // 获取自动滚动开关状态，默认为 true
+  const enableAutoScroll = verge?.enable_hover_jump_navigator ?? true;
   const timeout = verge?.default_latency_timeout || 10000;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
@@ -541,6 +549,7 @@ export const ProxyGroups = (props: Props) => {
                 name={name}
                 onClick={handleLetterClick}
                 getFirstChar={getFirstChar}
+                enableAutoScroll={enableAutoScroll}
               />
             ))}
           </div>
