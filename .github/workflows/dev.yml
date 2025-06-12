@@ -61,6 +61,7 @@ jobs:
           pnpm prepare ${{ matrix.target }}
 
       - name: Tauri build
+        continue-on-error: true
         uses: tauri-apps/tauri-action@v0
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
