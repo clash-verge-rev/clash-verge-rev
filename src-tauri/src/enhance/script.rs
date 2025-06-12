@@ -1,6 +1,7 @@
 use super::use_lowercase;
 use anyhow::{Error, Result};
 use serde_yaml::Mapping;
+use std::collections::HashMap;
 
 pub fn use_script(
     script: String,
@@ -31,39 +32,54 @@ pub fn use_script(
             ),
         );
     }
+
+    // 增强 console 对象，支持更多方法
     let _ = context.eval(Source::from_bytes(
         r#"var console = Object.freeze({
-        log(data){__verge_log__("log",JSON.stringify(data))}, 
-        info(data){__verge_log__("info",JSON.stringify(data))}, 
-        error(data){__verge_log__("error",JSON.stringify(data))},
-        debug(data){__verge_log__("debug",JSON.stringify(data))},
+        log(data){__verge_log__("log",JSON.stringify(data, null, 2))},
+        info(data){__verge_log__("info",JSON.stringify(data, null, 2))},
+        error(data){__verge_log__("error",JSON.stringify(data, null, 2))},
+        debug(data){__verge_log__("debug",JSON.stringify(data, null, 2))},
+        warn(data){__verge_log__("warn",JSON.stringify(data, null, 2))},
+        table(data){__verge_log__("table",JSON.stringify(data, null, 2))},
       });"#,
     ));
 
     let config = use_lowercase(config.clone());
     let config_str = serde_json::to_string(&config)?;
 
+    // 安全处理 name 参数中的特殊字符
+    let safe_name = escape_js_string(&name);
+
     let code = format!(
         r#"try{{
         {script};
-        JSON.stringify(main({config_str},'{name}')||'')
+        JSON.stringify(main({config_str},'{safe_name}')||'')
       }} catch(err) {{
         `__error_flag__ ${{err.toString()}}`
       }}"#
     );
+
     if let Ok(result) = context.eval(Source::from_bytes(code.as_str())) {
         if !result.is_string() {
             anyhow::bail!("main function should return object");
         }
         let result = result.to_string(&mut context).unwrap();
         let result = result.to_std_string().unwrap();
-        if result.starts_with("__error_flag__") {
-            anyhow::bail!(result[15..].to_owned());
+
+        // 安全处理 JS 执行结果中的特殊字符
+        let unescaped_result = unescape_js_string(&result);
+
+        if unescaped_result.starts_with("__error_flag__") {
+            anyhow::bail!(unescaped_result[15..].to_owned());
         }
-        if result == "\"\"" {
+        if unescaped_result == "\"\"" {
             anyhow::bail!("main function should return object");
         }
-        let res: Result<Mapping, Error> = Ok(serde_json::from_str::<Mapping>(result.as_str())?);
+
+        // 安全地解析 JSON 结果
+        let res: Result<Mapping, Error> = parse_json_safely(&unescaped_result);
+
         let mut out = outputs.lock().unwrap();
         match res {
             Ok(config) => Ok((use_lowercase(config), out.to_vec())),
@@ -75,6 +91,83 @@ pub fn use_script(
     } else {
         anyhow::bail!("main function should return object");
     }
+}
+
+// 安全地解析 JSON 字符串，处理可能的转义字符
+fn parse_json_safely(json_str: &str) -> Result<Mapping, Error> {
+    // 移除可能的引号包裹
+    let json_str = if json_str.starts_with('"') && json_str.ends_with('"') {
+        &json_str[1..json_str.len() - 1]
+    } else {
+        json_str
+    };
+
+    // 处理可能的 JSON 字符串中的转义字符
+    let json_str = json_str.replace("\\\"", "\"");
+
+    Ok(serde_json::from_str::<Mapping>(&json_str)?)
+}
+
+// 转义 JS 字符串中的特殊字符
+fn escape_js_string(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\'' => result.push_str("\\'"),
+            '"' => result.push_str("\\\""),
+            '\\' => result.push_str("\\\\"),
+            '\n' => result.push_str("\\n"),
+            '\r' => result.push_str("\\r"),
+            '\t' => result.push_str("\\t"),
+            '\0' => result.push_str("\\0"),
+            _ => result.push(c),
+        }
+    }
+    result
+}
+
+// 反转义 JS 字符串中的特殊字符
+fn unescape_js_string(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            if let Some(next) = chars.next() {
+                match next {
+                    'n' => result.push('\n'),
+                    'r' => result.push('\r'),
+                    't' => result.push('\t'),
+                    '0' => result.push('\0'),
+                    '\\' => result.push('\\'),
+                    '\'' => result.push('\''),
+                    '"' => result.push('"'),
+                    'u' => {
+                        // 处理 Unicode 转义序列 \uXXXX
+                        if let Some(hex1) = chars.next() {
+                            if let Some(hex2) = chars.next() {
+                                if let Some(hex3) = chars.next() {
+                                    if let Some(hex4) = chars.next() {
+                                        let hex_str = format!("{}{}{}{}", hex1, hex2, hex3, hex4);
+                                        if let Ok(codepoint) = u32::from_str_radix(&hex_str, 16) {
+                                            if let Some(ch) = char::from_u32(codepoint) {
+                                                result.push(ch);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    _ => result.push(next),
+                }
+            }
+        } else {
+            result.push(c);
+        }
+    }
+
+    result
 }
 
 #[test]
@@ -110,4 +203,20 @@ fn test_script() {
     dbg!(box_yaml_config_size);
     dbg!(results);
     assert!(box_yaml_config_size < yaml_config_size);
+}
+
+// 测试特殊字符转义功能
+#[test]
+fn test_escape_unescape() {
+    let test_string = r#"Hello "World"!\nThis is a test with \u00A9 copyright symbol."#;
+    let escaped = escape_js_string(test_string);
+    let unescaped = unescape_js_string(&escaped);
+
+    assert_eq!(test_string, unescaped);
+
+    let json_str = r#""{\"key\":\"value\",\"nested\":{\"key\":\"value\"}}"#;
+    let parsed = parse_json_safely(json_str).unwrap();
+
+    assert!(parsed.contains_key("key"));
+    assert!(parsed.contains_key("nested"));
 }
