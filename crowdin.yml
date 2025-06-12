@@ -1,4 +1,4 @@
 files:
-  - source: /src/locales/en.json
+  - source: /src/locales/
     translation: /src/locales
     multilingual: 1
