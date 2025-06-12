@@ -25,7 +25,7 @@ where
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let state = app_handle.state::<Mutex<LightWeightState>>();
     let mut guard = state.lock().unwrap();
-    f(&mut *guard)
+    f(&mut guard)
 }
 
 pub fn run_once_auto_lightweight() {
