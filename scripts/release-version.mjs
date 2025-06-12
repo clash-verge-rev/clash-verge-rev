@@ -25,7 +25,6 @@
  * Errors are logged and the process exits with code 1 on failure.
  */
 
-
 import fs from "fs/promises";
 import path from "path";
 import { program } from "commander";

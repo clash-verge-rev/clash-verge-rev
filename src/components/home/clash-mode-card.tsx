@@ -148,9 +148,7 @@ export const ClashModeCard = () => {
         }}
       >
         <Typography variant="caption" component="div" sx={descriptionStyles}>
-          {t(
-            `${currentMode?.charAt(0).toUpperCase()}${currentMode?.slice(1)} Mode Description`,
-          )}
+          {t(`${currentMode} Mode Description`)}
         </Typography>
       </Box>
     </Box>
