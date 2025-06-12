@@ -24,7 +24,7 @@
       "description": "Disable node/pnpm version updates",
       "matchPackageNames": ["node", "pnpm"],
       "matchDepTypes": ["engines", "packageManager"],
-      "enabled": false
+      "enabled": true
     },
     {
       "description": "Group all cargo dependencies into a single PR",
