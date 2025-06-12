@@ -61,12 +61,14 @@ export function hideNotice(id: number) {
 
 // Subscribes a listener function to notice state changes.
 
-export function subscribeNotices(listener: Listener): () => void {
+export function subscribeNotices(listener: () => void) {
   listeners.add(listener);
-  listener([...notices]);
   return () => {
     listeners.delete(listener);
   };
+}
+export function getSnapshotNotices() {
+  return notices;
 }
 
 // Function to clear all notices at once
