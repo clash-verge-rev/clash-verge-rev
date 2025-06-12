@@ -31,8 +31,6 @@ pub fn use_script(
             ),
         );
     }
-
-    // 增强 console 对象，支持更多方法
     let _ = context.eval(Source::from_bytes(
         r#"var console = Object.freeze({
         log(data){__verge_log__("log",JSON.stringify(data, null, 2))},
@@ -47,7 +45,7 @@ pub fn use_script(
     let config = use_lowercase(config.clone());
     let config_str = serde_json::to_string(&config)?;
 
-    // 安全处理 name 参数中的特殊字符
+    // 处理 name 参数中的特殊字符
     let safe_name = escape_js_string(&name);
 
     let code = format!(
@@ -66,7 +64,7 @@ pub fn use_script(
         let result = result.to_string(&mut context).unwrap();
         let result = result.to_std_string().unwrap();
 
-        // 安全处理 JS 执行结果中的特殊字符
+        // 处理 JS 执行结果中的特殊字符
         let unescaped_result = unescape_js_string(&result);
 
         if unescaped_result.starts_with("__error_flag__") {
@@ -92,7 +90,7 @@ pub fn use_script(
     }
 }
 
-// 安全地解析 JSON 字符串，处理可能的转义字符
+// 解析 JSON 字符串，处理可能的转义字符
 fn parse_json_safely(json_str: &str) -> Result<Mapping, Error> {
     // 移除可能的引号包裹
     let json_str = if json_str.starts_with('"') && json_str.ends_with('"') {
@@ -142,7 +140,7 @@ fn unescape_js_string(s: &str) -> String {
                     '\'' => result.push('\''),
                     '"' => result.push('"'),
                     'u' => {
-                        // 处理 Unicode 转义序列 \uXXXX
+                        // 处理转义序列
                         if let Some(hex1) = chars.next() {
                             if let Some(hex2) = chars.next() {
                                 if let Some(hex3) = chars.next() {
@@ -213,9 +211,15 @@ fn test_escape_unescape() {
 
     assert_eq!(test_string, unescaped);
 
-    let json_str = r#""{\"key\":\"value\",\"nested\":{\"key\":\"value\"}}"#;
+    let json_str = r#"{"key":"value","nested":{"key":"value"}}"#;
     let parsed = parse_json_safely(json_str).unwrap();
 
     assert!(parsed.contains_key("key"));
     assert!(parsed.contains_key("nested"));
+
+    let quoted_json_str = r#""{"key":"value","nested":{"key":"value"}}""#;
+    let parsed_quoted = parse_json_safely(quoted_json_str).unwrap();
+
+    assert!(parsed_quoted.contains_key("key"));
+    assert!(parsed_quoted.contains_key("nested"));
 }
