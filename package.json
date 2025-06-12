@@ -112,5 +112,5 @@
     "endOfLine": "lf"
   },
   "type": "module",
-  "packageManager": "pnpm@9.13.2"
+  "packageManager": "pnpm@10.12.1"
 }
