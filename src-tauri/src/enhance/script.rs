@@ -1,7 +1,6 @@
 use super::use_lowercase;
 use anyhow::{Error, Result};
 use serde_yaml::Mapping;
-use std::collections::HashMap;
 
 pub fn use_script(
     script: String,
