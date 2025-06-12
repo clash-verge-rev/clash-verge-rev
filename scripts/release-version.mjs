@@ -28,19 +28,35 @@
 import fs from "fs/promises";
 import path from "path";
 import { program } from "commander";
+import { execSync } from "child_process";
 
 /**
- * 生成短时间戳（格式：YYMMDDHHMM）
+ * 获取当前 git 短 commit hash
  * @returns {string}
  */
-function generateShortTimestamp() {
+function getGitShortCommit() {
+  try {
+    return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch (e) {
+    console.warn("[WARN]: Failed to get git short commit, fallback to 'nogit'");
+    return "nogit";
+  }
+}
+
+/**
+ * 生成短时间戳（格式：YYMMDD）或带 commit（格式：YYMMDD.cc39b27）
+ * @param {boolean} withCommit 是否带 commit
+ * @returns {string}
+ */
+function generateShortTimestamp(withCommit = false) {
   const now = new Date();
-  const year = String(now.getFullYear()).slice(-2);
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  return `${year}${month}${day}${hours}${minutes}`;
+  if (withCommit) {
+    const gitShort = getGitShortCommit();
+    return `${month}${day}.${gitShort}`;
+  }
+  return `${month}${day}`;
 }
 
 /**
@@ -205,8 +221,8 @@ async function main(versionArg) {
       const baseVersion = getBaseVersion(currentVersion);
 
       if (versionArg.toLowerCase() === "autobuild") {
-        const timestamp = generateShortTimestamp();
-        newVersion = `${baseVersion}+autobuild.${timestamp}`;
+        // 格式: 2.3.0+autobuild.250613.cc39b27
+        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp(true)}`;
       } else {
         newVersion = `${baseVersion}-${versionArg.toLowerCase()}`;
       }

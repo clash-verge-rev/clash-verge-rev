@@ -1,17 +1,18 @@
-use std::sync::Once;
+use std::sync::{Arc, Once, OnceLock};
 
 use crate::{logging, utils::logging::Type};
 
+#[derive(Clone)]
 pub struct LightWeightState {
     #[allow(unused)]
-    once: Once,
+    once: Arc<Once>,
     pub is_lightweight: bool,
 }
 
 impl LightWeightState {
     pub fn new() -> Self {
         Self {
-            once: Once::new(),
+            once: Arc::new(Once::new()),
             is_lightweight: false,
         }
     }
@@ -37,6 +38,7 @@ impl LightWeightState {
 
 impl Default for LightWeightState {
     fn default() -> Self {
-        Self::new()
+        static INSTANCE: OnceLock<LightWeightState> = OnceLock::new();
+        INSTANCE.get_or_init(LightWeightState::new).clone()
     }
 }
