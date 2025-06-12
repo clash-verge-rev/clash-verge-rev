@@ -39,6 +39,6 @@ impl LightWeightState {
 impl Default for LightWeightState {
     fn default() -> Self {
         static INSTANCE: OnceLock<LightWeightState> = OnceLock::new();
-        INSTANCE.get_or_init(|| LightWeightState::new()).clone()
+        INSTANCE.get_or_init(LightWeightState::new).clone()
     }
 }
