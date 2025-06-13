@@ -98,7 +98,7 @@ pub fn run() {
                 if result.is_err() {
                     logging!(info, Type::Setup, true, "检测到已有应用实例运行");
                     if let Some(app_handle) = AppHandleManager::global().get() {
-                        let _ = app_handle.exit(0);
+                        app_handle.exit(0);
                     } else {
                         std::process::exit(0);
                     }
