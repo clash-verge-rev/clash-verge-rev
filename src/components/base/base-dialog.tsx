@@ -6,6 +6,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AnimatePresence, motion } from "framer-motion";
 import { t } from "i18next";
 import { CSSProperties, ReactNode, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 
 const OS = getSystem();
 
@@ -69,7 +70,7 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
     });
   }, [titlebarRef.current, full]);
 
-  return (
+  return ReactDOM.createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -136,6 +137,7 @@ export const BaseDialog = (props: AnimatedDialogProps) => {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };
