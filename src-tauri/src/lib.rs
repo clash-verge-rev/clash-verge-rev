@@ -90,17 +90,20 @@ pub fn run() {
 
     let _ = utils::dirs::init_portable_flag();
 
-    // 单例检测
-    let app_exists: bool = AsyncHandler::block_on(move || async move {
+    // 异步单例检测
+    AsyncHandler::spawn(move || async move {
         logging!(info, Type::Setup, true, "开始检查单例实例...");
         match timeout(Duration::from_secs(3), server::check_singleton()).await {
             Ok(result) => {
                 if result.is_err() {
                     logging!(info, Type::Setup, true, "检测到已有应用实例运行");
-                    true
+                    if let Some(app_handle) = AppHandleManager::global().get() {
+                        let _ = app_handle.exit(0);
+                    } else {
+                        std::process::exit(0);
+                    }
                 } else {
                     logging!(info, Type::Setup, true, "未检测到其他应用实例");
-                    false
                 }
             }
             Err(_) => {
@@ -110,13 +113,9 @@ pub fn run() {
                     true,
                     "单例检查超时，假定没有其他实例运行"
                 );
-                false
             }
         }
     });
-    if app_exists {
-        return;
-    }
 
     #[cfg(target_os = "linux")]
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");

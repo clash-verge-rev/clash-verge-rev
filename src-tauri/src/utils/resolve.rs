@@ -142,7 +142,8 @@ pub async fn find_unused_port() -> Result<u16> {
 
 /// 异步方式处理启动后的额外任务
 pub async fn resolve_setup_async(app_handle: &AppHandle) {
-    logging!(info, Type::Setup, true, "执行异步设置任务...");
+    let start_time = std::time::Instant::now();
+    logging!(info, Type::Setup, true, "开始执行异步设置任务...");
 
     if VERSION.get().is_none() {
         let version = app_handle.package_info().version.to_string();
@@ -230,7 +231,25 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     logging!(trace, Type::System, true, "初始化热键...");
     logging_error!(Type::System, true, hotkey::Hotkey::global().init());
 
-    logging!(info, Type::Setup, true, "异步设置任务完成");
+    let elapsed = start_time.elapsed();
+    logging!(
+        info,
+        Type::Setup,
+        true,
+        "异步设置任务完成，耗时: {:?}",
+        elapsed
+    );
+
+    // 如果初始化时间过长，记录警告
+    if elapsed.as_secs() > 10 {
+        logging!(
+            warn,
+            Type::Setup,
+            true,
+            "异步设置任务耗时较长({:?})",
+            elapsed
+        );
+    }
 }
 
 /// reset system proxy (异步)
@@ -315,7 +334,49 @@ pub fn create_window(is_show: bool) -> bool {
     .fullscreen(false)
     .inner_size(DEFAULT_WIDTH as f64, DEFAULT_HEIGHT as f64)
     .min_inner_size(520.0, 520.0)
-    .visible(false)
+    .visible(true)  // 立即显示窗口，避免用户等待
+    .initialization_script(r#"
+        // 添加非侵入式的加载指示器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 只有在React应用还没有挂载时才显示加载指示器
+            if (!document.getElementById('root') || !document.getElementById('root').hasChildNodes()) {
+                // 创建加载指示器，但不覆盖整个body
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'initial-loading-overlay';
+                loadingDiv.innerHTML = `
+                    <div style="
+                        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                        background: var(--bg-color, #f5f5f5); color: var(--text-color, #333);
+                        display: flex; flex-direction: column; align-items: center; 
+                        justify-content: center; z-index: 9998; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    ">
+                        <div style="margin-bottom: 20px;">
+                            <div style="width: 40px; height: 40px; border: 3px solid #e3e3e3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        </div>
+                        <div style="font-size: 14px; opacity: 0.7;">正在加载 Clash Verge...</div>
+                    </div>
+                    <style>
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                        @media (prefers-color-scheme: dark) {
+                            :root { --bg-color: #1a1a1a; --text-color: #ffffff; }
+                        }
+                    </style>
+                `;
+                document.body.appendChild(loadingDiv);
+                
+                // 设置定时器，如果React应用在5秒内没有挂载，移除加载指示器
+                setTimeout(() => {
+                    const overlay = document.getElementById('initial-loading-overlay');
+                    if (overlay) {
+                        overlay.remove();
+                    }
+                }, 5000);
+            }
+        });
+    "#)
     .build()
     {
         Ok(newly_created_window) => {
@@ -334,72 +395,98 @@ pub fn create_window(is_show: bool) -> bool {
                     "异步窗口任务开始 (启动已标记完成)"
                 );
 
+                // 先运行轻量模式检测
+                lightweight::run_once_auto_lightweight();
+
+                // 发送启动完成事件，触发前端开始加载
+                logging!(
+                    debug,
+                    Type::Window,
+                    true,
+                    "发送 verge://startup-completed 事件"
+                );
+                handle::Handle::notify_startup_completed();
+
                 if is_show {
                     let window_clone = newly_created_window.clone();
 
-                    // Attempt to show and focus the window first.
+                    // 立即显示窗口
                     let _ = window_clone.show();
                     let _ = window_clone.set_focus();
-                    logging!(debug, Type::Window, true, "窗口已尝试显示和聚焦");
-
-                    lightweight::run_once_auto_lightweight();
-
-                    tokio::time::sleep(Duration::from_millis(100)).await; // Crucial delay
-
-                    logging!(
-                        debug,
-                        Type::Window,
-                        true,
-                        "延时后，尝试发送 verge://startup-completed 事件"
-                    );
-                    handle::Handle::notify_startup_completed();
+                    logging!(info, Type::Window, true, "窗口已立即显示");
 
                     let timeout_seconds = if crate::module::lightweight::is_in_lightweight_mode() {
-                        2
+                        3
                     } else {
-                        5
+                        8
                     };
 
                     logging!(
                         info,
                         Type::Window,
                         true,
-                        "等待UI就绪 (最多{}秒)...",
+                        "开始监控UI加载状态 (最多{}秒)...",
                         timeout_seconds
                     );
 
-                    let wait_result =
-                        tokio::time::timeout(Duration::from_secs(timeout_seconds), async {
-                            while !*get_ui_ready().read() {
-                                tokio::time::sleep(Duration::from_millis(100)).await;
-                            }
-                        })
-                        .await;
+                    // 异步监控UI状态，不影响窗口显示
+                    tokio::spawn(async move {
+                        let wait_result =
+                            tokio::time::timeout(Duration::from_secs(timeout_seconds), async {
+                                let mut check_count = 0;
+                                while !*get_ui_ready().read() {
+                                    tokio::time::sleep(Duration::from_millis(100)).await;
+                                    check_count += 1;
 
-                    match wait_result {
-                        Ok(_) => {
-                            logging!(info, Type::Window, true, "UI就绪");
+                                    // 每2秒记录一次等待状态
+                                    if check_count % 20 == 0 {
+                                        logging!(
+                                            debug,
+                                            Type::Window,
+                                            true,
+                                            "UI加载状态检查... ({}秒)",
+                                            check_count / 10
+                                        );
+                                    }
+                                }
+                            })
+                            .await;
+
+                        match wait_result {
+                            Ok(_) => {
+                                logging!(info, Type::Window, true, "UI已完全加载就绪");
+                                // 移除初始加载指示器
+                                if let Some(window) = handle::Handle::global().get_window() {
+                                    let _ = window.eval(r#"
+                                        const overlay = document.getElementById('initial-loading-overlay');
+                                        if (overlay) {
+                                            overlay.style.opacity = '0';
+                                            setTimeout(() => overlay.remove(), 300);
+                                        }
+                                    "#);
+                                }
+                            }
+                            Err(_) => {
+                                logging!(
+                                    warn,
+                                    Type::Window,
+                                    true,
+                                    "UI加载监控超时({}秒)，但窗口已正常显示",
+                                    timeout_seconds
+                                );
+                                *get_ui_ready().write() = true;
+                            }
                         }
-                        Err(_) => {
-                            logging!(
-                                warn,
-                                Type::Window,
-                                true,
-                                "等待UI就绪超时({}秒)，强制标记就绪",
-                                timeout_seconds
-                            );
-                            *get_ui_ready().write() = true;
-                        }
-                    }
+                    });
+
                     logging!(info, Type::Window, true, "窗口显示流程完成");
                 } else {
                     logging!(
                         debug,
                         Type::Window,
                         true,
-                        "is_show为false，窗口保持隐藏。尝试发送启动事件。"
+                        "is_show为false，窗口保持隐藏状态"
                     );
-                    handle::Handle::notify_startup_completed();
                 }
             });
             true

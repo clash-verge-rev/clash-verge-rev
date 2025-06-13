@@ -153,30 +153,61 @@ impl Hotkey {
                         "=== Hotkey Dashboard Window Operation Start ==="
                     );
 
-                    // 使用 spawn_blocking 来确保在正确的线程上执行
-                    AsyncHandler::spawn_blocking(|| {
-                        logging!(debug, Type::Hotkey, "Toggle dashboard window visibility");
+                    // 使用异步操作避免阻塞
+                    AsyncHandler::spawn(move || async move {
+                        logging!(
+                            debug,
+                            Type::Hotkey,
+                            true,
+                            "Toggle dashboard window visibility"
+                        );
 
                         // 检查窗口是否存在
                         if let Some(window) = handle::Handle::global().get_window() {
-                            // 如果窗口可见，则隐藏它
-                            if window.is_visible().unwrap_or(false) {
-                                logging!(info, Type::Window, "Window is visible, hiding it");
-                                let _ = window.hide();
-                            } else {
-                                // 如果窗口不可见，则显示它
-                                logging!(info, Type::Window, "Window is hidden, showing it");
-                                if window.is_minimized().unwrap_or(false) {
-                                    let _ = window.unminimize();
+                            // 如果窗口可见，则隐藏
+                            match window.is_visible() {
+                                Ok(visible) => {
+                                    if visible {
+                                        logging!(
+                                            info,
+                                            Type::Window,
+                                            true,
+                                            "Window is visible, hiding it"
+                                        );
+                                        let _ = window.hide();
+                                    } else {
+                                        // 如果窗口不可见，则显示
+                                        logging!(
+                                            info,
+                                            Type::Window,
+                                            true,
+                                            "Window is hidden, showing it"
+                                        );
+                                        if window.is_minimized().unwrap_or(false) {
+                                            let _ = window.unminimize();
+                                        }
+                                        let _ = window.show();
+                                        let _ = window.set_focus();
+                                    }
                                 }
-                                let _ = window.show();
-                                let _ = window.set_focus();
+                                Err(e) => {
+                                    logging!(
+                                        warn,
+                                        Type::Window,
+                                        true,
+                                        "Failed to check window visibility: {}",
+                                        e
+                                    );
+                                    let _ = window.show();
+                                    let _ = window.set_focus();
+                                }
                             }
                         } else {
                             // 如果窗口不存在，创建一个新窗口
                             logging!(
                                 info,
                                 Type::Window,
+                                true,
                                 "Window does not exist, creating a new one"
                             );
                             resolve::create_window(true);

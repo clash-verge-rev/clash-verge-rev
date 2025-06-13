@@ -288,24 +288,61 @@ const Layout = () => {
       }
     };
 
-    // 初始阶段 - 开始加载
-    notifyUiStage("Loading");
+    // 简化的UI初始化流程
+    const initializeUI = async () => {
+      try {
+        const initialOverlay = document.getElementById(
+          "initial-loading-overlay",
+        );
+        if (initialOverlay) {
+          initialOverlay.style.opacity = "0";
+          setTimeout(() => initialOverlay.remove(), 200);
+        }
 
-    setTimeout(() => {
-      notifyUiCoreReady();
+        await notifyUiStage("Loading");
 
-      setTimeout(() => {
-        notifyUiResourcesLoaded();
-        setTimeout(() => {
-          notifyUiReady();
-        }, 100);
-      }, 100);
-    }, 100);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        console.log("[Layout] 通知后端：DomReady");
+        await notifyUiCoreReady();
+
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+          });
+        });
+
+        console.log("[Layout] 通知后端：ResourcesLoaded");
+        await notifyUiResourcesLoaded();
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        await notifyUiReady();
+      } catch (error) {
+        try {
+          await notifyUiReady();
+        } catch (e) {
+          console.error("[Layout] 通知UI就绪失败:", e);
+        }
+      }
+    };
+
+    setTimeout(initializeUI, 50);
+
+    const emergencyTimeout = setTimeout(() => {
+      const emergencyNotify = async () => {
+        try {
+          await invoke("notify_ui_ready");
+        } catch (error) {}
+      };
+      emergencyNotify();
+    }, 5000);
 
     // 启动监听器
     const unlistenPromise = listenStartupCompleted();
 
     return () => {
+      clearTimeout(emergencyTimeout);
       unlistenPromise.then((unlisten) => unlisten());
     };
   }, []);
@@ -332,12 +369,30 @@ const Layout = () => {
           height: "100vh",
           background: mode === "light" ? "#fff" : "#181a1b",
           transition: "background 0.2s",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: mode === "light" ? "#333" : "#fff",
         }}
-      />
+      ></div>
     );
   }
 
-  if (!routersEles) return null;
+  if (!routersEles) {
+    return (
+      <div
+        style={{
+          width: "100vw",
+          height: "100vh",
+          background: mode === "light" ? "#fff" : "#181a1b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: mode === "light" ? "#333" : "#fff",
+        }}
+      ></div>
+    );
+  }
 
   return (
     <SWRConfig value={{ errorRetryCount: 3 }}>
