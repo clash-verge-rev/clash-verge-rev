@@ -126,38 +126,29 @@ fn escape_js_string(s: &str) -> String {
 // 反转义 JS 字符串中的特殊字符
 fn unescape_js_string(s: &str) -> String {
     let mut result = String::with_capacity(s.len());
-    let mut chars = s.chars().peekable();
+    let mut chars = s.chars();
 
     while let Some(c) = chars.next() {
         if c == '\\' {
-            if let Some(next) = chars.next() {
-                match next {
-                    'n' => result.push('\n'),
-                    'r' => result.push('\r'),
-                    't' => result.push('\t'),
-                    '0' => result.push('\0'),
-                    '\\' => result.push('\\'),
-                    '\'' => result.push('\''),
-                    '"' => result.push('"'),
-                    'u' => {
+            match chars.next() {
+                Some('n') => result.push('\n'),
+                Some('r') => result.push('\r'),
+                Some('t') => result.push('\t'),
+                Some('0') => result.push('\0'),
+                Some('\\') => result.push('\\'),
+                Some('\'') => result.push('\''),
+                Some('"') => result.push('"'),
+                Some('u') => {
                         // 处理转义序列
-                        if let Some(hex1) = chars.next() {
-                            if let Some(hex2) = chars.next() {
-                                if let Some(hex3) = chars.next() {
-                                    if let Some(hex4) = chars.next() {
-                                        let hex_str = format!("{}{}{}{}", hex1, hex2, hex3, hex4);
-                                        if let Ok(codepoint) = u32::from_str_radix(&hex_str, 16) {
-                                            if let Some(ch) = char::from_u32(codepoint) {
-                                                result.push(ch);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                    let hex = chars.by_ref().take(4).collect::<String>();
+                    if let Ok(codepoint) = u32::from_str_radix(&hex, 16) {
+                        if let Some(ch) = char::from_u32(codepoint) {
+                            result.push(ch);
                         }
                     }
-                    _ => result.push(next),
                 }
+                Some(other) => result.push(other),
+                None => break,
             }
         } else {
             result.push(c);
