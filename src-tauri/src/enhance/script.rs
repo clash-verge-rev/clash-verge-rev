@@ -139,7 +139,7 @@ fn unescape_js_string(s: &str) -> String {
                 Some('\'') => result.push('\''),
                 Some('"') => result.push('"'),
                 Some('u') => {
-                        // 处理转义序列
+                    // 处理转义序列
                     let hex = chars.by_ref().take(4).collect::<String>();
                     if let Ok(codepoint) = u32::from_str_radix(&hex, 16) {
                         if let Some(ch) = char::from_u32(codepoint) {
