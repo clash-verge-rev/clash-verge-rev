@@ -63,6 +63,8 @@ impl IClashTemp {
             vec![
                 "tauri://localhost",
                 "http://tauri.localhost",
+                // Only enable this in dev mode
+                #[cfg(feature = "verge-dev")]
                 "http://localhost:3000",
                 "https://yacd.metacubex.one",
                 "https://metacubex.github.io",
@@ -103,6 +105,8 @@ impl IClashTemp {
             vec![
                 "tauri://localhost",
                 "http://tauri.localhost",
+                // Only enable this in dev mode
+                #[cfg(feature = "verge-dev")]
                 "http://localhost:3000",
                 "https://yacd.metacubex.one",
                 "https://metacubex.github.io",

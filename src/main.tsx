@@ -48,7 +48,8 @@ const contexts = [
   <UpdateStateProvider />,
 ];
 
-createRoot(container).render(
+const root = createRoot(container);
+root.render(
   <React.StrictMode>
     <ComposeContextProvider contexts={contexts}>
       <BaseErrorBoundary>
@@ -61,3 +62,12 @@ createRoot(container).render(
     </ComposeContextProvider>
   </React.StrictMode>,
 );
+
+// 错误处理
+window.addEventListener("error", (event) => {
+  console.error("[main.tsx] 全局错误:", event.error);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("[main.tsx] 未处理的Promise拒绝:", event.reason);
+});
