@@ -25,7 +25,7 @@ where
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let state = app_handle.state::<Mutex<LightWeightState>>();
     let mut guard = state.lock().unwrap();
-    f(&mut *guard)
+    f(&mut guard)
 }
 
 pub fn run_once_auto_lightweight() {
@@ -54,12 +54,12 @@ pub fn auto_lightweight_mode_init() {
         let _ = app_handle.state::<Mutex<LightWeightState>>();
         let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
         let enable_auto = { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
-        if enable_auto && is_silent_start {
+        if enable_auto && !is_silent_start {
             logging!(
                 info,
                 Type::Lightweight,
                 true,
-                "Add timer listener when creating window in silent start mode"
+                "Add timer listener when creating window normally"
             );
             set_lightweight_mode(true);
             enable_auto_light_weight_mode();

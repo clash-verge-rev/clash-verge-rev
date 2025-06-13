@@ -263,6 +263,17 @@ pub fn create_window(is_show: bool) -> bool {
         is_show
     );
 
+    if !is_show {
+        logging!(
+            info,
+            Type::Window,
+            true,
+            "Not to create window when starting in silent mode"
+        );
+        handle::Handle::notify_startup_completed();
+        return false;
+    }
+
     if let Some(app_handle) = handle::Handle::global().app_handle() {
         if let Some(window) = app_handle.get_webview_window("main") {
             logging!(info, Type::Window, true, "主窗口已存在，将显示现有窗口");

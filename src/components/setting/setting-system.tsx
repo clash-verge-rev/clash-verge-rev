@@ -210,12 +210,29 @@ const SettingSystem = ({ onError }: Props) => {
         }
       >
         <GuardState
-          value={enable_system_proxy ?? false}
+          value={
+            // 此行为跟随代理状态，异常关闭时按钮应当也关闭
+            // 如果 autoproxy.enable 和 sysproxy.enable 都为 false，则强制为 false
+            autoproxy?.enable === false && sysproxy?.enable === false
+              ? false
+              : (enable_system_proxy ?? false)
+          }
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_system_proxy: e })}
+          onChange={(e) => {
+            if (autoproxy?.enable === false && sysproxy?.enable === false) {
+              onChangeData({ enable_system_proxy: !enable_system_proxy });
+            } else {
+              onChangeData({ enable_system_proxy: e });
+            }
+          }}
           onGuard={async (e) => {
+            if (autoproxy?.enable === false && sysproxy?.enable === false) {
+              await patchVerge({ enable_system_proxy: !enable_system_proxy });
+              await updateProxyStatus();
+              return;
+            }
             if (!e && verge?.auto_close_connection) {
               closeAllConnections();
             }
@@ -223,7 +240,14 @@ const SettingSystem = ({ onError }: Props) => {
             await updateProxyStatus();
           }}
         >
-          <Switch edge="end" />
+          <Switch
+            edge="end"
+            checked={
+              autoproxy?.enable === false && sysproxy?.enable === false
+                ? false
+                : (enable_system_proxy ?? false)
+            }
+          />
         </GuardState>
       </SettingItem>
 
