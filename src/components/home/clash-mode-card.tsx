@@ -23,6 +23,15 @@ export const ClashModeCard = () => {
   // 直接使用API返回的模式，不维护本地状态
   const currentMode = clashConfig?.mode?.toLowerCase();
 
+  const modeDescription = useMemo(() => {
+    if (typeof currentMode === "string" && currentMode.length > 0) {
+      return t(
+        `${currentMode[0].toLocaleUpperCase()}${currentMode.slice(1)} Mode Description`,
+      );
+    }
+    return t("Mode Description Not Available");
+  }, [currentMode]);
+
   // 模式图标映射
   const modeIcons = useMemo(
     () => ({
@@ -148,9 +157,7 @@ export const ClashModeCard = () => {
         }}
       >
         <Typography variant="caption" component="div" sx={descriptionStyles}>
-          {t(
-            `${currentMode?.charAt(0).toUpperCase()}${currentMode?.slice(1)} Mode Description`,
-          )}
+          {modeDescription}
         </Typography>
       </Box>
     </Box>
