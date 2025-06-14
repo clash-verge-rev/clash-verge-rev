@@ -1,3 +1,5 @@
+#[cfg(target_os = "macos")]
+use crate::AppHandleManager;
 use crate::{
     config::{Config, IVerge, PrfItem},
     core::*,
@@ -218,6 +220,14 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
 
     // 创建窗口
     let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
+    #[cfg(target_os = "macos")]
+    {
+        if is_silent_start {
+            use crate::AppHandleManager;
+
+            AppHandleManager::global().set_activation_policy_accessory();
+        }
+    }
     create_window(!is_silent_start);
 
     // 初始化定时器
@@ -414,6 +424,10 @@ pub fn create_window(is_show: bool) -> bool {
                     let _ = window_clone.show();
                     let _ = window_clone.set_focus();
                     logging!(info, Type::Window, true, "窗口已立即显示");
+                    #[cfg(target_os = "macos")]
+                    {
+                        AppHandleManager::global().set_activation_policy_regular();
+                    }
 
                     let timeout_seconds = if crate::module::lightweight::is_in_lightweight_mode() {
                         3
