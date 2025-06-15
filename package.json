@@ -100,7 +100,7 @@
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "0.6.12",
     "pretty-quick": "4.2.2",
-    "tailwind-merge": "3.3.0",
+    "tailwind-merge": "3.3.1",
     "tailwindcss": "4.1.8",
     "tar": "7.4.3",
     "terser": "5.41.0",
