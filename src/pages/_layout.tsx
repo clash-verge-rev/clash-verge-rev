@@ -237,49 +237,120 @@ const Layout = () => {
     console.log("[Layout] 开始执行初始化代码");
     initRef.current = true;
 
-    const notifyUiStage = async (stage: string) => {
+    let isInitialized = false;
+    let initializationAttempts = 0;
+    const maxAttempts = 3;
+
+    const notifyBackend = async (action: string, stage?: string) => {
       try {
-        console.log(`[Layout] UI加载阶段: ${stage}`);
-        await invoke("update_ui_stage", { stage });
+        if (stage) {
+          console.log(`[Layout] 通知后端 ${action}: ${stage}`);
+          await invoke("update_ui_stage", { stage });
+        } else {
+          console.log(`[Layout] 通知后端 ${action}`);
+          await invoke("notify_ui_ready");
+        }
       } catch (err) {
-        console.error(`[Layout] 通知UI加载阶段(${stage})失败:`, err);
+        console.error(`[Layout] 通知失败 ${action}:`, err);
       }
     };
 
-    const notifyUiCoreReady = async () => {
-      try {
-        console.log("[Layout] 核心组件已加载，通知后端");
-        await invoke("update_ui_stage", { stage: "DomReady" });
-      } catch (err) {
-        console.error("[Layout] 通知核心组件加载完成失败:", err);
+    const removeLoadingOverlay = () => {
+      const initialOverlay = document.getElementById("initial-loading-overlay");
+      if (initialOverlay) {
+        console.log("[Layout] 移除加载指示器");
+        initialOverlay.style.opacity = "0";
+        setTimeout(() => {
+          try {
+            initialOverlay.remove();
+          } catch (e) {
+            console.log("[Layout] 加载指示器已被移除");
+          }
+        }, 300);
       }
     };
 
-    const notifyUiResourcesLoaded = async () => {
+    const performInitialization = async () => {
+      if (isInitialized) {
+        console.log("[Layout] 已经初始化过，跳过");
+        return;
+      }
+
+      initializationAttempts++;
+      console.log(`[Layout] 开始第 ${initializationAttempts} 次初始化尝试`);
+
       try {
-        console.log("[Layout] 所有资源已加载，通知后端");
-        await invoke("update_ui_stage", { stage: "ResourcesLoaded" });
-      } catch (err) {
-        console.error("[Layout] 通知资源加载完成失败:", err);
+        removeLoadingOverlay();
+
+        await notifyBackend("加载阶段", "Loading");
+
+        await new Promise<void>((resolve) => {
+          const checkReactMount = () => {
+            const rootElement = document.getElementById("root");
+            if (rootElement && rootElement.children.length > 0) {
+              console.log("[Layout] React组件已挂载");
+              resolve();
+            } else {
+              setTimeout(checkReactMount, 50);
+            }
+          };
+
+          checkReactMount();
+
+          setTimeout(() => {
+            console.log("[Layout] React组件挂载检查超时，继续执行");
+            resolve();
+          }, 2000);
+        });
+
+        await notifyBackend("DOM就绪", "DomReady");
+
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+
+        await notifyBackend("资源加载完成", "ResourcesLoaded");
+
+        await notifyBackend("UI就绪");
+
+        isInitialized = true;
+        console.log(`[Layout] 第 ${initializationAttempts} 次初始化完成`);
+      } catch (error) {
+        console.error(
+          `[Layout] 第 ${initializationAttempts} 次初始化失败:`,
+          error,
+        );
+
+        if (initializationAttempts < maxAttempts) {
+          console.log(
+            `[Layout] 将在500ms后进行第 ${initializationAttempts + 1} 次重试`,
+          );
+          setTimeout(performInitialization, 500);
+        } else {
+          console.error("[Layout] 所有初始化尝试都失败，执行紧急初始化");
+
+          removeLoadingOverlay();
+          try {
+            await notifyBackend("UI就绪");
+            isInitialized = true;
+          } catch (e) {
+            console.error("[Layout] 紧急初始化也失败:", e);
+          }
+        }
       }
     };
 
-    const notifyUiReady = async () => {
-      try {
-        console.log("[Layout] UI完全准备就绪，通知后端");
-        await invoke("notify_ui_ready");
-      } catch (err) {
-        console.error("[Layout] 通知UI准备就绪失败:", err);
-      }
-    };
+    let hasEventTriggered = false;
 
-    // 监听后端发送的启动完成事件
-    const listenStartupCompleted = async () => {
+    const setupEventListener = async () => {
       try {
         console.log("[Layout] 开始监听启动完成事件");
         const unlisten = await listen("verge://startup-completed", () => {
-          console.log("[Layout] 收到启动完成事件，开始通知UI就绪");
-          notifyUiReady();
+          if (!hasEventTriggered) {
+            console.log("[Layout] 收到启动完成事件，开始初始化");
+            hasEventTriggered = true;
+            performInitialization();
+          }
         });
         return unlisten;
       } catch (err) {
@@ -288,61 +359,45 @@ const Layout = () => {
       }
     };
 
-    // 简化的UI初始化流程
-    const initializeUI = async () => {
+    const checkImmediateInitialization = async () => {
       try {
-        const initialOverlay = document.getElementById(
-          "initial-loading-overlay",
-        );
-        if (initialOverlay) {
-          initialOverlay.style.opacity = "0";
-          setTimeout(() => initialOverlay.remove(), 200);
+        console.log("[Layout] 检查后端是否已就绪");
+        await invoke("update_ui_stage", { stage: "Loading" });
+
+        if (!hasEventTriggered && !isInitialized) {
+          console.log("[Layout] 后端已就绪，立即开始初始化");
+          hasEventTriggered = true;
+          performInitialization();
         }
-
-        await notifyUiStage("Loading");
-
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        console.log("[Layout] 通知后端：DomReady");
-        await notifyUiCoreReady();
-
-        await new Promise((resolve) => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(resolve);
-          });
-        });
-
-        console.log("[Layout] 通知后端：ResourcesLoaded");
-        await notifyUiResourcesLoaded();
-
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        await notifyUiReady();
-      } catch (error) {
-        try {
-          await notifyUiReady();
-        } catch (e) {
-          console.error("[Layout] 通知UI就绪失败:", e);
-        }
+      } catch (err) {
+        console.log("[Layout] 后端尚未就绪，等待启动完成事件");
       }
     };
 
-    setTimeout(initializeUI, 50);
+    const backupInitialization = setTimeout(() => {
+      if (!hasEventTriggered && !isInitialized) {
+        console.warn("[Layout] 备用初始化触发：1.5秒内未开始初始化");
+        hasEventTriggered = true;
+        performInitialization();
+      }
+    }, 1500);
 
-    const emergencyTimeout = setTimeout(() => {
-      const emergencyNotify = async () => {
-        try {
-          await invoke("notify_ui_ready");
-        } catch (error) {}
-      };
-      emergencyNotify();
+    const emergencyInitialization = setTimeout(() => {
+      if (!isInitialized) {
+        console.error("[Layout] 紧急初始化触发：5秒内未完成初始化");
+        removeLoadingOverlay();
+        notifyBackend("UI就绪").catch(() => {});
+        isInitialized = true;
+      }
     }, 5000);
 
-    // 启动监听器
-    const unlistenPromise = listenStartupCompleted();
+    const unlistenPromise = setupEventListener();
+
+    setTimeout(checkImmediateInitialization, 100);
 
     return () => {
-      clearTimeout(emergencyTimeout);
+      clearTimeout(backupInitialization);
+      clearTimeout(emergencyInitialization);
       unlistenPromise.then((unlisten) => unlisten());
     };
   }, []);

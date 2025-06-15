@@ -188,78 +188,30 @@ async fn clean_async() -> bool {
 }
 
 pub fn clean() -> bool {
-    use tokio::time::{timeout, Duration};
+    use crate::process::AsyncHandler;
 
-    // 使用异步处理
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    let cleanup_result = rt.block_on(async {
+    let (tx, rx) = std::sync::mpsc::channel();
+
+    AsyncHandler::spawn(move || async move {
         log::info!(target: "app", "开始执行清理操作...");
 
-        // 1. 处理TUN模式 - 并行执行，减少等待时间
-        let tun_task = async {
-            if Config::verge().data().enable_tun_mode.unwrap_or(false) {
-                let disable_tun = serde_json::json!({
-                    "tun": {
-                        "enable": false
-                    }
-                });
-                timeout(
-                    Duration::from_secs(2),
-                    MihomoManager::global().patch_configs(disable_tun),
-                )
-                .await
-                .is_ok()
-            } else {
-                true
-            }
-        };
+        // 使用已有的异步清理函数
+        let cleanup_result = clean_async().await;
 
-        // 2. 系统代理重置
-        let proxy_task = async {
-            timeout(
-                Duration::from_secs(2),
-                sysopt::Sysopt::global().reset_sysproxy(),
-            )
-            .await
-            .is_ok()
-        };
-
-        // 3. 核心服务停止
-        let core_task = async {
-            timeout(Duration::from_secs(2), CoreManager::global().stop_core())
-                .await
-                .is_ok()
-        };
-
-        // 4. DNS恢复（仅macOS）
-        #[cfg(target_os = "macos")]
-        let dns_task = async {
-            timeout(Duration::from_millis(800), resolve::restore_public_dns())
-                .await
-                .is_ok()
-        };
-
-        // 并行执行所有清理任务，提高效率
-        let (tun_success, proxy_success, core_success) =
-            tokio::join!(tun_task, proxy_task, core_task);
-
-        #[cfg(target_os = "macos")]
-        let dns_success = dns_task.await;
-        #[cfg(not(target_os = "macos"))]
-        let dns_success = true;
-
-        let all_success = tun_success && proxy_success && core_success && dns_success;
-
-        log::info!(
-            target: "app",
-            "清理操作完成 - TUN: {}, 代理: {}, 核心: {}, DNS: {}, 总体: {}",
-            tun_success, proxy_success, core_success, dns_success, all_success
-        );
-
-        all_success
+        // 发送结果
+        let _ = tx.send(cleanup_result);
     });
 
-    cleanup_result
+    match rx.recv_timeout(std::time::Duration::from_secs(8)) {
+        Ok(result) => {
+            log::info!(target: "app", "清理操作完成，结果: {}", result);
+            result
+        }
+        Err(_) => {
+            log::warn!(target: "app", "清理操作超时，返回成功状态避免阻塞");
+            true
+        }
+    }
 }
 
 #[cfg(target_os = "macos")]

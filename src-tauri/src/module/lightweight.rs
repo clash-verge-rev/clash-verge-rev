@@ -172,19 +172,20 @@ fn cancel_window_close_listener() {
 
 fn setup_light_weight_timer() -> Result<()> {
     Timer::global().init()?;
-
-    let mut timer_map = Timer::global().timer_map.write();
-    let delay_timer = Timer::global().delay_timer.write();
-    let mut timer_count = Timer::global().timer_count.lock();
-
-    let task_id = *timer_count;
-    *timer_count += 1;
-
     let once_by_minutes = Config::verge()
         .latest()
         .auto_light_weight_minutes
         .unwrap_or(10);
 
+    // 获取task_id
+    let task_id = {
+        let mut timer_count = Timer::global().timer_count.lock();
+        let id = *timer_count;
+        *timer_count += 1;
+        id
+    };
+
+    // 创建任务
     let task = TaskBuilder::default()
         .set_task_id(task_id)
         .set_maximum_parallel_runnable_num(1)
@@ -195,17 +196,24 @@ fn setup_light_weight_timer() -> Result<()> {
         })
         .context("failed to create timer task")?;
 
-    delay_timer
-        .add_task(task)
-        .context("failed to add timer task")?;
+    // 添加任务到定时器
+    {
+        let delay_timer = Timer::global().delay_timer.write();
+        delay_timer
+            .add_task(task)
+            .context("failed to add timer task")?;
+    }
 
-    let timer_task = crate::core::timer::TimerTask {
-        task_id,
-        interval_minutes: once_by_minutes,
-        last_run: chrono::Local::now().timestamp(),
-    };
-
-    timer_map.insert(LIGHT_WEIGHT_TASK_UID.to_string(), timer_task);
+    // 更新任务映射
+    {
+        let mut timer_map = Timer::global().timer_map.write();
+        let timer_task = crate::core::timer::TimerTask {
+            task_id,
+            interval_minutes: once_by_minutes,
+            last_run: chrono::Local::now().timestamp(),
+        };
+        timer_map.insert(LIGHT_WEIGHT_TASK_UID.to_string(), timer_task);
+    }
 
     logging!(
         info,
