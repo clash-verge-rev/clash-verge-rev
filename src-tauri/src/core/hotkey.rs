@@ -153,66 +153,76 @@ impl Hotkey {
                         "=== Hotkey Dashboard Window Operation Start ==="
                     );
 
-                    // 使用异步操作避免阻塞
-                    AsyncHandler::spawn(move || async move {
+                    // 检查是否在轻量模式下，如果是，需要同步处理
+                    if crate::module::lightweight::is_in_lightweight_mode() {
                         logging!(
-                            debug,
+                            info,
                             Type::Hotkey,
                             true,
-                            "Toggle dashboard window visibility"
+                            "In lightweight mode, calling open_or_close_dashboard directly"
                         );
+                        crate::feat::open_or_close_dashboard();
+                    } else {
+                        AsyncHandler::spawn(move || async move {
+                            logging!(
+                                debug,
+                                Type::Hotkey,
+                                true,
+                                "Toggle dashboard window visibility (async)"
+                            );
 
-                        // 检查窗口是否存在
-                        if let Some(window) = handle::Handle::global().get_window() {
-                            // 如果窗口可见，则隐藏
-                            match window.is_visible() {
-                                Ok(visible) => {
-                                    if visible {
-                                        logging!(
-                                            info,
-                                            Type::Window,
-                                            true,
-                                            "Window is visible, hiding it"
-                                        );
-                                        let _ = window.hide();
-                                    } else {
-                                        // 如果窗口不可见，则显示
-                                        logging!(
-                                            info,
-                                            Type::Window,
-                                            true,
-                                            "Window is hidden, showing it"
-                                        );
-                                        if window.is_minimized().unwrap_or(false) {
-                                            let _ = window.unminimize();
+                            // 检查窗口是否存在
+                            if let Some(window) = handle::Handle::global().get_window() {
+                                // 如果窗口可见，则隐藏
+                                match window.is_visible() {
+                                    Ok(visible) => {
+                                        if visible {
+                                            logging!(
+                                                info,
+                                                Type::Window,
+                                                true,
+                                                "Window is visible, hiding it"
+                                            );
+                                            let _ = window.hide();
+                                        } else {
+                                            // 如果窗口不可见，则显示
+                                            logging!(
+                                                info,
+                                                Type::Window,
+                                                true,
+                                                "Window is hidden, showing it"
+                                            );
+                                            if window.is_minimized().unwrap_or(false) {
+                                                let _ = window.unminimize();
+                                            }
+                                            let _ = window.show();
+                                            let _ = window.set_focus();
                                         }
+                                    }
+                                    Err(e) => {
+                                        logging!(
+                                            warn,
+                                            Type::Window,
+                                            true,
+                                            "Failed to check window visibility: {}",
+                                            e
+                                        );
                                         let _ = window.show();
                                         let _ = window.set_focus();
                                     }
                                 }
-                                Err(e) => {
-                                    logging!(
-                                        warn,
-                                        Type::Window,
-                                        true,
-                                        "Failed to check window visibility: {}",
-                                        e
-                                    );
-                                    let _ = window.show();
-                                    let _ = window.set_focus();
-                                }
+                            } else {
+                                // 如果窗口不存在，创建一个新窗口
+                                logging!(
+                                    info,
+                                    Type::Window,
+                                    true,
+                                    "Window does not exist, creating a new one"
+                                );
+                                resolve::create_window(true);
                             }
-                        } else {
-                            // 如果窗口不存在，创建一个新窗口
-                            logging!(
-                                info,
-                                Type::Window,
-                                true,
-                                "Window does not exist, creating a new one"
-                            );
-                            resolve::create_window(true);
-                        }
-                    });
+                        });
+                    }
 
                     logging!(
                         debug,

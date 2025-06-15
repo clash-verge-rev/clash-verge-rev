@@ -119,6 +119,10 @@ pub fn exit_lightweight_mode() {
     set_lightweight_mode(false);
     logging!(info, Type::Lightweight, true, "正在退出轻量模式");
 
+    // macOS激活策略
+    #[cfg(target_os = "macos")]
+    AppHandleManager::global().set_activation_policy_regular();
+
     // 重置UI就绪状态
     crate::utils::resolve::reset_ui_ready();
 }

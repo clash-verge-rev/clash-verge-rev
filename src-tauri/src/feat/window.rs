@@ -13,6 +13,19 @@ pub fn open_or_close_dashboard() {
     println!("Attempting to open/close dashboard");
     log::info!(target: "app", "Attempting to open/close dashboard");
 
+    // 检查是否在轻量模式下
+    if crate::module::lightweight::is_in_lightweight_mode() {
+        println!("Currently in lightweight mode, exiting lightweight mode");
+        log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
+
+        crate::module::lightweight::exit_lightweight_mode();
+
+        println!("Creating new window after exiting lightweight mode");
+        log::info!(target: "app", "Creating new window after exiting lightweight mode");
+        resolve::create_window(true);
+        return;
+    }
+
     if let Some(window) = handle::Handle::global().get_window() {
         println!("Found existing window");
         log::info!(target: "app", "Found existing window");
