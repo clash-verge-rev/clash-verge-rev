@@ -1,6 +1,7 @@
 use crate::{
     config::{deserialize_encrypted, serialize_encrypted, DEFAULT_PAC},
-    utils::{dirs, help, i18n},
+    logging,
+    utils::{dirs, help, i18n, logging::Type},
 };
 use anyhow::Result;
 use log::LevelFilter;
@@ -232,6 +233,94 @@ pub struct IVergeTheme {
 }
 
 impl IVerge {
+    /// 有效的clash核心名称
+    pub const VALID_CLASH_CORES: &'static [&'static str] = &["verge-mihomo", "verge-mihomo-alpha"];
+
+    /// 验证并修正配置文件中的clash_core值
+    pub fn validate_and_fix_config() -> Result<()> {
+        let config_path = dirs::verge_path()?;
+        let mut config = match help::read_yaml::<IVerge>(&config_path) {
+            Ok(config) => config,
+            Err(_) => Self::template(),
+        };
+
+        let mut needs_fix = false;
+
+        if let Some(ref core) = config.clash_core {
+            let core_str = core.trim();
+            if core_str.is_empty() || !Self::VALID_CLASH_CORES.contains(&core_str) {
+                logging!(
+                    warn,
+                    Type::Config,
+                    true,
+                    "启动时发现无效的clash_core配置: '{}', 将自动修正为 'verge-mihomo'",
+                    core
+                );
+                config.clash_core = Some("verge-mihomo".to_string());
+                needs_fix = true;
+            }
+        } else {
+            logging!(
+                info,
+                Type::Config,
+                true,
+                "启动时发现未配置clash_core, 将设置为默认值 'verge-mihomo'"
+            );
+            config.clash_core = Some("verge-mihomo".to_string());
+            needs_fix = true;
+        }
+
+        // 修正后保存配置
+        if needs_fix {
+            logging!(info, Type::Config, true, "正在保存修正后的配置文件...");
+            help::save_yaml(&config_path, &config, Some("# Clash Verge Config"))?;
+            logging!(
+                info,
+                Type::Config,
+                true,
+                "配置文件修正完成，需要重新加载配置"
+            );
+
+            Self::reload_config_after_fix(config)?;
+        } else {
+            logging!(
+                info,
+                Type::Config,
+                true,
+                "clash_core配置验证通过: {:?}",
+                config.clash_core
+            );
+        }
+
+        Ok(())
+    }
+
+    /// 配置修正后重新加载配置
+
+    fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
+        use crate::config::Config;
+
+        let config_draft = Config::verge();
+        *config_draft.draft() = Box::new(updated_config.clone());
+        config_draft.apply();
+
+        logging!(
+            info,
+            Type::Config,
+            true,
+            "内存配置已强制更新，新的clash_core: {:?}",
+            updated_config.clash_core
+        );
+
+        Ok(())
+    }
+
+    pub fn get_valid_clash_core(&self) -> String {
+        self.clash_core
+            .clone()
+            .unwrap_or_else(|| "verge-mihomo".to_string())
+    }
+
     fn get_system_language() -> String {
         let sys_lang = sys_locale::get_locale()
             .unwrap_or_else(|| String::from("en"))
@@ -503,6 +592,8 @@ pub struct IVergeResponse {
 
 impl From<IVerge> for IVergeResponse {
     fn from(verge: IVerge) -> Self {
+        // 先获取验证后的clash_core值，避免后续借用冲突
+        let valid_clash_core = verge.get_valid_clash_core();
         Self {
             app_log_level: verge.app_log_level,
             language: verge.language,
@@ -534,7 +625,7 @@ impl From<IVerge> for IVergeResponse {
             proxy_host: verge.proxy_host,
             theme_setting: verge.theme_setting,
             web_ui_list: verge.web_ui_list,
-            clash_core: verge.clash_core,
+            clash_core: Some(valid_clash_core),
             hotkeys: verge.hotkeys,
             auto_close_connection: verge.auto_close_connection,
             auto_check_update: verge.auto_check_update,

@@ -742,8 +742,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     log::info!(target:"app", "尝试使用现有服务启动核心 (IPC)");
     // logging!(info, Type::Service, true, "尝试使用现有服务启动核心");
 
-    let clash_core = { Config::verge().latest().clash_core.clone() };
-    let clash_core = clash_core.unwrap_or("verge-mihomo".into());
+    let clash_core = Config::verge().latest().get_valid_clash_core();
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let clash_bin = format!("{clash_core}{bin_ext}");

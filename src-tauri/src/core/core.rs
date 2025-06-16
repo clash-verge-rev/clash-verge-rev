@@ -54,7 +54,7 @@ impl fmt::Display for RunningMode {
     }
 }
 
-const CLASH_CORES: [&str; 2] = ["verge-mihomo", "verge-mihomo-alpha"];
+use crate::config::IVerge;
 
 impl CoreManager {
     /// 检查文件是否为脚本文件
@@ -249,8 +249,7 @@ impl CoreManager {
             config_path
         );
 
-        let clash_core = { Config::verge().latest().clash_core.clone() };
-        let clash_core = clash_core.unwrap_or("verge-mihomo".into());
+        let clash_core = Config::verge().latest().get_valid_clash_core();
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -442,11 +441,7 @@ impl CoreManager {
         let app_handle = handle::Handle::global()
             .app_handle()
             .ok_or(anyhow::anyhow!("failed to get app handle"))?;
-        let clash_core = Config::verge()
-            .latest()
-            .clash_core
-            .clone()
-            .unwrap_or("verge-mihomo".to_string());
+        let clash_core = Config::verge().latest().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         let service_log_dir = dirs::app_home_dir()?.join("logs").join("service");
@@ -804,7 +799,7 @@ impl CoreManager {
             return Err(error_message.to_string());
         }
         let core: &str = &clash_core.clone().unwrap();
-        if !CLASH_CORES.contains(&core) {
+        if !IVerge::VALID_CLASH_CORES.contains(&core) {
             let error_message = format!("Clash core invalid name: {}", core);
             logging!(error, Type::Core, true, "{}", error_message);
             return Err(error_message);
