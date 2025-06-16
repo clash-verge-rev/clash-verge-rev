@@ -1,5 +1,11 @@
 use super::CmdResult;
-use crate::{config::*, core::*, utils::dirs, wrap_err};
+use crate::{
+    config::*,
+    core::*,
+    logging,
+    utils::{dirs, logging::Type},
+    wrap_err,
+};
 use std::fs;
 
 /// 保存profiles的配置
@@ -26,29 +32,54 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     wrap_err!(fs::write(&file_path, file_data.clone().unwrap()))?;
 
     let file_path_str = file_path.to_string_lossy().to_string();
-    println!(
+    logging!(
+        info,
+        Type::Config,
+        true,
         "[cmd配置save] 开始验证配置文件: {}, 是否为merge文件: {}",
-        file_path_str, is_merge_file
+        file_path_str,
+        is_merge_file
     );
 
     // 对于 merge 文件，只进行语法验证，不进行后续内核验证
     if is_merge_file {
-        println!("[cmd配置save] 检测到merge文件，只进行语法验证");
+        logging!(
+            info,
+            Type::Config,
+            true,
+            "[cmd配置save] 检测到merge文件，只进行语法验证"
+        );
         match CoreManager::global()
             .validate_config_file(&file_path_str, Some(true))
             .await
         {
             Ok((true, _)) => {
-                println!("[cmd配置save] merge文件语法验证通过");
+                logging!(
+                    info,
+                    Type::Config,
+                    true,
+                    "[cmd配置save] merge文件语法验证通过"
+                );
                 // 成功后尝试更新整体配置
                 if let Err(e) = CoreManager::global().update_config().await {
-                    println!("[cmd配置save] 更新整体配置时发生错误: {}", e);
-                    log::warn!(target: "app", "更新整体配置时发生错误: {}", e);
+                    logging!(
+                        warn,
+                        Type::Config,
+                        true,
+                        "[cmd配置save] 更新整体配置时发生错误: {}",
+                        e
+                    );
                 }
                 return Ok(());
             }
             Ok((false, error_msg)) => {
-                println!("[cmd配置save] merge文件语法验证失败: {}", error_msg);
+                logging!(
+                    warn,
+                    Type::Config,
+                    true,
+                    "[cmd配置save] merge文件语法验证失败: {}",
+                    error_msg
+                );
                 // 恢复原始配置文件
                 wrap_err!(fs::write(&file_path, original_content))?;
                 // 发送合并文件专用错误通知
@@ -57,7 +88,13 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                 return Ok(());
             }
             Err(e) => {
-                println!("[cmd配置save] 验证过程发生错误: {}", e);
+                logging!(
+                    error,
+                    Type::Config,
+                    true,
+                    "[cmd配置save] 验证过程发生错误: {}",
+                    e
+                );
                 // 恢复原始配置文件
                 wrap_err!(fs::write(&file_path, original_content))?;
                 return Err(e.to_string());
@@ -71,11 +108,17 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         .await
     {
         Ok((true, _)) => {
-            println!("[cmd配置save] 验证成功");
+            logging!(info, Type::Config, true, "[cmd配置save] 验证成功");
             Ok(())
         }
         Ok((false, error_msg)) => {
-            println!("[cmd配置save] 验证失败: {}", error_msg);
+            logging!(
+                warn,
+                Type::Config,
+                true,
+                "[cmd配置save] 验证失败: {}",
+                error_msg
+            );
             // 恢复原始配置文件
             wrap_err!(fs::write(&file_path, original_content))?;
 
@@ -90,24 +133,30 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                 || (!file_path_str.ends_with(".js") && !is_script_error)
             {
                 // 普通YAML错误使用YAML通知处理
-                println!("[cmd配置save] YAML配置文件验证失败，发送通知");
+                log::info!(target: "app", "[cmd配置save] YAML配置文件验证失败，发送通知");
                 let result = (false, error_msg.clone());
                 crate::cmd::validate::handle_yaml_validation_notice(&result, "YAML配置文件");
             } else if is_script_error {
                 // 脚本错误使用专门的通知处理
-                println!("[cmd配置save] 脚本文件验证失败，发送通知");
+                log::info!(target: "app", "[cmd配置save] 脚本文件验证失败，发送通知");
                 let result = (false, error_msg.clone());
                 crate::cmd::validate::handle_script_validation_notice(&result, "脚本文件");
             } else {
                 // 普通配置错误使用一般通知
-                println!("[cmd配置save] 其他类型验证失败，发送一般通知");
+                log::info!(target: "app", "[cmd配置save] 其他类型验证失败，发送一般通知");
                 handle::Handle::notice_message("config_validate::error", &error_msg);
             }
 
             Ok(())
         }
         Err(e) => {
-            println!("[cmd配置save] 验证过程发生错误: {}", e);
+            logging!(
+                error,
+                Type::Config,
+                true,
+                "[cmd配置save] 验证过程发生错误: {}",
+                e
+            );
             // 恢复原始配置文件
             wrap_err!(fs::write(&file_path, original_content))?;
             Err(e.to_string())

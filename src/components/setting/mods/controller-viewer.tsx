@@ -1,6 +1,5 @@
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
-import { patchClashConfig } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { ContentCopy } from "@mui/icons-material";
 import {
@@ -42,19 +41,19 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   // 保存配置
   const onSave = useLockFn(async () => {
     if (!controller.trim()) {
-      showNotice("error", t("Controller address cannot be empty"), 3000);
+      showNotice("error", t("Controller address cannot be empty"));
       return;
     }
 
     if (!secret.trim()) {
-      showNotice("error", t("Secret cannot be empty"), 3000);
+      showNotice("error", t("Secret cannot be empty"));
       return;
     }
 
     try {
       setIsSaving(true);
       await patchInfo({ "external-controller": controller, secret });
-      showNotice("success", t("Configuration saved successfully"), 2000);
+      showNotice("success", t("Configuration saved successfully"));
       setOpen(false);
     } catch (err: any) {
       showNotice(
@@ -73,9 +72,9 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
       try {
         await navigator.clipboard.writeText(text);
         setCopySuccess(type);
-        setTimeout(() => setCopySuccess(null), 2000);
+        setTimeout(() => setCopySuccess(null));
       } catch (err) {
-        showNotice("error", t("Failed to copy"), 2000);
+        showNotice("error", t("Failed to copy"));
       }
     },
   );

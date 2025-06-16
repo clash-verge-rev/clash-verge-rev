@@ -2,7 +2,9 @@ use crate::{
     cmd,
     config::{Config, PrfItem, PrfOption},
     core::{handle, CoreManager, *},
+    logging,
     process::AsyncHandler,
+    utils::logging::Type,
 };
 use anyhow::{bail, Result};
 
@@ -29,7 +31,7 @@ pub async fn update_profile(
     option: Option<PrfOption>,
     auto_refresh: Option<bool>,
 ) -> Result<()> {
-    println!("[订阅更新] 开始更新订阅 {}", uid);
+    logging!(info, Type::Config, true, "[订阅更新] 开始更新订阅 {}", uid);
     let auto_refresh = auto_refresh.unwrap_or(true); // 默认为true，保持兼容性
 
     let url_opt = {
@@ -39,13 +41,13 @@ pub async fn update_profile(
         let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
         if !is_remote {
-            println!("[订阅更新] {} 不是远程订阅，跳过更新", uid);
+            log::info!(target: "app", "[订阅更新] {} 不是远程订阅，跳过更新", uid);
             None // 非远程订阅直接更新
         } else if item.url.is_none() {
-            println!("[订阅更新] {} 缺少URL，无法更新", uid);
+            log::warn!(target: "app", "[订阅更新] {} 缺少URL，无法更新", uid);
             bail!("failed to get the profile item url");
         } else {
-            println!(
+            log::info!(target: "app",
                 "[订阅更新] {} 是远程订阅，URL: {}",
                 uid,
                 item.url.clone().unwrap()
@@ -56,24 +58,24 @@ pub async fn update_profile(
 
     let should_update = match url_opt {
         Some((url, opt)) => {
-            println!("[订阅更新] 开始下载新的订阅内容");
+            log::info!(target: "app", "[订阅更新] 开始下载新的订阅内容");
             let merged_opt = PrfOption::merge(opt.clone(), option.clone());
 
             // 尝试使用正常设置更新
             match PrfItem::from_url(&url, None, None, merged_opt.clone()).await {
                 Ok(item) => {
-                    println!("[订阅更新] 更新订阅配置成功");
+                    log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
                     let profiles = Config::profiles();
                     let mut profiles = profiles.latest();
                     profiles.update_item(uid.clone(), item)?;
 
                     let is_current = Some(uid.clone()) == profiles.get_current();
-                    println!("[订阅更新] 是否为当前使用的订阅: {}", is_current);
+                    log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {}", is_current);
                     is_current && auto_refresh
                 }
                 Err(err) => {
                     // 首次更新失败，尝试使用Clash代理
-                    println!("[订阅更新] 正常更新失败: {}，尝试使用Clash代理更新", err);
+                    log::warn!(target: "app", "[订阅更新] 正常更新失败: {}，尝试使用Clash代理更新", err);
 
                     // 发送通知
                     handle::Handle::notice_message("update_retry_with_clash", uid.clone());
@@ -90,7 +92,7 @@ pub async fn update_profile(
                     // 使用Clash代理重试
                     match PrfItem::from_url(&url, None, None, Some(fallback_opt)).await {
                         Ok(mut item) => {
-                            println!("[订阅更新] 使用Clash代理更新成功");
+                            log::info!(target: "app", "[订阅更新] 使用Clash代理更新成功");
 
                             // 恢复原始代理设置到item
                             if let Some(option) = item.option.as_mut() {
@@ -110,11 +112,11 @@ pub async fn update_profile(
                             handle::Handle::notice_message("update_with_clash_proxy", profile_name);
 
                             let is_current = Some(uid.clone()) == profiles.get_current();
-                            println!("[订阅更新] 是否为当前使用的订阅: {}", is_current);
+                            log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {}", is_current);
                             is_current && auto_refresh
                         }
                         Err(retry_err) => {
-                            println!("[订阅更新] 使用Clash代理更新仍然失败: {}", retry_err);
+                            log::error!(target: "app", "[订阅更新] 使用Clash代理更新仍然失败: {}", retry_err);
                             handle::Handle::notice_message(
                                 "update_failed_even_with_clash",
                                 format!("{}", retry_err),
@@ -129,14 +131,14 @@ pub async fn update_profile(
     };
 
     if should_update {
-        println!("[订阅更新] 更新内核配置");
+        logging!(info, Type::Config, true, "[订阅更新] 更新内核配置");
         match CoreManager::global().update_config().await {
             Ok(_) => {
-                println!("[订阅更新] 更新成功");
+                logging!(info, Type::Config, true, "[订阅更新] 更新成功");
                 handle::Handle::refresh_clash();
             }
             Err(err) => {
-                println!("[订阅更新] 更新失败: {}", err);
+                logging!(error, Type::Config, true, "[订阅更新] 更新失败: {}", err);
                 handle::Handle::notice_message("update_failed", format!("{err}"));
                 log::error!(target: "app", "{err}");
             }

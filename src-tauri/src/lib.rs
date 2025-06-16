@@ -368,7 +368,7 @@ pub fn run() {
                         if core::handle::Handle::global().is_exiting() {
                             return;
                         }
-                        println!("closing window...");
+                        log::info!(target: "app", "closing window...");
                         api.prevent_close();
                         if let Some(window) = core::handle::Handle::global().get_window() {
                             let _ = window.hide();

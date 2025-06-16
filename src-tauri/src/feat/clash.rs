@@ -84,7 +84,7 @@ pub fn change_clash_mode(mode: String) {
                     after_change_clash_mode();
                 }
             }
-            Err(err) => println!("{err}"),
+            Err(err) => log::error!(target: "app", "{err}"),
         }
     });
 }

@@ -3,45 +3,39 @@ use crate::AppHandleManager;
 use crate::{
     config::Config,
     core::{handle, sysopt, CoreManager},
+    logging,
     module::mihomo::MihomoManager,
-    utils::resolve,
+    utils::{logging::Type, resolve},
 };
 
 /// Open or close the dashboard window
 #[allow(dead_code)]
 pub fn open_or_close_dashboard() {
-    println!("Attempting to open/close dashboard");
     log::info!(target: "app", "Attempting to open/close dashboard");
 
     // 检查是否在轻量模式下
     if crate::module::lightweight::is_in_lightweight_mode() {
-        println!("Currently in lightweight mode, exiting lightweight mode");
         log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
 
         crate::module::lightweight::exit_lightweight_mode();
 
-        println!("Creating new window after exiting lightweight mode");
         log::info!(target: "app", "Creating new window after exiting lightweight mode");
         resolve::create_window(true);
         return;
     }
 
     if let Some(window) = handle::Handle::global().get_window() {
-        println!("Found existing window");
         log::info!(target: "app", "Found existing window");
 
         // 如果窗口存在，则切换其显示状态
         match window.is_visible() {
             Ok(visible) => {
-                println!("Window visibility status: {}", visible);
                 log::info!(target: "app", "Window visibility status: {}", visible);
 
                 if visible {
-                    println!("Attempting to hide window");
                     log::info!(target: "app", "Attempting to hide window");
                     let _ = window.hide();
                 } else {
-                    println!("Attempting to show and focus window");
                     log::info!(target: "app", "Attempting to show and focus window");
                     if window.is_minimized().unwrap_or(false) {
                         let _ = window.unminimize();
@@ -51,12 +45,10 @@ pub fn open_or_close_dashboard() {
                 }
             }
             Err(e) => {
-                println!("Failed to get window visibility: {:?}", e);
                 log::error!(target: "app", "Failed to get window visibility: {:?}", e);
             }
         }
     } else {
-        println!("No existing window found, creating new window");
         log::info!(target: "app", "No existing window found, creating new window");
         resolve::create_window(true);
     }
@@ -65,7 +57,7 @@ pub fn open_or_close_dashboard() {
 /// 异步优化的应用退出函数
 pub fn quit() {
     use crate::process::AsyncHandler;
-    log::debug!(target: "app", "启动退出流程");
+    logging!(debug, Type::System, true, "启动退出流程");
 
     // 获取应用句柄并设置退出标志
     let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -79,10 +71,16 @@ pub fn quit() {
 
     // 使用异步任务处理资源清理，避免阻塞
     AsyncHandler::spawn(move || async move {
-        log::info!(target: "app", "开始异步清理资源");
+        logging!(info, Type::System, true, "开始异步清理资源");
         let cleanup_result = clean_async().await;
 
-        log::info!(target: "app", "资源清理完成，退出代码: {}", if cleanup_result { 0 } else { 1 });
+        logging!(
+            info,
+            Type::System,
+            true,
+            "资源清理完成，退出代码: {}",
+            if cleanup_result { 0 } else { 1 }
+        );
         app_handle.exit(if cleanup_result { 0 } else { 1 });
     });
 }
@@ -90,7 +88,7 @@ pub fn quit() {
 async fn clean_async() -> bool {
     use tokio::time::{timeout, Duration};
 
-    log::info!(target: "app", "开始执行异步清理操作...");
+    logging!(info, Type::System, true, "开始执行异步清理操作...");
 
     // 1. 处理TUN模式
     let tun_task = async {
@@ -178,10 +176,16 @@ async fn clean_async() -> bool {
 
     let all_success = tun_success && proxy_success && core_success && dns_success;
 
-    log::info!(
-        target: "app",
+    logging!(
+        info,
+        Type::System,
+        true,
         "异步清理操作完成 - TUN: {}, 代理: {}, 核心: {}, DNS: {}, 总体: {}",
-        tun_success, proxy_success, core_success, dns_success, all_success
+        tun_success,
+        proxy_success,
+        core_success,
+        dns_success,
+        all_success
     );
 
     all_success
@@ -193,7 +197,7 @@ pub fn clean() -> bool {
     let (tx, rx) = std::sync::mpsc::channel();
 
     AsyncHandler::spawn(move || async move {
-        log::info!(target: "app", "开始执行清理操作...");
+        logging!(info, Type::System, true, "开始执行清理操作...");
 
         // 使用已有的异步清理函数
         let cleanup_result = clean_async().await;
@@ -204,11 +208,16 @@ pub fn clean() -> bool {
 
     match rx.recv_timeout(std::time::Duration::from_secs(8)) {
         Ok(result) => {
-            log::info!(target: "app", "清理操作完成，结果: {}", result);
+            logging!(info, Type::System, true, "清理操作完成，结果: {}", result);
             result
         }
         Err(_) => {
-            log::warn!(target: "app", "清理操作超时，返回成功状态避免阻塞");
+            logging!(
+                warn,
+                Type::System,
+                true,
+                "清理操作超时，返回成功状态避免阻塞"
+            );
             true
         }
     }
