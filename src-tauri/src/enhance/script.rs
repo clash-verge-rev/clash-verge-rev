@@ -89,9 +89,8 @@ fn parse_json_safely(json_str: &str) -> Result<Mapping, Error> {
 // 移除字符串外层的引号
 fn strip_outer_quotes(s: &str) -> &str {
     let s = s.trim();
-    if (s.starts_with('"') && s.ends_with('"')) ||
-       (s.starts_with('\'') && s.ends_with('\'')) {
-        &s[1..s.len()-1]
+    if (s.starts_with('"') && s.ends_with('"')) || (s.starts_with('\'') && s.ends_with('\'')) {
+        &s[1..s.len() - 1]
     } else {
         s
     }
@@ -99,8 +98,7 @@ fn strip_outer_quotes(s: &str) -> &str {
 
 // 转义单引号和反斜杠，用于单引号包裹的JavaScript字符串
 fn escape_js_string_for_single_quote(s: &str) -> String {
-    s.replace('\\', "\\\\")
-     .replace('\'', "\\'")
+    s.replace('\\', "\\\\").replace('\'', "\\'")
 }
 
 #[test]
