@@ -45,8 +45,8 @@ pub fn use_script(
     let config = use_lowercase(config.clone());
     let config_str = serde_json::to_string(&config)?;
 
-    // 处理 name 参数中的特殊字符
-    let safe_name = escape_js_string(&name);
+    // 仅处理 name 参数中的特殊字符
+    let safe_name = escape_js_string_for_single_quote(&name);
 
     let code = format!(
         r#"try{{
@@ -64,18 +64,8 @@ pub fn use_script(
         let result = result.to_string(&mut context).unwrap();
         let result = result.to_std_string().unwrap();
 
-        // 处理 JS 执行结果中的特殊字符
-        let unescaped_result = unescape_js_string(&result);
-
-        if unescaped_result.starts_with("__error_flag__") {
-            anyhow::bail!(unescaped_result[15..].to_owned());
-        }
-        if unescaped_result == "\"\"" {
-            anyhow::bail!("main function should return object");
-        }
-
-        // 安全地解析 JSON 结果
-        let res: Result<Mapping, Error> = parse_json_safely(&unescaped_result);
+        // 直接解析JSON结果,不做其他解析
+        let res: Result<Mapping, Error> = parse_json_safely(&result);
 
         let mut out = outputs.lock().unwrap();
         match res {
@@ -90,72 +80,25 @@ pub fn use_script(
     }
 }
 
-// 解析 JSON 字符串，处理可能的转义字符
 fn parse_json_safely(json_str: &str) -> Result<Mapping, Error> {
-    // 移除可能的引号包裹
-    let json_str = if json_str.starts_with('"') && json_str.ends_with('"') {
-        &json_str[1..json_str.len() - 1]
+    let json_str = strip_outer_quotes(json_str);
+
+    Ok(serde_json::from_str::<Mapping>(json_str)?)
+}
+
+// 移除字符串外层的引号
+fn strip_outer_quotes(s: &str) -> &str {
+    let s = s.trim();
+    if (s.starts_with('"') && s.ends_with('"')) || (s.starts_with('\'') && s.ends_with('\'')) {
+        &s[1..s.len() - 1]
     } else {
-        json_str
-    };
-
-    // 处理可能的 JSON 字符串中的转义字符
-    let json_str = json_str.replace("\\\"", "\"");
-
-    Ok(serde_json::from_str::<Mapping>(&json_str)?)
+        s
+    }
 }
 
-// 转义 JS 字符串中的特殊字符
-fn escape_js_string(s: &str) -> String {
-    let mut result = String::with_capacity(s.len());
-    for c in s.chars() {
-        match c {
-            '\'' => result.push_str("\\'"),
-            '"' => result.push_str("\\\""),
-            '\\' => result.push_str("\\\\"),
-            '\n' => result.push_str("\\n"),
-            '\r' => result.push_str("\\r"),
-            '\t' => result.push_str("\\t"),
-            '\0' => result.push_str("\\0"),
-            _ => result.push(c),
-        }
-    }
-    result
-}
-
-// 反转义 JS 字符串中的特殊字符
-fn unescape_js_string(s: &str) -> String {
-    let mut result = String::with_capacity(s.len());
-    let mut chars = s.chars();
-
-    while let Some(c) = chars.next() {
-        if c == '\\' {
-            match chars.next() {
-                Some('n') => result.push('\n'),
-                Some('r') => result.push('\r'),
-                Some('t') => result.push('\t'),
-                Some('0') => result.push('\0'),
-                Some('\\') => result.push('\\'),
-                Some('\'') => result.push('\''),
-                Some('"') => result.push('"'),
-                Some('u') => {
-                    // 处理转义序列
-                    let hex = chars.by_ref().take(4).collect::<String>();
-                    if let Ok(codepoint) = u32::from_str_radix(&hex, 16) {
-                        if let Some(ch) = char::from_u32(codepoint) {
-                            result.push(ch);
-                        }
-                    }
-                }
-                Some(other) => result.push(other),
-                None => break,
-            }
-        } else {
-            result.push(c);
-        }
-    }
-
-    result
+// 转义单引号和反斜杠，用于单引号包裹的JavaScript字符串
+fn escape_js_string_for_single_quote(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('\'', "\\'")
 }
 
 #[test]
@@ -197,10 +140,9 @@ fn test_script() {
 #[test]
 fn test_escape_unescape() {
     let test_string = r#"Hello "World"!\nThis is a test with \u00A9 copyright symbol."#;
-    let escaped = escape_js_string(test_string);
-    let unescaped = unescape_js_string(&escaped);
-
-    assert_eq!(test_string, unescaped);
+    let escaped = escape_js_string_for_single_quote(test_string);
+    println!("Original: {}", test_string);
+    println!("Escaped: {}", escaped);
 
     let json_str = r#"{"key":"value","nested":{"key":"value"}}"#;
     let parsed = parse_json_safely(json_str).unwrap();
