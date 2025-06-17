@@ -53,7 +53,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm run prepare ${{ matrix.target }}
+          pnpm run prebuild ${{ matrix.target }}
 
       - name: Build Web Assets
         run: pnpm run web:build

@@ -11,7 +11,7 @@
     "web:dev": "vite",
     "web:build": "tsc --noEmit && vite build",
     "web:serve": "vite preview",
-    "prepare": "node scripts/prepare.mjs",
+    "prebuild": "node scripts/prebuild.mjs",
     "updater": "node scripts/updater.mjs",
     "updater-fixed-webview2": "node scripts/updater-fixed-webview2.mjs",
     "portable": "node scripts/portable.mjs",
