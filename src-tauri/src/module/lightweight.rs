@@ -93,10 +93,18 @@ pub fn disable_auto_light_weight_mode() {
 }
 
 pub fn entry_lightweight_mode() {
+    use crate::utils::window_manager::WindowManager;
+
+    let result = WindowManager::hide_main_window();
+    logging!(
+        info,
+        Type::Lightweight,
+        true,
+        "轻量模式隐藏窗口结果: {:?}",
+        result
+    );
+
     if let Some(window) = handle::Handle::global().get_window() {
-        if window.is_visible().unwrap_or(false) {
-            let _ = window.hide();
-        }
         if let Some(webview) = window.get_webview_window("main") {
             let _ = webview.destroy();
         }

@@ -8,3 +8,4 @@ pub mod network;
 pub mod resolve;
 pub mod server;
 pub mod tmpl;
+pub mod window_manager;
