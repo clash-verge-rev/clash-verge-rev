@@ -1,4 +1,4 @@
-console.log('prepare.mjs argv:', process.argv)
+console.log("prepare.mjs argv:", process.argv);
 
 import fs from "fs";
 import fsp from "fs/promises";
