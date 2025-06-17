@@ -653,10 +653,13 @@ impl Tray {
                     "system_proxy" => feat::toggle_system_proxy(),
                     "tun_mode" => feat::toggle_tun_mode(None),
                     "main_window" => {
+                        log::info!(target: "app", "Tray点击事件: 显示主窗口");
                         if crate::module::lightweight::is_in_lightweight_mode() {
+                            log::info!(target: "app", "当前在轻量模式，正在退出轻量模式");
                             crate::module::lightweight::exit_lightweight_mode();
                         }
-                        let _ = resolve::create_window(true);
+                        let result = resolve::create_window(true);
+                        log::info!(target: "app", "窗口创建/显示结果: {}", result);
                     }
                     _ => {}
                 }

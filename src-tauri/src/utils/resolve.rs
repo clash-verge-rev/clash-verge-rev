@@ -307,8 +307,17 @@ pub fn create_window(is_show: bool) -> bool {
         if let Some(window) = app_handle.get_webview_window("main") {
             logging!(info, Type::Window, true, "主窗口已存在，将显示现有窗口");
             if is_show {
+                if window.is_minimized().unwrap_or(false) {
+                    logging!(info, Type::Window, true, "窗口已最小化，正在取消最小化");
+                    let _ = window.unminimize();
+                }
                 let _ = window.show();
                 let _ = window.set_focus();
+
+                #[cfg(target_os = "macos")]
+                {
+                    AppHandleManager::global().set_activation_policy_regular();
+                }
             }
             return true;
         }
