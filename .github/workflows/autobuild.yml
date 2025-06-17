@@ -195,6 +195,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "pnpm"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -204,7 +205,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm run prebuild "${{ matrix.target }}"
+          pnpm run prebuild ${{ matrix.target }}
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version ${{ env.TAG_NAME }}
@@ -266,6 +267,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -395,6 +397,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "pnpm"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
