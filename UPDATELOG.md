@@ -4,7 +4,7 @@
 
 - 增加配置文件校验，修复从古老版本升级上来的"No such file or directory (os error 2)"错误
 - 修复扩展脚本转义错误
-- 修复 x86(Intel)构架下 Clash-Verge-Service构架错误的问题
+- 修复 macOS Intel X86 架构构建错误导致无法运行
 - 修复 Linux 下界面边框白边问题
 
 ## v2.3.0
