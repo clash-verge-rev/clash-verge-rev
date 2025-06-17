@@ -99,7 +99,7 @@ winapi = { version = "0.3.9", features = [
 users = "0.11.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
+tauri-plugin-autostart = "2.4.0"
 tauri-plugin-global-shortcut = "2.2.1"
 tauri-plugin-updater = "2.8.1"
 
