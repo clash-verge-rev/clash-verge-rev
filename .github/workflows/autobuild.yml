@@ -201,9 +201,6 @@ jobs:
         with:
           run_install: false
 
-      - name: Debug matrix
-        run: echo "target=${{ matrix.target }}"
-
       - name: Pnpm install and check
         run: |
           pnpm i
