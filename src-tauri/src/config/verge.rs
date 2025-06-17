@@ -296,7 +296,6 @@ impl IVerge {
     }
 
     /// 配置修正后重新加载配置
-
     fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
         use crate::config::Config;
 
