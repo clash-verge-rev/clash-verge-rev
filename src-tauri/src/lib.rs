@@ -19,6 +19,7 @@ use tauri::Manager;
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
+use tauri_plugin_window_state;
 use tokio::time::{timeout, Duration};
 use utils::logging::Type;
 
@@ -161,6 +162,14 @@ pub fn run() {
                     }
                 });
             });
+
+            // 窗口管理
+            logging!(info, Type::Setup, true, "初始化窗口状态管理...");
+            let window_state_plugin = tauri_plugin_window_state::Builder::new()
+                .with_filename("window_state.json")
+                .with_state_flags(tauri_plugin_window_state::StateFlags::default())
+                .build();
+            let _ = app.handle().plugin(window_state_plugin);
 
             // 异步处理
             let app_handle = app.handle().clone();
