@@ -130,7 +130,12 @@ async fn clean_async() -> bool {
     // 4. DNS恢复（仅macOS）
     #[cfg(target_os = "macos")]
     let dns_task = async {
-        match timeout(Duration::from_millis(1000), resolve::restore_public_dns()).await {
+        match timeout(
+            Duration::from_millis(1000),
+            crate::utils::resolve::restore_public_dns(),
+        )
+        .await
+        {
             Ok(_) => {
                 log::info!(target: "app", "DNS设置已恢复");
                 true
