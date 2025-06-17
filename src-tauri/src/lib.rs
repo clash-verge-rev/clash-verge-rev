@@ -19,7 +19,6 @@ use tauri::Manager;
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_window_state;
 use tokio::time::{timeout, Duration};
 use utils::logging::Type;
 
