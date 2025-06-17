@@ -5,53 +5,29 @@ use crate::{
     core::{handle, sysopt, CoreManager},
     logging,
     module::mihomo::MihomoManager,
-    utils::{logging::Type, resolve},
+    utils::logging::Type,
 };
 
 /// Open or close the dashboard window
 #[allow(dead_code)]
 pub fn open_or_close_dashboard() {
+    use crate::utils::window_manager::WindowManager;
+
     log::info!(target: "app", "Attempting to open/close dashboard");
 
     // 检查是否在轻量模式下
     if crate::module::lightweight::is_in_lightweight_mode() {
         log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
-
         crate::module::lightweight::exit_lightweight_mode();
-
         log::info!(target: "app", "Creating new window after exiting lightweight mode");
-        resolve::create_window(true);
+        let result = WindowManager::show_main_window();
+        log::info!(target: "app", "Window operation result: {:?}", result);
         return;
     }
 
-    if let Some(window) = handle::Handle::global().get_window() {
-        log::info!(target: "app", "Found existing window");
-
-        // 如果窗口存在，则切换其显示状态
-        match window.is_visible() {
-            Ok(visible) => {
-                log::info!(target: "app", "Window visibility status: {}", visible);
-
-                if visible {
-                    log::info!(target: "app", "Attempting to hide window");
-                    let _ = window.hide();
-                } else {
-                    log::info!(target: "app", "Attempting to show and focus window");
-                    if window.is_minimized().unwrap_or(false) {
-                        let _ = window.unminimize();
-                    }
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-            }
-            Err(e) => {
-                log::error!(target: "app", "Failed to get window visibility: {:?}", e);
-            }
-        }
-    } else {
-        log::info!(target: "app", "No existing window found, creating new window");
-        resolve::create_window(true);
-    }
+    // 使用统一的窗口管理器切换窗口状态
+    let result = WindowManager::toggle_main_window();
+    log::info!(target: "app", "Window toggle result: {:?}", result);
 }
 
 /// 异步优化的应用退出函数
@@ -154,7 +130,12 @@ async fn clean_async() -> bool {
     // 4. DNS恢复（仅macOS）
     #[cfg(target_os = "macos")]
     let dns_task = async {
-        match timeout(Duration::from_millis(1000), resolve::restore_public_dns()).await {
+        match timeout(
+            Duration::from_millis(1000),
+            crate::utils::resolve::restore_public_dns(),
+        )
+        .await
+        {
             Ok(_) => {
                 log::info!(target: "app", "DNS设置已恢复");
                 true

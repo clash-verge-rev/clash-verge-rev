@@ -10,7 +10,6 @@ use crate::{
         lightweight::{entry_lightweight_mode, is_in_lightweight_mode},
         mihomo::Rate,
     },
-    resolve,
     utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
     Type,
 };
@@ -653,10 +652,14 @@ impl Tray {
                     "system_proxy" => feat::toggle_system_proxy(),
                     "tun_mode" => feat::toggle_tun_mode(None),
                     "main_window" => {
+                        use crate::utils::window_manager::WindowManager;
+                        log::info!(target: "app", "Tray点击事件: 显示主窗口");
                         if crate::module::lightweight::is_in_lightweight_mode() {
+                            log::info!(target: "app", "当前在轻量模式，正在退出轻量模式");
                             crate::module::lightweight::exit_lightweight_mode();
                         }
-                        let _ = resolve::create_window(true);
+                        let result = WindowManager::show_main_window();
+                        log::info!(target: "app", "窗口显示结果: {:?}", result);
                     }
                     _ => {}
                 }
@@ -917,12 +920,16 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             feat::change_clash_mode(mode.into());
         }
         "open_window" => {
+            use crate::utils::window_manager::WindowManager;
+            log::info!(target: "app", "托盘菜单点击: 打开窗口");
             // 如果在轻量模式中，先退出轻量模式
             if crate::module::lightweight::is_in_lightweight_mode() {
+                log::info!(target: "app", "当前在轻量模式，正在退出");
                 crate::module::lightweight::exit_lightweight_mode();
             }
-            // 然后创建窗口
-            let _ = resolve::create_window(true);
+            // 使用统一的窗口管理器显示窗口
+            let result = WindowManager::show_main_window();
+            log::info!(target: "app", "窗口显示结果: {:?}", result);
         }
         "system_proxy" => feat::toggle_system_proxy(),
         "tun_mode" => feat::toggle_tun_mode(None),

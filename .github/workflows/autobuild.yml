@@ -201,10 +201,13 @@ jobs:
         with:
           run_install: false
 
+      - name: Debug matrix
+        run: echo "target=${{ matrix.target }}"
+
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm prepare ${{ matrix.target }}
+          node scripts/prepare.js "${{ matrix.target }}"
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version ${{ env.TAG_NAME }}
