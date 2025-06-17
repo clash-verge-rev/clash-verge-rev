@@ -31,6 +31,8 @@ jobs:
         with:
           node-version: "lts/*"
           cache: "pnpm"
+          cache-dependency-path: |
+            pnpm-lock.yaml
       - run: pnpm i --frozen-lockfile
       - run: pnpm format:check
 
