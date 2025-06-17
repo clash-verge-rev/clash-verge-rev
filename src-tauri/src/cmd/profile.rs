@@ -12,45 +12,89 @@ use tokio::sync::Mutex;
 // 添加全局互斥锁防止并发配置更新
 static PROFILE_UPDATE_MUTEX: Mutex<()> = Mutex::const_new(());
 
-/// 获取配置文件列表
+/// 获取配置文件避免锁竞争
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
-    let profiles_result = tokio::time::timeout(
-        Duration::from_secs(3), // 3秒超时
-        tokio::task::spawn_blocking(move || Config::profiles().data().clone()),
+    // 策略1: 尝试快速获取latest数据
+    let latest_result = tokio::time::timeout(
+        Duration::from_millis(500),
+        tokio::task::spawn_blocking(move || {
+            let profiles = Config::profiles();
+            let latest = profiles.latest();
+            IProfiles {
+                current: latest.current.clone(),
+                items: latest.items.clone(),
+            }
+        }),
     )
     .await;
 
-    match profiles_result {
-        Ok(Ok(profiles)) => Ok(*profiles),
+    match latest_result {
+        Ok(Ok(profiles)) => {
+            logging!(info, Type::Cmd, false, "快速获取配置列表成功");
+            return Ok(profiles);
+        }
         Ok(Err(join_err)) => {
-            logging!(error, Type::Cmd, true, "获取配置列表任务失败: {}", join_err);
-            Ok(IProfiles {
-                current: None,
-                items: Some(vec![]),
-            })
+            logging!(warn, Type::Cmd, true, "快速获取配置任务失败: {}", join_err);
         }
         Err(_) => {
-            // 超时情况
+            logging!(warn, Type::Cmd, true, "快速获取配置超时(500ms)");
+        }
+    }
+
+    // 策略2: 如果快速获取失败，尝试获取data()
+    let data_result = tokio::time::timeout(
+        Duration::from_secs(2),
+        tokio::task::spawn_blocking(move || {
+            let profiles = Config::profiles();
+            let data = profiles.data();
+            IProfiles {
+                current: data.current.clone(),
+                items: data.items.clone(),
+            }
+        }),
+    )
+    .await;
+
+    match data_result {
+        Ok(Ok(profiles)) => {
+            logging!(info, Type::Cmd, false, "获取draft配置列表成功");
+            return Ok(profiles);
+        }
+        Ok(Err(join_err)) => {
             logging!(
                 error,
                 Type::Cmd,
                 true,
-                "获取配置列表超时(3秒)，可能存在锁竞争"
+                "获取draft配置任务失败: {}",
+                join_err
             );
-            match tokio::task::spawn_blocking(move || Config::profiles().latest().clone()).await {
-                Ok(profiles) => {
-                    logging!(info, Type::Cmd, true, "使用latest()成功获取配置");
-                    Ok(*profiles)
-                }
-                Err(_) => {
-                    logging!(error, Type::Cmd, true, "fallback获取配置也失败，返回空配置");
-                    Ok(IProfiles {
-                        current: None,
-                        items: Some(vec![]),
-                    })
-                }
-            }
+        }
+        Err(_) => {
+            logging!(error, Type::Cmd, true, "获取draft配置超时(2秒)");
+        }
+    }
+
+    // 策略3: fallback，尝试重新创建配置
+    logging!(
+        warn,
+        Type::Cmd,
+        true,
+        "所有获取配置策略都失败，尝试fallback"
+    );
+
+    match tokio::task::spawn_blocking(move || IProfiles::new()).await {
+        Ok(profiles) => {
+            logging!(info, Type::Cmd, true, "使用fallback配置成功");
+            Ok(profiles)
+        }
+        Err(err) => {
+            logging!(error, Type::Cmd, true, "fallback配置也失败: {}", err);
+            // 返回空配置避免崩溃
+            Ok(IProfiles {
+                current: None,
+                items: Some(vec![]),
+            })
         }
     }
 }
@@ -245,6 +289,13 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             logging!(info, Type::Cmd, true, "配置更新成功");
             Config::profiles().apply();
             handle::Handle::refresh_clash();
+
+            // 强制刷新代理缓存，确保profile切换后立即获取最新节点数据
+            crate::process::AsyncHandler::spawn(|| async move {
+                if let Err(e) = super::proxy::force_refresh_proxies().await {
+                    log::warn!(target: "app", "强制刷新代理缓存失败: {}", e);
+                }
+            });
 
             crate::process::AsyncHandler::spawn(|| async move {
                 if let Err(e) = Tray::global().update_tooltip() {

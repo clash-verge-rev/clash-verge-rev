@@ -190,27 +190,53 @@ const ProfilePage = () => {
     }
   };
 
-  const activateProfile = async (profile: string, notifySuccess: boolean) => {
-    // 避免大多数情况下loading态闪烁
-    const reset = setTimeout(() => {
-      setActivatings((prev) => [...prev, profile]);
-    }, 100);
-
-    try {
-      const success = await patchProfiles({ current: profile });
-      await mutateLogs();
-      closeAllConnections();
-      await activateSelected();
-      if (notifySuccess && success) {
-        showNotice("success", t("Profile Switched"), 1000);
+  const activateProfile = useLockFn(
+    async (profile: string, notifySuccess: boolean) => {
+      if (profiles.current === profile && !notifySuccess) {
+        console.log(
+          `[Profile] 目标profile ${profile} 已经是当前配置，跳过切换`,
+        );
+        return;
       }
-    } catch (err: any) {
-      showNotice("error", err?.message || err.toString(), 4000);
-    } finally {
-      clearTimeout(reset);
-      setActivatings([]);
-    }
-  };
+
+      // 避免大多数情况下loading态闪烁
+      const reset = setTimeout(() => {
+        setActivatings((prev) => [...prev, profile]);
+      }, 100);
+
+      try {
+        console.log(`[Profile] 开始切换到: ${profile}`);
+
+        const success = await patchProfiles({ current: profile });
+        await mutateLogs();
+        closeAllConnections();
+
+        if (notifySuccess && success) {
+          showNotice("success", t("Profile Switched"), 1000);
+        }
+
+        // 立即清除loading状态
+        clearTimeout(reset);
+        setActivatings([]);
+
+        console.log(`[Profile] 切换到 ${profile} 完成，开始后台处理`);
+
+        setTimeout(async () => {
+          try {
+            await activateSelected();
+            console.log(`[Profile] 后台处理完成`);
+          } catch (err: any) {
+            console.warn("Failed to activate selected proxies:", err);
+          }
+        }, 50);
+      } catch (err: any) {
+        console.error(`[Profile] 切换失败:`, err);
+        showNotice("error", err?.message || err.toString(), 4000);
+        clearTimeout(reset);
+        setActivatings([]);
+      }
+    },
+  );
   const onSelect = useLockFn(async (current: string, force: boolean) => {
     if (!force && current === profiles.current) return;
     await activateProfile(current, true);
@@ -300,31 +326,45 @@ const ProfilePage = () => {
   // 监听后端配置变更
   useEffect(() => {
     let unlistenPromise: Promise<() => void> | undefined;
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let lastProfileId: string | null = null;
+    let lastUpdateTime = 0;
+    const debounceDelay = 200;
 
     const setupListener = async () => {
       unlistenPromise = listen<string>("profile-changed", (event) => {
-        console.log("Profile changed event received:", event.payload);
-        if (timeoutId) {
-          clearTimeout(timeoutId);
+        const newProfileId = event.payload;
+        const now = Date.now();
+
+        console.log(`[Profile] 收到配置变更事件: ${newProfileId}`);
+
+        if (
+          lastProfileId === newProfileId &&
+          now - lastUpdateTime < debounceDelay
+        ) {
+          console.log(`[Profile] 重复事件被防抖，跳过`);
+          return;
         }
 
-        timeoutId = setTimeout(() => {
-          mutateProfiles();
-          timeoutId = undefined;
-        }, 300);
+        lastProfileId = newProfileId;
+        lastUpdateTime = now;
+
+        console.log(`[Profile] 执行配置数据刷新`);
+
+        // 使用异步调度避免阻塞事件处理
+        setTimeout(() => {
+          mutateProfiles().catch((error) => {
+            console.error("[Profile] 配置数据刷新失败:", error);
+          });
+        }, 0);
       });
     };
 
     setupListener();
 
     return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      unlistenPromise?.then((unlisten) => unlisten());
+      unlistenPromise?.then((unlisten) => unlisten()).catch(console.error);
     };
-  }, [mutateProfiles, t]);
+  }, [mutateProfiles]);
 
   return (
     <BasePage

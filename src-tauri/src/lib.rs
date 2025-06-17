@@ -255,6 +255,7 @@ pub fn run() {
             cmd::invoke_uwp_tool,
             cmd::copy_clash_env,
             cmd::get_proxies,
+            cmd::force_refresh_proxies,
             cmd::get_providers_proxies,
             cmd::save_dns_config,
             cmd::apply_dns_config,

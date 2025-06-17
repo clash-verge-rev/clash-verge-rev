@@ -151,6 +151,10 @@ impl NotificationSystem {
                                         match window.emit(event_name_str, payload) {
                                             Ok(_) => {
                                                 system.stats.total_sent.fetch_add(1, Ordering::SeqCst);
+                                                // 记录成功发送的事件
+                                                if log::log_enabled!(log::Level::Debug) {
+                                                    log::debug!("Successfully emitted event: {}", event_name_str);
+                                                }
                                             }
                                             Err(e) => {
                                                 log::warn!("Failed to emit event {}: {}", event_name_str, e);
@@ -224,12 +228,27 @@ impl NotificationSystem {
     }
 
     fn shutdown(&mut self) {
+        log::info!("NotificationSystem shutdown initiated");
         self.is_running = false;
-        self.sender = None;
 
-        if let Some(handle) = self.worker_handle.take() {
-            let _ = handle.join();
+        // 先关闭发送端，让接收端知道不会再有新消息
+        if let Some(sender) = self.sender.take() {
+            drop(sender);
         }
+
+        // 设置超时避免无限等待
+        if let Some(handle) = self.worker_handle.take() {
+            match handle.join() {
+                Ok(_) => {
+                    log::info!("NotificationSystem worker thread joined successfully");
+                }
+                Err(e) => {
+                    log::error!("NotificationSystem worker thread join failed: {:?}", e);
+                }
+            }
+        }
+
+        log::info!("NotificationSystem shutdown completed");
     }
 }
 

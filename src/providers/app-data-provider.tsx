@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, useEffect } from "react";
 import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
 import {
@@ -8,10 +8,16 @@ import {
   getProxyProviders,
   getRuleProviders,
 } from "@/services/api";
-import { getSystemProxy, getRunningMode, getAppUptime } from "@/services/cmds";
+import {
+  getSystemProxy,
+  getRunningMode,
+  getAppUptime,
+  forceRefreshProxies,
+} from "@/services/cmds";
 import { useClashInfo } from "@/hooks/use-clash";
 import { createAuthSockette } from "@/utils/websocket";
 import { useVisibility } from "@/hooks/use-visibility";
+import { listen } from "@tauri-apps/api/event";
 
 // 定义AppDataContext类型 - 使用宽松类型
 interface AppDataContextType {
@@ -63,6 +69,126 @@ export const AppDataProvider = ({
       errorRetryCount: 3,
     },
   );
+
+  // 监听profile和clash配置变更事件
+  useEffect(() => {
+    let profileUnlisten: Promise<() => void> | undefined;
+    let lastProfileId: string | null = null;
+    let lastUpdateTime = 0;
+    const refreshThrottle = 500;
+
+    const setupEventListeners = async () => {
+      try {
+        // 监听profile切换事件
+        profileUnlisten = listen<string>("profile-changed", (event) => {
+          const newProfileId = event.payload;
+          const now = Date.now();
+
+          console.log(`[AppDataProvider] Profile切换事件: ${newProfileId}`);
+
+          if (
+            lastProfileId === newProfileId &&
+            now - lastUpdateTime < refreshThrottle
+          ) {
+            console.log("[AppDataProvider] 重复事件被防抖，跳过");
+            return;
+          }
+
+          lastProfileId = newProfileId;
+          lastUpdateTime = now;
+
+          setTimeout(async () => {
+            try {
+              console.log("[AppDataProvider] 强制刷新代理缓存");
+
+              const refreshPromise = Promise.race([
+                forceRefreshProxies(),
+                new Promise((_, reject) =>
+                  setTimeout(
+                    () => reject(new Error("forceRefreshProxies timeout")),
+                    8000,
+                  ),
+                ),
+              ]);
+
+              await refreshPromise;
+
+              console.log("[AppDataProvider] 刷新前端代理数据");
+              await refreshProxy();
+
+              console.log("[AppDataProvider] Profile切换的代理数据刷新完成");
+            } catch (error) {
+              console.error("[AppDataProvider] 强制刷新代理缓存失败:", error);
+
+              refreshProxy().catch((e) =>
+                console.warn("[AppDataProvider] 普通刷新也失败:", e),
+              );
+            }
+          }, 0);
+        });
+
+        // 监听Clash配置刷新事件(enhance操作等)
+        const handleRefreshClash = () => {
+          const now = Date.now();
+          console.log("[AppDataProvider] Clash配置刷新事件");
+
+          if (now - lastUpdateTime > refreshThrottle) {
+            lastUpdateTime = now;
+
+            setTimeout(async () => {
+              try {
+                console.log("[AppDataProvider] Clash刷新 - 强制刷新代理缓存");
+
+                // 添加超时保护
+                const refreshPromise = Promise.race([
+                  forceRefreshProxies(),
+                  new Promise((_, reject) =>
+                    setTimeout(
+                      () => reject(new Error("forceRefreshProxies timeout")),
+                      8000,
+                    ),
+                  ),
+                ]);
+
+                await refreshPromise;
+                await refreshProxy();
+              } catch (error) {
+                console.error(
+                  "[AppDataProvider] Clash刷新时强制刷新代理缓存失败:",
+                  error,
+                );
+                refreshProxy().catch((e) =>
+                  console.warn("[AppDataProvider] Clash刷新普通刷新也失败:", e),
+                );
+              }
+            }, 0);
+          }
+        };
+
+        window.addEventListener(
+          "verge://refresh-clash-config",
+          handleRefreshClash,
+        );
+
+        return () => {
+          window.removeEventListener(
+            "verge://refresh-clash-config",
+            handleRefreshClash,
+          );
+        };
+      } catch (error) {
+        console.error("[AppDataProvider] 事件监听器设置失败:", error);
+        return () => {};
+      }
+    };
+
+    const cleanupPromise = setupEventListeners();
+
+    return () => {
+      profileUnlisten?.then((unlisten) => unlisten()).catch(console.error);
+      cleanupPromise.then((cleanup) => cleanup());
+    };
+  }, [refreshProxy]);
 
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
     "getClashConfig",

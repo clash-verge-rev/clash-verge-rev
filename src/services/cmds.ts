@@ -220,6 +220,12 @@ export async function cmdGetProxyDelay(
   }
 }
 
+/// 用于profile切换等场景
+export async function forceRefreshProxies() {
+  console.log("[API] 强制刷新代理缓存");
+  return invoke<any>("force_refresh_proxies");
+}
+
 export async function cmdTestDelay(url: string) {
   return invoke<number>("test_delay", { url });
 }

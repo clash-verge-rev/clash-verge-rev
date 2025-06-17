@@ -169,7 +169,13 @@ const Layout = () => {
   const handleNotice = useCallback(
     (payload: [string, string]) => {
       const [status, msg] = payload;
-      handleNoticeMessage(status, msg, t, navigate);
+      setTimeout(() => {
+        try {
+          handleNoticeMessage(status, msg, t, navigate);
+        } catch (error) {
+          console.error("[Layout] 处理通知消息失败:", error);
+        }
+      }, 0);
     },
     [t, navigate],
   );
@@ -220,12 +226,35 @@ const Layout = () => {
     const cleanupWindow = setupWindowListeners();
 
     return () => {
-      listeners.forEach((listener) => {
-        if (typeof listener.then === "function") {
-          listener.then((unlisten) => unlisten());
-        }
-      });
-      cleanupWindow.then((cleanup) => cleanup());
+      setTimeout(() => {
+        listeners.forEach((listener) => {
+          if (typeof listener.then === "function") {
+            listener
+              .then((unlisten) => {
+                try {
+                  unlisten();
+                } catch (error) {
+                  console.error("[Layout] 清理事件监听器失败:", error);
+                }
+              })
+              .catch((error) => {
+                console.error("[Layout] 获取unlisten函数失败:", error);
+              });
+          }
+        });
+
+        cleanupWindow
+          .then((cleanup) => {
+            try {
+              cleanup();
+            } catch (error) {
+              console.error("[Layout] 清理窗口监听器失败:", error);
+            }
+          })
+          .catch((error) => {
+            console.error("[Layout] 获取cleanup函数失败:", error);
+          });
+      }, 0);
     };
   }, [handleNotice]);
 
