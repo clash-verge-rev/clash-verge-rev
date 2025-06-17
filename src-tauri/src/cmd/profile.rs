@@ -83,7 +83,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
         "所有获取配置策略都失败，尝试fallback"
     );
 
-    match tokio::task::spawn_blocking(IProfiles::new()).await {
+    match tokio::task::spawn_blocking(IProfiles::new).await {
         Ok(profiles) => {
             logging!(info, Type::Cmd, true, "使用fallback配置成功");
             Ok(profiles)
