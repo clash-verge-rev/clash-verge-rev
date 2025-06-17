@@ -27,12 +27,11 @@ jobs:
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
 
-      # - name: Rust Cache
-      #   uses: Swatinem/rust-cache@v2
-      #   with:
-      #     workspaces: src-tauri
-      #     cache-all-crates: true
-      #     cache-on-failure: true
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          save-if: false
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -53,7 +52,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm prepare ${{ matrix.target }}
+          pnpm run prebuild ${{ matrix.target }}
 
       - name: Build Web Assets
         run: pnpm run web:build

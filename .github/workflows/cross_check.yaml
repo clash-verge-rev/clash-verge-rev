@@ -50,14 +50,13 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          pnpm prepare ${{ matrix.target }}
+          pnpm run prebuild ${{ matrix.target }}
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-          cache-all-crates: true
-          cache-on-failure: true
+          save-if: false
 
       - name: Cargo Check (deny warnings)
         working-directory: src-tauri

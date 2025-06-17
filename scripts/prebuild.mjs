@@ -1,5 +1,3 @@
-console.log('prepare.mjs argv:', process.argv)
-
 import fs from "fs";
 import fsp from "fs/promises";
 import zlib from "zlib";
