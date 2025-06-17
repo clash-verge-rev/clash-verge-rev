@@ -207,7 +207,7 @@ jobs:
       - name: Pnpm install and check
         run: |
           pnpm i
-          node scripts/prepare.js "${{ matrix.target }}"
+              pnpm prepare "${{ matrix.target }}"
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version ${{ env.TAG_NAME }}
