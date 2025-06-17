@@ -916,9 +916,9 @@ FunctionEnd
 !macroend
 
 Section Uninstall
-  ;删除 .window-state.json 文件
+  ;删除 window-state.json 文件
   SetShellVarContext current
-  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
+  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\window-state.json"
 
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
@@ -1015,9 +1015,9 @@ Section Uninstall
     RmDir /r "$LOCALAPPDATA\${BUNDLEID}"
   ${EndIf}
 
-  ;删除 .window-state.json 文件
+  ;删除 window-state.json 文件
   SetShellVarContext current
-  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
+  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\window-state.json"
 
   ${GetOptions} $CMDLINE "/P" $R0
   IfErrors +2 0
