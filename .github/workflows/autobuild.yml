@@ -179,11 +179,11 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
-        if: github.ref == 'refs/heads/dev'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
           cache-all-crates: true
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -256,11 +256,11 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
-        if: github.ref == 'refs/heads/dev'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
           cache-all-crates: true
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -385,11 +385,11 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
-        if: github.ref == 'refs/heads/dev'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
           cache-all-crates: true
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - name: Install Node
         uses: actions/setup-node@v4

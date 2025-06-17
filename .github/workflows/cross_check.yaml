@@ -56,8 +56,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-          cache-all-crates: true
-          cache-on-failure: true
+          save-if: false
 
       - name: Cargo Check (deny warnings)
         working-directory: src-tauri

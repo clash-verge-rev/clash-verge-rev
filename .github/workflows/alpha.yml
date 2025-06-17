@@ -286,8 +286,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-          cache-all-crates: true
-          cache-on-failure: true
+          save-if: false
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -363,7 +362,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-          cache-all-crates: true
+          save-if: false
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -491,8 +490,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-          cache-all-crates: true
-          cache-on-failure: true
+          save-if: false
 
       - name: Install Node
         uses: actions/setup-node@v4
