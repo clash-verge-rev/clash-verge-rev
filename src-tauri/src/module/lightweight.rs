@@ -59,16 +59,14 @@ pub fn auto_lightweight_mode_init() {
         let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
         let enable_auto = { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
 
-        if enable_auto {
-            if is_silent_start {
-                logging!(info, Type::Lightweight, true, "自动轻量模式静默启动");
-                set_lightweight_mode(true);
-                enable_auto_light_weight_mode();
+        if enable_auto && is_silent_start {
+            logging!(info, Type::Lightweight, true, "自动轻量模式静默启动");
+            set_lightweight_mode(true);
+            enable_auto_light_weight_mode();
 
-                // 确保托盘状态更新
-                if let Err(e) = Tray::global().update_part() {
-                    log::warn!("Failed to update tray: {}", e);
-                }
+            // 确保托盘状态更新
+            if let Err(e) = Tray::global().update_part() {
+                log::warn!("Failed to update tray: {}", e);
             }
         }
     }
