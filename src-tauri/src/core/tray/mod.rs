@@ -970,6 +970,11 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             // 处理轻量模式的切换
             if crate::module::lightweight::is_in_lightweight_mode() {
                 crate::module::lightweight::exit_lightweight_mode();
+
+                // 退出轻量模式后显示主窗口
+                use crate::utils::window_manager::WindowManager;
+                let result = WindowManager::show_main_window();
+                log::info!(target: "app", "退出轻量模式后显示主窗口: {:?}", result);
             } else {
                 crate::module::lightweight::entry_lightweight_mode();
             }
@@ -991,4 +996,4 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
 
     // 更新托盘菜单，确保状态正确显示
     let _ = Tray::global().update_menu();
-}
+}    
