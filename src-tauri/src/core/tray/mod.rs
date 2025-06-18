@@ -213,7 +213,7 @@ impl Tray {
 
         // 检查更新频率，但允许重要事件跳过频率限制
         let should_force_update = match std::thread::current().name() {
-            Some(name) if name == "main" => true,
+            Some("main") => true,
             _ => {
                 let last_update = self.last_menu_update.lock();
                 if let Some(last_time) = *last_update {
