@@ -419,6 +419,7 @@
   "Clash Core Restarted": "已重启 Clash 内核",
   "GeoData Updated": "已更新 GeoData",
   "Currently on the Latest Version": "当前已是最新版本",
+  "Already Using Latest Core": "已是最新内核版本",
   "Import Subscription Successful": "导入订阅成功",
   "WebDAV Server URL": "WebDAV 服务器地址 http(s)://",
   "Username": "用户名",
