@@ -8,4 +8,12 @@ if git diff --cached --name-only | grep -q '^src-tauri/'; then
     fi
 fi
 
+if [[ "$(git rev-parse --show-toplevel)" == */clash-verge-rev/clash-verge-rev ]]; then
+    pnpm format:check
+    if [ $? -ne 0 ]; then
+        echo "Code format check failed. Please fix formatting before pushing."
+        exit 1
+    fi
+fi
+
 exit 0
