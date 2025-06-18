@@ -201,33 +201,38 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘菜单（带频率限制）
+    /// 更新托盘菜单
     pub fn update_menu(&self) -> Result<()> {
-        // 检查是否正在更新或距离上次更新太近
-        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
+        // 调整最小更新间隔，确保状态及时刷新
+        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
-        // 检查是否已有更新任务在执行
+        // 检查是否正在更新
         if self.menu_updating.load(Ordering::Acquire) {
-            log::debug!(target: "app", "托盘菜单正在更新中，跳过本次更新");
             return Ok(());
         }
 
-        // 检查更新频率
-        {
-            let last_update = self.last_menu_update.lock();
-            if let Some(last_time) = *last_update {
-                if last_time.elapsed() < MIN_UPDATE_INTERVAL {
-                    log::debug!(target: "app", "托盘菜单更新频率过高，跳过本次更新");
-                    return Ok(());
+        // 检查更新频率，但允许重要事件跳过频率限制
+        let should_force_update = match std::thread::current().name() {
+            Some(name) if name == "main" => true,
+            _ => {
+                let last_update = self.last_menu_update.lock();
+                if let Some(last_time) = *last_update {
+                    last_time.elapsed() >= MIN_UPDATE_INTERVAL
+                } else {
+                    true
                 }
             }
+        };
+
+        if !should_force_update {
+            return Ok(());
         }
 
         let app_handle = match handle::Handle::global().app_handle() {
             Some(handle) => handle,
             None => {
                 log::warn!(target: "app", "更新托盘菜单失败: app_handle不存在");
-                return Ok(()); // 早期返回，避免panic
+                return Ok(());
             }
         };
 
@@ -690,6 +695,17 @@ impl Tray {
         log::info!(target: "app", "系统托盘创建成功");
         Ok(())
     }
+
+    // 托盘统一的状态更新函数
+    pub fn update_all_states(&self) -> Result<()> {
+        // 确保所有状态更新完成
+        self.update_menu()?;
+        self.update_icon(None)?;
+        self.update_tooltip()?;
+        self.update_tray_display(is_in_lightweight_mode())?;
+
+        Ok(())
+    }
 }
 
 fn create_tray_menu(
@@ -952,8 +968,12 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             let result = WindowManager::show_main_window();
             log::info!(target: "app", "窗口显示结果: {:?}", result);
         }
-        "system_proxy" => feat::toggle_system_proxy(),
-        "tun_mode" => feat::toggle_tun_mode(None),
+        "system_proxy" => {
+            feat::toggle_system_proxy();
+        }
+        "tun_mode" => {
+            feat::toggle_tun_mode(None);
+        }
         "copy_env" => feat::copy_clash_env(),
         "open_app_dir" => {
             let _ = cmd::open_app_dir();
@@ -968,21 +988,19 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "restart_app" => feat::restart_app(),
         "entry_lightweight_mode" => {
             // 处理轻量模式的切换
-            if crate::module::lightweight::is_in_lightweight_mode() {
+            let was_lightweight = crate::module::lightweight::is_in_lightweight_mode();
+            if was_lightweight {
                 crate::module::lightweight::exit_lightweight_mode();
-
-                // 退出轻量模式后显示主窗口
-                use crate::utils::window_manager::WindowManager;
-                let result = WindowManager::show_main_window();
-                log::info!(target: "app", "退出轻量模式后显示主窗口: {:?}", result);
             } else {
                 crate::module::lightweight::entry_lightweight_mode();
             }
-            // 更新托盘菜单
-            let _ = Tray::global().update_menu();
-            // 更新托盘显示
-            let _ = Tray::global()
-                .update_tray_display(crate::module::lightweight::is_in_lightweight_mode());
+
+            // 退出轻量模式后显示主窗口
+            if was_lightweight {
+                use crate::utils::window_manager::WindowManager;
+                let result = WindowManager::show_main_window();
+                log::info!(target: "app", "退出轻量模式后显示主窗口: {:?}", result);
+            }
         }
         "quit" => {
             feat::quit();
@@ -994,6 +1012,8 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         _ => {}
     }
 
-    // 更新托盘菜单，确保状态正确显示
-    let _ = Tray::global().update_menu();
-}    
+    // 统一调用状态更新
+    if let Err(e) = Tray::global().update_all_states() {
+        log::warn!(target: "app", "更新托盘状态失败: {}", e);
+    }
+}
