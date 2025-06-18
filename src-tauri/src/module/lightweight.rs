@@ -42,8 +42,8 @@ pub fn run_once_auto_lightweight() {
                 true,
                 "正常创建窗口和添加定时器监听器"
             );
-                set_lightweight_mode(false);
-                disable_auto_light_weight_mode();
+            set_lightweight_mode(false);
+            disable_auto_light_weight_mode();
 
             // 触发托盘更新
             if let Err(e) = Tray::global().update_part() {
@@ -61,12 +61,7 @@ pub fn auto_lightweight_mode_init() {
 
         if enable_auto {
             if is_silent_start {
-                logging!(
-                    info,
-                    Type::Lightweight,
-                    true,
-                    "自动轻量模式静默启动"
-                );
+                logging!(info, Type::Lightweight, true, "自动轻量模式静默启动");
                 set_lightweight_mode(true);
                 enable_auto_light_weight_mode();
 
@@ -90,10 +85,10 @@ fn set_lightweight_mode(value: bool) {
         state.set_lightweight_mode(value);
     });
 
-     // 触发托盘更新
+    // 触发托盘更新
     if let Err(e) = Tray::global().update_part() {
         log::warn!("Failed to update tray: {}", e);
-  }
+    }
 }
 
 pub fn enable_auto_light_weight_mode() {
