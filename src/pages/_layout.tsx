@@ -502,7 +502,7 @@ const Layout = () => {
           className={`${OS} layout`}
           style={{
             borderTopLeftRadius: "0px",
-            borderTopRightRadius: "0px"
+            borderTopRightRadius: "0px",
           }}
           onContextMenu={(e) => {
             if (
