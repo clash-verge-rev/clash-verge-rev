@@ -6,10 +6,7 @@ use crate::{
     cmd,
     config::Config,
     feat, logging,
-    module::{
-        lightweight::{entry_lightweight_mode, is_in_lightweight_mode},
-        mihomo::Rate,
-    },
+    module::{lightweight::is_in_lightweight_mode, mihomo::Rate},
     utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
     Type,
 };
@@ -204,33 +201,38 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘菜单（带频率限制）
+    /// 更新托盘菜单
     pub fn update_menu(&self) -> Result<()> {
-        // 检查是否正在更新或距离上次更新太近
-        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
+        // 调整最小更新间隔，确保状态及时刷新
+        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
-        // 检查是否已有更新任务在执行
+        // 检查是否正在更新
         if self.menu_updating.load(Ordering::Acquire) {
-            log::debug!(target: "app", "托盘菜单正在更新中，跳过本次更新");
             return Ok(());
         }
 
-        // 检查更新频率
-        {
-            let last_update = self.last_menu_update.lock();
-            if let Some(last_time) = *last_update {
-                if last_time.elapsed() < MIN_UPDATE_INTERVAL {
-                    log::debug!(target: "app", "托盘菜单更新频率过高，跳过本次更新");
-                    return Ok(());
+        // 检查更新频率，但允许重要事件跳过频率限制
+        let should_force_update = match std::thread::current().name() {
+            Some("main") => true,
+            _ => {
+                let last_update = self.last_menu_update.lock();
+                if let Some(last_time) = *last_update {
+                    last_time.elapsed() >= MIN_UPDATE_INTERVAL
+                } else {
+                    true
                 }
             }
+        };
+
+        if !should_force_update {
+            return Ok(());
         }
 
         let app_handle = match handle::Handle::global().app_handle() {
             Some(handle) => handle,
             None => {
                 log::warn!(target: "app", "更新托盘菜单失败: app_handle不存在");
-                return Ok(()); // 早期返回，避免panic
+                return Ok(());
             }
         };
 
@@ -247,6 +249,7 @@ impl Tray {
 
         result
     }
+
     fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -394,6 +397,17 @@ impl Tray {
         Ok(())
     }
 
+    /// 更新托盘显示状态的函数
+    pub fn update_tray_display(&self) -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let _tray = app_handle.tray_by_id("main").unwrap();
+
+        // 更新菜单
+        self.update_menu()?;
+
+        Ok(())
+    }
+
     /// 更新托盘提示
     pub fn update_tooltip(&self) -> Result<()> {
         let app_handle = match handle::Handle::global().app_handle() {
@@ -456,6 +470,8 @@ impl Tray {
         self.update_menu()?;
         self.update_icon(None)?;
         self.update_tooltip()?;
+        // 更新轻量模式显示状态
+        self.update_tray_display()?;
         Ok(())
     }
 
@@ -667,6 +683,17 @@ impl Tray {
         });
         tray.on_menu_event(on_menu_event);
         log::info!(target: "app", "系统托盘创建成功");
+        Ok(())
+    }
+
+    // 托盘统一的状态更新函数
+    pub fn update_all_states(&self) -> Result<()> {
+        // 确保所有状态更新完成
+        self.update_menu()?;
+        self.update_icon(None)?;
+        self.update_tooltip()?;
+        self.update_tray_display()?;
+
         Ok(())
     }
 }
@@ -931,8 +958,12 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             let result = WindowManager::show_main_window();
             log::info!(target: "app", "窗口显示结果: {:?}", result);
         }
-        "system_proxy" => feat::toggle_system_proxy(),
-        "tun_mode" => feat::toggle_tun_mode(None),
+        "system_proxy" => {
+            feat::toggle_system_proxy();
+        }
+        "tun_mode" => {
+            feat::toggle_tun_mode(None);
+        }
         "copy_env" => feat::copy_clash_env(),
         "open_app_dir" => {
             let _ = cmd::open_app_dir();
@@ -945,7 +976,22 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         }
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
-        "entry_lightweight_mode" => entry_lightweight_mode(),
+        "entry_lightweight_mode" => {
+            // 处理轻量模式的切换
+            let was_lightweight = crate::module::lightweight::is_in_lightweight_mode();
+            if was_lightweight {
+                crate::module::lightweight::exit_lightweight_mode();
+            } else {
+                crate::module::lightweight::entry_lightweight_mode();
+            }
+
+            // 退出轻量模式后显示主窗口
+            if was_lightweight {
+                use crate::utils::window_manager::WindowManager;
+                let result = WindowManager::show_main_window();
+                log::info!(target: "app", "退出轻量模式后显示主窗口: {:?}", result);
+            }
+        }
         "quit" => {
             feat::quit();
         }
@@ -954,5 +1000,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             feat::toggle_proxy_profile(profile_index.into());
         }
         _ => {}
+    }
+
+    // 统一调用状态更新
+    if let Err(e) = Tray::global().update_all_states() {
+        log::warn!(target: "app", "更新托盘状态失败: {}", e);
     }
 }

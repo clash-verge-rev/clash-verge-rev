@@ -293,12 +293,7 @@ pub fn create_window(is_show: bool) -> bool {
     );
 
     if !is_show {
-        logging!(
-            info,
-            Type::Window,
-            true,
-            "Not to create window when starting in silent mode"
-        );
+        logging!(info, Type::Window, true, "静默模式启动时不创建窗口");
         handle::Handle::notify_startup_completed();
         return false;
     }
@@ -364,7 +359,7 @@ pub fn create_window(is_show: bool) -> bool {
                 console.log('[Tauri] 加载指示器已存在');
                 return;
             }
-            
+
             console.log('[Tauri] 创建加载指示器');
             const loadingDiv = document.createElement('div');
             loadingDiv.id = 'initial-loading-overlay';
@@ -372,15 +367,15 @@ pub fn create_window(is_show: bool) -> bool {
                 <div style="
                     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
                     background: var(--bg-color, #f5f5f5); color: var(--text-color, #333);
-                    display: flex; flex-direction: column; align-items: center; 
-                    justify-content: center; z-index: 9999; 
+                    display: flex; flex-direction: column; align-items: center;
+                    justify-content: center; z-index: 9999;
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                     transition: opacity 0.3s ease;
                 ">
                     <div style="margin-bottom: 20px;">
                         <div style="
-                            width: 40px; height: 40px; border: 3px solid #e3e3e3; 
-                            border-top: 3px solid #3498db; border-radius: 50%; 
+                            width: 40px; height: 40px; border: 3px solid #e3e3e3;
+                            border-top: 3px solid #3498db; border-radius: 50%;
                             animation: spin 1s linear infinite;
                         "></div>
                     </div>
@@ -415,7 +410,7 @@ pub fn create_window(is_show: bool) -> bool {
         } else {
             createLoadingOverlay();
         }
-        
+
         console.log('[Tauri] 窗口初始化脚本执行完成');
     "#,
     )
