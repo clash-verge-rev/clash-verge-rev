@@ -6,10 +6,7 @@ use crate::{
     cmd,
     config::Config,
     feat, logging,
-    module::{
-        lightweight::{entry_lightweight_mode, is_in_lightweight_mode},
-        mihomo::Rate,
-    },
+    module::{lightweight::is_in_lightweight_mode, mihomo::Rate},
     utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
     Type,
 };
@@ -247,6 +244,7 @@ impl Tray {
 
         result
     }
+
     fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
         let verge = Config::verge().latest().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -394,6 +392,27 @@ impl Tray {
         Ok(())
     }
 
+    /// 更新托盘显示状态的函数
+    pub fn update_tray_display(&self, is_lightweight: bool) -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let tray = app_handle.tray_by_id("main").unwrap();
+
+        // 根据轻量模式状态更新托盘文本或图标
+        if is_lightweight {
+            // 设置托盘显示为轻量模式开启状态
+            tray.set_title(Some("轻量模式已开启"))?;
+        } else {
+            // 设置托盘显示为轻量模式关闭状态
+            tray.set_title(Some("轻量模式已关闭"))?;
+        }
+
+        // 同时更新图标和菜单，确保整体状态一致
+        self.update_icon(None)?;
+        self.update_menu()?;
+
+        Ok(())
+    }
+
     /// 更新托盘提示
     pub fn update_tooltip(&self) -> Result<()> {
         let app_handle = match handle::Handle::global().app_handle() {
@@ -456,6 +475,8 @@ impl Tray {
         self.update_menu()?;
         self.update_icon(None)?;
         self.update_tooltip()?;
+        // 更新轻量模式显示状态
+        self.update_tray_display(is_in_lightweight_mode())?;
         Ok(())
     }
 
@@ -945,7 +966,19 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         }
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
-        "entry_lightweight_mode" => entry_lightweight_mode(),
+        "entry_lightweight_mode" => {
+            // 处理轻量模式的切换
+            if crate::module::lightweight::is_in_lightweight_mode() {
+                crate::module::lightweight::exit_lightweight_mode();
+            } else {
+                crate::module::lightweight::entry_lightweight_mode();
+            }
+            // 更新托盘菜单
+            let _ = Tray::global().update_menu();
+            // 更新托盘显示
+            let _ = Tray::global()
+                .update_tray_display(crate::module::lightweight::is_in_lightweight_mode());
+        }
         "quit" => {
             feat::quit();
         }
@@ -955,4 +988,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         }
         _ => {}
     }
+
+    // 更新托盘菜单，确保状态正确显示
+    let _ = Tray::global().update_menu();
 }
