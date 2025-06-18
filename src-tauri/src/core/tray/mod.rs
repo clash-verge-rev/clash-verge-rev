@@ -398,21 +398,11 @@ impl Tray {
     }
 
     /// 更新托盘显示状态的函数
-    pub fn update_tray_display(&self, is_lightweight: bool) -> Result<()> {
+    pub fn update_tray_display(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
-        let tray = app_handle.tray_by_id("main").unwrap();
+        let _tray = app_handle.tray_by_id("main").unwrap();
 
-        // 根据轻量模式状态更新托盘文本或图标
-        if is_lightweight {
-            // 设置托盘显示为轻量模式开启状态
-            tray.set_title(Some("轻量模式已开启"))?;
-        } else {
-            // 设置托盘显示为轻量模式关闭状态
-            tray.set_title(Some("轻量模式已关闭"))?;
-        }
-
-        // 同时更新图标和菜单，确保整体状态一致
-        self.update_icon(None)?;
+        // 更新菜单
         self.update_menu()?;
 
         Ok(())
@@ -481,7 +471,7 @@ impl Tray {
         self.update_icon(None)?;
         self.update_tooltip()?;
         // 更新轻量模式显示状态
-        self.update_tray_display(is_in_lightweight_mode())?;
+        self.update_tray_display()?;
         Ok(())
     }
 
@@ -702,7 +692,7 @@ impl Tray {
         self.update_menu()?;
         self.update_icon(None)?;
         self.update_tooltip()?;
-        self.update_tray_display(is_in_lightweight_mode())?;
+        self.update_tray_display()?;
 
         Ok(())
     }

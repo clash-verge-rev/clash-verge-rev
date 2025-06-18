@@ -126,8 +126,7 @@ pub fn entry_lightweight_mode() {
     let _ = cancel_light_weight_timer();
 
     // 更新托盘显示
-    let tray = crate::core::tray::Tray::global();
-    let _ = tray.update_tray_display(true);
+    let _tray = crate::core::tray::Tray::global();
 }
 
 // 添加从轻量模式恢复的函数
@@ -149,8 +148,7 @@ pub fn exit_lightweight_mode() {
     crate::utils::resolve::reset_ui_ready();
 
     // 更新托盘显示
-    let tray = crate::core::tray::Tray::global();
-    let _ = tray.update_tray_display(false);
+    let _tray = crate::core::tray::Tray::global();
 }
 
 #[cfg(target_os = "macos")]
