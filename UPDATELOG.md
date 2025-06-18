@@ -7,8 +7,7 @@
 - 修复 macOS Intel X86 架构构建错误导致无法运行
 - 修复 Linux 下界面边框白边问题
 - 修复 托盘 无响应问题
-- 修复 托盘 轻量模式点击关闭无法显示窗口
-- 重构 `run_once_auto_lightweight` / `auto_lightweight_mode_init` 实现方式
+- 修复 托盘 无法从轻量模式退出并恢复窗口
 
 ### ✨ 新增功能
 
