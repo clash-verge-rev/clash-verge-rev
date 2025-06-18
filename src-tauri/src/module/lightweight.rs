@@ -1,6 +1,6 @@
 use crate::{
     config::Config,
-    core::{handle, timer::Timer},
+    core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
     state::lightweight::LightWeightState,
     utils::logging::Type,
@@ -30,39 +30,51 @@ where
 
 pub fn run_once_auto_lightweight() {
     LightWeightState::default().run_once_time(|| {
-        let is_silent_start = Config::verge().data().enable_silent_start.unwrap_or(false);
+        let is_silent_start = Config::verge().data().enable_silent_start.unwrap_or(true);
         let enable_auto = Config::verge()
             .data()
             .enable_auto_light_weight_mode
-            .unwrap_or(false);
+            .unwrap_or(true);
         if enable_auto && is_silent_start {
             logging!(
                 info,
                 Type::Lightweight,
                 true,
-                "Add timer listener when creating window in silent start mode"
+                "正常创建窗口和添加定时器监听器"
             );
-            set_lightweight_mode(true);
-            enable_auto_light_weight_mode();
+                set_lightweight_mode(false);
+                disable_auto_light_weight_mode();
+
+            // 触发托盘更新
+            if let Err(e) = Tray::global().update_part() {
+                log::warn!("Failed to update tray: {}", e);
+            }
         }
     });
 }
 
 pub fn auto_lightweight_mode_init() {
     if let Some(app_handle) = handle::Handle::global().app_handle() {
-        // 通过 app_handle.state 保证同步
         let _ = app_handle.state::<Mutex<LightWeightState>>();
         let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
         let enable_auto = { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
-        if enable_auto && !is_silent_start {
-            logging!(
-                info,
-                Type::Lightweight,
-                true,
-                "Add timer listener when creating window normally"
-            );
-            set_lightweight_mode(true);
-            enable_auto_light_weight_mode();
+
+        if enable_auto {
+            if is_silent_start {
+                logging!(
+                    info,
+                    Type::Lightweight,
+                    true,
+                    "自动轻量模式静默启动"
+                );
+                set_lightweight_mode(true);
+                enable_auto_light_weight_mode();
+
+                // 确保托盘状态更新
+                if let Err(e) = Tray::global().update_part() {
+                    log::warn!("Failed to update tray: {}", e);
+                }
+            }
         }
     }
 }
@@ -77,6 +89,11 @@ fn set_lightweight_mode(value: bool) {
     with_lightweight_status(|state| {
         state.set_lightweight_mode(value);
     });
+
+     // 触发托盘更新
+    if let Err(e) = Tray::global().update_part() {
+        log::warn!("Failed to update tray: {}", e);
+  }
 }
 
 pub fn enable_auto_light_weight_mode() {
