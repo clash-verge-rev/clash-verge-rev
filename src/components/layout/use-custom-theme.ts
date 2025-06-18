@@ -165,7 +165,8 @@ export const useCustomTheme = () => {
 
     const rootEle = document.documentElement;
     if (rootEle) {
-      const backgroundColor = mode === "light" ? "#ECECEC" : dt.background_color;
+      const backgroundColor =
+        mode === "light" ? "#ECECEC" : dt.background_color;
       const selectColor = mode === "light" ? "#f5f5f5" : "#3E3E3E";
       const scrollColor = mode === "light" ? "#90939980" : "#555555";
       const dividerColor =
@@ -184,9 +185,18 @@ export const useCustomTheme = () => {
         alpha(muiTheme.palette.primary.main, 0.1),
       );
       // 添加CSS变量
-      rootEle.style.setProperty("--window-border-color", mode === "light" ? "#cccccc" : "#1E1E1E");
-      rootEle.style.setProperty("--scrollbar-bg", mode === "light" ? "#f1f1f1" : "#2E303D");
-      rootEle.style.setProperty("--scrollbar-thumb", mode === "light" ? "#c1c1c1" : "#555555");
+      rootEle.style.setProperty(
+        "--window-border-color",
+        mode === "light" ? "#cccccc" : "#1E1E1E",
+      );
+      rootEle.style.setProperty(
+        "--scrollbar-bg",
+        mode === "light" ? "#f1f1f1" : "#2E303D",
+      );
+      rootEle.style.setProperty(
+        "--scrollbar-thumb",
+        mode === "light" ? "#c1c1c1" : "#555555",
+      );
     }
 
     let styleElement = document.querySelector("style#verge-theme");
