@@ -28,6 +28,10 @@ pub struct IVerge {
 
     /// start page
     pub start_page: Option<String>,
+
+    /// singleton instance action when click new app
+    pub run_multi_app_event: Option<String>,
+
     /// startup script path
     pub startup_script: Option<String>,
 
@@ -429,6 +433,7 @@ impl IVerge {
         patch!(tray_event);
         patch!(env_type);
         patch!(start_page);
+        patch!(run_multi_app_event);
         patch!(startup_script);
         patch!(traffic_graph);
         patch!(enable_memory_usage);
@@ -528,6 +533,7 @@ pub struct IVergeResponse {
     pub tray_event: Option<String>,
     pub env_type: Option<String>,
     pub start_page: Option<String>,
+    pub run_multi_app_event: Option<String>,
     pub startup_script: Option<String>,
     pub traffic_graph: Option<bool>,
     pub enable_memory_usage: Option<bool>,
@@ -600,6 +606,7 @@ impl From<IVerge> for IVergeResponse {
             tray_event: verge.tray_event,
             env_type: verge.env_type,
             start_page: verge.start_page,
+            run_multi_app_event: verge.run_multi_app_event,
             startup_script: verge.startup_script,
             traffic_graph: verge.traffic_graph,
             enable_memory_usage: verge.enable_memory_usage,

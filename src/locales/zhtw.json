@@ -561,5 +561,6 @@
   "Copy to clipboard": "點擊我複製",
   "Port Config": "端口設置",
   "Configuration saved successfully": "配置保存完成",
-  "Enable one-click random API port and key. Click to randomize the port and key": "開啟一鍵隨機 API 端口和密鑰，點進去就可以隨機端口和密鑰"
+  "Enable one-click random API port and key. Click to randomize the port and key": "開啟一鍵隨機 API 端口和密鑰，點進去就可以隨機端口和密鑰",
+  "Multiple App Event": "多程式事件"
 }

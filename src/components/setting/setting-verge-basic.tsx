@@ -54,6 +54,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
     env_type,
     startup_script,
     start_page,
+    run_multi_app_event,
   } = verge ?? {};
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
@@ -170,6 +171,23 @@ const SettingVergeBasic = ({ onError }: Props) => {
                 </MenuItem>
               );
             })}
+          </Select>
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem label={t("Multiple App Event")}>
+        <GuardState
+          value={run_multi_app_event ?? "nothing"}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ run_multi_app_type: e })}
+          onGuard={(e) => patchVerge({ run_multi_app_event: e })}
+        >
+          <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
+            <MenuItem value="nothing">{t("Disable")}</MenuItem>
+            <MenuItem value="show_main_window">
+              {t("Show Main Window")}
+            </MenuItem>
           </Select>
         </GuardState>
       </SettingItem>

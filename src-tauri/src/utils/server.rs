@@ -50,7 +50,20 @@ pub fn embed_server() {
 
     AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").map(move || {
-            resolve::create_window(false);
+            let action_type = Config::verge()
+                .latest()
+                .run_multi_app_event
+                .clone()
+                .unwrap_or("nothing".into());
+
+            let _ = match action_type.as_str() {
+                "show_main_window" => resolve::create_window(true),
+                // Can I replace by None?
+                "nothing" => resolve::create_window(false),
+                _ => resolve::create_window(false),
+                // custom more action type
+            };
+
             "ok"
         });
 

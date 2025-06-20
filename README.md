@@ -88,7 +88,7 @@ To run the development server, execute the following commands after all prerequi
 
 ```shell
 pnpm i
-pnpm run check
+pnpm run prebuild
 pnpm dev
 ```
 

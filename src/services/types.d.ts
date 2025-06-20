@@ -728,6 +728,7 @@ interface IVergeConfig {
   env_type?: "bash" | "cmd" | "powershell" | "fish" | string;
   startup_script?: string;
   start_page?: string;
+  run_multi_app_event?: string;
   clash_core?: string;
   theme_mode?: "light" | "dark" | "system";
   traffic_graph?: boolean;
