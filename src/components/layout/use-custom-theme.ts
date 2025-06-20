@@ -1,21 +1,21 @@
-import { useEffect, useMemo } from "react";
-import { alpha, createTheme, Shadows, Theme as MuiTheme } from "@mui/material";
+import { useVerge } from "@/hooks/use-verge";
+import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
+import { useSetThemeMode, useThemeMode } from "@/services/states";
+import { alpha, createTheme, Theme as MuiTheme, Shadows } from "@mui/material";
+import {
+  arSD as arXDataGrid,
+  enUS as enXDataGrid,
+  faIR as faXDataGrid,
+  ruRU as ruXDataGrid,
+  zhCN as zhXDataGrid,
+} from "@mui/x-data-grid/locales";
 import {
   getCurrentWebviewWindow,
   WebviewWindow,
 } from "@tauri-apps/api/webviewWindow";
-import { useSetThemeMode, useThemeMode } from "@/services/states";
-import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
-import { useVerge } from "@/hooks/use-verge";
-import {
-  zhCN as zhXDataGrid,
-  enUS as enXDataGrid,
-  ruRU as ruXDataGrid,
-  faIR as faXDataGrid,
-  arSD as arXDataGrid,
-} from "@mui/x-data-grid/locales";
-import { useTranslation } from "react-i18next";
 import { Theme as TauriOsTheme } from "@tauri-apps/api/window";
+import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 const languagePackMap: Record<string, any> = {
   zh: { ...zhXDataGrid },
@@ -38,6 +38,10 @@ export const useCustomTheme = () => {
   const { theme_mode, theme_setting } = verge ?? {};
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
+
+  // 提取用户自定义的背景图URL
+  const userBackgroundImage = theme_setting?.background_image || "";
+  const hasUserBackground = !!userBackgroundImage;
 
   useEffect(() => {
     if (theme_mode === "light" || theme_mode === "dark") {
@@ -197,6 +201,22 @@ export const useCustomTheme = () => {
         "--scrollbar-thumb",
         mode === "light" ? "#c1c1c1" : "#555555",
       );
+
+      // 设置背景图相关变量
+      rootEle.style.setProperty(
+        "--user-background-image",
+        hasUserBackground ? `url('${userBackgroundImage}')` : "none",
+      );
+      rootEle.style.setProperty(
+        "--background-blend-mode",
+        setting.background_blend_mode || "normal",
+      );
+      rootEle.style.setProperty(
+        "--background-opacity",
+        setting.background_opacity !== undefined
+          ? String(setting.background_opacity)
+          : "1",
+      );
     }
 
     let styleElement = document.querySelector("style#verge-theme");
@@ -207,7 +227,7 @@ export const useCustomTheme = () => {
     }
 
     if (styleElement) {
-      // 添加全局样式，确保所有元素都使用暗色主题
+      // 改进的全局样式，支持用户自定义背景图
       const globalStyles = `
         /* 修复滚动条样式 */
         ::-webkit-scrollbar {
@@ -223,9 +243,21 @@ export const useCustomTheme = () => {
           background-color: ${mode === "light" ? "#a1a1a1" : "#666666"};
         }
 
-        /* 确保所有元素都使用正确的背景色 */
-        body, html {
-          background-color: var(--background-color) !important;
+        /* 背景图处理 */
+        body {
+          background-color: var(--background-color);
+          ${
+            hasUserBackground
+              ? `
+            background-image: var(--user-background-image);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-blend-mode: var(--background-blend-mode);
+            opacity: var(--background-opacity);
+          `
+              : ""
+          }
         }
 
         /* 修复可能的白色边框 */
@@ -261,7 +293,13 @@ export const useCustomTheme = () => {
     }, 0);
 
     return muiTheme;
-  }, [mode, theme_setting, i18n.language]);
+  }, [
+    mode,
+    theme_setting,
+    i18n.language,
+    userBackgroundImage,
+    hasUserBackground,
+  ]);
 
   return { theme };
 };
