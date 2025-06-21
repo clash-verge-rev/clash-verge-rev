@@ -1,8 +1,9 @@
 use super::CmdResult;
+use crate::core::EventDrivenProxyManager;
 use crate::wrap_err;
 use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
-use sysproxy::{Autoproxy, Sysproxy};
+use sysproxy::Sysproxy;
 use tokio::task::spawn_blocking;
 
 /// get the system proxy
@@ -24,18 +25,24 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
     Ok(map)
 }
 
-/// get the system proxy
+/// 获取自动代理配置
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
-    let current = spawn_blocking(Autoproxy::get_auto_proxy)
-        .await
-        .map_err(|e| format!("Failed to spawn blocking task for autoproxy: {}", e))?
-        .map_err(|e| format!("Failed to get auto proxy: {}", e))?;
+    log::debug!(target: "app", "开始获取自动代理配置（事件驱动）");
+
+    let proxy_manager = EventDrivenProxyManager::global();
+
+    let current = proxy_manager.get_auto_proxy_cached();
+    // 异步请求更新，立即返回缓存数据
+    tokio::spawn(async move {
+        let _ = proxy_manager.get_auto_proxy_async().await;
+    });
 
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
-    map.insert("url".into(), current.url.into());
+    map.insert("url".into(), current.url.clone().into());
 
+    log::debug!(target: "app", "返回自动代理配置（缓存）: enable={}, url={}", current.enable, current.url);
     Ok(map)
 }
 

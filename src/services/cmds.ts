@@ -111,10 +111,21 @@ export async function getSystemProxy() {
 }
 
 export async function getAutotemProxy() {
-  return invoke<{
-    enable: boolean;
-    url: string;
-  }>("get_auto_proxy");
+  try {
+    console.log("[API] 开始调用 get_auto_proxy");
+    const result = await invoke<{
+      enable: boolean;
+      url: string;
+    }>("get_auto_proxy");
+    console.log("[API] get_auto_proxy 调用成功:", result);
+    return result;
+  } catch (error) {
+    console.error("[API] get_auto_proxy 调用失败:", error);
+    return {
+      enable: false,
+      url: "",
+    };
+  }
 }
 
 export async function getAutoLaunchStatus() {
@@ -122,7 +133,6 @@ export async function getAutoLaunchStatus() {
     return await invoke<boolean>("get_auto_launch_status");
   } catch (error) {
     console.error("获取自启动状态失败:", error);
-    // 出错时返回false作为默认值
     return false;
   }
 }

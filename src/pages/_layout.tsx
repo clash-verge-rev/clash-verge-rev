@@ -479,7 +479,19 @@ const Layout = () => {
   }
 
   return (
-    <SWRConfig value={{ errorRetryCount: 3 }}>
+    <SWRConfig
+      value={{
+        errorRetryCount: 3,
+        errorRetryInterval: 5000,
+        onError: (error, key) => {
+          console.error(`[SWR Error] Key: ${key}, Error:`, error);
+          if (key !== "getAutotemProxy") {
+            console.error(`SWR Error for ${key}:`, error);
+          }
+        },
+        dedupingInterval: 2000,
+      }}
+    >
       <ThemeProvider theme={theme}>
         <NoticeManager />
         <div

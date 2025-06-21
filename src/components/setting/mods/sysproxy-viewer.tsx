@@ -81,7 +81,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const { verge, patchVerge } = useVerge();
+  const { verge, patchVerge, mutateVerge } = useVerge();
   const [hostOptions, setHostOptions] = useState<string[]>([]);
 
   type SysProxy = Awaited<ReturnType<typeof getSystemProxy>>;
@@ -281,93 +281,108 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     }
 
     setSaving(true);
-    try {
-      const patch: Partial<IVergeConfig> = {};
+    setOpen(false);
+    setSaving(false);
+    const patch: Partial<IVergeConfig> = {};
 
-      if (value.guard !== enable_proxy_guard) {
-        patch.enable_proxy_guard = value.guard;
-      }
-      if (value.duration !== proxy_guard_duration) {
-        patch.proxy_guard_duration = value.duration;
-      }
-      if (value.bypass !== system_proxy_bypass) {
-        patch.system_proxy_bypass = value.bypass;
-      }
-      if (value.pac !== proxy_auto_config) {
-        patch.proxy_auto_config = value.pac;
-      }
-      if (value.use_default !== use_default_bypass) {
-        patch.use_default_bypass = value.use_default;
-      }
-
-      let pacContent = value.pac_content;
-      if (pacContent) {
-        pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host);
-        // 将 mixed-port 转换为字符串
-        const mixedPortStr = (clashConfig?.["mixed-port"] || "").toString();
-        pacContent = pacContent.replace(/%mixed-port%/g, mixedPortStr);
-      }
-
-      if (pacContent !== pac_file_content) {
-        patch.pac_file_content = pacContent;
-      }
-
-      // 处理IPv6地址，如果是IPv6地址但没有被方括号包围，则添加方括号
-      let proxyHost = value.proxy_host;
-      if (
-        ipv6Regex.test(proxyHost) &&
-        !proxyHost.startsWith("[") &&
-        !proxyHost.endsWith("]")
-      ) {
-        proxyHost = `[${proxyHost}]`;
-      }
-
-      if (proxyHost !== proxy_host) {
-        patch.proxy_host = proxyHost;
-      }
-
-      // 判断是否需要重置系统代理
-      const needResetProxy =
-        value.pac !== proxy_auto_config ||
-        proxyHost !== proxy_host ||
-        pacContent !== pac_file_content ||
-        value.bypass !== system_proxy_bypass ||
-        value.use_default !== use_default_bypass;
-
-      await patchVerge(patch);
-
-      // 更新系统代理状态，以便UI立即反映变化
-      await Promise.all([mutate("getSystemProxy"), mutate("getAutotemProxy")]);
-
-      // 只有在修改了影响系统代理的配置且系统代理当前启用时，才重置系统代理
-      if (needResetProxy) {
-        const currentSysProxy = await getSystemProxy();
-        const currentAutoProxy = await getAutotemProxy();
-
-        if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
-          // 临时关闭系统代理
-          await patchVergeConfig({ enable_system_proxy: false });
-
-          // 减少等待时间
-          await new Promise((resolve) => setTimeout(resolve, 200));
-
-          // 重新开启系统代理
-          await patchVergeConfig({ enable_system_proxy: true });
-
-          // 更新UI状态
-          await Promise.all([
-            mutate("getSystemProxy"),
-            mutate("getAutotemProxy"),
-          ]);
-        }
-      }
-
-      setOpen(false);
-    } catch (err: any) {
-      showNotice("error", err.toString());
-    } finally {
-      setSaving(false);
+    if (value.guard !== enable_proxy_guard) {
+      patch.enable_proxy_guard = value.guard;
     }
+    if (value.duration !== proxy_guard_duration) {
+      patch.proxy_guard_duration = value.duration;
+    }
+    if (value.bypass !== system_proxy_bypass) {
+      patch.system_proxy_bypass = value.bypass;
+    }
+    if (value.pac !== proxy_auto_config) {
+      patch.proxy_auto_config = value.pac;
+    }
+    if (value.use_default !== use_default_bypass) {
+      patch.use_default_bypass = value.use_default;
+    }
+
+    let pacContent = value.pac_content;
+    if (pacContent) {
+      pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host);
+      // 将 mixed-port 转换为字符串
+      const mixedPortStr = (clashConfig?.["mixed-port"] || "").toString();
+      pacContent = pacContent.replace(/%mixed-port%/g, mixedPortStr);
+    }
+
+    if (pacContent !== pac_file_content) {
+      patch.pac_file_content = pacContent;
+    }
+
+    // 处理IPv6地址，如果是IPv6地址但没有被方括号包围，则添加方括号
+    let proxyHost = value.proxy_host;
+    if (
+      ipv6Regex.test(proxyHost) &&
+      !proxyHost.startsWith("[") &&
+      !proxyHost.endsWith("]")
+    ) {
+      proxyHost = `[${proxyHost}]`;
+    }
+
+    if (proxyHost !== proxy_host) {
+      patch.proxy_host = proxyHost;
+    }
+
+    // 判断是否需要重置系统代理
+    const needResetProxy =
+      value.pac !== proxy_auto_config ||
+      proxyHost !== proxy_host ||
+      pacContent !== pac_file_content ||
+      value.bypass !== system_proxy_bypass ||
+      value.use_default !== use_default_bypass;
+
+    Promise.resolve().then(async () => {
+      try {
+        // 乐观更新本地状态
+        if (Object.keys(patch).length > 0) {
+          mutateVerge({ ...verge, ...patch }, false);
+        }
+        if (Object.keys(patch).length > 0) {
+          await patchVerge(patch);
+        }
+        setTimeout(async () => {
+          try {
+            await Promise.all([
+              mutate("getSystemProxy"),
+              mutate("getAutotemProxy"),
+            ]);
+
+            // 如果需要重置代理且代理当前启用
+            if (needResetProxy && enabled) {
+              const [currentSysProxy, currentAutoProxy] = await Promise.all([
+                getSystemProxy(),
+                getAutotemProxy(),
+              ]);
+
+              const isProxyActive = value.pac
+                ? currentAutoProxy?.enable
+                : currentSysProxy?.enable;
+
+              if (isProxyActive) {
+                await patchVergeConfig({ enable_system_proxy: false });
+                await new Promise((resolve) => setTimeout(resolve, 50));
+                await patchVergeConfig({ enable_system_proxy: true });
+                await Promise.all([
+                  mutate("getSystemProxy"),
+                  mutate("getAutotemProxy"),
+                ]);
+              }
+            }
+          } catch (err) {
+            console.warn("代理状态更新失败:", err);
+          }
+        }, 50);
+      } catch (err: any) {
+        console.error("配置保存失败:", err);
+        mutateVerge();
+        showNotice("error", err.toString());
+        // setOpen(true);
+      }
+    });
   });
 
   return (
