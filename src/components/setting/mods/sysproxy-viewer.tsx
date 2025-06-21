@@ -3,21 +3,20 @@ import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
+import { getClashConfig } from "@/services/api";
 import {
   getAutotemProxy,
-  getNetworkInterfaces,
   getNetworkInterfacesInfo,
   getSystemHostname,
   getSystemProxy,
   patchVergeConfig,
-  restartCore,
 } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
 import { EditRounded } from "@mui/icons-material";
 import {
   Autocomplete,
   Button,
-  CircularProgress,
   InputAdornment,
   List,
   ListItem,
@@ -29,14 +28,14 @@ import {
 import { useLockFn } from "ahooks";
 import {
   forwardRef,
-  useImperativeHandle,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { mutate } from "swr";
-import { showNotice } from "@/services/noticeService";
+import useSWR, { mutate } from "swr";
+
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
 }`;
@@ -120,6 +119,57 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       return "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1";
     }
     return "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
+  };
+
+  const { data: clashConfig, mutate: mutateClash } = useSWR(
+    "getClashConfig",
+    getClashConfig,
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: true,
+      dedupingInterval: 1000,
+      errorRetryInterval: 5000,
+    },
+  );
+
+  const [prevMixedPort, setPrevMixedPort] = useState(
+    clashConfig?.["mixed-port"],
+  );
+
+  useEffect(() => {
+    if (
+      clashConfig?.["mixed-port"] &&
+      clashConfig?.["mixed-port"] !== prevMixedPort
+    ) {
+      setPrevMixedPort(clashConfig?.["mixed-port"]);
+      resetSystemProxy();
+    }
+  }, [clashConfig?.["mixed-port"]]);
+
+  const resetSystemProxy = async () => {
+    try {
+      const currentSysProxy = await getSystemProxy();
+      const currentAutoProxy = await getAutotemProxy();
+
+      if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
+        // 临时关闭系统代理
+        await patchVergeConfig({ enable_system_proxy: false });
+
+        // 减少等待时间
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // 重新开启系统代理
+        await patchVergeConfig({ enable_system_proxy: true });
+
+        // 更新UI状态
+        await Promise.all([
+          mutate("getSystemProxy"),
+          mutate("getAutotemProxy"),
+        ]);
+      }
+    } catch (err: any) {
+      showNotice("error", err.toString());
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -253,6 +303,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       let pacContent = value.pac_content;
       if (pacContent) {
         pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host);
+        // 将 mixed-port 转换为字符串
+        const mixedPortStr = (clashConfig?.["mixed-port"] || "").toString();
+        pacContent = pacContent.replace(/%mixed-port%/g, mixedPortStr);
       }
 
       if (pacContent !== pac_file_content) {
