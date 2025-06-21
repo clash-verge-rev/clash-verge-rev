@@ -1,3 +1,5 @@
+#[cfg(target_os = "linux")]
+use anyhow::anyhow;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;

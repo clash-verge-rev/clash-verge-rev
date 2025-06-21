@@ -530,9 +530,9 @@ impl EventDrivenProxyManager {
         use tauri_plugin_shell::ShellExt;
 
         let app_handle = match Handle::global().app_handle() {
-            Ok(handle) => handle,
-            Err(e) => {
-                log::error!(target: "app", "获取应用句柄失败: {}", e);
+            Some(handle) => handle,
+            None => {
+                log::error!(target: "app", "获取应用句柄失败");
                 return;
             }
         };
