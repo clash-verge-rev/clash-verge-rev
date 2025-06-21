@@ -392,6 +392,7 @@
   "Profile Imported Successfully": "导入订阅成功",
   "Profile Switched": "订阅已切换",
   "Profile Reactivated": "订阅已激活",
+  "Profile switch interrupted by new selection": "配置切换被新选择中断",
   "Only YAML Files Supported": "仅支持 YAML 文件",
   "Settings Applied": "设置已应用",
   "Installing Service...": "安装服务中...",

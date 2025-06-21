@@ -392,6 +392,7 @@
   "Profile Imported Successfully": "Profile Imported Successfully",
   "Profile Switched": "Profile Switched",
   "Profile Reactivated": "Profile Reactivated",
+  "Profile switch interrupted by new selection": "Profile switch interrupted by new selection",
   "Only YAML Files Supported": "Only YAML Files Supported",
   "Settings Applied": "Settings Applied",
   "Installing Service...": "Installing Service...",
