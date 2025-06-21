@@ -4,6 +4,7 @@ use tokio::sync::{mpsc, oneshot};
 use tokio::time::{sleep, timeout, Duration};
 
 use crate::config::{Config, IVerge};
+use crate::core::async_proxy_query::AsyncProxyQuery;
 use crate::logging_error;
 use crate::utils::logging::Type;
 use once_cell::sync::Lazy;
@@ -393,56 +394,24 @@ impl EventDrivenProxyManager {
     }
 
     async fn get_auto_proxy_with_timeout() -> Autoproxy {
-        let result = timeout(
-            Duration::from_secs(2),
-            tokio::task::spawn_blocking(|| Autoproxy::get_auto_proxy()),
-        )
-        .await;
+        let async_proxy = AsyncProxyQuery::get_auto_proxy().await;
 
-        match result {
-            Ok(Ok(Ok(proxy))) => proxy,
-            Ok(Ok(Err(e))) => {
-                log::warn!(target: "app", "获取自动代理失败: {}", e);
-                Autoproxy {
-                    enable: false,
-                    url: "".to_string(),
-                }
-            }
-            Ok(Err(e)) => {
-                log::error!(target: "app", "spawn_blocking失败: {}", e);
-                Autoproxy {
-                    enable: false,
-                    url: "".to_string(),
-                }
-            }
-            Err(_) => {
-                log::warn!(target: "app", "获取自动代理超时");
-                Autoproxy {
-                    enable: false,
-                    url: "".to_string(),
-                }
-            }
+        // 转换为兼容的结构
+        Autoproxy {
+            enable: async_proxy.enable,
+            url: async_proxy.url,
         }
     }
 
     async fn get_sys_proxy_with_timeout() -> Sysproxy {
-        let result = timeout(
-            Duration::from_secs(2),
-            tokio::task::spawn_blocking(|| Sysproxy::get_system_proxy()),
-        )
-        .await;
+        let async_proxy = AsyncProxyQuery::get_system_proxy().await;
 
-        match result {
-            Ok(Ok(Ok(proxy))) => proxy,
-            _ => {
-                log::warn!(target: "app", "获取系统代理失败或超时");
-                Sysproxy {
-                    enable: false,
-                    host: "127.0.0.1".to_string(),
-                    port: 7890,
-                    bypass: "".to_string(),
-                }
-            }
+        // 转换为兼容的结构
+        Sysproxy {
+            enable: async_proxy.enable,
+            host: async_proxy.host,
+            port: async_proxy.port,
+            bypass: async_proxy.bypass,
         }
     }
 

@@ -1,3 +1,4 @@
+pub mod async_proxy_query;
 pub mod backup;
 #[allow(clippy::module_inception)]
 mod core;

@@ -1,18 +1,15 @@
 use super::CmdResult;
-use crate::core::EventDrivenProxyManager;
+use crate::core::{async_proxy_query::AsyncProxyQuery, EventDrivenProxyManager};
 use crate::wrap_err;
 use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
-use sysproxy::Sysproxy;
-use tokio::task::spawn_blocking;
 
 /// get the system proxy
 #[tauri::command]
 pub async fn get_sys_proxy() -> CmdResult<Mapping> {
-    let current = spawn_blocking(Sysproxy::get_system_proxy)
-        .await
-        .map_err(|e| format!("Failed to spawn blocking task for sysproxy: {}", e))?
-        .map_err(|e| format!("Failed to get system proxy: {}", e))?;
+    log::debug!(target: "app", "异步获取系统代理配置");
+
+    let current = AsyncProxyQuery::get_system_proxy().await;
 
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
@@ -22,6 +19,7 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
     );
     map.insert("bypass".into(), current.bypass.into());
 
+    log::debug!(target: "app", "返回系统代理配置: enable={}, {}:{}", current.enable, current.host, current.port);
     Ok(map)
 }
 
