@@ -1,3 +1,5 @@
+#[cfg(target_os = "linux")]
+use anyhow::anyhow;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
@@ -71,7 +73,7 @@ impl AsyncProxyQuery {
     async fn get_auto_proxy_impl() -> Result<AsyncAutoproxy> {
         // Windows: 使用 netsh winhttp show proxy 命令
         let output = Command::new("netsh")
-            .args(&["winhttp", "show", "proxy"])
+            .args(["winhttp", "show", "proxy"])
             .output()
             .await?;
 
@@ -172,7 +174,7 @@ impl AsyncProxyQuery {
 
         // 尝试使用 gsettings 获取 GNOME 代理设置
         let output = Command::new("gsettings")
-            .args(&["get", "org.gnome.system.proxy", "mode"])
+            .args(["get", "org.gnome.system.proxy", "mode"])
             .output()
             .await;
 
@@ -182,7 +184,7 @@ impl AsyncProxyQuery {
                 if mode.contains("auto") {
                     // 获取 PAC URL
                     let pac_output = Command::new("gsettings")
-                        .args(&["get", "org.gnome.system.proxy", "autoconfig-url"])
+                        .args(["get", "org.gnome.system.proxy", "autoconfig-url"])
                         .output()
                         .await;
 
@@ -212,7 +214,7 @@ impl AsyncProxyQuery {
     #[cfg(target_os = "windows")]
     async fn get_system_proxy_impl() -> Result<AsyncSysproxy> {
         let output = Command::new("netsh")
-            .args(&["winhttp", "show", "proxy"])
+            .args(["winhttp", "show", "proxy"])
             .output()
             .await?;
 
@@ -333,7 +335,7 @@ impl AsyncProxyQuery {
 
         // 尝试使用 gsettings 获取 GNOME 代理设置
         let mode_output = Command::new("gsettings")
-            .args(&["get", "org.gnome.system.proxy", "mode"])
+            .args(["get", "org.gnome.system.proxy", "mode"])
             .output()
             .await;
 
@@ -345,12 +347,12 @@ impl AsyncProxyQuery {
                 if mode.contains("manual") {
                     // 获取HTTP代理设置
                     let host_result = Command::new("gsettings")
-                        .args(&["get", "org.gnome.system.proxy.http", "host"])
+                        .args(["get", "org.gnome.system.proxy.http", "host"])
                         .output()
                         .await;
 
                     let port_result = Command::new("gsettings")
-                        .args(&["get", "org.gnome.system.proxy.http", "port"])
+                        .args(["get", "org.gnome.system.proxy.http", "port"])
                         .output()
                         .await;
 
@@ -390,10 +392,10 @@ impl AsyncProxyQuery {
         let url = proxy_url.trim();
 
         // 移除协议前缀
-        let url = if url.starts_with("http://") {
-            &url[7..]
-        } else if url.starts_with("https://") {
-            &url[8..]
+        let url = if let Some(stripped) = url.strip_prefix("http://") {
+            stripped
+        } else if let Some(stripped) = url.strip_prefix("https://") {
+            stripped
         } else {
             url
         };
