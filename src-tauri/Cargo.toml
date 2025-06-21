@@ -75,7 +75,7 @@ async-trait = "0.1.88"
 mihomo_api = { path = "src_crates/crate_mihomo_api" }
 ab_glyph = "0.2.29"
 tungstenite = "0.27.0"
-libc = "0.2.173"
+libc = "0.2.174"
 gethostname = "1.0.2"
 hmac = "0.12.1"
 sha2 = "0.10.9"
