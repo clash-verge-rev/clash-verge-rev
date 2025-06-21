@@ -140,20 +140,6 @@ jobs:
           Created at ${{ env.BUILDTIME }}.
           EOF
 
-      - name: Remove old assets from release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ env.TAG_NAME }}
-        run: |
-          VERSION=$(cat package.json | jq -r '.version')
-          assets=$(gh release view "$TAG_NAME" --json assets -q '.assets[].name' || true)
-          for asset in $assets; do
-            if [[ "$asset" != *"$VERSION"* ]]; then
-              echo "Deleting old asset: $asset"
-              gh release delete-asset "$TAG_NAME" "$asset" -y
-            fi
-          done
-
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
@@ -390,20 +376,6 @@ jobs:
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
-      - name: Remove old assets from release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ env.TAG_NAME }}
-        run: |
-          VERSION=$(cat package.json | jq -r '.version')
-          assets=$(gh release view "$TAG_NAME" --json assets -q '.assets[].name' || true)
-          for asset in $assets; do
-            if [[ "$asset" != *"$VERSION"* ]]; then
-              echo "Deleting old asset: $asset"
-              gh release delete-asset "$TAG_NAME" "$asset" -y
-            fi
-          done
-
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
@@ -500,20 +472,6 @@ jobs:
             $newName = $file.Name -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
             Rename-Item $file.FullName $newName
           }
-
-      - name: Remove old assets from release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ env.TAG_NAME }}
-        run: |
-          VERSION=$(cat package.json | jq -r '.version')
-          assets=$(gh release view "$TAG_NAME" --json assets -q '.assets[].name' || true)
-          for asset in $assets; do
-            if [[ "$asset" != *"$VERSION"* ]]; then
-              echo "Deleting old asset: $asset"
-              gh release delete-asset "$TAG_NAME" "$asset" -y
-            fi
-          done
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
