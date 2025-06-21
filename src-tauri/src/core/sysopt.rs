@@ -9,6 +9,7 @@ use crate::{
 use anyhow::Result;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
+#[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::async_runtime::Mutex as TokioMutex;
 use tauri_plugin_autostart::ManagerExt;
