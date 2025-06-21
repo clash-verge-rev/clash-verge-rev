@@ -3,19 +3,10 @@ use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 use tokio::time::{timeout, Duration};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AsyncAutoproxy {
     pub enable: bool,
     pub url: String,
-}
-
-impl Default for AsyncAutoproxy {
-    fn default() -> Self {
-        Self {
-            enable: false,
-            url: String::new(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -131,7 +122,7 @@ impl AsyncProxyQuery {
     #[cfg(target_os = "macos")]
     async fn get_auto_proxy_impl() -> Result<AsyncAutoproxy> {
         // macOS: 使用 scutil --proxy 命令
-        let output = Command::new("scutil").args(&["--proxy"]).output().await?;
+        let output = Command::new("scutil").args(["--proxy"]).output().await?;
 
         if !output.status.success() {
             return Ok(AsyncAutoproxy::default());
@@ -276,7 +267,7 @@ impl AsyncProxyQuery {
 
     #[cfg(target_os = "macos")]
     async fn get_system_proxy_impl() -> Result<AsyncSysproxy> {
-        let output = Command::new("scutil").args(&["--proxy"]).output().await?;
+        let output = Command::new("scutil").args(["--proxy"]).output().await?;
 
         if !output.status.success() {
             return Ok(AsyncSysproxy::default());

@@ -85,7 +85,7 @@ struct ProxyConfig {
     guard_enabled: bool,
 }
 
-static PROXY_MANAGER: Lazy<EventDrivenProxyManager> = Lazy::new(|| EventDrivenProxyManager::new());
+static PROXY_MANAGER: Lazy<EventDrivenProxyManager> = Lazy::new(EventDrivenProxyManager::new);
 
 impl EventDrivenProxyManager {
     pub fn global() -> &'static EventDrivenProxyManager {

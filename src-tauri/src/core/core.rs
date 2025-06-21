@@ -524,7 +524,7 @@ impl CoreManager {
     ) -> Result<(Vec<u32>, String)> {
         let output = if cfg!(windows) {
             tokio::process::Command::new("tasklist")
-                .args(&[
+                .args([
                     "/FI",
                     &format!("IMAGENAME eq {}", process_name),
                     "/FO",
@@ -569,7 +569,7 @@ impl CoreManager {
             }
         } else {
             // Unix系统直接解析PID列表
-            for pid_str in stdout.trim().split_whitespace() {
+            for pid_str in stdout.split_whitespace() {
                 if let Ok(pid) = pid_str.parse::<u32>() {
                     pids.push(pid);
                 }
@@ -592,14 +592,14 @@ impl CoreManager {
 
         let success = if cfg!(windows) {
             tokio::process::Command::new("taskkill")
-                .args(&["/F", "/PID", &pid.to_string()])
+                .args(["/F", "/PID", &pid.to_string()])
                 .output()
                 .await
                 .map(|output| output.status.success())
                 .unwrap_or(false)
         } else {
             tokio::process::Command::new("kill")
-                .args(&["-9", &pid.to_string()])
+                .args(["-9", &pid.to_string()])
                 .output()
                 .await
                 .map(|output| output.status.success())
@@ -649,12 +649,12 @@ impl CoreManager {
     async fn is_process_running(&self, pid: u32) -> Result<bool> {
         let output = if cfg!(windows) {
             tokio::process::Command::new("tasklist")
-                .args(&["/FI", &format!("PID eq {}", pid), "/FO", "CSV", "/NH"])
+                .args(["/FI", &format!("PID eq {}", pid), "/FO", "CSV", "/NH"])
                 .output()
                 .await?
         } else {
             tokio::process::Command::new("ps")
-                .args(&["-p", &pid.to_string()])
+                .args(["-p", &pid.to_string()])
                 .output()
                 .await?
         };
