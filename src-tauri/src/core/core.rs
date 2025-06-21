@@ -435,7 +435,244 @@ impl CoreManager {
 }
 
 impl CoreManager {
+    /// 清理多余的 mihomo 进程
+    async fn cleanup_orphaned_mihomo_processes(&self) -> Result<()> {
+        logging!(info, Type::Core, true, "开始清理多余的 mihomo 进程");
+
+        // 获取当前管理的进程 PID
+        let current_pid = {
+            let child_guard = self.child_sidecar.lock().await;
+            child_guard.as_ref().map(|child| child.pid())
+        };
+
+        let target_processes = ["verge-mihomo", "verge-mihomo-alpha"];
+
+        // 并行查找所有目标进程
+        let mut process_futures = Vec::new();
+        for &target in &target_processes {
+            let process_name = if cfg!(windows) {
+                format!("{}.exe", target)
+            } else {
+                target.to_string()
+            };
+            process_futures.push(self.find_processes_by_name(process_name, target));
+        }
+
+        let process_results = futures::future::join_all(process_futures).await;
+
+        // 收集所有需要终止的进程PID
+        let mut pids_to_kill = Vec::new();
+        for result in process_results {
+            match result {
+                Ok((pids, process_name)) => {
+                    for pid in pids {
+                        // 跳过当前管理的进程
+                        if let Some(current) = current_pid {
+                            if pid == current {
+                                logging!(
+                                    debug,
+                                    Type::Core,
+                                    true,
+                                    "跳过当前管理的进程: {} (PID: {})",
+                                    process_name,
+                                    pid
+                                );
+                                continue;
+                            }
+                        }
+                        pids_to_kill.push((pid, process_name.clone()));
+                    }
+                }
+                Err(e) => {
+                    logging!(debug, Type::Core, true, "查找进程时发生错误: {}", e);
+                }
+            }
+        }
+
+        if pids_to_kill.is_empty() {
+            logging!(debug, Type::Core, true, "未发现多余的 mihomo 进程");
+            return Ok(());
+        }
+
+        let mut kill_futures = Vec::new();
+        for (pid, process_name) in &pids_to_kill {
+            kill_futures.push(self.kill_process_with_verification(*pid, process_name.clone()));
+        }
+
+        let kill_results = futures::future::join_all(kill_futures).await;
+
+        let killed_count = kill_results.into_iter().filter(|&success| success).count();
+
+        if killed_count > 0 {
+            logging!(
+                info,
+                Type::Core,
+                true,
+                "清理完成，共终止了 {} 个多余的 mihomo 进程",
+                killed_count
+            );
+        }
+
+        Ok(())
+    }
+
+    /// 根据进程名查找进程PID列表
+    async fn find_processes_by_name(
+        &self,
+        process_name: String,
+        _target: &str,
+    ) -> Result<(Vec<u32>, String)> {
+        let output = if cfg!(windows) {
+            tokio::process::Command::new("tasklist")
+                .args(&[
+                    "/FI",
+                    &format!("IMAGENAME eq {}", process_name),
+                    "/FO",
+                    "CSV",
+                    "/NH",
+                ])
+                .output()
+                .await?
+        } else if cfg!(target_os = "macos") {
+            tokio::process::Command::new("pgrep")
+                .arg(&process_name)
+                .output()
+                .await?
+        } else {
+            // Linux
+            tokio::process::Command::new("pidof")
+                .arg(&process_name)
+                .output()
+                .await?
+        };
+
+        if !output.status.success() {
+            return Ok((Vec::new(), process_name));
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let mut pids = Vec::new();
+
+        if cfg!(windows) {
+            // 解析CSV格式输出: "进程名","PID","会话名","会话#","内存使用"
+            for line in stdout.lines() {
+                if !line.is_empty() && line.contains(&process_name) {
+                    let fields: Vec<&str> = line.split(',').collect();
+                    if fields.len() >= 2 {
+                        // 移除引号并解析PID
+                        let pid_str = fields[1].trim_matches('"');
+                        if let Ok(pid) = pid_str.parse::<u32>() {
+                            pids.push(pid);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Unix系统直接解析PID列表
+            for pid_str in stdout.trim().split_whitespace() {
+                if let Ok(pid) = pid_str.parse::<u32>() {
+                    pids.push(pid);
+                }
+            }
+        }
+
+        Ok((pids, process_name))
+    }
+
+    /// 终止进程并验证结果
+    async fn kill_process_with_verification(&self, pid: u32, process_name: String) -> bool {
+        logging!(
+            info,
+            Type::Core,
+            true,
+            "尝试终止进程: {} (PID: {})",
+            process_name,
+            pid
+        );
+
+        let success = if cfg!(windows) {
+            tokio::process::Command::new("taskkill")
+                .args(&["/F", "/PID", &pid.to_string()])
+                .output()
+                .await
+                .map(|output| output.status.success())
+                .unwrap_or(false)
+        } else {
+            tokio::process::Command::new("kill")
+                .args(&["-9", &pid.to_string()])
+                .output()
+                .await
+                .map(|output| output.status.success())
+                .unwrap_or(false)
+        };
+
+        if success {
+            // 短暂等待并验证进程是否真正终止
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+            let still_running = self.is_process_running(pid).await.unwrap_or(false);
+            if still_running {
+                logging!(
+                    warn,
+                    Type::Core,
+                    true,
+                    "进程 {} (PID: {}) 终止命令成功但进程仍在运行",
+                    process_name,
+                    pid
+                );
+                false
+            } else {
+                logging!(
+                    info,
+                    Type::Core,
+                    true,
+                    "成功终止进程: {} (PID: {})",
+                    process_name,
+                    pid
+                );
+                true
+            }
+        } else {
+            logging!(
+                warn,
+                Type::Core,
+                true,
+                "无法终止进程: {} (PID: {})",
+                process_name,
+                pid
+            );
+            false
+        }
+    }
+
+    /// 检查进程是否仍在运行
+    async fn is_process_running(&self, pid: u32) -> Result<bool> {
+        let output = if cfg!(windows) {
+            tokio::process::Command::new("tasklist")
+                .args(&["/FI", &format!("PID eq {}", pid), "/FO", "CSV", "/NH"])
+                .output()
+                .await?
+        } else {
+            tokio::process::Command::new("ps")
+                .args(&["-p", &pid.to_string()])
+                .output()
+                .await?
+        };
+
+        Ok(output.status.success() && !output.stdout.is_empty())
+    }
+
     async fn start_core_by_sidecar(&self) -> Result<()> {
+        if let Err(e) = self.cleanup_orphaned_mihomo_processes().await {
+            logging!(
+                warn,
+                Type::Core,
+                true,
+                "清理多余 mihomo 进程时发生错误: {}",
+                e
+            );
+        }
+
         logging!(trace, Type::Core, true, "Running core by sidecar");
         let config_file = &Config::generate_file(ConfigType::Run)?;
         let app_handle = handle::Handle::global()
@@ -584,6 +821,17 @@ impl CoreManager {
 
     pub async fn init(&self) -> Result<()> {
         logging!(trace, Type::Core, "Initializing core");
+
+        // 应用启动时先清理任何遗留的 mihomo 进程
+        if let Err(e) = self.cleanup_orphaned_mihomo_processes().await {
+            logging!(
+                warn,
+                Type::Core,
+                true,
+                "应用初始化时清理多余 mihomo 进程失败: {}",
+                e
+            );
+        }
 
         let mut core_started_successfully = false;
 
@@ -787,6 +1035,18 @@ impl CoreManager {
     /// 重启内核
     pub async fn restart_core(&self) -> Result<()> {
         self.stop_core().await?;
+
+        // 在重启时也清理多余的 mihomo 进程
+        if let Err(e) = self.cleanup_orphaned_mihomo_processes().await {
+            logging!(
+                warn,
+                Type::Core,
+                true,
+                "重启时清理多余 mihomo 进程失败: {}",
+                e
+            );
+        }
+
         self.start_core().await?;
         Ok(())
     }
