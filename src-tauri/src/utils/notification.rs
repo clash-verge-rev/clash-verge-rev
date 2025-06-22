@@ -3,11 +3,14 @@ use tauri_plugin_notification::NotificationExt;
 
 pub enum NotificationEvent<'a> {
     DashboardToggled,
-    ClashModeChanged { mode: &'a str },
+    ClashModeChanged {
+        mode: &'a str,
+    },
     SystemProxyToggled,
     TunModeToggled,
     LightweightModeEntered,
     AppQuit,
+    #[cfg(target_os = "macos")]
     AppHidden,
 }
 
@@ -65,6 +68,7 @@ pub fn notify_event(app: &AppHandle, event: NotificationEvent) {
                 &t("notification.appQuit.body"),
             );
         }
+        #[cfg(target_os = "macos")]
         NotificationEvent::AppHidden => {
             notify(
                 app,
