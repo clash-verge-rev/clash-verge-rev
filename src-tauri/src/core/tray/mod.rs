@@ -105,7 +105,7 @@ impl TrayState {
             if tray_icon_colorful == "monochrome" {
                 (
                     false,
-                    include_bytes!("../../../icons/tray-icon-sys-mono.ico").to_vec(),
+                    include_bytes!("../../../icons/tray-icon-sys-mono-new.ico").to_vec(),
                 )
             } else {
                 (
@@ -139,7 +139,7 @@ impl TrayState {
             if tray_icon_colorful == "monochrome" {
                 (
                     false,
-                    include_bytes!("../../../icons/tray-icon-tun-mono.ico").to_vec(),
+                    include_bytes!("../../../icons/tray-icon-tun-mono-new.ico").to_vec(),
                 )
             } else {
                 (
