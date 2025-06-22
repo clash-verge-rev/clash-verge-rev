@@ -978,7 +978,7 @@ impl CoreManager {
         }
 
         logging!(trace, Type::Core, "Initied core logic completed");
-        #[cfg(target_os = "macos")]
+        // #[cfg(target_os = "macos")]
         // logging_error!(Type::Core, true, Tray::global().subscribe_traffic().await);
         Ok(())
     }
