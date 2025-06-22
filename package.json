@@ -98,7 +98,7 @@
     "node-fetch": "3.3.2",
     "postcss": "8.5.6",
     "prettier": "3.5.3",
-    "prettier-plugin-tailwindcss": "0.6.12",
+    "prettier-plugin-tailwindcss": "0.6.13",
     "pretty-quick": "4.2.2",
     "tailwind-merge": "3.3.1",
     "tailwindcss": "4.1.10",
