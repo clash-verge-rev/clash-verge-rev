@@ -3,6 +3,7 @@ import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
+import { useAppData } from "@/providers/app-data-provider";
 import { getClashConfig } from "@/services/api";
 import {
   getAutotemProxy,
@@ -171,6 +172,35 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       showNotice("error", err.toString());
     }
   };
+
+  const { systemProxyAddress } = useAppData();
+
+  // 为当前状态计算系统代理地址
+  const getSystemProxyAddress = useMemo(() => {
+    if (!clashConfig) return "-";
+
+    const isPacMode = value.pac ?? false;
+
+    if (isPacMode) {
+      const host = value.proxy_host || "127.0.0.1";
+      const port = verge?.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+      return `${host}:${port}`;
+    } else {
+      return systemProxyAddress;
+    }
+  }, [
+    value.pac,
+    value.proxy_host,
+    verge?.verge_mixed_port,
+    clashConfig,
+    systemProxyAddress,
+  ]);
+  const getCurrentPacUrl = useMemo(() => {
+    const host = value.proxy_host || "127.0.0.1";
+    // 根据环境判断PAC端口
+    const port = import.meta.env.DEV ? 11233 : 33331;
+    return `http://${host}:${port}/commands/pac`;
+  }, [value.proxy_host]);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -417,7 +447,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               <FlexBox>
                 <Typography className="label">{t("Server Addr")}</Typography>
                 <Typography className="value">
-                  {sysproxy?.server ? sysproxy.server : t("Not available")}
+                  {getSystemProxyAddress}
                 </Typography>
               </FlexBox>
             </>
@@ -425,7 +455,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           {value.pac && (
             <FlexBox>
               <Typography className="label">{t("PAC URL")}</Typography>
-              <Typography className="value">{autoproxy?.url || "-"}</Typography>
+              <Typography className="value">
+                {getCurrentPacUrl || "-"}
+              </Typography>
             </FlexBox>
           )}
         </BaseFieldset>

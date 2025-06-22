@@ -1,5 +1,12 @@
-import { createContext, useContext, useMemo, useEffect } from "react";
-import useSWR from "swr";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { useVerge } from "@/hooks/use-verge";
+import useSWR, { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
 import {
   getProxies,
@@ -37,6 +44,8 @@ interface AppDataContextType {
   };
   traffic: { up: number; down: number };
   memory: { inuse: number };
+  systemProxyAddress: string;
+
   refreshProxy: () => Promise<any>;
   refreshClashConfig: () => Promise<any>;
   refreshRules: () => Promise<any>;
@@ -55,8 +64,9 @@ export const AppDataProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { clashInfo } = useClashInfo();
   const pageVisible = useVisibility();
+  const { clashInfo } = useClashInfo();
+  const { verge } = useVerge();
 
   // 基础数据 - 中频率更新 (5秒)
   const { data: proxiesData, mutate: refreshProxy } = useSWR(
@@ -508,8 +518,39 @@ export const AppDataProvider = ({
   };
 
   // 聚合所有数据
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    // 计算系统代理地址
+    const calculateSystemProxyAddress = () => {
+      if (!verge || !clashConfig) return "-";
+
+      const isPacMode = verge.proxy_auto_config ?? false;
+
+      if (isPacMode) {
+        // PAC模式：显示我们期望设置的代理地址
+        const proxyHost = verge.proxy_host || "127.0.0.1";
+        const proxyPort =
+          verge.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+        return `${proxyHost}:${proxyPort}`;
+      } else {
+        // HTTP代理模式：优先使用系统地址，但如果格式不正确则使用期望地址
+        const systemServer = sysproxy?.server;
+        if (
+          systemServer &&
+          systemServer !== "-" &&
+          !systemServer.startsWith(":")
+        ) {
+          return systemServer;
+        } else {
+          // 系统地址无效，返回期望的代理地址
+          const proxyHost = verge.proxy_host || "127.0.0.1";
+          const proxyPort =
+            verge.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+          return `${proxyHost}:${proxyPort}`;
+        }
+      }
+    };
+
+    return {
       // 数据
       proxies: proxiesData,
       clashConfig,
@@ -534,6 +575,8 @@ export const AppDataProvider = ({
       traffic: trafficData,
       memory: memoryData,
 
+      systemProxyAddress: calculateSystemProxyAddress(),
+
       // 刷新方法
       refreshProxy,
       refreshClashConfig,
@@ -542,27 +585,27 @@ export const AppDataProvider = ({
       refreshProxyProviders,
       refreshRuleProviders,
       refreshAll,
-    }),
-    [
-      proxiesData,
-      clashConfig,
-      rulesData,
-      sysproxy,
-      runningMode,
-      uptimeData,
-      connectionsData,
-      trafficData,
-      memoryData,
-      proxyProviders,
-      ruleProviders,
-      refreshProxy,
-      refreshClashConfig,
-      refreshRules,
-      refreshSysproxy,
-      refreshProxyProviders,
-      refreshRuleProviders,
-    ],
-  );
+    };
+  }, [
+    proxiesData,
+    clashConfig,
+    rulesData,
+    sysproxy,
+    runningMode,
+    uptimeData,
+    connectionsData,
+    trafficData,
+    memoryData,
+    proxyProviders,
+    ruleProviders,
+    verge,
+    refreshProxy,
+    refreshClashConfig,
+    refreshRules,
+    refreshSysproxy,
+    refreshProxyProviders,
+    refreshRuleProviders,
+  ]);
 
   return (
     <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
