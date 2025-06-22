@@ -4,8 +4,6 @@ use once_cell::sync::Lazy;
 use parking_lot::{Mutex, RwLock};
 use std::time::{Duration, Instant};
 use tauri::http::HeaderMap;
-#[cfg(target_os = "macos")]
-use tauri::http::HeaderValue;
 
 // 缓存的最大有效期（5秒）
 const CACHE_TTL: Duration = Duration::from_secs(5);
@@ -106,31 +104,5 @@ impl MihomoManager {
         Some((server, headers))
     }
 
-    // 提供默认值的版本，避免在connection_info为None时panic
-    #[cfg(target_os = "macos")]
-    fn get_clash_client_info_or_default() -> (String, HeaderMap) {
-        Self::get_clash_client_info().unwrap_or_else(|| {
-            let mut headers = HeaderMap::new();
-            headers.insert("Content-Type", "application/json".parse().unwrap());
-            ("http://127.0.0.1:9090".to_string(), headers)
-        })
-    }
-
-    #[cfg(target_os = "macos")]
-    pub fn get_traffic_ws_url() -> (String, HeaderValue) {
-        let (url, headers) = MihomoManager::get_clash_client_info_or_default();
-        let ws_url = url.replace("http://", "ws://") + "/traffic";
-        let auth = headers
-            .get("Authorization")
-            .map(|val| val.to_str().unwrap_or("").to_string())
-            .unwrap_or_default();
-
-        // 创建默认的空HeaderValue而不是使用unwrap_or_default
-        let token = match HeaderValue::from_str(&auth) {
-            Ok(v) => v,
-            Err(_) => HeaderValue::from_static(""),
-        };
-
-        (ws_url, token)
-    }
+    // 已移除未使用的 get_clash_client_info_or_default 和 get_traffic_ws_url 方法
 }

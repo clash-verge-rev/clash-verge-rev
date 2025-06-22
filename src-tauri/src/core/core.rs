@@ -1,5 +1,3 @@
-#[cfg(target_os = "macos")]
-use crate::core::tray::Tray;
 use crate::{
     config::*,
     core::{
@@ -981,8 +979,7 @@ impl CoreManager {
 
         logging!(trace, Type::Core, "Initied core logic completed");
         #[cfg(target_os = "macos")]
-        logging_error!(Type::Core, true, Tray::global().subscribe_traffic().await);
-
+        // logging_error!(Type::Core, true, Tray::global().subscribe_traffic().await);
         Ok(())
     }
 
