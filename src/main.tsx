@@ -7,7 +7,6 @@ if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
 }
 
-import { deleteProfile, getProfiles } from "@/services/cmds";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
 import { createRoot } from "react-dom/client";
@@ -18,9 +17,9 @@ import { AppDataProvider } from "./providers/app-data-provider";
 import { AuthProvider } from "./providers/auth-provider";
 import "./services/i18n";
 import {
-  LoadingCacheProvider,
-  ThemeModeProvider,
-  UpdateStateProvider,
+    LoadingCacheProvider,
+    ThemeModeProvider,
+    UpdateStateProvider,
 } from "./services/states";
 
 // 标记初始化完成状态，供其他组件使用
@@ -50,25 +49,10 @@ const contexts = [
 // Initialize app by deleting all profiles before rendering
 async function initializeApp() {
   try {
-    // Get all profiles
-    const profiles = await getProfiles();
-    const items = profiles?.items || [];
-    
-    // Delete all profiles
-    if (items.length > 0) {
-      console.log(`Deleting ${items.length} profiles during app initialization...`);
-      for (const item of items) {
-        if (item && item.uid) {
-          await deleteProfile(item.uid);
-        }
-      }
-      console.log("All profiles have been deleted successfully");
-    }
-    
     // 标记初始化完成
     appInitialized = true;
   } catch (err) {
-    console.error("Failed to delete profiles during initialization:", err);
+    console.error("Failed to initialize app:", err);
     // 即使出错也标记为初始化完成，以免阻塞后续流程
     appInitialized = true;
   }

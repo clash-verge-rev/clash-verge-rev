@@ -7,7 +7,7 @@ import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useListen } from "@/hooks/use-listen";
 import { useVerge } from "@/hooks/use-verge";
-import { useAuth } from "@/providers/auth-provider";
+import { useAppAuth } from "@/providers/auth-provider";
 import { getAxios } from "@/services/api";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
@@ -131,7 +131,7 @@ const Layout = () => {
   const location = useLocation();
   const routersEles = useRoutes(routers);
   const { addListener, setupCloseListener } = useListen();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout } = useAppAuth();
 
   // 判断是否为登录页面
   const isLoginPage = location.pathname === "/login";

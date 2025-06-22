@@ -1,18 +1,18 @@
-import ProxiesPage from "./proxies";
-import SettingsPage from "./settings";
+import { ProtectedRoute } from "@/components/auth/protected-route";
+import { BaseErrorBoundary } from "@/components/base";
+import { Navigate } from "react-router-dom";
 import HomePage from "./home";
 import LoginPage from "./login";
-import { BaseErrorBoundary } from "@/components/base";
-import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navigate } from "react-router-dom";
+import ProxiesPage from "./proxies";
+import SettingsPage from "./settings";
 
 import HomeSvg from "@/assets/image/itemicon/home.svg?react";
 import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 
-import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
 
 // 定义路由类型
 interface RouterItem {
@@ -32,7 +32,7 @@ export const publicRoutes: RouterItem[] = [
   // 根路径直接重定向到登录页面
   {
     path: "/",
-    element: <Navigate to="/home" replace />,
+    element: <Navigate to="/login" replace />,
   }
 ];
 

@@ -1,0 +1,17 @@
+# 请在项目根目录创建 .env 文件，并添加以下内容：
+
+# Clerk Configuration
+# Publishable Key (用于前端)
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_c3VwcmVtZS1qYXZlbGluLTQ3LmNsZXJrLmFjY291bnRzLmRldiQ
+
+# Frontend API URL
+VITE_CLERK_FRONTEND_API=https://supreme-javelin-47.clerk.accounts.dev
+
+# Development Environment
+NODE_ENV=development
+
+# 创建步骤：
+# 1. 在项目根目录运行: touch .env
+# 2. 将上述内容复制到 .env 文件中
+# 3. 保存文件
+# 4. 重启开发服务器 

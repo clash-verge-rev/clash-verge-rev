@@ -1,18 +1,37 @@
-import { defineConfig } from "vite";
-import path from "path";
-import svgr from "vite-plugin-svgr";
-import react from "@vitejs/plugin-react";
 import legacy from "@vitejs/plugin-legacy";
+import react from "@vitejs/plugin-react";
+import path from "path";
+import { defineConfig } from "vite";
 import monacoEditorPlugin, {
   type IMonacoEditorOpts,
 } from "vite-plugin-monaco-editor";
+import svgr from "vite-plugin-svgr";
 const monacoEditorPluginDefault = (monacoEditorPlugin as any).default as (
   options: IMonacoEditorOpts,
 ) => any;
 
 export default defineConfig({
   root: "src",
-  server: { port: 3000 },
+  server: {
+    port: 3000,
+    headers: {
+      "Content-Security-Policy": `
+        default-src 'self' http: https: ws: wss: ipc:;
+        script-src 'self' 'unsafe-eval' 'unsafe-inline' http: https:;
+        style-src 'self' 'unsafe-inline' http: https:;
+        img-src 'self' data: blob: http: https:;
+        font-src 'self' data: http: https:;
+        connect-src 'self' ws: wss: http: https: ipc: ipc://localhost;
+        frame-src 'self' http: https:;
+        worker-src 'self' blob:;
+        child-src 'self' blob:;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        frame-ancestors 'self';
+      `.replace(/\s+/g, " ").trim(),
+    },
+  },
   plugins: [
     svgr(),
     react(),
@@ -142,5 +161,6 @@ export default defineConfig({
   },
   define: {
     OS_PLATFORM: `"${process.platform}"`,
+    'process.env': process.env
   },
 });
