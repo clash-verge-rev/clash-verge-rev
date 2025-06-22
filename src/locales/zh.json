@@ -623,5 +623,19 @@
   "Originals Only": "仅限原创",
   "No (IP Banned By Disney+)": "不支持（IP被Disney+禁止）",
   "Unsupported Country/Region": "不支持的国家/地区",
-  "Failed (Network Connection)": "测试失败（网络连接问题）"
+  "Failed (Network Connection)": "测试失败（网络连接问题）",
+  "notification.dashboardToggled.title": "仪表盘已切换",
+  "notification.dashboardToggled.body": "已通过快捷键切换仪表盘显示状态",
+  "notification.clashModeChanged.title": "Clash 模式切换",
+  "notification.clashModeChanged.body": "已切换为 {mode} 模式",
+  "notification.systemProxyToggled.title": "系统代理切换",
+  "notification.systemProxyToggled.body": "已通过快捷键切换系统代理状态",
+  "notification.tunModeToggled.title": "TUN 模式切换",
+  "notification.tunModeToggled.body": "已通过快捷键切换 TUN 模式",
+  "notification.lightweightModeEntered.title": "轻量模式",
+  "notification.lightweightModeEntered.body": "已通过快捷键进入轻量模式",
+  "notification.appQuit.title": "应用退出",
+  "notification.appQuit.body": "已通过快捷键退出应用",
+  "notification.appHidden.title": "应用隐藏",
+  "notification.appHidden.body": "已通过快捷键隐藏应用窗口"
 }

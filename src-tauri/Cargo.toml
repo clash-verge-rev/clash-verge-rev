@@ -81,6 +81,7 @@ hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
+tauri-plugin-notification = "2"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"

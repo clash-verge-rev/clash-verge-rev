@@ -623,5 +623,19 @@
   "Originals Only": "Originals Only",
   "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
   "Unsupported Country/Region": "Unsupported Country/Region",
-  "Failed (Network Connection)": "Failed (Network Connection)"
+  "Failed (Network Connection)": "Failed (Network Connection)",
+  "notification.dashboardToggled.title": "Dashboard Toggled",
+  "notification.dashboardToggled.body": "Dashboard visibility toggled by hotkey",
+  "notification.clashModeChanged.title": "Clash Mode Changed",
+  "notification.clashModeChanged.body": "Switched to {mode} mode",
+  "notification.systemProxyToggled.title": "System Proxy Toggled",
+  "notification.systemProxyToggled.body": "System proxy state toggled by hotkey",
+  "notification.tunModeToggled.title": "TUN Mode Toggled",
+  "notification.tunModeToggled.body": "TUN mode toggled by hotkey",
+  "notification.lightweightModeEntered.title": "Lightweight Mode",
+  "notification.lightweightModeEntered.body": "Entered lightweight mode by hotkey",
+  "notification.appQuit.title": "APP Quit",
+  "notification.appQuit.body": "APP quit by hotkey",
+  "notification.appHidden.title": "APP Hidden",
+  "notification.appHidden.body": "APP window hidden by hotkey"
 }
