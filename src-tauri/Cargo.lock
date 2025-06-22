@@ -1078,6 +1078,7 @@ dependencies = [
  "reqwest",
  "reqwest_dav",
  "runas",
+ "scopeguard",
  "serde",
  "serde_json",
  "serde_yaml",

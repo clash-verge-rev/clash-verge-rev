@@ -11,11 +11,43 @@ use crate::{
 /// Open or close the dashboard window
 #[allow(dead_code)]
 pub fn open_or_close_dashboard() {
+    open_or_close_dashboard_internal(false)
+}
+
+/// Open or close the dashboard window (hotkey call, dispatched to main thread)
+#[allow(dead_code)]
+pub fn open_or_close_dashboard_hotkey() {
+    open_or_close_dashboard_internal(true)
+}
+
+/// Internal implementation for opening/closing dashboard
+fn open_or_close_dashboard_internal(bypass_debounce: bool) {
+    use crate::process::AsyncHandler;
     use crate::utils::window_manager::WindowManager;
 
-    log::info!(target: "app", "Attempting to open/close dashboard");
+    log::info!(target: "app", "Attempting to open/close dashboard (绕过防抖: {})", bypass_debounce);
 
-    // 检查是否在轻量模式下
+    // 热键调用调度到主线程执行，避免 WebView 创建死锁
+    if bypass_debounce {
+        log::info!(target: "app", "热键调用，调度到主线程执行窗口操作");
+
+        AsyncHandler::spawn(move || async move {
+            log::info!(target: "app", "主线程中执行热键窗口操作");
+
+            if crate::module::lightweight::is_in_lightweight_mode() {
+                log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
+                crate::module::lightweight::exit_lightweight_mode();
+                log::info!(target: "app", "Creating new window after exiting lightweight mode");
+                let result = WindowManager::show_main_window();
+                log::info!(target: "app", "Window operation result: {:?}", result);
+                return;
+            }
+
+            let result = WindowManager::toggle_main_window();
+            log::info!(target: "app", "Window toggle result: {:?}", result);
+        });
+        return;
+    }
     if crate::module::lightweight::is_in_lightweight_mode() {
         log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
         crate::module::lightweight::exit_lightweight_mode();
@@ -25,7 +57,6 @@ pub fn open_or_close_dashboard() {
         return;
     }
 
-    // 使用统一的窗口管理器切换窗口状态
     let result = WindowManager::toggle_main_window();
     log::info!(target: "app", "Window toggle result: {:?}", result);
 }

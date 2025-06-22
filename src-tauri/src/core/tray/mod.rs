@@ -29,6 +29,29 @@ use super::handle;
 #[derive(Clone)]
 struct TrayState {}
 
+// 托盘点击防抖机制
+static TRAY_CLICK_DEBOUNCE: OnceCell<Mutex<Instant>> = OnceCell::new();
+const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
+
+fn get_tray_click_debounce() -> &'static Mutex<Instant> {
+    TRAY_CLICK_DEBOUNCE.get_or_init(|| Mutex::new(Instant::now() - Duration::from_secs(1)))
+}
+
+fn should_handle_tray_click() -> bool {
+    let debounce_lock = get_tray_click_debounce();
+    let mut last_click = debounce_lock.lock();
+    let now = Instant::now();
+
+    if now.duration_since(*last_click) >= Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS) {
+        *last_click = now;
+        true
+    } else {
+        log::debug!(target: "app", "托盘点击被防抖机制忽略，距离上次点击 {:?}ms", 
+                  now.duration_since(*last_click).as_millis());
+        false
+    }
+}
+
 #[cfg(target_os = "macos")]
 pub struct Tray {
     last_menu_update: Mutex<Option<Instant>>,
@@ -458,6 +481,11 @@ impl Tray {
                 ..
             } = event
             {
+                // 添加防抖检查，防止快速连击
+                if !should_handle_tray_click() {
+                    return;
+                }
+
                 match tray_event.as_str() {
                     "system_proxy" => feat::toggle_system_proxy(),
                     "tun_mode" => feat::toggle_tun_mode(None),
@@ -743,12 +771,15 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "open_window" => {
             use crate::utils::window_manager::WindowManager;
             log::info!(target: "app", "托盘菜单点击: 打开窗口");
-            // 如果在轻量模式中，先退出轻量模式
+
+            if !should_handle_tray_click() {
+                return;
+            }
+
             if crate::module::lightweight::is_in_lightweight_mode() {
                 log::info!(target: "app", "当前在轻量模式，正在退出");
                 crate::module::lightweight::exit_lightweight_mode();
             }
-            // 使用统一的窗口管理器显示窗口
             let result = WindowManager::show_main_window();
             log::info!(target: "app", "窗口显示结果: {:?}", result);
         }
@@ -771,7 +802,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         "restart_clash" => feat::restart_clash_core(),
         "restart_app" => feat::restart_app(),
         "entry_lightweight_mode" => {
-            // 处理轻量模式的切换
+            if !should_handle_tray_click() {
+                return;
+            }
+
             let was_lightweight = crate::module::lightweight::is_in_lightweight_mode();
             if was_lightweight {
                 crate::module::lightweight::exit_lightweight_mode();
@@ -779,7 +813,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 crate::module::lightweight::entry_lightweight_mode();
             }
 
-            // 退出轻量模式后显示主窗口
             if was_lightweight {
                 use crate::utils::window_manager::WindowManager;
                 let result = WindowManager::show_main_window();
@@ -796,7 +829,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         _ => {}
     }
 
-    // 统一调用状态更新
     if let Err(e) = Tray::global().update_all_states() {
         log::warn!(target: "app", "更新托盘状态失败: {}", e);
     }

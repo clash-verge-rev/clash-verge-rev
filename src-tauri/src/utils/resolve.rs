@@ -13,6 +13,7 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
+use scopeguard;
 use serde_yaml::Mapping;
 use std::{
     sync::Arc,
@@ -337,6 +338,12 @@ pub fn create_window(is_show: bool) -> bool {
 
     *creating = (true, Instant::now());
 
+    // ScopeGuard 确保创建状态重置，防止 webview 卡死
+    let _guard = scopeguard::guard(creating, |mut creating_guard| {
+        *creating_guard = (false, Instant::now());
+        logging!(debug, Type::Window, true, "[ScopeGuard] 窗口创建状态已重置");
+    });
+
     match tauri::WebviewWindowBuilder::new(
         &handle::Handle::global().app_handle().unwrap(),
         "main", /* the unique window label */
@@ -418,8 +425,6 @@ pub fn create_window(is_show: bool) -> bool {
     {
         Ok(newly_created_window) => {
             logging!(debug, Type::Window, true, "主窗口实例创建成功");
-
-            *creating = (false, Instant::now());
 
             update_ui_ready_stage(UiReadyStage::NotStarted);
 
@@ -534,7 +539,6 @@ pub fn create_window(is_show: bool) -> bool {
         }
         Err(e) => {
             logging!(error, Type::Window, true, "主窗口构建失败: {}", e);
-            *creating = (false, Instant::now()); // Reset the creating state if window creation failed
             false
         }
     }

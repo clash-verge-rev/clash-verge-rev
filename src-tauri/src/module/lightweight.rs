@@ -13,10 +13,16 @@ use crate::AppHandleManager;
 
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
-use std::sync::Mutex;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Mutex,
+};
 use tauri::{Listener, Manager};
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
+
+// 添加退出轻量模式的锁，防止并发调用
+static EXITING_LIGHTWEIGHT: AtomicBool = AtomicBool::new(false);
 
 fn with_lightweight_status<F, R>(f: F) -> R
 where
@@ -131,6 +137,25 @@ pub fn entry_lightweight_mode() {
 
 // 添加从轻量模式恢复的函数
 pub fn exit_lightweight_mode() {
+    // 使用原子操作检查是否已经在退出过程中，防止并发调用
+    if EXITING_LIGHTWEIGHT
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        logging!(
+            info,
+            Type::Lightweight,
+            true,
+            "轻量模式退出操作已在进行中，跳过重复调用"
+        );
+        return;
+    }
+
+    // 使用defer确保无论如何都会重置标志
+    let _guard = scopeguard::guard((), |_| {
+        EXITING_LIGHTWEIGHT.store(false, Ordering::SeqCst);
+    });
+
     // 确保当前确实处于轻量模式才执行退出操作
     if !is_in_lightweight_mode() {
         logging!(info, Type::Lightweight, true, "当前不在轻量模式，无需退出");

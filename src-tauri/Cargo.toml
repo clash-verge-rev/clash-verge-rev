@@ -80,6 +80,7 @@ gethostname = "1.0.2"
 hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
+scopeguard = "1.2.0"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"

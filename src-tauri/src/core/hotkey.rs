@@ -1,10 +1,6 @@
 use crate::{
-    config::Config,
-    core::handle,
-    feat, logging, logging_error,
-    module::lightweight::entry_lightweight_mode,
-    process::AsyncHandler,
-    utils::{logging::Type, resolve},
+    config::Config, core::handle, feat, logging, logging_error,
+    module::lightweight::entry_lightweight_mode, utils::logging::Type,
 };
 use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
@@ -14,7 +10,7 @@ use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
 
 pub struct Hotkey {
-    current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
+    current: Arc<Mutex<Vec<String>>>,
 }
 
 impl Hotkey {
@@ -38,7 +34,6 @@ impl Hotkey {
             enable_global_hotkey
         );
 
-        // 如果全局热键被禁用，则不注册热键
         if !enable_global_hotkey {
             return Ok(());
         }
@@ -153,76 +148,14 @@ impl Hotkey {
                         "=== Hotkey Dashboard Window Operation Start ==="
                     );
 
-                    // 检查是否在轻量模式下，如果是，需要同步处理
-                    if crate::module::lightweight::is_in_lightweight_mode() {
-                        logging!(
-                            info,
-                            Type::Hotkey,
-                            true,
-                            "In lightweight mode, calling open_or_close_dashboard directly"
-                        );
-                        crate::feat::open_or_close_dashboard();
-                    } else {
-                        AsyncHandler::spawn(move || async move {
-                            logging!(
-                                debug,
-                                Type::Hotkey,
-                                true,
-                                "Toggle dashboard window visibility (async)"
-                            );
+                    logging!(
+                        info,
+                        Type::Hotkey,
+                        true,
+                        "Using unified WindowManager for hotkey operation (bypass debounce)"
+                    );
 
-                            // 检查窗口是否存在
-                            if let Some(window) = handle::Handle::global().get_window() {
-                                // 如果窗口可见，则隐藏
-                                match window.is_visible() {
-                                    Ok(visible) => {
-                                        if visible {
-                                            logging!(
-                                                info,
-                                                Type::Window,
-                                                true,
-                                                "Window is visible, hiding it"
-                                            );
-                                            let _ = window.hide();
-                                        } else {
-                                            // 如果窗口不可见，则显示
-                                            logging!(
-                                                info,
-                                                Type::Window,
-                                                true,
-                                                "Window is hidden, showing it"
-                                            );
-                                            if window.is_minimized().unwrap_or(false) {
-                                                let _ = window.unminimize();
-                                            }
-                                            let _ = window.show();
-                                            let _ = window.set_focus();
-                                        }
-                                    }
-                                    Err(e) => {
-                                        logging!(
-                                            warn,
-                                            Type::Window,
-                                            true,
-                                            "Failed to check window visibility: {}",
-                                            e
-                                        );
-                                        let _ = window.show();
-                                        let _ = window.set_focus();
-                                    }
-                                }
-                            } else {
-                                // 如果窗口不存在，创建一个新窗口
-                                logging!(
-                                    info,
-                                    Type::Window,
-                                    true,
-                                    "Window does not exist, creating a new one"
-                                );
-                                resolve::create_window(true);
-                            }
-                        });
-                    }
+                    crate::feat::open_or_close_dashboard_hotkey();
 
                     logging!(
                         debug,
@@ -261,10 +194,8 @@ impl Hotkey {
                         }
                     }
                 } else {
-                    // 直接执行函数，不做任何状态检查
                     logging!(debug, Type::Hotkey, "Executing function directly");
 
-                    // 获取全局热键状态
                     let is_enable_global_hotkey = Config::verge()
                         .latest()
                         .enable_global_hotkey
@@ -274,7 +205,6 @@ impl Hotkey {
                         f();
                     } else {
                         use crate::utils::window_manager::WindowManager;
-                        // 非轻量模式且未启用全局热键时，只在窗口可见且有焦点的情况下响应热键
                         let is_visible = WindowManager::is_main_window_visible();
                         let is_focused = WindowManager::is_main_window_focused();
 
