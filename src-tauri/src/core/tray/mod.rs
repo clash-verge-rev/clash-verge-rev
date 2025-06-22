@@ -12,15 +12,7 @@ use crate::{
 };
 
 use anyhow::Result;
-#[cfg(target_os = "macos")]
-use futures::StreamExt;
 use parking_lot::Mutex;
-#[cfg(target_os = "macos")]
-use parking_lot::RwLock;
-#[cfg(target_os = "macos")]
-pub use speed_rate::{SpeedRate, Traffic};
-#[cfg(target_os = "macos")]
-use std::sync::Arc;
 use std::{
     fs,
     sync::atomic::{AtomicBool, Ordering},
@@ -31,8 +23,6 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
     AppHandle, Wry,
 };
-#[cfg(target_os = "macos")]
-use tokio::sync::broadcast;
 
 use super::handle;
 
@@ -64,10 +54,6 @@ fn should_handle_tray_click() -> bool {
 
 #[cfg(target_os = "macos")]
 pub struct Tray {
-    pub speed_rate: Arc<Mutex<Option<SpeedRate>>>,
-    shutdown_tx: Arc<RwLock<Option<broadcast::Sender<()>>>>,
-    is_subscribed: Arc<RwLock<bool>>,
-    pub rate_cache: Arc<Mutex<Option<Rate>>>,
     last_menu_update: Mutex<Option<Instant>>,
     menu_updating: AtomicBool,
 }
@@ -187,10 +173,6 @@ impl Tray {
 
         #[cfg(target_os = "macos")]
         return TRAY.get_or_init(|| Tray {
-            speed_rate: Arc::new(Mutex::new(None)),
-            shutdown_tx: Arc::new(RwLock::new(None)),
-            is_subscribed: Arc::new(RwLock::new(false)),
-            rate_cache: Arc::new(Mutex::new(None)),
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
         });
@@ -203,11 +185,6 @@ impl Tray {
     }
 
     pub fn init(&self) -> Result<()> {
-        #[cfg(target_os = "macos")]
-        {
-            let mut speed_rate = self.speed_rate.lock();
-            *speed_rate = Some(SpeedRate::new());
-        }
         Ok(())
     }
 
@@ -314,7 +291,7 @@ impl Tray {
 
     /// 更新托盘图标
     #[cfg(target_os = "macos")]
-    pub fn update_icon(&self, rate: Option<Rate>) -> Result<()> {
+    pub fn update_icon(&self, _rate: Option<Rate>) -> Result<()> {
         let app_handle = match handle::Handle::global().app_handle() {
             Some(handle) => handle,
             None => {
@@ -335,55 +312,18 @@ impl Tray {
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
-        let (is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
+        let (_is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
             (true, true) => TrayState::get_tun_tray_icon(),
             (true, false) => TrayState::get_sysproxy_tray_icon(),
             (false, true) => TrayState::get_tun_tray_icon(),
             (false, false) => TrayState::get_common_tray_icon(),
         };
 
-        let enable_tray_speed = verge.enable_tray_speed.unwrap_or(false);
-        let enable_tray_icon = verge.enable_tray_icon.unwrap_or(true);
         let colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
         let is_colorful = colorful == "colorful";
 
-        if !enable_tray_speed {
-            let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
-            let _ = tray.set_icon_as_template(!is_colorful);
-            return Ok(());
-        }
-
-        let rate = if let Some(rate) = rate {
-            Some(rate)
-        } else {
-            let guard = self.speed_rate.lock();
-            if let Some(guard) = guard.as_ref() {
-                if let Some(rate) = guard.get_curent_rate() {
-                    Some(rate)
-                } else {
-                    Some(Rate::default())
-                }
-            } else {
-                Some(Rate::default())
-            }
-        };
-
-        let mut rate_guard = self.rate_cache.lock();
-        if *rate_guard != rate {
-            *rate_guard = rate;
-
-            let bytes = if enable_tray_icon {
-                Some(icon_bytes)
-            } else {
-                None
-            };
-
-            let rate = rate_guard.as_ref();
-            if let Ok(rate_bytes) = SpeedRate::add_speed_text(is_custom_icon, bytes, rate) {
-                let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&rate_bytes)?));
-                let _ = tray.set_icon_as_template(!is_custom_icon && !is_colorful);
-            }
-        }
+        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
+        let _ = tray.set_icon_as_template(!is_colorful);
         Ok(())
     }
 
@@ -498,155 +438,9 @@ impl Tray {
         Ok(())
     }
 
-    /// 订阅流量数据
-    #[cfg(target_os = "macos")]
-    pub async fn subscribe_traffic(&self) -> Result<()> {
-        log::info!(target: "app", "subscribe traffic");
-
-        // 如果已经订阅，先取消订阅
-        if *self.is_subscribed.read() {
-            self.unsubscribe_traffic();
-            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-        }
-
-        let (shutdown_tx, shutdown_rx) = broadcast::channel(3);
-        *self.shutdown_tx.write() = Some(shutdown_tx);
-        *self.is_subscribed.write() = true;
-
-        let speed_rate = Arc::clone(&self.speed_rate);
-        let is_subscribed = Arc::clone(&self.is_subscribed);
-
-        // 使用单线程防止阻塞主线程
-        std::thread::Builder::new()
-            .name("traffic-monitor".into())
-            .spawn(move || {
-                let rt = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .expect("Failed to build tokio runtime for traffic monitor");
-                // 在单独的运行时中执行异步任务
-                rt.block_on(async move {
-                    let mut shutdown = shutdown_rx;
-                    let speed_rate = speed_rate.clone();
-                    let is_subscribed = is_subscribed.clone();
-                    let mut consecutive_errors = 0;
-                    let max_consecutive_errors = 5;
-
-                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(10));
-
-                    'outer: loop {
-                        if !*is_subscribed.read() {
-                            log::info!(target: "app", "Traffic subscription has been cancelled");
-                            break;
-                        }
-
-                        match tokio::time::timeout(
-                            std::time::Duration::from_secs(5),
-                            Traffic::get_traffic_stream()
-                        ).await {
-                            Ok(stream_result) => {
-                                match stream_result {
-                                    Ok(mut stream) => {
-                                        consecutive_errors = 0;
-
-                                        loop {
-                                            tokio::select! {
-                                                traffic_result = stream.next() => {
-                                                    match traffic_result {
-                                                        Some(Ok(traffic)) => {
-                                                            if let Ok(Some(rate)) = tokio::time::timeout(
-                                                                std::time::Duration::from_millis(50),
-                                                                async {
-                                                                    let guard = speed_rate.try_lock();
-                                                                    if let Some(guard) = guard {
-                                                                        if let Some(sr) = guard.as_ref() {
-                                                                            sr.update_and_check_changed(traffic.up, traffic.down)
-                                                                        } else {
-                                                                            None
-                                                                        }
-                                                                    } else {
-                                                                        None
-                                                                    }
-                                                                }
-                                                            ).await {
-                                                                let _ = tokio::time::timeout(
-                                                                    std::time::Duration::from_millis(100),
-                                                                    async { let _ = Tray::global().update_icon(Some(rate)); }
-                                                                ).await;
-                                                            }
-                                                        },
-                                                        Some(Err(e)) => {
-                                                            log::error!(target: "app", "Traffic stream error: {}", e);
-                                                            consecutive_errors += 1;
-                                                            if consecutive_errors >= max_consecutive_errors {
-                                                                log::error!(target: "app", "Too many errors, reconnecting traffic stream");
-                                                                break;
-                                                            }
-                                                        },
-                                                        None => {
-                                                            log::info!(target: "app", "Traffic stream ended, reconnecting");
-                                                            break;
-                                                        }
-                                                    }
-                                                },
-                                                _ = shutdown.recv() => {
-                                                    log::info!(target: "app", "Received shutdown signal for traffic stream");
-                                                    break 'outer;
-                                                },
-                                                _ = interval.tick() => {
-                                                    if !*is_subscribed.read() {
-                                                        log::info!(target: "app", "Traffic monitor detected subscription cancelled");
-                                                        break 'outer;
-                                                    }
-                                                    log::debug!(target: "app", "Traffic subscription periodic health check");
-                                                },
-                                                _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
-                                                    log::info!(target: "app", "Traffic stream max active time reached, reconnecting");
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    },
-                                    Err(e) => {
-                                        log::error!(target: "app", "Failed to get traffic stream: {}", e);
-                                        consecutive_errors += 1;
-                                        if consecutive_errors >= max_consecutive_errors {
-                                            log::error!(target: "app", "Too many consecutive errors, pausing traffic monitoring");
-                                            tokio::time::sleep(std::time::Duration::from_secs(30)).await;
-                                            consecutive_errors = 0;
-                                        } else {
-                                            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
-                                        }
-                                    }
-                                }
-                            },
-                            Err(_) => {
-                                log::error!(target: "app", "Traffic stream initialization timed out");
-                                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
-                            }
-                        }
-
-                        if !*is_subscribed.read() {
-                            break;
-                        }
-                    }
-                    log::info!(target: "app", "Traffic subscription thread terminated");
-                });
-            })
-            .expect("Failed to spawn traffic monitor thread");
-
-        Ok(())
-    }
-
     /// 取消订阅 traffic 数据
     #[cfg(target_os = "macos")]
-    pub fn unsubscribe_traffic(&self) {
-        log::info!(target: "app", "unsubscribe traffic");
-        *self.is_subscribed.write() = false;
-        if let Some(tx) = self.shutdown_tx.write().take() {
-            drop(tx);
-        }
-    }
+    pub fn unsubscribe_traffic(&self) {}
 
     pub fn create_tray_from_handle(&self, app_handle: &AppHandle) -> Result<()> {
         log::info!(target: "app", "正在从AppHandle创建系统托盘");

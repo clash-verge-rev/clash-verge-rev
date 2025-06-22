@@ -209,7 +209,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             </GuardState>
           </Item>
         )}
-        {OS === "macos" && (
+        {/* {OS === "macos" && (
           <Item>
             <ListItemText primary={t("Enable Tray Speed")} />
             <GuardState
@@ -223,7 +223,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               <Switch edge="end" />
             </GuardState>
           </Item>
-        )}
+        )} */}
         {OS === "macos" && (
           <Item>
             <ListItemText primary={t("Enable Tray Icon")} />
