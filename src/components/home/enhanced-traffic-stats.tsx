@@ -26,7 +26,7 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { createAuthSockette } from "@/utils/websocket";
 import parseTraffic from "@/utils/parse-traffic";
-import { getConnections, isDebugEnabled, gc } from "@/services/api";
+import { isDebugEnabled, gc } from "@/services/api";
 import { ReactNode } from "react";
 import { useAppData } from "@/providers/app-data-provider";
 

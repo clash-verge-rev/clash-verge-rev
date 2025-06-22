@@ -730,7 +730,7 @@ function URI_Trojan(line: string): IProxyTrojanConfig {
 
 function URI_Hysteria2(line: string): IProxyHysteria2Config {
   line = line.split(/(hysteria2|hy2):\/\//)[2];
-  // eslint-disable-next-line no-unused-vars
+
   let [__, password, server, ___, port, ____, addons = "", name] =
     /^(.*?)@(.*?)(:(\d+))?\/?(\?(.*?))?(?:#(.*?))?$/.exec(line) || [];
   let portNum = parseInt(`${port}`, 10);

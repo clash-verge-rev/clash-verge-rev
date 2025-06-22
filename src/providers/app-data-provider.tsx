@@ -1,12 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { useVerge } from "@/hooks/use-verge";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
 import {
   getProxies,

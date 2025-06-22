@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo } from "react";
 import { useVerge } from "@/hooks/use-verge";
 import { filterSort } from "./use-filter-sort";
 import { useWindowWidth } from "./use-window-width";

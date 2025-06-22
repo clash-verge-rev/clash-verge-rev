@@ -1,5 +1,5 @@
 import useSWR, { mutate } from "swr";
-import { useRef, useEffect, useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   SettingsRounded,
@@ -19,7 +19,6 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import {
   getSystemProxy,
   getAutotemProxy,
-  installService,
   uninstallService,
   restartCore,
   stopCore,

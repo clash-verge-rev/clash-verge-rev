@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Box, Typography, Paper, Stack, Fade } from "@mui/material";
+import { Box, Typography, Paper, Stack } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { closeAllConnections } from "@/services/api";
 import { patchClashMode } from "@/services/cmds";

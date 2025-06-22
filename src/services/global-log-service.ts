@@ -1,8 +1,7 @@
 // 全局日志服务，使应用在任何页面都能收集日志
 import { create } from "zustand";
-import { createSockette, createAuthSockette } from "@/utils/websocket";
+import { createAuthSockette } from "@/utils/websocket";
 import dayjs from "dayjs";
-import { useState, useEffect } from "react";
 
 // 最大日志数量
 const MAX_LOG_NUM = 1000;

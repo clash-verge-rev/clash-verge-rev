@@ -24,11 +24,7 @@ import {
   getSystemProxy,
   getAutotemProxy,
   getRunningMode,
-  installService,
-  restartCore,
-  isServiceAvailable,
 } from "@/services/cmds";
-import { useLockFn } from "ahooks";
 import { closeAllConnections } from "@/services/api";
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
