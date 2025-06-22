@@ -514,70 +514,102 @@ impl CoreManager {
         Ok(())
     }
 
-    /// 根据进程名查找进程PID列表
+    /// 根据进程名查找进程PID列
     async fn find_processes_by_name(
         &self,
         process_name: String,
         _target: &str,
     ) -> Result<(Vec<u32>, String)> {
-        let output = if cfg!(windows) {
-            tokio::process::Command::new("tasklist")
-                .args([
-                    "/FI",
-                    &format!("IMAGENAME eq {}", process_name),
-                    "/FO",
-                    "CSV",
-                    "/NH",
-                ])
-                .output()
-                .await?
-        } else if cfg!(target_os = "macos") {
-            tokio::process::Command::new("pgrep")
-                .arg(&process_name)
-                .output()
-                .await?
-        } else {
-            // Linux
-            tokio::process::Command::new("pidof")
-                .arg(&process_name)
-                .output()
-                .await?
-        };
+        #[cfg(windows)]
+        {
+            use std::mem;
+            use winapi::um::handleapi::CloseHandle;
+            use winapi::um::tlhelp32::{
+                CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+                TH32CS_SNAPPROCESS,
+            };
+            use winapi::um::winnt::HANDLE;
 
-        if !output.status.success() {
-            return Ok((Vec::new(), process_name));
-        }
+            let process_name_clone = process_name.clone();
+            let pids = tokio::task::spawn_blocking(move || -> Result<Vec<u32>> {
+                let mut pids = Vec::new();
 
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let mut pids = Vec::new();
+                unsafe {
+                    // 创建进程快照
+                    let snapshot: HANDLE = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+                    if snapshot == winapi::um::handleapi::INVALID_HANDLE_VALUE {
+                        return Err(anyhow::anyhow!("Failed to create process snapshot"));
+                    }
 
-        if cfg!(windows) {
-            // 解析CSV格式输出: "进程名","PID","会话名","会话#","内存使用"
-            for line in stdout.lines() {
-                if !line.is_empty() && line.contains(&process_name) {
-                    let fields: Vec<&str> = line.split(',').collect();
-                    if fields.len() >= 2 {
-                        // 移除引号并解析PID
-                        let pid_str = fields[1].trim_matches('"');
-                        if let Ok(pid) = pid_str.parse::<u32>() {
-                            pids.push(pid);
+                    let mut pe32: PROCESSENTRY32W = mem::zeroed();
+                    pe32.dwSize = mem::size_of::<PROCESSENTRY32W>() as u32;
+
+                    // 获取第一个进程
+                    if Process32FirstW(snapshot, &mut pe32) != 0 {
+                        loop {
+                            // 将宽字符转换为String
+                            let end_pos = pe32
+                                .szExeFile
+                                .iter()
+                                .position(|&x| x == 0)
+                                .unwrap_or(pe32.szExeFile.len());
+                            let exe_file = String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
+
+                            // 检查进程名是否匹配
+                            if exe_file.eq_ignore_ascii_case(&process_name_clone) {
+                                pids.push(pe32.th32ProcessID);
+                            }
+                            if Process32NextW(snapshot, &mut pe32) == 0 {
+                                break;
+                            }
                         }
                     }
+
+                    // 关闭句柄
+                    CloseHandle(snapshot);
                 }
+
+                Ok(pids)
+            })
+            .await??;
+
+            Ok((pids, process_name))
+        }
+
+        #[cfg(not(windows))]
+        {
+            let output = if cfg!(target_os = "macos") {
+                tokio::process::Command::new("pgrep")
+                    .arg(&process_name)
+                    .output()
+                    .await?
+            } else {
+                // Linux
+                tokio::process::Command::new("pidof")
+                    .arg(&process_name)
+                    .output()
+                    .await?
+            };
+
+            if !output.status.success() {
+                return Ok((Vec::new(), process_name));
             }
-        } else {
+
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let mut pids = Vec::new();
+
             // Unix系统直接解析PID列表
             for pid_str in stdout.split_whitespace() {
                 if let Ok(pid) = pid_str.parse::<u32>() {
                     pids.push(pid);
                 }
             }
-        }
 
-        Ok((pids, process_name))
+            Ok((pids, process_name))
+        }
     }
 
-    /// 终止进程并验证结果
+    /// 终止进程并验证结果 - 使用Windows API直接终止，更优雅高效
     async fn kill_process_with_verification(&self, pid: u32, process_name: String) -> bool {
         logging!(
             info,
@@ -588,14 +620,30 @@ impl CoreManager {
             pid
         );
 
-        let success = if cfg!(windows) {
-            tokio::process::Command::new("taskkill")
-                .args(["/F", "/PID", &pid.to_string()])
-                .output()
-                .await
-                .map(|output| output.status.success())
-                .unwrap_or(false)
-        } else {
+        #[cfg(windows)]
+        let success = {
+            use winapi::um::handleapi::CloseHandle;
+            use winapi::um::processthreadsapi::{OpenProcess, TerminateProcess};
+            use winapi::um::winnt::{HANDLE, PROCESS_TERMINATE};
+
+            tokio::task::spawn_blocking(move || -> bool {
+                unsafe {
+                    let process_handle: HANDLE = OpenProcess(PROCESS_TERMINATE, 0, pid);
+                    if process_handle.is_null() {
+                        return false;
+                    }
+                    let result = TerminateProcess(process_handle, 1);
+                    CloseHandle(process_handle);
+
+                    result != 0
+                }
+            })
+            .await
+            .unwrap_or(false)
+        };
+
+        #[cfg(not(windows))]
+        let success = {
             tokio::process::Command::new("kill")
                 .args(["-9", &pid.to_string()])
                 .output()
@@ -643,34 +691,49 @@ impl CoreManager {
         }
     }
 
-    /// 检查进程是否仍在运行
+    /// Windows API检查进程
     async fn is_process_running(&self, pid: u32) -> Result<bool> {
-        let output = if cfg!(windows) {
-            tokio::process::Command::new("tasklist")
-                .args(["/FI", &format!("PID eq {}", pid), "/FO", "CSV", "/NH"])
-                .output()
-                .await?
-        } else {
-            tokio::process::Command::new("ps")
+        #[cfg(windows)]
+        {
+            use winapi::shared::minwindef::DWORD;
+            use winapi::um::handleapi::CloseHandle;
+            use winapi::um::processthreadsapi::GetExitCodeProcess;
+            use winapi::um::processthreadsapi::OpenProcess;
+            use winapi::um::winnt::{HANDLE, PROCESS_QUERY_INFORMATION};
+
+            let result = tokio::task::spawn_blocking(move || -> Result<bool> {
+                unsafe {
+                    let process_handle: HANDLE = OpenProcess(PROCESS_QUERY_INFORMATION, 0, pid);
+                    if process_handle.is_null() {
+                        return Ok(false);
+                    }
+                    let mut exit_code: DWORD = 0;
+                    let result = GetExitCodeProcess(process_handle, &mut exit_code);
+                    CloseHandle(process_handle);
+
+                    if result == 0 {
+                        return Ok(false);
+                    }
+                    Ok(exit_code == 259)
+                }
+            })
+            .await?;
+
+            result
+        }
+
+        #[cfg(not(windows))]
+        {
+            let output = tokio::process::Command::new("ps")
                 .args(["-p", &pid.to_string()])
                 .output()
-                .await?
-        };
+                .await?;
 
-        Ok(output.status.success() && !output.stdout.is_empty())
+            Ok(output.status.success() && !output.stdout.is_empty())
+        }
     }
 
     async fn start_core_by_sidecar(&self) -> Result<()> {
-        if let Err(e) = self.cleanup_orphaned_mihomo_processes().await {
-            logging!(
-                warn,
-                Type::Core,
-                true,
-                "清理多余 mihomo 进程时发生错误: {}",
-                e
-            );
-        }
-
         logging!(trace, Type::Core, true, "Running core by sidecar");
         let config_file = &Config::generate_file(ConfigType::Run)?;
         let app_handle = handle::Handle::global()
@@ -1032,17 +1095,6 @@ impl CoreManager {
     /// 重启内核
     pub async fn restart_core(&self) -> Result<()> {
         self.stop_core().await?;
-
-        // 在重启时也清理多余的 mihomo 进程
-        if let Err(e) = self.cleanup_orphaned_mihomo_processes().await {
-            logging!(
-                warn,
-                Type::Core,
-                true,
-                "重启时清理多余 mihomo 进程失败: {}",
-                e
-            );
-        }
 
         self.start_core().await?;
         Ok(())
