@@ -96,6 +96,8 @@ winapi = { version = "0.3.9", features = [
   "winerror",
   "tlhelp32",
   "processthreadsapi",
+  "winhttp",
+  "winreg",
 ] }
 
 [target.'cfg(target_os = "linux")'.dependencies]

@@ -526,16 +526,10 @@ impl EventDrivenProxyManager {
 
     #[cfg(target_os = "windows")]
     async fn execute_sysproxy_command(args: &[&str]) {
-        use crate::{core::handle::Handle, utils::dirs};
-        use tauri_plugin_shell::ShellExt;
-
-        let app_handle = match Handle::global().app_handle() {
-            Some(handle) => handle,
-            None => {
-                log::error!(target: "app", "获取应用句柄失败");
-                return;
-            }
-        };
+        use crate::utils::dirs;
+        #[allow(unused_imports)] // creation_flags必须
+        use std::os::windows::process::CommandExt;
+        use tokio::process::Command;
 
         let binary_path = match dirs::service_path() {
             Ok(path) => path,
@@ -551,10 +545,9 @@ impl EventDrivenProxyManager {
             return;
         }
 
-        let shell = app_handle.shell();
-        let output = shell
-            .command(sysproxy_exe.as_path().to_str().unwrap())
+        let output = Command::new(sysproxy_exe)
             .args(args)
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW - 隐藏窗口
             .output()
             .await;
 
@@ -562,6 +555,12 @@ impl EventDrivenProxyManager {
             Ok(output) => {
                 if !output.status.success() {
                     log::error!(target: "app", "执行sysproxy命令失败: {:?}", args);
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    if !stderr.is_empty() {
+                        log::error!(target: "app", "sysproxy错误输出: {}", stderr);
+                    }
+                } else {
+                    log::debug!(target: "app", "成功执行sysproxy命令: {:?}", args);
                 }
             }
             Err(e) => {

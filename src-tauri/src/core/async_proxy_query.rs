@@ -1,9 +1,11 @@
-#[cfg(target_os = "linux")]
-use anyhow::anyhow;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use tokio::process::Command;
 use tokio::time::{timeout, Duration};
+
+#[cfg(target_os = "linux")]
+use anyhow::anyhow;
+#[cfg(not(target_os = "windows"))]
+use tokio::process::Command;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AsyncAutoproxy {
@@ -71,54 +73,96 @@ impl AsyncProxyQuery {
 
     #[cfg(target_os = "windows")]
     async fn get_auto_proxy_impl() -> Result<AsyncAutoproxy> {
-        // Windows: 使用 netsh winhttp show proxy 命令
-        let output = Command::new("netsh")
-            .args(["winhttp", "show", "proxy"])
-            .output()
-            .await?;
+        // Windows: 从注册表读取PAC配置
+        tokio::task::spawn_blocking(move || -> Result<AsyncAutoproxy> {
+            Self::get_pac_config_from_registry()
+        })
+        .await?
+    }
 
-        if !output.status.success() {
-            return Ok(AsyncAutoproxy::default());
-        }
+    #[cfg(target_os = "windows")]
+    fn get_pac_config_from_registry() -> Result<AsyncAutoproxy> {
+        use std::ptr;
+        use winapi::shared::minwindef::{DWORD, HKEY};
+        use winapi::um::winnt::{KEY_READ, REG_DWORD, REG_SZ};
+        use winapi::um::winreg::{RegCloseKey, RegOpenKeyExW, RegQueryValueExW, HKEY_CURRENT_USER};
 
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        log::debug!(target: "app", "netsh output: {}", stdout);
+        unsafe {
+            let key_path = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\0"
+                .encode_utf16()
+                .collect::<Vec<u16>>();
 
-        // 解析输出，查找 PAC 配置
-        for line in stdout.lines() {
-            let line = line.trim();
-            if line.starts_with("代理自动配置脚本") || line.starts_with("Proxy auto-config script")
-            {
-                // 修复：正确解析包含冒号的URL
-                // 格式: "代理自动配置脚本 : http://127.0.0.1:11233/commands/pac"
-                // 或: "Proxy auto-config script : http://127.0.0.1:11233/commands/pac"
-                if let Some(colon_pos) = line.find(" : ") {
-                    let url = line[colon_pos + 3..].trim();
-                    if !url.is_empty() && url != "(none)" && url != "无" {
-                        log::debug!(target: "app", "解析到PAC URL: {}", url);
-                        return Ok(AsyncAutoproxy {
-                            enable: true,
-                            url: url.to_string(),
-                        });
-                    }
-                } else if let Some(colon_pos) = line.find(':') {
-                    // 兼容其他可能的格式
-                    let url = line[colon_pos + 1..].trim();
-                    // 确保这不是URL中的协议部分
-                    if url.starts_with("http") && !url.is_empty() && url != "(none)" && url != "无"
-                    {
-                        log::debug!(target: "app", "解析到PAC URL (fallback): {}", url);
-                        return Ok(AsyncAutoproxy {
-                            enable: true,
-                            url: url.to_string(),
-                        });
-                    }
+            let mut hkey: HKEY = ptr::null_mut();
+            let result =
+                RegOpenKeyExW(HKEY_CURRENT_USER, key_path.as_ptr(), 0, KEY_READ, &mut hkey);
+
+            if result != 0 {
+                log::debug!(target: "app", "无法打开注册表项");
+                return Ok(AsyncAutoproxy::default());
+            }
+
+            // 1. 检查自动配置是否启用 (AutoConfigURL 存在且不为空即表示启用)
+            let auto_config_url_name = "AutoConfigURL\0".encode_utf16().collect::<Vec<u16>>();
+            let mut url_buffer = vec![0u16; 1024];
+            let mut url_buffer_size: DWORD = (url_buffer.len() * 2) as DWORD;
+            let mut url_value_type: DWORD = 0;
+
+            let url_query_result = RegQueryValueExW(
+                hkey,
+                auto_config_url_name.as_ptr(),
+                ptr::null_mut(),
+                &mut url_value_type,
+                url_buffer.as_mut_ptr() as *mut u8,
+                &mut url_buffer_size,
+            );
+
+            let mut pac_url = String::new();
+            if url_query_result == 0 && url_value_type == REG_SZ && url_buffer_size > 0 {
+                let end_pos = url_buffer
+                    .iter()
+                    .position(|&x| x == 0)
+                    .unwrap_or(url_buffer.len());
+                pac_url = String::from_utf16_lossy(&url_buffer[..end_pos]);
+                log::debug!(target: "app", "从注册表读取到PAC URL: {}", pac_url);
+            }
+
+            // 2. 检查自动检测设置是否启用
+            let auto_detect_name = "AutoDetect\0".encode_utf16().collect::<Vec<u16>>();
+            let mut auto_detect: DWORD = 0;
+            let mut detect_buffer_size: DWORD = 4;
+            let mut detect_value_type: DWORD = 0;
+
+            let detect_query_result = RegQueryValueExW(
+                hkey,
+                auto_detect_name.as_ptr(),
+                ptr::null_mut(),
+                &mut detect_value_type,
+                &mut auto_detect as *mut DWORD as *mut u8,
+                &mut detect_buffer_size,
+            );
+
+            RegCloseKey(hkey);
+
+            // PAC 启用的条件：AutoConfigURL 不为空，或 AutoDetect 被启用
+            let pac_enabled = !pac_url.is_empty()
+                || (detect_query_result == 0 && detect_value_type == REG_DWORD && auto_detect != 0);
+
+            if pac_enabled {
+                log::debug!(target: "app", "PAC配置启用: URL={}, AutoDetect={}", pac_url, auto_detect);
+
+                if pac_url.is_empty() && auto_detect != 0 {
+                    pac_url = "auto-detect".to_string();
                 }
+
+                Ok(AsyncAutoproxy {
+                    enable: true,
+                    url: pac_url,
+                })
+            } else {
+                log::debug!(target: "app", "PAC配置未启用");
+                Ok(AsyncAutoproxy::default())
             }
         }
-
-        log::debug!(target: "app", "未找到有效的PAC配置");
-        Ok(AsyncAutoproxy::default())
     }
 
     #[cfg(target_os = "macos")]
@@ -142,7 +186,7 @@ impl AsyncProxyQuery {
             if line.contains("ProxyAutoConfigEnable") && line.contains("1") {
                 pac_enabled = true;
             } else if line.contains("ProxyAutoConfigURLString") {
-                // 修复：正确解析包含冒号的URL
+                // 正确解析包含冒号的URL
                 // 格式: "ProxyAutoConfigURLString : http://127.0.0.1:11233/commands/pac"
                 if let Some(colon_pos) = line.find(" : ") {
                     pac_url = line[colon_pos + 3..].trim().to_string();
@@ -213,57 +257,121 @@ impl AsyncProxyQuery {
 
     #[cfg(target_os = "windows")]
     async fn get_system_proxy_impl() -> Result<AsyncSysproxy> {
-        let output = Command::new("netsh")
-            .args(["winhttp", "show", "proxy"])
-            .output()
-            .await?;
+        // Windows: 使用注册表直接读取代理设置
+        tokio::task::spawn_blocking(move || -> Result<AsyncSysproxy> {
+            Self::get_system_proxy_from_registry()
+        })
+        .await?
+    }
 
-        if !output.status.success() {
-            return Ok(AsyncSysproxy::default());
-        }
+    #[cfg(target_os = "windows")]
+    fn get_system_proxy_from_registry() -> Result<AsyncSysproxy> {
+        use std::ptr;
+        use winapi::shared::minwindef::{DWORD, HKEY};
+        use winapi::um::winnt::{KEY_READ, REG_DWORD, REG_SZ};
+        use winapi::um::winreg::{RegCloseKey, RegOpenKeyExW, RegQueryValueExW, HKEY_CURRENT_USER};
 
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        log::debug!(target: "app", "netsh proxy output: {}", stdout);
+        unsafe {
+            let key_path = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\0"
+                .encode_utf16()
+                .collect::<Vec<u16>>();
 
-        let mut proxy_enabled = false;
-        let mut proxy_server = String::new();
-        let mut bypass_list = String::new();
+            let mut hkey: HKEY = ptr::null_mut();
+            let result =
+                RegOpenKeyExW(HKEY_CURRENT_USER, key_path.as_ptr(), 0, KEY_READ, &mut hkey);
 
-        for line in stdout.lines() {
-            let line = line.trim();
-            if line.starts_with("代理服务器") || line.starts_with("Proxy Server") {
-                if let Some(server_part) = line.split(':').nth(1) {
-                    let server = server_part.trim();
-                    if !server.is_empty() && server != "(none)" && server != "无" {
-                        proxy_server = server.to_string();
-                        proxy_enabled = true;
-                    }
-                }
-            } else if line.starts_with("绕过列表") || line.starts_with("Bypass List") {
-                if let Some(bypass_part) = line.split(':').nth(1) {
-                    bypass_list = bypass_part.trim().to_string();
-                }
+            if result != 0 {
+                return Ok(AsyncSysproxy::default());
             }
-        }
 
-        if proxy_enabled && !proxy_server.is_empty() {
-            // 解析服务器地址和端口
-            let (host, port) = if let Some(colon_pos) = proxy_server.rfind(':') {
-                let host = proxy_server[..colon_pos].to_string();
-                let port = proxy_server[colon_pos + 1..].parse::<u16>().unwrap_or(8080);
-                (host, port)
+            // 检查代理是否启用
+            let proxy_enable_name = "ProxyEnable\0".encode_utf16().collect::<Vec<u16>>();
+            let mut proxy_enable: DWORD = 0;
+            let mut buffer_size: DWORD = 4;
+            let mut value_type: DWORD = 0;
+
+            let enable_result = RegQueryValueExW(
+                hkey,
+                proxy_enable_name.as_ptr(),
+                ptr::null_mut(),
+                &mut value_type,
+                &mut proxy_enable as *mut DWORD as *mut u8,
+                &mut buffer_size,
+            );
+
+            if enable_result != 0 || value_type != REG_DWORD || proxy_enable == 0 {
+                RegCloseKey(hkey);
+                return Ok(AsyncSysproxy::default());
+            }
+
+            // 读取代理服务器设置
+            let proxy_server_name = "ProxyServer\0".encode_utf16().collect::<Vec<u16>>();
+            let mut buffer = vec![0u16; 1024];
+            let mut buffer_size: DWORD = (buffer.len() * 2) as DWORD;
+            let mut value_type: DWORD = 0;
+
+            let server_result = RegQueryValueExW(
+                hkey,
+                proxy_server_name.as_ptr(),
+                ptr::null_mut(),
+                &mut value_type,
+                buffer.as_mut_ptr() as *mut u8,
+                &mut buffer_size,
+            );
+
+            let mut proxy_server = String::new();
+            if server_result == 0 && value_type == REG_SZ && buffer_size > 0 {
+                let end_pos = buffer.iter().position(|&x| x == 0).unwrap_or(buffer.len());
+                proxy_server = String::from_utf16_lossy(&buffer[..end_pos]);
+            }
+
+            // 读取代理绕过列表
+            let proxy_override_name = "ProxyOverride\0".encode_utf16().collect::<Vec<u16>>();
+            let mut bypass_buffer = vec![0u16; 1024];
+            let mut bypass_buffer_size: DWORD = (bypass_buffer.len() * 2) as DWORD;
+            let mut bypass_value_type: DWORD = 0;
+
+            let override_result = RegQueryValueExW(
+                hkey,
+                proxy_override_name.as_ptr(),
+                ptr::null_mut(),
+                &mut bypass_value_type,
+                bypass_buffer.as_mut_ptr() as *mut u8,
+                &mut bypass_buffer_size,
+            );
+
+            let mut bypass_list = String::new();
+            if override_result == 0 && bypass_value_type == REG_SZ && bypass_buffer_size > 0 {
+                let end_pos = bypass_buffer
+                    .iter()
+                    .position(|&x| x == 0)
+                    .unwrap_or(bypass_buffer.len());
+                bypass_list = String::from_utf16_lossy(&bypass_buffer[..end_pos]);
+            }
+
+            RegCloseKey(hkey);
+
+            if !proxy_server.is_empty() {
+                // 解析服务器地址和端口
+                let (host, port) = if let Some(colon_pos) = proxy_server.rfind(':') {
+                    let host = proxy_server[..colon_pos].to_string();
+                    let port = proxy_server[colon_pos + 1..].parse::<u16>().unwrap_or(8080);
+                    (host, port)
+                } else {
+                    (proxy_server, 8080)
+                };
+
+                log::debug!(target: "app", "从注册表读取到代理设置: {}:{}, bypass: {}", host, port, bypass_list);
+
+                Ok(AsyncSysproxy {
+                    enable: true,
+                    host,
+                    port,
+                    bypass: bypass_list,
+                })
             } else {
-                (proxy_server, 8080)
-            };
-
-            Ok(AsyncSysproxy {
-                enable: true,
-                host,
-                port,
-                bypass: bypass_list,
-            })
-        } else {
-            Ok(AsyncSysproxy::default())
+                Ok(AsyncSysproxy::default())
+            }
         }
     }
 
