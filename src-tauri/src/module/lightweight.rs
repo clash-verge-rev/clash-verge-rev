@@ -131,7 +131,6 @@ pub fn entry_lightweight_mode() {
         }
         #[cfg(target_os = "macos")]
         AppHandleManager::global().set_activation_policy_accessory();
-        logging!(info, Type::Lightweight, true, "轻量模式已开启");
     }
     set_lightweight_mode(true);
     let _ = cancel_light_weight_timer();
@@ -168,7 +167,6 @@ pub fn exit_lightweight_mode() {
     }
 
     set_lightweight_mode(false);
-    logging!(info, Type::Lightweight, true, "正在退出轻量模式");
 
     // macOS激活策略
     #[cfg(target_os = "macos")]
