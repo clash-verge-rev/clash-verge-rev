@@ -9,7 +9,15 @@ if git diff --cached --name-only | grep -q '^src-tauri/'; then
 fi
 
 remote_name="$1"
-remote_url=$(git remote get-url "$remote_name")
+if [ -z "$remote_name" ]; then
+    echo "[pre-push] No remote name provided. Skipping format check."
+    exit 0
+fi
+remote_url=$(git remote get-url "$remote_name" 2>/dev/null)
+if [ $? -ne 0 ]; then
+    echo "[pre-push] Remote '$remote_name' not found. Skipping format check."
+    exit 0
+fi
 
 if [[ "$remote_url" =~ github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$ ]]; then
     echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev ($remote_url)"
