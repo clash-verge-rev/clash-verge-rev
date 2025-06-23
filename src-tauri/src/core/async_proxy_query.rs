@@ -43,7 +43,7 @@ impl AsyncProxyQuery {
                 proxy
             }
             Ok(Err(e)) => {
-                log::warn!(target: "app", "异步获取自动代理失败: {}", e);
+                log::warn!(target: "app", "异步获取自动代理失败: {e}");
                 AsyncAutoproxy::default()
             }
             Err(_) => {
@@ -61,7 +61,7 @@ impl AsyncProxyQuery {
                 proxy
             }
             Ok(Err(e)) => {
-                log::warn!(target: "app", "异步获取系统代理失败: {}", e);
+                log::warn!(target: "app", "异步获取系统代理失败: {e}");
                 AsyncSysproxy::default()
             }
             Err(_) => {
@@ -175,7 +175,7 @@ impl AsyncProxyQuery {
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        log::debug!(target: "app", "scutil output: {}", stdout);
+        log::debug!(target: "app", "scutil output: {stdout}");
 
         let mut pac_enabled = false;
         let mut pac_url = String::new();
@@ -194,7 +194,7 @@ impl AsyncProxyQuery {
             }
         }
 
-        log::debug!(target: "app", "解析结果: pac_enabled={}, pac_url={}", pac_enabled, pac_url);
+        log::debug!(target: "app", "解析结果: pac_enabled={pac_enabled}, pac_url={pac_url}");
 
         Ok(AsyncAutoproxy {
             enable: pac_enabled && !pac_url.is_empty(),
@@ -384,7 +384,7 @@ impl AsyncProxyQuery {
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        log::debug!(target: "app", "scutil proxy output: {}", stdout);
+        log::debug!(target: "app", "scutil proxy output: {stdout}");
 
         let mut http_enabled = false;
         let mut http_host = String::new();

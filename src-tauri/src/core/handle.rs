@@ -125,7 +125,7 @@ impl NotificationSystem {
                                             match serde_json::to_value((status, message)) {
                                                 Ok(p) => ("verge://notice-message", Ok(p)),
                                                 Err(e) => {
-                                                    log::error!("Failed to serialize NoticeMessage payload: {}", e);
+                                                    log::error!("Failed to serialize NoticeMessage payload: {e}");
                                                     ("verge://notice-message", Err(e))
                                                 }
                                             }
@@ -153,11 +153,11 @@ impl NotificationSystem {
                                                 system.stats.total_sent.fetch_add(1, Ordering::SeqCst);
                                                 // 记录成功发送的事件
                                                 if log::log_enabled!(log::Level::Debug) {
-                                                    log::debug!("Successfully emitted event: {}", event_name_str);
+                                                    log::debug!("Successfully emitted event: {event_name_str}");
                                                 }
                                             }
                                             Err(e) => {
-                                                log::warn!("Failed to emit event {}: {}", event_name_str, e);
+                                                log::warn!("Failed to emit event {event_name_str}: {e}");
                                                 system.stats.total_errors.fetch_add(1, Ordering::SeqCst);
                                                 *system.stats.last_error_time.write() = Some(Instant::now());
 
@@ -165,8 +165,7 @@ impl NotificationSystem {
                                                 const EMIT_ERROR_THRESHOLD: u64 = 10;
                                                 if errors > EMIT_ERROR_THRESHOLD && !*system.emergency_mode.read() {
                                                     log::warn!(
-                                                        "Reached {} emit errors, entering emergency mode",
-                                                        EMIT_ERROR_THRESHOLD
+                                                        "Reached {EMIT_ERROR_THRESHOLD} emit errors, entering emergency mode"
                                                     );
                                                     *system.emergency_mode.write() = true;
                                                 }
@@ -175,7 +174,7 @@ impl NotificationSystem {
                                     } else {
                                         system.stats.total_errors.fetch_add(1, Ordering::SeqCst);
                                         *system.stats.last_error_time.write() = Some(Instant::now());
-                                        log::warn!("Skipped emitting event due to payload serialization error for {}", event_name_str);
+                                        log::warn!("Skipped emitting event due to payload serialization error for {event_name_str}");
                                     }
                                 } else {
                                     log::warn!("No window found, skipping event emit.");
@@ -215,7 +214,7 @@ impl NotificationSystem {
             match sender.send(event) {
                 Ok(_) => true,
                 Err(e) => {
-                    log::warn!("Failed to send event to notification queue: {:?}", e);
+                    log::warn!("Failed to send event to notification queue: {e:?}");
                     self.stats.total_errors.fetch_add(1, Ordering::SeqCst);
                     *self.stats.last_error_time.write() = Some(Instant::now());
                     false
@@ -243,7 +242,7 @@ impl NotificationSystem {
                     log::info!("NotificationSystem worker thread joined successfully");
                 }
                 Err(e) => {
-                    log::error!("NotificationSystem worker thread join failed: {:?}", e);
+                    log::error!("NotificationSystem worker thread join failed: {e:?}");
                 }
             }
         }
@@ -500,7 +499,7 @@ impl Handle {
             });
 
         if let Err(e) = thread_result {
-            log::error!("Failed to spawn startup errors thread: {}", e);
+            log::error!("Failed to spawn startup errors thread: {e}");
         }
     }
 

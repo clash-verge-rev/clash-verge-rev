@@ -38,7 +38,7 @@ static TRANSLATIONS: Lazy<HashMap<String, Value>> = Lazy::new(|| {
 
     if let Some(locales_dir) = get_locales_dir() {
         for lang in get_supported_languages() {
-            let file_path = locales_dir.join(format!("{}.json", lang));
+            let file_path = locales_dir.join(format!("{lang}.json"));
             if let Ok(content) = fs::read_to_string(file_path) {
                 if let Ok(json) = serde_json::from_str(&content) {
                     translations.insert(lang.to_string(), json);

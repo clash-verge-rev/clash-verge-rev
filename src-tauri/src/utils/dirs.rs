@@ -94,7 +94,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
 
             // 如果无法获取系统目录，则回退到可执行文件目录
             let fallback_dir = PathBuf::from(exe_dir).join(".config").join(APP_ID);
-            log::warn!(target: "app", "Using fallback data directory: {:?}", fallback_dir);
+            log::warn!(target: "app", "Using fallback data directory: {fallback_dir:?}");
             return Ok(fallback_dir);
         }
     };
@@ -102,7 +102,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
     match app_handle.path().data_dir() {
         Ok(dir) => Ok(dir.join(APP_ID)),
         Err(e) => {
-            log::error!(target: "app", "Failed to get the app home directory: {}", e);
+            log::error!(target: "app", "Failed to get the app home directory: {e}");
             Err(anyhow::anyhow!("Failed to get the app homedirectory"))
         }
     }
@@ -127,7 +127,7 @@ pub fn app_resources_dir() -> Result<PathBuf> {
     match app_handle.path().resource_dir() {
         Ok(dir) => Ok(dir.join("resources")),
         Err(e) => {
-            log::error!(target: "app", "Failed to get the resource directory: {}", e);
+            log::error!(target: "app", "Failed to get the resource directory: {e}");
             Err(anyhow::anyhow!("Failed to get the resource directory"))
         }
     }
@@ -203,7 +203,7 @@ pub fn service_log_file() -> Result<PathBuf> {
     let log_dir = app_logs_dir()?.join("service");
 
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-    let log_file = format!("{}.log", local_time);
+    let log_file = format!("{local_time}.log");
     let log_file = log_dir.join(log_file);
 
     let _ = std::fs::create_dir_all(&log_dir);
