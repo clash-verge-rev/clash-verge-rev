@@ -623,5 +623,6 @@
   "Originals Only": "Originals Only",
   "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
   "Unsupported Country/Region": "Unsupported Country/Region",
-  "Failed (Network Connection)": "Failed (Network Connection)"
+  "Failed (Network Connection)": "Failed (Network Connection)",
+  "Invalid Profile URL": "Invalid profile URL. Please enter a URL starting with http:// or https://"
 }

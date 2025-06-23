@@ -227,8 +227,12 @@ const ProfilePage = () => {
 
   const onImport = async () => {
     if (!url) return;
+    // 校验url是否为http/https
+    if (!/^https?:\/\//i.test(url)) {
+      showNotice("error", t("Invalid Profile URL"));
+      return;
+    }
     setLoading(true);
-
     try {
       // 尝试正常导入
       await importProfile(url);
@@ -240,14 +244,12 @@ const ProfilePage = () => {
       // 首次导入失败，尝试使用自身代理
       const errmsg = err.message || err.toString();
       showNotice("info", t("Import failed, retrying with Clash proxy..."));
-
       try {
         // 使用自身代理尝试导入
         await importProfile(url, {
           with_proxy: false,
           self_proxy: true,
         });
-
         // 回退导入成功
         showNotice("success", t("Profile Imported with Clash proxy"));
         setUrl("");

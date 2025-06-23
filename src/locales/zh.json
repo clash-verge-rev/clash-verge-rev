@@ -623,5 +623,6 @@
   "Originals Only": "仅限原创",
   "No (IP Banned By Disney+)": "不支持（IP被Disney+禁止）",
   "Unsupported Country/Region": "不支持的国家/地区",
-  "Failed (Network Connection)": "测试失败（网络连接问题）"
+  "Failed (Network Connection)": "测试失败（网络连接问题）",
+  "Invalid Profile URL": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址"
 }
