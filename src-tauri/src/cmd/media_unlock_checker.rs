@@ -384,9 +384,8 @@ async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     }
 
     // 第二步：使用设备ID检查访问权限 (使用相同的Cookie)
-    let url = format!(
-        "https://ani.gamer.com.tw/ajax/token.php?adID=89422&sn=37783&device={device_id}"
-    );
+    let url =
+        format!("https://ani.gamer.com.tw/ajax/token.php?adID=89422&sn=37783&device={device_id}");
 
     let token_result = match client_with_cookies.get(&url).send().await {
         Ok(response) => {
