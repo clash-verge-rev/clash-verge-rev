@@ -36,20 +36,20 @@ where
 
 pub fn run_once_auto_lightweight() {
     LightWeightState::default().run_once_time(|| {
-        let is_silent_start = Config::verge().data().enable_silent_start.unwrap_or(true);
+        let is_silent_start = Config::verge().data().enable_silent_start.unwrap_or(false);
         let enable_auto = Config::verge()
             .data()
             .enable_auto_light_weight_mode
-            .unwrap_or(true);
+            .unwrap_or(false);
         if enable_auto && is_silent_start {
             logging!(
                 info,
                 Type::Lightweight,
                 true,
-                "正常创建窗口和添加定时器监听器"
+                "在静默启动的情况下，创建窗口再添加自动进入轻量模式窗口监听器"
             );
             set_lightweight_mode(false);
-            disable_auto_light_weight_mode();
+            enable_auto_light_weight_mode();
 
             // 触发托盘更新
             if let Err(e) = Tray::global().update_part() {
@@ -65,8 +65,13 @@ pub fn auto_lightweight_mode_init() {
         let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
         let enable_auto = { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
 
-        if enable_auto && is_silent_start {
-            logging!(info, Type::Lightweight, true, "自动轻量模式静默启动");
+        if enable_auto && !is_silent_start {
+            logging!(
+                info,
+                Type::Lightweight,
+                true,
+                "非静默启动直接挂载自动进入轻量模式监听器！"
+            );
             set_lightweight_mode(true);
             enable_auto_light_weight_mode();
 
@@ -84,7 +89,7 @@ pub fn is_in_lightweight_mode() -> bool {
 }
 
 // 设置轻量模式状态
-fn set_lightweight_mode(value: bool) {
+pub fn set_lightweight_mode(value: bool) {
     with_lightweight_status(|state| {
         state.set_lightweight_mode(value);
     });
