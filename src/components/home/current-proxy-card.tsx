@@ -517,7 +517,7 @@ export const CurrentProxyCard = () => {
 
   return (
     <EnhancedCard
-      title={t("Current Node")}
+      title={t("proxy:Current Node")}
       icon={
         <Tooltip
           title={
@@ -637,12 +637,14 @@ export const CurrentProxyCard = () => {
             size="small"
             sx={{ mb: 1.5 }}
           >
-            <InputLabel id="proxy-group-select-label">{t("Group")}</InputLabel>
+            <InputLabel id="proxy-group-select-label">
+              {t("proxy:Group")}
+            </InputLabel>
             <Select
               labelId="proxy-group-select-label"
               value={state.selection.group}
               onChange={handleGroupChange}
-              label={t("Group")}
+              label={t("proxy:Group")}
               disabled={isGlobalMode || isDirectMode}
             >
               {state.proxyData.groups.map((group) => (
@@ -655,12 +657,12 @@ export const CurrentProxyCard = () => {
 
           {/* 代理节点选择器 */}
           <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 0 }}>
-            <InputLabel id="proxy-select-label">{t("Proxy")}</InputLabel>
+            <InputLabel id="proxy-select-label">{t("proxy:Proxy")}</InputLabel>
             <Select
               labelId="proxy-select-label"
               value={state.selection.proxy}
               onChange={handleProxyChange}
-              label={t("Proxy")}
+              label={t("proxy:Proxy")}
               disabled={isDirectMode}
               renderValue={renderProxyValue}
               MenuProps={{
@@ -716,7 +718,7 @@ export const CurrentProxyCard = () => {
       ) : (
         <Box sx={{ textAlign: "center", py: 4 }}>
           <Typography variant="body1" color="text.secondary">
-            {t("No active proxy node")}
+            {t("proxy:No active proxy node")}
           </Typography>
         </Box>
       )}
