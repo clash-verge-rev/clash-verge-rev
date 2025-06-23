@@ -68,7 +68,7 @@ export const AppDataProvider = ({
     getProxies,
     {
       refreshInterval: 5000,
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       suspense: false,
       errorRetryCount: 3,
     },
@@ -243,7 +243,8 @@ export const AppDataProvider = ({
     "getSystemProxy",
     getSystemProxy,
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
       suspense: false,
       errorRetryCount: 3,
     },
