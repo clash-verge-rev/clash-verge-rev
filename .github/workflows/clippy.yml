@@ -2,6 +2,10 @@ name: Clippy Lint
 
 on:
   pull_request:
+    paths:
+      - "src-tauri/**"
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+  workflow_dispatch:
 
 jobs:
   clippy:
