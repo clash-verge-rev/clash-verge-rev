@@ -295,6 +295,7 @@ pub fn create_window(is_show: bool) -> bool {
 
     if !is_show {
         logging!(info, Type::Window, true, "静默模式启动时不创建窗口");
+        lightweight::set_lightweight_mode(true);
         handle::Handle::notify_startup_completed();
         return false;
     }

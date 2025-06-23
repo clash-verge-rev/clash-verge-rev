@@ -8,11 +8,9 @@ if git diff --cached --name-only | grep -q '^src-tauri/'; then
     fi
 fi
 
-remote_name="$1"
-remote_url=$(git remote get-url "$remote_name")
-
-if [[ "$remote_url" =~ github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$ ]]; then
-    echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev ($remote_url)"
+# 检查所有 remote url 是否有目标仓库
+if git remote -v | grep -Eq 'github\\.com[:/]+clash-verge-rev/clash-verge-rev(\\.git)?'; then
+    echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev"
     echo "[pre-push] Running pnpm format:check..."
 
     pnpm format:check
