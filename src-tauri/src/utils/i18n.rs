@@ -65,18 +65,29 @@ pub fn t(key: &str) -> String {
         .map(String::from)
         .unwrap_or_else(get_system_language);
 
+    // 支持命名空间: key 形如 "namespace:key"，如 "settings:foo"
+    let (namespace, real_key) = if let Some((ns, k)) = key.split_once(":") {
+        (ns, k)
+    } else {
+        ("translation", key)
+    };
+
+    // 优先查找当前语言的命名空间
     if let Some(text) = TRANSLATIONS
         .get(&current_lang)
-        .and_then(|trans| trans.get(key))
+        .and_then(|trans| trans.get(namespace))
+        .and_then(|ns| ns.get(real_key))
         .and_then(|val| val.as_str())
     {
         return text.to_string();
     }
 
+    // 回退到默认语言的命名空间
     if current_lang != DEFAULT_LANGUAGE {
         if let Some(text) = TRANSLATIONS
             .get(DEFAULT_LANGUAGE)
-            .and_then(|trans| trans.get(key))
+            .and_then(|trans| trans.get(namespace))
+            .and_then(|ns| ns.get(real_key))
             .and_then(|val| val.as_str())
         {
             return text.to_string();
