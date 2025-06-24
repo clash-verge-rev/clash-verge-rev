@@ -1,15 +1,45 @@
-use kode_bridge::{errors::AnyError, IpcHttpClient};
+use kode_bridge::{
+    errors::{AnyError, AnyResult},
+    types::Response,
+    IpcHttpClient,
+};
 use serde_json::json;
+use std::sync::OnceLock;
+
+use crate::utils::dirs::ipc_path;
 
 pub struct IpcManager {
-    client: IpcHttpClient,
+    ipc_path: String,
+}
+
+static INSTANCE: OnceLock<IpcManager> = OnceLock::new();
+
+impl IpcManager {
+    pub fn global() -> &'static IpcManager {
+        INSTANCE.get_or_init(|| {
+            let ipc_path_buf = ipc_path().unwrap();
+            let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
+            let instance = IpcManager {
+                ipc_path: ipc_path.to_string(),
+            };
+            println!(
+                "IpcManager initialized with IPC path: {}",
+                instance.ipc_path
+            );
+            instance
+        })
+    }
 }
 
 impl IpcManager {
-    pub async fn new(socket_path: &str) -> Self {
-        IpcManager {
-            client: IpcHttpClient::new(socket_path).await,
-        }
+    pub async fn request(
+        &self,
+        method: &str,
+        path: &str,
+        body: Option<&serde_json::Value>,
+    ) -> AnyResult<Response> {
+        let client = IpcHttpClient::new(&self.ipc_path);
+        Ok(client.request(method, path, body).await?)
     }
 }
 
@@ -20,18 +50,18 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, AnyError> {
-        // Ok(self.client.request(method, path, body).await?.json()?)
-        let response = self.client.request(method, path, body).await?;
-        if method == "PATCH" {
-            if response.status == 204 {
-                Ok(serde_json::json!({"code": 204}))
-            } else {
-                Ok(response.json()?)
+        let response = IpcManager::global().request(method, path, body).await?;
+        match method {
+            "GET" => Ok(response.json()?),
+            "PATCH" => {
+                if response.status == 204 {
+                    Ok(serde_json::json!({"code": 204}))
+                } else {
+                    Ok(response.json()?)
+                }
             }
-        } else if method == "PUT" {
-            Ok(json!(response.body))
-        } else {
-            Ok(response.json()?)
+            "PUT" => Ok(json!(response.body)),
+            _ => Ok(response.json()?),
         }
     }
 

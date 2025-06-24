@@ -3,8 +3,8 @@ use crate::AppHandleManager;
 use crate::{
     config::Config,
     core::{handle, sysopt, CoreManager},
+    ipc::IpcManager,
     logging,
-    module::mihomo::MihomoManager,
     utils::logging::Type,
 };
 
@@ -107,7 +107,7 @@ async fn clean_async() -> bool {
             });
             match timeout(
                 Duration::from_secs(2),
-                MihomoManager::global().patch_configs(disable_tun),
+                IpcManager::global().patch_configs(disable_tun),
             )
             .await
             {
