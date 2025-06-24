@@ -83,7 +83,7 @@
     "@types/lodash-es": "^4.17.12",
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
-    "@vitejs/plugin-legacy": "^6.1.1",
+    "@vitejs/plugin-legacy": "^7.0.0",
     "@vitejs/plugin-react": "4.5.2",
     "adm-zip": "^0.5.16",
     "commander": "^14.0.0",
@@ -95,7 +95,7 @@
     "sass": "^1.89.2",
     "terser": "^5.43.1",
     "typescript": "^5.8.3",
-    "vite": "^6.3.5",
+    "vite": "^7.0.0",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.3.0"
   },
