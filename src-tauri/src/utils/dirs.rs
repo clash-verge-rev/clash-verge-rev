@@ -245,18 +245,18 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
 
 #[cfg(target_os = "macos")]
 pub fn ipc_path() -> Result<PathBuf> {
-    let res_dir = app_resources_dir()?;
+    let res_dir = app_home_dir()?;
     Ok(res_dir.join("mihomo.sock"))
 }
 
 #[cfg(target_os = "linux")]
 pub fn ipc_path() -> Result<PathBuf> {
-    let res_dir = app_resources_dir()?;
+    let res_dir = app_home_dir()?;
     Ok(res_dir.join("mihomo.sock"))
 }
 
 #[cfg(target_os = "windows")]
 pub fn ipc_path() -> Result<PathBuf> {
-    let res_dir = app_resources_dir()?;
+    let res_dir = app_home_dir()?;
     Ok(res_dir.join(r"\\.\pipe\mihomo"))
 }

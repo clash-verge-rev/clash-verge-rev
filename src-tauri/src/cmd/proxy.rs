@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::{core::handle, module::mihomo::MihomoManager, state::proxy::CmdProxyState};
+use crate::{core::handle, ipc::IpcManager, state::proxy::CmdProxyState};
 use std::{
     sync::Mutex,
     time::{Duration, Instant},
@@ -11,7 +11,7 @@ const PROXIES_REFRESH_INTERVAL: Duration = Duration::from_secs(1);
 
 #[tauri::command]
 pub async fn get_proxies() -> CmdResult<serde_json::Value> {
-    let manager = MihomoManager::global();
+    let manager = IpcManager::global();
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let cmd_proxy_state = app_handle.state::<Mutex<CmdProxyState>>();
@@ -27,7 +27,10 @@ pub async fn get_proxies() -> CmdResult<serde_json::Value> {
     };
 
     if should_refresh {
-        let proxies = manager.get_refresh_proxies().await?;
+        let proxies = manager
+            .get_refresh_proxies()
+            .await
+            .map_err(|e| e.to_string())?;
         {
             let mut state = cmd_proxy_state.lock().unwrap();
             state.proxies = Box::new(proxies);
@@ -46,13 +49,16 @@ pub async fn get_proxies() -> CmdResult<serde_json::Value> {
 /// 强制刷新代理缓存用于profile切换
 #[tauri::command]
 pub async fn force_refresh_proxies() -> CmdResult<serde_json::Value> {
-    let manager = MihomoManager::global();
+    let manager = IpcManager::global();
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let cmd_proxy_state = app_handle.state::<Mutex<CmdProxyState>>();
 
     log::debug!(target: "app", "强制刷新代理缓存");
 
-    let proxies = manager.get_refresh_proxies().await?;
+    let proxies = manager
+        .get_refresh_proxies()
+        .await
+        .map_err(|e| e.to_string())?;
 
     {
         let mut state = cmd_proxy_state.lock().unwrap();
@@ -81,8 +87,11 @@ pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
     };
 
     if should_refresh {
-        let manager = MihomoManager::global();
-        let providers = manager.get_providers_proxies().await?;
+        let manager = IpcManager::global();
+        let providers = manager
+            .get_providers_proxies()
+            .await
+            .map_err(|e| e.to_string())?;
         {
             let mut state = cmd_proxy_state.lock().unwrap();
             state.providers_proxies = Box::new(providers);

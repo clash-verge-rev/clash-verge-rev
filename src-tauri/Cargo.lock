@@ -3645,9 +3645,9 @@ dependencies = [
 
 [[package]]
 name = "kode-bridge"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e9ab2004b6a6fe7afdb15f70690605d8599453fb8a9371dcdf7f3ca7f7672a2"
+checksum = "e04a2994f37fa3c40940dbf302050199607072ff826ff6c126e02c4faf34bd3a"
 dependencies = [
  "dotenv",
  "env",
