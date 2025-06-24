@@ -88,15 +88,6 @@ pub fn update_ui_ready_stage(stage: UiReadyStage) {
     *stage_lock = stage;
     *time_lock = Instant::now();
 
-    logging!(
-        info,
-        Type::Window,
-        true,
-        "UI准备阶段更新: {:?}, 耗时: {:?}ms",
-        stage,
-        time_lock.elapsed().as_millis()
-    );
-
     // 如果是最终阶段，标记UI完全就绪
     if stage == UiReadyStage::Ready {
         mark_ui_ready();
