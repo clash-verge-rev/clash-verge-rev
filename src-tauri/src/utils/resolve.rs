@@ -52,14 +52,12 @@ pub enum UiReadyStage {
 #[derive(Debug)]
 struct UiReadyState {
     stage: RwLock<UiReadyStage>,
-    last_update: RwLock<Instant>,
 }
 
 impl Default for UiReadyState {
     fn default() -> Self {
         Self {
             stage: RwLock::new(UiReadyStage::NotStarted),
-            last_update: RwLock::new(Instant::now()),
         }
     }
 }
@@ -83,20 +81,8 @@ fn get_ui_ready_state() -> &'static Arc<UiReadyState> {
 pub fn update_ui_ready_stage(stage: UiReadyStage) {
     let state = get_ui_ready_state();
     let mut stage_lock = state.stage.write();
-    let mut time_lock = state.last_update.write();
 
     *stage_lock = stage;
-    *time_lock = Instant::now();
-
-    logging!(
-        info,
-        Type::Window,
-        true,
-        "UI准备阶段更新: {:?}, 耗时: {:?}ms",
-        stage,
-        time_lock.elapsed().as_millis()
-    );
-
     // 如果是最终阶段，标记UI完全就绪
     if stage == UiReadyStage::Ready {
         mark_ui_ready();
@@ -119,9 +105,7 @@ pub fn reset_ui_ready() {
     {
         let state = get_ui_ready_state();
         let mut stage = state.stage.write();
-        let mut time = state.last_update.write();
         *stage = UiReadyStage::NotStarted;
-        *time = Instant::now();
     }
     logging!(info, Type::Window, true, "UI就绪状态已重置");
 }
