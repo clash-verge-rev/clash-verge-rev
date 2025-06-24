@@ -3,6 +3,7 @@ pub mod config;
 mod core;
 mod enhance;
 mod feat;
+mod ipc;
 mod module;
 mod process;
 mod state;

@@ -1,5 +1,7 @@
 use crate::config::Config;
-use mihomo_api;
+use crate::ipc::IpcManager;
+#[cfg(unix)]
+use crate::utils::dirs::{ipc_path, path_to_str};
 use once_cell::sync::Lazy;
 use parking_lot::{Mutex, RwLock};
 use std::time::{Duration, Instant};
@@ -15,7 +17,7 @@ pub struct Rate {
 }
 // 缓存MihomoManager实例
 struct MihomoCache {
-    manager: mihomo_api::MihomoManager,
+    manager: IpcManager,
     created_at: Instant,
     server: String,
 }
@@ -34,7 +36,7 @@ impl MihomoManager {
         &INSTANCE
     }
 
-    pub fn global() -> mihomo_api::MihomoManager {
+    pub fn global() -> IpcManager {
         let instance = MihomoManager::__global();
 
         // 尝试从缓存读取（只需读锁）
@@ -66,7 +68,7 @@ impl MihomoManager {
                 if cache_entry.server == current_server
                     && cache_entry.created_at.elapsed() < CACHE_TTL
                 {
-                    return cache_entry.manager.clone();
+                    return cache_entry.manager;
                 }
             }
         }
@@ -74,13 +76,16 @@ impl MihomoManager {
         // 创建新实例
         let (current_server, headers) = MihomoManager::get_clash_client_info()
             .unwrap_or_else(|| (String::new(), HeaderMap::new()));
-        let manager = mihomo_api::MihomoManager::new(current_server.clone(), headers);
+        // ! unix
+        #[cfg(unix)]
+        let manager = IpcManager::new(path_to_str(ipc_path()?));
+        // ! windows
 
         // 更新缓存
         {
             let mut cache = instance.mihomo_cache.write();
             *cache = Some(MihomoCache {
-                manager: manager.clone(),
+                manager: manager,
                 created_at: Instant::now(),
                 server: current_server,
             });
