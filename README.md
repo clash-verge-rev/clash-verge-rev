@@ -7,11 +7,11 @@
 
 > [!NOTE]
 >
-> 此仓库 fork 自 1.6.0 版本的 [clash-verge-rev](https://github.com/clash-verge-rev/clash-verge-rev)，仅仅是为了实现一些自己想要的功能，因为我基本上都在使用Linux，所以不能保证其他系统使用中出现的问题。
+> 此仓库 Fork 自 1.6.0 版本的 ___Clash Verge Rev___，仅为了实现一些自己想要的功能，由于我基本上都在使用 Linux，所以不能保证在其他系统使用中出现的问题。
 >
 > 其他 Clash 系列桌面端软件
 >
-> - [Mihomo Party](https://github.com/mihomo-party-org/mihomo-party)
+> - [Sparkle](https://github.com/xishang0128/sparkle)
 > - [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev)
 > - [Clash Nyanpasu](https://github.com/libnyanpasu/clash-nyanpasu)
 > - [FlClash](https://github.com/chen08209/FlClash)
@@ -75,6 +75,10 @@ Clash Verge Self was based on or inspired by these projects and so on:
 - [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo): A rule-based tunnel in Go.
 - [Fndroid/clash_for_windows_pkg](https://github.com/Fndroid/clash_for_windows_pkg): A Windows/macOS GUI based on Clash.
 - [vitejs/vite](https://github.com/vitejs/vite): Next generation frontend tooling. It's fast!
+
+## Activity
+
+![Alt](https://repobeats.axiom.co/api/embed/75152e62bbdd3da71dbc8519238a1741c97ab448.svg "Repobeats analytics image")
 
 ## License
 
