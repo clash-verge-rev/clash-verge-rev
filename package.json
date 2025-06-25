@@ -89,7 +89,7 @@
     "adm-zip": "0.5.16",
     "cli-color": "2.0.4",
     "clsx": "2.1.1",
-    "concurrently": "9.1.2",
+    "concurrently": "9.2.0",
     "cross-env": "7.0.3",
     "fs-extra": "11.3.0",
     "https-proxy-agent": "7.0.6",
