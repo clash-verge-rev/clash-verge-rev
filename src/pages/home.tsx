@@ -37,11 +37,7 @@ import { BasePage } from "@/components/base";
 import { ClashInfoCard } from "@/components/home/clash-info-card";
 import { SystemInfoCard } from "@/components/home/system-info-card";
 import { useLockFn } from "ahooks";
-import {
-  entry_lightweight_mode,
-  openWebUrl,
-  patchVergeConfig,
-} from "@/services/cmds";
+import { entry_lightweight_mode, openWebUrl } from "@/services/cmds";
 import { TestCard } from "@/components/home/test-card";
 import { IpInfoCard } from "@/components/home/ip-info-card";
 

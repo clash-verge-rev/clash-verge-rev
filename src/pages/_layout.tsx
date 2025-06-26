@@ -21,7 +21,6 @@ import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import getSystem from "@/utils/get-system";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-import { getPortableFlag } from "@/services/cmds";
 import React from "react";
 import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";

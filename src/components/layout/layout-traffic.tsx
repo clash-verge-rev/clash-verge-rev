@@ -11,7 +11,7 @@ import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 import { useVisibility } from "@/hooks/use-visibility";
 import parseTraffic from "@/utils/parse-traffic";
 import useSWRSubscription from "swr/subscription";
-import { createSockette, createAuthSockette } from "@/utils/websocket";
+import { createAuthSockette } from "@/utils/websocket";
 import { useTranslation } from "react-i18next";
 import { isDebugEnabled, gc } from "@/services/api";
 

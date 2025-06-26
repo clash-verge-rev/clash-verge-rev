@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import {
   SettingsRounded,
   PlayCircleOutlineRounded,
@@ -20,16 +20,8 @@ import { GuardState } from "@/components/setting/mods/guard-state";
 import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useVerge } from "@/hooks/use-verge";
-import {
-  getSystemProxy,
-  getAutotemProxy,
-  getRunningMode,
-  installService,
-  restartCore,
-  isServiceAvailable,
-} from "@/services/cmds";
-import { useLockFn } from "ahooks";
-import { closeAllConnections } from "@/services/api";
+import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
+import { getRunningMode } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 
@@ -48,12 +40,13 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const theme = useTheme();
   const { installServiceAndRestartCore } = useServiceInstaller();
 
-  const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
-  const { data: autoproxy } = useSWR("getAutotemProxy", getAutotemProxy);
-  const { data: runningMode, mutate: mutateRunningMode } = useSWR(
-    "getRunningMode",
-    getRunningMode,
-  );
+  const {
+    actualState: systemProxyActualState,
+    indicator: systemProxyIndicator,
+    toggleSystemProxy,
+  } = useSystemProxyState();
+
+  const { data: runningMode } = useSWR("getRunningMode", getRunningMode);
 
   // 是否以sidecar模式运行
   const isSidecarMode = runningMode === "Sidecar";
@@ -61,8 +54,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
 
-  const { enable_tun_mode, enable_system_proxy, proxy_auto_config } =
-    verge ?? {};
+  const { enable_tun_mode, enable_system_proxy } = verge ?? {};
 
   // 确定当前显示哪个开关
   const isSystemProxyMode = label === t("System Proxy") || !label;
@@ -71,12 +63,6 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
-  };
-
-  const updateProxyStatus = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await mutate("getSystemProxy");
-    await mutate("getAutotemProxy");
   };
 
   // 安装系统服务
@@ -113,7 +99,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {enable_system_proxy ? (
+            {systemProxyIndicator ? (
               <PlayCircleOutlineRounded
                 sx={{ color: "success.main", mr: 1.5, fontSize: 28 }}
               />
@@ -155,18 +141,11 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
             </Tooltip>
 
             <GuardState
-              value={enable_system_proxy ?? false}
+              value={systemProxyActualState}
               valueProps="checked"
               onCatch={onError}
               onFormat={onSwitchFormat}
-              onChange={(e) => onChangeData({ enable_system_proxy: e })}
-              onGuard={async (e) => {
-                if (!e && verge?.auto_close_connection) {
-                  closeAllConnections();
-                }
-                await patchVerge({ enable_system_proxy: e });
-                await updateProxyStatus();
-              }}
+              onGuard={(e) => toggleSystemProxy(e)}
             >
               <Switch edge="end" />
             </GuardState>

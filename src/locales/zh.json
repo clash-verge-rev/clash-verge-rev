@@ -624,6 +624,7 @@
   "No (IP Banned By Disney+)": "不支持（IP被Disney+禁止）",
   "Unsupported Country/Region": "不支持的国家/地区",
   "Failed (Network Connection)": "测试失败（网络连接问题）",
+<<<<<<< feat-notify
   "notification.dashboardToggled.title": "仪表盘已切换",
   "notification.dashboardToggled.body": "已通过快捷键切换仪表盘显示状态",
   "notification.clashModeChanged.title": "Clash 模式切换",
@@ -638,4 +639,7 @@
   "notification.appQuit.body": "已通过快捷键退出应用",
   "notification.appHidden.title": "应用隐藏",
   "notification.appHidden.body": "已通过快捷键隐藏应用窗口"
+=======
+  "Invalid Profile URL": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址"
+>>>>>>> dev
 }

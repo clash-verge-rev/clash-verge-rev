@@ -1,12 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { useVerge } from "@/hooks/use-verge";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
 import {
   getProxies,
@@ -74,7 +68,7 @@ export const AppDataProvider = ({
     getProxies,
     {
       refreshInterval: 5000,
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       suspense: false,
       errorRetryCount: 3,
     },
@@ -249,7 +243,8 @@ export const AppDataProvider = ({
     "getSystemProxy",
     getSystemProxy,
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
       suspense: false,
       errorRetryCount: 3,
     },

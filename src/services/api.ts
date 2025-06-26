@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { getClashInfo } from "./cmds";
 import { invoke } from "@tauri-apps/api/core";
-import { useLockFn } from "ahooks";
 
 let instancePromise: Promise<AxiosInstance> = null!;
 

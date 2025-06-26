@@ -1,5 +1,5 @@
-import useSWR, { mutate } from "swr";
-import { useRef, useEffect, useState } from "react";
+import { mutate } from "swr";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   SettingsRounded,
@@ -10,24 +10,18 @@ import {
   DeleteForeverRounded,
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
+import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { DialogRef, Switch } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { GuardState } from "./mods/guard-state";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import { TunViewer } from "./mods/tun-viewer";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import {
-  getSystemProxy,
-  getAutotemProxy,
-  installService,
-  uninstallService,
-  restartCore,
-  stopCore,
-} from "@/services/cmds";
+import { uninstallService, restartCore, stopCore } from "@/services/cmds";
 import { useLockFn } from "ahooks";
 import { Button, Tooltip } from "@mui/material";
 import { useSystemState } from "@/hooks/use-system-state";
-import { closeAllConnections } from "@/services/api";
+
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 
@@ -40,9 +34,11 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { verge, mutateVerge, patchVerge } = useVerge();
   const { installServiceAndRestartCore } = useServiceInstaller();
-
-  const { data: sysproxy } = useSWR("getSystemProxy", getSystemProxy);
-  const { data: autoproxy } = useSWR("getAutotemProxy", getAutotemProxy);
+  const {
+    actualState: systemProxyActualState,
+    indicator: systemProxyIndicator,
+    toggleSystemProxy,
+  } = useSystemProxyState();
 
   const { isAdminMode, isServiceMode, mutateRunningMode } = useSystemState();
 
@@ -52,24 +48,12 @@ const SettingSystem = ({ onError }: Props) => {
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
 
-  const {
-    enable_tun_mode,
-    enable_auto_launch,
-    enable_silent_start,
-    enable_system_proxy,
-    proxy_auto_config,
-    enable_hover_jump_navigator,
-  } = verge ?? {};
+  const { enable_tun_mode, enable_auto_launch, enable_silent_start } =
+    verge ?? {};
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
-  };
-
-  const updateProxyStatus = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await mutate("getSystemProxy");
-    await mutate("getAutotemProxy");
   };
 
   // 抽象服务操作逻辑
@@ -195,13 +179,7 @@ const SettingSystem = ({ onError }: Props) => {
               icon={SettingsRounded}
               onClick={() => sysproxyRef.current?.open()}
             />
-            {proxy_auto_config ? (
-              autoproxy?.enable ? (
-                <PlayArrowRounded sx={{ color: "success.main", mr: 1 }} />
-              ) : (
-                <PauseRounded sx={{ color: "error.main", mr: 1 }} />
-              )
-            ) : sysproxy?.enable ? (
+            {systemProxyIndicator ? (
               <PlayArrowRounded sx={{ color: "success.main", mr: 1 }} />
             ) : (
               <PauseRounded sx={{ color: "error.main", mr: 1 }} />
@@ -210,44 +188,13 @@ const SettingSystem = ({ onError }: Props) => {
         }
       >
         <GuardState
-          value={
-            // 此行为跟随代理状态，异常关闭时按钮应当也关闭
-            // 如果 autoproxy.enable 和 sysproxy.enable 都为 false，则强制为 false
-            autoproxy?.enable === false && sysproxy?.enable === false
-              ? false
-              : (enable_system_proxy ?? false)
-          }
+          value={systemProxyActualState}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => {
-            if (autoproxy?.enable === false && sysproxy?.enable === false) {
-              onChangeData({ enable_system_proxy: !enable_system_proxy });
-            } else {
-              onChangeData({ enable_system_proxy: e });
-            }
-          }}
-          onGuard={async (e) => {
-            if (autoproxy?.enable === false && sysproxy?.enable === false) {
-              await patchVerge({ enable_system_proxy: !enable_system_proxy });
-              await updateProxyStatus();
-              return;
-            }
-            if (!e && verge?.auto_close_connection) {
-              closeAllConnections();
-            }
-            await patchVerge({ enable_system_proxy: e });
-            await updateProxyStatus();
-          }}
+          onGuard={(e) => toggleSystemProxy(e)}
         >
-          <Switch
-            edge="end"
-            checked={
-              autoproxy?.enable === false && sysproxy?.enable === false
-                ? false
-                : (enable_system_proxy ?? false)
-            }
-          />
+          <Switch edge="end" checked={systemProxyActualState} />
         </GuardState>
       </SettingItem>
 

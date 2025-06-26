@@ -86,20 +86,27 @@ pub struct WindowManager;
 
 impl WindowManager {
     pub fn get_main_window_state() -> WindowState {
-        if let Some(window) = Self::get_main_window() {
-            if window.is_minimized().unwrap_or(false) {
-                WindowState::Minimized
-            } else if window.is_visible().unwrap_or(false) {
-                if window.is_focused().unwrap_or(false) {
+        match Self::get_main_window() {
+            Some(window) => {
+                let is_minimized = window.is_minimized().unwrap_or(false);
+                let is_visible = window.is_visible().unwrap_or(false);
+                let is_focused = window.is_focused().unwrap_or(false);
+
+                if is_minimized {
+                    return WindowState::Minimized;
+                }
+
+                if !is_visible {
+                    return WindowState::Hidden;
+                }
+
+                if is_focused {
                     WindowState::VisibleFocused
                 } else {
                     WindowState::VisibleUnfocused
                 }
-            } else {
-                WindowState::Hidden
             }
-        } else {
-            WindowState::NotExist
+            None => WindowState::NotExist,
         }
     }
 
@@ -316,17 +323,21 @@ impl WindowManager {
     pub fn hide_main_window() -> WindowOperationResult {
         logging!(info, Type::Window, true, "开始隐藏主窗口");
 
-        if let Some(window) = Self::get_main_window() {
-            if window.hide().is_ok() {
-                logging!(info, Type::Window, true, "窗口已隐藏");
-                WindowOperationResult::Hidden
-            } else {
-                logging!(warn, Type::Window, true, "隐藏窗口失败");
-                WindowOperationResult::Failed
+        match Self::get_main_window() {
+            Some(window) => match window.hide() {
+                Ok(_) => {
+                    logging!(info, Type::Window, true, "窗口已隐藏");
+                    WindowOperationResult::Hidden
+                }
+                Err(e) => {
+                    logging!(warn, Type::Window, true, "隐藏窗口失败: {}", e);
+                    WindowOperationResult::Failed
+                }
+            },
+            None => {
+                logging!(info, Type::Window, true, "窗口不存在，无需隐藏");
+                WindowOperationResult::NoAction
             }
-        } else {
-            logging!(info, Type::Window, true, "窗口不存在，无需隐藏");
-            WindowOperationResult::NoAction
         }
     }
 

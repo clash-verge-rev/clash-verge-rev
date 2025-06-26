@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {

@@ -624,6 +624,7 @@
   "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
   "Unsupported Country/Region": "Unsupported Country/Region",
   "Failed (Network Connection)": "Failed (Network Connection)",
+<<<<<<< feat-notify
   "notification.dashboardToggled.title": "Dashboard Toggled",
   "notification.dashboardToggled.body": "Dashboard visibility toggled by hotkey",
   "notification.clashModeChanged.title": "Clash Mode Changed",
@@ -638,4 +639,7 @@
   "notification.appQuit.body": "APP quit by hotkey",
   "notification.appHidden.title": "APP Hidden",
   "notification.appHidden.body": "APP window hidden by hotkey"
+=======
+  "Invalid Profile URL": "Invalid profile URL. Please enter a URL starting with http:// or https://"
+>>>>>>> dev
 }
