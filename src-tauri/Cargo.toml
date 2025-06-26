@@ -57,9 +57,9 @@ tauri = { version = "2.6.0", features = [
 network-interface = { version = "2.0.1", features = ["serde"] }
 tauri-plugin-shell = "2.3.0"
 tauri-plugin-dialog = "2.3.0"
-tauri-plugin-fs = "2.3.0"
-tauri-plugin-process = "2.2.2"
-tauri-plugin-clipboard-manager = "2.2.3"
+tauri-plugin-fs = "2.4.0"
+tauri-plugin-process = "2.3.0"
+tauri-plugin-clipboard-manager = "2.3.0"
 tauri-plugin-deep-link = "2.4.0"
 tauri-plugin-devtools = "2.0.0"
 tauri-plugin-window-state = "2.3.0"
@@ -106,7 +106,7 @@ users = "0.11.0"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.0"
 tauri-plugin-global-shortcut = "2.3.0"
-tauri-plugin-updater = "2.8.1"
+tauri-plugin-updater = "2.9.0"
 
 [features]
 default = ["custom-protocol"]
