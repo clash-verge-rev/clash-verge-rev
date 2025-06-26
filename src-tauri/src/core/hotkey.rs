@@ -1,3 +1,4 @@
+use crate::utils::notification::{notify_event, NotificationEvent};
 use crate::{
     config::Config, core::handle, feat, logging, logging_error,
     module::lightweight::entry_lightweight_mode, utils::logging::Type,
@@ -133,14 +134,11 @@ impl Hotkey {
             manager.unregister(hotkey)?;
         }
 
-        let f = match func.trim() {
+        let app_handle_clone = app_handle.clone();
+        let f: Box<dyn Fn() + Send + Sync> = match func.trim() {
             "open_or_close_dashboard" => {
-                logging!(
-                    debug,
-                    Type::Hotkey,
-                    "Registering open_or_close_dashboard function"
-                );
-                || {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
                     logging!(
                         debug,
                         Type::Hotkey,
@@ -162,18 +160,75 @@ impl Hotkey {
                         Type::Hotkey,
                         "=== Hotkey Dashboard Window Operation End ==="
                     );
-                }
+                    notify_event(&app_handle, NotificationEvent::DashboardToggled);
+                })
             }
-            "clash_mode_rule" => || feat::change_clash_mode("rule".into()),
-            "clash_mode_global" => || feat::change_clash_mode("global".into()),
-            "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
-            "toggle_system_proxy" => || feat::toggle_system_proxy(),
-            "toggle_tun_mode" => || feat::toggle_tun_mode(None),
-            "entry_lightweight_mode" => || entry_lightweight_mode(),
-            "quit" => || feat::quit(),
+            "clash_mode_rule" => {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
+                    feat::change_clash_mode("rule".into());
+                    notify_event(
+                        &app_handle,
+                        NotificationEvent::ClashModeChanged { mode: "Rule" },
+                    );
+                })
+            }
+            "clash_mode_global" => {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
+                    feat::change_clash_mode("global".into());
+                    notify_event(
+                        &app_handle,
+                        NotificationEvent::ClashModeChanged { mode: "Global" },
+                    );
+                })
+            }
+            "clash_mode_direct" => {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
+                    feat::change_clash_mode("direct".into());
+                    notify_event(
+                        &app_handle,
+                        NotificationEvent::ClashModeChanged { mode: "Direct" },
+                    );
+                })
+            }
+            "toggle_system_proxy" => {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
+                    feat::toggle_system_proxy();
+                    notify_event(&app_handle, NotificationEvent::SystemProxyToggled);
+                })
+            }
+            "toggle_tun_mode" => {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
+                    feat::toggle_tun_mode(None);
+                    notify_event(&app_handle, NotificationEvent::TunModeToggled);
+                })
+            }
+            "entry_lightweight_mode" => {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
+                    entry_lightweight_mode();
+                    notify_event(&app_handle, NotificationEvent::LightweightModeEntered);
+                })
+            }
+            "quit" => {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
+                    feat::quit();
+                    notify_event(&app_handle, NotificationEvent::AppQuit);
+                })
+            }
             #[cfg(target_os = "macos")]
-            "hide" => || feat::hide(),
-
+            "hide" => {
+                let app_handle = app_handle_clone.clone();
+                Box::new(move || {
+                    feat::hide();
+                    notify_event(&app_handle, NotificationEvent::AppHidden);
+                })
+            }
             _ => {
                 logging!(error, Type::Hotkey, "Invalid function: {}", func);
                 bail!("invalid function \"{func}\"");
