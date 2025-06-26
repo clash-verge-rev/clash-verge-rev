@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# $1: remote name (e.g., origin)
+# $2: remote url (e.g., git@github.com:clash-verge-rev/clash-verge-rev.git)
+
 if git diff --cached --name-only | grep -q '^src-tauri/'; then
     cargo clippy --manifest-path ./src-tauri/Cargo.toml
     if [ $? -ne 0 ]; then
@@ -8,9 +11,9 @@ if git diff --cached --name-only | grep -q '^src-tauri/'; then
     fi
 fi
 
-# 检查所有 remote url 是否有目标仓库
-if git remote -v | grep -Eq 'github\\.com[:/]+clash-verge-rev/clash-verge-rev(\\.git)?'; then
-    echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev"
+# 只在 push 到 origin 并且 origin 指向目标仓库时执行格式检查
+if [ "$1" = "origin" ] && echo "$2" | grep -Eq 'github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$'; then
+    echo "[pre-push] Detected push to origin (clash-verge-rev/clash-verge-rev)"
     echo "[pre-push] Running pnpm format:check..."
 
     pnpm format:check
