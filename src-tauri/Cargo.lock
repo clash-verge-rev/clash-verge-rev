@@ -2679,7 +2679,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.58.0",
+ "windows-core 0.61.2",
 ]
 
 [[package]]
@@ -6342,9 +6342,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-global-shortcut"
-version = "2.2.1"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31919f3c07bcb585afef217c0c33cde80da9ebccf5b8e2c90e0e0a535b14ab47"
+checksum = "6df9f0f7bf2fe768b85fee4951c2505a35b72c44df1f6403e74e110bc13c5f58"
 dependencies = [
  "global-hotkey",
  "log",
@@ -7782,7 +7782,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
