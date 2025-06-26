@@ -27,54 +27,38 @@ pub fn notify_event(app: &AppHandle, event: NotificationEvent) {
     use crate::utils::i18n::t;
     match event {
         NotificationEvent::DashboardToggled => {
-            notify(
-                app,
-                &t("notification.dashboardToggled.title"),
-                &t("notification.dashboardToggled.body"),
-            );
+            notify(app, &t("DashboardToggledTitle"), &t("DashboardToggledBody"));
         }
         NotificationEvent::ClashModeChanged { mode } => {
             notify(
                 app,
-                &t("notification.clashModeChanged.title"),
-                &t_with_args("notification.clashModeChanged.body", mode),
+                &t("ClashModeChangedTitle"),
+                &t_with_args("ClashModeChangedBody", mode),
             );
         }
         NotificationEvent::SystemProxyToggled => {
             notify(
                 app,
-                &t("notification.systemProxyToggled.title"),
-                &t("notification.systemProxyToggled.body"),
+                &t("SystemProxyToggledTitle"),
+                &t("SystemProxyToggledBody"),
             );
         }
         NotificationEvent::TunModeToggled => {
-            notify(
-                app,
-                &t("notification.tunModeToggled.title"),
-                &t("notification.tunModeToggled.body"),
-            );
+            notify(app, &t("TunModeToggledTitle"), &t("TunModeToggledBody"));
         }
         NotificationEvent::LightweightModeEntered => {
             notify(
                 app,
-                &t("notification.lightweightModeEntered.title"),
-                &t("notification.lightweightModeEntered.body"),
+                &t("LightweightModeEnteredTitle"),
+                &t("LightweightModeEnteredBody"),
             );
         }
         NotificationEvent::AppQuit => {
-            notify(
-                app,
-                &t("notification.appQuit.title"),
-                &t("notification.appQuit.body"),
-            );
+            notify(app, &t("AppQuitTitle"), &t("AppQuitBody"));
         }
         #[cfg(target_os = "macos")]
         NotificationEvent::AppHidden => {
-            notify(
-                app,
-                &t("notification.appHidden.title"),
-                &t("notification.appHidden.body"),
-            );
+            notify(app, &t("AppHiddenTitle"), &t("AppHiddenBody"));
         }
     }
 }
