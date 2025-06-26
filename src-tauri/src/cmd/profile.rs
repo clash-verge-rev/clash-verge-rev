@@ -290,7 +290,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                                 logging!(info, Type::Cmd, true, "目标配置文件语法正确");
                             }
                             Ok(Err(err)) => {
-                                let error_msg = format!(" {}", err);
+                                let error_msg = format!(" {err}");
                                 logging!(
                                     error,
                                     Type::Cmd,
@@ -305,7 +305,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                                 return Ok(false);
                             }
                             Err(join_err) => {
-                                let error_msg = format!("YAML解析任务失败: {}", join_err);
+                                let error_msg = format!("YAML解析任务失败: {join_err}");
                                 logging!(error, Type::Cmd, true, "{}", error_msg);
                                 handle::Handle::notice_message(
                                     "config_validate::yaml_parse_error",
@@ -316,7 +316,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                         }
                     }
                     Ok(Err(err)) => {
-                        let error_msg = format!("无法读取目标配置文件: {}", err);
+                        let error_msg = format!("无法读取目标配置文件: {err}");
                         logging!(error, Type::Cmd, true, "{}", error_msg);
                         handle::Handle::notice_message(
                             "config_validate::file_read_error",
@@ -437,22 +437,22 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             // 强制刷新代理缓存，确保profile切换后立即获取最新节点数据
             crate::process::AsyncHandler::spawn(|| async move {
                 if let Err(e) = super::proxy::force_refresh_proxies().await {
-                    log::warn!(target: "app", "强制刷新代理缓存失败: {}", e);
+                    log::warn!(target: "app", "强制刷新代理缓存失败: {e}");
                 }
             });
 
             crate::process::AsyncHandler::spawn(|| async move {
                 if let Err(e) = Tray::global().update_tooltip() {
-                    log::warn!(target: "app", "异步更新托盘提示失败: {}", e);
+                    log::warn!(target: "app", "异步更新托盘提示失败: {e}");
                 }
 
                 if let Err(e) = Tray::global().update_menu() {
-                    log::warn!(target: "app", "异步更新托盘菜单失败: {}", e);
+                    log::warn!(target: "app", "异步更新托盘菜单失败: {e}");
                 }
 
                 // 保存配置文件
                 if let Err(e) = Config::profiles().data().save_file() {
-                    log::warn!(target: "app", "异步保存配置文件失败: {}", e);
+                    log::warn!(target: "app", "异步保存配置文件失败: {e}");
                 }
             });
 
@@ -495,7 +495,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
                 crate::process::AsyncHandler::spawn(|| async move {
                     if let Err(e) = Config::profiles().data().save_file() {
-                        log::warn!(target: "app", "异步保存恢复配置文件失败: {}", e);
+                        log::warn!(target: "app", "异步保存恢复配置文件失败: {e}");
                     }
                 });
 

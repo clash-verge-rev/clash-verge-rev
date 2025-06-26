@@ -473,7 +473,7 @@ impl Tray {
         tray.on_tray_icon_event(|_, event| {
             let tray_event = { Config::verge().latest().tray_event.clone() };
             let tray_event: String = tray_event.unwrap_or("main_window".into());
-            log::debug!(target: "app","tray event: {:?}", tray_event);
+            log::debug!(target: "app","tray event: {tray_event:?}");
 
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
@@ -497,7 +497,7 @@ impl Tray {
                             crate::module::lightweight::exit_lightweight_mode();
                         }
                         let result = WindowManager::show_main_window();
-                        log::info!(target: "app", "窗口显示结果: {:?}", result);
+                        log::info!(target: "app", "窗口显示结果: {result:?}");
                     }
                     _ => {}
                 }
@@ -558,7 +558,7 @@ fn create_tray_menu(
                 .is_current_profile_index(profile_uid.to_string());
             CheckMenuItem::with_id(
                 app_handle,
-                format!("profiles_{}", profile_uid),
+                format!("profiles_{profile_uid}"),
                 t(profile_name),
                 true,
                 is_current_profile,
@@ -781,7 +781,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 crate::module::lightweight::exit_lightweight_mode();
             }
             let result = WindowManager::show_main_window();
-            log::info!(target: "app", "窗口显示结果: {:?}", result);
+            log::info!(target: "app", "窗口显示结果: {result:?}");
         }
         "system_proxy" => {
             feat::toggle_system_proxy();
@@ -816,7 +816,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             if was_lightweight {
                 use crate::utils::window_manager::WindowManager;
                 let result = WindowManager::show_main_window();
-                log::info!(target: "app", "退出轻量模式后显示主窗口: {:?}", result);
+                log::info!(target: "app", "退出轻量模式后显示主窗口: {result:?}");
             }
         }
         "quit" => {
@@ -830,6 +830,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     }
 
     if let Err(e) = Tray::global().update_all_states() {
-        log::warn!(target: "app", "更新托盘状态失败: {}", e);
+        log::warn!(target: "app", "更新托盘状态失败: {e}");
     }
 }

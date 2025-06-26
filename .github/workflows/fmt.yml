@@ -9,6 +9,7 @@ on:
 
 jobs:
   rustfmt:
+    if: github.event_name != 'pull_request' || contains(join(github.event.pull_request.changed_files.*.filename, ','), 'src-tauri/')
     runs-on: ubuntu-latest
 
     steps:

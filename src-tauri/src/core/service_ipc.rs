@@ -257,7 +257,7 @@ pub async fn send_ipc_request(
 
     logging!(info, Type::Service, true, "正在连接服务 (Unix)...");
 
-    let command_type = format!("{:?}", command);
+    let command_type = format!("{command:?}");
 
     let request = match create_signed_request(command, payload) {
         Ok(req) => req,

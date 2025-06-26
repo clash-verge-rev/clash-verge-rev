@@ -131,9 +131,9 @@ impl IProfiles {
             let path = dirs::app_profiles_dir()?.join(&file);
 
             fs::File::create(path)
-                .with_context(|| format!("failed to create file \"{}\"", file))?
+                .with_context(|| format!("failed to create file \"{file}\""))?
                 .write(file_data.as_bytes())
-                .with_context(|| format!("failed to write to file \"{}\"", file))?;
+                .with_context(|| format!("failed to write to file \"{file}\""))?;
         }
 
         if self.current.is_none()
@@ -234,9 +234,9 @@ impl IProfiles {
                         let path = dirs::app_profiles_dir()?.join(&file);
 
                         fs::File::create(path)
-                            .with_context(|| format!("failed to create file \"{}\"", file))?
+                            .with_context(|| format!("failed to create file \"{file}\""))?
                             .write(file_data.as_bytes())
-                            .with_context(|| format!("failed to write to file \"{}\"", file))?;
+                            .with_context(|| format!("failed to write to file \"{file}\""))?;
                     }
 
                     break;
@@ -531,7 +531,7 @@ impl IProfiles {
                 if Self::is_profile_file(file_name) {
                     // 检查是否为全局扩展文件
                     if protected_files.contains(file_name) {
-                        log::debug!(target: "app", "保护全局扩展配置文件: {}", file_name);
+                        log::debug!(target: "app", "保护全局扩展配置文件: {file_name}");
                         continue;
                     }
 
@@ -540,11 +540,11 @@ impl IProfiles {
                         match std::fs::remove_file(&path) {
                             Ok(_) => {
                                 deleted_files.push(file_name.to_string());
-                                log::info!(target: "app", "已清理冗余文件: {}", file_name);
+                                log::info!(target: "app", "已清理冗余文件: {file_name}");
                             }
                             Err(e) => {
-                                failed_deletions.push(format!("{}: {}", file_name, e));
-                                log::warn!(target: "app", "清理文件失败: {} - {}", file_name, e);
+                                failed_deletions.push(format!("{file_name}: {e}"));
+                                log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
                             }
                         }
                     }
@@ -681,7 +681,7 @@ impl IProfiles {
                 Ok(())
             }
             Err(e) => {
-                log::warn!(target: "app", "自动清理失败: {}", e);
+                log::warn!(target: "app", "自动清理失败: {e}");
                 Ok(())
             }
         }

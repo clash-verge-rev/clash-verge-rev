@@ -53,7 +53,7 @@ pub fn run_once_auto_lightweight() {
 
             // 触发托盘更新
             if let Err(e) = Tray::global().update_part() {
-                log::warn!("Failed to update tray: {}", e);
+                log::warn!("Failed to update tray: {e}");
             }
         }
     });
@@ -77,7 +77,7 @@ pub fn auto_lightweight_mode_init() {
 
             // 确保托盘状态更新
             if let Err(e) = Tray::global().update_part() {
-                log::warn!("Failed to update tray: {}", e);
+                log::warn!("Failed to update tray: {e}");
             }
         }
     }
@@ -96,7 +96,7 @@ pub fn set_lightweight_mode(value: bool) {
 
     // 触发托盘更新
     if let Err(e) = Tray::global().update_part() {
-        log::warn!("Failed to update tray: {}", e);
+        log::warn!("Failed to update tray: {e}");
     }
 }
 

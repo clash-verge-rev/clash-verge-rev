@@ -49,7 +49,7 @@ fn after_change_clash_mode() {
                 }
             }
             Err(err) => {
-                log::error!(target: "app", "Failed to get connections: {}", err);
+                log::error!(target: "app", "Failed to get connections: {err}");
             }
         }
     });
@@ -113,7 +113,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
 
     match response {
         Ok(response) => {
-            log::trace!(target: "app", "test_delay response: {:#?}", response);
+            log::trace!(target: "app", "test_delay response: {response:#?}");
             if response.status().is_success() {
                 Ok(start.elapsed().as_millis() as u32)
             } else {
@@ -121,7 +121,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
             }
         }
         Err(err) => {
-            log::trace!(target: "app", "test_delay error: {:#?}", err);
+            log::trace!(target: "app", "test_delay error: {err:#?}");
             Err(err)
         }
     }

@@ -49,8 +49,8 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
                     Ok(None)
                 }
                 Err(err) => {
-                    let error_msg = format!("Core changed but failed to restart: {}", err);
-                    log::error!(target: "app", "{}", error_msg);
+                    let error_msg = format!("Core changed but failed to restart: {err}");
+                    log::error!(target: "app", "{error_msg}");
                     handle::Handle::notice_message("config_core::change_error", &error_msg);
                     Ok(Some(error_msg))
                 }
@@ -116,7 +116,7 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     // 保存DNS配置到文件
     let yaml_str = serde_yaml::to_string(&dns_config).map_err(|e| e.to_string())?;
     fs::write(&dns_path, yaml_str).map_err(|e| e.to_string())?;
-    log::info!(target: "app", "DNS config saved to {:?}", dns_path);
+    log::info!(target: "app", "DNS config saved to {dns_path:?}");
 
     Ok(())
 }
@@ -137,7 +137,7 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
             let dns_path = match dirs::app_home_dir() {
                 Ok(path) => path.join("dns_config.yaml"),
                 Err(e) => {
-                    log::error!(target: "app", "Failed to get home dir: {}", e);
+                    log::error!(target: "app", "Failed to get home dir: {e}");
                     return;
                 }
             };
@@ -150,7 +150,7 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
             let dns_yaml = match std::fs::read_to_string(&dns_path) {
                 Ok(content) => content,
                 Err(e) => {
-                    log::error!(target: "app", "Failed to read DNS config: {}", e);
+                    log::error!(target: "app", "Failed to read DNS config: {e}");
                     return;
                 }
             };
@@ -163,7 +163,7 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
                     patch
                 }
                 Err(e) => {
-                    log::error!(target: "app", "Failed to parse DNS config: {}", e);
+                    log::error!(target: "app", "Failed to parse DNS config: {e}");
                     return;
                 }
             };
@@ -178,13 +178,13 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
 
             // 首先重新生成配置
             if let Err(err) = Config::generate().await {
-                log::error!(target: "app", "Failed to regenerate config with DNS: {}", err);
+                log::error!(target: "app", "Failed to regenerate config with DNS: {err}");
                 return;
             }
 
             // 然后应用新配置
             if let Err(err) = CoreManager::global().update_config().await {
-                log::error!(target: "app", "Failed to apply config with DNS: {}", err);
+                log::error!(target: "app", "Failed to apply config with DNS: {err}");
             } else {
                 log::info!(target: "app", "DNS config successfully applied");
                 handle::Handle::refresh_clash();
@@ -196,7 +196,7 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
 
             // 重新生成配置
             if let Err(err) = Config::generate().await {
-                log::error!(target: "app", "Failed to regenerate config: {}", err);
+                log::error!(target: "app", "Failed to regenerate config: {err}");
                 return;
             }
 
@@ -207,7 +207,7 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
                     handle::Handle::refresh_clash();
                 }
                 Err(err) => {
-                    log::error!(target: "app", "Failed to apply regenerated config: {}", err);
+                    log::error!(target: "app", "Failed to apply regenerated config: {err}");
                 }
             }
         }

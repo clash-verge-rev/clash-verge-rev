@@ -166,7 +166,7 @@ impl EventDrivenProxyManager {
 
     fn send_event(&self, event: ProxyEvent) {
         if let Err(e) = self.event_sender.send(event) {
-            log::error!(target: "app", "发送代理事件失败: {}", e);
+            log::error!(target: "app", "发送代理事件失败: {e}");
         }
     }
 
@@ -183,7 +183,7 @@ impl EventDrivenProxyManager {
                     event = event_rx.recv() => {
                         match event {
                             Some(event) => {
-                                log::debug!(target: "app", "处理代理事件: {:?}", event);
+                                log::debug!(target: "app", "处理代理事件: {event:?}");
                                 Self::handle_event(&state, event).await;
                             }
                             None => {
@@ -447,7 +447,7 @@ impl EventDrivenProxyManager {
         );
         Autoproxy {
             enable: true,
-            url: format!("http://{}:{}/commands/pac", proxy_host, pac_port),
+            url: format!("http://{proxy_host}:{pac_port}/commands/pac"),
         }
     }
 
@@ -489,7 +489,7 @@ impl EventDrivenProxyManager {
         if custom_bypass.is_empty() {
             default_bypass.to_string()
         } else if use_default {
-            format!("{},{}", default_bypass, custom_bypass)
+            format!("{default_bypass},{custom_bypass}")
         } else {
             custom_bypass
         }

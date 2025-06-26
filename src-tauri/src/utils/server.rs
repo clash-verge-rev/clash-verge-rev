@@ -64,7 +64,7 @@ pub fn embed_server() {
                 .latest()
                 .verge_mixed_port
                 .unwrap_or(Config::clash().data().get_mixed_port());
-            let content = content.replace("%mixed-port%", &format!("{}", port));
+            let content = content.replace("%mixed-port%", &format!("{port}"));
             warp::http::Response::builder()
                 .header("Content-Type", "application/x-ns-proxy-autoconfig")
                 .body(content)

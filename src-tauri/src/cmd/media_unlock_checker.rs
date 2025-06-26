@@ -37,7 +37,7 @@ fn country_code_to_emoji(country_code: &str) -> String {
     let c2 = 0x1F1E6 + (bytes[1] as u32) - ('A' as u32);
 
     char::from_u32(c1)
-        .and_then(|c1| char::from_u32(c2).map(|c2| format!("{}{}", c1, c2)))
+        .and_then(|c1| char::from_u32(c2).map(|c2| format!("{c1}{c2}")))
         .unwrap_or_default()
 }
 
@@ -163,7 +163,7 @@ async fn check_chatgpt_combined(client: &Client) -> Vec<UnlockItem> {
 
                 map.get("loc").map(|loc| {
                     let emoji = country_code_to_emoji(loc);
-                    format!("{}{}", emoji, loc)
+                    format!("{emoji}{loc}")
                 })
             } else {
                 None
@@ -255,7 +255,7 @@ async fn check_gemini(client: &Client) -> UnlockItem {
                     caps.get(1).map(|m| {
                         let country_code = m.as_str();
                         let emoji = country_code_to_emoji(country_code);
-                        format!("{}{}", emoji, country_code)
+                        format!("{emoji}{country_code}")
                     })
                 });
 
@@ -308,7 +308,7 @@ async fn check_youtube_premium(client: &Client) -> UnlockItem {
                         caps.get(1).map(|m| {
                             let country_code = m.as_str().trim();
                             let emoji = country_code_to_emoji(country_code);
-                            format!("{}{}", emoji, country_code)
+                            format!("{emoji}{country_code}")
                         })
                     });
 
@@ -384,10 +384,8 @@ async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     }
 
     // 第二步：使用设备ID检查访问权限 (使用相同的Cookie)
-    let url = format!(
-        "https://ani.gamer.com.tw/ajax/token.php?adID=89422&sn=37783&device={}",
-        device_id
-    );
+    let url =
+        format!("https://ani.gamer.com.tw/ajax/token.php?adID=89422&sn=37783&device={device_id}");
 
     let token_result = match client_with_cookies.get(&url).send().await {
         Ok(response) => {
@@ -431,7 +429,7 @@ async fn check_bahamut_anime(client: &Client) -> UnlockItem {
                     .map(|m| {
                         let country_code = m.as_str();
                         let emoji = country_code_to_emoji(country_code);
-                        format!("{}{}", emoji, country_code)
+                        format!("{emoji}{country_code}")
                     })
             }
             Err(_) => None,
@@ -470,7 +468,7 @@ async fn check_netflix(client: &Client) -> UnlockItem {
 
     // 检查连接失败情况
     if let Err(e) = &result1 {
-        eprintln!("Netflix请求错误: {}", e);
+        eprintln!("Netflix请求错误: {e}");
         return UnlockItem {
             name: "Netflix".to_string(),
             status: "Failed".to_string(),
@@ -487,7 +485,7 @@ async fn check_netflix(client: &Client) -> UnlockItem {
         .await;
 
     if let Err(e) = &result2 {
-        eprintln!("Netflix请求错误: {}", e);
+        eprintln!("Netflix请求错误: {e}");
         return UnlockItem {
             name: "Netflix".to_string(),
             status: "Failed".to_string(),
@@ -541,7 +539,7 @@ async fn check_netflix(client: &Client) -> UnlockItem {
                             return UnlockItem {
                                 name: "Netflix".to_string(),
                                 status: "Yes".to_string(),
-                                region: Some(format!("{}{}", emoji, region_code)),
+                                region: Some(format!("{emoji}{region_code}")),
                                 check_time: Some(get_local_date_string()),
                             };
                         }
@@ -557,7 +555,7 @@ async fn check_netflix(client: &Client) -> UnlockItem {
                 }
             }
             Err(e) => {
-                eprintln!("获取Netflix区域信息失败: {}", e);
+                eprintln!("获取Netflix区域信息失败: {e}");
                 UnlockItem {
                     name: "Netflix".to_string(),
                     status: "Yes (但无法获取区域)".to_string(),
@@ -570,7 +568,7 @@ async fn check_netflix(client: &Client) -> UnlockItem {
         // 其他未知错误状态
         UnlockItem {
             name: "Netflix".to_string(),
-            status: format!("Failed (状态码: {}_{}", status1, status2),
+            status: format!("Failed (状态码: {status1}_{status2}"),
             region: None,
             check_time: Some(get_local_date_string()),
         }
@@ -614,7 +612,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                                     return UnlockItem {
                                         name: "Netflix".to_string(),
                                         status: "Yes".to_string(),
-                                        region: Some(format!("{}{}", emoji, country)),
+                                        region: Some(format!("{emoji}{country}")),
                                         check_time: Some(get_local_date_string()),
                                     };
                                 }
@@ -631,7 +629,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                     }
                 }
                 Err(e) => {
-                    eprintln!("解析Fast.com API响应失败: {}", e);
+                    eprintln!("解析Fast.com API响应失败: {e}");
                     UnlockItem {
                         name: "Netflix".to_string(),
                         status: "Failed (解析错误)".to_string(),
@@ -642,7 +640,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
             }
         }
         Err(e) => {
-            eprintln!("Fast.com API请求失败: {}", e);
+            eprintln!("Fast.com API请求失败: {e}");
             UnlockItem {
                 name: "Netflix".to_string(),
                 status: "Failed (CDN API)".to_string(),
@@ -884,7 +882,7 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
             return UnlockItem {
                 name: "Disney+".to_string(),
                 status: "Yes".to_string(),
-                region: Some(format!("{}{} (from main page)", emoji, region)),
+                region: Some(format!("{emoji}{region} (from main page)")),
                 check_time: Some(get_local_date_string()),
             };
         }
@@ -947,7 +945,7 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
             return UnlockItem {
                 name: "Disney+".to_string(),
                 status: "Yes".to_string(),
-                region: Some(format!("{}{} (from main page)", emoji, region)),
+                region: Some(format!("{emoji}{region} (from main page)")),
                 check_time: Some(get_local_date_string()),
             };
         }
@@ -968,7 +966,7 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
         return UnlockItem {
             name: "Disney+".to_string(),
             status: "Yes".to_string(),
-            region: Some(format!("{}{}", emoji, region)),
+            region: Some(format!("{emoji}{region}")),
             check_time: Some(get_local_date_string()),
         };
     }
@@ -990,7 +988,7 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
             UnlockItem {
                 name: "Disney+".to_string(),
                 status: "Soon".to_string(),
-                region: Some(format!("{}{}（即将上线）", emoji, region)),
+                region: Some(format!("{emoji}{region}（即将上线）")),
                 check_time: Some(get_local_date_string()),
             }
         }
@@ -999,13 +997,13 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
             UnlockItem {
                 name: "Disney+".to_string(),
                 status: "Yes".to_string(),
-                region: Some(format!("{}{}", emoji, region)),
+                region: Some(format!("{emoji}{region}")),
                 check_time: Some(get_local_date_string()),
             }
         }
         None => UnlockItem {
             name: "Disney+".to_string(),
-            status: format!("Failed (Error: Unknown region status for {})", region),
+            status: format!("Failed (Error: Unknown region status for {region})"),
             region: None,
             check_time: Some(get_local_date_string()),
         },
@@ -1056,7 +1054,7 @@ async fn check_prime_video(client: &Client) -> UnlockItem {
                 return UnlockItem {
                     name: "Prime Video".to_string(),
                     status: "Yes".to_string(),
-                    region: Some(format!("{}{}", emoji, region)),
+                    region: Some(format!("{emoji}{region}")),
                     check_time: Some(get_local_date_string()),
                 };
             }
@@ -1170,7 +1168,7 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
         .connection_verbose(true) // 详细连接信息
         .build() {
         Ok(client) => client,
-        Err(e) => return Err(format!("创建HTTP客户端失败: {}", e)),
+        Err(e) => return Err(format!("创建HTTP客户端失败: {e}")),
     };
 
     // 创建共享的结果集
@@ -1284,7 +1282,7 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
     // 等待所有任务完成
     while let Some(res) = tasks.join_next().await {
         if let Err(e) = res {
-            eprintln!("任务执行失败: {}", e);
+            eprintln!("任务执行失败: {e}");
         }
     }
 

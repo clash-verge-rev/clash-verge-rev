@@ -147,7 +147,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
         Ok(icon_path.to_string_lossy().to_string())
     } else {
         let _ = std::fs::remove_file(&temp_path);
-        Err(format!("下载的内容不是有效图片: {}", url))
+        Err(format!("下载的内容不是有效图片: {url}"))
     }
 }
 
@@ -217,7 +217,7 @@ pub fn notify_ui_ready() -> CmdResult<()> {
 /// UI加载阶段
 #[tauri::command]
 pub fn update_ui_stage(stage: String) -> CmdResult<()> {
-    log::info!(target: "app", "UI加载阶段更新: {}", stage);
+    log::info!(target: "app", "UI加载阶段更新: {stage}");
 
     use crate::utils::resolve::UiReadyStage;
 
@@ -228,8 +228,8 @@ pub fn update_ui_stage(stage: String) -> CmdResult<()> {
         "ResourcesLoaded" => UiReadyStage::ResourcesLoaded,
         "Ready" => UiReadyStage::Ready,
         _ => {
-            log::warn!(target: "app", "未知的UI加载阶段: {}", stage);
-            return Err(format!("未知的UI加载阶段: {}", stage));
+            log::warn!(target: "app", "未知的UI加载阶段: {stage}");
+            return Err(format!("未知的UI加载阶段: {stage}"));
         }
     };
 

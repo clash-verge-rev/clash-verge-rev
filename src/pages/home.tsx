@@ -384,7 +384,7 @@ const ClashModeEnhancedCard = () => {
   const { t } = useTranslation();
   return (
     <EnhancedCard
-      title={t("Proxy Mode")}
+      title={t("proxy:Proxy Mode")}
       icon={<RouterOutlined />}
       iconColor="info"
       action={null}

@@ -31,7 +31,7 @@ fn init_log() -> Result<()> {
     }
 
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-    let log_file = format!("{}.log", local_time);
+    let log_file = format!("{local_time}.log");
     let log_file = log_dir.join(log_file);
 
     let log_pattern = match log_level {

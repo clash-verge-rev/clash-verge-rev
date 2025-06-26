@@ -322,7 +322,7 @@ impl NetworkManager {
             use crate::utils::resolve::VERSION;
 
             let version = match VERSION.get() {
-                Some(v) => format!("clash-verge/v{}", v),
+                Some(v) => format!("clash-verge/v{v}"),
                 None => "clash-verge/unknown".to_string(),
             };
 
@@ -401,7 +401,7 @@ impl NetworkManager {
         let result = tokio::select! {
             result = request.send() => result,
             _ = cancel_rx => {
-                self.record_connection_error(&format!("Request interrupted for: {}", url));
+                self.record_connection_error(&format!("Request interrupted for: {url}"));
                 return Err(anyhow::anyhow!("Request interrupted after {} seconds", timeout_duration));
             }
         };

@@ -19,7 +19,6 @@ import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { ContentCopyRounded } from "@mui/icons-material";
-import { languages } from "@/services/i18n";
 import { showNotice } from "@/services/noticeService";
 
 interface Props {
@@ -28,20 +27,22 @@ interface Props {
 
 const OS = getSystem();
 
-const languageOptions = Object.entries(languages).map(([code, _]) => {
-  const labels: { [key: string]: string } = {
-    en: "English",
-    ru: "Русский",
-    zh: "中文",
-    fa: "فارسی",
-    tt: "Татар",
-    id: "Bahasa Indonesia",
-    ar: "العربية",
-    ko: "한국어",
-    tr: "Türkçe",
-  };
-  return { code, label: labels[code] };
-});
+// 由于 languages 未导出，直接硬编码支持的语言列表
+const languageOptions = [
+  { code: "en", label: "English" },
+  { code: "zh", label: "中文" },
+  { code: "ru", label: "Русский" },
+  { code: "fa", label: "فارسی" },
+  { code: "tt", label: "Татар" },
+  { code: "id", label: "Bahasa Indonesia" },
+  { code: "ar", label: "العربية" },
+  { code: "ko", label: "한국어" },
+  { code: "jp", label: "日本語" },
+  { code: "es", label: "Español" },
+  { code: "de", label: "Deutsch" },
+  { code: "tr", label: "Türkçe" },
+  { code: "zhtw", label: "繁體中文" },
+];
 
 const SettingVergeBasic = ({ onError }: Props) => {
   const { t } = useTranslation();

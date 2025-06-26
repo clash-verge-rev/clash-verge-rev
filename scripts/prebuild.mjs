@@ -407,18 +407,23 @@ async function resolveLocales() {
     // 确保目标目录存在
     await fsp.mkdir(targetLocalesDir, { recursive: true });
 
-    // 读取所有语言文件
-    const files = await fsp.readdir(srcLocalesDir);
+    // 读取所有语言目录
+    const langDirs = (await fsp.readdir(srcLocalesDir, { withFileTypes: true }))
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name);
 
-    // 复制每个文件
-    for (const file of files) {
-      const srcPath = path.join(srcLocalesDir, file);
-      const targetPath = path.join(targetLocalesDir, file);
-
-      await fsp.copyFile(srcPath, targetPath);
-      log_success(`Copied locale file: ${file}`);
+    for (const lang of langDirs) {
+      const srcLangDir = path.join(srcLocalesDir, lang);
+      const targetLangDir = path.join(targetLocalesDir, lang);
+      await fsp.mkdir(targetLangDir, { recursive: true });
+      const files = await fsp.readdir(srcLangDir);
+      for (const file of files) {
+        const srcPath = path.join(srcLangDir, file);
+        const targetPath = path.join(targetLangDir, file);
+        await fsp.copyFile(srcPath, targetPath);
+        log_success(`Copied locale file: ${lang}/${file}`);
+      }
     }
-
     log_success("All locale files copied successfully");
   } catch (err) {
     log_error("Error copying locale files:", err.message);
