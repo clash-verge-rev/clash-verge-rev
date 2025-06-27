@@ -54,7 +54,7 @@ pub fn get_system_hostname() -> CmdResult<String> {
         Ok(name) => name,
         Err(os_string) => {
             // 对于包含非UTF-8的主机名，使用调试格式化
-            let fallback = format!("{:?}", os_string);
+            let fallback = format!("{os_string:?}");
             // 去掉可能存在的引号
             fallback.trim_matches('"').to_string()
         }

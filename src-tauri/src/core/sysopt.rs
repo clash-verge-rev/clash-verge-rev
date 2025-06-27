@@ -43,7 +43,7 @@ fn get_bypass() -> String {
     if custom_bypass.is_empty() {
         DEFAULT_BYPASS.to_string()
     } else if use_default {
-        format!("{},{}", DEFAULT_BYPASS, custom_bypass)
+        format!("{DEFAULT_BYPASS},{custom_bypass}")
     } else {
         custom_bypass
     }
@@ -100,7 +100,7 @@ impl Sysopt {
             };
             let mut auto = Autoproxy {
                 enable: false,
-                url: format!("http://{}:{}/commands/pac", proxy_host, pac_port),
+                url: format!("http://{proxy_host}:{pac_port}/commands/pac"),
             };
 
             if !sys_enable {
@@ -193,7 +193,7 @@ impl Sysopt {
             let mut autoproxy = match Autoproxy::get_auto_proxy() {
                 Ok(ap) => ap,
                 Err(e) => {
-                    log::warn!(target: "app", "重置代理时获取自动代理配置失败: {}, 使用默认配置", e);
+                    log::warn!(target: "app", "重置代理时获取自动代理配置失败: {e}, 使用默认配置");
                     Autoproxy {
                         enable: false,
                         url: "".to_string(),
@@ -305,11 +305,11 @@ impl Sysopt {
 
         match autostart_manager.is_enabled() {
             Ok(status) => {
-                log::info!(target: "app", "Auto launch status: {}", status);
+                log::info!(target: "app", "Auto launch status: {status}");
                 Ok(status)
             }
             Err(e) => {
-                log::error!(target: "app", "Failed to get auto launch status: {}", e);
+                log::error!(target: "app", "Failed to get auto launch status: {e}");
                 Err(anyhow::anyhow!("Failed to get auto launch status: {}", e))
             }
         }

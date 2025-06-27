@@ -25,7 +25,7 @@ fn open_or_close_dashboard_internal(bypass_debounce: bool) {
     use crate::process::AsyncHandler;
     use crate::utils::window_manager::WindowManager;
 
-    log::info!(target: "app", "Attempting to open/close dashboard (绕过防抖: {})", bypass_debounce);
+    log::info!(target: "app", "Attempting to open/close dashboard (绕过防抖: {bypass_debounce})");
 
     // 热键调用调度到主线程执行，避免 WebView 创建死锁
     if bypass_debounce {
@@ -39,12 +39,12 @@ fn open_or_close_dashboard_internal(bypass_debounce: bool) {
                 crate::module::lightweight::exit_lightweight_mode();
                 log::info!(target: "app", "Creating new window after exiting lightweight mode");
                 let result = WindowManager::show_main_window();
-                log::info!(target: "app", "Window operation result: {:?}", result);
+                log::info!(target: "app", "Window operation result: {result:?}");
                 return;
             }
 
             let result = WindowManager::toggle_main_window();
-            log::info!(target: "app", "Window toggle result: {:?}", result);
+            log::info!(target: "app", "Window toggle result: {result:?}");
         });
         return;
     }
@@ -53,12 +53,12 @@ fn open_or_close_dashboard_internal(bypass_debounce: bool) {
         crate::module::lightweight::exit_lightweight_mode();
         log::info!(target: "app", "Creating new window after exiting lightweight mode");
         let result = WindowManager::show_main_window();
-        log::info!(target: "app", "Window operation result: {:?}", result);
+        log::info!(target: "app", "Window operation result: {result:?}");
         return;
     }
 
     let result = WindowManager::toggle_main_window();
-    log::info!(target: "app", "Window toggle result: {:?}", result);
+    log::info!(target: "app", "Window toggle result: {result:?}");
 }
 
 /// 异步优化的应用退出函数

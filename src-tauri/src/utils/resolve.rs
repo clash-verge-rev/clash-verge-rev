@@ -121,7 +121,7 @@ pub async fn find_unused_port() -> Result<u16> {
                 .latest()
                 .verge_mixed_port
                 .unwrap_or(Config::clash().data().get_mixed_port());
-            log::warn!(target: "app", "use default port: {}", port);
+            log::warn!(target: "app", "use default port: {port}");
             Ok(port)
         }
     }
@@ -530,7 +530,7 @@ pub fn create_window(is_show: bool) -> bool {
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
-    log::info!(target:"app", "received deep link: {}", param);
+    log::info!(target:"app", "received deep link: {param}");
 
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param
@@ -568,7 +568,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
 
         match url_param {
             Some(url) => {
-                log::info!(target:"app", "decoded subscription url: {}", url);
+                log::info!(target:"app", "decoded subscription url: {url}");
 
                 create_window(false);
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
