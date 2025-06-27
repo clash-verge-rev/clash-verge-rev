@@ -8,7 +8,7 @@ import {
   List,
   ListItem,
   Switch,
-  TextField
+  TextField,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { useLockFn, useRequest } from "ahooks";
@@ -34,18 +34,18 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       const cors = clash?.["external-controller-cors"];
       return {
         allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
-        allowOrigins: cors?.["allow-origins"] ?? ["*"]
+        allowOrigins: cors?.["allow-origins"] ?? ["*"],
       };
     });
 
     // 处理CORS配置变更
     const handleCorsConfigChange = (
       key: "allowPrivateNetwork" | "allowOrigins",
-      value: boolean | string[]
+      value: boolean | string[],
     ) => {
-      setCorsConfig(prev => ({
+      setCorsConfig((prev) => ({
         ...prev,
-        [key]: value
+        [key]: value,
       }));
     };
 
@@ -74,8 +74,10 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         await patchClash({
           "external-controller-cors": {
             "allow-private-network": corsConfig.allowPrivateNetwork,
-            "allow-origins": corsConfig.allowOrigins.filter(origin => origin.trim() !== "")
-          }
+            "allow-origins": corsConfig.allowOrigins.filter(
+              (origin) => origin.trim() !== "",
+            ),
+          },
         });
         await mutateClash();
       },
@@ -87,8 +89,8 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         },
         onError: () => {
           showNotice("error", t("Failed to save configuration"));
-        }
-      }
+        },
+      },
     );
 
     useImperativeHandle(ref, () => ({
@@ -96,7 +98,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         const cors = clash?.["external-controller-cors"];
         setCorsConfig({
           allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
-          allowOrigins: cors?.["allow-origins"] ?? ["*"]
+          allowOrigins: cors?.["allow-origins"] ?? ["*"],
         });
         setOpen(true);
       },
@@ -119,7 +121,6 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         onOk={handleSave}
       >
         <List sx={{ width: "90%", padding: 2 }}>
-
           <ListItem sx={{ padding: "8px 0", fontWeight: "bold" }}>
             {t("External Controller CORS Settings")}
           </ListItem>
@@ -129,7 +130,12 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
               control={
                 <Switch
                   checked={corsConfig.allowPrivateNetwork}
-                  onChange={(e) => handleCorsConfigChange("allowPrivateNetwork", e.target.checked)}
+                  onChange={(e) =>
+                    handleCorsConfigChange(
+                      "allowPrivateNetwork",
+                      e.target.checked,
+                    )
+                  }
                 />
               }
               label={t("Allow private network access")}
@@ -144,7 +150,14 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                 {t("Allowed Origins")}
               </div>
               {corsConfig.allowOrigins.map((origin, index) => (
-                <div key={index} style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
                   <TextField
                     fullWidth
                     size="small"
@@ -178,5 +191,5 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         </List>
       </BaseDialog>
     );
-  }
+  },
 );
