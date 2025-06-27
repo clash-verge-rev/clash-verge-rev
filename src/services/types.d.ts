@@ -31,6 +31,10 @@ interface IConfigData {
   "socks-port": number;
   "tproxy-port": number;
   "external-controller": string;
+  "external-controller-cors": {
+    "allow-private-network": boolean;
+    "allow-origins": string[];
+  };
   secret: string;
   "unified-delay": boolean;
   tun: {
