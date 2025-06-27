@@ -47,7 +47,7 @@ regex = "1.11.1"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
 image = "0.25.6"
 imageproc = "0.25.0"
-tauri = { version = "2.6.1", features = [
+tauri = { version = "2.6.2", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -81,7 +81,7 @@ hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
-tauri-plugin-notification = "2"
+tauri-plugin-notification = "2.3.0"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
