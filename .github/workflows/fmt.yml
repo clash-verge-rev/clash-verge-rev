@@ -26,11 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm i -g --force corepack
       - uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
-      - run: pnpm i --frozen-lockfile
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
 
   # taplo:
