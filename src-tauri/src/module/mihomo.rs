@@ -97,7 +97,7 @@ impl MihomoManager {
         let mut headers = HeaderMap::new();
         headers.insert("Content-Type", "application/json".parse().unwrap());
         if let Some(secret) = client.secret {
-            let secret = format!("Bearer {}", secret).parse().unwrap();
+            let secret = format!("Bearer {secret}").parse().unwrap();
             headers.insert("Authorization", secret);
         }
 

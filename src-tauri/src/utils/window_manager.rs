@@ -376,8 +376,7 @@ impl WindowManager {
         let is_minimized = Self::is_main_window_minimized();
 
         format!(
-            "窗口状态: {:?} | 可见: {} | 有焦点: {} | 最小化: {}",
-            state, is_visible, is_focused, is_minimized
+            "窗口状态: {state:?} | 可见: {is_visible} | 有焦点: {is_focused} | 最小化: {is_minimized}"
         )
     }
 }
