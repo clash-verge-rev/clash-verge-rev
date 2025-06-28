@@ -1,7 +1,9 @@
 import { BaseDialog } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { showNotice } from "@/services/noticeService";
+import { Delete as DeleteIcon } from "@mui/icons-material";
 import {
+  Box,
   Button,
   Divider,
   FormControlLabel,
@@ -10,7 +12,6 @@ import {
   Switch,
   TextField,
 } from "@mui/material";
-import { Delete as DeleteIcon } from "@mui/icons-material";
 import { useLockFn, useRequest } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,11 +23,11 @@ import { useTranslation } from "react-i18next";
 const DEV_URLS = [
   "tauri://localhost",
   "http://tauri.localhost",
-  "http://localhost:3000"
+  "http://localhost:3000",
 ];
 
 // 判断是否处于开发模式
-const isDevMode = import.meta.env.MODE === 'development';
+const isDevMode = import.meta.env.MODE === "development";
 
 // 过滤开发环境URL
 const filterDevOrigins = (origins: string[]) => {
@@ -147,6 +148,51 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       await saveConfig();
     });
 
+    // 自定义按钮样式
+    const buttonStyle = {
+      borderRadius: '8px',
+      textTransform: 'none',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      transition: 'all 0.3s ease',
+      '&:hover': {
+        boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+        transform: 'translateY(-1px)',
+      },
+      '&:active': {
+        transform: 'translateY(0)',
+      }
+    };
+
+    // 保存按钮样式
+    const saveButtonStyle = {
+      ...buttonStyle,
+      backgroundColor: '#165DFF',
+      color: 'white',
+      '&:hover': {
+        backgroundColor: '#0E42D2',
+      }
+    };
+
+    // 添加按钮样式
+    const addButtonStyle = {
+      ...buttonStyle,
+      backgroundColor: '#4CAF50',
+      color: 'white',
+      '&:hover': {
+        backgroundColor: '#388E3C',
+      }
+    };
+
+    // 删除按钮样式
+    const deleteButtonStyle = {
+      ...buttonStyle,
+      backgroundColor: '#FF5252',
+      color: 'white',
+      '&:hover': {
+        backgroundColor: '#D32F2F',
+      }
+    };
+
     return (
       <BaseDialog
         open={open}
@@ -164,20 +210,30 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
           </ListItem>
 
           <ListItem sx={{ padding: "8px 0" }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={corsConfig.allowPrivateNetwork}
-                  onChange={(e) =>
-                    handleCorsConfigChange(
-                      "allowPrivateNetwork",
-                      e.target.checked,
-                    )
-                  }
-                />
-              }
-              label={t("Allow private network access")}
-            />
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              width="100%"
+            >
+              <span style={{ fontWeight: "normal" }}>
+                {t("Allow private network access")}
+              </span>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={corsConfig.allowPrivateNetwork}
+                    onChange={(e) =>
+                      handleCorsConfigChange(
+                        "allowPrivateNetwork",
+                        e.target.checked,
+                      )
+                    }
+                  />
+                }
+                label={undefined}
+              />
+            </Box>
           </ListItem>
 
           <Divider sx={{ my: 2 }} />
@@ -211,6 +267,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                     size="small"
                     onClick={() => handleDeleteOrigin(index)}
                     disabled={corsConfig.allowOrigins.length <= 1}
+                    sx={deleteButtonStyle}
                   >
                     <DeleteIcon fontSize="small" />
                   </Button>
@@ -220,15 +277,26 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                 variant="contained"
                 size="small"
                 onClick={handleAddOrigin}
-                sx={{ mt: 2 }}
+                sx={addButtonStyle}
               >
                 {t("Add")}
               </Button>
 
               {isDevMode && (
-                <div style={{ marginTop: 12, padding: 8, backgroundColor: '#f5f5f5', borderRadius: 4 }}>
-                  <div style={{ color: '#666', fontSize: 12, fontStyle: 'italic' }}>
-                    {t("Development mode: Automatically includes Tauri and localhost origins")}
+                <div
+                  style={{
+                    marginTop: 12,
+                    padding: 8,
+                    backgroundColor: "#f5f5f5",
+                    borderRadius: 4,
+                  }}
+                >
+                  <div
+                    style={{ color: "#666", fontSize: 12, fontStyle: "italic" }}
+                  >
+                    {t(
+                      "Development mode: Automatically includes Tauri and localhost origins",
+                    )}
                   </div>
                 </div>
               )}

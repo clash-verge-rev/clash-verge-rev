@@ -647,5 +647,6 @@
   "Allow private network access": "Allow private network access",
   "Allowed Origins": "Allowed Origins",
   "Please enter a valid url": "Please enter a valid url",
-  "Add": "Add"
+  "Add": "Add",
+  "Development mode: Automatically includes Tauri and localhost origins": "Development mode: Automatically includes Tauri and localhost origins"
 }
