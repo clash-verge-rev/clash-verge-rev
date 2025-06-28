@@ -91,7 +91,7 @@
     "https-proxy-agent": "^7.0.6",
     "meta-json-schema": "^1.19.11",
     "node-fetch": "^3.3.2",
-    "prettier": "^3.6.1",
+    "prettier": "^3.5.3",
     "sass": "^1.89.2",
     "terser": "^5.43.1",
     "typescript": "^5.8.3",
