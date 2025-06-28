@@ -30,7 +30,9 @@ export const TestItem = (props: Props) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: props.id });
+  } = useSortable({
+    id: props.id,
+  });
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);

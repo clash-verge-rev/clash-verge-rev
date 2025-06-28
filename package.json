@@ -46,7 +46,6 @@
     "@tauri-apps/plugin-updater": "2.9.0",
     "@tauri-apps/plugin-window-state": "^2.3.0",
     "@types/json-schema": "^7.0.15",
-    "json-schema": "^0.4.0",
     "ahooks": "^3.8.5",
     "axios": "^1.10.0",
     "chart.js": "^4.5.0",
@@ -56,6 +55,7 @@
     "glob": "^11.0.3",
     "i18next": "^25.2.1",
     "js-yaml": "^4.1.0",
+    "json-schema": "^0.4.0",
     "lodash-es": "^4.17.21",
     "monaco-editor": "^0.52.2",
     "monaco-yaml": "^5.4.0",
@@ -92,18 +92,13 @@
     "meta-json-schema": "^1.19.11",
     "node-fetch": "^3.3.2",
     "prettier": "^3.6.2",
+    "prettier-plugin-organize-imports": "^4.1.0",
     "sass": "^1.89.2",
     "terser": "^5.43.1",
     "typescript": "^5.8.3",
     "vite": "^7.0.0",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.3.0"
-  },
-  "prettier": {
-    "tabWidth": 2,
-    "semi": true,
-    "singleQuote": false,
-    "endOfLine": "lf"
   },
   "type": "module",
   "packageManager": "pnpm@9.13.2"

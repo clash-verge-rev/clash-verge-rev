@@ -48,7 +48,10 @@ export function useServiceInstaller() {
               "error",
               t(
                 "Failed to check service status, retrying attempt {count}/{total}...",
-                { count: i + 1, total: 5 },
+                {
+                  count: i + 1,
+                  total: 5,
+                },
               ),
             );
           }
