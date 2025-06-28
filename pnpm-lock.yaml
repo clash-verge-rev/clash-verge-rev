@@ -172,8 +172,8 @@ importers:
         specifier: 1.15.8
         version: 1.15.8
       '@vitejs/plugin-legacy':
-        specifier: 6.1.1
-        version: 6.1.1(terser@5.43.1)(vite@6.3.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))
+        specifier: 7.0.0
+        version: 7.0.0(terser@5.43.1)(vite@6.3.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))
       '@vitejs/plugin-react':
         specifier: 4.6.0
         version: 4.6.0(vite@6.3.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))
@@ -1897,12 +1897,12 @@ packages:
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
 
-  '@vitejs/plugin-legacy@6.1.1':
-    resolution: {integrity: sha512-BvusL+mYZ0q5qS5Rq3D70QxZBmhyiHRaXLtYJHH5AEsAmdSqJR4xe5KwMi1H3w8/9lVJwhkLYqFQ9vmWYWy6kA==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
+  '@vitejs/plugin-legacy@7.0.0':
+    resolution: {integrity: sha512-qevhyYFUeZXBd/bAZGwpBgyn4GGAYije9YPV8Jg07newPCZtFEIlFlzsQowPbm87iKekOIL/90wKn+hvGkjzkg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       terser: ^5.16.0
-      vite: ^6.0.0
+      vite: ^7.0.0
 
   '@vitejs/plugin-react@4.6.0':
     resolution: {integrity: sha512-5Kgff+m8e2PB+9j51eGHEpn5kUzRKH2Ry0qGoe8ItJg7pqnkPrYPkDQZGgGmTa0EGarHrkjLvOdU3b1fzI8otQ==}
@@ -2105,8 +2105,8 @@ packages:
   core-js-compat@3.42.0:
     resolution: {integrity: sha512-bQasjMfyDGyaeWKBIu33lHh9qlSR0MFE/Nmc6nMjf/iU9b3rSMdAYz1Baxrv4lPdGUsTqZudHA4jIGSJy0SWZQ==}
 
-  core-js@3.42.0:
-    resolution: {integrity: sha512-Sz4PP4ZA+Rq4II21qkNqOEDTDrCvcANId3xpIgB34NDkWc3UduWj2dqEtN9yZIq8Dk3HyPI33x9sqqU5C8sr0g==}
+  core-js@3.43.0:
+    resolution: {integrity: sha512-N6wEbTTZSYOY2rYAn85CuvWWkCK6QweMn7/4Nr3w+gDBeBhk/x4EJeY6FPo4QzDoJZxVTv8U7CMvgWk6pOHHqA==}
 
   cosmiconfig@6.0.0:
     resolution: {integrity: sha512-xb3ZL6+L8b9JLLCx3ZdoZy4+2ECphCMo2PwqgP1tlfVq6M6YReyzBJtvWWtbDSpNr9hn96pkCiZqUcFEc+54Qg==}
@@ -5197,13 +5197,13 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-legacy@6.1.1(terser@5.43.1)(vite@6.3.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))':
+  '@vitejs/plugin-legacy@7.0.0(terser@5.43.1)(vite@6.3.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))':
     dependencies:
       '@babel/core': 7.27.4
       '@babel/preset-env': 7.27.2(@babel/core@7.27.4)
       browserslist: 4.25.0
       browserslist-to-esbuild: 2.1.1(browserslist@4.25.0)
-      core-js: 3.42.0
+      core-js: 3.43.0
       magic-string: 0.30.17
       regenerator-runtime: 0.14.1
       systemjs: 6.15.1
@@ -5451,7 +5451,7 @@ snapshots:
     dependencies:
       browserslist: 4.25.0
 
-  core-js@3.42.0: {}
+  core-js@3.43.0: {}
 
   cosmiconfig@6.0.0:
     dependencies:
