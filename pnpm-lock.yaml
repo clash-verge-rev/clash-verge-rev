@@ -48,8 +48,8 @@ importers:
         specifier: ~2.3.0
         version: 2.3.0
       '@tauri-apps/plugin-fs':
-        specifier: ~2.3.0
-        version: 2.3.0
+        specifier: ~2.4.0
+        version: 2.4.0
       '@tauri-apps/plugin-global-shortcut':
         specifier: ~2.2.1
         version: 2.2.1
@@ -1794,8 +1794,8 @@ packages:
   '@tauri-apps/plugin-dialog@2.3.0':
     resolution: {integrity: sha512-ylSBvYYShpGlKKh732ZuaHyJ5Ie1JR71QCXewCtsRLqGdc8Is4xWdz6t43rzXyvkItM9syNPMvFVcvjgEy+/GA==}
 
-  '@tauri-apps/plugin-fs@2.3.0':
-    resolution: {integrity: sha512-G9gEyYVUaaxhdRJBgQTTLmzAe0vtHYxYyN1oTQzU3zwvb8T+tVLcAqCdFMWHq0qGeGbmynI5whvYpcXo5LvZ1w==}
+  '@tauri-apps/plugin-fs@2.4.0':
+    resolution: {integrity: sha512-Sp8AdDcbyXyk6LD6Pmdx44SH3LPeNAvxR2TFfq/8CwqzfO1yOyV+RzT8fov0NNN7d9nvW7O7MtMAptJ42YXA5g==}
 
   '@tauri-apps/plugin-global-shortcut@2.2.1':
     resolution: {integrity: sha512-b64/TI1t5LIi2JY4OWlYjZpPRq60T5GVVL/no27sUuxaNUZY8dVtwsMtDUgxUpln2yR+P2PJsYlqY5V8sLSxEw==}
@@ -5084,9 +5084,9 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.6.0
 
-  '@tauri-apps/plugin-fs@2.3.0':
+  '@tauri-apps/plugin-fs@2.4.0':
     dependencies:
-      '@tauri-apps/api': 2.5.0
+      '@tauri-apps/api': 2.6.0
 
   '@tauri-apps/plugin-global-shortcut@2.2.1':
     dependencies:
