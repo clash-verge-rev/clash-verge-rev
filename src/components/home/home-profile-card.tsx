@@ -100,11 +100,9 @@ const ProfileDetails = ({
   }, [current.extra]);
 
   const trafficPercentage = useMemo(() => {
-    if (!current.extra || !current.extra.total) return 1;
-    return Math.min(
-      Math.round((usedTraffic * 100) / (current.extra.total + 0.01)) + 1,
-      100,
-    );
+    if (!current.extra || !current.extra.total || current.extra.total <= 0)
+      return 0;
+    return Math.min(Math.round((usedTraffic / current.extra.total) * 100), 100);
   }, [current.extra, usedTraffic]);
 
   return (
