@@ -86,9 +86,7 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     { label: t("Rule"), value: rule },
     {
       label: t("Process"),
-      value: `${metadata.process}${
-        metadata.processPath ? `(${metadata.processPath})` : ""
-      }`,
+      value: `${metadata.process}${metadata.processPath ? `(${metadata.processPath})` : ""}`,
     },
     { label: t("Time"), value: dayjs(data.start).fromNow() },
     {
