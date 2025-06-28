@@ -15,6 +15,39 @@ import { useLockFn, useRequest } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+// 定义开发环境的URL列表
+// 这些URL在开发模式下会被自动包含在允许的来源中
+// 在生产环境中，这些URL会被过滤掉
+// 这样可以确保在生产环境中不会意外暴露开发环境的URL
+const DEV_URLS = [
+  "tauri://localhost",
+  "http://tauri.localhost",
+  "http://localhost:3000"
+];
+
+// 判断是否处于开发模式
+const isDevMode = import.meta.env.MODE === 'development';
+
+// 过滤开发环境URL
+const filterDevOrigins = (origins: string[]) => {
+  if (isDevMode) {
+    return origins;
+  }
+  return origins.filter((origin: string) => !DEV_URLS.includes(origin.trim()));
+};
+
+// 获取完整的源列表，包括开发URL
+const getFullOrigins = (origins: string[]) => {
+  if (!isDevMode) {
+    return origins;
+  }
+
+  // 合并现有源和开发URL，并去重
+  const allOrigins = [...origins, ...DEV_URLS];
+  const uniqueOrigins = [...new Set(allOrigins)];
+  return uniqueOrigins;
+};
+
 interface ClashHeaderConfigingRef {
   open: () => void;
   close: () => void;
@@ -32,9 +65,10 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       allowOrigins: string[];
     }>(() => {
       const cors = clash?.["external-controller-cors"];
+      const origins = cors?.["allow-origins"] ?? ["*"];
       return {
         allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
-        allowOrigins: cors?.["allow-origins"] ?? ["*"],
+        allowOrigins: filterDevOrigins(origins),
       };
     });
 
@@ -71,11 +105,14 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     // 保存配置请求
     const { loading, run: saveConfig } = useRequest(
       async () => {
+        // 保存时使用完整的源列表（包括开发URL）
+        const fullOrigins = getFullOrigins(corsConfig.allowOrigins);
+
         await patchClash({
           "external-controller-cors": {
             "allow-private-network": corsConfig.allowPrivateNetwork,
-            "allow-origins": corsConfig.allowOrigins.filter(
-              (origin) => origin.trim() !== "",
+            "allow-origins": fullOrigins.filter(
+              (origin: string) => origin.trim() !== "",
             ),
           },
         });
@@ -96,9 +133,10 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     useImperativeHandle(ref, () => ({
       open: () => {
         const cors = clash?.["external-controller-cors"];
+        const origins = cors?.["allow-origins"] ?? ["*"];
         setCorsConfig({
           allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
-          allowOrigins: cors?.["allow-origins"] ?? ["*"],
+          allowOrigins: filterDevOrigins(origins),
         });
         setOpen(true);
       },
@@ -186,6 +224,14 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
               >
                 {t("Add")}
               </Button>
+
+              {isDevMode && (
+                <div style={{ marginTop: 12, padding: 8, backgroundColor: '#f5f5f5', borderRadius: 4 }}>
+                  <div style={{ color: '#666', fontSize: 12, fontStyle: 'italic' }}>
+                    {t("Development mode: Automatically includes Tauri and localhost origins")}
+                  </div>
+                </div>
+              )}
             </div>
           </ListItem>
         </List>
