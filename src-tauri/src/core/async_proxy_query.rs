@@ -123,7 +123,7 @@ impl AsyncProxyQuery {
                     .position(|&x| x == 0)
                     .unwrap_or(url_buffer.len());
                 pac_url = String::from_utf16_lossy(&url_buffer[..end_pos]);
-                log::debug!(target: "app", "从注册表读取到PAC URL: {}", pac_url);
+                log::debug!(target: "app", "从注册表读取到PAC URL: {pac_url}");
             }
 
             // 2. 检查自动检测设置是否启用
@@ -148,7 +148,7 @@ impl AsyncProxyQuery {
                 || (detect_query_result == 0 && detect_value_type == REG_DWORD && auto_detect != 0);
 
             if pac_enabled {
-                log::debug!(target: "app", "PAC配置启用: URL={}, AutoDetect={}", pac_url, auto_detect);
+                log::debug!(target: "app", "PAC配置启用: URL={pac_url}, AutoDetect={auto_detect}");
 
                 if pac_url.is_empty() && auto_detect != 0 {
                     pac_url = "auto-detect".to_string();
@@ -361,7 +361,7 @@ impl AsyncProxyQuery {
                     (proxy_server, 8080)
                 };
 
-                log::debug!(target: "app", "从注册表读取到代理设置: {}:{}, bypass: {}", host, port, bypass_list);
+                log::debug!(target: "app", "从注册表读取到代理设置: {host}:{port}, bypass: {bypass_list}");
 
                 Ok(AsyncSysproxy {
                     enable: true,

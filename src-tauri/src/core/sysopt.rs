@@ -153,7 +153,7 @@ impl Sysopt {
 
             let shell = app_handle.shell();
             let output = if pac_enable {
-                let address = format!("http://{}:{}/commands/pac", proxy_host, pac_port);
+                let address = format!("http://{proxy_host}:{pac_port}/commands/pac");
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
                     .args(["pac", address.as_str()])
@@ -162,7 +162,7 @@ impl Sysopt {
                     .unwrap();
                 output
             } else {
-                let address = format!("{}:{}", proxy_host, port);
+                let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass();
                 let output = shell
                     .command(sysproxy_exe.as_path().to_str().unwrap())
@@ -248,14 +248,14 @@ impl Sysopt {
         {
             if is_enable {
                 if let Err(e) = startup_shortcut::create_shortcut() {
-                    log::error!(target: "app", "创建启动快捷方式失败: {}", e);
+                    log::error!(target: "app", "创建启动快捷方式失败: {e}");
                     // 如果快捷方式创建失败，回退到原来的方法
                     self.try_original_autostart_method(is_enable);
                 } else {
                     return Ok(());
                 }
             } else if let Err(e) = startup_shortcut::remove_shortcut() {
-                log::error!(target: "app", "删除启动快捷方式失败: {}", e);
+                log::error!(target: "app", "删除启动快捷方式失败: {e}");
                 self.try_original_autostart_method(is_enable);
             } else {
                 return Ok(());
@@ -290,11 +290,11 @@ impl Sysopt {
         {
             match startup_shortcut::is_shortcut_enabled() {
                 Ok(enabled) => {
-                    log::info!(target: "app", "快捷方式自启动状态: {}", enabled);
+                    log::info!(target: "app", "快捷方式自启动状态: {enabled}");
                     return Ok(enabled);
                 }
                 Err(e) => {
-                    log::error!(target: "app", "检查快捷方式失败，尝试原来的方法: {}", e);
+                    log::error!(target: "app", "检查快捷方式失败，尝试原来的方法: {e}");
                 }
             }
         }
