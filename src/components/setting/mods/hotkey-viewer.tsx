@@ -28,7 +28,7 @@ const ToggleButton = styled("label")`
     right: 0;
     bottom: 0;
     background-color: #e0e0e0;
-    transition: .4s;
+    transition: 0.4s;
     border-radius: 34px;
 
     &:before {
@@ -39,17 +39,17 @@ const ToggleButton = styled("label")`
       left: 4px;
       bottom: 4px;
       background-color: white;
-      transition: .4s;
+      transition: 0.4s;
       border-radius: 50%;
     }
   }
 
   input:checked + .slider {
-    background-color: #2196F3;
+    background-color: #2196f3;
   }
 
   input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
+    box-shadow: 0 0 1px #2196f3;
   }
 
   input:checked + .slider:before {
