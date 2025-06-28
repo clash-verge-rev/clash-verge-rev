@@ -150,47 +150,47 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
 
     // 自定义按钮样式
     const buttonStyle = {
-      borderRadius: '8px',
-      textTransform: 'none',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      transition: 'all 0.3s ease',
-      '&:hover': {
-        boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-        transform: 'translateY(-1px)',
+      borderRadius: "8px",
+      textTransform: "none",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      transition: "all 0.3s ease",
+      "&:hover": {
+        boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+        transform: "translateY(-1px)",
       },
-      '&:active': {
-        transform: 'translateY(0)',
-      }
+      "&:active": {
+        transform: "translateY(0)",
+      },
     };
 
     // 保存按钮样式
     const saveButtonStyle = {
       ...buttonStyle,
-      backgroundColor: '#165DFF',
-      color: 'white',
-      '&:hover': {
-        backgroundColor: '#0E42D2',
-      }
+      backgroundColor: "#165DFF",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "#0E42D2",
+      },
     };
 
     // 添加按钮样式
     const addButtonStyle = {
       ...buttonStyle,
-      backgroundColor: '#4CAF50',
-      color: 'white',
-      '&:hover': {
-        backgroundColor: '#388E3C',
-      }
+      backgroundColor: "#4CAF50",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "#388E3C",
+      },
     };
 
     // 删除按钮样式
     const deleteButtonStyle = {
       ...buttonStyle,
-      backgroundColor: '#FF5252',
-      color: 'white',
-      '&:hover': {
-        backgroundColor: '#D32F2F',
-      }
+      backgroundColor: "#FF5252",
+      color: "white",
+      "&:hover": {
+        backgroundColor: "#D32F2F",
+      },
     };
 
     return (
