@@ -6,15 +6,64 @@ import {
   Box,
   Button,
   Divider,
-  FormControlLabel,
   List,
   ListItem,
-  Switch,
+  styled,
   TextField,
 } from "@mui/material";
 import { useLockFn, useRequest } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+// 自定义开关按钮样式
+const ToggleButton = styled("label")`
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    transition: 0.4s;
+    border-radius: 34px;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+  }
+
+  input:checked + .slider {
+    background-color: #2196f3;
+  }
+
+  input:focus + .slider {
+    box-shadow: 0 0 1px #2196f3;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+`;
 
 // 定义开发环境的URL列表
 // 这些URL在开发模式下会被自动包含在允许的来源中
@@ -47,6 +96,51 @@ const getFullOrigins = (origins: string[]) => {
   const allOrigins = [...origins, ...DEV_URLS];
   const uniqueOrigins = [...new Set(allOrigins)];
   return uniqueOrigins;
+};
+
+// 统一使用的按钮样式
+const buttonStyle = {
+  borderRadius: "8px",
+  textTransform: "none",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+    transform: "translateY(-1px)",
+  },
+  "&:active": {
+    transform: "translateY(0)",
+  },
+};
+
+// 保存按钮样式
+const saveButtonStyle = {
+  ...buttonStyle,
+  backgroundColor: "#165DFF",
+  color: "white",
+  "&:hover": {
+    backgroundColor: "#0E42D2",
+  },
+};
+
+// 添加按钮样式
+const addButtonStyle = {
+  ...buttonStyle,
+  backgroundColor: "#4CAF50",
+  color: "white",
+  "&:hover": {
+    backgroundColor: "#388E3C",
+  },
+};
+
+// 删除按钮样式
+const deleteButtonStyle = {
+  ...buttonStyle,
+  backgroundColor: "#FF5252",
+  color: "white",
+  "&:hover": {
+    backgroundColor: "#D32F2F",
+  },
 };
 
 interface ClashHeaderConfigingRef {
@@ -148,51 +242,6 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       await saveConfig();
     });
 
-    // 自定义按钮样式
-    const buttonStyle = {
-      borderRadius: "8px",
-      textTransform: "none",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-      transition: "all 0.3s ease",
-      "&:hover": {
-        boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-        transform: "translateY(-1px)",
-      },
-      "&:active": {
-        transform: "translateY(0)",
-      },
-    };
-
-    // 保存按钮样式
-    const saveButtonStyle = {
-      ...buttonStyle,
-      backgroundColor: "#165DFF",
-      color: "white",
-      "&:hover": {
-        backgroundColor: "#0E42D2",
-      },
-    };
-
-    // 添加按钮样式
-    const addButtonStyle = {
-      ...buttonStyle,
-      backgroundColor: "#4CAF50",
-      color: "white",
-      "&:hover": {
-        backgroundColor: "#388E3C",
-      },
-    };
-
-    // 删除按钮样式
-    const deleteButtonStyle = {
-      ...buttonStyle,
-      backgroundColor: "#FF5252",
-      color: "white",
-      "&:hover": {
-        backgroundColor: "#D32F2F",
-      },
-    };
-
     return (
       <BaseDialog
         open={open}
@@ -219,20 +268,20 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
               <span style={{ fontWeight: "normal" }}>
                 {t("Allow private network access")}
               </span>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={corsConfig.allowPrivateNetwork}
-                    onChange={(e) =>
-                      handleCorsConfigChange(
-                        "allowPrivateNetwork",
-                        e.target.checked,
-                      )
-                    }
-                  />
-                }
-                label={undefined}
-              />
+              <ToggleButton>
+                <input
+                  type="checkbox"
+                  checked={corsConfig.allowPrivateNetwork}
+                  onChange={(e) =>
+                    handleCorsConfigChange(
+                      "allowPrivateNetwork",
+                      e.target.checked,
+                    )
+                  }
+                  id="private-network-toggle"
+                />
+                <span className="slider"></span>
+              </ToggleButton>
             </Box>
           </ListItem>
 
