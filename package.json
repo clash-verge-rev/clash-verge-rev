@@ -93,7 +93,7 @@
     "fs-extra": "11.3.0",
     "https-proxy-agent": "7.0.6",
     "husky": "9.1.7",
-    "meta-json-schema": "1.19.10",
+    "meta-json-schema": "1.19.11",
     "node-fetch": "3.3.2",
     "postcss": "8.5.6",
     "prettier": "3.6.1",
