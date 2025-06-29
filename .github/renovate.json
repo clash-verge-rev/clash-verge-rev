@@ -6,7 +6,6 @@
     ":prHourlyLimitNone",
     ":rebaseStalePrs",
     ":automergeMinor",
-    "schedule:automergeDaily",
     "docker:disable"
   ],
   "labels": ["dependencies"],

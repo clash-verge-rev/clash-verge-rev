@@ -18,12 +18,8 @@ use crate::{
 use anyhow::Result;
 use core::verge_log::VergeLog;
 use once_cell::sync::OnceCell;
-use rust_i18n::t;
-use std::backtrace::{Backtrace, BacktraceStatus};
 use tauri::AppHandle;
 use tauri_plugin_mihomo::Protocol;
-
-use utils::dirs::APP_ID;
 
 rust_i18n::i18n!("./src/locales", fallback = "en");
 
@@ -43,68 +39,19 @@ pub fn run() -> Result<()> {
         return Ok(());
     }
 
+    let language = {
+        Config::verge()
+            .latest()
+            .language
+            .clone()
+            .unwrap_or("zh".to_string())
+    };
+    rust_i18n::set_locale(&language);
+
     // 初始化日志
     let _g = VergeLog::global().init()?;
-
-    crate::log_err!(init::init_config());
-
-    let verge = Config::verge().latest().clone();
-    let language = verge.language.as_deref();
-    let language = language.unwrap_or("zh");
-    rust_i18n::set_locale(language);
-
-    std::panic::set_hook(Box::new(move |panic_info| {
-        let payload = panic_info.payload();
-
-        let payload = if let Some(s) = payload.downcast_ref::<&str>() {
-            &**s
-        } else if let Some(s) = payload.downcast_ref::<String>() {
-            s
-        } else {
-            &format!("{:?}", payload)
-        };
-
-        let location = panic_info
-            .location()
-            .map(|l| l.to_string())
-            .unwrap_or("unknown location".to_string());
-
-        let backtrace = Backtrace::capture();
-        let backtrace = if backtrace.status() == BacktraceStatus::Captured {
-            t!("panic.info.backtrace", backtrace = backtrace)
-        } else {
-            t!("panic.info.display.backtrace.note")
-        };
-
-        tracing::error!("panicked at {}:\n{}\n{}", location, payload, backtrace);
-        let limit_backtrace = backtrace.lines().take(10).collect::<Vec<_>>().join("\n");
-        let log_file = VergeLog::global().get_log_file().unwrap_or_default();
-        let log_file = log_file.split(APP_ID).last().unwrap_or_default();
-        let content = t!(
-            "panic.info.content",
-            location = location,
-            payload = payload,
-            limit_backtrace = limit_backtrace,
-            log_file = log_file,
-        );
-        rfd::MessageDialog::new()
-            .set_title(t!("panic.info.title"))
-            .set_description(content)
-            .set_buttons(rfd::MessageButtons::Ok)
-            .set_level(rfd::MessageLevel::Error)
-            .show();
-
-        // avoid window freezing, spawn a new thread to resolve reset
-        let task = std::thread::spawn(|| async {
-            resolve::resolve_reset().await;
-        });
-        let _ = task.join();
-        if let Some(app_handle) = APP_HANDLE.get() {
-            app_handle.exit(1);
-        } else {
-            std::process::exit(1);
-        }
-    }));
+    resolve::setup_panic_hook();
+    log_err!(init::init_config());
 
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -130,7 +77,7 @@ pub fn run() -> Result<()> {
 
             #[cfg(target_os = "macos")]
             {
-                app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
+                let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
                 let show_in_dock = { Config::verge().latest().show_in_dock.unwrap_or(true) };
                 let _ = app_handle.set_dock_visibility(show_in_dock);
             }

@@ -1,11 +1,15 @@
+use std::backtrace::{Backtrace, BacktraceStatus};
+
 use crate::config::PrfOption;
+use crate::core::verge_log::VergeLog;
+use crate::utils::dirs::APP_ID;
 use crate::{
     config::{Config, PrfItem},
     core::*,
     utils::init,
     utils::server,
 };
-use crate::{log_err, shutdown, trace_err, utils};
+use crate::{log_err, shutdown, trace_err, utils, APP_HANDLE};
 use anyhow::Result;
 use rust_i18n::t;
 use tauri::{AppHandle, CloseRequestApi, Manager};
@@ -60,6 +64,60 @@ pub async fn resolve_setup() {
             resolve_scheme(argvs[1].to_owned()).await;
         }
     }
+}
+
+pub fn setup_panic_hook() {
+    std::panic::set_hook(Box::new(move |panic_info| {
+        let payload = panic_info.payload();
+        let payload = if let Some(s) = payload.downcast_ref::<&str>() {
+            &**s
+        } else if let Some(s) = payload.downcast_ref::<String>() {
+            s
+        } else {
+            &format!("{:?}", payload)
+        };
+
+        let location = panic_info
+            .location()
+            .map(|l| l.to_string())
+            .unwrap_or("unknown location".to_string());
+
+        let backtrace = Backtrace::capture();
+        let backtrace = if backtrace.status() == BacktraceStatus::Captured {
+            t!("panic.info.backtrace", backtrace = backtrace)
+        } else {
+            t!("panic.info.display.backtrace.note")
+        };
+
+        tracing::error!("panicked at {}:\n{}\n{}", location, payload, backtrace);
+        let limit_backtrace = backtrace.lines().take(10).collect::<Vec<_>>().join("\n");
+        let log_file = VergeLog::global().get_log_file().unwrap_or_default();
+        let log_file = log_file.split(APP_ID).last().unwrap_or_default();
+        let content = t!(
+            "panic.info.content",
+            location = location,
+            payload = payload,
+            limit_backtrace = limit_backtrace,
+            log_file = log_file,
+        );
+        rfd::MessageDialog::new()
+            .set_title(t!("panic.info.title"))
+            .set_description(content)
+            .set_buttons(rfd::MessageButtons::Ok)
+            .set_level(rfd::MessageLevel::Error)
+            .show();
+
+        // avoid window freezing, spawn a new thread to resolve reset
+        let task = std::thread::spawn(|| async {
+            resolve_reset().await;
+        });
+        let _ = task.join();
+        if let Some(app_handle) = APP_HANDLE.get() {
+            app_handle.exit(1);
+        } else {
+            std::process::exit(1);
+        }
+    }));
 }
 
 /// reset system proxy
