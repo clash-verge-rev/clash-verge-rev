@@ -218,33 +218,24 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        onClick={() => ctrlRef.current?.open()}
         label={
           <>
             {t("External")}
-            <TooltipIcon
-              title={t(
-                "Enable one-click random API port and key. Click to randomize the port and key",
-              )}
-              sx={{ opacity: "0.7" }}
-            />
           </>
         }
-      />
-
-      <SettingItem
-        onClick={() => corsRef.current?.open()}
-        label={
-          <>
-            {t("External Cors")}
-            <TooltipIcon
-              title={t(
-                "Enable one-click CORS for external API. Click to toggle CORS",
-              )}
-              sx={{ opacity: "0.7" }}
-            />
-          </>
+        extra={
+          <TooltipIcon
+            title={t("External Cors Settings")}
+            icon={SettingsRounded}
+            onClick={(e) => {
+              e.stopPropagation();
+              corsRef.current?.open();
+            }}
+          />
         }
+        onClick={() => {
+          ctrlRef.current?.open();
+        }}
       />
 
       <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
