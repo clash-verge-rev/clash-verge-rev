@@ -2,6 +2,9 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:best-practices",
+    ":prConcurrentLimit10",
+    ":prHourlyLimitNone",
+    ":rebaseStalePrs",
     ":automergeMinor",
     "schedule:automergeDaily",
     "docker:disable"
