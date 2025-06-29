@@ -1,17 +1,15 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:best-practices", ":pinDevDependencies"],
-  "dependencyDashboard": true,
+  "extends": [
+    "config:best-practices",
+    ":dependencyDashboard",
+    ":pinDevDependencies",
+    ":automergeMinor",
+    "schedule:automergeDaily",
+    "docker:disable"
+  ],
   "labels": ["dependencies"],
-  "automerge": true,
-  "dockerfile": {
-    "ignorePaths": ["**/cross_dockerfile/**"]
-  },
   "packageRules": [
-    {
-      "matchDatasources": ["npm"],
-      "minimumReleaseAge": "3 days"
-    },
     {
       "matchManagers": ["github-actions"],
       "labels": ["github-actions"],
