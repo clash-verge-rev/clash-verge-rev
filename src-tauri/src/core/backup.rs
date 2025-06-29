@@ -104,23 +104,25 @@ impl WebDav {
         })
     }
 
-    pub async fn init(&self) -> Result<()> {
-        let (url, username, password) = {
-            let verge = Config::verge().latest().clone();
-            (
-                verge.webdav_url,
-                verge.webdav_username,
-                verge.webdav_password,
-            )
-        };
-        if let (Some(url), Some(username), Some(password)) = (url, username, password) {
-            trace_err!(
-                self.update_webdav_info(url, username, password).await,
-                "failed to update webdav info"
-            );
-        } else {
-            tracing::trace!("webdav info config is empty, skip init webdav");
-        }
+    pub fn init(&'static self) -> Result<()> {
+        tauri::async_runtime::spawn(async {
+            let (url, username, password) = {
+                let verge = Config::verge().latest().clone();
+                (
+                    verge.webdav_url,
+                    verge.webdav_username,
+                    verge.webdav_password,
+                )
+            };
+            if let (Some(url), Some(username), Some(password)) = (url, username, password) {
+                trace_err!(
+                    self.update_webdav_info(url, username, password).await,
+                    "failed to update webdav info"
+                );
+            } else {
+                tracing::trace!("webdav info config is empty, skip init webdav");
+            }
+        });
         Ok(())
     }
 

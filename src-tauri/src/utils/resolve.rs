@@ -25,7 +25,7 @@ pub async fn resolve_setup() {
     tracing::trace!("init config");
     log_err!(Config::init_config());
     tracing::trace!("launch core");
-    log_err!(CoreManager::global().init().await);
+    log_err!(CoreManager::global().init());
     tracing::trace!("launch embed server");
     server::embed_server().await;
     tracing::trace!("init autolaunch");
@@ -34,6 +34,15 @@ pub async fn resolve_setup() {
     log_err!(sysopt::Sysopt::global().init_sysproxy());
     tracing::trace!("update system tray");
     log_err!(handle::Handle::update_systray_part());
+    tracing::trace!("init hotkey");
+    log_err!(hotkey::Hotkey::global().init());
+    tracing::trace!("init webdav config");
+    log_err!(backup::WebDav::global().init());
+    tracing::trace!("init timer");
+    log_err!(timer::Timer::global().init());
+    tracing::trace!("register os shutdown handler");
+    shutdown::register();
+
     let silent_start = {
         Config::verge()
             .latest()
@@ -43,14 +52,6 @@ pub async fn resolve_setup() {
     if !silent_start {
         create_window();
     }
-    tracing::trace!("init hotkey");
-    log_err!(hotkey::Hotkey::global().init());
-    tracing::trace!("init webdav config");
-    log_err!(backup::WebDav::global().init().await);
-    tracing::trace!("init timer");
-    log_err!(timer::Timer::global().init());
-    tracing::trace!("register os shutdown handler");
-    shutdown::register();
 
     let argvs = std::env::args().collect::<Vec<String>>();
     if argvs.len() > 1 {
