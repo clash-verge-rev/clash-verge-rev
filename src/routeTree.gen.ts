@@ -8,132 +8,56 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as TestRouteImport } from "./routes/test";
+import { Route as SettingsRouteImport } from "./routes/settings";
+import { Route as RulesRouteImport } from "./routes/rules";
+import { Route as ProxiesRouteImport } from "./routes/proxies";
+import { Route as ProfilesRouteImport } from "./routes/profiles";
+import { Route as LogsRouteImport } from "./routes/logs";
+import { Route as ConnectionsRouteImport } from "./routes/connections";
+import { Route as IndexRouteImport } from "./routes/index";
 
-import { Route as rootRoute } from "./routes/__root";
-import { Route as TestImport } from "./routes/test";
-import { Route as SettingsImport } from "./routes/settings";
-import { Route as RulesImport } from "./routes/rules";
-import { Route as ProxiesImport } from "./routes/proxies";
-import { Route as ProfilesImport } from "./routes/profiles";
-import { Route as LogsImport } from "./routes/logs";
-import { Route as ConnectionsImport } from "./routes/connections";
-import { Route as IndexImport } from "./routes/index";
-
-// Create/Update Routes
-
-const TestRoute = TestImport.update({
+const TestRoute = TestRouteImport.update({
   id: "/test",
   path: "/test",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
-
-const SettingsRoute = SettingsImport.update({
+const SettingsRoute = SettingsRouteImport.update({
   id: "/settings",
   path: "/settings",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
-
-const RulesRoute = RulesImport.update({
+const RulesRoute = RulesRouteImport.update({
   id: "/rules",
   path: "/rules",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
-
-const ProxiesRoute = ProxiesImport.update({
+const ProxiesRoute = ProxiesRouteImport.update({
   id: "/proxies",
   path: "/proxies",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
-
-const ProfilesRoute = ProfilesImport.update({
+const ProfilesRoute = ProfilesRouteImport.update({
   id: "/profiles",
   path: "/profiles",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
-
-const LogsRoute = LogsImport.update({
+const LogsRoute = LogsRouteImport.update({
   id: "/logs",
   path: "/logs",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
-
-const ConnectionsRoute = ConnectionsImport.update({
+const ConnectionsRoute = ConnectionsRouteImport.update({
   id: "/connections",
   path: "/connections",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: "/",
   path: "/",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
-
-// Populate the FileRoutesByPath interface
-
-declare module "@tanstack/react-router" {
-  interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/connections": {
-      id: "/connections";
-      path: "/connections";
-      fullPath: "/connections";
-      preLoaderRoute: typeof ConnectionsImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/logs": {
-      id: "/logs";
-      path: "/logs";
-      fullPath: "/logs";
-      preLoaderRoute: typeof LogsImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/profiles": {
-      id: "/profiles";
-      path: "/profiles";
-      fullPath: "/profiles";
-      preLoaderRoute: typeof ProfilesImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/proxies": {
-      id: "/proxies";
-      path: "/proxies";
-      fullPath: "/proxies";
-      preLoaderRoute: typeof ProxiesImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/rules": {
-      id: "/rules";
-      path: "/rules";
-      fullPath: "/rules";
-      preLoaderRoute: typeof RulesImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/settings": {
-      id: "/settings";
-      path: "/settings";
-      fullPath: "/settings";
-      preLoaderRoute: typeof SettingsImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/test": {
-      id: "/test";
-      path: "/test";
-      fullPath: "/test";
-      preLoaderRoute: typeof TestImport;
-      parentRoute: typeof rootRoute;
-    };
-  }
-}
-
-// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
@@ -145,7 +69,6 @@ export interface FileRoutesByFullPath {
   "/settings": typeof SettingsRoute;
   "/test": typeof TestRoute;
 }
-
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/connections": typeof ConnectionsRoute;
@@ -156,9 +79,8 @@ export interface FileRoutesByTo {
   "/settings": typeof SettingsRoute;
   "/test": typeof TestRoute;
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute;
+  __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/connections": typeof ConnectionsRoute;
   "/logs": typeof LogsRoute;
@@ -168,7 +90,6 @@ export interface FileRoutesById {
   "/settings": typeof SettingsRoute;
   "/test": typeof TestRoute;
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
@@ -202,7 +123,6 @@ export interface FileRouteTypes {
     | "/test";
   fileRoutesById: FileRoutesById;
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   ConnectionsRoute: typeof ConnectionsRoute;
@@ -212,6 +132,67 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute;
   SettingsRoute: typeof SettingsRoute;
   TestRoute: typeof TestRoute;
+}
+
+declare module "@tanstack/react-router" {
+  interface FileRoutesByPath {
+    "/test": {
+      id: "/test";
+      path: "/test";
+      fullPath: "/test";
+      preLoaderRoute: typeof TestRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/settings": {
+      id: "/settings";
+      path: "/settings";
+      fullPath: "/settings";
+      preLoaderRoute: typeof SettingsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/rules": {
+      id: "/rules";
+      path: "/rules";
+      fullPath: "/rules";
+      preLoaderRoute: typeof RulesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/proxies": {
+      id: "/proxies";
+      path: "/proxies";
+      fullPath: "/proxies";
+      preLoaderRoute: typeof ProxiesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/profiles": {
+      id: "/profiles";
+      path: "/profiles";
+      fullPath: "/profiles";
+      preLoaderRoute: typeof ProfilesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/logs": {
+      id: "/logs";
+      path: "/logs";
+      fullPath: "/logs";
+      preLoaderRoute: typeof LogsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/connections": {
+      id: "/connections";
+      path: "/connections";
+      fullPath: "/connections";
+      preLoaderRoute: typeof ConnectionsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -224,51 +205,6 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   TestRoute: TestRoute,
 };
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>();
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/connections",
-        "/logs",
-        "/profiles",
-        "/proxies",
-        "/rules",
-        "/settings",
-        "/test"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/connections": {
-      "filePath": "connections.tsx"
-    },
-    "/logs": {
-      "filePath": "logs.tsx"
-    },
-    "/profiles": {
-      "filePath": "profiles.tsx"
-    },
-    "/proxies": {
-      "filePath": "proxies.tsx"
-    },
-    "/rules": {
-      "filePath": "rules.tsx"
-    },
-    "/settings": {
-      "filePath": "settings.tsx"
-    },
-    "/test": {
-      "filePath": "test.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

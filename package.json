@@ -6,8 +6,8 @@
   "scripts": {
     "generate-routes": "tsr generate",
     "watch-routes": "tsr watch",
-    "dev": "cross-env RUST_BACKTRACE=1 concurrently -k \"tauri dev\"",
-    "dev:diff": "cross-env RUST_BACKTRACE=1 concurrently -k  \"tauri dev -f verge-dev\"",
+    "dev": "RUST_BACKTRACE=1 tauri dev",
+    "dev:diff": "RUST_BACKTRACE=1 tauri dev -f verge-dev",
     "build": "tauri build",
     "devtools": "pnpm react-devtools",
     "arch-build": "cd archbuild/local_build && ./build.sh",
@@ -90,7 +90,6 @@
     "cli-color": "2.0.4",
     "clsx": "2.1.1",
     "concurrently": "9.2.0",
-    "cross-env": "7.0.3",
     "fs-extra": "11.3.0",
     "https-proxy-agent": "7.0.6",
     "husky": "9.1.7",
