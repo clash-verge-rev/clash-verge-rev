@@ -254,7 +254,6 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         onOk={handleSave}
       >
         <List sx={{ width: "90%", padding: 2 }}>
-
           <ListItem sx={{ padding: "8px 0" }}>
             <Box
               display="flex"
