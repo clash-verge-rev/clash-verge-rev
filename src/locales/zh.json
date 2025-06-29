@@ -639,5 +639,13 @@
   "AppHiddenTitle": "应用隐藏",
   "AppHiddenBody": "已通过快捷键隐藏应用窗口",
   "Invalid Profile URL": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址",
-  "Saved Successfully": "保存成功"
+  "Saved Successfully": "保存成功",
+  "External Cors": "外部控制跨域",
+  "Enable one-click CORS for external API. Click to toggle CORS": "设置内核跨域访问，点击切换 CORS是否启用",
+  "External Cors Configuration": "外部控制跨域配置",
+  "Allow private network access": "允许专用网络访问",
+  "Allowed Origins": "允许的来源",
+  "Please enter a valid url": "请输入有效的网址",
+  "Add": "添加",
+  "Development mode: Automatically includes Tauri and localhost origins": "开发模式：自动包含 Tauri 和 localhost 来源"
 }

@@ -141,8 +141,8 @@ fn test_script() {
 fn test_escape_unescape() {
     let test_string = r#"Hello "World"!\nThis is a test with \u00A9 copyright symbol."#;
     let escaped = escape_js_string_for_single_quote(test_string);
-    println!("Original: {}", test_string);
-    println!("Escaped: {}", escaped);
+    println!("Original: {test_string}");
+    println!("Escaped: {escaped}");
 
     let json_str = r#"{"key":"value","nested":{"key":"value"}}"#;
     let parsed = parse_json_safely(json_str).unwrap();

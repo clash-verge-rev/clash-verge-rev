@@ -534,7 +534,7 @@ impl EventDrivenProxyManager {
         let binary_path = match dirs::service_path() {
             Ok(path) => path,
             Err(e) => {
-                log::error!(target: "app", "获取服务路径失败: {}", e);
+                log::error!(target: "app", "获取服务路径失败: {e}");
                 return;
             }
         };
@@ -554,17 +554,17 @@ impl EventDrivenProxyManager {
         match output {
             Ok(output) => {
                 if !output.status.success() {
-                    log::error!(target: "app", "执行sysproxy命令失败: {:?}", args);
+                    log::error!(target: "app", "执行sysproxy命令失败: {args:?}");
                     let stderr = String::from_utf8_lossy(&output.stderr);
                     if !stderr.is_empty() {
-                        log::error!(target: "app", "sysproxy错误输出: {}", stderr);
+                        log::error!(target: "app", "sysproxy错误输出: {stderr}");
                     }
                 } else {
-                    log::debug!(target: "app", "成功执行sysproxy命令: {:?}", args);
+                    log::debug!(target: "app", "成功执行sysproxy命令: {args:?}");
                 }
             }
             Err(e) => {
-                log::error!(target: "app", "执行sysproxy命令出错: {}", e);
+                log::error!(target: "app", "执行sysproxy命令出错: {e}");
             }
         }
     }

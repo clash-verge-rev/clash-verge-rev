@@ -218,7 +218,7 @@ pub async fn reinstall_service() -> Result<()> {
             Ok(())
         }
         Err(err) => {
-            let error = format!("failed to install service: {}", err);
+            let error = format!("failed to install service: {err}");
             service_state.last_error = Some(error.clone());
             service_state.prefer_sidecar = true;
             service_state.save()?;
@@ -346,7 +346,7 @@ pub async fn reinstall_service() -> Result<()> {
             Ok(())
         }
         Err(err) => {
-            let error = format!("failed to install service: {}", err);
+            let error = format!("failed to install service: {err}");
             service_state.last_error = Some(error.clone());
             service_state.prefer_sidecar = true;
             service_state.save()?;

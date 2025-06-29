@@ -97,25 +97,6 @@ impl IClashTemp {
         config.insert("port".into(), port.into());
         config.insert("external-controller".into(), ctrl.into());
 
-        // 强制覆盖 external-controller-cors 字段，允许本地和 tauri 前端
-        let mut cors_map = Mapping::new();
-        cors_map.insert("allow-private-network".into(), true.into());
-        cors_map.insert(
-            "allow-origins".into(),
-            vec![
-                "tauri://localhost",
-                "http://tauri.localhost",
-                // Only enable this in dev mode
-                #[cfg(feature = "verge-dev")]
-                "http://localhost:3000",
-                "https://yacd.metacubex.one",
-                "https://metacubex.github.io",
-                "https://board.zash.run.place",
-            ]
-            .into(),
-        );
-        config.insert("external-controller-cors".into(), cors_map.into());
-
         config
     }
 

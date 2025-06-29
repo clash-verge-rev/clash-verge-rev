@@ -639,5 +639,13 @@
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
   "Invalid Profile URL": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-  "Saved Successfully": "Saved successfully"
+  "Saved Successfully": "Saved successfully",
+  "External Cors": "External Cors",
+  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
+  "External Cors Configuration": "External Cors Configuration",
+  "Allow private network access": "Allow private network access",
+  "Allowed Origins": "Allowed Origins",
+  "Please enter a valid url": "Please enter a valid url",
+  "Add": "Add",
+  "Development mode: Automatically includes Tauri and localhost origins": "Development mode: Automatically includes Tauri and localhost origins"
 }
