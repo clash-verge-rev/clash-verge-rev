@@ -643,7 +643,6 @@
   "External Cors": "外部控制跨域",
   "Enable one-click CORS for external API. Click to toggle CORS": "设置内核跨域访问，点击切换 CORS是否启用",
   "External Cors Configuration": "外部控制跨域配置",
-  "External Controller CORS Settings": "外部控制跨域设置",
   "Allow private network access": "允许专用网络访问",
   "Allowed Origins": "允许的来源",
   "Please enter a valid url": "请输入有效的网址",

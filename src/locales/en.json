@@ -643,7 +643,6 @@
   "External Cors": "External Cors",
   "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Configuration": "External Cors Configuration",
-  "External Controller CORS Settings": "External Controller CORS Settings",
   "Allow private network access": "Allow private network access",
   "Allowed Origins": "Allowed Origins",
   "Please enter a valid url": "Please enter a valid url",
