@@ -208,14 +208,14 @@ importers:
         specifier: 8.5.6
         version: 8.5.6
       prettier:
-        specifier: 3.6.1
-        version: 3.6.1
+        specifier: 3.6.2
+        version: 3.6.2
       prettier-plugin-tailwindcss:
         specifier: 0.6.13
-        version: 0.6.13(prettier@3.6.1)
+        version: 0.6.13(prettier@3.6.2)
       pretty-quick:
         specifier: 4.2.2
-        version: 4.2.2(prettier@3.6.1)
+        version: 4.2.2(prettier@3.6.2)
       tailwind-merge:
         specifier: 3.3.1
         version: 3.3.1
@@ -2893,8 +2893,8 @@ packages:
       prettier-plugin-svelte:
         optional: true
 
-  prettier@3.6.1:
-    resolution: {integrity: sha512-5xGWRa90Sp2+x1dQtNpIpeOQpTDBs9cZDmA/qs2vDNN2i18PdapqY7CmBeyLlMuGqXJRIOPaCaVZTLNQRWUH/A==}
+  prettier@3.6.2:
+    resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -4945,7 +4945,7 @@ snapshots:
       '@tanstack/router-core': 1.121.34
       '@tanstack/router-utils': 1.121.21
       '@tanstack/virtual-file-routes': 1.121.21
-      prettier: 3.6.1
+      prettier: 3.6.2
       recast: 0.23.11
       source-map: 0.7.4
       tsx: 4.19.4
@@ -6169,7 +6169,7 @@ snapshots:
       monaco-types: 0.1.0
       monaco-worker-manager: 2.0.1(monaco-editor@0.52.2)
       path-browserify: 1.0.1
-      prettier: 3.6.1
+      prettier: 3.6.2
       vscode-languageserver-textdocument: 1.0.12
       vscode-languageserver-types: 3.17.5
       vscode-uri: 3.1.0
@@ -6265,20 +6265,20 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  prettier-plugin-tailwindcss@0.6.13(prettier@3.6.1):
+  prettier-plugin-tailwindcss@0.6.13(prettier@3.6.2):
     dependencies:
-      prettier: 3.6.1
+      prettier: 3.6.2
 
-  prettier@3.6.1: {}
+  prettier@3.6.2: {}
 
-  pretty-quick@4.2.2(prettier@3.6.1):
+  pretty-quick@4.2.2(prettier@3.6.2):
     dependencies:
       '@pkgr/core': 0.2.7
       ignore: 7.0.5
       mri: 1.2.0
       picocolors: 1.1.1
       picomatch: 4.0.2
-      prettier: 3.6.1
+      prettier: 3.6.2
       tinyexec: 0.3.2
       tslib: 2.8.1
 
