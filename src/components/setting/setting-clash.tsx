@@ -218,11 +218,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={
-          <>
-            {t("External")}
-          </>
-        }
+        label={<>{t("External")}</>}
         extra={
           <TooltipIcon
             title={t("External Cors Settings")}
