@@ -8,6 +8,7 @@ import {
   deleteConnection,
   getGroupProxyDelays,
 } from "@/services/api";
+import { forceRefreshProxies } from "@/services/cmds";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseEmpty } from "../base";
@@ -341,6 +342,9 @@ export const ProxyGroups = (props: Props) => {
 
       const { name, now } = group;
       await updateProxy(name, proxy.name);
+
+      await forceRefreshProxies();
+
       onProxies();
 
       // 断开连接

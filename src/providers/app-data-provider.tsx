@@ -101,33 +101,19 @@ export const AppDataProvider = ({
           lastProfileId = newProfileId;
           lastUpdateTime = now;
 
-          setTimeout(async () => {
-            try {
-              console.log("[AppDataProvider] 强制刷新代理缓存");
-
-              const refreshPromise = Promise.race([
-                forceRefreshProxies(),
-                new Promise((_, reject) =>
-                  setTimeout(
-                    () => reject(new Error("forceRefreshProxies timeout")),
-                    8000,
-                  ),
-                ),
-              ]);
-
-              await refreshPromise;
-
-              console.log("[AppDataProvider] 刷新前端代理数据");
-              await refreshProxy();
-
-              console.log("[AppDataProvider] Profile切换的代理数据刷新完成");
-            } catch (error) {
-              console.error("[AppDataProvider] 强制刷新代理缓存失败:", error);
-
-              refreshProxy().catch((e) =>
-                console.warn("[AppDataProvider] 普通刷新也失败:", e),
-              );
-            }
+          setTimeout(() => {
+            // 先执行 forceRefreshProxies，完成后稍延迟再刷新前端数据，避免页面一直 loading
+            forceRefreshProxies()
+              .catch((e) =>
+                console.warn("[AppDataProvider] forceRefreshProxies 失败:", e),
+              )
+              .finally(() => {
+                setTimeout(() => {
+                  refreshProxy().catch((e) =>
+                    console.warn("[AppDataProvider] 普通刷新也失败:", e),
+                  );
+                }, 200); // 200ms 延迟，保证后端缓存已清理
+              });
           }, 0);
         });
 

@@ -1070,6 +1070,7 @@ dependencies = [
  "base64 0.22.1",
  "boa_engine",
  "chrono",
+ "dashmap 6.1.0",
  "deelevate",
  "delay_timer",
  "dirs 6.0.0",

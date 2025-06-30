@@ -213,7 +213,6 @@ pub fn run() {
                 logging!(error, Type::Setup, true, "初始化资源失败: {}", e);
             }
 
-            app.manage(Mutex::new(state::proxy::CmdProxyState::default()));
             app.manage(Mutex::new(state::lightweight::LightWeightState::default()));
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
