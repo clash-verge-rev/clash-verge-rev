@@ -22,7 +22,7 @@ impl ProxyRequestCache {
     }
 
     pub fn make_key(prefix: &str, id: &str) -> String {
-        format!("{}:{}", prefix, id)
+        format!("{prefix}:{id}")
     }
 
     pub async fn get_or_fetch<F, Fut>(&self, key: String, ttl: Duration, fetch_fn: F) -> Arc<Value>

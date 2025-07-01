@@ -28,7 +28,7 @@ chrono = "0.4.41"
 sysinfo = "0.35.2"
 boa_engine = "0.20.0"
 serde_json = "1.0.140"
-serde_yaml = "0.9.34-deprecated"
+serde_yaml = "0.9.34"
 once_cell = "1.21.3"
 lazy_static = "1.5.0"
 port_scanner = "0.1.5"
@@ -42,11 +42,10 @@ tokio = { version = "1.45.1", features = [
   "sync",
 ] }
 serde = { version = "1.0.219", features = ["derive"] }
-reqwest = { version = "0.12.20", features = ["json", "rustls-tls", "cookies"] }
+reqwest = { version = "0.12.22", features = ["json", "rustls-tls", "cookies"] }
 regex = "1.11.1"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
 image = "0.25.6"
-imageproc = "0.25.0"
 tauri = { version = "2.6.2", features = [
   "protocol-asset",
   "devtools",
@@ -68,13 +67,10 @@ reqwest_dav = "0.2.1"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
 getrandom = "0.3.3"
-tokio-tungstenite = "0.27.0"
 futures = "0.3.31"
 sys-locale = "0.3.2"
 async-trait = "0.1.88"
 mihomo_api = { path = "src_crates/crate_mihomo_api" }
-ab_glyph = "0.2.30"
-tungstenite = "0.27.0"
 libc = "0.2.174"
 gethostname = "1.0.2"
 hmac = "0.12.1"
@@ -147,8 +143,3 @@ tempfile = "3.20.0"
 
 [workspace]
 members = ["src_crates/crate_mihomo_api"]
-
-# [patch.crates-io]
-# bitflags = { git = "https://github.com/bitflags/bitflags", rev = "2.9.0" }
-# zerocopy = { git = "https://github.com/google/zerocopy", rev = "v0.8.24" }
-# tungstenite = { git = "https://github.com/snapview/tungstenite-rs", rev = "v0.26.2" }
