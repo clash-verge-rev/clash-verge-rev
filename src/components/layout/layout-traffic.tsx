@@ -34,7 +34,7 @@ export const LayoutTraffic = () => {
   const pageVisible = useVisibility();
 
   const { data: isDebug } = useSWR(
-    "clashh-verge-rev-internal://isDebugEnabled",
+    "clash-verge-rev-internal://isDebugEnabled",
     () => isDebugEnabled(),
     {
       // default value before is fetched
