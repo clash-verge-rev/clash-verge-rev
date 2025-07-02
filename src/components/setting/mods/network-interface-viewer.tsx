@@ -6,13 +6,11 @@ import { alpha, Box, Button, IconButton } from "@mui/material";
 import { ContentCopyRounded } from "@mui/icons-material";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { showNotice } from "@/services/noticeService";
+import useSWR from "swr";
 
 export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [networkInterfaces, setNetworkInterfaces] = useState<
-    INetworkInterface[]
-  >([]);
   const [isV4, setIsV4] = useState(true);
 
   useImperativeHandle(ref, () => ({
@@ -22,12 +20,13 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
     close: () => setOpen(false),
   }));
 
-  useEffect(() => {
-    if (!open) return;
-    getNetworkInterfacesInfo().then((res) => {
-      setNetworkInterfaces(res);
-    });
-  }, [open]);
+  const { data: networkInterfaces } = useSWR(
+    "clash-verge-rev-internal://network-interfaces",
+    getNetworkInterfacesInfo,
+    {
+      fallbackData: [], // default data before fetch
+    },
+  );
 
   return (
     <BaseDialog
