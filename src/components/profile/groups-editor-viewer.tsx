@@ -48,6 +48,10 @@ import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
 import { Controller, useForm } from "react-hook-form";
 import { showNotice } from "@/services/noticeService";
+import {
+  requestIdleCallback,
+  cancelIdleCallback,
+} from "foxact/request-idle-callback";
 
 interface Props {
   proxiesUid: string;
@@ -195,11 +199,11 @@ export const GroupsEditorViewer = (props: Props) => {
           // 防止异常导致UI卡死
         }
       };
-      if (window.requestIdleCallback) {
-        window.requestIdleCallback(serialize);
-      } else {
-        setTimeout(serialize, 0);
-      }
+
+      const handle = requestIdleCallback(serialize);
+      return () => {
+        cancelIdleCallback(handle);
+      };
     }
   }, [prependSeq, appendSeq, deleteSeq]);
 
