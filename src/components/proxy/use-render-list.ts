@@ -25,7 +25,13 @@ export const useRenderList = (mode: string) => {
   const { data: proxiesData, mutate: mutateProxies } = useSWR(
     "getProxies",
     calcuProxies,
-    { refreshInterval: 45000 },
+    {
+      refreshInterval: 45000,
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        if (retryCount >= 10) return;
+        setTimeout(() => revalidate({ retryCount }), 1000);
+      },
+    },
   );
 
   const { verge } = useVerge();

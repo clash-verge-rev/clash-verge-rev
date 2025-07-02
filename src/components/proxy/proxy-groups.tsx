@@ -15,6 +15,7 @@ import {
 } from "tauri-plugin-mihomo-api";
 import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
+import LoadingPage from "@/pages/loading";
 
 interface Props {
   mode: string;
@@ -141,6 +142,8 @@ export const ProxyGroups = (props: Props) => {
   const groupNameList = renderList
     .filter((item) => item.type === 0)
     .map((item) => item.key);
+
+  if (renderList.length === 0) return <LoadingPage />;
 
   return (
     <Box className="relative flex h-full w-full">
