@@ -1,12 +1,5 @@
 import { useTranslation } from "react-i18next";
-import {
-  Box,
-  Typography,
-  Button,
-  Skeleton,
-  IconButton,
-  useTheme,
-} from "@mui/material";
+import { Box, Typography, Button, Skeleton, IconButton } from "@mui/material";
 import {
   LocationOnOutlined,
   RefreshOutlined,

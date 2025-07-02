@@ -17,7 +17,7 @@ const formatUptime = (uptimeMs: number) => {
 export const ClashInfoCard = () => {
   const { t } = useTranslation();
   const { version: clashVersion } = useClash();
-  const { clashConfig, sysproxy, rules, uptime } = useAppData();
+  const { clashConfig, rules, uptime, systemProxyAddress } = useAppData();
 
   // 使用useMemo缓存格式化后的uptime，避免频繁计算
   const formattedUptime = useMemo(() => formatUptime(uptime), [uptime]);
@@ -42,7 +42,7 @@ export const ClashInfoCard = () => {
             {t("System Proxy Address")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
-            {sysproxy?.server || "-"}
+            {systemProxyAddress}
           </Typography>
         </Stack>
         <Divider />
@@ -74,7 +74,14 @@ export const ClashInfoCard = () => {
         </Stack>
       </Stack>
     );
-  }, [clashConfig, clashVersion, t, formattedUptime, rules.length, sysproxy]);
+  }, [
+    clashConfig,
+    clashVersion,
+    t,
+    formattedUptime,
+    rules.length,
+    systemProxyAddress,
+  ]);
 
   return (
     <EnhancedCard

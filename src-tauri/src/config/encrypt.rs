@@ -21,7 +21,7 @@ pub fn encrypt_data(data: &str) -> Result<String, Box<dyn std::error::Error>> {
     // Encrypt data
     let ciphertext = cipher
         .encrypt(nonce.as_slice().into(), data.as_bytes())
-        .map_err(|e| format!("Encryption failed: {}", e))?;
+        .map_err(|e| format!("Encryption failed: {e}"))?;
 
     // Concatenate nonce and ciphertext and encode them in base64
     let mut combined = nonce;
@@ -46,7 +46,7 @@ pub fn decrypt_data(encrypted: &str) -> Result<String, Box<dyn std::error::Error
     // Decrypt data
     let plaintext = cipher
         .decrypt(nonce.into(), ciphertext)
-        .map_err(|e| format!("Decryption failed: {}", e))?;
+        .map_err(|e| format!("Decryption failed: {e}"))?;
 
     String::from_utf8(plaintext).map_err(|e| e.into())
 }

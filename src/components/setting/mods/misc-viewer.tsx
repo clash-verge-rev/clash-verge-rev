@@ -27,7 +27,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     enableBuiltinEnhanced: true,
     proxyLayoutColumn: 6,
     defaultLatencyTest: "",
-    autoLogClean: 0,
+    autoLogClean: 2,
     defaultLatencyTimeout: 10000,
   });
 

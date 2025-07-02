@@ -59,7 +59,9 @@ export const ProfileItem = (props: Props) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: props.id });
+  } = useSortable({
+    id: props.id,
+  });
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -463,7 +465,15 @@ export const ProfileItem = (props: Props) => {
     >
       <ProfileBox
         aria-selected={selected}
-        onClick={() => onSelect(false)}
+        onClick={(e) => {
+          // 如果正在激活中，阻止重复点击
+          if (activating) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          onSelect(false);
+        }}
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });
@@ -484,9 +494,16 @@ export const ProfileItem = (props: Props) => {
               bottom: 2,
               zIndex: 10,
               backdropFilter: "blur(2px)",
+              backgroundColor: "rgba(0, 0, 0, 0.1)",
             }}
           >
-            <CircularProgress color="inherit" size={20} />
+            <CircularProgress
+              color="inherit"
+              size={20}
+              sx={{
+                animation: "pulse 1.5s ease-in-out infinite",
+              }}
+            />
           </Box>
         )}
         <Box position="relative">
@@ -535,6 +552,10 @@ export const ProfileItem = (props: Props) => {
               disabled={loading}
               onClick={(e) => {
                 e.stopPropagation();
+                // 如果正在激活或加载中，阻止更新操作
+                if (activating || loading) {
+                  return;
+                }
                 onUpdate(1);
               }}
             >

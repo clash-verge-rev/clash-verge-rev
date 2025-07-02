@@ -3,21 +3,21 @@ import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
+import { useAppData } from "@/providers/app-data-provider";
+import { getClashConfig } from "@/services/api";
 import {
   getAutotemProxy,
-  getNetworkInterfaces,
   getNetworkInterfacesInfo,
   getSystemHostname,
   getSystemProxy,
   patchVergeConfig,
-  restartCore,
 } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
 import { EditRounded } from "@mui/icons-material";
 import {
   Autocomplete,
   Button,
-  CircularProgress,
   InputAdornment,
   List,
   ListItem,
@@ -29,14 +29,14 @@ import {
 import { useLockFn } from "ahooks";
 import {
   forwardRef,
-  useImperativeHandle,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { mutate } from "swr";
-import { showNotice } from "@/services/noticeService";
+import useSWR, { mutate } from "swr";
+
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
 }`;
@@ -82,7 +82,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const { verge, patchVerge } = useVerge();
+  const { verge, patchVerge, mutateVerge } = useVerge();
   const [hostOptions, setHostOptions] = useState<string[]>([]);
 
   type SysProxy = Awaited<ReturnType<typeof getSystemProxy>>;
@@ -121,6 +121,86 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     }
     return "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
   };
+
+  const { data: clashConfig, mutate: mutateClash } = useSWR(
+    "getClashConfig",
+    getClashConfig,
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: true,
+      dedupingInterval: 1000,
+      errorRetryInterval: 5000,
+    },
+  );
+
+  const [prevMixedPort, setPrevMixedPort] = useState(
+    clashConfig?.["mixed-port"],
+  );
+
+  useEffect(() => {
+    if (
+      clashConfig?.["mixed-port"] &&
+      clashConfig?.["mixed-port"] !== prevMixedPort
+    ) {
+      setPrevMixedPort(clashConfig?.["mixed-port"]);
+      resetSystemProxy();
+    }
+  }, [clashConfig?.["mixed-port"]]);
+
+  const resetSystemProxy = async () => {
+    try {
+      const currentSysProxy = await getSystemProxy();
+      const currentAutoProxy = await getAutotemProxy();
+
+      if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
+        // 临时关闭系统代理
+        await patchVergeConfig({ enable_system_proxy: false });
+
+        // 减少等待时间
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // 重新开启系统代理
+        await patchVergeConfig({ enable_system_proxy: true });
+
+        // 更新UI状态
+        await Promise.all([
+          mutate("getSystemProxy"),
+          mutate("getAutotemProxy"),
+        ]);
+      }
+    } catch (err: any) {
+      showNotice("error", err.toString());
+    }
+  };
+
+  const { systemProxyAddress } = useAppData();
+
+  // 为当前状态计算系统代理地址
+  const getSystemProxyAddress = useMemo(() => {
+    if (!clashConfig) return "-";
+
+    const isPacMode = value.pac ?? false;
+
+    if (isPacMode) {
+      const host = value.proxy_host || "127.0.0.1";
+      const port = verge?.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+      return `${host}:${port}`;
+    } else {
+      return systemProxyAddress;
+    }
+  }, [
+    value.pac,
+    value.proxy_host,
+    verge?.verge_mixed_port,
+    clashConfig,
+    systemProxyAddress,
+  ]);
+  const getCurrentPacUrl = useMemo(() => {
+    const host = value.proxy_host || "127.0.0.1";
+    // 根据环境判断PAC端口
+    const port = import.meta.env.DEV ? 11233 : 33331;
+    return `http://${host}:${port}/commands/pac`;
+  }, [value.proxy_host]);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -231,90 +311,108 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     }
 
     setSaving(true);
-    try {
-      const patch: Partial<IVergeConfig> = {};
+    setOpen(false);
+    setSaving(false);
+    const patch: Partial<IVergeConfig> = {};
 
-      if (value.guard !== enable_proxy_guard) {
-        patch.enable_proxy_guard = value.guard;
-      }
-      if (value.duration !== proxy_guard_duration) {
-        patch.proxy_guard_duration = value.duration;
-      }
-      if (value.bypass !== system_proxy_bypass) {
-        patch.system_proxy_bypass = value.bypass;
-      }
-      if (value.pac !== proxy_auto_config) {
-        patch.proxy_auto_config = value.pac;
-      }
-      if (value.use_default !== use_default_bypass) {
-        patch.use_default_bypass = value.use_default;
-      }
-
-      let pacContent = value.pac_content;
-      if (pacContent) {
-        pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host);
-      }
-
-      if (pacContent !== pac_file_content) {
-        patch.pac_file_content = pacContent;
-      }
-
-      // 处理IPv6地址，如果是IPv6地址但没有被方括号包围，则添加方括号
-      let proxyHost = value.proxy_host;
-      if (
-        ipv6Regex.test(proxyHost) &&
-        !proxyHost.startsWith("[") &&
-        !proxyHost.endsWith("]")
-      ) {
-        proxyHost = `[${proxyHost}]`;
-      }
-
-      if (proxyHost !== proxy_host) {
-        patch.proxy_host = proxyHost;
-      }
-
-      // 判断是否需要重置系统代理
-      const needResetProxy =
-        value.pac !== proxy_auto_config ||
-        proxyHost !== proxy_host ||
-        pacContent !== pac_file_content ||
-        value.bypass !== system_proxy_bypass ||
-        value.use_default !== use_default_bypass;
-
-      await patchVerge(patch);
-
-      // 更新系统代理状态，以便UI立即反映变化
-      await Promise.all([mutate("getSystemProxy"), mutate("getAutotemProxy")]);
-
-      // 只有在修改了影响系统代理的配置且系统代理当前启用时，才重置系统代理
-      if (needResetProxy) {
-        const currentSysProxy = await getSystemProxy();
-        const currentAutoProxy = await getAutotemProxy();
-
-        if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
-          // 临时关闭系统代理
-          await patchVergeConfig({ enable_system_proxy: false });
-
-          // 减少等待时间
-          await new Promise((resolve) => setTimeout(resolve, 200));
-
-          // 重新开启系统代理
-          await patchVergeConfig({ enable_system_proxy: true });
-
-          // 更新UI状态
-          await Promise.all([
-            mutate("getSystemProxy"),
-            mutate("getAutotemProxy"),
-          ]);
-        }
-      }
-
-      setOpen(false);
-    } catch (err: any) {
-      showNotice("error", err.toString());
-    } finally {
-      setSaving(false);
+    if (value.guard !== enable_proxy_guard) {
+      patch.enable_proxy_guard = value.guard;
     }
+    if (value.duration !== proxy_guard_duration) {
+      patch.proxy_guard_duration = value.duration;
+    }
+    if (value.bypass !== system_proxy_bypass) {
+      patch.system_proxy_bypass = value.bypass;
+    }
+    if (value.pac !== proxy_auto_config) {
+      patch.proxy_auto_config = value.pac;
+    }
+    if (value.use_default !== use_default_bypass) {
+      patch.use_default_bypass = value.use_default;
+    }
+
+    let pacContent = value.pac_content;
+    if (pacContent) {
+      pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host);
+      // 将 mixed-port 转换为字符串
+      const mixedPortStr = (clashConfig?.["mixed-port"] || "").toString();
+      pacContent = pacContent.replace(/%mixed-port%/g, mixedPortStr);
+    }
+
+    if (pacContent !== pac_file_content) {
+      patch.pac_file_content = pacContent;
+    }
+
+    // 处理IPv6地址，如果是IPv6地址但没有被方括号包围，则添加方括号
+    let proxyHost = value.proxy_host;
+    if (
+      ipv6Regex.test(proxyHost) &&
+      !proxyHost.startsWith("[") &&
+      !proxyHost.endsWith("]")
+    ) {
+      proxyHost = `[${proxyHost}]`;
+    }
+
+    if (proxyHost !== proxy_host) {
+      patch.proxy_host = proxyHost;
+    }
+
+    // 判断是否需要重置系统代理
+    const needResetProxy =
+      value.pac !== proxy_auto_config ||
+      proxyHost !== proxy_host ||
+      pacContent !== pac_file_content ||
+      value.bypass !== system_proxy_bypass ||
+      value.use_default !== use_default_bypass;
+
+    Promise.resolve().then(async () => {
+      try {
+        // 乐观更新本地状态
+        if (Object.keys(patch).length > 0) {
+          mutateVerge({ ...verge, ...patch }, false);
+        }
+        if (Object.keys(patch).length > 0) {
+          await patchVerge(patch);
+        }
+        setTimeout(async () => {
+          try {
+            await Promise.all([
+              mutate("getSystemProxy"),
+              mutate("getAutotemProxy"),
+            ]);
+
+            // 如果需要重置代理且代理当前启用
+            if (needResetProxy && enabled) {
+              const [currentSysProxy, currentAutoProxy] = await Promise.all([
+                getSystemProxy(),
+                getAutotemProxy(),
+              ]);
+
+              const isProxyActive = value.pac
+                ? currentAutoProxy?.enable
+                : currentSysProxy?.enable;
+
+              if (isProxyActive) {
+                await patchVergeConfig({ enable_system_proxy: false });
+                await new Promise((resolve) => setTimeout(resolve, 50));
+                await patchVergeConfig({ enable_system_proxy: true });
+                await Promise.all([
+                  mutate("getSystemProxy"),
+                  mutate("getAutotemProxy"),
+                ]);
+              }
+            }
+          } catch (err) {
+            console.warn("代理状态更新失败:", err);
+          }
+        }, 50);
+      } catch (err: any) {
+        console.error("配置保存失败:", err);
+        mutateVerge();
+        showNotice("error", err.toString());
+        // setOpen(true);
+      }
+    });
   });
 
   return (
@@ -349,7 +447,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               <FlexBox>
                 <Typography className="label">{t("Server Addr")}</Typography>
                 <Typography className="value">
-                  {sysproxy?.server ? sysproxy.server : t("Not available")}
+                  {getSystemProxyAddress}
                 </Typography>
               </FlexBox>
             </>
@@ -357,7 +455,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           {value.pac && (
             <FlexBox>
               <Typography className="label">{t("PAC URL")}</Typography>
-              <Typography className="value">{autoproxy?.url || "-"}</Typography>
+              <Typography className="value">
+                {getCurrentPacUrl || "-"}
+              </Typography>
             </FlexBox>
           )}
         </BaseFieldset>

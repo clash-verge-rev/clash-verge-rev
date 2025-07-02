@@ -125,6 +125,7 @@ pub fn run() {
 
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_process::init())
@@ -212,7 +213,6 @@ pub fn run() {
                 logging!(error, Type::Setup, true, "初始化资源失败: {}", e);
             }
 
-            app.manage(Mutex::new(state::proxy::CmdProxyState::default()));
             app.manage(Mutex::new(state::lightweight::LightWeightState::default()));
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");

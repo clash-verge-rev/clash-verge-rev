@@ -19,6 +19,7 @@ import {
 } from "@mui/icons-material";
 import { useVerge } from "@/hooks/use-verge";
 import { useSystemState } from "@/hooks/use-system-state";
+import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { showNotice } from "@/services/noticeService";
 import { getRunningMode } from "@/services/cmds";
 import { mutate } from "swr";
@@ -145,8 +146,9 @@ export const ProxyTunCard: FC = () => {
 
   const { verge } = useVerge();
   const { isAdminMode } = useSystemState();
+  const { indicator: systemProxyIndicator } = useSystemProxyState();
 
-  const { enable_system_proxy, enable_tun_mode } = verge ?? {};
+  const { enable_tun_mode } = verge ?? {};
 
   const updateLocalStatus = async () => {
     try {
@@ -180,7 +182,7 @@ export const ProxyTunCard: FC = () => {
   const tabDescription = useMemo(() => {
     if (activeTab === "system") {
       return {
-        text: enable_system_proxy
+        text: systemProxyIndicator
           ? t("System Proxy Enabled")
           : t("System Proxy Disabled"),
         tooltip: t("System Proxy Info"),
@@ -195,7 +197,7 @@ export const ProxyTunCard: FC = () => {
         tooltip: t("TUN Mode Intercept Info"),
       };
     }
-  }, [activeTab, enable_system_proxy, enable_tun_mode, isTunAvailable, t]);
+  }, [activeTab, systemProxyIndicator, enable_tun_mode, isTunAvailable, t]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
@@ -214,7 +216,7 @@ export const ProxyTunCard: FC = () => {
           onClick={() => handleTabChange("system")}
           icon={ComputerRounded}
           label={t("System Proxy")}
-          hasIndicator={enable_system_proxy}
+          hasIndicator={systemProxyIndicator}
         />
         <TabButton
           isActive={activeTab === "tun"}

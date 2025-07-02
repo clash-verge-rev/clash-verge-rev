@@ -150,6 +150,28 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
 
+  clean_old_assets:
+    name: Clean Old Release Assets
+    runs-on: ubuntu-latest
+    needs: update_tag
+    if: ${{ needs.update_tag.result == 'success' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Remove old assets from release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ env.TAG_NAME }}
+        run: |
+          VERSION=$(cat package.json | jq -r '.version')
+          assets=$(gh release view "$TAG_NAME" --json assets -q '.assets[].name' || true)
+          for asset in $assets; do
+            if [[ "$asset" != *"$VERSION"* ]]; then
+              echo "Deleting old asset: $asset"
+              gh release delete-asset "$TAG_NAME" "$asset" -y
+            fi
+          done
+
   autobuild-x86-windows-macos-linux:
     name: Autobuild x86 Windows, MacOS and Linux
     needs: update_tag

@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use log::info;
 
 #[cfg(target_os = "windows")]
-use std::{fs, path::Path, path::PathBuf};
+use std::{fs, os::windows::process::CommandExt, path::Path, path::PathBuf};
 
 /// Windows 下的开机启动文件夹路径
 #[cfg(target_os = "windows")]
@@ -59,6 +59,8 @@ pub fn create_shortcut() -> Result<()> {
 
     let output = std::process::Command::new("powershell")
         .args(["-Command", &powershell_command])
+        // 隐藏 PowerShell 窗口
+        .creation_flags(0x08000000) // CREATE_NO_WINDOW
         .output()
         .map_err(|e| anyhow!("执行 PowerShell 命令失败: {}", e))?;
 

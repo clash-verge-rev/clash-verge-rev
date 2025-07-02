@@ -21,7 +21,6 @@ import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import getSystem from "@/utils/get-system";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-import { getPortableFlag } from "@/services/cmds";
 import React from "react";
 import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";
@@ -479,7 +478,19 @@ const Layout = () => {
   }
 
   return (
-    <SWRConfig value={{ errorRetryCount: 3 }}>
+    <SWRConfig
+      value={{
+        errorRetryCount: 3,
+        errorRetryInterval: 5000,
+        onError: (error, key) => {
+          console.error(`[SWR Error] Key: ${key}, Error:`, error);
+          if (key !== "getAutotemProxy") {
+            console.error(`SWR Error for ${key}:`, error);
+          }
+        },
+        dedupingInterval: 2000,
+      }}
+    >
       <ThemeProvider theme={theme}>
         <NoticeManager />
         <div

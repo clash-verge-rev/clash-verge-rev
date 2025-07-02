@@ -125,19 +125,6 @@ pub fn open_file(_: tauri::AppHandle, path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
-pub fn is_monochrome_image_from_bytes(data: &[u8]) -> anyhow::Result<bool> {
-    let img = image::load_from_memory(data)?;
-    let rgb_img = img.to_rgb8();
-
-    for pixel in rgb_img.pixels() {
-        if pixel[0] != pixel[1] || pixel[1] != pixel[2] {
-            return Ok(false);
-        }
-    }
-    Ok(true)
-}
-
 #[cfg(target_os = "linux")]
 pub fn linux_elevator() -> String {
     use std::process::Command;
@@ -175,40 +162,4 @@ macro_rules! t {
             $en
         }
     };
-}
-
-/// 将字节数转换为可读的流量字符串
-/// 支持 B/s、KB/s、MB/s、GB/s 的自动转换
-///
-/// # Examples
-/// ```not_run
-/// format_bytes_speed(1000) // returns "1000B/s"
-/// format_bytes_speed(1024) // returns "1.0KB/s"
-/// format_bytes_speed(1024 * 1024) // returns "1.0MB/s"
-/// ```
-/// ```
-#[cfg(target_os = "macos")]
-pub fn format_bytes_speed(speed: u64) -> String {
-    const UNITS: [&str; 4] = ["B", "KB", "MB", "GB"];
-    let mut size = speed as f64;
-    let mut unit_index = 0;
-
-    while size >= 1000.0 && unit_index < UNITS.len() - 1 {
-        size /= 1024.0;
-        unit_index += 1;
-    }
-
-    format!("{:.1}{}/s", size, UNITS[unit_index])
-}
-
-#[cfg(target_os = "macos")]
-#[test]
-fn test_format_bytes_speed() {
-    assert_eq!(format_bytes_speed(0), "0.0B/s");
-    assert_eq!(format_bytes_speed(1023), "1.0KB/s");
-    assert_eq!(format_bytes_speed(1024), "1.0KB/s");
-    assert_eq!(format_bytes_speed(1024 * 1024), "1.0MB/s");
-    assert_eq!(format_bytes_speed(1024 * 1024 * 1024), "1.0GB/s");
-    assert_eq!(format_bytes_speed(1024 * 500), "500.0KB/s");
-    assert_eq!(format_bytes_speed(1024 * 1024 * 2), "2.0MB/s");
 }

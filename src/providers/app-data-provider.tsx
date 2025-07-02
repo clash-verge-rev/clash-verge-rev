@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
+import { useVerge } from "@/hooks/use-verge";
 import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
 import {
@@ -37,6 +38,8 @@ interface AppDataContextType {
   };
   traffic: { up: number; down: number };
   memory: { inuse: number };
+  systemProxyAddress: string;
+
   refreshProxy: () => Promise<any>;
   refreshClashConfig: () => Promise<any>;
   refreshRules: () => Promise<any>;
@@ -55,8 +58,9 @@ export const AppDataProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { clashInfo } = useClashInfo();
   const pageVisible = useVisibility();
+  const { clashInfo } = useClashInfo();
+  const { verge } = useVerge();
 
   // 基础数据 - 中频率更新 (5秒)
   const { data: proxiesData, mutate: refreshProxy } = useSWR(
@@ -64,7 +68,7 @@ export const AppDataProvider = ({
     getProxies,
     {
       refreshInterval: 5000,
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       suspense: false,
       errorRetryCount: 3,
     },
@@ -97,33 +101,19 @@ export const AppDataProvider = ({
           lastProfileId = newProfileId;
           lastUpdateTime = now;
 
-          setTimeout(async () => {
-            try {
-              console.log("[AppDataProvider] 强制刷新代理缓存");
-
-              const refreshPromise = Promise.race([
-                forceRefreshProxies(),
-                new Promise((_, reject) =>
-                  setTimeout(
-                    () => reject(new Error("forceRefreshProxies timeout")),
-                    8000,
-                  ),
-                ),
-              ]);
-
-              await refreshPromise;
-
-              console.log("[AppDataProvider] 刷新前端代理数据");
-              await refreshProxy();
-
-              console.log("[AppDataProvider] Profile切换的代理数据刷新完成");
-            } catch (error) {
-              console.error("[AppDataProvider] 强制刷新代理缓存失败:", error);
-
-              refreshProxy().catch((e) =>
-                console.warn("[AppDataProvider] 普通刷新也失败:", e),
-              );
-            }
+          setTimeout(() => {
+            // 先执行 forceRefreshProxies，完成后稍延迟再刷新前端数据，避免页面一直 loading
+            forceRefreshProxies()
+              .catch((e) =>
+                console.warn("[AppDataProvider] forceRefreshProxies 失败:", e),
+              )
+              .finally(() => {
+                setTimeout(() => {
+                  refreshProxy().catch((e) =>
+                    console.warn("[AppDataProvider] 普通刷新也失败:", e),
+                  );
+                }, 200); // 200ms 延迟，保证后端缓存已清理
+              });
           }, 0);
         });
 
@@ -239,7 +229,8 @@ export const AppDataProvider = ({
     "getSystemProxy",
     getSystemProxy,
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
       suspense: false,
       errorRetryCount: 3,
     },
@@ -508,8 +499,39 @@ export const AppDataProvider = ({
   };
 
   // 聚合所有数据
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    // 计算系统代理地址
+    const calculateSystemProxyAddress = () => {
+      if (!verge || !clashConfig) return "-";
+
+      const isPacMode = verge.proxy_auto_config ?? false;
+
+      if (isPacMode) {
+        // PAC模式：显示我们期望设置的代理地址
+        const proxyHost = verge.proxy_host || "127.0.0.1";
+        const proxyPort =
+          verge.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+        return `${proxyHost}:${proxyPort}`;
+      } else {
+        // HTTP代理模式：优先使用系统地址，但如果格式不正确则使用期望地址
+        const systemServer = sysproxy?.server;
+        if (
+          systemServer &&
+          systemServer !== "-" &&
+          !systemServer.startsWith(":")
+        ) {
+          return systemServer;
+        } else {
+          // 系统地址无效，返回期望的代理地址
+          const proxyHost = verge.proxy_host || "127.0.0.1";
+          const proxyPort =
+            verge.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+          return `${proxyHost}:${proxyPort}`;
+        }
+      }
+    };
+
+    return {
       // 数据
       proxies: proxiesData,
       clashConfig,
@@ -534,6 +556,8 @@ export const AppDataProvider = ({
       traffic: trafficData,
       memory: memoryData,
 
+      systemProxyAddress: calculateSystemProxyAddress(),
+
       // 刷新方法
       refreshProxy,
       refreshClashConfig,
@@ -542,27 +566,27 @@ export const AppDataProvider = ({
       refreshProxyProviders,
       refreshRuleProviders,
       refreshAll,
-    }),
-    [
-      proxiesData,
-      clashConfig,
-      rulesData,
-      sysproxy,
-      runningMode,
-      uptimeData,
-      connectionsData,
-      trafficData,
-      memoryData,
-      proxyProviders,
-      ruleProviders,
-      refreshProxy,
-      refreshClashConfig,
-      refreshRules,
-      refreshSysproxy,
-      refreshProxyProviders,
-      refreshRuleProviders,
-    ],
-  );
+    };
+  }, [
+    proxiesData,
+    clashConfig,
+    rulesData,
+    sysproxy,
+    runningMode,
+    uptimeData,
+    connectionsData,
+    trafficData,
+    memoryData,
+    proxyProviders,
+    ruleProviders,
+    verge,
+    refreshProxy,
+    refreshClashConfig,
+    refreshRules,
+    refreshSysproxy,
+    refreshProxyProviders,
+    refreshRuleProviders,
+  ]);
 
   return (
     <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>

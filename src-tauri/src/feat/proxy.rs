@@ -22,7 +22,7 @@ pub fn toggle_system_proxy() {
                 .close_all_connections()
                 .await
             {
-                log::error!(target: "app", "Failed to close all connections: {}", err);
+                log::error!(target: "app", "Failed to close all connections: {err}");
             }
         }
 
@@ -75,8 +75,8 @@ pub fn copy_clash_env() {
 
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
-    let http_proxy = format!("http://{clash_verge_rev_ip}:{}", port);
-    let socks5_proxy = format!("socks5://{clash_verge_rev_ip}:{}", port);
+    let http_proxy = format!("http://{clash_verge_rev_ip}:{port}");
+    let socks5_proxy = format!("socks5://{clash_verge_rev_ip}:{port}");
 
     let cliboard = app_handle.clipboard();
     let env_type = { Config::verge().latest().env_type.clone() };

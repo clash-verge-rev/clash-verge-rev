@@ -3,6 +3,7 @@ import {
   getProfiles,
   patchProfile,
   patchProfilesConfig,
+  forceRefreshProxies,
 } from "@/services/cmds";
 import { getProxies, updateProxy } from "@/services/api";
 
@@ -19,21 +20,29 @@ export const useProfiles = () => {
     },
   );
 
-  const patchProfiles = async (value: Partial<IProfilesConfig>) => {
-    // 立即更新本地状态
-    if (value.current && profiles) {
-      const optimisticUpdate = {
-        ...profiles,
-        current: value.current,
-      };
-      mutateProfiles(optimisticUpdate, false); // 不重新验证
-    }
-
+  const patchProfiles = async (
+    value: Partial<IProfilesConfig>,
+    signal?: AbortSignal,
+  ) => {
     try {
-      await patchProfilesConfig(value);
-      mutateProfiles();
+      if (signal?.aborted) {
+        throw new DOMException("Operation was aborted", "AbortError");
+      }
+      const success = await patchProfilesConfig(value);
+
+      if (signal?.aborted) {
+        throw new DOMException("Operation was aborted", "AbortError");
+      }
+
+      await mutateProfiles();
+
+      return success;
     } catch (error) {
-      mutateProfiles();
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw error;
+      }
+
+      await mutateProfiles();
       throw error;
     }
   };
@@ -119,6 +128,9 @@ export const useProfiles = () => {
       try {
         await patchProfile(profileData.current!, { selected: newSelected });
         console.log("[ActivateSelected] 代理选择配置保存成功");
+
+        // 切换节点后强制刷新后端缓存
+        await forceRefreshProxies();
 
         setTimeout(() => {
           mutate("getProxies", getProxies());

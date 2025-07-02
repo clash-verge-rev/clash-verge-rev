@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# $1: remote name (e.g., origin)
+# $2: remote url (e.g., git@github.com:clash-verge-rev/clash-verge-rev.git)
+
 if git diff --cached --name-only | grep -q '^src-tauri/'; then
     cargo clippy --manifest-path ./src-tauri/Cargo.toml
     if [ $? -ne 0 ]; then
@@ -7,6 +10,7 @@ if git diff --cached --name-only | grep -q '^src-tauri/'; then
         exit 1
     fi
 fi
+
 
 # Only run format check if the remote exists and is the main repo
 remote_name="$1"

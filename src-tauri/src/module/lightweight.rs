@@ -13,10 +13,16 @@ use crate::AppHandleManager;
 
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
-use std::sync::Mutex;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Mutex,
+};
 use tauri::{Listener, Manager};
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
+
+// 添加退出轻量模式的锁，防止并发调用
+static EXITING_LIGHTWEIGHT: AtomicBool = AtomicBool::new(false);
 
 fn with_lightweight_status<F, R>(f: F) -> R
 where
@@ -30,24 +36,24 @@ where
 
 pub fn run_once_auto_lightweight() {
     LightWeightState::default().run_once_time(|| {
-        let is_silent_start = Config::verge().data().enable_silent_start.unwrap_or(true);
+        let is_silent_start = Config::verge().data().enable_silent_start.unwrap_or(false);
         let enable_auto = Config::verge()
             .data()
             .enable_auto_light_weight_mode
-            .unwrap_or(true);
+            .unwrap_or(false);
         if enable_auto && is_silent_start {
             logging!(
                 info,
                 Type::Lightweight,
                 true,
-                "正常创建窗口和添加定时器监听器"
+                "在静默启动的情况下，创建窗口再添加自动进入轻量模式窗口监听器"
             );
             set_lightweight_mode(false);
-            disable_auto_light_weight_mode();
+            enable_auto_light_weight_mode();
 
             // 触发托盘更新
             if let Err(e) = Tray::global().update_part() {
-                log::warn!("Failed to update tray: {}", e);
+                log::warn!("Failed to update tray: {e}");
             }
         }
     });
@@ -59,14 +65,19 @@ pub fn auto_lightweight_mode_init() {
         let is_silent_start = { Config::verge().data().enable_silent_start }.unwrap_or(false);
         let enable_auto = { Config::verge().data().enable_auto_light_weight_mode }.unwrap_or(false);
 
-        if enable_auto && is_silent_start {
-            logging!(info, Type::Lightweight, true, "自动轻量模式静默启动");
+        if enable_auto && !is_silent_start {
+            logging!(
+                info,
+                Type::Lightweight,
+                true,
+                "非静默启动直接挂载自动进入轻量模式监听器！"
+            );
             set_lightweight_mode(true);
             enable_auto_light_weight_mode();
 
             // 确保托盘状态更新
             if let Err(e) = Tray::global().update_part() {
-                log::warn!("Failed to update tray: {}", e);
+                log::warn!("Failed to update tray: {e}");
             }
         }
     }
@@ -78,14 +89,14 @@ pub fn is_in_lightweight_mode() -> bool {
 }
 
 // 设置轻量模式状态
-fn set_lightweight_mode(value: bool) {
+pub fn set_lightweight_mode(value: bool) {
     with_lightweight_status(|state| {
         state.set_lightweight_mode(value);
     });
 
     // 触发托盘更新
     if let Err(e) = Tray::global().update_part() {
-        log::warn!("Failed to update tray: {}", e);
+        log::warn!("Failed to update tray: {e}");
     }
 }
 
@@ -120,7 +131,6 @@ pub fn entry_lightweight_mode() {
         }
         #[cfg(target_os = "macos")]
         AppHandleManager::global().set_activation_policy_accessory();
-        logging!(info, Type::Lightweight, true, "轻量模式已开启");
     }
     set_lightweight_mode(true);
     let _ = cancel_light_weight_timer();
@@ -131,6 +141,25 @@ pub fn entry_lightweight_mode() {
 
 // 添加从轻量模式恢复的函数
 pub fn exit_lightweight_mode() {
+    // 使用原子操作检查是否已经在退出过程中，防止并发调用
+    if EXITING_LIGHTWEIGHT
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        logging!(
+            info,
+            Type::Lightweight,
+            true,
+            "轻量模式退出操作已在进行中，跳过重复调用"
+        );
+        return;
+    }
+
+    // 使用defer确保无论如何都会重置标志
+    let _guard = scopeguard::guard((), |_| {
+        EXITING_LIGHTWEIGHT.store(false, Ordering::SeqCst);
+    });
+
     // 确保当前确实处于轻量模式才执行退出操作
     if !is_in_lightweight_mode() {
         logging!(info, Type::Lightweight, true, "当前不在轻量模式，无需退出");
@@ -138,7 +167,6 @@ pub fn exit_lightweight_mode() {
     }
 
     set_lightweight_mode(false);
-    logging!(info, Type::Lightweight, true, "正在退出轻量模式");
 
     // macOS激活策略
     #[cfg(target_os = "macos")]

@@ -1,10 +1,4 @@
-import { useEffect } from "react";
-import { useEnableLog } from "../services/states";
-import { createSockette, createAuthSockette } from "../utils/websocket";
-import { useClashInfo } from "./use-clash";
-import dayjs from "dayjs";
 import { create } from "zustand";
-import { useVisibility } from "./use-visibility";
 import {
   useGlobalLogData,
   clearGlobalLogs,

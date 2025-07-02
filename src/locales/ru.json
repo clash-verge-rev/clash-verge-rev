@@ -581,5 +581,6 @@
   "Originals Only": "Только Originals",
   "No (IP Banned By Disney+)": "Нет (IP забанен Disney+)",
   "Unsupported Country/Region": "Страна/регион не поддерживается",
-  "Failed (Network Connection)": "Ошибка подключения"
+  "Failed (Network Connection)": "Ошибка подключения",
+  "Invalid Profile URL": "Недопустимая ссылка на профиль, введите адрес, начинающийся с http:// или https://"
 }

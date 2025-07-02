@@ -19,10 +19,7 @@ import {
   ConnectionDetailRef,
 } from "@/components/connection/connection-detail";
 import parseTraffic from "@/utils/parse-traffic";
-import {
-  BaseSearchBox,
-  type SearchState,
-} from "@/components/base/base-search-box";
+import { BaseSearchBox } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import { useTheme } from "@mui/material/styles";
 import { useVisibility } from "@/hooks/use-visibility";

@@ -13,6 +13,7 @@ use anyhow::{bail, Result};
 use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
+use scopeguard;
 use serde_yaml::Mapping;
 use std::{
     sync::Arc,
@@ -51,14 +52,12 @@ pub enum UiReadyStage {
 #[derive(Debug)]
 struct UiReadyState {
     stage: RwLock<UiReadyStage>,
-    last_update: RwLock<Instant>,
 }
 
 impl Default for UiReadyState {
     fn default() -> Self {
         Self {
             stage: RwLock::new(UiReadyStage::NotStarted),
-            last_update: RwLock::new(Instant::now()),
         }
     }
 }
@@ -82,20 +81,8 @@ fn get_ui_ready_state() -> &'static Arc<UiReadyState> {
 pub fn update_ui_ready_stage(stage: UiReadyStage) {
     let state = get_ui_ready_state();
     let mut stage_lock = state.stage.write();
-    let mut time_lock = state.last_update.write();
 
     *stage_lock = stage;
-    *time_lock = Instant::now();
-
-    logging!(
-        info,
-        Type::Window,
-        true,
-        "UI准备阶段更新: {:?}, 耗时: {:?}ms",
-        stage,
-        time_lock.elapsed().as_millis()
-    );
-
     // 如果是最终阶段，标记UI完全就绪
     if stage == UiReadyStage::Ready {
         mark_ui_ready();
@@ -118,9 +105,7 @@ pub fn reset_ui_ready() {
     {
         let state = get_ui_ready_state();
         let mut stage = state.stage.write();
-        let mut time = state.last_update.write();
         *stage = UiReadyStage::NotStarted;
-        *time = Instant::now();
     }
     logging!(info, Type::Window, true, "UI就绪状态已重置");
 }
@@ -136,7 +121,7 @@ pub async fn find_unused_port() -> Result<u16> {
                 .latest()
                 .verge_mixed_port
                 .unwrap_or(Config::clash().data().get_mixed_port());
-            log::warn!(target: "app", "use default port: {}", port);
+            log::warn!(target: "app", "use default port: {port}");
             Ok(port)
         }
     }
@@ -294,6 +279,7 @@ pub fn create_window(is_show: bool) -> bool {
 
     if !is_show {
         logging!(info, Type::Window, true, "静默模式启动时不创建窗口");
+        lightweight::set_lightweight_mode(true);
         handle::Handle::notify_startup_completed();
         return false;
     }
@@ -336,6 +322,12 @@ pub fn create_window(is_show: bool) -> bool {
     }
 
     *creating = (true, Instant::now());
+
+    // ScopeGuard 确保创建状态重置，防止 webview 卡死
+    let _guard = scopeguard::guard(creating, |mut creating_guard| {
+        *creating_guard = (false, Instant::now());
+        logging!(debug, Type::Window, true, "[ScopeGuard] 窗口创建状态已重置");
+    });
 
     match tauri::WebviewWindowBuilder::new(
         &handle::Handle::global().app_handle().unwrap(),
@@ -418,8 +410,6 @@ pub fn create_window(is_show: bool) -> bool {
     {
         Ok(newly_created_window) => {
             logging!(debug, Type::Window, true, "主窗口实例创建成功");
-
-            *creating = (false, Instant::now());
 
             update_ui_ready_stage(UiReadyStage::NotStarted);
 
@@ -534,14 +524,13 @@ pub fn create_window(is_show: bool) -> bool {
         }
         Err(e) => {
             logging!(error, Type::Window, true, "主窗口构建失败: {}", e);
-            *creating = (false, Instant::now()); // Reset the creating state if window creation failed
             false
         }
     }
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
-    log::info!(target:"app", "received deep link: {}", param);
+    log::info!(target:"app", "received deep link: {param}");
 
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param
@@ -579,7 +568,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
 
         match url_param {
             Some(url) => {
-                log::info!(target:"app", "decoded subscription url: {}", url);
+                log::info!(target:"app", "decoded subscription url: {url}");
 
                 create_window(false);
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
