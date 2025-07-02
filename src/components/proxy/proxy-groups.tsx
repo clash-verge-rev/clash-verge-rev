@@ -480,31 +480,34 @@ export const ProxyGroups = (props: Props) => {
     }
   }, [handleWheel]);
 
-  // 添加窗口大小变化监听和最大高度计算
-  const updateMaxHeight = useCallback(() => {
-    if (!alphabetSelectorRef.current) return;
-
-    const windowHeight = window.innerHeight;
-    const bottomMargin = 60; // 底部边距
-    const topMargin = bottomMargin * 2; // 顶部边距是底部的2倍
-    const availableHeight = windowHeight - (topMargin + bottomMargin);
-
-    // 调整选择器的位置，使其偏下
-    const offsetPercentage =
-      (((topMargin - bottomMargin) / windowHeight) * 100) / 2;
-    alphabetSelectorRef.current.style.top = `calc(48% + ${offsetPercentage}vh)`;
-
-    setMaxHeight(`${availableHeight}px`);
-  }, []);
-
   // 监听窗口大小变化
+  // layout effect runs before paint
   useEffect(() => {
+    // 添加窗口大小变化监听和最大高度计算
+    const updateMaxHeight = () => {
+      if (!alphabetSelectorRef.current) return;
+
+      const windowHeight = window.innerHeight;
+      const bottomMargin = 60; // 底部边距
+      const topMargin = bottomMargin * 2; // 顶部边距是底部的2倍
+      const availableHeight = windowHeight - (topMargin + bottomMargin);
+
+      // 调整选择器的位置，使其偏下
+      const offsetPercentage =
+        (((topMargin - bottomMargin) / windowHeight) * 100) / 2;
+      alphabetSelectorRef.current.style.top = `calc(48% + ${offsetPercentage}vh)`;
+
+      setMaxHeight(`${availableHeight}px`);
+    };
+
     updateMaxHeight();
+
     window.addEventListener("resize", updateMaxHeight);
+
     return () => {
       window.removeEventListener("resize", updateMaxHeight);
     };
-  }, [updateMaxHeight]);
+  }, []);
 
   if (mode === "direct") {
     return <BaseEmpty text={t("clash_mode_direct")} />;
