@@ -125,6 +125,9 @@ pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
             None => {}
         }
     }
+    if profile.name.is_some() {
+        wrap_err!(handle::Handle::update_systray_part())?;
+    }
     Ok(())
 }
 
