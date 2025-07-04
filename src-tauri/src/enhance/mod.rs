@@ -214,6 +214,12 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 config.remove("port");
                 continue;
             }
+            #[cfg(target_os = "windows")]
+            {
+                if key.as_str() == Some("redir-port") || key.as_str() == Some("tproxy-port") {
+                    continue;
+                }
+            }
             #[cfg(not(target_os = "windows"))]
             {
                 if key.as_str() == Some("redir-port") && !redir_enabled {
