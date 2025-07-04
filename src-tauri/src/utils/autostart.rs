@@ -115,28 +115,27 @@ fn remove_registry_startup_entries() -> Result<()> {
         ),
     ];
 
-    // 检查Clash Verge的关键字
-    let keywords = vec!["Clash Verge", "clash-verge"];
+    // 使用数组替代vec!
+    let keywords = ["Clash Verge", "clash-verge"];
 
     for (hkey, path) in registry_paths {
         match RegKey::predef(hkey).open_subkey_with_flags(path, KEY_READ | KEY_WRITE) {
             Ok(key) => {
-                // 枚举所有值
-                for result in key.enum_values() {
-                    if let Ok((value_name, _)) = result {
-                        // 检查值名称是否包含关键字
-                        if keywords.iter().any(|kw| value_name.contains(kw)) {
-                            if let Err(e) = key.delete_value(&value_name) {
-                                info!(target: "app", "删除注册表值失败 {}: {}", value_name, e);
-                            } else {
-                                info!(target: "app", "已删除注册表值: {}", value_name);
-                            }
+                // 使用flatten处理Result迭代器
+                for (value_name, _) in key.enum_values().flatten() {
+                    // 检查值名称是否包含关键字
+                    if keywords.iter().any(|kw| value_name.contains(kw)) {
+                        if let Err(e) = key.delete_value(&value_name) {
+                            // 使用内联格式化字符串
+                            info!(target: "app", "删除注册表值失败 {value_name}: {e}");
+                        } else {
+                            info!(target: "app", "已删除注册表值: {value_name}");
                         }
                     }
                 }
             }
             Err(e) => {
-                info!(target: "app", "无法访问注册表路径 {}: {}", path, e);
+                info!(target: "app", "无法访问注册表路径 {path}: {e}");
             }
         }
     }
