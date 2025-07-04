@@ -35,7 +35,7 @@ port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 parking_lot = "0.12.4"
 percent-encoding = "2.3.1"
-tokio = { version = "1.46.0", features = [
+tokio = { version = "1.46.1", features = [
   "rt-multi-thread",
   "macros",
   "time",
