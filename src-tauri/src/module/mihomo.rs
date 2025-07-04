@@ -92,7 +92,7 @@ impl MihomoManager {
 
 impl MihomoManager {
     pub fn get_clash_client_info() -> Option<(String, HeaderMap)> {
-        let client = { Config::clash().data().get_client_info() };
+        let client = { Config::clash().latest_ref().get_client_info() };
         let server = format!("http://{}", client.server);
         let mut headers = HeaderMap::new();
         headers.insert("Content-Type", "application/json".parse().unwrap());

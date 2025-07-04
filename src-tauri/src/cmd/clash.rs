@@ -14,7 +14,7 @@ pub fn copy_clash_env() -> CmdResult {
 /// 获取Clash信息
 #[tauri::command]
 pub fn get_clash_info() -> CmdResult<ClashInfo> {
-    Ok(Config::clash().latest().get_client_info())
+    Ok(Config::clash().latest_ref().get_client_info())
 }
 
 /// 修改Clash配置
@@ -173,7 +173,7 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
             // 重新生成配置，确保DNS配置被正确应用
             // 这里不调用patch_clash以避免将DNS配置写入config.yaml
             Config::runtime()
-                .latest()
+                .draft_mut()
                 .patch_config(patch_config.clone());
 
             // 首先重新生成配置

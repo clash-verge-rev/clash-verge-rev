@@ -18,7 +18,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     // 在异步操作前完成所有文件操作
     let (file_path, original_content, is_merge_file) = {
         let profiles = Config::profiles();
-        let profiles_guard = profiles.latest();
+        let profiles_guard = profiles.latest_ref();
         let item = wrap_err!(profiles_guard.get_item(&index))?;
         // 确定是否为merge类型文件
         let is_merge = item.itype.as_ref().is_some_and(|t| t == "merge");

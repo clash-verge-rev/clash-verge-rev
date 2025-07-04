@@ -428,7 +428,7 @@ impl EventDrivenProxyManager {
     fn get_proxy_config() -> ProxyConfig {
         let (sys_enabled, pac_enabled, guard_enabled) = {
             let verge_config = Config::verge();
-            let verge = verge_config.latest();
+            let verge = verge_config.latest_ref();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
@@ -445,7 +445,7 @@ impl EventDrivenProxyManager {
     fn get_expected_pac_config() -> Autoproxy {
         let proxy_host = {
             let verge_config = Config::verge();
-            let verge = verge_config.latest();
+            let verge = verge_config.latest_ref();
             verge
                 .proxy_host
                 .clone()
@@ -459,19 +459,15 @@ impl EventDrivenProxyManager {
     }
 
     fn get_expected_sys_proxy() -> Sysproxy {
-        let (verge_mixed_port, proxy_host) = {
-            let verge_config = Config::verge();
-            let verge = verge_config.latest();
-            (
-                verge.verge_mixed_port,
-                verge
-                    .proxy_host
-                    .clone()
-                    .unwrap_or_else(|| "127.0.0.1".to_string()),
-            )
-        };
-
-        let port = verge_mixed_port.unwrap_or_else(|| Config::clash().data().get_mixed_port());
+        let verge_config = Config::verge();
+        let verge = verge_config.latest_ref();
+        let port = verge
+            .verge_mixed_port
+            .unwrap_or(Config::clash().latest_ref().get_mixed_port());
+        let proxy_host = verge
+            .proxy_host
+            .clone()
+            .unwrap_or_else(|| "127.0.0.1".to_string());
 
         Sysproxy {
             enable: true,
@@ -484,7 +480,7 @@ impl EventDrivenProxyManager {
     fn get_bypass_config() -> String {
         let (use_default, custom_bypass) = {
             let verge_config = Config::verge();
-            let verge = verge_config.latest();
+            let verge = verge_config.latest_ref();
             (
                 verge.use_default_bypass.unwrap_or(true),
                 verge.system_proxy_bypass.clone().unwrap_or_default(),

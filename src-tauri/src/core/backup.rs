@@ -78,7 +78,7 @@ impl WebDavClient {
             if let Some(cfg) = lock.as_ref() {
                 cfg.clone()
             } else {
-                let verge = Config::verge().latest().clone();
+                let verge = Config::verge().latest_ref().clone();
                 if verge.webdav_url.is_none()
                     || verge.webdav_username.is_none()
                     || verge.webdav_password.is_none()

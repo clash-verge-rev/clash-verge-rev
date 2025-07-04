@@ -25,7 +25,7 @@ impl Hotkey {
 
     pub fn init(&self) -> Result<()> {
         let verge = Config::verge();
-        let enable_global_hotkey = verge.latest().enable_global_hotkey.unwrap_or(true);
+        let enable_global_hotkey = verge.latest_ref().enable_global_hotkey.unwrap_or(true);
 
         logging!(
             debug,
@@ -39,7 +39,7 @@ impl Hotkey {
             return Ok(());
         }
 
-        if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
+        if let Some(hotkeys) = verge.latest_ref().hotkeys.as_ref() {
             logging!(
                 debug,
                 Type::Hotkey,
@@ -252,7 +252,7 @@ impl Hotkey {
                     logging!(debug, Type::Hotkey, "Executing function directly");
 
                     let is_enable_global_hotkey = Config::verge()
-                        .latest()
+                        .latest_ref()
                         .enable_global_hotkey
                         .unwrap_or(true);
 

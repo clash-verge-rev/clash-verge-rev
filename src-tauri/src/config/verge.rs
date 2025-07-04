@@ -300,7 +300,7 @@ impl IVerge {
         use crate::config::Config;
 
         let config_draft = Config::verge();
-        *config_draft.draft() = Box::new(updated_config.clone());
+        *config_draft.draft_mut() = Box::new(updated_config.clone());
         config_draft.apply();
 
         logging!(

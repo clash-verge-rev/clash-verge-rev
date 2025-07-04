@@ -138,14 +138,14 @@ impl CoreManager {
     /// 使用默认配置
     pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
-        *Config::runtime().draft() = Box::new(IRuntime {
-            config: Some(Config::clash().latest().0.clone()),
+        *Config::runtime().draft_mut() = Box::new(IRuntime {
+            config: Some(Config::clash().latest_ref().0.clone()),
             exists_keys: vec![],
             chain_logs: Default::default(),
         });
         help::save_yaml(
             &runtime_path,
-            &Config::clash().latest().0,
+            &Config::clash().latest_ref().0,
             Some("# Clash Verge Runtime"),
         )?;
         handle::Handle::notice_message(msg_type, msg_content);
@@ -247,7 +247,7 @@ impl CoreManager {
             config_path
         );
 
-        let clash_core = Config::verge().latest().get_valid_clash_core();
+        let clash_core = Config::verge().latest_ref().get_valid_clash_core();
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -739,7 +739,7 @@ impl CoreManager {
         let app_handle = handle::Handle::global()
             .app_handle()
             .ok_or(anyhow::anyhow!("failed to get app handle"))?;
-        let clash_core = Config::verge().latest().get_valid_clash_core();
+        let clash_core = Config::verge().latest_ref().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         let service_log_dir = dirs::app_home_dir()?.join("logs").join("service");
@@ -1114,9 +1114,9 @@ impl CoreManager {
             return Err(error_message);
         }
 
-        Config::verge().draft().clash_core = clash_core.clone();
+        Config::verge().draft_mut().clash_core = clash_core.clone();
         Config::verge().apply();
-        logging_error!(Type::Core, true, Config::verge().latest().save_file());
+        logging_error!(Type::Core, true, Config::verge().latest_ref().save_file());
 
         let run_path = Config::generate_file(ConfigType::Run).map_err(|e| {
             let msg = e.to_string();

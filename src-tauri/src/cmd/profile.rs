@@ -39,7 +39,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
         Duration::from_millis(500),
         tokio::task::spawn_blocking(move || {
             let profiles = Config::profiles();
-            let latest = profiles.latest();
+            let latest = profiles.latest_ref();
             IProfiles {
                 current: latest.current.clone(),
                 items: latest.items.clone(),
@@ -66,7 +66,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
         Duration::from_secs(2),
         tokio::task::spawn_blocking(move || {
             let profiles = Config::profiles();
-            let data = profiles.data();
+            let data = profiles.latest_ref();
             IProfiles {
                 current: data.current.clone(),
                 items: data.items.clone(),
@@ -130,20 +130,20 @@ pub async fn enhance_profiles() -> CmdResult {
 #[tauri::command]
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
-    wrap_err!(Config::profiles().data().append_item(item))
+    wrap_err!(Config::profiles().data_mut().append_item(item))
 }
 
 /// 重新排序配置文件
 #[tauri::command]
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
-    wrap_err!(Config::profiles().data().reorder(active_id, over_id))
+    wrap_err!(Config::profiles().data_mut().reorder(active_id, over_id))
 }
 
 /// 创建配置文件
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
     let item = wrap_err!(PrfItem::from(item, file_data).await)?;
-    wrap_err!(Config::profiles().data().append_item(item))
+    wrap_err!(Config::profiles().data_mut().append_item(item))
 }
 
 /// 更新配置文件
@@ -155,10 +155,10 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 /// 删除配置文件
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
-    let should_update = wrap_err!({ Config::profiles().data().delete_item(index) })?;
+    let should_update = wrap_err!({ Config::profiles().data_mut().delete_item(index) })?;
 
     // 删除后自动清理冗余文件
-    let _ = Config::profiles().latest().auto_cleanup();
+    let _ = Config::profiles().latest_ref().auto_cleanup();
 
     if should_update {
         wrap_err!(CoreManager::global().update_config().await)?;
@@ -226,7 +226,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     }
 
     // 保存当前配置，以便在验证失败时恢复
-    let current_profile = Config::profiles().latest().current.clone();
+    let current_profile = Config::profiles().latest_ref().current.clone();
     logging!(info, Type::Cmd, true, "当前配置: {:?}", current_profile);
 
     // 如果要切换配置，先检查目标配置文件是否有语法错误
@@ -237,7 +237,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             // 获取目标配置文件路径
             let config_file_result = {
                 let profiles_config = Config::profiles();
-                let profiles_data = profiles_config.latest();
+                let profiles_data = profiles_config.latest_ref();
                 match profiles_data.get_item(new_profile) {
                     Ok(item) => {
                         if let Some(file) = &item.file {
@@ -375,7 +375,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     let current_value = profiles.current.clone();
 
-    let _ = Config::profiles().draft().patch_config(profiles);
+    let _ = Config::profiles().draft_mut().patch_config(profiles);
 
     // 在调用内核前再次验证请求有效性
     let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
@@ -451,7 +451,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 }
 
                 // 保存配置文件
-                if let Err(e) = Config::profiles().data().save_file() {
+                if let Err(e) = Config::profiles().data_mut().save_file() {
                     log::warn!(target: "app", "异步保存配置文件失败: {e}");
                 }
             });
@@ -490,11 +490,15 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                     items: None,
                 };
                 // 静默恢复，不触发验证
-                wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
+                wrap_err!({
+                    Config::profiles()
+                        .draft_mut()
+                        .patch_config(restore_profiles)
+                })?;
                 Config::profiles().apply();
 
                 crate::process::AsyncHandler::spawn(|| async move {
-                    if let Err(e) = Config::profiles().data().save_file() {
+                    if let Err(e) = Config::profiles().data_mut().save_file() {
                         log::warn!(target: "app", "异步保存恢复配置文件失败: {e}");
                     }
                 });
@@ -551,7 +555,11 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                     current: Some(prev_profile),
                     items: None,
                 };
-                wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
+                wrap_err!({
+                    Config::profiles()
+                        .draft_mut()
+                        .patch_config(restore_profiles)
+                })?;
                 Config::profiles().apply();
             }
 
@@ -584,7 +592,7 @@ pub async fn patch_profiles_config_by_profile_index(
 pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 保存修改前检查是否有更新 update_interval
     let update_interval_changed =
-        if let Ok(old_profile) = Config::profiles().latest().get_item(&index) {
+        if let Ok(old_profile) = Config::profiles().latest_ref().get_item(&index) {
             let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
             let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
             old_interval != new_interval
@@ -593,7 +601,9 @@ pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         };
 
     // 保存修改
-    wrap_err!(Config::profiles().data().patch_item(index.clone(), profile))?;
+    wrap_err!(Config::profiles()
+        .data_mut()
+        .patch_item(index.clone(), profile))?;
 
     // 如果更新间隔变更，异步刷新定时器
     if update_interval_changed {
@@ -616,7 +626,7 @@ pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 #[tauri::command]
 pub fn view_profile(app_handle: tauri::AppHandle, index: String) -> CmdResult {
     let file = {
-        wrap_err!(Config::profiles().latest().get_item(&index))?
+        wrap_err!(Config::profiles().latest_ref().get_item(&index))?
             .file
             .clone()
             .ok_or("the file field is null")
@@ -634,7 +644,7 @@ pub fn view_profile(app_handle: tauri::AppHandle, index: String) -> CmdResult {
 #[tauri::command]
 pub fn read_profile_file(index: String) -> CmdResult<String> {
     let profiles = Config::profiles();
-    let profiles = profiles.latest();
+    let profiles = profiles.latest_ref();
     let item = wrap_err!(profiles.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
