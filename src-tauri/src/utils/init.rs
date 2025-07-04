@@ -25,7 +25,7 @@ fn init_log() -> Result<()> {
         let _ = fs::create_dir_all(&log_dir);
     }
 
-    let log_level = Config::verge().data().get_log_level();
+    let log_level = Config::verge().latest_ref().get_log_level();
     if log_level == LevelFilter::Off {
         return Ok(());
     }
@@ -74,7 +74,7 @@ pub fn delete_log() -> Result<()> {
 
     let auto_log_clean = {
         let verge = Config::verge();
-        let verge = verge.data();
+        let verge = verge.latest_ref();
         verge.auto_log_clean.unwrap_or(0)
     };
 
@@ -405,7 +405,7 @@ pub async fn startup_script() -> Result<()> {
 
     let script_path = {
         let verge = Config::verge();
-        let verge = verge.latest();
+        let verge = verge.latest_ref();
         verge.startup_script.clone().unwrap_or("".to_string())
     };
 

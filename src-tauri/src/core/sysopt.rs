@@ -29,10 +29,13 @@ static DEFAULT_BYPASS: &str =
     "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
 
 fn get_bypass() -> String {
-    let use_default = Config::verge().latest().use_default_bypass.unwrap_or(true);
+    let use_default = Config::verge()
+        .latest_ref()
+        .use_default_bypass
+        .unwrap_or(true);
     let res = {
         let verge = Config::verge();
-        let verge = verge.latest();
+        let verge = verge.latest_ref();
         verge.system_proxy_bypass.clone()
     };
     let custom_bypass = match res {
@@ -72,14 +75,14 @@ impl Sysopt {
         let _lock = self.update_sysproxy.lock().await;
 
         let port = Config::verge()
-            .latest()
+            .latest_ref()
             .verge_mixed_port
-            .unwrap_or(Config::clash().data().get_mixed_port());
+            .unwrap_or(Config::clash().latest_ref().get_mixed_port());
         let pac_port = IVerge::get_singleton_port();
 
         let (sys_enable, pac_enable, proxy_host) = {
             let verge = Config::verge();
-            let verge = verge.latest();
+            let verge = verge.latest_ref();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
@@ -239,7 +242,7 @@ impl Sysopt {
 
     /// update the startup
     pub fn update_launch(&self) -> Result<()> {
-        let enable_auto_launch = { Config::verge().latest().enable_auto_launch };
+        let enable_auto_launch = { Config::verge().latest_ref().enable_auto_launch };
         let is_enable = enable_auto_launch.unwrap_or(false);
         logging!(info, true, "Setting auto-launch state to: {:?}", is_enable);
 

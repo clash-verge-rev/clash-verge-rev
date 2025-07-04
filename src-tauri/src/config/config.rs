@@ -52,20 +52,24 @@ impl Config {
     /// 初始化订阅
     pub async fn init_config() -> Result<()> {
         if Self::profiles()
-            .data()
+            .latest_ref()
             .get_item(&"Merge".to_string())
             .is_err()
         {
             let merge_item = PrfItem::from_merge(Some("Merge".to_string()))?;
-            Self::profiles().data().append_item(merge_item.clone())?;
+            Self::profiles()
+                .data_mut()
+                .append_item(merge_item.clone())?;
         }
         if Self::profiles()
-            .data()
+            .latest_ref()
             .get_item(&"Script".to_string())
             .is_err()
         {
             let script_item = PrfItem::from_script(Some("Script".to_string()))?;
-            Self::profiles().data().append_item(script_item.clone())?;
+            Self::profiles()
+                .data_mut()
+                .append_item(script_item.clone())?;
         }
         // 生成运行时配置
         if let Err(err) = Self::generate().await {
@@ -135,7 +139,7 @@ impl Config {
         };
 
         let runtime = Config::runtime();
-        let runtime = runtime.latest();
+        let runtime = runtime.latest_ref();
         let config = runtime
             .config
             .as_ref()
@@ -149,7 +153,7 @@ impl Config {
     pub async fn generate() -> Result<()> {
         let (config, exists_keys, logs) = enhance::enhance().await;
 
-        *Config::runtime().draft() = Box::new(IRuntime {
+        *Config::runtime().draft_mut() = Box::new(IRuntime {
             config: Some(config),
             exists_keys,
             chain_logs: logs,

@@ -18,7 +18,7 @@ fn bench_apply_old(c: &mut Criterion) {
             let draft = DraftOld::from(black_box(verge));
 
             {
-                let mut d = draft.draft();
+                let mut d = draft.draft_mut();
                 d.enable_auto_launch = Some(false);
             }
 
@@ -34,7 +34,7 @@ fn bench_discard_old(c: &mut Criterion) {
             let draft = DraftOld::from(black_box(verge));
 
             {
-                let mut d = draft.draft();
+                let mut d = draft.draft_mut();
                 d.enable_auto_launch = Some(false);
             }
 

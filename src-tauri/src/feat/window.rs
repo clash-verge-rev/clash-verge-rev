@@ -99,7 +99,7 @@ async fn clean_async() -> bool {
 
     // 1. 处理TUN模式
     let tun_task = async {
-        if Config::verge().data().enable_tun_mode.unwrap_or(false) {
+        if Config::verge().data_mut().enable_tun_mode.unwrap_or(false) {
             let disable_tun = serde_json::json!({
                 "tun": {
                     "enable": false
@@ -240,7 +240,7 @@ pub fn hide() {
     use crate::module::lightweight::add_light_weight_timer;
 
     let enable_auto_light_weight_mode = Config::verge()
-        .data()
+        .data_mut()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
 

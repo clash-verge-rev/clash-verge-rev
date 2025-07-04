@@ -427,7 +427,7 @@ impl EventDrivenProxyManager {
 
     fn get_proxy_config() -> ProxyConfig {
         let verge_config = Config::verge();
-        let verge = verge_config.latest();
+        let verge = verge_config.latest_ref();
         ProxyConfig {
             sys_enabled: verge.enable_system_proxy.unwrap_or(false),
             pac_enabled: verge.proxy_auto_config.unwrap_or(false),
@@ -437,7 +437,7 @@ impl EventDrivenProxyManager {
 
     fn get_expected_pac_config() -> Autoproxy {
         let verge_config = Config::verge();
-        let verge = verge_config.latest();
+        let verge = verge_config.latest_ref();
         let (proxy_host, pac_port) = (
             verge
                 .proxy_host
@@ -453,10 +453,10 @@ impl EventDrivenProxyManager {
 
     fn get_expected_sys_proxy() -> Sysproxy {
         let verge_config = Config::verge();
-        let verge = verge_config.latest();
+        let verge = verge_config.latest_ref();
         let port = verge
             .verge_mixed_port
-            .unwrap_or(Config::clash().data().get_mixed_port());
+            .unwrap_or(Config::clash().latest_ref().get_mixed_port());
         let proxy_host = verge
             .proxy_host
             .clone()
@@ -472,7 +472,7 @@ impl EventDrivenProxyManager {
 
     fn get_bypass_config() -> String {
         let verge_config = Config::verge();
-        let verge = verge_config.latest();
+        let verge = verge_config.latest_ref();
         let use_default = verge.use_default_bypass.unwrap_or(true);
         let custom_bypass = verge.system_proxy_bypass.clone().unwrap_or_default();
 

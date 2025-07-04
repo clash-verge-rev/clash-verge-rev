@@ -59,7 +59,7 @@ fn get_system_language() -> String {
 
 pub fn t(key: &str) -> String {
     let current_lang = Config::verge()
-        .latest()
+        .latest_ref()
         .language
         .as_deref()
         .map(String::from)

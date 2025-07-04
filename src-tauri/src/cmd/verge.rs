@@ -5,7 +5,7 @@ use crate::{config::*, feat, wrap_err};
 #[tauri::command]
 pub fn get_verge_config() -> CmdResult<IVergeResponse> {
     let verge = Config::verge();
-    let verge_data = verge.data().clone();
+    let verge_data = verge.latest_ref().clone();
     Ok(IVergeResponse::from(*verge_data))
 }
 
