@@ -1,5 +1,5 @@
 mod cmd;
-mod config;
+pub mod config;
 mod core;
 mod enhance;
 mod feat;

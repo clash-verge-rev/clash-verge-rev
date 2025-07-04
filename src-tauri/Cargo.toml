@@ -139,7 +139,12 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
+criterion = "0.6.0"
 tempfile = "3.20.0"
 
 [workspace]
 members = ["src_crates/crate_mihomo_api"]
+
+[[bench]]
+name = "draft_benchmark"
+harness = false
