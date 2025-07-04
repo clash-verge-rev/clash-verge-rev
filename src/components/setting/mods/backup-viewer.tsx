@@ -3,7 +3,7 @@ import {
   useImperativeHandle,
   useState,
   useCallback,
-  useEffect,
+  useMemo,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef } from "@/components/base";
@@ -30,7 +30,6 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);
-  const [dataSource, setDataSource] = useState<BackupFile[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
 
@@ -91,14 +90,14 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
       .sort((a, b) => (a.backup_time.isAfter(b.backup_time) ? -1 : 1));
   };
 
-  useEffect(() => {
-    setDataSource(
+  const dataSource = useMemo<BackupFile[]>(
+    () =>
       backupFiles.slice(
         page * DEFAULT_ROWS_PER_PAGE,
         page * DEFAULT_ROWS_PER_PAGE + DEFAULT_ROWS_PER_PAGE,
       ),
-    );
-  }, [page, backupFiles]);
+    [backupFiles, page],
+  );
 
   return (
     <BaseDialog
@@ -116,18 +115,10 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
         <Paper elevation={2} sx={{ padding: 2 }}>
           <BackupConfigViewer
             setLoading={setIsLoading}
-            onBackupSuccess={async () => {
-              fetchAndSetBackupFiles();
-            }}
-            onSaveSuccess={async () => {
-              fetchAndSetBackupFiles();
-            }}
-            onRefresh={async () => {
-              fetchAndSetBackupFiles();
-            }}
-            onInit={async () => {
-              fetchAndSetBackupFiles();
-            }}
+            onBackupSuccess={fetchAndSetBackupFiles}
+            onSaveSuccess={fetchAndSetBackupFiles}
+            onRefresh={fetchAndSetBackupFiles}
+            onInit={fetchAndSetBackupFiles}
           />
           <Divider sx={{ marginY: 2 }} />
           <BackupTableViewer

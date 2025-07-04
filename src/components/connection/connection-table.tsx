@@ -1,10 +1,11 @@
 import dayjs from "dayjs";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { DataGrid, GridColDef, GridColumnResizeParams } from "@mui/x-data-grid";
 import { useThemeMode } from "@/services/states";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { t } from "i18next";
+import { useLocalStorage } from "foxact/use-local-storage";
 
 interface Props {
   connections: IConnectionsItem[];
@@ -21,11 +22,13 @@ export const ConnectionTable = (props: Props) => {
     Partial<Record<keyof IConnectionsItem, boolean>>
   >({});
 
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(
-    () => {
-      const saved = localStorage.getItem("connection-table-widths");
-      return saved ? JSON.parse(saved) : {};
-    },
+  const [columnWidths, setColumnWidths] = useLocalStorage<
+    Record<string, number>
+  >(
+    "connection-table-widths",
+    // server-side value, this is the default value used by server-side rendering (if any)
+    // Do not omit (otherwise a Suspense boundary will be triggered)
+    {},
   );
 
   const [columns] = useState<GridColDef[]>([
@@ -115,14 +118,6 @@ export const ConnectionTable = (props: Props) => {
       minWidth: 100,
     },
   ]);
-
-  useEffect(() => {
-    console.log("Saving column widths:", columnWidths);
-    localStorage.setItem(
-      "connection-table-widths",
-      JSON.stringify(columnWidths),
-    );
-  }, [columnWidths]);
 
   const handleColumnResize = (params: GridColumnResizeParams) => {
     const { colDef, width } = params;

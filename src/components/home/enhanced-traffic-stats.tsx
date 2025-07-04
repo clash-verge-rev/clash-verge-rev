@@ -29,6 +29,7 @@ import parseTraffic from "@/utils/parse-traffic";
 import { isDebugEnabled, gc } from "@/services/api";
 import { ReactNode } from "react";
 import { useAppData } from "@/providers/app-data-provider";
+import useSWR from "swr";
 
 interface MemoryUsage {
   inuse: number;
@@ -161,7 +162,6 @@ export const EnhancedTrafficStats = () => {
   const { verge } = useVerge();
   const trafficRef = useRef<EnhancedTrafficGraphRef>(null);
   const pageVisible = useVisibility();
-  const [isDebug, setIsDebug] = useState(false);
 
   // 使用AppDataProvider
   const { connections, uptime } = useAppData();
@@ -178,19 +178,16 @@ export const EnhancedTrafficStats = () => {
   // 是否显示流量图表
   const trafficGraph = verge?.traffic_graph ?? true;
 
-  // WebSocket引用
-  const socketRefs = useRef<{
-    traffic: ReturnType<typeof createAuthSockette> | null;
-    memory: ReturnType<typeof createAuthSockette> | null;
-  }>({
-    traffic: null,
-    memory: null,
-  });
-
   // 检查是否支持调试
-  useEffect(() => {
-    isDebugEnabled().then((flag) => setIsDebug(flag));
-  }, []);
+  // TODO: merge this hook with layout-traffic.tsx
+  const { data: isDebug } = useSWR(
+    `clash-verge-rev-internal://isDebugEnabled`,
+    () => isDebugEnabled(),
+    {
+      // default value before is fetched
+      fallbackData: false,
+    },
+  );
 
   // 处理流量数据更新 - 使用节流控制更新频率
   const handleTrafficUpdate = useCallback((event: MessageEvent) => {
@@ -260,14 +257,23 @@ export const EnhancedTrafficStats = () => {
     const { server, secret = "" } = clashInfo;
     if (!server) return;
 
+    // WebSocket 引用
+    let sockets: {
+      traffic: ReturnType<typeof createAuthSockette> | null;
+      memory: ReturnType<typeof createAuthSockette> | null;
+    } = {
+      traffic: null,
+      memory: null,
+    };
+
     // 清理现有连接的函数
     const cleanupSockets = () => {
-      Object.values(socketRefs.current).forEach((socket) => {
+      Object.values(sockets).forEach((socket) => {
         if (socket) {
           socket.close();
         }
       });
-      socketRefs.current = { traffic: null, memory: null };
+      sockets = { traffic: null, memory: null };
     };
 
     // 关闭现有连接
@@ -277,44 +283,40 @@ export const EnhancedTrafficStats = () => {
     console.log(
       `[Traffic][${EnhancedTrafficStats.name}] 正在连接: ${server}/traffic`,
     );
-    socketRefs.current.traffic = createAuthSockette(
-      `${server}/traffic`,
-      secret,
-      {
-        onmessage: handleTrafficUpdate,
-        onopen: (event) => {
-          console.log(
-            `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接已建立`,
-            event,
-          );
-        },
-        onerror: (event) => {
-          console.error(
-            `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接错误或达到最大重试次数`,
-            event,
+    sockets.traffic = createAuthSockette(`${server}/traffic`, secret, {
+      onmessage: handleTrafficUpdate,
+      onopen: (event) => {
+        console.log(
+          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接已建立`,
+          event,
+        );
+      },
+      onerror: (event) => {
+        console.error(
+          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接错误或达到最大重试次数`,
+          event,
+        );
+        setStats((prev) => ({ ...prev, traffic: { up: 0, down: 0 } }));
+      },
+      onclose: (event) => {
+        console.log(
+          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接关闭`,
+          event.code,
+          event.reason,
+        );
+        if (event.code !== 1000 && event.code !== 1001) {
+          console.warn(
+            `[Traffic][${EnhancedTrafficStats.name}] 连接非正常关闭，重置状态`,
           );
           setStats((prev) => ({ ...prev, traffic: { up: 0, down: 0 } }));
-        },
-        onclose: (event) => {
-          console.log(
-            `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接关闭`,
-            event.code,
-            event.reason,
-          );
-          if (event.code !== 1000 && event.code !== 1001) {
-            console.warn(
-              `[Traffic][${EnhancedTrafficStats.name}] 连接非正常关闭，重置状态`,
-            );
-            setStats((prev) => ({ ...prev, traffic: { up: 0, down: 0 } }));
-          }
-        },
+        }
       },
-    );
+    });
 
     console.log(
       `[Memory][${EnhancedTrafficStats.name}] 正在连接: ${server}/memory`,
     );
-    socketRefs.current.memory = createAuthSockette(`${server}/memory`, secret, {
+    sockets.memory = createAuthSockette(`${server}/memory`, secret, {
       onmessage: handleMemoryUpdate,
       onopen: (event) => {
         console.log(
@@ -352,18 +354,6 @@ export const EnhancedTrafficStats = () => {
 
     return cleanupSockets;
   }, [clashInfo, pageVisible, handleTrafficUpdate, handleMemoryUpdate]);
-
-  // 组件卸载时清理所有定时器/引用
-  useEffect(() => {
-    return () => {
-      try {
-        Object.values(socketRefs.current).forEach((socket) => {
-          if (socket) socket.close();
-        });
-        socketRefs.current = { traffic: null, memory: null };
-      } catch {}
-    };
-  }, []);
 
   // 执行垃圾回收
   const handleGarbageCollection = useCallback(async () => {

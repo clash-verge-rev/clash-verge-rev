@@ -93,8 +93,8 @@ importers:
         specifier: ^11.0.3
         version: 11.0.3
       i18next:
-        specifier: ^25.2.1
-        version: 25.2.1(typescript@5.8.3)
+        specifier: ^25.3.0
+        version: 25.3.0(typescript@5.8.3)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -129,8 +129,8 @@ importers:
         specifier: ^7.59.0
         version: 7.59.0(react@19.1.0)
       react-i18next:
-        specifier: 15.5.3
-        version: 15.5.3(i18next@25.2.1(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)
+        specifier: 15.6.0
+        version: 15.6.0(i18next@25.3.0(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)
       react-markdown:
         specifier: 10.1.0
         version: 10.1.0(@types/react@19.1.8)(react@19.1.0)
@@ -147,8 +147,8 @@ importers:
         specifier: ^2.0.6
         version: 2.0.6
       swr:
-        specifier: ^2.3.3
-        version: 2.3.3(react@19.1.0)
+        specifier: ^2.3.4
+        version: 2.3.4(react@19.1.0)
       tar:
         specifier: ^7.4.3
         version: 7.4.3
@@ -179,10 +179,10 @@ importers:
         version: 19.1.6(@types/react@19.1.8)
       '@vitejs/plugin-legacy':
         specifier: ^7.0.0
-        version: 7.0.0(terser@5.43.1)(vite@7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))
+        version: 7.0.0(terser@5.43.1)(vite@7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))
       '@vitejs/plugin-react':
         specifier: 4.6.0
-        version: 4.6.0(vite@7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))
+        version: 4.6.0(vite@7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))
       adm-zip:
         specifier: ^0.5.16
         version: 0.5.16
@@ -217,14 +217,14 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
       vite:
-        specifier: ^7.0.0
-        version: 7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)
+        specifier: ^7.0.2
+        version: 7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
         version: 1.1.0(monaco-editor@0.52.2)
       vite-plugin-svgr:
         specifier: ^4.3.0
-        version: 4.3.0(rollup@4.40.2)(typescript@5.8.3)(vite@7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))
+        version: 4.3.0(rollup@4.40.2)(typescript@5.8.3)(vite@7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))
 
 packages:
 
@@ -2093,8 +2093,8 @@ packages:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
 
-  i18next@25.2.1:
-    resolution: {integrity: sha512-+UoXK5wh+VlE1Zy5p6MjcvctHXAhRwQKCxiJD8noKZzIXmnAX8gdHX5fLPA3MEVxEN4vbZkQFy8N0LyD9tUqPw==}
+  i18next@25.3.0:
+    resolution: {integrity: sha512-ZSQIiNGfqSG6yoLHaCvrkPp16UejHI8PCDxFYaNG/1qxtmqNmqEg4JlWKlxkrUmrin2sEjsy+Mjy1TRozBhOgw==}
     peerDependencies:
       typescript: ^5
     peerDependenciesMeta:
@@ -2524,8 +2524,8 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
 
-  react-i18next@15.5.3:
-    resolution: {integrity: sha512-ypYmOKOnjqPEJZO4m1BI0kS8kWqkBNsKYyhVUfij0gvjy9xJNoG/VcGkxq5dRlVwzmrmY1BQMAmpbbUBLwC4Kw==}
+  react-i18next@15.6.0:
+    resolution: {integrity: sha512-W135dB0rDfiFmbMipC17nOhGdttO5mzH8BivY+2ybsQBbXvxWIwl3cmeH3T9d+YPBSJu/ouyJKFJTtkK7rJofw==}
     peerDependencies:
       i18next: '>= 23.2.3'
       react: '>= 16.8.0'
@@ -2740,8 +2740,8 @@ packages:
   svg-parser@2.0.4:
     resolution: {integrity: sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==}
 
-  swr@2.3.3:
-    resolution: {integrity: sha512-dshNvs3ExOqtZ6kJBaAsabhPdHyeY4P2cKwRCniDVifBMoG/SVI7tfLWqPXriVspf2Rg4tPzXJTnwaihIeFw2A==}
+  swr@2.3.4:
+    resolution: {integrity: sha512-bYd2lrhc+VarcpkgWclcUi92wYCpOgMws9Sd1hG1ntAu0NEy+14CbotuFjshBU2kt9rYj9TSmDcybpxpeTU1fg==}
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -2861,8 +2861,8 @@ packages:
     peerDependencies:
       vite: '>=2.6.0'
 
-  vite@7.0.0:
-    resolution: {integrity: sha512-ixXJB1YRgDIw2OszKQS9WxGHKwLdCsbQNkpJN171udl6szi/rIySHL6/Os3s2+oE4P/FLD4dxg4mD7Wust+u5g==}
+  vite@7.0.2:
+    resolution: {integrity: sha512-hxdyZDY1CM6SNpKI4w4lcUc3Mtkd9ej4ECWVHSMrOdSinVc2zYOAppHeGc/hzmRo3pxM5blMzkuWHOJA/3NiFw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -4427,7 +4427,7 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-legacy@7.0.0(terser@5.43.1)(vite@7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))':
+  '@vitejs/plugin-legacy@7.0.0(terser@5.43.1)(vite@7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))':
     dependencies:
       '@babel/core': 7.27.4
       '@babel/preset-env': 7.27.2(@babel/core@7.27.4)
@@ -4438,11 +4438,11 @@ snapshots:
       regenerator-runtime: 0.14.1
       systemjs: 6.15.1
       terser: 5.43.1
-      vite: 7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)
+      vite: 7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react@4.6.0(vite@7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))':
+  '@vitejs/plugin-react@4.6.0(vite@7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1))':
     dependencies:
       '@babel/core': 7.27.4
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.27.4)
@@ -4450,7 +4450,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.19
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)
+      vite: 7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -4935,7 +4935,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  i18next@25.2.1(typescript@5.8.3):
+  i18next@25.3.0(typescript@5.8.3):
     dependencies:
       '@babel/runtime': 7.27.6
     optionalDependencies:
@@ -5459,11 +5459,11 @@ snapshots:
     dependencies:
       react: 19.1.0
 
-  react-i18next@15.5.3(i18next@25.2.1(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3):
+  react-i18next@15.6.0(i18next@25.3.0(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3):
     dependencies:
       '@babel/runtime': 7.27.6
       html-parse-stringify: 3.0.1
-      i18next: 25.2.1(typescript@5.8.3)
+      i18next: 25.3.0(typescript@5.8.3)
       react: 19.1.0
     optionalDependencies:
       react-dom: 19.1.0(react@19.1.0)
@@ -5694,7 +5694,7 @@ snapshots:
 
   svg-parser@2.0.4: {}
 
-  swr@2.3.3(react@19.1.0):
+  swr@2.3.4(react@19.1.0):
     dependencies:
       dequal: 2.0.3
       react: 19.1.0
@@ -5821,18 +5821,18 @@ snapshots:
     dependencies:
       monaco-editor: 0.52.2
 
-  vite-plugin-svgr@4.3.0(rollup@4.40.2)(typescript@5.8.3)(vite@7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)):
+  vite-plugin-svgr@4.3.0(rollup@4.40.2)(typescript@5.8.3)(vite@7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)):
     dependencies:
       '@rollup/pluginutils': 5.1.4(rollup@4.40.2)
       '@svgr/core': 8.1.0(typescript@5.8.3)
       '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0(typescript@5.8.3))
-      vite: 7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)
+      vite: 7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1)
     transitivePeerDependencies:
       - rollup
       - supports-color
       - typescript
 
-  vite@7.0.0(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1):
+  vite@7.0.2(sass@1.89.2)(terser@5.43.1)(yaml@2.7.1):
     dependencies:
       esbuild: 0.25.4
       fdir: 6.4.6(picomatch@4.0.2)

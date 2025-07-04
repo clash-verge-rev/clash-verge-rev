@@ -11,18 +11,24 @@ if git diff --cached --name-only | grep -q '^src-tauri/'; then
     fi
 fi
 
-# 只在 push 到 origin 并且 origin 指向目标仓库时执行格式检查
-if [ "$1" = "origin" ] && echo "$2" | grep -Eq 'github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$'; then
-    echo "[pre-push] Detected push to origin (clash-verge-rev/clash-verge-rev)"
-    echo "[pre-push] Running pnpm format:check..."
 
-    pnpm format:check
-    if [ $? -ne 0 ]; then
-        echo "❌ Code format check failed. Please fix formatting before pushing."
-        exit 1
+# Only run format check if the remote exists and is the main repo
+remote_name="$1"
+if git remote get-url "$remote_name" >/dev/null 2>&1; then
+    remote_url=$(git remote get-url "$remote_name")
+    if [[ "$remote_url" =~ github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$ ]]; then
+        echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev ($remote_url)"
+        echo "[pre-push] Running pnpm format:check..."
+        pnpm format:check
+        if [ $? -ne 0 ]; then
+            echo "❌ Code format check failed. Please fix formatting before pushing."
+            exit 1
+        fi
+    else
+        echo "[pre-push] Not pushing to target repo. Skipping format check."
     fi
 else
-    echo "[pre-push] Not pushing to target repo. Skipping format check."
+    echo "[pre-push] Remote $remote_name does not exist. Skipping format check."
 fi
 
 exit 0

@@ -426,25 +426,32 @@ impl EventDrivenProxyManager {
     }
 
     fn get_proxy_config() -> ProxyConfig {
-        let verge_config = Config::verge();
-        let verge = verge_config.latest_ref();
+        let (sys_enabled, pac_enabled, guard_enabled) = {
+            let verge_config = Config::verge();
+            let verge = verge_config.latest_ref();
+            (
+                verge.enable_system_proxy.unwrap_or(false),
+                verge.proxy_auto_config.unwrap_or(false),
+                verge.enable_proxy_guard.unwrap_or(false),
+            )
+        };
         ProxyConfig {
-            sys_enabled: verge.enable_system_proxy.unwrap_or(false),
-            pac_enabled: verge.proxy_auto_config.unwrap_or(false),
-            guard_enabled: verge.enable_proxy_guard.unwrap_or(false),
+            sys_enabled,
+            pac_enabled,
+            guard_enabled,
         }
     }
 
     fn get_expected_pac_config() -> Autoproxy {
-        let verge_config = Config::verge();
-        let verge = verge_config.latest_ref();
-        let (proxy_host, pac_port) = (
+        let proxy_host = {
+            let verge_config = Config::verge();
+            let verge = verge_config.latest_ref();
             verge
                 .proxy_host
                 .clone()
-                .unwrap_or_else(|| "127.0.0.1".to_string()),
-            IVerge::get_singleton_port(),
-        );
+                .unwrap_or_else(|| "127.0.0.1".to_string())
+        };
+        let pac_port = IVerge::get_singleton_port();
         Autoproxy {
             enable: true,
             url: format!("http://{proxy_host}:{pac_port}/commands/pac"),
@@ -471,10 +478,14 @@ impl EventDrivenProxyManager {
     }
 
     fn get_bypass_config() -> String {
-        let verge_config = Config::verge();
-        let verge = verge_config.latest_ref();
-        let use_default = verge.use_default_bypass.unwrap_or(true);
-        let custom_bypass = verge.system_proxy_bypass.clone().unwrap_or_default();
+        let (use_default, custom_bypass) = {
+            let verge_config = Config::verge();
+            let verge = verge_config.latest_ref();
+            (
+                verge.use_default_bypass.unwrap_or(true),
+                verge.system_proxy_bypass.clone().unwrap_or_default(),
+            )
+        };
 
         #[cfg(target_os = "windows")]
         let default_bypass = "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>";
