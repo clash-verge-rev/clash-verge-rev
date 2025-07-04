@@ -1039,6 +1039,102 @@ Section Uninstall
   Delete "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Clash Verge\clash-verge.lnk"
   RMDir /r /REBOOTOK "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Clash Verge"
 
+  ; 删除所有带 Clash Verge 或 clash-verge 的注册表项
+  DetailPrint "开始清理所有 Clash Verge 相关的注册表项..."
+
+  ; 设置注册表查看模式 (64位)
+  SetRegView 64
+
+  ; 清理 CurrentVersion\Run 中的自启动项
+  StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Run"
+  DeleteRegValue HKCU "$R1" "Clash Verge"
+  DeleteRegValue HKCU "$R1" "clash-verge"
+  DeleteRegValue HKLM "$R1" "Clash Verge"
+  DeleteRegValue HKLM "$R1" "clash-verge"
+
+  ; 清理 App Paths
+  DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Clash Verge.exe"
+  DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\clash-verge.exe"
+
+  ; 清理 Uninstall 信息
+  StrCpy $R1 0
+  EnumUninstallLoop:
+    EnumRegKey $R2 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" $R1
+    ${If} $R2 == ""
+      Goto EnumUninstallDone
+    ${EndIf}
+
+    ReadRegStr $R3 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$R2" "DisplayName"
+    ${If} $R3 != ""
+      StrCmp $R3 "Clash Verge" 0 +3
+      StrCmp $R3 "clash-verge" 0 +2
+      DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$R2"
+    ${EndIf}
+
+    IntOp $R1 $R1 + 1
+    Goto EnumUninstallLoop
+  EnumUninstallDone:
+
+  ; 清理用户特定的注册表项
+  StrCpy $R1 0
+  EnumHKCULoop:
+    EnumRegKey $R2 HKCU "SOFTWARE" $R1
+    ${If} $R2 == ""
+      Goto EnumHKCUDone
+    ${EndIf}
+
+    ReadRegStr $R3 HKCU "SOFTWARE\$R2" ""
+    ${If} $R3 != ""
+      StrCmp $R3 "Clash Verge" 0 +3
+      StrCmp $R3 "clash-verge" 0 +2
+      DeleteRegKey HKCU "SOFTWARE\$R2"
+    ${EndIf}
+
+    IntOp $R1 $R1 + 1
+    Goto EnumHKCULoop
+  EnumHKCUDone:
+
+  ; 清理系统范围的注册表项
+  StrCpy $R1 0
+  EnumHKLMLoop:
+    EnumRegKey $R2 HKLM "SOFTWARE" $R1
+    ${If} $R2 == ""
+      Goto EnumHKLMDone
+    ${EndIf}
+
+    ReadRegStr $R3 HKLM "SOFTWARE\$R2" ""
+    ${If} $R3 != ""
+      StrCmp $R3 "Clash Verge" 0 +3
+      StrCmp $R3 "clash-verge" 0 +2
+      DeleteRegKey HKLM "SOFTWARE\$R2"
+    ${EndIf}
+
+    IntOp $R1 $R1 + 1
+    Goto EnumHKLMLoop
+  EnumHKLMDone:
+
+  ; 清理 WOW6432Node 下的注册表项 (针对32位应用)
+  SetRegView 32
+  StrCpy $R1 0
+  EnumWOW64Loop:
+    EnumRegKey $R2 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" $R1
+    ${If} $R2 == ""
+      Goto EnumWOW64Done
+    ${EndIf}
+
+    ReadRegStr $R3 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$R2" "DisplayName"
+    ${If} $R3 != ""
+      StrCmp $R3 "Clash Verge" 0 +3
+      StrCmp $R3 "clash-verge" 0 +2
+      DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$R2"
+    ${EndIf}
+
+    IntOp $R1 $R1 + 1
+    Goto EnumWOW64Loop
+  EnumWOW64Done:
+
+  DetailPrint "注册表清理完成"
+
   ; Remove registry information for add/remove programs
   !if "${INSTALLMODE}" == "both"
     DeleteRegKey SHCTX "${UNINSTKEY}"
