@@ -762,6 +762,12 @@ Section Install
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
 
+  ; 删除 window-state.json 文件 .window-state.json 文件
+  DetailPrint "开始删除删除 window-state.json or .window-state.json"
+  SetShellVarContext current
+  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\window-state.json"
+  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
+
   ; 清理自启动注册表项
   DetailPrint "Cleaning auto-launch registry entries..."
 
@@ -913,15 +919,15 @@ FunctionEnd
 
 Section Uninstall
 
+  !insertmacro CheckIfAppIsRunning
+  !insertmacro CheckAllVergeProcesses
+  !insertmacro RemoveVergeService
+
   ; 删除 window-state.json 文件 .window-state.json 文件
   DetailPrint "开始删除删除 window-state.json or .window-state.json"
   SetShellVarContext current
   Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\window-state.json"
   Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
-
-  !insertmacro CheckIfAppIsRunning
-  !insertmacro CheckAllVergeProcesses
-  !insertmacro RemoveVergeService
 
   ; 清理自启动注册表项
   DetailPrint "Cleaning auto-launch registry entries..."
