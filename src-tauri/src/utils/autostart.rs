@@ -115,18 +115,17 @@ fn remove_registry_startup_entries() -> Result<()> {
         ),
     ];
 
-    // 使用数组替代vec!
+    //检查注册表关键字
     let keywords = ["Clash Verge", "clash-verge"];
 
     for (hkey, path) in registry_paths {
         match RegKey::predef(hkey).open_subkey_with_flags(path, KEY_READ | KEY_WRITE) {
             Ok(key) => {
-                // 使用flatten处理Result迭代器
+                // 枚举所有值
                 for (value_name, _) in key.enum_values().flatten() {
                     // 检查值名称是否包含关键字
                     if keywords.iter().any(|kw| value_name.contains(kw)) {
                         if let Err(e) = key.delete_value(&value_name) {
-                            // 使用内联格式化字符串
                             info!(target: "app", "删除注册表值失败 {value_name}: {e}");
                         } else {
                             info!(target: "app", "已删除注册表值: {value_name}");
