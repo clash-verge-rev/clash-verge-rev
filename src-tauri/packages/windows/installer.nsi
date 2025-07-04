@@ -691,8 +691,6 @@ SectionEnd
   app_check_done:
 !macroend
 
-
-
 Var VC_REDIST_URL
 Var VC_REDIST_EXE
 
@@ -701,25 +699,25 @@ Section CheckAndInstallVSRuntime
     ${If} ${IsNativeARM64}
         StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
         StrCpy $VC_REDIST_EXE "vc_redist.arm64.exe"
-        
+
         ; 检查关键DLL
         IfFileExists "$SYSDIR\vcruntime140.dll" 0 checkInstall
         IfFileExists "$SYSDIR\msvcp140.dll" Done checkInstall
-        
+
     ${ElseIf} ${RunningX64}
         StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x64.exe"
         StrCpy $VC_REDIST_EXE "vc_redist.x64.exe"
-        
+
         ; 检查关键DLL
         IfFileExists "$SYSDIR\vcruntime140.dll" 0 checkInstall
         IfFileExists "$SYSDIR\msvcp140.dll" Done checkInstall
-        
+
     ${Else}
         StrCpy $VC_REDIST_URL "https://aka.ms/vs/17/release/vc_redist.x86.exe"
         StrCpy $VC_REDIST_EXE "vc_redist.x86.exe"
-        
+
         ; 检查关键DLL
-        IfFileExists "$SYSDIR\vcruntime140.dll" 0 checkInstall  
+        IfFileExists "$SYSDIR\vcruntime140.dll" 0 checkInstall
         IfFileExists "$SYSDIR\msvcp140.dll" Done checkInstall
     ${EndIf}
 
@@ -754,11 +752,9 @@ Section CheckAndInstallVSRuntime
     ${Else}
         DetailPrint "Visual C++ Redistributable 下载失败"
     ${EndIf}
-    
+
     Done:
 SectionEnd
-
-
 
 Section Install
   SetOutPath $INSTDIR
@@ -770,14 +766,14 @@ Section Install
   DetailPrint "Cleaning auto-launch registry entries..."
 
   StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Run"
-  
-  SetRegView 64  
+
+  SetRegView 64
   ; 清理旧版本的注册表项 (Clash Verge)
   ReadRegStr $R2 HKCU "$R1" "Clash Verge"
   ${If} $R2 != ""
     DeleteRegValue HKCU "$R1" "Clash Verge"
   ${EndIf}
-  
+
   ReadRegStr $R2 HKLM "$R1" "Clash Verge"
   ${If} $R2 != ""
     DeleteRegValue HKLM "$R1" "Clash Verge"
@@ -788,7 +784,7 @@ Section Install
   ${If} $R2 != ""
     DeleteRegValue HKCU "$R1" "clash-verge"
   ${EndIf}
-  
+
   ReadRegStr $R2 HKLM "$R1" "clash-verge"
   ${If} $R2 != ""
     DeleteRegValue HKLM "$R1" "clash-verge"
@@ -798,7 +794,7 @@ Section Install
     ; Delete clash-verge.desktop
   IfFileExists "$INSTDIR\Clash Verge.exe" 0 +2
     Delete "$INSTDIR\Clash Verge.exe"
-  
+
   ; Copy main executable
   File "${MAINBINARYSRCPATH}"
 
@@ -916,9 +912,12 @@ FunctionEnd
 !macroend
 
 Section Uninstall
-  ;删除 window-state.json 文件
+
+  ; 删除 window-state.json 文件 .window-state.json 文件
+  DetailPrint "开始删除删除 window-state.json or .window-state.json"
   SetShellVarContext current
   Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\window-state.json"
+  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\.window-state.json"
 
   !insertmacro CheckIfAppIsRunning
   !insertmacro CheckAllVergeProcesses
@@ -926,16 +925,16 @@ Section Uninstall
 
   ; 清理自启动注册表项
   DetailPrint "Cleaning auto-launch registry entries..."
-  
+
   StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Run"
-  
+
   SetRegView 64
   ; 清理旧版本的注册表项 (Clash Verge)
   ReadRegStr $R2 HKCU "$R1" "Clash Verge"
   ${If} $R2 != ""
     DeleteRegValue HKCU "$R1" "Clash Verge"
   ${EndIf}
-  
+
   ReadRegStr $R2 HKLM "$R1" "Clash Verge"
   ${If} $R2 != ""
     DeleteRegValue HKLM "$R1" "Clash Verge"
@@ -946,7 +945,7 @@ Section Uninstall
   ${If} $R2 != ""
     DeleteRegValue HKCU "$R1" "clash-verge"
   ${EndIf}
-  
+
   ReadRegStr $R2 HKLM "$R1" "clash-verge"
   ${If} $R2 != ""
     DeleteRegValue HKLM "$R1" "clash-verge"
@@ -978,24 +977,61 @@ Section Uninstall
   {{/each}}
   RMDir "$INSTDIR"
 
+  ; 删除固定栏
   !insertmacro DeleteAppUserModelId
   !insertmacro UnpinShortcut "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk"
   !insertmacro UnpinShortcut "$DESKTOP\${PRODUCTNAME}.lnk"
-  ; 兼容旧名称快捷方式
-  !insertmacro UnpinShortcut "$SMPROGRAMS\$AppStartMenuFolder\clash-verge.lnk"
-  !insertmacro UnpinShortcut "$DESKTOP\clash-verge.lnk"
+  !insertmacro UnpinShortcut "$SMPROGRAMS\$AppStartMenuFolder\${MAINBINARYNAME}.lnk"
+  !insertmacro UnpinShortcut "$DESKTOP\${MAINBINARYNAME}.lnk"
 
-  ; Remove start menu shortcut
-  !insertmacro MUI_STARTMENU_GETFOLDER Application $AppStartMenuFolder
+  ; 删除所有用户的桌面快捷方式
+  DetailPrint "开始删除所有用户桌面的 Clash Verge 快捷方式..."
+
+  ; 删除公共桌面快捷方式
+  Delete "C:\Users\Public\Desktop\Clash Verge.lnk"
+  Delete "C:\Users\Public\Desktop\clash-verge.lnk"
+
+  ; 枚举所有用户配置文件目录
+  SetRegView 64
+  ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" ""
+
+  ; 初始化循环
+  StrCpy $R1 0
+  Loop:
+    EnumRegKey $R2 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" $R1
+    ${If} $R2 == ""
+      Goto Done
+    ${EndIf}
+
+    ; 读取用户配置文件路径
+    ReadRegStr $R3 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\$R2" "ProfileImagePath"
+    ${If} $R3 != ""
+      ; 构建用户桌面路径
+      StrCpy $R4 "$R3\Desktop"
+
+      ; 删除该用户桌面的快捷方式
+      Delete "$R4\Clash Verge.lnk"
+      Delete "$R4\clash-verge.lnk"
+
+      DetailPrint "尝试删除用户 '$R3' 桌面的 Clash Verge 快捷方式"
+    ${EndIf}
+
+    ; 递增循环计数器
+    IntOp $R1 $R1 + 1
+    Goto Loop
+  Done:
+
+  DetailPrint "所有用户桌面快捷方式删除完成"
+
+  ; 删除用户开始菜单文件夹
   Delete "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk"
-  ; 兼容旧名称快捷方式
-  Delete "$SMPROGRAMS\$AppStartMenuFolder\clash-verge.lnk"
-  RMDir "$SMPROGRAMS\$AppStartMenuFolder"
+  Delete "$SMPROGRAMS\$AppStartMenuFolder\${MAINBINARYNAME}.lnk"
+  RMDir /r /REBOOTOK "$SMPROGRAMS\$AppStartMenuFolder"
 
-  ; Remove desktop shortcuts
-  Delete "$DESKTOP\${PRODUCTNAME}.lnk"
-  ; 兼容旧名称快捷方式
-  Delete "$DESKTOP\clash-verge.lnk"
+  ; 删除系统级开始菜单中的 Clash Verge
+  Delete "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Clash Verge\Clash Verge.lnk"
+  Delete "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Clash Verge\clash-verge.lnk"
+  RMDir /r /REBOOTOK "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Clash Verge"
 
   ; Remove registry information for add/remove programs
   !if "${INSTALLMODE}" == "both"
@@ -1014,10 +1050,6 @@ Section Uninstall
     RmDir /r "$APPDATA\${BUNDLEID}"
     RmDir /r "$LOCALAPPDATA\${BUNDLEID}"
   ${EndIf}
-
-  ;删除 window-state.json 文件
-  SetShellVarContext current
-  Delete "$APPDATA\io.github.clash-verge-rev.clash-verge-rev\window-state.json"
 
   ${GetOptions} $CMDLINE "/P" $R0
   IfErrors +2 0
@@ -1051,7 +1083,6 @@ FunctionEnd
         System::Free $4
         System::Free $5
         ${IPropertyStore::Commit} $2 ""
-        ${IUnknown::Release} $2 ""
         ${IPersistFile::Save} $1 '("${shortcut}",1)'
       ${EndIf}
       ${IUnknown::Release} $1 ""
