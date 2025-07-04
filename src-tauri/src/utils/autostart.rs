@@ -6,6 +6,9 @@ use log::info;
 #[cfg(target_os = "windows")]
 use std::{fs, os::windows::process::CommandExt, path::Path, path::PathBuf};
 
+#[cfg(target_os = "windows")]
+use winreg::{enums::*, RegKey};
+
 /// Windows 下的开机启动文件夹路径
 #[cfg(target_os = "windows")]
 pub fn get_startup_dir() -> Result<PathBuf> {
@@ -73,9 +76,80 @@ pub fn create_shortcut() -> Result<()> {
     Ok(())
 }
 
+/// 删除注册表中启动项
+#[cfg(target_os = "windows")]
+fn remove_registry_startup_entries() -> Result<()> {
+    // 定义需要检查的注册表路径
+    let registry_paths = vec![
+        (
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",
+        ),
+        (
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce",
+        ),
+        (
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run",
+        ),
+        (
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\RunOnce",
+        ),
+        (
+            HKEY_CURRENT_USER,
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",
+        ),
+        (
+            HKEY_CURRENT_USER,
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce",
+        ),
+        (
+            HKEY_CURRENT_USER,
+            r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run",
+        ),
+        (
+            HKEY_CURRENT_USER,
+            r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\RunOnce",
+        ),
+    ];
+
+    // 检查Clash Verge的关键字
+    let keywords = vec!["Clash Verge", "clash-verge"];
+
+    for (hkey, path) in registry_paths {
+        match RegKey::predef(hkey).open_subkey_with_flags(path, KEY_READ | KEY_WRITE) {
+            Ok(key) => {
+                // 枚举所有值
+                for result in key.enum_values() {
+                    if let Ok((value_name, _)) = result {
+                        // 检查值名称是否包含关键字
+                        if keywords.iter().any(|kw| value_name.contains(kw)) {
+                            if let Err(e) = key.delete_value(&value_name) {
+                                info!(target: "app", "删除注册表值失败 {}: {}", value_name, e);
+                            } else {
+                                info!(target: "app", "已删除注册表值: {}", value_name);
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                info!(target: "app", "无法访问注册表路径 {}: {}", path, e);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// 删除快捷方式
 #[cfg(target_os = "windows")]
 pub fn remove_shortcut() -> Result<()> {
+    // 先删除注册表中的启动项
+    remove_registry_startup_entries()?;
+
     let startup_dir = get_startup_dir()?;
     let shortcut_path = startup_dir.join("Clash-Verge.lnk");
 
