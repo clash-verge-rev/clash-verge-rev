@@ -13,8 +13,10 @@ use crate::{
     utils::{resolve, resolve::resolve_scheme, server},
 };
 use config::Config;
-use std::sync::{Mutex, Once};
+use parking_lot::Mutex;
+use std::sync::Once;
 use tauri::AppHandle;
+#[cfg(target_os = "macos")]
 use tauri::Manager;
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
@@ -41,14 +43,14 @@ impl AppHandleManager {
     /// Initialize the app handle manager with an app handle.
     pub fn init(&self, handle: AppHandle) {
         self.init.call_once(|| {
-            let mut app_handle = self.inner.lock().unwrap();
+            let mut app_handle = self.inner.lock();
             *app_handle = Some(handle);
         });
     }
 
     /// Get the app handle if it has been initialized.
     pub fn get(&self) -> Option<AppHandle> {
-        self.inner.lock().unwrap().clone()
+        self.inner.lock().clone()
     }
 
     /// Get the app handle, panics if it hasn't been initialized.
@@ -59,7 +61,7 @@ impl AppHandleManager {
     pub fn set_activation_policy_regular(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock().unwrap();
+            let app_handle = self.inner.lock();
             let app_handle = app_handle.as_ref().unwrap();
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Regular);
         }
@@ -68,7 +70,7 @@ impl AppHandleManager {
     pub fn set_activation_policy_accessory(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock().unwrap();
+            let app_handle = self.inner.lock();
             let app_handle = app_handle.as_ref().unwrap();
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
         }
@@ -77,7 +79,7 @@ impl AppHandleManager {
     pub fn set_activation_policy_prohibited(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock().unwrap();
+            let app_handle = self.inner.lock();
             let app_handle = app_handle.as_ref().unwrap();
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Prohibited);
         }
@@ -134,6 +136,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
+        .manage(Mutex::new(state::lightweight::LightWeightState::default()))
         .setup(|app| {
             logging!(info, Type::Setup, true, "开始应用初始化...");
             let mut auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
@@ -212,8 +215,6 @@ pub fn run() {
             if let Err(e) = utils::init::init_resources() {
                 logging!(error, Type::Setup, true, "初始化资源失败: {}", e);
             }
-
-            app.manage(Mutex::new(state::lightweight::LightWeightState::default()));
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())
