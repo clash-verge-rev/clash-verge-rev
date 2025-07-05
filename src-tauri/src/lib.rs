@@ -135,6 +135,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
+        .manage(Mutex::new(state::lightweight::LightWeightState::default()))
         .setup(|app| {
             logging!(info, Type::Setup, true, "开始应用初始化...");
             let mut auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
@@ -213,8 +214,6 @@ pub fn run() {
             if let Err(e) = utils::init::init_resources() {
                 logging!(error, Type::Setup, true, "初始化资源失败: {}", e);
             }
-
-            app.manage(Mutex::new(state::lightweight::LightWeightState::default()));
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())

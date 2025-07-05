@@ -13,10 +13,8 @@ use crate::AppHandleManager;
 
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Mutex,
-};
+use parking_lot::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{Listener, Manager};
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
@@ -30,7 +28,7 @@ where
 {
     let app_handle = handle::Handle::global().app_handle().unwrap();
     let state = app_handle.state::<Mutex<LightWeightState>>();
-    let mut guard = state.lock().unwrap();
+    let mut guard = state.lock();
     f(&mut guard)
 }
 
