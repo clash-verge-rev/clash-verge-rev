@@ -1,9 +1,8 @@
 use anyhow::Result;
 use lazy_static::lazy_static;
-use parking_lot::Mutex;
 use reqwest::{Client, ClientBuilder, Proxy, RequestBuilder, Response};
 use std::{
-    sync::{Arc, Once},
+    sync::{Arc, Mutex, Once},
     time::{Duration, Instant},
 };
 use tokio::runtime::{Builder, Runtime};
@@ -79,7 +78,7 @@ impl NetworkManager {
                     .build()
                     .expect("Failed to build no_proxy client");
 
-                let mut no_proxy_guard = NETWORK_MANAGER.no_proxy_client.lock();
+                let mut no_proxy_guard = NETWORK_MANAGER.no_proxy_client.lock().unwrap();
                 *no_proxy_guard = Some(no_proxy_client);
 
                 logging!(info, Type::Network, true, "网络管理器初始化完成");
@@ -88,16 +87,16 @@ impl NetworkManager {
     }
 
     fn record_connection_error(&self, error: &str) {
-        let mut last_error = self.last_connection_error.lock();
+        let mut last_error = self.last_connection_error.lock().unwrap();
         *last_error = Some((Instant::now(), error.to_string()));
 
-        let mut error_count = self.connection_error_count.lock();
+        let mut error_count = self.connection_error_count.lock().unwrap();
         *error_count += 1;
     }
 
     fn should_reset_clients(&self) -> bool {
-        let error_count = *self.connection_error_count.lock();
-        let last_error = self.last_connection_error.lock();
+        let error_count = *self.connection_error_count.lock().unwrap();
+        let last_error = self.last_connection_error.lock().unwrap();
 
         if error_count > 5 {
             return true;
@@ -115,19 +114,19 @@ impl NetworkManager {
     pub fn reset_clients(&self) {
         logging!(info, Type::Network, true, "正在重置所有HTTP客户端");
         {
-            let mut client = self.self_proxy_client.lock();
+            let mut client = self.self_proxy_client.lock().unwrap();
             *client = None;
         }
         {
-            let mut client = self.system_proxy_client.lock();
+            let mut client = self.system_proxy_client.lock().unwrap();
             *client = None;
         }
         {
-            let mut client = self.no_proxy_client.lock();
+            let mut client = self.no_proxy_client.lock().unwrap();
             *client = None;
         }
         {
-            let mut error_count = self.connection_error_count.lock();
+            let mut error_count = self.connection_error_count.lock().unwrap();
             *error_count = 0;
         }
     }
@@ -138,7 +137,7 @@ impl NetworkManager {
                self.reset_clients();
            }
 
-           let mut client_guard = self.self_proxy_client.lock();
+           let mut client_guard = self.self_proxy_client.lock().unwrap();
 
            if client_guard.is_none() {
                let port = Config::verge()
@@ -186,7 +185,7 @@ impl NetworkManager {
                self.reset_clients();
            }
 
-           let mut client_guard = self.system_proxy_client.lock();
+           let mut client_guard = self.system_proxy_client.lock().unwrap();
 
            if client_guard.is_none() {
                use sysproxy::Sysproxy;
@@ -233,7 +232,7 @@ impl NetworkManager {
        pub fn get_client(&self, proxy_type: ProxyType) -> Client {
            match proxy_type {
                ProxyType::NoProxy => {
-                   let client_guard = self.no_proxy_client.lock();
+                   let client_guard = self.no_proxy_client.lock().unwrap();
                    client_guard.as_ref().unwrap().clone()
                }
                ProxyType::SelfProxy => self.get_or_create_self_proxy_client(),

@@ -13,8 +13,7 @@ use crate::{
     utils::{resolve, resolve::resolve_scheme, server},
 };
 use config::Config;
-use parking_lot::Mutex;
-use std::sync::Once;
+use std::sync::{Mutex, Once};
 use tauri::AppHandle;
 use tauri::Manager;
 #[cfg(target_os = "macos")]
@@ -42,14 +41,14 @@ impl AppHandleManager {
     /// Initialize the app handle manager with an app handle.
     pub fn init(&self, handle: AppHandle) {
         self.init.call_once(|| {
-            let mut app_handle = self.inner.lock();
+            let mut app_handle = self.inner.lock().unwrap();
             *app_handle = Some(handle);
         });
     }
 
     /// Get the app handle if it has been initialized.
     pub fn get(&self) -> Option<AppHandle> {
-        self.inner.lock().clone()
+        self.inner.lock().unwrap().clone()
     }
 
     /// Get the app handle, panics if it hasn't been initialized.
@@ -60,7 +59,7 @@ impl AppHandleManager {
     pub fn set_activation_policy_regular(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock();
+            let app_handle = self.inner.lock().unwrap();
             let app_handle = app_handle.as_ref().unwrap();
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Regular);
         }
@@ -69,7 +68,7 @@ impl AppHandleManager {
     pub fn set_activation_policy_accessory(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock();
+            let app_handle = self.inner.lock().unwrap();
             let app_handle = app_handle.as_ref().unwrap();
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
         }
@@ -78,7 +77,7 @@ impl AppHandleManager {
     pub fn set_activation_policy_prohibited(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock();
+            let app_handle = self.inner.lock().unwrap();
             let app_handle = app_handle.as_ref().unwrap();
             let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Prohibited);
         }
