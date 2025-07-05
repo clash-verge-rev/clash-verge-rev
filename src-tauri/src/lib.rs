@@ -16,6 +16,7 @@ use config::Config;
 use parking_lot::Mutex;
 use std::sync::Once;
 use tauri::AppHandle;
+#[cfg(target_os = "macos")]
 use tauri::Manager;
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
