@@ -8,8 +8,7 @@ pub fn use_script(
     name: String,
 ) -> Result<(Mapping, Vec<(String, String)>)> {
     use boa_engine::{native_function::NativeFunction, Context, JsValue, Source};
-    use parking_lot::Mutex;
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex};
     let mut context = Context::default();
 
     let outputs = Arc::new(Mutex::new(vec![]));
@@ -25,7 +24,7 @@ pub fn use_script(
                     let level = level.to_std_string().unwrap();
                     let data = args.get(1).unwrap().to_string(context)?;
                     let data = data.to_std_string().unwrap();
-                    let mut out = copy_outputs.lock();
+                    let mut out = copy_outputs.lock().unwrap();
                     out.push((level, data));
                     Ok(JsValue::undefined())
                 },
@@ -68,7 +67,7 @@ pub fn use_script(
         // 直接解析JSON结果,不做其他解析
         let res: Result<Mapping, Error> = parse_json_safely(&result);
 
-        let mut out = outputs.lock();
+        let mut out = outputs.lock().unwrap();
         match res {
             Ok(config) => Ok((use_lowercase(config), out.to_vec())),
             Err(err) => {
