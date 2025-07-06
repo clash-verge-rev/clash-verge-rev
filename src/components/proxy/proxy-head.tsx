@@ -55,7 +55,13 @@ export const ProxyHead = (props: Props) => {
   }, 500);
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ...sx }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        ...sx,
+      }}>
       <IconButton
         size="small"
         color="inherit"

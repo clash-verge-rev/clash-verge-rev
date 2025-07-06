@@ -80,7 +80,6 @@ const ProxyItemMiniCol = memo(function ProxyItemMiniCol(props: ProxyColProps) {
         display: "grid",
         gap: 1,
         px: 2,
-        mb: 1,
         gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
       }}>
       {proxyCol?.map((proxy) => (
@@ -133,6 +132,7 @@ export const ProxyRender = (props: RenderProps) => {
   if (type === 0) {
     return (
       <ListItemButton
+        id={`group-${group.name}`}
         dense
         sx={(theme) => ({
           background: "#ffffff",
@@ -140,7 +140,7 @@ export const ProxyRender = (props: RenderProps) => {
             background: "#282A36",
           }),
           height: "70px",
-          margin: "8px 8px 0",
+          margin: "0 8px",
           borderRadius: "8px",
           transition: "background-color 0s",
         })}
@@ -203,7 +203,7 @@ export const ProxyRender = (props: RenderProps) => {
   if (type === 1) {
     return (
       <ProxyHead
-        sx={{ pl: 2, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
+        sx={{ pl: 2, pr: 3 }}
         groupName={group.name}
         headState={headState!}
         onLocation={() => onLocation(group)}

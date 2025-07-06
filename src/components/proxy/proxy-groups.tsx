@@ -4,8 +4,8 @@ import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
 import { Box } from "@mui/material";
-import { useLockFn, useMemoizedFn } from "ahooks";
-import { useRef } from "react";
+import { useLockFn, useMemoizedFn, useThrottleFn } from "ahooks";
+import { useCallback, useRef } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import {
   closeConnections,
@@ -16,6 +16,7 @@ import {
 import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
 import LoadingPage from "@/pages/loading";
+import { cn, sleep } from "@/utils";
 
 interface Props {
   mode: string;
@@ -74,8 +75,8 @@ export const ProxyGroups = (props: Props) => {
   );
 
   // 测全部延迟
-  const handleCheckAll = useMemoizedFn(
-    useLockFn(async (groupName: string) => {
+  const { run: handleCheckAll } = useThrottleFn(
+    async (groupName: string) => {
       const proxies = renderList
         .filter(
           (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4),
@@ -98,46 +99,69 @@ export const ProxyGroups = (props: Props) => {
       await delayManager.checkListDelay(names, groupName, timeout);
 
       onProxies();
-    }),
+    },
+    { wait: 1000 },
   );
 
   // 滚到对应的节点
-  const handleGroupLocation = useMemoizedFn((groupName: string) => {
-    if (!groupName) return;
+  const handleGroupLocation = useCallback(
+    async (groupName: string) => {
+      if (!groupName) return;
 
-    const index = renderList.findIndex(
-      (e) => e.type === 0 && e.key === groupName,
-    );
+      const index = renderList.findIndex(
+        (e) => e.type === 0 && e.key === groupName,
+      );
 
-    if (index >= 0) {
-      virtuosoRef.current?.scrollToIndex?.({
-        index,
-        align: "start",
-        behavior: "auto",
-      });
-    }
-  });
+      if (index >= 0) {
+        virtuosoRef.current?.scrollToIndex?.({
+          index,
+          align: "start",
+          behavior: "auto",
+        });
+
+        // highlight group
+        let ele = document.getElementById(`group-${groupName}`);
+        let count = 20;
+        while (count > 0) {
+          ele = document.getElementById(`group-${groupName}`);
+          if (ele) {
+            ele.classList.add("animate-highlight");
+            break;
+          }
+          await sleep(200);
+          count--;
+        }
+        setTimeout(() => {
+          ele?.classList.remove("animate-highlight");
+        }, 1000);
+      }
+    },
+    [renderList, virtuosoRef],
+  );
 
   // 滚到对应的节点
-  const handleLocation = useMemoizedFn((group: IProxyGroupItem) => {
-    if (!group) return;
-    const { name, now } = group;
+  const handleLocation = useCallback(
+    (group: IProxyGroupItem) => {
+      if (!group) return;
+      const { name, now } = group;
 
-    const index = renderList.findIndex(
-      (e) =>
-        e.group?.name === name &&
-        ((e.type === 2 && e.proxy?.name === now) ||
-          (e.type === 4 && e.proxyCol?.some((p) => p.name === now))),
-    );
+      const index = renderList.findIndex(
+        (e) =>
+          e.group?.name === name &&
+          ((e.type === 2 && e.proxy?.name === now) ||
+            (e.type === 4 && e.proxyCol?.some((p) => p.name === now))),
+      );
 
-    if (index >= 0) {
-      virtuosoRef.current?.scrollToIndex?.({
-        index,
-        align: "center",
-        behavior: "smooth",
-      });
-    }
-  });
+      if (index >= 0) {
+        virtuosoRef.current?.scrollToIndex?.({
+          index,
+          align: "center",
+          behavior: "smooth",
+        });
+      }
+    },
+    [renderList, virtuosoRef],
+  );
 
   const groupNameList = renderList
     .filter((item) => item.type === 0)
@@ -150,19 +174,25 @@ export const ProxyGroups = (props: Props) => {
       <Box className="h-full w-full pr-7">
         <Virtuoso
           ref={virtuosoRef}
-          style={{ height: "calc(100% - 8px)" }}
+          style={{ height: "100%" }}
           totalCount={renderList.length}
           increaseViewportBy={256}
           itemContent={(index) => (
-            <ProxyRender
-              key={renderList[index].key}
-              item={renderList[index]}
-              indent={mode === "rule" || mode === "script"}
-              onLocation={handleLocation}
-              onCheckAll={handleCheckAll}
-              onHeadState={onHeadState}
-              onChangeProxy={handleChangeProxy}
-            />
+            <div
+              className={cn("py-1", {
+                "pt-2": index === 0,
+                "pb-2": index === renderList.length - 1,
+              })}>
+              <ProxyRender
+                key={renderList[index].key}
+                item={renderList[index]}
+                indent={mode === "rule"}
+                onLocation={handleLocation}
+                onCheckAll={handleCheckAll}
+                onHeadState={onHeadState}
+                onChangeProxy={handleChangeProxy}
+              />
+            </div>
           )}
         />
       </Box>

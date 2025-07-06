@@ -38,13 +38,31 @@
 
   /* animation */
   --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-highlight: highlight-pulse 1s ease-in-out infinite;
   --animate-marquee-vertical: marquee-vertical var(--duration) infinite linear;
+
   @keyframes marquee {
     from {
       transform: translateX(0);
     }
     to {
       transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  /* 高亮动画关键帧 */
+  @keyframes highlight-pulse {
+    0% {
+      background-color: var(--background-color-alpha);
+      box-shadow: 0 0 0 0 var(--background-color-alpha);
+    }
+    50% {
+      background-color: var(--background-color-alpha);
+      box-shadow: 0 0 10px 3px var(--color-primary-main);
+    }
+    100% {
+      background-color: var(--background-color-alpha);
+      box-shadow: 0 0 0 0 var(--background-color-alpha);
     }
   }
 
