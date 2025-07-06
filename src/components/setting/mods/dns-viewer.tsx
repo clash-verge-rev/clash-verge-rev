@@ -442,7 +442,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
 
   // 解析列表字符串为数组
   const parseList = (str: string): string[] => {
-    if (!str) return [];
+    if (!str?.trim()) return [];
     return str
       .split(",")
       .map((item) => item.trim())
@@ -472,26 +472,15 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
         ipcidr: parseList(values.fallbackIpcidr),
         domain: parseList(values.fallbackDomain),
       },
-    };
 
-    // 只在有值时添加其他可选字段
-    if (values.fallback) {
-      dnsConfig["fallback"] = parseList(values.fallback);
-    }
+      fallback: parseList(values.fallback),
+      "proxy-server-nameserver": parseList(values.proxyServerNameserver),
+      "direct-nameserver": parseList(values.directNameserver),
+    };
 
     const policy = parseNameserverPolicy(values.nameserverPolicy);
     if (Object.keys(policy).length > 0) {
       dnsConfig["nameserver-policy"] = policy;
-    }
-
-    if (values.proxyServerNameserver) {
-      dnsConfig["proxy-server-nameserver"] = parseList(
-        values.proxyServerNameserver,
-      );
-    }
-
-    if (values.directNameserver) {
-      dnsConfig["direct-nameserver"] = parseList(values.directNameserver);
     }
 
     return dnsConfig;
