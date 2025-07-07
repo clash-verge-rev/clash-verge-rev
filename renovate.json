@@ -1,5 +1,5 @@
 {
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", ":disableDependencyDashboard"],
   "baseBranches": ["dev"],
   "enabledManagers": ["cargo", "npm"],
   "labels": ["dependencies"],
