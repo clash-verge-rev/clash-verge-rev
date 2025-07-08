@@ -1,3 +1,4 @@
+// refer: https://github.com/openacid/low/tree/master/bitmap
 pub(crate) struct Bitmap;
 
 // 全局静态常量
