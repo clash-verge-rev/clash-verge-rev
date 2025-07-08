@@ -10,7 +10,8 @@
 - 修复导入订阅时非 http 协议链接被错误尝试导入
 - 修复切换节点后页面长时间 loading 及缓存过期导致的数据不同步问题
 - 修复将快捷键名称更名为 `Clash Verge`之后无法删除图标和无法删除注册表
-- 修复`DNS`覆写服务器支持默认留空
+- 修复`DNS`覆写 `fallback` `proxy server` `nameserver` `direct Nameserver` 字段支持留空
+- 修复`DNS`覆写 `nameserver-policy` 字段无法正确识别 `geo` 库
 
 ### ✨ 新增功能
 
