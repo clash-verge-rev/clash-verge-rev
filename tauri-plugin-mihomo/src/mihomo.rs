@@ -232,7 +232,7 @@ impl Mihomo {
                     })))
                     .unwrap()
                 }
-                Ok(Message::Frame(_)) => serde_json::Value::Null, // This value can't be recieved.
+                Ok(Message::Frame(_)) => serde_json::Value::Null, // This value can't be received.
                 Err(e) => {
                     serde_json::to_value(WebSocketMessage::Text(MihomoError::from(e).to_string()))
                         .unwrap()
@@ -519,7 +519,7 @@ impl Mihomo {
         let client = self.build_request(Method::GET, "/version")?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            failed_rep!("get mihomo version erro");
+            failed_rep!("get mihomo version error");
         }
         Ok(response.json::<MihomoVersion>().await?)
     }
@@ -828,7 +828,7 @@ impl Mihomo {
         let client = self.build_request(Method::POST, "/configs/geo")?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
-            failed_rep!("update geo datebase error");
+            failed_rep!("update geo database error");
         }
         Ok(())
     }

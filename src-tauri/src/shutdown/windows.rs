@@ -76,7 +76,7 @@ fn get_instance_handle() -> windows_sys::Win32::Foundation::HMODULE {
 }
 
 pub fn register() {
-    let app_hanlde = handle::Handle::get_app_handle();
+    let app_handle = handle::Handle::get_app_handle();
     let class_name = encode_wide("global_shutdown_app");
     unsafe {
         let hinstance = get_instance_handle();
@@ -115,7 +115,7 @@ pub fn register() {
         if hwnd.is_null() {
             tracing::error!("failed to create shutdown window");
         } else {
-            app_hanlde.manage(ShutdownState { hwnd });
+            app_handle.manage(ShutdownState { hwnd });
         }
     }
 }

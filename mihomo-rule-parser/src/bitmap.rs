@@ -96,9 +96,9 @@ impl Bitmap {
     }
 
     /// An optional bool specifies whether to add a last index entry of count of all
-    pub fn index_rank64(words: &[u64], trailling: bool) -> Vec<i32> {
+    pub fn index_rank64(words: &[u64], trailing: bool) -> Vec<i32> {
         let mut length = words.len();
-        if trailling {
+        if trailing {
             length += 1;
         }
         let mut idx = Vec::<i32>::with_capacity(length);
@@ -107,7 +107,7 @@ impl Bitmap {
             idx.push(n);
             n += word.count_ones() as i32;
         }
-        if trailling {
+        if trailing {
             idx.push(n)
         }
         idx

@@ -104,9 +104,9 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     let mut result_map = HashMap::new();
 
     // global chain
-    tracing::info!("excute global chains");
+    tracing::info!("execute global chains");
     for chain in global_chain {
-        match chain.excute(config.clone()) {
+        match chain.execute(config.clone()) {
             Ok(res) => {
                 config = res.config;
                 if let Some(logs) = res.logs {
@@ -115,7 +115,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
             }
             Err(e) => {
                 tracing::error!(
-                    "global chain [{:?}] excute failed, error: {:?}",
+                    "global chain [{:?}] execute failed, error: {:?}",
                     chain.uid,
                     e
                 );
@@ -124,9 +124,9 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     }
 
     // profile chain
-    tracing::info!("excute profile chains");
+    tracing::info!("execute profile chains");
     for chain in profile_chain {
-        match chain.excute(config.clone()) {
+        match chain.execute(config.clone()) {
             Ok(res) => {
                 config = res.config;
                 if let Some(logs) = res.logs {
@@ -135,7 +135,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
             }
             Err(e) => {
                 tracing::error!(
-                    "profile chain [{:?}] excute failed, error: {:?}",
+                    "profile chain [{:?}] execute failed, error: {:?}",
                     chain.uid,
                     e
                 );
@@ -190,13 +190,13 @@ pub fn get_pre_merge_result(
             // change current config mapping to profile mapping
             config = profiles.get_profile_mapping(&profile_uid)?.clone();
 
-            // excute all enabled global chain
-            tracing::info!("excute all global chains");
+            // execute all enabled global chain
+            tracing::info!("execute all global chains");
             let global_chain = profiles.get_profile_chains(None, EnableFilter::Enable);
-            excute_chains(&mut config, &global_chain, &mut script_logs);
+            execute_chains(&mut config, &global_chain, &mut script_logs);
 
             // get new profile chain, index form 0 to modified chain index.
-            tracing::info!("excute profile chains until find the modified chain");
+            tracing::info!("execute profile chains until find the modified chain");
             let profile_chain = {
                 let chain = profiles.get_profile_chains(Some(profile_uid), EnableFilter::All);
                 let new_chain = match chain.iter().position(|v| *v.uid == modified_uid) {
@@ -206,10 +206,10 @@ pub fn get_pre_merge_result(
                 new_chain.into_iter().filter(|c| c.enable).collect()
             };
             // execute new profile chain
-            excute_chains(&mut config, &profile_chain, &mut script_logs);
+            execute_chains(&mut config, &profile_chain, &mut script_logs);
         }
         None => {
-            tracing::info!("excute global chains until find the modified chain");
+            tracing::info!("execute global chains until find the modified chain");
             let global_chain = {
                 let chain = profiles.get_profile_chains(None, EnableFilter::All);
                 let new_chain = match chain.iter().position(|v| *v.uid == modified_uid) {
@@ -219,7 +219,7 @@ pub fn get_pre_merge_result(
                 new_chain.into_iter().filter(|c| c.enable).collect()
             };
             // global chain
-            excute_chains(&mut config, &global_chain, &mut script_logs);
+            execute_chains(&mut config, &global_chain, &mut script_logs);
         }
     };
     // 排序
@@ -298,13 +298,13 @@ pub async fn test_merge_chain(
     })
 }
 
-fn excute_chains(
+fn execute_chains(
     config: &mut Mapping,
     chains: &Vec<ChainItem>,
     script_logs: &mut HashMap<String, Vec<LogMessage>>,
 ) {
     for chain in chains {
-        match chain.excute(config.clone()) {
+        match chain.execute(config.clone()) {
             Ok(res) => {
                 *config = res.config;
                 if let Some(logs) = res.logs {
@@ -312,7 +312,7 @@ fn excute_chains(
                 }
             }
             Err(e) => {
-                tracing::error!("excute chain [{:?}] failed, error: {:?}", chain.uid, e);
+                tracing::error!("execute chain [{:?}] failed, error: {:?}", chain.uid, e);
             }
         }
     }

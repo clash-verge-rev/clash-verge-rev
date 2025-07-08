@@ -619,7 +619,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     let cmd: String = format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}");
     let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
 
-    let cliboard = app_handle.clipboard();
+    let clipboard = app_handle.clipboard();
 
     let env_type = { Config::verge().latest().env_type.clone() };
     let env_type = match env_type {
@@ -634,9 +634,9 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
         }
     };
     match env_type.as_str() {
-        "bash" => cliboard.write_text(sh).unwrap_or_default(),
-        "cmd" => cliboard.write_text(cmd).unwrap_or_default(),
-        "powershell" => cliboard.write_text(ps).unwrap_or_default(),
+        "bash" => clipboard.write_text(sh).unwrap_or_default(),
+        "cmd" => clipboard.write_text(cmd).unwrap_or_default(),
+        "powershell" => clipboard.write_text(ps).unwrap_or_default(),
         _ => tracing::error!("copy_clash_env: Invalid env type! {env_type}"),
     };
 }

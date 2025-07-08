@@ -90,7 +90,7 @@ impl From<PrfItem> for Option<ChainItem> {
 }
 
 impl ChainItem {
-    pub fn excute(&self, config: Mapping) -> Result<ChainExcResult> {
+    pub fn execute(&self, config: Mapping) -> Result<ChainExcResult> {
         let path = dirs::app_profiles_dir()?.join(&self.file);
         if !path.exists() {
             bail!("couldn't find enhance file, {:?}", self.name)
@@ -115,7 +115,7 @@ impl ChainItem {
                 }
             }
         };
-        tracing::info!("chain [{}] excute finished", self.name);
+        tracing::info!("chain [{}] execute finished", self.name);
         Ok(res)
     }
 }

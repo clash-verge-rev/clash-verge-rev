@@ -156,7 +156,7 @@ impl IProfiles {
             .collect::<Vec<PrfItem>>()
     }
 
-    // includ all enable or disable chains
+    // include all enable or disable chains
     pub fn get_profile_chains(
         &self,
         profile_uid: Option<String>,

@@ -196,9 +196,9 @@ pub fn create_window() {
     #[cfg(target_os = "linux")]
     let window = {
         use crate::cmds;
-        let visiable = _decoration && cmds::common::is_wayland().unwrap_or(false);
+        let visible = _decoration && cmds::common::is_wayland().unwrap_or(false);
         builder
-            .visible(visiable)
+            .visible(visible)
             .shadow(true)
             .transparent(true)
             .build()

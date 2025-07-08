@@ -45,7 +45,7 @@ impl Timer {
 
         let app_handle = handle::Handle::get_app_handle();
         app_handle.listen(ACTIVATING_SELECTED_EVENT, move |_| {
-            tracing::info!("recived finish activating selected event");
+            tracing::info!("received finish activating selected event");
             std::env::remove_var(ENV_APPLY_BACKUP);
             let delay_timer = Self::global().delay_timer.lock();
             // TODO: remove error --> (Fn : `finish_task`, Without the `task_mark_ref_mut` for task_id :0)

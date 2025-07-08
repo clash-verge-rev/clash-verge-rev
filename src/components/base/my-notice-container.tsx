@@ -23,11 +23,11 @@ export const MyNoticeContainer = (props: MyNoticeContainerProps) => {
   const { ref, id, variant, message } = props;
   const { theme } = useCustomTheme();
   const { closeSnackbar } = useSnackbar();
-  const [msgCopyed, setMsgCopyed] = useState(false);
+  const [msgCopied, setMsgCopied] = useState(false);
 
   const handleCopyMsg = useCallback(async () => {
     await writeText(message as string);
-    setMsgCopyed(true);
+    setMsgCopied(true);
   }, [message]);
 
   const handleDismiss = useCallback(() => {
@@ -63,7 +63,7 @@ export const MyNoticeContainer = (props: MyNoticeContainerProps) => {
             </div>
             <div className="flex items-center">
               <IconButton size="small" onClick={handleCopyMsg}>
-                {!msgCopyed ? (
+                {!msgCopied ? (
                   <ContentCopy fontSize="small" className="!fill-white" />
                 ) : (
                   <CheckCircleOutline

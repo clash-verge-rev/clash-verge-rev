@@ -1,0 +1,6 @@
+[files]
+extend-exclude = ["src/assets/*","tauri-plugin-mihomo/permissions/*", "tauri-plugin-mihomo/examples/*"]
+
+[type.svg]
+extend-glob = ["*.svg"]
+check-file = false

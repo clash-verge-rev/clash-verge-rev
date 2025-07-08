@@ -262,7 +262,7 @@ export const useCustomTheme = () => {
     // @ts-ignore
     // prettier-ignore
     const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // isAppearanceTransition return true in new webkit version on arch linux, but it not actually work. so we deside to enable it only on windows.
+    // isAppearanceTransition return true in new webkit version on arch linux, but it not actually work. so we decide to enable it only on windows.
     if (!isAppearanceTransition || getSystem() !== "windows") {
       setMode(isDark ? "light" : "dark");
       if (isDark) {

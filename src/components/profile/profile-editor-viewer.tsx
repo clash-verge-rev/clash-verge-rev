@@ -80,7 +80,7 @@ export const ProfileEditorViewer = (props: Props) => {
   const [appVersion, setAppVersion] = useState("");
   const [curContentSaved, setCurContentSaved] = useState(true);
   const profileEditorRef = useRef<ProfileEditorHandle>(null);
-  // confim saved when edit other profile
+  // confirm saved when edit other profile
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
   const resolveRef = useRef<any>(null);
   // chain

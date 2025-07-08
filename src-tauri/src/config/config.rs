@@ -68,14 +68,14 @@ impl Config {
     }
 
     /// 将订阅丢到对应的文件中
-    pub fn generate_file(typ: ConfigType) -> Result<PathBuf> {
-        let path = match typ {
+    pub fn generate_file(config_type: ConfigType) -> Result<PathBuf> {
+        let path = match config_type {
             ConfigType::Run => dirs::app_home_dir()?.join(RUNTIME_CONFIG),
             ConfigType::RuntimeCheck => temp_dir().join(CHECK_CONFIG),
             ConfigType::MappingCheck(_) => temp_dir().join(CHECK_CONFIG),
         };
 
-        let config = match typ {
+        let config = match config_type {
             ConfigType::Run | ConfigType::RuntimeCheck => Config::runtime()
                 .latest()
                 .config
