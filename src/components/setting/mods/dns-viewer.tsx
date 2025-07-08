@@ -332,50 +332,50 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
     }
   };
 
-// 解析nameserver-policy为对象
-const parseNameserverPolicy = (str: string): Record<string, any> => {
-  const result: Record<string, any> = {};
-  if (!str) return result;
+  // 解析nameserver-policy为对象
+  const parseNameserverPolicy = (str: string): Record<string, any> => {
+    const result: Record<string, any> = {};
+    if (!str) return result;
 
-  // 处理geosite:xxx,yyy格式
-  const ruleRegex = /\s*([^=]+?)\s*=\s*([^,]+)(?:,|$)/g;
-  let match;
+    // 处理geosite:xxx,yyy格式
+    const ruleRegex = /\s*([^=]+?)\s*=\s*([^,]+)(?:,|$)/g;
+    let match;
 
-  while ((match = ruleRegex.exec(str)) !== null) {
-    const [, domainsPart, serversPart] = match;
+    while ((match = ruleRegex.exec(str)) !== null) {
+      const [, domainsPart, serversPart] = match;
 
-    // 处理域名部分
-    let domains;
-    if (domainsPart.startsWith('geosite:')) {
-      domains = [domainsPart.trim()];
-    } else {
-      domains = [domainsPart.trim()];
+      // 处理域名部分
+      let domains;
+      if (domainsPart.startsWith("geosite:")) {
+        domains = [domainsPart.trim()];
+      } else {
+        domains = [domainsPart.trim()];
+      }
+
+      // 处理服务器部分
+      const servers = serversPart.split(";").map((s) => s.trim());
+
+      // 为每个域名组分配相同的服务器列表
+      domains.forEach((domain) => {
+        result[domain] = servers;
+      });
     }
 
-    // 处理服务器部分
-    const servers = serversPart.split(';').map(s => s.trim());
+    return result;
+  };
 
-    // 为每个域名组分配相同的服务器列表
-    domains.forEach(domain => {
-      result[domain] = servers;
-    });
-  }
+  // 格式化nameserver-policy为字符串
+  const formatNameserverPolicy = (policy: any): string => {
+    if (!policy || typeof policy !== "object") return "";
 
-  return result;
-};
-
-// 格式化nameserver-policy为字符串
-const formatNameserverPolicy = (policy: any): string => {
-  if (!policy || typeof policy !== 'object') return '';
-
-  // 直接将对象转换为字符串格式
-  return Object.entries(policy)
-    .map(([domain, servers]) => {
-      const serversStr = Array.isArray(servers) ? servers.join(';') : servers;
-      return `${domain}=${serversStr}`;
-    })
-    .join(', ');
-};
+    // 直接将对象转换为字符串格式
+    return Object.entries(policy)
+      .map(([domain, servers]) => {
+        const serversStr = Array.isArray(servers) ? servers.join(";") : servers;
+        return `${domain}=${serversStr}`;
+      })
+      .join(", ");
+  };
 
   // 格式化hosts为字符串
   const formatHosts = (hosts: any): string => {
