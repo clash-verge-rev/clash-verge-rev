@@ -95,7 +95,7 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
 
 ; Handle install mode, `perUser`, `perMachine` or `both`
 !if "${INSTALLMODE}" == "perMachine"
-  RequestExecutionLevel highest
+  RequestExecutionLevel admin
 !endif
 
 !if "${INSTALLMODE}" == "currentUser"
