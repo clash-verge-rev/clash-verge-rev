@@ -17,3 +17,4 @@ export { Marquee } from "./marquee";
 export { MyNoticeContainer } from "./my-notice-container";
 export { NoticeProvider } from "./notifice";
 export { TailwindIndicator } from "./tailwind-indicator";
+export { CopyButton } from "./copy-button";

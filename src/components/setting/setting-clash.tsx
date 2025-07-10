@@ -9,6 +9,7 @@ import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import {
   InfoRounded,
+  Lan,
   PrivacyTipRounded,
   Settings,
   Shuffle,
@@ -31,6 +32,7 @@ import { ControllerViewer } from "./mods/controller-viewer";
 import { GuardState } from "./mods/guard-state";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { WebUIViewer } from "./mods/web-ui-viewer";
+import { NetInfoViewer } from "./mods/net-info-viewer";
 
 const isWIN = getSystem() === "windows";
 
@@ -71,6 +73,7 @@ const SettingClash = ({ onError }: Props) => {
   const coreRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
   const serviceRef = useRef<DialogRef>(null);
+  const netInfoRef = useRef<DialogRef>(null);
 
   const [_clashLog, setClashLog] = useClashLog();
 
@@ -107,6 +110,7 @@ const SettingClash = ({ onError }: Props) => {
         serviceActive={serviceStatus === "active"}
       />
       <ServiceViewer ref={serviceRef} enable={!!enable_service_mode} />
+      <NetInfoViewer ref={netInfoRef} />
 
       <SettingItem
         disabled={serviceStatus !== "active"}
@@ -195,7 +199,20 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Allow Lan")}>
+      <SettingItem
+        label={t("Allow Lan")}
+        extra={
+          <Tooltip title={t("Ip Network Info")} placement="top">
+            <IconButton
+              color="inherit"
+              size="small"
+              onClick={() => {
+                netInfoRef.current?.open();
+              }}>
+              <Lan fontSize="inherit" sx={{ opacity: 0.75 }} />
+            </IconButton>
+          </Tooltip>
+        }>
         <GuardState
           value={allowLan ?? false}
           valueProps="checked"

@@ -109,6 +109,7 @@ pub fn run() -> Result<()> {
             cmds::common::download_icon_cache,
             cmds::common::open_devtools,
             cmds::common::set_tray_visible,
+            cmds::common::get_net_info,
             cmds::common::restart_app,
             cmds::common::exit_app,
             // clash

@@ -417,3 +417,9 @@ type AutoProxy = {
   enable: boolean;
   url: string;
 };
+
+type NetInfo = {
+  name: string;
+  ipv4?: string;
+  ipv6?: string;
+};

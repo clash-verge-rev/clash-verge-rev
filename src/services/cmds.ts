@@ -301,12 +301,16 @@ export async function openDevTools() {
   return invoke("open_devtools");
 }
 
-export async function exitApp() {
-  return invoke("exit_app");
+export async function getNetInfo() {
+  return invoke<NetInfo[]>("get_net_info");
 }
 
 export async function restartApp() {
   return invoke("restart_app");
+}
+
+export async function exitApp() {
+  return invoke("exit_app");
 }
 
 export async function copyIconFile(

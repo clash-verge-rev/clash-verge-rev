@@ -1,3 +1,4 @@
+use serde::Serialize;
 use serde_yaml::Mapping;
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri::Manager;
@@ -11,6 +12,13 @@ use crate::{
 };
 
 use super::CmdResult;
+
+#[derive(Serialize, Debug)]
+pub struct NetInfo {
+    name: String,
+    ipv4: Option<String>,
+    ipv6: Option<String>,
+}
 
 #[tauri::command]
 pub fn get_portable_flag() -> CmdResult<bool> {
@@ -198,6 +206,33 @@ pub fn is_wayland() -> CmdResult<bool> {
     } else {
         Ok(false)
     }
+}
+
+#[tauri::command]
+pub fn get_net_info() -> CmdResult<Vec<NetInfo>> {
+    let mut net_list = Vec::new();
+    let networks = sysinfo::Networks::new_with_refreshed_list();
+    for (interface_name, network) in &networks {
+        let ip_networks = network.ip_networks();
+        if ip_networks.len() > 0 {
+            let mut net_info = NetInfo {
+                name: interface_name.to_owned(),
+                ipv4: None,
+                ipv6: None,
+            };
+            ip_networks.iter().for_each(|i| {
+                if i.addr.is_ipv4() {
+                    net_info.ipv4 = Some(i.addr.to_string());
+                }
+                if i.addr.is_ipv6() {
+                    net_info.ipv6 = Some(i.addr.to_string());
+                }
+            });
+            net_list.push(net_info);
+        }
+    }
+    net_list.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok(net_list)
 }
 
 #[tauri::command]
