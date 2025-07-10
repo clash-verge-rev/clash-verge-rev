@@ -1,11 +1,10 @@
 import { Box, SvgIcon, TextField, styled } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import { ChangeEvent, useEffect, useRef, useState, useMemo } from "react";
-
-import { useTranslation } from "react-i18next";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
 import matchWholeWordIcon from "@/assets/image/component/match_whole_word.svg?react";
 import useRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
+import { useTranslation } from "react-i18next";
 
 export type SearchState = {
   text: string;
@@ -34,6 +33,11 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
     fill: "#A7A7A7",
   },
 }));
+
+// 转义正则表达式特殊字符的函数
+const escapeRegExp = (string: string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
 
 export const BaseSearchBox = (props: SearchProps) => {
   const { t } = useTranslation();
@@ -66,11 +70,14 @@ export const BaseSearchBox = (props: SearchProps) => {
           let searchItem = !matchCase ? searchText.toLowerCase() : searchText;
 
           if (useRegularExpression) {
-            return new RegExp(searchItem).test(item);
+            const pattern = matchWholeWord
+              ? `\\b${escapeRegExp(searchItem)}\\b`
+              : escapeRegExp(searchItem);
+            return new RegExp(pattern).test(item);
           }
 
           if (matchWholeWord) {
-            return new RegExp(`\\b${searchItem}\\b`).test(item);
+            return new RegExp(`\\b${escapeRegExp(searchItem)}\\b`).test(item);
           }
 
           return item.includes(searchItem);
