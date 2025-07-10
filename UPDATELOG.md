@@ -12,6 +12,7 @@
 - 修复将快捷键名称更名为 `Clash Verge`之后无法删除图标和无法删除注册表
 - 修复`DNS`覆写 `fallback` `proxy server` `nameserver` `direct Nameserver` 字段支持留空
 - 修复`DNS`覆写 `nameserver-policy` 字段无法正确识别 `geo` 库
+- 修复搜索框输入特殊字符崩溃
 
 ### ✨ 新增功能
 
