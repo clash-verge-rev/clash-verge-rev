@@ -8,6 +8,7 @@ import path from "path";
 import * as tar from "tar";
 import zlib from "zlib";
 
+const clashVergeServiceVersion = "v1.1.0";
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 let process_argvs = process.argv;
@@ -106,7 +107,7 @@ async function getLatestAlphaVersion() {
       ...options,
       method: "GET",
     });
-    let v = await response.text();
+    const v = await response.text();
     META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
     log_info(`Latest alpha version: ${META_ALPHA_VERSION}`);
   } catch (error) {
@@ -153,7 +154,7 @@ async function getLatestReleaseVersion() {
       ...options,
       method: "GET",
     });
-    let v = await response.text();
+    const v = await response.text();
     META_VERSION = v.trim(); // Trim to remove extra whitespaces
     log_info(`Latest release version: ${META_VERSION}`);
   } catch (error) {
@@ -410,8 +411,8 @@ async function getLatestClashVergeServices() {
   //   downloadURL: downloadItem.browser_download_url,
   // };
   const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
-  ("https://github.com/oomeow/clash-verge-service/releases/download/v1.1.0/clash-verge-service-aarch64-unknown-linux-gnu.tar.gz");
-  const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/v1.1.0/${fileName}`;
+  `https://github.com/oomeow/clash-verge-service/releases/download/${clashVergeServiceVersion}/clash-verge-service-aarch64-unknown-linux-gnu.tar.gz`;
+  const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/${clashVergeServiceVersion}/${fileName}`;
   return {
     file: fileName,
     downloadURL: downloadURL,
