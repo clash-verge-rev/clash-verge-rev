@@ -7,7 +7,6 @@ import {
   registerPacFunctionLib,
 } from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
-import getSystem from "@/utils/get-system";
 import {
   Button,
   Dialog,

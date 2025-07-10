@@ -16,13 +16,13 @@ import {
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useMemoizedFn } from "ahooks";
 import { memo, useEffect, useState } from "react";
+import { mutate } from "swr";
+import { unfixedProxy } from "tauri-plugin-mihomo-api";
 import { ProxyHead } from "./proxy-head";
 import { ProxyItem } from "./proxy-item";
 import { ProxyItemMini } from "./proxy-item-mini";
 import { HeadState } from "./use-head-state";
 import type { IRenderItem } from "./use-render-list";
-import { unfixedProxy } from "tauri-plugin-mihomo-api";
-import { mutate } from "swr";
 
 interface RenderProps {
   item: IRenderItem;

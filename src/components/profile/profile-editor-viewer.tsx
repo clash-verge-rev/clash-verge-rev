@@ -10,7 +10,6 @@ import {
   enhanceProfiles,
   getChains,
   patchProfile,
-  readProfileFile,
   reorderProfile,
 } from "@/services/cmds";
 import { sleep } from "@/utils";

@@ -1,9 +1,7 @@
-import { useVerge } from "@/hooks/use-verge";
-import { Box, Button } from "@mui/material";
-import { memo, useEffect, useRef, useState } from "react";
 import { BasePage, DraggableItem } from "@/components/base";
 import { TestItem } from "@/components/test/test-item";
 import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
+import { useVerge } from "@/hooks/use-verge";
 import {
   DndContext,
   DragEndEvent,
@@ -14,8 +12,10 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext } from "@dnd-kit/sortable";
+import { Box, Button } from "@mui/material";
 import { emit } from "@tauri-apps/api/event";
 import { nanoid } from "nanoid";
+import { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 // test icons

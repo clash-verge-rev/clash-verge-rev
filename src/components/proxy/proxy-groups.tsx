@@ -2,7 +2,9 @@ import { ProxyGroupSidebar } from "@/components/proxy/proxy-group-sidebar";
 import { ProxyRender } from "@/components/proxy/proxy-render";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
+import LoadingPage from "@/pages/loading";
 import delayManager from "@/services/delay";
+import { cn, sleep } from "@/utils";
 import { Box } from "@mui/material";
 import { useLockFn, useMemoizedFn, useThrottleFn } from "ahooks";
 import { useCallback, useRef } from "react";
@@ -15,8 +17,6 @@ import {
 } from "tauri-plugin-mihomo-api";
 import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
-import LoadingPage from "@/pages/loading";
-import { cn, sleep } from "@/utils";
 
 interface Props {
   mode: string;

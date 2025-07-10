@@ -19,6 +19,7 @@ import {
 } from "@mui/icons-material";
 import { Badge, BadgeProps, IconButton, styled, Tooltip } from "@mui/material";
 import { IDisposable } from "monaco-editor";
+import { nanoid } from "nanoid";
 import {
   ForwardedRef,
   useEffect,
@@ -28,7 +29,6 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotice } from "../base/notifice";
-import { nanoid } from "nanoid";
 
 export type ProfileEditorHandle = {
   save: () => Promise<boolean>;

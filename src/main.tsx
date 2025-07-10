@@ -13,7 +13,6 @@ import {
 import { ResizeObserver } from "@juggle/resize-observer";
 import { StyledEngineProvider } from "@mui/material";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { SnackbarProvider } from "notistack";
 import React from "react";

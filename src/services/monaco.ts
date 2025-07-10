@@ -1,6 +1,6 @@
-import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
-import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
 import { t } from "i18next";
+import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
+import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import * as monaco from "monaco-editor";
 import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
 import pac from "types-pac/pac.d.ts?raw";

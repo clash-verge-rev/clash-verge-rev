@@ -30,9 +30,9 @@ import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
 import { ControllerViewer } from "./mods/controller-viewer";
 import { GuardState } from "./mods/guard-state";
+import { NetInfoViewer } from "./mods/net-info-viewer";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { WebUIViewer } from "./mods/web-ui-viewer";
-import { NetInfoViewer } from "./mods/net-info-viewer";
 
 const isWIN = getSystem() === "windows";
 
