@@ -70,6 +70,7 @@ base64 = "0.22"
 rand = "0.8"
 rsa = "0.9.8"
 aes-gcm = "0.10"
+network-interface = "2.0.1"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2"

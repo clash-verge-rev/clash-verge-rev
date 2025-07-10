@@ -1,3 +1,4 @@
+use network_interface::NetworkInterfaceConfig;
 use serde::Serialize;
 use serde_yaml::Mapping;
 use sysproxy::{Autoproxy, Sysproxy};
@@ -211,27 +212,19 @@ pub fn is_wayland() -> CmdResult<bool> {
 #[tauri::command]
 pub fn get_net_info() -> CmdResult<Vec<NetInfo>> {
     let mut net_list = Vec::new();
-    let networks = sysinfo::Networks::new_with_refreshed_list();
-    for (interface_name, network) in &networks {
-        let ip_networks = network.ip_networks();
-        if ip_networks.len() > 0 {
-            let mut net_info = NetInfo {
-                name: interface_name.to_owned(),
-                ipv4: None,
-                ipv6: None,
-            };
-            ip_networks.iter().for_each(|i| {
-                if i.addr.is_ipv4() {
-                    net_info.ipv4 = Some(i.addr.to_string());
-                }
-                if i.addr.is_ipv6() {
-                    net_info.ipv6 = Some(i.addr.to_string());
-                }
-            });
-            net_list.push(net_info);
-        }
+    let network_interfaces = wrap_err!(network_interface::NetworkInterface::show())?;
+    for network in network_interfaces.iter() {
+        let mut net_info = NetInfo {
+            name: network.name.clone(),
+            ipv4: None,
+            ipv6:None,
+        };
+        network.addr.iter().for_each(|addr| match addr {
+            network_interface::Addr::V4(addr_v4) => net_info.ipv4 = Some(addr_v4.ip.to_string()),
+            network_interface::Addr::V6(addr_v6) => net_info.ipv6 = Some(addr_v6.ip.to_string()),
+        });
+        net_list.push(net_info);
     }
-    net_list.sort_by(|a, b| a.name.cmp(&b.name));
     Ok(net_list)
 }
 
