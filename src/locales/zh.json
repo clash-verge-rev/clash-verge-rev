@@ -647,5 +647,6 @@
   "Allowed Origins": "允许的来源",
   "Please enter a valid url": "请输入有效的网址",
   "Add": "添加",
-  "Development mode: Automatically includes Tauri and localhost origins": "开发模式：自动包含 Tauri 和 localhost 来源"
+  "Development mode: Automatically includes Tauri and localhost origins": "开发模式：自动包含 Tauri 和 localhost 来源",
+  "Invalid regular expression": "无效的正则表达式"
 }

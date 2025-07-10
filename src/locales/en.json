@@ -647,5 +647,6 @@
   "Allowed Origins": "Allowed Origins",
   "Please enter a valid url": "Please enter a valid url",
   "Add": "Add",
-  "Development mode: Automatically includes Tauri and localhost origins": "Development mode: Automatically includes Tauri and localhost origins"
+  "Development mode: Automatically includes Tauri and localhost origins": "Development mode: Automatically includes Tauri and localhost origins",
+  "Invalid regular expression": "Invalid regular expression"
 }
