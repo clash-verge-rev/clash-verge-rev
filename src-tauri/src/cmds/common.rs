@@ -217,14 +217,21 @@ pub fn get_net_info() -> CmdResult<Vec<NetInfo>> {
         let mut net_info = NetInfo {
             name: network.name.clone(),
             ipv4: None,
-            ipv6:None,
+            ipv6: None,
         };
-        network.addr.iter().for_each(|addr| match addr {
-            network_interface::Addr::V4(addr_v4) => net_info.ipv4 = Some(addr_v4.ip.to_string()),
-            network_interface::Addr::V6(addr_v6) => net_info.ipv6 = Some(addr_v6.ip.to_string()),
-        });
-        net_list.push(net_info);
+        if !network.addr.is_empty() {
+            network.addr.iter().for_each(|addr| match addr {
+                network_interface::Addr::V4(addr_v4) => {
+                    net_info.ipv4 = Some(addr_v4.ip.to_string())
+                }
+                network_interface::Addr::V6(addr_v6) => {
+                    net_info.ipv6 = Some(addr_v6.ip.to_string())
+                }
+            });
+            net_list.push(net_info);
+        }
     }
+    net_list.sort_by(|a, b| a.name.cmp(&b.name));
     Ok(net_list)
 }
 
