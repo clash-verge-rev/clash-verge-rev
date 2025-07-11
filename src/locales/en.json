@@ -638,7 +638,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid Profile URL": "Invalid profile URL. Please enter a URL starting with http:// or https://",
   "Saved Successfully": "Saved successfully",
   "External Cors": "External Cors",
   "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
