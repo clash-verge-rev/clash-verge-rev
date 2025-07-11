@@ -102,6 +102,12 @@ const ProfilePage = () => {
   const [activatings, setActivatings] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // 控制检测初始化
+  const [isValidUrl, setIsValidUrl] = useState(true);
+
+  // url检测状态
+  const [showError, setShowError] = useState(false);
+
   // 防止重复切换
   const switchingProfileRef = useRef<string | null>(null);
 
@@ -150,6 +156,20 @@ const ProfilePage = () => {
     pendingRequestRef.current = null;
     debugProfileSwitch("SWITCH_END", profile, `序列号: ${sequence}`);
   };
+
+  // 更新URL时验证格式
+  const handleUrlChange = (e: { target: { value: any } }) => {
+    const value = e.target.value;
+    setUrl(value);
+
+    // 只有当用户输入内容时才进行验证
+    const isValid = value === "" || /^https?:\/\//i.test(value);
+    setIsValidUrl(isValid);
+
+    // 输入但格式不正确，显示错误
+    setShowError(value !== "" && !isValid);
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -227,17 +247,22 @@ const ProfilePage = () => {
 
   const onImport = async () => {
     if (!url) return;
-    // 校验url是否为http/https
-    if (!/^https?:\/\//i.test(url)) {
-      showNotice("error", t("Invalid Profile URL"));
+
+    // 再次验证URL，确保无误
+    const isValid = /^https?:\/\//i.test(url);
+    if (!isValid) {
+      setShowError(true);
       return;
     }
+
     setLoading(true);
     try {
       // 尝试正常导入
       await importProfile(url);
       showNotice("success", t("Profile Imported Successfully"));
       setUrl("");
+      setIsValidUrl(true);
+      setShowError(false);
       mutateProfiles();
       await onEnhance(false);
     } catch (err: any) {
@@ -253,6 +278,8 @@ const ProfilePage = () => {
         // 回退导入成功
         showNotice("success", t("Profile Imported with Clash proxy"));
         setUrl("");
+        setIsValidUrl(true);
+        setShowError(false);
         mutateProfiles();
         await onEnhance(false);
       } catch (retryErr: any) {
@@ -523,7 +550,13 @@ const ProfilePage = () => {
 
   const onCopyLink = async () => {
     const text = await readText();
-    if (text) setUrl(text);
+    if (text) {
+      setUrl(text);
+      // 验证粘贴的URL
+      const isValid = /^https?:\/\//i.test(text);
+      setIsValidUrl(isValid);
+      setShowError(!isValid);
+    }
   };
 
   const mode = useThemeMode();
@@ -636,8 +669,9 @@ const ProfilePage = () => {
         <BaseStyledTextField
           value={url}
           variant="outlined"
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={handleUrlChange}
           placeholder={t("Profile URL")}
+          error={showError}
           slotProps={{
             input: {
               sx: { pr: 1 },
@@ -655,7 +689,11 @@ const ProfilePage = () => {
                   size="small"
                   sx={{ p: 0.5 }}
                   title={t("Clear")}
-                  onClick={() => setUrl("")}
+                  onClick={() => {
+                    setUrl("");
+                    setIsValidUrl(true);
+                    setShowError(false);
+                  }}
                 >
                   <ClearRounded fontSize="inherit" />
                 </IconButton>
@@ -664,7 +702,7 @@ const ProfilePage = () => {
           }}
         />
         <LoadingButton
-          disabled={!url || disabled}
+          disabled={!url || !isValidUrl || disabled}
           loading={loading}
           variant="contained"
           size="small"
