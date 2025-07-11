@@ -4,10 +4,10 @@ use crate::utils::dirs;
 use anyhow::{bail, Result};
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStrExt;
+use winapi::shared::minwindef::UINT;
+use winapi::shared::windef::HWND;
 use winapi::um::shellapi::ShellExecuteW;
 use winapi::um::winuser::SW_SHOWNORMAL;
-use winapi::shared::windef::HWND;
-use winapi::shared::minwindef::UINT;
 
 pub async fn invoke_uwptools() -> Result<()> {
     let resource_dir = dirs::app_resources_dir()?;
@@ -17,12 +17,14 @@ pub async fn invoke_uwptools() -> Result<()> {
         bail!("enableLoopback exe not found");
     }
 
-    let exe_path: Vec<u16> = tool_path.as_os_str()
+    let exe_path: Vec<u16> = tool_path
+        .as_os_str()
         .encode_wide()
         .chain(Some(0).into_iter())
         .collect();
 
-    let verb: Vec<u16> = OsString::from("runas").encode_wide()
+    let verb: Vec<u16> = OsString::from("runas")
+        .encode_wide()
         .chain(Some(0).into_iter())
         .collect();
 
@@ -34,7 +36,7 @@ pub async fn invoke_uwptools() -> Result<()> {
             exe_path.as_ptr(),
             std::ptr::null(),
             std::ptr::null(),
-            SW_SHOWNORMAL
+            SW_SHOWNORMAL,
         );
 
         let result_code = result as UINT;
@@ -42,7 +44,10 @@ pub async fn invoke_uwptools() -> Result<()> {
             match result_code {
                 1223 => bail!("UAC prompt was cancelled by user"), // SE_ERR_CANCELLED
                 31 => bail!("No application associated with the specified file"), // SE_ERR_NOASSOC
-                _ => bail!("Failed to run with administrator privileges: {}", result_code),
+                _ => bail!(
+                    "Failed to run with administrator privileges: {}",
+                    result_code
+                ),
             }
         }
     }
