@@ -2,7 +2,7 @@ use std::backtrace::{Backtrace, BacktraceStatus};
 
 use crate::config::PrfOption;
 use crate::core::verge_log::VergeLog;
-use crate::utils::dirs::APP_ID;
+use crate::utils::dirs::{self, APP_ID};
 use crate::{APP_HANDLE, log_err, shutdown, trace_err, utils};
 use crate::{
     config::{Config, PrfItem},
@@ -53,7 +53,7 @@ pub async fn resolve_setup() {
             .enable_silent_start
             .unwrap_or_default()
     };
-    if !silent_start {
+    if !silent_start || dirs::backup_archive_file().is_ok_and(|file| file.exists()) {
         create_window();
     }
 
