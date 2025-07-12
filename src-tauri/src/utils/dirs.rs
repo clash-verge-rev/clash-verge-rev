@@ -52,7 +52,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
 
 /// get the resources dir
 pub fn app_resources_dir() -> Result<PathBuf> {
-    use tauri::{utils::platform::resource_dir, Env};
+    use tauri::{Env, utils::platform::resource_dir};
 
     let app_handle = handle::Handle::get_app_handle();
     let res_dir = resource_dir(app_handle.package_info(), &Env::default())

@@ -1,6 +1,6 @@
 use super::tray::Tray;
-use crate::{log_err, APP_HANDLE};
-use anyhow::{anyhow, Ok, Result};
+use crate::{APP_HANDLE, log_err};
+use anyhow::{Result, anyhow};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt};

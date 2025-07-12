@@ -10,7 +10,7 @@ use crate::core::*;
 use crate::log_err;
 use crate::utils::help;
 use crate::utils::resolve;
-use anyhow::{anyhow, bail, Error, Result};
+use anyhow::{Error, Result, anyhow, bail};
 use rust_i18n::t;
 use serde_yaml::{Mapping, Value};
 use service::JsonResponse;

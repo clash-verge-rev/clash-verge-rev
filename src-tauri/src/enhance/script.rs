@@ -4,7 +4,7 @@ use anyhow::{Error, Result};
 use serde_yaml::Mapping;
 
 pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<LogMessage>)> {
-    use boa_engine::{native_function::NativeFunction, Context, JsValue, Source};
+    use boa_engine::{Context, JsValue, Source, native_function::NativeFunction};
     use std::sync::{Arc, Mutex};
     let mut context = Context::default();
 

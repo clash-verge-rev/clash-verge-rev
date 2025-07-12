@@ -1,5 +1,5 @@
 use crate::utils::dirs;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use deelevate::{PrivilegeLevel, Token};
 use runas::Command as RunasCommand;
 use std::process::Command as StdCommand;

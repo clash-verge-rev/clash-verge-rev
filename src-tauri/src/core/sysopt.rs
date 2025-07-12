@@ -2,7 +2,7 @@ use crate::{
     config::{Config, IVerge},
     log_err,
 };
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -359,7 +359,7 @@ impl Sysopt {
     /// launch a system proxy guard
     /// read config from file directly
     pub fn guard_proxy(&self) {
-        use tokio::time::{sleep, Duration};
+        use tokio::time::{Duration, sleep};
 
         let guard_state = self.guard_state.clone();
 

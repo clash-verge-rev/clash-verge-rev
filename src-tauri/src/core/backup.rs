@@ -1,10 +1,10 @@
 use crate::{config::Config, trace_err, utils::dirs};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest_dav::{
-    list_cmd::{ListEntity, ListFile},
     Depth,
+    list_cmd::{ListEntity, ListFile},
 };
 use std::{
     env::{consts::OS, temp_dir},

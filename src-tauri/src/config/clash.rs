@@ -204,64 +204,59 @@ impl IClashConfig {
     }
     #[cfg(not(target_os = "windows"))]
     pub fn guard_redir_port(config: &Mapping) -> u16 {
-        let port = config
+        config
             .get("redir-port")
             .and_then(|value| match value {
                 Value::String(val_str) => val_str.parse().ok(),
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(0);
-        port
+            .unwrap_or(0)
     }
 
     #[cfg(target_os = "linux")]
     pub fn guard_tproxy_port(config: &Mapping) -> u16 {
-        let port = config
+        config
             .get("tproxy-port")
             .and_then(|value| match value {
                 Value::String(val_str) => val_str.parse().ok(),
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(0);
-        port
+            .unwrap_or(0)
     }
 
     pub fn guard_mixed_port(config: &Mapping) -> u16 {
-        let port = config
+        config
             .get("mixed-port")
             .and_then(|value| match value {
                 Value::String(val_str) => val_str.parse().ok(),
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7890);
-        port
+            .unwrap_or(7890)
     }
 
     pub fn guard_socks_port(config: &Mapping) -> u16 {
-        let port = config
+        config
             .get("socks-port")
             .and_then(|value| match value {
                 Value::String(val_str) => val_str.parse().ok(),
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(0);
-        port
+            .unwrap_or(0)
     }
 
     pub fn guard_port(config: &Mapping) -> u16 {
-        let port = config
+        config
             .get("port")
             .and_then(|value| match value {
                 Value::String(val_str) => val_str.parse().ok(),
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(0);
-        port
+            .unwrap_or(0)
     }
 
     pub fn guard_server_ctrl(config: &Mapping) -> String {
@@ -299,7 +294,7 @@ impl IClashConfig {
     }
 
     pub fn guard_ctrl_cors(config: &Mapping) -> Cors {
-        let cors = config
+        config
             .get("external-controller-cors")
             .and_then(|value| match value {
                 Value::Mapping(val_map) => {
@@ -323,8 +318,7 @@ impl IClashConfig {
                 }
                 _ => None,
             })
-            .unwrap_or_default();
-        cors
+            .unwrap_or_default()
     }
 }
 

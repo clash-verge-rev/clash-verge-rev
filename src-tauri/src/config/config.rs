@@ -4,7 +4,7 @@ use crate::{
     enhance, feat,
     utils::{dirs, help},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use once_cell::sync::OnceCell;
 use rust_i18n::t;
 use serde_yaml::Mapping;

@@ -135,7 +135,12 @@ impl Timer {
                         .is_err()
                     {
                         if mihomo.get_proxy_by_name(&node).await.is_err() {
-                            tracing::error!("Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist", proxy_name, node, node);
+                            tracing::error!(
+                                "Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist",
+                                proxy_name,
+                                node,
+                                node
+                            );
                             continue;
                         }
                         tracing::error!(

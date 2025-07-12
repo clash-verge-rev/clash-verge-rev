@@ -1,10 +1,10 @@
 use super::Config;
 use crate::{
+    APP_VERSION,
     enhance::chain::ScopeType,
     utils::{dirs, help, tmpl},
-    APP_VERSION,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;

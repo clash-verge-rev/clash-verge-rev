@@ -3,8 +3,7 @@ name = "tauri-plugin-mihomo"
 version = "0.1.0"
 authors = ["oomeow"]
 description = ""
-edition = "2021"
-rust-version = "1.77.2"
+edition = "2024"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
 links = "tauri-plugin-mihomo"
 

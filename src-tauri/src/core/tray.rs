@@ -1,18 +1,17 @@
 use super::handle;
 use crate::{
-    cmds,
+    APP_VERSION, cmds,
     config::{Config, IProfiles},
     feat,
     utils::{dirs, resolve},
-    APP_VERSION,
 };
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use rust_i18n::t;
 use tauri::{
+    AppHandle, Runtime,
     image::Image,
     menu::{CheckMenuItem, Menu, MenuBuilder, MenuEvent, MenuItemBuilder, SubmenuBuilder},
     tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Runtime,
 };
 
 pub const TRAY_ID: &str = "verge_tray";
@@ -32,7 +31,8 @@ impl Tray {
         let common_tray_icon = verge.common_tray_icon.unwrap_or(false);
         let sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
         let tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
-        let icon = match (sysproxy_enabled, tun_enabled) {
+
+        match (sysproxy_enabled, tun_enabled) {
             (_, true) => {
                 if tun_tray_icon {
                     let mut icon_path = icon_dir_path.join("tun.ico");
@@ -100,8 +100,7 @@ impl Tray {
                     Image::from_bytes(&icon).unwrap()
                 }
             }
-        };
-        icon
+        }
     }
 
     pub fn tray_menu<R: Runtime>(app_handle: &AppHandle<R>) -> Result<Menu<R>> {
@@ -277,11 +276,7 @@ impl Tray {
                 }
             };
             let switch_map = |status| {
-                if status {
-                    "ON"
-                } else {
-                    "OFF"
-                }
+                if status { "ON" } else { "OFF" }
             };
             tray.set_tooltip(Some(&format!(
                 "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",

@@ -1,6 +1,6 @@
 use crate::{
-    config::{Config, EnableFilter, IProfiles, PrfItem, PrfOption, DEFAULT_PAC},
-    core::{handle, timer, CoreManager},
+    config::{Config, DEFAULT_PAC, EnableFilter, IProfiles, PrfItem, PrfOption},
+    core::{CoreManager, handle, timer},
     enhance::chain::{ChainItem, ScopeType},
     feat, ret_err,
     utils::{dirs, help, tmpl},

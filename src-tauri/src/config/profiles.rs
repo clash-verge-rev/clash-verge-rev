@@ -4,7 +4,7 @@ use crate::{
     enhance::chain::{ChainItem, ScopeType},
     utils::{dirs, help},
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, fs, io::Write, path::PathBuf};

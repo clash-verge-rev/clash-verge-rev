@@ -3,13 +3,13 @@ use std::backtrace::{Backtrace, BacktraceStatus};
 use crate::config::PrfOption;
 use crate::core::verge_log::VergeLog;
 use crate::utils::dirs::APP_ID;
+use crate::{APP_HANDLE, log_err, shutdown, trace_err, utils};
 use crate::{
     config::{Config, PrfItem},
     core::*,
     utils::init,
     utils::server,
 };
-use crate::{log_err, shutdown, trace_err, utils, APP_HANDLE};
 use anyhow::Result;
 use rust_i18n::t;
 use tauri::{AppHandle, CloseRequestApi, Manager};

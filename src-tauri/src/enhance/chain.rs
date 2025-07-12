@@ -1,9 +1,9 @@
-use super::{use_merge, use_script, LogMessage};
+use super::{LogMessage, use_merge, use_script};
 use crate::{
     config::{PrfItem, ProfileType},
     utils::{dirs, help},
 };
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, fs};

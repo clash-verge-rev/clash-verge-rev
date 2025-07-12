@@ -2,9 +2,9 @@ use super::verge_log::VergeLog;
 use crate::core::{handle, logger::Logger, service};
 use crate::utils::dirs;
 use crate::utils::help::find_unused_port;
+use crate::{MIHOMO_SOCKET_PATH, log_err};
 use crate::{config::*, utils};
-use crate::{log_err, MIHOMO_SOCKET_PATH};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -12,8 +12,8 @@ use serde_yaml::Mapping;
 use std::path::PathBuf;
 use std::sync::Arc;
 use sysinfo::System;
-use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 
 #[derive(Debug)]
 pub struct CoreManager {

@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::utils::{self, crypto, dirs};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};

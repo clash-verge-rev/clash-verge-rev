@@ -8,7 +8,7 @@ use serde_yaml::Mapping;
 
 use crate::{
     config::{ClashInfo, Config},
-    core::{handle, logger, service, CoreManager},
+    core::{CoreManager, handle, logger, service},
     enhance::{self, LogMessage, MergeResult},
     feat, wrap_err,
 };
@@ -36,9 +36,11 @@ pub fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = Config::runtime();
     let runtime = runtime.latest();
     let config = runtime.config.as_ref();
-    wrap_err!(config
-        .ok_or(anyhow::anyhow!(t!("config.parse.failed")))
-        .and_then(|config| serde_yaml::to_string(config).context(t!("config.convert.failed"))))
+    wrap_err!(
+        config
+            .ok_or(anyhow::anyhow!(t!("config.parse.failed")))
+            .and_then(|config| serde_yaml::to_string(config).context(t!("config.convert.failed")))
+    )
 }
 
 #[tauri::command]

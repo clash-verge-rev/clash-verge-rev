@@ -25,7 +25,6 @@ pub async fn apply_local_backup(app_handle: tauri::AppHandle, file_path: String)
     )?;
     utils::server::shutdown_embedded_server();
     resolve_reset().await;
-    std::env::set_var("ApplyBackup", "true");
     app_handle.restart();
 }
 
@@ -74,7 +73,6 @@ pub async fn download_backup_and_reload(
     )?;
     utils::server::shutdown_embedded_server();
     resolve_reset().await;
-    std::env::set_var("ApplyBackup", "true");
     app_handle.restart();
 }
 

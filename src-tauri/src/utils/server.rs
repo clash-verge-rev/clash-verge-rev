@@ -1,6 +1,6 @@
 use super::{help, resolve};
-use crate::config::{Config, IVerge, DEFAULT_PAC};
-use anyhow::{bail, Result};
+use crate::config::{Config, DEFAULT_PAC, IVerge};
+use anyhow::{Result, bail};
 use once_cell::sync::OnceCell;
 use reqwest::ClientBuilder;
 use std::{convert::Infallible, sync::Mutex, time::Duration};

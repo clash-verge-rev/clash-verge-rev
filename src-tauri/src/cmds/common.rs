@@ -6,7 +6,7 @@ use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
 
 use crate::{
-    core::{handle, sysopt, tray::Tray, CoreManager},
+    core::{CoreManager, handle, sysopt, tray::Tray},
     feat, ret_err,
     utils::{self, dirs, help, resolve},
     wrap_err,
@@ -92,26 +92,32 @@ pub fn get_app_dir() -> CmdResult<String> {
 #[tauri::command]
 pub fn open_app_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let app_dir = wrap_err!(dirs::app_home_dir())?;
-    wrap_err!(app_handle
-        .opener()
-        .open_path(app_dir.to_string_lossy(), None::<&str>))
+    wrap_err!(
+        app_handle
+            .opener()
+            .open_path(app_dir.to_string_lossy(), None::<&str>)
+    )
 }
 
 #[tauri::command]
 pub fn open_core_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let core_dir = wrap_err!(tauri::utils::platform::current_exe())?;
     let core_dir = core_dir.parent().ok_or("failed to get core dir")?;
-    wrap_err!(app_handle
-        .opener()
-        .open_path(core_dir.to_string_lossy(), None::<&str>))
+    wrap_err!(
+        app_handle
+            .opener()
+            .open_path(core_dir.to_string_lossy(), None::<&str>)
+    )
 }
 
 #[tauri::command]
 pub fn open_logs_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let log_dir = wrap_err!(dirs::app_logs_dir())?;
-    wrap_err!(app_handle
-        .opener()
-        .open_path(log_dir.to_string_lossy(), None::<&str>))
+    wrap_err!(
+        app_handle
+            .opener()
+            .open_path(log_dir.to_string_lossy(), None::<&str>)
+    )
 }
 
 #[tauri::command]

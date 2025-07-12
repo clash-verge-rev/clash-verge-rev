@@ -115,8 +115,8 @@ pub fn init_resources() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn init_scheme() -> Result<()> {
     use tauri::utils::platform::current_exe;
-    use winreg::enums::*;
     use winreg::RegKey;
+    use winreg::enums::*;
 
     let app_exe = current_exe()?;
     let app_exe = dunce::canonicalize(app_exe)?;
