@@ -1,20 +1,19 @@
 use crate::config::Config;
 use crate::feat;
+use crate::utils::dirs;
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tauri::{Emitter, Listener};
+use std::time::Duration;
 
-use super::backup::ENV_APPLY_BACKUP;
 use super::handle;
 
 type TaskID = u64;
 
 const ACTIVATING_SELECTED_TASK_ID: TaskID = 0;
-const ACTIVATING_SELECTED_EVENT: &str = "activate-selected-finish";
 
 pub struct Timer {
     /// cron manager
@@ -42,16 +41,6 @@ impl Timer {
     pub fn init(&self) -> Result<()> {
         self.activate_selected_task()?;
         self.refresh_profiles()?;
-
-        let app_handle = handle::Handle::get_app_handle();
-        app_handle.listen(ACTIVATING_SELECTED_EVENT, move |_| {
-            tracing::info!("received finish activating selected event");
-            std::env::remove_var(ENV_APPLY_BACKUP);
-            let delay_timer = Self::global().delay_timer.lock();
-            // TODO: remove error --> (Fn : `finish_task`, Without the `task_mark_ref_mut` for task_id :0)
-            //      But, this task seems to have been removed
-            let _ = delay_timer.remove_task(ACTIVATING_SELECTED_TASK_ID);
-        });
 
         let cur_timestamp = chrono::Local::now().timestamp();
 
@@ -102,8 +91,17 @@ impl Timer {
         Ok(())
     }
 
+    #[allow(unused)]
+    pub fn remove_task(&self, task_id: u64) -> Result<()> {
+        let delay_timer = self.delay_timer.lock();
+        delay_timer
+            .remove_task(task_id)
+            .context("failed to remove timer task")?;
+        Ok(())
+    }
+
     fn activate_selected_task(&self) -> Result<()> {
-        if std::env::var(ENV_APPLY_BACKUP).is_err() {
+        if !dirs::backup_archive_file()?.exists() {
             return Ok(());
         }
 
@@ -130,36 +128,55 @@ impl Timer {
             let profile = profiles.get_item(&current).unwrap();
             let selected = profile.selected.clone().unwrap_or_default();
             for selected_item in selected {
-                if selected_item.now.is_none() {
-                    continue;
-                }
-                let proxy_name = selected_item.name.clone().unwrap_or_default();
-                let node = selected_item.now.clone().unwrap();
-                if mihomo
-                    .select_node_for_proxy(&proxy_name, &node)
-                    .await
-                    .is_err()
-                {
-                    if mihomo.get_proxy_by_name(&node).await.is_err() {
-                        tracing::error!("Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist", proxy_name, node, node);
-                        continue;
+                if let (Some(proxy_name), Some(node)) = (selected_item.name, selected_item.now) {
+                    if mihomo
+                        .select_node_for_proxy(&proxy_name, &node)
+                        .await
+                        .is_err()
+                    {
+                        if mihomo.get_proxy_by_name(&node).await.is_err() {
+                            tracing::error!("Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist", proxy_name, node, node);
+                            continue;
+                        }
+                        tracing::error!(
+                            "Failed to select node for proxy: {}, node: {}",
+                            proxy_name,
+                            node
+                        );
+                        return;
                     }
-                    tracing::error!(
-                        "Failed to select node for proxy: {}, node: {}",
-                        proxy_name,
-                        node
-                    );
-                    return;
+                    tracing::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
                 }
-                tracing::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
             }
-            let app_handle = handle::Handle::get_app_handle();
-            let _ = app_handle.emit(ACTIVATING_SELECTED_EVENT, ());
+            if let Ok(archive_file) = dirs::backup_archive_file() {
+                if archive_file.exists() {
+                    let _ = std::fs::remove_file(archive_file);
+                }
+            }
             crate::utils::resolve::create_window();
         };
 
         self.add_async_task(ACTIVATING_SELECTED_TASK_ID, 3, body)?;
+        {
+            self.delay_timer
+                .lock()
+                .advance_task(ACTIVATING_SELECTED_TASK_ID)?;
+        }
 
+        tauri::async_runtime::spawn(async move {
+            loop {
+                let archive_file = dirs::backup_archive_file();
+                if let Ok(archive_file) = archive_file {
+                    if !archive_file.exists() {
+                        tracing::info!("received finish activating selected event");
+                        let delay_timer = Self::global().delay_timer.lock();
+                        let _ = delay_timer.remove_task(ACTIVATING_SELECTED_TASK_ID);
+                        break;
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(200)).await;
+            }
+        });
         Ok(())
     }
 
