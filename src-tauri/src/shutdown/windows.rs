@@ -68,7 +68,7 @@ fn get_instance_handle() -> windows_sys::Win32::Foundation::HMODULE {
     // This is preferred over GetModuleHandle(NULL) because it also works in DLLs:
     // https://stackoverflow.com/questions/21718027/getmodulehandlenull-vs-hinstance
 
-    extern "C" {
+    unsafe extern "C" {
         static __ImageBase: windows_sys::Win32::System::SystemServices::IMAGE_DOS_HEADER;
     }
 
