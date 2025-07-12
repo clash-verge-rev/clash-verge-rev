@@ -51,7 +51,7 @@ unsafe extern "system" fn shutdown_proc(
         }
         _ => {}
     };
-    DefWindowProcW(hwnd, msg, wparam, lparam)
+    unsafe { DefWindowProcW(hwnd, msg, wparam, lparam) }
 }
 
 fn encode_wide<S: AsRef<std::ffi::OsStr>>(string: S) -> Vec<u16> {
