@@ -84,7 +84,7 @@ pub async fn embed_server() {
             .clone()
             .unwrap_or(DEFAULT_PAC.to_string());
         let port = Config::clash().latest().get_mixed_port();
-        let content = content.replace("%mixed-port%", &format!("{}", port));
+        let content = content.replace("%mixed-port%", &format!("{port}"));
         warp::http::Response::builder()
             .header("Content-Type", "application/x-ns-proxy-autoconfig")
             .body(content)

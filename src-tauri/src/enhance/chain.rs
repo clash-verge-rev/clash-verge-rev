@@ -139,6 +139,6 @@ fn test_serde() -> anyhow::Result<()> {
         scope: ScopeType::Global,
     };
     let json = serde_yaml::to_string(&chain)?;
-    println!("yaml: {:?}", json);
+    println!("yaml: {json:?}");
     Ok(())
 }

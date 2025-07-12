@@ -23,9 +23,6 @@ const BACKUP_DIR: &str = "clash-verge-self-dev";
 
 const TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 
-// in timer crate, used to activating proxies group selected after restart app
-pub const ENV_APPLY_BACKUP: &str = "ApplyBackup";
-
 pub fn create_backup(local_save: bool, only_backup_profiles: bool) -> Result<(String, PathBuf)> {
     let now = chrono::Local::now().format(TIME_FORMAT_PATTERN).to_string();
 
@@ -178,14 +175,14 @@ impl WebDav {
     }
 
     pub async fn list_file() -> Result<Vec<ListFile>> {
-        let path = format!("{}/", BACKUP_DIR);
+        let path = format!("{BACKUP_DIR}/");
         let files = Self::list_file_by_path(&path).await?;
         Ok(files)
     }
 
     pub async fn download_file(webdav_file_name: String, storage_path: PathBuf) -> Result<()> {
         let client = Self::global().get_client()?;
-        let path = format!("{}/{}", BACKUP_DIR, webdav_file_name);
+        let path = format!("{BACKUP_DIR}/{webdav_file_name}");
         let response = client.get(&path).await?;
         let content = response.bytes().await?;
         fs::write(&storage_path, &content)?;
@@ -194,14 +191,14 @@ impl WebDav {
 
     pub async fn upload_file(file_path: PathBuf, webdav_file_name: String) -> Result<()> {
         let client = Self::global().get_client()?;
-        let web_dav_path = format!("{}/{}", BACKUP_DIR, webdav_file_name);
+        let web_dav_path = format!("{BACKUP_DIR}/{webdav_file_name}");
         client.put(&web_dav_path, fs::read(file_path)?).await?;
         Ok(())
     }
 
     pub async fn delete_file(file_name: String) -> Result<()> {
         let client = Self::global().get_client()?;
-        let path = format!("{}/{}", BACKUP_DIR, file_name);
+        let path = format!("{BACKUP_DIR}/{file_name}");
         client.delete(&path).await?;
         Ok(())
     }
@@ -215,6 +212,6 @@ async fn test_webdav() {
         .await;
     let files = WebDav::list_file().await.unwrap();
     for file in files {
-        println!("file: {:?}", file);
+        println!("file: {file:?}");
     }
 }

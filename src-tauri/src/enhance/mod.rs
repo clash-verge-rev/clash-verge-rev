@@ -68,7 +68,7 @@ pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
             absolute_path_map.insert(name.into(), absolute_path);
         } else {
             // no path value, set default path
-            let path = format!("./rules/{name}.{}", format_val);
+            let path = format!("./rules/{name}.{format_val}");
             let absolute_path = dirs::app_home_dir()
                 .unwrap()
                 .join(path.trim_start_matches("./"));

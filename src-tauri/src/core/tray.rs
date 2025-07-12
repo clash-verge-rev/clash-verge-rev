@@ -153,7 +153,7 @@ impl Tray {
                     .text("restart_clash", t!("restart.clash"))
                     .text("restart_app", t!("restart"))
                     .item(
-                        &MenuItemBuilder::new(format!("Version: {}", version))
+                        &MenuItemBuilder::new(format!("Version: {version}"))
                             .enabled(false)
                             .build(app_handle)?,
                     )

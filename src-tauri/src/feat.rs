@@ -102,7 +102,7 @@ pub fn toggle_service_mode() {
                 if let Err(err) = patch_verge(patch).await {
                     let _ = handle::Handle::notification(
                         "Clash Verge Service",
-                        format!("{}, {}", toggle_failed_msg, err),
+                        format!("{toggle_failed_msg}, {err}"),
                     );
                     tracing::error!("{err}")
                 } else {
@@ -163,7 +163,7 @@ pub fn toggle_tun_mode() {
                 {
                     let _ = handle::Handle::notification(
                         "Tun Mode",
-                        format!("{}, {}", toggle_failed_msg, err),
+                        format!("{toggle_failed_msg}, {err}"),
                     );
                 } else {
                     let _ = cmds::check_service_and_clash().await;
@@ -193,12 +193,12 @@ pub fn toggle_tun_mode() {
                     if let Err(err) = cmds::check_service_and_clash().await {
                         let _ = handle::Handle::notification(
                             "Tun Mode",
-                            format!("{}, {}", toggle_failed_msg, err),
+                            format!("{toggle_failed_msg}, {err}"),
                         );
                     } else if let Err(err) = patch_clash(tun).await {
                         let _ = handle::Handle::notification(
                             "Tun Mode",
-                            format!("{}, {}", toggle_failed_msg, err),
+                            format!("{toggle_failed_msg}, {err}"),
                         );
                         tracing::error!("{err}")
                     } else {
@@ -611,8 +611,8 @@ async fn update_core_config() -> Result<()> {
 /// copy env variable
 pub fn copy_clash_env(app_handle: &AppHandle) {
     let port = { Config::clash().latest().get_mixed_port() };
-    let http_proxy = format!("http://127.0.0.1:{}", port);
-    let socks5_proxy = format!("socks5://127.0.0.1:{}", port);
+    let http_proxy = format!("http://127.0.0.1:{port}");
+    let socks5_proxy = format!("socks5://127.0.0.1:{port}");
 
     let sh =
         format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");

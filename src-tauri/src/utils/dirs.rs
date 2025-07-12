@@ -106,7 +106,7 @@ pub fn service_log_file() -> Result<PathBuf> {
 
     let log_dir = app_logs_dir()?.join("service");
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-    let log_file = format!("{}.log", local_time);
+    let log_file = format!("{local_time}.log");
     let log_file = log_dir.join(log_file);
     if !log_dir.exists() {
         std::fs::create_dir_all(&log_dir)?;

@@ -74,7 +74,7 @@ pub fn setup_panic_hook() {
         } else if let Some(s) = payload.downcast_ref::<String>() {
             s
         } else {
-            &format!("{:?}", payload)
+            &format!("{payload:?}")
         };
 
         let location = panic_info

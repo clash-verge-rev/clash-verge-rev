@@ -70,7 +70,7 @@ impl VergeLog {
         // 输出到日志文件
         let log_dir = dirs::app_logs_dir()?;
         let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-        let log_file_name = format!("{}.log", local_time);
+        let log_file_name = format!("{local_time}.log");
         let file_appender = rolling::never(log_dir, log_file_name);
         let (non_blocking_appender, guard) = non_blocking(file_appender);
         let file_layer = tracing_subscriber::fmt::layer()

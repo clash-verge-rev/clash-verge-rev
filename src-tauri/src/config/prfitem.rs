@@ -285,7 +285,7 @@ impl PrfItem {
         }
 
         let version = match APP_VERSION.get() {
-            Some(v) => format!("clash-verge/v{}", v),
+            Some(v) => format!("clash-verge/v{v}"),
             None => "clash-verge/unknown".to_string(),
         };
 
