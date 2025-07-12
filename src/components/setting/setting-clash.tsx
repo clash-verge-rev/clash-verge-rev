@@ -202,7 +202,7 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem
         label={t("Allow Lan")}
         extra={
-          <Tooltip title={t("Ip Network Info")} placement="top">
+          <Tooltip title={t("Network Interface Info")} placement="top">
             <IconButton
               color="inherit"
               size="small"

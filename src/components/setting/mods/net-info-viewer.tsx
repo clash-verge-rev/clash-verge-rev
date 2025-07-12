@@ -21,7 +21,7 @@ export const NetInfoViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Network Interface")}
+      title={t("Network Interface Info")}
       contentStyle={{
         width: 450,
         overflowY: "auto",
