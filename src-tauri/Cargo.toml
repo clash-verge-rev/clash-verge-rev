@@ -70,7 +70,6 @@ getrandom = "0.3.3"
 futures = "0.3.31"
 sys-locale = "0.3.2"
 async-trait = "0.1.88"
-mihomo_api = { path = "src_crates/crate_mihomo_api" }
 ab_glyph = "0.2.29"
 tungstenite = "0.27.0"
 libc = "0.2.174"
