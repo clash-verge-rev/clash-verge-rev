@@ -10,7 +10,7 @@ use serde_yaml::Mapping;
 
 /// Patch Clash configuration
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
-    Config::clash().draft().patch_config(patch.clone());
+    Config::clash().draft_mut().patch_config(patch.clone());
 
     let res = {
         // 激活订阅
@@ -22,7 +22,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 logging_error!(Type::Tray, true, tray::Tray::global().update_menu());
                 logging_error!(Type::Tray, true, tray::Tray::global().update_icon(None));
             }
-            Config::runtime().latest().patch_config(patch);
+            Config::runtime().draft_mut().patch_config(patch);
             CoreManager::global().update_config().await?;
         }
         handle::Handle::refresh_clash();
@@ -31,7 +31,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     match res {
         Ok(()) => {
             Config::clash().apply();
-            Config::clash().data().save_config()?;
+            Config::clash().data_mut().save_config()?;
             Ok(())
         }
         Err(err) => {
@@ -60,7 +60,7 @@ enum UpdateFlags {
 
 /// Patch Verge configuration
 pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
-    Config::verge().draft().patch_config(patch.clone());
+    Config::verge().draft_mut().patch_config(patch.clone());
 
     let tun_mode = patch.enable_tun_mode;
     let auto_launch = patch.enable_auto_launch;
@@ -175,7 +175,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             handle::Handle::refresh_clash();
         }
         if (update_flags & (UpdateFlags::VergeConfig as i32)) != 0 {
-            Config::verge().draft().enable_global_hotkey = enable_global_hotkey;
+            Config::verge().draft_mut().enable_global_hotkey = enable_global_hotkey;
             handle::Handle::refresh_verge();
         }
         if (update_flags & (UpdateFlags::Launch as i32)) != 0 {
@@ -213,7 +213,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
         Ok(()) => {
             Config::verge().apply();
             if !not_save_file {
-                Config::verge().data().save_file()?;
+                Config::verge().data_mut().save_file()?;
             }
 
             Ok(())

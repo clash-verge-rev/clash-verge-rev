@@ -68,7 +68,7 @@ pub struct Tray {
 
 impl TrayState {
     pub fn get_common_tray_icon() -> (bool, Vec<u8>) {
-        let verge = Config::verge().latest().clone();
+        let verge = Config::verge().latest_ref().clone();
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
         if is_common_tray_icon {
             if let Some(common_icon_path) = find_target_icons("common").unwrap() {
@@ -102,7 +102,7 @@ impl TrayState {
     }
 
     pub fn get_sysproxy_tray_icon() -> (bool, Vec<u8>) {
-        let verge = Config::verge().latest().clone();
+        let verge = Config::verge().latest_ref().clone();
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
         if is_sysproxy_tray_icon {
             if let Some(sysproxy_icon_path) = find_target_icons("sysproxy").unwrap() {
@@ -136,7 +136,7 @@ impl TrayState {
     }
 
     pub fn get_tun_tray_icon() -> (bool, Vec<u8>) {
-        let verge = Config::verge().latest().clone();
+        let verge = Config::verge().latest_ref().clone();
         let is_tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
         if is_tun_tray_icon {
             if let Some(tun_icon_path) = find_target_icons("tun").unwrap() {
@@ -193,7 +193,7 @@ impl Tray {
     /// 更新托盘点击行为
     pub fn update_click_behavior(&self) -> Result<()> {
         let app_handle = handle::Handle::global().app_handle().unwrap();
-        let tray_event = { Config::verge().latest().tray_event.clone() };
+        let tray_event = { Config::verge().latest_ref().tray_event.clone() };
         let tray_event: String = tray_event.unwrap_or("main_window".into());
         let tray = app_handle.tray_by_id("main").unwrap();
         match tray_event.as_str() {
@@ -253,12 +253,12 @@ impl Tray {
     }
 
     fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
-        let verge = Config::verge().latest().clone();
+        let verge = Config::verge().latest_ref().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
         let mode = {
             Config::clash()
-                .latest()
+                .latest_ref()
                 .0
                 .get("mode")
                 .map(|val| val.as_str().unwrap_or("rule"))
@@ -266,7 +266,7 @@ impl Tray {
                 .to_owned()
         };
         let profile_uid_and_name = Config::profiles()
-            .data()
+            .data_mut()
             .all_profile_uid_and_name()
             .unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
@@ -310,7 +310,7 @@ impl Tray {
             }
         };
 
-        let verge = Config::verge().latest().clone();
+        let verge = Config::verge().latest_ref().clone();
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
@@ -347,7 +347,7 @@ impl Tray {
             }
         };
 
-        let verge = Config::verge().latest().clone();
+        let verge = Config::verge().latest_ref().clone();
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
@@ -391,7 +391,7 @@ impl Tray {
             }
         };
 
-        let verge = Config::verge().latest().clone();
+        let verge = Config::verge().latest_ref().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
@@ -404,7 +404,7 @@ impl Tray {
 
         let mut current_profile_name = "None".to_string();
         let profiles = Config::profiles();
-        let profiles = profiles.latest();
+        let profiles = profiles.latest_ref();
         if let Some(current_profile_uid) = profiles.get_current() {
             if let Ok(profile) = profiles.get_item(&current_profile_uid) {
                 current_profile_name = match &profile.name {
@@ -463,7 +463,7 @@ impl Tray {
 
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         {
-            let tray_event = { Config::verge().latest().tray_event.clone() };
+            let tray_event = { Config::verge().latest_ref().tray_event.clone() };
             let tray_event: String = tray_event.unwrap_or("main_window".into());
             if tray_event.as_str() != "tray_menu" {
                 builder = builder.show_menu_on_left_click(false);
@@ -473,9 +473,9 @@ impl Tray {
         let tray = builder.build(app_handle)?;
 
         tray.on_tray_icon_event(|_, event| {
-            let tray_event = { Config::verge().latest().tray_event.clone() };
+            let tray_event = { Config::verge().latest_ref().tray_event.clone() };
             let tray_event: String = tray_event.unwrap_or("main_window".into());
-            log::debug!(target: "app","tray event: {:?}", tray_event);
+            log::debug!(target: "app","tray event: {tray_event:?}");
 
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
@@ -499,7 +499,7 @@ impl Tray {
                             crate::module::lightweight::exit_lightweight_mode();
                         }
                         let result = WindowManager::show_main_window();
-                        log::info!(target: "app", "窗口显示结果: {:?}", result);
+                        log::info!(target: "app", "窗口显示结果: {result:?}");
                     }
                     _ => {}
                 }
@@ -536,7 +536,7 @@ fn create_tray_menu(
     let version = VERSION.get().unwrap_or(&unknown_version);
 
     let hotkeys = Config::verge()
-        .latest()
+        .latest_ref()
         .hotkeys
         .as_ref()
         .map(|h| {
@@ -556,11 +556,11 @@ fn create_tray_menu(
         .iter()
         .map(|(profile_uid, profile_name)| {
             let is_current_profile = Config::profiles()
-                .data()
+                .data_mut()
                 .is_current_profile_index(profile_uid.to_string());
             CheckMenuItem::with_id(
                 app_handle,
-                format!("profiles_{}", profile_uid),
+                format!("profiles_{profile_uid}"),
                 t(profile_name),
                 true,
                 is_current_profile,
@@ -783,7 +783,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 crate::module::lightweight::exit_lightweight_mode();
             }
             let result = WindowManager::show_main_window();
-            log::info!(target: "app", "窗口显示结果: {:?}", result);
+            log::info!(target: "app", "窗口显示结果: {result:?}");
         }
         "system_proxy" => {
             feat::toggle_system_proxy();
@@ -818,7 +818,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             if was_lightweight {
                 use crate::utils::window_manager::WindowManager;
                 let result = WindowManager::show_main_window();
-                log::info!(target: "app", "退出轻量模式后显示主窗口: {:?}", result);
+                log::info!(target: "app", "退出轻量模式后显示主窗口: {result:?}");
             }
         }
         "quit" => {
@@ -832,6 +832,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     }
 
     if let Err(e) = Tray::global().update_all_states() {
-        log::warn!(target: "app", "更新托盘状态失败: {}", e);
+        log::warn!(target: "app", "更新托盘状态失败: {e}");
     }
 }

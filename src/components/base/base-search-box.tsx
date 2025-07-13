@@ -1,11 +1,10 @@
 import { Box, SvgIcon, TextField, styled } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import { ChangeEvent, useEffect, useRef, useState, useMemo } from "react";
-
-import { useTranslation } from "react-i18next";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
 import matchWholeWordIcon from "@/assets/image/component/match_whole_word.svg?react";
 import useRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
+import { useTranslation } from "react-i18next";
 
 export type SearchState = {
   text: string;
@@ -56,9 +55,28 @@ export const BaseSearchBox = (props: SearchProps) => {
     inheritViewBox: true,
   };
 
+  // 验证正则表达式的辅助函数
+  const validateRegex = (pattern: string) => {
+    if (!pattern) return true;
+    try {
+      new RegExp(pattern);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   const createMatcher = useMemo(() => {
     return (searchText: string) => {
       try {
+        // 当启用正则表达式验证是否合规
+        if (useRegularExpression && searchText) {
+          const isValid = validateRegex(searchText);
+          if (!isValid) {
+            throw new Error(t("Invalid regular expression"));
+          }
+        }
+
         return (content: string) => {
           if (!searchText) return true;
 
@@ -76,16 +94,15 @@ export const BaseSearchBox = (props: SearchProps) => {
           return item.includes(searchItem);
         };
       } catch (err) {
-        setErrorMessage(`${err}`);
-        return () => true;
+        setErrorMessage(err instanceof Error ? err.message : `${err}`);
+        return () => false; // 无效正则规则 不匹配值
       }
     };
-  }, [matchCase, matchWholeWord, useRegularExpression]);
+  }, [matchCase, matchWholeWord, useRegularExpression, t]);
 
   useEffect(() => {
     if (!inputRef.current) return;
     const value = inputRef.current.value;
-    setErrorMessage("");
     props.onSearch(createMatcher(value), {
       text: value,
       matchCase,
@@ -97,6 +114,15 @@ export const BaseSearchBox = (props: SearchProps) => {
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target?.value ?? "";
     setErrorMessage("");
+
+    // 验证正则表达式
+    if (useRegularExpression && value) {
+      const isValid = validateRegex(value);
+      if (!isValid) {
+        setErrorMessage(t("Invalid regular expression"));
+      }
+    }
+
     props.onSearch(createMatcher(value), {
       text: value,
       matchCase,
@@ -106,7 +132,7 @@ export const BaseSearchBox = (props: SearchProps) => {
   };
 
   return (
-    <Tooltip title={errorMessage} placement="bottom-start">
+    <Tooltip title={errorMessage || ""} placement="bottom-start">
       <StyledTextField
         autoComplete="new-password"
         inputRef={inputRef}
@@ -118,6 +144,7 @@ export const BaseSearchBox = (props: SearchProps) => {
         placeholder={props.placeholder ?? t("Filter conditions")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
+        error={!!errorMessage}
         slotProps={{
           input: {
             sx: { pr: 1 },

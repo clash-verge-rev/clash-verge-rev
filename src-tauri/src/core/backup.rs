@@ -78,7 +78,7 @@ impl WebDavClient {
             if let Some(cfg) = lock.as_ref() {
                 cfg.clone()
             } else {
-                let verge = Config::verge().latest().clone();
+                let verge = Config::verge().latest_ref().clone();
                 if verge.webdav_url.is_none()
                     || verge.webdav_username.is_none()
                     || verge.webdav_password.is_none()
@@ -108,10 +108,7 @@ impl WebDavClient {
                 reqwest::Client::builder()
                     .danger_accept_invalid_certs(true)
                     .timeout(Duration::from_secs(op.timeout()))
-                    .user_agent(format!(
-                        "clash-verge/{} ({} WebDAV-Client)",
-                        APP_VERSION, OS
-                    ))
+                    .user_agent(format!("clash-verge/{APP_VERSION} ({OS} WebDAV-Client)"))
                     .redirect(reqwest::redirect::Policy::custom(|attempt| {
                         // 允许所有请求类型的重定向，包括PUT
                         if attempt.previous().len() >= 5 {
@@ -177,7 +174,7 @@ impl WebDavClient {
             }
 
             Ok(Err(e)) => {
-                log::warn!("Upload failed, retrying once: {}", e);
+                log::warn!("Upload failed, retrying once: {e}");
                 tokio::time::sleep(Duration::from_millis(500)).await;
                 timeout(
                     Duration::from_secs(TIMEOUT_UPLOAD),
@@ -237,7 +234,7 @@ impl WebDavClient {
 
 pub fn create_backup() -> Result<(String, PathBuf), Error> {
     let now = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
-    let zip_file_name = format!("{}-backup-{}.zip", OS, now);
+    let zip_file_name = format!("{OS}-backup-{now}.zip");
     let zip_path = temp_dir().join(&zip_file_name);
 
     let file = fs::File::create(&zip_path)?;

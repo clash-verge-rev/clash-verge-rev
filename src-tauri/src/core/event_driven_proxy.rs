@@ -166,7 +166,7 @@ impl EventDrivenProxyManager {
 
     fn send_event(&self, event: ProxyEvent) {
         if let Err(e) = self.event_sender.send(event) {
-            log::error!(target: "app", "发送代理事件失败: {}", e);
+            log::error!(target: "app", "发送代理事件失败: {e}");
         }
     }
 
@@ -183,7 +183,7 @@ impl EventDrivenProxyManager {
                     event = event_rx.recv() => {
                         match event {
                             Some(event) => {
-                                log::debug!(target: "app", "处理代理事件: {:?}", event);
+                                log::debug!(target: "app", "处理代理事件: {event:?}");
                                 Self::handle_event(&state, event).await;
                             }
                             None => {
@@ -426,37 +426,44 @@ impl EventDrivenProxyManager {
     }
 
     fn get_proxy_config() -> ProxyConfig {
-        let verge_config = Config::verge();
-        let verge = verge_config.latest();
+        let (sys_enabled, pac_enabled, guard_enabled) = {
+            let verge_config = Config::verge();
+            let verge = verge_config.latest_ref();
+            (
+                verge.enable_system_proxy.unwrap_or(false),
+                verge.proxy_auto_config.unwrap_or(false),
+                verge.enable_proxy_guard.unwrap_or(false),
+            )
+        };
         ProxyConfig {
-            sys_enabled: verge.enable_system_proxy.unwrap_or(false),
-            pac_enabled: verge.proxy_auto_config.unwrap_or(false),
-            guard_enabled: verge.enable_proxy_guard.unwrap_or(false),
+            sys_enabled,
+            pac_enabled,
+            guard_enabled,
         }
     }
 
     fn get_expected_pac_config() -> Autoproxy {
-        let verge_config = Config::verge();
-        let verge = verge_config.latest();
-        let (proxy_host, pac_port) = (
+        let proxy_host = {
+            let verge_config = Config::verge();
+            let verge = verge_config.latest_ref();
             verge
                 .proxy_host
                 .clone()
-                .unwrap_or_else(|| "127.0.0.1".to_string()),
-            IVerge::get_singleton_port(),
-        );
+                .unwrap_or_else(|| "127.0.0.1".to_string())
+        };
+        let pac_port = IVerge::get_singleton_port();
         Autoproxy {
             enable: true,
-            url: format!("http://{}:{}/commands/pac", proxy_host, pac_port),
+            url: format!("http://{proxy_host}:{pac_port}/commands/pac"),
         }
     }
 
     fn get_expected_sys_proxy() -> Sysproxy {
         let verge_config = Config::verge();
-        let verge = verge_config.latest();
+        let verge = verge_config.latest_ref();
         let port = verge
             .verge_mixed_port
-            .unwrap_or(Config::clash().data().get_mixed_port());
+            .unwrap_or(Config::clash().latest_ref().get_mixed_port());
         let proxy_host = verge
             .proxy_host
             .clone()
@@ -471,10 +478,14 @@ impl EventDrivenProxyManager {
     }
 
     fn get_bypass_config() -> String {
-        let verge_config = Config::verge();
-        let verge = verge_config.latest();
-        let use_default = verge.use_default_bypass.unwrap_or(true);
-        let custom_bypass = verge.system_proxy_bypass.clone().unwrap_or_default();
+        let (use_default, custom_bypass) = {
+            let verge_config = Config::verge();
+            let verge = verge_config.latest_ref();
+            (
+                verge.use_default_bypass.unwrap_or(true),
+                verge.system_proxy_bypass.clone().unwrap_or_default(),
+            )
+        };
 
         #[cfg(target_os = "windows")]
         let default_bypass = "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>";
@@ -489,7 +500,7 @@ impl EventDrivenProxyManager {
         if custom_bypass.is_empty() {
             default_bypass.to_string()
         } else if use_default {
-            format!("{},{}", default_bypass, custom_bypass)
+            format!("{default_bypass},{custom_bypass}")
         } else {
             custom_bypass
         }
@@ -534,7 +545,7 @@ impl EventDrivenProxyManager {
         let binary_path = match dirs::service_path() {
             Ok(path) => path,
             Err(e) => {
-                log::error!(target: "app", "获取服务路径失败: {}", e);
+                log::error!(target: "app", "获取服务路径失败: {e}");
                 return;
             }
         };
@@ -554,17 +565,17 @@ impl EventDrivenProxyManager {
         match output {
             Ok(output) => {
                 if !output.status.success() {
-                    log::error!(target: "app", "执行sysproxy命令失败: {:?}", args);
+                    log::error!(target: "app", "执行sysproxy命令失败: {args:?}");
                     let stderr = String::from_utf8_lossy(&output.stderr);
                     if !stderr.is_empty() {
-                        log::error!(target: "app", "sysproxy错误输出: {}", stderr);
+                        log::error!(target: "app", "sysproxy错误输出: {stderr}");
                     }
                 } else {
-                    log::debug!(target: "app", "成功执行sysproxy命令: {:?}", args);
+                    log::debug!(target: "app", "成功执行sysproxy命令: {args:?}");
                 }
             }
             Err(e) => {
-                log::error!(target: "app", "执行sysproxy命令出错: {}", e);
+                log::error!(target: "app", "执行sysproxy命令出错: {e}");
             }
         }
     }

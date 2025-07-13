@@ -3,6 +3,7 @@ import {
   getProfiles,
   patchProfile,
   patchProfilesConfig,
+  forceRefreshProxies,
 } from "@/services/cmds";
 import { getProxies, updateProxy } from "@/services/api";
 
@@ -127,6 +128,9 @@ export const useProfiles = () => {
       try {
         await patchProfile(profileData.current!, { selected: newSelected });
         console.log("[ActivateSelected] 代理选择配置保存成功");
+
+        // 切换节点后强制刷新后端缓存
+        await forceRefreshProxies();
 
         setTimeout(() => {
           mutate("getProxies", getProxies());

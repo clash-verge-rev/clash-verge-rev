@@ -16,11 +16,11 @@ type ResultLog = Vec<(String, String)>;
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
 pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // config.yaml 的订阅
-    let clash_config = { Config::clash().latest().0.clone() };
+    let clash_config = { Config::clash().latest_ref().0.clone() };
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = {
         let verge = Config::verge();
-        let verge = verge.latest();
+        let verge = verge.latest_ref();
         (
             Some(verge.get_valid_clash_core()),
             verge.enable_tun_mode.unwrap_or(false),
@@ -33,13 +33,13 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     #[cfg(not(target_os = "windows"))]
     let redir_enabled = {
         let verge = Config::verge();
-        let verge = verge.latest();
+        let verge = verge.latest_ref();
         verge.verge_redir_enabled.unwrap_or(false)
     };
     #[cfg(target_os = "linux")]
     let tproxy_enabled = {
         let verge = Config::verge();
-        let verge = verge.latest();
+        let verge = verge.latest_ref();
         verge.verge_tproxy_enabled.unwrap_or(false)
     };
 
@@ -56,7 +56,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         profile_name,
     ) = {
         let profiles = Config::profiles();
-        let profiles = profiles.latest();
+        let profiles = profiles.latest_ref();
 
         let current = profiles.current_mapping().unwrap_or_default();
         let merge = profiles
@@ -213,6 +213,12 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             if key.as_str() == Some("port") && !http_enabled {
                 config.remove("port");
                 continue;
+            }
+            #[cfg(target_os = "windows")]
+            {
+                if key.as_str() == Some("redir-port") || key.as_str() == Some("tproxy-port") {
+                    continue;
+                }
             }
             #[cfg(not(target_os = "windows"))]
             {

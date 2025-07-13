@@ -21,6 +21,7 @@ import { GuardState } from "./mods/guard-state";
 import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { WebUIViewer } from "./mods/web-ui-viewer";
+import { HeaderConfiguration } from "./mods/external-controller-cors";
 
 const isWIN = getSystem() === "windows";
 
@@ -57,6 +58,7 @@ const SettingClash = ({ onError }: Props) => {
   const coreRef = useRef<DialogRef>(null);
   const networkRef = useRef<DialogRef>(null);
   const dnsRef = useRef<DialogRef>(null);
+  const corsRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -101,6 +103,7 @@ const SettingClash = ({ onError }: Props) => {
       <ClashCoreViewer ref={coreRef} />
       <NetworkInterfaceViewer ref={networkRef} />
       <DnsViewer ref={dnsRef} />
+      <HeaderConfiguration ref={corsRef} />
 
       <SettingItem
         label={t("Allow Lan")}
@@ -215,18 +218,20 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        onClick={() => ctrlRef.current?.open()}
-        label={
-          <>
-            {t("External")}
-            <TooltipIcon
-              title={t(
-                "Enable one-click random API port and key. Click to randomize the port and key",
-              )}
-              sx={{ opacity: "0.7" }}
-            />
-          </>
+        label={<>{t("External")}</>}
+        extra={
+          <TooltipIcon
+            title={t("External Cors Settings")}
+            icon={SettingsRounded}
+            onClick={(e) => {
+              e.stopPropagation();
+              corsRef.current?.open();
+            }}
+          />
         }
+        onClick={() => {
+          ctrlRef.current?.open();
+        }}
       />
 
       <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />

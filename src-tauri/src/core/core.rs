@@ -138,14 +138,14 @@ impl CoreManager {
     /// 使用默认配置
     pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
-        *Config::runtime().draft() = Box::new(IRuntime {
-            config: Some(Config::clash().latest().0.clone()),
+        *Config::runtime().draft_mut() = Box::new(IRuntime {
+            config: Some(Config::clash().latest_ref().0.clone()),
             exists_keys: vec![],
             chain_logs: Default::default(),
         });
         help::save_yaml(
             &runtime_path,
-            &Config::clash().latest().0,
+            &Config::clash().latest_ref().0,
             Some("# Clash Verge Runtime"),
         )?;
         handle::Handle::notice_message(msg_type, msg_content);
@@ -172,7 +172,7 @@ impl CoreManager {
 
         // 检查文件是否存在
         if !std::path::Path::new(config_path).exists() {
-            let error_msg = format!("File not found: {}", config_path);
+            let error_msg = format!("File not found: {config_path}");
             //handle::Handle::notice_message("config_validate::file_not_found", &error_msg);
             return Ok((false, error_msg));
         }
@@ -247,7 +247,7 @@ impl CoreManager {
             config_path
         );
 
-        let clash_core = Config::verge().latest().get_valid_clash_core();
+        let clash_core = Config::verge().latest_ref().get_valid_clash_core();
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::global().app_handle().unwrap();
@@ -284,7 +284,7 @@ impl CoreManager {
             } else if !stderr.is_empty() {
                 stderr.to_string()
             } else if let Some(code) = output.status.code() {
-                format!("验证进程异常退出，退出码: {}", code)
+                format!("验证进程异常退出，退出码: {code}")
             } else {
                 "验证进程被终止".to_string()
             };
@@ -305,7 +305,7 @@ impl CoreManager {
         let content = match std::fs::read_to_string(config_path) {
             Ok(content) => content,
             Err(err) => {
-                let error_msg = format!("Failed to read file: {}", err);
+                let error_msg = format!("Failed to read file: {err}");
                 logging!(error, Type::Config, true, "无法读取文件: {}", error_msg);
                 return Ok((false, error_msg));
             }
@@ -319,7 +319,7 @@ impl CoreManager {
             }
             Err(err) => {
                 // 使用标准化的前缀，以便错误处理函数能正确识别
-                let error_msg = format!("YAML syntax error: {}", err);
+                let error_msg = format!("YAML syntax error: {err}");
                 logging!(error, Type::Config, true, "YAML语法错误: {}", error_msg);
                 Ok((false, error_msg))
             }
@@ -331,7 +331,7 @@ impl CoreManager {
         let content = match std::fs::read_to_string(path) {
             Ok(content) => content,
             Err(err) => {
-                let error_msg = format!("Failed to read script file: {}", err);
+                let error_msg = format!("Failed to read script file: {err}");
                 logging!(warn, Type::Config, true, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 return Ok((false, error_msg));
@@ -364,7 +364,7 @@ impl CoreManager {
                 Ok((true, String::new()))
             }
             Err(err) => {
-                let error_msg = format!("Script syntax error: {}", err);
+                let error_msg = format!("Script syntax error: {err}");
                 logging!(warn, Type::Config, true, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 Ok((false, error_msg))
@@ -446,7 +446,7 @@ impl CoreManager {
         let mut process_futures = Vec::new();
         for &target in &target_processes {
             let process_name = if cfg!(windows) {
-                format!("{}.exe", target)
+                format!("{target}.exe")
             } else {
                 target.to_string()
             };
@@ -736,7 +736,7 @@ impl CoreManager {
         let app_handle = handle::Handle::global()
             .app_handle()
             .ok_or(anyhow::anyhow!("failed to get app handle"))?;
-        let clash_core = Config::verge().latest().get_valid_clash_core();
+        let clash_core = Config::verge().latest_ref().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         let service_log_dir = dirs::app_home_dir()?.join("logs").join("service");
@@ -745,7 +745,7 @@ impl CoreManager {
         let now = Local::now();
         let timestamp = now.format("%Y%m%d_%H%M%S").to_string();
 
-        let log_path = service_log_dir.join(format!("sidecar_{}.log", timestamp));
+        let log_path = service_log_dir.join(format!("sidecar_{timestamp}.log"));
 
         let mut log_file = File::create(log_path)?;
 
@@ -861,7 +861,7 @@ impl CoreManager {
             let mut state = service::ServiceState::get();
             if !state.prefer_sidecar {
                 state.prefer_sidecar = true;
-                state.last_error = Some(format!("通过服务启动核心失败: {}", e));
+                state.last_error = Some(format!("通过服务启动核心失败: {e}"));
                 if let Err(save_err) = state.save() {
                     logging!(
                         error,
@@ -1106,14 +1106,14 @@ impl CoreManager {
         }
         let core: &str = &clash_core.clone().unwrap();
         if !IVerge::VALID_CLASH_CORES.contains(&core) {
-            let error_message = format!("Clash core invalid name: {}", core);
+            let error_message = format!("Clash core invalid name: {core}");
             logging!(error, Type::Core, true, "{}", error_message);
             return Err(error_message);
         }
 
-        Config::verge().draft().clash_core = clash_core.clone();
+        Config::verge().draft_mut().clash_core = clash_core.clone();
         Config::verge().apply();
-        logging_error!(Type::Core, true, Config::verge().latest().save_file());
+        logging_error!(Type::Core, true, Config::verge().latest_ref().save_file());
 
         let run_path = Config::generate_file(ConfigType::Run).map_err(|e| {
             let msg = e.to_string();

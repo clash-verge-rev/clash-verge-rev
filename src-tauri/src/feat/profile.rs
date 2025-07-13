@@ -36,15 +36,15 @@ pub async fn update_profile(
 
     let url_opt = {
         let profiles = Config::profiles();
-        let profiles = profiles.latest();
+        let profiles = profiles.latest_ref();
         let item = profiles.get_item(&uid)?;
         let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
         if !is_remote {
-            log::info!(target: "app", "[订阅更新] {} 不是远程订阅，跳过更新", uid);
+            log::info!(target: "app", "[订阅更新] {uid} 不是远程订阅，跳过更新");
             None // 非远程订阅直接更新
         } else if item.url.is_none() {
-            log::warn!(target: "app", "[订阅更新] {} 缺少URL，无法更新", uid);
+            log::warn!(target: "app", "[订阅更新] {uid} 缺少URL，无法更新");
             bail!("failed to get the profile item url");
         } else {
             log::info!(target: "app",
@@ -66,16 +66,16 @@ pub async fn update_profile(
                 Ok(item) => {
                     log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
                     let profiles = Config::profiles();
-                    let mut profiles = profiles.latest();
+                    let mut profiles = profiles.draft_mut();
                     profiles.update_item(uid.clone(), item)?;
 
                     let is_current = Some(uid.clone()) == profiles.get_current();
-                    log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {}", is_current);
+                    log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
                     is_current && auto_refresh
                 }
                 Err(err) => {
                     // 首次更新失败，尝试使用Clash代理
-                    log::warn!(target: "app", "[订阅更新] 正常更新失败: {}，尝试使用Clash代理更新", err);
+                    log::warn!(target: "app", "[订阅更新] 正常更新失败: {err}，尝试使用Clash代理更新");
 
                     // 发送通知
                     handle::Handle::notice_message("update_retry_with_clash", uid.clone());
@@ -102,7 +102,7 @@ pub async fn update_profile(
 
                             // 更新到配置
                             let profiles = Config::profiles();
-                            let mut profiles = profiles.latest();
+                            let mut profiles = profiles.draft_mut();
                             profiles.update_item(uid.clone(), item.clone())?;
 
                             // 获取配置名称用于通知
@@ -112,14 +112,14 @@ pub async fn update_profile(
                             handle::Handle::notice_message("update_with_clash_proxy", profile_name);
 
                             let is_current = Some(uid.clone()) == profiles.get_current();
-                            log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {}", is_current);
+                            log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
                             is_current && auto_refresh
                         }
                         Err(retry_err) => {
-                            log::error!(target: "app", "[订阅更新] 使用Clash代理更新仍然失败: {}", retry_err);
+                            log::error!(target: "app", "[订阅更新] 使用Clash代理更新仍然失败: {retry_err}");
                             handle::Handle::notice_message(
                                 "update_failed_even_with_clash",
-                                format!("{}", retry_err),
+                                format!("{retry_err}"),
                             );
                             return Err(retry_err);
                         }

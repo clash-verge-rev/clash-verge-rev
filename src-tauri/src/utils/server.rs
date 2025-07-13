@@ -56,15 +56,15 @@ pub fn embed_server() {
 
         let pac = warp::path!("commands" / "pac").map(move || {
             let content = Config::verge()
-                .latest()
+                .latest_ref()
                 .pac_file_content
                 .clone()
                 .unwrap_or(DEFAULT_PAC.to_string());
             let port = Config::verge()
-                .latest()
+                .latest_ref()
                 .verge_mixed_port
-                .unwrap_or(Config::clash().data().get_mixed_port());
-            let content = content.replace("%mixed-port%", &format!("{}", port));
+                .unwrap_or(Config::clash().latest_ref().get_mixed_port());
+            let content = content.replace("%mixed-port%", &format!("{port}"));
             warp::http::Response::builder()
                 .header("Content-Type", "application/x-ns-proxy-autoconfig")
                 .body(content)

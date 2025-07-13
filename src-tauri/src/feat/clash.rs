@@ -49,7 +49,7 @@ fn after_change_clash_mode() {
                 }
             }
             Err(err) => {
-                log::error!(target: "app", "Failed to get connections: {}", err);
+                log::error!(target: "app", "Failed to get connections: {err}");
             }
         }
     });
@@ -68,16 +68,16 @@ pub fn change_clash_mode(mode: String) {
         match IpcManager::global().patch_configs(json_value).await {
             Ok(_) => {
                 // 更新订阅
-                Config::clash().data().patch_config(mapping);
+                Config::clash().data_mut().patch_config(mapping);
 
-                if Config::clash().data().save_config().is_ok() {
+                if Config::clash().data_mut().save_config().is_ok() {
                     handle::Handle::refresh_clash();
                     logging_error!(Type::Tray, true, tray::Tray::global().update_menu());
                     logging_error!(Type::Tray, true, tray::Tray::global().update_icon(None));
                 }
 
                 let is_auto_close_connection = Config::verge()
-                    .data()
+                    .data_mut()
                     .auto_close_connection
                     .unwrap_or(false);
                 if is_auto_close_connection {
@@ -94,7 +94,10 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     use crate::utils::network::{NetworkManager, ProxyType};
     use tokio::time::Instant;
 
-    let tun_mode = Config::verge().latest().enable_tun_mode.unwrap_or(false);
+    let tun_mode = Config::verge()
+        .latest_ref()
+        .enable_tun_mode
+        .unwrap_or(false);
 
     // 如果是TUN模式，不使用代理，否则使用自身代理
     let proxy_type = if !tun_mode {
@@ -113,7 +116,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
 
     match response {
         Ok(response) => {
-            log::trace!(target: "app", "test_delay response: {:#?}", response);
+            log::trace!(target: "app", "test_delay response: {response:#?}");
             if response.status().is_success() {
                 Ok(start.elapsed().as_millis() as u32)
             } else {
@@ -121,7 +124,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
             }
         }
         Err(err) => {
-            log::trace!(target: "app", "test_delay error: {:#?}", err);
+            log::trace!(target: "app", "test_delay error: {err:#?}");
             Err(err)
         }
     }

@@ -25,13 +25,13 @@ fn init_log() -> Result<()> {
         let _ = fs::create_dir_all(&log_dir);
     }
 
-    let log_level = Config::verge().data().get_log_level();
+    let log_level = Config::verge().latest_ref().get_log_level();
     if log_level == LevelFilter::Off {
         return Ok(());
     }
 
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-    let log_file = format!("{}.log", local_time);
+    let log_file = format!("{local_time}.log");
     let log_file = log_dir.join(log_file);
 
     let log_pattern = match log_level {
@@ -74,7 +74,7 @@ pub fn delete_log() -> Result<()> {
 
     let auto_log_clean = {
         let verge = Config::verge();
-        let verge = verge.data();
+        let verge = verge.latest_ref();
         verge.auto_log_clean.unwrap_or(0)
     };
 
@@ -405,7 +405,7 @@ pub async fn startup_script() -> Result<()> {
 
     let script_path = {
         let verge = Config::verge();
-        let verge = verge.latest();
+        let verge = verge.latest_ref();
         verge.startup_script.clone().unwrap_or("".to_string())
     };
 

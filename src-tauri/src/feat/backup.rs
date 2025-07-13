@@ -11,7 +11,7 @@ use std::fs;
 /// Create a backup and upload to WebDAV
 pub async fn create_backup_and_upload_webdav() -> Result<()> {
     let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
-        log::error!(target: "app", "Failed to create backup: {:#?}", err);
+        log::error!(target: "app", "Failed to create backup: {err:#?}");
         err
     })?;
 
@@ -19,12 +19,12 @@ pub async fn create_backup_and_upload_webdav() -> Result<()> {
         .upload(temp_file_path.clone(), file_name)
         .await
     {
-        log::error!(target: "app", "Failed to upload to WebDAV: {:#?}", err);
+        log::error!(target: "app", "Failed to upload to WebDAV: {err:#?}");
         return Err(err);
     }
 
     if let Err(err) = std::fs::remove_file(&temp_file_path) {
-        log::warn!(target: "app", "Failed to remove temp file: {:#?}", err);
+        log::warn!(target: "app", "Failed to remove temp file: {err:#?}");
     }
 
     Ok(())
@@ -33,7 +33,7 @@ pub async fn create_backup_and_upload_webdav() -> Result<()> {
 /// List WebDAV backups
 pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
     backup::WebDavClient::global().list().await.map_err(|err| {
-        log::error!(target: "app", "Failed to list WebDAV backup files: {:#?}", err);
+        log::error!(target: "app", "Failed to list WebDAV backup files: {err:#?}");
         err
     })
 }
@@ -44,7 +44,7 @@ pub async fn delete_webdav_backup(filename: String) -> Result<()> {
         .delete(filename)
         .await
         .map_err(|err| {
-            log::error!(target: "app", "Failed to delete WebDAV backup file: {:#?}", err);
+            log::error!(target: "app", "Failed to delete WebDAV backup file: {err:#?}");
             err
         })
 }
@@ -52,7 +52,7 @@ pub async fn delete_webdav_backup(filename: String) -> Result<()> {
 /// Restore WebDAV backup
 pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let verge = Config::verge();
-    let verge_data = verge.data().clone();
+    let verge_data = verge.latest_ref().clone();
     let webdav_url = verge_data.webdav_url.clone();
     let webdav_username = verge_data.webdav_username.clone();
     let webdav_password = verge_data.webdav_password.clone();
@@ -62,7 +62,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         .download(filename, backup_storage_path.clone())
         .await
         .map_err(|err| {
-            log::error!(target: "app", "Failed to download WebDAV backup file: {:#?}", err);
+            log::error!(target: "app", "Failed to download WebDAV backup file: {err:#?}");
             err
         })?;
 

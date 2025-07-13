@@ -8,7 +8,8 @@ pub fn use_script(
     name: String,
 ) -> Result<(Mapping, Vec<(String, String)>)> {
     use boa_engine::{native_function::NativeFunction, Context, JsValue, Source};
-    use std::sync::{Arc, Mutex};
+    use parking_lot::Mutex;
+    use std::sync::Arc;
     let mut context = Context::default();
 
     let outputs = Arc::new(Mutex::new(vec![]));
@@ -24,7 +25,7 @@ pub fn use_script(
                     let level = level.to_std_string().unwrap();
                     let data = args.get(1).unwrap().to_string(context)?;
                     let data = data.to_std_string().unwrap();
-                    let mut out = copy_outputs.lock().unwrap();
+                    let mut out = copy_outputs.lock();
                     out.push((level, data));
                     Ok(JsValue::undefined())
                 },
@@ -67,7 +68,7 @@ pub fn use_script(
         // 直接解析JSON结果,不做其他解析
         let res: Result<Mapping, Error> = parse_json_safely(&result);
 
-        let mut out = outputs.lock().unwrap();
+        let mut out = outputs.lock();
         match res {
             Ok(config) => Ok((use_lowercase(config), out.to_vec())),
             Err(err) => {
@@ -141,8 +142,8 @@ fn test_script() {
 fn test_escape_unescape() {
     let test_string = r#"Hello "World"!\nThis is a test with \u00A9 copyright symbol."#;
     let escaped = escape_js_string_for_single_quote(test_string);
-    println!("Original: {}", test_string);
-    println!("Escaped: {}", escaped);
+    println!("Original: {test_string}");
+    println!("Escaped: {escaped}");
 
     let json_str = r#"{"key":"value","nested":{"key":"value"}}"#;
     let parsed = parse_json_safely(json_str).unwrap();

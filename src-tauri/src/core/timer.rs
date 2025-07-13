@@ -91,7 +91,7 @@ impl Timer {
         let cur_timestamp = chrono::Local::now().timestamp();
 
         // Collect profiles that need immediate update
-        let profiles_to_update = if let Some(items) = Config::profiles().latest().get_items() {
+        let profiles_to_update = if let Some(items) = Config::profiles().latest_ref().get_items() {
             items
                 .iter()
                 .filter_map(|item| {
@@ -229,7 +229,7 @@ impl Timer {
     fn gen_map(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
-        if let Some(items) = Config::profiles().latest().get_items() {
+        if let Some(items) = Config::profiles().latest_ref().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref() {
                     if let (Some(interval), Some(uid)) = (option.update_interval, &item.uid) {
@@ -376,7 +376,7 @@ impl Timer {
 
         // Get the profile updated timestamp
         let profiles_config = Config::profiles();
-        let profiles = profiles_config.latest();
+        let profiles = profiles_config.latest_ref();
         let items = match profiles.get_items() {
             Some(i) => i,
             None => {
@@ -438,7 +438,7 @@ impl Timer {
         match tokio::time::timeout(std::time::Duration::from_secs(40), async {
             Self::emit_update_event(&uid, true);
 
-            let is_current = Config::profiles().latest().current.as_ref() == Some(&uid);
+            let is_current = Config::profiles().latest_ref().current.as_ref() == Some(&uid);
             logging!(
                 info,
                 Type::Timer,

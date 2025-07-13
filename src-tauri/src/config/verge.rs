@@ -300,7 +300,7 @@ impl IVerge {
         use crate::config::Config;
 
         let config_draft = Config::verge();
-        *config_draft.draft() = Box::new(updated_config.clone());
+        *config_draft.draft_mut() = Box::new(updated_config.clone());
         config_draft.apply();
 
         logging!(
@@ -391,7 +391,7 @@ impl IVerge {
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
-            auto_log_clean: Some(3),
+            auto_log_clean: Some(2),
             webdav_url: None,
             webdav_username: None,
             webdav_password: None,

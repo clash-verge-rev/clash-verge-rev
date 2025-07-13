@@ -32,7 +32,7 @@ pub struct ServiceState {
 impl ServiceState {
     // 获取当前的服务状态
     pub fn get() -> Self {
-        if let Some(state) = Config::verge().latest().service_state.clone() {
+        if let Some(state) = Config::verge().latest_ref().service_state.clone() {
             return state;
         }
         Self::default()
@@ -41,11 +41,11 @@ impl ServiceState {
     // 保存服务状态
     pub fn save(&self) -> Result<()> {
         let config = Config::verge();
-        let mut latest = config.latest().clone();
+        let mut latest = config.latest_ref().clone();
         latest.service_state = Some(self.clone());
-        *config.draft() = latest;
+        *config.draft_mut() = latest;
         config.apply();
-        let result = config.latest().save_file();
+        let result = config.latest_ref().save_file();
         result
     }
 
@@ -218,7 +218,7 @@ pub async fn reinstall_service() -> Result<()> {
             Ok(())
         }
         Err(err) => {
-            let error = format!("failed to install service: {}", err);
+            let error = format!("failed to install service: {err}");
             service_state.last_error = Some(error.clone());
             service_state.prefer_sidecar = true;
             service_state.save()?;
@@ -346,7 +346,7 @@ pub async fn reinstall_service() -> Result<()> {
             Ok(())
         }
         Err(err) => {
-            let error = format!("failed to install service: {}", err);
+            let error = format!("failed to install service: {err}");
             service_state.last_error = Some(error.clone());
             service_state.prefer_sidecar = true;
             service_state.save()?;
@@ -466,7 +466,7 @@ pub async fn reinstall_service() -> Result<()> {
             Ok(())
         }
         Err(err) => {
-            let error = format!("failed to install service: {}", err);
+            let error = format!("failed to install service: {err}");
             service_state.last_error = Some(error.clone());
             service_state.prefer_sidecar = true;
             service_state.save()?;
@@ -686,7 +686,7 @@ pub async fn check_service_needs_reinstall() -> bool {
     // 检查版本和可用性
     match check_service_version().await {
         Ok(version) => {
-            log::info!(target: "app", "服务版本检测：当前={}, 要求={}", version, REQUIRED_SERVICE_VERSION);
+            log::info!(target: "app", "服务版本检测：当前={version}, 要求={REQUIRED_SERVICE_VERSION}");
             /*             logging!(
                 info,
                 Type::Service,
@@ -698,8 +698,7 @@ pub async fn check_service_needs_reinstall() -> bool {
 
             let needs_reinstall = version != REQUIRED_SERVICE_VERSION;
             if needs_reinstall {
-                log::warn!(target: "app", "发现服务版本不匹配，需要重装! 当前={}, 要求={}",
-                    version, REQUIRED_SERVICE_VERSION);
+                log::warn!(target: "app", "发现服务版本不匹配，需要重装! 当前={version}, 要求={REQUIRED_SERVICE_VERSION}");
                 logging!(warn, Type::Service, true, "服务版本不匹配，需要重装");
 
                 // log::debug!(target: "app", "当前版本字节: {:?}", version.as_bytes());
@@ -717,7 +716,7 @@ pub async fn check_service_needs_reinstall() -> bool {
             // 检查服务是否可用
             match is_service_available().await {
                 Ok(()) => {
-                    log::info!(target: "app", "服务正在运行但版本检查失败: {}", err);
+                    log::info!(target: "app", "服务正在运行但版本检查失败: {err}");
                     /*                     logging!(
                         info,
                         Type::Service,
@@ -742,7 +741,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     log::info!(target:"app", "尝试使用现有服务启动核心 (IPC)");
     // logging!(info, Type::Service, true, "尝试使用现有服务启动核心");
 
-    let clash_core = Config::verge().latest().get_valid_clash_core();
+    let clash_core = Config::verge().latest_ref().get_valid_clash_core();
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let clash_bin = format!("{clash_core}{bin_ext}");
@@ -827,8 +826,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     // 先检查服务版本，不受冷却期限制
     let version_check = match check_service_version().await {
         Ok(version) => {
-            log::info!(target: "app", "检测到服务版本: {}, 要求版本: {}",
-                version, REQUIRED_SERVICE_VERSION);
+            log::info!(target: "app", "检测到服务版本: {version}, 要求版本: {REQUIRED_SERVICE_VERSION}");
 
             if version.as_bytes() != REQUIRED_SERVICE_VERSION.as_bytes() {
                 log::warn!(target: "app", "服务版本不匹配，需要重装");
@@ -839,7 +837,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
             }
         }
         Err(err) => {
-            log::warn!(target: "app", "无法获取服务版本: {}", err);
+            log::warn!(target: "app", "无法获取服务版本: {err}");
             false
         }
     };
@@ -865,7 +863,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 
         log::info!(target: "app", "开始重装服务");
         if let Err(err) = reinstall_service().await {
-            log::warn!(target: "app", "服务重装失败: {}", err);
+            log::warn!(target: "app", "服务重装失败: {err}");
 
             log::info!(target: "app", "尝试使用现有服务");
             return start_with_existing_service(config_file).await;
@@ -884,7 +882,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
             }
         }
         Err(err) => {
-            log::warn!(target: "app", "服务检查失败: {}", err);
+            log::warn!(target: "app", "服务检查失败: {err}");
         }
     }
 
@@ -893,7 +891,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
         log::info!(target: "app", "服务需要重装");
 
         if let Err(err) = reinstall_service().await {
-            log::warn!(target: "app", "服务重装失败: {}", err);
+            log::warn!(target: "app", "服务重装失败: {err}");
             bail!("Failed to reinstall service: {}", err);
         }
 
@@ -986,7 +984,7 @@ pub async fn force_reinstall_service() -> Result<()> {
             Ok(())
         }
         Err(err) => {
-            log::error!(target: "app", "强制重装服务失败: {}", err);
+            log::error!(target: "app", "强制重装服务失败: {err}");
             bail!("强制重装服务失败: {}", err)
         }
     }

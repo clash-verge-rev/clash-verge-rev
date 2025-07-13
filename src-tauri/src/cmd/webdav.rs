@@ -11,10 +11,10 @@ pub async fn save_webdav_config(url: String, username: String, password: String)
         webdav_password: Some(password),
         ..IVerge::default()
     };
-    Config::verge().draft().patch_config(patch.clone());
+    Config::verge().draft_mut().patch_config(patch.clone());
     Config::verge().apply();
     Config::verge()
-        .data()
+        .latest_ref()
         .save_file()
         .map_err(|err| err.to_string())?;
     core::backup::WebDavClient::global().reset();
