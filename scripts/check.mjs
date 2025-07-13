@@ -8,7 +8,7 @@ import path from "path";
 import * as tar from "tar";
 import zlib from "zlib";
 
-const clashVergeServiceVersion = "v1.1.0";
+const clashVergeServiceVersion = "v1.1.1";
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 let process_argvs = process.argv;
