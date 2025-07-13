@@ -1882,12 +1882,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dotenv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
-
-[[package]]
 name = "downcast-rs"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1989,15 +1983,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.104",
-]
-
-[[package]]
-name = "env"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc95de49ad098572c02d3fbf368c9a020bfff5ae78483685b77f51d8a7e9486d"
-dependencies = [
- "num_threads",
 ]
 
 [[package]]
@@ -3725,11 +3710,8 @@ dependencies = [
 [[package]]
 name = "kode-bridge"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e04a2994f37fa3c40940dbf302050199607072ff826ff6c126e02c4faf34bd3a"
+source = "git+https://github.com/KodeBarinn/kode-bridge?branch=dev#f061e7175570e7544d27248d2fea173c7ad3302f"
 dependencies = [
- "dotenv",
- "env",
  "interprocess",
  "serde",
  "serde_json",
