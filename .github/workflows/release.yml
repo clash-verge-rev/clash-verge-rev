@@ -235,6 +235,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Typos
+        run: cargo binstall -y typos-cli
+
       - name: Install Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
