@@ -22,7 +22,13 @@
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
     "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check-dead-code": "node scripts/check-dead-code.js",
+    "clean-dead-code": "node scripts/clean-dead-code.js",
+    "check-unused-exports": "npx ts-unused-exports tsconfig.json --excludeDeclarationFiles",
+    "check-unimported": "npx unimported --no-cache",
+    "check-rust-dead-code": "cargo rustc --manifest-path ./src-tauri/Cargo.toml -- -W dead_code",
+    "check-rust-unused-deps": "cargo machete --with-metadata ./src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -88,6 +94,7 @@
     "adm-zip": "^0.5.16",
     "commander": "^14.0.0",
     "cross-env": "^7.0.3",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "https-proxy-agent": "^7.0.6",
     "meta-json-schema": "^1.19.11",
     "node-fetch": "^3.3.2",
@@ -95,7 +102,9 @@
     "prettier-plugin-organize-imports": "^4.1.0",
     "sass": "^1.89.2",
     "terser": "^5.43.1",
+    "ts-unused-exports": "^11.0.1",
     "typescript": "^5.8.3",
+    "unimported": "^1.31.1",
     "vite": "^7.0.4",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.3.0"

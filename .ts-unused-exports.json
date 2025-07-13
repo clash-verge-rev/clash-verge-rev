@@ -1,0 +1,13 @@
+# Dead Code Detection Configuration
+
+# Configuration for ts-unused-exports
+# Format: one glob pattern per line, patterns starting with '!' are excluded
+src/**/*.ts
+src/**/*.tsx
+!src/**/*.d.ts
+!src/**/*.test.ts
+!src/**/*.test.tsx
+!src/**/*.spec.ts
+!src/**/*.spec.tsx
+!src/**/index.ts
+!src/**/index.tsx
