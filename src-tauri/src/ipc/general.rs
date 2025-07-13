@@ -140,9 +140,7 @@ impl IpcManager {
     ) -> Result<serde_json::Value, AnyError> {
         let test_url =
             test_url.unwrap_or_else(|| "https://cp.cloudflare.com/generate_204".to_string());
-        let url = format!(
-            "/proxies/{name}/delay?url={test_url}&timeout={timeout}"
-        );
+        let url = format!("/proxies/{name}/delay?url={test_url}&timeout={timeout}");
         let response = self.send_request("GET", &url, None).await?;
         Ok(response)
     }
