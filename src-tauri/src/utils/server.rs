@@ -110,9 +110,9 @@ pub async fn embed_server() {
 
 pub fn shutdown_embedded_server() {
     tracing::info!("Shutting down embedded server");
-    if let Some(sender) = SHUTDOWN_SENDER.get() {
-        if let Some(sender) = sender.lock().unwrap().take() {
-            sender.send(()).ok();
-        }
+    if let Some(sender) = SHUTDOWN_SENDER.get()
+        && let Some(sender) = sender.lock().unwrap().take()
+    {
+        sender.send(()).ok();
     }
 }

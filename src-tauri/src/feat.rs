@@ -22,11 +22,11 @@ use verge_log::VergeLog;
 
 /// 打开面板
 pub fn open_or_close_dashboard() {
-    if let Some(window) = handle::Handle::get_window() {
-        if let Ok(true) = window.is_focused() {
-            let _ = window.close();
-            return;
-        }
+    if let Some(window) = handle::Handle::get_window()
+        && let Ok(true) = window.is_focused()
+    {
+        let _ = window.close();
+        return;
     }
     resolve::create_window();
 }
@@ -424,25 +424,25 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
     // handle window size when toggle system title bar enable on linux wayland
     let enable_system_title_bar = patch.enable_system_title_bar;
-    if let Some(system_title_bar) = enable_system_title_bar {
-        if cmds::common::is_wayland().unwrap_or(false) {
-            let verge = Config::verge();
-            let verge = verge.latest().clone();
-            let verge_size_position = verge.window_size_position;
-            if let Some(size_position) = verge_size_position {
-                let mut w = size_position[0];
-                let mut h = size_position[1];
-                let x = size_position[2];
-                let y = size_position[3];
-                if system_title_bar {
-                    w += 90.;
-                    h += 90.;
-                } else {
-                    w -= 90.;
-                    h -= 90.;
-                }
-                patch.window_size_position = Some(vec![w, h, x, y]);
+    if let Some(system_title_bar) = enable_system_title_bar
+        && cmds::common::is_wayland().unwrap_or(false)
+    {
+        let verge = Config::verge();
+        let verge = verge.latest().clone();
+        let verge_size_position = verge.window_size_position;
+        if let Some(size_position) = verge_size_position {
+            let mut w = size_position[0];
+            let mut h = size_position[1];
+            let x = size_position[2];
+            let y = size_position[3];
+            if system_title_bar {
+                w += 90.;
+                h += 90.;
+            } else {
+                w -= 90.;
+                h -= 90.;
             }
+            patch.window_size_position = Some(vec![w, h, x, y]);
         }
     }
     Config::verge().draft().patch_config(patch.clone());

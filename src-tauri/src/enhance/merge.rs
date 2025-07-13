@@ -37,18 +37,18 @@ pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
             let pre_key = Value::from(format!("prepend-{key_str}"));
             let post_key = Value::from(format!("append-{key_str}"));
 
-            if let Some(pre_val) = merge.get(&pre_key) {
-                if pre_val.is_sequence() {
-                    let mut pre_val = pre_val.as_sequence().unwrap().clone();
-                    pre_val.extend(list);
-                    list = pre_val;
-                }
+            if let Some(pre_val) = merge.get(&pre_key)
+                && pre_val.is_sequence()
+            {
+                let mut pre_val = pre_val.as_sequence().unwrap().clone();
+                pre_val.extend(list);
+                list = pre_val;
             }
 
-            if let Some(post_val) = merge.get(&post_key) {
-                if post_val.is_sequence() {
-                    list.extend(post_val.as_sequence().unwrap().clone());
-                }
+            if let Some(post_val) = merge.get(&post_key)
+                && post_val.is_sequence()
+            {
+                list.extend(post_val.as_sequence().unwrap().clone());
             }
 
             if !list.is_empty() {

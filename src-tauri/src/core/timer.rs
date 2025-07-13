@@ -61,10 +61,10 @@ impl Timer {
                 }
             })
             .for_each(|item| {
-                if let Some(uid) = item.uid.as_ref() {
-                    if let Some((task_id, _)) = timer_map.get(uid) {
-                        crate::log_err!(delay_timer.advance_task(*task_id));
-                    }
+                if let Some(uid) = item.uid.as_ref()
+                    && let Some((task_id, _)) = timer_map.get(uid)
+                {
+                    crate::log_err!(delay_timer.advance_task(*task_id));
                 }
             });
 
@@ -149,14 +149,15 @@ impl Timer {
                             node
                         );
                         return;
+                    } else {
+                        tracing::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
                     }
-                    tracing::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
                 }
             }
-            if let Ok(archive_file) = dirs::backup_archive_file() {
-                if archive_file.exists() {
-                    let _ = std::fs::remove_file(archive_file);
-                }
+            if let Ok(archive_file) = dirs::backup_archive_file()
+                && archive_file.exists()
+            {
+                let _ = std::fs::remove_file(archive_file);
             }
             crate::utils::resolve::create_window();
         };
@@ -171,13 +172,13 @@ impl Timer {
         tauri::async_runtime::spawn(async move {
             loop {
                 let archive_file = dirs::backup_archive_file();
-                if let Ok(archive_file) = archive_file {
-                    if !archive_file.exists() {
-                        tracing::info!("received finish activating selected event");
-                        let delay_timer = Self::global().delay_timer.lock();
-                        let _ = delay_timer.remove_task(ACTIVATING_SELECTED_TASK_ID);
-                        break;
-                    }
+                if let Ok(archive_file) = archive_file
+                    && !archive_file.exists()
+                {
+                    tracing::info!("received finish activating selected event");
+                    let delay_timer = Self::global().delay_timer.lock();
+                    let _ = delay_timer.remove_task(ACTIVATING_SELECTED_TASK_ID);
+                    break;
                 }
                 tokio::time::sleep(Duration::from_millis(200)).await;
             }

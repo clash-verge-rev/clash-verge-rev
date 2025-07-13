@@ -268,12 +268,11 @@ impl Tray {
             let version = app_handle.package_info().version.to_string();
             let mut current_profile_name = "None".to_string();
             let profiles = Config::profiles().latest().clone();
-            if let Some(current_profile_uid) = profiles.get_current() {
-                if let Ok(current_profile) = profiles.get_item(&current_profile_uid) {
-                    if let Some(profile_name) = &current_profile.name {
-                        current_profile_name = profile_name.to_string();
-                    }
-                }
+            if let Some(current_profile_uid) = profiles.get_current()
+                && let Ok(current_profile) = profiles.get_item(&current_profile_uid)
+                && let Some(profile_name) = &current_profile.name
+            {
+                current_profile_name = profile_name.to_string();
             };
             let switch_map = |status| {
                 if status { "ON" } else { "OFF" }
