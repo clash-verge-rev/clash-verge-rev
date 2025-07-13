@@ -20,7 +20,7 @@ pub fn toggle_system_proxy() {
         // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
         if enable && auto_close_connection {
             if let Err(err) = IpcManager::global().close_all_connections().await {
-                log::error!(target: "app", "Failed to close all connections: {}", err);
+                log::error!(target: "app", "Failed to close all connections: {err}");
             }
         }
 

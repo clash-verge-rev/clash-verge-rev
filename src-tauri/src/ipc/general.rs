@@ -31,7 +31,7 @@ impl IpcManager {
             );
             logging!(
                 info,
-                Type::IPC,
+                Type::Ipc,
                 true,
                 "IpcManager initialized with IPC path: {}",
                 instance.ipc_path
@@ -49,7 +49,7 @@ impl IpcManager {
         body: Option<&serde_json::Value>,
     ) -> AnyResult<Response> {
         let client = IpcHttpClient::new(&self.ipc_path);
-        Ok(client.request(method, path, body).await?)
+        client.request(method, path, body).await
     }
 }
 
@@ -141,8 +141,7 @@ impl IpcManager {
         let test_url =
             test_url.unwrap_or_else(|| "https://cp.cloudflare.com/generate_204".to_string());
         let url = format!(
-            "/proxies/{}/delay?url={}&timeout={}",
-            name, test_url, timeout
+            "/proxies/{name}/delay?url={test_url}&timeout={timeout}"
         );
         let response = self.send_request("GET", &url, None).await?;
         Ok(response)
@@ -155,7 +154,7 @@ impl IpcManager {
     }
 
     pub async fn delete_connection(&self, id: &str) -> Result<(), AnyError> {
-        let url = format!("/connections/{}", id);
+        let url = format!("/connections/{id}");
         let response = self.send_request("DELETE", &url, None).await?;
         if response["code"] == 204 {
             Ok(())
