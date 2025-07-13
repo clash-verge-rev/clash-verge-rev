@@ -57,6 +57,10 @@ impl IClashTemp {
         map.insert("ipv6".into(), true.into());
         map.insert("mode".into(), "rule".into());
         map.insert("external-controller".into(), "127.0.0.1:9097".into());
+        #[cfg(unix)]
+        map.insert("external-controller-unix".into(), "mihomo.sock".into());
+        #[cfg(windows)]
+        map.insert("external-controller-pipe".into(), r"\\.\pipe\mihomo".into());
         cors_map.insert("allow-private-network".into(), true.into());
         cors_map.insert(
             "allow-origins".into(),
@@ -88,6 +92,11 @@ impl IClashTemp {
         let socks_port = Self::guard_socks_port(&config);
         let port = Self::guard_port(&config);
         let ctrl = Self::guard_server_ctrl(&config);
+        #[cfg(unix)]
+        let external_controller_unix = Self::guard_external_controller_unix(&config);
+        #[cfg(windows)]
+        let external_controller_pipe = Self::guard_external_controller_pipe(&config);
+
         #[cfg(not(target_os = "windows"))]
         config.insert("redir-port".into(), redir_port.into());
         #[cfg(target_os = "linux")]
@@ -96,7 +105,16 @@ impl IClashTemp {
         config.insert("socks-port".into(), socks_port.into());
         config.insert("port".into(), port.into());
         config.insert("external-controller".into(), ctrl.into());
-
+        #[cfg(unix)]
+        config.insert(
+            "external-controller-unix".into(),
+            external_controller_unix.into(),
+        );
+        #[cfg(windows)]
+        config.insert(
+            "external-controller-pipe".into(),
+            external_controller_pipe.into(),
+        );
         config
     }
 
@@ -256,6 +274,26 @@ impl IClashTemp {
             }
             Err(_) => "127.0.0.1:9097".into(),
         }
+    }
+
+    #[cfg(unix)]
+    pub fn guard_external_controller_unix(config: &Mapping) -> String {
+        config
+            .get("external-controller-unix")
+            .and_then(|value| value.as_str())
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| "mihomo.sock".to_string())
+    }
+
+    #[cfg(windows)]
+    pub fn guard_external_controller_pipe(config: &Mapping) -> String {
+        config
+            .get("external-controller-pipe")
+            .and_then(|value| value.as_str())
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| r"\\.\pipe\mihomo".to_string())
     }
 }
 

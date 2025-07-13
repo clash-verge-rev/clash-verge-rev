@@ -257,6 +257,5 @@ pub fn ipc_path() -> Result<PathBuf> {
 
 #[cfg(target_os = "windows")]
 pub fn ipc_path() -> Result<PathBuf> {
-    let res_dir = app_home_dir()?;
-    Ok(res_dir.join(r"\\.\pipe\mihomo"))
+    Ok(PathBuf::from(r"\\.\pipe\mihomo"))
 }

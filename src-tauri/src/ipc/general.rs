@@ -6,7 +6,10 @@ use kode_bridge::{
 use serde_json::json;
 use std::sync::OnceLock;
 
-use crate::utils::dirs::ipc_path;
+use crate::{
+    logging,
+    utils::{dirs::ipc_path, logging::Type},
+};
 
 pub struct IpcManager {
     ipc_path: String,
@@ -23,6 +26,13 @@ impl IpcManager {
                 ipc_path: ipc_path.to_string(),
             };
             println!(
+                "IpcManager initialized with IPC path: {}",
+                instance.ipc_path
+            );
+            logging!(
+                info,
+                Type::IPC,
+                true,
                 "IpcManager initialized with IPC path: {}",
                 instance.ipc_path
             );
@@ -91,6 +101,7 @@ impl IpcManager {
 }
 
 impl IpcManager {
+    #[allow(dead_code)]
     pub async fn is_mihomo_running(&self) -> Result<(), AnyError> {
         let url = "/version";
         let _response = self.send_request("GET", url, None).await?;

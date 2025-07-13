@@ -79,6 +79,8 @@ sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
 kode-bridge = { git = "https://github.com/KodeBarinn/kode-bridge", branch = "dev" }
+dashmap = "6.1.0"
+tauri-plugin-notification = "2.3.0"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"

@@ -2,7 +2,6 @@ use once_cell::sync::OnceCell;
 use tauri::tray::TrayIconBuilder;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
-#[cfg(target_os = "macos")]
 use crate::ipc::Rate;
 use crate::{
     cmd,
