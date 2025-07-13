@@ -25,10 +25,6 @@ impl IpcManager {
             let instance = IpcManager {
                 ipc_path: ipc_path.to_string(),
             };
-            println!(
-                "IpcManager initialized with IPC path: {}",
-                instance.ipc_path
-            );
             logging!(
                 info,
                 Type::Ipc,
@@ -48,7 +44,7 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<Response> {
-        let client = IpcHttpClient::new(&self.ipc_path);
+        let client = IpcHttpClient::new(&self.ipc_path)?;
         client.request(method, path, body).await
     }
 }

@@ -3730,8 +3730,9 @@ dependencies = [
 
 [[package]]
 name = "kode-bridge"
-version = "0.1.2"
-source = "git+https://github.com/KodeBarinn/kode-bridge?branch=dev#f061e7175570e7544d27248d2fea173c7ad3302f"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b98b8ee7eeeef6fa12b835cb29f60278e647ca7b8e814af0313f577fbe8d5c2"
 dependencies = [
  "interprocess",
  "serde",
