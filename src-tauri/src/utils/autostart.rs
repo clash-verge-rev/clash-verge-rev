@@ -45,7 +45,7 @@ pub fn create_shortcut() -> Result<()> {
     // 移除旧的快捷方式
     if old_shortcut_path.exists() {
         if let Err(e) = fs::remove_file(&old_shortcut_path) {
-            info!(target: "app", "移除旧快捷方式失败: {}", e);
+            info!(target: "app", "移除旧快捷方式失败: {e}");
         } else {
             info!(target: "app", "成功移除旧快捷方式");
         }
