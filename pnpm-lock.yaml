@@ -82,7 +82,7 @@ importers:
         version: 0.2.49(react@19.1.0)
       framer-motion:
         specifier: ^12.16.0
-        version: 12.23.3(@emotion/is-prop-valid@1.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 12.23.5(@emotion/is-prop-valid@1.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       i18next:
         specifier: ^25.2.1
         version: 25.3.2(typescript@5.8.3)
@@ -2363,8 +2363,8 @@ packages:
       react:
         optional: true
 
-  framer-motion@12.23.3:
-    resolution: {integrity: sha512-llmLkf44zuIZOPSrE4bl4J0UTg6bav+rlKEfMRKgvDMXqBrUtMg6cspoQeRVK3nqRLxTmAJhfGXk39UDdZD7Kw==}
+  framer-motion@12.23.5:
+    resolution: {integrity: sha512-t+6/f2TUowkr1gVuGwVwxR3ZQupCdCZj0mivG8M8CW2kwHPqtSePomECvmto15qoFCwost77O/XuEsq59MLDKw==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -2814,8 +2814,8 @@ packages:
     peerDependencies:
       monaco-editor: '>=0.36'
 
-  motion-dom@12.23.2:
-    resolution: {integrity: sha512-73j6xDHX/NvVh5L5oS1ouAVnshsvmApOq4F3VZo5MkYSD/YVsVLal4Qp9wvVgJM9uU2bLZyc0Sn8B9c/MMKk4g==}
+  motion-dom@12.23.5:
+    resolution: {integrity: sha512-RrUS4X11w7kIU1COoSVptuYTx1QQ/sViDEI1Yl1zL0nem8UXn3HRcsMrFTCkZSSRLXeVpN540bFP1iS87SicPQ==}
 
   motion-utils@12.23.2:
     resolution: {integrity: sha512-cIEXlBlXAOUyiAtR0S+QPQUM9L3Diz23Bo+zM420NvSd/oPQJwg6U+rT+WRTpp0rizMsBGQOsAwhWIfglUcZfA==}
@@ -5834,9 +5834,9 @@ snapshots:
     optionalDependencies:
       react: 19.1.0
 
-  framer-motion@12.23.3(@emotion/is-prop-valid@1.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  framer-motion@12.23.5(@emotion/is-prop-valid@1.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
-      motion-dom: 12.23.2
+      motion-dom: 12.23.5
       motion-utils: 12.23.2
       tslib: 2.8.1
     optionalDependencies:
@@ -6383,7 +6383,7 @@ snapshots:
       vscode-uri: 3.1.0
       yaml: 2.8.0
 
-  motion-dom@12.23.2:
+  motion-dom@12.23.5:
     dependencies:
       motion-utils: 12.23.2
 
