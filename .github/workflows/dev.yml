@@ -2,12 +2,28 @@ name: Development Test
 
 on:
   workflow_dispatch:
+    inputs:
+      run_windows:
+        description: "运行 Windows"
+        required: false
+        type: boolean
+        default: true
+      run_macos_aarch64:
+        description: "运行 macOS aarch64"
+        required: false
+        type: boolean
+        default: true
+      run_macos_x86_64:
+        description: "运行 macOS x86_64"
+        required: false
+        type: boolean
+        default: true
+
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
 concurrency:
-  # only allow per workflow per commit (and not pr) to run at a time
   group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
@@ -20,46 +36,60 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             bundle: nsis
+            id: windows
+            input: run_windows
           - os: macos-latest
             target: aarch64-apple-darwin
             bundle: dmg
+            id: macos-aarch64
+            input: run_macos_aarch64
           - os: macos-latest
             target: x86_64-apple-darwin
             bundle: dmg
+            id: macos-x86_64
+            input: run_macos_x86_64
 
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
+        if: github.event.inputs[matrix.input] == 'true'
         uses: actions/checkout@v4
 
       - name: Install Rust Stable
+        if: github.event.inputs[matrix.input] == 'true'
         uses: dtolnay/rust-toolchain@stable
 
       - name: Add Rust Target
+        if: github.event.inputs[matrix.input] == 'true'
         run: rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
+        if: github.event.inputs[matrix.input] == 'true'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
           save-if: false
 
       - name: Install Node
+        if: github.event.inputs[matrix.input] == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
+        if: github.event.inputs[matrix.input] == 'true'
         with:
           run_install: false
 
       - name: Pnpm install and check
+        if: github.event.inputs[matrix.input] == 'true'
         run: |
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
       - name: Tauri build
+        if: github.event.inputs[matrix.input] == 'true'
         uses: tauri-apps/tauri-action@v0
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
@@ -77,7 +107,7 @@ jobs:
           args: --target ${{ matrix.target }} -b ${{ matrix.bundle }}
 
       - name: Upload Artifacts
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && github.event.inputs[matrix.input] == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
@@ -85,7 +115,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Artifacts
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && github.event.inputs[matrix.input] == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}

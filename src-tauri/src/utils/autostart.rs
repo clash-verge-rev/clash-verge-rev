@@ -39,10 +39,20 @@ pub fn get_exe_path() -> Result<PathBuf> {
 pub fn create_shortcut() -> Result<()> {
     let exe_path = get_exe_path()?;
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Clash-Verge.lnk");
+    let old_shortcut_path = startup_dir.join("Clash-Verge.lnk");
+    let new_shortcut_path = startup_dir.join("Clash Verge.lnk");
 
-    // 如果快捷方式已存在，直接返回成功
-    if shortcut_path.exists() {
+    // 移除旧的快捷方式
+    if old_shortcut_path.exists() {
+        if let Err(e) = fs::remove_file(&old_shortcut_path) {
+            info!(target: "app", "移除旧快捷方式失败: {e}");
+        } else {
+            info!(target: "app", "成功移除旧快捷方式");
+        }
+    }
+
+    // 如果新快捷方式已存在，直接返回成功
+    if new_shortcut_path.exists() {
         info!(target: "app", "启动快捷方式已存在");
         return Ok(());
     }
@@ -53,7 +63,7 @@ pub fn create_shortcut() -> Result<()> {
          $Shortcut = $WshShell.CreateShortcut('{}'); \
          $Shortcut.TargetPath = '{}'; \
          $Shortcut.Save()",
-        shortcut_path.to_string_lossy().replace("\\", "\\\\"),
+        new_shortcut_path.to_string_lossy().replace("\\", "\\\\"),
         exe_path.to_string_lossy().replace("\\", "\\\\")
     );
 
@@ -77,18 +87,29 @@ pub fn create_shortcut() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn remove_shortcut() -> Result<()> {
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Clash-Verge.lnk");
+    let old_shortcut_path = startup_dir.join("Clash-Verge.lnk");
+    let new_shortcut_path = startup_dir.join("Clash Verge.lnk");
 
-    // 如果快捷方式不存在，直接返回成功
-    if !shortcut_path.exists() {
-        info!(target: "app", "启动快捷方式不存在，无需删除");
-        return Ok(());
+    let mut removed_any = false;
+
+    // 删除旧的快捷方式
+    if old_shortcut_path.exists() {
+        fs::remove_file(&old_shortcut_path).map_err(|e| anyhow!("删除旧快捷方式失败: {}", e))?;
+        info!(target: "app", "成功删除旧启动快捷方式");
+        removed_any = true;
     }
 
-    // 删除快捷方式
-    fs::remove_file(&shortcut_path).map_err(|e| anyhow!("删除快捷方式失败: {}", e))?;
+    // 删除新的快捷方式
+    if new_shortcut_path.exists() {
+        fs::remove_file(&new_shortcut_path).map_err(|e| anyhow!("删除快捷方式失败: {}", e))?;
+        info!(target: "app", "成功删除启动快捷方式");
+        removed_any = true;
+    }
 
-    info!(target: "app", "成功删除启动快捷方式");
+    if !removed_any {
+        info!(target: "app", "启动快捷方式不存在，无需删除");
+    }
+
     Ok(())
 }
 
@@ -96,9 +117,9 @@ pub fn remove_shortcut() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn is_shortcut_enabled() -> Result<bool> {
     let startup_dir = get_startup_dir()?;
-    let shortcut_path = startup_dir.join("Clash-Verge.lnk");
+    let new_shortcut_path = startup_dir.join("Clash Verge.lnk");
 
-    Ok(shortcut_path.exists())
+    Ok(new_shortcut_path.exists())
 }
 
 // 非 Windows 平台使用的空方法
