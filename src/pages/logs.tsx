@@ -30,7 +30,7 @@ const LOG_LEVEL_HIERARCHY = {
   info: ["info", "warning", "error"],
   warning: ["warning", "error"],
   error: ["error"],
-  debug: ["debug"]
+  debug: ["debug"],
 };
 
 const LogPage = () => {
@@ -56,7 +56,8 @@ const LogPage = () => {
 
     return logData.filter((data) => {
       const logType = data.type?.toLowerCase() || "";
-      const isAllowedType = logLevel === "all" || allowedTypes.includes(logType);
+      const isAllowedType =
+        logLevel === "all" || allowedTypes.includes(logType);
 
       // 构建完整的搜索文本，包含时间、类型和内容
       const searchText =
