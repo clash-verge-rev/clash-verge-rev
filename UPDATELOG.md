@@ -14,6 +14,7 @@
 - 修复`DNS`覆写 `nameserver-policy` 字段无法正确识别 `geo` 库
 - 修复搜索框输入特殊字符崩溃
 - 修复 Windows 下 Start UP 名称与 exe 名称不统一
+- 修复显示 Mihomo 内核日志等级应该大于设置等级
 
 ### ✨ 新增功能
 
