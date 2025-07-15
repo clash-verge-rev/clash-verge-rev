@@ -73,8 +73,8 @@
   "devDependencies": {
     "@actions/github": "6.0.1",
     "@tailwindcss/vite": "4.1.11",
-    "@tanstack/router-cli": "1.127.5",
-    "@tanstack/router-plugin": "1.127.5",
+    "@tanstack/router-cli": "1.127.8",
+    "@tanstack/router-plugin": "1.127.8",
     "@tauri-apps/cli": "2.6.2",
     "@types/cli-color": "2.0.6",
     "@types/fs-extra": "11.0.4",
