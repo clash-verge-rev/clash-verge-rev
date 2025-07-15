@@ -24,6 +24,15 @@ import {
   toggleLogEnabled,
 } from "@/services/global-log-service";
 
+// 定义日志级别结构
+const LOG_LEVEL_HIERARCHY = {
+  all: ["info", "warning", "error", "debug"],
+  info: ["info", "warning", "error"],
+  warning: ["warning", "error"],
+  error: ["error"],
+  debug: ["debug"],
+};
+
 const LogPage = () => {
   const { t } = useTranslation();
   const [enableLog, setEnableLog] = useEnableLog();
@@ -35,21 +44,29 @@ const LogPage = () => {
     "info",
   );
   const [match, setMatch] = useState(() => (_: string) => true);
-  const logData = useGlobalLogData(logLevel);
+  const logData = useGlobalLogData("all");
   const [searchState, setSearchState] = useState<SearchState>();
 
   const filterLogs = useMemo(() => {
-    return logData
-      ? logData.filter((data) => {
-          // 构建完整的搜索文本，包含时间、类型和内容
-          const searchText =
-            `${data.time || ""} ${data.type} ${data.payload}`.toLowerCase();
+    if (!logData || logData.length === 0) {
+      return [];
+    }
 
-          return logLevel === "all"
-            ? match(searchText)
-            : data.type.toLowerCase() === logLevel && match(searchText);
-        })
-      : [];
+    const allowedTypes = LOG_LEVEL_HIERARCHY[logLevel] || [];
+
+    return logData.filter((data) => {
+      const logType = data.type?.toLowerCase() || "";
+      const isAllowedType =
+        logLevel === "all" || allowedTypes.includes(logType);
+
+      // 构建完整的搜索文本，包含时间、类型和内容
+      const searchText =
+        `${data.time || ""} ${data.type} ${data.payload}`.toLowerCase();
+
+      const matchesSearch = match(searchText);
+
+      return isAllowedType && matchesSearch;
+    });
   }, [logData, logLevel, match]);
 
   const handleLogLevelChange = (newLevel: LogLevel) => {
