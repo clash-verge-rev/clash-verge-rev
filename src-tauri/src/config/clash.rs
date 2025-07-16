@@ -1,3 +1,4 @@
+use crate::utils::dirs::{ipc_path, path_to_str};
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -58,7 +59,10 @@ impl IClashTemp {
         map.insert("mode".into(), "rule".into());
         map.insert("external-controller".into(), "127.0.0.1:9097".into());
         #[cfg(unix)]
-        map.insert("external-controller-unix".into(), "mihomo.sock".into());
+        map.insert(
+            "external-controller-unix".into(),
+            path_to_str(&ipc_path().unwrap()).unwrap().into(),
+        );
         #[cfg(windows)]
         map.insert("external-controller-pipe".into(), r"\\.\pipe\mihomo".into());
         cors_map.insert("allow-private-network".into(), true.into());
@@ -283,7 +287,7 @@ impl IClashTemp {
             .and_then(|value| value.as_str())
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| "mihomo.sock".to_string())
+            .unwrap_or_else(|| path_to_str(&ipc_path().unwrap()).unwrap().into())
     }
 
     #[cfg(windows)]

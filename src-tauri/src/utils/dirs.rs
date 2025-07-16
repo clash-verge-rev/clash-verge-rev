@@ -243,14 +243,45 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
     }
 }
 
+#[cfg(unix)]
+pub fn mihomo_safe_dir_path() -> Option<PathBuf> {
+    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config"))
+}
+
+#[cfg(unix)]
+pub fn has_mihomo_safe_dir() -> bool {
+    if let Some(config_dir) = mihomo_safe_dir_path() {
+        if config_dir.exists() {
+            return true;
+        }
+        if fs::create_dir_all(&config_dir).is_ok() {
+            return true;
+        }
+        log::error!(target: "app", "Failed to create .config directory");
+    }
+    false
+}
+
 #[cfg(target_os = "macos")]
 pub fn ipc_path() -> Result<PathBuf> {
+    if has_mihomo_safe_dir() {
+        let res_dir = mihomo_safe_dir_path()
+            .ok_or(anyhow::anyhow!("Failed to get mihomo safe dir path"))?
+            .join("mihomo.sock");
+        return Ok(res_dir);
+    }
     let res_dir = app_home_dir()?;
     Ok(res_dir.join("mihomo.sock"))
 }
 
 #[cfg(target_os = "linux")]
 pub fn ipc_path() -> Result<PathBuf> {
+    if has_mihomo_safe_dir() {
+        let res_dir = mihomo_safe_dir_path()
+            .ok_or(anyhow::anyhow!("Failed to get mihomo safe dir path"))?
+            .join("mihomo.sock");
+        return Ok(res_dir);
+    }
     let res_dir = app_home_dir()?;
     Ok(res_dir.join("mihomo.sock"))
 }
