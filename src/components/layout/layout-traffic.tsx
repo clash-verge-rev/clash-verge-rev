@@ -13,7 +13,7 @@ import parseTraffic from "@/utils/parse-traffic";
 import useSWRSubscription from "swr/subscription";
 import { createAuthSockette } from "@/utils/websocket";
 import { useTranslation } from "react-i18next";
-import { isDebugEnabled, gc } from "@/services/api";
+import { isDebugEnabled, gc } from "@/services/cmds";
 import useSWR from "swr";
 
 interface MemoryUsage {

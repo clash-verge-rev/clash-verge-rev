@@ -8,7 +8,7 @@ import {
   getClashConfig,
   getProxyProviders,
   getRuleProviders,
-} from "@/services/api";
+} from "@/services/cmds";
 import {
   getSystemProxy,
   getRunningMode,

@@ -7,7 +7,7 @@ import {
   updateProxy,
   deleteConnection,
   getGroupProxyDelays,
-} from "@/services/api";
+} from "@/services/cmds";
 import { forceRefreshProxies } from "@/services/cmds";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";

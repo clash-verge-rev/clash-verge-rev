@@ -12,7 +12,7 @@ pub async fn get_proxies() -> CmdResult<serde_json::Value> {
     let key = ProxyRequestCache::make_key("proxies", "default");
     let value = cache
         .get_or_fetch(key, PROXIES_REFRESH_INTERVAL, || async {
-            manager.get_refresh_proxies().await.expect("fetch failed")
+            manager.get_proxies().await.expect("fetch failed")
         })
         .await;
     Ok((*value).clone())

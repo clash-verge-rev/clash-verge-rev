@@ -266,3 +266,157 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
         Err(e) => Err(e.to_string()),
     }
 }
+
+/// 获取Clash版本信息
+#[tauri::command]
+pub async fn get_clash_version() -> CmdResult<serde_json::Value> {
+    IpcManager::global()
+        .get_version()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 获取Clash配置
+#[tauri::command]
+pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
+    IpcManager::global()
+        .get_config()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 更新地理数据
+#[tauri::command]
+pub async fn update_geo_data() -> CmdResult {
+    IpcManager::global()
+        .update_geo_data()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 升级Clash核心
+#[tauri::command]
+pub async fn upgrade_clash_core() -> CmdResult {
+    IpcManager::global()
+        .upgrade_core()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 获取规则
+#[tauri::command]
+pub async fn get_clash_rules() -> CmdResult<serde_json::Value> {
+    IpcManager::global()
+        .get_rules()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 更新代理选择
+#[tauri::command]
+pub async fn update_proxy_choice(group: String, proxy: String) -> CmdResult {
+    IpcManager::global()
+        .update_proxy(&group, &proxy)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 获取代理提供者
+#[tauri::command]
+pub async fn get_proxy_providers() -> CmdResult<serde_json::Value> {
+    IpcManager::global()
+        .get_providers_proxies()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 获取规则提供者
+#[tauri::command]
+pub async fn get_rule_providers() -> CmdResult<serde_json::Value> {
+    IpcManager::global()
+        .get_rule_providers()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 代理提供者健康检查
+#[tauri::command]
+pub async fn proxy_provider_health_check(name: String) -> CmdResult {
+    IpcManager::global()
+        .proxy_provider_health_check(&name)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 更新代理提供者
+#[tauri::command]
+pub async fn update_proxy_provider(name: String) -> CmdResult {
+    IpcManager::global()
+        .update_proxy_provider(&name)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 更新规则提供者
+#[tauri::command]
+pub async fn update_rule_provider(name: String) -> CmdResult {
+    IpcManager::global()
+        .update_rule_provider(&name)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 获取连接
+#[tauri::command]
+pub async fn get_clash_connections() -> CmdResult<serde_json::Value> {
+    IpcManager::global()
+        .get_connections()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 删除连接
+#[tauri::command]
+pub async fn delete_clash_connection(id: String) -> CmdResult {
+    IpcManager::global()
+        .delete_connection(&id)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 关闭所有连接
+#[tauri::command]
+pub async fn close_all_clash_connections() -> CmdResult {
+    IpcManager::global()
+        .close_all_connections()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 获取代理组延迟
+#[tauri::command]
+pub async fn get_group_proxy_delays(
+    group_name: String,
+    url: Option<String>,
+    timeout: Option<i32>,
+) -> CmdResult<serde_json::Value> {
+    IpcManager::global()
+        .get_group_proxy_delays(&group_name, url, timeout.unwrap_or(10000))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 检查调试是否启用
+#[tauri::command]
+pub async fn is_clash_debug_enabled() -> CmdResult<bool> {
+    match IpcManager::global().is_debug_enabled().await {
+        Ok(enabled) => Ok(enabled),
+        Err(_) => Ok(false),
+    }
+}
+
+/// 垃圾回收
+#[tauri::command]
+pub async fn clash_gc() -> CmdResult {
+    IpcManager::global().gc().await.map_err(|e| e.to_string())
+}

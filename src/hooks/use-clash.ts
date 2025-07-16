@@ -1,6 +1,6 @@
 import useSWR, { mutate } from "swr";
 import { useLockFn } from "ahooks";
-import { getAxios, getVersion } from "@/services/api";
+import { getVersion } from "@/services/cmds";
 import {
   getClashInfo,
   patchClashConfig,
@@ -122,8 +122,7 @@ export const useClashInfo = () => {
     await patchClashConfig(patch);
     mutateInfo();
     mutate("getClashConfig");
-    // 刷新接口
-    getAxios(true);
+    // IPC调用不需要刷新axios实例
   };
 
   return {
