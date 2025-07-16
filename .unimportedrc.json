@@ -1,0 +1,17 @@
+{
+  "entry": ["src/main.tsx"],
+  "extensions": [".ts", ".tsx"],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/*.d.ts",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/dist/**",
+    "**/build/**"
+  ],
+  "ignoreUnresolved": true,
+  "ignoreUnimported": [
+    "src/polyfills/**",
+    "src/assets/**"
+  ]
+}
