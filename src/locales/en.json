@@ -287,6 +287,7 @@
   "Redir Port": "Redir Port",
   "Tproxy Port": "Tproxy Port",
   "External": "External",
+  "Enable External Controller": "Enable External Controller",
   "External Controller": "External Controller",
   "Core Secret": "Core Secret",
   "Recommended": "Recommended",
@@ -648,5 +649,12 @@
   "Please enter a valid url": "Please enter a valid url",
   "Add": "Add",
   "Development mode: Automatically includes Tauri and localhost origins": "Development mode: Automatically includes Tauri and localhost origins",
-  "Invalid regular expression": "Invalid regular expression"
+  "Invalid regular expression": "Invalid regular expression",
+  "Controller address cannot be empty": "Controller address cannot be empty",
+  "Secret cannot be empty": "Secret cannot be empty",
+  "Configuration saved successfully": "Configuration saved successfully",
+  "Failed to save configuration": "Failed to save configuration",
+  "Controller address copied to clipboard": "Controller address copied to clipboard",
+  "Secret copied to clipboard": "Secret copied to clipboard",
+  "Saving...": "Saving..."
 }

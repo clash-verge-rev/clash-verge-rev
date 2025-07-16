@@ -1,3 +1,4 @@
+use crate::config::Config;
 #[cfg(unix)]
 use crate::utils::dirs::{ipc_path, path_to_str};
 use crate::utils::{dirs, help};
@@ -96,7 +97,7 @@ impl IClashTemp {
         let mixed_port = Self::guard_mixed_port(&config);
         let socks_port = Self::guard_socks_port(&config);
         let port = Self::guard_port(&config);
-        let ctrl = Self::guard_server_ctrl(&config);
+        let ctrl = Self::guard_external_controller(&config);
         #[cfg(unix)]
         let external_controller_unix = Self::guard_external_controller_unix(&config);
         #[cfg(windows)]
@@ -110,6 +111,7 @@ impl IClashTemp {
         config.insert("socks-port".into(), socks_port.into());
         config.insert("port".into(), port.into());
         config.insert("external-controller".into(), ctrl.into());
+
         #[cfg(unix)]
         config.insert(
             "external-controller-unix".into(),
@@ -266,6 +268,26 @@ impl IClashTemp {
                 None => None,
             })
             .unwrap_or("127.0.0.1:9097".into())
+    }
+
+    pub fn guard_external_controller(config: &Mapping) -> String {
+        // 在初始化阶段，直接返回配置中的值，不进行额外检查
+        // 这样可以避免在配置加载期间的循环依赖
+        Self::guard_server_ctrl(config)
+    }
+
+    pub fn guard_external_controller_with_setting(config: &Mapping) -> String {
+        // 检查 enable_external_controller 设置，用于运行时配置生成
+        let enable_external_controller = Config::verge()
+            .latest_ref()
+            .enable_external_controller
+            .unwrap_or(false);
+
+        if enable_external_controller {
+            Self::guard_server_ctrl(config)
+        } else {
+            "".into()
+        }
     }
 
     pub fn guard_client_ctrl(config: &Mapping) -> String {

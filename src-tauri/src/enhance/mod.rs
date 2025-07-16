@@ -234,7 +234,22 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                     continue;
                 }
             }
-            config.insert(key, value);
+            // 处理 external-controller 键的开关逻辑
+            if key.as_str() == Some("external-controller") {
+                let enable_external_controller = Config::verge()
+                    .latest_ref()
+                    .enable_external_controller
+                    .unwrap_or(false);
+
+                if enable_external_controller {
+                    config.insert(key, value);
+                } else {
+                    // 如果禁用了外部控制器，设置为空字符串
+                    config.insert(key, "".into());
+                }
+            } else {
+                config.insert(key, value);
+            }
         }
     }
 

@@ -204,6 +204,9 @@ pub struct IVerge {
     /// 启用代理页面自动滚动
     pub enable_hover_jump_navigator: Option<bool>,
 
+    /// 启用外部控制器
+    pub enable_external_controller: Option<bool>,
+
     /// 服务状态跟踪
     pub service_state: Option<crate::core::service::ServiceState>,
 }
@@ -403,6 +406,7 @@ impl IVerge {
             enable_dns_settings: Some(false),
             home_cards: None,
             service_state: None,
+            enable_external_controller: Some(false),
             ..Self::default()
         }
     }
@@ -491,6 +495,7 @@ impl IVerge {
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(service_state);
+        patch!(enable_external_controller);
     }
 
     /// 在初始化前尝试拿到单例端口的值
@@ -586,6 +591,7 @@ pub struct IVergeResponse {
     pub enable_dns_settings: Option<bool>,
     pub home_cards: Option<serde_json::Value>,
     pub enable_hover_jump_navigator: Option<bool>,
+    pub enable_external_controller: Option<bool>,
     pub service_state: Option<crate::core::service::ServiceState>,
 }
 
@@ -658,6 +664,7 @@ impl From<IVerge> for IVergeResponse {
             enable_dns_settings: verge.enable_dns_settings,
             home_cards: verge.home_cards,
             enable_hover_jump_navigator: verge.enable_hover_jump_navigator,
+            enable_external_controller: verge.enable_external_controller,
             service_state: verge.service_state,
         }
     }
