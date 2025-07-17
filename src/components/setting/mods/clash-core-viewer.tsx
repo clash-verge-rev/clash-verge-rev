@@ -154,9 +154,8 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
         </Box>
       }
       hideOkBtn
-      cancelBtn={t("Back")}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}>
+      hideCancelBtn
+      onClose={() => setOpen(false)}>
       <List component="nav">
         {VALID_CORE.map((each) => (
           <ListItemButton
