@@ -84,7 +84,7 @@
     "@types/react-dom": "19.1.6",
     "@types/react-transition-group": "4.4.12",
     "@types/sortablejs": "1.15.8",
-    "@vitejs/plugin-legacy": "7.0.0",
+    "@vitejs/plugin-legacy": "7.0.1",
     "@vitejs/plugin-react": "4.6.0",
     "adm-zip": "0.5.16",
     "cli-color": "2.0.4",
