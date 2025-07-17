@@ -10,6 +10,11 @@ use crate::{
     utils::{dirs::ipc_path, logging::Type},
 };
 
+// Helper function to create AnyError from string
+fn create_error(msg: impl Into<String>) -> AnyError {
+    Box::new(std::io::Error::other(msg.into()))
+}
+
 pub struct IpcManager {
     ipc_path: String,
 }
@@ -54,7 +59,7 @@ impl IpcManager {
         method: &str,
         path: &str,
         body: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, AnyError> {
+    ) -> AnyResult<serde_json::Value> {
         let response = IpcManager::global().request(method, path, body).await?;
         match method {
             "GET" => Ok(response.json()?),
@@ -85,45 +90,42 @@ impl IpcManager {
     }
 
     // 基础代理信息获取
-    pub async fn get_proxies(&self) -> Result<serde_json::Value, AnyError> {
+    pub async fn get_proxies(&self) -> AnyResult<serde_json::Value> {
         let url = "/proxies";
         self.send_request("GET", url, None).await
     }
 
     // 代理提供者信息获取
-    pub async fn get_providers_proxies(&self) -> Result<serde_json::Value, AnyError> {
+    pub async fn get_providers_proxies(&self) -> AnyResult<serde_json::Value> {
         let url = "/providers/proxies";
         self.send_request("GET", url, None).await
     }
 
     // 连接管理
-    pub async fn get_connections(&self) -> Result<serde_json::Value, AnyError> {
+    pub async fn get_connections(&self) -> AnyResult<serde_json::Value> {
         let url = "/connections";
         self.send_request("GET", url, None).await
     }
 
-    pub async fn delete_connection(&self, id: &str) -> Result<(), AnyError> {
+    pub async fn delete_connection(&self, id: &str) -> AnyResult<()> {
         let url = format!("/connections/{id}");
         let response = self.send_request("DELETE", &url, None).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
-                response["message"]
-                    .as_str()
-                    .unwrap_or("unknown error")
-                    .to_owned(),
+            Err(create_error(
+                response["message"].as_str().unwrap_or("unknown error"),
             ))
         }
     }
 
-    pub async fn close_all_connections(&self) -> Result<(), AnyError> {
+    pub async fn close_all_connections(&self) -> AnyResult<()> {
         let url = "/connections";
         let response = self.send_request("DELETE", url, None).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
+            Err(create_error(
                 response["message"]
                     .as_str()
                     .unwrap_or("unknown error")
@@ -135,13 +137,13 @@ impl IpcManager {
 
 impl IpcManager {
     #[allow(dead_code)]
-    pub async fn is_mihomo_running(&self) -> Result<(), AnyError> {
+    pub async fn is_mihomo_running(&self) -> AnyResult<()> {
         let url = "/version";
         let _response = self.send_request("GET", url, None).await?;
         Ok(())
     }
 
-    pub async fn put_configs_force(&self, clash_config_path: &str) -> Result<(), AnyError> {
+    pub async fn put_configs_force(&self, clash_config_path: &str) -> AnyResult<()> {
         let url = "/configs?force=true";
         let payload = serde_json::json!({
             "path": clash_config_path,
@@ -150,13 +152,13 @@ impl IpcManager {
         Ok(())
     }
 
-    pub async fn patch_configs(&self, config: serde_json::Value) -> Result<(), AnyError> {
+    pub async fn patch_configs(&self, config: serde_json::Value) -> AnyResult<()> {
         let url = "/configs";
         let response = self.send_request("PATCH", url, Some(&config)).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
+            Err(create_error(
                 response["message"]
                     .as_str()
                     .unwrap_or("unknown error")
@@ -170,7 +172,7 @@ impl IpcManager {
         name: &str,
         test_url: Option<String>,
         timeout: i32,
-    ) -> Result<serde_json::Value, AnyError> {
+    ) -> AnyResult<serde_json::Value> {
         let test_url =
             test_url.unwrap_or_else(|| "https://cp.cloudflare.com/generate_204".to_string());
         let url = format!("/proxies/{name}/delay?url={test_url}&timeout={timeout}");
@@ -179,23 +181,23 @@ impl IpcManager {
     }
 
     // 版本和配置相关
-    pub async fn get_version(&self) -> Result<serde_json::Value, AnyError> {
+    pub async fn get_version(&self) -> AnyResult<serde_json::Value> {
         let url = "/version";
         self.send_request("GET", url, None).await
     }
 
-    pub async fn get_config(&self) -> Result<serde_json::Value, AnyError> {
+    pub async fn get_config(&self) -> AnyResult<serde_json::Value> {
         let url = "/configs";
         self.send_request("GET", url, None).await
     }
 
-    pub async fn update_geo_data(&self) -> Result<(), AnyError> {
+    pub async fn update_geo_data(&self) -> AnyResult<()> {
         let url = "/configs/geo";
         let response = self.send_request("POST", url, None).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
+            Err(create_error(
                 response["message"]
                     .as_str()
                     .unwrap_or("unknown error")
@@ -204,13 +206,13 @@ impl IpcManager {
         }
     }
 
-    pub async fn upgrade_core(&self) -> Result<(), AnyError> {
+    pub async fn upgrade_core(&self) -> AnyResult<()> {
         let url = "/upgrade";
         let response = self.send_request("POST", url, None).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
+            Err(create_error(
                 response["message"]
                     .as_str()
                     .unwrap_or("unknown error")
@@ -220,23 +222,23 @@ impl IpcManager {
     }
 
     // 规则相关
-    pub async fn get_rules(&self) -> Result<serde_json::Value, AnyError> {
+    pub async fn get_rules(&self) -> AnyResult<serde_json::Value> {
         let url = "/rules";
         self.send_request("GET", url, None).await
     }
 
-    pub async fn get_rule_providers(&self) -> Result<serde_json::Value, AnyError> {
+    pub async fn get_rule_providers(&self) -> AnyResult<serde_json::Value> {
         let url = "/providers/rules";
         self.send_request("GET", url, None).await
     }
 
-    pub async fn update_rule_provider(&self, name: &str) -> Result<(), AnyError> {
+    pub async fn update_rule_provider(&self, name: &str) -> AnyResult<()> {
         let url = format!("/providers/rules/{name}");
         let response = self.send_request("PUT", &url, None).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
+            Err(create_error(
                 response["message"]
                     .as_str()
                     .unwrap_or("unknown error")
@@ -246,7 +248,7 @@ impl IpcManager {
     }
 
     // 代理相关
-    pub async fn update_proxy(&self, group: &str, proxy: &str) -> Result<(), AnyError> {
+    pub async fn update_proxy(&self, group: &str, proxy: &str) -> AnyResult<()> {
         let url = format!("/proxies/{group}");
         let payload = serde_json::json!({
             "name": proxy
@@ -265,17 +267,17 @@ impl IpcManager {
                 }
             });
 
-            Err(AnyError::from(error_msg.to_string()))
+            Err(create_error(error_msg.to_string()))
         }
     }
 
-    pub async fn proxy_provider_health_check(&self, name: &str) -> Result<(), AnyError> {
+    pub async fn proxy_provider_health_check(&self, name: &str) -> AnyResult<()> {
         let url = format!("/providers/proxies/{name}/healthcheck");
         let response = self.send_request("GET", &url, None).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
+            Err(create_error(
                 response["message"]
                     .as_str()
                     .unwrap_or("unknown error")
@@ -284,13 +286,13 @@ impl IpcManager {
         }
     }
 
-    pub async fn update_proxy_provider(&self, name: &str) -> Result<(), AnyError> {
+    pub async fn update_proxy_provider(&self, name: &str) -> AnyResult<()> {
         let url = format!("/providers/proxies/{name}");
         let response = self.send_request("PUT", &url, None).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
+            Err(create_error(
                 response["message"]
                     .as_str()
                     .unwrap_or("unknown error")
@@ -305,14 +307,14 @@ impl IpcManager {
         group_name: &str,
         url: Option<String>,
         timeout: i32,
-    ) -> Result<serde_json::Value, AnyError> {
+    ) -> AnyResult<serde_json::Value> {
         let test_url = url.unwrap_or_else(|| "https://cp.cloudflare.com/generate_204".to_string());
         let url = format!("/group/{group_name}/delay?url={test_url}&timeout={timeout}");
         self.send_request("GET", &url, None).await
     }
 
     // 调试相关
-    pub async fn is_debug_enabled(&self) -> Result<bool, AnyError> {
+    pub async fn is_debug_enabled(&self) -> AnyResult<bool> {
         let url = "/debug/pprof";
         match self.send_request("GET", url, None).await {
             Ok(_) => Ok(true),
@@ -320,13 +322,13 @@ impl IpcManager {
         }
     }
 
-    pub async fn gc(&self) -> Result<(), AnyError> {
+    pub async fn gc(&self) -> AnyResult<()> {
         let url = "/debug/gc";
         let response = self.send_request("PUT", url, None).await?;
         if response["code"] == 204 {
             Ok(())
         } else {
-            Err(AnyError::from(
+            Err(create_error(
                 response["message"]
                     .as_str()
                     .unwrap_or("unknown error")
