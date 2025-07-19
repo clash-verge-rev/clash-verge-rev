@@ -4,7 +4,7 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
-import { getClashConfig } from "@/services/api";
+import { getClashConfig } from "@/services/cmds";
 import {
   getAutotemProxy,
   getNetworkInterfacesInfo,

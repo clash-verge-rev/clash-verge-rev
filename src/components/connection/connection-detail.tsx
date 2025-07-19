@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Box, Button, Snackbar, useTheme } from "@mui/material";
-import { deleteConnection } from "@/services/api";
+import { deleteConnection } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
 import { t } from "i18next";
 

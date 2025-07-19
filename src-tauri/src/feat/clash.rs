@@ -1,8 +1,8 @@
 use crate::{
     config::Config,
     core::{handle, tray, CoreManager},
+    ipc::IpcManager,
     logging_error,
-    module::mihomo::MihomoManager,
     process::AsyncHandler,
     utils::{logging::Type, resolve},
 };
@@ -38,12 +38,12 @@ pub fn restart_app() {
 
 fn after_change_clash_mode() {
     AsyncHandler::spawn(move || async {
-        match MihomoManager::global().get_connections().await {
+        match IpcManager::global().get_connections().await {
             Ok(connections) => {
                 if let Some(connections_array) = connections["connections"].as_array() {
                     for connection in connections_array {
                         if let Some(id) = connection["id"].as_str() {
-                            let _ = MihomoManager::global().delete_connection(id).await;
+                            let _ = IpcManager::global().delete_connection(id).await;
                         }
                     }
                 }
@@ -65,7 +65,7 @@ pub fn change_clash_mode(mode: String) {
     });
     AsyncHandler::spawn(move || async move {
         log::debug!(target: "app", "change clash mode to {mode}");
-        match MihomoManager::global().patch_configs(json_value).await {
+        match IpcManager::global().patch_configs(json_value).await {
             Ok(_) => {
                 // 更新订阅
                 Config::clash().data_mut().patch_config(mapping);

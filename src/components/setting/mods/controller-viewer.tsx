@@ -1,5 +1,6 @@
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
+import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/noticeService";
 import { ContentCopy } from "@mui/icons-material";
 import {
@@ -11,6 +12,7 @@ import {
   ListItem,
   ListItemText,
   Snackbar,
+  Switch,
   TextField,
   Tooltip,
 } from "@mui/material";
@@ -25,8 +27,12 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const { clashInfo, patchInfo } = useClashInfo();
+  const { verge, patchVerge } = useVerge();
   const [controller, setController] = useState(clashInfo?.server || "");
   const [secret, setSecret] = useState(clashInfo?.secret || "");
+  const [enableController, setEnableController] = useState(
+    verge?.enable_external_controller ?? false,
+  );
 
   // 对话框打开时初始化配置
   useImperativeHandle(ref, () => ({
@@ -34,25 +40,37 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setController(clashInfo?.server || "");
       setSecret(clashInfo?.secret || "");
+      setEnableController(verge?.enable_external_controller ?? false);
     },
     close: () => setOpen(false),
   }));
 
   // 保存配置
   const onSave = useLockFn(async () => {
-    if (!controller.trim()) {
-      showNotice("error", t("Controller address cannot be empty"));
-      return;
-    }
-
-    if (!secret.trim()) {
-      showNotice("error", t("Secret cannot be empty"));
-      return;
-    }
-
     try {
       setIsSaving(true);
-      await patchInfo({ "external-controller": controller, secret });
+
+      // 先保存 enable_external_controller 设置
+      await patchVerge({ enable_external_controller: enableController });
+
+      // 如果启用了外部控制器，则保存控制器地址和密钥
+      if (enableController) {
+        if (!controller.trim()) {
+          showNotice("error", t("Controller address cannot be empty"));
+          return;
+        }
+
+        if (!secret.trim()) {
+          showNotice("error", t("Secret cannot be empty"));
+          return;
+        }
+
+        await patchInfo({ "external-controller": controller, secret });
+      } else {
+        // 如果禁用了外部控制器，则清空控制器地址
+        await patchInfo({ "external-controller": "" });
+      }
+
       showNotice("success", t("Configuration saved successfully"));
       setOpen(false);
     } catch (err: any) {
@@ -107,26 +125,42 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
             justifyContent: "space-between",
           }}
         >
+          <ListItemText primary={t("Enable External Controller")} />
+          <Switch
+            edge="end"
+            checked={enableController}
+            onChange={(e) => setEnableController(e.target.checked)}
+            disabled={isSaving}
+          />
+        </ListItem>
+
+        <ListItem
+          sx={{
+            padding: "5px 2px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
           <ListItemText primary={t("External Controller")} />
           <Box display="flex" alignItems="center" gap={1}>
             <TextField
               size="small"
               sx={{
                 width: 175,
-                opacity: 1,
-                pointerEvents: "auto",
+                opacity: enableController ? 1 : 0.5,
+                pointerEvents: enableController ? "auto" : "none",
               }}
               value={controller}
               placeholder="Required"
               onChange={(e) => setController(e.target.value)}
-              disabled={isSaving}
+              disabled={isSaving || !enableController}
             />
             <Tooltip title={t("Copy to clipboard")}>
               <IconButton
                 size="small"
                 onClick={() => handleCopyToClipboard(controller, "controller")}
                 color="primary"
-                disabled={isSaving}
+                disabled={isSaving || !enableController}
               >
                 <ContentCopy fontSize="small" />
               </IconButton>
@@ -147,20 +181,20 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
               size="small"
               sx={{
                 width: 175,
-                opacity: 1,
-                pointerEvents: "auto",
+                opacity: enableController ? 1 : 0.5,
+                pointerEvents: enableController ? "auto" : "none",
               }}
               value={secret}
               placeholder={t("Recommended")}
               onChange={(e) => setSecret(e.target.value)}
-              disabled={isSaving}
+              disabled={isSaving || !enableController}
             />
             <Tooltip title={t("Copy to clipboard")}>
               <IconButton
                 size="small"
                 onClick={() => handleCopyToClipboard(secret, "secret")}
                 color="primary"
-                disabled={isSaving}
+                disabled={isSaving || !enableController}
               >
                 <ContentCopy fontSize="small" />
               </IconButton>

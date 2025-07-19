@@ -9,7 +9,7 @@ import {
   alpha,
 } from "@mui/material";
 import { CloseRounded } from "@mui/icons-material";
-import { deleteConnection } from "@/services/api";
+import { deleteConnection } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
 
 const Tag = styled("span")(({ theme }) => ({

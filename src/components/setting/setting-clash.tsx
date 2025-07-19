@@ -3,7 +3,7 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useClash } from "@/hooks/use-clash";
 import { useListen } from "@/hooks/use-listen";
 import { useVerge } from "@/hooks/use-verge";
-import { updateGeoData } from "@/services/api";
+import { updateGeoData } from "@/services/cmds";
 import { invoke_uwp_tool } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";

@@ -2,11 +2,12 @@ use once_cell::sync::OnceCell;
 use tauri::tray::TrayIconBuilder;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
+use crate::ipc::Rate;
 use crate::{
     cmd,
     config::Config,
     feat, logging,
-    module::{lightweight::is_in_lightweight_mode, mihomo::Rate},
+    module::lightweight::is_in_lightweight_mode,
     utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
     Type,
 };

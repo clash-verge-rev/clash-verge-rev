@@ -17,6 +17,7 @@ pub enum Type {
     Lightweight,
     Network,
     ProxyMode,
+    Ipc,
 }
 
 impl fmt::Display for Type {
@@ -37,6 +38,7 @@ impl fmt::Display for Type {
             Type::Lightweight => write!(f, "[Lightweight]"),
             Type::Network => write!(f, "[Network]"),
             Type::ProxyMode => write!(f, "[ProxMode]"),
+            Type::Ipc => write!(f, "[IPC]"),
         }
     }
 }

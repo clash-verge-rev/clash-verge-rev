@@ -35,7 +35,7 @@ import {
   createProfile,
 } from "@/services/cmds";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
-import { closeAllConnections } from "@/services/api";
+import { closeAllConnections } from "@/services/cmds";
 import { BasePage, DialogRef } from "@/components/base";
 import {
   ProfileViewer,

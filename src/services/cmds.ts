@@ -94,6 +94,281 @@ export async function patchClashMode(payload: String) {
   return invoke<void>("patch_clash_mode", { payload });
 }
 
+// New IPC-based API functions to replace HTTP API calls
+export async function getVersion() {
+  return invoke<{
+    premium: boolean;
+    meta?: boolean;
+    version: string;
+  }>("get_clash_version");
+}
+
+export async function getClashConfig() {
+  return invoke<IConfigData>("get_clash_config");
+}
+
+export async function updateGeoData() {
+  return invoke<void>("update_geo_data");
+}
+
+export async function upgradeCore() {
+  return invoke<void>("upgrade_clash_core");
+}
+
+export async function getRules() {
+  const response = await invoke<{ rules: IRuleItem[] }>("get_clash_rules");
+  return response?.rules || [];
+}
+
+export async function getProxyDelay(
+  name: string,
+  url?: string,
+  timeout?: number,
+) {
+  return invoke<{ delay: number }>("clash_api_get_proxy_delay", {
+    name,
+    url,
+    timeout: timeout || 10000,
+  });
+}
+
+export async function updateProxy(group: string, proxy: string) {
+  return invoke<void>("update_proxy_choice", { group, proxy });
+}
+
+export async function getProxies(): Promise<{
+  global: IProxyGroupItem;
+  direct: IProxyItem;
+  groups: IProxyGroupItem[];
+  records: Record<string, IProxyItem>;
+  proxies: IProxyItem[];
+}> {
+  const [proxyResponse, providerResponse] = await Promise.all([
+    invoke<{ proxies: Record<string, IProxyItem> }>("get_proxies"),
+    invoke<{ providers: Record<string, IProxyProviderItem> }>(
+      "get_providers_proxies",
+    ),
+  ]);
+
+  const proxyRecord = proxyResponse.proxies;
+  const providerRecord = providerResponse.providers || {};
+
+  // provider name map
+  const providerMap = Object.fromEntries(
+    Object.entries(providerRecord).flatMap(([provider, item]) =>
+      item.proxies.map((p) => [p.name, { ...p, provider }]),
+    ),
+  );
+
+  // compatible with proxy-providers
+  const generateItem = (name: string) => {
+    if (proxyRecord[name]) return proxyRecord[name];
+    if (providerMap[name]) return providerMap[name];
+    return {
+      name,
+      type: "unknown",
+      udp: false,
+      xudp: false,
+      tfo: false,
+      mptcp: false,
+      smux: false,
+      history: [],
+    };
+  };
+
+  const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
+
+  let groups: IProxyGroupItem[] = Object.values(proxyRecord).reduce<
+    IProxyGroupItem[]
+  >((acc, each) => {
+    if (each.name !== "GLOBAL" && each.all) {
+      acc.push({
+        ...each,
+        all: each.all!.map((item) => generateItem(item)),
+      });
+    }
+
+    return acc;
+  }, []);
+
+  if (global?.all) {
+    let globalGroups: IProxyGroupItem[] = global.all.reduce<IProxyGroupItem[]>(
+      (acc, name) => {
+        if (proxyRecord[name]?.all) {
+          acc.push({
+            ...proxyRecord[name],
+            all: proxyRecord[name].all!.map((item) => generateItem(item)),
+          });
+        }
+        return acc;
+      },
+      [],
+    );
+
+    let globalNames = new Set(globalGroups.map((each) => each.name));
+    groups = groups
+      .filter((group) => {
+        return !globalNames.has(group.name);
+      })
+      .concat(globalGroups);
+  }
+
+  const proxies = [direct, reject].concat(
+    Object.values(proxyRecord).filter(
+      (p) => !p.all?.length && p.name !== "DIRECT" && p.name !== "REJECT",
+    ),
+  );
+
+  const _global: IProxyGroupItem = {
+    ...global,
+    all: global?.all?.map((item) => generateItem(item)) || [],
+  };
+
+  return { global: _global, direct, groups, records: proxyRecord, proxies };
+}
+
+export async function getProxyProviders() {
+  const response = await invoke<{
+    providers: Record<string, IProxyProviderItem>;
+  }>("get_providers_proxies");
+  if (!response || !response.providers) {
+    console.warn(
+      "getProxyProviders: Invalid response structure, returning empty object",
+    );
+    return {};
+  }
+
+  const providers = response.providers as Record<string, IProxyProviderItem>;
+
+  return Object.fromEntries(
+    Object.entries(providers).filter(([key, item]) => {
+      const type = item.vehicleType.toLowerCase();
+      return type === "http" || type === "file";
+    }),
+  );
+}
+
+export async function getRuleProviders() {
+  const response = await invoke<{
+    providers: Record<string, IRuleProviderItem>;
+  }>("get_rule_providers");
+
+  const providers = (response.providers || {}) as Record<
+    string,
+    IRuleProviderItem
+  >;
+
+  return Object.fromEntries(
+    Object.entries(providers).filter(([key, item]) => {
+      const type = item.vehicleType.toLowerCase();
+      return type === "http" || type === "file";
+    }),
+  );
+}
+
+export async function providerHealthCheck(name: string) {
+  return invoke<void>("proxy_provider_health_check", { name });
+}
+
+export async function proxyProviderUpdate(name: string) {
+  return invoke<void>("update_proxy_provider", { name });
+}
+
+export async function ruleProviderUpdate(name: string) {
+  return invoke<void>("update_rule_provider", { name });
+}
+
+export async function getConnections() {
+  return invoke<IConnections>("get_clash_connections");
+}
+
+export async function deleteConnection(id: string) {
+  return invoke<void>("delete_clash_connection", { id });
+}
+
+export async function closeAllConnections() {
+  return invoke<void>("close_all_clash_connections");
+}
+
+export async function getGroupProxyDelays(
+  groupName: string,
+  url?: string,
+  timeout?: number,
+) {
+  return invoke<Record<string, number>>("get_group_proxy_delays", {
+    groupName,
+    url,
+    timeout,
+  });
+}
+
+export async function getTrafficData() {
+  console.log("[Traffic][Service] 开始调用 get_traffic_data");
+  const result = await invoke<ITrafficItem>("get_traffic_data");
+  console.log("[Traffic][Service] get_traffic_data 返回结果:", result);
+  return result;
+}
+
+export async function getMemoryData() {
+  console.log("[Memory][Service] 开始调用 get_memory_data");
+  const result = await invoke<{ inuse: number; oslimit?: number }>(
+    "get_memory_data",
+  );
+  console.log("[Memory][Service] get_memory_data 返回结果:", result);
+  return result;
+}
+
+export async function startTrafficService() {
+  console.log("[Traffic][Service] 开始调用 start_traffic_service");
+  try {
+    const result = await invoke<void>("start_traffic_service");
+    console.log("[Traffic][Service] start_traffic_service 调用成功");
+    return result;
+  } catch (error) {
+    console.error("[Traffic][Service] start_traffic_service 调用失败:", error);
+    throw error;
+  }
+}
+
+export async function stopTrafficService() {
+  console.log("[Traffic][Service] 开始调用 stop_traffic_service");
+  const result = await invoke<void>("stop_traffic_service");
+  console.log("[Traffic][Service] stop_traffic_service 调用成功");
+  return result;
+}
+
+export async function isDebugEnabled() {
+  return invoke<boolean>("is_clash_debug_enabled");
+}
+
+export async function gc() {
+  return invoke<void>("clash_gc");
+}
+
+// 全局测试方法
+(window as any).testTrafficService = async () => {
+  console.log("=== 开始测试流量服务 ===");
+  try {
+    console.log("1. 启动流量服务...");
+    await startTrafficService();
+
+    console.log("2. 等待2秒...");
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    console.log("3. 获取流量数据...");
+    const trafficData = await getTrafficData();
+    console.log("流量数据:", trafficData);
+
+    console.log("4. 获取内存数据...");
+    const memoryData = await getMemoryData();
+    console.log("内存数据:", memoryData);
+
+    console.log("=== 测试完成 ===");
+  } catch (error) {
+    console.error("=== 测试失败 ===", error);
+  }
+};
+
 export async function getVergeConfig() {
   return invoke<IVergeConfig>("get_verge_config");
 }

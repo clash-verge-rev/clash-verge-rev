@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
-import { proxyProviderUpdate } from "@/services/api";
+import { proxyProviderUpdate } from "@/services/cmds";
 import { useAppData } from "@/providers/app-data-provider";
 import { showNotice } from "@/services/noticeService";
 import { StorageOutlined, RefreshRounded } from "@mui/icons-material";

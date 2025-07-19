@@ -18,7 +18,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { changeClashCore, restartCore } from "@/services/cmds";
-import { closeAllConnections, upgradeCore } from "@/services/api";
+import { closeAllConnections, upgradeCore } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
 const VALID_CORE = [

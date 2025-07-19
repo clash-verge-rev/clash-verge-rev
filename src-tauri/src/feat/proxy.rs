@@ -1,6 +1,7 @@
 use crate::{
     config::{Config, IVerge},
     core::handle,
+    ipc::IpcManager,
     process::AsyncHandler,
 };
 use std::env;
@@ -18,10 +19,7 @@ pub fn toggle_system_proxy() {
     AsyncHandler::spawn(move || async move {
         // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
         if enable && auto_close_connection {
-            if let Err(err) = crate::module::mihomo::MihomoManager::global()
-                .close_all_connections()
-                .await
-            {
+            if let Err(err) = IpcManager::global().close_all_connections().await {
                 log::error!(target: "app", "Failed to close all connections: {err}");
             }
         }

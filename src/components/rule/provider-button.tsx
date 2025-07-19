@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
-import { ruleProviderUpdate } from "@/services/api";
+import { ruleProviderUpdate } from "@/services/cmds";
 import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
 import { useAppData } from "@/providers/app-data-provider";
 import dayjs from "dayjs";

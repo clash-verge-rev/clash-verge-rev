@@ -1,6 +1,11 @@
 use super::CmdResult;
 use crate::{
-    config::*, core::*, feat, module::mihomo::MihomoManager, process::AsyncHandler, wrap_err,
+    config::*,
+    core::{traffic::TrafficService, *},
+    feat,
+    ipc::IpcManager,
+    process::AsyncHandler,
+    wrap_err,
 };
 use serde_yaml::Mapping;
 
@@ -90,9 +95,11 @@ pub async fn clash_api_get_proxy_delay(
     url: Option<String>,
     timeout: i32,
 ) -> CmdResult<serde_json::Value> {
-    MihomoManager::global()
-        .test_proxy_delay(&name, url, timeout)
-        .await
+    wrap_err!(
+        IpcManager::global()
+            .test_proxy_delay(&name, url, timeout)
+            .await
+    )
 }
 
 /// 测试URL延迟
@@ -266,4 +273,163 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
         Ok(result) => Ok(result),
         Err(e) => Err(e.to_string()),
     }
+}
+
+/// 获取Clash版本信息
+#[tauri::command]
+pub async fn get_clash_version() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_version().await)
+}
+
+/// 获取Clash配置
+#[tauri::command]
+pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_config().await)
+}
+
+/// 更新地理数据
+#[tauri::command]
+pub async fn update_geo_data() -> CmdResult {
+    wrap_err!(IpcManager::global().update_geo_data().await)
+}
+
+/// 升级Clash核心
+#[tauri::command]
+pub async fn upgrade_clash_core() -> CmdResult {
+    wrap_err!(IpcManager::global().upgrade_core().await)
+}
+
+/// 获取规则
+#[tauri::command]
+pub async fn get_clash_rules() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_rules().await)
+}
+
+/// 更新代理选择
+#[tauri::command]
+pub async fn update_proxy_choice(group: String, proxy: String) -> CmdResult {
+    wrap_err!(IpcManager::global().update_proxy(&group, &proxy).await)
+}
+
+/// 获取代理提供者
+#[tauri::command]
+pub async fn get_proxy_providers() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_providers_proxies().await)
+}
+
+/// 获取规则提供者
+#[tauri::command]
+pub async fn get_rule_providers() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_rule_providers().await)
+}
+
+/// 代理提供者健康检查
+#[tauri::command]
+pub async fn proxy_provider_health_check(name: String) -> CmdResult {
+    wrap_err!(
+        IpcManager::global()
+            .proxy_provider_health_check(&name)
+            .await
+    )
+}
+
+/// 更新代理提供者
+#[tauri::command]
+pub async fn update_proxy_provider(name: String) -> CmdResult {
+    wrap_err!(IpcManager::global().update_proxy_provider(&name).await)
+}
+
+/// 更新规则提供者
+#[tauri::command]
+pub async fn update_rule_provider(name: String) -> CmdResult {
+    wrap_err!(IpcManager::global().update_rule_provider(&name).await)
+}
+
+/// 获取连接
+#[tauri::command]
+pub async fn get_clash_connections() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_connections().await)
+}
+
+/// 删除连接
+#[tauri::command]
+pub async fn delete_clash_connection(id: String) -> CmdResult {
+    wrap_err!(IpcManager::global().delete_connection(&id).await)
+}
+
+/// 关闭所有连接
+#[tauri::command]
+pub async fn close_all_clash_connections() -> CmdResult {
+    wrap_err!(IpcManager::global().close_all_connections().await)
+}
+
+/// 获取流量数据
+#[tauri::command]
+pub async fn get_traffic_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "开始获取流量数据");
+    let traffic_data = TrafficService::global().get_traffic_data();
+    let result = serde_json::json!({
+        "up": traffic_data.up,
+        "down": traffic_data.down
+    });
+    log::info!(target: "app", "获取流量数据结果: {result:?}");
+    Ok(result)
+}
+
+/// 获取内存数据
+#[tauri::command]
+pub async fn get_memory_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "开始获取内存数据");
+    let memory_data = TrafficService::global().get_memory_data();
+    let result = serde_json::json!({
+        "inuse": memory_data.inuse,
+        "oslimit": memory_data.oslimit
+    });
+    log::info!(target: "app", "获取内存数据结果: {result:?}");
+    Ok(result)
+}
+
+/// 启动流量监控服务
+#[tauri::command]
+pub async fn start_traffic_service() -> CmdResult {
+    log::info!(target: "app", "启动流量监控服务");
+
+    wrap_err!(TrafficService::global().start().map_err(|e| e.to_string()))
+}
+
+/// 停止流量监控服务
+#[tauri::command]
+pub async fn stop_traffic_service() -> CmdResult {
+    log::info!(target: "app", "停止流量监控服务");
+    TrafficService::global().stop();
+    Ok(())
+}
+
+/// 获取代理组延迟
+#[tauri::command]
+pub async fn get_group_proxy_delays(
+    group_name: String,
+    url: Option<String>,
+    timeout: Option<i32>,
+) -> CmdResult<serde_json::Value> {
+    wrap_err!(
+        IpcManager::global()
+            .get_group_proxy_delays(&group_name, url, timeout.unwrap_or(10000))
+            .await
+    )
+}
+
+/// 检查调试是否启用
+#[tauri::command]
+pub async fn is_clash_debug_enabled() -> CmdResult<bool> {
+    match IpcManager::global().is_debug_enabled().await {
+        Ok(enabled) => Ok(enabled),
+        Err(_) => Ok(false),
+    }
+}
+
+/// 垃圾回收
+#[tauri::command]
+pub async fn clash_gc() -> CmdResult {
+    wrap_err!(IpcManager::global().gc().await)
 }

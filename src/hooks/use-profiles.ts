@@ -5,7 +5,7 @@ import {
   patchProfilesConfig,
   forceRefreshProxies,
 } from "@/services/cmds";
-import { getProxies, updateProxy } from "@/services/api";
+import { getProxies, updateProxy } from "@/services/cmds";
 
 export const useProfiles = () => {
   const { data: profiles, mutate: mutateProfiles } = useSWR(
