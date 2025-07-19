@@ -1,5 +1,12 @@
 use super::CmdResult;
-use crate::{config::*, core::*, feat, ipc::IpcManager, process::AsyncHandler, wrap_err};
+use crate::{
+    config::*,
+    core::{traffic::TrafficService, *},
+    feat,
+    ipc::IpcManager,
+    process::AsyncHandler,
+    wrap_err,
+};
 use serde_yaml::Mapping;
 
 /// 复制Clash环境变量
@@ -354,6 +361,48 @@ pub async fn delete_clash_connection(id: String) -> CmdResult {
 #[tauri::command]
 pub async fn close_all_clash_connections() -> CmdResult {
     wrap_err!(IpcManager::global().close_all_connections().await)
+}
+
+/// 获取流量数据
+#[tauri::command]
+pub async fn get_traffic_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "开始获取流量数据");
+    let traffic_data = TrafficService::global().get_traffic_data();
+    let result = serde_json::json!({
+        "up": traffic_data.up,
+        "down": traffic_data.down
+    });
+    log::info!(target: "app", "获取流量数据结果: {result:?}");
+    Ok(result)
+}
+
+/// 获取内存数据
+#[tauri::command]
+pub async fn get_memory_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "开始获取内存数据");
+    let memory_data = TrafficService::global().get_memory_data();
+    let result = serde_json::json!({
+        "inuse": memory_data.inuse,
+        "oslimit": memory_data.oslimit
+    });
+    log::info!(target: "app", "获取内存数据结果: {result:?}");
+    Ok(result)
+}
+
+/// 启动流量监控服务
+#[tauri::command]
+pub async fn start_traffic_service() -> CmdResult {
+    log::info!(target: "app", "启动流量监控服务");
+
+    wrap_err!(TrafficService::global().start().map_err(|e| e.to_string()))
+}
+
+/// 停止流量监控服务
+#[tauri::command]
+pub async fn stop_traffic_service() -> CmdResult {
+    log::info!(target: "app", "停止流量监控服务");
+    TrafficService::global().stop();
+    Ok(())
 }
 
 /// 获取代理组延迟

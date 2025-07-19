@@ -24,9 +24,13 @@ import {
 import { useVisibility } from "@/hooks/use-visibility";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-import { createAuthSockette } from "@/utils/websocket";
 import parseTraffic from "@/utils/parse-traffic";
-import { isDebugEnabled, gc } from "@/services/cmds";
+import {
+  isDebugEnabled,
+  gc,
+  getTrafficData,
+  getMemoryData,
+} from "@/services/cmds";
 import { ReactNode } from "react";
 import { useAppData } from "@/providers/app-data-provider";
 import useSWR from "swr";
@@ -64,7 +68,6 @@ declare global {
 
 // 控制更新频率
 const CONNECTIONS_UPDATE_INTERVAL = 5000; // 5秒更新一次连接数据
-const THROTTLE_TRAFFIC_UPDATE = 500; // 500ms节流流量数据更新
 
 // 统计卡片组件 - 使用memo优化
 const CompactStatCard = memo(
@@ -172,9 +175,6 @@ export const EnhancedTrafficStats = () => {
     memory: { inuse: 0, oslimit: undefined as number | undefined },
   });
 
-  // 创建一个标记来追踪最后更新时间，用于节流
-  const lastUpdateRef = useRef({ traffic: 0 });
-
   // 是否显示流量图表
   const trafficGraph = verge?.traffic_graph ?? true;
 
@@ -189,171 +189,79 @@ export const EnhancedTrafficStats = () => {
     },
   );
 
-  // 处理流量数据更新 - 使用节流控制更新频率
-  const handleTrafficUpdate = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data) as ITrafficItem;
-      if (
-        data &&
-        typeof data.up === "number" &&
-        typeof data.down === "number"
-      ) {
-        // 使用节流控制更新频率
-        const now = Date.now();
-        if (now - lastUpdateRef.current.traffic < THROTTLE_TRAFFIC_UPDATE) {
-          try {
-            trafficRef.current?.appendData({
-              up: data.up,
-              down: data.down,
-              timestamp: now,
-            });
-          } catch {}
-          return;
-        }
-        lastUpdateRef.current.traffic = now;
-        const safeUp = isNaN(data.up) ? 0 : data.up;
-        const safeDown = isNaN(data.down) ? 0 : data.down;
-        try {
+  // 使用 IPC 获取流量数据
+  const { data: trafficData } = useSWR<ITrafficItem>(
+    clashInfo && pageVisible ? "getTrafficData" : null,
+    getTrafficData,
+    {
+      refreshInterval: 1000, // 1秒刷新一次
+      fallbackData: { up: 0, down: 0 },
+      keepPreviousData: true,
+      onSuccess: (data) => {
+        console.log(
+          "[Traffic][EnhancedTrafficStats] IPC 获取到流量数据:",
+          data,
+        );
+        if (data) {
+          const safeUp = isNaN(data.up) ? 0 : data.up;
+          const safeDown = isNaN(data.down) ? 0 : data.down;
+          console.log("[Traffic][EnhancedTrafficStats] 处理后的数据:", {
+            up: safeUp,
+            down: safeDown,
+          });
           setStats((prev) => ({
             ...prev,
             traffic: { up: safeUp, down: safeDown },
           }));
-        } catch {}
-        try {
-          trafficRef.current?.appendData({
-            up: safeUp,
-            down: safeDown,
-            timestamp: now,
-          });
-        } catch {}
-      }
-    } catch (err) {
-      console.error("[Traffic] 解析数据错误:", err, event.data);
-    }
-  }, []);
 
-  // 处理内存数据更新
-  const handleMemoryUpdate = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data) as MemoryUsage;
-      if (data && typeof data.inuse === "number") {
-        setStats((prev) => ({
-          ...prev,
-          memory: {
-            inuse: isNaN(data.inuse) ? 0 : data.inuse,
-            oslimit: data.oslimit,
-          },
-        }));
-      }
-    } catch (err) {
-      console.error("[Memory] 解析数据错误:", err, event.data);
-    }
-  }, []);
-
-  // 使用 WebSocket 连接获取数据 - 合并流量和内存连接逻辑
-  useEffect(() => {
-    if (!clashInfo || !pageVisible) return;
-
-    const { server, secret = "" } = clashInfo;
-    if (!server) return;
-
-    // WebSocket 引用
-    let sockets: {
-      traffic: ReturnType<typeof createAuthSockette> | null;
-      memory: ReturnType<typeof createAuthSockette> | null;
-    } = {
-      traffic: null,
-      memory: null,
-    };
-
-    // 清理现有连接的函数
-    const cleanupSockets = () => {
-      Object.values(sockets).forEach((socket) => {
-        if (socket) {
-          socket.close();
+          // 为图表添加数据
+          if (trafficRef.current) {
+            trafficRef.current.appendData({
+              up: safeUp,
+              down: safeDown,
+              timestamp: Date.now(),
+            });
+          }
         }
-      });
-      sockets = { traffic: null, memory: null };
-    };
-
-    // 关闭现有连接
-    cleanupSockets();
-
-    // 创建新连接
-    console.log(
-      `[Traffic][${EnhancedTrafficStats.name}] 正在连接: ${server}/traffic`,
-    );
-    sockets.traffic = createAuthSockette(`${server}/traffic`, secret, {
-      onmessage: handleTrafficUpdate,
-      onopen: (event) => {
-        console.log(
-          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接已建立`,
-          event,
-        );
       },
-      onerror: (event) => {
+      onError: (error) => {
         console.error(
-          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接错误或达到最大重试次数`,
-          event,
+          "[Traffic][EnhancedTrafficStats] IPC 获取数据错误:",
+          error,
         );
         setStats((prev) => ({ ...prev, traffic: { up: 0, down: 0 } }));
       },
-      onclose: (event) => {
-        console.log(
-          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接关闭`,
-          event.code,
-          event.reason,
-        );
-        if (event.code !== 1000 && event.code !== 1001) {
-          console.warn(
-            `[Traffic][${EnhancedTrafficStats.name}] 连接非正常关闭，重置状态`,
-          );
-          setStats((prev) => ({ ...prev, traffic: { up: 0, down: 0 } }));
+    },
+  );
+
+  // 使用 IPC 获取内存数据
+  const { data: memoryData } = useSWR<MemoryUsage>(
+    clashInfo && pageVisible ? "getMemoryData" : null,
+    getMemoryData,
+    {
+      refreshInterval: 2000, // 2秒刷新一次
+      fallbackData: { inuse: 0 },
+      keepPreviousData: true,
+      onSuccess: (data) => {
+        if (data) {
+          setStats((prev) => ({
+            ...prev,
+            memory: {
+              inuse: isNaN(data.inuse) ? 0 : data.inuse,
+              oslimit: data.oslimit,
+            },
+          }));
         }
       },
-    });
-
-    console.log(
-      `[Memory][${EnhancedTrafficStats.name}] 正在连接: ${server}/memory`,
-    );
-    sockets.memory = createAuthSockette(`${server}/memory`, secret, {
-      onmessage: handleMemoryUpdate,
-      onopen: (event) => {
-        console.log(
-          `[Memory][${EnhancedTrafficStats.name}] WebSocket 连接已建立`,
-          event,
-        );
-      },
-      onerror: (event) => {
-        console.error(
-          `[Memory][${EnhancedTrafficStats.name}] WebSocket 连接错误或达到最大重试次数`,
-          event,
-        );
+      onError: (error) => {
+        console.error("[Memory] IPC 获取数据错误:", error);
         setStats((prev) => ({
           ...prev,
           memory: { inuse: 0, oslimit: undefined },
         }));
       },
-      onclose: (event) => {
-        console.log(
-          `[Memory][${EnhancedTrafficStats.name}] WebSocket 连接关闭`,
-          event.code,
-          event.reason,
-        );
-        if (event.code !== 1000 && event.code !== 1001) {
-          console.warn(
-            `[Memory][${EnhancedTrafficStats.name}] 连接非正常关闭，重置状态`,
-          );
-          setStats((prev) => ({
-            ...prev,
-            memory: { inuse: 0, oslimit: undefined },
-          }));
-        }
-      },
-    });
-
-    return cleanupSockets;
-  }, [clashInfo, pageVisible, handleTrafficUpdate, handleMemoryUpdate]);
+    },
+  );
 
   // 执行垃圾回收
   const handleGarbageCollection = useCallback(async () => {

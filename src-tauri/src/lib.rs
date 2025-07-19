@@ -289,6 +289,10 @@ pub fn run() {
             cmd::get_group_proxy_delays,
             cmd::is_clash_debug_enabled,
             cmd::clash_gc,
+            cmd::get_traffic_data,
+            cmd::get_memory_data,
+            cmd::start_traffic_service,
+            cmd::stop_traffic_service,
             // verge
             cmd::get_verge_config,
             cmd::patch_verge_config,

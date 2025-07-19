@@ -1,6 +1,6 @@
 use kode_bridge::{
     errors::{AnyError, AnyResult},
-    types::Response,
+    ipc_http_client::HttpResponse,
     IpcHttpClient,
 };
 use std::sync::OnceLock;
@@ -47,9 +47,13 @@ impl IpcManager {
         method: &str,
         path: &str,
         body: Option<&serde_json::Value>,
-    ) -> AnyResult<Response> {
+    ) -> AnyResult<HttpResponse> {
         let client = IpcHttpClient::new(&self.ipc_path)?;
-        client.request(method, path, body).await
+        if let Some(body) = body {
+            client.request(method, path).json(body).send().await
+        } else {
+            client.request(method, path).send().await
+        }
     }
 }
 
@@ -64,22 +68,22 @@ impl IpcManager {
         match method {
             "GET" => Ok(response.json()?),
             "PATCH" => {
-                if response.status == 204 {
+                if response.status() == 204 {
                     Ok(serde_json::json!({"code": 204}))
                 } else {
                     Ok(response.json()?)
                 }
             }
             "PUT" => {
-                if response.status == 204 {
+                if response.status() == 204 {
                     Ok(serde_json::json!({"code": 204}))
                 } else {
                     // 尝试解析JSON，如果失败则返回错误信息
                     match response.json() {
                         Ok(json) => Ok(json),
                         Err(_) => Ok(serde_json::json!({
-                            "code": response.status,
-                            "message": response.body,
+                            "code": response.status(),
+                            "message": response.text(),
                             "error": "failed to parse response as JSON"
                         })),
                     }
@@ -335,5 +339,28 @@ impl IpcManager {
                     .to_string(),
             ))
         }
+    }
+
+    // 流量数据相关
+    pub async fn get_traffic(&self) -> AnyResult<serde_json::Value> {
+        let url = "/traffic";
+        logging!(info, Type::Ipc, true, "IPC: 发送 GET 请求到 {}", url);
+        let result = self.send_request("GET", url, None).await;
+        logging!(
+            info,
+            Type::Ipc,
+            true,
+            "IPC: /traffic 请求结果: {:?}",
+            result
+        );
+        result
+    }
+
+    pub async fn get_memory(&self) -> AnyResult<serde_json::Value> {
+        let url = "/memory";
+        logging!(info, Type::Ipc, true, "IPC: 发送 GET 请求到 {}", url);
+        let result = self.send_request("GET", url, None).await;
+        logging!(info, Type::Ipc, true, "IPC: /memory 请求结果: {:?}", result);
+        result
     }
 }

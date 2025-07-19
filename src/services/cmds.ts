@@ -302,6 +302,41 @@ export async function getGroupProxyDelays(
   });
 }
 
+export async function getTrafficData() {
+  console.log("[Traffic][Service] 开始调用 get_traffic_data");
+  const result = await invoke<ITrafficItem>("get_traffic_data");
+  console.log("[Traffic][Service] get_traffic_data 返回结果:", result);
+  return result;
+}
+
+export async function getMemoryData() {
+  console.log("[Memory][Service] 开始调用 get_memory_data");
+  const result = await invoke<{ inuse: number; oslimit?: number }>(
+    "get_memory_data",
+  );
+  console.log("[Memory][Service] get_memory_data 返回结果:", result);
+  return result;
+}
+
+export async function startTrafficService() {
+  console.log("[Traffic][Service] 开始调用 start_traffic_service");
+  try {
+    const result = await invoke<void>("start_traffic_service");
+    console.log("[Traffic][Service] start_traffic_service 调用成功");
+    return result;
+  } catch (error) {
+    console.error("[Traffic][Service] start_traffic_service 调用失败:", error);
+    throw error;
+  }
+}
+
+export async function stopTrafficService() {
+  console.log("[Traffic][Service] 开始调用 stop_traffic_service");
+  const result = await invoke<void>("stop_traffic_service");
+  console.log("[Traffic][Service] stop_traffic_service 调用成功");
+  return result;
+}
+
 export async function isDebugEnabled() {
   return invoke<boolean>("is_clash_debug_enabled");
 }
@@ -309,6 +344,30 @@ export async function isDebugEnabled() {
 export async function gc() {
   return invoke<void>("clash_gc");
 }
+
+// 全局测试方法
+(window as any).testTrafficService = async () => {
+  console.log("=== 开始测试流量服务 ===");
+  try {
+    console.log("1. 启动流量服务...");
+    await startTrafficService();
+
+    console.log("2. 等待2秒...");
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    console.log("3. 获取流量数据...");
+    const trafficData = await getTrafficData();
+    console.log("流量数据:", trafficData);
+
+    console.log("4. 获取内存数据...");
+    const memoryData = await getMemoryData();
+    console.log("内存数据:", memoryData);
+
+    console.log("=== 测试完成 ===");
+  } catch (error) {
+    console.error("=== 测试失败 ===", error);
+  }
+};
 
 export async function getVergeConfig() {
   return invoke<IVergeConfig>("get_verge_config");

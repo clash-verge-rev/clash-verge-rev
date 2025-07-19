@@ -9,6 +9,8 @@ pub mod service;
 pub mod service_ipc;
 pub mod sysopt;
 pub mod timer;
+pub mod traffic;
+pub mod traffic_manager;
 pub mod tray;
 pub mod win_uwp;
 

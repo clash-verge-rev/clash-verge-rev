@@ -10,10 +10,14 @@ import { useVerge } from "@/hooks/use-verge";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 import { useVisibility } from "@/hooks/use-visibility";
 import parseTraffic from "@/utils/parse-traffic";
-import useSWRSubscription from "swr/subscription";
-import { createAuthSockette } from "@/utils/websocket";
 import { useTranslation } from "react-i18next";
-import { isDebugEnabled, gc } from "@/services/cmds";
+import {
+  isDebugEnabled,
+  gc,
+  getTrafficData,
+  getMemoryData,
+  startTrafficService,
+} from "@/services/cmds";
 import useSWR from "swr";
 
 interface MemoryUsage {
@@ -23,6 +27,7 @@ interface MemoryUsage {
 
 // setup the traffic
 export const LayoutTraffic = () => {
+  console.log("[Traffic][LayoutTraffic] 组件正在渲染");
   const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
@@ -33,6 +38,22 @@ export const LayoutTraffic = () => {
   const trafficRef = useRef<TrafficRef>(null);
   const pageVisible = useVisibility();
 
+  // 启动流量服务
+  useEffect(() => {
+    console.log(
+      "[Traffic][LayoutTraffic] useEffect 触发，clashInfo:",
+      clashInfo,
+      "pageVisible:",
+      pageVisible,
+    );
+
+    // 简化条件，只要组件挂载就尝试启动服务
+    console.log("[Traffic][LayoutTraffic] 开始启动流量服务");
+    startTrafficService().catch((error) => {
+      console.error("[Traffic][LayoutTraffic] 启动流量服务失败:", error);
+    });
+  }, []); // 移除依赖，只在组件挂载时启动一次
+
   const { data: isDebug } = useSWR(
     "clash-verge-rev-internal://isDebugEnabled",
     () => isDebugEnabled(),
@@ -42,55 +63,22 @@ export const LayoutTraffic = () => {
     },
   );
 
-  const { data: traffic = { up: 0, down: 0 } } = useSWRSubscription<
-    ITrafficItem,
-    any,
-    "getRealtimeTraffic" | null
-  >(
-    clashInfo && pageVisible ? "getRealtimeTraffic" : null,
-    (_key, { next }) => {
-      const { server = "", secret = "" } = clashInfo!;
-
-      if (!server) {
-        console.warn("[Traffic] 服务器地址为空，无法建立连接");
-        next(null, { up: 0, down: 0 });
-        return () => {};
-      }
-
-      console.log(`[Traffic] 正在连接: ${server}/traffic`);
-
-      const s = createAuthSockette(`${server}/traffic`, secret, {
-        timeout: 8000, // 8秒超时
-        onmessage(event) {
-          const data = JSON.parse(event.data) as ITrafficItem;
-          trafficRef.current?.appendData(data);
-          next(null, data);
-        },
-        onerror(event) {
-          console.error("[Traffic] WebSocket 连接错误", event);
-          this.close();
-          next(null, { up: 0, down: 0 });
-        },
-        onclose(event) {
-          console.log("[Traffic] WebSocket 连接关闭", event);
-        },
-        onopen(event) {
-          console.log("[Traffic] WebSocket 连接已建立");
-        },
-      });
-
-      return () => {
-        console.log("[Traffic] 清理WebSocket连接");
-        try {
-          s.close();
-        } catch (e) {
-          console.error("[Traffic] 关闭连接时出错", e);
-        }
-      };
-    },
+  const { data: traffic = { up: 0, down: 0 } } = useSWR<ITrafficItem>(
+    clashInfo && pageVisible ? "getTrafficData" : null,
+    getTrafficData,
     {
+      refreshInterval: 1000, // 1秒刷新一次
       fallbackData: { up: 0, down: 0 },
       keepPreviousData: true,
+      onSuccess: (data) => {
+        console.log("[Traffic][LayoutTraffic] IPC 获取到流量数据:", data);
+        if (data && trafficRef.current) {
+          trafficRef.current.appendData(data);
+        }
+      },
+      onError: (error) => {
+        console.error("[Traffic][LayoutTraffic] IPC 获取数据错误:", error);
+      },
     },
   );
 
@@ -98,54 +86,19 @@ export const LayoutTraffic = () => {
 
   const displayMemory = verge?.enable_memory_usage ?? true;
 
-  const { data: memory = { inuse: 0 } } = useSWRSubscription<
-    MemoryUsage,
-    any,
-    "getRealtimeMemory" | null
-  >(
-    clashInfo && pageVisible && displayMemory ? "getRealtimeMemory" : null,
-    (_key, { next }) => {
-      const { server = "", secret = "" } = clashInfo!;
-
-      if (!server) {
-        console.warn("[Memory] 服务器地址为空，无法建立连接");
-        next(null, { inuse: 0 });
-        return () => {};
-      }
-
-      console.log(`[Memory] 正在连接: ${server}/memory`);
-
-      const s = createAuthSockette(`${server}/memory`, secret, {
-        timeout: 8000, // 8秒超时
-        onmessage(event) {
-          const data = JSON.parse(event.data) as MemoryUsage;
-          next(null, data);
-        },
-        onerror(event) {
-          console.error("[Memory] WebSocket 连接错误", event);
-          this.close();
-          next(null, { inuse: 0 });
-        },
-        onclose(event) {
-          console.log("[Memory] WebSocket 连接关闭", event);
-        },
-        onopen(event) {
-          console.log("[Memory] WebSocket 连接已建立");
-        },
-      });
-
-      return () => {
-        console.log("[Memory] 清理WebSocket连接");
-        try {
-          s.close();
-        } catch (e) {
-          console.error("[Memory] 关闭连接时出错", e);
-        }
-      };
-    },
+  const { data: memory = { inuse: 0 } } = useSWR<MemoryUsage>(
+    clashInfo && pageVisible && displayMemory ? "getMemoryData" : null,
+    getMemoryData,
     {
+      refreshInterval: 2000, // 2秒刷新一次
       fallbackData: { inuse: 0 },
       keepPreviousData: true,
+      onSuccess: (data) => {
+        console.log("[Memory][LayoutTraffic] IPC 获取到内存数据:", data);
+      },
+      onError: (error) => {
+        console.error("[Memory][LayoutTraffic] IPC 获取数据错误:", error);
+      },
     },
   );
 

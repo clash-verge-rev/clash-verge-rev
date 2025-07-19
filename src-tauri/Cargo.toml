@@ -41,6 +41,8 @@ tokio = { version = "1.46.1", features = [
   "time",
   "sync",
 ] }
+tokio-tungstenite = "0.24.0"
+futures-util = "0.3.31"
 serde = { version = "1.0.219", features = ["derive"] }
 reqwest = { version = "0.12.22", features = ["json", "rustls-tls", "cookies"] }
 regex = "1.11.1"
