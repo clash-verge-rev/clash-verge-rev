@@ -8,7 +8,7 @@ Before you start contributing to the project, you need to set up your developmen
 
 ### Prerequisites
 
-1. **Install Rust and Node.js**: Our project requires both Rust and Node.js. Please follow the instructions provided [here](https://tauri.app/v1/guides/getting-started/prerequisites) to install them on your system.
+1. **Install Rust and Node.js**: Our project requires both Rust and Node.js. Please follow the instructions provided [here](https://tauri.app/start/prerequisites/) to install them on your system.
 
 ### Setup for Windows Users
 
