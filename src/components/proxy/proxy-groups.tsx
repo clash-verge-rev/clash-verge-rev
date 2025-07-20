@@ -14,6 +14,7 @@ import {
   getConnections,
   healthcheckProxyProvider,
   selectNodeForProxy,
+  unfixedProxy,
 } from "tauri-plugin-mihomo-api";
 import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
@@ -42,8 +43,18 @@ export const ProxyGroups = (props: Props) => {
     useLockFn(async (group: IProxyGroupItem, proxy: IProxyItem) => {
       if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
 
-      const { name, now } = group;
-      await selectNodeForProxy(name, proxy.name);
+      const { name, type, fixed, now } = group;
+      let unfixing = false;
+      if (type === "URLTest") {
+        if (fixed === proxy.name) {
+          unfixing = true;
+          await unfixedProxy(group.name);
+        } else {
+          await selectNodeForProxy(name, proxy.name);
+        }
+      } else {
+        await selectNodeForProxy(name, proxy.name);
+      }
       onProxies();
 
       // 断开连接
@@ -66,9 +77,12 @@ export const ProxyGroups = (props: Props) => {
       );
 
       if (index < 0) {
-        current.selected.push({ name, now: proxy.name });
+        current.selected.push({ name, now: unfixing ? undefined : proxy.name });
       } else {
-        current.selected[index] = { name, now: proxy.name };
+        current.selected[index] = {
+          name,
+          now: unfixing ? undefined : proxy.name,
+        };
       }
       await patchCurrent({ selected: current.selected });
     }),

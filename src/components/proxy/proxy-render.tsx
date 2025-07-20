@@ -16,8 +16,6 @@ import {
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useMemoizedFn } from "ahooks";
 import { memo, useEffect, useState } from "react";
-import { mutate } from "swr";
-import { unfixedProxy } from "tauri-plugin-mihomo-api";
 import { ProxyHead } from "./proxy-head";
 import { ProxyItem } from "./proxy-item";
 import { ProxyItemMini } from "./proxy-item-mini";
@@ -90,14 +88,7 @@ const ProxyItemMiniCol = memo(function ProxyItemMiniCol(props: ProxyColProps) {
           fixed={group.fixed === proxy.name}
           selected={group.now === proxy.name}
           showType={headState?.showType}
-          onClick={async () => {
-            if (group.fixed === proxy.name) {
-              await unfixedProxy(group.name);
-              mutate("getProxies");
-            } else {
-              onChangeProxy(group, proxy!);
-            }
-          }}
+          onClick={() => onChangeProxy(group, proxy!)}
         />
       ))}
     </Box>
