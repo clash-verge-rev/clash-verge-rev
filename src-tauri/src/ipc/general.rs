@@ -1,7 +1,6 @@
 use kode_bridge::{
     errors::{AnyError, AnyResult},
-    ipc_http_client::HttpResponse,
-    IpcHttpClient,
+    IpcHttpClient, LegacyResponse,
 };
 use std::sync::OnceLock;
 
@@ -47,13 +46,9 @@ impl IpcManager {
         method: &str,
         path: &str,
         body: Option<&serde_json::Value>,
-    ) -> AnyResult<HttpResponse> {
+    ) -> AnyResult<LegacyResponse> {
         let client = IpcHttpClient::new(&self.ipc_path)?;
-        if let Some(body) = body {
-            client.request(method, path).json(body).send().await
-        } else {
-            client.request(method, path).send().await
-        }
+        client.request(method, path, body).await
     }
 }
 
@@ -68,22 +63,22 @@ impl IpcManager {
         match method {
             "GET" => Ok(response.json()?),
             "PATCH" => {
-                if response.status() == 204 {
+                if response.status == 204 {
                     Ok(serde_json::json!({"code": 204}))
                 } else {
                     Ok(response.json()?)
                 }
             }
             "PUT" => {
-                if response.status() == 204 {
+                if response.status == 204 {
                     Ok(serde_json::json!({"code": 204}))
                 } else {
                     // 尝试解析JSON，如果失败则返回错误信息
                     match response.json() {
                         Ok(json) => Ok(json),
                         Err(_) => Ok(serde_json::json!({
-                            "code": response.status(),
-                            "message": response.text(),
+                            "code": response.status,
+                            "message": response.body,
                             "error": "failed to parse response as JSON"
                         })),
                     }

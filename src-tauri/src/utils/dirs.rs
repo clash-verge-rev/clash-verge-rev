@@ -252,12 +252,10 @@ pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
         .or_else(|| {
             std::env::var_os("HOME").and_then(|home| {
                 let home_config = PathBuf::from(home).join(".config");
-                if home_config.exists() {
-                    Some(home_config)
-                } else if fs::create_dir_all(&home_config).is_ok() {
+                if home_config.exists() || fs::create_dir_all(&home_config).is_ok() {
                     Some(home_config)
                 } else {
-                    log::error!(target: "app", "Failed to create safe directory: {:?}", home_config);
+                    log::error!(target: "app", "Failed to create safe directory: {home_config:?}");
                     None
                 }
             })
