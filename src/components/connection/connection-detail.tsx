@@ -89,11 +89,11 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
   return (
     <Box sx={{ userSelect: "text", maxWidth: 500, minWidth: 300 }}>
       {information.map((each) => (
-        <div key={each.label} className="grid grid-cols-6 gap-1 break-all">
-          <div className="text-primary-main col-span-1 text-right font-bold">
+        <div key={each.label} className="flex w-full break-all">
+          <div className="text-primary-main w-fit min-w-[102px] shrink-0 grow-0 pr-2 text-right font-bold">
             {each.label}
           </div>
-          <div className="col-span-5">{each.value}</div>
+          <div className="grow">{each.value}</div>
         </div>
       ))}
 
