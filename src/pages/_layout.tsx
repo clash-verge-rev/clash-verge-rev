@@ -11,7 +11,6 @@ import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
 import { Paper, ThemeProvider } from "@mui/material";
 import { Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
@@ -190,7 +189,6 @@ const Layout = () => {
                 <Outlet />
               </Suspense>
             </div>
-            <TanStackRouterDevtools />
             <TailwindIndicator />
           </div>
         </Paper>
