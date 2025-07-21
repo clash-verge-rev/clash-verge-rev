@@ -63,12 +63,12 @@ impl IClashTemp {
         #[cfg(unix)]
         map.insert(
             "external-controller-unix".into(),
-            path_to_str(&ipc_path().unwrap()).unwrap().into(),
+            Self::guard_external_controller_ipc(),
         );
         #[cfg(windows)]
         map.insert(
             "external-controller-pipe".into(),
-            path_to_str(&ipc_path().unwrap()).unwrap().into(),
+            Self::guard_external_controller_ipc(),
         );
         cors_map.insert("allow-private-network".into(), true.into());
         cors_map.insert(
