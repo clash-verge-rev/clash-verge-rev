@@ -64,6 +64,7 @@ impl IClashConfig {
         map.insert("external-controller-cors".into(), cors.into());
         map.insert("tun".into(), tun.into());
         map.insert("unified-delay".into(), true.into());
+        map.insert("find-process-mode".into(), "strict".into());
         // default store selected
         let mut profile = Mapping::new();
         profile.insert("store-selected".into(), true.into());

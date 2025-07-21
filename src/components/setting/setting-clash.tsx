@@ -15,6 +15,8 @@ import {
   Shuffle,
 } from "@mui/icons-material";
 import {
+  Button,
+  ButtonGroup,
   IconButton,
   MenuItem,
   Select,
@@ -59,8 +61,10 @@ const SettingClash = ({ onError }: Props) => {
     "allow-lan": allowLan,
     "log-level": logLevel,
     "unified-delay": unifiedDelay,
+    "find-process-mode": findProcessMode,
     tun,
   } = clash ?? {};
+
   const {
     enable_random_port = false,
     enable_service_mode = false,
@@ -233,6 +237,42 @@ const SettingClash = ({ onError }: Props) => {
           // onChange={(e) => onChangeData({ ipv6: e })}
           onGuard={(e) => patchClash({ ipv6: e })}>
           <SwitchLovely edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t("Find Process Mode")}
+        extra={
+          <Tooltip
+            title={
+              <>
+                <p>always: {t("Find Process Mode Always")}</p>
+                <p>strict: {t("Find Process Mode Strict")}</p>
+                <p>off: {t("Find Process Mode Off")}</p>
+              </>
+            }
+            placement="top">
+            <IconButton color="inherit" size="small">
+              <InfoRounded fontSize="inherit" sx={{ opacity: 0.75 }} />
+            </IconButton>
+          </Tooltip>
+        }>
+        <GuardState
+          value={findProcessMode}
+          valueProps="checked"
+          onCatch={onError}
+          onGuard={(e) => patchClash({ "find-process-mode": e })}>
+          <ButtonGroup size="small" sx={{ my: "4px" }}>
+            {(["always", "strict", "off"] as const).map((mode) => (
+              <Button
+                key={mode}
+                variant={mode === findProcessMode ? "contained" : "outlined"}
+                onClick={(e) => patchClash({ "find-process-mode": mode })}
+                sx={{ textTransform: "lowercase" }}>
+                {mode}
+              </Button>
+            ))}
+          </ButtonGroup>
         </GuardState>
       </SettingItem>
 

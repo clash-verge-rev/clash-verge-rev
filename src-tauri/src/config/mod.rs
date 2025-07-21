@@ -20,7 +20,7 @@ pub const DEFAULT_PAC: &str = r#"function FindProxyForURL(url, host) {
 }
 "#;
 
-pub const CLASH_BASIC_CONFIG: [&str; 22] = [
+pub const CLASH_BASIC_CONFIG: [&str; 23] = [
     "port",
     "socks-port",
     "redir-port",
@@ -43,4 +43,5 @@ pub const CLASH_BASIC_CONFIG: [&str; 22] = [
     "sniffing",
     "tcp-concurrent",
     "interface-name",
+    "find-process-mode",
 ];

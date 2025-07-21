@@ -39,6 +39,7 @@ interface IConfigData {
     "allow-origins": string[];
   };
   "unified-delay": boolean;
+  "find-process-mode": "always" | "strict" | "off";
   tun: {
     enable?: boolean;
     stack?: string;
