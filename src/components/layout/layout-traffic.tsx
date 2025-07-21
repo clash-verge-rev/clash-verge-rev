@@ -16,6 +16,9 @@ import {
   gc,
   getTrafficData,
   getMemoryData,
+  getFormattedTrafficData,
+  getFormattedMemoryData,
+  getSystemMonitorOverview,
   startTrafficService,
 } from "@/services/cmds";
 import useSWR from "swr";
@@ -63,48 +66,59 @@ export const LayoutTraffic = () => {
     },
   );
 
-  const { data: traffic = { up: 0, down: 0 } } = useSWR<ITrafficItem>(
-    clashInfo && pageVisible ? "getTrafficData" : null,
-    getTrafficData,
+  // 使用系统监控概览 API 一次性获取所有数据
+  const { data: monitorData } = useSWR<ISystemMonitorOverview>(
+    clashInfo && pageVisible ? "getSystemMonitorOverview" : null,
+    getSystemMonitorOverview,
     {
       refreshInterval: 1000, // 1秒刷新一次
-      fallbackData: { up: 0, down: 0 },
       keepPreviousData: true,
       onSuccess: (data) => {
-        console.log("[Traffic][LayoutTraffic] IPC 获取到流量数据:", data);
-        if (data && trafficRef.current) {
-          trafficRef.current.appendData(data);
+        console.log("[Monitor][LayoutTraffic] IPC 获取到监控数据:", data);
+        if (data && data.traffic && trafficRef.current) {
+          // 为图表提供原始流量数据
+          trafficRef.current.appendData({
+            up: data.traffic.raw.up_rate, // 使用速率数据而不是总量
+            down: data.traffic.raw.down_rate,
+          });
         }
       },
       onError: (error) => {
-        console.error("[Traffic][LayoutTraffic] IPC 获取数据错误:", error);
+        console.error("[Monitor][LayoutTraffic] IPC 获取数据错误:", error);
       },
     },
   );
 
-  /* --------- meta memory information --------- */
+  // 从监控数据中提取流量和内存信息
+  const traffic = monitorData?.traffic || {
+    raw: { up_rate: 0, down_rate: 0 },
+    formatted: { up_rate: "0B", down_rate: "0B" },
+    is_fresh: false,
+  };
+  const memory = monitorData?.memory || {
+    raw: { inuse: 0 },
+    formatted: { inuse: "0B" },
+    is_fresh: false,
+  };
 
+  // 显示内存使用情况的设置
   const displayMemory = verge?.enable_memory_usage ?? true;
 
-  const { data: memory = { inuse: 0 } } = useSWR<MemoryUsage>(
-    clashInfo && pageVisible && displayMemory ? "getMemoryData" : null,
-    getMemoryData,
-    {
-      refreshInterval: 2000, // 2秒刷新一次
-      fallbackData: { inuse: 0 },
-      keepPreviousData: true,
-      onSuccess: (data) => {
-        console.log("[Memory][LayoutTraffic] IPC 获取到内存数据:", data);
-      },
-      onError: (error) => {
-        console.error("[Memory][LayoutTraffic] IPC 获取数据错误:", error);
-      },
-    },
-  );
+  // 使用格式化的数据，避免重复解析
+  const upSpeed = traffic.formatted.up_rate || "0B";
+  const downSpeed = traffic.formatted.down_rate || "0B";
+  const memoryUsage = memory.formatted.inuse || "0B";
 
-  const [up, upUnit] = parseTraffic(traffic.up);
-  const [down, downUnit] = parseTraffic(traffic.down);
-  const [inuse, inuseUnit] = parseTraffic(memory.inuse);
+  // 提取数值和单位
+  const [up, upUnit] = upSpeed.includes("B")
+    ? upSpeed.split(/(?=[KMGT]?B$)/)
+    : [upSpeed, ""];
+  const [down, downUnit] = downSpeed.includes("B")
+    ? downSpeed.split(/(?=[KMGT]?B$)/)
+    : [downSpeed, ""];
+  const [inuse, inuseUnit] = memoryUsage.includes("B")
+    ? memoryUsage.split(/(?=[KMGT]?B$)/)
+    : [memoryUsage, ""];
 
   const boxStyle: any = {
     display: "flex",
@@ -139,10 +153,17 @@ export const LayoutTraffic = () => {
       )}
 
       <Box display="flex" flexDirection="column" gap={0.75}>
-        <Box title={t("Upload Speed")} {...boxStyle}>
+        <Box
+          title={`${t("Upload Speed")} ${traffic.is_fresh ? "" : "(Stale)"}`}
+          {...boxStyle}
+          sx={{
+            ...boxStyle.sx,
+            opacity: traffic.is_fresh ? 1 : 0.6,
+          }}
+        >
           <ArrowUpwardRounded
             {...iconStyle}
-            color={+up > 0 ? "secondary" : "disabled"}
+            color={traffic.raw.up_rate > 0 ? "secondary" : "disabled"}
           />
           <Typography {...valStyle} color="secondary">
             {up}
@@ -150,10 +171,17 @@ export const LayoutTraffic = () => {
           <Typography {...unitStyle}>{upUnit}/s</Typography>
         </Box>
 
-        <Box title={t("Download Speed")} {...boxStyle}>
+        <Box
+          title={`${t("Download Speed")} ${traffic.is_fresh ? "" : "(Stale)"}`}
+          {...boxStyle}
+          sx={{
+            ...boxStyle.sx,
+            opacity: traffic.is_fresh ? 1 : 0.6,
+          }}
+        >
           <ArrowDownwardRounded
             {...iconStyle}
-            color={+down > 0 ? "primary" : "disabled"}
+            color={traffic.raw.down_rate > 0 ? "primary" : "disabled"}
           />
           <Typography {...valStyle} color="primary">
             {down}
@@ -163,9 +191,12 @@ export const LayoutTraffic = () => {
 
         {displayMemory && (
           <Box
-            title={t(isDebug ? "Memory Cleanup" : "Memory Usage")}
+            title={`${t(isDebug ? "Memory Cleanup" : "Memory Usage")} ${memory.is_fresh ? "" : "(Stale)"} ${"usage_percent" in memory.formatted && memory.formatted.usage_percent ? `(${memory.formatted.usage_percent.toFixed(1)}%)` : ""}`}
             {...boxStyle}
-            sx={{ cursor: isDebug ? "pointer" : "auto" }}
+            sx={{
+              cursor: isDebug ? "pointer" : "auto",
+              opacity: memory.is_fresh ? 1 : 0.6,
+            }}
             color={isDebug ? "success.main" : "disabled"}
             onClick={async () => {
               isDebug && (await gc());

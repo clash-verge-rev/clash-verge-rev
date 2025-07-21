@@ -311,10 +311,46 @@ export async function getTrafficData() {
 
 export async function getMemoryData() {
   console.log("[Memory][Service] 开始调用 get_memory_data");
-  const result = await invoke<{ inuse: number; oslimit?: number }>(
-    "get_memory_data",
-  );
+  const result = await invoke<{
+    inuse: number;
+    oslimit?: number;
+    usage_percent?: number;
+    last_updated?: number;
+  }>("get_memory_data");
   console.log("[Memory][Service] get_memory_data 返回结果:", result);
+  return result;
+}
+
+export async function getFormattedTrafficData() {
+  console.log("[Traffic][Service] 开始调用 get_formatted_traffic_data");
+  const result = await invoke<IFormattedTrafficData>(
+    "get_formatted_traffic_data",
+  );
+  console.log(
+    "[Traffic][Service] get_formatted_traffic_data 返回结果:",
+    result,
+  );
+  return result;
+}
+
+export async function getFormattedMemoryData() {
+  console.log("[Memory][Service] 开始调用 get_formatted_memory_data");
+  const result = await invoke<IFormattedMemoryData>(
+    "get_formatted_memory_data",
+  );
+  console.log("[Memory][Service] get_formatted_memory_data 返回结果:", result);
+  return result;
+}
+
+export async function getSystemMonitorOverview() {
+  console.log("[Monitor][Service] 开始调用 get_system_monitor_overview");
+  const result = await invoke<ISystemMonitorOverview>(
+    "get_system_monitor_overview",
+  );
+  console.log(
+    "[Monitor][Service] get_system_monitor_overview 返回结果:",
+    result,
+  );
   return result;
 }
 

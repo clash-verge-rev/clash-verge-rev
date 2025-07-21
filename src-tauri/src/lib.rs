@@ -291,6 +291,9 @@ pub fn run() {
             cmd::clash_gc,
             cmd::get_traffic_data,
             cmd::get_memory_data,
+            cmd::get_formatted_traffic_data,
+            cmd::get_formatted_memory_data,
+            cmd::get_system_monitor_overview,
             cmd::start_traffic_service,
             cmd::stop_traffic_service,
             // verge

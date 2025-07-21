@@ -337,6 +337,7 @@ impl IpcManager {
     }
 
     // 流量数据相关
+    #[allow(dead_code)]
     pub async fn get_traffic(&self) -> AnyResult<serde_json::Value> {
         let url = "/traffic";
         logging!(info, Type::Ipc, true, "IPC: 发送 GET 请求到 {}", url);
@@ -351,6 +352,8 @@ impl IpcManager {
         result
     }
 
+    // 内存相关
+    #[allow(dead_code)]
     pub async fn get_memory(&self) -> AnyResult<serde_json::Value> {
         let url = "/memory";
         logging!(info, Type::Ipc, true, "IPC: 发送 GET 请求到 {}", url);

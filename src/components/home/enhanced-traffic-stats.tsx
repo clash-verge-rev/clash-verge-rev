@@ -30,6 +30,7 @@ import {
   gc,
   getTrafficData,
   getMemoryData,
+  getSystemMonitorOverview,
 } from "@/services/cmds";
 import { ReactNode } from "react";
 import { useAppData } from "@/providers/app-data-provider";
@@ -189,30 +190,44 @@ export const EnhancedTrafficStats = () => {
     },
   );
 
-  // 使用 IPC 获取流量数据
-  const { data: trafficData } = useSWR<ITrafficItem>(
-    clashInfo && pageVisible ? "getTrafficData" : null,
-    getTrafficData,
+  // 使用系统监控概览 API 一次性获取所有数据
+  const { data: monitorData } = useSWR<ISystemMonitorOverview>(
+    clashInfo && pageVisible ? "getSystemMonitorOverview" : null,
+    getSystemMonitorOverview,
     {
       refreshInterval: 1000, // 1秒刷新一次
-      fallbackData: { up: 0, down: 0 },
       keepPreviousData: true,
       onSuccess: (data) => {
         console.log(
-          "[Traffic][EnhancedTrafficStats] IPC 获取到流量数据:",
+          "[Monitor][EnhancedTrafficStats] IPC 获取到监控数据:",
           data,
         );
         if (data) {
-          const safeUp = isNaN(data.up) ? 0 : data.up;
-          const safeDown = isNaN(data.down) ? 0 : data.down;
-          console.log("[Traffic][EnhancedTrafficStats] 处理后的数据:", {
+          // 使用速率数据而不是总量
+          const safeUp = isNaN(data.traffic.raw.up_rate)
+            ? 0
+            : data.traffic.raw.up_rate;
+          const safeDown = isNaN(data.traffic.raw.down_rate)
+            ? 0
+            : data.traffic.raw.down_rate;
+          const safeInuse = isNaN(data.memory.raw.inuse)
+            ? 0
+            : data.memory.raw.inuse;
+          const safeOslimit = isNaN(data.memory.raw.oslimit)
+            ? undefined
+            : data.memory.raw.oslimit;
+
+          console.log("[Monitor][EnhancedTrafficStats] 处理后的数据:", {
             up: safeUp,
             down: safeDown,
+            inuse: safeInuse,
+            oslimit: safeOslimit,
           });
-          setStats((prev) => ({
-            ...prev,
+
+          setStats({
             traffic: { up: safeUp, down: safeDown },
-          }));
+            memory: { inuse: safeInuse, oslimit: safeOslimit },
+          });
 
           // 为图表添加数据
           if (trafficRef.current) {
@@ -226,39 +241,13 @@ export const EnhancedTrafficStats = () => {
       },
       onError: (error) => {
         console.error(
-          "[Traffic][EnhancedTrafficStats] IPC 获取数据错误:",
+          "[Monitor][EnhancedTrafficStats] IPC 获取数据错误:",
           error,
         );
-        setStats((prev) => ({ ...prev, traffic: { up: 0, down: 0 } }));
-      },
-    },
-  );
-
-  // 使用 IPC 获取内存数据
-  const { data: memoryData } = useSWR<MemoryUsage>(
-    clashInfo && pageVisible ? "getMemoryData" : null,
-    getMemoryData,
-    {
-      refreshInterval: 2000, // 2秒刷新一次
-      fallbackData: { inuse: 0 },
-      keepPreviousData: true,
-      onSuccess: (data) => {
-        if (data) {
-          setStats((prev) => ({
-            ...prev,
-            memory: {
-              inuse: isNaN(data.inuse) ? 0 : data.inuse,
-              oslimit: data.oslimit,
-            },
-          }));
-        }
-      },
-      onError: (error) => {
-        console.error("[Memory] IPC 获取数据错误:", error);
-        setStats((prev) => ({
-          ...prev,
+        setStats({
+          traffic: { up: 0, down: 0 },
           memory: { inuse: 0, oslimit: undefined },
-        }));
+        });
       },
     },
   );
@@ -335,6 +324,8 @@ export const EnhancedTrafficStats = () => {
               }}
             >
               DEBUG: {!!trafficRef.current ? "图表已初始化" : "图表未初始化"}
+              <br />
+              状态: {monitorData?.overall_status || "unknown"}
               <br />
               {new Date().toISOString().slice(11, 19)}
             </div>

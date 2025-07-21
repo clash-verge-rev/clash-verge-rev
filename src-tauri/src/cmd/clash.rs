@@ -1,12 +1,5 @@
 use super::CmdResult;
-use crate::{
-    config::*,
-    core::{traffic::TrafficService, *},
-    feat,
-    ipc::IpcManager,
-    process::AsyncHandler,
-    wrap_err,
-};
+use crate::{config::*, core::*, feat, ipc::IpcManager, process::AsyncHandler, wrap_err};
 use serde_yaml::Mapping;
 
 /// 复制Clash环境变量
@@ -363,46 +356,157 @@ pub async fn close_all_clash_connections() -> CmdResult {
     wrap_err!(IpcManager::global().close_all_connections().await)
 }
 
-/// 获取流量数据
+/// 获取流量数据 (使用新的IPC流式监控)
 #[tauri::command]
 pub async fn get_traffic_data() -> CmdResult<serde_json::Value> {
-    log::info!(target: "app", "开始获取流量数据");
-    let traffic_data = TrafficService::global().get_traffic_data();
+    log::info!(target: "app", "开始获取流量数据 (IPC流式)");
+    let traffic = crate::ipc::get_current_traffic().await;
     let result = serde_json::json!({
-        "up": traffic_data.up,
-        "down": traffic_data.down
+        "up": traffic.total_up,
+        "down": traffic.total_down,
+        "up_rate": traffic.up_rate,
+        "down_rate": traffic.down_rate,
+        "last_updated": traffic.last_updated.elapsed().as_secs()
     });
-    log::info!(target: "app", "获取流量数据结果: {result:?}");
+    log::info!(target: "app", "获取流量数据结果: up={}, down={}, up_rate={}, down_rate={}", 
+        traffic.total_up, traffic.total_down, traffic.up_rate, traffic.down_rate);
     Ok(result)
 }
 
-/// 获取内存数据
+/// 获取内存数据 (使用新的IPC流式监控)
 #[tauri::command]
 pub async fn get_memory_data() -> CmdResult<serde_json::Value> {
-    log::info!(target: "app", "开始获取内存数据");
-    let memory_data = TrafficService::global().get_memory_data();
+    log::info!(target: "app", "开始获取内存数据 (IPC流式)");
+    let memory = crate::ipc::get_current_memory().await;
+    let usage_percent = if memory.oslimit > 0 {
+        (memory.inuse as f64 / memory.oslimit as f64) * 100.0
+    } else {
+        0.0
+    };
     let result = serde_json::json!({
-        "inuse": memory_data.inuse,
-        "oslimit": memory_data.oslimit
+        "inuse": memory.inuse,
+        "oslimit": memory.oslimit,
+        "usage_percent": usage_percent,
+        "last_updated": memory.last_updated.elapsed().as_secs()
     });
-    log::info!(target: "app", "获取内存数据结果: {result:?}");
+    log::info!(target: "app", "获取内存数据结果: inuse={}, oslimit={}, usage={}%", 
+        memory.inuse, memory.oslimit, usage_percent);
     Ok(result)
 }
 
-/// 启动流量监控服务
+/// 启动流量监控服务 (IPC流式监控自动启动，此函数为兼容性保留)
 #[tauri::command]
 pub async fn start_traffic_service() -> CmdResult {
-    log::info!(target: "app", "启动流量监控服务");
-
-    wrap_err!(TrafficService::global().start().map_err(|e| e.to_string()))
+    log::info!(target: "app", "启动流量监控服务 (IPC流式监控)");
+    // 新的IPC监控在首次访问时自动启动
+    // 触发一次访问以确保监控器已初始化
+    let _ = crate::ipc::get_current_traffic().await;
+    let _ = crate::ipc::get_current_memory().await;
+    log::info!(target: "app", "IPC流式监控已激活");
+    Ok(())
 }
 
-/// 停止流量监控服务
+/// 停止流量监控服务 (IPC流式监控无需显式停止，此函数为兼容性保留)
 #[tauri::command]
 pub async fn stop_traffic_service() -> CmdResult {
-    log::info!(target: "app", "停止流量监控服务");
-    TrafficService::global().stop();
+    log::info!(target: "app", "停止流量监控服务请求 (IPC流式监控)");
+    // 新的IPC监控是持久的，无需显式停止
+    log::info!(target: "app", "IPC流式监控继续运行");
     Ok(())
+}
+
+/// 获取格式化的流量数据 (包含单位，便于前端显示)
+#[tauri::command]
+pub async fn get_formatted_traffic_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "获取格式化流量数据");
+    let (up_rate, down_rate, total_up, total_down, is_fresh) =
+        crate::ipc::get_formatted_traffic().await;
+    let result = serde_json::json!({
+        "up_rate_formatted": up_rate,
+        "down_rate_formatted": down_rate,
+        "total_up_formatted": total_up,
+        "total_down_formatted": total_down,
+        "is_fresh": is_fresh
+    });
+    log::debug!(target: "app", "格式化流量数据: ↑{up_rate}/s ↓{down_rate}/s (总计: ↑{total_up} ↓{total_down})");
+    // Clippy: variables can be used directly in the format string
+    // log::debug!(target: "app", "格式化流量数据: ↑{up_rate}/s ↓{down_rate}/s (总计: ↑{total_up} ↓{total_down})");
+    Ok(result)
+}
+
+/// 获取格式化的内存数据 (包含单位，便于前端显示)
+#[tauri::command]
+pub async fn get_formatted_memory_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "获取格式化内存数据");
+    let (inuse, oslimit, usage_percent, is_fresh) = crate::ipc::get_formatted_memory().await;
+    let result = serde_json::json!({
+        "inuse_formatted": inuse,
+        "oslimit_formatted": oslimit,
+        "usage_percent": usage_percent,
+        "is_fresh": is_fresh
+    });
+    log::debug!(target: "app", "格式化内存数据: {inuse} / {oslimit} ({usage_percent:.1}%)");
+    // Clippy: variables can be used directly in the format string
+    // log::debug!(target: "app", "格式化内存数据: {inuse} / {oslimit} ({usage_percent:.1}%)");
+    Ok(result)
+}
+
+/// 获取系统监控概览 (流量+内存，便于前端一次性获取所有状态)
+#[tauri::command]
+pub async fn get_system_monitor_overview() -> CmdResult<serde_json::Value> {
+    log::debug!(target: "app", "获取系统监控概览");
+
+    // 并发获取流量和内存数据
+    let (traffic, memory) = tokio::join!(
+        crate::ipc::get_current_traffic(),
+        crate::ipc::get_current_memory()
+    );
+
+    let (traffic_formatted, memory_formatted) = tokio::join!(
+        crate::ipc::get_formatted_traffic(),
+        crate::ipc::get_formatted_memory()
+    );
+
+    let traffic_is_fresh = traffic.last_updated.elapsed().as_secs() < 5;
+    let memory_is_fresh = memory.last_updated.elapsed().as_secs() < 10;
+
+    let result = serde_json::json!({
+        "traffic": {
+            "raw": {
+                "up": traffic.total_up,
+                "down": traffic.total_down,
+                "up_rate": traffic.up_rate,
+                "down_rate": traffic.down_rate
+            },
+            "formatted": {
+                "up_rate": traffic_formatted.0,
+                "down_rate": traffic_formatted.1,
+                "total_up": traffic_formatted.2,
+                "total_down": traffic_formatted.3
+            },
+            "is_fresh": traffic_is_fresh
+        },
+        "memory": {
+            "raw": {
+                "inuse": memory.inuse,
+                "oslimit": memory.oslimit,
+                "usage_percent": if memory.oslimit > 0 {
+                    (memory.inuse as f64 / memory.oslimit as f64) * 100.0
+                } else {
+                    0.0
+                }
+            },
+            "formatted": {
+                "inuse": memory_formatted.0,
+                "oslimit": memory_formatted.1,
+                "usage_percent": memory_formatted.2
+            },
+            "is_fresh": memory_is_fresh
+        },
+        "overall_status": if traffic_is_fresh && memory_is_fresh { "healthy" } else { "stale" }
+    });
+
+    Ok(result)
 }
 
 /// 获取代理组延迟

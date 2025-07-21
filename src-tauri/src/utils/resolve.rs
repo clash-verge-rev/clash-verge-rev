@@ -2,7 +2,7 @@
 use crate::AppHandleManager;
 use crate::{
     config::{Config, IVerge, PrfItem},
-    core::{traffic::TrafficService, *},
+    core::*,
     logging, logging_error,
     module::lightweight::{self, auto_lightweight_mode_init},
     process::AsyncHandler,
@@ -172,31 +172,31 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     log::trace!(target: "app", "启动内嵌服务器...");
     server::embed_server();
 
-    logging!(trace, Type::Core, true, "启动 Traffic 服务...");
-    logging_error!(Type::Core, true, TrafficService::global().start());
+    logging!(trace, Type::Core, true, "启动 IPC 监控服务...");
+    // IPC 监控器将在首次调用时自动初始化
 
-    // 启动测试线程，持续打印流量数据
-    logging!(info, Type::Core, true, "启动流量数据测试线程...");
-    AsyncHandler::spawn(|| async {
-        let mut interval = tokio::time::interval(std::time::Duration::from_secs(2));
-        loop {
-            interval.tick().await;
+    // // 启动测试线程，持续打印流量数据
+    // logging!(info, Type::Core, true, "启动流量数据测试线程...");
+    // AsyncHandler::spawn(|| async {
+    //     let mut interval = tokio::time::interval(std::time::Duration::from_secs(2));
+    //     loop {
+    //         interval.tick().await;
 
-            let traffic_data = TrafficService::global().get_traffic_data();
-            let memory_data = TrafficService::global().get_memory_data();
+    //         let traffic_data = get_current_traffic().await;
+    //         let memory_data = get_current_memory().await;
 
-            println!("=== Traffic Data Test ===");
-            println!(
-                "Traffic - Up: {} bytes, Down: {} bytes, Timestamp: {}",
-                traffic_data.up, traffic_data.down, traffic_data.timestamp
-            );
-            println!(
-                "Memory - InUse: {} bytes, OSLimit: {:?}, Timestamp: {}",
-                memory_data.inuse, memory_data.oslimit, memory_data.timestamp
-            );
-            println!("========================");
-        }
-    });
+    //         println!("=== Traffic Data Test (IPC) ===");
+    //         println!(
+    //             "Traffic - Up: {} bytes/s, Down: {} bytes/s, Last Updated: {:?}",
+    //             traffic_data.up_rate, traffic_data.down_rate, traffic_data.last_updated
+    //         );
+    //         println!(
+    //             "Memory - InUse: {} bytes, OSLimit: {:?}, Last Updated: {:?}",
+    //             memory_data.inuse, memory_data.oslimit, memory_data.last_updated
+    //         );
+    //         println!("==============================");
+    //     }
+    // });
 
     logging_error!(Type::Tray, true, tray::Tray::global().init());
 
