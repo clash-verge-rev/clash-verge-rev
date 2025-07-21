@@ -66,7 +66,10 @@ impl IClashTemp {
             path_to_str(&ipc_path().unwrap()).unwrap().into(),
         );
         #[cfg(windows)]
-        map.insert("external-controller-pipe".into(), r"\\.\pipe\mihomo".into());
+        map.insert(
+            "external-controller-pipe".into(),
+            path_to_str(&ipc_path().unwrap()).unwrap().into(),
+        );
         cors_map.insert("allow-private-network".into(), true.into());
         cors_map.insert(
             "allow-origins".into(),
@@ -99,9 +102,9 @@ impl IClashTemp {
         let port = Self::guard_port(&config);
         let ctrl = Self::guard_external_controller(&config);
         #[cfg(unix)]
-        let external_controller_unix = Self::guard_external_controller_unix(&config);
+        let external_controller_unix = Self::guard_external_controller_ipc();
         #[cfg(windows)]
-        let external_controller_pipe = Self::guard_external_controller_pipe(&config);
+        let external_controller_pipe = Self::guard_external_controller_ipc();
 
         #[cfg(not(target_os = "windows"))]
         config.insert("redir-port".into(), redir_port.into());
@@ -303,24 +306,9 @@ impl IClashTemp {
         }
     }
 
-    #[cfg(unix)]
-    pub fn guard_external_controller_unix(config: &Mapping) -> String {
-        config
-            .get("external-controller-unix")
-            .and_then(|value| value.as_str())
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| path_to_str(&ipc_path().unwrap()).unwrap().into())
-    }
-
-    #[cfg(windows)]
-    pub fn guard_external_controller_pipe(config: &Mapping) -> String {
-        config
-            .get("external-controller-pipe")
-            .and_then(|value| value.as_str())
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| r"\\.\pipe\mihomo".to_string())
+    pub fn guard_external_controller_ipc() -> String {
+        // 总是使用当前的 IPC 路径，确保配置文件与运行时路径一致
+        path_to_str(&ipc_path().unwrap()).unwrap().to_string()
     }
 }
 

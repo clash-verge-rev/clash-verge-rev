@@ -244,49 +244,39 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
 }
 
 #[cfg(unix)]
-pub fn mihomo_safe_dir_path() -> Option<PathBuf> {
-    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config"))
+pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
+    ["/var/tmp", "/tmp"]
+        .iter()
+        .map(PathBuf::from)
+        .find(|path| path.exists())
+        .or_else(|| {
+            std::env::var_os("HOME").and_then(|home| {
+                let home_config = PathBuf::from(home).join(".config");
+                if home_config.exists() {
+                    Some(home_config)
+                } else if fs::create_dir_all(&home_config).is_ok() {
+                    Some(home_config)
+                } else {
+                    log::error!(target: "app", "Failed to create safe directory: {:?}", home_config);
+                    None
+                }
+            })
+        })
 }
 
 #[cfg(unix)]
-pub fn has_mihomo_safe_dir() -> bool {
-    if let Some(config_dir) = mihomo_safe_dir_path() {
-        if config_dir.exists() {
-            return true;
-        }
-        if fs::create_dir_all(&config_dir).is_ok() {
-            return true;
-        }
-        log::error!(target: "app", "Failed to create .config directory");
-    }
-    false
-}
-
-#[cfg(target_os = "macos")]
 pub fn ipc_path() -> Result<PathBuf> {
-    if has_mihomo_safe_dir() {
-        let res_dir = mihomo_safe_dir_path()
-            .ok_or(anyhow::anyhow!("Failed to get mihomo safe dir path"))?
-            .join("mihomo.sock");
-        return Ok(res_dir);
-    }
-    let res_dir = app_home_dir()?;
-    Ok(res_dir.join("mihomo.sock"))
-}
-
-#[cfg(target_os = "linux")]
-pub fn ipc_path() -> Result<PathBuf> {
-    if has_mihomo_safe_dir() {
-        let res_dir = mihomo_safe_dir_path()
-            .ok_or(anyhow::anyhow!("Failed to get mihomo safe dir path"))?
-            .join("mihomo.sock");
-        return Ok(res_dir);
-    }
-    let res_dir = app_home_dir()?;
-    Ok(res_dir.join("mihomo.sock"))
+    ensure_mihomo_safe_dir()
+        .map(|base_dir| base_dir.join("verge").join("verge-mihomo.sock"))
+        .or_else(|| {
+            app_home_dir()
+                .ok()
+                .map(|dir| dir.join("verge").join("verge-mihomo.sock"))
+        })
+        .ok_or_else(|| anyhow::anyhow!("Failed to determine ipc path"))
 }
 
 #[cfg(target_os = "windows")]
 pub fn ipc_path() -> Result<PathBuf> {
-    Ok(PathBuf::from(r"\\.\pipe\mihomo"))
+    Ok(PathBuf::from(r"\\.\pipe\verge-mihomo"))
 }
