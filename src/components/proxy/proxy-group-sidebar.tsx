@@ -40,7 +40,11 @@ export const ProxyGroupSidebar = (props: Props) => {
       )}>
       <div className="no-scrollbar hover:scrollbar w-full !space-y-2 overflow-auto px-1 py-2">
         {groupNameListWithShortName.map((item) => (
-          <Tooltip title={item.name} key={item.name} placement="left">
+          <Tooltip
+            title={item.name}
+            key={item.name}
+            placement="top"
+            followCursor>
             <Link
               underline="hover"
               className="text-primary-text hover:text-secondary-text line-clamp-1 cursor-pointer"
