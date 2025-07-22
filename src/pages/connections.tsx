@@ -10,22 +10,21 @@ import {
 } from "@/components/connection/connection-detail";
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
-import { useConnectionData } from "@/hooks/use-connection-data";
+import { initConnData, useConnectionData } from "@/hooks/use-connection-data";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
-import { TableChartRounded, TableRowsRounded } from "@mui/icons-material";
-import { Box, Button, IconButton, MenuItem } from "@mui/material";
+import {
+  Download,
+  TableChartRounded,
+  TableRowsRounded,
+  Upload,
+} from "@mui/icons-material";
+import { Box, Button, IconButton, MenuItem, Tooltip } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import { closeAllConnections, closeConnections } from "tauri-plugin-mihomo-api";
-
-const initConn: IConnections = {
-  uploadTotal: 0,
-  downloadTotal: 0,
-  connections: [],
-};
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
@@ -51,7 +50,7 @@ const ConnectionsPage = () => {
   };
 
   const {
-    response: { data: connData = initConn },
+    response: { data: connData = initConnData },
   } = useConnectionData();
 
   const [filterConn] = useMemo(() => {
@@ -74,6 +73,8 @@ const ConnectionsPage = () => {
   });
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
+  const totalUpload = parseTraffic(connData.uploadTotal);
+  const totalDownload = parseTraffic(connData.downloadTotal);
 
   return (
     <BasePage
@@ -82,13 +83,23 @@ const ConnectionsPage = () => {
       contentStyle={{ height: "100%" }}
       header={
         <div className="mx-2 flex items-center overflow-hidden">
-          <div className="flex items-center space-x-2 p-2">
-            <span>
-              {t("Total Downloaded")}: {parseTraffic(connData.downloadTotal)}
-            </span>
-            <span>
-              {t("Total Uploaded")}: {parseTraffic(connData.uploadTotal)}
-            </span>
+          <div className="flex w-full items-center space-x-2 p-2">
+            <div className="flex w-fit items-center space-x-4">
+              <div className="flex w-full items-center space-x-1">
+                <Tooltip title={t("Total Uploaded")}>
+                  <Upload fontSize="small" />
+                </Tooltip>
+                <span className="text-sm">{totalUpload[0]}</span>
+                <span className="text-sm">{totalUpload[1]}</span>
+              </div>
+              <div className="flex w-full items-center space-x-1">
+                <Tooltip title={t("Total Downloaded")}>
+                  <Download fontSize="small" />
+                </Tooltip>
+                <span className="text-sm">{totalDownload[0]}</span>
+                <span className="text-sm">{totalDownload[1]}</span>
+              </div>
+            </div>
             <IconButton
               color="inherit"
               size="small"
@@ -107,12 +118,13 @@ const ConnectionsPage = () => {
               )}
             </IconButton>
           </div>
-
-          <Button size="small" variant="contained" onClick={onCloseAll}>
-            <span style={{ whiteSpace: "nowrap" }}>
-              {t("Close All")} {filterConn.length}
-            </span>
-          </Button>
+          <div>
+            <Button size="small" variant="contained" onClick={onCloseAll}>
+              <span style={{ whiteSpace: "nowrap" }}>
+                {t("Close All")} {filterConn.length}
+              </span>
+            </Button>
+          </div>
         </div>
       }>
       <Box

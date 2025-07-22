@@ -5,7 +5,7 @@ import { mutate } from "swr";
 import useSWRSubscription from "swr/subscription";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
-const initData: IConnections = {
+export const initConnData: IConnections = {
   uploadTotal: 0,
   downloadTotal: 0,
   connections: [],
@@ -35,7 +35,7 @@ export const useConnectionData = () => {
                   timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as IConnections;
-                  next(null, (old = initData) => {
+                  next(null, (old = initConnData) => {
                     const oldConn = old.connections;
                     const maxLen = data.connections?.length;
                     const connections: IConnectionsItem[] = [];
@@ -80,7 +80,7 @@ export const useConnectionData = () => {
       };
     },
     {
-      fallbackData: initData,
+      fallbackData: initConnData,
       keepPreviousData: true,
     },
   );
