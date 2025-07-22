@@ -172,8 +172,8 @@ importers:
         specifier: 1.15.8
         version: 1.15.8
       '@vitejs/plugin-legacy':
-        specifier: 7.0.1
-        version: 7.0.1(terser@5.43.1)(vite@7.0.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))
+        specifier: 7.1.0
+        version: 7.1.0(terser@5.43.1)(vite@7.0.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))
       '@vitejs/plugin-react':
         specifier: 4.7.0
         version: 4.7.0(vite@7.0.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))
@@ -1967,8 +1967,8 @@ packages:
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
 
-  '@vitejs/plugin-legacy@7.0.1':
-    resolution: {integrity: sha512-ZpT0cKlFzNPU/kjdKzuI+2aDr2MYs7MxndmV7ekAMO2TD6YdU6GJKtc+/K7gaiJwEyaAZhDsxmBSi7SqM6MBxQ==}
+  '@vitejs/plugin-legacy@7.1.0':
+    resolution: {integrity: sha512-dzpcfN7gWWgzUwSxv7/ntUTEvoA8BYQWsdrawZFfwDSbitsEOXj8oSLn7I8QHJ8ijDukmCxsuUcib42EyTEVMw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       terser: ^5.16.0
@@ -5335,9 +5335,11 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-legacy@7.0.1(terser@5.43.1)(vite@7.0.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))':
+  '@vitejs/plugin-legacy@7.1.0(terser@5.43.1)(vite@7.0.5(@types/node@22.15.30)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.80.3)(terser@5.43.1)(tsx@4.19.4)(yaml@2.8.0))':
     dependencies:
       '@babel/core': 7.28.0
+      '@babel/plugin-transform-dynamic-import': 7.27.1(@babel/core@7.28.0)
+      '@babel/plugin-transform-modules-systemjs': 7.27.1(@babel/core@7.28.0)
       '@babel/preset-env': 7.28.0(@babel/core@7.28.0)
       babel-plugin-polyfill-corejs3: 0.13.0(@babel/core@7.28.0)
       babel-plugin-polyfill-regenerator: 0.6.5(@babel/core@7.28.0)
