@@ -38,8 +38,6 @@ export const useCustomTheme = () => {
   const { theme_mode, theme_setting } = verge ?? {};
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
-
-  // 提取用户自定义的背景图URL
   const userBackgroundImage = theme_setting?.background_image || "";
   const hasUserBackground = !!userBackgroundImage;
 
@@ -56,16 +54,19 @@ export const useCustomTheme = () => {
 
     let isMounted = true;
 
-    appWindow
-      .theme()
-      .then((systemTheme) => {
-        if (isMounted && systemTheme) {
-          setMode(systemTheme);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to get initial system theme:", err);
-      });
+    const timerId = setTimeout(() => {
+      if (!isMounted) return;
+      appWindow
+        .theme()
+        .then((systemTheme) => {
+          if (isMounted && systemTheme) {
+            setMode(systemTheme);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to get initial system theme:", err);
+        });
+    }, 0);
 
     const unlistenPromise = appWindow.onThemeChanged(({ payload }) => {
       if (isMounted) {
@@ -75,6 +76,7 @@ export const useCustomTheme = () => {
 
     return () => {
       isMounted = false;
+      clearTimeout(timerId);
       unlistenPromise
         .then((unlistenFn) => {
           if (typeof unlistenFn === "function") {
@@ -175,7 +177,6 @@ export const useCustomTheme = () => {
       const scrollColor = mode === "light" ? "#90939980" : "#555555";
       const dividerColor =
         mode === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)";
-
       rootEle.style.setProperty("--divider-color", dividerColor);
       rootEle.style.setProperty("--background-color", backgroundColor);
       rootEle.style.setProperty("--selection-color", selectColor);
@@ -188,7 +189,6 @@ export const useCustomTheme = () => {
         "--background-color-alpha",
         alpha(muiTheme.palette.primary.main, 0.1),
       );
-      // 添加CSS变量
       rootEle.style.setProperty(
         "--window-border-color",
         mode === "light" ? "#cccccc" : "#1E1E1E",
@@ -201,8 +201,6 @@ export const useCustomTheme = () => {
         "--scrollbar-thumb",
         mode === "light" ? "#c1c1c1" : "#555555",
       );
-
-      // 设置背景图相关变量
       rootEle.style.setProperty(
         "--user-background-image",
         hasUserBackground ? `url('${userBackgroundImage}')` : "none",
@@ -227,7 +225,6 @@ export const useCustomTheme = () => {
     }
 
     if (styleElement) {
-      // 改进的全局样式，支持用户自定义背景图
       const globalStyles = `
         /* 修复滚动条样式 */
         ::-webkit-scrollbar {
