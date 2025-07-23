@@ -65,15 +65,6 @@ export const LayoutTraffic = () => {
     });
   }, []); // 移除依赖，只在组件挂载时启动一次
 
-  const { data: isDebug } = useSWR(
-    "clash-verge-rev-internal://isDebugEnabled",
-    () => isDebugEnabled(),
-    {
-      // default value before is fetched
-      fallbackData: false,
-    },
-  );
-
   // 监听数据变化，为图表添加数据点
   useEffect(() => {
     if (traffic?.raw && trafficRef.current) {
