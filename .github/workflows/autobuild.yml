@@ -527,8 +527,8 @@ jobs:
           with open("./snapcraft.yaml", "w") as conf:
             safe_dump(snapcraft, conf, default_flow_style=False)
             pass
-          print(f"Hijacked version: {snapcraft['version']}"')
-          print(f"Hijacked deb soursce: {snapcraft['parts']['clash-verge-rev']['source']}")
+          print(f"Hijacked version: {snapcraft['version']}")
+          print(f"Hijacked deb source: {snapcraft['parts']['clash-verge-rev']['source']}")
           print("Hijacked succeeded!")
 
       - uses: snapcore/action-build@v1
