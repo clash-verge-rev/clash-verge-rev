@@ -61,6 +61,13 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
     showNotice("success", t("Copy Success"), 1000);
   }, []);
 
+  const copyVersion = useCallback(() => {
+    navigator.clipboard.writeText(`v${version}`)
+      .then(() => {
+        showNotice("success", t("Version copied to clipboard"), 1000);
+      })
+  }, [version, t]);
+
   return (
     <SettingList title={t("Verge Advanced Setting")}>
       <ThemeViewer ref={themeRef} />
@@ -135,7 +142,16 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
         }
       ></SettingItem>
 
-      <SettingItem label={t("Verge Version")}>
+      <SettingItem
+        label={t("Verge Version")}
+        extra={
+          <TooltipIcon
+            icon={ContentCopyRounded}
+            onClick={copyVersion}
+            title={t("Copy Version")}
+          />
+        }
+      >
         <Typography sx={{ py: "7px", pr: 1 }}>v{version}</Typography>
       </SettingItem>
     </SettingList>
