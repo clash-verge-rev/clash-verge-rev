@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=https://github.com/canonical/snapcraft/raw/refs/heads/main/schema/snapcraft.json
+name: clash-verge-rev
+title: Clash Verge Rev
+license: GPL-3.0
+# [NOTE]
+# Will also be hijacked in GitHub Workflows on the fly, to avoid version mismatch with other assets.
+version: "2.4.0"
+type: app
+base: core22
+grade: stable
+confinement: strict
+
+summary: A Clash Meta GUI based on Tauri.
+description: |
+  A modern GUI client based on Tauri, designed to run in Windows, macOS and Linux for tailored proxy experience
+source-code: https://github.com/clash-verge-rev/clash-verge-rev
+contact:
+  # For issues related to this snap.
+  - https://github.com/Dragon1573
+  # For issues related to anything else.
+  - https://github.com/clash-verge-rev
+website: https://www.clashverge.dev/
+# Please also ping @Dragon1573 when reporting bugs specifically related to this Snap.
+issues: https://github.com/clash-verge-rev/clash-verge-rev/issues
+donation: https://github.com/sponsors/clash-verge-rev
+
+icon: src-tauri/icons/128x128.png
+
+layout:
+  ##### Begin: GNOME extension
+  /usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libgweather-4:
+    symlink: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libgweather-4
+  /usr/lib/evolution-data-server:
+    symlink: $SNAP/usr/lib/evolution-data-server
+  /usr/bin/gnome-control-center:
+    symlink: $SNAP/usr/bin/gnome-control-center
+  /usr/lib/$SNAPCRAFT_ARCH_TRIPLET/webkit2gtk-4.1:
+    bind: $SNAP/gnome-platform/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/webkit2gtk-4.1
+  /usr/share/xml/iso-codes:
+    bind: $SNAP/gnome-platform/usr/share/xml/iso-codes
+  /usr/share/libdrm:
+    bind: $SNAP/gnome-platform/usr/share/libdrm
+  ##### End: GNOME extension
+
+architectures:
+  # We're currently using amd64 arch of GitHub-hosted Runner.
+  # All other architectures can be cross-built by snapcraft.
+  #
+  # [TODO] Might be able to use arm64 local images for arm64/armhf build?
+  - build-on: amd64
+    # yaml-language-server ignore
+    build-for: amd64
+  - build-on: amd64
+    build-for: arm64
+  - build-on: amd64
+    build-for: armhf
+
+plugs:
+  desktop:
+    mount-host-font-cache: false
+  gtk-3-themes:
+    interface: content
+    target: $SNAP/data-dir/themes
+    default-provider: gtk-common-themes
+  icon-themes:
+    interface: content
+    target: $SNAP/data-dir/icons
+    default-provider: gtk-common-themes
+  sound-themes:
+    interface: content
+    target: $SNAP/data-dir/sounds
+    default-provider: gtk-common-themes
+  gnome-42-2204:
+    interface: content
+    target: $SNAP/gnome-platform
+    default-provider: gnome-42-2204
+  dot-cvr-profiles:
+    interface: personal-files
+    write:
+      - "$HOME/.local/share/io.github.clash-verge-rev.clash-verge-rev"
+  clash-verge-service:
+    interface: system-files
+    read:
+      - "/tmp/clash-verge-service.sock"
+  graphics-core22:
+    interface: content
+    target: $SNAP/graphics
+    default-provider: mesa-core22
+
+apps:
+  clash-verge-rev:
+    command: usr/bin/clash-verge
+    desktop: "usr/share/applications/Clash Verge.desktop"
+    extensions:
+      - gnome
+    plugs:
+      ##### Users specified
+      # Networks
+      - network
+      - network-bind
+      # Profiles
+      - home
+      - dot-cvr-profiles
+      # Unix sockets & BUS
+      - clash-verge-service
+      ##### GNOME extension
+      - desktop
+      - desktop-legacy
+      - gsettings
+      - opengl
+      - wayland
+      - x11
+      - mount-observe
+      - calendar-service
+      - graphics-core22
+
+environment:
+  LIBGL_ALWAYS_SOFTWARE: 1
+  SNAP_DESKTOP_RUNTIME: $SNAP/gnome-platform
+  GTK_USE_PORTAL: "1"
+
+parts:
+  clash-verge-rev:
+    plugin: dump
+    source-type: deb
+    # [NOTE]
+    # This deb URL is currently hardcoded as a placeholder, convinient for testing on local amd64 machine.
+    # This will be hijacked in GitHub Workflows on the fly.
+    source: https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild/Clash.Verge_2.4.0_amd64.deb
+    build-environment:
+      - PATH: /snap/gnome-42-2204-sdk/current/usr/bin${PATH:+:$PATH}
+      - XDG_DATA_DIRS: $SNAPCRAFT_STAGE/usr/share:/snap/gnome-42-2204-sdk/current/usr/share:/usr/share${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}
+      - LD_LIBRARY_PATH: /snap/gnome-42-2204-sdk/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:/snap/gnome-42-2204-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:/snap/gnome-42-2204-sdk/current/usr/lib:/snap/gnome-42-2204-sdk/current/usr/lib/vala-current:/snap/gnome-42-2204-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+      - PKG_CONFIG_PATH: /snap/gnome-42-2204-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pkgconfig:/snap/gnome-42-2204-sdk/current/usr/lib/pkgconfig:/snap/gnome-42-2204-sdk/current/usr/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
+      - GETTEXTDATADIRS: /snap/gnome-42-2204-sdk/current/usr/share/gettext-current${GETTEXTDATADIRS:+:$GETTEXTDATADIRS}
+      - GDK_PIXBUF_MODULE_FILE: /snap/gnome-42-2204-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gdk-pixbuf-current/loaders.cache
+      - ACLOCAL_PATH: /snap/gnome-42-2204-sdk/current/usr/share/aclocal${ACLOCAL_PATH:+:$ACLOCAL_PATH}
+      - PYTHONPATH: /snap/gnome-42-2204-sdk/current/usr/lib/python3.10:/snap/gnome-42-2204-sdk/current/usr/lib/python3/dist-packages:/snap/gnome-42-2204-sdk/current/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gobject-introspection${PYTHONPATH:+:$PYTHONPATH}

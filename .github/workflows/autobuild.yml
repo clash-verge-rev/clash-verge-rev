@@ -268,6 +268,7 @@ jobs:
             target: armv7-unknown-linux-gnueabihf
             arch: armhf
     runs-on: ${{ matrix.os }}
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -486,3 +487,60 @@ jobs:
         run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  autobuild-all-snap:
+    name: Autobuild All Snaps
+    continue-on-error: true
+    needs:
+      - autobuild-x86-windows-macos-linux
+      - autobuild-arm-linux
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build-for:
+          - amd64
+          - arm64
+          - armhf
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get Version
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
+          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
+
+      - name: Hijack version and source of Snapcraft
+        shell: python
+        run: |
+          from yaml import safe_load, safe_dump
+
+          with open("./snapcraft.yaml", "r") as conf:
+            snapcraft = safe_load(conf)
+            pass
+          print(f"Original version: {snapcraft['version']}")
+          print(f"Original deb source: {snapcraft['parts']['clash-verge-rev']['source']}")
+          snapcraft['version'] = "${{ env.VERSION }}"
+          snapcraft['parts']['clash-verge-rev']['source'] = "${{ github.server_url }}/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/Clash.Verge_${{ env.VERSION }}_$CRAFT_ARCH_BUILD_FOR.deb"
+          with open("./snapcraft.yaml", "w") as conf:
+            safe_dump(snapcraft, conf, default_flow_style=False)
+            pass
+          print(f"Hijacked version: {snapcraft['version']}"')
+          print(f"Hijacked deb soursce: {snapcraft['parts']['clash-verge-rev']['source']}")
+          print("Hijacked succeeded!")
+
+      - uses: snapcore/action-build@v1
+        id: build-snap
+        with:
+          snapcraft-args: '-v --build-for ${{ matrix.build-for }}'
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.build-snap.outputs.snap }}
