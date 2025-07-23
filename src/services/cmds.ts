@@ -408,30 +408,6 @@ export async function gc() {
   return invoke<void>("clash_gc");
 }
 
-// 全局测试方法
-(window as any).testTrafficService = async () => {
-  console.log("=== 开始测试流量服务 ===");
-  try {
-    console.log("1. 启动流量服务...");
-    await startTrafficService();
-
-    console.log("2. 等待2秒...");
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    console.log("3. 获取流量数据...");
-    const trafficData = await getTrafficData();
-    console.log("流量数据:", trafficData);
-
-    console.log("4. 获取内存数据...");
-    const memoryData = await getMemoryData();
-    console.log("内存数据:", memoryData);
-
-    console.log("=== 测试完成 ===");
-  } catch (error) {
-    console.error("=== 测试失败 ===", error);
-  }
-};
-
 export async function getVergeConfig() {
   return invoke<IVergeConfig>("get_verge_config");
 }
