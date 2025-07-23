@@ -62,10 +62,9 @@ const SettingVergeAdvanced = ({ onError }: Props) => {
   }, []);
 
   const copyVersion = useCallback(() => {
-    navigator.clipboard.writeText(`v${version}`)
-      .then(() => {
-        showNotice("success", t("Version copied to clipboard"), 1000);
-      })
+    navigator.clipboard.writeText(`v${version}`).then(() => {
+      showNotice("success", t("Version copied to clipboard"), 1000);
+    });
   }, [version, t]);
 
   return (
