@@ -31,23 +31,35 @@ export interface EnhancedCanvasTrafficGraphRef {
 type TimeRange = 1 | 5 | 10; // 分钟
 
 // Canvas图表配置
+const MAX_POINTS = 300;
+const TARGET_FPS = 15; // 降低帧率减少闪烁
+const LINE_WIDTH_UP = 2.5;
+const LINE_WIDTH_DOWN = 2.5;
+const LINE_WIDTH_GRID = 0.5;
+const ALPHA_GRADIENT = 0.15; // 降低渐变透明度
+const ALPHA_LINE = 0.9;
+const PADDING_TOP = 16;
+const PADDING_RIGHT = 16; // 增加右边距确保时间戳完整显示
+const PADDING_BOTTOM = 32; // 进一步增加底部空间给时间轴和统计信息
+const PADDING_LEFT = 16; // 增加左边距确保时间戳完整显示
+
 const GRAPH_CONFIG = {
-  maxPoints: 300,
-  targetFPS: 15, // 降低帧率减少闪烁
+  maxPoints: MAX_POINTS,
+  targetFPS: TARGET_FPS,
   lineWidth: {
-    up: 2.5,
-    down: 2.5,
-    grid: 0.5,
+    up: LINE_WIDTH_UP,
+    down: LINE_WIDTH_DOWN,
+    grid: LINE_WIDTH_GRID,
   },
   alpha: {
-    gradient: 0.15, // 降低渐变透明度
-    line: 0.9,
+    gradient: ALPHA_GRADIENT,
+    line: ALPHA_LINE,
   },
   padding: {
-    top: 16,
-    right: 16, // 增加右边距确保时间戳完整显示
-    bottom: 32, // 进一步增加底部空间给时间轴和统计信息
-    left: 16, // 增加左边距确保时间戳完整显示
+    top: PADDING_TOP,
+    right: PADDING_RIGHT,
+    bottom: PADDING_BOTTOM,
+    left: PADDING_LEFT,
   },
 };
 
