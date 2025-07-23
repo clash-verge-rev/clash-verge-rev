@@ -11,6 +11,10 @@ import {
 import { Box, useTheme } from "@mui/material";
 import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
+import {
+  useTrafficGraphDataEnhanced,
+  type ITrafficDataPoint,
+} from "@/hooks/use-traffic-monitor-enhanced";
 import { Line as ChartJsLine } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -59,24 +63,24 @@ export const EnhancedTrafficGraph = memo(
     const theme = useTheme();
     const { t } = useTranslation();
 
+    // 使用增强版全局流量数据管理
+    const {
+      dataPoints,
+      getDataForTimeRange,
+      isDataFresh,
+      samplerStats,
+      referenceCount,
+    } = useTrafficGraphDataEnhanced();
+
     // 基础状态
     const [timeRange, setTimeRange] = useState<TimeRange>(10);
     const [chartStyle, setChartStyle] = useState<"line" | "area">("area");
     const [displayData, setDisplayData] = useState<DataPoint[]>([]);
 
-    // 数据缓冲区
-    const dataBufferRef = useRef<DataPoint[]>([]);
-
     // 根据时间范围计算保留的数据点数量
     const getMaxPointsByTimeRange = useCallback(
       (minutes: TimeRange): number => minutes * 60,
       [],
-    );
-
-    // 最大数据点数量
-    const MAX_BUFFER_SIZE = useMemo(
-      () => getMaxPointsByTimeRange(10),
-      [getMaxPointsByTimeRange],
     );
 
     // 颜色配置
@@ -112,118 +116,32 @@ export const EnhancedTrafficGraph = memo(
       [],
     );
 
-    // 初始化数据缓冲区
-    useEffect(() => {
-      const now = Date.now();
-      const tenMinutesAgo = now - 10 * 60 * 1000;
+    // 现在使用全局数据，不需要本地初始化
 
-      const initialBuffer = Array.from(
-        { length: MAX_BUFFER_SIZE },
-        (_, index) => {
-          const pointTime =
-            tenMinutesAgo + index * ((10 * 60 * 1000) / MAX_BUFFER_SIZE);
-          const date = new Date(pointTime);
-          let nameValue: string;
-          try {
-            if (isNaN(date.getTime())) {
-              console.warn(
-                `Initial data generation: Invalid date for timestamp ${pointTime}`,
-              );
-              nameValue = "??:??:??";
-            } else {
-              nameValue = date.toLocaleTimeString("en-US", {
-                hour12: false,
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              });
-            }
-          } catch (e) {
-            console.error(
-              "Error in toLocaleTimeString during initial data gen:",
-              e,
-              "Date:",
-              date,
-              "Timestamp:",
-              pointTime,
-            );
-            nameValue = "Err:Time";
-          }
-
-          return {
-            up: 0,
-            down: 0,
-            timestamp: pointTime,
-            name: nameValue,
-          };
-        },
-      );
-
-      dataBufferRef.current = initialBuffer;
-
-      // 更新显示数据
-      const pointsToShow = getMaxPointsByTimeRange(timeRange);
-      setDisplayData(initialBuffer.slice(-pointsToShow));
-    }, [MAX_BUFFER_SIZE, getMaxPointsByTimeRange]);
-    // 添加数据点方法
-    const appendData = useCallback(
-      (data: ITrafficItem) => {
-        const safeData = {
-          up: typeof data.up === "number" && !isNaN(data.up) ? data.up : 0,
-          down:
-            typeof data.down === "number" && !isNaN(data.down) ? data.down : 0,
-        };
-
-        const timestamp = data.timestamp || Date.now();
-        const date = new Date(timestamp);
-
-        let nameValue: string;
-        try {
-          if (isNaN(date.getTime())) {
-            console.warn(`appendData: Invalid date for timestamp ${timestamp}`);
-            nameValue = "??:??:??";
-          } else {
-            nameValue = date.toLocaleTimeString("en-US", {
-              hour12: false,
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            });
-          }
-        } catch (e) {
-          console.error(
-            "Error in toLocaleTimeString in appendData:",
-            e,
-            "Date:",
-            date,
-            "Timestamp:",
-            timestamp,
-          );
-          nameValue = "Err:Time";
-        }
-        // 带时间标签的新数据点
-        const newPoint: DataPoint = {
-          ...safeData,
-          name: nameValue,
-          timestamp: timestamp,
-        };
-
-        const newBuffer = [...dataBufferRef.current.slice(1), newPoint];
-        dataBufferRef.current = newBuffer;
-
-        const pointsToShow = getMaxPointsByTimeRange(timeRange);
-        setDisplayData(newBuffer.slice(-pointsToShow));
-      },
-      [timeRange, getMaxPointsByTimeRange],
-    );
-
-    // 监听时间范围变化
+    // 监听全局数据变化，更新显示数据
     useEffect(() => {
       const pointsToShow = getMaxPointsByTimeRange(timeRange);
-      if (dataBufferRef.current.length > 0) {
-        setDisplayData(dataBufferRef.current.slice(-pointsToShow));
+      if (dataPoints.length > 0) {
+        const filteredData = getDataForTimeRange(timeRange);
+        setDisplayData(
+          filteredData.map((point: ITrafficDataPoint) => ({
+            up: point.up,
+            down: point.down,
+            timestamp: point.timestamp,
+            name: point.name,
+          })),
+        );
       }
-    }, [timeRange, getMaxPointsByTimeRange]);
+    }, [dataPoints, timeRange, getDataForTimeRange, getMaxPointsByTimeRange]);
+
+    // 添加数据点方法 - 现在仅作为备用，主要使用全局数据
+    const appendData = useCallback((data: ITrafficItem) => {
+      // 注意：现在数据由全局Hook管理，这个方法主要保持兼容性
+      console.log(
+        "[EnhancedTrafficGraph] appendData called (using global data now):",
+        data,
+      );
+    }, []);
 
     // 切换图表样式
     const toggleStyle = useCallback(() => {

@@ -354,6 +354,33 @@ export async function getSystemMonitorOverview() {
   return result;
 }
 
+// 带数据验证的安全版本
+export async function getSystemMonitorOverviewSafe() {
+  console.log(
+    "[Monitor][Service] 开始调用安全版本 get_system_monitor_overview",
+  );
+  try {
+    const result = await invoke<any>("get_system_monitor_overview");
+    console.log("[Monitor][Service] 原始数据:", result);
+
+    // 导入验证器（动态导入避免循环依赖）
+    const { systemMonitorValidator } = await import("@/utils/data-validator");
+
+    if (systemMonitorValidator.validate(result)) {
+      console.log("[Monitor][Service] 数据验证通过");
+      return result as ISystemMonitorOverview;
+    } else {
+      console.warn("[Monitor][Service] 数据验证失败，使用清理后的数据");
+      return systemMonitorValidator.sanitize(result);
+    }
+  } catch (error) {
+    console.error("[Monitor][Service] API调用失败:", error);
+    // 返回安全的默认值
+    const { systemMonitorValidator } = await import("@/utils/data-validator");
+    return systemMonitorValidator.sanitize(null);
+  }
+}
+
 export async function startTrafficService() {
   console.log("[Traffic][Service] 开始调用 start_traffic_service");
   try {

@@ -7,6 +7,7 @@ import {
   useTheme,
   PaletteColor,
   Grid,
+  Box,
 } from "@mui/material";
 import {
   ArrowUpwardRounded,
@@ -17,23 +18,19 @@ import {
   CloudDownloadRounded,
 } from "@mui/icons-material";
 import {
-  EnhancedTrafficGraph,
-  EnhancedTrafficGraphRef,
+  EnhancedCanvasTrafficGraphV2,
+  EnhancedCanvasTrafficGraphRef,
   ITrafficItem,
-} from "./enhanced-traffic-graph";
+} from "./enhanced-canvas-traffic-graph-v2";
 import { useVisibility } from "@/hooks/use-visibility";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import parseTraffic from "@/utils/parse-traffic";
-import {
-  isDebugEnabled,
-  gc,
-  getTrafficData,
-  getMemoryData,
-  getSystemMonitorOverview,
-} from "@/services/cmds";
+import { isDebugEnabled, gc } from "@/services/cmds";
 import { ReactNode } from "react";
 import { useAppData } from "@/providers/app-data-provider";
+import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor-enhanced";
+import { TrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
 import useSWR from "swr";
 
 interface MemoryUsage {
@@ -164,17 +161,15 @@ export const EnhancedTrafficStats = () => {
   const theme = useTheme();
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
-  const trafficRef = useRef<EnhancedTrafficGraphRef>(null);
+  const trafficRef = useRef<EnhancedCanvasTrafficGraphRef>(null);
   const pageVisible = useVisibility();
 
   // 使用AppDataProvider
   const { connections, uptime } = useAppData();
 
-  // 使用单一状态对象减少状态更新次数
-  const [stats, setStats] = useState({
-    traffic: { up: 0, down: 0 },
-    memory: { inuse: 0, oslimit: undefined as number | undefined },
-  });
+  // 使用增强版的统一流量数据Hook
+  const { traffic, memory, isLoading, isDataFresh, hasValidData } =
+    useTrafficDataEnhanced();
 
   // 是否显示流量图表
   const trafficGraph = verge?.traffic_graph ?? true;
@@ -190,67 +185,7 @@ export const EnhancedTrafficStats = () => {
     },
   );
 
-  // 使用系统监控概览 API 一次性获取所有数据
-  const { data: monitorData } = useSWR<ISystemMonitorOverview>(
-    clashInfo && pageVisible ? "getSystemMonitorOverview" : null,
-    getSystemMonitorOverview,
-    {
-      refreshInterval: 1000, // 1秒刷新一次
-      keepPreviousData: true,
-      onSuccess: (data) => {
-        console.log(
-          "[Monitor][EnhancedTrafficStats] IPC 获取到监控数据:",
-          data,
-        );
-        if (data) {
-          // 使用速率数据而不是总量
-          const safeUp = isNaN(data.traffic.raw.up_rate)
-            ? 0
-            : data.traffic.raw.up_rate;
-          const safeDown = isNaN(data.traffic.raw.down_rate)
-            ? 0
-            : data.traffic.raw.down_rate;
-          const safeInuse = isNaN(data.memory.raw.inuse)
-            ? 0
-            : data.memory.raw.inuse;
-          const safeOslimit = isNaN(data.memory.raw.oslimit)
-            ? undefined
-            : data.memory.raw.oslimit;
-
-          console.log("[Monitor][EnhancedTrafficStats] 处理后的数据:", {
-            up: safeUp,
-            down: safeDown,
-            inuse: safeInuse,
-            oslimit: safeOslimit,
-          });
-
-          setStats({
-            traffic: { up: safeUp, down: safeDown },
-            memory: { inuse: safeInuse, oslimit: safeOslimit },
-          });
-
-          // 为图表添加数据
-          if (trafficRef.current) {
-            trafficRef.current.appendData({
-              up: safeUp,
-              down: safeDown,
-              timestamp: Date.now(),
-            });
-          }
-        }
-      },
-      onError: (error) => {
-        console.error(
-          "[Monitor][EnhancedTrafficStats] IPC 获取数据错误:",
-          error,
-        );
-        setStats({
-          traffic: { up: 0, down: 0 },
-          memory: { inuse: 0, oslimit: undefined },
-        });
-      },
-    },
-  );
+  // Canvas组件现在直接从全局Hook获取数据，无需手动添加数据点
 
   // 执行垃圾回收
   const handleGarbageCollection = useCallback(async () => {
@@ -266,9 +201,9 @@ export const EnhancedTrafficStats = () => {
 
   // 使用useMemo计算解析后的流量数据
   const parsedData = useMemo(() => {
-    const [up, upUnit] = parseTraffic(stats.traffic.up);
-    const [down, downUnit] = parseTraffic(stats.traffic.down);
-    const [inuse, inuseUnit] = parseTraffic(stats.memory.inuse);
+    const [up, upUnit] = parseTraffic(traffic?.raw?.up_rate || 0);
+    const [down, downUnit] = parseTraffic(traffic?.raw?.down_rate || 0);
+    const [inuse, inuseUnit] = parseTraffic(memory?.raw?.inuse || 0);
     const [uploadTotal, uploadTotalUnit] = parseTraffic(
       connections.uploadTotal,
     );
@@ -289,7 +224,7 @@ export const EnhancedTrafficStats = () => {
       downloadTotalUnit,
       connectionsCount: connections.count,
     };
-  }, [stats, connections]);
+  }, [traffic, memory, connections]);
 
   // 渲染流量图表 - 使用useMemo缓存渲染结果
   const trafficGraphComponent = useMemo(() => {
@@ -308,7 +243,7 @@ export const EnhancedTrafficStats = () => {
         onClick={() => trafficRef.current?.toggleStyle()}
       >
         <div style={{ height: "100%", position: "relative" }}>
-          <EnhancedTrafficGraph ref={trafficRef} />
+          <EnhancedCanvasTrafficGraphV2 ref={trafficRef} />
           {isDebug && (
             <div
               style={{
@@ -325,7 +260,9 @@ export const EnhancedTrafficStats = () => {
             >
               DEBUG: {!!trafficRef.current ? "图表已初始化" : "图表未初始化"}
               <br />
-              状态: {monitorData?.overall_status || "unknown"}
+              状态: {isDataFresh ? "active" : "inactive"}
+              <br />
+              数据新鲜度: {traffic?.is_fresh ? "Fresh" : "Stale"}
               <br />
               {new Date().toISOString().slice(11, 19)}
             </div>
@@ -386,19 +323,42 @@ export const EnhancedTrafficStats = () => {
   );
 
   return (
-    <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>
-      {trafficGraph && (
-        <Grid size={12}>
-          {/* 流量图表区域 */}
-          {trafficGraphComponent}
-        </Grid>
-      )}
-      {/* 统计卡片区域 */}
-      {statCards.map((card, index) => (
-        <Grid key={index} size={4}>
-          <CompactStatCard {...card} />
-        </Grid>
-      ))}
-    </Grid>
+    <TrafficErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error("[EnhancedTrafficStats] 组件错误:", error, errorInfo);
+      }}
+    >
+      <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>
+        {trafficGraph && (
+          <Grid size={12}>
+            {/* 流量图表区域 */}
+            {trafficGraphComponent}
+          </Grid>
+        )}
+        {/* 统计卡片区域 */}
+        {statCards.map((card, index) => (
+          <Grid key={index} size={4}>
+            <CompactStatCard {...card} />
+          </Grid>
+        ))}
+
+        {/* 数据状态指示器（调试用）*/}
+        {isDebug && (
+          <Grid size={12}>
+            <Box
+              sx={{
+                p: 1,
+                bgcolor: "action.hover",
+                borderRadius: 1,
+                fontSize: "0.75rem",
+              }}
+            >
+              数据状态: {isDataFresh ? "新鲜" : "过期"} | 有效数据:{" "}
+              {hasValidData ? "是" : "否"} | 加载中: {isLoading ? "是" : "否"}
+            </Box>
+          </Grid>
+        )}
+      </Grid>
+    </TrafficErrorBoundary>
   );
 };

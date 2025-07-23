@@ -151,6 +151,7 @@ interface IFormattedMemoryData {
   is_fresh: boolean;
 }
 
+// 增强的类型安全接口定义，确保所有字段必需
 interface ISystemMonitorOverview {
   traffic: {
     raw: {
@@ -180,7 +181,13 @@ interface ISystemMonitorOverview {
     };
     is_fresh: boolean;
   };
-  overall_status: string;
+  overall_status: "active" | "inactive" | "error" | "unknown";
+}
+
+// 类型安全的数据验证器
+interface ISystemMonitorOverviewValidator {
+  validate(data: any): data is ISystemMonitorOverview;
+  sanitize(data: any): ISystemMonitorOverview;
 }
 
 interface ILogItem {
