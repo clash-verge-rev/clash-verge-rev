@@ -185,7 +185,7 @@ export const AppDataProvider = ({
     "getClashConfig",
     getClashConfig,
     {
-      refreshInterval: 5000,
+      refreshInterval: 60000, // 60秒刷新间隔，减少频繁请求
       revalidateOnFocus: false,
       suspense: false,
       errorRetryCount: 3,

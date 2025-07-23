@@ -1,6 +1,12 @@
 use super::CmdResult;
-use crate::{config::*, core::*, feat, ipc::IpcManager, process::AsyncHandler, wrap_err};
+use crate::{
+    config::*, core::*, feat, ipc::IpcManager, process::AsyncHandler,
+    state::proxy::ProxyRequestCache, wrap_err,
+};
 use serde_yaml::Mapping;
+use std::time::Duration;
+
+const CONFIG_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
 
 /// 复制Clash环境变量
 #[tauri::command]
@@ -66,19 +72,31 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
 /// 启动核心
 #[tauri::command]
 pub async fn start_core() -> CmdResult {
-    wrap_err!(CoreManager::global().start_core().await)
+    let result = wrap_err!(CoreManager::global().start_core().await);
+    if result.is_ok() {
+        handle::Handle::refresh_clash();
+    }
+    result
 }
 
 /// 关闭核心
 #[tauri::command]
 pub async fn stop_core() -> CmdResult {
-    wrap_err!(CoreManager::global().stop_core().await)
+    let result = wrap_err!(CoreManager::global().stop_core().await);
+    if result.is_ok() {
+        handle::Handle::refresh_clash();
+    }
+    result
 }
 
 /// 重启核心
 #[tauri::command]
 pub async fn restart_core() -> CmdResult {
-    wrap_err!(CoreManager::global().restart_core().await)
+    let result = wrap_err!(CoreManager::global().restart_core().await);
+    if result.is_ok() {
+        handle::Handle::refresh_clash();
+    }
+    result
 }
 
 /// 获取代理延迟
@@ -277,7 +295,24 @@ pub async fn get_clash_version() -> CmdResult<serde_json::Value> {
 /// 获取Clash配置
 #[tauri::command]
 pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
-    wrap_err!(IpcManager::global().get_config().await)
+    let manager = IpcManager::global();
+    let cache = ProxyRequestCache::global();
+    let key = ProxyRequestCache::make_key("clash_config", "default");
+    let value = cache
+        .get_or_fetch(key, CONFIG_REFRESH_INTERVAL, || async {
+            manager.get_config().await.expect("fetch failed")
+        })
+        .await;
+    Ok((*value).clone())
+}
+
+/// 强制刷新Clash配置缓存
+#[tauri::command]
+pub async fn force_refresh_clash_config() -> CmdResult<serde_json::Value> {
+    let cache = ProxyRequestCache::global();
+    let key = ProxyRequestCache::make_key("clash_config", "default");
+    cache.map.remove(&key);
+    get_clash_config().await
 }
 
 /// 更新地理数据

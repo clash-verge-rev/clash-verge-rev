@@ -5,6 +5,7 @@ import {
   getClashInfo,
   patchClashConfig,
   getRuntimeConfig,
+  forceRefreshClashConfig,
 } from "@/services/cmds";
 
 export const useClash = () => {
@@ -121,6 +122,8 @@ export const useClashInfo = () => {
 
     await patchClashConfig(patch);
     mutateInfo();
+    // 配置修改后强制刷新缓存
+    await forceRefreshClashConfig();
     mutate("getClashConfig");
     // IPC调用不需要刷新axios实例
   };

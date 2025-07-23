@@ -107,6 +107,10 @@ export async function getClashConfig() {
   return invoke<IConfigData>("get_clash_config");
 }
 
+export async function forceRefreshClashConfig() {
+  return invoke<IConfigData>("force_refresh_clash_config");
+}
+
 export async function updateGeoData() {
   return invoke<void>("update_geo_data");
 }
