@@ -133,7 +133,7 @@ export async function getProxyDelay(
 }
 
 export async function updateProxy(group: string, proxy: string) {
-  return invoke<void>("update_proxy_choice", { group, proxy });
+  return await invoke<void>("update_proxy_choice", { group, proxy });
 }
 
 export async function getProxies(): Promise<{
@@ -303,9 +303,9 @@ export async function getGroupProxyDelays(
 }
 
 export async function getTrafficData() {
-  console.log("[Traffic][Service] 开始调用 get_traffic_data");
+  // console.log("[Traffic][Service] 开始调用 get_traffic_data");
   const result = await invoke<ITrafficItem>("get_traffic_data");
-  console.log("[Traffic][Service] get_traffic_data 返回结果:", result);
+  // console.log("[Traffic][Service] get_traffic_data 返回结果:", result);
   return result;
 }
 
@@ -356,25 +356,25 @@ export async function getSystemMonitorOverview() {
 
 // 带数据验证的安全版本
 export async function getSystemMonitorOverviewSafe() {
-  console.log(
-    "[Monitor][Service] 开始调用安全版本 get_system_monitor_overview",
-  );
+  // console.log(
+  //   "[Monitor][Service] 开始调用安全版本 get_system_monitor_overview",
+  // );
   try {
     const result = await invoke<any>("get_system_monitor_overview");
-    console.log("[Monitor][Service] 原始数据:", result);
+    // console.log("[Monitor][Service] 原始数据:", result);
 
     // 导入验证器（动态导入避免循环依赖）
     const { systemMonitorValidator } = await import("@/utils/data-validator");
 
     if (systemMonitorValidator.validate(result)) {
-      console.log("[Monitor][Service] 数据验证通过");
+      // console.log("[Monitor][Service] 数据验证通过");
       return result as ISystemMonitorOverview;
     } else {
-      console.warn("[Monitor][Service] 数据验证失败，使用清理后的数据");
+      // console.warn("[Monitor][Service] 数据验证失败，使用清理后的数据");
       return systemMonitorValidator.sanitize(result);
     }
   } catch (error) {
-    console.error("[Monitor][Service] API调用失败:", error);
+    // console.error("[Monitor][Service] API调用失败:", error);
     // 返回安全的默认值
     const { systemMonitorValidator } = await import("@/utils/data-validator");
     return systemMonitorValidator.sanitize(null);
@@ -571,7 +571,9 @@ export async function cmdGetProxyDelay(
 /// 用于profile切换等场景
 export async function forceRefreshProxies() {
   console.log("[API] 强制刷新代理缓存");
-  return invoke<any>("force_refresh_proxies");
+  const result = await invoke<any>("force_refresh_proxies");
+  console.log("[API] 代理缓存刷新完成");
+  return result;
 }
 
 export async function cmdTestDelay(url: string) {

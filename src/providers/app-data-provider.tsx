@@ -286,7 +286,7 @@ export const AppDataProvider = ({
       fallbackData: { up: 0, down: 0 },
       keepPreviousData: true,
       onSuccess: (data) => {
-        console.log("[Traffic][AppDataProvider] IPC 获取到流量数据:", data);
+        // console.log("[Traffic][AppDataProvider] IPC 获取到流量数据:", data);
       },
       onError: (error) => {
         console.error("[Traffic][AppDataProvider] IPC 获取数据错误:", error);

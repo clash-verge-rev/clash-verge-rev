@@ -239,7 +239,7 @@ export const useTrafficMonitorEnhanced = () => {
       refreshInterval: shouldFetch ? 1000 : 0, // 只有在需要时才刷新
       keepPreviousData: true,
       onSuccess: (data) => {
-        console.log("[TrafficMonitorEnhanced] 获取到监控数据:", data);
+        // console.log("[TrafficMonitorEnhanced] 获取到监控数据:", data);
 
         if (data?.traffic?.raw && globalSampler) {
           // 保存最后有效数据
