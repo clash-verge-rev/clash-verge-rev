@@ -48,11 +48,13 @@ architectures:
   #
   # [TODO] Might be able to use arm64 local images for arm64/armhf build?
   - build-on: amd64
-    # yaml-language-server ignore
+    # yaml-language-server: disable-next-line
     build-for: amd64
   - build-on: amd64
+    # yaml-language-server: disable-next-line
     build-for: arm64
   - build-on: amd64
+    # yaml-language-server: disable-next-line
     build-for: armhf
 
 plugs:
@@ -124,7 +126,7 @@ parts:
     plugin: dump
     source-type: deb
     # [NOTE]
-    # This deb URL is currently hardcoded as a placeholder, convinient for testing on local amd64 machine.
+    # This deb URL is currently hardcoded as a placeholder, convenient for testing on local amd64 machine.
     # This will be hijacked in GitHub Workflows on the fly.
     source: https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild/Clash.Verge_2.4.0_amd64.deb
     build-environment:
