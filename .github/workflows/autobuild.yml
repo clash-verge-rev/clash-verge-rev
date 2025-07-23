@@ -523,7 +523,7 @@ jobs:
           print(f"Original version: {snapcraft['version']}")
           print(f"Original deb source: {snapcraft['parts']['clash-verge-rev']['source']}")
           snapcraft['version'] = "${{ env.VERSION }}"
-          snapcraft['parts']['clash-verge-rev']['source'] = "${{ github.server_url }}/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/Clash.Verge_${{ env.VERSION }}_$CRAFT_ARCH_BUILD_FOR.deb"
+          snapcraft['parts']['clash-verge-rev']['source'] = "${{ github.server_url }}/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/Clash.Verge_${{ env.VERSION }}_${{ matrix.build-for }}.deb"
           with open("./snapcraft.yaml", "w") as conf:
             safe_dump(snapcraft, conf, default_flow_style=False)
             pass
