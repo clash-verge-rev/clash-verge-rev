@@ -23,7 +23,18 @@ interface MemoryUsage {
 
 // setup the traffic
 export const LayoutTraffic = () => {
-  console.log("[Traffic][LayoutTraffic] 组件正在渲染");
+  const { data: isDebug } = useSWR(
+    "clash-verge-rev-internal://isDebugEnabled",
+    () => isDebugEnabled(),
+    {
+      // default value before is fetched
+      fallbackData: false,
+    },
+  );
+
+  if (isDebug) {
+    console.debug("[Traffic][LayoutTraffic] 组件正在渲染");
+  }
   const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
