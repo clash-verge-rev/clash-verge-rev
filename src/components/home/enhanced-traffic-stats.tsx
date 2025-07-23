@@ -18,10 +18,10 @@ import {
   CloudDownloadRounded,
 } from "@mui/icons-material";
 import {
-  EnhancedCanvasTrafficGraphV2,
-  EnhancedCanvasTrafficGraphRef,
-  ITrafficItem,
-} from "./enhanced-canvas-traffic-graph-v2";
+  EnhancedCanvasTrafficGraph,
+  type EnhancedCanvasTrafficGraphRef,
+  type ITrafficItem,
+} from "./enhanced-canvas-traffic-graph";
 import { useVisibility } from "@/hooks/use-visibility";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
@@ -243,7 +243,7 @@ export const EnhancedTrafficStats = () => {
         onClick={() => trafficRef.current?.toggleStyle()}
       >
         <div style={{ height: "100%", position: "relative" }}>
-          <EnhancedCanvasTrafficGraphV2 ref={trafficRef} />
+          <EnhancedCanvasTrafficGraph ref={trafficRef} />
           {isDebug && (
             <div
               style={{
