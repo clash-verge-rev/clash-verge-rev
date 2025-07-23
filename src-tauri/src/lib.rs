@@ -3,6 +3,7 @@ pub mod config;
 mod core;
 mod enhance;
 mod feat;
+mod ipc;
 mod module;
 mod process;
 mod state;
@@ -271,6 +272,30 @@ pub fn run() {
             cmd::check_dns_config_exists,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,
+            cmd::get_clash_version,
+            cmd::get_clash_config,
+            cmd::update_geo_data,
+            cmd::upgrade_clash_core,
+            cmd::get_clash_rules,
+            cmd::update_proxy_choice,
+            cmd::get_proxy_providers,
+            cmd::get_rule_providers,
+            cmd::proxy_provider_health_check,
+            cmd::update_proxy_provider,
+            cmd::update_rule_provider,
+            cmd::get_clash_connections,
+            cmd::delete_clash_connection,
+            cmd::close_all_clash_connections,
+            cmd::get_group_proxy_delays,
+            cmd::is_clash_debug_enabled,
+            cmd::clash_gc,
+            cmd::get_traffic_data,
+            cmd::get_memory_data,
+            cmd::get_formatted_traffic_data,
+            cmd::get_formatted_memory_data,
+            cmd::get_system_monitor_overview,
+            cmd::start_traffic_service,
+            cmd::stop_traffic_service,
             // verge
             cmd::get_verge_config,
             cmd::patch_verge_config,

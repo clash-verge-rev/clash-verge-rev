@@ -287,6 +287,7 @@
   "Redir Port": "Redir 透明代理端口",
   "TPROXY Port": "TPROXY 透明代理端口",
   "External": "外部控制",
+  "Enable External Controller": "启用外部控制器",
   "External Controller": "外部控制器监听地址",
   "Core Secret": "API 访问密钥",
   "Recommended": "建议设置",
@@ -653,5 +654,12 @@
   "Development mode: Automatically includes Tauri and localhost origins": "开发模式：自动包含 Tauri 和 localhost 来源",
   "Invalid regular expression": "无效的正则表达式",
   "Copy Version": "复制Verge版本号",
-  "Version copied to clipboard": "Verge版本已复制到剪贴板"
+  "Version copied to clipboard": "Verge版本已复制到剪贴板",
+  "Controller address cannot be empty": "控制器地址不能为空",
+  "Secret cannot be empty": "访问密钥不能为空",
+  "Configuration saved successfully": "配置保存成功",
+  "Failed to save configuration": "配置保存失败",
+  "Controller address copied to clipboard": "控制器地址已复制到剪贴板",
+  "Secret copied to clipboard": "访问密钥已复制到剪贴板",
+  "Saving...": "保存中..."
 }

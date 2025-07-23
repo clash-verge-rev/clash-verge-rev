@@ -131,6 +131,63 @@ interface IRuleProviderItem {
 interface ITrafficItem {
   up: number;
   down: number;
+  up_rate?: number;
+  down_rate?: number;
+  last_updated?: number;
+}
+
+interface IFormattedTrafficData {
+  up_rate_formatted: string;
+  down_rate_formatted: string;
+  total_up_formatted: string;
+  total_down_formatted: string;
+  is_fresh: boolean;
+}
+
+interface IFormattedMemoryData {
+  inuse_formatted: string;
+  oslimit_formatted: string;
+  usage_percent: number;
+  is_fresh: boolean;
+}
+
+// 增强的类型安全接口定义，确保所有字段必需
+interface ISystemMonitorOverview {
+  traffic: {
+    raw: {
+      up: number;
+      down: number;
+      up_rate: number;
+      down_rate: number;
+    };
+    formatted: {
+      up_rate: string;
+      down_rate: string;
+      total_up: string;
+      total_down: string;
+    };
+    is_fresh: boolean;
+  };
+  memory: {
+    raw: {
+      inuse: number;
+      oslimit: number;
+      usage_percent: number;
+    };
+    formatted: {
+      inuse: string;
+      oslimit: string;
+      usage_percent: number;
+    };
+    is_fresh: boolean;
+  };
+  overall_status: "active" | "inactive" | "error" | "unknown";
+}
+
+// 类型安全的数据验证器
+interface ISystemMonitorOverviewValidator {
+  validate(data: any): data is ISystemMonitorOverview;
+  sanitize(data: any): ISystemMonitorOverview;
 }
 
 interface ILogItem {
@@ -800,6 +857,7 @@ interface IVergeConfig {
   webdav_password?: string;
   home_cards?: Record<string, boolean>;
   enable_hover_jump_navigator?: boolean;
+  enable_external_controller?: boolean;
 }
 
 interface IWebDavFile {

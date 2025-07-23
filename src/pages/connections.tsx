@@ -9,7 +9,7 @@ import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { closeAllConnections } from "@/services/api";
+import { closeAllConnections } from "@/services/cmds";
 import { useConnectionSetting } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import { ConnectionItem } from "@/components/connection/connection-item";

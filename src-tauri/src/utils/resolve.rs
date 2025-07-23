@@ -172,6 +172,32 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     log::trace!(target: "app", "启动内嵌服务器...");
     server::embed_server();
 
+    logging!(trace, Type::Core, true, "启动 IPC 监控服务...");
+    // IPC 监控器将在首次调用时自动初始化
+
+    // // 启动测试线程，持续打印流量数据
+    // logging!(info, Type::Core, true, "启动流量数据测试线程...");
+    // AsyncHandler::spawn(|| async {
+    //     let mut interval = tokio::time::interval(std::time::Duration::from_secs(2));
+    //     loop {
+    //         interval.tick().await;
+
+    //         let traffic_data = get_current_traffic().await;
+    //         let memory_data = get_current_memory().await;
+
+    //         println!("=== Traffic Data Test (IPC) ===");
+    //         println!(
+    //             "Traffic - Up: {} bytes/s, Down: {} bytes/s, Last Updated: {:?}",
+    //             traffic_data.up_rate, traffic_data.down_rate, traffic_data.last_updated
+    //         );
+    //         println!(
+    //             "Memory - InUse: {} bytes, OSLimit: {:?}, Last Updated: {:?}",
+    //             memory_data.inuse, memory_data.oslimit, memory_data.last_updated
+    //         );
+    //         println!("==============================");
+    //     }
+    // });
+
     logging_error!(Type::Tray, true, tray::Tray::global().init());
 
     if let Some(app_handle) = handle::Handle::global().app_handle() {

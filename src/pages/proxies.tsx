@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Box, Button, ButtonGroup } from "@mui/material";
-import { closeAllConnections, getClashConfig } from "@/services/api";
+import { closeAllConnections, getClashConfig } from "@/services/cmds";
 import { patchClashMode } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { BasePage } from "@/components/base";

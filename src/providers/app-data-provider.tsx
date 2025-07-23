@@ -1,14 +1,16 @@
 import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { useVerge } from "@/hooks/use-verge";
 import useSWR from "swr";
-import useSWRSubscription from "swr/subscription";
 import {
   getProxies,
   getRules,
   getClashConfig,
   getProxyProviders,
   getRuleProviders,
-} from "@/services/api";
+  getConnections,
+  getTrafficData,
+  getMemoryData,
+} from "@/services/cmds";
 import {
   getSystemProxy,
   getRunningMode,
@@ -16,7 +18,6 @@ import {
   forceRefreshProxies,
 } from "@/services/cmds";
 import { useClashInfo } from "@/hooks/use-clash";
-import { createAuthSockette } from "@/utils/websocket";
 import { useVisibility } from "@/hooks/use-visibility";
 import { listen } from "@tauri-apps/api/event";
 
@@ -249,240 +250,61 @@ export const AppDataProvider = ({
     suspense: false,
   });
 
-  // 连接数据 - 使用WebSocket实时更新
+  // 连接数据 - 使用IPC轮询更新
   const {
     data: connectionsData = {
       connections: [],
       uploadTotal: 0,
       downloadTotal: 0,
     },
-  } = useSWRSubscription(
-    clashInfo && pageVisible ? "connections" : null,
-    (_key, { next }) => {
-      if (!clashInfo || !pageVisible) return () => {};
-
-      const { server = "", secret = "" } = clashInfo;
-      if (!server) return () => {};
-
-      console.log(
-        `[Connections][${AppDataProvider.name}] 正在连接: ${server}/connections`,
-      );
-      const socket = createAuthSockette(`${server}/connections`, secret, {
-        timeout: 5000,
-        onmessage(event) {
-          try {
-            const data = JSON.parse(event.data);
-            // 处理连接数据，计算当前上传下载速度
-            next(
-              null,
-              (
-                prev: any = {
-                  connections: [],
-                  uploadTotal: 0,
-                  downloadTotal: 0,
-                },
-              ) => {
-                const oldConns = prev.connections || [];
-                const newConns = data.connections || [];
-
-                // 计算当前速度
-                const processedConns = newConns.map((conn: any) => {
-                  const oldConn = oldConns.find(
-                    (old: any) => old.id === conn.id,
-                  );
-                  if (oldConn) {
-                    return {
-                      ...conn,
-                      curUpload: conn.upload - oldConn.upload,
-                      curDownload: conn.download - oldConn.download,
-                    };
-                  }
-                  return { ...conn, curUpload: 0, curDownload: 0 };
-                });
-
-                return {
-                  ...data,
-                  connections: processedConns,
-                };
-              },
-            );
-          } catch (err) {
-            console.error(
-              `[Connections][${AppDataProvider.name}] 解析数据错误:`,
-              err,
-              event.data,
-            );
-          }
-        },
-        onopen: (event) => {
-          console.log(
-            `[Connections][${AppDataProvider.name}] WebSocket 连接已建立`,
-            event,
-          );
-        },
-        onerror(event) {
-          console.error(
-            `[Connections][${AppDataProvider.name}] WebSocket 连接错误或达到最大重试次数`,
-            event,
-          );
-          next(null, { connections: [], uploadTotal: 0, downloadTotal: 0 });
-        },
-        onclose: (event) => {
-          console.log(
-            `[Connections][${AppDataProvider.name}] WebSocket 连接关闭`,
-            event.code,
-            event.reason,
-          );
-          if (event.code !== 1000 && event.code !== 1001) {
-            console.warn(
-              `[Connections][${AppDataProvider.name}] 连接非正常关闭，重置数据`,
-            );
-            next(null, { connections: [], uploadTotal: 0, downloadTotal: 0 });
-          }
-        },
-      });
-
-      return () => {
-        console.log(`[Connections][${AppDataProvider.name}] 清理WebSocket连接`);
-        socket.close();
+  } = useSWR(
+    clashInfo && pageVisible ? "getConnections" : null,
+    async () => {
+      const data = await getConnections();
+      return {
+        connections: data.connections || [],
+        uploadTotal: data.uploadTotal || 0,
+        downloadTotal: data.downloadTotal || 0,
       };
+    },
+    {
+      refreshInterval: 2000, // 2秒刷新一次
+      fallbackData: { connections: [], uploadTotal: 0, downloadTotal: 0 },
+      keepPreviousData: true,
+      onError: (error) => {
+        console.error("[Connections] IPC 获取数据错误:", error);
+      },
     },
   );
 
-  // 流量和内存数据 - 通过WebSocket获取实时流量数据
-  const { data: trafficData = { up: 0, down: 0 } } = useSWRSubscription(
-    clashInfo && pageVisible ? "traffic" : null,
-    (_key, { next }) => {
-      if (!clashInfo || !pageVisible) return () => {};
-
-      const { server = "", secret = "" } = clashInfo;
-      if (!server) return () => {};
-
-      console.log(
-        `[Traffic][${AppDataProvider.name}] 正在连接: ${server}/traffic`,
-      );
-      const socket = createAuthSockette(`${server}/traffic`, secret, {
-        onmessage(event) {
-          try {
-            const data = JSON.parse(event.data);
-            if (
-              data &&
-              typeof data.up === "number" &&
-              typeof data.down === "number"
-            ) {
-              next(null, data);
-            } else {
-              console.warn(
-                `[Traffic][${AppDataProvider.name}] 收到无效数据:`,
-                data,
-              );
-            }
-          } catch (err) {
-            console.error(
-              `[Traffic][${AppDataProvider.name}] 解析数据错误:`,
-              err,
-              event.data,
-            );
-          }
-        },
-        onopen: (event) => {
-          console.log(
-            `[Traffic][${AppDataProvider.name}] WebSocket 连接已建立`,
-            event,
-          );
-        },
-        onerror(event) {
-          console.error(
-            `[Traffic][${AppDataProvider.name}] WebSocket 连接错误或达到最大重试次数`,
-            event,
-          );
-          next(null, { up: 0, down: 0 });
-        },
-        onclose: (event) => {
-          console.log(
-            `[Traffic][${AppDataProvider.name}] WebSocket 连接关闭`,
-            event.code,
-            event.reason,
-          );
-          if (event.code !== 1000 && event.code !== 1001) {
-            console.warn(
-              `[Traffic][${AppDataProvider.name}] 连接非正常关闭，重置数据`,
-            );
-            next(null, { up: 0, down: 0 });
-          }
-        },
-      });
-
-      return () => {
-        console.log(`[Traffic][${AppDataProvider.name}] 清理WebSocket连接`);
-        socket.close();
-      };
+  // 流量数据 - 使用IPC轮询更新
+  const { data: trafficData = { up: 0, down: 0 } } = useSWR(
+    clashInfo && pageVisible ? "getTrafficData" : null,
+    getTrafficData,
+    {
+      refreshInterval: 1000, // 1秒刷新一次
+      fallbackData: { up: 0, down: 0 },
+      keepPreviousData: true,
+      onSuccess: (data) => {
+        // console.log("[Traffic][AppDataProvider] IPC 获取到流量数据:", data);
+      },
+      onError: (error) => {
+        console.error("[Traffic][AppDataProvider] IPC 获取数据错误:", error);
+      },
     },
   );
 
-  const { data: memoryData = { inuse: 0 } } = useSWRSubscription(
-    clashInfo && pageVisible ? "memory" : null,
-    (_key, { next }) => {
-      if (!clashInfo || !pageVisible) return () => {};
-
-      const { server = "", secret = "" } = clashInfo;
-      if (!server) return () => {};
-
-      console.log(
-        `[Memory][${AppDataProvider.name}] 正在连接: ${server}/memory`,
-      );
-      const socket = createAuthSockette(`${server}/memory`, secret, {
-        onmessage(event) {
-          try {
-            const data = JSON.parse(event.data);
-            if (data && typeof data.inuse === "number") {
-              next(null, data);
-            } else {
-              console.warn(
-                `[Memory][${AppDataProvider.name}] 收到无效数据:`,
-                data,
-              );
-            }
-          } catch (err) {
-            console.error(
-              `[Memory][${AppDataProvider.name}] 解析数据错误:`,
-              err,
-              event.data,
-            );
-          }
-        },
-        onopen: (event) => {
-          console.log(
-            `[Memory][${AppDataProvider.name}] WebSocket 连接已建立`,
-            event,
-          );
-        },
-        onerror(event) {
-          console.error(
-            `[Memory][${AppDataProvider.name}] WebSocket 连接错误或达到最大重试次数`,
-            event,
-          );
-          next(null, { inuse: 0 });
-        },
-        onclose: (event) => {
-          console.log(
-            `[Memory][${AppDataProvider.name}] WebSocket 连接关闭`,
-            event.code,
-            event.reason,
-          );
-          if (event.code !== 1000 && event.code !== 1001) {
-            console.warn(
-              `[Memory][${AppDataProvider.name}] 连接非正常关闭，重置数据`,
-            );
-            next(null, { inuse: 0 });
-          }
-        },
-      });
-
-      return () => {
-        console.log(`[Memory][${AppDataProvider.name}] 清理WebSocket连接`);
-        socket.close();
-      };
+  // 内存数据 - 使用IPC轮询更新
+  const { data: memoryData = { inuse: 0 } } = useSWR(
+    clashInfo && pageVisible ? "getMemoryData" : null,
+    getMemoryData,
+    {
+      refreshInterval: 2000, // 2秒刷新一次
+      fallbackData: { inuse: 0 },
+      keepPreviousData: true,
+      onError: (error) => {
+        console.error("[Memory] IPC 获取数据错误:", error);
+      },
     },
   );
 

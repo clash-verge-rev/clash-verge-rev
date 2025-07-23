@@ -1,7 +1,5 @@
 use super::CmdResult;
-use crate::{
-    config::*, core::*, feat, module::mihomo::MihomoManager, process::AsyncHandler, wrap_err,
-};
+use crate::{config::*, core::*, feat, ipc::IpcManager, process::AsyncHandler, wrap_err};
 use serde_yaml::Mapping;
 
 /// 复制Clash环境变量
@@ -90,9 +88,11 @@ pub async fn clash_api_get_proxy_delay(
     url: Option<String>,
     timeout: i32,
 ) -> CmdResult<serde_json::Value> {
-    MihomoManager::global()
-        .test_proxy_delay(&name, url, timeout)
-        .await
+    wrap_err!(
+        IpcManager::global()
+            .test_proxy_delay(&name, url, timeout)
+            .await
+    )
 }
 
 /// 测试URL延迟
@@ -266,4 +266,274 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
         Ok(result) => Ok(result),
         Err(e) => Err(e.to_string()),
     }
+}
+
+/// 获取Clash版本信息
+#[tauri::command]
+pub async fn get_clash_version() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_version().await)
+}
+
+/// 获取Clash配置
+#[tauri::command]
+pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_config().await)
+}
+
+/// 更新地理数据
+#[tauri::command]
+pub async fn update_geo_data() -> CmdResult {
+    wrap_err!(IpcManager::global().update_geo_data().await)
+}
+
+/// 升级Clash核心
+#[tauri::command]
+pub async fn upgrade_clash_core() -> CmdResult {
+    wrap_err!(IpcManager::global().upgrade_core().await)
+}
+
+/// 获取规则
+#[tauri::command]
+pub async fn get_clash_rules() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_rules().await)
+}
+
+/// 更新代理选择
+#[tauri::command]
+pub async fn update_proxy_choice(group: String, proxy: String) -> CmdResult {
+    wrap_err!(IpcManager::global().update_proxy(&group, &proxy).await)
+}
+
+/// 获取代理提供者
+#[tauri::command]
+pub async fn get_proxy_providers() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_providers_proxies().await)
+}
+
+/// 获取规则提供者
+#[tauri::command]
+pub async fn get_rule_providers() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_rule_providers().await)
+}
+
+/// 代理提供者健康检查
+#[tauri::command]
+pub async fn proxy_provider_health_check(name: String) -> CmdResult {
+    wrap_err!(
+        IpcManager::global()
+            .proxy_provider_health_check(&name)
+            .await
+    )
+}
+
+/// 更新代理提供者
+#[tauri::command]
+pub async fn update_proxy_provider(name: String) -> CmdResult {
+    wrap_err!(IpcManager::global().update_proxy_provider(&name).await)
+}
+
+/// 更新规则提供者
+#[tauri::command]
+pub async fn update_rule_provider(name: String) -> CmdResult {
+    wrap_err!(IpcManager::global().update_rule_provider(&name).await)
+}
+
+/// 获取连接
+#[tauri::command]
+pub async fn get_clash_connections() -> CmdResult<serde_json::Value> {
+    wrap_err!(IpcManager::global().get_connections().await)
+}
+
+/// 删除连接
+#[tauri::command]
+pub async fn delete_clash_connection(id: String) -> CmdResult {
+    wrap_err!(IpcManager::global().delete_connection(&id).await)
+}
+
+/// 关闭所有连接
+#[tauri::command]
+pub async fn close_all_clash_connections() -> CmdResult {
+    wrap_err!(IpcManager::global().close_all_connections().await)
+}
+
+/// 获取流量数据 (使用新的IPC流式监控)
+#[tauri::command]
+pub async fn get_traffic_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "开始获取流量数据 (IPC流式)");
+    let traffic = crate::ipc::get_current_traffic().await;
+    let result = serde_json::json!({
+        "up": traffic.total_up,
+        "down": traffic.total_down,
+        "up_rate": traffic.up_rate,
+        "down_rate": traffic.down_rate,
+        "last_updated": traffic.last_updated.elapsed().as_secs()
+    });
+    log::info!(target: "app", "获取流量数据结果: up={}, down={}, up_rate={}, down_rate={}", 
+        traffic.total_up, traffic.total_down, traffic.up_rate, traffic.down_rate);
+    Ok(result)
+}
+
+/// 获取内存数据 (使用新的IPC流式监控)
+#[tauri::command]
+pub async fn get_memory_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "开始获取内存数据 (IPC流式)");
+    let memory = crate::ipc::get_current_memory().await;
+    let usage_percent = if memory.oslimit > 0 {
+        (memory.inuse as f64 / memory.oslimit as f64) * 100.0
+    } else {
+        0.0
+    };
+    let result = serde_json::json!({
+        "inuse": memory.inuse,
+        "oslimit": memory.oslimit,
+        "usage_percent": usage_percent,
+        "last_updated": memory.last_updated.elapsed().as_secs()
+    });
+    log::info!(target: "app", "获取内存数据结果: inuse={}, oslimit={}, usage={}%", 
+        memory.inuse, memory.oslimit, usage_percent);
+    Ok(result)
+}
+
+/// 启动流量监控服务 (IPC流式监控自动启动，此函数为兼容性保留)
+#[tauri::command]
+pub async fn start_traffic_service() -> CmdResult {
+    log::info!(target: "app", "启动流量监控服务 (IPC流式监控)");
+    // 新的IPC监控在首次访问时自动启动
+    // 触发一次访问以确保监控器已初始化
+    let _ = crate::ipc::get_current_traffic().await;
+    let _ = crate::ipc::get_current_memory().await;
+    log::info!(target: "app", "IPC流式监控已激活");
+    Ok(())
+}
+
+/// 停止流量监控服务 (IPC流式监控无需显式停止，此函数为兼容性保留)
+#[tauri::command]
+pub async fn stop_traffic_service() -> CmdResult {
+    log::info!(target: "app", "停止流量监控服务请求 (IPC流式监控)");
+    // 新的IPC监控是持久的，无需显式停止
+    log::info!(target: "app", "IPC流式监控继续运行");
+    Ok(())
+}
+
+/// 获取格式化的流量数据 (包含单位，便于前端显示)
+#[tauri::command]
+pub async fn get_formatted_traffic_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "获取格式化流量数据");
+    let (up_rate, down_rate, total_up, total_down, is_fresh) =
+        crate::ipc::get_formatted_traffic().await;
+    let result = serde_json::json!({
+        "up_rate_formatted": up_rate,
+        "down_rate_formatted": down_rate,
+        "total_up_formatted": total_up,
+        "total_down_formatted": total_down,
+        "is_fresh": is_fresh
+    });
+    log::debug!(target: "app", "格式化流量数据: ↑{up_rate}/s ↓{down_rate}/s (总计: ↑{total_up} ↓{total_down})");
+    // Clippy: variables can be used directly in the format string
+    // log::debug!(target: "app", "格式化流量数据: ↑{up_rate}/s ↓{down_rate}/s (总计: ↑{total_up} ↓{total_down})");
+    Ok(result)
+}
+
+/// 获取格式化的内存数据 (包含单位，便于前端显示)
+#[tauri::command]
+pub async fn get_formatted_memory_data() -> CmdResult<serde_json::Value> {
+    log::info!(target: "app", "获取格式化内存数据");
+    let (inuse, oslimit, usage_percent, is_fresh) = crate::ipc::get_formatted_memory().await;
+    let result = serde_json::json!({
+        "inuse_formatted": inuse,
+        "oslimit_formatted": oslimit,
+        "usage_percent": usage_percent,
+        "is_fresh": is_fresh
+    });
+    log::debug!(target: "app", "格式化内存数据: {inuse} / {oslimit} ({usage_percent:.1}%)");
+    // Clippy: variables can be used directly in the format string
+    // log::debug!(target: "app", "格式化内存数据: {inuse} / {oslimit} ({usage_percent:.1}%)");
+    Ok(result)
+}
+
+/// 获取系统监控概览 (流量+内存，便于前端一次性获取所有状态)
+#[tauri::command]
+pub async fn get_system_monitor_overview() -> CmdResult<serde_json::Value> {
+    log::debug!(target: "app", "获取系统监控概览");
+
+    // 并发获取流量和内存数据
+    let (traffic, memory) = tokio::join!(
+        crate::ipc::get_current_traffic(),
+        crate::ipc::get_current_memory()
+    );
+
+    let (traffic_formatted, memory_formatted) = tokio::join!(
+        crate::ipc::get_formatted_traffic(),
+        crate::ipc::get_formatted_memory()
+    );
+
+    let traffic_is_fresh = traffic.last_updated.elapsed().as_secs() < 5;
+    let memory_is_fresh = memory.last_updated.elapsed().as_secs() < 10;
+
+    let result = serde_json::json!({
+        "traffic": {
+            "raw": {
+                "up": traffic.total_up,
+                "down": traffic.total_down,
+                "up_rate": traffic.up_rate,
+                "down_rate": traffic.down_rate
+            },
+            "formatted": {
+                "up_rate": traffic_formatted.0,
+                "down_rate": traffic_formatted.1,
+                "total_up": traffic_formatted.2,
+                "total_down": traffic_formatted.3
+            },
+            "is_fresh": traffic_is_fresh
+        },
+        "memory": {
+            "raw": {
+                "inuse": memory.inuse,
+                "oslimit": memory.oslimit,
+                "usage_percent": if memory.oslimit > 0 {
+                    (memory.inuse as f64 / memory.oslimit as f64) * 100.0
+                } else {
+                    0.0
+                }
+            },
+            "formatted": {
+                "inuse": memory_formatted.0,
+                "oslimit": memory_formatted.1,
+                "usage_percent": memory_formatted.2
+            },
+            "is_fresh": memory_is_fresh
+        },
+        "overall_status": if traffic_is_fresh && memory_is_fresh { "healthy" } else { "stale" }
+    });
+
+    Ok(result)
+}
+
+/// 获取代理组延迟
+#[tauri::command]
+pub async fn get_group_proxy_delays(
+    group_name: String,
+    url: Option<String>,
+    timeout: Option<i32>,
+) -> CmdResult<serde_json::Value> {
+    wrap_err!(
+        IpcManager::global()
+            .get_group_proxy_delays(&group_name, url, timeout.unwrap_or(10000))
+            .await
+    )
+}
+
+/// 检查调试是否启用
+#[tauri::command]
+pub async fn is_clash_debug_enabled() -> CmdResult<bool> {
+    match IpcManager::global().is_debug_enabled().await {
+        Ok(enabled) => Ok(enabled),
+        Err(_) => Ok(false),
+    }
+}
+
+/// 垃圾回收
+#[tauri::command]
+pub async fn clash_gc() -> CmdResult {
+    wrap_err!(IpcManager::global().gc().await)
 }

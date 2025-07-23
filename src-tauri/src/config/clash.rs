@@ -1,3 +1,5 @@
+use crate::config::Config;
+use crate::utils::dirs::{ipc_path, path_to_str};
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -57,6 +59,16 @@ impl IClashTemp {
         map.insert("ipv6".into(), true.into());
         map.insert("mode".into(), "rule".into());
         map.insert("external-controller".into(), "127.0.0.1:9097".into());
+        #[cfg(unix)]
+        map.insert(
+            "external-controller-unix".into(),
+            Self::guard_external_controller_ipc().into(),
+        );
+        #[cfg(windows)]
+        map.insert(
+            "external-controller-pipe".into(),
+            Self::guard_external_controller_ipc().into(),
+        );
         cors_map.insert("allow-private-network".into(), true.into());
         cors_map.insert(
             "allow-origins".into(),
@@ -87,7 +99,12 @@ impl IClashTemp {
         let mixed_port = Self::guard_mixed_port(&config);
         let socks_port = Self::guard_socks_port(&config);
         let port = Self::guard_port(&config);
-        let ctrl = Self::guard_server_ctrl(&config);
+        let ctrl = Self::guard_external_controller(&config);
+        #[cfg(unix)]
+        let external_controller_unix = Self::guard_external_controller_ipc();
+        #[cfg(windows)]
+        let external_controller_pipe = Self::guard_external_controller_ipc();
+
         #[cfg(not(target_os = "windows"))]
         config.insert("redir-port".into(), redir_port.into());
         #[cfg(target_os = "linux")]
@@ -97,6 +114,16 @@ impl IClashTemp {
         config.insert("port".into(), port.into());
         config.insert("external-controller".into(), ctrl.into());
 
+        #[cfg(unix)]
+        config.insert(
+            "external-controller-unix".into(),
+            external_controller_unix.into(),
+        );
+        #[cfg(windows)]
+        config.insert(
+            "external-controller-pipe".into(),
+            external_controller_pipe.into(),
+        );
         config
     }
 
@@ -245,6 +272,26 @@ impl IClashTemp {
             .unwrap_or("127.0.0.1:9097".into())
     }
 
+    pub fn guard_external_controller(config: &Mapping) -> String {
+        // 在初始化阶段，直接返回配置中的值，不进行额外检查
+        // 这样可以避免在配置加载期间的循环依赖
+        Self::guard_server_ctrl(config)
+    }
+
+    pub fn guard_external_controller_with_setting(config: &Mapping) -> String {
+        // 检查 enable_external_controller 设置，用于运行时配置生成
+        let enable_external_controller = Config::verge()
+            .latest_ref()
+            .enable_external_controller
+            .unwrap_or(false);
+
+        if enable_external_controller {
+            Self::guard_server_ctrl(config)
+        } else {
+            "".into()
+        }
+    }
+
     pub fn guard_client_ctrl(config: &Mapping) -> String {
         let value = Self::guard_server_ctrl(config);
         match SocketAddr::from_str(value.as_str()) {
@@ -256,6 +303,11 @@ impl IClashTemp {
             }
             Err(_) => "127.0.0.1:9097".into(),
         }
+    }
+
+    pub fn guard_external_controller_ipc() -> String {
+        // 总是使用当前的 IPC 路径，确保配置文件与运行时路径一致
+        path_to_str(&ipc_path().unwrap()).unwrap().to_string()
     }
 }
 

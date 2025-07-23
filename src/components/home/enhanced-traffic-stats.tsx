@@ -7,6 +7,7 @@ import {
   useTheme,
   PaletteColor,
   Grid,
+  Box,
 } from "@mui/material";
 import {
   ArrowUpwardRounded,
@@ -17,18 +18,19 @@ import {
   CloudDownloadRounded,
 } from "@mui/icons-material";
 import {
-  EnhancedTrafficGraph,
-  EnhancedTrafficGraphRef,
-  ITrafficItem,
-} from "./enhanced-traffic-graph";
+  EnhancedCanvasTrafficGraph,
+  type EnhancedCanvasTrafficGraphRef,
+  type ITrafficItem,
+} from "./enhanced-canvas-traffic-graph";
 import { useVisibility } from "@/hooks/use-visibility";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-import { createAuthSockette } from "@/utils/websocket";
 import parseTraffic from "@/utils/parse-traffic";
-import { isDebugEnabled, gc } from "@/services/api";
+import { isDebugEnabled, gc } from "@/services/cmds";
 import { ReactNode } from "react";
 import { useAppData } from "@/providers/app-data-provider";
+import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor-enhanced";
+import { TrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
 import useSWR from "swr";
 
 interface MemoryUsage {
@@ -64,7 +66,6 @@ declare global {
 
 // 控制更新频率
 const CONNECTIONS_UPDATE_INTERVAL = 5000; // 5秒更新一次连接数据
-const THROTTLE_TRAFFIC_UPDATE = 500; // 500ms节流流量数据更新
 
 // 统计卡片组件 - 使用memo优化
 const CompactStatCard = memo(
@@ -160,20 +161,15 @@ export const EnhancedTrafficStats = () => {
   const theme = useTheme();
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
-  const trafficRef = useRef<EnhancedTrafficGraphRef>(null);
+  const trafficRef = useRef<EnhancedCanvasTrafficGraphRef>(null);
   const pageVisible = useVisibility();
 
   // 使用AppDataProvider
   const { connections, uptime } = useAppData();
 
-  // 使用单一状态对象减少状态更新次数
-  const [stats, setStats] = useState({
-    traffic: { up: 0, down: 0 },
-    memory: { inuse: 0, oslimit: undefined as number | undefined },
-  });
-
-  // 创建一个标记来追踪最后更新时间，用于节流
-  const lastUpdateRef = useRef({ traffic: 0 });
+  // 使用增强版的统一流量数据Hook
+  const { traffic, memory, isLoading, isDataFresh, hasValidData } =
+    useTrafficDataEnhanced();
 
   // 是否显示流量图表
   const trafficGraph = verge?.traffic_graph ?? true;
@@ -189,171 +185,7 @@ export const EnhancedTrafficStats = () => {
     },
   );
 
-  // 处理流量数据更新 - 使用节流控制更新频率
-  const handleTrafficUpdate = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data) as ITrafficItem;
-      if (
-        data &&
-        typeof data.up === "number" &&
-        typeof data.down === "number"
-      ) {
-        // 使用节流控制更新频率
-        const now = Date.now();
-        if (now - lastUpdateRef.current.traffic < THROTTLE_TRAFFIC_UPDATE) {
-          try {
-            trafficRef.current?.appendData({
-              up: data.up,
-              down: data.down,
-              timestamp: now,
-            });
-          } catch {}
-          return;
-        }
-        lastUpdateRef.current.traffic = now;
-        const safeUp = isNaN(data.up) ? 0 : data.up;
-        const safeDown = isNaN(data.down) ? 0 : data.down;
-        try {
-          setStats((prev) => ({
-            ...prev,
-            traffic: { up: safeUp, down: safeDown },
-          }));
-        } catch {}
-        try {
-          trafficRef.current?.appendData({
-            up: safeUp,
-            down: safeDown,
-            timestamp: now,
-          });
-        } catch {}
-      }
-    } catch (err) {
-      console.error("[Traffic] 解析数据错误:", err, event.data);
-    }
-  }, []);
-
-  // 处理内存数据更新
-  const handleMemoryUpdate = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data) as MemoryUsage;
-      if (data && typeof data.inuse === "number") {
-        setStats((prev) => ({
-          ...prev,
-          memory: {
-            inuse: isNaN(data.inuse) ? 0 : data.inuse,
-            oslimit: data.oslimit,
-          },
-        }));
-      }
-    } catch (err) {
-      console.error("[Memory] 解析数据错误:", err, event.data);
-    }
-  }, []);
-
-  // 使用 WebSocket 连接获取数据 - 合并流量和内存连接逻辑
-  useEffect(() => {
-    if (!clashInfo || !pageVisible) return;
-
-    const { server, secret = "" } = clashInfo;
-    if (!server) return;
-
-    // WebSocket 引用
-    let sockets: {
-      traffic: ReturnType<typeof createAuthSockette> | null;
-      memory: ReturnType<typeof createAuthSockette> | null;
-    } = {
-      traffic: null,
-      memory: null,
-    };
-
-    // 清理现有连接的函数
-    const cleanupSockets = () => {
-      Object.values(sockets).forEach((socket) => {
-        if (socket) {
-          socket.close();
-        }
-      });
-      sockets = { traffic: null, memory: null };
-    };
-
-    // 关闭现有连接
-    cleanupSockets();
-
-    // 创建新连接
-    console.log(
-      `[Traffic][${EnhancedTrafficStats.name}] 正在连接: ${server}/traffic`,
-    );
-    sockets.traffic = createAuthSockette(`${server}/traffic`, secret, {
-      onmessage: handleTrafficUpdate,
-      onopen: (event) => {
-        console.log(
-          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接已建立`,
-          event,
-        );
-      },
-      onerror: (event) => {
-        console.error(
-          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接错误或达到最大重试次数`,
-          event,
-        );
-        setStats((prev) => ({ ...prev, traffic: { up: 0, down: 0 } }));
-      },
-      onclose: (event) => {
-        console.log(
-          `[Traffic][${EnhancedTrafficStats.name}] WebSocket 连接关闭`,
-          event.code,
-          event.reason,
-        );
-        if (event.code !== 1000 && event.code !== 1001) {
-          console.warn(
-            `[Traffic][${EnhancedTrafficStats.name}] 连接非正常关闭，重置状态`,
-          );
-          setStats((prev) => ({ ...prev, traffic: { up: 0, down: 0 } }));
-        }
-      },
-    });
-
-    console.log(
-      `[Memory][${EnhancedTrafficStats.name}] 正在连接: ${server}/memory`,
-    );
-    sockets.memory = createAuthSockette(`${server}/memory`, secret, {
-      onmessage: handleMemoryUpdate,
-      onopen: (event) => {
-        console.log(
-          `[Memory][${EnhancedTrafficStats.name}] WebSocket 连接已建立`,
-          event,
-        );
-      },
-      onerror: (event) => {
-        console.error(
-          `[Memory][${EnhancedTrafficStats.name}] WebSocket 连接错误或达到最大重试次数`,
-          event,
-        );
-        setStats((prev) => ({
-          ...prev,
-          memory: { inuse: 0, oslimit: undefined },
-        }));
-      },
-      onclose: (event) => {
-        console.log(
-          `[Memory][${EnhancedTrafficStats.name}] WebSocket 连接关闭`,
-          event.code,
-          event.reason,
-        );
-        if (event.code !== 1000 && event.code !== 1001) {
-          console.warn(
-            `[Memory][${EnhancedTrafficStats.name}] 连接非正常关闭，重置状态`,
-          );
-          setStats((prev) => ({
-            ...prev,
-            memory: { inuse: 0, oslimit: undefined },
-          }));
-        }
-      },
-    });
-
-    return cleanupSockets;
-  }, [clashInfo, pageVisible, handleTrafficUpdate, handleMemoryUpdate]);
+  // Canvas组件现在直接从全局Hook获取数据，无需手动添加数据点
 
   // 执行垃圾回收
   const handleGarbageCollection = useCallback(async () => {
@@ -369,9 +201,9 @@ export const EnhancedTrafficStats = () => {
 
   // 使用useMemo计算解析后的流量数据
   const parsedData = useMemo(() => {
-    const [up, upUnit] = parseTraffic(stats.traffic.up);
-    const [down, downUnit] = parseTraffic(stats.traffic.down);
-    const [inuse, inuseUnit] = parseTraffic(stats.memory.inuse);
+    const [up, upUnit] = parseTraffic(traffic?.raw?.up_rate || 0);
+    const [down, downUnit] = parseTraffic(traffic?.raw?.down_rate || 0);
+    const [inuse, inuseUnit] = parseTraffic(memory?.raw?.inuse || 0);
     const [uploadTotal, uploadTotalUnit] = parseTraffic(
       connections.uploadTotal,
     );
@@ -392,7 +224,7 @@ export const EnhancedTrafficStats = () => {
       downloadTotalUnit,
       connectionsCount: connections.count,
     };
-  }, [stats, connections]);
+  }, [traffic, memory, connections]);
 
   // 渲染流量图表 - 使用useMemo缓存渲染结果
   const trafficGraphComponent = useMemo(() => {
@@ -411,7 +243,7 @@ export const EnhancedTrafficStats = () => {
         onClick={() => trafficRef.current?.toggleStyle()}
       >
         <div style={{ height: "100%", position: "relative" }}>
-          <EnhancedTrafficGraph ref={trafficRef} />
+          <EnhancedCanvasTrafficGraph ref={trafficRef} />
           {isDebug && (
             <div
               style={{
@@ -427,6 +259,10 @@ export const EnhancedTrafficStats = () => {
               }}
             >
               DEBUG: {!!trafficRef.current ? "图表已初始化" : "图表未初始化"}
+              <br />
+              状态: {isDataFresh ? "active" : "inactive"}
+              <br />
+              数据新鲜度: {traffic?.is_fresh ? "Fresh" : "Stale"}
               <br />
               {new Date().toISOString().slice(11, 19)}
             </div>
@@ -487,19 +323,42 @@ export const EnhancedTrafficStats = () => {
   );
 
   return (
-    <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>
-      {trafficGraph && (
-        <Grid size={12}>
-          {/* 流量图表区域 */}
-          {trafficGraphComponent}
-        </Grid>
-      )}
-      {/* 统计卡片区域 */}
-      {statCards.map((card, index) => (
-        <Grid key={index} size={4}>
-          <CompactStatCard {...card} />
-        </Grid>
-      ))}
-    </Grid>
+    <TrafficErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error("[EnhancedTrafficStats] 组件错误:", error, errorInfo);
+      }}
+    >
+      <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>
+        {trafficGraph && (
+          <Grid size={12}>
+            {/* 流量图表区域 */}
+            {trafficGraphComponent}
+          </Grid>
+        )}
+        {/* 统计卡片区域 */}
+        {statCards.map((card, index) => (
+          <Grid key={index} size={4}>
+            <CompactStatCard {...card} />
+          </Grid>
+        ))}
+
+        {/* 数据状态指示器（调试用）*/}
+        {isDebug && (
+          <Grid size={12}>
+            <Box
+              sx={{
+                p: 1,
+                bgcolor: "action.hover",
+                borderRadius: 1,
+                fontSize: "0.75rem",
+              }}
+            >
+              数据状态: {isDataFresh ? "新鲜" : "过期"} | 有效数据:{" "}
+              {hasValidData ? "是" : "否"} | 加载中: {isLoading ? "是" : "否"}
+            </Box>
+          </Grid>
+        )}
+      </Grid>
+    </TrafficErrorBoundary>
   );
 };

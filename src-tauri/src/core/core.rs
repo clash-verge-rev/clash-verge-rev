@@ -4,8 +4,8 @@ use crate::{
         handle,
         service::{self},
     },
+    ipc::IpcManager,
     logging, logging_error,
-    module::mihomo::MihomoManager,
     utils::{
         dirs,
         help::{self},
@@ -413,10 +413,7 @@ impl CoreManager {
             logging_error!(Type::Core, true, "{}", msg);
             msg
         });
-        match MihomoManager::global()
-            .put_configs_force(run_path_str?)
-            .await
-        {
+        match IpcManager::global().put_configs_force(run_path_str?).await {
             Ok(_) => {
                 Config::runtime().apply();
                 logging!(info, Type::Core, true, "Configuration updated successfully");
