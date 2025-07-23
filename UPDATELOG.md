@@ -33,7 +33,7 @@
 
 ### 🔧 技术改进
 
-- 移除过时的 MihomoManager，统一使用 IpcManager
+- 移除过时的 Http 控制 Mihomo，统一使用 IPC 控制
 - 添加外部控制器配置和 UI 支持
 - 改进 IPC 路径处理，支持 Unix 系统特定功能
 - 优化 IPC 目录安全检查和路径解析
