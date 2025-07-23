@@ -534,7 +534,7 @@ jobs:
       - uses: snapcore/action-build@v1
         id: build-snap
         with:
-          snapcraft-args: '-v --build-for ${{ matrix.build-for }}'
+          snapcraft-args: "-v --build-for ${{ matrix.build-for }}"
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
