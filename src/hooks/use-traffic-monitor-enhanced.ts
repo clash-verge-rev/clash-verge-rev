@@ -264,9 +264,12 @@ export const useTrafficMonitorEnhanced = () => {
         }
       },
       onError: (error) => {
-        console.warn(
-          "[TrafficMonitorEnhanced] 网络错误，使用最后有效数据:",
-          error,
+        console.error(
+          "[TrafficMonitorEnhanced] 网络错误，使用最后有效数据. 错误详情:",
+          {
+            message: error?.message || "未知错误",
+            stack: error?.stack || "无堆栈信息",
+          },
         );
         // 网络错误时不清空数据，继续使用最后有效值
         // 但是添加一个错误标记的数据点（流量为0）
