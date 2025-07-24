@@ -1039,15 +1039,22 @@ Section Uninstall
 
   DetailPrint "所有用户桌面快捷方式删除完成"
 
-  ; 删除开始菜单中的应用程序文件夹和快捷方式（强兼老版本）
+  ; 删除用户级开始菜单中的应用程序文件夹和快捷方式
+  DetailPrint "删除用户级开始菜单中的应用程序文件夹和快捷方式..."
   RMDir /r /REBOOTOK "$SMPROGRAMS\Clash Verge"
   RMDir /r /REBOOTOK "$SMPROGRAMS\clash-verge"
+  DetailPrint "删除用户级开始菜单中的应用程序文件夹和快捷方式完成"
+
+  ; 删除系统级开始菜单中的应用程序文件夹和快捷方式
+  DetailPrint "删除系统级开始菜单中的应用程序文件夹和快捷方式..."
   RMDir /r /REBOOTOK "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Clash Verge"
   RMDir /r /REBOOTOK "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\clash-verge"
+  DetailPrint "删除系统级开始菜单中的应用程序文件夹和快捷方式完成"
 
   ; 删除所有带 Clash Verge 或 clash-verge 的注册表项
   DetailPrint "开始清理所有 Clash Verge 相关的注册表项..."
 
+  ; 设置注册表查看模式 (64位)
   SetRegView 64
 
   ; 清理 CurrentVersion\Run 中的自启动项
