@@ -221,7 +221,8 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                   handleCorsConfigChange(
                     "allowPrivateNetwork",
                     e.target.checked,
-                  )}
+                  )
+                }
               />
             </Box>
           </ListItem>
