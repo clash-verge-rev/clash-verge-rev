@@ -25,8 +25,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { showNotice } from "@/services/noticeService";
 
 const Item = styled(ListItem)(({ theme }) => ({
-  padding: "8px 0",
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  padding: "5px 2px",
   "& textarea": {
     lineHeight: 1.5,
     fontSize: 14,
