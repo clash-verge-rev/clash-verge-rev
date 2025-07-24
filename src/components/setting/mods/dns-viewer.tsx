@@ -11,13 +11,12 @@ import {
   MenuItem,
   Select,
   styled,
-  Switch,
   TextField,
   Typography,
 } from "@mui/material";
 import { RestartAltRounded } from "@mui/icons-material";
 import { useClash } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import yaml from "js-yaml";
 import MonacoEditor from "react-monaco-editor";
 import { useThemeMode } from "@/services/states";
