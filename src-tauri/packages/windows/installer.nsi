@@ -50,6 +50,9 @@ ${StrLoc}
 !define MANUPRODUCTKEY "Software\${MANUFACTURER}\${PRODUCTNAME}"
 !define UNINSTALLERSIGNCOMMAND "{{uninstaller_sign_cmd}}"
 !define ESTIMATEDSIZE "{{estimated_size}}"
+!define appRunningOkKill "${PRODUCTNAME} 正在运行！$\n点击确定以终止运行。"
+!define appRunning "${PRODUCTNAME} 正在运行，请先关闭它再尝试安装。"
+!define failedToKillApp "无法终止 ${PRODUCTNAME} 的运行。请手动关闭后重试。"
 
 Name "${PRODUCTNAME}"
 BrandingText "${COPYRIGHT}"
@@ -368,6 +371,9 @@ FunctionEnd
 !insertmacro MUI_RESERVEFILE_LANGDLL
 {{#each language_files}}
   !include "{{this}}"
+  LangString appRunningOkKill ${LANG_ENGLISH} "${PRODUCTNAME} 正在运行！$\n点击确定以终止运行。"
+  LangString appRunning ${LANG_ENGLISH} "${PRODUCTNAME} 正在运行，请先关闭它再尝试安装。"
+  LangString failedToKillApp ${LANG_ENGLISH} "无法终止 ${PRODUCTNAME} 的运行。请手动关闭后重试。"
 {{/each}}
 
 !macro SetContext
