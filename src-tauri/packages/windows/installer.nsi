@@ -661,7 +661,7 @@ SectionEnd
   Pop $R0
   ${If} $R0 = 0
       IfSilent kill 0
-      ${IfThen} $PassiveMode != 1 ${|} MessageBox MB_OKCANCEL "$(appRunningOkKill)" IDOK kill IDCANCEL cancel ${|}
+      ${IfThen} $PassiveMode != 1 ${|} MessageBox MB_OKCANCEL "Clash Verge 正在运行！$\n点击确定以终止运行" IDOK kill IDCANCEL cancel ${|}
       kill:
         !if "${INSTALLMODE}" == "currentUser"
           nsis_tauri_utils::KillProcessCurrentUser "${MAINBINARYNAME}.exe"
