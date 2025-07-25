@@ -61,14 +61,20 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                     "[cmd配置save] merge文件语法验证通过"
                 );
                 // 成功后尝试更新整体配置
-                if let Err(e) = CoreManager::global().update_config().await {
-                    logging!(
-                        warn,
-                        Type::Config,
-                        true,
-                        "[cmd配置save] 更新整体配置时发生错误: {}",
-                        e
-                    );
+                match CoreManager::global().update_config().await {
+                    Ok(_) => {
+                        // 配置更新成功，刷新前端
+                        handle::Handle::refresh_clash();
+                    }
+                    Err(e) => {
+                        logging!(
+                            warn,
+                            Type::Config,
+                            true,
+                            "[cmd配置save] 更新整体配置时发生错误: {}",
+                            e
+                        );
+                    }
                 }
                 return Ok(());
             }

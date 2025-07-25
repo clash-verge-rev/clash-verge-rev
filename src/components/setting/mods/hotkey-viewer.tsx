@@ -3,59 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
 import { styled, Typography } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { HotkeyInput } from "./hotkey-input";
 import { showNotice } from "@/services/noticeService";
-
-// 修复后的自定义开关组件
-const ToggleButton = styled("label")`
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 24px;
-
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #e0e0e0;
-    transition: 0.4s;
-    border-radius: 34px;
-
-    &:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: 0.4s;
-      border-radius: 50%;
-    }
-  }
-
-  input:checked + .slider {
-    background-color: #2196f3;
-  }
-
-  input:focus + .slider {
-    box-shadow: 0 0 1px #2196f3;
-  }
-
-  input:checked + .slider:before {
-    transform: translateX(24px);
-  }
-`;
 
 const ItemWrapper = styled("div")`
   display: flex;
@@ -147,15 +97,11 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
     >
       <ItemWrapper style={{ marginBottom: 16 }}>
         <Typography>{t("Enable Global Hotkey")}</Typography>
-        <ToggleButton>
-          <input
-            type="checkbox"
-            checked={enableGlobalHotkey}
-            onChange={(e) => setEnableHotkey(e.target.checked)}
-            id="global-hotkey-toggle"
-          />
-          <span className="slider"></span>
-        </ToggleButton>
+        <Switch
+          edge="end"
+          checked={enableGlobalHotkey}
+          onChange={(e) => setEnableHotkey(e.target.checked)}
+        />
       </ItemWrapper>
 
       {HOTKEY_FUNC.map((func) => (

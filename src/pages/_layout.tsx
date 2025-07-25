@@ -9,6 +9,7 @@ import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
+import { forceRefreshClashConfig } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
@@ -192,6 +193,8 @@ const Layout = () => {
     const listeners = [
       addListener("verge://refresh-clash-config", async () => {
         await getAxios(true);
+        // 后端配置变更事件触发，强制刷新配置缓存
+        await forceRefreshClashConfig();
         mutate("getProxies");
         mutate("getVersion");
         mutate("getClashConfig");
