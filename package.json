@@ -18,6 +18,8 @@
     "portable-fixed-webview2": "node scripts/portable-fixed-webview2.mjs",
     "fix-alpha-version": "node scripts/fix-alpha_version.mjs",
     "release-version": "node scripts/release-version.mjs",
+    "release:autobuild": "pnpm release-version autobuild",
+    "release:deploytest": "pnpm release-version deploytest",
     "publish-version": "node scripts/publish-version.mjs",
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
     "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml",
