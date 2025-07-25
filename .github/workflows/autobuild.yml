@@ -206,6 +206,7 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
+          shared-key: autobuild-shared
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -284,6 +285,7 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
+          shared-key: autobuild-shared
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -414,6 +416,7 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
+          shared-key: autobuild-shared
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4

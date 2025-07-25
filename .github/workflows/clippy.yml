@@ -32,6 +32,8 @@ jobs:
         with:
           workspaces: src-tauri
           save-if: false
+          cache-all-crates: false
+          shared-key: autobuild-shared
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
