@@ -89,7 +89,7 @@
     "@vitejs/plugin-react": "4.7.0",
     "adm-zip": "^0.5.16",
     "commander": "^14.0.0",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.0.0",
     "https-proxy-agent": "^7.0.6",
     "meta-json-schema": "^1.19.11",
     "node-fetch": "^3.3.2",
