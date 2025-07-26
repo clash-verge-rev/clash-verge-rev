@@ -334,6 +334,12 @@ export const HomePage = () => {
       clashinfo: { id: "clashinfo", size: 6, enabled: homeCards.clashinfo },
       systeminfo: { id: "systeminfo", size: 6, enabled: homeCards.systeminfo },
     };
+
+    if (!configs[id]) {
+      console.warn(`检测到未知卡片ID: ${id}，使用默认配置`);
+      return { id, size: 6, enabled: false };
+    }
+
     return configs[id];
   };
 
@@ -372,6 +378,7 @@ export const HomePage = () => {
       case "systeminfo":
         return <SystemInfoCard />;
       default:
+        console.warn(`无法渲染未知卡片: ${id}`);
         return null;
     }
   };
@@ -421,9 +428,14 @@ export const HomePage = () => {
               {...provided.droppableProps}
             >
               {cardOrder
-                .filter((id) => homeCards[id])
+                .filter((id) => {
+                  const config = getCardConfig(id);
+                  return homeCards[id] && config.enabled;
+                })
                 .map((id, index) => {
                   const config = getCardConfig(id);
+                  if (!config) return null;
+
                   return (
                     <Draggable
                       key={id}
