@@ -138,7 +138,7 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
   private validateOverallStatus(status: any): boolean {
     return (
       typeof status === "string" &&
-      ["active", "inactive", "error", "unknown"].includes(status)
+      ["active", "inactive", "error", "unknown", "healthy"].includes(status)
     );
   }
 
@@ -190,12 +190,12 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
 
   private sanitizeOverallStatus(
     status: any,
-  ): "active" | "inactive" | "error" | "unknown" {
+  ): "active" | "inactive" | "error" | "unknown" | "healthy" {
     if (
       typeof status === "string" &&
-      ["active", "inactive", "error", "unknown"].includes(status)
+      ["active", "inactive", "error", "unknown", "healthy"].includes(status)
     ) {
-      return status as "active" | "inactive" | "error" | "unknown";
+      return status as "active" | "inactive" | "error" | "unknown" | "healthy";
     }
     return "unknown";
   }

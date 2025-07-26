@@ -2,8 +2,17 @@ use kode_bridge::{
     errors::{AnyError, AnyResult},
     IpcHttpClient, LegacyResponse,
 };
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 use std::sync::OnceLock;
+
+// 定义用于URL路径的编码集合，只编码真正必要的字符
+const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
+    .add(b' ') // 空格
+    .add(b'/') // 斜杠
+    .add(b'?') // 问号
+    .add(b'#') // 井号
+    .add(b'&') // 和号
+    .add(b'%'); // 百分号
 
 use crate::{
     logging,
@@ -108,7 +117,7 @@ impl IpcManager {
     }
 
     pub async fn delete_connection(&self, id: &str) -> AnyResult<()> {
-        let encoded_id = utf8_percent_encode(id, NON_ALPHANUMERIC).to_string();
+        let encoded_id = utf8_percent_encode(id, URL_PATH_ENCODE_SET).to_string();
         let url = format!("/connections/{encoded_id}");
         let response = self.send_request("DELETE", &url, None).await?;
         if response["code"] == 204 {
@@ -176,11 +185,13 @@ impl IpcManager {
     ) -> AnyResult<serde_json::Value> {
         let test_url =
             test_url.unwrap_or_else(|| "https://cp.cloudflare.com/generate_204".to_string());
-        let encoded_name = utf8_percent_encode(name, NON_ALPHANUMERIC).to_string();
-        let encoded_test_url = utf8_percent_encode(&test_url, NON_ALPHANUMERIC).to_string();
-        let url = format!("/proxies/{encoded_name}/delay?url={encoded_test_url}&timeout={timeout}");
-        let response = self.send_request("GET", &url, None).await?;
-        Ok(response)
+
+        let encoded_name = utf8_percent_encode(name, URL_PATH_ENCODE_SET).to_string();
+        // 测速URL不再编码，直接传递
+        let url = format!("/proxies/{encoded_name}/delay?url={test_url}&timeout={timeout}");
+
+        let response = self.send_request("GET", &url, None).await;
+        response
     }
 
     // 版本和配置相关
@@ -236,7 +247,7 @@ impl IpcManager {
     }
 
     pub async fn update_rule_provider(&self, name: &str) -> AnyResult<()> {
-        let encoded_name = utf8_percent_encode(name, NON_ALPHANUMERIC).to_string();
+        let encoded_name = utf8_percent_encode(name, URL_PATH_ENCODE_SET).to_string();
         let url = format!("/providers/rules/{encoded_name}");
         let response = self.send_request("PUT", &url, None).await?;
         if response["code"] == 204 {
@@ -254,7 +265,7 @@ impl IpcManager {
     // 代理相关
     pub async fn update_proxy(&self, group: &str, proxy: &str) -> AnyResult<()> {
         // 使用 percent-encoding 进行正确的 URL 编码
-        let encoded_group = utf8_percent_encode(group, NON_ALPHANUMERIC).to_string();
+        let encoded_group = utf8_percent_encode(group, URL_PATH_ENCODE_SET).to_string();
         let url = format!("/proxies/{encoded_group}");
         let payload = serde_json::json!({
             "name": proxy
@@ -299,7 +310,7 @@ impl IpcManager {
     }
 
     pub async fn proxy_provider_health_check(&self, name: &str) -> AnyResult<()> {
-        let encoded_name = utf8_percent_encode(name, NON_ALPHANUMERIC).to_string();
+        let encoded_name = utf8_percent_encode(name, URL_PATH_ENCODE_SET).to_string();
         let url = format!("/providers/proxies/{encoded_name}/healthcheck");
         let response = self.send_request("GET", &url, None).await?;
         if response["code"] == 204 {
@@ -315,7 +326,7 @@ impl IpcManager {
     }
 
     pub async fn update_proxy_provider(&self, name: &str) -> AnyResult<()> {
-        let encoded_name = utf8_percent_encode(name, NON_ALPHANUMERIC).to_string();
+        let encoded_name = utf8_percent_encode(name, URL_PATH_ENCODE_SET).to_string();
         let url = format!("/providers/proxies/{encoded_name}");
         let response = self.send_request("PUT", &url, None).await?;
         if response["code"] == 204 {
@@ -338,11 +349,13 @@ impl IpcManager {
         timeout: i32,
     ) -> AnyResult<serde_json::Value> {
         let test_url = url.unwrap_or_else(|| "https://cp.cloudflare.com/generate_204".to_string());
-        let encoded_group_name = utf8_percent_encode(group_name, NON_ALPHANUMERIC).to_string();
-        let encoded_test_url = utf8_percent_encode(&test_url, NON_ALPHANUMERIC).to_string();
-        let url =
-            format!("/group/{encoded_group_name}/delay?url={encoded_test_url}&timeout={timeout}");
-        self.send_request("GET", &url, None).await
+
+        let encoded_group_name = utf8_percent_encode(group_name, URL_PATH_ENCODE_SET).to_string();
+        // 测速URL不再编码，直接传递
+        let url = format!("/group/{encoded_group_name}/delay?url={test_url}&timeout={timeout}");
+
+        let response = self.send_request("GET", &url, None).await;
+        response
     }
 
     // 调试相关

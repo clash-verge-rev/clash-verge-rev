@@ -13,7 +13,7 @@ build = "build.rs"
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.3.0", features = [] }
+tauri-build = { version = "2.3.1", features = [] }
 
 [dependencies]
 warp = "0.3.7"
@@ -25,9 +25,9 @@ dunce = "1.0.5"
 log4rs = "1.3.0"
 nanoid = "0.4"
 chrono = "0.4.41"
-sysinfo = "=0.35.2"
+sysinfo = { version = "0.36.1", features = ["network", "system"] }
 boa_engine = "0.20.0"
-serde_json = "1.0.140"
+serde_json = "1.0.141"
 serde_yaml = "0.9.34"
 once_cell = "1.21.3"
 lazy_static = "1.5.0"
@@ -47,23 +47,23 @@ reqwest = { version = "0.12.22", features = ["json", "rustls-tls", "cookies"] }
 regex = "1.11.1"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
 image = "0.25.6"
-tauri = { version = "2.6.2", features = [
+tauri = { version = "2.7.0", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
   "image-ico",
   "image-png",
 ] }
-network-interface = { version = "2.0.1", features = ["serde"] }
+network-interface = { version = "2.0.2", features = ["serde"] }
 tauri-plugin-shell = "2.3.0"
-tauri-plugin-dialog = "2.3.0"
-tauri-plugin-fs = "2.4.0"
+tauri-plugin-dialog = "2.3.1"
+tauri-plugin-fs = "2.4.1"
 tauri-plugin-process = "2.3.0"
 tauri-plugin-clipboard-manager = "2.3.0"
-tauri-plugin-deep-link = "2.4.0"
+tauri-plugin-deep-link = "2.4.1"
 tauri-plugin-devtools = "2.0.0"
-tauri-plugin-window-state = "2.3.0"
-zip = "=4.2.0"
+tauri-plugin-window-state = "2.4.0"
+zip = "4.3.0"
 reqwest_dav = "0.2.1"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
@@ -77,7 +77,7 @@ hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
-kode-bridge = "0.1.5"
+kode-bridge = "0.1.6-rc"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.0"
 

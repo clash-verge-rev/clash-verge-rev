@@ -181,7 +181,7 @@ interface ISystemMonitorOverview {
     };
     is_fresh: boolean;
   };
-  overall_status: "active" | "inactive" | "error" | "unknown";
+  overall_status: "active" | "inactive" | "error" | "unknown" | "healthy";
 }
 
 // 类型安全的数据验证器
