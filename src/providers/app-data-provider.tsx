@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { useVerge } from "@/hooks/use-verge";
 import useSWR from "swr";
 import {
@@ -21,6 +27,19 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { useVisibility } from "@/hooks/use-visibility";
 import { listen } from "@tauri-apps/api/event";
 
+// 连接速度计算接口
+interface ConnectionSpeedData {
+  id: string;
+  upload: number;
+  download: number;
+  timestamp: number;
+}
+
+interface ConnectionWithSpeed extends IConnectionsItem {
+  curUpload: number;
+  curDownload: number;
+}
+
 // 定义AppDataContext类型 - 使用宽松类型
 interface AppDataContextType {
   proxies: any;
@@ -32,7 +51,7 @@ interface AppDataContextType {
   proxyProviders: any;
   ruleProviders: any;
   connections: {
-    data: any[];
+    data: ConnectionWithSpeed[];
     count: number;
     uploadTotal: number;
     downloadTotal: number;
@@ -62,6 +81,52 @@ export const AppDataProvider = ({
   const pageVisible = useVisibility();
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
+
+  // 存储上一次连接数据用于速度计算
+  const previousConnectionsRef = useRef<Map<string, ConnectionSpeedData>>(
+    new Map(),
+  );
+
+  // 计算连接速度的函数
+  const calculateConnectionSpeeds = (
+    currentConnections: IConnectionsItem[],
+  ): ConnectionWithSpeed[] => {
+    const now = Date.now();
+    const currentMap = new Map<string, ConnectionSpeedData>();
+
+    return currentConnections.map((conn) => {
+      const connWithSpeed: ConnectionWithSpeed = {
+        ...conn,
+        curUpload: 0,
+        curDownload: 0,
+      };
+
+      const currentData: ConnectionSpeedData = {
+        id: conn.id,
+        upload: conn.upload,
+        download: conn.download,
+        timestamp: now,
+      };
+
+      currentMap.set(conn.id, currentData);
+
+      const previousData = previousConnectionsRef.current.get(conn.id);
+      if (previousData) {
+        const timeDiff = (now - previousData.timestamp) / 1000; // 转换为秒
+
+        if (timeDiff > 0) {
+          const uploadDiff = conn.upload - previousData.upload;
+          const downloadDiff = conn.download - previousData.download;
+
+          // 计算每秒速度 (字节/秒)
+          connWithSpeed.curUpload = Math.max(0, uploadDiff / timeDiff);
+          connWithSpeed.curDownload = Math.max(0, downloadDiff / timeDiff);
+        }
+      }
+
+      return connWithSpeed;
+    });
+  };
 
   // 基础数据 - 中频率更新 (5秒)
   const { data: proxiesData, mutate: refreshProxy } = useSWR(
@@ -250,7 +315,7 @@ export const AppDataProvider = ({
     suspense: false,
   });
 
-  // 连接数据 - 使用IPC轮询更新
+  // 连接数据 - 使用IPC轮询更新并计算速度
   const {
     data: connectionsData = {
       connections: [],
@@ -261,8 +326,26 @@ export const AppDataProvider = ({
     clashInfo && pageVisible ? "getConnections" : null,
     async () => {
       const data = await getConnections();
+      const rawConnections: IConnectionsItem[] = data.connections || [];
+
+      // 计算带速度的连接数据
+      const connectionsWithSpeed = calculateConnectionSpeeds(rawConnections);
+
+      // 更新上一次数据的引用
+      const currentMap = new Map<string, ConnectionSpeedData>();
+      const now = Date.now();
+      rawConnections.forEach((conn) => {
+        currentMap.set(conn.id, {
+          id: conn.id,
+          upload: conn.upload,
+          download: conn.download,
+          timestamp: now,
+        });
+      });
+      previousConnectionsRef.current = currentMap;
+
       return {
-        connections: data.connections || [],
+        connections: connectionsWithSpeed,
         uploadTotal: data.uploadTotal || 0,
         downloadTotal: data.downloadTotal || 0,
       };
