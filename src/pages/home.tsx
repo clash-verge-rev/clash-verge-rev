@@ -1,45 +1,49 @@
-import { useTranslation } from "react-i18next";
+import { BasePage } from "@/components/base";
+import { ClashInfoCard } from "@/components/home/clash-info-card";
+import { ClashModeCard } from "@/components/home/clash-mode-card";
+import { CurrentProxyCard } from "@/components/home/current-proxy-card";
+import { EnhancedCard } from "@/components/home/enhanced-card";
+import { EnhancedTrafficStats } from "@/components/home/enhanced-traffic-stats";
+import { HomeProfileCard } from "@/components/home/home-profile-card";
+import { IpInfoCard } from "@/components/home/ip-info-card";
+import { ProxyTunCard } from "@/components/home/proxy-tun-card";
+import { SystemInfoCard } from "@/components/home/system-info-card";
+import { TestCard } from "@/components/home/test-card";
+import { useProfiles } from "@/hooks/use-profiles";
+import { useVerge } from "@/hooks/use-verge";
+import { entry_lightweight_mode, openWebUrl } from "@/services/cmds";
+import {
+  DnsOutlined,
+  HelpOutlineRounded,
+  HistoryEduOutlined,
+  RouterOutlined,
+  SettingsOutlined,
+  SpeedOutlined,
+  VisibilityOutlined,
+  VisibilityOffOutlined,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
-  IconButton,
-  useTheme,
-  keyframes,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormGroup,
-  FormControlLabel,
   Checkbox,
-  Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  FormGroup,
   Grid,
+  IconButton,
+  keyframes,
+  Popover,
+  Tooltip,
+  Typography,
+  useTheme,
 } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { useProfiles } from "@/hooks/use-profiles";
-import {
-  RouterOutlined,
-  SettingsOutlined,
-  DnsOutlined,
-  SpeedOutlined,
-  HelpOutlineRounded,
-  HistoryEduOutlined,
-} from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-import { ProxyTunCard } from "@/components/home/proxy-tun-card";
-import { ClashModeCard } from "@/components/home/clash-mode-card";
-import { EnhancedTrafficStats } from "@/components/home/enhanced-traffic-stats";
-import { useState } from "react";
-import { HomeProfileCard } from "@/components/home/home-profile-card";
-import { EnhancedCard } from "@/components/home/enhanced-card";
-import { CurrentProxyCard } from "@/components/home/current-proxy-card";
-import { BasePage } from "@/components/base";
-import { ClashInfoCard } from "@/components/home/clash-info-card";
-import { SystemInfoCard } from "@/components/home/system-info-card";
 import { useLockFn } from "ahooks";
-import { entry_lightweight_mode, openWebUrl } from "@/services/cmds";
-import { TestCard } from "@/components/home/test-card";
-import { IpInfoCard } from "@/components/home/ip-info-card";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 // 定义旋转动画
 const round = keyframes`
@@ -68,6 +72,156 @@ interface HomeCardsSettings {
   ip: boolean;
   [key: string]: boolean;
 }
+
+// 首页设置对话框组件接口
+interface HomeCardsControlProps {
+  homeCards: HomeCardsSettings;
+  onToggle: (key: string) => void;
+}
+
+// 首页卡片显示控制组件
+const HomeCardsControl = ({ homeCards, onToggle }: HomeCardsControlProps) => {
+  const { t } = useTranslation();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? "card-control-popover" : undefined;
+
+  return (
+    <>
+      <Tooltip title={t("Show/Hide Cards")} arrow>
+        <IconButton onClick={handleClick} size="small" color="inherit">
+          {Object.values(homeCards).every((v) => v) ? (
+            <VisibilityOutlined />
+          ) : Object.values(homeCards).every((v) => !v) ? (
+            <VisibilityOffOutlined />
+          ) : (
+            <VisibilityOutlined />
+          )}
+        </IconButton>
+      </Tooltip>
+
+      <Popover
+        id={id}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        PaperProps={{
+          style: {
+            maxHeight: 400,
+            width: 250,
+            overflow: "auto",
+          },
+        }}
+      >
+        <Box p={2}>
+          <Typography variant="subtitle1" gutterBottom>
+            {t("Card Visibility")}
+          </Typography>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.profile || false}
+                  onChange={() => onToggle("profile")}
+                />
+              }
+              label={t("Profiles")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.proxy || false}
+                  onChange={() => onToggle("proxy")}
+                />
+              }
+              label={t("Current Node")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.network || false}
+                  onChange={() => onToggle("network")}
+                />
+              }
+              label={t("Network Settings")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.mode || false}
+                  onChange={() => onToggle("mode")}
+                />
+              }
+              label={t("Proxy Mode")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.traffic || false}
+                  onChange={() => onToggle("traffic")}
+                />
+              }
+              label={t("Traffic Stats")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.test || false}
+                  onChange={() => onToggle("test")}
+                />
+              }
+              label={t("Website Tests")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.ip || false}
+                  onChange={() => onToggle("ip")}
+                />
+              }
+              label={t("IP Information")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.clashinfo || false}
+                  onChange={() => onToggle("clashinfo")}
+                />
+              }
+              label={t("Clash Info")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={homeCards.systeminfo || false}
+                  onChange={() => onToggle("systeminfo")}
+                />
+              }
+              label={t("System Info")}
+            />
+          </FormGroup>
+        </Box>
+      </Popover>
+    </>
+  );
+};
 
 // 首页设置对话框组件接口
 interface HomeSettingsDialogProps {
@@ -201,7 +355,7 @@ const HomeSettingsDialog = ({
 
 export const HomePage = () => {
   const { t } = useTranslation();
-  const { verge } = useVerge();
+  const { verge, patchVerge } = useVerge();
   const { current, mutateProfiles } = useProfiles();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -220,8 +374,16 @@ export const HomePage = () => {
       systeminfo: true,
       test: true,
       ip: true,
+      info: true,
     },
   );
+
+  // 处理卡片显示切换
+  const handleCardToggle = useLockFn(async (key: string) => {
+    const newCards = { ...homeCards, [key]: !homeCards[key] };
+    setHomeCards(newCards);
+    await patchVerge({ home_cards: newCards });
+  });
 
   // 导航到订阅页面
   const goToProfiles = () => {
@@ -250,11 +412,7 @@ export const HomePage = () => {
 
   // 新增：保存设置时用requestIdleCallback/setTimeout
   const handleSaveSettings = (newCards: HomeCardsSettings) => {
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => setHomeCards(newCards));
-    } else {
-      setTimeout(() => setHomeCards(newCards), 0);
-    }
+    setHomeCards(newCards);
   };
 
   return (
@@ -272,6 +430,9 @@ export const HomePage = () => {
               <HistoryEduOutlined />
             </IconButton>
           </Tooltip>
+
+          <HomeCardsControl homeCards={homeCards} onToggle={handleCardToggle} />
+
           <Tooltip title={t("Manual")} arrow>
             <IconButton onClick={toGithubDoc} size="small" color="inherit">
               <HelpOutlineRounded />
