@@ -661,5 +661,6 @@
   "Failed to save configuration": "配置保存失败",
   "Controller address copied to clipboard": "控制器地址已复制到剪贴板",
   "Secret copied to clipboard": "访问密钥已复制到剪贴板",
-  "Saving...": "保存中..."
+  "Saving...": "保存中...",
+  "Card Visibility": "卡片管理"
 }
