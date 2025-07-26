@@ -822,7 +822,6 @@ interface IVergeConfig {
   verge_tproxy_enabled?: boolean;
   verge_socks_enabled?: boolean;
   verge_http_enabled?: boolean;
-  card_order?: string[];
   enable_proxy_guard?: boolean;
   enable_bypass_check?: boolean;
   use_default_bypass?: boolean;
