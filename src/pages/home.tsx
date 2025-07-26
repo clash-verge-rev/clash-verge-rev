@@ -63,14 +63,6 @@ interface HomeCardsSettings {
   [key: string]: boolean;
 }
 
-// 扩展IVergeConfig类型以包含所需属性
-declare module "@/hooks/use-verge" {
-  interface IVergeConfig {
-    home_cards?: HomeCardsSettings;
-    card_order?: string[];
-  }
-}
-
 // 辅助函数解析URL和过期时间
 function parseUrl(url?: string) {
   if (!url) return "-";
