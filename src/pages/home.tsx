@@ -63,13 +63,6 @@ interface HomeCardsSettings {
   [key: string]: boolean;
 }
 
-// 辅助函数解析URL和过期时间
-function parseUrl(url?: string) {
-  if (!url) return "-";
-  if (url.startsWith("http")) return new URL(url).host;
-  return "local";
-}
-
 // 卡片配置接口，包含排序信息
 interface CardConfig {
   id: string;
@@ -241,7 +234,6 @@ export const HomePage = () => {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
   const { current, mutateProfiles } = useProfiles();
-  const navigate = useNavigate();
   const theme = useTheme();
 
   // 设置弹窗的状态
