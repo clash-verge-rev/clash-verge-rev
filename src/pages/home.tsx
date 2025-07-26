@@ -41,11 +41,6 @@ import { entry_lightweight_mode, openWebUrl } from "@/services/cmds";
 import { TestCard } from "@/components/home/test-card";
 import { IpInfoCard } from "@/components/home/ip-info-card";
 
-// 定义旋转动画
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
 
 // 辅助函数解析URL和过期时间
 function parseUrl(url?: string) {
@@ -223,32 +218,17 @@ export const HomePage = () => {
     },
   );
 
-  // 导航到订阅页面
-  const goToProfiles = () => {
-    navigate("/profile");
-  };
-
-  // 导航到代理页面
-  const goToProxies = () => {
-    navigate("/");
-  };
-
-  // 导航到设置页面
-  const goToSettings = () => {
-    navigate("/settings");
-  };
-
   // 文档链接函数
   const toGithubDoc = useLockFn(() => {
     return openWebUrl("https://clash-verge-rev.github.io/index.html");
   });
 
-  // 新增：打开设置弹窗
+  // 卡片设置弹窗
   const openSettings = () => {
     setSettingsOpen(true);
   };
 
-  // 新增：保存设置时用requestIdleCallback/setTimeout
+  // 保存勾选设置
   const handleSaveSettings = (newCards: HomeCardsSettings) => {
     if (window.requestIdleCallback) {
       window.requestIdleCallback(() => setHomeCards(newCards));
