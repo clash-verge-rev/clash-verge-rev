@@ -14,7 +14,7 @@ import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { emit } from "@tauri-apps/api/event";
 import { useLockFn } from "ahooks";
 import { t } from "i18next";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { restart } from "tauri-plugin-mihomo-api";
 import { useNotice } from "../base/notifice";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
@@ -40,6 +40,10 @@ export const LayoutTraffic = () => {
   } = useMemoryData();
   useLogData();
   useConnectionData();
+
+  useEffect(() => {
+    if (trafficRef.current) trafficRef.current.appendData(traffic);
+  }, [traffic]);
 
   const [up, upUnit] = parseTraffic(traffic.up);
   const [down, downUnit] = parseTraffic(traffic.down);
