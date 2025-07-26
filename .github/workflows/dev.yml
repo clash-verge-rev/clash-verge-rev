@@ -71,6 +71,8 @@ jobs:
         with:
           workspaces: src-tauri
           save-if: false
+          cache-all-crates: false
+          shared-key: autobuild-shared
 
       - name: Install Node
         if: github.event.inputs[matrix.input] == 'true'
