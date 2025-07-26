@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   IconButton,
-  useTheme,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -71,28 +70,6 @@ declare module "@/hooks/use-verge" {
   }
 }
 
-// 辅助函数解析URL和过期时间
-function parseUrl(url?: string) {
-  if (!url) return "-";
-  if (url.startsWith("http")) return new URL(url).host;
-  return "local";
-}
-
-// 卡片配置接口，包含排序信息
-interface CardConfig {
-  id: string;
-  size: number;
-  enabled: boolean;
-}
-
-// 首页设置对话框组件接口
-interface HomeSettingsDialogProps {
-  open: boolean;
-  onClose: () => void;
-  homeCards: HomeCardsSettings;
-  onSave: (cards: HomeCardsSettings) => void;
-}
-
 // 确保对象符合HomeCardsSettings类型的辅助函数
 const ensureHomeCardsSettings = (obj: any): HomeCardsSettings => {
   const defaultSettings: HomeCardsSettings = {
@@ -128,7 +105,12 @@ const HomeSettingsDialog = ({
   onClose,
   homeCards,
   onSave,
-}: HomeSettingsDialogProps) => {
+}: {
+  open: boolean;
+  onClose: () => void;
+  homeCards: HomeCardsSettings;
+  onSave: (cards: HomeCardsSettings) => void;
+}) => {
   const { t } = useTranslation();
   const [cards, setCards] = useState<HomeCardsSettings>(homeCards);
   const { patchVerge } = useVerge();
@@ -141,7 +123,6 @@ const HomeSettingsDialog = ({
   };
 
   const handleSave = async () => {
-    // 明确类型为HomeCardsSettings
     await patchVerge({ home_cards: cards as HomeCardsSettings });
     onSave(cards);
     onClose();
@@ -250,7 +231,6 @@ export const HomePage = () => {
   const { verge, patchVerge } = useVerge();
   const { current, mutateProfiles } = useProfiles();
   const navigate = useNavigate();
-  const theme = useTheme();
 
   // 设置弹窗的状态
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -259,9 +239,8 @@ export const HomePage = () => {
     ensureHomeCardsSettings(verge?.home_cards),
   );
 
-  // 卡片排序配置 - 默认为初始顺序
+  // 卡片排序配置
   const [cardOrder, setCardOrder] = useState<string[]>(
-    // 明确断言类型
     (verge?.card_order as string[]) || [
       "profile",
       "proxy",
@@ -338,8 +317,8 @@ export const HomePage = () => {
   };
 
   // 获取卡片配置信息
-  const getCardConfig = (id: string): CardConfig => {
-    const configs: Record<string, CardConfig> = {
+  const getCardConfig = (id: string) => {
+    const configs = {
       profile: { id: "profile", size: 6, enabled: homeCards.profile },
       proxy: { id: "proxy", size: 6, enabled: homeCards.proxy },
       network: { id: "network", size: 6, enabled: homeCards.network },
@@ -350,7 +329,7 @@ export const HomePage = () => {
       clashinfo: { id: "clashinfo", size: 6, enabled: homeCards.clashinfo },
       systeminfo: { id: "systeminfo", size: 6, enabled: homeCards.systeminfo },
     };
-    return configs[id];
+    return configs[id as keyof typeof configs];
   };
 
   // 渲染卡片内容
@@ -422,7 +401,12 @@ export const HomePage = () => {
     >
       {/* 拖拽上下文 */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="home-cards" isDropDisabled={false}>
+        <Droppable
+          droppableId="home-cards"
+          isDropDisabled={false}
+          isCombineEnabled={false}
+          ignoreContainerClipping={false}
+        >
           {(provided: DroppableProvided) => (
             <Grid
               container
