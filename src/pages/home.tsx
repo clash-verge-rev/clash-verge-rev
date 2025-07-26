@@ -422,7 +422,12 @@ export const HomePage = () => {
     >
       {/* 拖拽上下文 */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="home-cards" isDropDisabled={false}>
+        <Droppable
+          droppableId="home-cards"
+          isDropDisabled={false}
+          isCombineEnabled={false}
+          ignoreContainerClipping={false}
+        >
           {(provided: DroppableProvided) => (
             <Grid
               container
