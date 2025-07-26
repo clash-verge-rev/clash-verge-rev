@@ -6,11 +6,11 @@ use std::io::{BufRead, BufReader, Read};
 const MRS_MAGIC: [u8; 4] = [b'M', b'R', b'S', 1];
 
 /// Get the rule behavior based on the given behavior byte.
-fn get_rule_behavior(behavior: u8) -> RuleBehavior {
+fn get_rule_behavior(behavior: u8) -> Result<RuleBehavior> {
     match behavior {
-        0 => RuleBehavior::Domain,
-        1 => RuleBehavior::IpCidr,
-        _ => panic!("unknown behavior"),
+        0 => Ok(RuleBehavior::Domain),
+        1 => Ok(RuleBehavior::IpCidr),
+        _ => Err(RuleParseError::InvalidBehavior("unknown behavior".to_string())),
     }
 }
 
@@ -29,7 +29,7 @@ pub(crate) fn validate_mrs<R: Read>(
     // 读取并校验 Behavior
     let mut behavior = [0u8; 1];
     reader.read_exact(&mut behavior)?;
-    let actual_behavior = get_rule_behavior(behavior[0]);
+    let actual_behavior = get_rule_behavior(behavior[0])?;
     if actual_behavior != expected_behavior {
         return Err(RuleParseError::BehaviorMismatch {
             expected: expected_behavior,
