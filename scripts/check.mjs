@@ -8,7 +8,7 @@ import path from "path";
 import * as tar from "tar";
 import zlib from "zlib";
 
-const clashVergeServiceVersion = "v1.1.1";
+const VERGE_SERVICE_VERSION = "v1.1.1";
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 let process_argvs = process.argv;
@@ -69,19 +69,19 @@ const SIDECAR_HOST = target
       .toString()
       .match(/(?<=host: ).+(?=\s*)/g)[0];
 
-/* ======= clash meta alpha======= */
-const META_ALPHA_VERSION_URL =
+/* ======= mihomo alpha======= */
+const MIHOMO_ALPHA_VERSION_URL =
   "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt";
-const META_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`;
-let META_ALPHA_VERSION;
+const MIHOMO_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`;
+let MIHOMO_ALPHA_VERSION;
 
-const META_ALPHA_MAP = {
-  "win32-x64": "mihomo-windows-amd64-compatible",
+const MIHOMO_ALPHA_MAP = {
+  "win32-x64": "mihomo-windows-amd64-v3",
   "win32-ia32": "mihomo-windows-386",
   "win32-arm64": "mihomo-windows-arm64",
-  "darwin-x64": "mihomo-darwin-amd64-compatible",
+  "darwin-x64": "mihomo-darwin-amd64-v3",
   "darwin-arm64": "mihomo-darwin-arm64",
-  "linux-x64": "mihomo-linux-amd64-compatible",
+  "linux-x64": "mihomo-linux-amd64-v3",
   "linux-ia32": "mihomo-linux-386",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
@@ -103,32 +103,32 @@ async function getLatestAlphaVersion() {
     options.agent = new HttpsProxyAgent(httpProxy);
   }
   try {
-    const response = await fetch(META_ALPHA_VERSION_URL, {
+    const response = await fetch(MIHOMO_ALPHA_VERSION_URL, {
       ...options,
       method: "GET",
     });
     const v = await response.text();
-    META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
-    log_info(`Latest alpha version: ${META_ALPHA_VERSION}`);
+    MIHOMO_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
+    log_info(`Latest alpha version: ${MIHOMO_ALPHA_VERSION}`);
   } catch (error) {
     log_error("Error fetching latest alpha version:", error.message);
     process.exit(1);
   }
 }
 
-/* ======= clash meta stable ======= */
-const META_VERSION_URL =
+/* ======= mihomo stable ======= */
+const MIHOMO_VERSION_URL =
   "https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt";
-const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
-let META_VERSION;
+const MIHOMO_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
+let MIHOMO_VERSION;
 
-const META_MAP = {
-  "win32-x64": "mihomo-windows-amd64-compatible",
+const MIHOMO_MAP = {
+  "win32-x64": "mihomo-windows-amd64-v3",
   "win32-ia32": "mihomo-windows-386",
   "win32-arm64": "mihomo-windows-arm64",
-  "darwin-x64": "mihomo-darwin-amd64-compatible",
+  "darwin-x64": "mihomo-darwin-amd64-v3",
   "darwin-arm64": "mihomo-darwin-arm64",
-  "linux-x64": "mihomo-linux-amd64-compatible",
+  "linux-x64": "mihomo-linux-amd64-v3",
   "linux-ia32": "mihomo-linux-386",
   "linux-arm64": "mihomo-linux-arm64",
   "linux-arm": "mihomo-linux-armv7",
@@ -150,13 +150,13 @@ async function getLatestReleaseVersion() {
     options.agent = new HttpsProxyAgent(httpProxy);
   }
   try {
-    const response = await fetch(META_VERSION_URL, {
+    const response = await fetch(MIHOMO_VERSION_URL, {
       ...options,
       method: "GET",
     });
     const v = await response.text();
-    META_VERSION = v.trim(); // Trim to remove extra whitespaces
-    log_info(`Latest release version: ${META_VERSION}`);
+    MIHOMO_VERSION = v.trim(); // Trim to remove extra whitespaces
+    log_info(`Latest release version: ${MIHOMO_VERSION}`);
   } catch (error) {
     log_error("Error fetching latest release version:", error.message);
     process.exit(1);
@@ -166,13 +166,13 @@ async function getLatestReleaseVersion() {
 /*
  * check available
  */
-if (!META_MAP[`${platform}-${arch}`]) {
+if (!MIHOMO_MAP[`${platform}-${arch}`]) {
   throw new Error(
     `clash meta alpha unsupported platform "${platform}-${arch}"`,
   );
 }
 
-if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
+if (!MIHOMO_ALPHA_MAP[`${platform}-${arch}`]) {
   throw new Error(
     `clash meta alpha unsupported platform "${platform}-${arch}"`,
   );
@@ -181,13 +181,13 @@ if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
 /**
  * core info
  */
-function clashMetaAlpha() {
-  const name = META_ALPHA_MAP[`${platform}-${arch}`];
+function mihomoAlpha() {
+  const name = MIHOMO_ALPHA_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${META_ALPHA_URL_PREFIX}/${name}-${META_ALPHA_VERSION}.${urlExt}`;
+  const downloadURL = `${MIHOMO_ALPHA_URL_PREFIX}/${name}-${MIHOMO_ALPHA_VERSION}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}-${META_ALPHA_VERSION}.${urlExt}`;
+  const zipFile = `${name}-${MIHOMO_ALPHA_VERSION}.${urlExt}`;
 
   return {
     name: "verge-mihomo-alpha",
@@ -198,13 +198,13 @@ function clashMetaAlpha() {
   };
 }
 
-function clashMeta() {
-  const name = META_MAP[`${platform}-${arch}`];
+function mihomo() {
+  const name = MIHOMO_MAP[`${platform}-${arch}`];
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${META_URL_PREFIX}/${META_VERSION}/${name}-${META_VERSION}.${urlExt}`;
+  const downloadURL = `${MIHOMO_URL_PREFIX}/${MIHOMO_VERSION}/${name}-${MIHOMO_VERSION}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}-${META_VERSION}.${urlExt}`;
+  const zipFile = `${name}-${MIHOMO_VERSION}.${urlExt}`;
 
   return {
     name: "verge-mihomo",
@@ -411,8 +411,8 @@ async function getLatestClashVergeServices() {
   //   downloadURL: downloadItem.browser_download_url,
   // };
   const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
-  `https://github.com/oomeow/clash-verge-service/releases/download/${clashVergeServiceVersion}/clash-verge-service-aarch64-unknown-linux-gnu.tar.gz`;
-  const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/${clashVergeServiceVersion}/${fileName}`;
+  `https://github.com/oomeow/clash-verge-service/releases/download/${VERGE_SERVICE_VERSION}/clash-verge-service-aarch64-unknown-linux-gnu.tar.gz`;
+  const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/${VERGE_SERVICE_VERSION}/${fileName}`;
   return {
     file: fileName,
     downloadURL: downloadURL,
@@ -519,13 +519,12 @@ const tasks = [
   {
     name: "verge-mihomo-alpha",
     func: () =>
-      getLatestAlphaVersion().then(() => resolveSidecar(clashMetaAlpha())),
+      getLatestAlphaVersion().then(() => resolveSidecar(mihomoAlpha())),
     retry: 5,
   },
   {
     name: "verge-mihomo",
-    func: () =>
-      getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
+    func: () => getLatestReleaseVersion().then(() => resolveSidecar(mihomo())),
     retry: 5,
   },
   { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
