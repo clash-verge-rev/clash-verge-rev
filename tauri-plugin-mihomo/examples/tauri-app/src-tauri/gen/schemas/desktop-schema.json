@@ -1694,7 +1694,7 @@
           "const": "mihomo:default"
         },
         {
-          "description": "Enables the clean_fakeip command without any pre-configured scope.",
+          "description": "Enables the flush_fakeip command without any pre-configured scope.",
           "type": "string",
           "const": "mihomo:allow-clean-fakeip"
         },
@@ -1844,7 +1844,7 @@
           "const": "mihomo:allow-upgrade-ui"
         },
         {
-          "description": "Denies the clean_fakeip command without any pre-configured scope.",
+          "description": "Denies the flush_fakeip command without any pre-configured scope.",
           "type": "string",
           "const": "mihomo:deny-clean-fakeip"
         },

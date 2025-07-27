@@ -92,8 +92,8 @@ impl Builder {
                 commands::update_controller,
                 commands::update_secret,
                 commands::get_version,
-                commands::clean_fakeip,
-                commands::clean_dns,
+                commands::flush_fakeip,
+                commands::flush_dns,
                 // connections
                 commands::get_connections,
                 commands::close_all_connections,

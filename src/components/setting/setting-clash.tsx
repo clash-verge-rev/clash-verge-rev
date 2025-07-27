@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { cleanDns, cleanFakeIp, updateGeo } from "tauri-plugin-mihomo-api";
+import { flushDNS, flushFakeIp, updateGeo } from "tauri-plugin-mihomo-api";
 import { useNotice } from "../base/notifice";
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
@@ -96,7 +96,7 @@ const SettingClash = ({ onError }: Props) => {
 
   const onFlushFakeip = async () => {
     try {
-      await cleanFakeIp();
+      await flushFakeIp();
       notice(
         "success",
         t("Cache Flushed", {
@@ -110,7 +110,7 @@ const SettingClash = ({ onError }: Props) => {
 
   const onFlushDNS = async () => {
     try {
-      await cleanDns();
+      await flushDNS();
       notice("success", t("Cache Flushed", { cache: "DNS" }));
     } catch (err: any) {
       notice("error", err.toString());

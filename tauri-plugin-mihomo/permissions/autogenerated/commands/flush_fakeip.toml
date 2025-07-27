@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-flush-fakeip"
+description = "Enables the flush_fakeip command without any pre-configured scope."
+commands.allow = ["flush_fakeip"]
+
+[[permission]]
+identifier = "deny-flush-fakeip"
+description = "Denies the flush_fakeip command without any pre-configured scope."
+commands.deny = ["flush_fakeip"]

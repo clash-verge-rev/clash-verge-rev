@@ -7,8 +7,8 @@ Default permissions for the plugin
 - `allow-update-controller`
 - `allow-update-secret`
 - `allow-get-version`
-- `allow-clean-fakeip`
-- `allow-clean-dns`
+- `allow-flush-fakeip`
+- `allow-flush-dns`
 - `allow-get-connections`
 - `allow-close-all-connections`
 - `allow-close-connections`
@@ -51,58 +51,6 @@ Default permissions for the plugin
 <th>Description</th>
 </tr>
 
-
-<tr>
-<td>
-
-`mihomo:allow-clean-dns`
-
-</td>
-<td>
-
-Enables the clean_dns command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-clean-dns`
-
-</td>
-<td>
-
-Denies the clean_dns command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:allow-clean-fakeip`
-
-</td>
-<td>
-
-Enables the clean_fakeip command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-clean-fakeip`
-
-</td>
-<td>
-
-Denies the clean_fakeip command without any pre-configured scope.
-
-</td>
-</tr>
 
 <tr>
 <td>
@@ -230,6 +178,58 @@ Enables the delay_proxy_by_name command without any pre-configured scope.
 <td>
 
 Denies the delay_proxy_by_name command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-flush-dns`
+
+</td>
+<td>
+
+Enables the flush_dns command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-flush-dns`
+
+</td>
+<td>
+
+Denies the flush_dns command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:allow-flush-fakeip`
+
+</td>
+<td>
+
+Enables the flush_fakeip command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-flush-fakeip`
+
+</td>
+<td>
+
+Denies the flush_fakeip command without any pre-configured scope.
 
 </td>
 </tr>

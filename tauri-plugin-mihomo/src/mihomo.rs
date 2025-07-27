@@ -525,7 +525,7 @@ impl Mihomo {
     }
 
     /// 清理 FakeIP 缓存
-    pub async fn clean_fakeip(&self) -> Result<()> {
+    pub async fn flush_fakeip(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/cache/fakeip/flush")?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
@@ -535,7 +535,7 @@ impl Mihomo {
     }
 
     /// 清理 DNS 缓存
-    pub async fn clean_dns(&self) -> Result<()> {
+    pub async fn flush_dns(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/cache/dns/flush")?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
@@ -927,9 +927,9 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_clean_dns() -> Result<()> {
+    async fn test_flush_dns() -> Result<()> {
         let mihomo = mihomo();
-        mihomo.clean_dns().await?;
+        mihomo.flush_dns().await?;
         Ok(())
     }
 

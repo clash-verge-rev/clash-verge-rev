@@ -102,14 +102,14 @@ async function getVersion() {
 /**
  * 清除 FakeIP 缓存
  */
-async function cleanFakeIp() {
-  await invoke("plugin:mihomo|clean_fakeip");
+async function flushFakeIp() {
+  await invoke("plugin:mihomo|flush_fakeip");
 }
 /**
  * 清除 DNS 缓存
  */
-async function cleanDns() {
-  await invoke("plugin:mihomo|clean_dns");
+async function flushDNS() {
+  await invoke("plugin:mihomo|flush_dns");
 }
 // connections
 /**
@@ -503,12 +503,12 @@ export {
   ProxyType,
   RuleType,
   TunStack,
-  cleanDns,
-  cleanFakeIp,
   closeAllConnections,
   closeConnections,
   delayGroup,
   delayProxyByName,
+  flushDNS,
+  flushFakeIp,
   getBaseConfig,
   getConnections,
   getGroupByName,

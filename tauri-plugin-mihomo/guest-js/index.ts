@@ -312,15 +312,15 @@ export async function getVersion(): Promise<MihomoVersion> {
 /**
  * 清除 FakeIP 缓存
  */
-export async function cleanFakeIp(): Promise<void> {
-  await invoke<void>("plugin:mihomo|clean_fakeip");
+export async function flushFakeIp(): Promise<void> {
+  await invoke<void>("plugin:mihomo|flush_fakeip");
 }
 
 /**
  * 清除 DNS 缓存
  */
-export async function cleanDns(): Promise<void> {
-  await invoke<void>("plugin:mihomo|clean_dns");
+export async function flushDNS(): Promise<void> {
+  await invoke<void>("plugin:mihomo|flush_dns");
 }
 
 // connections

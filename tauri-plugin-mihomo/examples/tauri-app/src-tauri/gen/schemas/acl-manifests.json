@@ -1724,8 +1724,8 @@
     "permissions": {
       "allow-clean-fakeip": {
         "identifier": "allow-clean-fakeip",
-        "description": "Enables the clean_fakeip command without any pre-configured scope.",
-        "commands": { "allow": ["clean_fakeip"], "deny": [] }
+        "description": "Enables the flush_fakeip command without any pre-configured scope.",
+        "commands": { "allow": ["flush_fakeip"], "deny": [] }
       },
       "allow-close-all-connections": {
         "identifier": "allow-close-all-connections",
@@ -1874,8 +1874,8 @@
       },
       "deny-clean-fakeip": {
         "identifier": "deny-clean-fakeip",
-        "description": "Denies the clean_fakeip command without any pre-configured scope.",
-        "commands": { "allow": [], "deny": ["clean_fakeip"] }
+        "description": "Denies the flush_fakeip command without any pre-configured scope.",
+        "commands": { "allow": [], "deny": ["flush_fakeip"] }
       },
       "deny-close-all-connections": {
         "identifier": "deny-close-all-connections",

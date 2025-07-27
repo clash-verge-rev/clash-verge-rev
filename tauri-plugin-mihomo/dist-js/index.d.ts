@@ -265,11 +265,11 @@ export declare function getVersion(): Promise<MihomoVersion>;
 /**
  * 清除 FakeIP 缓存
  */
-export declare function cleanFakeIp(): Promise<void>;
+export declare function flushFakeIp(): Promise<void>;
 /**
  * 清除 DNS 缓存
  */
-export declare function cleanDns(): Promise<void>;
+export declare function flushDNS(): Promise<void>;
 /**
  * 获取所有连接信息
  * @returns 所有连接信息

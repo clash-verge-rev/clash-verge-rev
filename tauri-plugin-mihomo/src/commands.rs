@@ -33,13 +33,13 @@ pub(crate) async fn get_version(state: State<'_, RwLock<Mihomo>>) -> Result<Miho
 }
 
 #[command]
-pub(crate) async fn clean_fakeip(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
-    state.read().await.clean_fakeip().await
+pub(crate) async fn flush_fakeip(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
+    state.read().await.flush_fakeip().await
 }
 
 #[command]
-pub(crate) async fn clean_dns(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
-    state.read().await.clean_dns().await
+pub(crate) async fn flush_dns(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
+    state.read().await.flush_dns().await
 }
 
 // connections
