@@ -98,7 +98,7 @@ const SettingVerge = ({ onError }: Props) => {
   const onCheckUpdate = async () => {
     try {
       const info = await check();
-      if (!info?.available) {
+      if (!info) {
         notice("success", t("Currently on the Latest Version"));
       } else {
         updateRef.current?.open();

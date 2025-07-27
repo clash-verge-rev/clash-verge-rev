@@ -26,7 +26,7 @@ export const UpdateButton = (props: Props) => {
     },
   );
 
-  if (!updateInfo?.available) return null;
+  if (!updateInfo) return null;
 
   return (
     <>
