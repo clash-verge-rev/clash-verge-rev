@@ -5,6 +5,7 @@ permissions = [
   "allow-update-secret",
   "allow-get-version",
   "allow-clean-fakeip",
+  "allow-clean-dns",
   "allow-get-connections",
   "allow-close-all-connections",
   "allow-close-connections",
@@ -37,5 +38,5 @@ permissions = [
   "allow-ws-connections",
   "allow-ws-logs",
   "allow-ws-disconnect",
-  "allow-clear-all-ws-connection"
+  "allow-clear-all-ws-connection",
 ]

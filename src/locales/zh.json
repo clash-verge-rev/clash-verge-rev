@@ -310,8 +310,8 @@
   "Find Process Mode Always": "开启，强制匹配所有进程",
   "Find Process Mode Strict": "默认，由 Clash 判断是否开启",
   "Find Process Mode Off": "不匹配进程",
-  "Flush Fake-IP Cache": "清除 Fake-IP 缓存",
-  "Fake-IP Cache Flushed": "Fake-IP 缓存已清除",
+  "Flush Cache": "清除 {{cache}} 缓存",
+  "Cache Flushed": "{{cache}} 缓存已清除",
   "Duplicate Bypass": "重复的代理绕过",
   "Reset Default Bypass": "重置为默认代理绕过",
 

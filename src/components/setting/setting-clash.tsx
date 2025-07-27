@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { cleanFakeIp, updateGeo } from "tauri-plugin-mihomo-api";
+import { cleanDns, cleanFakeIp, updateGeo } from "tauri-plugin-mihomo-api";
 import { useNotice } from "../base/notifice";
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
@@ -97,9 +97,23 @@ const SettingClash = ({ onError }: Props) => {
   const onFlushFakeip = async () => {
     try {
       await cleanFakeIp();
-      notice("success", t("Fake-IP Cache Flushed"));
+      notice(
+        "success",
+        t("Cache Flushed", {
+          cache: "Fake-IP",
+        }),
+      );
     } catch (err: any) {
-      notice("error", err?.response.data.message || err.toString());
+      notice("error", err.toString());
+    }
+  };
+
+  const onFlushDNS = async () => {
+    try {
+      await cleanDns();
+      notice("success", t("Cache Flushed", { cache: "DNS" }));
+    } catch (err: any) {
+      notice("error", err.toString());
     }
   };
 
@@ -362,7 +376,14 @@ const SettingClash = ({ onError }: Props) => {
       )}
 
       <SettingItem onClick={onUpdateGeo} label={t("Update GeoData")} />
-      <SettingItem onClick={onFlushFakeip} label={t("Flush Fake-IP Cache")} />
+      <SettingItem
+        onClick={onFlushFakeip}
+        label={t("Flush Cache", { cache: "Fake-IP" })}
+      />
+      <SettingItem
+        onClick={onFlushDNS}
+        label={t("Flush Cache", { cache: "DNS" })}
+      />
     </SettingList>
   );
 };

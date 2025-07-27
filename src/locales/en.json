@@ -310,8 +310,8 @@
   "Find Process Mode Always": "Open, force matching all processes",
   "Find Process Mode Strict": "Default, and Clash determines whether to enable it",
   "Find Process Mode Off": "Does not match the process",
-  "Flush Fake-IP Cache": "Flush Fake-IP Cache",
-  "Fake-IP Cache Flushed": "Fake-IP Cache Flushed",
+  "Flush Cache": "Flush {{cache}} Cache",
+  "Cache Flushed": "{{cache}} Cache Flushed",
   "Duplicate Bypass": "Duplicate Bypass",
   "Reset Default Bypass": "Reset Default Bypass",
 

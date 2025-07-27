@@ -8,6 +8,7 @@ Default permissions for the plugin
 - `allow-update-secret`
 - `allow-get-version`
 - `allow-clean-fakeip`
+- `allow-clean-dns`
 - `allow-get-connections`
 - `allow-close-all-connections`
 - `allow-close-connections`
