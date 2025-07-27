@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use tauri::async_runtime::RwLock;
 use tauri::ipc::Channel;
-use tauri::{command, State};
+use tauri::{State, command};
 
 use crate::mihomo::Mihomo;
-use crate::{models::*, Result};
+use crate::{Result, models::*};
 
 #[command]
 pub(crate) async fn update_controller(
@@ -35,6 +35,11 @@ pub(crate) async fn get_version(state: State<'_, RwLock<Mihomo>>) -> Result<Miho
 #[command]
 pub(crate) async fn clean_fakeip(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
     state.read().await.clean_fakeip().await
+}
+
+#[command]
+pub(crate) async fn clean_dns(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
+    state.read().await.clean_dns().await
 }
 
 // connections

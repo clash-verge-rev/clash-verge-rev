@@ -1,16 +1,16 @@
 #![allow(dead_code)]
 use crate::{
-    enhance_request::LocalSocket, utils, BaseConfig, ConnectionId, Connections, GroupProxies,
-    MihomoError, MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay, ProxyProvider,
-    ProxyProviders, Result, RuleProviders, Rules, WebSocketWriter,
+    BaseConfig, ConnectionId, Connections, GroupProxies, MihomoError, MihomoVersion, Protocol,
+    Proxies, Proxy, ProxyDelay, ProxyProvider, ProxyProviders, Result, RuleProviders, Rules,
+    WebSocketWriter, enhance_request::LocalSocket, utils,
 };
 use futures_util::{SinkExt, StreamExt};
 use http::{
+    HeaderMap, HeaderValue, Request,
     header::{
         AUTHORIZATION, CONNECTION, CONTENT_TYPE, HOST, SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_VERSION,
         UPGRADE,
     },
-    HeaderMap, HeaderValue, Request,
 };
 use reqwest::{Method, RequestBuilder};
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,7 @@ use tauri::ipc::Channel;
 use tokio::sync::Mutex;
 use tokio_tungstenite::{
     client_async, connect_async,
-    tungstenite::{client::IntoClientRequest, protocol::CloseFrame as ProtocolCloseFrame, Message},
+    tungstenite::{Message, client::IntoClientRequest, protocol::CloseFrame as ProtocolCloseFrame},
 };
 
 macro_rules! failed_rep {
@@ -466,21 +466,21 @@ impl Mihomo {
         Ok(())
     }
 
-    /// Mihomo 流量监控的 WebSocket 连接
+    /// WebSocket: Mihomo 流量数据
     pub async fn ws_traffic(&self, on_message: Channel<serde_json::Value>) -> Result<ConnectionId> {
         let ws_url = self.get_websocket_url("/traffic")?;
         let websocket_id = self.connect(ws_url, on_message).await?;
         Ok(websocket_id)
     }
 
-    /// Mihomo 内存监控的 WebSocket 连接
+    /// WebSocket: Mihomo 内存使用数据
     pub async fn ws_memory(&self, on_message: Channel<serde_json::Value>) -> Result<ConnectionId> {
         let ws_url = self.get_websocket_url("/memory")?;
         let websocket_id = self.connect(ws_url, on_message).await?;
         Ok(websocket_id)
     }
 
-    /// Mihomo 连接监控的 WebSocket 连接
+    /// WebSocket: Mihomo 连接信息数据
     pub async fn ws_connections(
         &self,
         on_message: Channel<serde_json::Value>,
@@ -490,7 +490,7 @@ impl Mihomo {
         Ok(websocket_id)
     }
 
-    /// Mihomo 日志监控的 WebSocket 连接
+    /// WebSocket: Mihomo 日志数据
     pub async fn ws_logs(
         &self,
         level: &str,
@@ -524,12 +524,22 @@ impl Mihomo {
         Ok(response.json::<MihomoVersion>().await?)
     }
 
-    /// 清理 FakeIP 的缓存
+    /// 清理 FakeIP 缓存
     pub async fn clean_fakeip(&self) -> Result<()> {
         let client = self.build_request(Method::POST, "/cache/fakeip/flush")?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
             failed_rep!("clean fakeip cache error");
+        }
+        Ok(())
+    }
+
+    /// 清理 DNS 缓存
+    pub async fn clean_dns(&self) -> Result<()> {
+        let client = self.build_request(Method::POST, "/cache/dns/flush")?;
+        let response = self.send_by_protocol(client).await?;
+        if !response.status().is_success() {
+            failed_rep!("clean dns cache error");
         }
         Ok(())
     }
@@ -914,6 +924,13 @@ mod test {
             Some("ppr7qxGrVBu9E8dUX3BoS".into()),
             Some(socket_path),
         )
+    }
+
+    #[tokio::test]
+    async fn test_clean_dns() -> Result<()> {
+        let mihomo = mihomo();
+        mihomo.clean_dns().await?;
+        Ok(())
     }
 
     #[tokio::test]

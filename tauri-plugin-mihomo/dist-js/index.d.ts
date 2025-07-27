@@ -263,9 +263,13 @@ export declare function updateSecret(secret: string): Promise<void>;
  */
 export declare function getVersion(): Promise<MihomoVersion>;
 /**
- * 清除 FakeIP 的缓存
+ * 清除 FakeIP 缓存
  */
 export declare function cleanFakeIp(): Promise<void>;
+/**
+ * 清除 DNS 缓存
+ */
+export declare function cleanDns(): Promise<void>;
 /**
  * 获取所有连接信息
  * @returns 所有连接信息

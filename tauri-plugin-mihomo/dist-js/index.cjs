@@ -102,10 +102,16 @@ async function getVersion() {
   return await core.invoke("plugin:mihomo|get_version");
 }
 /**
- * 清除 FakeIP 的缓存
+ * 清除 FakeIP 缓存
  */
 async function cleanFakeIp() {
   await core.invoke("plugin:mihomo|clean_fakeip");
+}
+/**
+ * 清除 DNS 缓存
+ */
+async function cleanDns() {
+  await core.invoke("plugin:mihomo|clean_dns");
 }
 // connections
 /**
@@ -494,6 +500,7 @@ class MihomoWebSocket {
 MihomoWebSocket.instances = new Set();
 
 exports.MihomoWebSocket = MihomoWebSocket;
+exports.cleanDns = cleanDns;
 exports.cleanFakeIp = cleanFakeIp;
 exports.closeAllConnections = closeAllConnections;
 exports.closeConnections = closeConnections;

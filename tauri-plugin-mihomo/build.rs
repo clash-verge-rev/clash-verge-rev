@@ -3,6 +3,7 @@ const COMMANDS: &[&str] = &[
     "update_secret",
     "get_version",
     "clean_fakeip",
+    "clean_dns",
     "get_connections",
     "close_all_connections",
     "close_connections",

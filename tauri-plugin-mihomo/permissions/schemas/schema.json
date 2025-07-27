@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the clean_dns command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-clean-dns",
+          "markdownDescription": "Enables the clean_dns command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the clean_dns command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-clean-dns",
+          "markdownDescription": "Denies the clean_dns command without any pre-configured scope."
+        },
+        {
           "description": "Enables the clean_fakeip command without any pre-configured scope.",
           "type": "string",
           "const": "allow-clean-fakeip",

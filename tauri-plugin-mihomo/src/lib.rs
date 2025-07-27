@@ -3,9 +3,9 @@ use std::sync::Arc;
 use mihomo::ConnectionManager;
 pub use mihomo::Mihomo;
 use tauri::{
+    Manager, Runtime,
     async_runtime::RwLock,
     plugin::{Builder as PluginBuilder, TauriPlugin},
-    Manager, Runtime,
 };
 
 pub use models::*;
@@ -93,6 +93,7 @@ impl Builder {
                 commands::update_secret,
                 commands::get_version,
                 commands::clean_fakeip,
+                commands::clean_dns,
                 // connections
                 commands::get_connections,
                 commands::close_all_connections,

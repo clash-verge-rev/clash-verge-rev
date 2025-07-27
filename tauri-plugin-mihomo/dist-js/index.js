@@ -100,10 +100,16 @@ async function getVersion() {
   return await invoke("plugin:mihomo|get_version");
 }
 /**
- * 清除 FakeIP 的缓存
+ * 清除 FakeIP 缓存
  */
 async function cleanFakeIp() {
   await invoke("plugin:mihomo|clean_fakeip");
+}
+/**
+ * 清除 DNS 缓存
+ */
+async function cleanDns() {
+  await invoke("plugin:mihomo|clean_dns");
 }
 // connections
 /**
@@ -497,6 +503,7 @@ export {
   ProxyType,
   RuleType,
   TunStack,
+  cleanDns,
   cleanFakeIp,
   closeAllConnections,
   closeConnections,

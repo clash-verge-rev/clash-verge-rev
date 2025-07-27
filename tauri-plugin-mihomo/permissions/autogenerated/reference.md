@@ -54,6 +54,32 @@ Default permissions for the plugin
 <tr>
 <td>
 
+`mihomo:allow-clean-dns`
+
+</td>
+<td>
+
+Enables the clean_dns command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`mihomo:deny-clean-dns`
+
+</td>
+<td>
+
+Denies the clean_dns command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `mihomo:allow-clean-fakeip`
 
 </td>

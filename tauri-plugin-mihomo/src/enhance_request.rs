@@ -1,7 +1,7 @@
 use reqwest::RequestBuilder;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-use crate::utils::{build_socket_request, parse_socket_response};
+use crate::utils;
 
 pub trait LocalSocket {
     async fn send_to_local_socket(self, socket_path: &str) -> crate::Result<reqwest::Response>;
@@ -28,14 +28,14 @@ impl LocalSocket for RequestBuilder {
                         Err(e) => {
                             return Err(MihomoError::FailedResponse(format!(
                                 "Failed to connect to named pipe: {socket_path}, {e}"
-                            )))
+                            )));
                         }
                     }
                     tokio::time::sleep(Duration::from_millis(50)).await;
                 }
             }
         };
-        let req_str = build_socket_request(self)?;
+        let req_str = utils::build_socket_request(self)?;
         // println!("generate request string: {:?} \n", req_str);
         stream.writable().await?;
         stream.write_all(req_str.as_bytes()).await?;
@@ -66,6 +66,6 @@ impl LocalSocket for RequestBuilder {
             }
         }
         let response = String::from_utf8_lossy(&buf);
-        parse_socket_response(&response, is_chunked)
+        utils::parse_socket_response(&response, is_chunked)
     }
 }
