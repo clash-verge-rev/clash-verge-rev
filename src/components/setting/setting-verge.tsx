@@ -268,6 +268,7 @@ const SettingVerge = ({ onError }: Props) => {
             <MenuItem value="bash">Bash</MenuItem>
             <MenuItem value="cmd">CMD</MenuItem>
             <MenuItem value="powershell">PowerShell</MenuItem>
+            <MenuItem value="nushell">NuShell</MenuItem>
           </Select>
         </GuardState>
       </SettingItem>

@@ -615,9 +615,10 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     let socks5_proxy = format!("socks5://127.0.0.1:{port}");
 
     let sh =
-        format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}");
-    let cmd: String = format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}");
-    let ps: String = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
+        format!("export http_proxy={http_proxy} https_proxy={http_proxy} all_proxy={socks5_proxy}");
+    let cmd = format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}");
+    let ps = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
+    let nu = format!("load-env {{http_proxy:\"{http_proxy}\", https_proxy:\"{http_proxy}\"}}");
 
     let clipboard = app_handle.clipboard();
 
@@ -637,6 +638,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
         "bash" => clipboard.write_text(sh).unwrap_or_default(),
         "cmd" => clipboard.write_text(cmd).unwrap_or_default(),
         "powershell" => clipboard.write_text(ps).unwrap_or_default(),
+        "nushell" => clipboard.write_text(nu).unwrap_or_default(),
         _ => tracing::error!("copy_clash_env: Invalid env type! {env_type}"),
     };
 }
