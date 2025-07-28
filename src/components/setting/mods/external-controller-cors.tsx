@@ -25,27 +25,17 @@ const DEV_URLS = [
   "http://localhost:3000",
 ];
 
-// 判断是否处于开发模式
-const isDevMode = import.meta.env.MODE === "development";
-
-// 过滤开发环境URL
-const filterDevOrigins = (origins: string[]) => {
-  if (isDevMode) {
-    return origins;
-  }
-  return origins.filter((origin: string) => !DEV_URLS.includes(origin.trim()));
-};
-
 // 获取完整的源列表，包括开发URL
 const getFullOrigins = (origins: string[]) => {
-  if (!isDevMode) {
-    return origins;
-  }
-
   // 合并现有源和开发URL，并去重
   const allOrigins = [...origins, ...DEV_URLS];
   const uniqueOrigins = [...new Set(allOrigins)];
   return uniqueOrigins;
+};
+
+// 过滤基础URL(确保后续添加)
+const filterBaseOriginsForUI = (origins: string[]) => {
+  return origins.filter((origin: string) => !DEV_URLS.includes(origin.trim()));
 };
 
 // 统一使用的按钮样式
@@ -60,16 +50,6 @@ const buttonStyle = {
   },
   "&:active": {
     transform: "translateY(0)",
-  },
-};
-
-// 保存按钮样式
-const saveButtonStyle = {
-  ...buttonStyle,
-  backgroundColor: "#165DFF",
-  color: "white",
-  "&:hover": {
-    backgroundColor: "#0E42D2",
   },
 };
 
@@ -110,10 +90,10 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       allowOrigins: string[];
     }>(() => {
       const cors = clash?.["external-controller-cors"];
-      const origins = cors?.["allow-origins"] ?? ["*"];
+      const origins = cors?.["allow-origins"] ?? [];
       return {
         allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
-        allowOrigins: filterDevOrigins(origins),
+        allowOrigins: filterBaseOriginsForUI(origins),
       };
     });
 
@@ -178,10 +158,10 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     useImperativeHandle(ref, () => ({
       open: () => {
         const cors = clash?.["external-controller-cors"];
-        const origins = cors?.["allow-origins"] ?? ["*"];
+        const origins = cors?.["allow-origins"] ?? [];
         setCorsConfig({
           allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
-          allowOrigins: filterDevOrigins(origins),
+          allowOrigins: filterBaseOriginsForUI(origins),
         });
         setOpen(true);
       },
@@ -257,7 +237,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                     color="error"
                     size="small"
                     onClick={() => handleDeleteOrigin(index)}
-                    disabled={corsConfig.allowOrigins.length <= 1}
+                    disabled={corsConfig.allowOrigins.length <= 0}
                     sx={deleteButtonStyle}
                   >
                     <DeleteIcon fontSize="small" />
@@ -273,24 +253,22 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                 {t("Add")}
               </Button>
 
-              {isDevMode && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: 8,
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: 4,
+                }}
+              >
                 <div
-                  style={{
-                    marginTop: 12,
-                    padding: 8,
-                    backgroundColor: "#f5f5f5",
-                    borderRadius: 4,
-                  }}
+                  style={{ color: "#666", fontSize: 12, fontStyle: "italic" }}
                 >
-                  <div
-                    style={{ color: "#666", fontSize: 12, fontStyle: "italic" }}
-                  >
-                    {t(
-                      "Development mode: Automatically includes Tauri and localhost origins",
-                    )}
-                  </div>
+                  {t("Always included origins: {{urls}}", {
+                    urls: DEV_URLS.join(", "),
+                  })}
                 </div>
-              )}
+              </div>
             </div>
           </ListItem>
         </List>
