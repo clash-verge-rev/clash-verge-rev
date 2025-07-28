@@ -166,7 +166,7 @@ const ConnectionsPage = () => {
               {t("Closed")} {closedConns.length}
             </Button>
           </ButtonGroup>
-          {!isTableLayout && (
+          {!isTableLayout && isActiveTab && (
             <BaseStyledSelect
               value={curOrderOpt}
               onChange={(e) => setOrderOpt(e.target.value)}>
