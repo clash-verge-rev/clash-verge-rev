@@ -76,8 +76,7 @@ export const LayoutTraffic = () => {
   const pageVisible = useVisibility();
 
   // 使用增强版的统一流量数据Hook
-  const { traffic, memory } =
-    useTrafficDataEnhanced();
+  const { traffic, memory } = useTrafficDataEnhanced();
 
   // 启动流量服务
   useEffect(() => {
