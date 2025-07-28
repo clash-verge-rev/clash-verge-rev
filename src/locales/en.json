@@ -216,6 +216,7 @@
   "TUN Mode Disabled": "TUN mode is disabled, suitable for special applications",
   "TUN Mode Service Required": "TUN mode requires service mode, please install the service first",
   "TUN Mode Intercept Info": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings",
+  "Core communication error": "Core communication error",
   "Rule Mode Description": "Routes traffic according to preset rules, provides flexible proxy strategies",
   "Global Mode Description": "All traffic goes through proxy servers, suitable for scenarios requiring global internet access",
   "Direct Mode Description": "All traffic doesn't go through proxy nodes, but is forwarded by Clash kernel to target servers, suitable for specific scenarios requiring kernel traffic distribution",
