@@ -8,19 +8,21 @@ import {
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
+import { GridApiCommunity } from "@mui/x-data-grid/internals";
 import dayjs from "dayjs";
-import { useMemo, useState } from "react";
+import { RefObject, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { closeConnections } from "tauri-plugin-mihomo-api";
 
 interface Props {
+  gridApiRef: RefObject<GridApiCommunity>;
   connections: IConnectionsItem[];
   onShowDetail: (data: IConnectionsItem) => void;
 }
 
 export const ConnectionTable = (props: Props) => {
   const { t } = useTranslation();
-  const { connections, onShowDetail } = props;
+  const { gridApiRef, connections, onShowDetail } = props;
 
   const Toolbar = () => (
     <div style={{ margin: "5px" }}>
@@ -138,6 +140,7 @@ export const ConnectionTable = (props: Props) => {
 
   return (
     <DataGrid
+      apiRef={gridApiRef}
       hideFooter
       disableDensitySelector
       disableColumnMenu

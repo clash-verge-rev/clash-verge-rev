@@ -27,6 +27,7 @@ import {
   MenuItem,
   Tooltip,
 } from "@mui/material";
+import { useGridApiRef } from "@mui/x-data-grid";
 import { useLockFn } from "ahooks";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -41,6 +42,7 @@ const ConnectionsPage = () => {
   const [curOrderOpt, setOrderOpt] = useState("Default");
   const [tabName, setTabName] = useState<"active" | "closed">("active");
   const [setting, setSetting] = useConnectionSetting();
+  const gridApiRef = useGridApiRef();
 
   const isTableLayout = setting.layout === "table";
   const isActiveTab = tabName === "active";
@@ -157,12 +159,18 @@ const ConnectionsPage = () => {
           <ButtonGroup size="small" className="mr-2 w-fit shrink-0 grow-0">
             <Button
               variant={isActiveTab ? "contained" : "outlined"}
-              onClick={() => setTabName("active")}>
+              onClick={() => {
+                setTabName("active");
+                gridApiRef.current.scroll({ top: 0 });
+              }}>
               {t("Active")} {activeConns.length}
             </Button>
             <Button
               variant={!isActiveTab ? "contained" : "outlined"}
-              onClick={() => setTabName("closed")}>
+              onClick={() => {
+                setTabName("closed");
+                gridApiRef.current.scroll({ top: 0 });
+              }}>
               {t("Closed")} {closedConns.length}
             </Button>
           </ButtonGroup>
@@ -197,6 +205,7 @@ const ConnectionsPage = () => {
             <BaseEmpty text={t("No Connections")} />
           ) : isTableLayout ? (
             <ConnectionTable
+              gridApiRef={gridApiRef}
               connections={filterConn}
               onShowDetail={(detail) =>
                 detailRef.current?.open(detail, isActiveTab)
