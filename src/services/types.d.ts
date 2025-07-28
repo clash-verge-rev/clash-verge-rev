@@ -859,6 +859,7 @@ interface IVergeConfig {
   home_cards?: Record<string, boolean>;
   enable_hover_jump_navigator?: boolean;
   enable_external_controller?: boolean;
+  enable_runtime_display?: boolean;
 }
 
 interface CardConfig {

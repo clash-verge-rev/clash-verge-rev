@@ -4,7 +4,7 @@ import {
   ArrowDownwardRounded,
   ArrowUpwardRounded,
   MemoryRounded,
-  AccessTimeRounded  // 导入时钟图标
+  AccessTimeRounded,
 } from "@mui/icons-material";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
@@ -114,6 +114,9 @@ export const LayoutTraffic = () => {
   // 显示内存使用情况的设置
   const displayMemory = verge?.enable_memory_usage ?? true;
 
+  // 显示运行时间
+  const displayRuntime = verge?.enable_runtime_display ?? true;
+
   // 使用格式化的数据，避免重复解析
   const upSpeed = traffic?.formatted?.up_rate || "0B";
   const downSpeed = traffic?.formatted?.down_rate || "0B";
@@ -140,7 +143,7 @@ export const LayoutTraffic = () => {
   };
   const valStyle: any = {
     component: "span",
-    textAlign: "left", // 文字左对齐
+    textAlign: "left",
     sx: { flex: "1 1 auto", userSelect: "none" },
   };
   const unitStyle: any = {
@@ -150,7 +153,6 @@ export const LayoutTraffic = () => {
     sx: { flex: "0 1 auto", userSelect: "none", ml: 1 },
   };
 
-  // 时间显示样式
   const timeStyle: any = {
     transition: "opacity 0.3s ease",
     opacity: pageVisible ? 1 : 0.7,
@@ -239,6 +241,7 @@ export const LayoutTraffic = () => {
             </Box>
           )}
 
+         {displayRuntime && (
           <Box {...boxStyle} sx={timeStyle}>
             <AccessTimeRounded
               {...iconStyle}
@@ -251,6 +254,7 @@ export const LayoutTraffic = () => {
               {uptime}
             </Typography>
           </Box>
+          )}
 
           <Box {...boxStyle} sx={timeStyle}>
             <AccessTimeRounded

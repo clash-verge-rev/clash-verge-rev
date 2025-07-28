@@ -135,6 +135,20 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
         </Item>
 
         <Item>
+          <ListItemText primary={t("Uptime")} />
+          <GuardState
+            value={verge?.enable_runtime_display ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_runtime_display: e })}
+            onGuard={(e) => patchVerge({ enable_runtime_display: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+
+        <Item>
           <ListItemText primary={t("Proxy Group Icon")} />
           <GuardState
             value={verge?.enable_group_icon ?? true}
