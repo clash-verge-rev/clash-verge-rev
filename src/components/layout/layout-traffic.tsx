@@ -117,6 +117,9 @@ export const LayoutTraffic = () => {
   // 显示运行时间
   const displayRuntime = verge?.enable_runtime_display ?? true;
 
+  // 显示系统时间
+  const displaysystemtime = verge?.enable_system_time ?? true;
+
   // 使用格式化的数据，避免重复解析
   const upSpeed = traffic?.formatted?.up_rate || "0B";
   const downSpeed = traffic?.formatted?.down_rate || "0B";
@@ -256,6 +259,7 @@ export const LayoutTraffic = () => {
           </Box>
           )}
 
+       {displaysystemtime  && (
           <Box {...boxStyle} sx={timeStyle}>
             <AccessTimeRounded
               {...iconStyle}
@@ -268,6 +272,8 @@ export const LayoutTraffic = () => {
               {currentTime}
             </Typography>
           </Box>
+          )}
+
         </Box>
       </Box>
     </LightweightTrafficErrorBoundary>

@@ -149,6 +149,20 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
         </Item>
 
         <Item>
+          <ListItemText primary={t("System Time")} />
+          <GuardState
+            value={verge?.enable_system_time ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_system_time: e })}
+            onGuard={(e) => patchVerge({ enable_system_time: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+
+        <Item>
           <ListItemText primary={t("Proxy Group Icon")} />
           <GuardState
             value={verge?.enable_group_icon ?? true}
