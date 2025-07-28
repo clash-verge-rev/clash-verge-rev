@@ -1,19 +1,12 @@
 import { cn } from "@/utils";
-import {
-  Cancel,
-  CheckCircle,
-  CheckCircleOutline,
-  ContentCopy,
-  Info,
-  Warning,
-} from "@mui/icons-material";
+import { Cancel, CheckCircle, Info, Warning } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
 import { ThemeProvider } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { CustomContentProps, SnackbarContent, useSnackbar } from "notistack";
-import { ForwardedRef, useCallback, useState } from "react";
+import { ForwardedRef, useCallback } from "react";
 import { useCustomTheme } from "../layout/use-custom-theme";
+import { CopyButton } from "./copy-button";
 
 type MyNoticeContainerProps = CustomContentProps & {
   ref: ForwardedRef<HTMLDivElement>;
@@ -23,12 +16,6 @@ export const MyNoticeContainer = (props: MyNoticeContainerProps) => {
   const { ref, id, variant, message } = props;
   const { theme } = useCustomTheme();
   const { closeSnackbar } = useSnackbar();
-  const [msgCopied, setMsgCopied] = useState(false);
-
-  const handleCopyMsg = useCallback(async () => {
-    await writeText(message as string);
-    setMsgCopied(true);
-  }, [message]);
 
   const handleDismiss = useCallback(() => {
     closeSnackbar(id);
@@ -62,16 +49,11 @@ export const MyNoticeContainer = (props: MyNoticeContainerProps) => {
               {message}
             </div>
             <div className="flex items-center">
-              <IconButton size="small" onClick={handleCopyMsg}>
-                {!msgCopied ? (
-                  <ContentCopy fontSize="small" className="!fill-white" />
-                ) : (
-                  <CheckCircleOutline
-                    fontSize="small"
-                    className="!fill-white"
-                  />
-                )}
-              </IconButton>
+              <CopyButton
+                size="small"
+                className="!text-white"
+                content={message as string}
+              />
               <IconButton size="small" onClick={handleDismiss}>
                 <CloseIcon fontSize="small" className="!fill-white" />
               </IconButton>
