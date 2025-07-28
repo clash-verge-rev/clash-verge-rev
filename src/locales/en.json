@@ -651,7 +651,7 @@
   "Allowed Origins": "Allowed Origins",
   "Please enter a valid url": "Please enter a valid url",
   "Add": "Add",
-  "Development mode: Automatically includes Tauri and localhost origins": "Development mode: Automatically includes Tauri and localhost origins",
+  "Always included origins: {{urls}}": "Always included origins: {{urls}}",
   "Invalid regular expression": "Invalid regular expression",
   "Copy Version": "Copy Version",
   "Version copied to clipboard": "Version copied to clipboard",
