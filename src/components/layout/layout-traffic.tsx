@@ -10,17 +10,11 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 import { useVisibility } from "@/hooks/use-visibility";
-import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
 import { isDebugEnabled, gc, startTrafficService } from "@/services/cmds";
 import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor-enhanced";
 import { LightweightTrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
 import useSWR from "swr";
-
-interface MemoryUsage {
-  inuse: number;
-  oslimit?: number;
-}
 
 // 格式化时间为 HH:MM:SS 格式
 const formatTime = (date: Date): string => {
@@ -82,7 +76,7 @@ export const LayoutTraffic = () => {
   const pageVisible = useVisibility();
 
   // 使用增强版的统一流量数据Hook
-  const { traffic, memory, isLoading, isDataFresh, hasValidData } =
+  const { traffic, memory } =
     useTrafficDataEnhanced();
 
   // 启动流量服务
