@@ -261,21 +261,29 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onGuard={(e) => patchClash({ "find-process-mode": e })}>
           <ButtonGroup size="small" sx={{ my: "4px" }}>
-            {(["always", "strict", "off"] as const).map((mode) => (
-              <Tooltip
-                title={t(
-                  `Find Process Mode ${mode[0].toUpperCase() + mode.slice(1)}`,
-                )}
-                placement="top">
-                <Button
-                  key={mode}
-                  variant={mode === findProcessMode ? "contained" : "outlined"}
-                  onClick={(e) => patchClash({ "find-process-mode": mode })}
-                  sx={{ textTransform: "lowercase" }}>
-                  {mode}
-                </Button>
-              </Tooltip>
-            ))}
+            {(["always", "strict", "off"] as const).map((mode) => {
+              const modeName = mode[0].toUpperCase() + mode.slice(1);
+              const buttonName = {
+                always: "Enable",
+                strict: "Default",
+                off: "Disable",
+              }[mode];
+              return (
+                <Tooltip
+                  title={t(`Find Process Mode ${modeName}`)}
+                  placement="top">
+                  <Button
+                    key={mode}
+                    variant={
+                      mode === findProcessMode ? "contained" : "outlined"
+                    }
+                    onClick={(e) => patchClash({ "find-process-mode": mode })}
+                    sx={{ textTransform: "lowercase" }}>
+                    {t(buttonName)}
+                  </Button>
+                </Tooltip>
+              );
+            })}
           </ButtonGroup>
         </GuardState>
       </SettingItem>
