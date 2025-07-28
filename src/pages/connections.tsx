@@ -19,9 +19,16 @@ import {
   TableRowsRounded,
   Upload,
 } from "@mui/icons-material";
-import { Box, Button, IconButton, MenuItem, Tooltip } from "@mui/material";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  IconButton,
+  MenuItem,
+  Tooltip,
+} from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import { closeAllConnections, closeConnections } from "tauri-plugin-mihomo-api";
@@ -32,10 +39,11 @@ const ConnectionsPage = () => {
   const { t } = useTranslation();
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
-
+  const [tabName, setTabName] = useState<"active" | "closed">("active");
   const [setting, setSetting] = useConnectionSetting();
 
   const isTableLayout = setting.layout === "table";
+  const isActiveTab = tabName === "active";
 
   const orderOpts: Record<string, OrderFunc> = {
     Default: (list) =>
@@ -52,29 +60,35 @@ const ConnectionsPage = () => {
   const {
     response: { data: connData = initConnData },
   } = useConnectionData();
+  const [activeConns, setActiveConns] = useState<IConnectionsItem[]>([]);
+  const [closedConns, setClosedConn] = useState<IConnectionsItem[]>([]);
 
-  const [filterConn] = useMemo(() => {
-    const orderFunc = orderOpts[curOrderOpt];
-    let connections = connData.connections.filter((conn) =>
-      match(conn.metadata.host || conn.metadata.destinationIP || ""),
-    );
+  const detailRef = useRef<ConnectionDetailRef>(null!);
+  const totalUpload = parseTraffic(connData.uploadTotal);
+  const totalDownload = parseTraffic(connData.downloadTotal);
 
-    if (orderFunc) connections = orderFunc(connections);
+  useEffect(() => {
+    const ids = connData.connections.map((o) => o.id);
+    const closedConns = activeConns.filter((o) => !ids.includes(o.id));
+    setClosedConn((prev) => [...prev, ...closedConns]);
+    setActiveConns(connData.connections);
+  }, [connData]);
 
-    return [connections];
-  }, [connData, match, curOrderOpt]);
+  // filter connections
+  const orderFunc = orderOpts[curOrderOpt];
+  const conns = isActiveTab ? activeConns : closedConns;
+  let filterConn = conns.filter((conn) =>
+    match(conn.metadata.host || conn.metadata.destinationIP || ""),
+  );
+  if (orderFunc) filterConn = orderFunc(filterConn);
 
   const onCloseAll = useLockFn(async () => {
-    if (filterConn.length === connData.connections.length) {
+    if (!isActiveTab || filterConn.length === connData.connections.length) {
       await closeAllConnections();
     } else {
       filterConn.forEach(async (conn) => await closeConnections(conn.id));
     }
   });
-
-  const detailRef = useRef<ConnectionDetailRef>(null!);
-  const totalUpload = parseTraffic(connData.uploadTotal);
-  const totalDownload = parseTraffic(connData.downloadTotal);
 
   return (
     <BasePage
@@ -121,70 +135,90 @@ const ConnectionsPage = () => {
           <div>
             <Button size="small" variant="contained" onClick={onCloseAll}>
               <span style={{ whiteSpace: "nowrap" }}>
-                {t("Close All")} {filterConn.length}
+                {t("Close All")}{" "}
+                {isActiveTab ? filterConn.length : activeConns.length}
               </span>
             </Button>
           </div>
         </div>
       }>
-      <Box
-        sx={{
-          mb: "10px",
-          pt: "10px",
-          mx: "10px",
-          height: "36px",
-          display: "flex",
-          alignItems: "center",
-          userSelect: "text",
-          boxSizing: "border-box",
-        }}>
-        {!isTableLayout && (
-          <BaseStyledSelect
-            value={curOrderOpt}
-            onChange={(e) => setOrderOpt(e.target.value)}>
-            {Object.keys(orderOpts).map((opt) => (
-              <MenuItem key={opt} value={opt}>
-                <span style={{ fontSize: 14 }}>{t(opt)}</span>
-              </MenuItem>
-            ))}
-          </BaseStyledSelect>
-        )}
-        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-      </Box>
+      <div className="h-full w-full overflow-hidden">
+        <Box
+          sx={{
+            mb: "10px",
+            pt: "10px",
+            mx: "10px",
+            height: "36px",
+            display: "flex",
+            alignItems: "center",
+            userSelect: "text",
+            boxSizing: "border-box",
+          }}>
+          <ButtonGroup size="small" className="mr-2 w-fit shrink-0 grow-0">
+            <Button
+              variant={isActiveTab ? "contained" : "outlined"}
+              onClick={() => setTabName("active")}>
+              {t("Active")} {activeConns.length}
+            </Button>
+            <Button
+              variant={!isActiveTab ? "contained" : "outlined"}
+              onClick={() => setTabName("closed")}>
+              {t("Closed")} {closedConns.length}
+            </Button>
+          </ButtonGroup>
+          {!isTableLayout && (
+            <BaseStyledSelect
+              value={curOrderOpt}
+              onChange={(e) => setOrderOpt(e.target.value)}>
+              {Object.keys(orderOpts).map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  <span style={{ fontSize: 14 }}>{t(opt)}</span>
+                </MenuItem>
+              ))}
+            </BaseStyledSelect>
+          )}
+          <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
+        </Box>
 
-      <Box
-        height="calc(100% - 50px)"
-        sx={(theme) => ({
-          userSelect: "text",
-          mx: "10px",
-          mb: "4px",
-          borderRadius: "8px",
-          bgcolor: "#ffffff",
-          ...theme.applyStyles("dark", {
-            bgcolor: "#282a36",
-          }),
-          boxSizing: "border-box",
-        })}>
-        {filterConn.length === 0 ? (
-          <BaseEmpty text={t("No Connections")} />
-        ) : isTableLayout ? (
-          <ConnectionTable
-            connections={filterConn}
-            onShowDetail={(detail) => detailRef.current?.open(detail)}
-          />
-        ) : (
-          <Virtuoso
-            data={filterConn}
-            itemContent={(_, item) => (
-              <ConnectionItem
-                value={item}
-                onShowDetail={() => detailRef.current?.open(item)}
-              />
-            )}
-          />
-        )}
-      </Box>
-      <ConnectionDetail ref={detailRef} />
+        <Box
+          height="calc(100% - 50px)"
+          sx={(theme) => ({
+            userSelect: "text",
+            mx: "10px",
+            mb: "4px",
+            borderRadius: "8px",
+            bgcolor: "#ffffff",
+            ...theme.applyStyles("dark", {
+              bgcolor: "#282a36",
+            }),
+            boxSizing: "border-box",
+          })}>
+          {filterConn.length === 0 ? (
+            <BaseEmpty text={t("No Connections")} />
+          ) : isTableLayout ? (
+            <ConnectionTable
+              connections={filterConn}
+              onShowDetail={(detail) =>
+                detailRef.current?.open(detail, isActiveTab)
+              }
+            />
+          ) : (
+            <Virtuoso
+              data={filterConn}
+              itemContent={(_, item) => (
+                <ConnectionItem
+                  key={item.id}
+                  value={item}
+                  onShowDetail={() =>
+                    detailRef.current?.open(item, isActiveTab)
+                  }
+                />
+              )}
+            />
+          )}
+        </Box>
+        <ConnectionDetail ref={detailRef} />
+      </div>
     </BasePage>
   );
 };

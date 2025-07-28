@@ -7,19 +7,21 @@ import { useTranslation } from "react-i18next";
 import { closeConnections } from "tauri-plugin-mihomo-api";
 
 export interface ConnectionDetailRef {
-  open: (detail: IConnectionsItem) => void;
+  open: (detail: IConnectionsItem, active: boolean) => void;
 }
 
 export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
   (props, ref) => {
     const [open, setOpen] = useState(false);
     const [detail, setDetail] = useState<IConnectionsItem>();
+    const [active, setActive] = useState(true);
 
     useImperativeHandle(ref, () => ({
-      open: (detail: IConnectionsItem) => {
+      open: (detail: IConnectionsItem, active) => {
         if (open) return;
         setOpen(true);
         setDetail(detail);
+        setActive(active);
       },
     }));
 
@@ -33,7 +35,11 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
         onClose={onClose}
         message={
           detail ? (
-            <InnerConnectionDetail data={detail} onClose={onClose} />
+            <InnerConnectionDetail
+              data={detail}
+              active={active}
+              onClose={onClose}
+            />
           ) : null
         }
       />
@@ -43,10 +49,11 @@ export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
 
 interface InnerProps {
   data: IConnectionsItem;
+  active: boolean;
   onClose?: () => void;
 }
 
-const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
+const InnerConnectionDetail = ({ data, active, onClose }: InnerProps) => {
   const { t } = useTranslation();
   const { metadata, rulePayload } = data;
   const chains = [...data.chains].reverse().join(" / ");
@@ -97,17 +104,19 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
         </div>
       ))}
 
-      <Box sx={{ textAlign: "right" }}>
-        <Button
-          variant="contained"
-          title={t("Close Connection")}
-          onClick={() => {
-            onDelete();
-            onClose?.();
-          }}>
-          {t("Close Connection")}
-        </Button>
-      </Box>
+      {active && (
+        <Box sx={{ textAlign: "right" }}>
+          <Button
+            variant="contained"
+            title={t("Close Connection")}
+            onClick={() => {
+              onDelete();
+              onClose?.();
+            }}>
+            {t("Close Connection")}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };

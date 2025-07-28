@@ -1,7 +1,6 @@
 import parseTraffic from "@/utils/parse-traffic";
 import { CloseRounded } from "@mui/icons-material";
 import {
-  Box,
   IconButton,
   ListItem,
   ListItemText,
@@ -50,7 +49,7 @@ export const ConnectionItem = (props: Props) => {
         primary={metadata.host || metadata.destinationIP}
         onClick={onShowDetail}
         secondary={
-          <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+          <span className="inline-block flex-wrap">
             <Tag sx={{ textTransform: "uppercase", color: "success" }}>
               {metadata.network}
             </Tag>
@@ -70,7 +69,7 @@ export const ConnectionItem = (props: Props) => {
                 {parseTraffic(curUpload!)} / {parseTraffic(curDownload!)}
               </Tag>
             )}
-          </Box>
+          </span>
         }
       />
     </ListItem>
