@@ -4,6 +4,7 @@ import {
   ArrowDownwardRounded,
   ArrowUpwardRounded,
   MemoryRounded,
+  AccessTimeRounded  // 导入时钟图标
 } from "@mui/icons-material";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
@@ -21,13 +22,30 @@ interface MemoryUsage {
   oslimit?: number;
 }
 
+// 格式化时间为 HH:MM:SS 格式
+const formatTime = (date: Date): string => {
+  return date.toTimeString().slice(0, 8);
+};
+
+// 格式化运行时间
+const formatUptime = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  return [
+    hours.toString().padStart(2, '0'),
+    minutes.toString().padStart(2, '0'),
+    secs.toString().padStart(2, '0')
+  ].join(':');
+};
+
 // setup the traffic
 export const LayoutTraffic = () => {
   const { data: isDebug } = useSWR(
     "clash-verge-rev-internal://isDebugEnabled",
     () => isDebugEnabled(),
     {
-      // default value before is fetched
       fallbackData: false,
     },
   );
@@ -38,6 +56,24 @@ export const LayoutTraffic = () => {
   const { t } = useTranslation();
   const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
+  const [currentTime, setCurrentTime] = useState(formatTime(new Date()));
+  const [uptime, setUptime] = useState("00:00:00");
+  const startTime = useRef<number>(Date.now() / 1000);
+
+  // 实时更新时间和运行计时
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // 更新当前时间
+      setCurrentTime(formatTime(new Date()));
+
+      // 计算并更新运行时间
+      const currentTime = Date.now() / 1000;
+      const elapsedSeconds = Math.floor(currentTime - startTime.current);
+      setUptime(formatUptime(elapsedSeconds));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // whether hide traffic graph
   const trafficGraph = verge?.traffic_graph ?? true;
@@ -104,15 +140,20 @@ export const LayoutTraffic = () => {
   };
   const valStyle: any = {
     component: "span",
-    textAlign: "center",
-    sx: { flex: "1 1 56px", userSelect: "none" },
+    textAlign: "left", // 文字左对齐
+    sx: { flex: "1 1 auto", userSelect: "none" },
   };
   const unitStyle: any = {
     component: "span",
-    color: "grey.500",
     fontSize: "12px",
     textAlign: "right",
-    sx: { flex: "0 1 27px", userSelect: "none" },
+    sx: { flex: "0 1 auto", userSelect: "none", ml: 1 },
+  };
+
+  // 时间显示样式
+  const timeStyle: any = {
+    transition: "opacity 0.3s ease",
+    opacity: pageVisible ? 1 : 0.7,
   };
 
   return (
@@ -143,9 +184,11 @@ export const LayoutTraffic = () => {
               }
             />
             <Typography {...valStyle} color="secondary">
-              {up}
+              {t("Upload Speed")}
             </Typography>
-            <Typography {...unitStyle}>{upUnit}/s</Typography>
+            <Typography {...unitStyle} color="secondary">
+              {up} {upUnit}/s
+            </Typography>
           </Box>
 
           <Box
@@ -163,9 +206,11 @@ export const LayoutTraffic = () => {
               }
             />
             <Typography {...valStyle} color="primary">
-              {down}
+              {t("Download Speed")}
             </Typography>
-            <Typography {...unitStyle}>{downUnit}/s</Typography>
+            <Typography {...unitStyle} color="primary">
+              {down} {downUnit}/s
+            </Typography>
           </Box>
 
           {displayMemory && (
@@ -182,10 +227,43 @@ export const LayoutTraffic = () => {
               }}
             >
               <MemoryRounded {...iconStyle} />
-              <Typography {...valStyle}>{inuse}</Typography>
-              <Typography {...unitStyle}>{inuseUnit}</Typography>
+              <Typography {...valStyle}>
+                {t(isDebug ? "Memory Cleanup" : "Memory Usage")}
+              </Typography>
+              <Typography {...unitStyle}>
+                {inuse} {inuseUnit}
+                {("usage_percent" in (memory?.formatted || {}) && memory.formatted.usage_percent) &&
+                  ` (${memory.formatted.usage_percent.toFixed(1)}%)`
+                }
+              </Typography>
             </Box>
           )}
+
+          <Box {...boxStyle} sx={timeStyle}>
+            <AccessTimeRounded
+              {...iconStyle}
+              color="error.main"
+            />
+            <Typography {...valStyle} color="error.main">
+              {t("Uptime")}
+            </Typography>
+            <Typography {...unitStyle} color="error.main">
+              {uptime}
+            </Typography>
+          </Box>
+
+          <Box {...boxStyle} sx={timeStyle}>
+            <AccessTimeRounded
+              {...iconStyle}
+              color="success.main"
+            />
+            <Typography {...valStyle} color="success.main">
+              {t("System Time")}
+            </Typography>
+            <Typography {...unitStyle} color="success.main">
+              {currentTime}
+            </Typography>
+          </Box>
         </Box>
       </Box>
     </LightweightTrafficErrorBoundary>
