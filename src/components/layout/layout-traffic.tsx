@@ -34,10 +34,10 @@ const formatUptime = (seconds: number): string => {
   const secs = Math.floor(seconds % 60);
 
   return [
-    hours.toString().padStart(2, '0'),
-    minutes.toString().padStart(2, '0'),
-    secs.toString().padStart(2, '0')
-  ].join(':');
+    hours.toString().padStart(2, "0"),
+    minutes.toString().padStart(2, "0"),
+    secs.toString().padStart(2, "0"),
+  ].join(":");
 };
 
 // setup the traffic
@@ -237,43 +237,36 @@ export const LayoutTraffic = () => {
               </Typography>
               <Typography {...unitStyle}>
                 {inuse} {inuseUnit}
-                {("usage_percent" in (memory?.formatted || {}) && memory.formatted.usage_percent) &&
-                  ` (${memory.formatted.usage_percent.toFixed(1)}%)`
-                }
+                {"usage_percent" in (memory?.formatted || {}) &&
+                  memory.formatted.usage_percent &&
+                  ` (${memory.formatted.usage_percent.toFixed(1)}%)`}
               </Typography>
             </Box>
           )}
 
-         {displayRuntime && (
-          <Box {...boxStyle} sx={timeStyle}>
-            <AccessTimeRounded
-              {...iconStyle}
-              color="error.main"
-            />
-            <Typography {...valStyle} color="error.main">
-              {t("Uptime")}
-            </Typography>
-            <Typography {...unitStyle} color="error.main">
-              {uptime}
-            </Typography>
-          </Box>
+          {displayRuntime && (
+            <Box {...boxStyle} sx={timeStyle}>
+              <AccessTimeRounded {...iconStyle} color="error.main" />
+              <Typography {...valStyle} color="error.main">
+                {t("Uptime")}
+              </Typography>
+              <Typography {...unitStyle} color="error.main">
+                {uptime}
+              </Typography>
+            </Box>
           )}
 
-       {displaysystemtime  && (
-          <Box {...boxStyle} sx={timeStyle}>
-            <AccessTimeRounded
-              {...iconStyle}
-              color="success.main"
-            />
-            <Typography {...valStyle} color="success.main">
-              {t("System Time")}
-            </Typography>
-            <Typography {...unitStyle} color="success.main">
-              {currentTime}
-            </Typography>
-          </Box>
+          {displaysystemtime && (
+            <Box {...boxStyle} sx={timeStyle}>
+              <AccessTimeRounded {...iconStyle} color="success.main" />
+              <Typography {...valStyle} color="success.main">
+                {t("System Time")}
+              </Typography>
+              <Typography {...unitStyle} color="success.main">
+                {currentTime}
+              </Typography>
+            </Box>
           )}
-
         </Box>
       </Box>
     </LightweightTrafficErrorBoundary>
