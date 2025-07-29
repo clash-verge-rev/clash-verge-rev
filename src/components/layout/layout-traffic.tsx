@@ -111,10 +111,10 @@ export const LayoutTraffic = () => {
   const displayRuntime = verge?.enable_runtime_display ?? true;
 
   // 显示系统时间
-  const displaySystemTime = verge?.enable_system_time ?? true;
+  const displaySystemTime = verge?.enable_system_time ?? false;
 
   // 显示下载速度
-  const displayDownload = verge?.enable_download_speed ?? true;
+  const displayDownload = verge?.enable_download_speed ?? false;
 
   // 显示整体
   const displayWhole = verge?.enable_side_control ?? true;

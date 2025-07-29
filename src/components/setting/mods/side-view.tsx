@@ -98,7 +98,7 @@ export const SideViewer = forwardRef<DialogRef>((props, ref) => {
             <Item>
               <ListItemText primary={t("Uptime")} />
               <GuardState
-                value={verge?.enable_runtime_display ?? true}
+                value={verge?.enable_runtime_display ?? false}
                 valueProps="checked"
                 onCatch={onError}
                 onFormat={onSwitchFormat}
@@ -112,7 +112,7 @@ export const SideViewer = forwardRef<DialogRef>((props, ref) => {
             <Item>
               <ListItemText primary={t("System Time")} />
               <GuardState
-                value={verge?.enable_system_time ?? true}
+                value={verge?.enable_system_time ?? false}
                 valueProps="checked"
                 onCatch={onError}
                 onFormat={onSwitchFormat}

@@ -419,8 +419,8 @@ impl IVerge {
             home_cards: None,
             service_state: None,
             enable_external_controller: Some(false),
-            enable_runtime_display: Some(true),
-            enable_system_time: Some(true),
+            enable_runtime_display: Some(false),
+            enable_system_time: Some(false),
             enable_download_speed: Some(true),
             enable_side_control: Some(true),
             ..Self::default()
