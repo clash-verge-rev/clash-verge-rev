@@ -1,11 +1,6 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  List,
-  styled,
-  ListItem,
-  ListItemText,
-} from "@mui/material";
+import { List, styled, ListItem, ListItemText } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { GuardState } from "./guard-state";
