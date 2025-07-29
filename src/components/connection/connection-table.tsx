@@ -141,7 +141,6 @@ export const ConnectionTable = (props: Props) => {
   return (
     <DataGrid
       apiRef={gridApiRef}
-      hideFooter
       disableDensitySelector
       disableColumnMenu
       rows={connRows}
