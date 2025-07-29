@@ -664,5 +664,7 @@
   "Secret copied to clipboard": "访问密钥已复制到剪贴板",
   "Saving...": "保存中...",
   "System Time": "系统时间",
-  "Download speed": "下载速度"
+  "Download speed": "下载速度",
+  "Side Setting": "侧边设置",
+  "Flow overall": "整体流量图"
 }

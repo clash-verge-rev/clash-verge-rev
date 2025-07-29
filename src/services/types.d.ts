@@ -862,6 +862,7 @@ interface IVergeConfig {
   enable_runtime_display?: boolean;
   enable_system_time?: boolean;
   enable_download_speed?: boolean;
+  enable_side_control?:boolean;
 }
 
 interface CardConfig {

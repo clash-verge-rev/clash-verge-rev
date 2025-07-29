@@ -21,6 +21,7 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { ContentCopyRounded } from "@mui/icons-material";
 import { languages } from "@/services/i18n";
 import { showNotice } from "@/services/noticeService";
+import { SideViewer } from "./mods/side-view";
 
 interface Props {
   onError?: (err: Error) => void;
@@ -60,6 +61,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
   const miscRef = useRef<DialogRef>(null);
   const themeRef = useRef<DialogRef>(null);
   const layoutRef = useRef<DialogRef>(null);
+  const SideRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
   const backupRef = useRef<DialogRef>(null);
 
@@ -79,6 +81,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
       <HotkeyViewer ref={hotkeyRef} />
       <MiscViewer ref={miscRef} />
       <LayoutViewer ref={layoutRef} />
+      <SideViewer ref={SideRef} />
       <UpdateViewer ref={updateRef} />
       <BackupViewer ref={backupRef} />
 
@@ -233,6 +236,11 @@ const SettingVergeBasic = ({ onError }: Props) => {
       <SettingItem
         onClick={() => layoutRef.current?.open()}
         label={t("Layout Setting")}
+      />
+
+      <SettingItem
+        onClick={() => SideRef.current?.open()}
+        label={t("Side Setting")}
       />
 
       <SettingItem
