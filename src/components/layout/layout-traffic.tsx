@@ -113,6 +113,9 @@ export const LayoutTraffic = () => {
   // 显示系统时间
   const displaysystemtime = verge?.enable_system_time ?? true;
 
+  // 显示下载速度
+  const displaydownload = verge?.enable_download_speed ?? true;
+
   // 使用格式化的数据，避免重复解析
   const upSpeed = traffic?.formatted?.up_rate || "0B";
   const downSpeed = traffic?.formatted?.down_rate || "0B";
@@ -166,98 +169,100 @@ export const LayoutTraffic = () => {
           </div>
         )}
 
-        <Box display="flex" flexDirection="column" gap={0.75}>
-          <Box
-            title={`${t("Upload Speed")} ${traffic?.is_fresh ? "" : "(Stale)"}`}
-            {...boxStyle}
-            sx={{
-              ...boxStyle.sx,
-              opacity: traffic?.is_fresh ? 1 : 0.6,
-            }}
-          >
-            <ArrowUpwardRounded
-              {...iconStyle}
-              color={
-                (traffic?.raw?.up_rate || 0) > 0 ? "secondary" : "disabled"
-              }
-            />
-            <Typography {...valStyle} color="secondary">
-              {t("Upload Speed")}
-            </Typography>
-            <Typography {...unitStyle} color="secondary">
-              {up} {upUnit}/s
-            </Typography>
-          </Box>
-
-          <Box
-            title={`${t("Download Speed")} ${traffic?.is_fresh ? "" : "(Stale)"}`}
-            {...boxStyle}
-            sx={{
-              ...boxStyle.sx,
-              opacity: traffic?.is_fresh ? 1 : 0.6,
-            }}
-          >
-            <ArrowDownwardRounded
-              {...iconStyle}
-              color={
-                (traffic?.raw?.down_rate || 0) > 0 ? "primary" : "disabled"
-              }
-            />
-            <Typography {...valStyle} color="primary">
-              {t("Download Speed")}
-            </Typography>
-            <Typography {...unitStyle} color="primary">
-              {down} {downUnit}/s
-            </Typography>
-          </Box>
-
-          {displayMemory && (
+        {displaydownload && (
+          <Box display="flex" flexDirection="column">
             <Box
-              title={`${t(isDebug ? "Memory Cleanup" : "Memory Usage")} ${memory?.is_fresh ? "" : "(Stale)"} ${"usage_percent" in (memory?.formatted || {}) && memory.formatted.usage_percent ? `(${memory.formatted.usage_percent.toFixed(1)}%)` : ""}`}
+              title={`${t("Upload Speed")} ${traffic?.is_fresh ? "" : "(Stale)"}`}
               {...boxStyle}
               sx={{
-                cursor: isDebug ? "pointer" : "auto",
-                opacity: memory?.is_fresh ? 1 : 0.6,
-              }}
-              color={isDebug ? "success.main" : "disabled"}
-              onClick={async () => {
-                isDebug && (await gc());
+                ...boxStyle.sx,
+                opacity: traffic?.is_fresh ? 1 : 0.6,
               }}
             >
-              <MemoryRounded {...iconStyle} />
-              <Typography {...valStyle}>
-                {t(isDebug ? "Memory Cleanup" : "Memory Usage")}
+              <ArrowUpwardRounded
+                {...iconStyle}
+                color={
+                  (traffic?.raw?.up_rate || 0) > 0 ? "secondary" : "disabled"
+                }
+              />
+              <Typography {...valStyle} color="secondary">
+                {t("Upload Speed")}
               </Typography>
-              <Typography {...unitStyle}>
-                {inuse} {inuseUnit}
+              <Typography {...unitStyle} color="secondary">
+                {up} {upUnit}/s
               </Typography>
             </Box>
-          )}
 
-          {displayRuntime && (
-            <Box {...boxStyle} sx={timeStyle}>
-              <AccessTimeRounded {...iconStyle} color="error.main" />
-              <Typography {...valStyle} color="error.main">
-                {t("Uptime")}
+            <Box
+              title={`${t("Download Speed")} ${traffic?.is_fresh ? "" : "(Stale)"}`}
+              {...boxStyle}
+              sx={{
+                ...boxStyle.sx,
+                opacity: traffic?.is_fresh ? 1 : 0.6,
+              }}
+            >
+              <ArrowDownwardRounded
+                {...iconStyle}
+                color={
+                  (traffic?.raw?.down_rate || 0) > 0 ? "primary" : "disabled"
+                }
+              />
+              <Typography {...valStyle} color="primary">
+                {t("Download Speed")}
               </Typography>
-              <Typography {...unitStyle} color="error.main">
-                {uptime}
+              <Typography {...unitStyle} color="primary">
+                {down} {downUnit}/s
               </Typography>
             </Box>
-          )}
+          </Box>
+        )}
 
-          {displaysystemtime && (
-            <Box {...boxStyle} sx={timeStyle}>
-              <AccessTimeRounded {...iconStyle} color="success.main" />
-              <Typography {...valStyle} color="success.main">
-                {t("System Time")}
-              </Typography>
-              <Typography {...unitStyle} color="success.main">
-                {currentTime}
-              </Typography>
-            </Box>
-          )}
-        </Box>
+        {displayMemory && (
+          <Box
+            title={`${t(isDebug ? "Memory Cleanup" : "Memory Usage")} ${memory?.is_fresh ? "" : "(Stale)"} ${"usage_percent" in (memory?.formatted || {}) && memory.formatted.usage_percent ? `(${memory.formatted.usage_percent.toFixed(1)}%)` : ""}`}
+            {...boxStyle}
+            sx={{
+              cursor: isDebug ? "pointer" : "auto",
+              opacity: memory?.is_fresh ? 1 : 0.6,
+            }}
+            color={isDebug ? "success.main" : "disabled"}
+            onClick={async () => {
+              isDebug && (await gc());
+            }}
+          >
+            <MemoryRounded {...iconStyle} />
+            <Typography {...valStyle}>
+              {t(isDebug ? "Memory Cleanup" : "Memory Usage")}
+            </Typography>
+            <Typography {...unitStyle}>
+              {inuse} {inuseUnit}
+            </Typography>
+          </Box>
+        )}
+
+        {displayRuntime && (
+          <Box {...boxStyle} sx={timeStyle}>
+            <AccessTimeRounded {...iconStyle} color="error.main" />
+            <Typography {...valStyle} color="error.main">
+              {t("Uptime")}
+            </Typography>
+            <Typography {...unitStyle} color="error.main">
+              {uptime}
+            </Typography>
+          </Box>
+        )}
+
+        {displaysystemtime && (
+          <Box {...boxStyle} sx={timeStyle}>
+            <AccessTimeRounded {...iconStyle} color="success.main" />
+            <Typography {...valStyle} color="success.main">
+              {t("System Time")}
+            </Typography>
+            <Typography {...unitStyle} color="success.main">
+              {currentTime}
+            </Typography>
+          </Box>
+        )}
       </Box>
     </LightweightTrafficErrorBoundary>
   );

@@ -121,6 +121,20 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
         </Item>
 
         <Item>
+          <ListItemText primary={t("Download speed")} />
+          <GuardState
+            value={verge?.enable_download_speed ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_download_speed: e })}
+            onGuard={(e) => patchVerge({ enable_download_speed: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+
+        <Item>
           <ListItemText primary={t("Memory Usage")} />
           <GuardState
             value={verge?.enable_memory_usage ?? true}

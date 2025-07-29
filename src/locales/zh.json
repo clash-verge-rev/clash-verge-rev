@@ -663,5 +663,6 @@
   "Controller address copied to clipboard": "控制器地址已复制到剪贴板",
   "Secret copied to clipboard": "访问密钥已复制到剪贴板",
   "Saving...": "保存中...",
-  "System Time": "系统时间"
+  "System Time": "系统时间",
+  "Download speed": "下载速度"
 }

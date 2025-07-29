@@ -213,6 +213,9 @@ pub struct IVerge {
     /// 启用系统时间
     pub enable_system_time: Option<bool>,
 
+    /// 启用下载速度显示
+    pub enable_download_speed: Option<bool>,
+
     /// 服务状态跟踪
     pub service_state: Option<crate::core::service::ServiceState>,
 }
@@ -415,6 +418,7 @@ impl IVerge {
             enable_external_controller: Some(false),
             enable_runtime_display: Some(true),
             enable_system_time: Some(true),
+            enable_download_speed: Some(true),
             ..Self::default()
         }
     }
@@ -506,6 +510,7 @@ impl IVerge {
         patch!(enable_external_controller);
         patch!(enable_runtime_display);
         patch!(enable_system_time);
+        patch!(enable_download_speed);
     }
 
     /// 在初始化前尝试拿到单例端口的值
@@ -605,6 +610,7 @@ pub struct IVergeResponse {
     pub enable_runtime_display: Option<bool>,
     pub enable_system_time: Option<bool>,
     pub service_state: Option<crate::core::service::ServiceState>,
+    pub enable_download_speed: Option<bool>,
 }
 
 impl From<IVerge> for IVergeResponse {
@@ -679,6 +685,7 @@ impl From<IVerge> for IVergeResponse {
             enable_external_controller: verge.enable_external_controller,
             enable_runtime_display: verge.enable_runtime_display,
             enable_system_time: verge.enable_system_time,
+            enable_download_speed: verge.enable_download_speed,
             service_state: verge.service_state,
         }
     }
