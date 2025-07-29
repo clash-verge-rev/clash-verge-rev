@@ -230,9 +230,6 @@ export const LayoutTraffic = () => {
               </Typography>
               <Typography {...unitStyle}>
                 {inuse} {inuseUnit}
-                {"usage_percent" in (memory?.formatted || {}) &&
-                  memory.formatted.usage_percent &&
-                  ` (${memory.formatted.usage_percent.toFixed(1)}%)`}
               </Typography>
             </Box>
           )}
