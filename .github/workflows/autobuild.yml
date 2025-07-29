@@ -63,9 +63,30 @@ jobs:
           if [ "$CURRENT_SRC_HASH" != "$PREVIOUS_SRC_HASH" ] || [ "$CURRENT_TAURI_HASH" != "$PREVIOUS_TAURI_HASH" ]; then
             echo "Source directories changed"
             echo "should_run=true" >> $GITHUB_OUTPUT
-          else
-            echo "Version and source directories unchanged"
+            exit 0
+          fi
+
+          # Check if current version already has assets in autobuild release
+          CURRENT_COMMIT=$(git rev-parse --short HEAD)
+          echo "Current commit: $CURRENT_COMMIT"
+
+          # Generate the version that would be created for autobuild
+          CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
+          MONTH=$(date +%m)
+          DAY=$(date +%d)
+          EXPECTED_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${CURRENT_COMMIT}"
+          echo "Expected autobuild version: $EXPECTED_VERSION"
+
+          # Check if autobuild release exists and has assets for current version
+          EXISTING_ASSETS=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets[].name' 2>/dev/null | grep -E "${EXPECTED_VERSION//+/\\+}" || true)
+
+          if [ -n "$EXISTING_ASSETS" ]; then
+            echo "Autobuild assets already exist for version $EXPECTED_VERSION"
+            echo "Existing assets: $EXISTING_ASSETS"
             echo "should_run=false" >> $GITHUB_OUTPUT
+          else
+            echo "No autobuild assets found for version $EXPECTED_VERSION, build needed"
+            echo "should_run=true" >> $GITHUB_OUTPUT
           fi
 
   update_tag:
