@@ -26,10 +26,15 @@ rust_i18n::i18n!("./src/locales", fallback = "en");
 pub static APP_VERSION: OnceCell<String> = OnceCell::new();
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
-#[cfg(unix)]
+#[cfg(all(unix, not(feature = "verge-dev")))]
 pub const MIHOMO_SOCKET_PATH: &str = "/tmp/verge-mihomo.sock";
-#[cfg(windows)]
+#[cfg(all(unix, feature = "verge-dev"))]
+pub const MIHOMO_SOCKET_PATH: &str = "/tmp/verge-mihomo-dev.sock";
+
+#[cfg(all(windows, not(feature = "verge-dev")))]
 pub const MIHOMO_SOCKET_PATH: &str = r#"\\.\pipe\verge-mihomo"#;
+#[cfg(all(windows, feature = "verge-dev"))]
+pub const MIHOMO_SOCKET_PATH: &str = r#"\\.\pipe\verge-mihomo-dev"#;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<()> {
