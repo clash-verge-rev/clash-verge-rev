@@ -51,11 +51,17 @@ fn get_bypass() -> String {
     }
 }
 
-// Use singleton_lazy macro
-singleton_lazy!(Sysopt, SYSOPT, || Sysopt {
-    update_sysproxy: Arc::new(TokioMutex::new(false)),
-    reset_sysproxy: Arc::new(TokioMutex::new(false)),
-});
+impl Default for Sysopt {
+    fn default() -> Self {
+        Sysopt {
+            update_sysproxy: Arc::new(TokioMutex::new(false)),
+            reset_sysproxy: Arc::new(TokioMutex::new(false)),
+        }
+    }
+}
+
+// Use simplified singleton_lazy macro
+singleton_lazy!(Sysopt, SYSOPT, Sysopt::default);
 
 impl Sysopt {
     pub fn init_guard_sysproxy(&self) -> Result<()> {

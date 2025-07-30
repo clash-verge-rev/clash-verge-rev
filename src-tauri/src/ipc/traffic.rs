@@ -40,13 +40,22 @@ pub struct TrafficMonitor {
     current: Arc<RwLock<CurrentTraffic>>,
 }
 
-// Use singleton_lazy_with_logging macro
-singleton_lazy_with_logging!(TrafficMonitor, INSTANCE, "TrafficMonitor", || {
-    let ipc_path_buf = ipc_path().unwrap();
-    let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-    let client = IpcStreamClient::new(ipc_path).unwrap();
-    TrafficMonitor::new(client)
-});
+impl Default for TrafficMonitor {
+    fn default() -> Self {
+        let ipc_path_buf = ipc_path().unwrap();
+        let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
+        let client = IpcStreamClient::new(ipc_path).unwrap();
+        TrafficMonitor::new(client)
+    }
+}
+
+// Use simplified singleton_lazy_with_logging macro
+singleton_lazy_with_logging!(
+    TrafficMonitor,
+    INSTANCE,
+    "TrafficMonitor",
+    TrafficMonitor::default
+);
 
 impl TrafficMonitor {
     fn new(client: IpcStreamClient) -> Self {

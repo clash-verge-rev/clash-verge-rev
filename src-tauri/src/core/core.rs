@@ -822,11 +822,17 @@ impl CoreManager {
     }
 }
 
-// Use singleton_lazy macro
-singleton_lazy!(CoreManager, CORE_MANAGER, || CoreManager {
-    running: Arc::new(Mutex::new(RunningMode::NotRunning)),
-    child_sidecar: Arc::new(Mutex::new(None)),
-});
+impl Default for CoreManager {
+    fn default() -> Self {
+        CoreManager {
+            running: Arc::new(Mutex::new(RunningMode::NotRunning)),
+            child_sidecar: Arc::new(Mutex::new(None)),
+        }
+    }
+}
+
+// Use simplified singleton_lazy macro
+singleton_lazy!(CoreManager, CORE_MANAGER, CoreManager::default);
 
 impl CoreManager {
     // 当服务安装失败时的回退逻辑

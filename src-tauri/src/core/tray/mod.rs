@@ -169,11 +169,17 @@ impl TrayState {
     }
 }
 
-// Use singleton_lazy macro
-singleton_lazy!(Tray, TRAY, || Tray {
-    last_menu_update: Mutex::new(None),
-    menu_updating: AtomicBool::new(false),
-});
+impl Default for Tray {
+    fn default() -> Self {
+        Tray {
+            last_menu_update: Mutex::new(None),
+            menu_updating: AtomicBool::new(false),
+        }
+    }
+}
+
+// Use simplified singleton_lazy macro
+singleton_lazy!(Tray, TRAY, Tray::default);
 
 impl Tray {
     pub fn init(&self) -> Result<()> {

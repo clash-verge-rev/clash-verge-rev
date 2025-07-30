@@ -36,13 +36,22 @@ pub struct MemoryMonitor {
     current: Arc<RwLock<CurrentMemory>>,
 }
 
-// Use singleton_lazy_with_logging macro
-singleton_lazy_with_logging!(MemoryMonitor, INSTANCE, "MemoryMonitor", || {
-    let ipc_path_buf = ipc_path().unwrap();
-    let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-    let client = IpcStreamClient::new(ipc_path).unwrap();
-    MemoryMonitor::new(client)
-});
+impl Default for MemoryMonitor {
+    fn default() -> Self {
+        let ipc_path_buf = ipc_path().unwrap();
+        let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
+        let client = IpcStreamClient::new(ipc_path).unwrap();
+        MemoryMonitor::new(client)
+    }
+}
+
+// Use simplified singleton_lazy_with_logging macro
+singleton_lazy_with_logging!(
+    MemoryMonitor,
+    INSTANCE,
+    "MemoryMonitor",
+    MemoryMonitor::default
+);
 
 impl MemoryMonitor {
     fn new(client: IpcStreamClient) -> Self {
