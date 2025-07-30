@@ -1,12 +1,16 @@
 /// Macro to generate singleton pattern for structs
 ///
 /// Usage:
-/// ```rust
+/// ```rust,ignore
 /// use crate::utils::singleton::singleton;
 ///
-/// struct MyStruct { ... }
+/// struct MyStruct {
+///     value: i32,
+/// }
 /// impl MyStruct {
-///     fn new() -> Self { ... }
+///     fn new() -> Self {
+///         MyStruct { value: 0 }
+///     }
 /// }
 /// singleton!(MyStruct, INSTANCE);
 /// ```

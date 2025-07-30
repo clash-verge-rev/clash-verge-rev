@@ -1,5 +1,5 @@
 use kode_bridge::IpcStreamClient;
-use std::{sync::Arc, time::Instant};
+use std::sync::Arc;
 use tokio::{sync::RwLock, task::JoinHandle, time::Duration};
 
 use crate::{
@@ -8,6 +8,7 @@ use crate::{
 };
 
 /// Generic trait for IPC stream monitoring
+#[allow(dead_code)]
 pub trait IpcStreamMonitor<T>
 where
     T: Clone + Send + Sync + 'static,
@@ -116,11 +117,13 @@ where
 }
 
 /// Generic singleton pattern for IPC monitors
+#[allow(dead_code)]
 pub struct IpcMonitorManager<T> {
     current: Arc<RwLock<T>>,
     task_handle: Arc<RwLock<Option<JoinHandle<()>>>>,
 }
 
+#[allow(dead_code)]
 impl<T> IpcMonitorManager<T>
 where
     T: Clone + Send + Sync + 'static,
