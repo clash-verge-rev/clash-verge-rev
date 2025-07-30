@@ -12,18 +12,6 @@ export type { ILogItem };
 
 const MAX_LOG_NUM = 1000;
 
-const buildWSUrl = (server: string, logLevel: LogLevel) => {
-  let baseUrl = `${server}/logs`;
-
-  // 只处理日志级别参数
-  if (logLevel && logLevel !== "info") {
-    const level = logLevel === "all" ? "debug" : logLevel;
-    baseUrl += `?level=${level}`;
-  }
-
-  return baseUrl;
-};
-
 interface LogStore {
   logs: ILogItem[];
   clearLogs: () => void;

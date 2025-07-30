@@ -1,7 +1,12 @@
 use super::CmdResult;
 use crate::{
-    config::*, core::*, feat, ipc::IpcManager, process::AsyncHandler,
-    state::proxy::ProxyRequestCache, wrap_err,
+    config::*,
+    core::*,
+    feat,
+    ipc::{self, IpcManager},
+    process::AsyncHandler,
+    state::proxy::ProxyRequestCache,
+    wrap_err,
 };
 use serde_yaml::Mapping;
 use std::time::Duration;
@@ -571,4 +576,24 @@ pub async fn is_clash_debug_enabled() -> CmdResult<bool> {
 #[tauri::command]
 pub async fn clash_gc() -> CmdResult {
     wrap_err!(IpcManager::global().gc().await)
+}
+
+/// 获取日志 (使用新的流式实现)
+#[tauri::command]
+pub async fn get_clash_logs(level: Option<String>) -> CmdResult<serde_json::Value> {
+    Ok(ipc::get_logs_json(level).await)
+}
+
+/// 启动日志监控
+#[tauri::command]
+pub async fn start_logs_monitoring(level: Option<String>) -> CmdResult {
+    ipc::start_logs_monitoring(level).await;
+    Ok(())
+}
+
+/// 清除日志
+#[tauri::command]
+pub async fn clear_logs() -> CmdResult {
+    ipc::clear_logs().await;
+    Ok(())
 }

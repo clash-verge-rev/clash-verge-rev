@@ -1,6 +1,10 @@
 // 全局日志服务，使应用在任何页面都能收集日志
 import { create } from "zustand";
-import { createAuthSockette } from "@/utils/websocket";
+import {
+  fetchLogsViaIPC,
+  startLogsStreaming,
+  clearLogs as clearLogsIPC,
+} from "@/services/ipc-log-service";
 import dayjs from "dayjs";
 
 // 最大日志数量
@@ -24,6 +28,7 @@ interface GlobalLogStore {
   setCurrentLevel: (level: LogLevel) => void;
   clearLogs: () => void;
   appendLog: (log: ILogItem) => void;
+  setLogs: (logs: ILogItem[]) => void;
 }
 
 // 创建全局状态存储
@@ -43,124 +48,117 @@ export const useGlobalLogStore = create<GlobalLogStore>((set) => ({
           : [...state.logs, log];
       return { logs: newLogs };
     }),
+  setLogs: (logs: ILogItem[]) => set({ logs }),
 }));
 
-// 构建WebSocket URL
-const buildWSUrl = (server: string, logLevel: LogLevel) => {
-  let baseUrl = `${server}/logs`;
-
-  // 只处理日志级别参数
-  if (logLevel && logLevel !== "info") {
-    const level = logLevel === "all" ? "debug" : logLevel;
-    baseUrl += `?level=${level}`;
+// IPC 日志获取函数
+export const fetchLogsViaIPCPeriodically = async (
+  logLevel: LogLevel = "info",
+) => {
+  try {
+    const logs = await fetchLogsViaIPC(logLevel);
+    useGlobalLogStore.getState().setLogs(logs);
+    console.log(`[GlobalLog-IPC] 成功获取 ${logs.length} 条日志`);
+  } catch (error) {
+    console.error("[GlobalLog-IPC] 获取日志失败:", error);
   }
-
-  return baseUrl;
 };
 
-// 初始化全局日志服务
-let globalLogSocket: any = null;
+// 初始化全局日志服务 (仅IPC模式)
+let ipcPollingInterval: number | null = null;
+let isInitializing = false; // 添加初始化标志
 
 export const initGlobalLogService = (
-  server: string,
-  secret: string,
   enabled: boolean = false,
   logLevel: LogLevel = "info",
 ) => {
-  const { appendLog, setEnabled } = useGlobalLogStore.getState();
+  // 防止重复初始化
+  if (isInitializing) {
+    console.log("[GlobalLog-IPC] 正在初始化中，跳过重复调用");
+    return;
+  }
+
+  const { setEnabled, setCurrentLevel } = useGlobalLogStore.getState();
 
   // 更新启用状态
   setEnabled(enabled);
+  setCurrentLevel(logLevel);
 
-  // 如果不启用或没有服务器信息，则不初始化
-  if (!enabled || !server) {
-    closeGlobalLogConnection();
-    return;
-  }
-
-  // 关闭现有连接
-  closeGlobalLogConnection();
-
-  // 创建新的WebSocket连接，使用新的认证方法
-  const wsUrl = buildWSUrl(server, logLevel);
-  console.log(`[GlobalLog] 正在连接日志服务: ${wsUrl}`);
-
-  if (!server) {
-    console.warn("[GlobalLog] 服务器地址为空，无法建立连接");
-    return;
-  }
-
-  globalLogSocket = createAuthSockette(wsUrl, secret, {
-    timeout: 8000, // 8秒超时
-    onmessage(event) {
-      try {
-        const data = JSON.parse(event.data) as ILogItem;
-        const time = dayjs().format("MM-DD HH:mm:ss");
-        appendLog({ ...data, time });
-      } catch (error) {
-        console.error("[GlobalLog] 解析日志数据失败:", error);
-      }
-    },
-    onerror(event) {
-      console.error("[GlobalLog] WebSocket连接错误", event);
-
-      // 记录错误状态但不关闭连接，让重连机制起作用
-      useGlobalLogStore.setState({ isConnected: false });
-
-      // 只有在重试彻底失败后才关闭连接
-      if (
-        event &&
-        typeof event === "object" &&
-        "type" in event &&
-        event.type === "error"
-      ) {
-        console.error("[GlobalLog] 连接已彻底失败，关闭连接");
-        closeGlobalLogConnection();
-      }
-    },
-    onclose(event) {
-      console.log("[GlobalLog] WebSocket连接关闭", event);
-      useGlobalLogStore.setState({ isConnected: false });
-    },
-    onopen(event) {
-      console.log("[GlobalLog] WebSocket连接已建立", event);
-      useGlobalLogStore.setState({ isConnected: true });
-    },
-  });
-};
-
-// 关闭全局日志连接
-export const closeGlobalLogConnection = () => {
-  if (globalLogSocket) {
-    globalLogSocket.close();
-    globalLogSocket = null;
+  // 如果不启用，则不初始化
+  if (!enabled) {
+    clearIpcPolling();
     useGlobalLogStore.setState({ isConnected: false });
+    return;
+  }
+
+  isInitializing = true;
+
+  // 使用IPC流式模式
+  console.log("[GlobalLog-IPC] 启用IPC流式日志服务");
+
+  // 启动流式监控
+  startLogsStreaming(logLevel);
+
+  // 立即获取一次日志
+  fetchLogsViaIPCPeriodically(logLevel);
+
+  // 设置定期轮询来同步流式缓存的数据
+  clearIpcPolling();
+  ipcPollingInterval = setInterval(() => {
+    fetchLogsViaIPCPeriodically(logLevel);
+  }, 1000); // 每1秒同步一次流式缓存
+
+  // 设置连接状态
+  useGlobalLogStore.setState({ isConnected: true });
+
+  isInitializing = false;
+};
+
+// 清除IPC轮询
+const clearIpcPolling = () => {
+  if (ipcPollingInterval) {
+    clearInterval(ipcPollingInterval);
+    ipcPollingInterval = null;
+    console.log("[GlobalLog-IPC] 轮询已停止");
   }
 };
 
-// 切换日志级别
-export const changeLogLevel = (
-  level: LogLevel,
-  server: string,
-  secret: string,
-) => {
+// 关闭全局日志连接 (仅IPC模式)
+export const closeGlobalLogConnection = () => {
+  clearIpcPolling();
+  isInitializing = false; // 重置初始化标志
+  useGlobalLogStore.setState({ isConnected: false });
+  console.log("[GlobalLog-IPC] 日志服务已关闭");
+};
+
+// 切换日志级别 (仅IPC模式)
+export const changeLogLevel = (level: LogLevel) => {
   const { enabled } = useGlobalLogStore.getState();
   useGlobalLogStore.setState({ currentLevel: level });
 
-  if (enabled && server) {
-    initGlobalLogService(server, secret, enabled, level);
+  // 如果正在初始化，则跳过，避免重复启动
+  if (isInitializing) {
+    console.log("[GlobalLog-IPC] 正在初始化中，跳过级别变更流启动");
+    return;
+  }
+
+  if (enabled) {
+    // IPC流式模式下重新启动监控
+    startLogsStreaming(level);
+    fetchLogsViaIPCPeriodically(level);
   }
 };
 
-// 切换启用状态
-export const toggleLogEnabled = (server: string, secret: string) => {
+// 切换启用状态 (仅IPC模式)
+export const toggleLogEnabled = () => {
   const { enabled, currentLevel } = useGlobalLogStore.getState();
   const newEnabled = !enabled;
 
   useGlobalLogStore.setState({ enabled: newEnabled });
 
-  if (newEnabled && server) {
-    initGlobalLogService(server, secret, newEnabled, currentLevel);
+  if (newEnabled) {
+    // IPC模式下直接启动
+    initGlobalLogService(newEnabled, currentLevel);
   } else {
     closeGlobalLogConnection();
   }
@@ -169,6 +167,8 @@ export const toggleLogEnabled = (server: string, secret: string) => {
 // 获取日志清理函数
 export const clearGlobalLogs = () => {
   useGlobalLogStore.getState().clearLogs();
+  // 同时清理后端流式缓存
+  clearLogsIPC();
 };
 
 // 自定义钩子，用于获取过滤后的日志数据

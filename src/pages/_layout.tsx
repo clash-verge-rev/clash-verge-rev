@@ -184,7 +184,7 @@ const Layout = () => {
   useEffect(() => {
     if (clashInfo) {
       const { server = "", secret = "" } = clashInfo;
-      initGlobalLogService(server, secret, enableLog, "info");
+      initGlobalLogService(enableLog, "info");
     }
   }, [clashInfo, enableLog]);
 
