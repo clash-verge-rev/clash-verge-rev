@@ -71,18 +71,12 @@ const LogPage = () => {
 
   const handleLogLevelChange = (newLevel: LogLevel) => {
     setLogLevel(newLevel);
-    if (clashInfo) {
-      const { server = "", secret = "" } = clashInfo;
-      changeLogLevel(newLevel, server, secret);
-    }
+    changeLogLevel(newLevel);
   };
 
   const handleToggleLog = () => {
-    if (clashInfo) {
-      const { server = "", secret = "" } = clashInfo;
-      toggleLogEnabled(server, secret);
-      setEnableLog(!enableLog);
-    }
+    toggleLogEnabled();
+    setEnableLog(!enableLog);
   };
 
   return (

@@ -1,5 +1,6 @@
 pub mod autostart;
 pub mod dirs;
+pub mod format;
 pub mod help;
 pub mod i18n;
 pub mod init;

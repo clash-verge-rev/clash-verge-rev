@@ -412,6 +412,18 @@ export async function gc() {
   return invoke<void>("clash_gc");
 }
 
+export async function getClashLogs(level?: string) {
+  return invoke<any>("get_clash_logs", { level });
+}
+
+export async function startLogsMonitoring(level?: string) {
+  return invoke<void>("start_logs_monitoring", { level });
+}
+
+export async function clearLogs() {
+  return invoke<void>("clear_logs");
+}
+
 export async function getVergeConfig() {
   return invoke<IVergeConfig>("get_verge_config");
 }

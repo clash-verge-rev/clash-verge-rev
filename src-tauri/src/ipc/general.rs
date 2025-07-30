@@ -382,29 +382,5 @@ impl IpcManager {
         }
     }
 
-    // 流量数据相关
-    #[allow(dead_code)]
-    pub async fn get_traffic(&self) -> AnyResult<serde_json::Value> {
-        let url = "/traffic";
-        logging!(info, Type::Ipc, true, "IPC: 发送 GET 请求到 {}", url);
-        let result = self.send_request("GET", url, None).await;
-        logging!(
-            info,
-            Type::Ipc,
-            true,
-            "IPC: /traffic 请求结果: {:?}",
-            result
-        );
-        result
-    }
-
-    // 内存相关
-    #[allow(dead_code)]
-    pub async fn get_memory(&self) -> AnyResult<serde_json::Value> {
-        let url = "/memory";
-        logging!(info, Type::Ipc, true, "IPC: 发送 GET 请求到 {}", url);
-        let result = self.send_request("GET", url, None).await;
-        logging!(info, Type::Ipc, true, "IPC: /memory 请求结果: {:?}", result);
-        result
-    }
+    // 日志相关功能已迁移到 logs.rs 模块，使用流式处理
 }

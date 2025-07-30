@@ -8,7 +8,7 @@ use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
     logging,
-    utils::{dirs::ipc_path, logging::Type},
+    utils::{dirs::ipc_path, format::fmt_bytes, logging::Type},
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -117,16 +117,6 @@ impl TrafficMonitor {
     pub async fn is_fresh(&self) -> bool {
         self.current.read().await.last_updated.elapsed() < Duration::from_secs(5)
     }
-}
-
-fn fmt_bytes(bytes: u64) -> String {
-    const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
-    let (mut val, mut unit) = (bytes as f64, 0);
-    while val >= 1024.0 && unit < 3 {
-        val /= 1024.0;
-        unit += 1;
-    }
-    format!("{:.1}{}", val, UNITS[unit])
 }
 
 pub async fn get_current_traffic() -> CurrentTraffic {
