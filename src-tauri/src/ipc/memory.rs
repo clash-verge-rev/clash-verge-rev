@@ -1,11 +1,11 @@
-use kode_bridge::IpcStreamClient;
 use serde::{Deserialize, Serialize};
 use std::{sync::Arc, time::Instant};
 use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
+    ipc::monitor::{IpcStreamMonitor, MonitorData, StreamingParser},
     singleton_lazy_with_logging,
-    utils::{dirs::ipc_path, format::fmt_bytes},
+    utils::format::fmt_bytes,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -31,17 +31,48 @@ impl Default for CurrentMemory {
     }
 }
 
-// Minimal memory monitor
+impl MonitorData for CurrentMemory {
+    fn mark_fresh(&mut self) {
+        self.last_updated = Instant::now();
+    }
+
+    fn is_fresh_within(&self, duration: Duration) -> bool {
+        self.last_updated.elapsed() < duration
+    }
+}
+
+impl StreamingParser for CurrentMemory {
+    fn parse_and_update(
+        line: &str,
+        current: Arc<RwLock<Self>>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        if let Ok(memory) = serde_json::from_str::<MemoryData>(line.trim()) {
+            tokio::spawn(async move {
+                let mut current_guard = current.write().await;
+                current_guard.inuse = memory.inuse;
+                current_guard.oslimit = memory.oslimit;
+                current_guard.mark_fresh();
+            });
+        }
+        Ok(())
+    }
+}
+
+// Minimal memory monitor using the new architecture
 pub struct MemoryMonitor {
-    current: Arc<RwLock<CurrentMemory>>,
+    monitor: IpcStreamMonitor<CurrentMemory>,
 }
 
 impl Default for MemoryMonitor {
     fn default() -> Self {
-        let ipc_path_buf = ipc_path().unwrap();
-        let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-        let client = IpcStreamClient::new(ipc_path).unwrap();
-        MemoryMonitor::new(client)
+        MemoryMonitor {
+            monitor: IpcStreamMonitor::new(
+                "/memory".to_string(),
+                Duration::from_secs(10),
+                Duration::from_secs(2),
+                Duration::from_secs(10),
+            ),
+        }
     }
 }
 
@@ -54,44 +85,12 @@ singleton_lazy_with_logging!(
 );
 
 impl MemoryMonitor {
-    fn new(client: IpcStreamClient) -> Self {
-        let current = Arc::new(RwLock::new(CurrentMemory::default()));
-        let monitor_current = current.clone();
-
-        tokio::spawn(async move {
-            loop {
-                let _ = client
-                    .get("/memory")
-                    .timeout(Duration::from_secs(10))
-                    .process_lines(|line| {
-                        if let Ok(memory) = serde_json::from_str::<MemoryData>(line.trim()) {
-                            tokio::spawn({
-                                let current = monitor_current.clone();
-                                async move {
-                                    *current.write().await = CurrentMemory {
-                                        inuse: memory.inuse,
-                                        oslimit: memory.oslimit,
-                                        last_updated: Instant::now(),
-                                    };
-                                }
-                            });
-                        }
-                        Ok(())
-                    })
-                    .await;
-                tokio::time::sleep(Duration::from_secs(2)).await; // Memory updates less frequently
-            }
-        });
-
-        Self { current }
-    }
-
     pub async fn current(&self) -> CurrentMemory {
-        self.current.read().await.clone()
+        self.monitor.current().await
     }
 
     pub async fn is_fresh(&self) -> bool {
-        self.current.read().await.last_updated.elapsed() < Duration::from_secs(10)
+        self.monitor.is_fresh().await
     }
 }
 

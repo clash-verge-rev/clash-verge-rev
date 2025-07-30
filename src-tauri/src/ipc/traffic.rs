@@ -1,11 +1,11 @@
-use kode_bridge::IpcStreamClient;
 use serde::{Deserialize, Serialize};
 use std::{sync::Arc, time::Instant};
 use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
+    ipc::monitor::{IpcStreamMonitor, MonitorData, StreamingParser},
     singleton_lazy_with_logging,
-    utils::{dirs::ipc_path, format::fmt_bytes},
+    utils::format::fmt_bytes,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -35,17 +35,92 @@ impl Default for CurrentTraffic {
     }
 }
 
-// Minimal traffic monitor
+impl MonitorData for CurrentTraffic {
+    fn mark_fresh(&mut self) {
+        self.last_updated = Instant::now();
+    }
+
+    fn is_fresh_within(&self, duration: Duration) -> bool {
+        self.last_updated.elapsed() < duration
+    }
+}
+
+// Traffic monitoring state for calculating rates
+#[derive(Debug, Clone)]
+pub struct TrafficMonitorState {
+    pub current: CurrentTraffic,
+    pub last_traffic: Option<TrafficData>,
+}
+
+impl Default for TrafficMonitorState {
+    fn default() -> Self {
+        Self {
+            current: CurrentTraffic::default(),
+            last_traffic: None,
+        }
+    }
+}
+
+impl MonitorData for TrafficMonitorState {
+    fn mark_fresh(&mut self) {
+        self.current.mark_fresh();
+    }
+
+    fn is_fresh_within(&self, duration: Duration) -> bool {
+        self.current.is_fresh_within(duration)
+    }
+}
+
+impl StreamingParser for TrafficMonitorState {
+    fn parse_and_update(
+        line: &str,
+        current: Arc<RwLock<Self>>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        if let Ok(traffic) = serde_json::from_str::<TrafficData>(line.trim()) {
+            tokio::spawn(async move {
+                let mut state_guard = current.write().await;
+
+                let (up_rate, down_rate) = state_guard
+                    .last_traffic
+                    .as_ref()
+                    .map(|l| {
+                        (
+                            traffic.up.saturating_sub(l.up),
+                            traffic.down.saturating_sub(l.down),
+                        )
+                    })
+                    .unwrap_or((0, 0));
+
+                state_guard.current = CurrentTraffic {
+                    up_rate,
+                    down_rate,
+                    total_up: traffic.up,
+                    total_down: traffic.down,
+                    last_updated: Instant::now(),
+                };
+
+                state_guard.last_traffic = Some(traffic);
+            });
+        }
+        Ok(())
+    }
+}
+
+// Minimal traffic monitor using the new architecture
 pub struct TrafficMonitor {
-    current: Arc<RwLock<CurrentTraffic>>,
+    monitor: IpcStreamMonitor<TrafficMonitorState>,
 }
 
 impl Default for TrafficMonitor {
     fn default() -> Self {
-        let ipc_path_buf = ipc_path().unwrap();
-        let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-        let client = IpcStreamClient::new(ipc_path).unwrap();
-        TrafficMonitor::new(client)
+        TrafficMonitor {
+            monitor: IpcStreamMonitor::new(
+                "/traffic".to_string(),
+                Duration::from_secs(10),
+                Duration::from_secs(1),
+                Duration::from_secs(5),
+            ),
+        }
     }
 }
 
@@ -58,58 +133,12 @@ singleton_lazy_with_logging!(
 );
 
 impl TrafficMonitor {
-    fn new(client: IpcStreamClient) -> Self {
-        let current = Arc::new(RwLock::new(CurrentTraffic::default()));
-        let monitor_current = current.clone();
-
-        tokio::spawn(async move {
-            let mut last: Option<TrafficData> = None;
-            loop {
-                let _ = client
-                    .get("/traffic")
-                    .timeout(Duration::from_secs(10))
-                    .process_lines(|line| {
-                        if let Ok(traffic) = serde_json::from_str::<TrafficData>(line.trim()) {
-                            let (up_rate, down_rate) = last
-                                .as_ref()
-                                .map(|l| {
-                                    (
-                                        traffic.up.saturating_sub(l.up),
-                                        traffic.down.saturating_sub(l.down),
-                                    )
-                                })
-                                .unwrap_or((0, 0));
-
-                            tokio::spawn({
-                                let current = monitor_current.clone();
-                                async move {
-                                    *current.write().await = CurrentTraffic {
-                                        up_rate,
-                                        down_rate,
-                                        total_up: traffic.up,
-                                        total_down: traffic.down,
-                                        last_updated: Instant::now(),
-                                    };
-                                }
-                            });
-                            last = Some(traffic);
-                        }
-                        Ok(())
-                    })
-                    .await;
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
-        });
-
-        Self { current }
-    }
-
     pub async fn current(&self) -> CurrentTraffic {
-        self.current.read().await.clone()
+        self.monitor.current().await.current
     }
 
     pub async fn is_fresh(&self) -> bool {
-        self.current.read().await.last_updated.elapsed() < Duration::from_secs(5)
+        self.monitor.is_fresh().await
     }
 }
 

@@ -1,9 +1,9 @@
-use kode_bridge::IpcStreamClient;
 use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, sync::Arc, time::Instant};
 use tokio::{sync::RwLock, task::JoinHandle, time::Duration};
 
 use crate::{
+    ipc::monitor::MonitorData,
     logging, singleton_with_logging,
     utils::{dirs::ipc_path, logging::Type},
 };
@@ -59,6 +59,16 @@ impl Default for CurrentLogs {
             level: "info".to_string(),
             last_updated: Instant::now(),
         }
+    }
+}
+
+impl MonitorData for CurrentLogs {
+    fn mark_fresh(&mut self) {
+        self.last_updated = Instant::now();
+    }
+
+    fn is_fresh_within(&self, duration: Duration) -> bool {
+        self.last_updated.elapsed() < duration
     }
 }
 
@@ -124,9 +134,6 @@ impl LogsMonitor {
         }
 
         let monitor_current = self.current.clone();
-        let ipc_path_buf = ipc_path().unwrap();
-        let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-        let client = IpcStreamClient::new(ipc_path).unwrap();
 
         // Update current level in data structure
         {
@@ -136,6 +143,16 @@ impl LogsMonitor {
 
         let task = tokio::spawn(async move {
             loop {
+                // Get fresh IPC path and client for each connection attempt
+                let (_ipc_path_buf, client) = match Self::create_ipc_client().await {
+                    Ok((path, client)) => (path, client),
+                    Err(e) => {
+                        logging!(error, Type::Ipc, true, "Failed to create IPC client: {}", e);
+                        tokio::time::sleep(Duration::from_secs(2)).await;
+                        continue;
+                    }
+                };
+
                 let url = if filter_level == "info" {
                     "/logs".to_string()
                 } else {
@@ -159,35 +176,7 @@ impl LogsMonitor {
                     .get(&url)
                     .timeout(Duration::from_secs(30))
                     .process_lines(|line| {
-                        if let Ok(log_data) = serde_json::from_str::<LogData>(line.trim()) {
-                            // Filter logs based on level if needed
-                            let should_include = match filter_level.as_str() {
-                                "all" => true,
-                                level => log_data.log_type.to_lowercase() == level.to_lowercase(),
-                            };
-
-                            if should_include {
-                                let log_item = LogItem::new(log_data.log_type, log_data.payload);
-
-                                tokio::spawn({
-                                    let current = monitor_current.clone();
-                                    async move {
-                                        let mut logs = current.write().await;
-
-                                        // Add new log
-                                        logs.logs.push_back(log_item);
-
-                                        // Keep only the last 1000 logs
-                                        if logs.logs.len() > 1000 {
-                                            logs.logs.pop_front();
-                                        }
-
-                                        logs.last_updated = Instant::now();
-                                    }
-                                });
-                            }
-                        }
-                        Ok(())
+                        Self::process_log_line(line, &filter_level, monitor_current.clone())
                     })
                     .await;
 
@@ -211,6 +200,51 @@ impl LogsMonitor {
         );
     }
 
+    async fn create_ipc_client() -> Result<
+        (std::path::PathBuf, kode_bridge::IpcStreamClient),
+        Box<dyn std::error::Error + Send + Sync>,
+    > {
+        use kode_bridge::IpcStreamClient;
+
+        let ipc_path_buf = ipc_path()?;
+        let ipc_path = ipc_path_buf.to_str().ok_or("Invalid IPC path")?;
+        let client = IpcStreamClient::new(ipc_path)?;
+        Ok((ipc_path_buf, client))
+    }
+
+    fn process_log_line(
+        line: &str,
+        filter_level: &str,
+        current: Arc<RwLock<CurrentLogs>>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        if let Ok(log_data) = serde_json::from_str::<LogData>(line.trim()) {
+            // Filter logs based on level if needed
+            let should_include = match filter_level {
+                "all" => true,
+                level => log_data.log_type.to_lowercase() == level.to_lowercase(),
+            };
+
+            if should_include {
+                let log_item = LogItem::new(log_data.log_type, log_data.payload);
+
+                tokio::spawn(async move {
+                    let mut logs = current.write().await;
+
+                    // Add new log
+                    logs.logs.push_back(log_item);
+
+                    // Keep only the last 1000 logs
+                    if logs.logs.len() > 1000 {
+                        logs.logs.pop_front();
+                    }
+
+                    logs.mark_fresh();
+                });
+            }
+        }
+        Ok(())
+    }
+
     pub async fn current(&self) -> CurrentLogs {
         self.current.read().await.clone()
     }
@@ -218,7 +252,7 @@ impl LogsMonitor {
     pub async fn clear_logs(&self) {
         let mut current = self.current.write().await;
         current.logs.clear();
-        current.last_updated = Instant::now();
+        current.mark_fresh();
 
         // Also reset monitoring level when clearing logs
         {
