@@ -35,6 +35,7 @@ import { Virtuoso } from "react-virtuoso";
 import { closeAllConnections, closeConnections } from "tauri-plugin-mihomo-api";
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
+const MAX_CLOSED_CONNS = 500;
 
 const ConnectionsPage = () => {
   const { t } = useTranslation();
@@ -63,7 +64,7 @@ const ConnectionsPage = () => {
     response: { data: connData = initConnData },
   } = useConnectionData();
   const [activeConns, setActiveConns] = useState<IConnectionsItem[]>([]);
-  const [closedConns, setClosedConn] = useState<IConnectionsItem[]>([]);
+  const [closedConns, setClosedConns] = useState<IConnectionsItem[]>([]);
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
   const totalUpload = parseTraffic(connData.uploadTotal);
@@ -71,8 +72,12 @@ const ConnectionsPage = () => {
 
   useEffect(() => {
     const ids = connData.connections.map((o) => o.id);
-    const closedConns = activeConns.filter((o) => !ids.includes(o.id));
-    setClosedConn((prev) => [...prev, ...closedConns]);
+    const closed = activeConns.filter((o) => !ids.includes(o.id));
+    let newList = [...closedConns, ...closed];
+    if (newList.length > MAX_CLOSED_CONNS) {
+      newList = newList.slice(newList.length - MAX_CLOSED_CONNS);
+    }
+    setClosedConns(newList);
     setActiveConns(connData.connections);
   }, [connData]);
 

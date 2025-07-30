@@ -1,3 +1,4 @@
+use crate::MIHOMO_SOCKET_PATH;
 use crate::config::Config;
 use crate::utils::{self, crypto, dirs};
 use anyhow::{Result, bail};
@@ -22,6 +23,7 @@ pub enum SocketCommand {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct StartBody {
     pub core_type: Option<String>,
+    pub socket_path: Option<String>,
     pub bin_path: String,
     pub config_dir: String,
     pub config_file: String,
@@ -363,6 +365,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
 
     let body = StartBody {
         core_type: Some(clash_core),
+        socket_path: Some(MIHOMO_SOCKET_PATH.to_string()),
         bin_path: bin_path.to_string(),
         config_dir: config_dir.to_string(),
         config_file: config_file.to_string(),

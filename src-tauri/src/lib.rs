@@ -32,9 +32,9 @@ pub const MIHOMO_SOCKET_PATH: &str = "/tmp/verge-mihomo.sock";
 pub const MIHOMO_SOCKET_PATH: &str = "/tmp/verge-mihomo-dev.sock";
 
 #[cfg(all(windows, not(feature = "verge-dev")))]
-pub const MIHOMO_SOCKET_PATH: &str = r#"\\.\pipe\verge-mihomo"#;
+pub const MIHOMO_SOCKET_PATH: &str = r"\\.\pipe\verge-mihomo";
 #[cfg(all(windows, feature = "verge-dev"))]
-pub const MIHOMO_SOCKET_PATH: &str = r#"\\.\pipe\verge-mihomo-dev"#;
+pub const MIHOMO_SOCKET_PATH: &str = r"\\.\pipe\verge-mihomo-dev";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() -> Result<()> {
