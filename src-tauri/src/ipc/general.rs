@@ -3,7 +3,6 @@ use kode_bridge::{
     IpcHttpClient, LegacyResponse,
 };
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
-use std::sync::OnceLock;
 
 // 定义用于URL路径的编码集合，只编码真正必要的字符
 const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
@@ -14,10 +13,7 @@ const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b'&') // 和号
     .add(b'%'); // 百分号
 
-use crate::{
-    logging,
-    utils::{dirs::ipc_path, logging::Type},
-};
+use crate::{logging, singleton_with_logging, utils::dirs::ipc_path};
 
 // Helper function to create AnyError from string
 fn create_error(msg: impl Into<String>) -> AnyError {
@@ -28,27 +24,18 @@ pub struct IpcManager {
     ipc_path: String,
 }
 
-static INSTANCE: OnceLock<IpcManager> = OnceLock::new();
-
 impl IpcManager {
-    pub fn global() -> &'static IpcManager {
-        INSTANCE.get_or_init(|| {
-            let ipc_path_buf = ipc_path().unwrap();
-            let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-            let instance = IpcManager {
-                ipc_path: ipc_path.to_string(),
-            };
-            logging!(
-                info,
-                Type::Ipc,
-                true,
-                "IpcManager initialized with IPC path: {}",
-                instance.ipc_path
-            );
-            instance
-        })
+    fn new() -> Self {
+        let ipc_path_buf = ipc_path().unwrap();
+        let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
+        Self {
+            ipc_path: ipc_path.to_string(),
+        }
     }
 }
+
+// Use singleton macro with logging
+singleton_with_logging!(IpcManager, INSTANCE, "IpcManager");
 
 impl IpcManager {
     pub async fn request(

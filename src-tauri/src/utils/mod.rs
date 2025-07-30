@@ -4,7 +4,6 @@ pub mod format;
 pub mod help;
 pub mod i18n;
 pub mod init;
-pub mod ipc_monitor;
 pub mod logging;
 pub mod network;
 pub mod notification;

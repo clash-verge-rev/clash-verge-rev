@@ -1,24 +1,24 @@
+use crate::singleton;
+use dashmap::DashMap;
+use serde_json::Value;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
+use tokio::sync::OnceCell;
+
 pub struct CacheEntry {
     pub value: Arc<Value>,
     pub expires_at: Instant,
 }
-use dashmap::DashMap;
-use serde_json::Value;
-use std::sync::Arc;
-use tokio::sync::OnceCell;
 
 pub struct ProxyRequestCache {
     pub map: DashMap<String, Arc<OnceCell<CacheEntry>>>,
 }
 
 impl ProxyRequestCache {
-    pub fn global() -> &'static Self {
-        static INSTANCE: once_cell::sync::OnceCell<ProxyRequestCache> =
-            once_cell::sync::OnceCell::new();
-        INSTANCE.get_or_init(|| ProxyRequestCache {
+    fn new() -> Self {
+        ProxyRequestCache {
             map: DashMap::new(),
-        })
+        }
     }
 
     pub fn make_key(prefix: &str, id: &str) -> String {
@@ -63,3 +63,6 @@ impl ProxyRequestCache {
         Arc::clone(&cell.get().unwrap().value)
     }
 }
+
+// Use singleton macro
+singleton!(ProxyRequestCache, INSTANCE);

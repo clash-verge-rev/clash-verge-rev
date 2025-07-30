@@ -7,7 +7,7 @@ use std::{
 use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
-    logging,
+    logging, singleton_with_logging,
     utils::{dirs::ipc_path, format::fmt_bytes, logging::Type},
 };
 
