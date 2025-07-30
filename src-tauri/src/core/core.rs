@@ -5,7 +5,7 @@ use crate::{
         service::{self},
     },
     ipc::IpcManager,
-    logging, logging_error,
+    logging, logging_error, singleton_lazy,
     utils::{
         dirs,
         help::{self},
@@ -14,7 +14,6 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::Local;
-use once_cell::sync::OnceCell;
 use std::{
     fmt,
     fs::{create_dir_all, File},
@@ -823,14 +822,13 @@ impl CoreManager {
     }
 }
 
+// Use singleton_lazy macro
+singleton_lazy!(CoreManager, CORE_MANAGER, || CoreManager {
+    running: Arc::new(Mutex::new(RunningMode::NotRunning)),
+    child_sidecar: Arc::new(Mutex::new(None)),
+});
+
 impl CoreManager {
-    pub fn global() -> &'static CoreManager {
-        static CORE_MANAGER: OnceCell<CoreManager> = OnceCell::new();
-        CORE_MANAGER.get_or_init(|| CoreManager {
-            running: Arc::new(Mutex::new(RunningMode::NotRunning)),
-            child_sidecar: Arc::new(Mutex::new(None)),
-        })
-    }
     // 当服务安装失败时的回退逻辑
     async fn attempt_service_init(&self) -> Result<()> {
         if service::check_service_needs_reinstall().await {

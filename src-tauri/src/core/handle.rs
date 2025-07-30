@@ -1,4 +1,4 @@
-use once_cell::sync::OnceCell;
+use crate::singleton;
 use parking_lot::RwLock;
 use std::{
     sync::{
@@ -272,10 +272,12 @@ impl Default for Handle {
     }
 }
 
+// Use singleton macro
+singleton!(Handle, HANDLE);
+
 impl Handle {
-    pub fn global() -> &'static Handle {
-        static HANDLE: OnceCell<Handle> = OnceCell::new();
-        HANDLE.get_or_init(Handle::default)
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn init(&self, app_handle: &AppHandle) {

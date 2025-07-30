@@ -1,14 +1,10 @@
 use kode_bridge::IpcStreamClient;
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::VecDeque,
-    sync::{Arc, OnceLock},
-    time::Instant,
-};
+use std::{collections::VecDeque, sync::Arc, time::Instant};
 use tokio::{sync::RwLock, task::JoinHandle, time::Duration};
 
 use crate::{
-    logging,
+    logging, singleton_with_logging,
     utils::{dirs::ipc_path, logging::Type},
 };
 
@@ -73,17 +69,10 @@ pub struct LogsMonitor {
     current_monitoring_level: Arc<RwLock<Option<String>>>,
 }
 
-static INSTANCE: OnceLock<LogsMonitor> = OnceLock::new();
+// Use singleton_with_logging macro
+singleton_with_logging!(LogsMonitor, INSTANCE, "LogsMonitor");
 
 impl LogsMonitor {
-    pub fn global() -> &'static LogsMonitor {
-        INSTANCE.get_or_init(|| {
-            let instance = LogsMonitor::new();
-            logging!(info, Type::Ipc, true, "LogsMonitor initialized");
-            instance
-        })
-    }
-
     fn new() -> Self {
         let current = Arc::new(RwLock::new(CurrentLogs::default()));
 

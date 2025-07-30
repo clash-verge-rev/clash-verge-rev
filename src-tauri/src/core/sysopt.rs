@@ -3,11 +3,10 @@ use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
     core::{handle::Handle, EventDrivenProxyManager},
-    logging, logging_error,
+    logging, logging_error, singleton_lazy,
     utils::logging::Type,
 };
 use anyhow::Result;
-use once_cell::sync::OnceCell;
 use std::sync::Arc;
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
@@ -52,15 +51,13 @@ fn get_bypass() -> String {
     }
 }
 
-impl Sysopt {
-    pub fn global() -> &'static Sysopt {
-        static SYSOPT: OnceCell<Sysopt> = OnceCell::new();
-        SYSOPT.get_or_init(|| Sysopt {
-            update_sysproxy: Arc::new(TokioMutex::new(false)),
-            reset_sysproxy: Arc::new(TokioMutex::new(false)),
-        })
-    }
+// Use singleton_lazy macro
+singleton_lazy!(Sysopt, SYSOPT, || Sysopt {
+    update_sysproxy: Arc::new(TokioMutex::new(false)),
+    reset_sysproxy: Arc::new(TokioMutex::new(false)),
+});
 
+impl Sysopt {
     pub fn init_guard_sysproxy(&self) -> Result<()> {
         // 使用事件驱动代理管理器
         let proxy_manager = EventDrivenProxyManager::global();
