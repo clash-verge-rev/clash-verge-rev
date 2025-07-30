@@ -404,14 +404,14 @@ mod app_init {
 }
 
 pub fn run() {
+    // Setup singleton check
+    app_init::init_singleton_check();
+
     // Initialize network manager
     utils::network::NetworkManager::global().init();
 
     // Initialize portable flag
     let _ = utils::dirs::init_portable_flag();
-
-    // Setup singleton check
-    app_init::init_singleton_check();
 
     // Set Linux environment variable
     #[cfg(target_os = "linux")]

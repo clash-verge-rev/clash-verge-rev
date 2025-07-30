@@ -22,14 +22,23 @@ const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
 // 添加退出轻量模式的锁，防止并发调用
 static EXITING_LIGHTWEIGHT: AtomicBool = AtomicBool::new(false);
 
-fn with_lightweight_status<F, R>(f: F) -> R
+fn with_lightweight_status<F, R>(f: F) -> Option<R>
 where
     F: FnOnce(&mut LightWeightState) -> R,
 {
-    let app_handle = handle::Handle::global().app_handle().unwrap();
-    let state = app_handle.state::<Mutex<LightWeightState>>();
-    let mut guard = state.lock();
-    f(&mut guard)
+    if let Some(app_handle) = handle::Handle::global().app_handle() {
+        // Try to get state, but don't panic if it's not managed yet
+        if let Some(state) = app_handle.try_state::<Mutex<LightWeightState>>() {
+            let mut guard = state.lock();
+            Some(f(&mut guard))
+        } else {
+            // State not managed yet, return None
+            None
+        }
+    } else {
+        // App handle not available yet
+        None
+    }
 }
 
 pub fn run_once_auto_lightweight() {
@@ -62,7 +71,17 @@ pub fn run_once_auto_lightweight() {
 
 pub fn auto_lightweight_mode_init() {
     if let Some(app_handle) = handle::Handle::global().app_handle() {
-        let _ = app_handle.state::<Mutex<LightWeightState>>();
+        // Check if state is available before accessing it
+        if app_handle.try_state::<Mutex<LightWeightState>>().is_none() {
+            logging!(
+                warn,
+                Type::Lightweight,
+                true,
+                "LightWeightState 尚未初始化，跳过自动轻量模式初始化"
+            );
+            return;
+        }
+
         let is_silent_start = { Config::verge().latest_ref().enable_silent_start }.unwrap_or(false);
         let enable_auto =
             { Config::verge().latest_ref().enable_auto_light_weight_mode }.unwrap_or(false);
@@ -87,18 +106,20 @@ pub fn auto_lightweight_mode_init() {
 
 // 检查是否处于轻量模式
 pub fn is_in_lightweight_mode() -> bool {
-    with_lightweight_status(|state| state.is_lightweight)
+    with_lightweight_status(|state| state.is_lightweight).unwrap_or(false)
 }
 
 // 设置轻量模式状态
 pub fn set_lightweight_mode(value: bool) {
-    with_lightweight_status(|state| {
+    if with_lightweight_status(|state| {
         state.set_lightweight_mode(value);
-    });
-
-    // 触发托盘更新
-    if let Err(e) = Tray::global().update_part() {
-        log::warn!("Failed to update tray: {e}");
+    })
+    .is_some()
+    {
+        // 只有在状态可用时才触发托盘更新
+        if let Err(e) = Tray::global().update_part() {
+            log::warn!("Failed to update tray: {e}");
+        }
     }
 }
 
