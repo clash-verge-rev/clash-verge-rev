@@ -1,14 +1,14 @@
 use kode_bridge::IpcStreamClient;
 use serde::{Deserialize, Serialize};
 use std::{
-    sync::{Arc, OnceLock},
+    sync::Arc,
     time::Instant,
 };
 use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
-    logging, singleton_with_logging,
-    utils::{dirs::ipc_path, format::fmt_bytes, logging::Type},
+    singleton_lazy_with_logging,
+    utils::{dirs::ipc_path, format::fmt_bytes},
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -43,27 +43,20 @@ pub struct TrafficMonitor {
     current: Arc<RwLock<CurrentTraffic>>,
 }
 
-static INSTANCE: OnceLock<TrafficMonitor> = OnceLock::new();
+// Use singleton_lazy_with_logging macro
+singleton_lazy_with_logging!(
+    TrafficMonitor,
+    INSTANCE,
+    "TrafficMonitor",
+    || {
+        let ipc_path_buf = ipc_path().unwrap();
+        let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
+        let client = IpcStreamClient::new(ipc_path).unwrap();
+        TrafficMonitor::new(client)
+    }
+);
 
 impl TrafficMonitor {
-    pub fn global() -> &'static TrafficMonitor {
-        INSTANCE.get_or_init(|| {
-            let ipc_path_buf = ipc_path().unwrap();
-            let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-            let client = IpcStreamClient::new(ipc_path).unwrap();
-
-            let instance = TrafficMonitor::new(client);
-            logging!(
-                info,
-                Type::Ipc,
-                true,
-                "TrafficMonitor initialized with IPC path: {}",
-                ipc_path
-            );
-            instance
-        })
-    }
-
     fn new(client: IpcStreamClient) -> Self {
         let current = Arc::new(RwLock::new(CurrentTraffic::default()));
         let monitor_current = current.clone();
