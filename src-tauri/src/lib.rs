@@ -59,30 +59,31 @@ impl AppHandleManager {
         self.get().expect("AppHandle not initialized")
     }
 
+    #[cfg(target_os = "macos")]
+    pub fn set_activation_policy(&self, policy: tauri::ActivationPolicy) {
+        let app_handle = self.inner.lock();
+        let app_handle = app_handle.as_ref().unwrap();
+        let _ = app_handle.set_activation_policy(policy);
+    }
+
     pub fn set_activation_policy_regular(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock();
-            let app_handle = app_handle.as_ref().unwrap();
-            let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Regular);
+            self.set_activation_policy(tauri::ActivationPolicy::Regular);
         }
     }
 
     pub fn set_activation_policy_accessory(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock();
-            let app_handle = app_handle.as_ref().unwrap();
-            let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            self.set_activation_policy(tauri::ActivationPolicy::Accessory);
         }
     }
 
     pub fn set_activation_policy_prohibited(&self) {
         #[cfg(target_os = "macos")]
         {
-            let app_handle = self.inner.lock();
-            let app_handle = app_handle.as_ref().unwrap();
-            let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Prohibited);
+            self.set_activation_policy(tauri::ActivationPolicy::Prohibited);
         }
     }
 }
