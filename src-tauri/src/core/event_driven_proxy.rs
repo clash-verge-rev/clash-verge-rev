@@ -58,7 +58,7 @@ impl Default for ProxyState {
             sys_proxy: Sysproxy {
                 enable: false,
                 host: "127.0.0.1".to_string(),
-                port: 7890,
+                port: 7897,
                 bypass: "".to_string(),
             },
             last_updated: std::time::Instant::now(),

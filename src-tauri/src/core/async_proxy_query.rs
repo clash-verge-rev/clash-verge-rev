@@ -26,7 +26,7 @@ impl Default for AsyncSysproxy {
         Self {
             enable: false,
             host: "127.0.0.1".to_string(),
-            port: 7890,
+            port: 7897,
             bypass: String::new(),
         }
     }
