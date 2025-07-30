@@ -78,6 +78,8 @@ impl fmt::Display for SystemHotkey {
             SystemHotkey::CmdQ => "CMD+Q",
             #[cfg(target_os = "macos")]
             SystemHotkey::CmdW => "CMD+W",
+            #[cfg(not(target_os = "macos"))]
+            _ => unreachable!("SystemHotkey variants only exist on macOS"),
         };
         write!(f, "{s}")
     }
@@ -90,6 +92,8 @@ impl SystemHotkey {
             SystemHotkey::CmdQ => HotkeyFunction::Quit,
             #[cfg(target_os = "macos")]
             SystemHotkey::CmdW => HotkeyFunction::Hide,
+            #[cfg(not(target_os = "macos"))]
+            _ => unreachable!("SystemHotkey variants only exist on macOS"),
         }
     }
 }
