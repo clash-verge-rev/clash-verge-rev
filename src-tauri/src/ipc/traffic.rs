@@ -46,19 +46,10 @@ impl MonitorData for CurrentTraffic {
 }
 
 // Traffic monitoring state for calculating rates
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct TrafficMonitorState {
     pub current: CurrentTraffic,
     pub last_traffic: Option<TrafficData>,
-}
-
-impl Default for TrafficMonitorState {
-    fn default() -> Self {
-        Self {
-            current: CurrentTraffic::default(),
-            last_traffic: None,
-        }
-    }
 }
 
 impl MonitorData for TrafficMonitorState {

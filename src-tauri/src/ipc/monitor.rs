@@ -31,8 +31,11 @@ where
     T: MonitorData + StreamingParser + Default,
 {
     current: Arc<RwLock<T>>,
+    #[allow(dead_code)]
     endpoint: String,
+    #[allow(dead_code)]
     timeout: Duration,
+    #[allow(dead_code)]
     retry_interval: Duration,
     freshness_duration: Duration,
 }
