@@ -24,7 +24,6 @@ pub struct LogItem {
     pub log_type: String,
     pub payload: String,
     pub time: String,
-    pub timestamp: Instant,
 }
 
 impl LogItem {
@@ -46,7 +45,6 @@ impl LogItem {
             log_type,
             payload,
             time: time_str,
-            timestamp: Instant::now(),
         }
     }
 }
@@ -71,7 +69,6 @@ impl Default for CurrentLogs {
 // Logs monitor with streaming support
 pub struct LogsMonitor {
     current: Arc<RwLock<CurrentLogs>>,
-    client: IpcStreamClient,
     task_handle: Arc<RwLock<Option<JoinHandle<()>>>>,
     current_monitoring_level: Arc<RwLock<Option<String>>>,
 }
@@ -81,28 +78,17 @@ static INSTANCE: OnceLock<LogsMonitor> = OnceLock::new();
 impl LogsMonitor {
     pub fn global() -> &'static LogsMonitor {
         INSTANCE.get_or_init(|| {
-            let ipc_path_buf = ipc_path().unwrap();
-            let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-            let client = IpcStreamClient::new(ipc_path).unwrap();
-
-            let instance = LogsMonitor::new(client);
-            logging!(
-                info,
-                Type::Ipc,
-                true,
-                "LogsMonitor initialized with IPC path: {}",
-                ipc_path
-            );
+            let instance = LogsMonitor::new();
+            logging!(info, Type::Ipc, true, "LogsMonitor initialized");
             instance
         })
     }
 
-    fn new(client: IpcStreamClient) -> Self {
+    fn new() -> Self {
         let current = Arc::new(RwLock::new(CurrentLogs::default()));
 
         Self {
             current,
-            client,
             task_handle: Arc::new(RwLock::new(None)),
             current_monitoring_level: Arc::new(RwLock::new(None)),
         }
@@ -240,10 +226,6 @@ impl LogsMonitor {
         self.current.read().await.clone()
     }
 
-    pub async fn is_fresh(&self) -> bool {
-        self.current.read().await.last_updated.elapsed() < Duration::from_secs(10)
-    }
-
     pub async fn clear_logs(&self) {
         let mut current = self.current.write().await;
         current.logs.clear();
@@ -298,14 +280,6 @@ impl LogsMonitor {
 
         serde_json::Value::Array(filtered_logs)
     }
-
-    pub async fn get_current_monitoring_level(&self) -> Option<String> {
-        self.current_monitoring_level.read().await.clone()
-    }
-}
-
-pub async fn get_current_logs() -> CurrentLogs {
-    LogsMonitor::global().current().await
 }
 
 pub async fn start_logs_monitoring(level: Option<String>) {
