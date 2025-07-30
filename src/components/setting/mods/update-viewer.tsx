@@ -1,7 +1,11 @@
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useNotice } from "@/components/base/notifice";
 import { portableFlag } from "@/pages/_layout";
-import { useSetUpdateState, useUpdateState } from "@/services/states";
+import {
+  useSetUpdateState,
+  useThemeMode,
+  useUpdateState,
+} from "@/services/states";
 import getSystem from "@/utils/get-system";
 import { Box, Button, LinearProgress } from "@mui/material";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -10,7 +14,7 @@ import { check } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 import useSWR from "swr";
 
 const OS = getSystem();
@@ -18,9 +22,8 @@ const OS = getSystem();
 export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const { notice } = useNotice();
-
+  const themeMode = useThemeMode();
   const [open, setOpen] = useState(false);
-
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
 
@@ -91,7 +94,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {`New Version v${updateInfo?.version}`}
+          New Version v{updateInfo?.version}
           <Box>
             <Button
               variant="contained"
@@ -106,15 +109,20 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
           </Box>
         </Box>
       }
-      contentStyle={{ minWidth: 360, maxWidth: 400 }}
+      contentStyle={{ minWidth: 360, maxWidth: "60%" }}
       okBtn={t("Update")}
       cancelBtn={t("Cancel")}
       hideFooter={OS === "linux"}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onUpdate}>
-      <Box sx={{ height: "calc(100% - 10px)", overflow: "auto" }}>
-        <ReactMarkdown
+      <div className="h-full w-full overflow-auto">
+        <MarkdownPreview
+          className="p-4"
+          source={markdownContent}
+          wrapperElement={{
+            "data-color-mode": themeMode,
+          }}
           components={{
             a: ({ node, ...props }) => {
               const { children } = props;
@@ -124,10 +132,9 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
                 </a>
               );
             },
-          }}>
-          {markdownContent}
-        </ReactMarkdown>
-      </Box>
+          }}
+        />
+      </div>
       {updateState && (
         <LinearProgress
           variant="buffer"
