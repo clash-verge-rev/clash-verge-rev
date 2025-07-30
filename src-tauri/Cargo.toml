@@ -56,8 +56,8 @@ tauri = { version = "2.7.0", features = [
 ] }
 network-interface = { version = "2.0.2", features = ["serde"] }
 tauri-plugin-shell = "2.3.0"
-tauri-plugin-dialog = "2.3.0"
-tauri-plugin-fs = "2.4.0"
+tauri-plugin-dialog = "2.3.2"
+tauri-plugin-fs = "2.4.1"
 tauri-plugin-process = "2.3.0"
 tauri-plugin-clipboard-manager = "2.3.0"
 tauri-plugin-deep-link = "2.4.1"
