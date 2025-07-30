@@ -6,6 +6,7 @@
 - 调整 amd64 平台使用的内核版本
 - 复制环境变量新增对 NuShell 的支持
 - 连接界面支持查看已关闭的连接信息
+- 版本更新内容显示支持 Github 的[警报信息](https://docs.github.com/zh/contributing/style-guide-and-content-model/style-guide#alerts)
 
 ### 🐛 Bug Fixes
 
