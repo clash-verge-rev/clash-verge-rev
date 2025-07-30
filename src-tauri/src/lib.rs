@@ -87,7 +87,6 @@ impl AppHandleManager {
     }
 }
 
-#[allow(clippy::panic)]
 pub fn run() {
     utils::network::NetworkManager::global().init();
 
