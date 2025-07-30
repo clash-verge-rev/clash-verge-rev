@@ -1,3 +1,7 @@
+> [!Important]
+>
+> 优化更新了 Clash Verge Service 服务，需要在设置界面中重新卸载安装服务
+
 ### ✨ Features
 
 - 优化部分样式
