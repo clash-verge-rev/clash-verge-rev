@@ -1,28 +1,274 @@
 use crate::utils::notification::{notify_event, NotificationEvent};
 use crate::{
     config::Config, core::handle, feat, logging, logging_error,
-    module::lightweight::entry_lightweight_mode, utils::logging::Type,
+    module::lightweight::entry_lightweight_mode, singleton_with_logging, utils::logging::Type,
 };
 use anyhow::{bail, Result};
-use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
 use tauri::Manager;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
+
+/// Enum representing all available hotkey functions
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HotkeyFunction {
+    OpenOrCloseDashboard,
+    ClashModeRule,
+    ClashModeGlobal,
+    ClashModeDirect,
+    ToggleSystemProxy,
+    ToggleTunMode,
+    EntryLightweightMode,
+    Quit,
+    #[cfg(target_os = "macos")]
+    Hide,
+}
+
+impl fmt::Display for HotkeyFunction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            HotkeyFunction::OpenOrCloseDashboard => "open_or_close_dashboard",
+            HotkeyFunction::ClashModeRule => "clash_mode_rule",
+            HotkeyFunction::ClashModeGlobal => "clash_mode_global",
+            HotkeyFunction::ClashModeDirect => "clash_mode_direct",
+            HotkeyFunction::ToggleSystemProxy => "toggle_system_proxy",
+            HotkeyFunction::ToggleTunMode => "toggle_tun_mode",
+            HotkeyFunction::EntryLightweightMode => "entry_lightweight_mode",
+            HotkeyFunction::Quit => "quit",
+            #[cfg(target_os = "macos")]
+            HotkeyFunction::Hide => "hide",
+        };
+        write!(f, "{s}")
+    }
+}
+
+impl FromStr for HotkeyFunction {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "open_or_close_dashboard" => Ok(HotkeyFunction::OpenOrCloseDashboard),
+            "clash_mode_rule" => Ok(HotkeyFunction::ClashModeRule),
+            "clash_mode_global" => Ok(HotkeyFunction::ClashModeGlobal),
+            "clash_mode_direct" => Ok(HotkeyFunction::ClashModeDirect),
+            "toggle_system_proxy" => Ok(HotkeyFunction::ToggleSystemProxy),
+            "toggle_tun_mode" => Ok(HotkeyFunction::ToggleTunMode),
+            "entry_lightweight_mode" => Ok(HotkeyFunction::EntryLightweightMode),
+            "quit" => Ok(HotkeyFunction::Quit),
+            #[cfg(target_os = "macos")]
+            "hide" => Ok(HotkeyFunction::Hide),
+            _ => bail!("invalid hotkey function: {}", s),
+        }
+    }
+}
+
+/// Enum representing predefined system hotkeys
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SystemHotkey {
+    #[cfg(target_os = "macos")]
+    CmdQ,
+    #[cfg(target_os = "macos")]
+    CmdW,
+}
+
+impl fmt::Display for SystemHotkey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            #[cfg(target_os = "macos")]
+            SystemHotkey::CmdQ => "CMD+Q",
+            #[cfg(target_os = "macos")]
+            SystemHotkey::CmdW => "CMD+W",
+        };
+        write!(f, "{s}")
+    }
+}
+
+impl SystemHotkey {
+    pub fn function(self) -> HotkeyFunction {
+        match self {
+            #[cfg(target_os = "macos")]
+            SystemHotkey::CmdQ => HotkeyFunction::Quit,
+            #[cfg(target_os = "macos")]
+            SystemHotkey::CmdW => HotkeyFunction::Hide,
+        }
+    }
+}
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>,
 }
 
 impl Hotkey {
-    pub fn global() -> &'static Hotkey {
-        static HOTKEY: OnceCell<Hotkey> = OnceCell::new();
-
-        HOTKEY.get_or_init(|| Hotkey {
+    fn new() -> Self {
+        Self {
             current: Arc::new(Mutex::new(Vec::new())),
-        })
+        }
     }
 
+    /// Execute the function associated with a hotkey function enum
+    fn execute_function(function: HotkeyFunction, app_handle: &tauri::AppHandle) {
+        match function {
+            HotkeyFunction::OpenOrCloseDashboard => {
+                logging!(
+                    debug,
+                    Type::Hotkey,
+                    true,
+                    "=== Hotkey Dashboard Window Operation Start ==="
+                );
+
+                logging!(
+                    info,
+                    Type::Hotkey,
+                    true,
+                    "Using unified WindowManager for hotkey operation (bypass debounce)"
+                );
+
+                crate::feat::open_or_close_dashboard_hotkey();
+
+                logging!(
+                    debug,
+                    Type::Hotkey,
+                    "=== Hotkey Dashboard Window Operation End ==="
+                );
+                notify_event(app_handle, NotificationEvent::DashboardToggled);
+            }
+            HotkeyFunction::ClashModeRule => {
+                feat::change_clash_mode("rule".into());
+                notify_event(
+                    app_handle,
+                    NotificationEvent::ClashModeChanged { mode: "Rule" },
+                );
+            }
+            HotkeyFunction::ClashModeGlobal => {
+                feat::change_clash_mode("global".into());
+                notify_event(
+                    app_handle,
+                    NotificationEvent::ClashModeChanged { mode: "Global" },
+                );
+            }
+            HotkeyFunction::ClashModeDirect => {
+                feat::change_clash_mode("direct".into());
+                notify_event(
+                    app_handle,
+                    NotificationEvent::ClashModeChanged { mode: "Direct" },
+                );
+            }
+            HotkeyFunction::ToggleSystemProxy => {
+                feat::toggle_system_proxy();
+                notify_event(app_handle, NotificationEvent::SystemProxyToggled);
+            }
+            HotkeyFunction::ToggleTunMode => {
+                feat::toggle_tun_mode(None);
+                notify_event(app_handle, NotificationEvent::TunModeToggled);
+            }
+            HotkeyFunction::EntryLightweightMode => {
+                entry_lightweight_mode();
+                notify_event(app_handle, NotificationEvent::LightweightModeEntered);
+            }
+            HotkeyFunction::Quit => {
+                feat::quit();
+                notify_event(app_handle, NotificationEvent::AppQuit);
+            }
+            #[cfg(target_os = "macos")]
+            HotkeyFunction::Hide => {
+                feat::hide();
+                notify_event(app_handle, NotificationEvent::AppHidden);
+            }
+        }
+    }
+
+    /// Register a system hotkey using enum
+    pub fn register_system_hotkey(&self, hotkey: SystemHotkey) -> Result<()> {
+        let hotkey_str = hotkey.to_string();
+        let function = hotkey.function();
+        self.register_hotkey_with_function(&hotkey_str, function)
+    }
+
+    /// Unregister a system hotkey using enum
+    pub fn unregister_system_hotkey(&self, hotkey: SystemHotkey) -> Result<()> {
+        let hotkey_str = hotkey.to_string();
+        self.unregister(&hotkey_str)
+    }
+
+    /// Register a hotkey with function enum
+    pub fn register_hotkey_with_function(
+        &self,
+        hotkey: &str,
+        function: HotkeyFunction,
+    ) -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let manager = app_handle.global_shortcut();
+
+        logging!(
+            debug,
+            Type::Hotkey,
+            "Attempting to register hotkey: {} for function: {}",
+            hotkey,
+            function
+        );
+
+        if manager.is_registered(hotkey) {
+            logging!(
+                debug,
+                Type::Hotkey,
+                "Hotkey {} was already registered, unregistering first",
+                hotkey
+            );
+            manager.unregister(hotkey)?;
+        }
+
+        let app_handle_clone = app_handle.clone();
+        let is_quit = matches!(function, HotkeyFunction::Quit);
+
+        let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey_event, event| {
+            if event.state == ShortcutState::Pressed {
+                logging!(debug, Type::Hotkey, "Hotkey pressed: {:?}", hotkey_event);
+
+                if hotkey_event.key == Code::KeyQ && is_quit {
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        if window.is_focused().unwrap_or(false) {
+                            logging!(debug, Type::Hotkey, "Executing quit function");
+                            Self::execute_function(function, &app_handle_clone);
+                        }
+                    }
+                } else {
+                    logging!(debug, Type::Hotkey, "Executing function directly");
+
+                    let is_enable_global_hotkey = Config::verge()
+                        .latest_ref()
+                        .enable_global_hotkey
+                        .unwrap_or(true);
+
+                    if is_enable_global_hotkey {
+                        Self::execute_function(function, &app_handle_clone);
+                    } else {
+                        use crate::utils::window_manager::WindowManager;
+                        let is_visible = WindowManager::is_main_window_visible();
+                        let is_focused = WindowManager::is_main_window_focused();
+
+                        if is_focused && is_visible {
+                            Self::execute_function(function, &app_handle_clone);
+                        }
+                    }
+                }
+            }
+        });
+
+        logging!(
+            debug,
+            Type::Hotkey,
+            "Successfully registered hotkey {} for {}",
+            hotkey,
+            function
+        );
+        Ok(())
+    }
+}
+
+// Use unified singleton macro
+singleton_with_logging!(Hotkey, INSTANCE, "Hotkey");
+
+impl Hotkey {
     pub fn init(&self) -> Result<()> {
         let verge = Config::verge();
         let enable_global_hotkey = verge.latest_ref().enable_global_hotkey.unwrap_or(true);
@@ -112,173 +358,10 @@ impl Hotkey {
         Ok(())
     }
 
+    /// Register a hotkey with string-based function (backward compatibility)
     pub fn register(&self, hotkey: &str, func: &str) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        let manager = app_handle.global_shortcut();
-
-        logging!(
-            debug,
-            Type::Hotkey,
-            "Attempting to register hotkey: {} for function: {}",
-            hotkey,
-            func
-        );
-
-        if manager.is_registered(hotkey) {
-            logging!(
-                debug,
-                Type::Hotkey,
-                "Hotkey {} was already registered, unregistering first",
-                hotkey
-            );
-            manager.unregister(hotkey)?;
-        }
-
-        let app_handle_clone = app_handle.clone();
-        let f: Box<dyn Fn() + Send + Sync> = match func.trim() {
-            "open_or_close_dashboard" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    logging!(
-                        debug,
-                        Type::Hotkey,
-                        true,
-                        "=== Hotkey Dashboard Window Operation Start ==="
-                    );
-
-                    logging!(
-                        info,
-                        Type::Hotkey,
-                        true,
-                        "Using unified WindowManager for hotkey operation (bypass debounce)"
-                    );
-
-                    crate::feat::open_or_close_dashboard_hotkey();
-
-                    logging!(
-                        debug,
-                        Type::Hotkey,
-                        "=== Hotkey Dashboard Window Operation End ==="
-                    );
-                    notify_event(&app_handle, NotificationEvent::DashboardToggled);
-                })
-            }
-            "clash_mode_rule" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    feat::change_clash_mode("rule".into());
-                    notify_event(
-                        &app_handle,
-                        NotificationEvent::ClashModeChanged { mode: "Rule" },
-                    );
-                })
-            }
-            "clash_mode_global" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    feat::change_clash_mode("global".into());
-                    notify_event(
-                        &app_handle,
-                        NotificationEvent::ClashModeChanged { mode: "Global" },
-                    );
-                })
-            }
-            "clash_mode_direct" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    feat::change_clash_mode("direct".into());
-                    notify_event(
-                        &app_handle,
-                        NotificationEvent::ClashModeChanged { mode: "Direct" },
-                    );
-                })
-            }
-            "toggle_system_proxy" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    feat::toggle_system_proxy();
-                    notify_event(&app_handle, NotificationEvent::SystemProxyToggled);
-                })
-            }
-            "toggle_tun_mode" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    feat::toggle_tun_mode(None);
-                    notify_event(&app_handle, NotificationEvent::TunModeToggled);
-                })
-            }
-            "entry_lightweight_mode" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    entry_lightweight_mode();
-                    notify_event(&app_handle, NotificationEvent::LightweightModeEntered);
-                })
-            }
-            "quit" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    feat::quit();
-                    notify_event(&app_handle, NotificationEvent::AppQuit);
-                })
-            }
-            #[cfg(target_os = "macos")]
-            "hide" => {
-                let app_handle = app_handle_clone.clone();
-                Box::new(move || {
-                    feat::hide();
-                    notify_event(&app_handle, NotificationEvent::AppHidden);
-                })
-            }
-            _ => {
-                logging!(error, Type::Hotkey, "Invalid function: {}", func);
-                bail!("invalid function \"{func}\"");
-            }
-        };
-
-        let is_quit = func.trim() == "quit";
-
-        let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey, event| {
-            if event.state == ShortcutState::Pressed {
-                logging!(debug, Type::Hotkey, "Hotkey pressed: {:?}", hotkey);
-
-                if hotkey.key == Code::KeyQ && is_quit {
-                    if let Some(window) = app_handle.get_webview_window("main") {
-                        if window.is_focused().unwrap_or(false) {
-                            logging!(debug, Type::Hotkey, "Executing quit function");
-                            f();
-                        }
-                    }
-                } else {
-                    logging!(debug, Type::Hotkey, "Executing function directly");
-
-                    let is_enable_global_hotkey = Config::verge()
-                        .latest_ref()
-                        .enable_global_hotkey
-                        .unwrap_or(true);
-
-                    if is_enable_global_hotkey {
-                        f();
-                    } else {
-                        use crate::utils::window_manager::WindowManager;
-                        let is_visible = WindowManager::is_main_window_visible();
-                        let is_focused = WindowManager::is_main_window_focused();
-
-                        if is_focused && is_visible {
-                            f();
-                        }
-                    }
-                }
-            }
-        });
-
-        logging!(
-            debug,
-            Type::Hotkey,
-            "Successfully registered hotkey {} for {}",
-            hotkey,
-            func
-        );
-        Ok(())
+        let function = HotkeyFunction::from_str(func)?;
+        self.register_hotkey_with_function(hotkey, function)
     }
 
     pub fn unregister(&self, hotkey: &str) -> Result<()> {

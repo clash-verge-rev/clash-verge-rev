@@ -528,10 +528,15 @@ pub fn run() {
             if focused {
                 #[cfg(target_os = "macos")]
                 {
-                    if let Err(e) = hotkey::Hotkey::global().register("CMD+Q", "quit") {
+                    use crate::core::hotkey::SystemHotkey;
+                    if let Err(e) =
+                        hotkey::Hotkey::global().register_system_hotkey(SystemHotkey::CmdQ)
+                    {
                         logging!(error, Type::Hotkey, true, "Failed to register CMD+Q: {}", e);
                     }
-                    if let Err(e) = hotkey::Hotkey::global().register("CMD+W", "hide") {
+                    if let Err(e) =
+                        hotkey::Hotkey::global().register_system_hotkey(SystemHotkey::CmdW)
+                    {
                         logging!(error, Type::Hotkey, true, "Failed to register CMD+W: {}", e);
                     }
                 }
@@ -544,7 +549,10 @@ pub fn run() {
             } else {
                 #[cfg(target_os = "macos")]
                 {
-                    if let Err(e) = hotkey::Hotkey::global().unregister("CMD+Q") {
+                    use crate::core::hotkey::SystemHotkey;
+                    if let Err(e) =
+                        hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ)
+                    {
                         logging!(
                             error,
                             Type::Hotkey,
@@ -553,7 +561,9 @@ pub fn run() {
                             e
                         );
                     }
-                    if let Err(e) = hotkey::Hotkey::global().unregister("CMD+W") {
+                    if let Err(e) =
+                        hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW)
+                    {
                         logging!(
                             error,
                             Type::Hotkey,
@@ -576,7 +586,10 @@ pub fn run() {
         pub fn handle_window_destroyed() {
             #[cfg(target_os = "macos")]
             {
-                if let Err(e) = hotkey::Hotkey::global().unregister("CMD+Q") {
+                use crate::core::hotkey::SystemHotkey;
+                if let Err(e) =
+                    hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ)
+                {
                     logging!(
                         error,
                         Type::Hotkey,
@@ -585,7 +598,9 @@ pub fn run() {
                         e
                     );
                 }
-                if let Err(e) = hotkey::Hotkey::global().unregister("CMD+W") {
+                if let Err(e) =
+                    hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW)
+                {
                     logging!(
                         error,
                         Type::Hotkey,
