@@ -8,12 +8,13 @@ import {
   useRef,
   memo,
 } from "react";
-import { Box, useTheme } from "@mui/material";
+import { Box, useTheme, Tooltip, Paper, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import parseTraffic from "@/utils/parse-traffic";
 import {
   useTrafficGraphDataEnhanced,
   type ITrafficDataPoint,
-} from "@/hooks/use-traffic-monitor-enhanced";
+} from "@/hooks/use-traffic-monitor";
 
 // 流量数据项接口
 export interface ITrafficItem {
@@ -30,6 +31,18 @@ export interface EnhancedCanvasTrafficGraphRef {
 
 type TimeRange = 1 | 5 | 10; // 分钟
 
+// 悬浮提示数据接口
+interface TooltipData {
+  x: number;
+  y: number;
+  upSpeed: string;
+  downSpeed: string;
+  timestamp: string;
+  visible: boolean;
+  dataIndex: number; // 添加数据索引用于高亮
+  highlightY: number; // 高亮Y轴位置
+}
+
 // Canvas图表配置
 const MAX_POINTS = 300;
 const TARGET_FPS = 15; // 降低帧率减少闪烁
@@ -41,7 +54,7 @@ const ALPHA_LINE = 0.9;
 const PADDING_TOP = 16;
 const PADDING_RIGHT = 16; // 增加右边距确保时间戳完整显示
 const PADDING_BOTTOM = 32; // 进一步增加底部空间给时间轴和统计信息
-const PADDING_LEFT = 16; // 增加左边距确保时间戳完整显示
+const PADDING_LEFT = 35; // 增加左边距为Y轴标签留出空间
 
 const GRAPH_CONFIG = {
   maxPoints: MAX_POINTS,
@@ -79,6 +92,18 @@ export const EnhancedCanvasTrafficGraph = memo(
     // 基础状态
     const [timeRange, setTimeRange] = useState<TimeRange>(10);
     const [chartStyle, setChartStyle] = useState<"bezier" | "line">("bezier");
+
+    // 悬浮提示状态
+    const [tooltipData, setTooltipData] = useState<TooltipData>({
+      x: 0,
+      y: 0,
+      upSpeed: "",
+      downSpeed: "",
+      timestamp: "",
+      visible: false,
+      dataIndex: -1,
+      highlightY: 0,
+    });
 
     // Canvas引用和渲染状态
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -130,26 +155,303 @@ export const EnhancedCanvasTrafficGraph = memo(
       updateDisplayDataDebounced,
     ]);
 
-    // Y轴坐标计算（对数刻度）- 确保不与时间轴重叠
-    const calculateY = useCallback((value: number, height: number): number => {
-      const padding = GRAPH_CONFIG.padding;
-      const effectiveHeight = height - padding.top - padding.bottom;
-      const baseY = height - padding.bottom;
+    // Y轴坐标计算 - 基于刻度范围的线性映射
+    const calculateY = useCallback(
+      (value: number, height: number, data: ITrafficDataPoint[]): number => {
+        const padding = GRAPH_CONFIG.padding;
+        const topY = padding.top + 10; // 与刻度系统保持一致
+        const bottomY = height - padding.bottom - 5;
 
-      if (value === 0) return baseY - 2; // 稍微抬高零值线
+        if (data.length === 0) return bottomY;
 
-      const steps = effectiveHeight / 7;
+        // 获取当前的刻度范围
+        const allValues = [
+          ...data.map((d) => d.up),
+          ...data.map((d) => d.down),
+        ];
+        const maxValue = Math.max(...allValues);
+        const minValue = Math.min(...allValues);
 
-      if (value <= 10) return baseY - (value / 10) * steps;
-      if (value <= 100) return baseY - (value / 100 + 1) * steps;
-      if (value <= 1024) return baseY - (value / 1024 + 2) * steps;
-      if (value <= 10240) return baseY - (value / 10240 + 3) * steps;
-      if (value <= 102400) return baseY - (value / 102400 + 4) * steps;
-      if (value <= 1048576) return baseY - (value / 1048576 + 5) * steps;
-      if (value <= 10485760) return baseY - (value / 10485760 + 6) * steps;
+        let topValue, bottomValue;
 
-      return padding.top + 1;
+        if (maxValue === 0) {
+          topValue = 1024;
+          bottomValue = 0;
+        } else {
+          const range = maxValue - minValue;
+          const padding_percent = range > 0 ? 0.1 : 0.5;
+
+          if (range === 0) {
+            bottomValue = 0;
+            topValue = maxValue * 1.2;
+          } else {
+            bottomValue = Math.max(0, minValue - range * padding_percent);
+            topValue = maxValue + range * padding_percent;
+          }
+        }
+
+        // 线性映射到Y坐标
+        if (topValue === bottomValue) return bottomY;
+
+        const ratio = (value - bottomValue) / (topValue - bottomValue);
+        return bottomY - ratio * (bottomY - topY);
+      },
+      [],
+    );
+
+    // 鼠标悬浮处理 - 计算最近的数据点
+    const handleMouseMove = useCallback(
+      (event: React.MouseEvent<HTMLCanvasElement>) => {
+        const canvas = canvasRef.current;
+        if (!canvas || displayData.length === 0) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const padding = GRAPH_CONFIG.padding;
+        const effectiveWidth = rect.width - padding.left - padding.right;
+
+        // 计算最接近的数据点索引
+        const relativeMouseX = mouseX - padding.left;
+        const ratio = Math.max(0, Math.min(1, relativeMouseX / effectiveWidth));
+        const dataIndex = Math.round(ratio * (displayData.length - 1));
+
+        if (dataIndex >= 0 && dataIndex < displayData.length) {
+          const dataPoint = displayData[dataIndex];
+
+          // 格式化流量数据
+          const [upValue, upUnit] = parseTraffic(dataPoint.up);
+          const [downValue, downUnit] = parseTraffic(dataPoint.down);
+
+          // 格式化时间戳
+          const timeStr = dataPoint.timestamp
+            ? new Date(dataPoint.timestamp).toLocaleTimeString("zh-CN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })
+            : "未知时间";
+
+          // 计算数据点对应的Y坐标位置（用于高亮）
+          const upY = calculateY(dataPoint.up, rect.height, displayData);
+          const downY = calculateY(dataPoint.down, rect.height, displayData);
+          const highlightY =
+            Math.max(dataPoint.up, dataPoint.down) === dataPoint.up
+              ? upY
+              : downY;
+
+          setTooltipData({
+            x: mouseX,
+            y: mouseY,
+            upSpeed: `${upValue}${upUnit}/s`,
+            downSpeed: `${downValue}${downUnit}/s`,
+            timestamp: timeStr,
+            visible: true,
+            dataIndex,
+            highlightY,
+          });
+        }
+      },
+      [displayData, calculateY],
+    );
+
+    // 鼠标离开处理
+    const handleMouseLeave = useCallback(() => {
+      setTooltipData((prev) => ({ ...prev, visible: false }));
     }, []);
+
+    // 获取智能Y轴刻度（三刻度系统：最小值、中间值、最大值）
+    const getYAxisTicks = useCallback(
+      (data: ITrafficDataPoint[], height: number) => {
+        if (data.length === 0) return [];
+
+        // 找到数据的最大值和最小值
+        const allValues = [
+          ...data.map((d) => d.up),
+          ...data.map((d) => d.down),
+        ];
+        const maxValue = Math.max(...allValues);
+        const minValue = Math.min(...allValues);
+
+        // 格式化流量数值
+        const formatTrafficValue = (bytes: number): string => {
+          if (bytes === 0) return "0";
+          if (bytes < 1024) return `${Math.round(bytes)}B`;
+          if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`;
+          return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+        };
+
+        const padding = GRAPH_CONFIG.padding;
+        const effectiveHeight = height - padding.top - padding.bottom;
+
+        // 强制显示三个刻度：底部、中间、顶部
+        const topY = padding.top + 10; // 避免与顶部时间范围按钮重叠
+        const bottomY = height - padding.bottom - 5; // 避免与底部时间轴重叠
+        const middleY = (topY + bottomY) / 2;
+
+        // 计算对应的值
+        let topValue, middleValue, bottomValue;
+
+        if (maxValue === 0) {
+          // 如果没有流量，显示0到一个小值的范围
+          topValue = 1024; // 1KB
+          middleValue = 512; // 512B
+          bottomValue = 0;
+        } else {
+          // 根据数据范围计算合适的刻度值
+          const range = maxValue - minValue;
+          const padding_percent = range > 0 ? 0.1 : 0.5; // 如果范围为0，使用更大的边距
+
+          if (range === 0) {
+            // 所有值相同的情况
+            bottomValue = 0;
+            middleValue = maxValue * 0.5;
+            topValue = maxValue * 1.2;
+          } else {
+            // 正常情况
+            bottomValue = Math.max(0, minValue - range * padding_percent);
+            topValue = maxValue + range * padding_percent;
+            middleValue = (bottomValue + topValue) / 2;
+          }
+        }
+
+        // 创建三个固定位置的刻度
+        const ticks = [
+          {
+            value: bottomValue,
+            label: formatTrafficValue(bottomValue),
+            y: bottomY,
+          },
+          {
+            value: middleValue,
+            label: formatTrafficValue(middleValue),
+            y: middleY,
+          },
+          {
+            value: topValue,
+            label: formatTrafficValue(topValue),
+            y: topY,
+          },
+        ];
+
+        return ticks;
+      },
+      [],
+    );
+
+    // 绘制Y轴刻度线和标签
+    const drawYAxis = useCallback(
+      (
+        ctx: CanvasRenderingContext2D,
+        width: number,
+        height: number,
+        data: ITrafficDataPoint[],
+      ) => {
+        const padding = GRAPH_CONFIG.padding;
+        const ticks = getYAxisTicks(data, height);
+
+        if (ticks.length === 0) return;
+
+        ctx.save();
+
+        ticks.forEach((tick, index) => {
+          const isBottomTick = index === 0; // 最底部的刻度
+          const isTopTick = index === ticks.length - 1; // 最顶部的刻度
+
+          // 绘制水平刻度线，只绘制关键刻度线
+          if (isBottomTick || isTopTick) {
+            ctx.strokeStyle = colors.grid;
+            ctx.lineWidth = isBottomTick ? 0.8 : 0.4; // 底部刻度线稍粗
+            ctx.globalAlpha = isBottomTick ? 0.25 : 0.15;
+
+            ctx.beginPath();
+            ctx.moveTo(padding.left, tick.y);
+            ctx.lineTo(width - padding.right, tick.y);
+            ctx.stroke();
+          }
+
+          // 绘制Y轴标签
+          ctx.fillStyle = colors.text;
+          ctx.font =
+            "8px -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif";
+          ctx.globalAlpha = 0.9;
+          ctx.textAlign = "right";
+          ctx.textBaseline = "middle";
+
+          // 为标签添加更清晰的背景（仅在必要时）
+          if (tick.label !== "0") {
+            const labelWidth = ctx.measureText(tick.label).width;
+            ctx.globalAlpha = 0.15;
+            ctx.fillStyle = colors.background;
+            ctx.fillRect(
+              padding.left - labelWidth - 8,
+              tick.y - 5,
+              labelWidth + 4,
+              10,
+            );
+          }
+
+          // 绘制标签文字
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = colors.text;
+          ctx.fillText(tick.label, padding.left - 4, tick.y);
+        });
+
+        ctx.restore();
+      },
+      [colors.grid, colors.text, colors.background, getYAxisTicks],
+    );
+
+    // 获取时间范围对应的最佳时间显示策略
+    const getTimeDisplayStrategy = useCallback(
+      (timeRangeMinutes: TimeRange) => {
+        switch (timeRangeMinutes) {
+          case 1: // 1分钟：更密集的时间标签，显示 MM:SS
+            return {
+              maxLabels: 6, // 减少到6个，更适合短时间
+              formatTime: (timestamp: number) => {
+                const date = new Date(timestamp);
+                const minutes = date.getMinutes().toString().padStart(2, "0");
+                const seconds = date.getSeconds().toString().padStart(2, "0");
+                return `${minutes}:${seconds}`; // 显示 MM:SS
+              },
+              intervalSeconds: 10, // 每10秒一个标签，更合理
+              minPixelDistance: 35, // 减少间距，允许更多标签
+            };
+          case 5: // 5分钟：中等密度，显示 HH:MM
+            return {
+              maxLabels: 6, // 6个标签比较合适
+              formatTime: (timestamp: number) => {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString("en-US", {
+                  hour12: false,
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }); // 显示 HH:MM
+              },
+              intervalSeconds: 30, // 约30秒间隔
+              minPixelDistance: 38, // 减少间距，允许更多标签
+            };
+          case 10: // 10分钟：标准密度，显示 HH:MM
+          default:
+            return {
+              maxLabels: 8, // 保持8个
+              formatTime: (timestamp: number) => {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString("en-US", {
+                  hour12: false,
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }); // 显示 HH:MM
+              },
+              intervalSeconds: 60, // 1分钟间隔
+              minPixelDistance: 40, // 减少间距，允许更多标签
+            };
+        }
+      },
+      [],
+    );
 
     // 绘制时间轴
     const drawTimeAxis = useCallback(
@@ -165,44 +467,89 @@ export const EnhancedCanvasTrafficGraph = memo(
         const effectiveWidth = width - padding.left - padding.right;
         const timeAxisY = height - padding.bottom + 14;
 
+        const strategy = getTimeDisplayStrategy(timeRange);
+
         ctx.save();
         ctx.fillStyle = colors.text;
         ctx.font =
           "10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif";
         ctx.globalAlpha = 0.7;
 
-        // 显示最多6个时间标签，确保边界完整显示
-        const maxLabels = 6;
-        const step = Math.max(1, Math.floor(data.length / (maxLabels - 1)));
+        // 根据数据长度和时间范围智能选择显示间隔
+        const targetLabels = Math.min(strategy.maxLabels, data.length);
+        const step = Math.max(1, Math.floor(data.length / (targetLabels - 1)));
 
-        // 绘制第一个时间点（左对齐）
-        if (data.length > 0 && data[0].name) {
-          ctx.textAlign = "left";
-          const timeLabel = data[0].name.substring(0, 5);
-          ctx.fillText(timeLabel, padding.left, timeAxisY);
+        // 使用策略中定义的最小像素间距
+        const minPixelDistance = strategy.minPixelDistance || 45;
+        const actualStep = Math.max(
+          step,
+          Math.ceil((data.length * minPixelDistance) / effectiveWidth),
+        );
+
+        // 收集要显示的时间点
+        const timePoints: Array<{ index: number; x: number; label: string }> =
+          [];
+
+        // 添加第一个时间点
+        if (data.length > 0 && data[0].timestamp) {
+          timePoints.push({
+            index: 0,
+            x: padding.left,
+            label: strategy.formatTime(data[0].timestamp),
+          });
         }
 
-        // 绘制中间的时间点（居中对齐）
-        ctx.textAlign = "center";
-        for (let i = step; i < data.length - step; i += step) {
+        // 添加中间的时间点
+        for (
+          let i = actualStep;
+          i < data.length - actualStep;
+          i += actualStep
+        ) {
           const point = data[i];
-          if (!point.name) continue;
+          if (!point.timestamp) continue;
 
           const x = padding.left + (i / (data.length - 1)) * effectiveWidth;
-          const timeLabel = point.name.substring(0, 5);
-          ctx.fillText(timeLabel, x, timeAxisY);
+          timePoints.push({
+            index: i,
+            x,
+            label: strategy.formatTime(point.timestamp),
+          });
         }
 
-        // 绘制最后一个时间点（右对齐）
-        if (data.length > 1 && data[data.length - 1].name) {
-          ctx.textAlign = "right";
-          const timeLabel = data[data.length - 1].name.substring(0, 5);
-          ctx.fillText(timeLabel, width - padding.right, timeAxisY);
+        // 添加最后一个时间点（如果不会与前面的重叠）
+        if (data.length > 1 && data[data.length - 1].timestamp) {
+          const lastX = width - padding.right;
+          const lastPoint = timePoints[timePoints.length - 1];
+
+          // 确保最后一个标签与前一个标签有足够间距
+          if (!lastPoint || lastX - lastPoint.x >= minPixelDistance) {
+            timePoints.push({
+              index: data.length - 1,
+              x: lastX,
+              label: strategy.formatTime(data[data.length - 1].timestamp),
+            });
+          }
         }
+
+        // 绘制时间标签
+        timePoints.forEach((point, index) => {
+          if (index === 0) {
+            // 第一个标签左对齐
+            ctx.textAlign = "left";
+          } else if (index === timePoints.length - 1) {
+            // 最后一个标签右对齐
+            ctx.textAlign = "right";
+          } else {
+            // 中间标签居中对齐
+            ctx.textAlign = "center";
+          }
+
+          ctx.fillText(point.label, point.x, timeAxisY);
+        });
 
         ctx.restore();
       },
-      [colors.text],
+      [colors.text, timeRange, getTimeDisplayStrategy],
     );
 
     // 绘制网格线
@@ -215,7 +562,7 @@ export const EnhancedCanvasTrafficGraph = memo(
         ctx.save();
         ctx.strokeStyle = colors.grid;
         ctx.lineWidth = GRAPH_CONFIG.lineWidth.grid;
-        ctx.globalAlpha = 0.2;
+        ctx.globalAlpha = 0.7;
 
         // 水平网格线
         const horizontalLines = 4;
@@ -251,6 +598,7 @@ export const EnhancedCanvasTrafficGraph = memo(
         height: number,
         color: string,
         withGradient = false,
+        data: ITrafficDataPoint[],
       ) => {
         if (values.length < 2) return;
 
@@ -259,7 +607,7 @@ export const EnhancedCanvasTrafficGraph = memo(
 
         const points = values.map((value, index) => [
           padding.left + (index / (values.length - 1)) * effectiveWidth,
-          calculateY(value, height),
+          calculateY(value, height, data),
         ]);
 
         ctx.save();
@@ -360,6 +708,9 @@ export const EnhancedCanvasTrafficGraph = memo(
       // 清空画布
       ctx.clearRect(0, 0, width, height);
 
+      // 绘制Y轴刻度线（背景层）
+      drawYAxis(ctx, width, height, displayData);
+
       // 绘制网格
       drawGrid(ctx, width, height);
 
@@ -371,13 +722,66 @@ export const EnhancedCanvasTrafficGraph = memo(
       const downValues = displayData.map((d) => d.down);
 
       // 绘制下载线（背景层）
-      drawTrafficLine(ctx, downValues, width, height, colors.down, true);
+      drawTrafficLine(
+        ctx,
+        downValues,
+        width,
+        height,
+        colors.down,
+        true,
+        displayData,
+      );
 
       // 绘制上传线（前景层）
-      drawTrafficLine(ctx, upValues, width, height, colors.up, true);
+      drawTrafficLine(
+        ctx,
+        upValues,
+        width,
+        height,
+        colors.up,
+        true,
+        displayData,
+      );
+
+      // 绘制悬浮高亮线
+      if (tooltipData.visible && tooltipData.dataIndex >= 0) {
+        const padding = GRAPH_CONFIG.padding;
+        const effectiveWidth = width - padding.left - padding.right;
+        const dataX =
+          padding.left +
+          (tooltipData.dataIndex / (displayData.length - 1)) * effectiveWidth;
+
+        ctx.save();
+        ctx.strokeStyle = colors.text;
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.6;
+        ctx.setLineDash([4, 4]); // 虚线效果
+
+        // 绘制垂直指示线
+        ctx.beginPath();
+        ctx.moveTo(dataX, padding.top);
+        ctx.lineTo(dataX, height - padding.bottom);
+        ctx.stroke();
+
+        // 绘制水平指示线（高亮Y轴位置）
+        ctx.beginPath();
+        ctx.moveTo(padding.left, tooltipData.highlightY);
+        ctx.lineTo(width - padding.right, tooltipData.highlightY);
+        ctx.stroke();
+
+        ctx.restore();
+      }
 
       isInitializedRef.current = true;
-    }, [displayData, colors, drawGrid, drawTimeAxis, drawTrafficLine]);
+    }, [
+      displayData,
+      colors,
+      drawYAxis,
+      drawGrid,
+      drawTimeAxis,
+      drawTrafficLine,
+      tooltipData,
+    ]);
 
     // 受控的动画循环
     useEffect(() => {
@@ -461,6 +865,8 @@ export const EnhancedCanvasTrafficGraph = memo(
             height: "100%",
             display: "block",
           }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
         />
 
         {/* 控制层覆盖 */}
@@ -481,7 +887,7 @@ export const EnhancedCanvasTrafficGraph = memo(
             sx={{
               position: "absolute",
               top: 6,
-              left: 8,
+              left: 40, // 向右移动，避免与Y轴最大值标签重叠
               fontSize: "11px",
               fontWeight: "bold",
               color: "text.secondary",
@@ -561,6 +967,42 @@ export const EnhancedCanvasTrafficGraph = memo(
             Points: {displayData.length} | Fresh: {isDataFresh ? "✓" : "✗"} |
             Compressed: {samplerStats.compressedBufferSize}
           </Box>
+
+          {/* 悬浮提示框 */}
+          {tooltipData.visible && (
+            <Box
+              sx={{
+                position: "absolute",
+                left: tooltipData.x + 8,
+                top: tooltipData.y - 8,
+                bgcolor: theme.palette.background.paper,
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 0.5,
+                px: 1,
+                py: 0.5,
+                fontSize: "10px",
+                lineHeight: 1.2,
+                zIndex: 1000,
+                pointerEvents: "none",
+                transform:
+                  tooltipData.x > 200 ? "translateX(-100%)" : "translateX(0)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                backdropFilter: "none",
+                opacity: 1,
+              }}
+            >
+              <Box color="text.secondary" mb={0.2}>
+                {tooltipData.timestamp}
+              </Box>
+              <Box color="secondary.main" fontWeight="500">
+                ↑ {tooltipData.upSpeed}
+              </Box>
+              <Box color="primary.main" fontWeight="500">
+                ↓ {tooltipData.downSpeed}
+              </Box>
+            </Box>
+          )}
         </Box>
       </Box>
     );

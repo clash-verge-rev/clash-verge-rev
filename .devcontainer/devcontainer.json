@@ -1,7 +1,7 @@
 {
   "name": "Clash Verge Rev Development Environment",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
-  
+
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "20"
@@ -19,7 +19,7 @@
     "vscode": {
       "extensions": [
         "rust-lang.rust-analyzer",
-        "tauri-apps.tauri-vscode", 
+        "tauri-apps.tauri-vscode",
         "ms-vscode.vscode-typescript-next",
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
@@ -64,7 +64,7 @@
       "onAutoForward": "notify"
     },
     "3000": {
-      "label": "Vite Dev Server", 
+      "label": "Vite Dev Server",
       "onAutoForward": "notify"
     },
     "7890": {

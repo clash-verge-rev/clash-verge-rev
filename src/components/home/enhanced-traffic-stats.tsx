@@ -29,7 +29,7 @@ import parseTraffic from "@/utils/parse-traffic";
 import { isDebugEnabled, gc } from "@/services/cmds";
 import { ReactNode } from "react";
 import { useAppData } from "@/providers/app-data-provider";
-import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor-enhanced";
+import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
 import { TrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
 import useSWR from "swr";
 

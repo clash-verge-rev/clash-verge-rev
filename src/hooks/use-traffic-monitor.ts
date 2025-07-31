@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import useSWR from "swr";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVisibility } from "@/hooks/use-visibility";
-import { getSystemMonitorOverview } from "@/services/cmds";
+import { getSystemMonitorOverviewSafe } from "@/services/cmds";
 
-// 流量数据项接口
+// 增强的流量数据点接口
 export interface ITrafficDataPoint {
   up: number;
   down: number;
@@ -12,215 +12,365 @@ export interface ITrafficDataPoint {
   name: string;
 }
 
-// 流量监控数据接口
-export interface ITrafficMonitorData {
-  traffic: {
-    raw: { up_rate: number; down_rate: number };
-    formatted: { up_rate: string; down_rate: string };
-    is_fresh: boolean;
-  };
-  memory: {
-    raw: { inuse: number; oslimit?: number };
-    formatted: { inuse: string; usage_percent?: number };
-    is_fresh: boolean;
-  };
+// 压缩的数据点（用于长期存储）
+interface ICompressedDataPoint {
+  up: number;
+  down: number;
+  timestamp: number;
+  samples: number; // 压缩了多少个原始数据点
 }
 
-// 图表数据管理接口
-export interface ITrafficGraphData {
-  dataPoints: ITrafficDataPoint[];
-  addDataPoint: (data: {
-    up: number;
-    down: number;
-    timestamp?: number;
-  }) => void;
-  clearData: () => void;
-  getDataForTimeRange: (minutes: number) => ITrafficDataPoint[];
+// 数据采样器配置
+interface ISamplingConfig {
+  // 原始数据保持时间（分钟）
+  rawDataMinutes: number;
+  // 压缩数据保持时间（分钟）
+  compressedDataMinutes: number;
+  // 压缩比例（多少个原始点压缩成1个）
+  compressionRatio: number;
 }
+
+// 引用计数管理器
+class ReferenceCounter {
+  private count = 0;
+  private callbacks: (() => void)[] = [];
+
+  increment(): () => void {
+    this.count++;
+    console.log(`[ReferenceCounter] 引用计数增加: ${this.count}`);
+
+    if (this.count === 1) {
+      // 从0到1，开始数据收集
+      this.callbacks.forEach((cb) => cb());
+    }
+
+    return () => {
+      this.count--;
+      console.log(`[ReferenceCounter] 引用计数减少: ${this.count}`);
+
+      if (this.count === 0) {
+        // 从1到0，停止数据收集
+        this.callbacks.forEach((cb) => cb());
+      }
+    };
+  }
+
+  onCountChange(callback: () => void) {
+    this.callbacks.push(callback);
+  }
+
+  getCount(): number {
+    return this.count;
+  }
+}
+
+// 智能数据采样器
+class TrafficDataSampler {
+  private rawBuffer: ITrafficDataPoint[] = [];
+  private compressedBuffer: ICompressedDataPoint[] = [];
+  private config: ISamplingConfig;
+  private compressionQueue: ITrafficDataPoint[] = [];
+
+  constructor(config: ISamplingConfig) {
+    this.config = config;
+  }
+
+  addDataPoint(point: ITrafficDataPoint): void {
+    // 添加到原始缓冲区
+    this.rawBuffer.push(point);
+
+    // 清理过期的原始数据
+    const rawCutoff = Date.now() - this.config.rawDataMinutes * 60 * 1000;
+    this.rawBuffer = this.rawBuffer.filter((p) => p.timestamp > rawCutoff);
+
+    // 添加到压缩队列
+    this.compressionQueue.push(point);
+
+    // 当压缩队列达到压缩比例时，执行压缩
+    if (this.compressionQueue.length >= this.config.compressionRatio) {
+      this.compressData();
+    }
+
+    // 清理过期的压缩数据
+    const compressedCutoff =
+      Date.now() - this.config.compressedDataMinutes * 60 * 1000;
+    this.compressedBuffer = this.compressedBuffer.filter(
+      (p) => p.timestamp > compressedCutoff,
+    );
+  }
+
+  private compressData(): void {
+    if (this.compressionQueue.length === 0) return;
+
+    // 计算平均值进行压缩
+    const totalUp = this.compressionQueue.reduce((sum, p) => sum + p.up, 0);
+    const totalDown = this.compressionQueue.reduce((sum, p) => sum + p.down, 0);
+    const avgTimestamp =
+      this.compressionQueue.reduce((sum, p) => sum + p.timestamp, 0) /
+      this.compressionQueue.length;
+
+    const compressedPoint: ICompressedDataPoint = {
+      up: totalUp / this.compressionQueue.length,
+      down: totalDown / this.compressionQueue.length,
+      timestamp: avgTimestamp,
+      samples: this.compressionQueue.length,
+    };
+
+    this.compressedBuffer.push(compressedPoint);
+    this.compressionQueue = [];
+
+    console.log(`[DataSampler] 压缩了 ${compressedPoint.samples} 个数据点`);
+  }
+
+  getDataForTimeRange(minutes: number): ITrafficDataPoint[] {
+    const cutoff = Date.now() - minutes * 60 * 1000;
+
+    // 如果请求的时间范围在原始数据范围内，直接返回原始数据
+    if (minutes <= this.config.rawDataMinutes) {
+      return this.rawBuffer.filter((p) => p.timestamp > cutoff);
+    }
+
+    // 否则组合原始数据和压缩数据
+    const rawData = this.rawBuffer.filter((p) => p.timestamp > cutoff);
+    const compressedData = this.compressedBuffer
+      .filter(
+        (p) =>
+          p.timestamp > cutoff &&
+          p.timestamp <= Date.now() - this.config.rawDataMinutes * 60 * 1000,
+      )
+      .map((p) => ({
+        up: p.up,
+        down: p.down,
+        timestamp: p.timestamp,
+        name: new Date(p.timestamp).toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+      }));
+
+    return [...compressedData, ...rawData].sort(
+      (a, b) => a.timestamp - b.timestamp,
+    );
+  }
+
+  getStats() {
+    return {
+      rawBufferSize: this.rawBuffer.length,
+      compressedBufferSize: this.compressedBuffer.length,
+      compressionQueueSize: this.compressionQueue.length,
+      totalMemoryPoints: this.rawBuffer.length + this.compressedBuffer.length,
+    };
+  }
+
+  clear(): void {
+    this.rawBuffer = [];
+    this.compressedBuffer = [];
+    this.compressionQueue = [];
+  }
+}
+
+// 全局单例
+const refCounter = new ReferenceCounter();
+let globalSampler: TrafficDataSampler | null = null;
+let lastValidData: ISystemMonitorOverview | null = null;
 
 /**
- * 全局流量监控数据管理Hook
- * 提供统一的流量数据获取和图表数据管理
+ * 增强的流量监控Hook - 支持数据压缩、采样和引用计数
  */
-export const useTrafficMonitor = () => {
+export const useTrafficMonitorEnhanced = () => {
   const { clashInfo } = useClashInfo();
   const pageVisible = useVisibility();
 
-  // 图表数据缓冲区 - 使用ref保持数据持久性
-  const dataBufferRef = useRef<ITrafficDataPoint[]>([]);
-  const [, forceUpdate] = useState({});
+  // 初始化采样器
+  if (!globalSampler) {
+    globalSampler = new TrafficDataSampler({
+      rawDataMinutes: 10, // 原始数据保持10分钟
+      compressedDataMinutes: 60, // 压缩数据保持1小时
+      compressionRatio: 5, // 每5个原始点压缩成1个
+    });
+  }
 
-  // 强制组件更新的函数
+  const [, forceUpdate] = useState({});
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  // 强制组件更新
   const triggerUpdate = useCallback(() => {
     forceUpdate({});
   }, []);
 
-  // 最大缓冲区大小 (10分钟 * 60秒 = 600个数据点)
-  const MAX_BUFFER_SIZE = 600;
-
-  // 初始化数据缓冲区
+  // 注册引用计数
   useEffect(() => {
-    if (dataBufferRef.current.length === 0) {
-      const now = Date.now();
-      const tenMinutesAgo = now - 10 * 60 * 1000;
+    console.log("[TrafficMonitorEnhanced] 组件挂载，注册引用计数");
+    const cleanup = refCounter.increment();
+    cleanupRef.current = cleanup;
 
-      const initialBuffer = Array.from(
-        { length: MAX_BUFFER_SIZE },
-        (_, index) => {
-          const pointTime =
-            tenMinutesAgo + index * ((10 * 60 * 1000) / MAX_BUFFER_SIZE);
-          const date = new Date(pointTime);
+    return () => {
+      console.log("[TrafficMonitorEnhanced] 组件卸载，清理引用计数");
+      cleanup();
+      cleanupRef.current = null;
+    };
+  }, []);
 
-          let nameValue: string;
-          try {
-            if (isNaN(date.getTime())) {
-              nameValue = "??:??:??";
-            } else {
-              nameValue = date.toLocaleTimeString("en-US", {
-                hour12: false,
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              });
-            }
-          } catch (e) {
-            nameValue = "Err:Time";
-          }
-
-          return {
-            up: 0,
-            down: 0,
-            timestamp: pointTime,
-            name: nameValue,
-          };
-        },
+  // 设置引用计数变化回调
+  useEffect(() => {
+    const handleCountChange = () => {
+      console.log(
+        `[TrafficMonitorEnhanced] 引用计数变化: ${refCounter.getCount()}`,
       );
+      if (refCounter.getCount() === 0) {
+        console.log("[TrafficMonitorEnhanced] 所有组件已卸载，暂停数据收集");
+      } else {
+        console.log("[TrafficMonitorEnhanced] 开始数据收集");
+      }
+    };
 
-      dataBufferRef.current = initialBuffer;
-    }
-  }, [MAX_BUFFER_SIZE]);
+    refCounter.onCountChange(handleCountChange);
+  }, []);
 
-  // 使用SWR获取监控数据
+  // 只有在有引用时才启用SWR
+  const shouldFetch = clashInfo && pageVisible && refCounter.getCount() > 0;
+
   const { data: monitorData, error } = useSWR<ISystemMonitorOverview>(
-    clashInfo && pageVisible ? "getSystemMonitorOverview" : null,
-    getSystemMonitorOverview,
+    shouldFetch ? "getSystemMonitorOverviewSafe" : null,
+    getSystemMonitorOverviewSafe,
     {
-      refreshInterval: 1000, // 1秒刷新一次
+      refreshInterval: shouldFetch ? 1000 : 0, // 只有在需要时才刷新
       keepPreviousData: true,
       onSuccess: (data) => {
-        console.log("[TrafficMonitor] 获取到监控数据:", data);
+        // console.log("[TrafficMonitorEnhanced] 获取到监控数据:", data);
 
-        if (data?.traffic) {
-          // 为图表添加新数据点
-          addDataPoint({
+        if (data?.traffic?.raw && globalSampler) {
+          // 保存最后有效数据
+          lastValidData = data;
+
+          // 添加到采样器
+          const timestamp = Date.now();
+          const dataPoint: ITrafficDataPoint = {
             up: data.traffic.raw.up_rate || 0,
             down: data.traffic.raw.down_rate || 0,
-            timestamp: Date.now(),
-          });
+            timestamp,
+            name: new Date(timestamp).toLocaleTimeString("en-US", {
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            }),
+          };
+
+          globalSampler.addDataPoint(dataPoint);
+          triggerUpdate();
         }
       },
       onError: (error) => {
-        console.error("[TrafficMonitor] 获取数据错误:", error);
+        console.error(
+          "[TrafficMonitorEnhanced] 网络错误，使用最后有效数据. 错误详情:",
+          {
+            message: error?.message || "未知错误",
+            stack: error?.stack || "无堆栈信息",
+          },
+        );
+        // 网络错误时不清空数据，继续使用最后有效值
+        // 但是添加一个错误标记的数据点（流量为0）
+        if (globalSampler) {
+          const timestamp = Date.now();
+          const errorPoint: ITrafficDataPoint = {
+            up: 0,
+            down: 0,
+            timestamp,
+            name: new Date(timestamp).toLocaleTimeString("en-US", {
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            }),
+          };
+          globalSampler.addDataPoint(errorPoint);
+          triggerUpdate();
+        }
       },
     },
   );
 
-  // 添加数据点到缓冲区
-  const addDataPoint = useCallback(
-    (data: { up: number; down: number; timestamp?: number }) => {
-      const timestamp = data.timestamp || Date.now();
-      const date = new Date(timestamp);
-
-      let nameValue: string;
-      try {
-        if (isNaN(date.getTime())) {
-          nameValue = "??:??:??";
-        } else {
-          nameValue = date.toLocaleTimeString("en-US", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          });
-        }
-      } catch (e) {
-        nameValue = "Err:Time";
-      }
-
-      const newPoint: ITrafficDataPoint = {
-        up: typeof data.up === "number" && !isNaN(data.up) ? data.up : 0,
-        down:
-          typeof data.down === "number" && !isNaN(data.down) ? data.down : 0,
-        timestamp,
-        name: nameValue,
-      };
-
-      // 更新缓冲区，保持固定大小
-      const newBuffer = [...dataBufferRef.current.slice(1), newPoint];
-      dataBufferRef.current = newBuffer;
-
-      // 触发使用该数据的组件更新
-      triggerUpdate();
-    },
-    [triggerUpdate],
-  );
-
-  // 清空数据
-  const clearData = useCallback(() => {
-    dataBufferRef.current = [];
-    triggerUpdate();
-  }, [triggerUpdate]);
-
-  // 根据时间范围获取数据
+  // 获取指定时间范围的数据
   const getDataForTimeRange = useCallback(
     (minutes: number): ITrafficDataPoint[] => {
-      const pointsToShow = minutes * 60; // 每分钟60个数据点
-      return dataBufferRef.current.slice(-pointsToShow);
+      if (!globalSampler) return [];
+      return globalSampler.getDataForTimeRange(minutes);
     },
     [],
   );
 
-  // 构建图表数据管理对象
-  const graphData: ITrafficGraphData = {
-    dataPoints: dataBufferRef.current,
-    addDataPoint,
-    clearData,
-    getDataForTimeRange,
-  };
+  // 清空数据
+  const clearData = useCallback(() => {
+    if (globalSampler) {
+      globalSampler.clear();
+      triggerUpdate();
+    }
+  }, [triggerUpdate]);
 
-  // 构建监控数据对象
-  const trafficMonitorData: ITrafficMonitorData = {
-    traffic: monitorData?.traffic || {
-      raw: { up_rate: 0, down_rate: 0 },
-      formatted: { up_rate: "0B", down_rate: "0B" },
+  // 获取采样器统计信息
+  const getSamplerStats = useCallback(() => {
+    return (
+      globalSampler?.getStats() || {
+        rawBufferSize: 0,
+        compressedBufferSize: 0,
+        compressionQueueSize: 0,
+        totalMemoryPoints: 0,
+      }
+    );
+  }, []);
+
+  // 构建返回的监控数据，优先使用当前数据，fallback到最后有效数据
+  const currentData = monitorData || lastValidData;
+  const trafficMonitorData = {
+    traffic: currentData?.traffic || {
+      raw: { up: 0, down: 0, up_rate: 0, down_rate: 0 },
+      formatted: {
+        up_rate: "0B",
+        down_rate: "0B",
+        total_up: "0B",
+        total_down: "0B",
+      },
       is_fresh: false,
     },
-    memory: monitorData?.memory || {
-      raw: { inuse: 0 },
-      formatted: { inuse: "0B" },
+    memory: currentData?.memory || {
+      raw: { inuse: 0, oslimit: 0, usage_percent: 0 },
+      formatted: { inuse: "0B", oslimit: "0B", usage_percent: 0 },
       is_fresh: false,
     },
   };
 
   return {
-    // 原始监控数据
+    // 监控数据
     monitorData: trafficMonitorData,
+
     // 图表数据管理
-    graphData,
-    // 数据获取状态
-    isLoading: !monitorData && !error,
+    graphData: {
+      dataPoints: globalSampler?.getDataForTimeRange(60) || [], // 默认获取1小时数据
+      getDataForTimeRange,
+      clearData,
+    },
+
+    // 状态信息
+    isLoading: !currentData && !error,
     error,
-    // 数据新鲜度
-    isDataFresh: monitorData?.overall_status === "active",
+    isDataFresh: currentData?.traffic?.is_fresh || false,
+    hasValidData: !!lastValidData,
+
+    // 性能统计
+    samplerStats: getSamplerStats(),
+    referenceCount: refCounter.getCount(),
   };
 };
 
 /**
- * 仅获取流量数据的轻量级Hook
- * 适用于不需要图表数据的组件
+ * 轻量级流量数据Hook
  */
-export const useTrafficData = () => {
-  const { monitorData, isLoading, error, isDataFresh } = useTrafficMonitor();
+export const useTrafficDataEnhanced = () => {
+  const { monitorData, isLoading, error, isDataFresh, hasValidData } =
+    useTrafficMonitorEnhanced();
 
   return {
     traffic: monitorData.traffic,
@@ -228,18 +378,21 @@ export const useTrafficData = () => {
     isLoading,
     error,
     isDataFresh,
+    hasValidData,
   };
 };
 
 /**
- * 仅获取图表数据的Hook
- * 适用于图表组件
+ * 图表数据Hook
  */
-export const useTrafficGraphData = () => {
-  const { graphData, isDataFresh } = useTrafficMonitor();
+export const useTrafficGraphDataEnhanced = () => {
+  const { graphData, isDataFresh, samplerStats, referenceCount } =
+    useTrafficMonitorEnhanced();
 
   return {
     ...graphData,
     isDataFresh,
+    samplerStats,
+    referenceCount,
   };
 };

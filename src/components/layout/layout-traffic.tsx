@@ -12,7 +12,7 @@ import { useVisibility } from "@/hooks/use-visibility";
 import parseTraffic from "@/utils/parse-traffic";
 import { useTranslation } from "react-i18next";
 import { isDebugEnabled, gc, startTrafficService } from "@/services/cmds";
-import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor-enhanced";
+import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
 import { LightweightTrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
 import useSWR from "swr";
 
@@ -78,21 +78,10 @@ export const LayoutTraffic = () => {
   // 显示内存使用情况的设置
   const displayMemory = verge?.enable_memory_usage ?? true;
 
-  // 使用格式化的数据，避免重复解析
-  const upSpeed = traffic?.formatted?.up_rate || "0B";
-  const downSpeed = traffic?.formatted?.down_rate || "0B";
-  const memoryUsage = memory?.formatted?.inuse || "0B";
-
-  // 提取数值和单位
-  const [up, upUnit] = upSpeed.includes("B")
-    ? upSpeed.split(/(?=[KMGT]?B$)/)
-    : [upSpeed, ""];
-  const [down, downUnit] = downSpeed.includes("B")
-    ? downSpeed.split(/(?=[KMGT]?B$)/)
-    : [downSpeed, ""];
-  const [inuse, inuseUnit] = memoryUsage.includes("B")
-    ? memoryUsage.split(/(?=[KMGT]?B$)/)
-    : [memoryUsage, ""];
+  // 使用parseTraffic统一处理转换，保持与首页一致的显示格式
+  const [up, upUnit] = parseTraffic(traffic?.raw?.up_rate || 0);
+  const [down, downUnit] = parseTraffic(traffic?.raw?.down_rate || 0);
+  const [inuse, inuseUnit] = parseTraffic(memory?.raw?.inuse || 0);
 
   const boxStyle: any = {
     display: "flex",
