@@ -174,6 +174,7 @@ impl Hotkey {
         }
     }
 
+    #[cfg(target_os = "macos")]
     /// Register a system hotkey using enum
     pub fn register_system_hotkey(&self, hotkey: SystemHotkey) -> Result<()> {
         let hotkey_str = hotkey.to_string();
@@ -181,6 +182,7 @@ impl Hotkey {
         self.register_hotkey_with_function(&hotkey_str, function)
     }
 
+    #[cfg(target_os = "macos")]
     /// Unregister a system hotkey using enum
     pub fn unregister_system_hotkey(&self, hotkey: SystemHotkey) -> Result<()> {
         let hotkey_str = hotkey.to_string();
