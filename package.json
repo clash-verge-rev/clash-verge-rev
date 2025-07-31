@@ -77,7 +77,7 @@
     "swr": "^2.3.4",
     "tar": "^7.4.3",
     "types-pac": "^1.0.3",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
