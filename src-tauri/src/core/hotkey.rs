@@ -62,38 +62,31 @@ impl FromStr for HotkeyFunction {
     }
 }
 
-/// Enum representing predefined system hotkeys
+#[cfg(target_os = "macos")]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// Enum representing predefined system hotkeys
 pub enum SystemHotkey {
-    #[cfg(target_os = "macos")]
     CmdQ,
-    #[cfg(target_os = "macos")]
     CmdW,
 }
 
+#[cfg(target_os = "macos")]
 impl fmt::Display for SystemHotkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            #[cfg(target_os = "macos")]
             SystemHotkey::CmdQ => "CMD+Q",
-            #[cfg(target_os = "macos")]
             SystemHotkey::CmdW => "CMD+W",
-            #[cfg(not(target_os = "macos"))]
-            _ => unreachable!("SystemHotkey variants only exist on macOS"),
         };
         write!(f, "{s}")
     }
 }
 
+#[cfg(target_os = "macos")]
 impl SystemHotkey {
     pub fn function(self) -> HotkeyFunction {
         match self {
-            #[cfg(target_os = "macos")]
             SystemHotkey::CmdQ => HotkeyFunction::Quit,
-            #[cfg(target_os = "macos")]
             SystemHotkey::CmdW => HotkeyFunction::Hide,
-            #[cfg(not(target_os = "macos"))]
-            _ => unreachable!("SystemHotkey variants only exist on macOS"),
         }
     }
 }
