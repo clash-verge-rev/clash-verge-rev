@@ -161,6 +161,8 @@ impl Mihomo {
                 if let Some(socket_path) = self.socket_path.as_ref() {
                     #[cfg(unix)]
                     {
+                        use std::path::Path;
+
                         let path = Path::new(socket_path);
                         if !path.exists() {
                             log::error!("socket path is not exists: {}", socket_path);
