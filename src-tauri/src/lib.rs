@@ -550,38 +550,40 @@ pub fn run() {
                         logging!(error, Type::Hotkey, true, "Failed to init hotkeys: {}", e);
                     }
                 }
-            } else {
-                #[cfg(target_os = "macos")]
-                {
-                    use crate::core::hotkey::SystemHotkey;
-                    if let Err(e) =
-                        hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ)
-                    {
-                        logging!(
-                            error,
-                            Type::Hotkey,
-                            true,
-                            "Failed to unregister CMD+Q: {}",
-                            e
-                        );
-                    }
-                    if let Err(e) =
-                        hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW)
-                    {
-                        logging!(
-                            error,
-                            Type::Hotkey,
-                            true,
-                            "Failed to unregister CMD+W: {}",
-                            e
-                        );
-                    }
-                }
+                return;
+            }
 
-                if !is_enable_global_hotkey {
-                    if let Err(e) = hotkey::Hotkey::global().reset() {
-                        logging!(error, Type::Hotkey, true, "Failed to reset hotkeys: {}", e);
-                    }
+            // Handle unfocused state
+            #[cfg(target_os = "macos")]
+            {
+                use crate::core::hotkey::SystemHotkey;
+                if let Err(e) =
+                    hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ)
+                {
+                    logging!(
+                        error,
+                        Type::Hotkey,
+                        true,
+                        "Failed to unregister CMD+Q: {}",
+                        e
+                    );
+                }
+                if let Err(e) =
+                    hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW)
+                {
+                    logging!(
+                        error,
+                        Type::Hotkey,
+                        true,
+                        "Failed to unregister CMD+W: {}",
+                        e
+                    );
+                }
+            }
+
+            if !is_enable_global_hotkey {
+                if let Err(e) = hotkey::Hotkey::global().reset() {
+                    logging!(error, Type::Hotkey, true, "Failed to reset hotkeys: {}", e);
                 }
             }
         }
