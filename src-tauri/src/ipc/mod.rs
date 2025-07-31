@@ -1,6 +1,7 @@
 pub mod general;
 pub mod logs;
 pub mod memory;
+pub mod monitor;
 pub mod traffic;
 
 pub use general::IpcManager;

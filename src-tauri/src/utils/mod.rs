@@ -9,5 +9,6 @@ pub mod network;
 pub mod notification;
 pub mod resolve;
 pub mod server;
+pub mod singleton;
 pub mod tmpl;
 pub mod window_manager;

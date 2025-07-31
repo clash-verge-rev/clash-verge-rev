@@ -8,6 +8,7 @@ use crate::{
     config::Config,
     feat, logging,
     module::lightweight::is_in_lightweight_mode,
+    singleton_lazy,
     utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
     Type,
 };
@@ -168,23 +169,19 @@ impl TrayState {
     }
 }
 
-impl Tray {
-    pub fn global() -> &'static Tray {
-        static TRAY: OnceCell<Tray> = OnceCell::new();
-
-        #[cfg(target_os = "macos")]
-        return TRAY.get_or_init(|| Tray {
+impl Default for Tray {
+    fn default() -> Self {
+        Tray {
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
-        });
-
-        #[cfg(not(target_os = "macos"))]
-        return TRAY.get_or_init(|| Tray {
-            last_menu_update: Mutex::new(None),
-            menu_updating: AtomicBool::new(false),
-        });
+        }
     }
+}
 
+// Use simplified singleton_lazy macro
+singleton_lazy!(Tray, TRAY, Tray::default);
+
+impl Tray {
     pub fn init(&self) -> Result<()> {
         Ok(())
     }

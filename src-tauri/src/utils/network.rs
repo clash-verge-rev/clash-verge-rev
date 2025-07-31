@@ -1,5 +1,4 @@
 use anyhow::Result;
-use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use reqwest::{Client, ClientBuilder, Proxy, RequestBuilder, Response};
 use std::{
@@ -8,7 +7,7 @@ use std::{
 };
 use tokio::runtime::{Builder, Runtime};
 
-use crate::{config::Config, logging, utils::logging::Type};
+use crate::{config::Config, logging, singleton_lazy, utils::logging::Type};
 
 // HTTP2 相关
 const H2_CONNECTION_WINDOW_SIZE: u32 = 1024 * 1024;
@@ -32,9 +31,8 @@ pub struct NetworkManager {
     connection_error_count: Arc<Mutex<usize>>,
 }
 
-lazy_static! {
-    static ref NETWORK_MANAGER: NetworkManager = NetworkManager::new();
-}
+// Use singleton_lazy macro to replace lazy_static!
+singleton_lazy!(NetworkManager, NETWORK_MANAGER, NetworkManager::new);
 
 impl NetworkManager {
     fn new() -> Self {
@@ -58,10 +56,6 @@ impl NetworkManager {
         }
     }
 
-    pub fn global() -> &'static Self {
-        &NETWORK_MANAGER
-    }
-
     /// 初始化网络客户端
     pub fn init(&self) {
         self.init.call_once(|| {
@@ -79,7 +73,7 @@ impl NetworkManager {
                     .build()
                     .expect("Failed to build no_proxy client");
 
-                let mut no_proxy_guard = NETWORK_MANAGER.no_proxy_client.lock();
+                let mut no_proxy_guard = NetworkManager::global().no_proxy_client.lock();
                 *no_proxy_guard = Some(no_proxy_client);
 
                 logging!(info, Type::Network, true, "网络管理器初始化完成");
