@@ -13,6 +13,7 @@ mod utils;
 
 use crate::{
     config::Config,
+    core::handle,
     utils::{init, resolve, server},
 };
 use anyhow::Result;
@@ -168,6 +169,13 @@ pub fn run() -> Result<()> {
 
     app.run(|app_handle, e| match e {
         tauri::RunEvent::ExitRequested { code, api, .. } if code.is_none() => {
+            tauri::async_runtime::block_on(async move {
+                tracing::info!("exit requested, clear all ws connections");
+                let _ = handle::Handle::get_mihomo_write()
+                    .await
+                    .clear_all_ws_connections()
+                    .await;
+            });
             api.prevent_exit();
         }
         tauri::RunEvent::WindowEvent { label, event, .. } => {

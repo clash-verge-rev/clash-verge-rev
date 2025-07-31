@@ -366,6 +366,9 @@ async function upgradeUi() {
 async function upgradeGeo() {
   await core.invoke("plugin:mihomo|upgrade_geo");
 }
+async function clearAllWsConnections() {
+  await core.invoke("plugin:mihomo|clear_all_ws_connections");
+}
 class MihomoWebSocket {
   constructor(id, listeners) {
     this.id = id;
@@ -494,12 +497,13 @@ class MihomoWebSocket {
   static async cleanupAll() {
     this.instances.forEach((instance) => instance.close());
     this.instances.clear();
-    await core.invoke("plugin:mihomo|clear_all_ws_connection");
+    await clearAllWsConnections();
   }
 }
 MihomoWebSocket.instances = new Set();
 
 exports.MihomoWebSocket = MihomoWebSocket;
+exports.clearAllWsConnections = clearAllWsConnections;
 exports.closeAllConnections = closeAllConnections;
 exports.closeConnections = closeConnections;
 exports.delayGroup = delayGroup;

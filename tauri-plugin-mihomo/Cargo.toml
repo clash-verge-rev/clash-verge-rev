@@ -20,6 +20,7 @@ rand = "0.9"
 http = "1.3"
 base64 = "0.22"
 httparse = "1.10"
+log = "0.4.27"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = "0.59"

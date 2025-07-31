@@ -27,9 +27,9 @@ pub fn build_socket_request(req: reqwest::RequestBuilder) -> Result<String> {
     let method = req.method().as_str();
     let mut path = req.url().path().to_string();
     if let Some(query) = req.url().query() {
-        path.push_str(&format!("?{}", query));
+        path.push_str(&format!("?{query}"));
     }
-    let request_line = format!("{} {} HTTP/1.1\r\n", method, path);
+    let request_line = format!("{method} {path} HTTP/1.1\r\n");
 
     // 添加头部信息
     let mut headers = String::new();
@@ -42,7 +42,7 @@ pub fn build_socket_request(req: reqwest::RequestBuilder) -> Result<String> {
         .unwrap_or_default();
     for (name, value) in req.headers() {
         if let Ok(value) = value.to_str() {
-            headers.push_str(&format!("{}: {}\r\n", name, value));
+            headers.push_str(&format!("{name}: {value}\r\n"));
             if name == CONTENT_TYPE && missing_content_length {
                 headers.push_str(&format!("{}: {}\r\n", CONTENT_LENGTH, body.len()));
             }
@@ -50,7 +50,7 @@ pub fn build_socket_request(req: reqwest::RequestBuilder) -> Result<String> {
     }
 
     // 拼接完整请求, 格式: 请求行 + 头部 + 空行 + Body
-    let raw = format!("{}{}\r\n{}", request_line, headers, body);
+    let raw = format!("{request_line}{headers}\r\n{body}");
 
     Ok(raw)
 }
@@ -84,8 +84,7 @@ pub fn parse_socket_response(response_str: &str, is_chunked: bool) -> Result<req
             "Partial response, need more data.".to_string(),
         )),
         Err(e) => Err(MihomoError::HttpParseError(format!(
-            "Failed to parse response: {:?}",
-            e
+            "Failed to parse response: {e:?}"
         ))),
     }
 }
@@ -115,8 +114,7 @@ fn decode_chunked(data: &str) -> Result<String> {
             reader.read_line(&mut String::new())?;
         } else {
             return Err(MihomoError::HttpParseError(format!(
-                "Failed to parse chunk size: {}",
-                line
+                "Failed to parse chunk size: {line}"
             )));
         }
     }

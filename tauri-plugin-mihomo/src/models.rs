@@ -29,7 +29,7 @@ impl Display for Protocol {
                 }
             }
         };
-        write!(f, "{}", protocol_str)
+        write!(f, "{protocol_str}")
     }
 }
 
@@ -110,7 +110,7 @@ impl Display for ClashMode {
             ClashMode::Global => "global",
             ClashMode::Direct => "direct",
         };
-        write!(f, "{}", clash_mode_str)
+        write!(f, "{clash_mode_str}")
     }
 }
 

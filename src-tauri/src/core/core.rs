@@ -131,7 +131,7 @@ impl CoreManager {
 
         handle::Handle::get_mihomo_read()
             .await
-            .clear_all_ws_connection()
+            .clear_all_ws_connections()
             .await?;
         let mut system = System::new();
         system.refresh_all();

@@ -307,6 +307,18 @@
           "markdownDescription": "Denies the clear_all_ws_connection command without any pre-configured scope."
         },
         {
+          "description": "Enables the clear_all_ws_connections command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-clear-all-ws-connections",
+          "markdownDescription": "Enables the clear_all_ws_connections command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the clear_all_ws_connections command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-clear-all-ws-connections",
+          "markdownDescription": "Denies the clear_all_ws_connections command without any pre-configured scope."
+        },
+        {
           "description": "Enables the close_all_connections command without any pre-configured scope.",
           "type": "string",
           "const": "allow-close-all-connections",
@@ -751,10 +763,10 @@
           "markdownDescription": "Denies the ws_traffic command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-flush-fakeip`\n- `allow-flush-dns`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`\n- `allow-ws-traffic`\n- `allow-ws-memory`\n- `allow-ws-connections`\n- `allow-ws-logs`\n- `allow-ws-disconnect`\n- `allow-clear-all-ws-connection`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-flush-fakeip`\n- `allow-flush-dns`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`\n- `allow-ws-traffic`\n- `allow-ws-memory`\n- `allow-ws-connections`\n- `allow-ws-logs`\n- `allow-ws-disconnect`\n- `allow-clear-all-ws-connections`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-flush-fakeip`\n- `allow-flush-dns`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`\n- `allow-ws-traffic`\n- `allow-ws-memory`\n- `allow-ws-connections`\n- `allow-ws-logs`\n- `allow-ws-disconnect`\n- `allow-clear-all-ws-connection`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-update-controller`\n- `allow-update-secret`\n- `allow-get-version`\n- `allow-flush-fakeip`\n- `allow-flush-dns`\n- `allow-get-connections`\n- `allow-close-all-connections`\n- `allow-close-connections`\n- `allow-get-groups`\n- `allow-get-group-by-name`\n- `allow-delay-group`\n- `allow-get-proxy-providers`\n- `allow-get-proxy-provider-by-name`\n- `allow-update-proxy-provider`\n- `allow-healthcheck-proxy-provider`\n- `allow-healthcheck-node-in-provider`\n- `allow-get-proxies`\n- `allow-get-proxy-by-name`\n- `allow-select-node-for-proxy`\n- `allow-unfixed-proxy`\n- `allow-delay-proxy-by-name`\n- `allow-get-rules`\n- `allow-get-rule-providers`\n- `allow-update-rule-provider`\n- `allow-get-base-config`\n- `allow-reload-config`\n- `allow-patch-base-config`\n- `allow-update-geo`\n- `allow-restart`\n- `allow-upgrade-core`\n- `allow-upgrade-ui`\n- `allow-upgrade-geo`\n- `allow-ws-traffic`\n- `allow-ws-memory`\n- `allow-ws-connections`\n- `allow-ws-logs`\n- `allow-ws-disconnect`\n- `allow-clear-all-ws-connections`"
         }
       ]
     }

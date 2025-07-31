@@ -451,6 +451,7 @@ export declare function upgradeUi(): Promise<void>;
  * 更新 Geo
  */
 export declare function upgradeGeo(): Promise<void>;
+export declare function clearAllWsConnections(): Promise<void>;
 export interface MessageKind<T, D> {
   type: T;
   data: D;

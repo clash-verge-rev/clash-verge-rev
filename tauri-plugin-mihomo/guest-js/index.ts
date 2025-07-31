@@ -627,6 +627,10 @@ export async function upgradeGeo(): Promise<void> {
   await invoke<void>("plugin:mihomo|upgrade_geo");
 }
 
+export async function clearAllWsConnections(): Promise<void> {
+  await invoke<void>("plugin:mihomo|clear_all_ws_connections");
+}
+
 export interface MessageKind<T, D> {
   type: T;
   data: D;
@@ -786,6 +790,6 @@ export class MihomoWebSocket {
   static async cleanupAll() {
     this.instances.forEach((instance) => instance.close());
     this.instances.clear();
-    await invoke("plugin:mihomo|clear_all_ws_connection");
+    await clearAllWsConnections();
   }
 }
