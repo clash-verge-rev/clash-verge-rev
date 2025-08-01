@@ -1,9 +1,14 @@
-use crate::{config::Config, feat, logging, logging_error, utils::logging::Type};
+use crate::{config::Config, feat, logging, logging_error, singleton, utils::logging::Type};
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
-use once_cell::sync::OnceCell;
-use parking_lot::{Mutex, RwLock};
-use std::{collections::HashMap, sync::Arc};
+use parking_lot::RwLock;
+use std::{
+    collections::HashMap,
+    sync::{
+        atomic::{AtomicBool, AtomicU64, Ordering},
+        Arc,
+    },
+};
 
 type TaskID = u64;
 
@@ -22,23 +27,24 @@ pub struct Timer {
     /// save the current state - using RwLock for better read concurrency
     pub timer_map: Arc<RwLock<HashMap<String, TimerTask>>>,
 
-    /// increment id - kept as mutex since it's just a counter
-    pub timer_count: Arc<Mutex<TaskID>>,
+    /// increment id - atomic counter for better performance
+    pub timer_count: AtomicU64,
 
     /// Flag to mark if timer is initialized - atomic for better performance
-    pub initialized: Arc<std::sync::atomic::AtomicBool>,
+    pub initialized: AtomicBool,
 }
 
-impl Timer {
-    pub fn global() -> &'static Timer {
-        static TIMER: OnceCell<Timer> = OnceCell::new();
+// Use singleton macro
+singleton!(Timer, TIMER_INSTANCE);
 
-        TIMER.get_or_init(|| Timer {
+impl Timer {
+    fn new() -> Self {
+        Timer {
             delay_timer: Arc::new(RwLock::new(DelayTimerBuilder::default().build())),
             timer_map: Arc::new(RwLock::new(HashMap::new())),
-            timer_count: Arc::new(Mutex::new(1)),
-            initialized: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-        })
+            timer_count: AtomicU64::new(1),
+            initialized: AtomicBool::new(false),
+        }
     }
 
     /// Initialize timer with better error handling and atomic operations
@@ -46,12 +52,7 @@ impl Timer {
         // Use compare_exchange for thread-safe initialization check
         if self
             .initialized
-            .compare_exchange(
-                false,
-                true,
-                std::sync::atomic::Ordering::SeqCst,
-                std::sync::atomic::Ordering::SeqCst,
-            )
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
             .is_err()
         {
             logging!(debug, Type::Timer, "Timer already initialized, skipping...");
@@ -63,8 +64,7 @@ impl Timer {
         // Initialize timer tasks
         if let Err(e) = self.refresh() {
             // Reset initialization flag on error
-            self.initialized
-                .store(false, std::sync::atomic::Ordering::SeqCst);
+            self.initialized.store(false, Ordering::SeqCst);
             logging_error!(Type::Timer, false, "Failed to initialize timer: {}", e);
             return Err(e);
         }
@@ -299,7 +299,8 @@ impl Timer {
         }
 
         // Find new tasks to add
-        let mut next_id = *self.timer_count.lock();
+        let mut next_id = self.timer_count.load(Ordering::Relaxed);
+        let original_id = next_id;
 
         for (uid, &interval) in new_map.iter() {
             if !timer_map.contains_key(uid) {
@@ -316,8 +317,8 @@ impl Timer {
         }
 
         // Update counter only if we added new tasks
-        if next_id > *self.timer_count.lock() {
-            *self.timer_count.lock() = next_id;
+        if next_id > original_id {
+            self.timer_count.store(next_id, Ordering::Relaxed);
         }
 
         logging!(debug, Type::Timer, "定时任务变更数量: {}", diff_map.len());

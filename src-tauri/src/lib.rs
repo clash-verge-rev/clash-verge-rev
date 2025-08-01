@@ -162,6 +162,7 @@ mod app_init {
 
     /// Setup plugins for the Tauri builder
     pub fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+        #[allow(unused_mut)]
         let mut builder = builder
             .plugin(tauri_plugin_notification::init())
             .plugin(tauri_plugin_updater::Builder::new().build())

@@ -15,10 +15,7 @@ use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
 use scopeguard;
 use serde_yaml::Mapping;
-use std::{
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager};
 use tokio::net::TcpListener;
 
@@ -33,7 +30,7 @@ const DEFAULT_WIDTH: u32 = 940;
 const DEFAULT_HEIGHT: u32 = 700;
 
 // 添加全局UI准备就绪标志
-static UI_READY: OnceCell<Arc<RwLock<bool>>> = OnceCell::new();
+static UI_READY: OnceCell<RwLock<bool>> = OnceCell::new();
 
 // 窗口创建锁，防止并发创建窗口
 static WINDOW_CREATING: OnceCell<Mutex<(bool, Instant)>> = OnceCell::new();
@@ -63,18 +60,18 @@ impl Default for UiReadyState {
 }
 
 // 获取UI就绪状态细节
-static UI_READY_STATE: OnceCell<Arc<UiReadyState>> = OnceCell::new();
+static UI_READY_STATE: OnceCell<UiReadyState> = OnceCell::new();
 
 fn get_window_creating_lock() -> &'static Mutex<(bool, Instant)> {
     WINDOW_CREATING.get_or_init(|| Mutex::new((false, Instant::now())))
 }
 
-fn get_ui_ready() -> &'static Arc<RwLock<bool>> {
-    UI_READY.get_or_init(|| Arc::new(RwLock::new(false)))
+fn get_ui_ready() -> &'static RwLock<bool> {
+    UI_READY.get_or_init(|| RwLock::new(false))
 }
 
-fn get_ui_ready_state() -> &'static Arc<UiReadyState> {
-    UI_READY_STATE.get_or_init(|| Arc::new(UiReadyState::default()))
+fn get_ui_ready_state() -> &'static UiReadyState {
+    UI_READY_STATE.get_or_init(UiReadyState::default)
 }
 
 // 更新UI准备阶段

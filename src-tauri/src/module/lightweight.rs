@@ -254,10 +254,9 @@ fn setup_light_weight_timer() -> Result<()> {
 
     // 获取task_id
     let task_id = {
-        let mut timer_count = Timer::global().timer_count.lock();
-        let id = *timer_count;
-        *timer_count += 1;
-        id
+        Timer::global()
+            .timer_count
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
     };
 
     // 创建任务
