@@ -11,7 +11,6 @@ import {
   alpha,
   styled,
 } from "@mui/material";
-import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { throttle } from "lodash-es";
 import { useState } from "react";
@@ -72,7 +71,7 @@ export const ProviderButton = () => {
     }
   };
 
-  const updateAll = useLockFn(async () => {
+  const updateAll = throttle(async () => {
     entries.forEach(async ([key, _item], index) => {
       await handleUpdate(key, index);
     });
@@ -80,7 +79,7 @@ export const ProviderButton = () => {
     if (!needRefresh) {
       setNeedRefresh(true);
     }
-  });
+  }, 1000);
 
   const updateOne = throttle(async (key: string) => {
     await handleUpdate(key, keys.indexOf(key));
