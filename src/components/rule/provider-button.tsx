@@ -11,7 +11,9 @@ import {
   alpha,
   styled,
 } from "@mui/material";
+import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
+import { throttle } from "lodash-es";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
@@ -63,10 +65,18 @@ export const ProviderButton = () => {
       }
     } finally {
       setUpdatingAt(false, index);
-      await mutate("getRules");
-      await mutate("getRuleProviders");
     }
   };
+
+  const updateAll = useLockFn(async () => {
+    entries.forEach(async ([key, _item], index) => {
+      await handleUpdate(key, index);
+    });
+  });
+
+  const updateOne = throttle(async (key: string) => {
+    await handleUpdate(key, keys.indexOf(key));
+  }, 1000);
 
   if (!hasProvider) return null;
 
@@ -91,11 +101,7 @@ export const ProviderButton = () => {
             <Button
               variant="contained"
               size="small"
-              onClick={async () => {
-                entries.forEach(async ([key, item], index) => {
-                  await handleUpdate(key, index);
-                });
-              }}>
+              onClick={async () => await updateAll()}>
               {t("Update All")}
             </Button>
           </Box>
@@ -103,7 +109,11 @@ export const ProviderButton = () => {
         contentStyle={{ width: 400 }}
         hideOkBtn
         hideCancelBtn
-        onClose={() => setOpen(false)}>
+        onClose={() => {
+          setOpen(false);
+          mutate("getRules");
+          mutate("getRuleProviders");
+        }}>
         <div>
           {entries.map(([key, item], index) => {
             const time = dayjs(item.updatedAt);
@@ -137,7 +147,7 @@ export const ProviderButton = () => {
                   size="small"
                   color="inherit"
                   title={`${t("Update")}${t("Rule Provider")}`}
-                  onClick={() => handleUpdate(key, index)}>
+                  onClick={async () => await updateOne(key)}>
                   <RefreshRounded
                     className={cn({
                       "animate-spin": updating[index],
