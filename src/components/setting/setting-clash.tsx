@@ -1,7 +1,6 @@
 import { DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useClash } from "@/hooks/use-clash";
-import { useListen } from "@/hooks/use-listen";
 import { useVerge } from "@/hooks/use-verge";
 import { updateGeoData } from "@/services/cmds";
 import { invoke_uwp_tool } from "@/services/cmds";
@@ -34,7 +33,7 @@ const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { clash, version, mutateClash, patchClash } = useClash();
-  const { verge, mutateVerge, patchVerge } = useVerge();
+  const { verge, patchVerge } = useVerge();
 
   const {
     ipv6,
@@ -44,14 +43,12 @@ const SettingClash = ({ onError }: Props) => {
     dns,
   } = clash ?? {};
 
-  const { enable_random_port = false, verge_mixed_port } = verge ?? {};
+  const { verge_mixed_port } = verge ?? {};
 
   // 独立跟踪DNS设置开关状态
   const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
     return verge?.enable_dns_settings ?? false;
   });
-
-  const { addListener } = useListen();
 
   const webRef = useRef<DialogRef>(null);
   const portRef = useRef<DialogRef>(null);
@@ -65,9 +62,6 @@ const SettingClash = ({ onError }: Props) => {
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
     mutateClash((old) => ({ ...(old! || {}), ...patch }), false);
-  };
-  const onChangeVerge = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...verge, ...patch }, false);
   };
   const onUpdateGeo = async () => {
     try {
