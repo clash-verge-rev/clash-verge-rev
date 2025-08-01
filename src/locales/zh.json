@@ -662,5 +662,9 @@
   "Failed to save configuration": "配置保存失败",
   "Controller address copied to clipboard": "控制器地址已复制到剪贴板",
   "Secret copied to clipboard": "访问密钥已复制到剪贴板",
-  "Saving...": "保存中..."
+  "Saving...": "保存中...",
+  "Profile Config": "缓存配置",
+  "Profile Configuration": "缓存设置",
+  "Store Selected": "储存 API 对策略组的选择",
+  "Store Fake IP": "储存 fakeip 映射表"
 }
