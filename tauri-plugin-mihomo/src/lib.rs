@@ -86,6 +86,9 @@ impl Builder {
         let external_port = self.external_port;
         let secret = self.secret;
         let socket_path = self.socket_path;
+        log::info!(
+            "build mihomo config, protocol: {protocol:?}, external_host: {external_host:?}, external_port: {external_port:?}, secret: {secret:?}, socket_path: {socket_path:?}"
+        );
 
         PluginBuilder::new("mihomo")
             .invoke_handler(tauri::generate_handler![

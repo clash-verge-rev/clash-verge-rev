@@ -172,7 +172,7 @@ impl Mihomo {
                             )));
                         }
                     }
-                    log::info!("send to local socket: {socket_path}");
+                    log::debug!("send to local socket: {socket_path}");
                     match client.send_to_local_socket(socket_path).await {
                         Ok(res) => res,
                         Err(e) => {

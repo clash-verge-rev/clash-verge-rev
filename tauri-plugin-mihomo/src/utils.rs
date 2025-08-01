@@ -119,6 +119,7 @@ fn decode_chunked(data: &str) -> Result<String> {
             // 跳过 \r\n 分隔符
             reader.read_line(&mut String::new())?;
         } else {
+            log::error!("Failed to parse chunk size: {line}");
             return Err(MihomoError::HttpParseError(format!(
                 "Failed to parse chunk size: {line}"
             )));
