@@ -172,7 +172,16 @@ impl Mihomo {
                             )));
                         }
                     }
-                    client.send_to_local_socket(socket_path).await?
+                    log::info!("send to local socket: {socket_path}");
+                    match client.send_to_local_socket(socket_path).await {
+                        Ok(res) => res,
+                        Err(e) => {
+                            log::error!("failed to send to local socket: {e}");
+                            return Err(MihomoError::FailedResponse(format!(
+                                "failed to send to local socket: {e}"
+                            )));
+                        }
+                    }
                 } else {
                     log::error!("missing socket path parameter");
                     return Err(MihomoError::Io(std::io::Error::new(
@@ -655,7 +664,6 @@ impl Mihomo {
         let suffix_url = format!(
             "/group/{group_name}/delay?url={test_url}&timeout={timeout}"
         );
-        println!("{}", suffix_url);
         let client = self.build_request(Method::GET, &suffix_url)?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {

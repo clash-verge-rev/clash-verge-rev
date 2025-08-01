@@ -56,6 +56,8 @@ pub fn build_socket_request(req: reqwest::RequestBuilder) -> Result<String> {
 }
 
 pub fn parse_socket_response(response_str: &str, is_chunked: bool) -> Result<reqwest::Response> {
+    log::debug!("parsing socket response");
+    log::trace!("chunked: {is_chunked}, response: {response_str}");
     let mut headers = [EMPTY_HEADER; 16];
     let mut res = httparse::Response::new(&mut headers);
     let raw_response = response_str.as_bytes();
@@ -80,12 +82,16 @@ pub fn parse_socket_response(response_str: &str, is_chunked: bool) -> Result<req
             let response = res_builder.body(body)?;
             Ok(reqwest::Response::from(response))
         }
-        Ok(httparse::Status::Partial) => Err(MihomoError::HttpParseError(
+        Ok(httparse::Status::Partial) => {
+            log::error!("Partial response, need more data.");
+            Err(MihomoError::HttpParseError(
             "Partial response, need more data.".to_string(),
-        )),
-        Err(e) => Err(MihomoError::HttpParseError(format!(
+        ))},
+        Err(e) => {
+            log::error!("Failed to parse response: {e:?}");
+            Err(MihomoError::HttpParseError(format!(
             "Failed to parse response: {e:?}"
-        ))),
+        )))},
     }
 }
 

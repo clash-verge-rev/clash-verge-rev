@@ -26,6 +26,7 @@ impl LocalSocket for RequestBuilder {
                         Ok(client) => break client,
                         Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
                         Err(e) => {
+                            log::error!("Failed to connect to named pipe: {socket_path}, {e}");
                             return Err(MihomoError::FailedResponse(format!(
                                 "Failed to connect to named pipe: {socket_path}, {e}"
                             )));
@@ -35,10 +36,13 @@ impl LocalSocket for RequestBuilder {
                 }
             }
         };
+        log::debug!("building socket request");
         let req_str = utils::build_socket_request(self)?;
-        // println!("generate request string: {:?} \n", req_str);
+        log::debug!("request string: {req_str}");
         stream.writable().await?;
+        log::debug!("send request");
         stream.write_all(req_str.as_bytes()).await?;
+        log::debug!("wait for response");
         stream.readable().await?;
         let mut buf: Vec<u8> = Vec::new();
         let mut b = [0; 4096];
@@ -65,6 +69,7 @@ impl LocalSocket for RequestBuilder {
                 break;
             }
         }
+        log::debug!("receive response success, shut down stream");
         stream.shutdown().await?;
         let response = String::from_utf8_lossy(&buf);
         utils::parse_socket_response(&response, is_chunked)
