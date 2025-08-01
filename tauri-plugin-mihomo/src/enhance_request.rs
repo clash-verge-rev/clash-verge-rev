@@ -65,6 +65,7 @@ impl LocalSocket for RequestBuilder {
                 break;
             }
         }
+        stream.shutdown().await?;
         let response = String::from_utf8_lossy(&buf);
         utils::parse_socket_response(&response, is_chunked)
     }

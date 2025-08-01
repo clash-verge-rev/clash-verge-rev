@@ -634,6 +634,7 @@ impl Mihomo {
 
     /// 获取指定名称的代理组
     pub async fn get_group_by_name(&self, group_name: &str) -> Result<Proxy> {
+        let group_name = urlencoding::encode(group_name);
         let client = self.build_request(Method::GET, &format!("/group/{group_name}"))?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
@@ -649,9 +650,12 @@ impl Mihomo {
         test_url: &str,
         timeout: u32,
     ) -> Result<HashMap<String, u32>> {
+        let group_name = urlencoding::encode(group_name);
+        let test_url = urlencoding::encode(test_url);
         let suffix_url = format!(
             "/group/{group_name}/delay?url={test_url}&timeout={timeout}"
         );
+        println!("{}", suffix_url);
         let client = self.build_request(Method::GET, &suffix_url)?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
@@ -672,6 +676,7 @@ impl Mihomo {
 
     /// 获取指定代理提供者信息
     pub async fn get_proxy_provider_by_name(&self, provider_name: &str) -> Result<ProxyProvider> {
+        let provider_name = urlencoding::encode(provider_name);
         let client = self.build_request(
             Method::GET,
             &format!("/providers/proxies/{provider_name}"),
@@ -685,6 +690,7 @@ impl Mihomo {
 
     /// 更新指定代理提供者信息
     pub async fn update_proxy_provider(&self, provider_name: &str) -> Result<()> {
+        let provider_name = urlencoding::encode(provider_name);
         let client = self.build_request(
             Method::PUT,
             &format!("/providers/proxies/{provider_name}"),
@@ -698,6 +704,7 @@ impl Mihomo {
 
     /// 对指定代理提供者进行健康检查
     pub async fn healthcheck_proxy_provider(&self, provider_name: &str) -> Result<()> {
+        let provider_name = urlencoding::encode(provider_name);
         let suffix_url = format!("/providers/proxies/{provider_name}/healthcheck");
         let client = self.build_request(Method::GET, &suffix_url)?;
         let response = self.send_by_protocol(client).await?;
@@ -715,6 +722,8 @@ impl Mihomo {
         test_url: &str,
         timeout: u32,
     ) -> Result<ProxyDelay> {
+        let provider_name = urlencoding::encode(provider_name);
+        let proxy_name = urlencoding::encode(proxy_name);
         let suffix_url = format!(
             "/providers/proxies/{provider_name}/{proxy_name}/healthcheck",
         );
@@ -741,6 +750,7 @@ impl Mihomo {
 
     /// 获取指定代理信息
     pub async fn get_proxy_by_name(&self, proxy_name: &str) -> Result<Proxy> {
+        let proxy_name = urlencoding::encode(proxy_name);
         let client = self.build_request(Method::GET, &format!("/proxies/{proxy_name}"))?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
@@ -753,6 +763,7 @@ impl Mihomo {
     ///
     /// 一般为指定代理组下使用指定的代理节点 【代理组/节点】
     pub async fn select_node_for_proxy(&self, proxy_name: &str, node: &str) -> Result<()> {
+        let proxy_name = urlencoding::encode(proxy_name);
         let body = json!({
             "name": node
         });
@@ -771,6 +782,7 @@ impl Mihomo {
     ///
     /// 一般用于自动选择的代理组（例如：URLTest 类型的代理组）下的节点
     pub async fn unfixed_proxy(&self, group_name: &str) -> Result<()> {
+        let group_name = urlencoding::encode(group_name);
         let client = self.build_request(Method::DELETE, &format!("/proxies/{group_name}"))?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
@@ -788,6 +800,7 @@ impl Mihomo {
         test_url: &str,
         timeout: u32,
     ) -> Result<ProxyDelay> {
+        let proxy_name = urlencoding::encode(proxy_name);
         let suffix_url = format!("/proxies/{proxy_name}/delay");
         let client = self.build_request(Method::GET, &suffix_url)?.query(&[
             ("timeout", &timeout.to_string()),
@@ -830,6 +843,7 @@ impl Mihomo {
 
     /// 更新规则提供者信息
     pub async fn update_rule_provider(&self, provider_name: &str) -> Result<()> {
+        let provider_name = urlencoding::encode(provider_name);
         let client =
             self.build_request(Method::PUT, &format!("/providers/rules/{provider_name}"))?;
         let response = self.send_by_protocol(client).await?;
@@ -1077,6 +1091,14 @@ mod test {
             task.await.unwrap();
         }
         println!("---------------------------------");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delay_group() -> Result<()> {
+        let mihomo = mihomo();
+        let delay = mihomo.delay_group("PROXY", "https://www.gstatic.com/generate_204", 5000).await?;
+        println!("{:?}", delay);
         Ok(())
     }
 

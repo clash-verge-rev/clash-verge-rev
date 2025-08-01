@@ -2574,7 +2574,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.4.10",
+ "socket2 0.5.10",
  "tokio",
  "tower-service",
  "tracing",
@@ -6411,6 +6411,7 @@ dependencies = [
  "thiserror 2.0.12",
  "tokio",
  "tokio-tungstenite 0.27.0",
+ "urlencoding",
  "windows-sys 0.59.0",
 ]
 
@@ -7333,6 +7334,12 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "urlpattern"
