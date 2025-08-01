@@ -41,6 +41,7 @@ impl IClashTemp {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
         let mut cors_map = Mapping::new();
+        let mut profile = Mapping::new();
         tun.insert("enable".into(), false.into());
         tun.insert("stack".into(), "gvisor".into());
         tun.insert("auto-route".into(), true.into());
@@ -88,6 +89,12 @@ impl IClashTemp {
         map.insert("tun".into(), tun.into());
         map.insert("external-controller-cors".into(), cors_map.into());
         map.insert("unified-delay".into(), true.into());
+
+        // 记忆配置
+        profile.insert("store-selected".into(), true.into());
+        profile.insert("fakestore-fake-ip".into(), true.into());
+        map.insert("profile".into(), profile.into());
+
         Self(map)
     }
 
