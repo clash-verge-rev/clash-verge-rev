@@ -46,6 +46,10 @@ interface IConfigData {
     "strict-route": boolean;
     mtu: number;
   };
+  profile: {
+    "store-selected": boolean;
+    "store-fake-ip": boolean;
+  };
   dns?: {
     enable?: boolean;
     listen?: string;

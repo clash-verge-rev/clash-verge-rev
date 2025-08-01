@@ -22,6 +22,7 @@ import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { WebUIViewer } from "./mods/web-ui-viewer";
 import { HeaderConfiguration } from "./mods/external-controller-cors";
+import { Profile } from "./mods/profile-config";
 
 const isWIN = getSystem() === "windows";
 
@@ -59,6 +60,7 @@ const SettingClash = ({ onError }: Props) => {
   const networkRef = useRef<DialogRef>(null);
   const dnsRef = useRef<DialogRef>(null);
   const corsRef = useRef<DialogRef>(null);
+  const proRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -104,6 +106,7 @@ const SettingClash = ({ onError }: Props) => {
       <NetworkInterfaceViewer ref={networkRef} />
       <DnsViewer ref={dnsRef} />
       <HeaderConfiguration ref={corsRef} />
+      <Profile ref={proRef} />
 
       <SettingItem
         label={t("Allow Lan")}
@@ -216,6 +219,11 @@ const SettingClash = ({ onError }: Props) => {
           }}
         />
       </SettingItem>
+
+      <SettingItem
+        onClick={() => proRef.current?.open()}
+        label={t("Profile Config")}
+      />
 
       <SettingItem
         label={<>{t("External")}</>}
