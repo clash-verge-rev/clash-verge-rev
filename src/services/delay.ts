@@ -1,4 +1,4 @@
-import { delayProxyByName } from "tauri-plugin-mihomo-api";
+import { delayGroup, delayProxyByName } from "tauri-plugin-mihomo-api";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
@@ -17,7 +17,7 @@ class DelayManager {
   }
 
   getUrl(group: string) {
-    return this.urlMap.get(group);
+    return this.urlMap.get(group) || "https://www.gstatic.com/generate_204";
   }
 
   setListener(name: string, group: string, listener: (time: number) => void) {
@@ -73,11 +73,7 @@ class DelayManager {
 
     try {
       const url = this.getUrl(group);
-      const result = await delayProxyByName(
-        name,
-        url || "https://www.gstatic.com/generate_204",
-        timeout,
-      );
+      const result = await delayProxyByName(name, url, timeout);
       if (result.delay) {
         delay = result.delay;
       } else if (result.message) {
@@ -102,8 +98,24 @@ class DelayManager {
     names.forEach((name) => this.setDelay(name, group, -2));
 
     let total = names.length;
-    let current = 0;
 
+    if (total > 30) {
+      return new Promise(async (resolve) => {
+        const url = this.getUrl(group);
+        const result = await delayGroup(group, url, timeout);
+        const resultNames = Object.keys(result);
+        const timeoutNames = names.filter(
+          (name) => !resultNames.includes(name),
+        );
+        timeoutNames.forEach((name) => this.setDelay(name, group, 0));
+        Object.entries(result).forEach(([name, delay]) => {
+          this.setDelay(name, group, delay);
+        });
+        resolve(null);
+      });
+    }
+
+    let current = 0;
     return new Promise((resolve) => {
       const help = async (): Promise<void> => {
         if (current >= concurrency) return;
