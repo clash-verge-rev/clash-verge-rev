@@ -29,6 +29,7 @@ export const ProviderButton = () => {
   const keys = entries.map(([key]) => key);
 
   const [open, setOpen] = useState(false);
+  const [needRefresh, setNeedRefresh] = useState(false);
 
   const hasProvider = keys.length > 0;
   const [updating, setUpdating] = useState(keys.map(() => false));
@@ -74,13 +75,19 @@ export const ProviderButton = () => {
   const updateAll = useLockFn(async () => {
     entries.forEach(async ([key, _item], index) => {
       await handleUpdate(key, index);
-      mutateRuleProviders();
     });
+    mutateRuleProviders();
+    if (!needRefresh) {
+      setNeedRefresh(true);
+    }
   });
 
   const updateOne = throttle(async (key: string) => {
     await handleUpdate(key, keys.indexOf(key));
     mutateRuleProviders();
+    if (!needRefresh) {
+      setNeedRefresh(true);
+    }
   }, 1000);
 
   if (!hasProvider) return null;
@@ -116,7 +123,10 @@ export const ProviderButton = () => {
         hideCancelBtn
         onClose={() => {
           setOpen(false);
-          mutate("getRules");
+          if (needRefresh) {
+            mutate("getRules");
+            setNeedRefresh(false);
+          }
         }}>
         <div>
           {entries.map(([key, item], index) => {
