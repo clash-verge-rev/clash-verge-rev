@@ -21,7 +21,10 @@ import { updateRuleProvider } from "tauri-plugin-mihomo-api";
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
-  const { data } = useSWR("getRuleProviders", calcuRuleProviders);
+  const { data, mutate: mutateRuleProviders } = useSWR(
+    "getRuleProviders",
+    calcuRuleProviders,
+  );
   const entries = Object.entries(data || {});
   const keys = entries.map(([key]) => key);
 
@@ -71,11 +74,13 @@ export const ProviderButton = () => {
   const updateAll = useLockFn(async () => {
     entries.forEach(async ([key, _item], index) => {
       await handleUpdate(key, index);
+      mutateRuleProviders();
     });
   });
 
   const updateOne = throttle(async (key: string) => {
     await handleUpdate(key, keys.indexOf(key));
+    mutateRuleProviders();
   }, 1000);
 
   if (!hasProvider) return null;
@@ -112,7 +117,6 @@ export const ProviderButton = () => {
         onClose={() => {
           setOpen(false);
           mutate("getRules");
-          mutate("getRuleProviders");
         }}>
         <div>
           {entries.map(([key, item], index) => {
