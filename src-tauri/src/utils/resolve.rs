@@ -125,7 +125,6 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
 
     logging_error!(Type::Setup, true, init::startup_script().await);
 
-
     logging!(trace, Type::Config, true, "初始化配置...");
     logging_error!(Type::Config, true, Config::init_config().await);
 
