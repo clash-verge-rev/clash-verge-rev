@@ -11,6 +11,7 @@
 - 复制环境变量新增对 NuShell 的支持
 - 连接界面支持查看已关闭的连接信息
 - 新版本更新内容窗口支持显示更多的内容格式，例如 Github 的 [警报信息](https://docs.github.com/zh/contributing/style-guide-and-content-model/style-guide#alerts)
+- 优化代理组延迟检测，超过 30 个节点的代理组，不在对代理节点逐一检测，而是使用内核方法进行一次性检测
 
 ### 🐛 Bug Fixes
 
