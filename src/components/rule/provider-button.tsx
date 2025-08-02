@@ -72,9 +72,8 @@ export const ProviderButton = () => {
   };
 
   const updateAll = throttle(async () => {
-    entries.forEach(async ([key, _item], index) => {
-      await handleUpdate(key, index);
-    });
+    const tasks = keys.map((key, index) => handleUpdate(key, index));
+    await Promise.all(tasks);
     mutateRuleProviders();
     if (!needRefresh) {
       setNeedRefresh(true);
