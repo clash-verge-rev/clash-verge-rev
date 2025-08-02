@@ -4,6 +4,7 @@ import { useMemoryData } from "@/hooks/use-memory-data";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
+import { restartSidecar } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
 import {
   ArrowDownward,
@@ -11,11 +12,9 @@ import {
   MemoryOutlined,
 } from "@mui/icons-material";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
-import { emit } from "@tauri-apps/api/event";
 import { useLockFn } from "ahooks";
 import { t } from "i18next";
 import { useEffect, useRef } from "react";
-import { restart } from "tauri-plugin-mihomo-api";
 import { useNotice } from "../base/notifice";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 
@@ -67,11 +66,12 @@ export const LayoutTraffic = () => {
   };
 
   const restartClashCore = useLockFn(async () => {
-    await restart();
-    notice("success", t("Clash Core Restarted"));
-    setTimeout(async () => {
-      await emit("verge://refresh-websocket");
-    }, 1000);
+    try {
+      await restartSidecar();
+      notice("success", t(`Clash Core Restarted`), 1000);
+    } catch (err: any) {
+      notice("error", err?.message || err.toString());
+    }
   });
 
   return (
