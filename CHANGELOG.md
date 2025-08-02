@@ -13,6 +13,7 @@
 - 新版本更新内容窗口支持显示更多的内容格式，例如 Github 的 [警报信息](https://docs.github.com/zh/contributing/style-guide-and-content-model/style-guide#alerts)
 - 优化代理组延迟检测，超过 30 个节点的代理组，不在对代理节点逐一检测，而是使用内核方法进行一次性检测
 - 优化规则合集更新逻辑，减少重复读取规则合集文件内容的次数，避免内存占用过高
+- 优化代理合集更新逻辑
 
 ### 🐛 Bug Fixes
 
@@ -20,4 +21,4 @@
 - 未同步更新流量图显
 - 应用未及时关闭 websocket 连接导致应用后台运行时，内存占用持续升高的问题
 - 未正确编码 URL 导致请求不正确的问题
-- 更新内核时没有关闭旧的 websocket 连接
+- 未及时清理旧的 websocket 连接
