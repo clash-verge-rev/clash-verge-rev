@@ -27,11 +27,11 @@ export const useConnectionData = () => {
           .then((ws_) => {
             ws.current = ws_;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            ws_.addListener((msg) => {
+            ws_.addListener(async (msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
                   next(msg.data);
-                  ws.current?.close();
+                  await MihomoWebSocket.cleanupAll();
                   timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as IConnections;
@@ -63,7 +63,8 @@ export const useConnectionData = () => {
               }
             });
           })
-          .catch((_) => {
+          .catch(async (_) => {
+            await MihomoWebSocket.cleanupAll();
             timeoutRef.current = setTimeout(() => connect(), 500);
           });
 
@@ -86,9 +87,13 @@ export const useConnectionData = () => {
   );
 
   useEffect(() => {
-    const unlistenRefreshWebsocket = listen("verge://refresh-websocket", () => {
-      setDate(Date.now());
-    });
+    const unlistenRefreshWebsocket = listen(
+      "verge://refresh-websocket",
+      async () => {
+        ws.current?.close();
+        setDate(Date.now());
+      },
+    );
 
     return () => {
       unlistenRefreshWebsocket.then((fn) => fn());

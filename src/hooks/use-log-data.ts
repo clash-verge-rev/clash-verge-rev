@@ -36,11 +36,11 @@ export const useLogData = () => {
               (logs) => next(null, logs),
               (err) => next(err),
             );
-            ws_.addListener((msg) => {
+            ws_.addListener(async (msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
                   next(msg.data);
-                  ws.current?.close();
+                  await MihomoWebSocket.cleanupAll();
                   timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as ILogItem;
@@ -55,7 +55,8 @@ export const useLogData = () => {
               }
             });
           })
-          .catch((_) => {
+          .catch(async (_) => {
+            await MihomoWebSocket.cleanupAll();
             timeoutRef.current = setTimeout(() => connect(), 500);
           });
 
@@ -78,9 +79,13 @@ export const useLogData = () => {
   );
 
   useEffect(() => {
-    const unlistenRefreshWebsocket = listen("verge://refresh-websocket", () => {
-      setDate(Date.now());
-    });
+    const unlistenRefreshWebsocket = listen(
+      "verge://refresh-websocket",
+      async () => {
+        ws.current?.close();
+        setDate(Date.now());
+      },
+    );
 
     return () => {
       unlistenRefreshWebsocket.then((fn) => fn());

@@ -24,11 +24,7 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PulseLoader } from "react-spinners";
 import { mutate } from "swr";
-import {
-  closeAllConnections,
-  MihomoWebSocket,
-  upgradeCore,
-} from "tauri-plugin-mihomo-api";
+import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 
 interface Props {
   serviceActive: boolean;
@@ -118,7 +114,6 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
       setUpgrading(false);
       notice("success", t(`Core Version Updated`), 1000);
       setTimeout(async () => {
-        await MihomoWebSocket.cleanupAll();
         await emit("verge://refresh-websocket");
       }, 2000);
     } catch (err: any) {

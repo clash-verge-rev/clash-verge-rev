@@ -451,6 +451,9 @@ export declare function upgradeUi(): Promise<void>;
  * 更新 Geo
  */
 export declare function upgradeGeo(): Promise<void>;
+/**
+ * 清除 Rust 侧中所有的 WebSocket 连接
+ */
 export declare function clearAllWsConnections(): Promise<void>;
 export interface MessageKind<T, D> {
   type: T;

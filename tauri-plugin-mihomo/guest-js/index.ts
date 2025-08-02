@@ -627,6 +627,9 @@ export async function upgradeGeo(): Promise<void> {
   await invoke<void>("plugin:mihomo|upgrade_geo");
 }
 
+/**
+ * 清除 Rust 侧中所有的 WebSocket 连接
+ */
 export async function clearAllWsConnections(): Promise<void> {
   await invoke<void>("plugin:mihomo|clear_all_ws_connections");
 }
@@ -777,18 +780,25 @@ export class MihomoWebSocket {
    * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认为 0
    */
   async close(): Promise<void> {
-    await invoke("plugin:mihomo|ws_disconnect", {
-      id: this.id,
-      forceTimeout: 0,
-    });
-    MihomoWebSocket.instances.delete(this);
+    try {
+      await invoke("plugin:mihomo|ws_disconnect", {
+        id: this.id,
+        forceTimeout: 0,
+      });
+    } catch (ignore) {
+      // ignore
+    } finally {
+      MihomoWebSocket.instances.delete(this);
+    }
   }
 
   /**
    * 清理全部的 websocket 连接资源
    */
   static async cleanupAll() {
-    this.instances.forEach((instance) => instance.close());
+    await Promise.all(
+      Array.from(MihomoWebSocket.instances).map((instance) => instance.close()),
+    );
     this.instances.clear();
     await clearAllWsConnections();
   }
