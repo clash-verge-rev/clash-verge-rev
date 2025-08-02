@@ -73,7 +73,7 @@ export const useTrafficData = () => {
     return () => {
       unlistenRefreshWebsocket.then((fn) => fn());
     };
-  }, [date]);
+  }, []);
 
   useEffect(() => {
     mutate(`$sub$${subscriptKey}`);

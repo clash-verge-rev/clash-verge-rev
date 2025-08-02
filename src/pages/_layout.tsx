@@ -61,25 +61,19 @@ const Layout = () => {
       }
     });
 
-    const unlistenRefreshProfiles = listen(
-      "verge://refresh-profiles",
-      async () => {
-        mutate("getProfiles");
-      },
-    );
+    const unlistenRefreshProfiles = listen("verge://refresh-profiles", () => {
+      mutate("getProfiles");
+    });
 
-    const unlistenRefreshClash = listen(
-      "verge://refresh-clash-config",
-      async () => {
-        // the clash info may be updated
-        mutate("getProxies");
-        mutate("getVersion");
-        mutate("getClashConfig");
-        mutate("getClashInfo");
-        mutate("getRuntimeConfig");
-        mutate("getProxyProviders");
-      },
-    );
+    const unlistenRefreshClash = listen("verge://refresh-clash-config", () => {
+      // the clash info may be updated
+      mutate("getProxies");
+      mutate("getVersion");
+      mutate("getClashConfig");
+      mutate("getClashInfo");
+      mutate("getRuntimeConfig");
+      mutate("getProxyProviders");
+    });
 
     // update the verge config
     const unlistenRefreshVerge = listen("verge://refresh-verge-config", () => {
