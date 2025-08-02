@@ -13,6 +13,7 @@ import {
   styled,
 } from "@mui/material";
 import dayjs from "dayjs";
+import { throttle } from "lodash-es";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
@@ -21,14 +22,16 @@ import { BaseDialog } from "../base";
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
-  const { data } = useSWR("getProxyProviders", calcuProxyProviders);
+  const { data = {}, mutate: mutateProxyProviders } = useSWR(
+    "getProxyProviders",
+    calcuProxyProviders,
+  );
+  const entries = Object.entries(data);
+  const keys = entries.map(([key]) => key);
 
   const [open, setOpen] = useState(false);
-
-  const hasProvider = Object.keys(data || {}).length > 0;
-  const [updating, setUpdating] = useState(
-    Object.keys(data || {}).map(() => false),
-  );
+  const hasProvider = keys.length > 0;
+  const [updating, setUpdating] = useState(Object.keys(data).map(() => false));
 
   const setUpdatingAt = (status: boolean, index: number) => {
     setUpdating((prev) => {
@@ -38,13 +41,28 @@ export const ProviderButton = () => {
     });
   };
   const handleUpdate = async (key: string, index: number) => {
-    setUpdatingAt(true, index);
-    updateProxyProvider(key).finally(async () => {
+    try {
+      setUpdatingAt(true, index);
+      await updateProxyProvider(key);
+    } catch (e: any) {
+      console.error(e);
+    } finally {
       setUpdatingAt(false, index);
-      await mutate("getProxies");
-      await mutate("getProxyProviders");
-    });
+    }
   };
+
+  const updateAll = throttle(async () => {
+    const tasks = keys.map((key, index) => handleUpdate(key, index));
+    await Promise.all(tasks);
+    mutate("getProxies");
+    mutateProxyProviders();
+  }, 1000);
+
+  const updateOne = throttle(async (key: string) => {
+    await handleUpdate(key, keys.indexOf(key));
+    mutate("getProxies");
+    mutateProxyProviders();
+  }, 1000);
 
   if (!hasProvider) return null;
 
@@ -66,13 +84,7 @@ export const ProviderButton = () => {
             <Button
               variant="contained"
               size="small"
-              onClick={async () => {
-                Object.entries(data || {}).forEach(
-                  async ([key, item], index) => {
-                    await handleUpdate(key, index);
-                  },
-                );
-              }}>
+              onClick={async () => await updateAll()}>
               {t("Update All")}
             </Button>
           </Box>
@@ -127,7 +139,7 @@ export const ProviderButton = () => {
                   size="small"
                   color="inherit"
                   title={`${t("Update")}${t("Proxy Provider")}`}
-                  onClick={() => handleUpdate(key, index)}>
+                  onClick={async () => await updateOne(key)}>
                   <RefreshRounded
                     className={cn({
                       "animate-spin": updating[index],
