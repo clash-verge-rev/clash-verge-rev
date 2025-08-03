@@ -20,14 +20,15 @@ export const useTrafficData = () => {
     (_key, { next }) => {
       const connect = async () => {
         MihomoWebSocket.connect_traffic()
-          .then((ws_) => {
+          .then(async (ws_) => {
             ws.current = ws_;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             ws_.addListener(async (msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
                   next(msg.data, { up: 0, down: 0 });
-                  await MihomoWebSocket.cleanupAll();
+                  await ws.current?.close();
+                  ws.current = null;
                   timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as ITrafficItem;
@@ -37,9 +38,10 @@ export const useTrafficData = () => {
               }
             });
           })
-          .catch(async (_) => {
-            await MihomoWebSocket.cleanupAll();
-            timeoutRef.current = setTimeout(() => connect(), 500);
+          .catch((_) => {
+            if (!ws.current) {
+              timeoutRef.current = setTimeout(() => connect(), 500);
+            }
           });
       };
 
@@ -48,6 +50,10 @@ export const useTrafficData = () => {
         (ws.current && !ws_first_connection.current)
       ) {
         ws_first_connection.current = false;
+        if (ws.current) {
+          ws.current.close();
+          ws.current = null;
+        }
         connect();
       }
 

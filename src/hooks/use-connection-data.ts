@@ -31,7 +31,8 @@ export const useConnectionData = () => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
                   next(msg.data);
-                  await MihomoWebSocket.cleanupAll();
+                  await ws.current?.close();
+                  ws.current = null;
                   timeoutRef.current = setTimeout(() => connect(), 500);
                 } else {
                   const data = JSON.parse(msg.data) as IConnections;
@@ -63,9 +64,10 @@ export const useConnectionData = () => {
               }
             });
           })
-          .catch(async (_) => {
-            await MihomoWebSocket.cleanupAll();
-            timeoutRef.current = setTimeout(() => connect(), 500);
+          .catch((_) => {
+            if (!ws.current) {
+              timeoutRef.current = setTimeout(() => connect(), 500);
+            }
           });
 
       if (
@@ -73,6 +75,10 @@ export const useConnectionData = () => {
         (ws.current && !ws_first_connection.current)
       ) {
         ws_first_connection.current = false;
+        if (ws.current) {
+          ws.current.close();
+          ws.current = null;
+        }
         connect();
       }
 
