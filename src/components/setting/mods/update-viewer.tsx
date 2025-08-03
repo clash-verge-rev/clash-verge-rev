@@ -1,5 +1,6 @@
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useNotice } from "@/components/base/notifice";
+import { useWindowSize } from "@/hooks/use-window-size";
 import { portableFlag } from "@/pages/_layout";
 import {
   useSetUpdateState,
@@ -11,10 +12,10 @@ import { Box, Button, LinearProgress } from "@mui/material";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { check } from "@tauri-apps/plugin-updater";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import MarkdownPreview from "@uiw/react-markdown-preview";
 import useSWR from "swr";
 
 const OS = getSystem();
@@ -26,6 +27,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
+  const { size } = useWindowSize();
 
   const { data: updateInfo } = useSWR("checkUpdate", check, {
     errorRetryCount: 2,
@@ -116,16 +118,15 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onUpdate}>
-      <div className="h-full w-full overflow-auto">
+      <div style={{ height: size.height - 260, overflow: "auto" }}>
         <MarkdownPreview
           className="p-4"
           source={markdownContent}
-          wrapperElement={{
-            "data-color-mode": themeMode,
-          }}
+          wrapperElement={{ "data-color-mode": themeMode }}
           components={{
             a: ({ node, ...props }) => {
               const { children } = props;
+              if (props.className === "anchor") return null;
               return (
                 <a {...props} target="_blank">
                   {children}
@@ -135,14 +136,12 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
           }}
         />
       </div>
-      {updateState && (
-        <LinearProgress
-          variant="buffer"
-          value={(downloaded / total) * 100}
-          valueBuffer={buffer}
-          sx={{ marginTop: "5px" }}
-        />
-      )}
+      <LinearProgress
+        variant="buffer"
+        value={(downloaded / total) * 100}
+        valueBuffer={buffer}
+        sx={{ marginTop: "10px", opacity: updateState ? 1 : 0 }}
+      />
     </BaseDialog>
   );
 });
