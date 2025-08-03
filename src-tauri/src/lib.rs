@@ -8,6 +8,8 @@ mod module;
 mod process;
 mod state;
 mod utils;
+#[cfg(target_os = "macos")]
+use crate::utils::window_manager::WindowManager;
 use crate::{
     core::hotkey,
     process::AsyncHandler,
@@ -498,10 +500,33 @@ pub fn run() {
         /// Handle application reopen events (macOS)
         #[cfg(target_os = "macos")]
         pub fn handle_reopen(app_handle: &tauri::AppHandle, has_visible_windows: bool) {
-            if !has_visible_windows {
-                AppHandleManager::global().set_activation_policy_regular();
-            }
+            logging!(
+                info,
+                Type::System,
+                true,
+                "处理 macOS 应用重新打开事件: has_visible_windows={}",
+                has_visible_windows
+            );
+
             AppHandleManager::global().init(app_handle.clone());
+
+            if !has_visible_windows {
+                // 当没有可见窗口时，设置为 regular 模式并显示主窗口
+                AppHandleManager::global().set_activation_policy_regular();
+
+                logging!(info, Type::System, true, "没有可见窗口，尝试显示主窗口");
+
+                let result = WindowManager::show_main_window();
+                logging!(
+                    info,
+                    Type::System,
+                    true,
+                    "窗口显示操作完成，结果: {:?}",
+                    result
+                );
+            } else {
+                logging!(info, Type::System, true, "已有可见窗口，无需额外操作");
+            }
         }
 
         /// Handle window close requests
