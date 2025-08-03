@@ -153,16 +153,7 @@ impl LogsMonitor {
                     }
                 };
 
-                let url = if filter_level == "info" {
-                    "/logs".to_string()
-                } else {
-                    let level_param = if filter_level == "all" {
-                        "debug"
-                    } else {
-                        &filter_level
-                    };
-                    format!("/logs?level={level_param}")
-                };
+                let url = "/logs";
 
                 logging!(
                     info,
@@ -173,7 +164,7 @@ impl LogsMonitor {
                 );
 
                 let _ = client
-                    .get(&url)
+                    .get(url)
                     .timeout(Duration::from_secs(30))
                     .process_lines(|line| {
                         Self::process_log_line(line, &filter_level, monitor_current.clone())
@@ -198,6 +189,28 @@ impl LogsMonitor {
             "LogsMonitor: Started new monitoring task for level: {:?}",
             level
         );
+    }
+
+    pub async fn stop_monitoring(&self) {
+        // Stop monitoring task but keep logs
+        {
+            let mut handle = self.task_handle.write().await;
+            if let Some(task) = handle.take() {
+                task.abort();
+                logging!(
+                    info,
+                    Type::Ipc,
+                    true,
+                    "LogsMonitor: Stopped monitoring task"
+                );
+            }
+        }
+
+        // Reset monitoring level
+        {
+            let mut monitoring_level = self.current_monitoring_level.write().await;
+            *monitoring_level = None;
+        }
     }
 
     async fn create_ipc_client() -> Result<
@@ -253,26 +266,12 @@ impl LogsMonitor {
         let mut current = self.current.write().await;
         current.logs.clear();
         current.mark_fresh();
-
-        // Also reset monitoring level when clearing logs
-        {
-            let mut monitoring_level = self.current_monitoring_level.write().await;
-            *monitoring_level = None;
-        }
-
-        // Abort current monitoring task
-        {
-            let mut handle = self.task_handle.write().await;
-            if let Some(task) = handle.take() {
-                task.abort();
-                logging!(
-                    info,
-                    Type::Ipc,
-                    true,
-                    "LogsMonitor: Stopped monitoring task due to clear_logs"
-                );
-            }
-        }
+        logging!(
+            info,
+            Type::Ipc,
+            true,
+            "LogsMonitor: Cleared frontend logs (monitoring continues)"
+        );
     }
 
     pub async fn get_logs_as_json(&self, level: Option<String>) -> serde_json::Value {
@@ -307,6 +306,10 @@ impl LogsMonitor {
 
 pub async fn start_logs_monitoring(level: Option<String>) {
     LogsMonitor::global().start_monitoring(level).await;
+}
+
+pub async fn stop_logs_monitoring() {
+    LogsMonitor::global().stop_monitoring().await;
 }
 
 pub async fn clear_logs() {

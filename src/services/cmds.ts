@@ -420,6 +420,10 @@ export async function startLogsMonitoring(level?: string) {
   return invoke<void>("start_logs_monitoring", { level });
 }
 
+export async function stopLogsMonitoring() {
+  return invoke<void>("stop_logs_monitoring");
+}
+
 export async function clearLogs() {
   return invoke<void>("clear_logs");
 }

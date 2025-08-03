@@ -74,8 +74,8 @@ const LogPage = () => {
     changeLogLevel(newLevel);
   };
 
-  const handleToggleLog = () => {
-    toggleLogEnabled();
+  const handleToggleLog = async () => {
+    await toggleLogEnabled();
     setEnableLog(!enableLog);
   };
 

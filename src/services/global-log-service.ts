@@ -3,6 +3,7 @@ import { create } from "zustand";
 import {
   fetchLogsViaIPC,
   startLogsStreaming,
+  stopLogsStreaming,
   clearLogs as clearLogsIPC,
 } from "@/services/ipc-log-service";
 import dayjs from "dayjs";
@@ -123,12 +124,21 @@ const clearIpcPolling = () => {
   }
 };
 
-// 关闭全局日志连接 (仅IPC模式)
-export const closeGlobalLogConnection = () => {
+// 停止日志监控 (仅IPC模式)
+export const stopGlobalLogMonitoring = async () => {
   clearIpcPolling();
   isInitializing = false; // 重置初始化标志
+
+  // 调用后端停止监控
+  await stopLogsStreaming();
+
   useGlobalLogStore.setState({ isConnected: false });
-  console.log("[GlobalLog-IPC] 日志服务已关闭");
+  console.log("[GlobalLog-IPC] 日志监控已停止");
+};
+
+// 关闭全局日志连接 (仅IPC模式) - 保持向后兼容
+export const closeGlobalLogConnection = async () => {
+  await stopGlobalLogMonitoring();
 };
 
 // 切换日志级别 (仅IPC模式)
@@ -150,7 +160,7 @@ export const changeLogLevel = (level: LogLevel) => {
 };
 
 // 切换启用状态 (仅IPC模式)
-export const toggleLogEnabled = () => {
+export const toggleLogEnabled = async () => {
   const { enabled, currentLevel } = useGlobalLogStore.getState();
   const newEnabled = !enabled;
 
@@ -160,14 +170,14 @@ export const toggleLogEnabled = () => {
     // IPC模式下直接启动
     initGlobalLogService(newEnabled, currentLevel);
   } else {
-    closeGlobalLogConnection();
+    await stopGlobalLogMonitoring();
   }
 };
 
-// 获取日志清理函数
+// 获取日志清理函数 - 只清理前端日志，不停止监控
 export const clearGlobalLogs = () => {
   useGlobalLogStore.getState().clearLogs();
-  // 同时清理后端流式缓存
+  // 同时清理后端缓存的日志，但不停止监控
   clearLogsIPC();
 };
 

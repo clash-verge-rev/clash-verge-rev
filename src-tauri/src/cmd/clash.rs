@@ -591,6 +591,13 @@ pub async fn start_logs_monitoring(level: Option<String>) -> CmdResult {
     Ok(())
 }
 
+/// 停止日志监控
+#[tauri::command]
+pub async fn stop_logs_monitoring() -> CmdResult {
+    ipc::stop_logs_monitoring().await;
+    Ok(())
+}
+
 /// 清除日志
 #[tauri::command]
 pub async fn clear_logs() -> CmdResult {

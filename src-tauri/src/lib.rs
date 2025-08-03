@@ -355,6 +355,7 @@ mod app_init {
             // Logging and monitoring
             cmd::get_clash_logs,
             cmd::start_logs_monitoring,
+            cmd::stop_logs_monitoring,
             cmd::clear_logs,
             cmd::get_traffic_data,
             cmd::get_memory_data,

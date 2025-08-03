@@ -2,6 +2,7 @@
 import {
   getClashLogs,
   startLogsMonitoring,
+  stopLogsMonitoring,
   clearLogs as clearLogsCmd,
 } from "@/services/cmds";
 import dayjs from "dayjs";
@@ -25,6 +26,16 @@ export const startLogsStreaming = async (logLevel: LogLevel = "info") => {
     );
   } catch (error) {
     console.error("[IPC-LogService] Failed to start logs monitoring:", error);
+  }
+};
+
+// Stop logs monitoring
+export const stopLogsStreaming = async () => {
+  try {
+    await stopLogsMonitoring();
+    console.log("[IPC-LogService] Stopped logs monitoring");
+  } catch (error) {
+    console.error("[IPC-LogService] Failed to stop logs monitoring:", error);
   }
 };
 

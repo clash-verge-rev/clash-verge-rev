@@ -30,6 +30,8 @@ import { initGlobalLogService } from "@/services/global-log-service";
 import { invoke } from "@tauri-apps/api/core";
 import { showNotice } from "@/services/noticeService";
 import { NoticeManager } from "@/components/base/NoticeManager";
+import { useLocalStorage } from "foxact/use-local-storage";
+import { LogLevel } from "@/hooks/use-log-data";
 
 const appWindow = getCurrentWebviewWindow();
 export let portableFlag = false;
@@ -154,6 +156,7 @@ const Layout = () => {
   const { verge } = useVerge();
   const { clashInfo } = useClashInfo();
   const [enableLog] = useEnableLog();
+  const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
   const { language, start_page } = verge ?? {};
   const navigate = useNavigate();
   const location = useLocation();
@@ -184,9 +187,9 @@ const Layout = () => {
   useEffect(() => {
     if (clashInfo) {
       const { server = "", secret = "" } = clashInfo;
-      initGlobalLogService(enableLog, "info");
+      initGlobalLogService(enableLog, logLevel);
     }
-  }, [clashInfo, enableLog]);
+  }, [clashInfo, enableLog, logLevel]);
 
   // 设置监听器
   useEffect(() => {
