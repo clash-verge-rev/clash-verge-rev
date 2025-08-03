@@ -1,7 +1,7 @@
 {
   "productName": "Clash Verge",
   "mainBinaryName": "Clash Verge",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "identifier": "io.github.oomeow.clash-verge-self",
   "app": {
     "security": {
