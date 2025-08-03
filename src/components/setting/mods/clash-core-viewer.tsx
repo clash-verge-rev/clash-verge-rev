@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import { emit } from "@tauri-apps/api/event";
 import { useLockFn } from "ahooks";
+import { debounce } from "lodash-es";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PulseLoader } from "react-spinners";
@@ -103,14 +104,14 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
     }
   });
 
-  const onRestart = useLockFn(async () => {
+  const onRestart = debounce(async () => {
     try {
       await restartSidecar();
       notice("success", t(`Clash Core Restarted`), 1000);
     } catch (err: any) {
       notice("error", err?.message || err.toString());
     }
-  });
+  }, 500);
 
   const onUpgrade = useLockFn(async () => {
     try {

@@ -17,6 +17,7 @@ import { t } from "i18next";
 import { useEffect, useRef } from "react";
 import { useNotice } from "../base/notifice";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
+import { debounce } from "lodash-es";
 
 // setup the traffic
 export const LayoutTraffic = () => {
@@ -65,14 +66,14 @@ export const LayoutTraffic = () => {
     sx: { flex: "0 1 27px", userSelect: "none" },
   };
 
-  const restartClashCore = useLockFn(async () => {
+  const restartClashCore = debounce(async () => {
     try {
       await restartSidecar();
       notice("success", t(`Clash Core Restarted`), 1000);
     } catch (err: any) {
       notice("error", err?.message || err.toString());
     }
-  });
+  }, 500);
 
   return (
     <Box width={"100%"} onClick={trafficRef.current?.toggleStyle}>
