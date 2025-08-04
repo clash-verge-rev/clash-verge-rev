@@ -77,7 +77,8 @@ jobs:
           CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
           MONTH=$(date +%m)
           DAY=$(date +%d)
-          EXPECTED_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${CURRENT_COMMIT}"
+          # EXPECTED_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${CURRENT_COMMIT}"
+          EXPECTED_VERSION="${CURRENT_COMMIT}"
           echo "🏷️  Expected autobuild version: $EXPECTED_VERSION"
 
           # Check if autobuild release exists and has assets for current version
