@@ -90,7 +90,7 @@
     "cli-color": "2.0.4",
     "clsx": "2.1.1",
     "concurrently": "9.2.0",
-    "fs-extra": "11.3.0",
+    "fs-extra": "11.3.1",
     "https-proxy-agent": "7.0.6",
     "husky": "9.1.7",
     "meta-json-schema": "1.19.12",
