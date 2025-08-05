@@ -139,12 +139,20 @@ pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult
             logging!(info, Type::Cmd, true, "[导入订阅] 下载完成，开始保存配置");
 
             // 获取导入前的配置数量用于验证
-            let pre_count = Config::profiles().latest_ref().items.len();
+            let pre_count = Config::profiles()
+                .latest_ref()
+                .items
+                .as_ref()
+                .map_or(0, |items| items.len());
 
             Config::profiles().data_mut().append_item(item.clone())?;
 
             // 验证导入是否成功
-            let post_count = Config::profiles().latest_ref().items.len();
+            let post_count = Config::profiles()
+                .latest_ref()
+                .items
+                .as_ref()
+                .map_or(0, |items| items.len());
             if post_count <= pre_count {
                 logging!(
                     error,
@@ -179,7 +187,10 @@ pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult
             // 异步保存配置文件并发送全局通知
             let uid_clone = item.uid.clone();
             crate::process::AsyncHandler::spawn(move || async move {
-                if let Err(e) = Config::profiles().data_mut().save_file() {
+                // 在异步块中重新获取锁，避免跨await问题
+                let save_result = { Config::profiles().data_mut().save_file() };
+
+                if let Err(e) = save_result {
                     logging!(error, Type::Cmd, true, "[导入订阅] 保存配置文件失败: {}", e);
                 } else {
                     logging!(info, Type::Cmd, true, "[导入订阅] 配置文件保存成功");
