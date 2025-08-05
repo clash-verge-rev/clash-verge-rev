@@ -523,7 +523,7 @@ FunctionEnd
     ${If} $0 == 0
       Push $0
       ${If} $1 == 0
-            DetailPrint "Restart Clash Verge Service..."
+            DetailPrint "Restart ${PRODUCTNAME} Service..."
             SimpleSC::StartService "clash_verge_service" "" 30
       ${EndIf}
     ${ElseIf} $0 != 0
@@ -549,20 +549,20 @@ FunctionEnd
     ${If} $0 == 0
       Push $0
       ${If} $1 == 1
-        DetailPrint "Stop Clash Verge Service..."
+        DetailPrint "Stop ${PRODUCTNAME} Service..."
         SimpleSC::StopService "clash_verge_service" 1 30
         Pop $0 ; returns an errorcode (<>0) otherwise success (0)
         ${If} $0 == 0
-              DetailPrint "Removing Clash Verge Service..."
+              DetailPrint "Removing ${PRODUCTNAME} Service..."
               SimpleSC::RemoveService "clash_verge_service"
         ${ElseIf} $0 != 0
                   Push $0
                   SimpleSC::GetErrorMessage
                   Pop $0
-                  MessageBox MB_OK|MB_ICONSTOP "Clash Verge Service Stop Error ($0)"
+                  MessageBox MB_OK|MB_ICONSTOP "${PRODUCTNAME} Service Stop Error ($0)"
         ${EndIf}
   ${ElseIf} $1 == 0
-        DetailPrint "Removing Clash Verge Service..."
+        DetailPrint "Removing ${PRODUCTNAME} Service..."
         SimpleSC::RemoveService "clash_verge_service"
   ${EndIf}
     ${ElseIf} $0 != 0
@@ -661,7 +661,7 @@ SectionEnd
   Pop $R0
   ${If} $R0 = 0
       IfSilent kill 0
-      ${IfThen} $PassiveMode != 1 ${|} MessageBox MB_OKCANCEL "Clash Verge 正在运行 $\n点击确定以终止运行" IDOK kill IDCANCEL cancel ${|}
+      ${IfThen} $PassiveMode != 1 ${|} MessageBox MB_OKCANCEL "${PRODUCTNAME} 正在运行 $\n点击确定以终止运行" IDOK kill IDCANCEL cancel ${|}
       kill:
         !if "${INSTALLMODE}" == "currentUser"
           nsis_tauri_utils::KillProcessCurrentUser "${MAINBINARYNAME}.exe"
@@ -1001,7 +1001,7 @@ Section Uninstall
   !insertmacro UnpinShortcut "$DESKTOP\${MAINBINARYNAME}.lnk"
 
   ; 删除所有用户的桌面快捷方式
-  DetailPrint "开始删除所有用户桌面的 Clash Verge 快捷方式..."
+  DetailPrint "开始删除所有用户桌面的 ${PRODUCTNAME} 快捷方式..."
 
   ; 删除公共桌面快捷方式
   Delete "C:\Users\Public\Desktop\Clash Verge.lnk"
@@ -1029,7 +1029,7 @@ Section Uninstall
       Delete "$R4\Clash Verge.lnk"
       Delete "$R4\clash-verge.lnk"
 
-      DetailPrint "尝试删除用户 '$R3' 桌面的 Clash Verge 快捷方式"
+      DetailPrint "尝试删除用户 '$R3' 桌面的 ${PRODUCTNAME} 快捷方式"
     ${EndIf}
 
     ; 递增循环计数器
@@ -1052,7 +1052,7 @@ Section Uninstall
   DetailPrint "删除系统级开始菜单中的应用程序文件夹和快捷方式完成"
 
   ; 删除所有带 Clash Verge 或 clash-verge 的注册表项
-  DetailPrint "开始清理所有 Clash Verge 相关的注册表项..."
+  DetailPrint "开始清理所有 ${PRODUCTNAME} 相关的注册表项..."
 
   ; 设置注册表查看模式 (64位)
   SetRegView 64
