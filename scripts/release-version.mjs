@@ -169,19 +169,21 @@ async function updateTauriConfigVersion(newVersion) {
     const versionWithoutV = newVersion.startsWith("v")
       ? newVersion.slice(1)
       : newVersion;
-    const baseVersion = getBaseVersion(versionWithoutV);
 
     console.log(
       "[INFO]: Current tauri.conf.json version is: ",
       tauriConfig.version,
     );
-    tauriConfig.version = baseVersion;
+    
+    // 使用完整版本信息，包含build metadata
+    tauriConfig.version = versionWithoutV;
+    
     await fs.writeFile(
       tauriConfigPath,
       JSON.stringify(tauriConfig, null, 2),
       "utf8",
     );
-    console.log(`[INFO]: tauri.conf.json version updated to: ${baseVersion}`);
+    console.log(`[INFO]: tauri.conf.json version updated to: ${versionWithoutV}`);
   } catch (error) {
     console.error("Error updating tauri.conf.json version:", error);
     throw error;
