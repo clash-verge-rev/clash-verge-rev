@@ -39,6 +39,22 @@ pub async fn patch_clash_mode(payload: String) -> CmdResult {
     Ok(())
 }
 
+/// 重置内核恢复状态
+#[tauri::command]
+pub async fn reset_core_recovery_state() -> CmdResult {
+    CoreManager::global().reset_recovery_state().await;
+    Ok(())
+}
+
+/// 手动尝试自动恢复内核
+#[tauri::command]
+pub async fn attempt_core_auto_recovery() -> CmdResult {
+    match CoreManager::global().attempt_auto_recovery().await {
+        Ok(()) => Ok(()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 /// 切换Clash核心
 #[tauri::command]
 pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {

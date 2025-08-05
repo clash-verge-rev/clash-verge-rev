@@ -321,6 +321,8 @@ mod app_init {
             cmd::get_clash_info,
             cmd::patch_clash_config,
             cmd::patch_clash_mode,
+            cmd::reset_core_recovery_state,
+            cmd::attempt_core_auto_recovery,
             cmd::change_clash_core,
             cmd::get_runtime_config,
             cmd::get_runtime_yaml,

@@ -8,6 +8,7 @@ import SettingVergeBasic from "@/components/setting/setting-verge-basic";
 import SettingVergeAdvanced from "@/components/setting/setting-verge-advanced";
 import SettingClash from "@/components/setting/setting-clash";
 import SettingSystem from "@/components/setting/setting-system";
+import { CoreHealthStatus } from "@/components/setting/core-health-status";
 import { useThemeMode } from "@/services/states";
 import { showNotice } from "@/services/noticeService";
 
@@ -80,10 +81,19 @@ const SettingPage = () => {
           <Box
             sx={{
               borderRadius: 2,
+              marginBottom: 1.5,
               backgroundColor: isDark ? "#282a36" : "#ffffff",
             }}
           >
             <SettingClash onError={onError} />
+          </Box>
+          <Box
+            sx={{
+              borderRadius: 2,
+              backgroundColor: isDark ? "#282a36" : "#ffffff",
+            }}
+          >
+            <CoreHealthStatus onError={onError} />
           </Box>
         </Grid>
         <Grid size={6}>

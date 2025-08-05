@@ -662,5 +662,19 @@
   "Failed to save configuration": "Failed to save configuration",
   "Controller address copied to clipboard": "Controller address copied to clipboard",
   "Secret copied to clipboard": "Secret copied to clipboard",
-  "Saving...": "Saving..."
+  "Saving...": "Saving...",
+  "Core Health Status": "Core Health Status",
+  "Core Running Normally": "Core Running Normally",
+  "Core Not Responding": "Core Not Responding",
+  "Core Status Unknown": "Core Status Unknown",
+  "Reset Recovery State": "Reset Recovery State",
+  "Attempt Recovery": "Attempt Recovery",
+  "Core recovery state has been reset": "Core recovery state has been reset",
+  "Failed to reset recovery state": "Failed to reset recovery state",
+  "Automatic recovery attempt completed": "Automatic recovery attempt completed",
+  "Recovery Failed": "Recovery Failed",
+  "Automatic recovery failed": "Automatic recovery failed",
+  "Core is not responding properly. You can try automatic recovery or restart the application.": "Core is not responding properly. You can try automatic recovery or restart the application.",
+  "The system automatically monitors core health every 30 seconds and will attempt recovery if issues are detected.": "The system automatically monitors core health every 30 seconds and will attempt recovery if issues are detected.",
+  "Version": "Version"
 }

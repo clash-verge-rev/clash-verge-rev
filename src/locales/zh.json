@@ -662,5 +662,19 @@
   "Failed to save configuration": "配置保存失败",
   "Controller address copied to clipboard": "控制器地址已复制到剪贴板",
   "Secret copied to clipboard": "访问密钥已复制到剪贴板",
-  "Saving...": "保存中..."
+  "Saving...": "保存中...",
+  "Core Health Status": "内核健康状态",
+  "Core Running Normally": "内核运行正常",
+  "Core Not Responding": "内核无响应",
+  "Core Status Unknown": "内核状态未知",
+  "Reset Recovery State": "重置恢复状态",
+  "Attempt Recovery": "尝试恢复",
+  "Core recovery state has been reset": "内核恢复状态已重置",
+  "Failed to reset recovery state": "重置恢复状态失败",
+  "Automatic recovery attempt completed": "自动恢复尝试已完成",
+  "Recovery Failed": "恢复失败",
+  "Automatic recovery failed": "自动恢复失败",
+  "Core is not responding properly. You can try automatic recovery or restart the application.": "内核响应异常。您可以尝试自动恢复或重启应用程序。",
+  "The system automatically monitors core health every 30 seconds and will attempt recovery if issues are detected.": "系统每30秒自动监控内核健康状态，检测到问题时会尝试自动恢复。",
+  "Version": "版本"
 }
