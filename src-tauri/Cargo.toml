@@ -16,7 +16,7 @@ identifier = "io.github.clash-verge-rev.clash-verge-rev"
 tauri-build = { version = "2.3.1", features = [] }
 
 [dependencies]
-warp = "0.3.7"
+warp = "0.4.0"
 anyhow = "1.0.98"
 dirs = "6.0"
 open = "5.3.2"
@@ -61,7 +61,7 @@ tauri-plugin-fs = "2.4.1"
 tauri-plugin-process = "2.3.0"
 tauri-plugin-clipboard-manager = "2.3.0"
 tauri-plugin-deep-link = "2.4.1"
-tauri-plugin-devtools = "2.0.0"
+tauri-plugin-devtools = "2.0.1"
 tauri-plugin-window-state = "2.4.0"
 zip = "=4.2.0"
 reqwest_dav = "0.2.1"
