@@ -33,6 +33,7 @@ import {
   updateProfile,
   reorderProfile,
   createProfile,
+  getProfiles,
 } from "@/services/cmds";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import { closeAllConnections } from "@/services/cmds";
@@ -356,14 +357,14 @@ const ProfilePage = () => {
       await mutate("getProfiles", getProfiles(), { revalidate: true });
       await onEnhance(false);
       showNotice(
-        "warning",
+        "error",
         t("Profile imported but may need manual refresh"),
         3000,
       );
     } catch (finalError) {
       console.error(`[导入刷新] 最终刷新尝试失败:`, finalError);
       showNotice(
-        "warning",
+        "error",
         t("Profile imported successfully, please restart if not visible"),
         5000,
       );

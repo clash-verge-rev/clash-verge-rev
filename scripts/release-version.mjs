@@ -174,16 +174,18 @@ async function updateTauriConfigVersion(newVersion) {
       "[INFO]: Current tauri.conf.json version is: ",
       tauriConfig.version,
     );
-    
+
     // 使用完整版本信息，包含build metadata
     tauriConfig.version = versionWithoutV;
-    
+
     await fs.writeFile(
       tauriConfigPath,
       JSON.stringify(tauriConfig, null, 2),
       "utf8",
     );
-    console.log(`[INFO]: tauri.conf.json version updated to: ${versionWithoutV}`);
+    console.log(
+      `[INFO]: tauri.conf.json version updated to: ${versionWithoutV}`,
+    );
   } catch (error) {
     console.error("Error updating tauri.conf.json version:", error);
     throw error;

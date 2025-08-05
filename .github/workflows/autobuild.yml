@@ -77,13 +77,14 @@ jobs:
           CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
           MONTH=$(date +%m)
           DAY=$(date +%d)
-          # EXPECTED_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${CURRENT_COMMIT}"
-          EXPECTED_VERSION="${CURRENT_COMMIT}"
+          EXPECTED_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${CURRENT_COMMIT}"
           echo "🏷️  Expected autobuild version: $EXPECTED_VERSION"
 
           # Check if autobuild release exists and has assets for current version
           echo "🔍 Checking if autobuild assets already exist..."
-          EXISTING_ASSETS=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets[].name' 2>/dev/null | grep -E "${EXPECTED_VERSION//+/\\+}" || true)
+          # Escape special characters in version for regex matching
+          EXPECTED_VERSION_ESCAPED=$(echo "$EXPECTED_VERSION" | sed 's/[+.]/\\&/g')
+          EXISTING_ASSETS=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets[].name' 2>/dev/null | grep -E "${EXPECTED_VERSION_ESCAPED}" || true)
 
           if [ -n "$EXISTING_ASSETS" ]; then
             echo "📦 Existing assets:"
