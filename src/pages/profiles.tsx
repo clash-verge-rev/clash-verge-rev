@@ -1,4 +1,4 @@
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLockFn } from "ahooks";
 import { Box, Button, IconButton, Stack, Divider, Grid } from "@mui/material";
@@ -202,7 +202,35 @@ const ProfilePage = () => {
     activateSelected,
     patchProfiles,
     mutateProfiles,
+    isLoading,
+    error,
+    isStale,
   } = useProfiles();
+
+  // 添加紧急恢复功能
+  const onEmergencyRefresh = useLockFn(async () => {
+    console.log("[紧急刷新] 开始强制刷新所有数据");
+
+    try {
+      // 清除所有SWR缓存
+      await mutate(() => true, undefined, { revalidate: false });
+
+      // 强制重新获取配置数据
+      await mutateProfiles(undefined, {
+        revalidate: true,
+        rollbackOnError: false,
+      });
+
+      // 等待状态稳定后增强配置
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await onEnhance(false);
+
+      showNotice("success", "数据已强制刷新", 2000);
+    } catch (error: any) {
+      console.error("[紧急刷新] 失败:", error);
+      showNotice("error", `紧急刷新失败: ${error.message}`, 4000);
+    }
+  });
 
   const { data: chainLogs = {}, mutate: mutateLogs } = useSWR(
     "getRuntimeLogs",
@@ -233,13 +261,18 @@ const ProfilePage = () => {
       return;
     }
     setLoading(true);
+
+    // 保存导入前的配置状态用于故障恢复
+    const preImportProfilesCount = profiles?.items?.length || 0;
+
     try {
       // 尝试正常导入
       await importProfile(url);
       showNotice("success", t("Profile Imported Successfully"));
       setUrl("");
-      mutateProfiles();
-      await onEnhance(false);
+
+      // 增强的刷新策略
+      await performRobustRefresh(preImportProfilesCount);
     } catch (err: any) {
       // 首次导入失败，尝试使用自身代理
       const errmsg = err.message || err.toString();
@@ -253,8 +286,9 @@ const ProfilePage = () => {
         // 回退导入成功
         showNotice("success", t("Profile Imported with Clash proxy"));
         setUrl("");
-        mutateProfiles();
-        await onEnhance(false);
+
+        // 增强的刷新策略
+        await performRobustRefresh(preImportProfilesCount);
       } catch (retryErr: any) {
         // 回退导入也失败
         const retryErrmsg = retryErr?.message || retryErr.toString();
@@ -266,6 +300,73 @@ const ProfilePage = () => {
     } finally {
       setDisabled(false);
       setLoading(false);
+    }
+  };
+
+  // 强化的刷新策略
+  const performRobustRefresh = async (expectedMinCount: number) => {
+    let retryCount = 0;
+    const maxRetries = 5;
+    const baseDelay = 200;
+
+    while (retryCount < maxRetries) {
+      try {
+        console.log(`[导入刷新] 第${retryCount + 1}次尝试刷新配置数据`);
+
+        // 强制刷新，绕过所有缓存
+        await mutateProfiles(undefined, {
+          revalidate: true,
+          rollbackOnError: false,
+        });
+
+        // 等待状态稳定
+        await new Promise((resolve) =>
+          setTimeout(resolve, baseDelay * (retryCount + 1)),
+        );
+
+        // 验证刷新是否成功
+        const currentProfiles = await getProfiles();
+        const currentCount = currentProfiles?.items?.length || 0;
+
+        if (currentCount > expectedMinCount) {
+          console.log(
+            `[导入刷新] 配置刷新成功，配置数量: ${expectedMinCount} -> ${currentCount}`,
+          );
+          await onEnhance(false);
+          return;
+        }
+
+        console.warn(
+          `[导入刷新] 配置数量未增加 (${currentCount}), 继续重试...`,
+        );
+        retryCount++;
+      } catch (error) {
+        console.error(`[导入刷新] 第${retryCount + 1}次刷新失败:`, error);
+        retryCount++;
+        await new Promise((resolve) =>
+          setTimeout(resolve, baseDelay * retryCount),
+        );
+      }
+    }
+
+    // 所有重试失败后的最后尝试
+    console.warn(`[导入刷新] 常规刷新失败，尝试清除缓存重新获取`);
+    try {
+      // 清除SWR缓存并重新获取
+      await mutate("getProfiles", getProfiles(), { revalidate: true });
+      await onEnhance(false);
+      showNotice(
+        "warning",
+        t("Profile imported but may need manual refresh"),
+        3000,
+      );
+    } catch (finalError) {
+      console.error(`[导入刷新] 最终刷新尝试失败:`, finalError);
+      showNotice(
+        "warning",
+        t("Profile imported successfully, please restart if not visible"),
+        5000,
+      );
     }
   };
 
@@ -618,6 +719,26 @@ const ProfilePage = () => {
           >
             <LocalFireDepartmentRounded />
           </IconButton>
+
+          {/* 故障检测和紧急恢复按钮 */}
+          {(error || isStale) && (
+            <IconButton
+              size="small"
+              color="warning"
+              title="数据异常，点击强制刷新"
+              onClick={onEmergencyRefresh}
+              sx={{
+                animation: "pulse 2s infinite",
+                "@keyframes pulse": {
+                  "0%": { opacity: 1 },
+                  "50%": { opacity: 0.5 },
+                  "100%": { opacity: 1 },
+                },
+              }}
+            >
+              <ClearRounded />
+            </IconButton>
+          )}
         </Box>
       }
     >

@@ -8,17 +8,28 @@ import {
 import { getProxies, updateProxy } from "@/services/cmds";
 
 export const useProfiles = () => {
-  const { data: profiles, mutate: mutateProfiles } = useSWR(
-    "getProfiles",
-    getProfiles,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 2000,
-      errorRetryCount: 2,
-      errorRetryInterval: 1000,
+  const {
+    data: profiles,
+    mutate: mutateProfiles,
+    error,
+    isValidating,
+  } = useSWR("getProfiles", getProfiles, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 500, // 减少去重时间，提高响应性
+    errorRetryCount: 3,
+    errorRetryInterval: 1000,
+    refreshInterval: 0, // 完全由手动控制
+    onError: (error) => {
+      console.error("[useProfiles] SWR错误:", error);
     },
-  );
+    onSuccess: (data) => {
+      console.log(
+        "[useProfiles] 配置数据更新成功，配置数量:",
+        data?.items?.length || 0,
+      );
+    },
+  });
 
   const patchProfiles = async (
     value: Partial<IProfilesConfig>,
@@ -153,5 +164,9 @@ export const useProfiles = () => {
     patchProfiles,
     patchCurrent,
     mutateProfiles,
+    // 新增故障检测状态
+    isLoading: isValidating,
+    error,
+    isStale: !profiles && !error && !isValidating, // 检测是否处于异常状态
   };
 };

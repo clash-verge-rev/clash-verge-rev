@@ -129,8 +129,89 @@ pub async fn enhance_profiles() -> CmdResult {
 /// 导入配置文件
 #[tauri::command]
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
-    let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
-    wrap_err!(Config::profiles().data_mut().append_item(item))
+    logging!(info, Type::Cmd, true, "[导入订阅] 开始导入: {}", url);
+
+    // 使用超时保护避免长时间阻塞
+    let import_result = tokio::time::timeout(
+        Duration::from_secs(60), // 60秒超时
+        async {
+            let item = PrfItem::from_url(&url, None, None, option).await?;
+            logging!(info, Type::Cmd, true, "[导入订阅] 下载完成，开始保存配置");
+
+            // 获取导入前的配置数量用于验证
+            let pre_count = Config::profiles().latest_ref().items.len();
+
+            Config::profiles().data_mut().append_item(item.clone())?;
+
+            // 验证导入是否成功
+            let post_count = Config::profiles().latest_ref().items.len();
+            if post_count <= pre_count {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    true,
+                    "[导入订阅] 配置未增加，导入可能失败"
+                );
+                return Err(anyhow::anyhow!("配置导入后数量未增加"));
+            }
+
+            logging!(
+                info,
+                Type::Cmd,
+                true,
+                "[导入订阅] 配置保存成功，数量: {} -> {}",
+                pre_count,
+                post_count
+            );
+
+            // 立即发送配置变更通知
+            if let Some(uid) = &item.uid {
+                logging!(
+                    info,
+                    Type::Cmd,
+                    true,
+                    "[导入订阅] 发送配置变更通知: {}",
+                    uid
+                );
+                handle::Handle::notify_profile_changed(uid.clone());
+            }
+
+            // 异步保存配置文件并发送全局通知
+            let uid_clone = item.uid.clone();
+            crate::process::AsyncHandler::spawn(move || async move {
+                if let Err(e) = Config::profiles().data_mut().save_file() {
+                    logging!(error, Type::Cmd, true, "[导入订阅] 保存配置文件失败: {}", e);
+                } else {
+                    logging!(info, Type::Cmd, true, "[导入订阅] 配置文件保存成功");
+
+                    // 发送全局配置更新通知
+                    if let Some(uid) = uid_clone {
+                        // 延迟发送，确保文件已完全写入
+                        tokio::time::sleep(Duration::from_millis(100)).await;
+                        handle::Handle::notify_profile_changed(uid);
+                    }
+                }
+            });
+
+            Ok(())
+        },
+    )
+    .await;
+
+    match import_result {
+        Ok(Ok(())) => {
+            logging!(info, Type::Cmd, true, "[导入订阅] 导入完成: {}", url);
+            Ok(())
+        }
+        Ok(Err(e)) => {
+            logging!(error, Type::Cmd, true, "[导入订阅] 导入失败: {}", e);
+            Err(format!("导入订阅失败: {}", e).into())
+        }
+        Err(_) => {
+            logging!(error, Type::Cmd, true, "[导入订阅] 导入超时(60秒): {}", url);
+            Err("导入订阅超时，请检查网络连接".into())
+        }
+    }
 }
 
 /// 重新排序配置文件
