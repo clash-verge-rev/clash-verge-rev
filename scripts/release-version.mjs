@@ -137,20 +137,19 @@ async function updateCargoVersion(newVersion) {
     const versionWithoutV = newVersion.startsWith("v")
       ? newVersion.slice(1)
       : newVersion;
-    const baseVersion = getBaseVersion(versionWithoutV);
 
     const updatedLines = lines.map((line) => {
       if (line.trim().startsWith("version =")) {
         return line.replace(
           /version\s*=\s*"[^"]+"/,
-          `version = "${baseVersion}"`,
+          `version = "${versionWithoutV}"`,
         );
       }
       return line;
     });
 
     await fs.writeFile(cargoTomlPath, updatedLines.join("\n"), "utf8");
-    console.log(`[INFO]: Cargo.toml version updated to: ${baseVersion}`);
+    console.log(`[INFO]: Cargo.toml version updated to: ${versionWithoutV}`);
   } catch (error) {
     console.error("Error updating Cargo.toml version:", error);
     throw error;
