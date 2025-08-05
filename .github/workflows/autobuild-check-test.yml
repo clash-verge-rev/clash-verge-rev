@@ -1,0 +1,66 @@
+name: Autobuild Check Logic Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check_autobuild_logic:
+    name: Check Autobuild Should Run Logic
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version or source changed, or assets already exist
+        id: check
+        run: |
+          # # 仅用于测试逻辑，手动触发自动跳过
+          # if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          #   echo "should_run=skip" >> $GITHUB_OUTPUT
+          #   echo "🟡 手动触发，跳过 should_run 检查"
+          #   exit 0
+          # fi
+
+          # 确保有 HEAD~1
+          if ! git rev-parse HEAD~1 > /dev/null 2>&1; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "🟢 没有前一个提交，默认需要构建"
+            exit 0
+          fi
+
+          # 版本号变更判断
+          CURRENT_VERSION=$(jq -r '.version' package.json)
+          PREVIOUS_VERSION=$(git show HEAD~1:package.json | jq -r '.version' 2>/dev/null || echo "")
+
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "🟢 版本号变更: $PREVIOUS_VERSION → $CURRENT_VERSION"
+            exit 0
+          fi
+
+          # 检查 src 变更（排除常见产物与缓存）
+          SRC_DIFF=$(git diff --name-only HEAD~1 HEAD -- src/ | grep -Ev '^src/(dist|build|node_modules|\.next|\.cache)' || true)
+          TAURI_DIFF=$(git diff --name-only HEAD~1 HEAD -- src-tauri/ | grep -Ev '^src-tauri/(target|node_modules|dist|\.cache)' || true)
+
+          if [ -n "$SRC_DIFF" ] || [ -n "$TAURI_DIFF" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "🟢 源码变更 detected"
+            exit 0
+          fi
+
+          # 检查 autobuild release 下是否已存在当前 commit 产物
+          CURRENT_COMMIT=$(git rev-parse --short HEAD)
+          EXISTING_ASSETS=$(gh release view "autobuild" --json assets -q '.assets[].name' 2>/dev/null | grep -E "${CURRENT_COMMIT//+/\\+}" || true)
+          if [ -n "$EXISTING_ASSETS" ]; then
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "🔴 已存在当前 commit 的 autobuild 产物"
+          else
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "🟢 没有 autobuild 产物，需构建"
+          fi
+
+      - name: Output should_run result
+        run: |
+          echo "Result: ${{ steps.check.outputs.should_run }}"
