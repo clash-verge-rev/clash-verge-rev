@@ -47,9 +47,9 @@ impl IProfiles {
                         match item.itype {
                             Some(ProfileType::Merge) | Some(ProfileType::Script) => {
                                 if item.scope.is_none() {
-                                    let uid = item.uid.clone().unwrap();
+                                    let uid = item.uid.as_ref().unwrap();
                                     item.scope = Some(ScopeType::Global);
-                                    item.enable = Some(enabled_global_chain.contains(&uid));
+                                    item.enable = Some(enabled_global_chain.contains(uid));
                                 }
                             }
                             _ => {}
@@ -191,14 +191,10 @@ impl IProfiles {
 
         // save the file data
         // move the field value after save
-        if let Some(file_data) = item.file_data.take() {
-            if item.file.is_none() {
-                bail!("the file should not be null");
-            }
-
-            let file = item.file.clone().unwrap();
-            let path = dirs::app_profiles_dir()?.join(&file);
-
+        if let Some(file_data) = item.file_data.take()
+            && let Some(file) = item.file.as_ref()
+        {
+            let path = dirs::app_profiles_dir()?.join(file);
             fs::File::create(path)
                 .with_context(|| format!("failed to create file \"{file}\""))?
                 .write(file_data.as_bytes())

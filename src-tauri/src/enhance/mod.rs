@@ -245,17 +245,16 @@ pub async fn test_merge_chain(
     result_map.extend(logs);
 
     let profile_item = profiles.get_item(&modified_uid)?;
-    tracing::info!("test merge chain {}", profile_item.name.as_ref().unwrap());
-    let chain_type = profile_item.itype.as_ref().unwrap();
-    match chain_type {
-        ProfileType::Merge => {
+    tracing::info!("test merge chain {:?}", profile_item.name);
+    match profile_item.itype.as_ref() {
+        Some(ProfileType::Merge) => {
             let yaml_content = serde_yaml::from_str::<Value>(&content)?
                 .as_mapping()
                 .ok_or_else(|| anyhow!("invalid yaml content"))?
                 .clone();
             config = use_merge(yaml_content, config.to_owned());
         }
-        ProfileType::Script => {
+        Some(ProfileType::Script) => {
             let mut logs = vec![];
             match use_script(content, config.to_owned()) {
                 Ok((res_config, res_logs)) => {
@@ -270,8 +269,11 @@ pub async fn test_merge_chain(
             }
             result_map.insert(modified_uid.to_string(), logs);
         }
-        _ => {
+        Some(_) => {
             bail!("unsupported chain type");
+        }
+        None => {
+            bail!("missing chain type");
         }
     };
 

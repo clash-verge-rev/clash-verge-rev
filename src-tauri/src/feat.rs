@@ -280,8 +280,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         return Ok(());
     }
 
-    if patch.get("external-controller").is_some() {
-        let external_controller = patch.get("external-controller").unwrap().as_str().unwrap();
+    if let Some(external_controller) = patch.get("external-controller") {
+        let external_controller = external_controller.as_str().unwrap();
         let (host, port) = external_controller
             .split_once(':')
             .ok_or(anyhow!("invalid external controller"))?;
@@ -289,8 +289,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         mihomo.update_external_host(Some(host.to_string()));
         mihomo.update_external_port(Some(port.parse()?));
     }
-    if patch.get("secret").is_some() {
-        let secret = patch.get("secret").unwrap().as_str().unwrap();
+    if let Some(secret) = patch.get("secret") {
+        let secret = secret.as_str().unwrap();
         handle::Handle::get_mihomo_write()
             .await
             .update_secret(Some(secret.to_string()));
@@ -539,13 +539,13 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
         handle::Handle::update_systray_part()?;
     }
 
-    if enable_tray.is_some() {
-        handle::Handle::set_tray_visible(enable_tray.unwrap())?;
+    if let Some(enable_tray) = enable_tray {
+        handle::Handle::set_tray_visible(enable_tray)?;
     }
 
     #[cfg(target_os = "macos")]
-    if show_in_dock.is_some() {
-        handle::Handle::set_dock_visible(show_in_dock.unwrap_or(true))?;
+    if let Some(show_in_dock) = show_in_dock {
+        handle::Handle::set_dock_visible(show_in_dock)?;
     }
 
     Ok(())

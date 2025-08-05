@@ -19,10 +19,10 @@ pub const TRAY_ID: &str = "verge_tray";
 pub struct Tray;
 
 impl Tray {
-    fn get_tray_icon() -> Image<'static> {
+    fn get_tray_icon() -> Result<Image<'static>> {
         let verge = Config::verge().latest().clone();
         let clash = Config::clash().latest().clone();
-        let icon_dir_path = dirs::app_home_dir().unwrap().join("icons");
+        let icon_dir_path = dirs::app_home_dir()?.join("icons");
         let sysproxy_enabled = verge.enable_system_proxy.unwrap_or(false);
         let tun_enabled = clash.get_enable_tun();
         #[cfg(target_os = "macos")]
@@ -40,7 +40,7 @@ impl Tray {
                         icon_path = icon_dir_path.join("tun.png");
                     }
                     // Icon::File(icon_path)
-                    Image::from_path(icon_path).unwrap()
+                    Ok(Image::from_path(icon_path)?)
                 } else {
                     #[cfg(target_os = "macos")]
                     let icon = match tray_icon.as_str() {
@@ -53,7 +53,7 @@ impl Tray {
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
                     // Icon::Raw(icon)
-                    Image::from_bytes(&icon).unwrap()
+                    Ok(Image::from_bytes(&icon)?)
                 }
             }
             (true, _) => {
@@ -63,7 +63,7 @@ impl Tray {
                         icon_path = icon_dir_path.join("sysproxy.png");
                     }
                     // Icon::File(icon_path)
-                    Image::from_path(icon_path).unwrap()
+                    Ok(Image::from_path(icon_path)?)
                 } else {
                     #[cfg(target_os = "macos")]
                     let icon = match tray_icon.as_str() {
@@ -76,7 +76,7 @@ impl Tray {
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
                     // Icon::Raw(icon)
-                    Image::from_bytes(&icon).unwrap()
+                    Ok(Image::from_bytes(&icon)?)
                 }
             }
             _ => {
@@ -86,7 +86,7 @@ impl Tray {
                         icon_path = icon_dir_path.join("common.png");
                     }
                     // Icon::File(icon_path)
-                    Image::from_path(icon_path).unwrap()
+                    Ok(Image::from_path(icon_path)?)
                 } else {
                     #[cfg(target_os = "macos")]
                     let icon = match tray_icon.as_str() {
@@ -97,30 +97,32 @@ impl Tray {
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon.png").to_vec();
                     // Icon::Raw(icon)
-                    Image::from_bytes(&icon).unwrap()
+                    Ok(Image::from_bytes(&icon)?)
                 }
             }
         }
     }
 
     pub fn tray_menu<R: Runtime>(app_handle: &AppHandle<R>) -> Result<Menu<R>> {
-        let version = APP_VERSION.get().unwrap();
+        let version = APP_VERSION.get().expect("failed to get app version");
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         let current = profiles.get_current().unwrap_or_default();
         let profiles = profiles.get_profiles();
         let mut switch_menu = SubmenuBuilder::new(app_handle, t!("profiles.switch"));
         for profile in profiles {
-            let uid = profile.uid.unwrap();
-            let name = profile.name.unwrap();
-            if current == uid {
-                let checkmenu =
-                    CheckMenuItem::with_id(app_handle, uid, name, true, true, None::<&str>)?;
-                switch_menu = switch_menu.item(&checkmenu);
-            } else {
-                let checkmenu =
-                    CheckMenuItem::with_id(app_handle, uid, name, true, false, None::<&str>)?;
-                switch_menu = switch_menu.item(&checkmenu);
+            if let Some(uid) = profile.uid
+                && let Some(name) = profile.name
+            {
+                if current == uid {
+                    let checkmenu =
+                        CheckMenuItem::with_id(app_handle, uid, name, true, true, None::<&str>)?;
+                    switch_menu = switch_menu.item(&checkmenu);
+                } else {
+                    let checkmenu =
+                        CheckMenuItem::with_id(app_handle, uid, name, true, false, None::<&str>)?;
+                    switch_menu = switch_menu.item(&checkmenu);
+                }
             }
         }
 
@@ -169,7 +171,7 @@ impl Tray {
         let app_handle = handle::Handle::get_app_handle();
         let menu = Self::tray_menu(app_handle)?;
         let tray = TrayIconBuilder::with_id(TRAY_ID)
-            .icon(Self::get_tray_icon())
+            .icon(Self::get_tray_icon()?)
             .menu(&menu)
             .show_menu_on_left_click(false)
             .on_tray_icon_event(Self::on_click)
@@ -261,7 +263,7 @@ impl Tray {
         }
 
         // set tray icon
-        tray.set_icon(Some(Self::get_tray_icon()))?;
+        tray.set_icon(Some(Self::get_tray_icon()?))?;
 
         #[cfg(not(target_os = "linux"))]
         {

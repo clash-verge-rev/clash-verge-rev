@@ -159,11 +159,11 @@ pub fn read_profile_file(index: String) -> CmdResult<String> {
 
 #[tauri::command]
 pub fn save_profile_file(uid: String, file_data: Option<String>) -> CmdResult {
-    if file_data.is_none() {
-        return Ok(());
+    if let Some(file_data) = file_data {
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
+        let item = wrap_err!(profiles.get_item(&uid))?;
+        wrap_err!(item.save_file(file_data))?;
     }
-    let profiles = Config::profiles();
-    let profiles = profiles.latest();
-    let item = wrap_err!(profiles.get_item(&uid))?;
-    wrap_err!(item.save_file(file_data.unwrap()))
+    Ok(())
 }

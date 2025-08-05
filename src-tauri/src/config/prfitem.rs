@@ -168,33 +168,29 @@ impl PrfItem {
     /// From partial item
     /// must contain `itype`
     pub async fn from(item: PrfItem, file_data: Option<String>) -> Result<PrfItem> {
-        if item.itype.is_none() {
-            bail!("type should not be null");
-        }
-
-        match item.itype.unwrap() {
-            ProfileType::Remote => {
-                if item.url.is_none() {
-                    bail!("url should not be null");
+        match item.itype {
+            None => bail!("type should not be null"),
+            Some(ProfileType::Remote) => match item.url.as_ref() {
+                None => bail!("url should not be null"),
+                Some(url) => {
+                    let name = item.name;
+                    let desc = item.desc;
+                    PrfItem::from_url(url, name, desc, item.option).await
                 }
-                let url = item.url.as_ref().unwrap().as_str();
-                let name = item.name;
-                let desc = item.desc;
-                PrfItem::from_url(url, name, desc, item.option).await
-            }
-            ProfileType::Local => {
+            },
+            Some(ProfileType::Local) => {
                 let name = item.name.unwrap_or("Local File".into());
                 let desc = item.desc.unwrap_or("".into());
                 PrfItem::from_local(name, desc, file_data)
             }
-            ProfileType::Merge => {
+            Some(ProfileType::Merge) => {
                 let name = item.name.unwrap_or("Merge".into());
                 let desc = item.desc.unwrap_or("".into());
                 let parent = item.parent;
                 let scope = item.scope.unwrap_or_default();
                 PrfItem::from_merge(parent, scope, name, desc)
             }
-            ProfileType::Script => {
+            Some(ProfileType::Script) => {
                 let name = item.name.unwrap_or("Script".into());
                 let desc = item.desc.unwrap_or("".into());
                 let parent = item.parent;
@@ -465,31 +461,33 @@ impl PrfItem {
 
     /// get the file data
     pub fn read_file(&self) -> Result<String> {
-        if self.file.is_none() {
-            bail!("could not find the file");
+        match self.file {
+            Some(ref file) => {
+                let path = dirs::app_profiles_dir()?.join(file);
+                fs::read_to_string(path).context("failed to read the file")
+            }
+            None => bail!("could not find the file"),
         }
-
-        let file = self.file.clone().unwrap();
-        let path = dirs::app_profiles_dir()?.join(file);
-        fs::read_to_string(path).context("failed to read the file")
     }
 
     /// save the file data
     pub fn save_file(&self, data: String) -> Result<()> {
-        if self.file.is_none() {
-            bail!("could not find the file");
+        match self.file {
+            Some(ref file) => {
+                let path = dirs::app_profiles_dir()?.join(file);
+                fs::write(path, data.as_bytes()).context("failed to save the file")
+            }
+            None => bail!("could not find the file"),
         }
-        let file = self.file.clone().unwrap();
-        let path = dirs::app_profiles_dir()?.join(file);
-        fs::write(path, data.as_bytes()).context("failed to save the file")
     }
 
     pub fn delete_file(&self) -> Result<()> {
-        if self.file.is_none() {
-            bail!("could not find the file");
+        match self.file {
+            Some(ref file) => {
+                let path = dirs::app_profiles_dir()?.join(file);
+                fs::remove_file(path).context("failed to delete the file")
+            }
+            None => bail!("could not find the file"),
         }
-        let file = self.file.clone().unwrap();
-        let path = dirs::app_profiles_dir()?.join(file);
-        fs::remove_file(path).context("failed to delete the file")
     }
 }

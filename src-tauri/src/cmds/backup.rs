@@ -10,7 +10,7 @@ use std::{fs, path::PathBuf};
 
 #[tauri::command]
 pub async fn create_local_backup(only_backup_profiles: bool) -> CmdResult<(String, PathBuf)> {
-    let (file_name, file_path) = backup::create_backup(true, only_backup_profiles).unwrap();
+    let (file_name, file_path) = wrap_err!(backup::create_backup(true, only_backup_profiles))?;
     Ok((file_name, file_path))
 }
 
@@ -41,7 +41,7 @@ pub async fn update_webdav_info(url: String, username: String, password: String)
 
 #[tauri::command]
 pub async fn create_and_upload_backup(only_backup_profiles: bool) -> CmdResult {
-    let (file_name, file_path) = backup::create_backup(false, only_backup_profiles).unwrap();
+    let (file_name, file_path) = wrap_err!(backup::create_backup(false, only_backup_profiles))?;
     wrap_err!(WebDav::upload_file(file_path, file_name).await)
 }
 

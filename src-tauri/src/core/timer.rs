@@ -125,41 +125,50 @@ impl Timer {
                 tracing::error!("Failed to get profile");
                 return;
             }
-            let profile = profiles.get_item(&current).unwrap();
-            let selected = profile.selected.clone().unwrap_or_default();
-            for selected_item in selected {
-                if let (Some(proxy_name), Some(node)) = (selected_item.name, selected_item.now) {
-                    if mihomo
-                        .select_node_for_proxy(&proxy_name, &node)
-                        .await
-                        .is_err()
-                    {
-                        if mihomo.get_proxy_by_name(&node).await.is_err() {
-                            tracing::error!(
-                                "Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist",
-                                proxy_name,
-                                node,
-                                node
-                            );
-                            continue;
+            if let Ok(profile) = profiles.get_item(&current) {
+                if let Some(selected) = profile.selected.as_ref() {
+                    for selected_item in selected {
+                        if let Some(proxy_name) = selected_item.name.as_ref()
+                            && let Some(node) = selected_item.now.as_ref()
+                        {
+                            if mihomo
+                                .select_node_for_proxy(proxy_name, node)
+                                .await
+                                .is_err()
+                            {
+                                if mihomo.get_proxy_by_name(node).await.is_err() {
+                                    tracing::error!(
+                                        "Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist",
+                                        proxy_name,
+                                        node,
+                                        node
+                                    );
+                                    continue;
+                                }
+                                tracing::error!(
+                                    "Failed to select node for proxy: {}, node: {}",
+                                    proxy_name,
+                                    node
+                                );
+                                return;
+                            } else {
+                                tracing::info!(
+                                    "Selected node for proxy: {}, node: {}",
+                                    proxy_name,
+                                    node
+                                );
+                            }
                         }
-                        tracing::error!(
-                            "Failed to select node for proxy: {}, node: {}",
-                            proxy_name,
-                            node
-                        );
-                        return;
-                    } else {
-                        tracing::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
                     }
                 }
+
+                if let Ok(archive_file) = dirs::backup_archive_file()
+                    && archive_file.exists()
+                {
+                    let _ = std::fs::remove_file(archive_file);
+                }
+                crate::utils::resolve::create_window();
             }
-            if let Ok(archive_file) = dirs::backup_archive_file()
-                && archive_file.exists()
-            {
-                let _ = std::fs::remove_file(archive_file);
-            }
-            crate::utils::resolve::create_window();
         };
 
         self.add_async_task(ACTIVATING_SELECTED_TASK_ID, 3, body)?;
@@ -217,19 +226,17 @@ impl Timer {
     /// generate a map -> (uid, update_interval)
     fn gen_profiles_interval(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
-
         let profiles = Config::profiles().latest().get_profiles();
         for profile in profiles.iter() {
-            if profile.option.is_some() {
-                let option = profile.option.as_ref().unwrap();
+            if let Some(uid) = profile.uid.as_ref()
+                && let Some(option) = profile.option.as_ref()
+            {
                 let interval = option.update_interval.unwrap_or(0);
-
                 if interval > 0 {
-                    new_map.insert(profile.uid.clone().unwrap(), interval);
+                    new_map.insert(uid.clone(), interval);
                 }
             }
         }
-
         new_map
     }
 

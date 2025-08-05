@@ -124,11 +124,13 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
 // use vscode by default
 #[cfg(target_os = "windows")]
 pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
+    use std::sync::Arc;
+
     use tauri_plugin_opener::OpenerExt;
     use tauri_plugin_shell::ShellExt;
 
     let shell = app.shell();
-    let path_ = path.clone();
+    let path_ = Arc::new(&path);
     let output = tauri::async_runtime::block_on(async move {
         shell
             .command("cmd")

@@ -105,9 +105,11 @@ impl Hotkey {
             let func = iter.next();
             let key = iter.next();
 
-            if func.is_some() && key.is_some() {
-                let func = func.unwrap().trim();
-                let key = key.unwrap().trim();
+            if let Some(func) = func
+                && let Some(key) = key
+            {
+                let func = func.trim();
+                let key = key.trim();
                 map.insert(key, func);
             }
         });
