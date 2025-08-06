@@ -49,12 +49,12 @@ pub fn embed_server() {
     let port = IVerge::get_singleton_port();
 
     AsyncHandler::spawn(move || async move {
-        let visible = warp::path!("commands" / "visible").map(move || {
+        let visible = warp::path!("commands" / "visible").map(|| {
             resolve::create_window(false);
-            "ok"
+            warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
         });
 
-        let pac = warp::path!("commands" / "pac").map(move || {
+        let pac = warp::path!("commands" / "pac").map(|| {
             let content = Config::verge()
                 .latest_ref()
                 .pac_file_content

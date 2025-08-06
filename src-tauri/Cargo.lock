@@ -8456,6 +8456,7 @@ dependencies = [
  "http 1.3.1",
  "http-body-util",
  "hyper 1.6.0",
+ "hyper-util",
  "log",
  "mime",
  "mime_guess",
