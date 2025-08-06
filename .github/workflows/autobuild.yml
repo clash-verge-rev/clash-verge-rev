@@ -69,31 +69,93 @@ jobs:
             exit 0
           fi
 
-          # Check if current version already has assets in autobuild release
-          CURRENT_COMMIT=$(git rev-parse --short HEAD)
-          echo "📝 Current commit: $CURRENT_COMMIT"
+          # Find the last commit that changed Tauri-related files
+          echo "🔍 Finding last commit with Tauri-related changes..."
 
-          # Generate the version that would be created for autobuild
+          # Define patterns for Tauri-related files
+          TAURI_PATTERNS="src/ src-tauri/src src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities"
+
+          # Get the last commit that changed any of these patterns (excluding build artifacts)
+          LAST_TAURI_COMMIT=""
+          for commit in $(git rev-list HEAD --max-count=50); do
+            # Check if this commit changed any Tauri-related files
+            CHANGED_FILES=$(git show --name-only --pretty=format: $commit | tr '\n' ' ')
+            HAS_TAURI_CHANGES=false
+            
+            # Check each pattern
+            if echo "$CHANGED_FILES" | grep -q "src/" && echo "$CHANGED_FILES" | grep -qvE "src/(dist|build|node_modules|\.next|\.cache)"; then
+              HAS_TAURI_CHANGES=true
+            elif echo "$CHANGED_FILES" | grep -qE "src-tauri/(src|Cargo\.(toml|lock)|tauri\..*\.conf\.json|build\.rs|capabilities)"; then
+              HAS_TAURI_CHANGES=true
+            fi
+            
+            if [ "$HAS_TAURI_CHANGES" = true ]; then
+              LAST_TAURI_COMMIT=$(git rev-parse --short $commit)
+              break
+            fi
+          done
+
+          if [ -z "$LAST_TAURI_COMMIT" ]; then
+            echo "⚠️  No Tauri-related changes found in recent commits, using current commit"
+            LAST_TAURI_COMMIT=$(git rev-parse --short HEAD)
+          fi
+
+          echo "📝 Last Tauri-related commit: $LAST_TAURI_COMMIT"
+          echo "📝 Current commit: $(git rev-parse --short HEAD)"
+
+          # Generate the version that would be created for autobuild using the last Tauri commit
           CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
           MONTH=$(date +%m)
           DAY=$(date +%d)
-          EXPECTED_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${CURRENT_COMMIT}"
+          EXPECTED_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${LAST_TAURI_COMMIT}"
           echo "🏷️  Expected autobuild version: $EXPECTED_VERSION"
 
-          # Check if autobuild release exists and has assets for current version
-          echo "🔍 Checking if autobuild assets already exist..."
-          # Escape special characters in version for regex matching
-          EXPECTED_VERSION_ESCAPED=$(echo "$EXPECTED_VERSION" | sed 's/[+.]/\\&/g')
-          EXISTING_ASSETS=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets[].name' 2>/dev/null | grep -E "${EXPECTED_VERSION_ESCAPED}" || true)
+          # Check if autobuild release exists
+          echo "🔍 Checking autobuild release and latest.json..."
+          AUTOBUILD_RELEASE_EXISTS=$(gh release view "${{ env.TAG_NAME }}" --json id -q '.id' 2>/dev/null || echo "")
 
-          if [ -n "$EXISTING_ASSETS" ]; then
-            echo "📦 Existing assets:"
-            echo "$EXISTING_ASSETS"
-            echo "❌ Autobuild assets already exist for version $EXPECTED_VERSION"
-            echo "should_run=false" >> $GITHUB_OUTPUT
-          else
-            echo "✅ No autobuild assets found for version $EXPECTED_VERSION, build needed"
+          if [ -z "$AUTOBUILD_RELEASE_EXISTS" ]; then
+            echo "✅ No autobuild release exists, build needed"
             echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            # Check if latest.json exists in the release
+            LATEST_JSON_EXISTS=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets[] | select(.name == "latest.json") | .name' 2>/dev/null || echo "")
+            
+            if [ -z "$LATEST_JSON_EXISTS" ]; then
+              echo "✅ No latest.json found in autobuild release, build needed"
+              echo "should_run=true" >> $GITHUB_OUTPUT
+            else
+              # Download and parse latest.json to check version and commit hash
+              echo "📥 Downloading latest.json to check version..."
+              LATEST_JSON_URL=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets[] | select(.name == "latest.json") | .browser_download_url' 2>/dev/null)
+              
+              if [ -n "$LATEST_JSON_URL" ]; then
+                LATEST_JSON_CONTENT=$(curl -s "$LATEST_JSON_URL" 2>/dev/null || echo "")
+                
+                if [ -n "$LATEST_JSON_CONTENT" ]; then
+                  LATEST_VERSION=$(echo "$LATEST_JSON_CONTENT" | jq -r '.version' 2>/dev/null || echo "")
+                  echo "📦 Latest autobuild version: $LATEST_VERSION"
+                  
+                  # Extract commit hash from version string (format: X.Y.Z+autobuild.MMDD.commit)
+                  LATEST_COMMIT=$(echo "$LATEST_VERSION" | sed -n 's/.*+autobuild\.[0-9]\{4\}\.\([a-f0-9]*\)$/\1/p' || echo "")
+                  echo "📝 Latest autobuild commit: $LATEST_COMMIT"
+                  
+                  if [ "$LAST_TAURI_COMMIT" != "$LATEST_COMMIT" ]; then
+                    echo "✅ Tauri commit hash mismatch ($LAST_TAURI_COMMIT != $LATEST_COMMIT), build needed"
+                    echo "should_run=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "❌ Same Tauri commit hash ($LAST_TAURI_COMMIT), no build needed"
+                    echo "should_run=false" >> $GITHUB_OUTPUT
+                  fi
+                else
+                  echo "⚠️  Failed to download or parse latest.json, build needed"
+                  echo "should_run=true" >> $GITHUB_OUTPUT
+                fi
+              else
+                echo "⚠️  Failed to get latest.json download URL, build needed"
+                echo "should_run=true" >> $GITHUB_OUTPUT
+              fi
+            fi
           fi
 
   update_tag:
@@ -517,3 +579,142 @@ jobs:
         run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  generate-latest-json:
+    name: Generate latest.json
+    runs-on: ubuntu-latest
+    needs:
+      [
+        autobuild-x86-windows-macos-linux,
+        autobuild-arm-linux,
+        autobuild-x86-arm-windows_webview2,
+      ]
+    if: ${{ always() && (needs.autobuild-x86-windows-macos-linux.result == 'success' || needs.autobuild-arm-linux.result == 'success' || needs.autobuild-x86-arm-windows_webview2.result == 'success') }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate and upload latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get current version and find last Tauri-related commit
+          VERSION=$(cat package.json | jq -r '.version')
+          CURRENT_COMMIT=$(git rev-parse --short HEAD)
+
+          # Find the last commit that changed Tauri-related files (same logic as check_commit job)
+          echo "🔍 Finding last commit with Tauri-related changes..."
+          LAST_TAURI_COMMIT=""
+          for commit in $(git rev-list HEAD --max-count=50); do
+            CHANGED_FILES=$(git show --name-only --pretty=format: $commit | tr '\n' ' ')
+            HAS_TAURI_CHANGES=false
+            
+            if echo "$CHANGED_FILES" | grep -q "src/" && echo "$CHANGED_FILES" | grep -qvE "src/(dist|build|node_modules|\.next|\.cache)"; then
+              HAS_TAURI_CHANGES=true
+            elif echo "$CHANGED_FILES" | grep -qE "src-tauri/(src|Cargo\.(toml|lock)|tauri\..*\.conf\.json|build\.rs|capabilities)"; then
+              HAS_TAURI_CHANGES=true
+            fi
+            
+            if [ "$HAS_TAURI_CHANGES" = true ]; then
+              LAST_TAURI_COMMIT=$(git rev-parse --short $commit)
+              break
+            fi
+          done
+
+          if [ -z "$LAST_TAURI_COMMIT" ]; then
+            echo "⚠️  No Tauri-related changes found in recent commits, using current commit"
+            LAST_TAURI_COMMIT=$CURRENT_COMMIT
+          fi
+
+          echo "📝 Last Tauri-related commit: $LAST_TAURI_COMMIT"
+
+          # Generate the version that was created for autobuild using the Tauri commit
+          CURRENT_BASE_VERSION=$(echo "$VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
+          MONTH=$(date +%m)
+          DAY=$(date +%d)
+          AUTOBUILD_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${LAST_TAURI_COMMIT}"
+
+          echo "📦 Autobuild version: $AUTOBUILD_VERSION"
+          echo "📝 Last Tauri-related commit: $LAST_TAURI_COMMIT"
+          echo "📝 Current commit: $CURRENT_COMMIT"
+          echo "🕒 Build time: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
+
+          # Get all assets from the autobuild release
+          echo "📥 Fetching release assets..."
+          ASSETS_JSON=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets')
+
+          # Filter assets that match the current autobuild version
+          MATCHING_ASSETS=$(echo "$ASSETS_JSON" | jq --arg version "$AUTOBUILD_VERSION" '
+            map(select(.name | contains($version))) | 
+            map({
+              name: .name,
+              signature: (.name | if endswith(".sig") then .browser_download_url else empty end),
+              url: (if (.name | endswith(".sig") | not) then .browser_download_url else empty end)
+            }) | 
+            map(select(.url or .signature))'
+          )
+
+          # Create platforms object
+          PLATFORMS_JSON=$(echo "$MATCHING_ASSETS" | jq '
+            reduce .[] as $item ({};
+              if ($item.name | test("x64.*\\.app\\.tar\\.gz$")) then
+                .["darwin-x86_64"] = {
+                  signature: (if $item.signature then $item.signature else (.["darwin-x86_64"].signature // "") end),
+                  url: (if $item.url then $item.url else (.["darwin-x86_64"].url // "") end)
+                }
+              elif ($item.name | test("aarch64.*\\.app\\.tar\\.gz$")) then
+                .["darwin-aarch64"] = {
+                  signature: (if $item.signature then $item.signature else (.["darwin-aarch64"].signature // "") end),
+                  url: (if $item.url then $item.url else (.["darwin-aarch64"].url // "") end)
+                }
+              elif ($item.name | test("x64-setup\\.exe$")) then
+                .["windows-x86_64"] = {
+                  signature: (if $item.signature then $item.signature else (.["windows-x86_64"].signature // "") end),
+                  url: (if $item.url then $item.url else (.["windows-x86_64"].url // "") end)
+                }
+              elif ($item.name | test("arm64-setup\\.exe$")) then
+                .["windows-aarch64"] = {
+                  signature: (if $item.signature then $item.signature else (.["windows-aarch64"].signature // "") end),
+                  url: (if $item.url then $item.url else (.["windows-aarch64"].url // "") end)
+                }
+              else
+                .
+              end
+            )'
+          )
+
+          # Download signature content for each platform
+          for platform in $(echo "$PLATFORMS_JSON" | jq -r 'keys[]'); do
+            SIG_URL=$(echo "$PLATFORMS_JSON" | jq -r --arg p "$platform" '.[$p].signature // empty')
+            if [ -n "$SIG_URL" ] && [ "$SIG_URL" != "null" ]; then
+              echo "📥 Downloading signature for $platform..."
+              SIG_CONTENT=$(curl -s "$SIG_URL" || echo "")
+              if [ -n "$SIG_CONTENT" ]; then
+                PLATFORMS_JSON=$(echo "$PLATFORMS_JSON" | jq --arg p "$platform" --arg sig "$SIG_CONTENT" '.[$p].signature = $sig')
+              fi
+            fi
+          done
+
+          # Generate latest.json
+          cat > latest.json << EOF
+          {
+            "version": "$AUTOBUILD_VERSION",
+            "notes": "More new features are now supported.",
+            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)",
+            "platforms": $PLATFORMS_JSON
+          }
+          EOF
+
+          echo "📝 Generated latest.json:"
+          cat latest.json
+
+          # Remove existing latest.json if it exists
+          EXISTING_LATEST_JSON=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets[] | select(.name == "latest.json") | .id' 2>/dev/null || echo "")
+          if [ -n "$EXISTING_LATEST_JSON" ]; then
+            echo "🗑️  Removing existing latest.json..."
+            gh release delete-asset "${{ env.TAG_NAME }}" latest.json -y
+          fi
+
+          # Upload latest.json to the release
+          echo "📤 Uploading latest.json to autobuild release..."
+          gh release upload "${{ env.TAG_NAME }}" latest.json

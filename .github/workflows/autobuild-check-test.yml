@@ -50,15 +50,82 @@ jobs:
             exit 0
           fi
 
-          # 检查 autobuild release 下是否已存在当前 commit 产物
+          # 找到最后一个修改 Tauri 相关文件的 commit
+          echo "🔍 查找最后一个 Tauri 相关变更的 commit..."
+
+          LAST_TAURI_COMMIT=""
+          for commit in $(git rev-list HEAD --max-count=50); do
+            # 检查此 commit 是否修改了 Tauri 相关文件
+            CHANGED_FILES=$(git show --name-only --pretty=format: $commit | tr '\n' ' ')
+            HAS_TAURI_CHANGES=false
+            
+            # 检查各个模式
+            if echo "$CHANGED_FILES" | grep -q "src/" && echo "$CHANGED_FILES" | grep -qvE "src/(dist|build|node_modules|\.next|\.cache)"; then
+              HAS_TAURI_CHANGES=true
+            elif echo "$CHANGED_FILES" | grep -qE "src-tauri/(src|Cargo\.(toml|lock)|tauri\..*\.conf\.json|build\.rs|capabilities)"; then
+              HAS_TAURI_CHANGES=true
+            fi
+            
+            if [ "$HAS_TAURI_CHANGES" = true ]; then
+              LAST_TAURI_COMMIT=$(git rev-parse --short $commit)
+              break
+            fi
+          done
+
+          if [ -z "$LAST_TAURI_COMMIT" ]; then
+            echo "⚠️  最近的 commits 中未找到 Tauri 相关变更，使用当前 commit"
+            LAST_TAURI_COMMIT=$(git rev-parse --short HEAD)
+          fi
+
           CURRENT_COMMIT=$(git rev-parse --short HEAD)
-          EXISTING_ASSETS=$(gh release view "autobuild" --json assets -q '.assets[].name' 2>/dev/null | grep -E "${CURRENT_COMMIT//+/\\+}" || true)
-          if [ -n "$EXISTING_ASSETS" ]; then
-            echo "should_run=false" >> $GITHUB_OUTPUT
-            echo "🔴 已存在当前 commit 的 autobuild 产物"
-          else
+          echo "📝 最后 Tauri 相关 commit: $LAST_TAURI_COMMIT"
+          echo "📝 当前 commit: $CURRENT_COMMIT"
+
+          # 检查 autobuild release 是否存在
+          AUTOBUILD_RELEASE_EXISTS=$(gh release view "autobuild" --json id -q '.id' 2>/dev/null || echo "")
+
+          if [ -z "$AUTOBUILD_RELEASE_EXISTS" ]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "🟢 没有 autobuild 产物，需构建"
+            echo "🟢 没有 autobuild release，需构建"
+          else
+            # 检查 latest.json 是否存在
+            LATEST_JSON_EXISTS=$(gh release view "autobuild" --json assets -q '.assets[] | select(.name == "latest.json") | .name' 2>/dev/null || echo "")
+            
+            if [ -z "$LATEST_JSON_EXISTS" ]; then
+              echo "should_run=true" >> $GITHUB_OUTPUT
+              echo "🟢 没有 latest.json，需构建"
+            else
+              # 下载并解析 latest.json 检查版本和 commit hash
+              echo "📥 下载 latest.json 检查版本..."
+              LATEST_JSON_URL=$(gh release view "autobuild" --json assets -q '.assets[] | select(.name == "latest.json") | .browser_download_url' 2>/dev/null)
+              
+              if [ -n "$LATEST_JSON_URL" ]; then
+                LATEST_JSON_CONTENT=$(curl -s "$LATEST_JSON_URL" 2>/dev/null || echo "")
+                
+                if [ -n "$LATEST_JSON_CONTENT" ]; then
+                  LATEST_VERSION=$(echo "$LATEST_JSON_CONTENT" | jq -r '.version' 2>/dev/null || echo "")
+                  echo "📦 最新 autobuild 版本: $LATEST_VERSION"
+                  
+                  # 从版本字符串中提取 commit hash (格式: X.Y.Z+autobuild.MMDD.commit)
+                  LATEST_COMMIT=$(echo "$LATEST_VERSION" | sed -n 's/.*+autobuild\.[0-9]\{4\}\.\([a-f0-9]*\)$/\1/p' || echo "")
+                  echo "📝 最新 autobuild commit: $LATEST_COMMIT"
+                  
+                  if [ "$LAST_TAURI_COMMIT" != "$LATEST_COMMIT" ]; then
+                    echo "should_run=true" >> $GITHUB_OUTPUT
+                    echo "🟢 Tauri commit hash 不匹配 ($LAST_TAURI_COMMIT != $LATEST_COMMIT)，需构建"
+                  else
+                    echo "should_run=false" >> $GITHUB_OUTPUT
+                    echo "🔴 相同 Tauri commit hash ($LAST_TAURI_COMMIT)，不需构建"
+                  fi
+                else
+                  echo "should_run=true" >> $GITHUB_OUTPUT
+                  echo "⚠️  无法下载或解析 latest.json，需构建"
+                fi
+              else
+                echo "should_run=true" >> $GITHUB_OUTPUT
+                echo "⚠️  无法获取 latest.json 下载 URL，需构建"
+              fi
+            fi
           fi
 
       - name: Output should_run result
