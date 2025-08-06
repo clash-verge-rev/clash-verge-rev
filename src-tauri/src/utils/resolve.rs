@@ -127,7 +127,13 @@ pub async fn find_unused_port() -> Result<u16> {
 /// 异步方式处理启动后的额外任务
 pub async fn resolve_setup_async(app_handle: &AppHandle) {
     let start_time = std::time::Instant::now();
-    logging!(info, Type::Setup, true, "开始执行异步设置任务...");
+    logging!(
+        info,
+        Type::Setup,
+        true,
+        "开始执行异步设置任务... 线程ID: {:?}",
+        std::thread::current().id()
+    );
 
     if VERSION.get().is_none() {
         let version = app_handle.package_info().version.to_string();
@@ -151,16 +157,26 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
         );
     }
 
-    logging!(trace, Type::Config, true, "初始化配置...");
+    logging!(
+        info,
+        Type::Config,
+        true,
+        "开始初始化配置... 线程ID: {:?}",
+        std::thread::current().id()
+    );
     logging_error!(Type::Config, true, Config::init_config().await);
+    logging!(info, Type::Config, true, "配置初始化完成");
 
     // 启动时清理冗余的 Profile 文件
-    logging!(info, Type::Setup, true, "清理冗余的Profile文件...");
-    let profiles = Config::profiles();
-    if let Err(e) = profiles.latest_ref().auto_cleanup() {
-        logging!(warn, Type::Setup, true, "启动时清理Profile文件失败: {}", e);
-    } else {
-        logging!(info, Type::Setup, true, "启动时Profile文件清理完成");
+    logging!(info, Type::Setup, true, "开始清理冗余的Profile文件...");
+
+    match Config::profiles().latest_ref().auto_cleanup() {
+        Ok(_) => {
+            logging!(info, Type::Setup, true, "启动时Profile文件清理完成");
+        }
+        Err(e) => {
+            logging!(warn, Type::Setup, true, "启动时清理Profile文件失败: {}", e);
+        }
     }
 
     logging!(trace, Type::Core, true, "启动核心管理器...");
@@ -170,30 +186,6 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     server::embed_server();
 
     logging!(trace, Type::Core, true, "启动 IPC 监控服务...");
-    // IPC 监控器将在首次调用时自动初始化
-
-    // // 启动测试线程，持续打印流量数据
-    // logging!(info, Type::Core, true, "启动流量数据测试线程...");
-    // AsyncHandler::spawn(|| async {
-    //     let mut interval = tokio::time::interval(std::time::Duration::from_secs(2));
-    //     loop {
-    //         interval.tick().await;
-
-    //         let traffic_data = get_current_traffic().await;
-    //         let memory_data = get_current_memory().await;
-
-    //         println!("=== Traffic Data Test (IPC) ===");
-    //         println!(
-    //             "Traffic - Up: {} bytes/s, Down: {} bytes/s, Last Updated: {:?}",
-    //             traffic_data.up_rate, traffic_data.down_rate, traffic_data.last_updated
-    //         );
-    //         println!(
-    //             "Memory - InUse: {} bytes, OSLimit: {:?}, Last Updated: {:?}",
-    //             memory_data.inuse, memory_data.oslimit, memory_data.last_updated
-    //         );
-    //         println!("==============================");
-    //     }
-    // });
 
     logging_error!(Type::Tray, true, tray::Tray::global().init());
 
@@ -483,42 +475,82 @@ pub fn create_window(is_show: bool) -> bool {
                         timeout_seconds
                     );
 
-                    // 异步监控UI状态，不影响窗口显示
+                    // 异步监控UI状态，使用try_read避免死锁
                     tokio::spawn(async move {
-                        let wait_result =
-                            tokio::time::timeout(Duration::from_secs(timeout_seconds), async {
-                                let mut check_count = 0;
-                                while !*get_ui_ready().read() {
-                                    tokio::time::sleep(Duration::from_millis(100)).await;
-                                    check_count += 1;
+                        logging!(
+                            debug,
+                            Type::Window,
+                            true,
+                            "启动UI状态监控线程，超时{}秒",
+                            timeout_seconds
+                        );
 
-                                    // 每2秒记录一次等待状态
-                                    if check_count % 20 == 0 {
-                                        logging!(
-                                            debug,
-                                            Type::Window,
-                                            true,
-                                            "UI加载状态检查... ({}秒)",
-                                            check_count / 10
-                                        );
-                                    }
+                        let ui_ready_checker = || async {
+                            let (mut check_count, mut consecutive_failures) = (0, 0);
+
+                            loop {
+                                let is_ready = get_ui_ready()
+                                    .try_read()
+                                    .map(|guard| *guard)
+                                    .unwrap_or_else(|| {
+                                        consecutive_failures += 1;
+                                        if consecutive_failures > 50 {
+                                            logging!(
+                                                warn,
+                                                Type::Window,
+                                                true,
+                                                "UI状态监控连续{}次无法获取读锁，可能存在死锁",
+                                                consecutive_failures
+                                            );
+                                            consecutive_failures = 0;
+                                        }
+                                        false
+                                    });
+
+                                if is_ready {
+                                    logging!(
+                                        debug,
+                                        Type::Window,
+                                        true,
+                                        "UI状态监控检测到就绪信号，退出监控"
+                                    );
+                                    return;
                                 }
-                            })
-                            .await;
+
+                                consecutive_failures = 0;
+                                tokio::time::sleep(Duration::from_millis(100)).await;
+                                check_count += 1;
+
+                                if check_count % 20 == 0 {
+                                    logging!(
+                                        debug,
+                                        Type::Window,
+                                        true,
+                                        "UI加载状态检查... ({}秒)",
+                                        check_count / 10
+                                    );
+                                }
+                            }
+                        };
+
+                        let wait_result = tokio::time::timeout(
+                            Duration::from_secs(timeout_seconds),
+                            ui_ready_checker(),
+                        )
+                        .await;
 
                         match wait_result {
                             Ok(_) => {
                                 logging!(info, Type::Window, true, "UI已完全加载就绪");
-                                // 移除初始加载指示器
-                                if let Some(window) = handle::Handle::global().get_window() {
-                                    let _ = window.eval(r#"
+                                handle::Handle::global()
+                                    .get_window()
+                                    .map(|window| window.eval(r#"
                                         const overlay = document.getElementById('initial-loading-overlay');
                                         if (overlay) {
                                             overlay.style.opacity = '0';
                                             setTimeout(() => overlay.remove(), 300);
                                         }
-                                    "#);
-                                }
+                                    "#));
                             }
                             Err(_) => {
                                 logging!(
@@ -528,7 +560,26 @@ pub fn create_window(is_show: bool) -> bool {
                                     "UI加载监控超时({}秒)，但窗口已正常显示",
                                     timeout_seconds
                                 );
-                                *get_ui_ready().write() = true;
+
+                                get_ui_ready()
+                                    .try_write()
+                                    .map(|mut guard| {
+                                        *guard = true;
+                                        logging!(
+                                            info,
+                                            Type::Window,
+                                            true,
+                                            "超时后成功设置UI就绪状态"
+                                        );
+                                    })
+                                    .unwrap_or_else(|| {
+                                        logging!(
+                                            error,
+                                            Type::Window,
+                                            true,
+                                            "超时后无法获取UI状态写锁，可能存在严重死锁"
+                                        );
+                                    });
                             }
                         }
                     });
@@ -633,24 +684,37 @@ async fn resolve_random_port_config() -> Result<()> {
 
     let port_to_save = port;
 
-    tokio::task::spawn_blocking(move || {
-        let verge_config_accessor = Config::verge();
-        let mut verge_data = verge_config_accessor.data_mut();
-        verge_data.patch_config(IVerge {
-            verge_mixed_port: Some(port_to_save),
-            ..IVerge::default()
-        });
-        verge_data.save_file()
-    })
-    .await??; // First ? for spawn_blocking error, second for save_file Result
+    // 合并配置访问以避免锁竞争死锁
+    tokio::task::spawn_blocking(move || -> Result<()> {
+        logging!(
+            debug,
+            Type::Config,
+            true,
+            "开始合并配置更新操作，避免锁竞争"
+        );
 
-    tokio::task::spawn_blocking(move || {
-        let clash_config_accessor = Config::clash(); // Extend lifetime of the accessor
-        let mut clash_data = clash_config_accessor.data_mut(); // Access within blocking task, made mutable
-        let mut mapping = Mapping::new();
-        mapping.insert("mixed-port".into(), port_to_save.into());
-        clash_data.patch_config(mapping);
-        clash_data.save_config()
+        // 按顺序更新配置，避免交叉锁定
+        {
+            let verge_accessor = Config::verge();
+            let mut verge_data = verge_accessor.data_mut();
+            verge_data.patch_config(IVerge {
+                verge_mixed_port: Some(port_to_save),
+                ..IVerge::default()
+            });
+            verge_data.save_file()?;
+        }
+
+        {
+            let clash_accessor = Config::clash();
+            let mut clash_data = clash_accessor.data_mut();
+            let mut mapping = Mapping::new();
+            mapping.insert("mixed-port".into(), port_to_save.into());
+            clash_data.patch_config(mapping);
+            clash_data.save_config()?;
+        }
+
+        logging!(debug, Type::Config, true, "配置更新操作完成");
+        Ok(())
     })
     .await??;
 

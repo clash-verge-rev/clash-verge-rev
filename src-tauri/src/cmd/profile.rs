@@ -216,7 +216,7 @@ pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult
         }
         Ok(Err(e)) => {
             logging!(error, Type::Cmd, true, "[导入订阅] 导入失败: {}", e);
-            Err(format!("导入订阅失败: {}", e).into())
+            Err(format!("导入订阅失败: {e}"))
         }
         Err(_) => {
             logging!(error, Type::Cmd, true, "[导入订阅] 导入超时(60秒): {}", url);
