@@ -34,11 +34,8 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { verge, mutateVerge, patchVerge } = useVerge();
   const { installServiceAndRestartCore } = useServiceInstaller();
-  const {
-    actualState: systemProxyActualState,
-    indicator: systemProxyIndicator,
-    toggleSystemProxy,
-  } = useSystemProxyState();
+  const { actualState: systemProxyActualState, toggleSystemProxy } =
+    useSystemProxyState();
 
   const { isAdminMode, isServiceMode, mutateRunningMode } = useSystemState();
 
@@ -179,7 +176,7 @@ const SettingSystem = ({ onError }: Props) => {
               icon={SettingsRounded}
               onClick={() => sysproxyRef.current?.open()}
             />
-            {systemProxyIndicator ? (
+            {systemProxyActualState ? (
               <PlayArrowRounded sx={{ color: "success.main", mr: 1 }} />
             ) : (
               <PauseRounded sx={{ color: "error.main", mr: 1 }} />

@@ -18,13 +18,18 @@ export const useSystemProxyState = () => {
   const getSystemProxyActualState = () => {
     const userEnabled = enable_system_proxy ?? false;
 
+    // 用户配置状态应该与系统实际状态一致
+    // 如果用户启用了系统代理，检查实际的系统状态
     if (userEnabled) {
-      return true;
+      if (proxy_auto_config) {
+        return autoproxy?.enable ?? false;
+      } else {
+        return sysproxy?.enable ?? false;
+      }
     }
 
-    return autoproxy?.enable === false && sysproxy?.enable === false
-      ? false
-      : userEnabled;
+    // 用户没有启用时，返回 false
+    return false;
   };
 
   const getSystemProxyIndicator = () => {

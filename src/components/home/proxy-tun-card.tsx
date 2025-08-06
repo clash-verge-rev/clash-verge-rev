@@ -146,7 +146,7 @@ export const ProxyTunCard: FC = () => {
 
   const { verge } = useVerge();
   const { isAdminMode } = useSystemState();
-  const { indicator: systemProxyIndicator } = useSystemProxyState();
+  const { actualState: systemProxyActualState } = useSystemProxyState();
 
   const { enable_tun_mode } = verge ?? {};
 
@@ -182,7 +182,7 @@ export const ProxyTunCard: FC = () => {
   const tabDescription = useMemo(() => {
     if (activeTab === "system") {
       return {
-        text: systemProxyIndicator
+        text: systemProxyActualState
           ? t("System Proxy Enabled")
           : t("System Proxy Disabled"),
         tooltip: t("System Proxy Info"),
@@ -197,7 +197,7 @@ export const ProxyTunCard: FC = () => {
         tooltip: t("TUN Mode Intercept Info"),
       };
     }
-  }, [activeTab, systemProxyIndicator, enable_tun_mode, isTunAvailable, t]);
+  }, [activeTab, systemProxyActualState, enable_tun_mode, isTunAvailable, t]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
@@ -216,7 +216,7 @@ export const ProxyTunCard: FC = () => {
           onClick={() => handleTabChange("system")}
           icon={ComputerRounded}
           label={t("System Proxy")}
-          hasIndicator={systemProxyIndicator}
+          hasIndicator={systemProxyActualState}
         />
         <TabButton
           isActive={activeTab === "tun"}

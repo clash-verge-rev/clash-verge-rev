@@ -40,11 +40,8 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const theme = useTheme();
   const { installServiceAndRestartCore } = useServiceInstaller();
 
-  const {
-    actualState: systemProxyActualState,
-    indicator: systemProxyIndicator,
-    toggleSystemProxy,
-  } = useSystemProxyState();
+  const { actualState: systemProxyActualState, toggleSystemProxy } =
+    useSystemProxyState();
 
   const { data: runningMode } = useSWR("getRunningMode", getRunningMode);
 
@@ -99,7 +96,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {systemProxyIndicator ? (
+            {systemProxyActualState ? (
               <PlayCircleOutlineRounded
                 sx={{ color: "success.main", mr: 1.5, fontSize: 28 }}
               />
