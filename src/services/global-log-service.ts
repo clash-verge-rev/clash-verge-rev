@@ -185,10 +185,7 @@ export const clearGlobalLogs = () => {
 export const useGlobalLogData = (logLevel: LogLevel = "all") => {
   const logs = useGlobalLogStore((state) => state.logs);
 
-  // 根据当前选择的日志等级过滤日志
-  if (logLevel === "all") {
-    return logs;
-  } else {
-    return logs.filter((log) => log.type.toLowerCase() === logLevel);
-  }
+  // 日志已经在后端根据级别进行了过滤，这里直接返回所有日志
+  // 不需要在前端再次过滤，避免重复过滤导致DEBUG日志丢失
+  return logs;
 };

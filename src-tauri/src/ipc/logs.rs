@@ -234,6 +234,19 @@ impl LogsMonitor {
             // Filter logs based on level if needed
             let should_include = match filter_level {
                 "all" => true,
+                "debug" => true, // DEBUG level should include all log types
+                "info" => {
+                    let log_type = log_data.log_type.to_lowercase();
+                    matches!(log_type.as_str(), "info" | "warning" | "error")
+                }
+                "warning" => {
+                    let log_type = log_data.log_type.to_lowercase();
+                    matches!(log_type.as_str(), "warning" | "error")
+                }
+                "error" => {
+                    let log_type = log_data.log_type.to_lowercase();
+                    log_type == "error"
+                }
                 level => log_data.log_type.to_lowercase() == level.to_lowercase(),
             };
 
@@ -282,10 +295,22 @@ impl LogsMonitor {
             .iter()
             .filter(|log| {
                 if let Some(ref filter_level) = level {
-                    if filter_level == "all" {
-                        true
-                    } else {
-                        log.log_type.to_lowercase() == filter_level.to_lowercase()
+                    match filter_level.as_str() {
+                        "all" => true,
+                        "debug" => true, // DEBUG level should include all log types
+                        "info" => {
+                            let log_type = log.log_type.to_lowercase();
+                            matches!(log_type.as_str(), "info" | "warning" | "error")
+                        }
+                        "warning" => {
+                            let log_type = log.log_type.to_lowercase();
+                            matches!(log_type.as_str(), "warning" | "error")
+                        }
+                        "error" => {
+                            let log_type = log.log_type.to_lowercase();
+                            log_type == "error"
+                        }
+                        level => log.log_type.to_lowercase() == level.to_lowercase(),
                     }
                 } else {
                     true
