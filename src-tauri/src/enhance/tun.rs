@@ -18,7 +18,10 @@ macro_rules! append {
     };
 }
 
-pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
+// 添加一个静态变量来跟踪系统 DNS 是否被修改过
+static mut SYSTEM_DNS_MODIFIED: bool = false;
+
+pub async fn use_tun(mut config: Mapping, enable: bool, enable_dns_settings: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
     let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
@@ -57,19 +60,46 @@ pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
                 revise!(dns_val, "fake-ip-range", "198.18.0.1/16");
             }
 
+            // 处理系统 DNS 设置
             #[cfg(target_os = "macos")]
             {
-                crate::utils::resolve::restore_public_dns().await;
-                crate::utils::resolve::set_public_dns("223.6.6.6".to_string()).await;
+                unsafe {
+                    if enable_dns_settings {
+                        // 需要设置系统 DNS
+                        if !SYSTEM_DNS_MODIFIED {
+                            crate::utils::resolve::restore_public_dns().await;
+                            crate::utils::resolve::set_public_dns("223.6.6.6".to_string()).await;
+                            SYSTEM_DNS_MODIFIED = true;
+                            log::info!(target: "app", "System DNS set to 223.6.6.6 (TUN + DNS Overwrite enabled)");
+                        }
+                    } else {
+                        // 不需要设置系统 DNS，但如果之前设置过，需要恢复
+                        if SYSTEM_DNS_MODIFIED {
+                            crate::utils::resolve::restore_public_dns().await;
+                            SYSTEM_DNS_MODIFIED = false;
+                            log::info!(target: "app", "System DNS restored (DNS Overwrite disabled)");
+                        } else {
+                            log::info!(target: "app", "TUN mode enabled but DNS Overwrite disabled, skipping system DNS modification");
+                        }
+                    }
+                }
             }
         }
 
         // 当TUN启用时，将修改后的DNS配置写回
         revise!(config, "dns", dns_val);
     } else {
-        // TUN未启用时，仅恢复系统DNS，不修改配置文件中的DNS设置
+        // TUN未启用时，恢复系统DNS，不修改配置文件中的DNS设置
         #[cfg(target_os = "macos")]
-        crate::utils::resolve::restore_public_dns().await;
+        {
+            unsafe {
+                if SYSTEM_DNS_MODIFIED {
+                    crate::utils::resolve::restore_public_dns().await;
+                    SYSTEM_DNS_MODIFIED = false;
+                    log::info!(target: "app", "System DNS restored (TUN mode disabled)");
+                }
+            }
+        }
     }
 
     // 更新TUN配置
