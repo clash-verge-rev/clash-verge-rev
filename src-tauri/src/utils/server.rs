@@ -70,13 +70,13 @@ pub fn embed_server() {
                 .body(content)
                 .unwrap_or_default()
         });
-        async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
+        async fn scheme_handler(query: QueryParam) -> Result<String, Infallible> {
             logging_error!(
                 Type::Setup,
                 true,
                 resolve::resolve_scheme(query.param).await
             );
-            Ok("ok")
+            Ok("ok".to_string())
         }
 
         let scheme = warp::path!("commands" / "scheme")
