@@ -159,12 +159,14 @@ pub fn run() -> Result<()> {
         .expect("error while running tauri application");
 
     app.run(|app_handle, e| match e {
-        tauri::RunEvent::ExitRequested { code, api, .. } if code.is_none() => {
+        tauri::RunEvent::ExitRequested { code, api, .. } => {
             tauri::async_runtime::block_on(async move {
                 tracing::info!("exit requested, clear all ws connections");
                 let _ = handle::Handle::get_mihomo_read().await.clear_all_ws_connections().await;
             });
-            api.prevent_exit();
+            if code.is_none() {
+                api.prevent_exit();
+            }
         }
         tauri::RunEvent::WindowEvent { label, event, .. } => {
             if label == "main" {
