@@ -49,12 +49,8 @@ pub fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<LogMessage>>> {
 }
 
 #[tauri::command]
-pub fn get_pre_merge_result(
-    parent_uid: Option<String>,
-    modified_uid: String,
-) -> CmdResult<CmdMergeResult> {
-    let MergeResult { config, logs } =
-        wrap_err!(enhance::get_pre_merge_result(parent_uid, modified_uid))?;
+pub fn get_pre_merge_result(parent_uid: Option<String>, modified_uid: String) -> CmdResult<CmdMergeResult> {
+    let MergeResult { config, logs } = wrap_err!(enhance::get_pre_merge_result(parent_uid, modified_uid))?;
     let config = wrap_err!(serde_yaml::to_string(&config))?;
     Ok(CmdMergeResult { config, logs })
 }
@@ -65,8 +61,7 @@ pub async fn test_merge_chain(
     modified_uid: String,
     content: String,
 ) -> CmdResult<CmdMergeResult> {
-    let MergeResult { config, logs } =
-        wrap_err!(enhance::test_merge_chain(profile_uid, modified_uid, content).await)?;
+    let MergeResult { config, logs } = wrap_err!(enhance::test_merge_chain(profile_uid, modified_uid, content).await)?;
     let config = wrap_err!(serde_yaml::to_string(&config))?;
     Ok(CmdMergeResult { config, logs })
 }
@@ -83,12 +78,7 @@ pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
 
 #[tauri::command]
 pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
-    let enable_service_mode = {
-        Config::verge()
-            .latest()
-            .enable_service_mode
-            .unwrap_or_default()
-    };
+    let enable_service_mode = { Config::verge().latest().enable_service_mode.unwrap_or_default() };
     let logs = if enable_service_mode {
         let res = wrap_err!(service::get_logs().await)?;
         res.data.unwrap_or_default()

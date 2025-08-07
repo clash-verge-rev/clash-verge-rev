@@ -150,11 +150,7 @@ pub async fn install_service() -> Result<()> {
             .arg(log_dir.clone())
             .status()?,
         _ => {
-            let execute_cmd = format!(
-                "{} --log-dir {}",
-                installer_path.display(),
-                log_dir.display()
-            );
+            let execute_cmd = format!("{} --log-dir {}", installer_path.display(), log_dir.display());
             StdCommand::new(elevator)
                 .arg("sh")
                 .arg("-c")
@@ -186,9 +182,7 @@ pub async fn install_service() -> Result<()> {
         log_dir.display()
     );
 
-    let status = StdCommand::new("osascript")
-        .args(vec!["-e", &command])
-        .status()?;
+    let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 
     if !status.success() {
         bail!("failed to install service with status {:?}", status.code());
@@ -229,10 +223,7 @@ pub async fn uninstall_service() -> Result<()> {
     };
 
     if !status.success() {
-        bail!(
-            "failed to uninstall service with status {:?}",
-            status.code()
-        );
+        bail!("failed to uninstall service with status {:?}", status.code());
     }
 
     Ok(())
@@ -257,11 +248,7 @@ pub async fn uninstall_service() -> Result<()> {
             .arg(log_dir)
             .status()?,
         _ => {
-            let execute_cmd = format!(
-                "{} --log-dir {}",
-                uninstaller_path.display(),
-                log_dir.display()
-            );
+            let execute_cmd = format!("{} --log-dir {}", uninstaller_path.display(), log_dir.display());
             StdCommand::new(elevator)
                 .arg("sh")
                 .arg("-c")
@@ -294,9 +281,7 @@ pub async fn uninstall_service() -> Result<()> {
         log_dir.display()
     );
 
-    let status = StdCommand::new("osascript")
-        .args(vec!["-e", &command])
-        .status()?;
+    let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 
     if !status.success() {
         bail!("failed to install service with status {:?}", status.code());

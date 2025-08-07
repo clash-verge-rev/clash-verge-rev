@@ -1,21 +1,18 @@
 #![allow(dead_code)]
+use crate::error::Result;
 use classical::ClassicalParseStrategy;
 use domain::DomainParseStrategy;
+pub use error::RuleParseError;
 use ipcidr::IpCidrParseStrategy;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path};
 
-pub use error::RuleParseError;
-
-use crate::error::Result;
-
 mod bitmap;
-mod utils;
-
 mod classical;
 mod domain;
 mod error;
 mod ipcidr;
+mod utils;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum RuleBehavior {
@@ -103,11 +100,7 @@ trait Parser {
     fn parse(buf: &[u8], format: RuleFormat) -> Result<RulePayload>;
 }
 
-pub fn parse<P: AsRef<Path>>(
-    file_path: P,
-    behavior: RuleBehavior,
-    format: RuleFormat,
-) -> Result<RulePayload> {
+pub fn parse<P: AsRef<Path>>(file_path: P, behavior: RuleBehavior, format: RuleFormat) -> Result<RulePayload> {
     let buf = std::fs::read(file_path)?;
     match behavior {
         RuleBehavior::Domain => DomainParseStrategy::parse(&buf, format),
@@ -119,7 +112,11 @@ pub fn parse<P: AsRef<Path>>(
 #[cfg(test)]
 #[allow(deprecated)] // for std::env::home_dir() method, I develop on Linux, so it can get home dir
 mod tests {
-    use crate::{error::{Result, RuleParseError}, parse, RuleBehavior, RuleFormat};
+    use crate::{
+        RuleBehavior, RuleFormat,
+        error::{Result, RuleParseError},
+        parse,
+    };
     use std::io::{Read, Write};
 
     /// Test public parse method
@@ -178,26 +175,16 @@ mod tests {
         file.sync_all()?;
 
         // classical
-        let classical_yaml_path =
-            home_dir.join("Downloads/meta-rules-dat/geo/geoip/classical/ad.yaml");
-        let rule_payload = parse(
-            &classical_yaml_path,
-            RuleBehavior::Classical,
-            RuleFormat::Yaml,
-        )?;
+        let classical_yaml_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/classical/ad.yaml");
+        let rule_payload = parse(&classical_yaml_path, RuleBehavior::Classical, RuleFormat::Yaml)?;
         assert_ne!(rule_payload.count, 0);
         assert_ne!(rule_payload.rules.len(), 0);
         let mut file = std::fs::File::create("classical_yaml.txt")?;
         file.write_all(rule_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
-        let classical_txt_path =
-            home_dir.join("Downloads/meta-rules-dat/geo/geoip/classical/ad.list");
-        let rule_payload = parse(
-            &classical_txt_path,
-            RuleBehavior::Classical,
-            RuleFormat::Text,
-        )?;
+        let classical_txt_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/classical/ad.list");
+        let rule_payload = parse(&classical_txt_path, RuleBehavior::Classical, RuleFormat::Text)?;
         assert_ne!(rule_payload.count, 0);
         assert_ne!(rule_payload.rules.len(), 0);
         let mut file = std::fs::File::create("classical.txt")?;
@@ -280,9 +267,7 @@ mod tests {
                 let entry = entry.expect("failed to read entry");
                 let path = entry.path();
                 let file_name = path.file_name().expect("failed to get file name");
-                let file_name = file_name
-                    .to_str()
-                    .expect("failed to convert file name to string");
+                let file_name = file_name.to_str().expect("failed to convert file name to string");
                 mrs_files.push(file_name.to_string());
             });
 
@@ -344,10 +329,7 @@ mod tests {
         }
 
         if !mihomo_convert_error_file.is_empty() {
-            println!(
-                "mihomo convert error files: {:?}",
-                mihomo_convert_error_file
-            );
+            println!("mihomo convert error files: {:?}", mihomo_convert_error_file);
         }
 
         Ok(())

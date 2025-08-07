@@ -47,12 +47,7 @@ pub async fn resolve_setup() {
     tracing::trace!("register os shutdown handler");
     shutdown::register();
 
-    let silent_start = {
-        Config::verge()
-            .latest()
-            .enable_silent_start
-            .unwrap_or_default()
-    };
+    let silent_start = { Config::verge().latest().enable_silent_start.unwrap_or_default() };
     if !silent_start || dirs::backup_archive_file().is_ok_and(|file| file.exists()) {
         create_window();
     }
@@ -139,15 +134,11 @@ pub fn create_window() {
     let verge = Config::verge().latest().clone();
     let start_page = verge.start_page.unwrap_or("/".into());
 
-    let mut builder = tauri::WebviewWindowBuilder::new(
-        app_handle,
-        "main",
-        tauri::WebviewUrl::App(start_page.into()),
-    )
-    .title("Clash Verge")
-    .fullscreen(false)
-    .maximized(verge.window_is_maximized.unwrap_or(false))
-    .min_inner_size(600.0, 550.0);
+    let mut builder = tauri::WebviewWindowBuilder::new(app_handle, "main", tauri::WebviewUrl::App(start_page.into()))
+        .title("Clash Verge")
+        .fullscreen(false)
+        .maximized(verge.window_is_maximized.unwrap_or(false))
+        .min_inner_size(600.0, 550.0);
 
     let _decoration = verge.enable_system_title_bar.unwrap_or(false);
     #[cfg(not(target_os = "macos"))]
@@ -168,9 +159,7 @@ pub fn create_window() {
                 use crate::cmds;
                 let is_wayland = cmds::common::is_wayland().unwrap_or(false);
                 if _decoration && is_wayland {
-                    builder = builder
-                        .inner_size(w - 90.0, h - 90.0)
-                        .position(pos.0, pos.1);
+                    builder = builder.inner_size(w - 90.0, h - 90.0).position(pos.0, pos.1);
                 }
             }
         }
@@ -197,11 +186,7 @@ pub fn create_window() {
     let window = {
         use crate::cmds;
         let visible = _decoration && cmds::common::is_wayland().unwrap_or(false);
-        builder
-            .visible(visible)
-            .shadow(true)
-            .transparent(true)
-            .build()
+        builder.visible(visible).shadow(true).transparent(true).build()
     };
 
     match window {
@@ -281,12 +266,7 @@ pub async fn resolve_scheme(param: String) {
 }
 
 pub fn handle_window_close(api: CloseRequestApi, app_handle: &AppHandle) {
-    let keep_ui_active = {
-        Config::verge()
-            .latest()
-            .enable_keep_ui_active
-            .unwrap_or_default()
-    };
+    let keep_ui_active = { Config::verge().latest().enable_keep_ui_active.unwrap_or_default() };
     if keep_ui_active {
         if let Some(window) = app_handle.get_webview_window("main") {
             let _ = window.hide();

@@ -73,11 +73,7 @@ impl IProfiles {
     }
 
     pub fn save_file(&self) -> Result<()> {
-        help::save_yaml(
-            &dirs::profiles_path()?,
-            self,
-            Some("# Profiles Config for Clash Verge"),
-        )
+        help::save_yaml(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge"))
     }
 
     /// 只修改 current、global chain
@@ -147,30 +143,16 @@ impl IProfiles {
         let items = self.items.clone().unwrap_or_default();
         items
             .into_iter()
-            .filter(|o| {
-                matches!(
-                    o.itype,
-                    Some(ProfileType::Remote) | Some(ProfileType::Local)
-                )
-            })
+            .filter(|o| matches!(o.itype, Some(ProfileType::Remote) | Some(ProfileType::Local)))
             .collect::<Vec<PrfItem>>()
     }
 
     // include all enable or disable chains
-    pub fn get_profile_chains(
-        &self,
-        profile_uid: Option<String>,
-        enable_filter: EnableFilter,
-    ) -> Vec<ChainItem> {
+    pub fn get_profile_chains(&self, profile_uid: Option<String>, enable_filter: EnableFilter) -> Vec<ChainItem> {
         let items = self.items.clone().unwrap_or_default();
         items
             .into_iter()
-            .filter(|o| {
-                matches!(
-                    o.itype,
-                    Some(ProfileType::Merge) | Some(ProfileType::Script)
-                )
-            })
+            .filter(|o| matches!(o.itype, Some(ProfileType::Merge) | Some(ProfileType::Script)))
             .filter(|i| match enable_filter {
                 EnableFilter::All => true,
                 EnableFilter::Enable => i.enable.unwrap_or_default(),
@@ -293,8 +275,7 @@ impl IProfiles {
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
-                        let file =
-                            file.unwrap_or(item.file.take().unwrap_or(format!("{}.yaml", &uid)));
+                        let file = file.unwrap_or(item.file.take().unwrap_or(format!("{}.yaml", &uid)));
 
                         // the file must exists
                         each.file = Some(file.clone());
@@ -340,8 +321,7 @@ impl IProfiles {
 
         // delete the original uid
         let delete_current = current == uid;
-        let restart_core = delete_current
-            || (profile.parent == Some(current) && profile.enable.is_some_and(|x| x));
+        let restart_core = delete_current || (profile.parent == Some(current) && profile.enable.is_some_and(|x| x));
 
         let items = self.items.take().unwrap_or_default();
         if delete_current {
@@ -390,10 +370,7 @@ impl IProfiles {
     pub fn get_profile_mapping(&self, profile_uid: &str) -> Result<Mapping> {
         match (profile_uid, self.items.as_ref()) {
             (profile_uid, Some(items)) => {
-                if let Some(item) = items
-                    .iter()
-                    .find(|&e| e.uid == Some(profile_uid.to_string()))
-                {
+                if let Some(item) = items.iter().find(|&e| e.uid == Some(profile_uid.to_string())) {
                     let file_path = match item.file.as_ref() {
                         Some(file) => dirs::app_profiles_dir()?.join(file),
                         None => bail!("failed to get the file field"),

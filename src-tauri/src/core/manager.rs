@@ -14,16 +14,13 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
         let path = path.replace(' ', "\\\\ ");
         let shell = format!("chown root:admin {path}\nchmod +sx {path}");
         let command = format!(r#"do shell script "{shell}" with administrator privileges"#);
-        Command::new("osascript")
-            .args(vec!["-e", &command])
-            .output()?
+        Command::new("osascript").args(vec!["-e", &command]).output()?
     };
 
     #[cfg(target_os = "linux")]
     let output = {
         let path = path.replace(' ', "\\ "); // 避免路径中有空格
-        let shell =
-            format!("setcap cap_net_bind_service,cap_net_admin,cap_dac_override=+ep {path}");
+        let shell = format!("setcap cap_net_bind_service,cap_net_admin,cap_dac_override=+ep {path}");
 
         let sudo = match Command::new("which").arg("pkexec").output() {
             Ok(output) => {

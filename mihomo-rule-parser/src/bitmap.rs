@@ -114,12 +114,7 @@ impl Bitmap {
         idx
     }
 
-    pub fn select_32_r64(
-        words: &[u64],
-        select_index: &[i32],
-        rank_index: &[i32],
-        i: i32,
-    ) -> (i32, i32) {
+    pub fn select_32_r64(words: &[u64], select_index: &[i32], rank_index: &[i32], i: i32) -> (i32, i32) {
         let mut a;
         let l = words.len() as i32;
 
@@ -151,9 +146,7 @@ impl Bitmap {
 
         ones = (ww as u8).count_ones() as isize;
         if ones <= find_ith {
-            a = SELECT_8_LOOKUP[((ww >> 5) & 0x7f8 | (find_ith - ones) as u64) as usize] as i32
-                + offset
-                + 8;
+            a = SELECT_8_LOOKUP[((ww >> 5) & 0x7f8 | (find_ith - ones) as u64) as usize] as i32 + offset + 8;
         } else {
             a = SELECT_8_LOOKUP[(((ww & 0xff) << 3) | (find_ith) as u64) as usize] as i32 + offset;
         }

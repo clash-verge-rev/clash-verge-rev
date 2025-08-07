@@ -11,15 +11,11 @@ pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
         bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = fs::read_to_string(path)
-        .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
+    let yaml_str =
+        fs::read_to_string(path).with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
 
-    serde_yaml::from_str::<T>(&yaml_str).with_context(|| {
-        format!(
-            "failed to read the file with yaml format \"{}\"",
-            path.display()
-        )
-    })
+    serde_yaml::from_str::<T>(&yaml_str)
+        .with_context(|| format!("failed to read the file with yaml format \"{}\"", path.display()))
 }
 
 /// read mapping from yaml fix #165
@@ -33,10 +29,7 @@ pub fn read_merge_mapping(path: &PathBuf) -> Result<Mapping> {
 
     Ok(val
         .as_mapping()
-        .ok_or(anyhow!(
-            "failed to transform to yaml mapping \"{}\"",
-            path.display()
-        ))?
+        .ok_or(anyhow!("failed to transform to yaml mapping \"{}\"", path.display()))?
         .to_owned())
 }
 
@@ -51,8 +44,7 @@ pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -
     };
 
     let path_str = path.as_os_str().to_string_lossy().to_string();
-    fs::write(path, yaml_str.as_bytes())
-        .with_context(|| format!("failed to save file \"{path_str}\""))
+    fs::write(path, yaml_str.as_bytes()).with_context(|| format!("failed to save file \"{path_str}\""))
 }
 
 pub fn deep_merge(a: &mut Value, b: &Value) {
@@ -67,10 +59,9 @@ pub fn deep_merge(a: &mut Value, b: &Value) {
 }
 
 const ALPHABET: [char; 62] = [
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
-    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
-    'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
-    'V', 'W', 'X', 'Y', 'Z',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 ];
 
 /// generate the uid
@@ -283,10 +274,7 @@ fn test_parse_value() {
     assert_eq!(parse_str::<usize>(test_1, "download").unwrap(), 2222);
     assert_eq!(parse_str::<usize>(test_1, "total").unwrap(), 3333);
     assert_eq!(parse_str::<usize>(test_1, "expire").unwrap(), 444);
-    assert_eq!(
-        parse_str::<String>(test_2, "filename").unwrap(),
-        format!("Clash.yaml")
-    );
+    assert_eq!(parse_str::<String>(test_2, "filename").unwrap(), format!("Clash.yaml"));
 
     assert_eq!(parse_str::<usize>(test_1, "aaa"), None);
     assert_eq!(parse_str::<usize>(test_1, "upload1"), None);

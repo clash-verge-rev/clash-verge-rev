@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::{error::RuleParseError, utils, Parser, RuleBehavior, RuleFormat, RulePayload};
+use crate::{Parser, RuleBehavior, RuleFormat, RulePayload, error::RuleParseError, utils};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{Cursor, Read};
 use std::{

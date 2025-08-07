@@ -2,10 +2,10 @@
 use core::str;
 use std::io::{BufRead, BufReader, Cursor, Read};
 
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use http::{
-    header::{CONTENT_LENGTH, CONTENT_TYPE},
     Version,
+    header::{CONTENT_LENGTH, CONTENT_TYPE},
 };
 use httparse::EMPTY_HEADER;
 use rand::Rng;
@@ -71,11 +71,7 @@ pub fn parse_socket_response(response_str: &str, is_chunked: bool) -> Result<req
                 let header_value = str::from_utf8(header.value).unwrap_or_default();
                 res_builder = res_builder.header(header_name, header_value);
             }
-            let mut body = response_str
-                .split("\r\n\r\n")
-                .nth(1)
-                .unwrap_or_default()
-                .to_string();
+            let mut body = response_str.split("\r\n\r\n").nth(1).unwrap_or_default().to_string();
             if is_chunked {
                 body = decode_chunked(&body)?;
             }
@@ -85,13 +81,13 @@ pub fn parse_socket_response(response_str: &str, is_chunked: bool) -> Result<req
         Ok(httparse::Status::Partial) => {
             log::error!("Partial response, need more data.");
             Err(MihomoError::HttpParseError(
-            "Partial response, need more data.".to_string(),
-        ))},
+                "Partial response, need more data.".to_string(),
+            ))
+        }
         Err(e) => {
             log::error!("Failed to parse response: {e:?}");
-            Err(MihomoError::HttpParseError(format!(
-            "Failed to parse response: {e:?}"
-        )))},
+            Err(MihomoError::HttpParseError(format!("Failed to parse response: {e:?}")))
+        }
     }
 }
 

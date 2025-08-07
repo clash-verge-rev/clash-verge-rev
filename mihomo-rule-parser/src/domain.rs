@@ -1,6 +1,6 @@
 use crate::bitmap;
 use crate::error::Result;
-use crate::{error::RuleParseError, utils, Parser, RuleBehavior, RuleFormat, RulePayload};
+use crate::{Parser, RuleBehavior, RuleFormat, RulePayload, error::RuleParseError, utils};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{
     io::{Cursor, Read},
@@ -48,13 +48,7 @@ impl DomainSet {
         self.traverse(&mut current_key, 0, 0, &mut f);
     }
 
-    fn traverse<F>(
-        &self,
-        current_key: &mut Vec<char>,
-        node_id: isize,
-        bm_idx: isize,
-        f: &mut F,
-    ) -> bool
+    fn traverse<F>(&self, current_key: &mut Vec<char>, node_id: isize, bm_idx: isize, f: &mut F) -> bool
     where
         F: FnMut(&String) -> bool,
     {
@@ -73,12 +67,7 @@ impl DomainSet {
             let next_label = self.labels[index];
             current_key.push(next_label as char);
             let next_node_id = count_zeros(&self.label_bit_map, &self.ranks, bm_idx + 1);
-            let next_bm_idx = select_ith_one(
-                &self.label_bit_map,
-                &self.ranks,
-                &self.selects,
-                next_node_id - 1,
-            ) + 1;
+            let next_bm_idx = select_ith_one(&self.label_bit_map, &self.ranks, &self.selects, next_node_id - 1) + 1;
 
             if !self.traverse(current_key, next_node_id, next_bm_idx, f) {
                 return false;
@@ -163,7 +152,7 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload> {
     // get rules
     let mut rules: Vec<String> = vec![];
     let keys = Arc::new(Mutex::new(Vec::new()));
-    let keys_ = Arc::clone(&keys);
+    let keys_ = keys.clone();
     domain_set.foreach(move |key| {
         keys_.lock().unwrap().push(key);
         true
@@ -172,7 +161,7 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload> {
     keys.sort();
 
     for key in keys.iter() {
-        let search_str = "+.".to_string() + key;
+        let search_str = format!("+.{key}");
         if keys.binary_search(&search_str).is_ok() {
             continue;
         }

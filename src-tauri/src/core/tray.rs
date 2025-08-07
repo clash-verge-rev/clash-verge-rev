@@ -44,9 +44,7 @@ impl Tray {
                 } else {
                     #[cfg(target_os = "macos")]
                     let icon = match tray_icon.as_str() {
-                        "monochrome" => {
-                            include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec()
-                        }
+                        "monochrome" => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
                         "colorful" => include_bytes!("../../icons/tray-icon-tun.ico").to_vec(),
                         _ => include_bytes!("../../icons/tray-icon-tun-mono.ico").to_vec(),
                     };
@@ -67,9 +65,7 @@ impl Tray {
                 } else {
                     #[cfg(target_os = "macos")]
                     let icon = match tray_icon.as_str() {
-                        "monochrome" => {
-                            include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec()
-                        }
+                        "monochrome" => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
                         "colorful" => include_bytes!("../../icons/tray-icon-sys.ico").to_vec(),
                         _ => include_bytes!("../../icons/tray-icon-sys-mono.ico").to_vec(),
                     };
@@ -115,12 +111,10 @@ impl Tray {
                 && let Some(name) = profile.name
             {
                 if current == uid {
-                    let checkmenu =
-                        CheckMenuItem::with_id(app_handle, uid, name, true, true, None::<&str>)?;
+                    let checkmenu = CheckMenuItem::with_id(app_handle, uid, name, true, true, None::<&str>)?;
                     switch_menu = switch_menu.item(&checkmenu);
                 } else {
-                    let checkmenu =
-                        CheckMenuItem::with_id(app_handle, uid, name, true, false, None::<&str>)?;
+                    let checkmenu = CheckMenuItem::with_id(app_handle, uid, name, true, false, None::<&str>)?;
                     switch_menu = switch_menu.item(&checkmenu);
                 }
             }
@@ -340,18 +334,14 @@ impl Tray {
                         .await
                         {
                             Ok(_) => {
-                                let _ = handle::Handle::notification(
-                                    t!("profiles.switch"),
-                                    t!("profiles.switch.success"),
-                                );
+                                let _ =
+                                    handle::Handle::notification(t!("profiles.switch"), t!("profiles.switch.success"));
                                 handle::Handle::refresh_profiles();
                                 tracing::info!("switch profile successfully");
                             }
                             Err(e) => {
-                                let _ = handle::Handle::notification(
-                                    t!("profiles.switch"),
-                                    t!("profiles.switch.failed"),
-                                );
+                                let _ =
+                                    handle::Handle::notification(t!("profiles.switch"), t!("profiles.switch.failed"));
                                 tracing::error!("failed to switch profile, error: {:?}", e);
                             }
                         }

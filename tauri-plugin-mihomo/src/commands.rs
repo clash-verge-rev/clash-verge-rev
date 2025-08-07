@@ -19,10 +19,7 @@ pub(crate) async fn update_controller(
 }
 
 #[command]
-pub(crate) async fn update_secret(
-    state: State<'_, RwLock<Mihomo>>,
-    secret: Option<String>,
-) -> Result<()> {
+pub(crate) async fn update_secret(state: State<'_, RwLock<Mihomo>>, secret: Option<String>) -> Result<()> {
     state.write().await.update_secret(secret);
     Ok(())
 }
@@ -54,10 +51,7 @@ pub(crate) async fn close_all_connections(state: State<'_, RwLock<Mihomo>>) -> R
 }
 
 #[command]
-pub(crate) async fn close_connections(
-    state: State<'_, RwLock<Mihomo>>,
-    connection_id: String,
-) -> Result<()> {
+pub(crate) async fn close_connections(state: State<'_, RwLock<Mihomo>>, connection_id: String) -> Result<()> {
     state.read().await.close_connection(&connection_id).await
 }
 
@@ -68,10 +62,7 @@ pub(crate) async fn get_groups(state: State<'_, RwLock<Mihomo>>) -> Result<Group
 }
 
 #[command]
-pub(crate) async fn get_group_by_name(
-    state: State<'_, RwLock<Mihomo>>,
-    group_name: String,
-) -> Result<Proxy> {
+pub(crate) async fn get_group_by_name(state: State<'_, RwLock<Mihomo>>, group_name: String) -> Result<Proxy> {
     state.read().await.get_group_by_name(&group_name).await
 }
 
@@ -82,18 +73,12 @@ pub(crate) async fn delay_group(
     test_url: String,
     timeout: u32,
 ) -> Result<HashMap<String, u32>> {
-    state
-        .read()
-        .await
-        .delay_group(&group_name, &test_url, timeout)
-        .await
+    state.read().await.delay_group(&group_name, &test_url, timeout).await
 }
 
 // providers
 #[command]
-pub(crate) async fn get_proxy_providers(
-    state: State<'_, RwLock<Mihomo>>,
-) -> Result<ProxyProviders> {
+pub(crate) async fn get_proxy_providers(state: State<'_, RwLock<Mihomo>>) -> Result<ProxyProviders> {
     state.read().await.get_proxy_providers().await
 }
 
@@ -102,35 +87,17 @@ pub(crate) async fn get_proxy_provider_by_name(
     state: State<'_, RwLock<Mihomo>>,
     provider_name: String,
 ) -> Result<ProxyProvider> {
-    state
-        .read()
-        .await
-        .get_proxy_provider_by_name(&provider_name)
-        .await
+    state.read().await.get_proxy_provider_by_name(&provider_name).await
 }
 
 #[command]
-pub(crate) async fn update_proxy_provider(
-    state: State<'_, RwLock<Mihomo>>,
-    provider_name: String,
-) -> Result<()> {
-    state
-        .read()
-        .await
-        .update_proxy_provider(&provider_name)
-        .await
+pub(crate) async fn update_proxy_provider(state: State<'_, RwLock<Mihomo>>, provider_name: String) -> Result<()> {
+    state.read().await.update_proxy_provider(&provider_name).await
 }
 
 #[command]
-pub(crate) async fn healthcheck_proxy_provider(
-    state: State<'_, RwLock<Mihomo>>,
-    provider_name: String,
-) -> Result<()> {
-    state
-        .read()
-        .await
-        .healthcheck_proxy_provider(&provider_name)
-        .await
+pub(crate) async fn healthcheck_proxy_provider(state: State<'_, RwLock<Mihomo>>, provider_name: String) -> Result<()> {
+    state.read().await.healthcheck_proxy_provider(&provider_name).await
 }
 
 #[command]
@@ -155,10 +122,7 @@ pub(crate) async fn get_proxies(state: State<'_, RwLock<Mihomo>>) -> Result<Prox
 }
 
 #[command]
-pub(crate) async fn get_proxy_by_name(
-    state: State<'_, RwLock<Mihomo>>,
-    proxy_name: String,
-) -> Result<Proxy> {
+pub(crate) async fn get_proxy_by_name(state: State<'_, RwLock<Mihomo>>, proxy_name: String) -> Result<Proxy> {
     state.read().await.get_proxy_by_name(&proxy_name).await
 }
 
@@ -168,18 +132,11 @@ pub(crate) async fn select_node_for_proxy(
     proxy_name: String,
     node: String,
 ) -> Result<()> {
-    state
-        .read()
-        .await
-        .select_node_for_proxy(&proxy_name, &node)
-        .await
+    state.read().await.select_node_for_proxy(&proxy_name, &node).await
 }
 
 #[command]
-pub(crate) async fn unfixed_proxy(
-    state: State<'_, RwLock<Mihomo>>,
-    group_name: String,
-) -> Result<()> {
+pub(crate) async fn unfixed_proxy(state: State<'_, RwLock<Mihomo>>, group_name: String) -> Result<()> {
     state.read().await.unfixed_proxy(&group_name).await
 }
 
@@ -209,15 +166,8 @@ pub(crate) async fn get_rule_providers(state: State<'_, RwLock<Mihomo>>) -> Resu
 }
 
 #[command]
-pub(crate) async fn update_rule_provider(
-    state: State<'_, RwLock<Mihomo>>,
-    provider_name: String,
-) -> Result<()> {
-    state
-        .read()
-        .await
-        .update_rule_provider(&provider_name)
-        .await
+pub(crate) async fn update_rule_provider(state: State<'_, RwLock<Mihomo>>, provider_name: String) -> Result<()> {
+    state.read().await.update_rule_provider(&provider_name).await
 }
 
 // runtime config
@@ -227,19 +177,12 @@ pub(crate) async fn get_base_config(state: State<'_, RwLock<Mihomo>>) -> Result<
 }
 
 #[command]
-pub(crate) async fn reload_config(
-    state: State<'_, RwLock<Mihomo>>,
-    force: bool,
-    config_path: String,
-) -> Result<()> {
+pub(crate) async fn reload_config(state: State<'_, RwLock<Mihomo>>, force: bool, config_path: String) -> Result<()> {
     state.read().await.reload_config(force, &config_path).await
 }
 
 #[command]
-pub(crate) async fn patch_base_config(
-    state: State<'_, RwLock<Mihomo>>,
-    data: serde_json::Value,
-) -> Result<()> {
+pub(crate) async fn patch_base_config(state: State<'_, RwLock<Mihomo>>, data: serde_json::Value) -> Result<()> {
     state.read().await.patch_base_config(&data).await
 }
 

@@ -1,4 +1,7 @@
-use crate::{error::{Result, RuleParseError}, RuleBehavior, RulePayload, YamlPayload};
+use crate::{
+    RuleBehavior, RulePayload, YamlPayload,
+    error::{Result, RuleParseError},
+};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{BufRead, BufReader, Read};
 
@@ -15,10 +18,7 @@ fn get_rule_behavior(behavior: u8) -> Result<RuleBehavior> {
 }
 
 /// Validate MRS format and return the count of rules.
-pub(crate) fn validate_mrs<R: Read>(
-    reader: &mut R,
-    expected_behavior: RuleBehavior,
-) -> Result<i64> {
+pub(crate) fn validate_mrs<R: Read>(reader: &mut R, expected_behavior: RuleBehavior) -> Result<i64> {
     // 读取并校验 Magic Number
     let mut magic = [0u8; 4];
     reader.read_exact(&mut magic)?;

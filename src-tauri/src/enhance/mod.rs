@@ -69,9 +69,7 @@ pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
         } else {
             // no path value, set default path
             let path = format!("./rules/{name}.{format_val}");
-            let absolute_path = dirs::app_home_dir()
-                .unwrap()
-                .join(path.trim_start_matches("./"));
+            let absolute_path = dirs::app_home_dir().unwrap().join(path.trim_start_matches("./"));
             val_map.insert(path_key, Value::from(path));
             absolute_path_map.insert(name.into(), absolute_path);
         }
@@ -114,11 +112,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
                 }
             }
             Err(e) => {
-                tracing::error!(
-                    "global chain [{:?}] execute failed, error: {:?}",
-                    chain.uid,
-                    e
-                );
+                tracing::error!("global chain [{:?}] execute failed, error: {:?}", chain.uid, e);
             }
         }
     }
@@ -134,11 +128,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
                 }
             }
             Err(e) => {
-                tracing::error!(
-                    "profile chain [{:?}] execute failed, error: {:?}",
-                    chain.uid,
-                    e
-                );
+                tracing::error!("profile chain [{:?}] execute failed, error: {:?}", chain.uid, e);
             }
         }
     }
@@ -149,12 +139,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
         config.insert(key, value);
     }
 
-    let enable_external_controller = {
-        Config::verge()
-            .latest()
-            .enable_external_controller
-            .unwrap_or_default()
-    };
+    let enable_external_controller = { Config::verge().latest().enable_external_controller.unwrap_or_default() };
     tracing::info!("external controller enable: {}", enable_external_controller);
     if !enable_external_controller {
         config.remove("external-controller");
@@ -175,10 +160,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     (config, result_map)
 }
 
-pub fn get_pre_merge_result(
-    profile_uid: Option<String>,
-    modified_uid: String,
-) -> Result<MergeResult> {
+pub fn get_pre_merge_result(profile_uid: Option<String>, modified_uid: String) -> Result<MergeResult> {
     let profiles = Config::profiles().latest().clone();
     let mut config = profiles.current_mapping()?.clone();
 
@@ -300,11 +282,7 @@ pub async fn test_merge_chain(
     })
 }
 
-fn execute_chains(
-    config: &mut Mapping,
-    chains: &Vec<ChainItem>,
-    script_logs: &mut HashMap<String, Vec<LogMessage>>,
-) {
+fn execute_chains(config: &mut Mapping, chains: &Vec<ChainItem>, script_logs: &mut HashMap<String, Vec<LogMessage>>) {
     for chain in chains {
         match chain.execute(config.clone()) {
             Ok(res) => {

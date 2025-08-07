@@ -63,9 +63,7 @@ impl LocalSocket for RequestBuilder {
                 header_judged = true;
             }
             // if response is chunked, wait to \r\n\r\n
-            if (!is_chunked && n < 4096 && buf.ends_with(b"\n"))
-                || (is_chunked && buf.ends_with(b"\r\n\r\n"))
-            {
+            if (!is_chunked && n < 4096 && buf.ends_with(b"\n")) || (is_chunked && buf.ends_with(b"\r\n\r\n")) {
                 break;
             }
         }

@@ -98,12 +98,7 @@ impl Handle {
 
     pub fn notification<T: Into<String>, B: Into<String>>(title: T, body: B) -> Result<()> {
         let app_handle = Self::get_app_handle();
-        let _ = app_handle
-            .notification()
-            .builder()
-            .title(title)
-            .body(body)
-            .show();
+        let _ = app_handle.notification().builder().title(title).body(body).show();
         Ok(())
     }
 

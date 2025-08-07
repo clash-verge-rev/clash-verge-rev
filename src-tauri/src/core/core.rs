@@ -173,9 +173,7 @@ impl CoreManager {
         } else {
             VergeLog::global().reset_service_log_file();
             // service mode is disable, patch the config: disable tun mode
-            Config::clash()
-                .latest()
-                .patch_and_merge_config(disable.clone());
+            Config::clash().latest().patch_and_merge_config(disable.clone());
             Config::clash().latest().save_config()?;
             Config::runtime().latest().patch_config(disable.clone());
             Config::generate_file(ConfigType::Run)?;
@@ -198,11 +196,7 @@ impl CoreManager {
             app_dir,
             "-f",
             config_path,
-            if cfg!(unix) {
-                "-ext-ctl-unix"
-            } else {
-                "-ext-ctl-pipe"
-            },
+            if cfg!(unix) { "-ext-ctl-unix" } else { "-ext-ctl-pipe" },
             MIHOMO_SOCKET_PATH,
         ];
 
@@ -247,10 +241,7 @@ impl CoreManager {
     /// 重启内核
     pub fn recover_core(&self) -> Result<()> {
         let need_restart_core = self.need_restart_core.lock();
-        tracing::info!(
-            "core terminated, need to restart it? [{}]",
-            need_restart_core
-        );
+        tracing::info!("core terminated, need to restart it? [{}]", need_restart_core);
         // 服务模式 / 切换内核 不进行恢复
         if *self.use_service_mode.lock() || !*need_restart_core {
             return Ok(());

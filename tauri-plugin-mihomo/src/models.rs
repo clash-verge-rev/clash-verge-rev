@@ -2,12 +2,12 @@ use std::{collections::HashMap, fmt::Display};
 
 use futures_util::stream::SplitSink;
 use serde::{Deserialize, Serialize};
-#[cfg(windows)]
-use tokio::net::windows::named_pipe::NamedPipeClient;
 use tokio::net::TcpStream;
 #[cfg(unix)]
 use tokio::net::UnixStream;
-use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
+#[cfg(windows)]
+use tokio::net::windows::named_pipe::NamedPipeClient;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

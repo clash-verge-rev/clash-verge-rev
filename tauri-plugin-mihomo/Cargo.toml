@@ -2,7 +2,7 @@
 name = "tauri-plugin-mihomo"
 version = "0.1.0"
 authors = ["oomeow"]
-description = ""
+description = "http or ipc api for mihomo"
 edition = "2024"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
 links = "tauri-plugin-mihomo"

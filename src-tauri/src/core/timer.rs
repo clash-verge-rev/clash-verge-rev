@@ -131,11 +131,7 @@ impl Timer {
                         if let Some(proxy_name) = selected_item.name.as_ref()
                             && let Some(node) = selected_item.now.as_ref()
                         {
-                            if mihomo
-                                .select_node_for_proxy(proxy_name, node)
-                                .await
-                                .is_err()
-                            {
+                            if mihomo.select_node_for_proxy(proxy_name, node).await.is_err() {
                                 if mihomo.get_proxy_by_name(node).await.is_err() {
                                     tracing::error!(
                                         "Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist",
@@ -145,18 +141,10 @@ impl Timer {
                                     );
                                     continue;
                                 }
-                                tracing::error!(
-                                    "Failed to select node for proxy: {}, node: {}",
-                                    proxy_name,
-                                    node
-                                );
+                                tracing::error!("Failed to select node for proxy: {}, node: {}", proxy_name, node);
                                 return;
                             } else {
-                                tracing::info!(
-                                    "Selected node for proxy: {}, node: {}",
-                                    proxy_name,
-                                    node
-                                );
+                                tracing::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
                             }
                         }
                     }
@@ -173,9 +161,7 @@ impl Timer {
 
         self.add_async_task(ACTIVATING_SELECTED_TASK_ID, 3, body)?;
         {
-            self.delay_timer
-                .lock()
-                .advance_task(ACTIVATING_SELECTED_TASK_ID)?;
+            self.delay_timer.lock().advance_task(ACTIVATING_SELECTED_TASK_ID)?;
         }
 
         tauri::async_runtime::spawn(async move {
@@ -273,13 +259,7 @@ impl Timer {
     }
 
     /// add a cron task
-    fn add_profiles_task(
-        &self,
-        delay_timer: &DelayTimer,
-        uid: String,
-        tid: TaskID,
-        minutes: u64,
-    ) -> Result<()> {
+    fn add_profiles_task(&self, delay_timer: &DelayTimer, uid: String, tid: TaskID, minutes: u64) -> Result<()> {
         let task = TaskBuilder::default()
             .set_task_id(tid)
             .set_maximum_parallel_runnable_num(1)
@@ -288,9 +268,7 @@ impl Timer {
             .spawn_async_routine(move || Self::update_profile_task(uid.to_owned()))
             .context("failed to create timer task")?;
 
-        delay_timer
-            .add_task(task)
-            .context("failed to add timer task")?;
+        delay_timer.add_task(task).context("failed to add timer task")?;
 
         Ok(())
     }

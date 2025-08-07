@@ -153,9 +153,7 @@ impl PrfOption {
                 a.user_agent = b.user_agent.or(a.user_agent);
                 a.with_proxy = b.with_proxy.or(a.with_proxy);
                 a.self_proxy = b.self_proxy.or(a.self_proxy);
-                a.danger_accept_invalid_certs = b
-                    .danger_accept_invalid_certs
-                    .or(a.danger_accept_invalid_certs);
+                a.danger_accept_invalid_certs = b.danger_accept_invalid_certs.or(a.danger_accept_invalid_certs);
                 a.update_interval = b.update_interval.or(a.update_interval);
                 Some(a)
             }
@@ -238,8 +236,7 @@ impl PrfItem {
         let opt_ref = option.as_ref();
         let with_proxy = opt_ref.is_some_and(|o| o.with_proxy.unwrap_or(false));
         let self_proxy = opt_ref.is_some_and(|o| o.self_proxy.unwrap_or(false));
-        let accept_invalid_certs =
-            opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
+        let accept_invalid_certs = opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
 
@@ -367,8 +364,7 @@ impl PrfItem {
         let data = data.trim_start_matches('\u{feff}');
 
         // check the data whether the valid yaml format
-        let yaml = serde_yaml::from_str::<Mapping>(data)
-            .context("the remote profile data is invalid yaml")?;
+        let yaml = serde_yaml::from_str::<Mapping>(data).context("the remote profile data is invalid yaml")?;
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
             bail!("profile does not contain `proxies` or `proxy-providers`");
@@ -397,12 +393,7 @@ impl PrfItem {
 
     /// ## Merge type (enhance)
     /// create the enhanced item by using `merge` rule
-    pub fn from_merge(
-        parent: Option<String>,
-        scope: ScopeType,
-        name: String,
-        desc: String,
-    ) -> Result<PrfItem> {
+    pub fn from_merge(parent: Option<String>, scope: ScopeType, name: String, desc: String) -> Result<PrfItem> {
         let uid = help::get_uid("m");
         let file = format!("{uid}.yaml");
 
@@ -429,12 +420,7 @@ impl PrfItem {
 
     /// ## Script type (enhance)
     /// create the enhanced item by using javascript quick.js
-    pub fn from_script(
-        parent: Option<String>,
-        scope: ScopeType,
-        name: String,
-        desc: String,
-    ) -> Result<PrfItem> {
+    pub fn from_script(parent: Option<String>, scope: ScopeType, name: String, desc: String) -> Result<PrfItem> {
         let uid = help::get_uid("s");
         let file = format!("{uid}.js"); // js ext
 

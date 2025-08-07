@@ -21,9 +21,7 @@ pub fn check_singleton() -> Result<()> {
 
     if !help::local_port_available(port) {
         tauri::async_runtime::block_on(async {
-            let request = ClientBuilder::new()
-                .timeout(Duration::from_secs(2))
-                .build()?;
+            let request = ClientBuilder::new().timeout(Duration::from_secs(2)).build()?;
             let resp = request
                 .get(format!("http://127.0.0.1:{port}/commands/ping"))
                 .send()
@@ -37,9 +35,7 @@ pub fn check_singleton() -> Result<()> {
                     let param = argvs[1].as_str();
                     if param.starts_with("clash:") {
                         request
-                            .get(format!(
-                                "http://127.0.0.1:{port}/commands/scheme?param={param}"
-                            ))
+                            .get(format!("http://127.0.0.1:{port}/commands/scheme?param={param}"))
                             .send()
                             .await?
                             .text()
@@ -101,10 +97,9 @@ pub async fn embed_server() {
     }
 
     let commands = ping.or(visible).or(pac).or(scheme);
-    let (_addr, server) =
-        warp::serve(commands).bind_with_graceful_shutdown(([127, 0, 0, 1], port), async {
-            shutdown_rx.await.ok();
-        });
+    let (_addr, server) = warp::serve(commands).bind_with_graceful_shutdown(([127, 0, 0, 1], port), async {
+        shutdown_rx.await.ok();
+    });
     tokio::task::spawn(server);
 }
 

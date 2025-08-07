@@ -1,7 +1,4 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
+#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
 mod cmds;
 mod config;
@@ -45,13 +42,7 @@ pub fn run() -> Result<()> {
         return Ok(());
     }
 
-    let language = {
-        Config::verge()
-            .latest()
-            .language
-            .clone()
-            .unwrap_or("zh".to_string())
-    };
+    let language = { Config::verge().latest().language.clone().unwrap_or("zh".to_string()) };
     rust_i18n::set_locale(&language);
 
     // 初始化日志
@@ -171,10 +162,7 @@ pub fn run() -> Result<()> {
         tauri::RunEvent::ExitRequested { code, api, .. } if code.is_none() => {
             tauri::async_runtime::block_on(async move {
                 tracing::info!("exit requested, clear all ws connections");
-                let _ = handle::Handle::get_mihomo_read()
-                    .await
-                    .clear_all_ws_connections()
-                    .await;
+                let _ = handle::Handle::get_mihomo_read().await.clear_all_ws_connections().await;
             });
             api.prevent_exit();
         }

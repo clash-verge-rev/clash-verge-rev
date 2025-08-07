@@ -21,13 +21,7 @@ pub const HANDLE_FIELDS: [&str; 17] = [
     "dns",
 ];
 
-pub const DEFAULT_FIELDS: [&str; 5] = [
-    "proxies",
-    "proxy-providers",
-    "proxy-groups",
-    "rule-providers",
-    "rules",
-];
+pub const DEFAULT_FIELDS: [&str; 5] = ["proxies", "proxy-providers", "proxy-groups", "rule-providers", "rules"];
 
 pub fn use_filter(config: Mapping, filter: &[String]) -> Mapping {
     let mut ret = Mapping::new();
@@ -69,10 +63,7 @@ pub fn use_sort(config: Mapping) -> Mapping {
         .chain(DEFAULT_FIELDS)
         .collect::<HashSet<&str>>();
 
-    let config_keys = config
-        .keys()
-        .filter_map(|e| e.as_str())
-        .collect::<HashSet<&str>>();
+    let config_keys = config.keys().filter_map(|e| e.as_str()).collect::<HashSet<&str>>();
 
     config_keys.difference(&supported_keys).for_each(|&key| {
         let key = Value::from(key);

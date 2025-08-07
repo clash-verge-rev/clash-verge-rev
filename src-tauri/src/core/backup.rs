@@ -29,11 +29,7 @@ pub fn create_backup(local_save: bool, only_backup_profiles: bool) -> Result<(St
     let zip_file_name = format!(
         "{}-{}backup-{}.zip",
         OS,
-        if only_backup_profiles {
-            "profiles-"
-        } else {
-            ""
-        },
+        if only_backup_profiles { "profiles-" } else { "" },
         now
     );
 
@@ -77,12 +73,7 @@ pub fn create_backup(local_save: bool, only_backup_profiles: bool) -> Result<(St
         add_file_to_zip(&mut zip, &dirs::verge_path()?, dirs::VERGE_CONFIG, options)?;
     }
 
-    add_file_to_zip(
-        &mut zip,
-        &dirs::profiles_path()?,
-        dirs::PROFILE_YAML,
-        options,
-    )?;
+    add_file_to_zip(&mut zip, &dirs::profiles_path()?, dirs::PROFILE_YAML, options)?;
     zip.finish()?;
 
     Ok((zip_file_name, zip_path))
@@ -105,11 +96,7 @@ impl WebDav {
         tauri::async_runtime::spawn(async {
             let (url, username, password) = {
                 let verge = Config::verge().latest().clone();
-                (
-                    verge.webdav_url,
-                    verge.webdav_username,
-                    verge.webdav_password,
-                )
+                (verge.webdav_url, verge.webdav_username, verge.webdav_password)
             };
             if let (Some(url), Some(username), Some(password)) = (url, username, password) {
                 trace_err!(
@@ -123,12 +110,7 @@ impl WebDav {
         Ok(())
     }
 
-    pub async fn update_webdav_info<S: Into<String>>(
-        &self,
-        url: S,
-        username: S,
-        password: S,
-    ) -> Result<()> {
+    pub async fn update_webdav_info<S: Into<String>>(&self, url: S, username: S, password: S) -> Result<()> {
         *self.client.lock() = None;
         let client = reqwest_dav::ClientBuilder::new()
             .set_host(url.into())

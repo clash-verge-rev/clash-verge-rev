@@ -55,10 +55,7 @@ pub fn get_sys_proxy() -> CmdResult<Mapping> {
     let current = wrap_err!(Sysproxy::get_system_proxy())?;
     let mut map = Mapping::new();
     map.insert("enable".into(), current.enable.into());
-    map.insert(
-        "server".into(),
-        format!("{}:{}", current.host, current.port).into(),
-    );
+    map.insert("server".into(), format!("{}:{}", current.host, current.port).into());
     map.insert("bypass".into(), current.bypass.replace("@as [", "").into());
 
     Ok(map)
@@ -83,41 +80,27 @@ pub fn get_auto_proxy() -> CmdResult<Mapping> {
 
 #[tauri::command]
 pub fn get_app_dir() -> CmdResult<String> {
-    let app_home_dir = wrap_err!(dirs::app_home_dir())?
-        .to_string_lossy()
-        .to_string();
+    let app_home_dir = wrap_err!(dirs::app_home_dir())?.to_string_lossy().to_string();
     Ok(app_home_dir)
 }
 
 #[tauri::command]
 pub fn open_app_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let app_dir = wrap_err!(dirs::app_home_dir())?;
-    wrap_err!(
-        app_handle
-            .opener()
-            .open_path(app_dir.to_string_lossy(), None::<&str>)
-    )
+    wrap_err!(app_handle.opener().open_path(app_dir.to_string_lossy(), None::<&str>))
 }
 
 #[tauri::command]
 pub fn open_core_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let core_dir = wrap_err!(tauri::utils::platform::current_exe())?;
     let core_dir = core_dir.parent().ok_or("failed to get core dir")?;
-    wrap_err!(
-        app_handle
-            .opener()
-            .open_path(core_dir.to_string_lossy(), None::<&str>)
-    )
+    wrap_err!(app_handle.opener().open_path(core_dir.to_string_lossy(), None::<&str>))
 }
 
 #[tauri::command]
 pub fn open_logs_dir(app_handle: tauri::AppHandle) -> CmdResult<()> {
     let log_dir = wrap_err!(dirs::app_logs_dir())?;
-    wrap_err!(
-        app_handle
-            .opener()
-            .open_path(log_dir.to_string_lossy(), None::<&str>)
-    )
+    wrap_err!(app_handle.opener().open_path(log_dir.to_string_lossy(), None::<&str>))
 }
 
 #[tauri::command]
@@ -227,12 +210,8 @@ pub fn get_net_info() -> CmdResult<Vec<NetInfo>> {
         };
         if !network.addr.is_empty() {
             network.addr.iter().for_each(|addr| match addr {
-                network_interface::Addr::V4(addr_v4) => {
-                    net_info.ipv4 = Some(addr_v4.ip.to_string())
-                }
-                network_interface::Addr::V6(addr_v6) => {
-                    net_info.ipv6 = Some(addr_v6.ip.to_string())
-                }
+                network_interface::Addr::V4(addr_v4) => net_info.ipv4 = Some(addr_v4.ip.to_string()),
+                network_interface::Addr::V6(addr_v6) => net_info.ipv6 = Some(addr_v6.ip.to_string()),
             });
             net_list.push(net_info);
         }

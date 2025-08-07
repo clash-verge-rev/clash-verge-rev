@@ -1,4 +1,4 @@
-use serde::{ser::Serializer, Serialize};
+use serde::{Serialize, ser::Serializer};
 
 use crate::ConnectionId;
 

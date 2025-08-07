@@ -32,9 +32,7 @@ pub async fn apply_local_backup(app_handle: tauri::AppHandle, file_path: String)
 #[tauri::command]
 pub async fn update_webdav_info(url: String, username: String, password: String) -> CmdResult {
     wrap_err!(
-        WebDav::global()
-            .update_webdav_info(url, username, password)
-            .await,
+        WebDav::global().update_webdav_info(url, username, password).await,
         "update webdav info failed"
     )
 }
@@ -51,19 +49,13 @@ pub async fn list_backup() -> CmdResult<Vec<ListFile>> {
 }
 
 #[tauri::command]
-pub async fn download_backup_and_reload(
-    app_handle: tauri::AppHandle,
-    file_name: String,
-) -> CmdResult {
+pub async fn download_backup_and_reload(app_handle: tauri::AppHandle, file_name: String) -> CmdResult {
     let backup_archive = wrap_err!(dirs::backup_archive_file())?;
     wrap_err!(
         WebDav::download_file(file_name, backup_archive.clone()).await,
         "download backup file failed"
     )?;
-    let file = wrap_err!(
-        fs::File::open(backup_archive),
-        "Failed to open backup archive"
-    )?;
+    let file = wrap_err!(fs::File::open(backup_archive), "Failed to open backup archive")?;
     // extract zip file
     let mut zip = wrap_err!(zip::ZipArchive::new(file), "Failed to create zip archive")?;
     wrap_err!(zip.extract(wrap_err!(dirs::app_home_dir())?))?;

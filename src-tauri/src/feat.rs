@@ -82,10 +82,7 @@ pub fn toggle_system_proxy() {
 
 /// 切换服务模式 (仅内核)
 pub fn toggle_service_mode() {
-    let enable = Config::verge()
-        .latest()
-        .enable_service_mode
-        .unwrap_or(false);
+    let enable = Config::verge().latest().enable_service_mode.unwrap_or(false);
     let toggle_failed_msg = if enable {
         t!("disable.failed")
     } else {
@@ -100,10 +97,7 @@ pub fn toggle_service_mode() {
                     ..IVerge::default()
                 };
                 if let Err(err) = patch_verge(patch).await {
-                    let _ = handle::Handle::notification(
-                        "Clash Verge Service",
-                        format!("{toggle_failed_msg}, {err}"),
-                    );
+                    let _ = handle::Handle::notification("Clash Verge Service", format!("{toggle_failed_msg}, {err}"));
                     tracing::error!("{err}")
                 } else {
                     handle::Handle::refresh_verge()
@@ -161,10 +155,7 @@ pub fn toggle_tun_mode() {
                 })
                 .await
                 {
-                    let _ = handle::Handle::notification(
-                        "Tun Mode",
-                        format!("{toggle_failed_msg}, {err}"),
-                    );
+                    let _ = handle::Handle::notification("Tun Mode", format!("{toggle_failed_msg}, {err}"));
                 } else {
                     let _ = cmds::check_service_and_clash().await;
                     handle::Handle::refresh_verge();
@@ -175,10 +166,7 @@ pub fn toggle_tun_mode() {
                 }
             }
             Ok(response) => {
-                let _ = handle::Handle::notification(
-                    "Tun Mode",
-                    format!("{}, {}", toggle_failed_msg, response.msg),
-                );
+                let _ = handle::Handle::notification("Tun Mode", format!("{}, {}", toggle_failed_msg, response.msg));
             }
             Err(err) => {
                 tracing::error!("toggle service mode failed: {err}");
@@ -191,15 +179,9 @@ pub fn toggle_tun_mode() {
                 .unwrap_or(false);
                 if status && install_and_run_service().await.is_ok() {
                     if let Err(err) = cmds::check_service_and_clash().await {
-                        let _ = handle::Handle::notification(
-                            "Tun Mode",
-                            format!("{toggle_failed_msg}, {err}"),
-                        );
+                        let _ = handle::Handle::notification("Tun Mode", format!("{toggle_failed_msg}, {err}"));
                     } else if let Err(err) = patch_clash(tun).await {
-                        let _ = handle::Handle::notification(
-                            "Tun Mode",
-                            format!("{toggle_failed_msg}, {err}"),
-                        );
+                        let _ = handle::Handle::notification("Tun Mode", format!("{toggle_failed_msg}, {err}"));
                         tracing::error!("{err}")
                     } else {
                         tracing::info!("change tun mode to {:?}", !enable);
@@ -215,10 +197,7 @@ pub fn toggle_tun_mode() {
 /// 安装并运行服务 (仅内核)
 async fn install_and_run_service() -> Result<()> {
     if let Err(err) = cmds::service::install_service().await {
-        handle::Handle::notification(
-            "Clash Verge Service",
-            format!("{}, {}", t!("install.failed"), err),
-        )?;
+        handle::Handle::notification("Clash Verge Service", format!("{}, {}", t!("install.failed"), err))?;
         return Err(anyhow!(err));
     }
     if let Err(err) = patch_verge(IVerge {
@@ -246,8 +225,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         // disable other port & update clash config
         let mut tmp_map = Mapping::new();
         if enable_random_port {
-            let port =
-                help::find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
+            let port = help::find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
             tmp_map.insert("mixed-port".into(), port.into());
         } else {
             tmp_map.insert("mixed-port".into(), 7890.into());
@@ -296,9 +274,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             .update_secret(Some(secret.to_string()));
     }
 
-    Config::clash()
-        .draft()
-        .patch_and_merge_config(patch.clone());
+    Config::clash().draft().patch_and_merge_config(patch.clone());
     let mut generate_runtime_config = false;
     let res = {
         let mut update_tun_failed = false;
@@ -319,10 +295,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
                 // handle tun config
                 if key == "tun" {
-                    let clash_basic_configs = handle::Handle::get_mihomo_read()
-                        .await
-                        .get_base_config()
-                        .await?;
+                    let clash_basic_configs = handle::Handle::get_mihomo_read().await.get_base_config().await?;
                     let tun_enable = value
                         .as_mapping()
                         .unwrap()
@@ -330,17 +303,10 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                         .is_some_and(|val| val.as_bool().unwrap_or(false));
                     let tun_enable_by_api = clash_basic_configs.tun.enable;
                     if tun_enable == tun_enable_by_api {
-                        let auto_close_connection = {
-                            Config::verge()
-                                .latest()
-                                .auto_close_connection
-                                .unwrap_or_default()
-                        };
+                        let auto_close_connection =
+                            { Config::verge().latest().auto_close_connection.unwrap_or_default() };
                         if auto_close_connection {
-                            let _ = handle::Handle::get_mihomo_read()
-                                .await
-                                .close_all_connections()
-                                .await;
+                            let _ = handle::Handle::get_mihomo_read().await.close_all_connections().await;
                         }
                         handle::Handle::update_systray_part()?;
                     } else {
@@ -363,12 +329,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 update_core_config().await?;
             }
             // 激活订阅
-            let enable_external_controller = {
-                Config::verge()
-                    .latest()
-                    .enable_external_controller
-                    .unwrap_or_default()
-            };
+            let enable_external_controller =
+                { Config::verge().latest().enable_external_controller.unwrap_or_default() };
             if enable_external_controller
                 && (patch.get("secret").is_some()
                     || patch.get("external-controller").is_some()
@@ -379,17 +341,9 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             }
 
             if patch.get("mode").is_some() {
-                let auto_close_connection = {
-                    Config::verge()
-                        .latest()
-                        .auto_close_connection
-                        .unwrap_or_default()
-                };
+                let auto_close_connection = { Config::verge().latest().auto_close_connection.unwrap_or_default() };
                 if auto_close_connection {
-                    let _ = handle::Handle::get_mihomo_read()
-                        .await
-                        .close_all_connections()
-                        .await;
+                    let _ = handle::Handle::get_mihomo_read().await.close_all_connections().await;
                 }
                 log_err!(handle::Handle::update_systray_part());
             }
@@ -558,10 +512,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         let item = profiles.get_item(&uid)?;
-        let is_remote = item
-            .itype
-            .as_ref()
-            .is_some_and(|s| *s == ProfileType::Remote);
+        let is_remote = item.itype.as_ref().is_some_and(|s| *s == ProfileType::Remote);
 
         if !is_remote {
             None // 直接更新
@@ -614,8 +565,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     let http_proxy = format!("http://127.0.0.1:{port}");
     let socks5_proxy = format!("socks5://127.0.0.1:{port}");
 
-    let sh =
-        format!("export http_proxy={http_proxy} https_proxy={http_proxy} all_proxy={socks5_proxy}");
+    let sh = format!("export http_proxy={http_proxy} https_proxy={http_proxy} all_proxy={socks5_proxy}");
     let cmd = format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}");
     let ps = format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"");
     let nu = format!("load-env {{http_proxy:\"{http_proxy}\", https_proxy:\"{http_proxy}\"}}");

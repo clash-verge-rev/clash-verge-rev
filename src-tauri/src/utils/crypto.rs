@@ -120,8 +120,7 @@ pub fn decrypt_socket_data(private_key: &RsaPrivateKey, data: &str) -> Result<St
     let nonce = BASE64_STANDARD.decode(parts[1])?;
     let ciphertext = BASE64_STANDARD.decode(parts[2])?;
 
-    let aes_key =
-        rsa_decrypt(private_key, &enc_data).map_err(|e| anyhow!("rsa decrypt failed: {:?}", e))?;
+    let aes_key = rsa_decrypt(private_key, &enc_data).map_err(|e| anyhow!("rsa decrypt failed: {:?}", e))?;
     let plaintext = aes_decrypt(&aes_key, &nonce, &ciphertext).unwrap();
     let data = String::from_utf8_lossy(&plaintext);
 

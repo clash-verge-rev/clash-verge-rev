@@ -3,9 +3,9 @@ use tauri::Manager;
 use windows_sys::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
     UI::WindowsAndMessaging::{
-        CW_USEDEFAULT, CreateWindowExW, DefWindowProcW, DestroyWindow, RegisterClassW,
-        WM_ENDSESSION, WM_QUERYENDSESSION, WNDCLASSW, WS_EX_LAYERED, WS_EX_NOACTIVATE,
-        WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT, WS_OVERLAPPED,
+        CW_USEDEFAULT, CreateWindowExW, DefWindowProcW, DestroyWindow, RegisterClassW, WM_ENDSESSION,
+        WM_QUERYENDSESSION, WNDCLASSW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
+        WS_OVERLAPPED,
     },
 };
 
@@ -30,12 +30,7 @@ impl Drop for ShutdownState {
     }
 }
 
-unsafe extern "system" fn shutdown_proc(
-    hwnd: HWND,
-    msg: u32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-) -> LRESULT {
+unsafe extern "system" fn shutdown_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     // refer: https://learn.microsoft.com/zh-cn/windows/win32/shutdown/shutting-down#shutdown-notifications
     // only perform reset operations in `WM_ENDSESSION`
     match msg {

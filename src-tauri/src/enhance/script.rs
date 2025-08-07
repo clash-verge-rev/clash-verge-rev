@@ -15,21 +15,19 @@ pub fn use_script(script: String, config: Mapping) -> Result<(Mapping, Vec<LogMe
         let _ = context.register_global_builtin_callable(
             "__verge_log__".into(),
             2,
-            NativeFunction::from_closure(
-                move |_: &JsValue, args: &[JsValue], context: &mut Context| {
-                    let level = args.first().unwrap().to_string(context)?;
-                    let level = level.to_std_string().unwrap();
-                    let data = args.get(1).unwrap().to_string(context)?;
-                    let data = data.to_std_string().unwrap();
-                    let mut out = copy_outputs.lock().unwrap();
-                    out.push(LogMessage {
-                        method: level,
-                        data: vec![data],
-                        exception: None,
-                    });
-                    Ok(JsValue::undefined())
-                },
-            ),
+            NativeFunction::from_closure(move |_: &JsValue, args: &[JsValue], context: &mut Context| {
+                let level = args.first().unwrap().to_string(context)?;
+                let level = level.to_std_string().unwrap();
+                let data = args.get(1).unwrap().to_string(context)?;
+                let data = data.to_std_string().unwrap();
+                let mut out = copy_outputs.lock().unwrap();
+                out.push(LogMessage {
+                    method: level,
+                    data: vec![data],
+                    exception: None,
+                });
+                Ok(JsValue::undefined())
+            }),
         );
     }
     let _ = context.eval(Source::from_bytes(
