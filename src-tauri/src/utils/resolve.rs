@@ -221,10 +221,9 @@ pub fn create_window() {
 }
 
 /// save window size and position
-pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> Result<()> {
+pub fn save_window_size_position(app_handle: &AppHandle) -> Result<()> {
     let verge = Config::verge();
     let mut verge = verge.latest();
-
     if let Some(win) = app_handle.get_webview_window("main") {
         let scale = win.scale_factor()?;
         let size = win.inner_size()?;
@@ -237,11 +236,7 @@ pub fn save_window_size_position(app_handle: &AppHandle, save_to_file: bool) -> 
             verge.window_size_position = Some(vec![size.width, size.height, pos.x, pos.y]);
         }
     }
-
-    if save_to_file {
-        verge.save_file()?;
-    }
-
+    verge.save_file()?;
     Ok(())
 }
 

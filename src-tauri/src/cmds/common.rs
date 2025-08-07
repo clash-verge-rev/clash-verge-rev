@@ -223,7 +223,7 @@ pub fn get_net_info() -> CmdResult<Vec<NetInfo>> {
 #[tauri::command]
 pub fn restart_app(app_handle: tauri::AppHandle) {
     utils::server::shutdown_embedded_server();
-    let _ = resolve::save_window_size_position(&app_handle, false);
+    let _ = resolve::save_window_size_position(&app_handle);
     tauri::async_runtime::block_on(async {
         resolve::resolve_reset().await;
     });
@@ -233,7 +233,7 @@ pub fn restart_app(app_handle: tauri::AppHandle) {
 #[tauri::command]
 pub fn exit_app(app_handle: tauri::AppHandle) {
     utils::server::shutdown_embedded_server();
-    let _ = resolve::save_window_size_position(&app_handle, true);
+    let _ = resolve::save_window_size_position(&app_handle);
     tauri::async_runtime::block_on(async {
         resolve::resolve_reset().await;
     });
