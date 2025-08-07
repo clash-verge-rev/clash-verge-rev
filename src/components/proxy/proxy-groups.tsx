@@ -97,6 +97,9 @@ export const ProxyGroups = (props: Props) => {
         )
         .flatMap((e) => e.proxyCol || e.proxy!)
         .filter(Boolean);
+      const fixedProxy = renderList
+        .filter((i) => i.type === 0 && i.group.name === groupName)
+        .find((i) => i.group.fixed);
 
       const providers = new Set(
         proxies.map((p) => p!.provider!).filter(Boolean),
@@ -111,7 +114,9 @@ export const ProxyGroups = (props: Props) => {
         .filter((p) => !p!.provider && p.type !== "Direct")
         .map((p) => p!.name);
       await delayManager.checkListDelay(names, groupName, timeout);
-
+      if (fixedProxy) {
+        await selectNodeForProxy(groupName, fixedProxy.group.fixed!);
+      }
       onProxies();
     },
     { wait: 1000 },
