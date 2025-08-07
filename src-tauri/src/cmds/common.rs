@@ -225,7 +225,7 @@ pub fn restart_app(app_handle: tauri::AppHandle) {
     utils::server::shutdown_embedded_server();
     let _ = resolve::save_window_size_position(&app_handle, false);
     tauri::async_runtime::block_on(async {
-        let _ = CoreManager::global().stop_core().await;
+        resolve::resolve_reset().await;
     });
     app_handle.restart();
 }
