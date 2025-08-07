@@ -477,8 +477,8 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
         hotkey::Hotkey::global().update(hotkeys)?;
     }
 
-    if language.is_some() {
-        rust_i18n::set_locale(language.unwrap().as_str());
+    if let Some(language) = language {
+        rust_i18n::set_locale(&language);
         handle::Handle::update_systray()?;
     } else if system_proxy.is_some()
         || common_tray_icon.is_some()
