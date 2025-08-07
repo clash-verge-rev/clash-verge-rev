@@ -31,7 +31,7 @@ importers:
         version: 7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@mui/x-data-grid':
         specifier: ^7.29.6
-        version: 7.29.8(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@mui/material@7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mui/system@7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 7.29.9(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@mui/material@7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mui/system@7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@tanstack/react-router':
         specifier: ^1.120.16
         version: 1.130.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1207,26 +1207,6 @@ packages:
       '@types/react':
         optional: true
 
-  '@mui/utils@7.2.0':
-    resolution: {integrity: sha512-O0i1GQL6MDzhKdy9iAu5Yr0Sz1wZjROH1o3aoztuivdCXqEeQYnEjTDiRLGuFxI9zrUbTHBwobMyQH5sNtyacw==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      '@types/react': ^17.0.0 || ^18.0.0 || ^19.0.0
-      react: ^17.0.0 || ^18.0.0 || ^19.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-
-  '@mui/utils@7.3.0':
-    resolution: {integrity: sha512-YdL6ebwFV7PIOidIsees3HxkZ8hZjj+/atKLuI1ENwvJJ1puiEoLEmuDU72qSbKu911/GeFa7pc7Cn/ZmAj6yQ==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      '@types/react': ^17.0.0 || ^18.0.0 || ^19.0.0
-      react: ^17.0.0 || ^18.0.0 || ^19.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-
   '@mui/utils@7.3.1':
     resolution: {integrity: sha512-/31y4wZqVWa0jzMnzo6JPjxwP6xXy4P3+iLbosFg/mJQowL1KIou0LC+lquWW60FKVbKz5ZUWBg2H3jausa0pw==}
     engines: {node: '>=14.0.0'}
@@ -1237,8 +1217,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@mui/x-data-grid@7.29.8':
-    resolution: {integrity: sha512-m4Dp1Vig8gFiBlcEOWimUku182cEw5YrAyXS3PfTSdbxa/20bFw7a8mlHdxO9ChHQRMf6TqbisdRm23CDIIdog==}
+  '@mui/x-data-grid@7.29.9':
+    resolution: {integrity: sha512-RfK7Fnuu4eyv/4eD3MEB1xxZsx0xRBsofb1kifghIjyQV1EKAeRcwvczyrzQggj7ZRT5AqkwCzhLsZDvE5O0nQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@emotion/react': ^11.9.0
@@ -3148,9 +3128,6 @@ packages:
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
-  react-is@19.1.0:
-    resolution: {integrity: sha512-Oe56aUPnkHyyDxxkvqtd7KkdQP5uIUfHxd5XTb3wE9d/kRnZLmKbDB0GWk919tdQ+mxxPtG6EAs6RMT6i1qtHg==}
-
   react-is@19.1.1:
     resolution: {integrity: sha512-tr41fA15Vn8p4X9ntI+yCyeGSf1TlYaY5vlTZfQmeLBrFo3psOPX6HhTDnFNL9uj3EhP0KAQ80cugCl4b4BERA==}
 
@@ -4781,30 +4758,6 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.9
 
-  '@mui/utils@7.2.0(@types/react@19.1.9)(react@19.1.1)':
-    dependencies:
-      '@babel/runtime': 7.27.6
-      '@mui/types': 7.4.5(@types/react@19.1.9)
-      '@types/prop-types': 15.7.15
-      clsx: 2.1.1
-      prop-types: 15.8.1
-      react: 19.1.1
-      react-is: 19.1.0
-    optionalDependencies:
-      '@types/react': 19.1.9
-
-  '@mui/utils@7.3.0(@types/react@19.1.9)(react@19.1.1)':
-    dependencies:
-      '@babel/runtime': 7.28.2
-      '@mui/types': 7.4.5(@types/react@19.1.9)
-      '@types/prop-types': 15.7.15
-      clsx: 2.1.1
-      prop-types: 15.8.1
-      react: 19.1.1
-      react-is: 19.1.1
-    optionalDependencies:
-      '@types/react': 19.1.9
-
   '@mui/utils@7.3.1(@types/react@19.1.9)(react@19.1.1)':
     dependencies:
       '@babel/runtime': 7.28.2
@@ -4817,12 +4770,12 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.9
 
-  '@mui/x-data-grid@7.29.8(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@mui/material@7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mui/system@7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@mui/x-data-grid@7.29.9(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@mui/material@7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mui/system@7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.2
       '@mui/material': 7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@mui/system': 7.3.1(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@emotion/styled@11.13.0(@emotion/react@11.13.0(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1))(@types/react@19.1.9)(react@19.1.1)
-      '@mui/utils': 7.2.0(@types/react@19.1.9)(react@19.1.1)
+      '@mui/utils': 7.3.1(@types/react@19.1.9)(react@19.1.1)
       '@mui/x-internals': 7.29.0(@types/react@19.1.9)(react@19.1.1)
       clsx: 2.1.1
       prop-types: 15.8.1
@@ -4838,8 +4791,8 @@ snapshots:
 
   '@mui/x-internals@7.29.0(@types/react@19.1.9)(react@19.1.1)':
     dependencies:
-      '@babel/runtime': 7.27.6
-      '@mui/utils': 7.3.0(@types/react@19.1.9)(react@19.1.1)
+      '@babel/runtime': 7.28.2
+      '@mui/utils': 7.3.1(@types/react@19.1.9)(react@19.1.1)
       react: 19.1.1
     transitivePeerDependencies:
       - '@types/react'
@@ -6918,8 +6871,6 @@ snapshots:
       react: 19.1.1
 
   react-is@16.13.1: {}
-
-  react-is@19.1.0: {}
 
   react-is@19.1.1: {}
 
