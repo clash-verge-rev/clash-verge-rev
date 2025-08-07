@@ -66,11 +66,12 @@ pub async fn embed_server() {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     let _ = SHUTDOWN_SENDER.set(Mutex::new(Some(shutdown_tx)));
     let port = IVerge::get_singleton_port();
-    let ping = warp::path!("commands" / "ping").map(move || "ok");
+
+    let ping = warp::path!("commands" / "ping").map(move || "ok".to_string());
 
     let visible = warp::path!("commands" / "visible").map(move || {
         resolve::create_window();
-        "ok"
+        "ok".to_string()
     });
 
     let pac = warp::path!("commands" / "pac").map(move || {
@@ -90,17 +91,22 @@ pub async fn embed_server() {
     let scheme = warp::path!("commands" / "scheme")
         .and(warp::query::<QueryParam>())
         .and_then(scheme_handler);
-
     async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
         resolve::resolve_scheme(query.param).await;
-        Ok("ok")
+        Ok("ok".to_string())
     }
 
-    let commands = ping.or(visible).or(pac).or(scheme);
-    let (_addr, server) = warp::serve(commands).bind_with_graceful_shutdown(([127, 0, 0, 1], port), async {
-        shutdown_rx.await.ok();
+    let routes = ping.or(visible).or(pac).or(scheme);
+    tauri::async_runtime::spawn(async move {
+        warp::serve(routes)
+            .bind(([127, 0, 0, 1], port))
+            .await
+            .graceful(async {
+                shutdown_rx.await.ok();
+            })
+            .run()
+            .await;
     });
-    tokio::task::spawn(server);
 }
 
 pub fn shutdown_embedded_server() {
