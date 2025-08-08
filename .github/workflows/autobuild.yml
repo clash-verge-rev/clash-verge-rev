@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.check.outputs.should_run }}
+      last_tauri_commit: ${{ steps.check.outputs.last_tauri_commit }}
+      autobuild_version: ${{ steps.check.outputs.autobuild_version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -103,12 +105,18 @@ jobs:
           echo "📝 Last Tauri-related commit: $LAST_TAURI_COMMIT"
           echo "📝 Current commit: $(git rev-parse --short HEAD)"
 
-          # Generate the version that would be created for autobuild using the last Tauri commit
+          # Generate autobuild version for consistency across jobs
           CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
           MONTH=$(date +%m)
           DAY=$(date +%d)
-          EXPECTED_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${LAST_TAURI_COMMIT}"
-          echo "🏷️  Expected autobuild version: $EXPECTED_VERSION"
+          AUTOBUILD_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${LAST_TAURI_COMMIT}"
+          
+          echo "🏷️  Autobuild version: $AUTOBUILD_VERSION"
+          echo "📝 Last Tauri commit: $LAST_TAURI_COMMIT"
+          
+          # Set outputs for other jobs to use
+          echo "last_tauri_commit=$LAST_TAURI_COMMIT" >> $GITHUB_OUTPUT
+          echo "autobuild_version=$AUTOBUILD_VERSION" >> $GITHUB_OUTPUT
 
           # Check if autobuild release exists
           echo "🔍 Checking autobuild release and latest.json..."
@@ -253,42 +261,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ env.TAG_NAME }}
         run: |
-          # Get base version from package.json
-          BASE_VERSION=$(cat package.json | jq -r '.version')
-
-          # Find the last commit that changed Tauri-related files (same logic as check_commit job)
-          echo "🔍 Finding last commit with Tauri-related changes..."
-          LAST_TAURI_COMMIT=""
-          for commit in $(git rev-list HEAD --max-count=50); do
-            # Check if this commit changed any Tauri-related files
-            CHANGED_FILES=$(git show --name-only --pretty=format: $commit | tr '\n' ' ')
-            HAS_TAURI_CHANGES=false
-            
-            # Check each pattern
-            if echo "$CHANGED_FILES" | grep -q "src/" && echo "$CHANGED_FILES" | grep -qvE "src/(dist|build|node_modules|\.next|\.cache)"; then
-              HAS_TAURI_CHANGES=true
-            elif echo "$CHANGED_FILES" | grep -qE "src-tauri/(src|Cargo\.(toml|lock)|tauri\..*\.conf\.json|build\.rs|capabilities)"; then
-              HAS_TAURI_CHANGES=true
-            fi
-            
-            if [ "$HAS_TAURI_CHANGES" = true ]; then
-              LAST_TAURI_COMMIT=$(git rev-parse --short $commit)
-              break
-            fi
-          done
-
-          if [ -z "$LAST_TAURI_COMMIT" ]; then
-            LAST_TAURI_COMMIT=$(git rev-parse --short HEAD)
-          fi
-
-          # Generate current autobuild version
-          CURRENT_BASE_VERSION=$(echo "$BASE_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
-          MONTH=$(date +%m)
-          DAY=$(date +%d)
-          CURRENT_AUTOBUILD_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${LAST_TAURI_COMMIT}"
-
+          # Use consistent values from check_commit job
+          CURRENT_AUTOBUILD_VERSION="${{ needs.check_commit.outputs.autobuild_version }}"
+          LAST_TAURI_COMMIT="${{ needs.check_commit.outputs.last_tauri_commit }}"
+          
           echo "📦 Current autobuild version: $CURRENT_AUTOBUILD_VERSION"
-          echo "📝 Base version: $CURRENT_BASE_VERSION"
           echo "📝 Last Tauri commit: $LAST_TAURI_COMMIT"
 
           # Get all assets and remove old ones
