@@ -30,7 +30,7 @@ const LOG_LEVEL_HIERARCHY = {
   info: ["info", "warning", "error"],
   warning: ["warning", "error"],
   error: ["error"],
-  debug: ["info", "warning", "error", "debug"],
+  debug: ["debug"],
 };
 
 const LogPage = () => {

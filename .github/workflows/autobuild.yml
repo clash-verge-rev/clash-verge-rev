@@ -110,10 +110,10 @@ jobs:
           MONTH=$(date +%m)
           DAY=$(date +%d)
           AUTOBUILD_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${LAST_TAURI_COMMIT}"
-          
+
           echo "🏷️  Autobuild version: $AUTOBUILD_VERSION"
           echo "📝 Last Tauri commit: $LAST_TAURI_COMMIT"
-          
+
           # Set outputs for other jobs to use
           echo "last_tauri_commit=$LAST_TAURI_COMMIT" >> $GITHUB_OUTPUT
           echo "autobuild_version=$AUTOBUILD_VERSION" >> $GITHUB_OUTPUT
@@ -264,7 +264,7 @@ jobs:
           # Use consistent values from check_commit job
           CURRENT_AUTOBUILD_VERSION="${{ needs.check_commit.outputs.autobuild_version }}"
           LAST_TAURI_COMMIT="${{ needs.check_commit.outputs.last_tauri_commit }}"
-          
+
           echo "📦 Current autobuild version: $CURRENT_AUTOBUILD_VERSION"
           echo "📝 Last Tauri commit: $LAST_TAURI_COMMIT"
 
