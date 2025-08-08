@@ -163,8 +163,8 @@ impl Hotkey {
                 notify_event(app_handle, NotificationEvent::LightweightModeEntered);
             }
             HotkeyFunction::Quit => {
-                feat::quit();
                 notify_event(app_handle, NotificationEvent::AppQuit);
+                feat::quit();
             }
             #[cfg(target_os = "macos")]
             HotkeyFunction::Hide => {
