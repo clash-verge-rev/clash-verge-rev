@@ -88,7 +88,7 @@
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "19.1.7",
     "@vitejs/plugin-legacy": "^7.1.0",
-    "@vitejs/plugin-react": "4.7.0",
+    "@vitejs/plugin-react": "5.0.0",
     "adm-zip": "^0.5.16",
     "commander": "^14.0.0",
     "cross-env": "^10.0.0",
