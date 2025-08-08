@@ -265,7 +265,7 @@ const SettingClash = ({ onError }: Props) => {
               const modeName = mode[0].toUpperCase() + mode.slice(1);
               const buttonName = {
                 always: "Enable",
-                strict: "Default",
+                strict: "Auto",
                 off: "Disable",
               }[mode];
               return (
