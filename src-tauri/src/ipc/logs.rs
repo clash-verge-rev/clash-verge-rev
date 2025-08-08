@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::{collections::VecDeque, sync::Arc, time::Instant};
 use tokio::{sync::RwLock, task::JoinHandle, time::Duration};
 
@@ -20,6 +21,74 @@ pub struct LogItem {
     pub log_type: String,
     pub payload: String,
     pub time: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum LogLevel {
+    Debug,
+    Info,
+    Warning,
+    Error,
+    All,
+}
+
+impl fmt::Display for LogLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LogLevel::Debug => write!(f, "debug"),
+            LogLevel::Info => write!(f, "info"),
+            LogLevel::Warning => write!(f, "warning"),
+            LogLevel::Error => write!(f, "error"),
+            LogLevel::All => write!(f, "all"),
+        }
+    }
+}
+
+impl TryFrom<&str> for LogLevel {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, <Self as TryFrom<&str>>::Error> {
+        match value.to_lowercase().as_str() {
+            "debug" => Ok(LogLevel::Debug),
+            "info" => Ok(LogLevel::Info),
+            "warning" | "warn" => Ok(LogLevel::Warning),
+            "error" | "err" => Ok(LogLevel::Error),
+            "all" => Ok(LogLevel::All),
+            _ => Err(format!("Invalid log level: '{}'", value)),
+        }
+    }
+}
+
+impl TryFrom<String> for LogLevel {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, <Self as TryFrom<String>>::Error> {
+        LogLevel::try_from(value.as_str())
+    }
+}
+
+impl LogLevel {
+    /// Parse from string with a default fallback
+    pub fn from_str_or_default(s: &str, default: LogLevel) -> LogLevel {
+        Self::try_from(s).unwrap_or(default)
+    }
+
+    /// Check if this log level should include logs of the specified type
+    pub fn should_include(&self, log_type: &str) -> bool {
+        match LogLevel::try_from(log_type) {
+            Ok(log_level) => match self {
+                LogLevel::All => true,
+                LogLevel::Debug => true, // Debug includes all levels
+                LogLevel::Info => log_level >= LogLevel::Info,
+                LogLevel::Warning => log_level >= LogLevel::Warning,
+                LogLevel::Error => log_level >= LogLevel::Error,
+            },
+            Err(_) => {
+                // If we can't parse the log type, include it by default
+                true
+            }
+        }
+    }
 }
 
 impl LogItem {
@@ -231,11 +300,9 @@ impl LogsMonitor {
         current: Arc<RwLock<CurrentLogs>>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Ok(log_data) = serde_json::from_str::<LogData>(line.trim()) {
-            // Filter logs based on level if needed
-            let should_include = match filter_level {
-                "all" => true,
-                level => log_data.log_type.to_lowercase() == level.to_lowercase(),
-            };
+            // Use LogLevel enum for smarter filtering with hierarchical support
+            let filter_log_level = LogLevel::from_str_or_default(filter_level, LogLevel::Info);
+            let should_include = filter_log_level.should_include(&log_data.log_type);
 
             if should_include {
                 let log_item = LogItem::new(log_data.log_type, log_data.payload);
@@ -277,20 +344,16 @@ impl LogsMonitor {
     pub async fn get_logs_as_json(&self, level: Option<String>) -> serde_json::Value {
         let current = self.current().await;
 
+        // Use the same filtering logic as process_log_line for consistency
+        let filter_log_level = level
+            .as_deref()
+            .map(|l| LogLevel::from_str_or_default(l, LogLevel::Info))
+            .unwrap_or(LogLevel::All);
+
         let filtered_logs: Vec<serde_json::Value> = current
             .logs
             .iter()
-            .filter(|log| {
-                if let Some(ref filter_level) = level {
-                    if filter_level == "all" {
-                        true
-                    } else {
-                        log.log_type.to_lowercase() == filter_level.to_lowercase()
-                    }
-                } else {
-                    true
-                }
-            })
+            .filter(|log| filter_log_level.should_include(&log.log_type))
             .map(|log| {
                 serde_json::json!({
                     "type": log.log_type,

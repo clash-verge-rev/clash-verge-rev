@@ -11,7 +11,7 @@ import dayjs from "dayjs";
 // 最大日志数量
 const MAX_LOG_NUM = 1000;
 
-export type LogLevel = "warning" | "info" | "debug" | "error" | "all";
+export type LogLevel = "debug" | "info" | "warning" | "error" | "all";
 
 export interface ILogItem {
   time?: string;

@@ -24,13 +24,14 @@ import {
   toggleLogEnabled,
 } from "@/services/global-log-service";
 
-// 定义日志级别结构
+// 定义日志级别结构 - 与后端保持一致
+// 后端顺序：Debug < Info < Warning < Error, All 显示所有
 const LOG_LEVEL_HIERARCHY = {
-  all: ["info", "warning", "error", "debug"],
-  info: ["info", "warning", "error"],
-  warning: ["warning", "error"],
-  error: ["error"],
-  debug: ["debug"],
+  all: ["debug", "info", "warning", "error"], // All: 显示所有等级
+  debug: ["debug", "info", "warning", "error"], // Debug: 显示所有等级（最低级别）
+  info: ["info", "warning", "error"], // Info: 显示 Info、Warning、Error
+  warning: ["warning", "error"], // Warning: 显示 Warning、Error
+  error: ["error"], // Error: 仅显示 Error
 };
 
 const LogPage = () => {
@@ -133,10 +134,10 @@ const LogPage = () => {
           onChange={(e) => handleLogLevelChange(e.target.value as LogLevel)}
         >
           <MenuItem value="all">ALL</MenuItem>
+          <MenuItem value="debug">DEBUG</MenuItem>
           <MenuItem value="info">INFO</MenuItem>
           <MenuItem value="warning">WARNING</MenuItem>
           <MenuItem value="error">ERROR</MenuItem>
-          <MenuItem value="debug">DEBUG</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox
           onSearch={(matcher, state) => {
