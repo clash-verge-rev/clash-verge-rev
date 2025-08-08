@@ -2,6 +2,7 @@
 
 - 重置代理时，清理 mihomo 已连接的 websocket 连接
 - 软件请求退出时，清理 mihomo 已连接的 websocket 连接
+- 进程匹配模式的 “默认” 选项替换为 “自动” 选项
 
 ### 🐛 Bug Fixes
 
