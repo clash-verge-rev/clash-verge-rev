@@ -74,7 +74,7 @@
     "react-router-dom": "7.8.0",
     "react-virtuoso": "^4.13.0",
     "sockette": "^2.0.6",
-    "swr": "^2.3.4",
+    "swr": "^2.3.5",
     "tar": "^7.4.3",
     "types-pac": "^1.0.3",
     "zustand": "^5.0.7"
