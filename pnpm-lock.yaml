@@ -127,7 +127,7 @@ importers:
         version: 4.13.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       swr:
         specifier: ^2.3.3
-        version: 2.3.4(react@19.1.1)
+        version: 2.3.5(react@19.1.1)
       tauri-plugin-mihomo-api:
         specifier: file:tauri-plugin-mihomo
         version: file:tauri-plugin-mihomo
@@ -3368,8 +3368,8 @@ packages:
   svg-parser@2.0.4:
     resolution: {integrity: sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==}
 
-  swr@2.3.4:
-    resolution: {integrity: sha512-bYd2lrhc+VarcpkgWclcUi92wYCpOgMws9Sd1hG1ntAu0NEy+14CbotuFjshBU2kt9rYj9TSmDcybpxpeTU1fg==}
+  swr@2.3.5:
+    resolution: {integrity: sha512-4e7pjTVulZTIL+b/S0RYFsgDcTcXPLUOvBPqyh9YdD+PkHeEMoaPwDmF9Kv6I1nnPg1OFKhiiEYpsYaaE2W2jA==}
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -7185,7 +7185,7 @@ snapshots:
 
   svg-parser@2.0.4: {}
 
-  swr@2.3.4(react@19.1.1):
+  swr@2.3.5(react@19.1.1):
     dependencies:
       dequal: 2.0.3
       react: 19.1.1
