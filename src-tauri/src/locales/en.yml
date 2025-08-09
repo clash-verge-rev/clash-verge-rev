@@ -1,4 +1,6 @@
 # system tray related
+on: ON
+off: OFF
 dashboard: Dashboard
 mode.rule: Rule Mode
 mode.global: Global Mode

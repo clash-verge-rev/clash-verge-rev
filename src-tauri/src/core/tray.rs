@@ -2,10 +2,10 @@ use super::handle;
 use crate::{
     APP_VERSION, cmds,
     config::{Config, IProfiles},
-    feat,
+    feat, log_err,
     utils::{dirs, resolve},
 };
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
 use rust_i18n::t;
 use tauri::{
     AppHandle, Runtime,
@@ -39,7 +39,6 @@ impl Tray {
                     if !icon_path.exists() {
                         icon_path = icon_dir_path.join("tun.png");
                     }
-                    // Icon::File(icon_path)
                     Ok(Image::from_path(icon_path)?)
                 } else {
                     #[cfg(target_os = "macos")]
@@ -50,7 +49,6 @@ impl Tray {
                     };
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon-tun.png").to_vec();
-                    // Icon::Raw(icon)
                     Ok(Image::from_bytes(&icon)?)
                 }
             }
@@ -60,7 +58,6 @@ impl Tray {
                     if !icon_path.exists() {
                         icon_path = icon_dir_path.join("sysproxy.png");
                     }
-                    // Icon::File(icon_path)
                     Ok(Image::from_path(icon_path)?)
                 } else {
                     #[cfg(target_os = "macos")]
@@ -71,7 +68,6 @@ impl Tray {
                     };
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon-sys.png").to_vec();
-                    // Icon::Raw(icon)
                     Ok(Image::from_bytes(&icon)?)
                 }
             }
@@ -81,7 +77,6 @@ impl Tray {
                     if !icon_path.exists() {
                         icon_path = icon_dir_path.join("common.png");
                     }
-                    // Icon::File(icon_path)
                     Ok(Image::from_path(icon_path)?)
                 } else {
                     #[cfg(target_os = "macos")]
@@ -92,7 +87,6 @@ impl Tray {
                     };
                     #[cfg(not(target_os = "macos"))]
                     let icon = include_bytes!("../../icons/tray-icon.png").to_vec();
-                    // Icon::Raw(icon)
                     Ok(Image::from_bytes(&icon)?)
                 }
             }
@@ -218,27 +212,27 @@ impl Tray {
         let tray = app_handle.tray_by_id(TRAY_ID).expect("tray not found");
         let menu = Self::tray_menu(app_handle)?;
 
-        let _ = menu
-            .get("rule_mode")
-            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "rule").ok());
-        let _ = menu
-            .get("global_mode")
-            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "global").ok());
-        let _ = menu
-            .get("direct_mode")
-            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "direct").ok());
+        menu.get("rule_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "rule").ok())
+            .ok_or(anyhow!("failed to update rule mode menu"))?;
+        menu.get("global_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "global").ok())
+            .ok_or(anyhow!("failed to update global mode menu"))?;
+        menu.get("direct_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(mode == "direct").ok())
+            .ok_or(anyhow!("failed to update direct mode menu"))?;
 
-        let _ = menu
-            .get("system_proxy")
-            .and_then(|item| item.as_check_menuitem()?.set_checked(sysproxy_enabled).ok());
+        menu.get("system_proxy")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(sysproxy_enabled).ok())
+            .ok_or(anyhow!("failed to update system proxy menu"))?;
 
-        let _ = menu
-            .get("tun_mode")
-            .and_then(|item| item.as_check_menuitem()?.set_checked(tun_enabled).ok());
+        menu.get("tun_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(tun_enabled).ok())
+            .ok_or(anyhow!("failed to update tun mode menu"))?;
 
-        let _ = menu
-            .get("service_mode")
-            .and_then(|item| item.as_check_menuitem()?.set_checked(service_enabled).ok());
+        menu.get("service_mode")
+            .and_then(|item| item.as_check_menuitem()?.set_checked(service_enabled).ok())
+            .ok_or(anyhow!("failed to update service mode menu"))?;
 
         tray.set_menu(Some(menu))?;
 
@@ -246,12 +240,8 @@ impl Tray {
         {
             let tray_icon = verge.tray_icon.unwrap_or("monochrome".to_string());
             match tray_icon.as_str() {
-                "monochrome" => {
-                    let _ = tray.set_icon_as_template(true);
-                }
-                "colorful" => {
-                    let _ = tray.set_icon_as_template(false);
-                }
+                "monochrome" => log_err!(tray.set_icon_as_template(true)),
+                "colorful" => log_err!(tray.set_icon_as_template(false)),
                 _ => {}
             }
         }
@@ -271,7 +261,7 @@ impl Tray {
                 current_profile_name = profile_name.to_string();
             };
             let switch_map = |status| {
-                if status { "ON" } else { "OFF" }
+                if status { t!("on") } else { t!("off") }
             };
             tray.set_tooltip(Some(&format!(
                 "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
@@ -334,28 +324,26 @@ impl Tray {
                         .await
                         {
                             Ok(_) => {
-                                let _ =
-                                    handle::Handle::notification(t!("profiles.switch"), t!("profiles.switch.success"));
+                                handle::Handle::notify(t!("profiles.switch"), t!("profiles.switch.success"));
                                 handle::Handle::refresh_profiles();
                                 tracing::info!("switch profile successfully");
                             }
                             Err(e) => {
-                                let _ =
-                                    handle::Handle::notification(t!("profiles.switch"), t!("profiles.switch.failed"));
+                                handle::Handle::notify(t!("profiles.switch"), t!("profiles.switch.failed"));
                                 tracing::error!("failed to switch profile, error: {:?}", e);
                             }
                         }
                     });
                 } else {
-                    let _ = Self::update_systray(app_handle);
+                    log_err!(Self::update_systray(app_handle));
                 }
             }
             "service_mode" => feat::toggle_service_mode(),
             "copy_env" => feat::copy_clash_env(app_handle),
-            "open_app_dir" => crate::log_err!(cmds::common::open_app_dir(app_handle_)),
-            "open_core_dir" => crate::log_err!(cmds::common::open_core_dir(app_handle_)),
-            "open_logs_dir" => crate::log_err!(cmds::common::open_logs_dir(app_handle_)),
-            "open_devtools" => crate::log_err!(cmds::common::open_devtools(app_handle_)),
+            "open_app_dir" => log_err!(cmds::common::open_app_dir(app_handle_)),
+            "open_core_dir" => log_err!(cmds::common::open_core_dir(app_handle_)),
+            "open_logs_dir" => log_err!(cmds::common::open_logs_dir(app_handle_)),
+            "open_devtools" => log_err!(cmds::common::open_devtools(app_handle_)),
             "restart_clash" => feat::restart_clash_core(),
             "restart_app" => cmds::common::restart_app(app_handle_),
             "quit" => cmds::common::exit_app(app_handle_),

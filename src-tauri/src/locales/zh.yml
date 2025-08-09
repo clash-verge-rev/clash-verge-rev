@@ -1,4 +1,6 @@
 # 系统托盘相关
+on: 开
+off: 关
 dashboard: 打开面板
 mode.rule: 规则模式
 mode.global: 全局模式

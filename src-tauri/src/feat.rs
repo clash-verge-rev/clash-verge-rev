@@ -97,14 +97,14 @@ pub fn toggle_service_mode() {
                     ..IVerge::default()
                 };
                 if let Err(err) = patch_verge(patch).await {
-                    let _ = handle::Handle::notification("Clash Verge Service", format!("{toggle_failed_msg}, {err}"));
+                    let _ = handle::Handle::notify("Clash Verge Service", format!("{toggle_failed_msg}, {err}"));
                     tracing::error!("{err}")
                 } else {
                     handle::Handle::refresh_verge()
                 }
             }
             Ok(response) => {
-                let _ = handle::Handle::notification(
+                let _ = handle::Handle::notify(
                     "Clash Verge Service",
                     format!("{}, {}", toggle_failed_msg, response.msg),
                 );
@@ -155,9 +155,9 @@ pub fn toggle_tun_mode() {
                 })
                 .await
                 {
-                    let _ = handle::Handle::notification("Tun Mode", format!("{toggle_failed_msg}, {err}"));
+                    handle::Handle::notify("Tun Mode", format!("{toggle_failed_msg}, {err}"));
                 } else {
-                    let _ = cmds::check_service_and_clash().await;
+                    log_err!(cmds::check_service_and_clash().await, "check service failed");
                     handle::Handle::refresh_verge();
                     match patch_clash(tun).await {
                         Ok(_) => tracing::info!("change tun mode to {:?}", !enable),
@@ -166,7 +166,7 @@ pub fn toggle_tun_mode() {
                 }
             }
             Ok(response) => {
-                let _ = handle::Handle::notification("Tun Mode", format!("{}, {}", toggle_failed_msg, response.msg));
+                handle::Handle::notify("Tun Mode", format!("{}, {}", toggle_failed_msg, response.msg));
             }
             Err(err) => {
                 tracing::error!("toggle service mode failed: {err}");
@@ -179,9 +179,9 @@ pub fn toggle_tun_mode() {
                 .unwrap_or(false);
                 if status && install_and_run_service().await.is_ok() {
                     if let Err(err) = cmds::check_service_and_clash().await {
-                        let _ = handle::Handle::notification("Tun Mode", format!("{toggle_failed_msg}, {err}"));
+                        handle::Handle::notify("Tun Mode", format!("{toggle_failed_msg}, {err}"));
                     } else if let Err(err) = patch_clash(tun).await {
-                        let _ = handle::Handle::notification("Tun Mode", format!("{toggle_failed_msg}, {err}"));
+                        handle::Handle::notify("Tun Mode", format!("{toggle_failed_msg}, {err}"));
                         tracing::error!("{err}")
                     } else {
                         tracing::info!("change tun mode to {:?}", !enable);
@@ -197,7 +197,7 @@ pub fn toggle_tun_mode() {
 /// 安装并运行服务 (仅内核)
 async fn install_and_run_service() -> Result<()> {
     if let Err(err) = cmds::service::install_service().await {
-        handle::Handle::notification("Clash Verge Service", format!("{}, {}", t!("install.failed"), err))?;
+        handle::Handle::notify("Clash Verge Service", format!("{}, {}", t!("install.failed"), err));
         return Err(anyhow!(err));
     }
     if let Err(err) = patch_verge(IVerge {
@@ -206,13 +206,13 @@ async fn install_and_run_service() -> Result<()> {
     })
     .await
     {
-        handle::Handle::notification(
+        handle::Handle::notify(
             "Clash Verge Service",
             format!("{}, {}", t!("service.install.run.failed"), err),
-        )?;
+        );
         return Err(anyhow!(err));
     }
-    handle::Handle::notification("Clash Verge Service", t!("service.install.run.success"))?;
+    handle::Handle::notify("Clash Verge Service", t!("service.install.run.success"));
     handle::Handle::refresh_verge();
     Ok(())
 }
@@ -614,10 +614,10 @@ pub async fn test_delay(url: String) -> Result<u32> {
         }
     }
 
-    let request = builder
-        .timeout(Duration::from_millis(5000))
-        .build()?
-        .get(url).header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
+    let request = builder.timeout(Duration::from_millis(5000)).build()?.get(url).header(
+        "User-Agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+    );
     let start = Instant::now();
 
     let response = request.send().await;

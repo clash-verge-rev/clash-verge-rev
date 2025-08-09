@@ -253,10 +253,10 @@ pub async fn resolve_scheme(param: String) {
     };
     if let Ok(item) = PrfItem::from_url(url, None, None, Some(option)).await {
         if Config::profiles().data().append_item(item).is_ok() {
-            let _ = handle::Handle::notification("Clash Verge", t!("import.success"));
+            handle::Handle::notify("Clash Verge", t!("import.success"));
         };
     } else {
-        let _ = handle::Handle::notification("Clash Verge", t!("import.failed"));
+        handle::Handle::notify("Clash Verge", t!("import.failed"));
         tracing::error!("failed to parse url: {}", url);
     }
 }

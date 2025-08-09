@@ -96,10 +96,10 @@ impl Handle {
         Ok(())
     }
 
-    pub fn notification<T: Into<String>, B: Into<String>>(title: T, body: B) -> Result<()> {
+    pub fn notify<T: Into<String>, B: Into<String>>(title: T, body: B) {
         let app_handle = Self::get_app_handle();
-        let _ = app_handle.notification().builder().title(title).body(body).show();
-        Ok(())
+        let notification = app_handle.notification().builder().title(title).body(body);
+        log_err!(notification.show(), "failed to show notification");
     }
 
     pub fn show_block_dialog<T: Into<String>, M: Into<String>>(
