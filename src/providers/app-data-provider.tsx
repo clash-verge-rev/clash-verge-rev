@@ -351,7 +351,7 @@ export const AppDataProvider = ({
       };
     },
     {
-      refreshInterval: 2000, // 2秒刷新一次
+      refreshInterval: 1000, // 1秒刷新一次
       fallbackData: { connections: [], uploadTotal: 0, downloadTotal: 0 },
       keepPreviousData: true,
       onError: (error) => {
