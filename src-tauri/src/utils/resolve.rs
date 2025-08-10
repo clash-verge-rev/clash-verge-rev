@@ -53,8 +53,10 @@ pub async fn resolve_setup() {
     }
 
     let argvs = std::env::args().collect::<Vec<String>>();
-    if let [_, second,..] = argvs.as_slice() && second.starts_with("clash:") {
-        resolve_scheme(second.to_owned()).await; 
+    if let [_, second, ..] = argvs.as_slice()
+        && second.starts_with("clash:")
+    {
+        resolve_scheme(second.to_owned()).await;
     }
 }
 
@@ -192,14 +194,11 @@ pub fn create_window() {
             tracing::trace!("try to calculate the monitor size");
             let center = (|| -> Result<bool> {
                 let mut center = false;
-                let monitor = win.current_monitor()?.ok_or(anyhow::anyhow!(""))?;
-                let size = monitor.size();
+                let monitors = win.available_monitors()?;
+                let sum_width: u32 = monitors.iter().map(|m| m.size().width).sum();
+                let sum_height: u32 = monitors.iter().map(|m| m.size().height).sum();
                 let pos = win.outer_position()?;
-
-                if pos.x < -400
-                    || pos.x > (size.width - 200) as i32
-                    || pos.y < -200
-                    || pos.y > (size.height - 200) as i32
+                if pos.x < -400 || pos.x > (sum_width - 200) as i32 || pos.y < -200 || pos.y > (sum_height - 200) as i32
                 {
                     center = true;
                 }
@@ -211,8 +210,8 @@ pub fn create_window() {
             #[cfg(debug_assertions)]
             win.open_devtools();
         }
-        Err(_) => {
-            tracing::error!("failed to create window");
+        Err(e) => {
+            tracing::error!("failed to create window: {e}");
         }
     }
 }

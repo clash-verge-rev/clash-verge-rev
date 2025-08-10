@@ -97,14 +97,14 @@ pub fn toggle_service_mode() {
                     ..IVerge::default()
                 };
                 if let Err(err) = patch_verge(patch).await {
-                    let _ = handle::Handle::notify("Clash Verge Service", format!("{toggle_failed_msg}, {err}"));
+                    handle::Handle::notify("Clash Verge Service", format!("{toggle_failed_msg}, {err}"));
                     tracing::error!("{err}")
                 } else {
                     handle::Handle::refresh_verge()
                 }
             }
             Ok(response) => {
-                let _ = handle::Handle::notify(
+                handle::Handle::notify(
                     "Clash Verge Service",
                     format!("{}, {}", toggle_failed_msg, response.msg),
                 );
