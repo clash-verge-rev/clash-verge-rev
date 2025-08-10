@@ -172,14 +172,17 @@ pub fn run() -> Result<()> {
             if label == "main" {
                 match event {
                     tauri::WindowEvent::Destroyed => {
-                        let _ = resolve::save_window_size_position(app_handle);
+                        log_err!(
+                            resolve::save_window_size_position(app_handle),
+                            "save window size position failed"
+                        );
                     }
                     tauri::WindowEvent::CloseRequested { api, .. } => {
-                        let _ = resolve::save_window_size_position(app_handle);
+                        log_err!(
+                            resolve::save_window_size_position(app_handle),
+                            "save window size position failed"
+                        );
                         resolve::handle_window_close(api, app_handle)
-                    }
-                    tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
-                        let _ = resolve::save_window_size_position(app_handle);
                     }
                     _ => {}
                 }
