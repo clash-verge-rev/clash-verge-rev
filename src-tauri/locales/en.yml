@@ -20,8 +20,8 @@ restart: Restart App
 quit: Quit
 current.profile: Current Profile
 profiles.switch: Switch Profile
-switch.profiles.success: Switch profile successfully
-switch.profiles.failed: Switch profile failed
+profiles.switch.success: Switch profile successfully
+profiles.switch.failed: Switch profile failed
 
 # notification related
 disable.failed: Disabled Failed

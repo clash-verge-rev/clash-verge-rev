@@ -19,7 +19,7 @@ use once_cell::sync::OnceCell;
 use tauri::AppHandle;
 use tauri_plugin_mihomo::Protocol;
 
-rust_i18n::i18n!("./src/locales", fallback = "en");
+rust_i18n::i18n!("locales", fallback = "en");
 
 pub static APP_VERSION: OnceCell<String> = OnceCell::new();
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
