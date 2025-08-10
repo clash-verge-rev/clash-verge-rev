@@ -53,11 +53,8 @@ pub async fn resolve_setup() {
     }
 
     let argvs = std::env::args().collect::<Vec<String>>();
-    if argvs.len() > 1 {
-        let param = argvs[1].as_str();
-        if param.starts_with("clash:") {
-            resolve_scheme(argvs[1].to_owned()).await;
-        }
+    if let [_, second,..] = argvs.as_slice() && second.starts_with("clash:") {
+        resolve_scheme(second.to_owned()).await; 
     }
 }
 
