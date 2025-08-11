@@ -167,7 +167,8 @@ async function resolveUpdater() {
 
   Object.entries(updateDataNew.platforms).forEach(([key, value]) => {
     if (value.url) {
-      updateDataNew.platforms[key].url = "https://ghp.ci/" + value.url;
+      updateDataNew.platforms[key].url =
+        "https://ghproxy.fangkuai.fun/" + value.url;
     } else {
       console.log(`[Error]: updateDataNew.platforms.${key} is null`);
     }
