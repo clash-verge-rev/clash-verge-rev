@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::log_err;
 use crate::utils::dirs::{self};
 use anyhow::{Error, Result, bail};
 use chrono::{Local, TimeZone};
@@ -10,13 +11,14 @@ use std::{
     sync::Arc,
 };
 use time::macros::format_description;
+use tracing::Level;
 use tracing::level_filters::LevelFilter;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_appender::{non_blocking, rolling};
-use tracing_subscriber::Registry;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::reload::{self, Handle};
 use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{Layer, Registry, filter};
 
 #[derive(Debug, Default)]
 pub struct VergeLog {
@@ -58,6 +60,9 @@ impl VergeLog {
         let timer = tracing_subscriber::fmt::time::LocalTime::new(format_description!(
             "[year]-[month]-[day] [hour]:[minute]:[second]"
         ));
+        let exclude_filter = filter::filter_fn(|metadata| {
+            !(metadata.target().contains("tungstenite") && *metadata.level() == Level::TRACE)
+        });
         // 输出到终端
         let (level_filter, reload_handle) = reload::Layer::new(log_level);
         let console_layer = tracing_subscriber::fmt::layer()
@@ -65,7 +70,8 @@ impl VergeLog {
             .with_ansi(true)
             .with_timer(timer.clone())
             .with_line_number(true)
-            .with_writer(std::io::stdout);
+            .with_writer(std::io::stdout)
+            .with_filter(exclude_filter.clone());
 
         // 输出到日志文件
         let log_dir = dirs::app_logs_dir()?;
@@ -78,7 +84,8 @@ impl VergeLog {
             .with_ansi(false)
             .with_timer(timer)
             .with_line_number(true)
-            .with_writer(non_blocking_appender);
+            .with_writer(non_blocking_appender)
+            .with_filter(exclude_filter);
 
         tracing_subscriber::registry()
             .with(level_filter)
@@ -154,7 +161,7 @@ impl VergeLog {
                 let duration = now.signed_duration_since(file_time);
                 if duration.num_days() > day {
                     let file_path = file.path();
-                    let _ = fs::remove_file(file_path);
+                    log_err!(fs::remove_file(file_path), "delete file failed");
                     tracing::info!("delete log file: {file_name}");
                 }
             }
@@ -162,13 +169,13 @@ impl VergeLog {
         };
 
         for file in fs::read_dir(&log_dir)?.flatten() {
-            let _ = process_file(file);
+            log_err!(process_file(file));
         }
 
         let service_log_dir = log_dir.join("service");
         if service_log_dir.exists() {
             for file in fs::read_dir(service_log_dir)?.flatten() {
-                let _ = process_file(file);
+                log_err!(process_file(file));
             }
         }
 
