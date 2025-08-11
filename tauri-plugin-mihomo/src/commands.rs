@@ -3,7 +3,7 @@ use tauri::async_runtime::RwLock;
 use tauri::ipc::Channel;
 use tauri::{State, command};
 
-use crate::mihomo::Mihomo;
+use crate::mihomo::{ConnectionId, Mihomo};
 use crate::{Result, models::*};
 
 #[command]

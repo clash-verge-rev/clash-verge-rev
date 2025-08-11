@@ -1,13 +1,5 @@
-use std::{collections::HashMap, fmt::Display};
-
-use futures_util::stream::SplitSink;
 use serde::{Deserialize, Serialize};
-use tokio::net::TcpStream;
-#[cfg(unix)]
-use tokio::net::UnixStream;
-#[cfg(windows)]
-use tokio::net::windows::named_pipe::NamedPipeClient;
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
+use std::{collections::HashMap, fmt::Display};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -392,13 +384,4 @@ pub struct Log {
     #[serde(rename = "type")]
     pub log_type: String,
     pub payload: String,
-}
-
-pub(crate) type ConnectionId = u32;
-pub(crate) enum WebSocketWriter {
-    TcpStreamWriter(SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>),
-    #[cfg(unix)]
-    UnixStreamWriter(SplitSink<WebSocketStream<UnixStream>, Message>),
-    #[cfg(windows)]
-    NamedPipeWriter(SplitSink<WebSocketStream<NamedPipeClient>, Message>),
 }

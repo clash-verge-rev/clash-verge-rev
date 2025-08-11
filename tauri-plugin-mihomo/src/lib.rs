@@ -60,23 +60,23 @@ impl Builder {
         self
     }
 
-    pub fn external_host(mut self, external_host: Option<String>) -> Self {
-        self.external_host = external_host;
+    pub fn external_host<S: Into<String>>(mut self, external_host: S) -> Self {
+        self.external_host = Some(external_host.into());
         self
     }
 
-    pub fn external_port(mut self, external_port: Option<u32>) -> Self {
-        self.external_port = external_port;
+    pub fn external_port(mut self, external_port: u32) -> Self {
+        self.external_port = Some(external_port);
         self
     }
 
-    pub fn secret(mut self, secret: Option<String>) -> Self {
-        self.secret = secret;
+    pub fn secret<S: Into<String>>(mut self, secret: S) -> Self {
+        self.secret = Some(secret.into());
         self
     }
 
-    pub fn socket_path(mut self, socket_path: Option<String>) -> Self {
-        self.socket_path = socket_path;
+    pub fn socket_path<S: Into<String>>(mut self, socket_path: S) -> Self {
+        self.socket_path = Some(socket_path.into());
         self
     }
 

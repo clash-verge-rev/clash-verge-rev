@@ -12,7 +12,17 @@ impl LocalSocket for RequestBuilder {
         let mut stream = {
             #[cfg(unix)]
             {
+                use std::path::Path;
                 use tokio::net::UnixStream;
+                if !Path::new(socket_path).exists() {
+                    use crate::MihomoError;
+
+                    log::error!("socket path is not exists: {socket_path}");
+                    return Err(MihomoError::Io(std::io::Error::new(
+                        std::io::ErrorKind::NotFound,
+                        format!("socket path: {socket_path} not found"),
+                    )));
+                }
                 UnixStream::connect(socket_path).await?
             }
             #[cfg(windows)]
@@ -26,7 +36,7 @@ impl LocalSocket for RequestBuilder {
                         Ok(client) => break client,
                         Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
                         Err(e) => {
-                            log::error!("Failed to connect to named pipe: {socket_path}, {e}");
+                            log::error!("failed to connect to named pipe: {socket_path}, {e}");
                             return Err(MihomoError::FailedResponse(format!(
                                 "Failed to connect to named pipe: {socket_path}, {e}"
                             )));

@@ -63,7 +63,7 @@ pub fn run() -> Result<()> {
         .plugin(
             tauri_plugin_mihomo::Builder::new()
                 .protocol(Protocol::LocalSocket)
-                .socket_path(Some(MIHOMO_SOCKET_PATH.into()))
+                .socket_path(MIHOMO_SOCKET_PATH)
                 .build(),
         )
         .setup(|app| {
