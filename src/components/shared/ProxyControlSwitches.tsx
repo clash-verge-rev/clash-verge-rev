@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
 import {
   SettingsRounded,
   PlayCircleOutlineRounded,
@@ -21,7 +20,7 @@ import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
-import { getRunningMode } from "@/services/cmds";
+import { useSystemState } from "@/hooks/use-system-state";
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 
@@ -43,10 +42,9 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const { actualState: systemProxyActualState, toggleSystemProxy } =
     useSystemProxyState();
 
-  const { data: runningMode } = useSWR("getRunningMode", getRunningMode);
+  const { isAdminMode, isServiceMode } = useSystemState();
 
-  // 是否以sidecar模式运行
-  const isSidecarMode = runningMode === "Sidecar";
+  const isTunAvailable = isServiceMode || isAdminMode;
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
@@ -161,7 +159,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
             bgcolor: enable_tun_mode
               ? alpha(theme.palette.success.main, 0.07)
               : "transparent",
-            opacity: isSidecarMode ? 0.6 : 1,
+            opacity: !isTunAvailable ? 0.6 : 1,
             transition: "background-color 0.3s",
           }}
         >
@@ -187,7 +185,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {isSidecarMode && (
+            {!isTunAvailable && (
               <Tooltip title={t("Install Service")} arrow>
                 <Button
                   variant="outlined"
@@ -221,7 +219,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               onCatch={onError}
               onFormat={onSwitchFormat}
               onChange={(e) => {
-                if (isSidecarMode) {
+                if (!isTunAvailable) {
                   showNotice(
                     "error",
                     t("TUN requires Service Mode or Admin Mode"),
@@ -233,7 +231,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
                 onChangeData({ enable_tun_mode: e });
               }}
               onGuard={(e) => {
-                if (isSidecarMode) {
+                if (!isTunAvailable) {
                   showNotice(
                     "error",
                     t("TUN requires Service Mode or Admin Mode"),
@@ -245,7 +243,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
                 return patchVerge({ enable_tun_mode: e });
               }}
             >
-              <Switch edge="end" disabled={isSidecarMode} />
+              <Switch edge="end" disabled={!isTunAvailable} />
             </GuardState>
           </Box>
         </Box>

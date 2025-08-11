@@ -9,7 +9,7 @@ import {
   useTheme,
   Fade,
 } from "@mui/material";
-import { useState, useMemo, memo, FC, useEffect } from "react";
+import { useState, useMemo, memo, FC } from "react";
 import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
 import {
   ComputerRounded,
@@ -21,8 +21,6 @@ import { useVerge } from "@/hooks/use-verge";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { showNotice } from "@/services/noticeService";
-import { getRunningMode } from "@/services/cmds";
-import { mutate } from "swr";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
 
@@ -142,30 +140,13 @@ export const ProxyTunCard: FC = () => {
     () => localStorage.getItem(LOCAL_STORAGE_TAB_KEY) || "system",
   );
 
-  const [localServiceOk, setLocalServiceOk] = useState(false);
-
   const { verge } = useVerge();
-  const { isAdminMode } = useSystemState();
+  const { isAdminMode, isServiceMode } = useSystemState();
   const { actualState: systemProxyActualState } = useSystemProxyState();
 
   const { enable_tun_mode } = verge ?? {};
 
-  const updateLocalStatus = async () => {
-    try {
-      const runningMode = await getRunningMode();
-      const serviceStatus = runningMode === "Service";
-      setLocalServiceOk(serviceStatus);
-      mutate("isServiceAvailable", serviceStatus, false);
-    } catch (error) {
-      console.error("更新TUN状态失败:", error);
-    }
-  };
-
-  useEffect(() => {
-    updateLocalStatus();
-  }, []);
-
-  const isTunAvailable = localServiceOk || isAdminMode;
+  const isTunAvailable = isServiceMode || isAdminMode;
 
   const handleError = (err: Error) => {
     showNotice("error", err.message || err.toString());
@@ -174,9 +155,6 @@ export const ProxyTunCard: FC = () => {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     localStorage.setItem(LOCAL_STORAGE_TAB_KEY, tab);
-    if (tab === "tun") {
-      updateLocalStatus();
-    }
   };
 
   const tabDescription = useMemo(() => {
