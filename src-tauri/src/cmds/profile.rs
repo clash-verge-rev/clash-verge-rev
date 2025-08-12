@@ -46,32 +46,32 @@ pub async fn enhance_profiles() -> CmdResult {
 #[tauri::command]
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
-    wrap_err!(Config::profiles().data().append_item(item))?;
+    wrap_err!(Config::profiles().data_mut().append_item(item))?;
     wrap_err!(handle::Handle::update_systray_part())
 }
 
 #[tauri::command]
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
-    wrap_err!(Config::profiles().data().reorder(active_id, over_id))?;
+    wrap_err!(Config::profiles().data_mut().reorder(active_id, over_id))?;
     wrap_err!(handle::Handle::update_systray_part())
 }
 
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
     let item = wrap_err!(PrfItem::from(item, file_data).await)?;
-    wrap_err!(Config::profiles().data().append_item(item))?;
+    wrap_err!(Config::profiles().data_mut().append_item(item))?;
     wrap_err!(handle::Handle::update_systray_part())
 }
 
 #[tauri::command]
-pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    wrap_err!(feat::update_profile(index, option).await)?;
+pub async fn update_profile(uid: String, option: Option<PrfOption>) -> CmdResult {
+    wrap_err!(feat::update_profile(&uid, option).await)?;
     wrap_err!(handle::Handle::update_systray_part())
 }
 
 #[tauri::command]
 pub async fn delete_profile(uid: String) -> CmdResult {
-    let restart_core = wrap_err!({ Config::profiles().data().delete_item(uid) })?;
+    let restart_core = wrap_err!(Config::profiles().data_mut().delete_item(uid))?;
     // the running profile is deleted, update the core config
     if restart_core {
         wrap_err!(CoreManager::global().update_config().await)?;
@@ -83,7 +83,7 @@ pub async fn delete_profile(uid: String) -> CmdResult {
 /// 修改profiles的
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
-    wrap_err!({ Config::profiles().draft().patch_config(profiles) })?;
+    wrap_err!(Config::profiles().draft().patch_config(profiles))?;
 
     match CoreManager::global().update_config().await {
         Ok(_) => {
@@ -104,12 +104,13 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
 /// 修改某个profile item的
 #[tauri::command]
 pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
-    wrap_err!(Config::profiles().data().patch_item(&uid, profile.clone()))?;
+    let enable_changed = profile.enable.is_some();
+    let name_changed = profile.name.is_some();
+    wrap_err!(Config::profiles().data_mut().patch_item(&uid, profile))?;
     wrap_err!(timer::Timer::global().refresh_profiles())?;
-    if profile.enable.is_some() {
+    if enable_changed {
         // this is a chain to toggle enable
-        let profiles = Config::profiles();
-        let profiles = profiles.latest().clone();
+        let profiles = Config::profiles().latest().clone();
         let result_item = wrap_err!(profiles.get_item(&uid))?;
         match result_item.scope {
             Some(ScopeType::Global) => {
@@ -117,7 +118,7 @@ pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
                 handle::Handle::refresh_clash();
             }
             Some(ScopeType::Specific) => {
-                if result_item.parent == profiles.get_current() {
+                if result_item.parent.as_ref() == profiles.get_current() {
                     wrap_err!(CoreManager::global().update_config().await)?;
                     handle::Handle::refresh_clash();
                 }
@@ -125,7 +126,7 @@ pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
             None => {}
         }
     }
-    if profile.name.is_some() {
+    if name_changed {
         wrap_err!(handle::Handle::update_systray_part())?;
     }
     Ok(())
@@ -133,18 +134,16 @@ pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
 
 #[tauri::command]
 pub fn view_profile(app_handle: tauri::AppHandle, index: String) -> CmdResult {
-    let file = {
-        wrap_err!(Config::profiles().latest().get_item(&index))?
-            .file
-            .clone()
-            .ok_or("the file field is null")
-    }?;
-
+    let profiles = Config::profiles();
+    let profiles = profiles.latest();
+    let file = wrap_err!(profiles.get_item(&index))?
+        .file
+        .as_ref()
+        .ok_or("the file field is null")?;
     let path = wrap_err!(dirs::app_profiles_dir())?.join(file);
     if !path.exists() {
-        ret_err!("the file not found");
+        ret_err!("profile [{}] not found", path.display());
     }
-
     wrap_err!(help::open_file(app_handle, path))
 }
 

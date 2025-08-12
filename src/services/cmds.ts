@@ -96,8 +96,8 @@ export async function reorderProfile(activeId: string, overId: string) {
   });
 }
 
-export async function updateProfile(index: string, option?: IProfileOption) {
-  return invoke<void>("update_profile", { index, option });
+export async function updateProfile(uid: string, option?: IProfileOption) {
+  return invoke<void>("update_profile", { uid, option });
 }
 
 export async function deleteProfile(uid: string) {

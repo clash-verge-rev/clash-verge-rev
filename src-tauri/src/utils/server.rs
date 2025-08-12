@@ -75,11 +75,9 @@ pub async fn embed_server() {
     });
 
     let pac = warp::path!("commands" / "pac").map(move || {
-        let content = Config::verge()
-            .latest()
-            .pac_file_content
-            .clone()
-            .unwrap_or(DEFAULT_PAC.to_string());
+        let verge = Config::verge();
+        let verge = verge.latest();
+        let content = verge.pac_file_content.as_deref().unwrap_or(DEFAULT_PAC);
         let port = Config::clash().latest().get_mixed_port();
         let content = content.replace("%mixed-port%", &format!("{port}"));
         warp::http::Response::builder()

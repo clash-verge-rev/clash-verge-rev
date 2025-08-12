@@ -40,7 +40,7 @@ pub async fn update_webdav_info(url: String, username: String, password: String)
 #[tauri::command]
 pub async fn create_and_upload_backup(only_backup_profiles: bool) -> CmdResult {
     let (file_name, file_path) = wrap_err!(backup::create_backup(false, only_backup_profiles))?;
-    wrap_err!(WebDav::upload_file(file_path, file_name).await)
+    wrap_err!(WebDav::upload_file(&file_path, &file_name).await)
 }
 
 #[tauri::command]
@@ -52,7 +52,7 @@ pub async fn list_backup() -> CmdResult<Vec<ListFile>> {
 pub async fn download_backup_and_reload(app_handle: tauri::AppHandle, file_name: String) -> CmdResult {
     let backup_archive = wrap_err!(dirs::backup_archive_file())?;
     wrap_err!(
-        WebDav::download_file(file_name, backup_archive.clone()).await,
+        WebDav::download_file(&file_name, &backup_archive).await,
         "download backup file failed"
     )?;
     let file = wrap_err!(fs::File::open(backup_archive), "Failed to open backup archive")?;

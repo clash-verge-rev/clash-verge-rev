@@ -78,7 +78,7 @@ pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
 
 #[tauri::command]
 pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
-    let enable_service_mode = { Config::verge().latest().enable_service_mode.unwrap_or_default() };
+    let enable_service_mode = Config::verge().latest().enable_service_mode.unwrap_or_default();
     let logs = if enable_service_mode {
         let res = wrap_err!(service::get_logs().await)?;
         res.data.unwrap_or_default()
@@ -94,23 +94,24 @@ pub async fn get_rule_providers_payload() -> CmdResult<HashMap<String, RulePaylo
     let mihomo = handle::Handle::get_mihomo_read().await;
     let rule_providers = wrap_err!(mihomo.get_rule_providers().await)?;
     let profiles = Config::profiles();
-    let rule_provider_paths = wrap_err!(profiles.latest().get_current_profile_rule_providers())?;
-    for (name, rule_provider) in rule_providers.providers.iter() {
-        if let Some(file_path) = rule_provider_paths.get(name) {
-            let behavior = match rule_provider.behavior.as_str() {
-                "Domain" => RuleBehavior::Domain,
-                "IPCIDR" => RuleBehavior::IpCidr,
-                "Classical" => RuleBehavior::Classical,
-                _ => return Err("Unknown rule behavior".into()),
-            };
-            let format = match rule_provider.format.as_str() {
-                "MrsRule" => RuleFormat::Mrs,
-                "YamlRule" => RuleFormat::Yaml,
-                "TextRule" => RuleFormat::Text,
-                _ => return Err("Unknown rule format".into()),
-            };
-            let payload = wrap_err!(mihomo_rule_parser::parse(file_path, behavior, format))?;
-            res.insert(name.clone(), payload);
+    if let Some(rule_provider_paths) = profiles.latest().get_current_profile_rule_providers() {
+        for (name, rule_provider) in rule_providers.providers.iter() {
+            if let Some(file_path) = rule_provider_paths.get(name) {
+                let behavior = match rule_provider.behavior.as_str() {
+                    "Domain" => RuleBehavior::Domain,
+                    "IPCIDR" => RuleBehavior::IpCidr,
+                    "Classical" => RuleBehavior::Classical,
+                    _ => return Err("Unknown rule behavior".into()),
+                };
+                let format = match rule_provider.format.as_str() {
+                    "MrsRule" => RuleFormat::Mrs,
+                    "YamlRule" => RuleFormat::Yaml,
+                    "TextRule" => RuleFormat::Text,
+                    _ => return Err("Unknown rule format".into()),
+                };
+                let payload = wrap_err!(mihomo_rule_parser::parse(file_path, behavior, format))?;
+                res.insert(name.clone(), payload);
+            }
         }
     }
     Ok(res)

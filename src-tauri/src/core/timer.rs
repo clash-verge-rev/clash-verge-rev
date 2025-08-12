@@ -1,6 +1,6 @@
 use crate::config::Config;
-use crate::feat;
 use crate::utils::dirs;
+use crate::{feat, log_err};
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
@@ -46,7 +46,9 @@ impl Timer {
 
         let timer_map = self.timer_map.lock();
         let delay_timer = self.delay_timer.lock();
-        let profiles = Config::profiles().latest().get_profiles();
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
+        let profiles = profiles.get_profiles();
         profiles
             .iter()
             .filter_map(|item| {
@@ -108,54 +110,52 @@ impl Timer {
         tracing::info!("backup file has been applied, register activating group selected task");
         let body = move || async {
             tracing::info!("starting activating selected task");
-            let current = Config::profiles().latest().get_current();
-            if current.is_none() {
-                tracing::info!("No current profile found");
-                return;
-            }
-            let current = current.unwrap_or_default();
-            let profiles = Config::profiles().latest().clone();
-            let mihomo = handle::Handle::get_mihomo_read().await;
+            let profiles = Config::profiles();
+            let profiles = profiles.latest().clone();
+            let current = profiles.get_current();
+            if let Some(current) = current {
+                let profiles = Config::profiles().latest().clone();
+                let mihomo = handle::Handle::get_mihomo_read().await;
 
-            if mihomo.get_base_config().await.is_err() {
-                tracing::error!("Failed to get base config");
-                return;
-            }
-            if profiles.get_item(&current).is_err() {
-                tracing::error!("Failed to get profile");
-                return;
-            }
-            if let Ok(profile) = profiles.get_item(&current) {
-                if let Some(selected) = profile.selected.as_ref() {
-                    for selected_item in selected {
-                        if let Some(proxy_name) = selected_item.name.as_ref()
-                            && let Some(node) = selected_item.now.as_ref()
-                        {
-                            if mihomo.select_node_for_proxy(proxy_name, node).await.is_err() {
-                                if mihomo.get_proxy_by_name(node).await.is_err() {
-                                    tracing::error!(
-                                        "Failed to select node for proxy: {}, node: {}, because the node [{}] does not exist",
-                                        proxy_name,
-                                        node,
-                                        node
-                                    );
-                                    continue;
+                if mihomo.get_base_config().await.is_err() {
+                    tracing::error!("failed to get base config");
+                    return;
+                }
+
+                match profiles.get_item(current) {
+                    Ok(profile) => {
+                        if let Some(selected) = profile.selected.as_ref() {
+                            for selected_item in selected {
+                                if let Some(proxy_name) = selected_item.name.as_ref()
+                                    && let Some(node) = selected_item.now.as_ref()
+                                {
+                                    if mihomo.select_node_for_proxy(proxy_name, node).await.is_err() {
+                                        if mihomo.get_proxy_by_name(node).await.is_err() {
+                                            tracing::error!(
+                                                "Failed to select node for proxy: {proxy_name}, node: {node}, because the node [{node}] does not exist"
+                                            );
+                                            continue;
+                                        }
+                                        tracing::error!("Failed to select node for proxy: {proxy_name}, node: {node}");
+                                        return;
+                                    } else {
+                                        tracing::info!("Selected node for proxy: {proxy_name}, node: {node}");
+                                    }
                                 }
-                                tracing::error!("Failed to select node for proxy: {}, node: {}", proxy_name, node);
-                                return;
-                            } else {
-                                tracing::info!("Selected node for proxy: {}, node: {}", proxy_name, node);
                             }
                         }
+
+                        if let Ok(archive_file) = dirs::backup_archive_file()
+                            && archive_file.exists()
+                        {
+                            log_err!(std::fs::remove_file(archive_file), "failed to remove archive file");
+                        }
+                        crate::utils::resolve::create_window();
+                    }
+                    Err(_) => {
+                        tracing::error!("Failed to get current profile [{current}]");
                     }
                 }
-
-                if let Ok(archive_file) = dirs::backup_archive_file()
-                    && archive_file.exists()
-                {
-                    let _ = std::fs::remove_file(archive_file);
-                }
-                crate::utils::resolve::create_window();
             }
         };
 
@@ -192,16 +192,16 @@ impl Timer {
             match diff {
                 DiffFlag::Del(tid) => {
                     let _ = timer_map.remove(&uid);
-                    crate::log_err!(delay_timer.remove_task(tid));
+                    log_err!(delay_timer.remove_task(tid));
                 }
                 DiffFlag::Add(tid, val) => {
-                    let _ = timer_map.insert(uid.clone(), (tid, val));
-                    crate::log_err!(self.add_profiles_task(&delay_timer, uid, tid, val));
+                    log_err!(self.add_profiles_task(&delay_timer, uid.clone(), tid, val));
+                    let _ = timer_map.insert(uid, (tid, val));
                 }
                 DiffFlag::Mod(tid, val) => {
-                    let _ = timer_map.insert(uid.clone(), (tid, val));
-                    crate::log_err!(delay_timer.remove_task(tid));
-                    crate::log_err!(self.add_profiles_task(&delay_timer, uid, tid, val));
+                    log_err!(delay_timer.remove_task(tid));
+                    log_err!(self.add_profiles_task(&delay_timer, uid.clone(), tid, val));
+                    let _ = timer_map.insert(uid, (tid, val));
                 }
             }
         }
@@ -212,7 +212,9 @@ impl Timer {
     /// generate a map -> (uid, update_interval)
     fn gen_profiles_interval(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
-        let profiles = Config::profiles().latest().get_profiles();
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
+        let profiles = profiles.get_profiles();
         for profile in profiles.iter() {
             if let Some(uid) = profile.uid.as_ref()
                 && let Some(option) = profile.option.as_ref()
@@ -229,7 +231,6 @@ impl Timer {
     /// generate the diff map for refresh
     fn gen_diff_profiles(&self) -> HashMap<String, DiffFlag> {
         let mut diff_map = HashMap::new();
-
         let timer_map = self.timer_map.lock();
 
         let new_map = self.gen_profiles_interval();
@@ -237,7 +238,6 @@ impl Timer {
 
         cur_map.iter().for_each(|(uid, (tid, val))| {
             let new_val = new_map.get(uid).unwrap_or(&0);
-
             if *new_val == 0 {
                 diff_map.insert(uid.clone(), DiffFlag::Del(*tid));
             } else if new_val != val {
@@ -246,11 +246,9 @@ impl Timer {
         });
 
         let mut count = self.timer_count.lock();
-
         new_map.iter().for_each(|(uid, val)| {
             if cur_map.get(uid).is_none() {
                 diff_map.insert(uid.clone(), DiffFlag::Add(*count, *val));
-
                 *count += 1;
             }
         });
@@ -276,7 +274,7 @@ impl Timer {
     /// the task runner
     async fn update_profile_task(uid: String) {
         tracing::info!("running timer task `{uid}`");
-        crate::log_err!(feat::update_profile(uid, None).await);
+        crate::log_err!(feat::update_profile(&uid, None).await);
     }
 }
 

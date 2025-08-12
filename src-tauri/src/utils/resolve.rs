@@ -47,8 +47,9 @@ pub async fn resolve_setup() {
     tracing::trace!("register os shutdown handler");
     shutdown::register();
 
-    let silent_start = { Config::verge().latest().enable_silent_start.unwrap_or_default() };
-    if !silent_start || dirs::backup_archive_file().is_ok_and(|file| file.exists()) {
+    let silent_start = Config::verge().latest().enable_silent_start.unwrap_or_default();
+    let exists_archive_file = dirs::backup_archive_file().is_ok_and(|file| file.exists());
+    if !silent_start || exists_archive_file {
         create_window();
     }
 
@@ -131,8 +132,9 @@ pub fn create_window() {
         return;
     }
 
-    let verge = Config::verge().latest().clone();
-    let start_page = verge.start_page.unwrap_or("/".into());
+    let verge = Config::verge();
+    let verge = verge.latest();
+    let start_page = verge.start_page.as_deref().unwrap_or("/");
 
     let mut builder = tauri::WebviewWindowBuilder::new(app_handle, "main", tauri::WebviewUrl::App(start_page.into()))
         .title("Clash Verge")
@@ -146,7 +148,7 @@ pub fn create_window() {
         builder = builder.decorations(_decoration);
     }
 
-    match verge.window_size_position {
+    match &verge.window_size_position {
         Some(size_pos) if size_pos.len() == 4 => {
             let size = (size_pos[0], size_pos[1]);
             let pos = (size_pos[2], size_pos[3]);
@@ -195,10 +197,10 @@ pub fn create_window() {
             let center = (|| -> Result<bool> {
                 let mut center = false;
                 let monitors = win.available_monitors()?;
-                let sum_width: u32 = monitors.iter().map(|m| m.size().width).sum();
-                let sum_height: u32 = monitors.iter().map(|m| m.size().height).sum();
+                let max_width: u32 = monitors.iter().map(|m| m.size().width).sum();
+                let max_height: u32 = monitors.iter().map(|m| m.size().height).sum();
                 let pos = win.outer_position()?;
-                if pos.x < -400 || pos.x > (sum_width - 200) as i32 || pos.y < -200 || pos.y > (sum_height - 200) as i32
+                if pos.x < -400 || pos.x > (max_width - 200) as i32 || pos.y < -200 || pos.y > (max_height - 200) as i32
                 {
                     center = true;
                 }
@@ -219,7 +221,7 @@ pub fn create_window() {
 /// save window size and position
 pub fn save_window_size_position(app_handle: &AppHandle) -> Result<()> {
     let verge = Config::verge();
-    let mut verge = verge.latest();
+    let mut verge = verge.latest_mut();
     if let Some(win) = app_handle.get_webview_window("main") {
         let scale = win.scale_factor()?;
         let size = win.inner_size()?;
@@ -227,7 +229,7 @@ pub fn save_window_size_position(app_handle: &AppHandle) -> Result<()> {
         let pos = win.outer_position()?;
         let pos = pos.to_logical::<f64>(scale);
         let is_maximized = win.is_maximized()?;
-        verge.window_is_maximized = Some(is_maximized);
+        verge.window_is_maximized.replace(is_maximized);
         if !is_maximized && size.width >= 600.0 && size.height >= 550.0 {
             verge.window_size_position = Some(vec![size.width, size.height, pos.x, pos.y]);
         }
@@ -248,7 +250,7 @@ pub async fn resolve_scheme(param: String) {
         update_interval: None,
     };
     if let Ok(item) = PrfItem::from_url(url, None, None, Some(option)).await {
-        if Config::profiles().data().append_item(item).is_ok() {
+        if Config::profiles().data_mut().append_item(item).is_ok() {
             handle::Handle::notify("Clash Verge", t!("import.success"));
         };
     } else {
@@ -258,8 +260,7 @@ pub async fn resolve_scheme(param: String) {
 }
 
 pub fn handle_window_close(api: CloseRequestApi, app_handle: &AppHandle) {
-    let keep_ui_active = { Config::verge().latest().enable_keep_ui_active.unwrap_or_default() };
-    if keep_ui_active {
+    if Config::verge().latest().enable_keep_ui_active.unwrap_or_default() {
         if let Some(window) = app_handle.get_webview_window("main") {
             let _ = window.hide();
         }

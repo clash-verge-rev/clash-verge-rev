@@ -16,7 +16,7 @@ pub fn register() {
                 SIGHUP => "SIGHUP",
                 _ => "UNKNOWN",
             };
-            tracing::info!("Received signal {}", signal_to_str(signal));
+            tracing::info!("received signal {}", signal_to_str(signal));
             resolve::resolve_reset().await;
             // After printing it, do whatever the signal was supposed to do in the first place
             low_level::emulate_default_handler(signal).unwrap();

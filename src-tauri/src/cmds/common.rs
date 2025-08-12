@@ -202,9 +202,9 @@ pub fn is_wayland() -> CmdResult<bool> {
 pub fn get_net_info() -> CmdResult<Vec<NetInfo>> {
     let mut net_list = Vec::new();
     let network_interfaces = wrap_err!(network_interface::NetworkInterface::show())?;
-    for network in network_interfaces.iter() {
+    for network in network_interfaces.into_iter() {
         let mut net_info = NetInfo {
-            name: network.name.clone(),
+            name: network.name,
             ipv4: None,
             ipv6: None,
         };

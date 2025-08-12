@@ -147,7 +147,7 @@ pub async fn install_service() -> Result<()> {
     let status = match get_effective_uid() {
         0 => StdCommand::new(installer_path)
             .arg("--log-dir")
-            .arg(log_dir.clone())
+            .arg(&log_dir)
             .status()?,
         _ => {
             let execute_cmd = format!("{} --log-dir {}", installer_path.display(), log_dir.display());
@@ -309,11 +309,11 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
     check_service().await?;
     stop_core_by_service().await?;
 
-    let clash_core = {
-        let verge = Config::verge();
-        let verge = verge.latest();
-        verge.clash_core.clone().unwrap_or("verge-mihomo".into())
-    };
+    let clash_core = Config::verge()
+        .latest()
+        .clash_core
+        .clone()
+        .unwrap_or("verge-mihomo".to_string());
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let clash_bin = format!("{clash_core}{bin_ext}");

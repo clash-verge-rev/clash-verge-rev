@@ -85,20 +85,15 @@ impl Sysopt {
 
     /// init the sysproxy
     pub fn init_sysproxy(&self) -> Result<()> {
-        let port = { Config::clash().latest().get_mixed_port() };
+        let port = Config::clash().latest().get_mixed_port();
         let pac_port = IVerge::get_singleton_port();
 
-        let (enable, pac) = {
-            let verge = Config::verge();
-            let verge = verge.latest();
-            (
-                verge.enable_system_proxy.unwrap_or(false),
-                verge.proxy_auto_config.unwrap_or(false),
-            )
-        };
+        let enable = Config::verge().latest().enable_system_proxy.unwrap_or_default();
+        let pac = Config::verge().latest().proxy_auto_config.unwrap_or_default();
+
         let mut sys = Sysproxy {
             enable,
-            host: "127.0.0.1".to_string(),
+            host: "127.0.0.1".into(),
             port,
             bypass: get_bypass(),
         };
@@ -154,14 +149,8 @@ impl Sysopt {
         let mut cur_autoproxy = self.cur_autoproxy.lock();
         let old_autoproxy = { self.old_autoproxy.lock().clone() };
 
-        let (enable, pac) = {
-            let verge = Config::verge();
-            let verge = verge.latest();
-            (
-                verge.enable_system_proxy.unwrap_or(false),
-                verge.proxy_auto_config.unwrap_or(false),
-            )
-        };
+        let enable = Config::verge().latest().enable_system_proxy.unwrap_or_default();
+        let pac = Config::verge().latest().proxy_auto_config.unwrap_or_default();
         if pac && (cur_autoproxy.is_none() || old_autoproxy.is_none()) {
             tracing::info!("init pac proxy");
             drop(cur_autoproxy);
@@ -344,7 +333,7 @@ impl Sysopt {
             drop(auto_launch);
             return self.init_launch();
         }
-        let enable = { Config::verge().latest().enable_auto_launch };
+        let enable = Config::verge().latest().enable_auto_launch;
         let enable = enable.unwrap_or(false);
         let auto_launch = auto_launch.as_ref().unwrap();
 
@@ -378,16 +367,8 @@ impl Sysopt {
             loop {
                 sleep(Duration::from_secs(wait_secs)).await;
 
-                let (enable, guard, guard_duration, pac) = {
-                    let verge = Config::verge();
-                    let verge = verge.latest();
-                    (
-                        verge.enable_system_proxy.unwrap_or(false),
-                        verge.enable_proxy_guard.unwrap_or(false),
-                        verge.proxy_guard_duration.unwrap_or(10),
-                        verge.proxy_auto_config.unwrap_or(false),
-                    )
-                };
+                let enable = Config::verge().latest().enable_system_proxy.unwrap_or_default();
+                let guard = Config::verge().latest().enable_proxy_guard.unwrap_or_default();
 
                 // stop loop
                 if !enable || !guard {
@@ -395,12 +376,14 @@ impl Sysopt {
                 }
 
                 // update duration
+                let guard_duration = Config::verge().latest().proxy_guard_duration.unwrap_or(10);
                 wait_secs = guard_duration;
 
                 tracing::debug!("try to guard the system proxy");
 
                 let port = Config::clash().latest().get_mixed_port();
                 let pac_port = IVerge::get_singleton_port();
+                let pac = Config::verge().latest().proxy_auto_config.unwrap_or_default();
                 if pac {
                     let autoproxy = Autoproxy {
                         enable: true,

@@ -1,7 +1,7 @@
 use serde_yaml::{Mapping, Value};
 use std::collections::HashSet;
 
-pub const HANDLE_FIELDS: [&str; 17] = [
+pub const SORT_FIELDS: [&str; 17] = [
     "mode",
     "mixed-port",
     "port",
@@ -38,7 +38,6 @@ pub fn use_filter(config: Mapping, filter: &[String]) -> Mapping {
 
 pub fn use_lowercase(config: Mapping) -> Mapping {
     let mut ret = Mapping::new();
-
     for (key, value) in config.into_iter() {
         if let Some(key_str) = key.as_str() {
             let mut key_str = String::from(key_str);
@@ -51,17 +50,14 @@ pub fn use_lowercase(config: Mapping) -> Mapping {
 
 pub fn use_sort(config: Mapping) -> Mapping {
     let mut ret = Mapping::new();
-    HANDLE_FIELDS.into_iter().for_each(|key| {
+    SORT_FIELDS.into_iter().for_each(|key| {
         let key = Value::from(key);
         if let Some(value) = config.get(&key) {
             ret.insert(key, value.clone());
         }
     });
 
-    let supported_keys = HANDLE_FIELDS
-        .into_iter()
-        .chain(DEFAULT_FIELDS)
-        .collect::<HashSet<&str>>();
+    let supported_keys = SORT_FIELDS.into_iter().chain(DEFAULT_FIELDS).collect::<HashSet<&str>>();
 
     let config_keys = config.keys().filter_map(|e| e.as_str()).collect::<HashSet<&str>>();
 

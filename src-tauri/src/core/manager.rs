@@ -39,7 +39,7 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
     if output.status.success() {
         Ok(())
     } else {
-        let stderr = std::str::from_utf8(&output.stderr).unwrap_or("");
+        let stderr = std::str::from_utf8(&output.stderr).unwrap_or_default();
         anyhow::bail!("{stderr}");
     }
 }

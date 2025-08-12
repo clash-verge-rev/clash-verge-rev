@@ -28,7 +28,7 @@ macro_rules! failed_rep {
     ($($arg: tt)*) => {
         return Err(MihomoError::FailedResponse(format!($($arg)*)))
     };
-   }
+}
 
 pub(crate) type ConnectionId = u32;
 pub(crate) enum WebSocketWriter {
@@ -149,7 +149,7 @@ impl Mihomo {
         headers.insert(HOST, HeaderValue::from_str("localhost")?);
         headers.insert(CONTENT_TYPE, HeaderValue::from_str("application/json")?);
         if matches!(self.protocol, Protocol::Http)
-            && let Some(secret) = self.secret.clone()
+            && let Some(secret) = &self.secret
         {
             let auth_value = HeaderValue::from_str(&format!("Bearer {secret}"))?;
             headers.insert(AUTHORIZATION, auth_value);

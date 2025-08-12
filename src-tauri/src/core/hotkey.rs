@@ -20,8 +20,9 @@ impl Hotkey {
 
     pub fn init(&self) -> Result<()> {
         let verge = Config::verge();
+        let verge = verge.latest();
 
-        if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
+        if let Some(hotkeys) = verge.hotkeys.as_ref() {
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
                 let func = iter.next();

@@ -2,7 +2,7 @@ name: Test Build
 
 on:
   push:
-    branches: [tanstack/router]
+    branches-ignore: [renovate/**, up-dev]
     tags-ignore: [updater, alpha]
   workflow_dispatch:
 

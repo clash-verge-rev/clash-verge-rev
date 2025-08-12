@@ -1,22 +1,36 @@
 use super::{IClashConfig, IProfiles, IRuntime, IVerge};
-use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
+use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct Draft<T: Clone + ToOwned> {
-    inner: Arc<Mutex<(T, Option<T>)>>,
+    inner: Arc<RwLock<(T, Option<T>)>>,
 }
 
 macro_rules! draft_define {
     ($id: ident) => {
         impl Draft<$id> {
             #[allow(unused)]
-            pub fn data(&self) -> MappedMutexGuard<'_, $id> {
-                MutexGuard::map(self.inner.lock(), |guard| &mut guard.0)
+            pub fn data(&self) -> MappedRwLockReadGuard<'_, $id> {
+                RwLockReadGuard::map(self.inner.read(), |guard| &guard.0)
             }
 
-            pub fn latest(&self) -> MappedMutexGuard<'_, $id> {
-                MutexGuard::map(self.inner.lock(), |inner| {
+            pub fn data_mut(&self) -> MappedRwLockWriteGuard<'_, $id> {
+                RwLockWriteGuard::map(self.inner.write(), |guard| &mut guard.0)
+            }
+
+            pub fn latest(&self) -> MappedRwLockReadGuard<'_, $id> {
+                RwLockReadGuard::map(self.inner.read(), |inner| {
+                    if inner.1.is_none() {
+                        &inner.0
+                    } else {
+                        inner.1.as_ref().unwrap()
+                    }
+                })
+            }
+
+            pub fn latest_mut(&self) -> MappedRwLockWriteGuard<'_, $id> {
+                RwLockWriteGuard::map(self.inner.write(), |inner| {
                     if inner.1.is_none() {
                         &mut inner.0
                     } else {
@@ -25,8 +39,8 @@ macro_rules! draft_define {
                 })
             }
 
-            pub fn draft(&self) -> MappedMutexGuard<'_, $id> {
-                MutexGuard::map(self.inner.lock(), |inner| {
+            pub fn draft(&self) -> MappedRwLockWriteGuard<'_, $id> {
+                RwLockWriteGuard::map(self.inner.write(), |inner| {
                     if inner.1.is_none() {
                         inner.1 = Some(inner.0.clone());
                     }
@@ -36,7 +50,7 @@ macro_rules! draft_define {
             }
 
             pub fn apply(&self) -> Option<$id> {
-                let mut inner = self.inner.lock();
+                let mut inner = self.inner.write();
 
                 match inner.1.take() {
                     Some(draft) => {
@@ -49,7 +63,7 @@ macro_rules! draft_define {
             }
 
             pub fn discard(&self) -> Option<$id> {
-                let mut inner = self.inner.lock();
+                let mut inner = self.inner.write();
                 inner.1.take()
             }
         }
@@ -57,7 +71,7 @@ macro_rules! draft_define {
         impl From<$id> for Draft<$id> {
             fn from(data: $id) -> Self {
                 Draft {
-                    inner: Arc::new(Mutex::new((data, None))),
+                    inner: Arc::new(RwLock::new((data, None))),
                 }
             }
         }

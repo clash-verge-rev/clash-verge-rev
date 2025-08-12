@@ -154,11 +154,9 @@ pub fn init_scheme() -> Result<()> {
 }
 
 pub async fn startup_script() -> Result<()> {
-    let path = {
-        let verge = Config::verge();
-        let verge = verge.latest();
-        verge.startup_script.clone().unwrap_or("".to_string())
-    };
+    let verge = Config::verge();
+    let verge = verge.latest();
+    let path = verge.startup_script.as_deref().unwrap_or("");
 
     if !path.is_empty() {
         let mut shell = "";
@@ -174,7 +172,7 @@ pub async fn startup_script() -> Result<()> {
         if shell.is_empty() {
             return Err(anyhow::anyhow!("unsupported script: {path}"));
         }
-        let current_dir = PathBuf::from(path.clone());
+        let current_dir = PathBuf::from(path);
         if !current_dir.exists() {
             return Err(anyhow::anyhow!("script not found: {path}"));
         }

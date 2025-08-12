@@ -42,7 +42,7 @@ pub fn run() -> Result<()> {
         return Ok(());
     }
 
-    let language = { Config::verge().latest().language.clone().unwrap_or("zh".to_string()) };
+    let language = Config::verge().latest().language.clone().unwrap_or("zh".to_string());
     rust_i18n::set_locale(&language);
 
     // 初始化日志
@@ -68,14 +68,16 @@ pub fn run() -> Result<()> {
         )
         .setup(|app| {
             let app_handle = app.handle();
-            let _ = APP_HANDLE.set(app_handle.clone());
+            APP_HANDLE
+                .set(app_handle.clone())
+                .expect("failed to set global app handle");
             let version = app_handle.package_info().version.to_string();
-            let _ = APP_VERSION.set(version);
+            APP_VERSION.set(version).expect("failed to set global app version");
 
             #[cfg(target_os = "macos")]
             {
                 let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
-                let show_in_dock = { Config::verge().latest().show_in_dock.unwrap_or(true) };
+                let show_in_dock = Config::verge().latest().show_in_dock.unwrap_or(true);
                 let _ = app_handle.set_dock_visibility(show_in_dock);
             }
 

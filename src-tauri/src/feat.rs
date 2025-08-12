@@ -49,11 +49,11 @@ pub fn restart_clash_core() {
 
 /// 切换模式 rule/global/direct/script mode
 pub fn change_clash_mode(mode: String) {
+    tracing::debug!("change clash mode to {mode}");
     let mut mapping = Mapping::new();
-    mapping.insert(Value::from("mode"), mode.clone().into());
+    mapping.insert(Value::from("mode"), mode.into());
 
     tauri::async_runtime::spawn(async move {
-        tracing::debug!("change clash mode to {mode}");
         match patch_clash(mapping).await {
             Ok(_) => log_err!(handle::Handle::update_systray_part()),
             Err(err) => tracing::error!("{err}"),
@@ -63,7 +63,7 @@ pub fn change_clash_mode(mode: String) {
 
 /// 切换系统代理
 pub fn toggle_system_proxy() {
-    let enable = Config::verge().draft().enable_system_proxy;
+    let enable = Config::verge().latest().enable_system_proxy;
     let enable = enable.unwrap_or(false);
 
     tauri::async_runtime::spawn(async move {
@@ -219,6 +219,7 @@ async fn install_and_run_service() -> Result<()> {
 
 /// 修改clash的订阅
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
+    tracing::debug!("patch clash");
     // enable-random-port filed store in verge config, only need update verge config
     if let Some(random_val) = patch.get("enable-random-port") {
         let enable_random_port = random_val.as_bool().unwrap_or(false);
@@ -239,21 +240,28 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             .patch_base_config(&tmp_map)
             .await;
         // clash config
-        Config::clash().latest().patch_config(tmp_map);
+        tracing::debug!("patch latest clash config");
+        Config::clash().latest_mut().patch_config(tmp_map);
+        tracing::debug!("save latest clash config to file");
         Config::clash().latest().save_config()?;
         // runtime config
+        tracing::debug!("generate runtime config");
         Config::generate()?;
         Config::generate_file(ConfigType::Run)?;
         // verge config
-        Config::verge().latest().patch_config(IVerge {
+        tracing::debug!("patch latest verge config");
+        Config::verge().latest_mut().patch_config(IVerge {
             enable_random_port: Some(enable_random_port),
             ..IVerge::default()
         });
         // update sysproxy
+        tracing::debug!("update system proxy");
         sysopt::Sysopt::global().update_sysproxy()?;
         // emit refresh event & emit set config ok message
+        tracing::debug!("emit refresh verge and clash event");
         handle::Handle::refresh_verge();
         handle::Handle::refresh_clash();
+        tracing::debug!("emit notice message event");
         handle::Handle::notice_message("set_config::ok", "ok");
         return Ok(());
     }
@@ -284,7 +292,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                     generate_runtime_config = true;
                 }
                 let mut mapping = Mapping::new();
-                let clash_config_mapping = { Config::clash().latest().0.clone() };
+                let clash_config_mapping = Config::clash().latest().0.clone();
                 let value = clash_config_mapping.get(key).unwrap();
 
                 mapping.insert(key.into(), value.clone());
@@ -303,10 +311,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                         .is_some_and(|val| val.as_bool().unwrap_or(false));
                     let tun_enable_by_api = clash_basic_configs.tun.enable;
                     if tun_enable == tun_enable_by_api {
-                        let auto_close_connection =
-                            { Config::verge().latest().auto_close_connection.unwrap_or_default() };
-                        if auto_close_connection {
-                            let _ = handle::Handle::get_mihomo_read().await.close_all_connections().await;
+                        if Config::verge().latest().auto_close_connection.unwrap_or_default() {
+                            log_err!(handle::Handle::get_mihomo_read().await.close_all_connections().await);
                         }
                         handle::Handle::update_systray_part()?;
                     } else {
@@ -329,9 +335,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 update_core_config().await?;
             }
             // 激活订阅
-            let enable_external_controller =
-                { Config::verge().latest().enable_external_controller.unwrap_or_default() };
-            if enable_external_controller
+            if Config::verge().latest().enable_external_controller.unwrap_or_default()
                 && (patch.get("secret").is_some()
                     || patch.get("external-controller").is_some()
                     || patch.get("external-controller-cors").is_some())
@@ -341,14 +345,13 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             }
 
             if patch.get("mode").is_some() {
-                let auto_close_connection = { Config::verge().latest().auto_close_connection.unwrap_or_default() };
-                if auto_close_connection {
+                if Config::verge().latest().auto_close_connection.unwrap_or_default() {
                     let _ = handle::Handle::get_mihomo_read().await.close_all_connections().await;
                 }
                 log_err!(handle::Handle::update_systray_part());
             }
 
-            Config::runtime().latest().patch_config(patch);
+            Config::runtime().latest_mut().patch_config(patch);
             if generate_runtime_config {
                 // if the clash basic config changed, we need to sync the runtime configuration file now
                 Config::generate()?;
@@ -381,9 +384,8 @@ pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
     if let Some(system_title_bar) = enable_system_title_bar
         && cmds::common::is_wayland().unwrap_or(false)
     {
-        let verge = Config::verge();
-        let verge = verge.latest().clone();
-        let verge_size_position = verge.window_size_position;
+        tracing::debug!("calc windows size on linux wayland");
+        let verge_size_position = Config::verge().latest().window_size_position.clone();
         if let Some(size_position) = verge_size_position {
             let mut w = size_position[0];
             let mut h = size_position[1];
@@ -399,8 +401,11 @@ pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
             patch.window_size_position = Some(vec![w, h, x, y]);
         }
     }
+
+    tracing::debug!("patch verge draft");
     Config::verge().draft().patch_config(patch.clone());
 
+    tracing::debug!("resolve config settings");
     let res = resolve_config_settings(patch).await;
     match res {
         Ok(()) => {
@@ -466,18 +471,22 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
         || pac.is_some()
         || pac_content.is_some()
     {
+        tracing::debug!("update system proxy");
         sysopt::Sysopt::global().update_sysproxy()?;
     }
 
     if let Some(true) = patch.enable_proxy_guard {
+        tracing::debug!("enable system proxy guard");
         sysopt::Sysopt::global().guard_proxy();
     }
 
     if let Some(hotkeys) = patch.hotkeys {
+        tracing::debug!("update global hotkeys");
         hotkey::Hotkey::global().update(hotkeys)?;
     }
 
     if let Some(language) = language {
+        tracing::debug!("change app language");
         rust_i18n::set_locale(&language);
         handle::Handle::update_systray()?;
     } else if system_proxy.is_some()
@@ -486,19 +495,23 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
         || tun_tray_icon.is_some()
         || service_mode.is_some()
     {
+        tracing::debug!("update tray cause by some settings changed");
         handle::Handle::update_systray_part()?;
     }
     #[cfg(target_os = "macos")]
     if tray_icon.is_some() {
+        tracing::debug!("macos tray icon changed, update tray");
         handle::Handle::update_systray_part()?;
     }
 
     if let Some(enable_tray) = enable_tray {
+        tracing::debug!("toggle tray enable: {enable_tray}");
         handle::Handle::set_tray_visible(enable_tray)?;
     }
 
     #[cfg(target_os = "macos")]
     if let Some(show_in_dock) = show_in_dock {
+        tracing::debug!("toggle show in macos dock, {show_in_dock}");
         handle::Handle::set_dock_visible(show_in_dock)?;
     }
 
@@ -507,19 +520,19 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
 
 /// 更新某个profile
 /// 如果更新当前订阅就激活订阅
-pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()> {
+pub async fn update_profile(uid: &str, option: Option<PrfOption>) -> Result<()> {
     let url_opt = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
-        let item = profiles.get_item(&uid)?;
+        let item = profiles.get_item(uid)?;
         let is_remote = item.itype.as_ref().is_some_and(|s| *s == ProfileType::Remote);
 
-        if !is_remote {
-            None // 直接更新
-        } else if item.url.is_none() {
-            bail!("failed to get the profile item url");
+        if let Some(url) = item.url.as_ref() {
+            Some((url.clone(), item.option.clone()))
+        } else if !is_remote {
+            None
         } else {
-            Some((item.url.clone().unwrap(), item.option.clone()))
+            bail!("failed to get the profile item url");
         }
     };
 
@@ -529,10 +542,10 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> Result<()
             let item = PrfItem::from_url(&url, None, None, merged_opt).await?;
 
             let profiles = Config::profiles();
-            let mut profiles = profiles.latest();
-            profiles.update_item(uid.clone(), item)?;
+            let mut profiles = profiles.latest_mut();
+            profiles.update_item(uid, item)?;
 
-            Some(uid) == profiles.get_current()
+            profiles.get_current().is_some_and(|v| v == uid)
         }
         None => true,
     };
@@ -561,7 +574,7 @@ async fn update_core_config() -> Result<()> {
 
 /// copy env variable
 pub fn copy_clash_env(app_handle: &AppHandle) {
-    let port = { Config::clash().latest().get_mixed_port() };
+    let port = Config::clash().latest().get_mixed_port();
     let http_proxy = format!("http://127.0.0.1:{port}");
     let socks5_proxy = format!("socks5://127.0.0.1:{port}");
 
@@ -572,19 +585,19 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
 
     let clipboard = app_handle.clipboard();
 
-    let env_type = { Config::verge().latest().env_type.clone() };
-    let env_type = match env_type {
+    let verge = Config::verge();
+    let verge = verge.latest();
+    let env_type = match verge.env_type.as_deref() {
         Some(env_type) => env_type,
         None => {
             #[cfg(not(target_os = "windows"))]
             let default = "bash";
             #[cfg(target_os = "windows")]
             let default = "powershell";
-
-            default.to_string()
+            default
         }
     };
-    match env_type.as_str() {
+    match env_type {
         "bash" => clipboard.write_text(sh).unwrap_or_default(),
         "cmd" => clipboard.write_text(cmd).unwrap_or_default(),
         "powershell" => clipboard.write_text(ps).unwrap_or_default(),

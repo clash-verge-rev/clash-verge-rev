@@ -1,6 +1,3 @@
-use std::sync::Arc;
-
-use mihomo::ConnectionManager;
 pub use mihomo::Mihomo;
 use tauri::{
     Manager, Runtime,
@@ -147,7 +144,7 @@ impl Builder {
                     external_port,
                     secret,
                     socket_path,
-                    connection_manager: Arc::new(ConnectionManager::default()),
+                    connection_manager: Default::default(),
                 }));
                 Ok(())
             })

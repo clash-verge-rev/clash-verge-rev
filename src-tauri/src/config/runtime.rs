@@ -20,15 +20,15 @@ impl IRuntime {
         for key in CLASH_BASIC_CONFIG {
             if let Some(value) = patch.get(key) {
                 match value {
-                    Value::Mapping(val_map) => {
+                    Value::Mapping(patch_val) => {
                         if let Some(config) = self.config.as_mut() {
-                            let mut patch_val_map = config
+                            let mut patch_result = config
                                 .get(key)
                                 .map_or(Mapping::new(), |val| val.as_mapping().cloned().unwrap_or_default());
-                            for (k, v) in val_map.into_iter() {
-                                patch_val_map.insert(k.clone(), v.clone());
+                            for (k, v) in patch_val.clone().into_iter() {
+                                patch_result.insert(k, v);
                             }
-                            config.insert(key.into(), patch_val_map.clone().into());
+                            config.insert(key.into(), patch_result.into());
                         }
                     }
                     _ => {

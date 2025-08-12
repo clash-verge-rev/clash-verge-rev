@@ -95,8 +95,13 @@ impl WebDav {
     pub fn init(&'static self) -> Result<()> {
         tauri::async_runtime::spawn(async {
             let (url, username, password) = {
-                let verge = Config::verge().latest().clone();
-                (verge.webdav_url, verge.webdav_username, verge.webdav_password)
+                let verge = Config::verge();
+                let verge = verge.latest();
+                (
+                    verge.webdav_url.clone(),
+                    verge.webdav_username.clone(),
+                    verge.webdav_password.clone(),
+                )
             };
             if let (Some(url), Some(username), Some(password)) = (url, username, password) {
                 trace_err!(
@@ -116,12 +121,12 @@ impl WebDav {
             .set_host(url.into())
             .set_auth(reqwest_dav::Auth::Basic(username.into(), password.into()))
             .build()?;
-        *self.client.lock() = Some(client.clone());
         match client.list("/", Depth::Number(1)).await {
             Ok(_) => {
                 if client.list(BACKUP_DIR, Depth::Number(1)).await.is_err() {
                     client.mkcol(BACKUP_DIR).await?;
                 }
+                *self.client.lock() = Some(client);
                 Ok(())
             }
             Err(e) => {
@@ -162,16 +167,16 @@ impl WebDav {
         Ok(files)
     }
 
-    pub async fn download_file(webdav_file_name: String, storage_path: PathBuf) -> Result<()> {
+    pub async fn download_file(webdav_file_name: &str, storage_path: &PathBuf) -> Result<()> {
         let client = Self::global().get_client()?;
         let path = format!("{BACKUP_DIR}/{webdav_file_name}");
         let response = client.get(&path).await?;
         let content = response.bytes().await?;
-        fs::write(&storage_path, &content)?;
+        fs::write(storage_path, &content)?;
         Ok(())
     }
 
-    pub async fn upload_file(file_path: PathBuf, webdav_file_name: String) -> Result<()> {
+    pub async fn upload_file(file_path: &PathBuf, webdav_file_name: &str) -> Result<()> {
         let client = Self::global().get_client()?;
         let web_dav_path = format!("{BACKUP_DIR}/{webdav_file_name}");
         client.put(&web_dav_path, fs::read(file_path)?).await?;
