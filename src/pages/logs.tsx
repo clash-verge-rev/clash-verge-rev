@@ -24,15 +24,7 @@ import {
   toggleLogEnabled,
 } from "@/services/global-log-service";
 
-// 定义日志级别结构 - 与后端保持一致
-// 后端顺序：Debug < Info < Warning < Error, All 显示所有
-const LOG_LEVEL_HIERARCHY = {
-  all: ["debug", "info", "warning", "error"], // All: 显示所有等级
-  debug: ["debug", "info", "warning", "error"], // Debug: 显示所有等级（最低级别）
-  info: ["info", "warning", "error"], // Info: 显示 Info、Warning、Error
-  warning: ["warning", "error"], // Warning: 显示 Warning、Error
-  error: ["error"], // Error: 仅显示 Error
-};
+// 后端通过 /logs?level={level} 进行筛选，前端不再需要手动筛选日志级别
 
 const LogPage = () => {
   const { t } = useTranslation();
@@ -53,22 +45,18 @@ const LogPage = () => {
       return [];
     }
 
-    const allowedTypes = LOG_LEVEL_HIERARCHY[logLevel] || [];
-
+    // Server-side filtering handles level filtering via query parameters
+    // We only need to apply search filtering here
     return logData.filter((data) => {
-      const logType = data.type?.toLowerCase() || "";
-      const isAllowedType =
-        logLevel === "all" || allowedTypes.includes(logType);
-
       // 构建完整的搜索文本，包含时间、类型和内容
       const searchText =
         `${data.time || ""} ${data.type} ${data.payload}`.toLowerCase();
 
       const matchesSearch = match(searchText);
 
-      return isAllowedType && matchesSearch;
+      return matchesSearch;
     });
-  }, [logData, logLevel, match]);
+  }, [logData, match]);
 
   const handleLogLevelChange = (newLevel: LogLevel) => {
     setLogLevel(newLevel);
@@ -105,17 +93,15 @@ const LogPage = () => {
             )}
           </IconButton>
 
-          {enableLog === true && (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => {
-                clearGlobalLogs();
-              }}
-            >
-              {t("Clear")}
-            </Button>
-          )}
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => {
+              clearGlobalLogs();
+            }}
+          >
+            {t("Clear")}
+          </Button>
         </Box>
       }
     >

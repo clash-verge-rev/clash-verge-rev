@@ -44,8 +44,9 @@ export const fetchLogsViaIPC = async (
   logLevel: LogLevel = "info",
 ): Promise<ILogItem[]> => {
   try {
-    const level = logLevel === "all" ? undefined : logLevel;
-    const response = await getClashLogs(level);
+    // Server-side filtering handles the level via /logs?level={level}
+    // We just fetch all cached logs regardless of the logLevel parameter
+    const response = await getClashLogs();
 
     // The response should be in the format expected by the frontend
     // Transform the logs to match the expected format

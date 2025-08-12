@@ -412,8 +412,8 @@ export async function gc() {
   return invoke<void>("clash_gc");
 }
 
-export async function getClashLogs(level?: string) {
-  return invoke<any>("get_clash_logs", { level });
+export async function getClashLogs() {
+  return invoke<any>("get_clash_logs");
 }
 
 export async function startLogsMonitoring(level?: string) {

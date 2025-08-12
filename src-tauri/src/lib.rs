@@ -426,7 +426,9 @@ pub fn run() {
     {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
 
-        let desktop_env = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default().to_uppercase();
+        let desktop_env = std::env::var("XDG_CURRENT_DESKTOP")
+            .unwrap_or_default()
+            .to_uppercase();
         let is_kde_desktop = desktop_env.contains("KDE");
         let is_plasma_desktop = desktop_env.contains("PLASMA");
 

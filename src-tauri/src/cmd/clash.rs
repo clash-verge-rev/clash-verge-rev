@@ -580,8 +580,8 @@ pub async fn clash_gc() -> CmdResult {
 
 /// 获取日志 (使用新的流式实现)
 #[tauri::command]
-pub async fn get_clash_logs(level: Option<String>) -> CmdResult<serde_json::Value> {
-    Ok(ipc::get_logs_json(level).await)
+pub async fn get_clash_logs() -> CmdResult<serde_json::Value> {
+    Ok(ipc::get_logs_json().await)
 }
 
 /// 启动日志监控

@@ -25,11 +25,11 @@ pub struct LogItem {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum LogLevel {
-    Debug,
-    Info,
-    Warning,
-    Error,
-    All,
+    All = 0,     // 显示所有级别（仅用于过滤）
+    Debug = 1,   // Debug 日志类型 / Debug 过滤级别（显示 debug、warning、error，排除info）
+    Info = 2,    // Info 日志类型 / Info 过滤级别（显示 info、warning、error）
+    Warning = 3, // Warning 日志类型 / Warning 过滤级别（显示 warning、error）
+    Error = 4,   // Error 日志类型 / Error 过滤级别（只显示 error）
 }
 
 impl fmt::Display for LogLevel {
@@ -54,7 +54,7 @@ impl TryFrom<&str> for LogLevel {
             "warning" | "warn" => Ok(LogLevel::Warning),
             "error" | "err" => Ok(LogLevel::Error),
             "all" => Ok(LogLevel::All),
-            _ => Err(format!("Invalid log level: '{}'", value)),
+            _ => Err(format!("Invalid log level: '{value}'")),
         }
     }
 }
@@ -67,29 +67,7 @@ impl TryFrom<String> for LogLevel {
     }
 }
 
-impl LogLevel {
-    /// Parse from string with a default fallback
-    pub fn from_str_or_default(s: &str, default: LogLevel) -> LogLevel {
-        Self::try_from(s).unwrap_or(default)
-    }
-
-    /// Check if this log level should include logs of the specified type
-    pub fn should_include(&self, log_type: &str) -> bool {
-        match LogLevel::try_from(log_type) {
-            Ok(log_level) => match self {
-                LogLevel::All => true,
-                LogLevel::Debug => true, // Debug includes all levels
-                LogLevel::Info => log_level >= LogLevel::Info,
-                LogLevel::Warning => log_level >= LogLevel::Warning,
-                LogLevel::Error => log_level >= LogLevel::Error,
-            },
-            Err(_) => {
-                // If we can't parse the log type, include it by default
-                true
-            }
-        }
-    }
-}
+impl LogLevel {}
 
 impl LogItem {
     fn new(log_type: String, payload: String) -> Self {
@@ -166,7 +144,7 @@ impl LogsMonitor {
         let filter_level = level.clone().unwrap_or_else(|| "info".to_string());
 
         // Check if we're already monitoring the same level
-        {
+        let level_changed = {
             let current_level = self.current_monitoring_level.read().await;
             if let Some(existing_level) = current_level.as_ref() {
                 if existing_level == &filter_level {
@@ -178,9 +156,13 @@ impl LogsMonitor {
                         filter_level
                     );
                     return;
+                } else {
+                    true // Level changed
                 }
+            } else {
+                true // First time or was stopped
             }
-        }
+        };
 
         // Stop existing monitoring task if level changed or first time
         {
@@ -196,6 +178,21 @@ impl LogsMonitor {
             }
         }
 
+        // Clear logs cache when level changes to ensure fresh data
+        if level_changed {
+            let mut current = self.current.write().await;
+            current.logs.clear();
+            current.level = filter_level.clone();
+            current.mark_fresh();
+            logging!(
+                info,
+                Type::Ipc,
+                true,
+                "LogsMonitor: Cleared logs cache due to level change to '{}'",
+                filter_level
+            );
+        }
+
         // Update current monitoring level
         {
             let mut current_level = self.current_monitoring_level.write().await;
@@ -203,12 +200,6 @@ impl LogsMonitor {
         }
 
         let monitor_current = self.current.clone();
-
-        // Update current level in data structure
-        {
-            let mut current = monitor_current.write().await;
-            current.level = filter_level.clone();
-        }
 
         let task = tokio::spawn(async move {
             loop {
@@ -222,7 +213,11 @@ impl LogsMonitor {
                     }
                 };
 
-                let url = "/logs";
+                let url = if filter_level == "all" {
+                    "/logs".to_string()
+                } else {
+                    format!("/logs?level={filter_level}")
+                };
 
                 logging!(
                     info,
@@ -233,11 +228,9 @@ impl LogsMonitor {
                 );
 
                 let _ = client
-                    .get(url)
+                    .get(&url)
                     .timeout(Duration::from_secs(30))
-                    .process_lines(|line| {
-                        Self::process_log_line(line, &filter_level, monitor_current.clone())
-                    })
+                    .process_lines(|line| Self::process_log_line(line, monitor_current.clone()))
                     .await;
 
                 // Wait before retrying
@@ -296,31 +289,26 @@ impl LogsMonitor {
 
     fn process_log_line(
         line: &str,
-        filter_level: &str,
         current: Arc<RwLock<CurrentLogs>>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Ok(log_data) = serde_json::from_str::<LogData>(line.trim()) {
-            // Use LogLevel enum for smarter filtering with hierarchical support
-            let filter_log_level = LogLevel::from_str_or_default(filter_level, LogLevel::Info);
-            let should_include = filter_log_level.should_include(&log_data.log_type);
+            // Server-side filtering via query parameters handles the level filtering
+            // We only need to accept all logs since filtering is done at the endpoint level
+            let log_item = LogItem::new(log_data.log_type, log_data.payload);
 
-            if should_include {
-                let log_item = LogItem::new(log_data.log_type, log_data.payload);
+            tokio::spawn(async move {
+                let mut logs = current.write().await;
 
-                tokio::spawn(async move {
-                    let mut logs = current.write().await;
+                // Add new log
+                logs.logs.push_back(log_item);
 
-                    // Add new log
-                    logs.logs.push_back(log_item);
+                // Keep only the last 1000 logs
+                if logs.logs.len() > 1000 {
+                    logs.logs.pop_front();
+                }
 
-                    // Keep only the last 1000 logs
-                    if logs.logs.len() > 1000 {
-                        logs.logs.pop_front();
-                    }
-
-                    logs.mark_fresh();
-                });
-            }
+                logs.mark_fresh();
+            });
         }
         Ok(())
     }
@@ -341,19 +329,14 @@ impl LogsMonitor {
         );
     }
 
-    pub async fn get_logs_as_json(&self, level: Option<String>) -> serde_json::Value {
+    pub async fn get_logs_as_json(&self) -> serde_json::Value {
         let current = self.current().await;
 
-        // Use the same filtering logic as process_log_line for consistency
-        let filter_log_level = level
-            .as_deref()
-            .map(|l| LogLevel::from_str_or_default(l, LogLevel::Info))
-            .unwrap_or(LogLevel::All);
-
-        let filtered_logs: Vec<serde_json::Value> = current
+        // Simply return all cached logs since filtering is handled by start_monitoring
+        // and the cache is cleared when level changes
+        let logs: Vec<serde_json::Value> = current
             .logs
             .iter()
-            .filter(|log| filter_log_level.should_include(&log.log_type))
             .map(|log| {
                 serde_json::json!({
                     "type": log.log_type,
@@ -363,7 +346,7 @@ impl LogsMonitor {
             })
             .collect();
 
-        serde_json::Value::Array(filtered_logs)
+        serde_json::Value::Array(logs)
     }
 }
 
@@ -379,6 +362,6 @@ pub async fn clear_logs() {
     LogsMonitor::global().clear_logs().await;
 }
 
-pub async fn get_logs_json(level: Option<String>) -> serde_json::Value {
-    LogsMonitor::global().get_logs_as_json(level).await
+pub async fn get_logs_json() -> serde_json::Value {
+    LogsMonitor::global().get_logs_as_json().await
 }
