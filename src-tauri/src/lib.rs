@@ -423,7 +423,23 @@ pub fn run() {
 
     // Set Linux environment variable
     #[cfg(target_os = "linux")]
-    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+
+        let desktop_env = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default().to_uppercase();
+        let is_kde_desktop = desktop_env.contains("KDE");
+        let is_plasma_desktop = desktop_env.contains("PLASMA");
+
+        if is_kde_desktop || is_plasma_desktop {
+            std::env::set_var("GTK_CSD", "0");
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "KDE detected: Disabled GTK CSD for better titlebar stability."
+            );
+        }
+    }
 
     // Create and configure the Tauri builder
     let builder = app_init::setup_plugins(tauri::Builder::default())
