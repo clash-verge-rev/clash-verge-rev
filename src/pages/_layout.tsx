@@ -68,6 +68,7 @@ const Layout = () => {
     const unlistenRefreshClash = listen("verge://refresh-clash-config", () => {
       // the clash info may be updated
       mutate("getProxies");
+      mutate("getRules");
       mutate("getVersion");
       mutate("getClashConfig");
       mutate("getClashInfo");
