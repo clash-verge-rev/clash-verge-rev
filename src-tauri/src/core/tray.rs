@@ -268,7 +268,7 @@ impl Tray {
             let profiles = Config::profiles();
             let profiles = profiles.latest();
             if let Some(current_uid) = profiles.get_current()
-                && let Ok(current) = profiles.get_item(current_uid)
+                && let Some(current) = profiles.get_item(current_uid)
                 && let Some(profile_name) = &current.name
             {
                 current_name = profile_name.to_string();

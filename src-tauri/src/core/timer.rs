@@ -124,7 +124,7 @@ impl Timer {
                 }
 
                 match profiles.get_item(current) {
-                    Ok(profile) => {
+                    Some(profile) => {
                         if let Some(selected) = profile.selected.as_ref() {
                             for selected_item in selected {
                                 if let Some(proxy_name) = selected_item.name.as_ref()
@@ -153,7 +153,7 @@ impl Timer {
                         }
                         crate::utils::resolve::create_window();
                     }
-                    Err(_) => {
+                    None => {
                         tracing::error!("Failed to get current profile [{current}]");
                     }
                 }

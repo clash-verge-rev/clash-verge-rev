@@ -518,7 +518,9 @@ pub async fn update_profile(uid: &str, option: Option<PrfOption>) -> Result<()> 
     let url_opt = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
-        let item = profiles.get_item(uid)?;
+        let item = profiles
+            .get_item(uid)
+            .ok_or(anyhow!("failed to find the profile item \"uid:{uid}\""))?;
         let is_remote = item.itype.as_ref().is_some_and(|s| *s == ProfileType::Remote);
 
         if let Some(url) = item.url.as_ref() {

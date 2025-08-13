@@ -230,7 +230,9 @@ pub async fn test_merge_chain(
     let MergeResult { mut config, logs } = get_pre_merge_result(profile_uid, modified_uid.clone())?;
     result_map.extend(logs);
 
-    let profile_item = profiles.get_item(&modified_uid)?;
+    let profile_item = profiles
+        .get_item(&modified_uid)
+        .ok_or(anyhow!("failed to find the profile item \"uid:{modified_uid}\""))?;
     tracing::info!("test merge chain {:?}", profile_item.name);
     match profile_item.itype.as_ref() {
         Some(ProfileType::Merge) => {

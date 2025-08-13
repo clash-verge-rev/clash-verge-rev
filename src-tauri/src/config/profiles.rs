@@ -5,7 +5,7 @@ use crate::{
     log_err,
     utils::{dirs, help},
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, fs, io::Write, path::PathBuf};
@@ -97,13 +97,18 @@ impl IProfiles {
             // disable old chain
             if let Some(old_chain) = old_chain {
                 for old_uid in old_chain {
-                    let item = self.get_item_mut(&old_uid)?;
+                    let item = self
+                        .get_item_mut(&old_uid)
+                        .ok_or(anyhow!("failed to find the profile item \"uid:{old_uid}\""))?;
+
                     item.enable = Some(false);
                 }
             }
             // enable new chain
             for new_uid in new_chain.iter() {
-                let item = self.get_item_mut(new_uid)?;
+                let item = self
+                    .get_item_mut(new_uid)
+                    .ok_or(anyhow!("failed to find the profile item \"uid:{new_uid}\""))?;
                 item.enable = Some(true);
             }
 
@@ -118,26 +123,16 @@ impl IProfiles {
     }
 
     /// find the item by the uid
-    pub fn get_item(&self, uid: &str) -> Result<&PrfItem> {
-        if let Some(items) = self.items.as_ref() {
-            for each in items.iter() {
-                if each.uid == Some(uid.to_string()) {
-                    return Ok(each);
-                }
-            }
-        }
-        bail!("failed to get the profile item \"uid:{uid}\"");
+    pub fn get_item(&self, uid: &str) -> Option<&PrfItem> {
+        self.items
+            .as_ref()
+            .and_then(|items| items.iter().find(|item| item.uid == Some(uid.to_string())))
     }
 
-    pub fn get_item_mut(&mut self, uid: &str) -> Result<&mut PrfItem> {
-        if let Some(items) = self.items.as_mut() {
-            for item in items.iter_mut() {
-                if item.uid == Some(uid.to_string()) {
-                    return Ok(item);
-                }
-            }
-        }
-        bail!("failed to get the profile item \"uid:{uid}\"");
+    pub fn get_item_mut(&mut self, uid: &str) -> Option<&mut PrfItem> {
+        self.items
+            .as_mut()
+            .and_then(|items| items.iter_mut().find(|item| item.uid == Some(uid.to_string())))
     }
 
     pub fn get_profiles(&self) -> Vec<&PrfItem> {
@@ -182,7 +177,9 @@ impl IProfiles {
             }
 
             if let Some(parent) = item.parent.as_ref() {
-                let profile = self.get_item_mut(parent)?;
+                let profile = self
+                    .get_item_mut(parent)
+                    .ok_or(anyhow!("failed to find the profile item \"uid:{parent}\""))?;
                 match profile.chain.as_mut() {
                     Some(chain) => chain.push(uid),
                     None => profile.chain = Some(vec![uid]),
@@ -264,7 +261,8 @@ impl IProfiles {
         }
 
         // find the item
-        self.get_item(uid)?;
+        self.get_item(uid)
+            .ok_or(anyhow!("failed to find the profile item \"uid:{uid}\""))?;
 
         if let Some(items) = self.items.as_mut() {
             let some_uid = Some(uid);
@@ -305,14 +303,16 @@ impl IProfiles {
         let current = self.current.as_ref().unwrap_or(&uid);
         let mut filter_uids: Vec<String> = Vec::new();
 
-        let profile = self.get_item(&uid)?;
+        let profile = self
+            .get_item(&uid)
+            .ok_or(anyhow!("failed to find the profile item \"uid:{uid}\""))?;
         filter_uids.push(uid.clone());
         // delete profile chain
         if let Some(profile_chain) = profile.chain.as_ref() {
             filter_uids.extend(profile_chain.clone());
             profile_chain
                 .iter()
-                .filter_map(|chain_uid| self.get_item(chain_uid).ok())
+                .filter_map(|chain_uid| self.get_item(chain_uid))
                 .for_each(|o| log_err!(o.delete_file()));
         }
         // delete profile
@@ -385,7 +385,7 @@ impl IProfiles {
 
     pub fn get_current_profile_rule_providers(&self) -> Option<&HashMap<String, PathBuf>> {
         if let Some(current) = self.get_current()
-            && let Ok(item) = self.get_item(current)
+            && let Some(item) = self.get_item(current)
         {
             item.rule_providers_path.as_ref()
         } else {

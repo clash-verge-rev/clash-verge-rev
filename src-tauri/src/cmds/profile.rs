@@ -16,7 +16,11 @@ pub fn get_profiles() -> CmdResult<IProfiles> {
 
 #[tauri::command]
 pub fn get_profile(uid: String) -> CmdResult<PrfItem> {
-    wrap_err!(Config::profiles().data().get_item(&uid).cloned())
+    Ok(Config::profiles()
+        .data()
+        .get_item(&uid)
+        .ok_or(format!("failed to get profile [{uid}]"))?
+        .clone())
 }
 
 #[tauri::command]
@@ -63,6 +67,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
     wrap_err!(handle::Handle::update_systray_part())
 }
 
+// 同步更新订阅
 #[tauri::command]
 pub async fn update_profile(uid: String, option: Option<PrfOption>) -> CmdResult {
     wrap_err!(feat::update_profile(&uid, option).await)?;
@@ -80,7 +85,7 @@ pub async fn delete_profile(uid: String) -> CmdResult {
     wrap_err!(handle::Handle::update_systray_part())
 }
 
-/// 修改profiles的
+/// 修改整个 profiles
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
     wrap_err!(Config::profiles().draft().patch_config(profiles))?;
@@ -101,17 +106,20 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
     }
 }
 
-/// 修改某个profile item的
+/// 修改某个 profile item
 #[tauri::command]
 pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
     let enable_changed = profile.enable.is_some();
     let name_changed = profile.name.is_some();
+    // let old = Config::profiles().latest().get_item(&uid);
     wrap_err!(Config::profiles().data_mut().patch_item(&uid, profile))?;
     wrap_err!(timer::Timer::global().refresh_profiles())?;
     if enable_changed {
         // this is a chain to toggle enable
         let profiles = Config::profiles().latest().clone();
-        let result_item = wrap_err!(profiles.get_item(&uid))?;
+        let result_item = profiles
+            .get_item(&uid)
+            .ok_or(format!("failed to get profile [{uid}]"))?;
         match result_item.scope {
             Some(ScopeType::Global) => {
                 wrap_err!(CoreManager::global().update_config().await)?;
@@ -136,7 +144,9 @@ pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
 pub fn view_profile(app_handle: tauri::AppHandle, index: String) -> CmdResult {
     let profiles = Config::profiles();
     let profiles = profiles.latest();
-    let file = wrap_err!(profiles.get_item(&index))?
+    let file = profiles
+        .get_item(&index)
+        .ok_or(format!("failed to get profile [{index}]"))?
         .file
         .as_ref()
         .ok_or("the file field is null")?;
@@ -151,7 +161,9 @@ pub fn view_profile(app_handle: tauri::AppHandle, index: String) -> CmdResult {
 pub fn read_profile_file(index: String) -> CmdResult<String> {
     let profiles = Config::profiles();
     let profiles = profiles.latest();
-    let item = wrap_err!(profiles.get_item(&index))?;
+    let item = profiles
+        .get_item(&index)
+        .ok_or(format!("failed to get profile [{index}]"))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
 }
@@ -161,7 +173,9 @@ pub fn save_profile_file(uid: String, file_data: Option<String>) -> CmdResult {
     if let Some(file_data) = file_data {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
-        let item = wrap_err!(profiles.get_item(&uid))?;
+        let item = profiles
+            .get_item(&uid)
+            .ok_or(format!("failed to get profile [{uid}]"))?;
         wrap_err!(item.save_file(file_data))?;
     }
     Ok(())
