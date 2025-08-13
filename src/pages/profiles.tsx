@@ -402,18 +402,7 @@ const ProfilePage = () => {
           </Button>
         </Box>
       }>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          mb: "10px",
-          pt: "10px",
-          mx: "10px",
-          height: "36px",
-          display: "flex",
-          alignItems: "center",
-          boxSizing: "border-box",
-        }}>
+      <div className="bg-comment sticky top-0 z-10 mb-1 flex items-center !space-x-2 px-2 pb-1">
         <BaseStyledTextField
           value={url}
           variant="outlined"
@@ -465,7 +454,7 @@ const ProfilePage = () => {
           onClick={() => viewerRef.current?.create(null)}>
           {t("New")}
         </Button>
-      </Stack>
+      </div>
       <Box sx={{ px: "10px" }}>
         <DndContext
           sensors={sensors}
