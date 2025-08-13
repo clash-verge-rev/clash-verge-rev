@@ -135,7 +135,8 @@ const Layout = () => {
   return (
     <SWRConfig
       value={{
-        errorRetryCount: 3,
+        errorRetryCount: 10,
+        errorRetryInterval: 1000,
         revalidateOnFocus: true,
         revalidateOnMount: true,
       }}>
