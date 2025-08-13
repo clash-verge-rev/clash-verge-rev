@@ -251,16 +251,12 @@ jobs:
   clean_old_assets:
     name: Clean Old Release Assets
     needs: [check_commit, update_tag]
-    runs-on: [ubuntu-latest]
     if: ${{ needs.check_commit.outputs.should_run == 'true' && needs.update_tag.result == 'success' }}
-    steps:
-      # - name: Checkout repository
-      #   uses: actions/checkout@v4
 
-      - uses: clash-verge-rev/clash-verge-rev/.github/workflows/clean-old-assets.yml@dev
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          dry_run: false
+    uses: clash-verge-rev/clash-verge-rev/.github/workflows/clean-old-assets.yml@dev
+    with:
+      tag_name: autobuild
+      dry_run: false
 
   autobuild-x86-windows-macos-linux:
     name: Autobuild x86 Windows, MacOS and Linux
