@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::{collections::VecDeque, sync::Arc, time::Instant};
 use tokio::{sync::RwLock, task::JoinHandle, time::Duration};
 
@@ -22,52 +21,6 @@ pub struct LogItem {
     pub payload: String,
     pub time: String,
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum LogLevel {
-    All = 0,     // 显示所有级别（仅用于过滤）
-    Debug = 1,   // Debug 日志类型 / Debug 过滤级别（显示 debug、warning、error，排除info）
-    Info = 2,    // Info 日志类型 / Info 过滤级别（显示 info、warning、error）
-    Warning = 3, // Warning 日志类型 / Warning 过滤级别（显示 warning、error）
-    Error = 4,   // Error 日志类型 / Error 过滤级别（只显示 error）
-}
-
-impl fmt::Display for LogLevel {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            LogLevel::Debug => write!(f, "debug"),
-            LogLevel::Info => write!(f, "info"),
-            LogLevel::Warning => write!(f, "warning"),
-            LogLevel::Error => write!(f, "error"),
-            LogLevel::All => write!(f, "all"),
-        }
-    }
-}
-
-impl TryFrom<&str> for LogLevel {
-    type Error = String;
-
-    fn try_from(value: &str) -> Result<Self, <Self as TryFrom<&str>>::Error> {
-        match value.to_lowercase().as_str() {
-            "debug" => Ok(LogLevel::Debug),
-            "info" => Ok(LogLevel::Info),
-            "warning" | "warn" => Ok(LogLevel::Warning),
-            "error" | "err" => Ok(LogLevel::Error),
-            "all" => Ok(LogLevel::All),
-            _ => Err(format!("Invalid log level: '{value}'")),
-        }
-    }
-}
-
-impl TryFrom<String> for LogLevel {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, <Self as TryFrom<String>>::Error> {
-        LogLevel::try_from(value.as_str())
-    }
-}
-
-impl LogLevel {}
 
 impl LogItem {
     fn new(log_type: String, payload: String) -> Self {

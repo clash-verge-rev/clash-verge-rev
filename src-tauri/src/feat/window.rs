@@ -112,7 +112,7 @@ async fn clean_async() -> bool {
                 true
             }
             Ok(Err(e)) => {
-                log::warn!(target: "app", "禁用TUN模式失败: {}", e);
+                log::warn!(target: "app", "禁用TUN模式失败: {e}");
                 false
             }
             Err(_) => {
