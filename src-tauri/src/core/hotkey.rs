@@ -46,7 +46,7 @@ impl Hotkey {
     }
 
     fn register(&self, hotkey: &str, func: &str) -> Result<()> {
-        let app_handle = handle::Handle::get_app_handle();
+        let app_handle = handle::Handle::app_handle();
         let manager = app_handle.global_shortcut();
 
         if manager.is_registered(hotkey) {
@@ -73,7 +73,7 @@ impl Hotkey {
     }
 
     fn unregister(&self, hotkey: &str) -> Result<()> {
-        let app_handle = handle::Handle::get_app_handle();
+        let app_handle = handle::Handle::app_handle();
         app_handle.global_shortcut().unregister(hotkey)?;
         tracing::info!("unregister hotkey {hotkey}");
         Ok(())
@@ -148,7 +148,7 @@ impl Hotkey {
 
 impl Drop for Hotkey {
     fn drop(&mut self) {
-        let app_handle = handle::Handle::get_app_handle();
+        let app_handle = handle::Handle::app_handle();
         let shortcut = app_handle.global_shortcut();
         if let Err(e) = shortcut.unregister_all() {
             tracing::error!("unregister all hotkey error: {e}");

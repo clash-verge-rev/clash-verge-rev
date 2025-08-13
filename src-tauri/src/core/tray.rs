@@ -160,7 +160,7 @@ impl Tray {
     }
 
     pub fn init() -> Result<()> {
-        let app_handle = handle::Handle::get_app_handle();
+        let app_handle = handle::Handle::app_handle();
         tracing::trace!("generate tray menu");
         let menu = Self::tray_menu(app_handle)?;
         tracing::trace!("build tray");
@@ -198,12 +198,12 @@ impl Tray {
     }
 
     pub fn update_systray(app_handle: &AppHandle) -> Result<()> {
-        tracing::trace!("starting update tray");
+        tracing::debug!("starting update tray");
         let enable_tray = Config::verge().latest().enable_tray.unwrap_or(true);
         if enable_tray {
             Self::update_part(app_handle)?;
         }
-        tracing::trace!("update tray finished");
+        tracing::debug!("update tray finished");
         Ok(())
     }
 
@@ -264,26 +264,26 @@ impl Tray {
         #[cfg(not(target_os = "linux"))]
         {
             let version = app_handle.package_info().version.to_string();
-            let mut current_profile_name = "None".to_string();
+            let mut current_name = "None".to_string();
             let profiles = Config::profiles();
             let profiles = profiles.latest();
-            if let Some(current_profile_uid) = profiles.get_current()
-                && let Ok(current_profile) = profiles.get_item(&current_profile_uid)
-                && let Some(profile_name) = &current_profile.name
+            if let Some(current_uid) = profiles.get_current()
+                && let Ok(current) = profiles.get_item(current_uid)
+                && let Some(profile_name) = &current.name
             {
-                current_profile_name = profile_name.to_string();
+                current_name = profile_name.to_string();
             };
             let switch_map = |status| {
                 if status { t!("on") } else { t!("off") }
             };
             tray.set_tooltip(Some(&format!(
-                "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
+                "Clash Verge v{version}\n{}: {}\n{}: {}\n{}: {}",
                 t!("proxy.system"),
                 switch_map(sysproxy_enabled),
                 t!("proxy.tun"),
                 switch_map(tun_enabled),
                 t!("current.profile"),
-                current_profile_name
+                current_name
             )))?;
         }
         Ok(())
@@ -296,9 +296,11 @@ impl Tray {
             ..
         } = event
         {
-            let tray_event = Config::verge().latest().tray_event.clone();
-            let tray_event = tray_event.unwrap_or("main_window".into());
-            match tray_event.as_str() {
+            let verge = Config::verge();
+            let verge = verge.latest();
+            let tray_event = verge.tray_event.as_deref();
+            let tray_event = tray_event.unwrap_or("main_window");
+            match tray_event {
                 "system_proxy" => feat::toggle_system_proxy(),
                 "service_mode" => feat::toggle_service_mode(),
                 "tun_mode" => feat::toggle_tun_mode(),

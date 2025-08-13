@@ -7,6 +7,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use super::handle;
@@ -23,7 +24,7 @@ pub struct Timer {
     timer_map: Arc<Mutex<HashMap<String, (TaskID, u64)>>>,
 
     /// increment id, from 2, the 1 is used to activating selected task after backup file
-    timer_count: Arc<Mutex<TaskID>>,
+    timer_count: Arc<AtomicU64>,
 }
 
 impl Timer {
@@ -33,7 +34,7 @@ impl Timer {
         TIMER.get_or_init(|| Timer {
             delay_timer: Arc::new(Mutex::new(DelayTimerBuilder::default().build())),
             timer_map: Arc::new(Mutex::new(HashMap::new())),
-            timer_count: Arc::new(Mutex::new(1)),
+            timer_count: Arc::new(AtomicU64::new(1)),
         })
     }
 
@@ -115,7 +116,7 @@ impl Timer {
             let current = profiles.get_current();
             if let Some(current) = current {
                 let profiles = Config::profiles().latest().clone();
-                let mihomo = handle::Handle::get_mihomo_read().await;
+                let mihomo = handle::Handle::mihomo().await;
 
                 if mihomo.get_base_config().await.is_err() {
                     tracing::error!("failed to get base config");
@@ -245,11 +246,10 @@ impl Timer {
             }
         });
 
-        let mut count = self.timer_count.lock();
         new_map.iter().for_each(|(uid, val)| {
+            let count = self.timer_count.fetch_add(1, Ordering::SeqCst);
             if cur_map.get(uid).is_none() {
-                diff_map.insert(uid.clone(), DiffFlag::Add(*count, *val));
-                *count += 1;
+                diff_map.insert(uid.clone(), DiffFlag::Add(count, *val));
             }
         });
 

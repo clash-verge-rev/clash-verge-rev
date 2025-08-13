@@ -118,13 +118,13 @@ pub fn setup_panic_hook() {
 /// reset system proxy
 pub async fn resolve_reset() {
     log_err!(sysopt::Sysopt::global().reset_sysproxy());
-    log_err!(handle::Handle::get_mihomo_read().await.clear_all_ws_connections().await);
+    log_err!(handle::Handle::mihomo().await.clear_all_ws_connections().await);
     log_err!(CoreManager::global().stop_core().await);
 }
 
 /// create main window
 pub fn create_window() {
-    let app_handle = handle::Handle::get_app_handle();
+    let app_handle = handle::Handle::app_handle();
     if let Some(window) = app_handle.get_webview_window("main") {
         trace_err!(window.unminimize(), "set win unminimize");
         trace_err!(window.show(), "set win visible");

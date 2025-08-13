@@ -132,7 +132,7 @@ pub fn open_devtools(app_handle: tauri::AppHandle) -> CmdResult {
 
 #[tauri::command]
 pub fn copy_clash_env() -> CmdResult {
-    feat::copy_clash_env(handle::Handle::get_app_handle());
+    feat::copy_clash_env(handle::Handle::app_handle());
     Ok(())
 }
 

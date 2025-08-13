@@ -83,7 +83,7 @@ pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
         let res = wrap_err!(service::get_logs().await)?;
         res.data.unwrap_or_default()
     } else {
-        logger::Logger::global().get_log()
+        logger::Logger::global().get_logs().clone()
     };
     Ok(logs)
 }
@@ -91,7 +91,7 @@ pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
 #[tauri::command]
 pub async fn get_rule_providers_payload() -> CmdResult<HashMap<String, RulePayload>> {
     let mut res = HashMap::new();
-    let mihomo = handle::Handle::get_mihomo_read().await;
+    let mihomo = handle::Handle::mihomo().await;
     let rule_providers = wrap_err!(mihomo.get_rule_providers().await)?;
     let profiles = Config::profiles();
     if let Some(rule_provider_paths) = profiles.latest().get_current_profile_rule_providers() {

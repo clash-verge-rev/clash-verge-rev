@@ -69,7 +69,7 @@ fn get_instance_handle() -> windows_sys::Win32::Foundation::HMODULE {
 }
 
 pub fn register() {
-    let app_handle = handle::Handle::get_app_handle();
+    let app_handle = handle::Handle::app_handle();
     let class_name = encode_wide("global_shutdown_app");
     unsafe {
         let hinstance = get_instance_handle();

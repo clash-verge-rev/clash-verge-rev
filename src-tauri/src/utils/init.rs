@@ -177,7 +177,7 @@ pub async fn startup_script() -> Result<()> {
             return Err(anyhow::anyhow!("script not found: {path}"));
         }
         let current_dir = current_dir.parent();
-        let app_handle = handle::Handle::get_app_handle();
+        let app_handle = handle::Handle::app_handle();
         let mut cmd = app_handle.shell().command(shell);
         if let Some(dir) = current_dir {
             cmd = cmd.current_dir(dir);

@@ -235,10 +235,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         tmp_map.insert("socks-port".into(), 0.into());
         tmp_map.insert("redir-port".into(), 0.into());
         tmp_map.insert("tproxy-port".into(), 0.into());
-        let _ = handle::Handle::get_mihomo_read()
-            .await
-            .patch_base_config(&tmp_map)
-            .await;
+        let _ = handle::Handle::mihomo().await.patch_base_config(&tmp_map).await;
         // clash config
         tracing::debug!("patch latest clash config");
         Config::clash().latest_mut().patch_config(tmp_map);
@@ -271,13 +268,13 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         let (host, port) = external_controller
             .split_once(':')
             .ok_or(anyhow!("invalid external controller"))?;
-        let mut mihomo = handle::Handle::get_mihomo_write().await;
+        let mut mihomo = handle::Handle::mihomo_mut().await;
         mihomo.update_external_host(Some(host.to_string()));
         mihomo.update_external_port(Some(port.parse()?));
     }
     if let Some(secret) = patch.get("secret") {
         let secret = secret.as_str().unwrap();
-        handle::Handle::get_mihomo_write()
+        handle::Handle::mihomo_mut()
             .await
             .update_secret(Some(secret.to_string()));
     }
@@ -296,14 +293,11 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 let value = clash_config_mapping.get(key).unwrap();
 
                 mapping.insert(key.into(), value.clone());
-                let _ = handle::Handle::get_mihomo_read()
-                    .await
-                    .patch_base_config(&mapping)
-                    .await;
+                let _ = handle::Handle::mihomo().await.patch_base_config(&mapping).await;
 
                 // handle tun config
                 if key == "tun" {
-                    let clash_basic_configs = handle::Handle::get_mihomo_read().await.get_base_config().await?;
+                    let clash_basic_configs = handle::Handle::mihomo().await.get_base_config().await?;
                     let tun_enable = value
                         .as_mapping()
                         .unwrap()
@@ -312,7 +306,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                     let tun_enable_by_api = clash_basic_configs.tun.enable;
                     if tun_enable == tun_enable_by_api {
                         if Config::verge().latest().auto_close_connection.unwrap_or_default() {
-                            log_err!(handle::Handle::get_mihomo_read().await.close_all_connections().await);
+                            log_err!(handle::Handle::mihomo().await.close_all_connections().await);
                         }
                         handle::Handle::update_systray_part()?;
                     } else {
@@ -346,7 +340,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
             if patch.get("mode").is_some() {
                 if Config::verge().latest().auto_close_connection.unwrap_or_default() {
-                    let _ = handle::Handle::get_mihomo_read().await.close_all_connections().await;
+                    let _ = handle::Handle::mihomo().await.close_all_connections().await;
                 }
                 log_err!(handle::Handle::update_systray_part());
             }

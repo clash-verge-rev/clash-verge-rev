@@ -30,46 +30,50 @@ impl IClashConfig {
     }
 
     pub fn default() -> Self {
-        let mut map = Mapping::new();
-        let mut tun = Mapping::new();
-        tun.insert("enable".into(), false.into());
-        tun.insert("stack".into(), "gvisor".into());
-        #[cfg(not(target_os = "macos"))]
-        tun.insert("device".into(), "Mihomo".into());
-        #[cfg(target_os = "macos")]
-        tun.insert("device".into(), "utun_Mihomo".into());
-        tun.insert("auto-route".into(), true.into());
-        tun.insert("strict-route".into(), false.into());
-        tun.insert("auto-detect-interface".into(), true.into());
-        tun.insert("dns-hijack".into(), vec!["any:53"].into());
-        tun.insert("mtu".into(), 9000.into());
-        #[cfg(not(target_os = "windows"))]
-        map.insert("redir-port".into(), 0.into());
-        #[cfg(target_os = "linux")]
-        map.insert("tproxy-port".into(), 0.into());
-        map.insert("mixed-port".into(), 7890.into());
-        map.insert("socks-port".into(), 0.into());
-        map.insert("port".into(), 0.into());
-        map.insert("log-level".into(), "info".into());
-        map.insert("allow-lan".into(), false.into());
-        map.insert("mode".into(), "rule".into());
-        map.insert("external-controller".into(), "127.0.0.1:9090".into());
-        map.insert("secret".into(), nanoid!().into());
-        let mut cors = Mapping::new();
-        cors.insert("allow-private-network".into(), false.into());
-        cors.insert(
-            "allow-origins".into(),
-            vec!["https://metacubex.github.io", "https://yacd.metacubex.one"].into(),
-        );
-        map.insert("external-controller-cors".into(), cors.into());
-        map.insert("tun".into(), tun.into());
-        map.insert("unified-delay".into(), true.into());
-        map.insert("find-process-mode".into(), "strict".into());
-        // default store selected
-        let mut profile = Mapping::new();
-        profile.insert("store-selected".into(), true.into());
-        profile.insert("store-fake-ip".into(), true.into());
-        map.insert("profile".into(), profile.into());
+        let tun = Mapping::from_iter([
+            ("enable".into(), false.into()),
+            ("stack".into(), "gvisor".into()),
+            #[cfg(not(target_os = "macos"))]
+            ("device".into(), "Mihomo".into()),
+            #[cfg(target_os = "macos")]
+            ("device".into(), "utun_Mihomo".into()),
+            ("auto-route".into(), true.into()),
+            ("strict-route".into(), false.into()),
+            ("auto-detect-interface".into(), true.into()),
+            ("dns-hijack".into(), vec!["any:53"].into()),
+            ("mtu".into(), 9000.into()),
+        ]);
+        let cors = Mapping::from_iter([
+            ("allow-private-network".into(), false.into()),
+            (
+                "allow-origins".into(),
+                vec!["https://metacubex.github.io", "https://yacd.metacubex.one"].into(),
+            ),
+        ]);
+        let profile = Mapping::from_iter([
+            ("store-selected".into(), true.into()),
+            ("store-fake-ip".into(), true.into()),
+        ]);
+
+        let map = Mapping::from_iter([
+            #[cfg(not(target_os = "windows"))]
+            ("redir-port".into(), 0.into()),
+            #[cfg(target_os = "linux")]
+            ("tproxy-port".into(), 0.into()),
+            ("mixed-port".into(), 7890.into()),
+            ("socks-port".into(), 0.into()),
+            ("port".into(), 0.into()),
+            ("log-level".into(), "info".into()),
+            ("allow-lan".into(), false.into()),
+            ("mode".into(), "rule".into()),
+            ("external-controller".into(), "127.0.0.1:9090".into()),
+            ("secret".into(), nanoid!().into()),
+            ("external-controller-cors".into(), cors.into()),
+            ("tun".into(), tun.into()),
+            ("unified-delay".into(), true.into()),
+            ("find-process-mode".into(), "strict".into()),
+            ("profile".into(), profile.into()),
+        ]);
 
         Self(map)
     }

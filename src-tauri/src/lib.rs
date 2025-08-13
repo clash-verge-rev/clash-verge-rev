@@ -164,7 +164,7 @@ pub fn run() -> Result<()> {
         tauri::RunEvent::ExitRequested { code, api, .. } => {
             tauri::async_runtime::block_on(async move {
                 tracing::info!("exit requested, clear all ws connections");
-                let _ = handle::Handle::get_mihomo_read().await.clear_all_ws_connections().await;
+                let _ = handle::Handle::mihomo().await.clear_all_ws_connections().await;
             });
             if code.is_none() {
                 api.prevent_exit();

@@ -7,10 +7,9 @@ use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use rust_i18n::t;
-use std::env::current_exe;
-use std::sync::Arc;
+use std::sync::{Arc, atomic::Ordering};
+use std::{env::current_exe, sync::atomic::AtomicBool};
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri::async_runtime::Mutex as TokioMutex;
 
 pub struct Sysopt {
     /// current system proxy setting
@@ -31,7 +30,7 @@ pub struct Sysopt {
     auto_launch: Arc<Mutex<Option<AutoLaunch>>>,
 
     /// record whether the guard async is running or not
-    guard_state: Arc<TokioMutex<bool>>,
+    guard_state: Arc<AtomicBool>,
 }
 
 #[cfg(target_os = "windows")]
@@ -79,7 +78,7 @@ impl Sysopt {
             cur_autoproxy: Arc::new(Mutex::new(None)),
             old_autoproxy: Arc::new(Mutex::new(None)),
             auto_launch: Arc::new(Mutex::new(None)),
-            guard_state: Arc::new(TokioMutex::new(false)),
+            guard_state: Arc::new(AtomicBool::new(false)),
         })
     }
 
@@ -308,7 +307,7 @@ impl Sysopt {
             use crate::core::handle::Handle;
             use tauri::Manager;
 
-            let app_handle = Handle::get_app_handle();
+            let app_handle = Handle::app_handle();
             let appimage = app_handle.env().appimage;
             appimage
                 .and_then(|p| p.to_str().map(|s| s.to_string()))
@@ -351,15 +350,12 @@ impl Sysopt {
         use tokio::time::{Duration, sleep};
 
         let guard_state = self.guard_state.clone();
-
         tauri::async_runtime::spawn(async move {
             // if it is running, exit
-            let mut state = guard_state.lock().await;
-            if *state {
+            if guard_state.load(Ordering::Acquire) {
                 return;
             }
-            *state = true;
-            drop(state);
+            guard_state.store(true, Ordering::Release);
 
             // default duration is 10s
             let mut wait_secs = 10u64;
@@ -402,9 +398,7 @@ impl Sysopt {
                 }
             }
 
-            let mut state = guard_state.lock().await;
-            *state = false;
-            drop(state);
+            guard_state.store(false, Ordering::Release);
         });
     }
 }
