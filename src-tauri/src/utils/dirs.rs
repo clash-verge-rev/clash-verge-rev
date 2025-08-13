@@ -83,14 +83,10 @@ pub fn profiles_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
 }
 
-#[cfg(not(target_os = "windows"))]
 pub fn service_path() -> Result<PathBuf> {
-    Ok(app_resources_dir()?.join("clash-verge-service"))
-}
-
-#[cfg(windows)]
-pub fn service_path() -> Result<PathBuf> {
-    Ok(app_resources_dir()?.join("clash-verge-service.exe"))
+    let exe_ext = std::env::consts::EXE_SUFFIX;
+    let service_bin = format!("clash-verge-service{}", exe_ext);
+    Ok(app_resources_dir()?.join(service_bin))
 }
 
 pub fn backup_dir() -> Result<PathBuf> {

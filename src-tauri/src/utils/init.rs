@@ -1,7 +1,7 @@
 use crate::core::handle;
 use crate::core::verge_log::VergeLog;
 use crate::utils::{dirs, help};
-use crate::{config::*, trace_err};
+use crate::{config::*, log_err, trace_err};
 use anyhow::Result;
 use std::fs::{self};
 use std::path::PathBuf;
@@ -14,33 +14,33 @@ pub fn init_config() -> Result<()> {
 
     dirs::init_portable_flag()?;
 
-    crate::log_err!(dirs::app_home_dir().map(|app_dir| {
+    log_err!(dirs::app_home_dir().map(|app_dir| {
         if !app_dir.exists() {
             let _ = fs::create_dir_all(&app_dir);
         }
     }));
 
-    crate::log_err!(dirs::app_profiles_dir().map(|profiles_dir| {
+    log_err!(dirs::app_profiles_dir().map(|profiles_dir| {
         if !profiles_dir.exists() {
             let _ = fs::create_dir_all(&profiles_dir);
         }
     }));
 
-    crate::log_err!(dirs::clash_path().map(|path| {
+    log_err!(dirs::clash_path().map(|path| {
         if !path.exists() {
             help::save_yaml(&path, &IClashConfig::default().0, Some("# Clash Verge"))?;
         }
         <Result<()>>::Ok(())
     }));
 
-    crate::log_err!(dirs::verge_path().map(|path| {
+    log_err!(dirs::verge_path().map(|path| {
         if !path.exists() {
             help::save_yaml(&path, &IVerge::template(), Some("# Clash Verge"))?;
         }
         <Result<()>>::Ok(())
     }));
 
-    crate::log_err!(dirs::profiles_path().map(|path| {
+    log_err!(dirs::profiles_path().map(|path| {
         if !path.exists() {
             help::save_yaml(&path, &IProfiles::template(), Some("# Clash Verge"))?;
         }

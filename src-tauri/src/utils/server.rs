@@ -3,6 +3,7 @@ use crate::config::{Config, DEFAULT_PAC, IVerge};
 use anyhow::{Result, bail};
 use once_cell::sync::OnceCell;
 use reqwest::ClientBuilder;
+use serde::Deserialize;
 use std::{convert::Infallible, sync::Mutex, time::Duration};
 use tokio::sync::oneshot;
 use warp::Filter;
@@ -10,7 +11,7 @@ use warp::Filter;
 // 关闭 embedded server 的信号发送端
 static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 struct QueryParam {
     param: String,
 }
@@ -29,7 +30,7 @@ pub fn check_singleton() -> Result<()> {
                 .text()
                 .await?;
 
-            if &resp == "ok" {
+            if resp.as_str() == "ok" {
                 let argvs = std::env::args().collect::<Vec<String>>();
                 if argvs.len() > 1 {
                     let param = argvs[1].as_str();
@@ -64,7 +65,9 @@ pub fn check_singleton() -> Result<()> {
 /// maybe it can be used as pac server later
 pub async fn embed_server() {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
-    let _ = SHUTDOWN_SENDER.set(Mutex::new(Some(shutdown_tx)));
+    SHUTDOWN_SENDER
+        .set(Mutex::new(Some(shutdown_tx)))
+        .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
     let ping = warp::path!("commands" / "ping").map(move || "ok".to_string());
@@ -108,7 +111,7 @@ pub async fn embed_server() {
 }
 
 pub fn shutdown_embedded_server() {
-    tracing::info!("Shutting down embedded server");
+    tracing::info!("shutting down embedded server");
     if let Some(sender) = SHUTDOWN_SENDER.get()
         && let Some(sender) = sender.lock().unwrap().take()
     {
