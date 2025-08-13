@@ -109,9 +109,13 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult {
 /// 修改某个 profile item
 #[tauri::command]
 pub async fn patch_profile(uid: String, profile: PrfItem) -> CmdResult {
-    let enable_changed = profile.enable.is_some();
-    let name_changed = profile.name.is_some();
-    // let old = Config::profiles().latest().get_item(&uid);
+    let old = Config::profiles()
+        .latest()
+        .get_item(&uid)
+        .ok_or(format!("failed to get profile [{uid}]"))?
+        .clone();
+    let name_changed = profile.name != old.name;
+    let enable_changed = profile.enable != old.enable;
     wrap_err!(Config::profiles().data_mut().patch_item(&uid, profile))?;
     wrap_err!(timer::Timer::global().refresh_profiles())?;
     if enable_changed {
