@@ -2,7 +2,7 @@ name: Test Build
 
 on:
   push:
-    branches-ignore: [renovate/**, up-dev]
+    branches-ignore: [renovate/**, dev, up-dev]
     tags-ignore: [updater, alpha]
   workflow_dispatch:
 
