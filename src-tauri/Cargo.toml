@@ -17,7 +17,7 @@ tauri-build = { version = "2.3.1", features = [] }
 
 [dependencies]
 warp = { version = "0.4.1", features = ["server"] }
-anyhow = "1.0.98"
+anyhow = "1.0.99"
 dirs = "6.0"
 open = "5.3.2"
 log = "0.4.27"
@@ -43,7 +43,7 @@ tokio = { version = "1.47.1", features = [
 ] }
 futures-util = "0.3.31"
 serde = { version = "1.0.219", features = ["derive"] }
-reqwest = { version = "0.12.22", features = ["json", "rustls-tls", "cookies"] }
+reqwest = { version = "0.12.23", features = ["json", "rustls-tls", "cookies"] }
 regex = "1.11.1"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
 image = "0.25.6"
@@ -54,7 +54,7 @@ tauri = { version = "2.7.0", features = [
   "image-ico",
   "image-png",
 ] }
-network-interface = { version = "2.0.2", features = ["serde"] }
+network-interface = { version = "2.0.3", features = ["serde"] }
 tauri-plugin-shell = "2.3.0"
 tauri-plugin-dialog = "2.3.2"
 tauri-plugin-fs = "2.4.1"
@@ -71,13 +71,13 @@ getrandom = "0.3.3"
 futures = "0.3.31"
 sys-locale = "0.3.2"
 async-trait = "0.1.88"
-libc = "0.2.174"
+libc = "0.2.175"
 gethostname = "1.0.2"
 hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
-kode-bridge = "0.1.6-rc"
+kode-bridge = "0.2.0"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.0"
 
