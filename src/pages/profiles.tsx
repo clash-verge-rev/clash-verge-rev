@@ -54,7 +54,7 @@ import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useLockFn, useMemoizedFn } from "ahooks";
 import { isEqual, throttle } from "lodash-es";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
@@ -156,51 +156,59 @@ const ProfilePage = () => {
     setChainList(globalChains);
   }, [profileItems, globalChains]);
 
-  const handleProfileDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
-    setDraggingItem(null);
-    const { active, over } = event;
-    if (over) {
-      const activeId = active.id.toString();
-      const overId = over.id.toString();
-      if (activeId !== overId) {
-        const activeIndex = profileList.findIndex(
-          (item) => item.uid === activeId,
-        );
-        const overIndex = profileList.findIndex((item) => item.uid === overId);
-        setProfileList((items) => arrayMove(items, activeIndex, overIndex));
-        await reorderProfile(activeId, overId);
-        mutateProfiles();
-      }
-    }
-  });
-
-  const handleChainDragEnd = useMemoizedFn(async (event: DragEndEvent) => {
-    setDraggingItem(null);
-    const { active, over } = event;
-    if (over) {
-      const activeId = active.id.toString();
-      const overId = over.id.toString();
-      if (activeId !== overId) {
-        const activeIndex = chainList.findIndex(
-          (item) => item.uid === activeId,
-        );
-        const overIndex = chainList.findIndex((item) => item.uid === overId);
-        const newChainList = arrayMove(chainList, activeIndex, overIndex);
-        const newEnabledChainUids = newChainList
-          .filter((i) => i.enable)
-          .map((item) => item.uid);
-        const needToEnhance = !isEqual(enabledChainUids, newEnabledChainUids);
-        setChainList(newChainList);
-        await reorderProfile(activeId, overId);
-        if (needToEnhance) {
-          await onEnhance();
+  const handleProfileDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      setDraggingItem(null);
+      const { active, over } = event;
+      if (over) {
+        const activeId = active.id.toString();
+        const overId = over.id.toString();
+        if (activeId !== overId) {
+          const activeIndex = profileList.findIndex(
+            (item) => item.uid === activeId,
+          );
+          const overIndex = profileList.findIndex(
+            (item) => item.uid === overId,
+          );
+          setProfileList((items) => arrayMove(items, activeIndex, overIndex));
+          await reorderProfile(activeId, overId);
+          mutateProfiles();
         }
-        mutateProfiles();
       }
-    }
-  });
+    },
+    [profileList],
+  );
 
-  const onImport = useMemoizedFn(async () => {
+  const handleChainDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      setDraggingItem(null);
+      const { active, over } = event;
+      if (over) {
+        const activeId = active.id.toString();
+        const overId = over.id.toString();
+        if (activeId !== overId) {
+          const activeIndex = chainList.findIndex(
+            (item) => item.uid === activeId,
+          );
+          const overIndex = chainList.findIndex((item) => item.uid === overId);
+          const newChainList = arrayMove(chainList, activeIndex, overIndex);
+          const newEnabledChainUids = newChainList
+            .filter((i) => i.enable)
+            .map((item) => item.uid);
+          const needToEnhance = !isEqual(enabledChainUids, newEnabledChainUids);
+          setChainList(newChainList);
+          await reorderProfile(activeId, overId);
+          if (needToEnhance) {
+            await onEnhance();
+          }
+          mutateProfiles();
+        }
+      }
+    },
+    [chainList],
+  );
+
+  const onImport = useCallback(async () => {
     if (!url) return;
     setImportLoading(true);
 
@@ -228,43 +236,44 @@ const ProfilePage = () => {
       setDisabled(false);
       setImportLoading(false);
     }
+  }, []);
+
+  const onSelect = useLockFn(async (current: string, force: boolean) => {
+    if (current === profiles.current || activatingUids.length > 0) return;
+    try {
+      setActivatingUids([current, ...enabledChainUids]);
+      await patchProfiles({ current });
+      mutateLogs();
+      setTimeout(() => activateSelected(), 2000);
+      notice("success", t("Profile Switched"), 1000);
+    } catch (err: any) {
+      notice("error", err?.message || err.toString(), 4000);
+    } finally {
+      setTimeout(() => {
+        setActivatingUids([]);
+      }, 500);
+    }
   });
 
-  const onSelect = useMemoizedFn(
-    useLockFn(async (current: string, force: boolean) => {
-      if (current === profiles.current || activatingUids.length > 0) return;
-      try {
-        setActivatingUids([current, ...enabledChainUids]);
-        await patchProfiles({ current });
-        mutateLogs();
-        setTimeout(() => activateSelected(), 2000);
-        notice("success", t("Profile Switched"), 1000);
-      } catch (err: any) {
-        notice("error", err?.message || err.toString(), 4000);
-      } finally {
-        setTimeout(() => {
-          setActivatingUids([]);
-        }, 500);
+  const onDelete = useLockFn(async (uid: string) => {
+    const isEnable = profiles.current === uid || enabledChainUids.includes(uid);
+    try {
+      if (isEnable) {
+        setActivatingUids([profiles.current || "", uid, ...enabledChainUids]);
       }
-    }),
-  );
-
-  const onDelete = useMemoizedFn(
-    useLockFn(async (uid: string) => {
-      try {
-        setActivatingUids([uid, ...enabledChainUids]);
-        await deleteProfile(uid);
-        mutateProfiles();
-      } catch (err: any) {
-        notice("error", err?.message || err.toString());
-      } finally {
+      await deleteProfile(uid);
+      mutateProfiles();
+    } catch (err: any) {
+      notice("error", err?.message || err.toString());
+    } finally {
+      if (isEnable) {
         setActivatingUids([]);
       }
-    }),
-  );
+    }
+  });
 
-  const handleToggleEnable = useMemoizedFn(
-    useLockFn(async (chainUid: string, enable: boolean) => {
+  const handleToggleEnable = useLockFn(
+    async (chainUid: string, enable: boolean) => {
       try {
         setActivatingUids([
           profiles.current || "",
@@ -282,48 +291,44 @@ const ProfilePage = () => {
           setActivatingUids([]);
         }, 500);
       }
-    }),
+    },
   );
 
-  const handleChainDelete = useMemoizedFn(
-    useLockFn(async (item: IProfileItem) => {
-      try {
-        if (item.enable) {
-          setActivatingUids([
-            profiles.current || "",
-            item.uid,
-            ...enabledChainUids,
-          ]);
-        }
-        await deleteProfile(item.uid);
-        mutateProfiles();
-        if (item.enable) {
-          await onEnhance();
-        }
-      } catch (error: any) {
-        notice("error", error.message || error.toString());
-      } finally {
-        if (item.enable) {
-          setActivatingUids([]);
-        }
+  const handleChainDelete = useLockFn(async (item: IProfileItem) => {
+    try {
+      if (item.enable) {
+        setActivatingUids([
+          profiles.current || "",
+          item.uid,
+          ...enabledChainUids,
+        ]);
       }
-    }),
-  );
-
-  const onEnhance = useMemoizedFn(
-    useLockFn(async () => {
-      try {
-        setActivatingUids([profiles.current || "", ...enabledChainUids]);
-        await enhanceProfiles();
-        mutateLogs();
-        notice("success", t("Profile Reactivated"), 1000);
-      } catch (err: any) {
-        notice("error", err.message || err.toString(), 3000);
-      } finally {
+      await deleteProfile(item.uid);
+      mutateProfiles();
+      if (item.enable) {
+        await onEnhance();
+      }
+    } catch (error: any) {
+      notice("error", error.message || error.toString());
+    } finally {
+      if (item.enable) {
         setActivatingUids([]);
       }
-    }),
-  );
+    }
+  });
+
+  const onEnhance = useLockFn(async () => {
+    try {
+      setActivatingUids([profiles.current || "", ...enabledChainUids]);
+      await enhanceProfiles();
+      mutateLogs();
+      notice("success", t("Profile Reactivated"), 1000);
+    } catch (err: any) {
+      notice("error", err.message || err.toString(), 3000);
+    } finally {
+      setActivatingUids([]);
+    }
+  });
 
   // 更新所有订阅
   const setLoadingCache = useSetLoadingCache();
@@ -356,10 +361,10 @@ const ProfilePage = () => {
     }),
   );
 
-  const onCopyLink = useMemoizedFn(async () => {
+  const onCopyLink = useCallback(async () => {
     const text = await readText();
     if (text) setUrl(text);
-  });
+  }, []);
 
   return (
     <BasePage
