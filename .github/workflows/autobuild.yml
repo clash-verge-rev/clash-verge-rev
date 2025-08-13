@@ -250,8 +250,15 @@ jobs:
 
   clean_old_assets:
     name: Clean Old Release Assets
-    needs: [check_commit, update_tag]
-    if: ${{ needs.check_commit.outputs.should_run == 'true' && needs.update_tag.result == 'success' }}
+    needs:
+      [
+        check_commit,
+        update_tag,
+        autobuild-x86-windows-macos-linux,
+        autobuild-arm-linux,
+        autobuild-x86-arm-windows_webview2,
+      ]
+    if: ${{ needs.check_commit.outputs.should_run == 'true' && needs.update_tag.result == 'success' && always() && !cancelled() && !failure() }}
 
     uses: clash-verge-rev/clash-verge-rev/.github/workflows/clean-old-assets.yml@dev
     with:
