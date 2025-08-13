@@ -254,6 +254,9 @@ jobs:
     runs-on: [ubuntu-latest]
     if: ${{ needs.check_commit.outputs.should_run == 'true' && needs.update_tag.result == 'success' }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - uses: ./.github/workflows/clean-old-assets.yml
         with:
           tag_name: ${{ env.TAG_NAME }}
