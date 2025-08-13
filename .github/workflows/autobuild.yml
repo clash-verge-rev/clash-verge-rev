@@ -52,60 +52,20 @@ jobs:
             exit 0
           fi
 
-          # 只检查 src 中的源码文件，排除构建产物和缓存
-          CURRENT_SRC_HASH=$(git ls-tree -r HEAD -- src/ ':(exclude)src/dist' ':(exclude)src/build' ':(exclude)src/node_modules' ':(exclude)src/.next' ':(exclude)src/.cache' 2>/dev/null | git hash-object --stdin || echo "")
-          PREVIOUS_SRC_HASH=$(git ls-tree -r HEAD~1 -- src/ ':(exclude)src/dist' ':(exclude)src/build' ':(exclude)src/node_modules' ':(exclude)src/.next' ':(exclude)src/.cache' 2>/dev/null | git hash-object --stdin || echo "")
+          # Use get_latest_tauri_commit.bash to find the latest Tauri-related commit
+          echo "🔍 Finding last commit with Tauri-related changes using script..."
 
-          # 只检查 src-tauri 中的源码文件，排除构建产物和缓存
-          CURRENT_TAURI_HASH=$(git ls-tree -r HEAD -- src-tauri/src src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities 2>/dev/null | git hash-object --stdin || echo "")
-          PREVIOUS_TAURI_HASH=$(git ls-tree -r HEAD~1 -- src-tauri/src src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities 2>/dev/null | git hash-object --stdin || echo "")
+          # Make script executable
+          chmod +x scripts-workflow/get_latest_tauri_commit.bash
 
-          echo "📂 Current src source hash: $CURRENT_SRC_HASH"
-          echo "📂 Previous src source hash: $PREVIOUS_SRC_HASH"
-          echo "🦀 Current tauri source hash: $CURRENT_TAURI_HASH"
-          echo "🦀 Previous tauri source hash: $PREVIOUS_TAURI_HASH"
-
-          if [ "$CURRENT_SRC_HASH" != "$PREVIOUS_SRC_HASH" ] || [ "$CURRENT_TAURI_HASH" != "$PREVIOUS_TAURI_HASH" ]; then
-            echo "✅ Source directories changed"
-            echo "should_run=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Find the last commit that changed Tauri-related files
-          echo "🔍 Finding last commit with Tauri-related changes..."
-
-          # Define patterns for Tauri-related files
-          TAURI_PATTERNS="src/ src-tauri/src src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities"
-
-          # Get the last commit that changed any of these patterns (excluding build artifacts)
-          LAST_TAURI_COMMIT=""
-          for commit in $(git rev-list HEAD --max-count=50); do
-            # Check if this commit changed any Tauri-related files
-            CHANGED_FILES=$(git show --name-only --pretty=format: $commit | tr '\n' ' ')
-            HAS_TAURI_CHANGES=false
-            
-            # Check each pattern
-            if echo "$CHANGED_FILES" | grep -q "src/" && echo "$CHANGED_FILES" | grep -qvE "src/(dist|build|node_modules|\.next|\.cache)"; then
-              HAS_TAURI_CHANGES=true
-            elif echo "$CHANGED_FILES" | grep -qE "src-tauri/(src|Cargo\.(toml|lock)|tauri\..*\.conf\.json|build\.rs|capabilities)"; then
-              HAS_TAURI_CHANGES=true
-            fi
-            
-            if [ "$HAS_TAURI_CHANGES" = true ]; then
-              LAST_TAURI_COMMIT=$(git rev-parse --short $commit)
-              break
-            fi
-          done
-
-          if [ -z "$LAST_TAURI_COMMIT" ]; then
-            echo "⚠️  No Tauri-related changes found in recent commits, using current commit"
-            LAST_TAURI_COMMIT=$(git rev-parse --short HEAD)
-          fi
+          # Get the latest Tauri-related commit hash
+          LAST_TAURI_COMMIT_FULL=$(./scripts-workflow/get_latest_tauri_commit.bash)
+          LAST_TAURI_COMMIT=$(git rev-parse --short "$LAST_TAURI_COMMIT_FULL")
 
           echo "📝 Last Tauri-related commit: $LAST_TAURI_COMMIT"
           echo "📝 Current commit: $(git rev-parse --short HEAD)"
 
-          # Generate autobuild version for consistency across jobs
+          # Generate autobuild version using autobuild-latest format
           CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
           MONTH=$(date +%m)
           DAY=$(date +%d)
@@ -250,35 +210,13 @@ jobs:
 
   clean_old_assets:
     name: Clean Old Release Assets
-    runs-on: ubuntu-latest
     needs: [check_commit, update_tag]
     if: ${{ needs.check_commit.outputs.should_run == 'true' && needs.update_tag.result == 'success' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Remove old assets from release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ env.TAG_NAME }}
-        run: |
-          # Use consistent values from check_commit job
-          CURRENT_AUTOBUILD_VERSION="${{ needs.check_commit.outputs.autobuild_version }}"
-          LAST_TAURI_COMMIT="${{ needs.check_commit.outputs.last_tauri_commit }}"
 
-          echo "📦 Current autobuild version: $CURRENT_AUTOBUILD_VERSION"
-          echo "📝 Last Tauri commit: $LAST_TAURI_COMMIT"
-
-          # Get all assets and remove old ones
-          assets=$(gh release view "$TAG_NAME" --json assets -q '.assets[].name' || true)
-          for asset in $assets; do
-            # Keep assets that match current autobuild version or are non-versioned files (like latest.json)
-            if [[ "$asset" == *"$CURRENT_AUTOBUILD_VERSION"* ]] || [[ "$asset" == "latest.json" ]]; then
-              echo "🔒 Keeping current asset: $asset"
-            else
-              echo "🗑️  Deleting old asset: $asset"
-              gh release delete-asset "$TAG_NAME" "$asset" -y || echo "⚠️  Failed to delete $asset"
-            fi
-          done
+    uses: clash-verge-rev/clash-verge-rev/.github/workflows/clean-old-assets.yml@dev
+    with:
+      tag_name: autobuild
+      dry_run: false
 
   autobuild-x86-windows-macos-linux:
     name: Autobuild x86 Windows, MacOS and Linux
@@ -340,7 +278,7 @@ jobs:
           pnpm run prebuild ${{ matrix.target }}
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version ${{ env.TAG_NAME }}
+        run: pnpm release-version autobuild-latest
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
@@ -414,7 +352,7 @@ jobs:
           pnpm run prebuild ${{ matrix.target }}
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version ${{ env.TAG_NAME }}
+        run: pnpm release-version autobuild-latest
 
       - name: Setup for linux
         run: |
@@ -546,7 +484,7 @@ jobs:
           pnpm run prebuild ${{ matrix.target }}
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version ${{ env.TAG_NAME }}
+        run: pnpm release-version autobuild-latest
 
       - name: Download WebView2 Runtime
         run: |
