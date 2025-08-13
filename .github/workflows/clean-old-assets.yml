@@ -13,6 +13,18 @@ on:
         required: false
         default: false
         type: boolean
+  workflow_call:
+    inputs:
+      tag_name:
+        description: "Release tag name to clean (default: autobuild)"
+        required: false
+        default: "autobuild"
+        type: string
+      dry_run:
+        description: "Dry run mode (only show what would be deleted)"
+        required: false
+        default: false
+        type: boolean
 
 permissions: write-all
 
