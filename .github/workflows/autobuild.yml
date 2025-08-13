@@ -257,7 +257,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - uses: ./.github/workflows/clean-old-assets.yml
+      - uses: .github/workflows/clean-old-assets.yml
         with:
           tag_name: ${{ env.TAG_NAME }}
           dry_run: false
