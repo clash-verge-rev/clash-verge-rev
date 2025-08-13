@@ -254,10 +254,10 @@ jobs:
     runs-on: [ubuntu-latest]
     if: ${{ needs.check_commit.outputs.should_run == 'true' && needs.update_tag.result == 'success' }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      # - name: Checkout repository
+      #   uses: actions/checkout@v4
 
-      - uses: .github/workflows/clean-old-assets.yml
+      - uses: clash-verge-rev/clash-verge-rev/.github/workflows/clean-old-assets.yml@dev
         with:
           tag_name: ${{ env.TAG_NAME }}
           dry_run: false
