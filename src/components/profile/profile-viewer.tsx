@@ -31,6 +31,15 @@ export interface ProfileViewerRef {
   edit: (item: IProfileItem) => void;
 }
 
+const text = {
+  fullWidth: true,
+  size: "small",
+  margin: "normal",
+  variant: "outlined",
+  autoComplete: "off",
+  autoCorrect: "off",
+} as const;
+
 // create or edit the profile
 // remote / local / merge / script
 export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
@@ -59,21 +68,78 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
       },
     });
 
+    const formType = watch("type");
+    const isRemote = formType === "remote";
+    const isLocal = formType === "local";
+    const selfProxy = watch("option.self_proxy");
+    const withProxy = watch("option.with_proxy");
+
+    let selectType = ["remote", "local", "merge", "script"];
+    if (onlyChain) {
+      selectType = ["merge", "script"];
+    }
+
+    let defaultName = "remote file";
+    switch (formType) {
+      case "remote": {
+        defaultName = "remote file";
+        break;
+      }
+      case "local": {
+        defaultName = "local file";
+        break;
+      }
+      case "merge": {
+        defaultName = "merge file";
+        break;
+      }
+      case "script": {
+        defaultName = "script file";
+        break;
+      }
+    }
+
+    useEffect(() => {
+      if (selfProxy) formIns.setValue("option.with_proxy", false);
+    }, [selfProxy]);
+
+    useEffect(() => {
+      if (withProxy) formIns.setValue("option.self_proxy", false);
+    }, [withProxy]);
+
+    useEffect(() => {
+      formIns.setValue("name", defaultName);
+    }, [formType, defaultName]);
+
+    useEffect(() => {
+      console.log(isRemote, appVersion);
+      if (isRemote) return;
+      formIns.setValue("option.user_agent", `clash-verge/${appVersion}`);
+      console.log(formIns);
+    }, [isRemote, appVersion]);
+
     useImperativeHandle(ref, () => ({
-      create: (profileUid) => {
+      create: async (profileUid) => {
         if (profileUid) {
           // it means create a chain in this profile
           formIns.setValue("parent", profileUid);
           formIns.setValue("type", "merge");
+          formIns.setValue("name", "merge file");
           formIns.setValue("scope", "specific");
           setOnlyChain(true);
+        } else {
+          formIns.setValue("type", "remote");
+          formIns.setValue("name", "remote file");
         }
-        getVersion().then((version) => setAppVersion(version));
+        const version = await getVersion();
+        setAppVersion(version);
+        formIns.setValue("option.user_agent", `clash-verge/${version}`);
         setOpenType("new");
         setOpen(true);
       },
-      edit: (item) => {
-        getVersion().then((version) => setAppVersion(version));
+      edit: async (item) => {
+        const version = await getVersion();
+        setAppVersion(version);
         if (item) {
           Object.entries(item).forEach(([key, value]) => {
             formIns.setValue(key as any, value);
@@ -89,22 +155,14 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
       },
     }));
 
-    const selfProxy = watch("option.self_proxy");
-    const withProxy = watch("option.with_proxy");
-
-    useEffect(() => {
-      if (selfProxy) formIns.setValue("option.with_proxy", false);
-    }, [selfProxy]);
-
-    useEffect(() => {
-      if (withProxy) formIns.setValue("option.self_proxy", false);
-    }, [withProxy]);
-
     const handleOk = useLockFn(
       formIns.handleSubmit(async (form) => {
         setLoading(true);
         try {
           if (!form.type) throw new Error("`Type` should not be null");
+          if (!form.name) {
+            throw new Error("The name should not be empty");
+          }
           if (form.type === "remote" && !form.url) {
             throw new Error("The URL should not be null");
           }
@@ -119,8 +177,8 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
           if (form.option?.user_agent === "") {
             delete form.option.user_agent;
           }
-          const name = form.name || `${form.type} file`;
-          const item = { ...form, name };
+          // const name = form.name || `${form.type} file`;
+          const item = { ...form };
 
           // 创建
           if (openType === "new") {
@@ -148,44 +206,6 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
       fileDataRef.current = null;
       setTimeout(() => formIns.reset(), 500);
     };
-
-    const text = {
-      fullWidth: true,
-      size: "small",
-      margin: "normal",
-      variant: "outlined",
-      autoComplete: "off",
-      autoCorrect: "off",
-    } as const;
-
-    const formType = watch("type");
-    const isRemote = formType === "remote";
-    const isLocal = formType === "local";
-
-    let selectType = ["remote", "local", "merge", "script"];
-    if (onlyChain) {
-      selectType = ["merge", "script"];
-    }
-
-    let defaultName = "remote file";
-    switch (formType) {
-      case "remote": {
-        defaultName = "remote file";
-        break;
-      }
-      case "local": {
-        defaultName = "local file";
-        break;
-      }
-      case "merge": {
-        defaultName = "merge file";
-        break;
-      }
-      case "script": {
-        defaultName = "script file";
-        break;
-      }
-    }
 
     return (
       <BaseDialog
@@ -222,12 +242,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
             name="name"
             control={control}
             render={({ field }) => (
-              <TextField
-                {...text}
-                {...field}
-                label={t("Name")}
-                placeholder={defaultName}
-              />
+              <TextField {...text} {...field} required label={t("Name")} />
             )}
           />
           <Controller
@@ -269,12 +284,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                 name="option.user_agent"
                 control={control}
                 render={({ field }) => (
-                  <TextField
-                    {...text}
-                    {...field}
-                    placeholder={`clash-verge/v${appVersion}`}
-                    label="User Agent"
-                  />
+                  <TextField {...text} {...field} label="User Agent" />
                 )}
               />
               <Controller

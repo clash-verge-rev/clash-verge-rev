@@ -48,7 +48,7 @@ impl LocalSocket for RequestBuilder {
         };
         log::debug!("building socket request");
         let req_str = utils::build_socket_request(self)?;
-        log::debug!("request string: {req_str}");
+        log::debug!("request string: {req_str:?}");
         stream.writable().await?;
         log::debug!("send request");
         stream.write_all(req_str.as_bytes()).await?;

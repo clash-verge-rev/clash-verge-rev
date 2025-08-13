@@ -60,6 +60,15 @@ interface Props {
   onChange?: () => void;
 }
 
+const text = {
+  fullWidth: true,
+  size: "small",
+  margin: "dense",
+  variant: "outlined",
+  autoComplete: "off",
+  autoCorrect: "off",
+} as const;
+
 export const ProfileEditorViewer = (props: Props) => {
   const {
     title,
@@ -92,7 +101,7 @@ export const ProfileEditorViewer = (props: Props) => {
   const [reactivating, setReactivating] = useState(false);
   // sortable
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 2 } }),
   );
   const dropAnimationConfig: DropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
@@ -104,14 +113,7 @@ export const ProfileEditorViewer = (props: Props) => {
   const { control, watch, register, ...formIns } = useForm<IProfileItem>({
     defaultValues: profileItem,
   });
-  const text = {
-    fullWidth: true,
-    size: "small",
-    margin: "dense",
-    variant: "outlined",
-    autoComplete: "off",
-    autoCorrect: "off",
-  } as const;
+
   const profileName = watch("name");
   const formType = watch("type");
   const isRemote = formType === "remote";
@@ -121,6 +123,9 @@ export const ProfileEditorViewer = (props: Props) => {
     if (!open) return;
     getVersion().then((version) => {
       setAppVersion(version);
+      if (isRemote) {
+        formIns.setValue("option.user_agent", `clash-verge/${version}`);
+      }
     });
     refreshChain();
   }, [open]);
@@ -187,6 +192,9 @@ export const ProfileEditorViewer = (props: Props) => {
       }
       try {
         if (!form.type) throw new Error("`Type` should not be null");
+        if (!form.name) {
+          throw new Error("The name should not be empty");
+        }
         if (form.type === "remote" && !form.url) {
           throw new Error("The URL should not be null");
         }
@@ -204,8 +212,7 @@ export const ProfileEditorViewer = (props: Props) => {
         if (profileItem.enable) {
           form.enable = profileItem.enable;
         }
-        const name = form.name || `${form.type} file`;
-        const item = { ...form, name };
+        const item = { ...form };
 
         if (!form.uid) throw new Error("UID not found");
         await patchProfile(form.uid, item);
@@ -289,28 +296,30 @@ export const ProfileEditorViewer = (props: Props) => {
         contentStyle={{ userSelect: "text" }}>
         <div className="bg-comment flex h-full overflow-hidden dark:bg-[#1e1f27]">
           <div className="no-scrollbar w-1/4 min-w-[260px] overflow-auto">
-            <div
-              className="bg-primary-alpha flex cursor-pointer items-center justify-between p-2"
-              onClick={() => setExpand(!expand)}>
-              <Marquee pauseOnHover>
-                <span className="text-md font-bold">{profileName}</span>
-              </Marquee>
-              <Chip
-                label={t(formType || "local")}
-                size="small"
-                color="primary"
-                className="mr-1 ml-2"
-              />
-              <IconButton size="small">
-                <ExpandMore
-                  fontSize="inherit"
+            <div className="bg-comment sticky top-0 z-10">
+              <div
+                className="bg-primary-alpha flex cursor-pointer items-center justify-between p-2"
+                onClick={() => setExpand(!expand)}>
+                <Marquee pauseOnHover>
+                  <span className="text-md font-bold">{profileName}</span>
+                </Marquee>
+                <Chip
+                  label={t(formType || "local")}
+                  size="small"
                   color="primary"
-                  style={{
-                    transform: expand ? "rotate(180deg)" : "rotate(0deg)",
-                    transition: "transform 0.3s ease-in-out",
-                  }}
+                  className="mr-1 ml-2"
                 />
-              </IconButton>
+                <IconButton size="small">
+                  <ExpandMore
+                    fontSize="inherit"
+                    color="primary"
+                    style={{
+                      transform: expand ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.3s ease-in-out",
+                    }}
+                  />
+                </IconButton>
+              </div>
             </div>
 
             <Collapse
@@ -323,7 +332,12 @@ export const ProfileEditorViewer = (props: Props) => {
                   name="name"
                   control={control}
                   render={({ field }) => (
-                    <TextField {...text} {...field} label={t("Name")} />
+                    <TextField
+                      {...text}
+                      {...field}
+                      required
+                      label={t("Name")}
+                    />
                   )}
                 />
                 <Controller
@@ -351,12 +365,7 @@ export const ProfileEditorViewer = (props: Props) => {
                       name="option.user_agent"
                       control={control}
                       render={({ field }) => (
-                        <TextField
-                          {...text}
-                          {...field}
-                          placeholder={`clash-verge/v${appVersion}`}
-                          label="User Agent"
-                        />
+                        <TextField {...text} {...field} label="User Agent" />
                       )}
                     />
                     <Controller
@@ -505,17 +514,6 @@ export const ProfileEditorViewer = (props: Props) => {
                             reactivating={reactivating && draggingItem.enable}
                             selected={draggingItem.uid === editProfile.uid}
                             logs={chainLogs[draggingItem.uid]}
-                            onToggleEnableCallback={async (enabled) => {
-                              mutate("getRuntimeLogs");
-                              await refreshChain();
-                            }}
-                            onClick={async () => {
-                              await handleChainClick(draggingItem);
-                            }}
-                            onInfoChangeCallback={refreshChain}
-                            onDeleteCallback={async () => {
-                              await handleChainDeleteCallBack(draggingItem);
-                            }}
                           />
                         )}
                       </DragOverlay>
