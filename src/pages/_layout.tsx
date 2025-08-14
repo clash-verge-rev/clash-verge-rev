@@ -165,9 +165,7 @@ const Layout = () => {
           <div className="flex h-full w-full flex-col overflow-hidden">
             {!enable_system_title_bar && (
               <div className="z-10 box-border flex shrink-0 grow-0 basis-8 justify-end">
-                <div
-                  className="mt-1 w-full"
-                  data-tauri-drag-region="true"></div>
+                <div className="mt-1 w-full" data-tauri-drag-region="true" />
                 {OS !== "macos" && (
                   <LayoutControl
                     maximized={isMaximized}

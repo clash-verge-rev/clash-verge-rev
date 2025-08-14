@@ -34,9 +34,11 @@ export const NetInfoViewer = forwardRef<DialogRef>((props, ref) => {
         {netInfo.map((net) => {
           return (
             <div key={net.name} className="w-full py-2">
-              <h3 className="font-bold">{net.name}</h3>
+              <h3 className="border-primary bg-primary-alpha inline-block w-full border-l-4 pl-2 font-bold">
+                {net.name}
+              </h3>
               {net.ipv4 && (
-                <div className="flex items-center">
+                <div className="flex items-center pl-2">
                   <div className="flex w-full items-center justify-between pl-2">
                     <Typography variant="subtitle2">IPv4</Typography>
                     <Typography>{net.ipv4}</Typography>
@@ -45,7 +47,7 @@ export const NetInfoViewer = forwardRef<DialogRef>((props, ref) => {
                 </div>
               )}
               {net.ipv6 && (
-                <div className="flex items-center">
+                <div className="flex items-center pl-2">
                   <div className="flex w-full items-center justify-between pl-2">
                     <Typography variant="subtitle2">IPv6</Typography>
                     <Typography>{net.ipv6}</Typography>

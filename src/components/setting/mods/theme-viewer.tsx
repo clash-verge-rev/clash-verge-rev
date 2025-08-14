@@ -84,6 +84,8 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
           <Typography variant="h6">{t("Theme Setting")}</Typography>
           <div className="flex items-center justify-between">
             <Button
+              size="small"
+              variant="outlined"
               className="!text-primary-text !mr-2"
               onClick={() => {
                 setThemeSettings((prev: any) => ({
