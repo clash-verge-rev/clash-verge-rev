@@ -19,6 +19,7 @@ import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { Titlebar } from "@/components/layout/custom-titlebar";
 import getSystem from "@/utils/get-system";
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
@@ -499,6 +500,7 @@ const Layout = () => {
     >
       <ThemeProvider theme={theme}>
         <NoticeManager />
+        <Titlebar />
         <div
           style={{
             animation: "fadeIn 0.5s",
@@ -533,7 +535,10 @@ const Layout = () => {
             }
           }}
           sx={[
-            ({ palette }) => ({ bgcolor: palette.background.paper }),
+            ({ palette }) => ({
+              bgcolor: palette.background.paper,
+              paddingTop: "26px",
+            }),
             OS === "linux"
               ? {
                   borderRadius: "8px",
@@ -545,9 +550,8 @@ const Layout = () => {
           ]}
         >
           <div className="layout__left">
-            <div className="the-logo" data-tauri-drag-region="true">
+            <div className="the-logo">
               <div
-                data-tauri-drag-region="true"
                 style={{
                   height: "27px",
                   display: "flex",
