@@ -20,7 +20,6 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
-    appLogLevel: "info",
     autoCloseConnection: true,
     autoCheckUpdate: true,
     enableBuiltinEnhanced: true,
@@ -34,7 +33,6 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     open: () => {
       setOpen(true);
       setValues({
-        appLogLevel: verge?.app_log_level ?? "info",
         autoCloseConnection: verge?.auto_close_connection ?? true,
         autoCheckUpdate: verge?.auto_check_update ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
@@ -50,7 +48,6 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const onSave = useLockFn(async () => {
     try {
       await patchVerge({
-        app_log_level: values.appLogLevel,
         auto_close_connection: values.autoCloseConnection,
         auto_check_update: values.autoCheckUpdate,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
@@ -76,26 +73,6 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
       onOk={onSave}>
       <List>
-        <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("App Log Level")} />
-          <Select
-            size="small"
-            sx={{ width: 100, "> div": { py: "7.5px" } }}
-            value={values.appLogLevel}
-            onChange={(e) => {
-              setValues((v) => ({
-                ...v,
-                appLogLevel: e.target.value as string,
-              }));
-            }}>
-            {["trace", "debug", "info", "warn", "error", "silent"].map((i) => (
-              <MenuItem value={i} key={i}>
-                {i[0].toUpperCase() + i.slice(1).toLowerCase()}
-              </MenuItem>
-            ))}
-          </Select>
-        </ListItem>
-
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText primary={t("Auto Close Connections")} />
           <SwitchLovely

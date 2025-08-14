@@ -73,16 +73,17 @@ const SettingVerge = ({ onError }: Props) => {
 
   const { verge, patchVerge, mutateVerge } = useVerge();
   const {
+    app_log_level = "info",
     theme_mode,
-    language,
-    tray_event,
-    env_type,
-    startup_script,
-    start_page,
+    language = "en",
+    tray_event = "main_window",
+    env_type = OS === "windows" ? "powershell" : "bash",
+    startup_script = "",
+    start_page = "/",
     webdav_url,
     webdav_username,
     webdav_password,
-  } = verge ?? {};
+  } = verge;
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
   const miscRef = useRef<DialogRef>(null);
@@ -201,9 +202,26 @@ const SettingVerge = ({ onError }: Props) => {
       <UpdateViewer ref={updateRef} />
       <WebDavFilesViewer ref={webDavRef} />
 
+      <SettingItem label={t("App Log Level")}>
+        <GuardState
+          value={app_log_level}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ app_log_level: e })}
+          onGuard={(e) => patchVerge({ app_log_level: e })}>
+          <Select size="small" sx={{ width: 110, "> div": { py: "7.5px" } }}>
+            {["trace", "debug", "info", "warn", "error", "silent"].map((i) => (
+              <MenuItem value={i} key={i}>
+                {i[0].toUpperCase() + i.slice(1).toLowerCase()}
+              </MenuItem>
+            ))}
+          </Select>
+        </GuardState>
+      </SettingItem>
+
       <SettingItem label={t("Language")}>
         <GuardState
-          value={language ?? "en"}
+          value={language}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ language: e })}
@@ -230,7 +248,7 @@ const SettingVerge = ({ onError }: Props) => {
       {OS !== "linux" && (
         <SettingItem label={t("Tray Click Event")}>
           <GuardState
-            value={tray_event ?? "main_window"}
+            value={tray_event}
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
             onChange={(e) => onChangeData({ tray_event: e })}
@@ -259,7 +277,7 @@ const SettingVerge = ({ onError }: Props) => {
           </IconButton>
         }>
         <GuardState
-          value={env_type ?? (OS === "windows" ? "powershell" : "bash")}
+          value={env_type}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ env_type: e })}
@@ -275,7 +293,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem label={t("Start Page")}>
         <GuardState
-          value={start_page ?? "/"}
+          value={start_page}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ start_page: e })}
@@ -294,7 +312,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem label={t("Startup Script")}>
         <GuardState
-          value={startup_script ?? ""}
+          value={startup_script}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ startup_script: e })}
