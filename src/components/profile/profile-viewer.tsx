@@ -112,10 +112,8 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     }, [formType, defaultName]);
 
     useEffect(() => {
-      console.log(isRemote, appVersion);
       if (isRemote) return;
       formIns.setValue("option.user_agent", `clash-verge/${appVersion}`);
-      console.log(formIns);
     }, [isRemote, appVersion]);
 
     useImperativeHandle(ref, () => ({
