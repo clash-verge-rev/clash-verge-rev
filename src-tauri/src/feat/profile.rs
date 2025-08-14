@@ -136,7 +136,10 @@ pub async fn update_profile(
             Ok(_) => {
                 logging!(info, Type::Config, true, "[订阅更新] 更新成功");
                 handle::Handle::refresh_clash();
-                let _ = cmd::proxy::force_refresh_proxies().await;
+                if let Err(err) = cmd::proxy::force_refresh_proxies().await {
+                    logging!(error, Type::Config, true, "[订阅更新] 刷新代理失败: {}", err);
+                    log::error!(target: "app", "刷新代理失败: {err}");
+                }
             }
             Err(err) => {
                 logging!(error, Type::Config, true, "[订阅更新] 更新失败: {}", err);
