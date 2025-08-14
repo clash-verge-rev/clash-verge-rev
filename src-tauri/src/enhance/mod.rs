@@ -107,35 +107,37 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
 
     // global chain
     tracing::info!("execute global chains");
-    for chain in global_chain {
-        match chain.execute(config.clone()) {
-            Ok(res) => {
-                config = res.config;
-                if let Some(logs) = res.logs {
-                    result_map.extend(logs);
-                }
-            }
-            Err(e) => {
-                tracing::error!("global chain [{:?}] execute failed, error: {:?}", chain.uid, e);
-            }
-        }
-    }
+    execute_chains(&mut config, &global_chain, &mut result_map);
+    // for chain in global_chain {
+    //     match chain.execute(config.clone()) {
+    //         Ok(res) => {
+    //             config = res.config;
+    //             if let Some(logs) = res.logs {
+    //                 result_map.extend(logs);
+    //             }
+    //         }
+    //         Err(e) => {
+    //             tracing::error!("global chain [{:?}] execute failed, error: {:?}", chain.uid, e);
+    //         }
+    //     }
+    // }
 
     // profile chain
     tracing::info!("execute profile chains");
-    for chain in profile_chain {
-        match chain.execute(config.clone()) {
-            Ok(res) => {
-                config = res.config;
-                if let Some(logs) = res.logs {
-                    result_map.extend(logs);
-                }
-            }
-            Err(e) => {
-                tracing::error!("profile chain [{:?}] execute failed, error: {:?}", chain.uid, e);
-            }
-        }
-    }
+    execute_chains(&mut config, &profile_chain, &mut result_map);
+    // for chain in profile_chain {
+    //     match chain.execute(config.clone()) {
+    //         Ok(res) => {
+    //             config = res.config;
+    //             if let Some(logs) = res.logs {
+    //                 result_map.extend(logs);
+    //             }
+    //         }
+    //         Err(e) => {
+    //             tracing::error!("profile chain [{:?}] execute failed, error: {:?}", chain.uid, e);
+    //         }
+    //     }
+    // }
 
     // 合并 verge 配置的 clash 配置
     tracing::info!("merge clash config file");
@@ -297,8 +299,14 @@ fn execute_chains(config: &mut Mapping, chains: &Vec<ChainItem>, script_logs: &m
                     script_logs.extend(logs);
                 }
             }
-            Err(e) => {
-                tracing::error!("execute chain [{:?}] failed, error: {:?}", chain.uid, e);
+            Err(err) => {
+                let log_message = LogMessage {
+                    method: "error".into(),
+                    data: vec![err.to_string()],
+                    exception: Some(err.to_string()),
+                };
+                script_logs.insert(chain.uid.clone(), vec![log_message]);
+                tracing::error!("execute chain [{}] failed, error: {}", chain.uid, err);
             }
         }
     }
