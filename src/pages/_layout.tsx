@@ -25,6 +25,7 @@ import { SWRConfig, mutate } from "swr";
 export let portableFlag = false;
 dayjs.extend(relativeTime);
 const OS = getSystem();
+let keepUIActive = false;
 
 const Layout = () => {
   const appWindow = getCurrentWebviewWindow();
@@ -33,14 +34,10 @@ const Layout = () => {
   const { notice } = useNotice();
   const { theme } = useCustomTheme();
   const visible = useVisibility();
-
   const { verge } = useVerge();
-  const {
-    language,
-    enable_system_title_bar = false,
-    enable_keep_ui_active = false,
-  } = verge;
-  const keepUIActive = useRef(enable_keep_ui_active);
+  const { language, enable_system_title_bar, enable_keep_ui_active } = verge;
+
+  keepUIActive = enable_keep_ui_active || false;
 
   const handleClose = (keepUIActive: boolean) => {
     if (keepUIActive) {
@@ -57,7 +54,7 @@ const Layout = () => {
 
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && OS !== "macos") {
-        handleClose(keepUIActive.current);
+        handleClose(keepUIActive);
       }
     });
 
@@ -174,7 +171,7 @@ const Layout = () => {
                 {OS !== "macos" && (
                   <LayoutControl
                     maximized={isMaximized}
-                    onClose={() => handleClose(keepUIActive.current)}
+                    onClose={() => handleClose(keepUIActive)}
                   />
                 )}
               </div>
