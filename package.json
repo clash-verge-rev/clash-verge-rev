@@ -72,7 +72,7 @@
   },
   "devDependencies": {
     "@actions/github": "6.0.1",
-    "@tailwindcss/vite": "4.1.11",
+    "@tailwindcss/vite": "4.1.12",
     "@tanstack/router-cli": "1.131.7",
     "@tanstack/router-plugin": "1.131.8",
     "@tauri-apps/cli": "2.7.1",
@@ -100,7 +100,7 @@
     "prettier-plugin-tailwindcss": "0.6.14",
     "pretty-quick": "4.2.2",
     "tailwind-merge": "3.3.1",
-    "tailwindcss": "4.1.11",
+    "tailwindcss": "4.1.12",
     "tar": "7.4.3",
     "terser": "5.43.1",
     "types-pac": "1.0.3",
