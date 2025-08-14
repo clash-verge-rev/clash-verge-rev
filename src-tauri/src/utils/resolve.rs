@@ -424,6 +424,9 @@ pub fn create_window(is_show: bool) -> bool {
     .build()
     {
         Ok(newly_created_window) => {
+            if newly_created_window.set_decorations(false).is_ok() {
+                logging!(debug, Type::Window, true, "禁用系统标题栏");
+            }
             logging!(debug, Type::Window, true, "主窗口实例创建成功");
 
             update_ui_ready_stage(UiReadyStage::NotStarted);
