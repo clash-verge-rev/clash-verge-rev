@@ -1,7 +1,7 @@
 #[cfg(target_os = "macos")]
 use crate::AppHandleManager;
 use crate::{
-    config::{Config, IVerge, PrfItem},
+    config::{Config, PrfItem},
     core::*,
     logging, logging_error,
     module::lightweight::{self, auto_lightweight_mode_init},
@@ -14,10 +14,8 @@ use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
 use scopeguard;
-use serde_yaml::Mapping;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager};
-use tokio::net::TcpListener;
 
 use tauri::Url;
 //#[cfg(not(target_os = "linux"))]
@@ -107,23 +105,6 @@ pub fn reset_ui_ready() {
     logging!(info, Type::Window, true, "UI就绪状态已重置");
 }
 
-pub async fn find_unused_port() -> Result<u16> {
-    match TcpListener::bind("127.0.0.1:0").await {
-        Ok(listener) => {
-            let port = listener.local_addr()?.port();
-            Ok(port)
-        }
-        Err(_) => {
-            let port = Config::verge()
-                .latest_ref()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().latest_ref().get_mixed_port());
-            log::warn!(target: "app", "use default port: {port}");
-            Ok(port)
-        }
-    }
-}
-
 /// 异步方式处理启动后的额外任务
 pub async fn resolve_setup_async(app_handle: &AppHandle) {
     let start_time = std::time::Instant::now();
@@ -146,16 +127,6 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     logging_error!(Type::Setup, true, init::init_scheme());
 
     logging_error!(Type::Setup, true, init::startup_script().await);
-
-    if let Err(err) = resolve_random_port_config().await {
-        logging!(
-            error,
-            Type::System,
-            true,
-            "Failed to resolve random port config: {}",
-            err
-        );
-    }
 
     logging!(
         info,
@@ -659,64 +630,6 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
             None => bail!("failed to get profile url"),
         }
     }
-
-    Ok(())
-}
-
-async fn resolve_random_port_config() -> Result<()> {
-    let verge_config = Config::verge();
-    let clash_config = Config::clash();
-    let enable_random_port = verge_config
-        .latest_ref()
-        .enable_random_port
-        .unwrap_or(false);
-
-    let default_port = verge_config
-        .latest_ref()
-        .verge_mixed_port
-        .unwrap_or(clash_config.latest_ref().get_mixed_port());
-
-    let port = if enable_random_port {
-        find_unused_port().await.unwrap_or(default_port)
-    } else {
-        default_port
-    };
-
-    let port_to_save = port;
-
-    // 合并配置访问以避免锁竞争死锁
-    tokio::task::spawn_blocking(move || -> Result<()> {
-        logging!(
-            debug,
-            Type::Config,
-            true,
-            "开始合并配置更新操作，避免锁竞争"
-        );
-
-        // 按顺序更新配置，避免交叉锁定
-        {
-            let verge_accessor = Config::verge();
-            let mut verge_data = verge_accessor.data_mut();
-            verge_data.patch_config(IVerge {
-                verge_mixed_port: Some(port_to_save),
-                ..IVerge::default()
-            });
-            verge_data.save_file()?;
-        }
-
-        {
-            let clash_accessor = Config::clash();
-            let mut clash_data = clash_accessor.data_mut();
-            let mut mapping = Mapping::new();
-            mapping.insert("mixed-port".into(), port_to_save.into());
-            clash_data.patch_config(mapping);
-            clash_data.save_config()?;
-        }
-
-        logging!(debug, Type::Config, true, "配置更新操作完成");
-        Ok(())
-    })
-    .await??;
 
     Ok(())
 }
