@@ -88,6 +88,12 @@ impl IClashConfig {
         let port = Self::guard_port(&config);
         let ctrl = Self::guard_server_ctrl(&config);
         let cors = Self::guard_ctrl_cors(&config);
+
+        let cors_map = Mapping::from_iter([
+            ("allow-private-network".into(), cors.allow_private_network.into()),
+            ("allow-origins".into(), cors.allow_origins.into()),
+        ]);
+
         #[cfg(not(target_os = "windows"))]
         config.insert("redir-port".into(), redir_port.into());
         #[cfg(target_os = "linux")]
@@ -96,9 +102,6 @@ impl IClashConfig {
         config.insert("socks-port".into(), socks_port.into());
         config.insert("port".into(), port.into());
         config.insert("external-controller".into(), ctrl.into());
-        let mut cors_map = Mapping::new();
-        cors_map.insert("allow-private-network".into(), cors.allow_private_network.into());
-        cors_map.insert("allow-origins".into(), cors.allow_origins.into());
         config.insert("external-controller-cors".into(), cors_map.into());
         config
     }

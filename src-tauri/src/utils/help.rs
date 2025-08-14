@@ -125,11 +125,18 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
             .args(["/c", "code", &path.to_string_lossy()])
             .output()
             .await
-            .unwrap()
     });
-
-    if !output.status.success() {
-        let _ = app.opener().open_path(path.to_string_lossy(), None::<&str>);
+    match output {
+        Ok(output) => {
+            if !output.status.success() {
+                tracing::info!("open file by vscode err, use system default to open it");
+                let _ = app.opener().open_path(path.to_string_lossy(), None::<&str>);
+            }
+        }
+        Err(_) => {
+            tracing::info!("open file by vscode err, use system default to open it");
+            let _ = app.opener().open_path(path.to_string_lossy(), None::<&str>);
+        }
     }
     Ok(())
 }

@@ -70,12 +70,11 @@ pub fn get_default_bypass() -> CmdResult<String> {
 #[tauri::command]
 pub fn get_auto_proxy() -> CmdResult<Mapping> {
     let current = wrap_err!(Autoproxy::get_auto_proxy())?;
-
-    let mut map = Mapping::new();
-    map.insert("enable".into(), current.enable.into());
-    map.insert("url".into(), current.url.into());
-
-    Ok(map)
+    let res = Mapping::from_iter([
+        ("enable".into(), current.enable.into()),
+        ("url".into(), current.url.into()),
+    ]);
+    Ok(res)
 }
 
 #[tauri::command]
