@@ -1,6 +1,7 @@
+use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::{sync::Arc, time::Instant};
-use tokio::{sync::RwLock, time::Duration};
+use tokio::time::Duration;
 
 use crate::{
     ipc::monitor::{IpcStreamMonitor, MonitorData, StreamingParser},
