@@ -57,9 +57,10 @@ pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
         let name = key.as_str().unwrap();
         let val_map = value.as_mapping_mut().unwrap();
         let path_key = Value::from("path");
-        let rp_format = val_map.get(Value::from("format")).cloned();
+        let format_key = Value::from("format");
+        let rp_format = val_map.get(&format_key).cloned();
         if rp_format.is_none() {
-            val_map.insert(Value::from("format"), Value::from("yaml"));
+            val_map.insert(format_key, Value::from("yaml"));
         }
         let format_val = rp_format.as_ref().map_or("yaml", |v| v.as_str().unwrap());
         if let Some(path) = val_map.get(&path_key) {
@@ -108,36 +109,10 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     // global chain
     tracing::info!("execute global chains");
     execute_chains(&mut config, &global_chain, &mut result_map);
-    // for chain in global_chain {
-    //     match chain.execute(config.clone()) {
-    //         Ok(res) => {
-    //             config = res.config;
-    //             if let Some(logs) = res.logs {
-    //                 result_map.extend(logs);
-    //             }
-    //         }
-    //         Err(e) => {
-    //             tracing::error!("global chain [{:?}] execute failed, error: {:?}", chain.uid, e);
-    //         }
-    //     }
-    // }
 
     // profile chain
     tracing::info!("execute profile chains");
     execute_chains(&mut config, &profile_chain, &mut result_map);
-    // for chain in profile_chain {
-    //     match chain.execute(config.clone()) {
-    //         Ok(res) => {
-    //             config = res.config;
-    //             if let Some(logs) = res.logs {
-    //                 result_map.extend(logs);
-    //             }
-    //         }
-    //         Err(e) => {
-    //             tracing::error!("profile chain [{:?}] execute failed, error: {:?}", chain.uid, e);
-    //         }
-    //     }
-    // }
 
     // 合并 verge 配置的 clash 配置
     tracing::info!("merge clash config file");
@@ -240,7 +215,7 @@ pub async fn test_merge_chain(
         Some(ProfileType::Merge) => {
             let yaml_content = serde_yaml::from_str::<Value>(&content)?
                 .as_mapping()
-                .ok_or_else(|| anyhow!("invalid yaml content"))?
+                .ok_or(anyhow!("invalid yaml content"))?
                 .to_owned();
             config = use_merge(yaml_content, config.clone());
         }
@@ -306,7 +281,7 @@ fn execute_chains(config: &mut Mapping, chains: &Vec<ChainItem>, script_logs: &m
                     exception: Some(err.to_string()),
                 };
                 script_logs.insert(chain.uid.clone(), vec![log_message]);
-                tracing::error!("execute chain [{}] failed, error: {}", chain.uid, err);
+                tracing::error!("execute chain {} [{}] failed, error: {}", chain.name, chain.uid, err);
             }
         }
     }

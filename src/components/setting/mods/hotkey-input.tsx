@@ -38,12 +38,13 @@ const KeyWrapper = styled("div")(({ theme }) => ({
   },
   ".item": {
     color: theme.palette.text.primary,
-    border: "1px solid",
-    borderColor: alpha(theme.palette.text.secondary, 0.2),
+    height: "24px",
+    fontSize: "14px",
     borderRadius: "2px",
-    padding: "1px 1px",
+    padding: "2px 4px",
     margin: "2px 0",
-    marginRight: 8,
+    marginRight: "6px",
+    backgroundColor: "var(--background-color-alpha)",
   },
 }));
 

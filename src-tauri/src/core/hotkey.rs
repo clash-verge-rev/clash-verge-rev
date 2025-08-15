@@ -87,12 +87,12 @@ impl Hotkey {
         let (del, add) = Self::get_diff(old_map, new_map);
 
         del.iter().for_each(|key| {
-            let _ = self.unregister(key);
+            log_err!(self.unregister(key));
         });
 
-        add.iter().for_each(|(key, func)| {
-            log_err!(self.register(key, func));
-        });
+        for (key, func) in add.iter() {
+            self.register(key, func)?;
+        }
 
         *current = new_hotkeys;
         Ok(())
