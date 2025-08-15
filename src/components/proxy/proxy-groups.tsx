@@ -139,20 +139,22 @@ export const ProxyGroups = (props: Props) => {
         });
 
         // highlight group
-        let ele = document.getElementById(`group-${groupName}`);
-        let count = 20;
-        while (count > 0) {
-          ele = document.getElementById(`group-${groupName}`);
-          if (ele) {
-            ele.classList.add("animate-highlight");
-            break;
+        const highlightGroup = () => {
+          let ele = document.getElementById(`group-${groupName}`);
+          if (!ele) {
+            requestAnimationFrame(() => highlightGroup());
+          } else {
+            ele = document.getElementById(`group-${groupName}`);
+            if (ele) {
+              ele.classList.add("animate-highlight");
+              setTimeout(() => {
+                ele?.classList.remove("animate-highlight");
+              }, 1000);
+            }
           }
-          await sleep(200);
-          count--;
-        }
-        setTimeout(() => {
-          ele?.classList.remove("animate-highlight");
-        }, 1000);
+        };
+
+        highlightGroup();
       }
     },
     [renderList, virtuosoRef],

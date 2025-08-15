@@ -58,7 +58,7 @@
     }
     50% {
       background-color: var(--background-color-alpha);
-      box-shadow: 0 0 10px 3px var(--color-primary-main);
+      box-shadow: 0 0 6px 1px var(--color-primary-main);
     }
     100% {
       background-color: var(--background-color-alpha);
