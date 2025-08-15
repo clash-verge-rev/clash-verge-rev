@@ -1,0 +1,159 @@
+name: Check Commit Needs Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag name to check against (default: autobuild)"
+        required: false
+        default: "autobuild"
+        type: string
+      force_build:
+        description: "Force build regardless of checks"
+        required: false
+        default: false
+        type: boolean
+  workflow_call:
+    inputs:
+      tag_name:
+        description: "Release tag name to check against (default: autobuild)"
+        required: false
+        default: "autobuild"
+        type: string
+      force_build:
+        description: "Force build regardless of checks"
+        required: false
+        default: false
+        type: boolean
+    outputs:
+      should_run:
+        description: "Whether the build should run"
+        value: ${{ jobs.check_commit.outputs.should_run }}
+      last_tauri_commit:
+        description: "The last commit hash with Tauri-related changes"
+        value: ${{ jobs.check_commit.outputs.last_tauri_commit }}
+      autobuild_version:
+        description: "The generated autobuild version string"
+        value: ${{ jobs.check_commit.outputs.autobuild_version }}
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  TAG_NAME: ${{ inputs.tag_name || 'autobuild' }}
+
+jobs:
+  check_commit:
+    name: Check Commit Needs Build
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+      last_tauri_commit: ${{ steps.check.outputs.last_tauri_commit }}
+      autobuild_version: ${{ steps.check.outputs.autobuild_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version changed or src changed
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Force build if requested
+          if [ "${{ inputs.force_build }}" == "true" ]; then
+            echo "🚀 Force build requested"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          CURRENT_VERSION=$(cat package.json | jq -r '.version')
+          echo "📦 Current version: $CURRENT_VERSION"
+
+          git checkout HEAD~1 package.json
+          PREVIOUS_VERSION=$(cat package.json | jq -r '.version')
+          echo "📦 Previous version: $PREVIOUS_VERSION"
+
+          git checkout HEAD package.json
+
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "✅ Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Use get_latest_tauri_commit.bash to find the latest Tauri-related commit
+          echo "🔍 Finding last commit with Tauri-related changes using script..."
+
+          # Make script executable
+          chmod +x scripts-workflow/get_latest_tauri_commit.bash
+
+          # Get the latest Tauri-related commit hash (full hash)
+          LAST_TAURI_COMMIT_FULL=$(./scripts-workflow/get_latest_tauri_commit.bash)
+          if [[ $? -ne 0 ]] || [[ -z "$LAST_TAURI_COMMIT_FULL" ]]; then
+            echo "❌ Failed to get Tauri-related commit, using current commit"
+            LAST_TAURI_COMMIT_FULL=$(git rev-parse HEAD)
+          fi
+
+          # Get short hash for display and version tagging
+          LAST_TAURI_COMMIT=$(git rev-parse --short "$LAST_TAURI_COMMIT_FULL")
+
+          echo "📝 Last Tauri-related commit: $LAST_TAURI_COMMIT"
+
+          # Generate autobuild version using autobuild-latest format
+          CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
+          MONTH=$(date +%m)
+          DAY=$(date +%d)
+          AUTOBUILD_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${LAST_TAURI_COMMIT}"
+
+          echo "🏷️  Autobuild version: $AUTOBUILD_VERSION"
+          echo "📝 Last Tauri commit: $LAST_TAURI_COMMIT"
+
+          # Set outputs for other jobs to use
+          echo "last_tauri_commit=$LAST_TAURI_COMMIT" >> $GITHUB_OUTPUT
+          echo "autobuild_version=$AUTOBUILD_VERSION" >> $GITHUB_OUTPUT
+
+          # Check if autobuild release exists
+          echo "🔍 Checking autobuild release and latest.json..."
+          AUTOBUILD_RELEASE_EXISTS=$(gh release view "${{ env.TAG_NAME }}" --json id -q '.id' 2>/dev/null || echo "")
+
+          if [ -z "$AUTOBUILD_RELEASE_EXISTS" ]; then
+            echo "✅ No autobuild release exists, build needed"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            # Check if latest.json exists in the release
+            LATEST_JSON_EXISTS=$(gh release view "${{ env.TAG_NAME }}" --json assets -q '.assets[] | select(.name == "latest.json") | .name' 2>/dev/null || echo "")
+            
+            if [ -z "$LATEST_JSON_EXISTS" ]; then
+              echo "✅ No latest.json found in autobuild release, build needed"
+              echo "should_run=true" >> $GITHUB_OUTPUT
+            else
+              # Download and parse latest.json to check version and commit hash
+              echo "📥 Downloading latest.json to check version..."
+              LATEST_JSON_URL="https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild/latest.json"
+              
+              LATEST_JSON_CONTENT=$(curl -sL "$LATEST_JSON_URL" 2>/dev/null || echo "")
+              
+              if [ -n "$LATEST_JSON_CONTENT" ]; then
+                LATEST_VERSION=$(echo "$LATEST_JSON_CONTENT" | jq -r '.version' 2>/dev/null || echo "")
+                echo "📦 Latest autobuild version: $LATEST_VERSION"
+                
+                # Extract commit hash from version string (format: X.Y.Z+autobuild.MMDD.commit)
+                LATEST_COMMIT=$(echo "$LATEST_VERSION" | sed -n 's/.*+autobuild\.[0-9]\{4\}\.\([a-f0-9]*\)$/\1/p' || echo "")
+                echo "📝 Latest autobuild commit: $LATEST_COMMIT"
+                
+                if [ "$LAST_TAURI_COMMIT" != "$LATEST_COMMIT" ]; then
+                  echo "✅ Tauri commit hash mismatch ($LAST_TAURI_COMMIT != $LATEST_COMMIT), build needed"
+                  echo "should_run=true" >> $GITHUB_OUTPUT
+                else
+                  echo "❌ Same Tauri commit hash ($LAST_TAURI_COMMIT), no build needed"
+                  echo "should_run=false" >> $GITHUB_OUTPUT
+                fi
+              else
+                echo "⚠️  Failed to download or parse latest.json, build needed"
+                echo "should_run=true" >> $GITHUB_OUTPUT
+              fi
+            fi
+          fi
