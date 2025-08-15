@@ -361,7 +361,11 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
+      <SettingItem
+        openMoreSettings
+        onClick={() => webRef.current?.open()}
+        label={t("Web UI")}
+      />
 
       <SettingItem
         label={t("Clash Core")}

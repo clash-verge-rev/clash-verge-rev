@@ -357,21 +357,25 @@ const SettingVerge = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
+        openMoreSettings
         onClick={() => themeRef.current?.open()}
         label={t("Theme Setting")}
       />
 
       <SettingItem
+        openMoreSettings
         onClick={() => layoutRef.current?.open()}
         label={t("Layout Setting")}
       />
 
       <SettingItem
+        openMoreSettings
         onClick={() => miscRef.current?.open()}
         label={t("Miscellaneous")}
       />
 
       <SettingItem
+        openMoreSettings
         onClick={() => {
           if (expand && webdavChanged) {
             reset();
@@ -545,6 +549,7 @@ const SettingVerge = ({ onError }: Props) => {
       </Collapse>
 
       <SettingItem
+        openMoreSettings
         onClick={() => hotkeyRef.current?.open()}
         label={t("Hotkey Setting")}
       />

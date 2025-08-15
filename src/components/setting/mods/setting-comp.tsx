@@ -14,6 +14,7 @@ import React, { ReactNode, useState } from "react";
 interface ItemProps {
   label: ReactNode;
   disabled?: boolean;
+  openMoreSettings?: boolean;
   expand?: boolean;
   extra?: ReactNode;
   children?: ReactNode;
@@ -22,8 +23,16 @@ interface ItemProps {
 }
 
 export const SettingItem: React.FC<ItemProps> = (props) => {
-  const { label, expand, disabled, extra, children, secondary, onClick } =
-    props;
+  const {
+    label,
+    openMoreSettings,
+    expand,
+    disabled,
+    extra,
+    children,
+    secondary,
+    onClick,
+  } = props;
   const clickable = !!onClick;
 
   const primary = (
@@ -54,12 +63,14 @@ export const SettingItem: React.FC<ItemProps> = (props) => {
         {isLoading ? (
           <CircularProgress color="inherit" size={20} />
         ) : (
-          <ChevronRightRounded
-            sx={{
-              transform: expand ? "rotate(90deg)" : "rotate(0)",
-              transition: "all 0.2s",
-            }}
-          />
+          openMoreSettings && (
+            <ChevronRightRounded
+              sx={{
+                transform: expand ? "rotate(90deg)" : "rotate(0)",
+                transition: "all 0.2s",
+              }}
+            />
+          )
         )}
       </ListItemButton>
     </ListItem>
