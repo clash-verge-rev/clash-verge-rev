@@ -253,6 +253,7 @@ impl IProfiles {
         let current = self.current.as_ref().unwrap_or(&uid);
         let current = current.clone();
         let mut items = self.items.take().unwrap_or_default();
+        let mut index = None;
         // get the index
         for (i, _) in items.iter().enumerate() {
             if items[i].uid == Some(uid.clone()) {
@@ -284,7 +285,6 @@ impl IProfiles {
         let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
         let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
         let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
-        let mut index = None;
         let mut merge_index = None;
         let mut script_index = None;
         let mut rules_index = None;
