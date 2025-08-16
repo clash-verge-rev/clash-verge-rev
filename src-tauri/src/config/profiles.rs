@@ -277,7 +277,7 @@ impl IProfiles {
                 // no need to update current uid
                 self.items = Some(items);
                 self.save_file()?;
-                return e;
+                return Err(e);
             }
         };
         let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
