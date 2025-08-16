@@ -76,7 +76,7 @@ const SettingVerge = ({ onError }: Props) => {
     app_log_level = "info",
     theme_mode,
     language = "en",
-    tray_event = "main_window",
+    tray_event,
     env_type = OS === "windows" ? "powershell" : "bash",
     startup_script = "",
     start_page = "/",
@@ -248,7 +248,7 @@ const SettingVerge = ({ onError }: Props) => {
       {OS !== "linux" && (
         <SettingItem label={t("Tray Click Event")}>
           <GuardState
-            value={tray_event}
+            value={tray_event ?? "main_window"}
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
             onChange={(e) => onChangeData({ tray_event: e })}

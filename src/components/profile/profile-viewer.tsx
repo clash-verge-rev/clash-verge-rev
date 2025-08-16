@@ -100,19 +100,22 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     }
 
     useEffect(() => {
+      if (openType === "edit") return;
       if (selfProxy) formIns.setValue("option.with_proxy", false);
     }, [selfProxy]);
 
     useEffect(() => {
+      if (openType === "edit") return;
       if (withProxy) formIns.setValue("option.self_proxy", false);
     }, [withProxy]);
 
     useEffect(() => {
+      if (openType === "edit") return;
       formIns.setValue("name", defaultName);
     }, [formType, defaultName]);
 
     useEffect(() => {
-      if (isRemote) return;
+      if (isRemote || openType === "edit") return;
       formIns.setValue("option.user_agent", `clash-verge/${appVersion}`);
     }, [isRemote, appVersion]);
 

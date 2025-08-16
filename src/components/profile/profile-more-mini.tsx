@@ -83,7 +83,7 @@ export default function ProfileMoreMini(props: Props) {
                 : unselectedbackgroundColor,
           }}
           className={cn(
-            "relative ml-1 flex h-full w-full items-center justify-between overflow-hidden rounded-md p-1 shadow-xs",
+            "relative flex h-full w-full items-center justify-between overflow-hidden rounded-md p-1 shadow-xs",
             {
               "border-primary-main border-0 !border-l-2 border-solid":
                 item.enable && !hasError,

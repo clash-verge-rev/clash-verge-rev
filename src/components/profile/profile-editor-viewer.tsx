@@ -279,7 +279,7 @@ export const ProfileEditorViewer = (props: Props) => {
         open={open}
         title={title ?? t("Edit File")}
         full
-        cancelBtn={t("Back")}
+        cancelBtn={t("Cancel")}
         okBtn={t("Save")}
         onClose={() => {
           setEditProfile(profileItem);
@@ -466,7 +466,7 @@ export const ProfileEditorViewer = (props: Props) => {
                     onChange={async () => await refreshChain()}
                   />
 
-                  <div className="overflow-auto">
+                  <div className="overflow-auto pl-1">
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
