@@ -14,7 +14,8 @@ export const useSystemProxyState = () => {
   });
 
   const { enable_system_proxy, proxy_auto_config } = verge ?? {};
-
+  
+  // 优化 getSystemProxyActualState 函数逻辑结构，简化判断逻辑以提高代码可读性和可维护性
   const getSystemProxyActualState = () => enable_system_proxy && (proxy_auto_config ? autoproxy?.enable : sysproxy?.enable) ?? false;
 
   const getSystemProxyIndicator = () => {
