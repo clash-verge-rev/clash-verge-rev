@@ -14,7 +14,6 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::Local;
-use parking_lot::Mutex;
 use std::{
     fmt,
     fs::{create_dir_all, File},
@@ -23,6 +22,7 @@ use std::{
     sync::Arc,
 };
 use tauri_plugin_shell::{process::CommandChild, ShellExt};
+use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub struct CoreManager {
