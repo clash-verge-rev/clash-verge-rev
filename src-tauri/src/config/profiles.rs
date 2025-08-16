@@ -252,20 +252,7 @@ impl IProfiles {
     pub fn delete_item(&mut self, uid: String) -> Result<bool> {
         let current = self.current.as_ref().unwrap_or(&uid);
         let current = current.clone();
-        let item = self.get_item(&uid)?;
-        let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
-        let script_uid = item.option.as_ref().and_then(|e| e.script.clone());
-        let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
-        let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
-        let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
         let mut items = self.items.take().unwrap_or_default();
-        let mut index = None;
-        let mut merge_index = None;
-        let mut script_index = None;
-        let mut rules_index = None;
-        let mut proxies_index = None;
-        let mut groups_index = None;
-
         // get the index
         for (i, _) in items.iter().enumerate() {
             if items[i].uid == Some(uid.clone()) {
@@ -283,6 +270,27 @@ impl IProfiles {
                 });
             }
         }
+        let item = match self.get_item(&uid) {
+            Ok(item) => item,
+            Err(e) => {
+                // no need to update current uid
+                self.items = Some(items);
+                self.save_file()?;
+                return Ok(current == uid);
+            }
+        };
+        let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
+        let script_uid = item.option.as_ref().and_then(|e| e.script.clone());
+        let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
+        let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
+        let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
+        let mut index = None;
+        let mut merge_index = None;
+        let mut script_index = None;
+        let mut rules_index = None;
+        let mut proxies_index = None;
+        let mut groups_index = None;
+
         // get the merge index
         for (i, _) in items.iter().enumerate() {
             if items[i].uid == merge_uid {
