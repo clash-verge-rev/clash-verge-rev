@@ -177,14 +177,13 @@ export const ProviderButton = () => {
 
 const TypeSpan = styled("span")(({ theme }) => ({
   display: "inline-block",
-  border: "1px solid #ccc",
-  borderColor: alpha(theme.palette.secondary.main, 0.5),
-  color: alpha(theme.palette.secondary.main, 0.8),
+  backgroundColor: alpha(theme.palette.primary.main, 0.2),
+  color: theme.palette.primary.main,
+  fontWeight: "bold",
   borderRadius: 4,
   fontSize: 12,
-  marginRight: "4px",
-  padding: "0 2px",
-  lineHeight: 1.25,
+  marginLeft: "8px",
+  padding: "0 4px",
 }));
 
 const StyledTypeSpan = styled("span")(({ theme }) => ({

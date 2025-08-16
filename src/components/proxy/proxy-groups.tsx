@@ -4,7 +4,7 @@ import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
 import LoadingPage from "@/pages/loading";
 import delayManager from "@/services/delay";
-import { cn, sleep } from "@/utils";
+import { cn } from "@/utils";
 import { Box } from "@mui/material";
 import { useLockFn, useMemoizedFn, useThrottleFn } from "ahooks";
 import { useCallback, useRef } from "react";
@@ -31,10 +31,9 @@ export const ProxyGroups = (props: Props) => {
   }
 
   const { renderList, onProxies, onHeadState } = useRenderList(mode);
-
   const { verge } = useVerge();
   const { current, patchCurrent } = useProfiles();
-  const timeout = verge?.default_latency_timeout || 5000;
+  const timeout = verge.default_latency_timeout || 5000;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
@@ -58,7 +57,7 @@ export const ProxyGroups = (props: Props) => {
       onProxies();
 
       // 断开连接
-      if (verge?.auto_close_connection) {
+      if (verge.auto_close_connection) {
         getConnections().then(({ connections }) => {
           connections.forEach((conn) => {
             if (conn.chains.includes(now!)) {
