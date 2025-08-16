@@ -15,22 +15,7 @@ export const useSystemProxyState = () => {
 
   const { enable_system_proxy, proxy_auto_config } = verge ?? {};
 
-  const getSystemProxyActualState = () => {
-    const userEnabled = enable_system_proxy ?? false;
-
-    // 用户配置状态应该与系统实际状态一致
-    // 如果用户启用了系统代理，检查实际的系统状态
-    if (userEnabled) {
-      if (proxy_auto_config) {
-        return autoproxy?.enable ?? false;
-      } else {
-        return sysproxy?.enable ?? false;
-      }
-    }
-
-    // 用户没有启用时，返回 false
-    return false;
-  };
+  const getSystemProxyActualState = () => enable_system_proxy && (proxy_auto_config ? autoproxy?.enable : sysproxy?.enable) ?? false;
 
   const getSystemProxyIndicator = () => {
     if (proxy_auto_config) {
