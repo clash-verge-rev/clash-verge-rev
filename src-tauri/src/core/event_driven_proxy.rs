@@ -523,6 +523,7 @@ impl EventDrivenProxyManager {
         Self::execute_sysproxy_command(&["pac", expected_url]).await
     }
 
+    #[allow(clippy::unused_async)]
     #[cfg(not(target_os = "windows"))]
     async fn restore_pac_proxy(expected_url: &str) -> Result<(), anyhow::Error> {
         {
@@ -543,6 +544,7 @@ impl EventDrivenProxyManager {
         Self::execute_sysproxy_command(&["global", &address, &expected.bypass]).await
     }
 
+    #[allow(clippy::unused_async)]
     #[cfg(not(target_os = "windows"))]
     async fn restore_sys_proxy(expected: &Sysproxy) -> Result<(), anyhow::Error> {
         {
