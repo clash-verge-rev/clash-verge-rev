@@ -191,7 +191,9 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             sysopt::Sysopt::global().update_sysproxy().await?;
         }
         if (update_flags & (UpdateFlags::Hotkey as i32)) != 0 {
-            hotkey::Hotkey::global().update(patch.hotkeys.unwrap())?;
+            if let Some(hotkeys) = patch.hotkeys {
+                hotkey::Hotkey::global().update(hotkeys)?;
+            }
         }
         if (update_flags & (UpdateFlags::SystrayMenu as i32)) != 0 {
             tray::Tray::global().update_menu()?;
@@ -206,7 +208,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             tray::Tray::global().update_click_behavior()?;
         }
         if (update_flags & (UpdateFlags::LighteWeight as i32)) != 0 {
-            if enable_auto_light_weight.unwrap() {
+            if enable_auto_light_weight.unwrap_or(false) {
                 lightweight::enable_auto_light_weight_mode();
             } else {
                 lightweight::disable_auto_light_weight_mode();

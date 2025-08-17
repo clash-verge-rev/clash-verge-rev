@@ -32,7 +32,17 @@ impl PlatformSpecification {
         let system_kernel_version = System::kernel_version().unwrap_or("Null".into());
         let system_arch = System::cpu_arch();
 
-        let handler = handle::Handle::global().app_handle().unwrap();
+        let Some(handler) = handle::Handle::global().app_handle() else {
+            return Self {
+                system_name,
+                system_version,
+                system_kernel_version,
+                system_arch,
+                verge_version: "unknown".into(),
+                running_mode: "NotRunning".to_string(),
+                is_admin: false,
+            };
+        };
         let verge_version = handler.package_info().version.to_string();
 
         // 使用默认值避免在同步上下文中执行异步操作

@@ -60,7 +60,13 @@ impl ProxyRequestCache {
             expires_at: Instant::now() + ttl,
         };
         let _ = cell.set(entry);
-        Arc::clone(&cell.get().unwrap().value)
+        // Safe to unwrap here as we just set the value
+        Arc::clone(
+            &cell
+                .get()
+                .unwrap_or_else(|| unreachable!("Cell value should exist after set"))
+                .value,
+        )
     }
 }
 

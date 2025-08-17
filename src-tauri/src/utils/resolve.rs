@@ -344,8 +344,21 @@ pub fn create_window(is_show: bool) -> bool {
         logging!(debug, Type::Window, true, "[ScopeGuard] 窗口创建状态已重置");
     });
 
+    let app_handle = match handle::Handle::global().app_handle() {
+        Some(handle) => handle,
+        None => {
+            logging!(
+                error,
+                Type::Window,
+                true,
+                "无法获取app_handle，窗口创建失败"
+            );
+            return false;
+        }
+    };
+
     match tauri::WebviewWindowBuilder::new(
-        &handle::Handle::global().app_handle().unwrap(),
+        &app_handle,
         "main", /* the unique window label */
         tauri::WebviewUrl::App("index.html".into()),
     )
@@ -647,7 +660,17 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                 create_window(false);
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
                     Ok(item) => {
-                        let uid = item.uid.clone().unwrap();
+                        let uid = match item.uid.clone() {
+                            Some(uid) => uid,
+                            None => {
+                                logging!(error, Type::Config, true, "Profile item missing UID");
+                                handle::Handle::notice_message(
+                                    "import_sub_url::error",
+                                    "Profile item missing UID".to_string(),
+                                );
+                                return Ok(());
+                            }
+                        };
                         let _ = wrap_err!(Config::profiles().data_mut().append_item(item));
                         handle::Handle::notice_message("import_sub_url::ok", uid);
                     }
@@ -725,10 +748,22 @@ async fn resolve_random_port_config() -> Result<()> {
 pub async fn set_public_dns(dns_server: String) {
     use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt;
-    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = match handle::Handle::global().app_handle() {
+        Some(handle) => handle,
+        None => {
+            log::error!(target: "app", "app_handle not available for DNS configuration");
+            return;
+        }
+    };
 
     log::info!(target: "app", "try to set system dns");
-    let resource_dir = dirs::app_resources_dir().unwrap();
+    let resource_dir = match dirs::app_resources_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            log::error!(target: "app", "Failed to get resource directory: {}", e);
+            return;
+        }
+    };
     let script = resource_dir.join("set_dns.sh");
     if !script.exists() {
         log::error!(target: "app", "set_dns.sh not found");
@@ -761,9 +796,21 @@ pub async fn set_public_dns(dns_server: String) {
 pub async fn restore_public_dns() {
     use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt;
-    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = match handle::Handle::global().app_handle() {
+        Some(handle) => handle,
+        None => {
+            log::error!(target: "app", "app_handle not available for DNS restoration");
+            return;
+        }
+    };
     log::info!(target: "app", "try to unset system dns");
-    let resource_dir = dirs::app_resources_dir().unwrap();
+    let resource_dir = match dirs::app_resources_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            log::error!(target: "app", "Failed to get resource directory: {}", e);
+            return;
+        }
+    };
     let script = resource_dir.join("unset_dns.sh");
     if !script.exists() {
         log::error!(target: "app", "unset_dns.sh not found");

@@ -2,7 +2,7 @@ use crate::{
     config::Config,
     core::{handle, tray, CoreManager},
     ipc::IpcManager,
-    logging_error,
+    logging, logging_error,
     process::AsyncHandler,
     utils::{logging::Type, resolve},
 };
@@ -30,7 +30,10 @@ pub fn restart_app() {
     AsyncHandler::spawn(move || async move {
         logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
         resolve::resolve_reset_async().await;
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let Some(app_handle) = handle::Handle::global().app_handle() else {
+            logging!(error, Type::Core, "Failed to get app handle for restart");
+            return;
+        };
         std::thread::sleep(std::time::Duration::from_secs(1));
         tauri::process::restart(&app_handle.env());
     });

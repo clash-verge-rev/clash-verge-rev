@@ -29,7 +29,8 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     };
 
     // 保存新的配置文件
-    wrap_err!(fs::write(&file_path, file_data.clone().unwrap()))?;
+    let file_data = file_data.ok_or("file_data is None")?;
+    wrap_err!(fs::write(&file_path, &file_data))?;
 
     let file_path_str = file_path.to_string_lossy().to_string();
     logging!(
@@ -139,17 +140,29 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                 || (!file_path_str.ends_with(".js") && !is_script_error)
             {
                 // 普通YAML错误使用YAML通知处理
-                log::info!(target: "app", "[cmd配置save] YAML配置文件验证失败，发送通知");
+                logging!(
+                    info,
+                    Type::Config,
+                    "[cmd配置save] YAML配置文件验证失败，发送通知"
+                );
                 let result = (false, error_msg.clone());
                 crate::cmd::validate::handle_yaml_validation_notice(&result, "YAML配置文件");
             } else if is_script_error {
                 // 脚本错误使用专门的通知处理
-                log::info!(target: "app", "[cmd配置save] 脚本文件验证失败，发送通知");
+                logging!(
+                    info,
+                    Type::Config,
+                    "[cmd配置save] 脚本文件验证失败，发送通知"
+                );
                 let result = (false, error_msg.clone());
                 crate::cmd::validate::handle_script_validation_notice(&result, "脚本文件");
             } else {
                 // 普通配置错误使用一般通知
-                log::info!(target: "app", "[cmd配置save] 其他类型验证失败，发送一般通知");
+                logging!(
+                    info,
+                    Type::Config,
+                    "[cmd配置save] 其他类型验证失败，发送一般通知"
+                );
                 handle::Handle::notice_message("config_validate::error", &error_msg);
             }
 

@@ -249,7 +249,11 @@ impl CoreManager {
         let clash_core = Config::verge().latest_ref().get_valid_clash_core();
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global().app_handle().ok_or_else(|| {
+            let msg = "Failed to get app handle";
+            logging!(error, Type::Core, true, "{}", msg);
+            anyhow::anyhow!(msg)
+        })?;
         let app_dir = dirs::app_home_dir()?;
         let app_dir_str = dirs::path_to_str(&app_dir)?;
         logging!(info, Type::Config, true, "验证目录: {}", app_dir_str);
@@ -1108,8 +1112,12 @@ impl CoreManager {
             logging!(error, Type::Core, true, "{}", error_message);
             return Err(error_message.to_string());
         }
-        let core: &str = &clash_core.clone().unwrap();
-        if !IVerge::VALID_CLASH_CORES.contains(&core) {
+        let core = clash_core.as_ref().ok_or_else(|| {
+            let msg = "Clash core should not be None";
+            logging!(error, Type::Core, true, "{}", msg);
+            msg.to_string()
+        })?;
+        if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
             let error_message = format!("Clash core invalid name: {core}");
             logging!(error, Type::Core, true, "{}", error_message);
             return Err(error_message);

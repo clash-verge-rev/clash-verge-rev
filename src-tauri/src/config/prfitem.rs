@@ -147,12 +147,15 @@ impl PrfItem {
             bail!("type should not be null");
         }
 
-        match item.itype.unwrap().as_str() {
+        let itype = item
+            .itype
+            .ok_or_else(|| anyhow::anyhow!("type should not be null"))?;
+        match itype.as_str() {
             "remote" => {
-                if item.url.is_none() {
-                    bail!("url should not be null");
-                }
-                let url = item.url.as_ref().unwrap().as_str();
+                let url = item
+                    .url
+                    .as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("url should not be null"))?;
                 let name = item.name;
                 let desc = item.desc;
                 PrfItem::from_url(url, name, desc, item.option).await
@@ -549,22 +552,20 @@ impl PrfItem {
 
     /// get the file data
     pub fn read_file(&self) -> Result<String> {
-        if self.file.is_none() {
-            bail!("could not find the file");
-        }
-
-        let file = self.file.clone().unwrap();
+        let file = self
+            .file
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file);
         fs::read_to_string(path).context("failed to read the file")
     }
 
     /// save the file data
     pub fn save_file(&self, data: String) -> Result<()> {
-        if self.file.is_none() {
-            bail!("could not find the file");
-        }
-
-        let file = self.file.clone().unwrap();
+        let file = self
+            .file
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file);
         fs::write(path, data.as_bytes()).context("failed to save the file")
     }

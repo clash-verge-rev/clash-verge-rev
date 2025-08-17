@@ -71,9 +71,10 @@ impl TrayState {
         let verge = Config::verge().latest_ref().clone();
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
         if is_common_tray_icon {
-            if let Some(common_icon_path) = find_target_icons("common").unwrap() {
-                let icon_data = fs::read(common_icon_path).unwrap();
-                return (true, icon_data);
+            if let Ok(Some(common_icon_path)) = find_target_icons("common") {
+                if let Ok(icon_data) = fs::read(common_icon_path) {
+                    return (true, icon_data);
+                }
             }
         }
         #[cfg(target_os = "macos")]
@@ -105,9 +106,10 @@ impl TrayState {
         let verge = Config::verge().latest_ref().clone();
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
         if is_sysproxy_tray_icon {
-            if let Some(sysproxy_icon_path) = find_target_icons("sysproxy").unwrap() {
-                let icon_data = fs::read(sysproxy_icon_path).unwrap();
-                return (true, icon_data);
+            if let Ok(Some(sysproxy_icon_path)) = find_target_icons("sysproxy") {
+                if let Ok(icon_data) = fs::read(sysproxy_icon_path) {
+                    return (true, icon_data);
+                }
             }
         }
         #[cfg(target_os = "macos")]
@@ -139,9 +141,10 @@ impl TrayState {
         let verge = Config::verge().latest_ref().clone();
         let is_tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
         if is_tun_tray_icon {
-            if let Some(tun_icon_path) = find_target_icons("tun").unwrap() {
-                let icon_data = fs::read(tun_icon_path).unwrap();
-                return (true, icon_data);
+            if let Ok(Some(tun_icon_path)) = find_target_icons("tun") {
+                if let Ok(icon_data) = fs::read(tun_icon_path) {
+                    return (true, icon_data);
+                }
             }
         }
         #[cfg(target_os = "macos")]
@@ -188,10 +191,14 @@ impl Tray {
 
     /// 更新托盘点击行为
     pub fn update_click_behavior(&self) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global()
+            .app_handle()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get app handle for tray update"))?;
         let tray_event = { Config::verge().latest_ref().tray_event.clone() };
         let tray_event: String = tray_event.unwrap_or("main_window".into());
-        let tray = app_handle.tray_by_id("main").unwrap();
+        let tray = app_handle
+            .tray_by_id("main")
+            .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
         match tray_event.as_str() {
             "tray_menu" => tray.set_show_menu_on_left_click(true)?,
             _ => tray.set_show_menu_on_left_click(false)?,
@@ -360,8 +367,12 @@ impl Tray {
 
     /// 更新托盘显示状态的函数
     pub fn update_tray_display(&self) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
-        let _tray = app_handle.tray_by_id("main").unwrap();
+        let app_handle = handle::Handle::global()
+            .app_handle()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get app handle for tray update"))?;
+        let _tray = app_handle
+            .tray_by_id("main")
+            .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
 
         // 更新菜单
         self.update_menu()?;
@@ -562,9 +573,8 @@ fn create_tray_menu(
                 is_current_profile,
                 None::<&str>,
             )
-            .unwrap()
         })
-        .collect();
+        .collect::<Result<Vec<_>, _>>()?;
     let profile_menu_items: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
         .iter()
         .map(|item| item as &dyn IsMenuItem<Wry>)
@@ -576,8 +586,7 @@ fn create_tray_menu(
         t("Dashboard"),
         true,
         hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
-    )
-    .unwrap();
+    )?;
 
     let rule_mode = &CheckMenuItem::with_id(
         app_handle,
@@ -586,8 +595,7 @@ fn create_tray_menu(
         true,
         mode == "rule",
         hotkeys.get("clash_mode_rule").map(|s| s.as_str()),
-    )
-    .unwrap();
+    )?;
 
     let global_mode = &CheckMenuItem::with_id(
         app_handle,
@@ -596,8 +604,7 @@ fn create_tray_menu(
         true,
         mode == "global",
         hotkeys.get("clash_mode_global").map(|s| s.as_str()),
-    )
-    .unwrap();
+    )?;
 
     let direct_mode = &CheckMenuItem::with_id(
         app_handle,
@@ -606,8 +613,7 @@ fn create_tray_menu(
         true,
         mode == "direct",
         hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
-    )
-    .unwrap();
+    )?;
 
     let profiles = &Submenu::with_id_and_items(
         app_handle,
@@ -615,8 +621,7 @@ fn create_tray_menu(
         t("Profiles"),
         true,
         &profile_menu_items,
-    )
-    .unwrap();
+    )?;
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
@@ -625,8 +630,7 @@ fn create_tray_menu(
         true,
         system_proxy_enabled,
         hotkeys.get("toggle_system_proxy").map(|s| s.as_str()),
-    )
-    .unwrap();
+    )?;
 
     let tun_mode = &CheckMenuItem::with_id(
         app_handle,
@@ -635,8 +639,7 @@ fn create_tray_menu(
         true,
         tun_mode_enabled,
         hotkeys.get("toggle_tun_mode").map(|s| s.as_str()),
-    )
-    .unwrap();
+    )?;
 
     let lighteweight_mode = &CheckMenuItem::with_id(
         app_handle,
@@ -645,11 +648,9 @@ fn create_tray_menu(
         true,
         is_lightweight_mode,
         hotkeys.get("entry_lightweight_mode").map(|s| s.as_str()),
-    )
-    .unwrap();
+    )?;
 
-    let copy_env =
-        &MenuItem::with_id(app_handle, "copy_env", t("Copy Env"), true, None::<&str>).unwrap();
+    let copy_env = &MenuItem::with_id(app_handle, "copy_env", t("Copy Env"), true, None::<&str>)?;
 
     let open_app_dir = &MenuItem::with_id(
         app_handle,
@@ -657,8 +658,7 @@ fn create_tray_menu(
         t("Conf Dir"),
         true,
         None::<&str>,
-    )
-    .unwrap();
+    )?;
 
     let open_core_dir = &MenuItem::with_id(
         app_handle,
@@ -666,8 +666,7 @@ fn create_tray_menu(
         t("Core Dir"),
         true,
         None::<&str>,
-    )
-    .unwrap();
+    )?;
 
     let open_logs_dir = &MenuItem::with_id(
         app_handle,
@@ -675,8 +674,7 @@ fn create_tray_menu(
         t("Logs Dir"),
         true,
         None::<&str>,
-    )
-    .unwrap();
+    )?;
 
     let open_dir = &Submenu::with_id_and_items(
         app_handle,
@@ -684,8 +682,7 @@ fn create_tray_menu(
         t("Open Dir"),
         true,
         &[open_app_dir, open_core_dir, open_logs_dir],
-    )
-    .unwrap();
+    )?;
 
     let restart_clash = &MenuItem::with_id(
         app_handle,
@@ -693,8 +690,7 @@ fn create_tray_menu(
         t("Restart Clash Core"),
         true,
         None::<&str>,
-    )
-    .unwrap();
+    )?;
 
     let restart_app = &MenuItem::with_id(
         app_handle,
@@ -702,8 +698,7 @@ fn create_tray_menu(
         t("Restart App"),
         true,
         None::<&str>,
-    )
-    .unwrap();
+    )?;
 
     let app_version = &MenuItem::with_id(
         app_handle,
@@ -711,8 +706,7 @@ fn create_tray_menu(
         format!("{} {version}", t("Verge Version")),
         true,
         None::<&str>,
-    )
-    .unwrap();
+    )?;
 
     let more = &Submenu::with_id_and_items(
         app_handle,
@@ -720,13 +714,11 @@ fn create_tray_menu(
         t("More"),
         true,
         &[restart_clash, restart_app, app_version],
-    )
-    .unwrap();
+    )?;
 
-    let quit =
-        &MenuItem::with_id(app_handle, "quit", t("Exit"), true, Some("CmdOrControl+Q")).unwrap();
+    let quit = &MenuItem::with_id(app_handle, "quit", t("Exit"), true, Some("CmdOrControl+Q"))?;
 
-    let separator = &PredefinedMenuItem::separator(app_handle).unwrap();
+    let separator = &PredefinedMenuItem::separator(app_handle)?;
 
     let menu = tauri::menu::MenuBuilder::new(app_handle)
         .items(&[
@@ -748,8 +740,7 @@ fn create_tray_menu(
             separator,
             quit,
         ])
-        .build()
-        .unwrap();
+        .build()?;
     Ok(menu)
 }
 

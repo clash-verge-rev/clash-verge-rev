@@ -1,3 +1,4 @@
+use crate::{logging, utils::logging::Type};
 use chrono::Local;
 use regex::Regex;
 use reqwest::Client;
@@ -250,7 +251,23 @@ async fn check_gemini(client: &Client) -> UnlockItem {
                 let status = if is_ok { "Yes" } else { "No" };
 
                 // 尝试提取国家代码
-                let re = Regex::new(r#",2,1,200,"([A-Z]{3})""#).unwrap();
+                let re = match Regex::new(r#",2,1,200,"([A-Z]{3})""#) {
+                    Ok(re) => re,
+                    Err(e) => {
+                        logging!(
+                            error,
+                            Type::Network,
+                            "Failed to compile Gemini regex: {}",
+                            e
+                        );
+                        return UnlockItem {
+                            name: "Gemini".to_string(),
+                            status: "Failed".to_string(),
+                            region: None,
+                            check_time: Some(get_local_date_string()),
+                        };
+                    }
+                };
                 let region = re.captures(&body).and_then(|caps| {
                     caps.get(1).map(|m| {
                         let country_code = m.as_str();
@@ -303,7 +320,23 @@ async fn check_youtube_premium(client: &Client) -> UnlockItem {
                     }
                 } else if body_lower.contains("ad-free") {
                     // 尝试解析国家代码
-                    let re = Regex::new(r#"id="country-code"[^>]*>([^<]+)<"#).unwrap();
+                    let re = match Regex::new(r#"id="country-code"[^>]*>([^<]+)<"#) {
+                        Ok(re) => re,
+                        Err(e) => {
+                            logging!(
+                                error,
+                                Type::Network,
+                                "Failed to compile YouTube Premium regex: {}",
+                                e
+                            );
+                            return UnlockItem {
+                                name: "Youtube Premium".to_string(),
+                                status: "Failed".to_string(),
+                                region: None,
+                                check_time: Some(get_local_date_string()),
+                            };
+                        }
+                    };
                     let region = re.captures(&body).and_then(|caps| {
                         caps.get(1).map(|m| {
                             let country_code = m.as_str().trim();
@@ -350,11 +383,16 @@ async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     let cookie_store = Arc::new(reqwest::cookie::Jar::default());
 
     // 使用带Cookie的客户端
-    let client_with_cookies = reqwest::Client::builder()
+    let client_with_cookies = match reqwest::Client::builder()
         .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
         .cookie_provider(Arc::clone(&cookie_store))
-        .build()
-        .unwrap_or_else(|_| client.clone());
+        .build() {
+        Ok(client) => client,
+        Err(e) => {
+            logging!(error, Type::Network, "Failed to create client with cookies for Bahamut Anime: {}", e);
+            client.clone()
+        }
+    };
 
     // 第一步：获取设备ID (会自动保存Cookie)
     let device_url = "https://ani.gamer.com.tw/ajax/getdeviceid.php";
@@ -363,10 +401,21 @@ async fn check_bahamut_anime(client: &Client) -> UnlockItem {
             match response.text().await {
                 Ok(text) => {
                     // 使用正则提取deviceid
-                    let re = Regex::new(r#""deviceid"\s*:\s*"([^"]+)"#).unwrap();
-                    re.captures(&text)
-                        .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()))
-                        .unwrap_or_default()
+                    match Regex::new(r#""deviceid"\s*:\s*"([^"]+)"#) {
+                        Ok(re) => re
+                            .captures(&text)
+                            .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()))
+                            .unwrap_or_default(),
+                        Err(e) => {
+                            logging!(
+                                error,
+                                Type::Network,
+                                "Failed to compile deviceid regex for Bahamut Anime: {}",
+                                e
+                            );
+                            String::new()
+                        }
+                    }
                 }
                 Err(_) => String::new(),
             }
@@ -421,17 +470,25 @@ async fn check_bahamut_anime(client: &Client) -> UnlockItem {
         .await
     {
         Ok(response) => match response.text().await {
-            Ok(body) => {
-                let region_re = Regex::new(r#"data-geo="([^"]+)"#).unwrap();
-                region_re
+            Ok(body) => match Regex::new(r#"data-geo="([^"]+)"#) {
+                Ok(region_re) => region_re
                     .captures(&body)
                     .and_then(|caps| caps.get(1))
                     .map(|m| {
                         let country_code = m.as_str();
                         let emoji = country_code_to_emoji(country_code);
                         format!("{emoji}{country_code}")
-                    })
-            }
+                    }),
+                Err(e) => {
+                    logging!(
+                        error,
+                        Type::Network,
+                        "Failed to compile region regex for Bahamut Anime: {}",
+                        e
+                    );
+                    None
+                }
+            },
             Err(_) => None,
         },
         Err(_) => None,
@@ -495,8 +552,40 @@ async fn check_netflix(client: &Client) -> UnlockItem {
     }
 
     // 获取状态码
-    let status1 = result1.unwrap().status().as_u16();
-    let status2 = result2.unwrap().status().as_u16();
+    let status1 = match result1 {
+        Ok(response) => response.status().as_u16(),
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to get Netflix response 1: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Netflix".to_string(),
+                status: "Failed".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
+    let status2 = match result2 {
+        Ok(response) => response.status().as_u16(),
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to get Netflix response 2: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Netflix".to_string(),
+                status: "Failed".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
 
     // 根据状态码判断解锁状况
     if status1 == 404 && status2 == 404 {
@@ -685,7 +774,23 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
         };
     }
 
-    let device_response = device_result.unwrap();
+    let device_response = match device_result {
+        Ok(response) => response,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to get Disney+ device response: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Disney+".to_string(),
+                status: "Failed (Network Connection)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
 
     // 检查是否 403 错误
     if device_response.status().as_u16() == 403 {
@@ -710,7 +815,23 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
     };
 
     // 提取 assertion
-    let re = Regex::new(r#""assertion"\s*:\s*"([^"]+)"#).unwrap();
+    let re = match Regex::new(r#""assertion"\s*:\s*"([^"]+)"#) {
+        Ok(re) => re,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to compile assertion regex for Disney+: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Disney+".to_string(),
+                status: "Failed (Regex Error)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
     let assertion = match re.captures(&device_body) {
         Some(caps) => caps.get(1).map(|m| m.as_str().to_string()),
         None => None,
@@ -729,7 +850,18 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
     let token_url = "https://disney.api.edge.bamgrid.com/token";
 
     // 构建请求体 - 使用表单数据格式而非 JSON
-    let assertion_str = assertion.unwrap();
+    let assertion_str = match assertion {
+        Some(assertion) => assertion,
+        None => {
+            logging!(error, Type::Network, "No assertion found for Disney+");
+            return UnlockItem {
+                name: "Disney+".to_string(),
+                status: "Failed (No Assertion)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
     let token_body = [
         (
             "grant_type",
@@ -762,7 +894,23 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
         };
     }
 
-    let token_response = token_result.unwrap();
+    let token_response = match token_result {
+        Ok(response) => response,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to get Disney+ token response: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Disney+".to_string(),
+                status: "Failed (Network Connection)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
     let token_status = token_response.status();
 
     // 保存原始响应用于调试
@@ -798,10 +946,20 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
             .map(|s| s.to_string()),
         Err(_) => {
             // 如果 JSON 解析失败，尝试使用正则表达式
-            let refresh_token_re = Regex::new(r#""refresh_token"\s*:\s*"([^"]+)"#).unwrap();
-            refresh_token_re
-                .captures(&token_body_text)
-                .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()))
+            match Regex::new(r#""refresh_token"\s*:\s*"([^"]+)"#) {
+                Ok(refresh_token_re) => refresh_token_re
+                    .captures(&token_body_text)
+                    .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string())),
+                Err(e) => {
+                    logging!(
+                        error,
+                        Type::Network,
+                        "Failed to compile refresh_token regex for Disney+: {}",
+                        e
+                    );
+                    None
+                }
+            }
         }
     };
 
@@ -825,7 +983,7 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
     // GraphQL API 通常接受 JSON 格式
     let graphql_payload = format!(
         r#"{{"query":"mutation refreshToken($input: RefreshTokenInput!) {{ refreshToken(refreshToken: $input) {{ activeSession {{ sessionId }} }} }}","variables":{{"input":{{"refreshToken":"{}"}}}}}}"#,
-        refresh_token.unwrap()
+        refresh_token.unwrap_or_default()
     );
 
     let graphql_result = client
@@ -857,21 +1015,56 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
     };
 
     // 解析 GraphQL 响应获取区域信息
-    let graphql_response = graphql_result.unwrap();
+    let graphql_response = match graphql_result {
+        Ok(response) => response,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to get Disney+ GraphQL response: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Disney+".to_string(),
+                status: "Failed (Network Connection)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
     let graphql_status = graphql_response.status();
-    let graphql_body_text = (graphql_response.text().await).unwrap_or_default();
+    let graphql_body_text = match graphql_response.text().await {
+        Ok(text) => text,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to read Disney+ GraphQL response text: {}",
+                e
+            );
+            String::new()
+        }
+    };
 
     // 如果 GraphQL 响应为空或明显错误，尝试直接获取区域信息
     if graphql_body_text.is_empty() || graphql_status.as_u16() >= 400 {
         // 尝试直接从主页获取区域信息
         let region_from_main = match client.get("https://www.disneyplus.com/").send().await {
             Ok(response) => match response.text().await {
-                Ok(body) => {
-                    let region_re = Regex::new(r#"region"\s*:\s*"([^"]+)"#).unwrap();
-                    region_re
+                Ok(body) => match Regex::new(r#"region"\s*:\s*"([^"]+)"#) {
+                    Ok(region_re) => region_re
                         .captures(&body)
-                        .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()))
-                }
+                        .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string())),
+                    Err(e) => {
+                        logging!(
+                            error,
+                            Type::Network,
+                            "Failed to compile Disney+ main page region regex: {}",
+                            e
+                        );
+                        None
+                    }
+                },
                 Err(_) => None,
             },
             Err(_) => None,
@@ -913,13 +1106,45 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
     }
 
     // 提取国家代码
-    let region_re = Regex::new(r#""countryCode"\s*:\s*"([^"]+)"#).unwrap();
+    let region_re = match Regex::new(r#""countryCode"\s*:\s*"([^"]+)"#) {
+        Ok(re) => re,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to compile Disney+ countryCode regex: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Disney+".to_string(),
+                status: "Failed (Regex Error)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
     let region_code = region_re
         .captures(&graphql_body_text)
         .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()));
 
     // 提取支持状态
-    let supported_re = Regex::new(r#""inSupportedLocation"\s*:\s*(false|true)"#).unwrap();
+    let supported_re = match Regex::new(r#""inSupportedLocation"\s*:\s*(false|true)"#) {
+        Ok(re) => re,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to compile Disney+ supported location regex: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Disney+".to_string(),
+                status: "Failed (Regex Error)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
     let in_supported_location = supported_re
         .captures(&graphql_body_text)
         .and_then(|caps| caps.get(1).map(|m| m.as_str() == "true"));
@@ -929,12 +1154,20 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
         // 尝试直接从主页获取区域信息
         let region_from_main = match client.get("https://www.disneyplus.com/").send().await {
             Ok(response) => match response.text().await {
-                Ok(body) => {
-                    let region_re = Regex::new(r#"region"\s*:\s*"([^"]+)"#).unwrap();
-                    region_re
+                Ok(body) => match Regex::new(r#"region"\s*:\s*"([^"]+)"#) {
+                    Ok(region_re) => region_re
                         .captures(&body)
-                        .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()))
-                }
+                        .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string())),
+                    Err(e) => {
+                        logging!(
+                            error,
+                            Type::Network,
+                            "Failed to compile Disney+ main page region regex: {}",
+                            e
+                        );
+                        None
+                    }
+                },
                 Err(_) => None,
             },
             Err(_) => None,
@@ -958,7 +1191,18 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
         };
     }
 
-    let region = region_code.unwrap();
+    let region = match region_code {
+        Some(code) => code,
+        None => {
+            logging!(error, Type::Network, "No region code found for Disney+");
+            return UnlockItem {
+                name: "Disney+".to_string(),
+                status: "No".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
 
     // 判断日本地区
     if region == "JP" {
@@ -1028,13 +1272,47 @@ async fn check_prime_video(client: &Client) -> UnlockItem {
     }
 
     // 解析响应内容
-    match result.unwrap().text().await {
+    let response = match result {
+        Ok(response) => response,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to get Prime Video response: {}",
+                e
+            );
+            return UnlockItem {
+                name: "Prime Video".to_string(),
+                status: "Failed (Network Connection)".to_string(),
+                region: None,
+                check_time: Some(get_local_date_string()),
+            };
+        }
+    };
+
+    match response.text().await {
         Ok(body) => {
             // 检查是否被地区限制
             let is_blocked = body.contains("isServiceRestricted");
 
             // 提取地区信息
-            let region_re = Regex::new(r#""currentTerritory":"([^"]+)"#).unwrap();
+            let region_re = match Regex::new(r#""currentTerritory":"([^"]+)"#) {
+                Ok(re) => re,
+                Err(e) => {
+                    logging!(
+                        error,
+                        Type::Network,
+                        "Failed to compile Prime Video region regex: {}",
+                        e
+                    );
+                    return UnlockItem {
+                        name: "Prime Video".to_string(),
+                        status: "Failed (Regex Error)".to_string(),
+                        region: None,
+                        check_time: Some(get_local_date_string()),
+                    };
+                }
+            };
             let region_code = region_re
                 .captures(&body)
                 .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()));
@@ -1287,9 +1565,17 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
     }
 
     // 获取所有结果
-    let results = Arc::try_unwrap(results)
-        .expect("无法获取结果，可能仍有引用存在")
-        .into_inner();
+    let results = match Arc::try_unwrap(results) {
+        Ok(mutex) => mutex.into_inner(),
+        Err(_) => {
+            logging!(
+                error,
+                Type::Network,
+                "Failed to unwrap results Arc, references still exist"
+            );
+            return Err("Failed to collect results".to_string());
+        }
+    };
 
     Ok(results)
 }

@@ -26,7 +26,16 @@ pub struct IpcManager {
 
 impl IpcManager {
     fn new() -> Self {
-        let ipc_path_buf = ipc_path().unwrap();
+        let ipc_path_buf = ipc_path().unwrap_or_else(|e| {
+            logging!(
+                error,
+                crate::utils::logging::Type::Ipc,
+                true,
+                "Failed to get IPC path: {}",
+                e
+            );
+            std::path::PathBuf::from("/tmp/clash-verge-ipc") // fallback path
+        });
         let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
         Self {
             ipc_path: ipc_path.to_string(),

@@ -142,3 +142,52 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [dev-dependencies]
 criterion = "0.7.0"
 tempfile = "3.20.0"
+
+[lints.clippy]
+# Core categories - most important for code safety and correctness
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+
+# Critical safety lints - warn for now due to extensive existing usage
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "deny"
+unimplemented = "deny"
+
+# Development quality lints
+todo = "warn"
+dbg_macro = "warn"
+#print_stdout = "warn"
+#print_stderr = "warn"
+
+# Performance lints for proxy application
+#clone_on_ref_ptr = "warn"
+#rc_clone_in_vec_init = "warn"
+#large_stack_arrays = "warn"
+#large_const_arrays = "warn"
+
+# Security lints
+#integer_division = "warn"
+#lossy_float_literal = "warn"
+#default_numeric_fallback = "warn"
+
+# Mutex and async lints - strict control
+#async_yields_async = "deny"          # Prevents missing await in async blocks
+#mutex_atomic = "deny"                # Use atomics instead of Mutex<bool/int>
+#mutex_integer = "deny"               # Use AtomicInt instead of Mutex<int>
+#rc_mutex = "deny"                    # Single-threaded Rc with Mutex is wrong
+#unused_async = "allow"               # Too many false positives in Tauri/framework code
+
+# Common style improvements
+#redundant_else = "allow"         # Too many in existing code
+#needless_continue = "allow"      # Too many in existing code
+#needless_raw_string_hashes = "allow"  # Too many in existing code
+
+# Disable noisy categories for existing codebase but keep them available
+#style = { level = "allow", priority = -1 }
+#complexity = { level = "allow", priority = -1 }
+#perf = { level = "allow", priority = -1 }
+#pedantic = { level = "allow", priority = -1 }
+#nursery = { level = "allow", priority = -1 }
+#restriction = { level = "allow", priority = -1 }
+

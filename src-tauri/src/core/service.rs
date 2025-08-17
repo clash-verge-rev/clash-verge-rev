@@ -138,7 +138,7 @@ pub async fn uninstall_service() -> Result<()> {
     if !status.success() {
         bail!(
             "failed to uninstall service with status {}",
-            status.code().unwrap()
+            status.code().unwrap_or(-1)
         );
     }
 
@@ -172,7 +172,7 @@ pub async fn install_service() -> Result<()> {
     if !status.success() {
         bail!(
             "failed to install service with status {}",
-            status.code().unwrap()
+            status.code().unwrap_or(-1)
         );
     }
 
@@ -254,13 +254,13 @@ pub async fn uninstall_service() -> Result<()> {
         Type::Service,
         true,
         "uninstall status code:{}",
-        status.code().unwrap()
+        status.code().unwrap_or(-1)
     );
 
     if !status.success() {
         bail!(
             "failed to uninstall service with status {}",
-            status.code().unwrap()
+            status.code().unwrap_or(-1)
         );
     }
 
@@ -294,13 +294,13 @@ pub async fn install_service() -> Result<()> {
         Type::Service,
         true,
         "install status code:{}",
-        status.code().unwrap()
+        status.code().unwrap_or(-1)
     );
 
     if !status.success() {
         bail!(
             "failed to install service with status {}",
-            status.code().unwrap()
+            status.code().unwrap_or(-1)
         );
     }
 
@@ -384,7 +384,7 @@ pub async fn uninstall_service() -> Result<()> {
     if !status.success() {
         bail!(
             "failed to uninstall service with status {}",
-            status.code().unwrap()
+            status.code().unwrap_or(-1)
         );
     }
 
@@ -420,7 +420,7 @@ pub async fn install_service() -> Result<()> {
     if !status.success() {
         bail!(
             "failed to install service with status {}",
-            status.code().unwrap()
+            status.code().unwrap_or(-1)
         );
     }
 

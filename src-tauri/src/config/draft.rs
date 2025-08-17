@@ -46,11 +46,18 @@ impl<T: Clone + ToOwned> Draft<Box<T>> {
         if guard.1.is_none() {
             let mut guard = RwLockUpgradableReadGuard::upgrade(guard);
             guard.1 = Some(guard.0.clone());
-            return RwLockWriteGuard::map(guard, |inner| inner.1.as_mut().unwrap());
+            return RwLockWriteGuard::map(guard, |inner| {
+                inner.1.as_mut().unwrap_or_else(|| {
+                    unreachable!("Draft was just created above, this should never fail")
+                })
+            });
         }
         // 已存在草稿，升级为写锁映射
         RwLockWriteGuard::map(RwLockUpgradableReadGuard::upgrade(guard), |inner| {
-            inner.1.as_mut().unwrap()
+            inner
+                .1
+                .as_mut()
+                .unwrap_or_else(|| unreachable!("Draft should exist when guard.1.is_some()"))
         })
     }
 

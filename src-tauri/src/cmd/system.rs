@@ -1,7 +1,9 @@
 use super::CmdResult;
 use crate::{
     core::{handle, CoreManager},
+    logging,
     module::sysinfo::PlatformSpecification,
+    utils::logging::Type,
 };
 use once_cell::sync::Lazy;
 use std::{
@@ -26,10 +28,12 @@ pub async fn export_diagnostic_info() -> CmdResult<()> {
     let sysinfo = PlatformSpecification::new_async().await;
     let info = format!("{sysinfo:?}");
 
-    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = handle::Handle::global()
+        .app_handle()
+        .ok_or("Failed to get app handle")?;
     let cliboard = app_handle.clipboard();
     if cliboard.write_text(info).is_err() {
-        log::error!(target: "app", "Failed to write to clipboard");
+        logging!(error, Type::System, "Failed to write to clipboard");
     }
     Ok(())
 }

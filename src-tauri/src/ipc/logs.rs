@@ -28,7 +28,7 @@ impl LogItem {
 
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
 
         // Simple time formatting (HH:MM:SS)
