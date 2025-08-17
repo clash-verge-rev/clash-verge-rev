@@ -28,6 +28,9 @@ use tokio::sync::Mutex;
 pub struct CoreManager {
     running: Arc<Mutex<RunningMode>>,
     child_sidecar: Arc<Mutex<Option<CommandChild>>>,
+    health_check_handle: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
+    recovery_attempts: Arc<Mutex<u32>>,
+    last_failure_time: Arc<Mutex<Option<std::time::Instant>>>,
 }
 
 /// 内核运行模式
@@ -785,10 +788,23 @@ impl CoreManager {
         );
         *self.child_sidecar.lock().await = Some(child);
         self.set_running_mode(RunningMode::Sidecar).await;
+
+        // 验证内核启动是否成功
+        self.verify_core_functionality().await?;
+
+        // 启动健康检查
+        self.start_health_check().await;
+
+        // 重置恢复状态
+        self.reset_recovery_state().await;
+
         Ok(())
     }
     async fn stop_core_by_sidecar(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Stopping core by sidecar");
+
+        // 停止健康检查
+        self.stop_health_check().await;
 
         if let Some(child) = self.child_sidecar.lock().await.take() {
             let pid = child.pid();
@@ -812,10 +828,24 @@ impl CoreManager {
         let config_file = &Config::generate_file(ConfigType::Run)?;
         service::run_core_by_service(config_file).await?;
         self.set_running_mode(RunningMode::Service).await;
+
+        // 验证内核启动是否成功
+        self.verify_core_functionality().await?;
+
+        // 启动健康检查
+        self.start_health_check().await;
+
+        // 重置恢复状态
+        self.reset_recovery_state().await;
+
         Ok(())
     }
     async fn stop_core_by_service(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Stopping core by service");
+
+        // 停止健康检查
+        self.stop_health_check().await;
+
         service::stop_core_by_service().await?;
         self.set_running_mode(RunningMode::NotRunning).await;
         Ok(())
@@ -827,6 +857,9 @@ impl Default for CoreManager {
         CoreManager {
             running: Arc::new(Mutex::new(RunningMode::NotRunning)),
             child_sidecar: Arc::new(Mutex::new(None)),
+            health_check_handle: Arc::new(Mutex::new(None)),
+            recovery_attempts: Arc::new(Mutex::new(0)),
+            last_failure_time: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -835,6 +868,232 @@ impl Default for CoreManager {
 singleton_lazy!(CoreManager, CORE_MANAGER, CoreManager::default);
 
 impl CoreManager {
+    /// 验证内核功能是否正常工作
+    async fn verify_core_functionality(&self) -> Result<()> {
+        logging!(info, Type::Core, true, "开始验证内核功能");
+
+        // 等待内核启动完成
+        let max_wait_time = std::time::Duration::from_secs(10);
+        let check_interval = std::time::Duration::from_millis(500);
+        let start_time = std::time::Instant::now();
+
+        while start_time.elapsed() < max_wait_time {
+            match self.check_core_basic_functionality().await {
+                Ok(()) => {
+                    logging!(info, Type::Core, true, "内核功能验证通过");
+                    return Ok(());
+                }
+                Err(e) => {
+                    logging!(debug, Type::Core, true, "内核功能验证失败，等待重试: {}", e);
+                    tokio::time::sleep(check_interval).await;
+                }
+            }
+        }
+
+        let error_msg = "内核启动超时或功能验证失败";
+        logging!(error, Type::Core, true, "{}", error_msg);
+        Err(anyhow::anyhow!(error_msg))
+    }
+
+    /// 检查内核基础功能是否可用
+    async fn check_core_basic_functionality(&self) -> Result<()> {
+        use crate::ipc::IpcManager;
+
+        // 检查版本信息
+        match IpcManager::global().get_version().await {
+            Ok(_) => {
+                logging!(debug, Type::Core, true, "版本接口检查通过");
+            }
+            Err(e) => {
+                return Err(anyhow::anyhow!("版本接口检查失败: {}", e));
+            }
+        }
+
+        // 检查配置接口
+        match IpcManager::global().get_config().await {
+            Ok(_) => {
+                logging!(debug, Type::Core, true, "配置接口检查通过");
+            }
+            Err(e) => {
+                return Err(anyhow::anyhow!("配置接口检查失败: {}", e));
+            }
+        }
+
+        // 检查代理接口
+        match IpcManager::global().get_proxies().await {
+            Ok(_) => {
+                logging!(debug, Type::Core, true, "代理接口检查通过");
+            }
+            Err(e) => {
+                return Err(anyhow::anyhow!("代理接口检查失败: {}", e));
+            }
+        }
+
+        Ok(())
+    }
+
+    /// 启动定期健康检查
+    async fn start_health_check(&self) {
+        // 先停止之前的健康检查
+        self.stop_health_check().await;
+
+        let running = Arc::clone(&self.running);
+        let child_sidecar = Arc::clone(&self.child_sidecar);
+
+        let handle = tokio::spawn(async move {
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
+            loop {
+                interval.tick().await;
+
+                let current_mode = {
+                    let guard = running.lock().await;
+                    (*guard).clone()
+                };
+
+                if current_mode == RunningMode::NotRunning {
+                    logging!(debug, Type::Core, true, "内核未运行，跳过健康检查");
+                    continue;
+                }
+
+                logging!(debug, Type::Core, true, "执行定期健康检查");
+
+                match Self::perform_health_check().await {
+                    Ok(()) => {
+                        logging!(debug, Type::Core, true, "健康检查通过");
+                    }
+                    Err(e) => {
+                        logging!(warn, Type::Core, true, "健康检查失败: {}", e);
+
+                        // 发送基本通知，不在这里进行自动恢复（避免复杂的异步操作）
+                        if current_mode == RunningMode::Sidecar {
+                            let child_guard = child_sidecar.lock().await;
+                            if child_guard.is_none() {
+                                logging!(error, Type::Core, true, "Sidecar进程句柄已失效");
+                                handle::Handle::notice_message(
+                                    "core_health_check::sidecar_failed",
+                                    "Sidecar进程异常，建议重启应用",
+                                );
+                            } else {
+                                handle::Handle::notice_message(
+                                    "core_health_check::sidecar_unhealthy",
+                                    "Sidecar内核健康检查失败",
+                                );
+                            }
+                        } else if current_mode == RunningMode::Service {
+                            logging!(error, Type::Core, true, "Service模式健康检查失败");
+                            handle::Handle::notice_message(
+                                "core_health_check::service_failed",
+                                "服务模式内核异常，请检查服务状态",
+                            );
+                        }
+                    }
+                }
+            }
+        });
+
+        *self.health_check_handle.lock().await = Some(handle);
+        logging!(info, Type::Core, true, "定期健康检查已启动");
+    }
+
+    /// 停止健康检查
+    async fn stop_health_check(&self) {
+        let mut handle_guard = self.health_check_handle.lock().await;
+        if let Some(handle) = handle_guard.take() {
+            handle.abort();
+            logging!(info, Type::Core, true, "定期健康检查已停止");
+        }
+    }
+
+    /// 执行一次健康检查
+    async fn perform_health_check() -> Result<()> {
+        use crate::ipc::IpcManager;
+
+        // 快速检查版本接口
+        match tokio::time::timeout(
+            std::time::Duration::from_secs(5),
+            IpcManager::global().get_version(),
+        )
+        .await
+        {
+            Ok(Ok(_)) => Ok(()),
+            Ok(Err(e)) => Err(anyhow::anyhow!("内核版本接口失败: {}", e)),
+            Err(_) => Err(anyhow::anyhow!("内核版本接口超时")),
+        }
+    }
+
+    /// 尝试自动恢复内核
+    pub async fn attempt_auto_recovery(&self) -> Result<()> {
+        const MAX_RECOVERY_ATTEMPTS: u32 = 3;
+        const RECOVERY_COOLDOWN: std::time::Duration = std::time::Duration::from_secs(60);
+
+        let now = std::time::Instant::now();
+
+        // 检查恢复冷却期
+        {
+            let last_failure = self.last_failure_time.lock().await;
+            if let Some(last_time) = *last_failure {
+                if now.duration_since(last_time) < RECOVERY_COOLDOWN {
+                    return Err(anyhow::anyhow!("恢复冷却期内，暂不尝试恢复"));
+                }
+            }
+        }
+
+        // 检查恢复次数
+        {
+            let mut attempts = self.recovery_attempts.lock().await;
+            if *attempts >= MAX_RECOVERY_ATTEMPTS {
+                return Err(anyhow::anyhow!("已达最大恢复尝试次数"));
+            }
+            *attempts += 1;
+        }
+
+        // 更新失败时间
+        *self.last_failure_time.lock().await = Some(now);
+
+        logging!(info, Type::Core, true, "开始尝试自动恢复内核");
+
+        // 先停止当前内核
+        if let Err(e) = self.stop_core().await {
+            logging!(warn, Type::Core, true, "停止内核时出错: {}", e);
+        }
+
+        // 等待一段时间再重启
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+
+        // 尝试重启内核
+        match self.start_core().await {
+            Ok(()) => {
+                logging!(info, Type::Core, true, "内核自动恢复成功");
+
+                // 重置恢复计数
+                *self.recovery_attempts.lock().await = 0;
+
+                // 发送成功通知
+                handle::Handle::notice_message("core_recovery::success", "内核已成功自动恢复");
+
+                Ok(())
+            }
+            Err(e) => {
+                let error_msg = format!("内核自动恢复失败: {e}");
+                logging!(error, Type::Core, true, "{}", error_msg);
+
+                // 发送失败通知
+                handle::Handle::notice_message("core_recovery::failed", &error_msg);
+
+                Err(anyhow::anyhow!(error_msg))
+            }
+        }
+    }
+
+    /// 重置恢复状态
+    pub async fn reset_recovery_state(&self) {
+        *self.recovery_attempts.lock().await = 0;
+        *self.last_failure_time.lock().await = None;
+        logging!(info, Type::Core, true, "已重置内核恢复状态");
+    }
+
     // 当服务安装失败时的回退逻辑
     async fn attempt_service_init(&self) -> Result<()> {
         if service::check_service_needs_reinstall().await {

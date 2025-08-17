@@ -397,6 +397,15 @@ export async function startTrafficService() {
   }
 }
 
+// Core recovery and health check functions
+export async function resetCoreRecoveryState() {
+  return invoke<void>("reset_core_recovery_state");
+}
+
+export async function attemptCoreAutoRecovery() {
+  return invoke<void>("attempt_core_auto_recovery");
+}
+
 export async function stopTrafficService() {
   console.log("[Traffic][Service] 开始调用 stop_traffic_service");
   const result = await invoke<void>("stop_traffic_service");
