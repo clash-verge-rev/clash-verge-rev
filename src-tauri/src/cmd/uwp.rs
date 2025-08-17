@@ -24,5 +24,5 @@ mod platform {
 /// Command exposed to Tauri
 #[tauri::command]
 pub async fn invoke_uwp_tool() -> CmdResult {
-    platform::invoke_uwp_tool()
+    platform::invoke_uwp_tool().await
 }

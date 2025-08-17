@@ -180,7 +180,7 @@ pub fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-pub async fn reinstall_service() -> Result<()> {
+pub fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态
@@ -308,7 +308,7 @@ pub fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn reinstall_service() -> Result<()> {
+pub fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态

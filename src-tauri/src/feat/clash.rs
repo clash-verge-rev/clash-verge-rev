@@ -34,7 +34,7 @@ pub fn restart_app() {
             logging!(error, Type::Core, "Failed to get app handle for restart");
             return;
         };
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         tauri::process::restart(&app_handle.env());
     });
 }
