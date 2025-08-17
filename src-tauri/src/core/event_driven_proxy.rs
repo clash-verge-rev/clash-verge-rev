@@ -307,7 +307,9 @@ impl EventDrivenProxyManager {
 
         if !current.enable || current.url != expected.url {
             log::info!(target: "app", "PAC代理设置异常，正在恢复...");
-            Self::restore_pac_proxy(&expected.url);
+            if let Err(e) = Self::restore_pac_proxy(&expected.url) {
+                log::error!(target: "app", "恢复PAC代理失败: {}", e);
+            }
 
             sleep(Duration::from_millis(500)).await;
             let restored = Self::get_auto_proxy_with_timeout().await;
@@ -329,7 +331,9 @@ impl EventDrivenProxyManager {
 
         if !current.enable || current.host != expected.host || current.port != expected.port {
             log::info!(target: "app", "系统代理设置异常，正在恢复...");
-            Self::restore_sys_proxy(&expected);
+            if let Err(e) = Self::restore_sys_proxy(&expected) {
+                log::error!(target: "app", "恢复系统代理失败: {}", e);
+            }
 
             sleep(Duration::from_millis(500)).await;
             let restored = Self::get_sys_proxy_with_timeout().await;
@@ -350,10 +354,14 @@ impl EventDrivenProxyManager {
 
         if pac_enabled {
             let expected = Self::get_expected_pac_config();
-            Self::restore_pac_proxy(&expected.url);
+            if let Err(e) = Self::restore_pac_proxy(&expected.url) {
+                log::error!(target: "app", "启用PAC代理失败: {}", e);
+            }
         } else {
             let expected = Self::get_expected_sys_proxy();
-            Self::restore_sys_proxy(&expected);
+            if let Err(e) = Self::restore_sys_proxy(&expected) {
+                log::error!(target: "app", "启用系统代理失败: {}", e);
+            }
         }
 
         Self::check_and_restore_proxy(state).await;
@@ -380,13 +388,17 @@ impl EventDrivenProxyManager {
             logging_error!(Type::System, true, disabled_sys.set_system_proxy());
 
             let expected = Self::get_expected_pac_config();
-            Self::restore_pac_proxy(&expected.url);
+            if let Err(e) = Self::restore_pac_proxy(&expected.url) {
+                log::error!(target: "app", "切换到PAC模式失败: {}", e);
+            }
         } else {
             let disabled_auto = Autoproxy::default();
             logging_error!(Type::System, true, disabled_auto.set_auto_proxy());
 
             let expected = Self::get_expected_sys_proxy();
-            Self::restore_sys_proxy(&expected);
+            if let Err(e) = Self::restore_sys_proxy(&expected) {
+                log::error!(target: "app", "切换到HTTP代理模式失败: {}", e);
+            }
         }
 
         Self::update_state_timestamp(state, |s| s.pac_enabled = to_pac);
@@ -514,7 +526,9 @@ impl EventDrivenProxyManager {
                 url: expected_url.to_string(),
             };
             // logging_error!(Type::System, true, new_autoproxy.set_auto_proxy());
-            new_autoproxy.set_auto_proxy().into()
+            new_autoproxy
+                .set_auto_proxy()
+                .map_err(|e| anyhow::anyhow!("Failed to set auto proxy: {}", e))
         }
 
         #[cfg(target_os = "windows")]
@@ -527,7 +541,9 @@ impl EventDrivenProxyManager {
         #[cfg(not(target_os = "windows"))]
         {
             // logging_error!(Type::System, true, expected.set_system_proxy());
-            expected.set_system_proxy().into()
+            expected
+                .set_system_proxy()
+                .map_err(|e| anyhow::anyhow!("Failed to set system proxy: {}", e))
         }
 
         #[cfg(target_os = "windows")]
@@ -538,7 +554,7 @@ impl EventDrivenProxyManager {
     }
 
     #[cfg(target_os = "windows")]
-    async fn execute_sysproxy_command(args: &[&str]) -> Result<(), E> {
+    async fn execute_sysproxy_command(args: &[&str]) -> Result<(), anyhow::Error> {
         use crate::utils::dirs;
         #[allow(unused_imports)] // creation_flags必须
         use std::os::windows::process::CommandExt;

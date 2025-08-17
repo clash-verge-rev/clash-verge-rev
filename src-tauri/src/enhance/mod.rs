@@ -274,7 +274,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             });
     }
 
-    config = use_tun(config, enable_tun).await;
+    config = use_tun(config, enable_tun);
     config = use_sort(config);
 
     // 应用独立的DNS配置（如果启用）
