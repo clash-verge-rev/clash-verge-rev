@@ -172,12 +172,14 @@ large_const_arrays = "warn"
 #default_numeric_fallback = "warn"
 
 # Mutex and async lints - strict control
-#async_yields_async = "deny"          # Prevents missing await in async blocks
-#mutex_atomic = "deny"                # Use atomics instead of Mutex<bool/int>
-#mutex_integer = "deny"               # Use AtomicInt instead of Mutex<int>
-#rc_mutex = "deny"                    # Single-threaded Rc with Mutex is wrong
-#unused_async = "allow"               # Too many false positives in Tauri/framework code
-
+async_yields_async = "deny"          # Prevents missing await in async blocks
+mutex_atomic = "deny"                # Use atomics instead of Mutex<bool/int>
+mutex_integer = "deny"               # Use AtomicInt instead of Mutex<int>
+rc_mutex = "deny"                    # Single-threaded Rc with Mutex is wrong
+unused_async = "deny"               # Too many false positives in Tauri/framework code
+await_holding_lock = "deny"
+large_futures = "deny"
+future_not_send = "deny"
 # Common style improvements
 #redundant_else = "allow"         # Too many in existing code
 #needless_continue = "allow"      # Too many in existing code
