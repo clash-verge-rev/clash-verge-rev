@@ -18,6 +18,7 @@ macro_rules! append {
     };
 }
 
+#[allow(clippy::unused_async)]
 pub async fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);

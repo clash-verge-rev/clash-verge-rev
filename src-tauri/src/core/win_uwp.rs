@@ -6,7 +6,7 @@ use deelevate::{PrivilegeLevel, Token};
 use runas::Command as RunasCommand;
 use std::process::Command as StdCommand;
 
-pub async fn invoke_uwptools() -> Result<()> {
+pub fn invoke_uwptools() -> Result<()> {
     let resource_dir = dirs::app_resources_dir()?;
     let tool_path = resource_dir.join("enableLoopback.exe");
 
