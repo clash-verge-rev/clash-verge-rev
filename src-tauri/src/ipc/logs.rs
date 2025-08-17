@@ -152,7 +152,7 @@ impl LogsMonitor {
             *current_level = Some(filter_level.clone());
         }
 
-        let monitor_current = self.current.clone();
+        let monitor_current = Arc::clone(&self.current);
 
         let task = tokio::spawn(async move {
             loop {
@@ -183,7 +183,9 @@ impl LogsMonitor {
                 let _ = client
                     .get(&url)
                     .timeout(Duration::from_secs(30))
-                    .process_lines(|line| Self::process_log_line(line, monitor_current.clone()))
+                    .process_lines(|line| {
+                        Self::process_log_line(line, Arc::clone(&monitor_current))
+                    })
                     .await;
 
                 // Wait before retrying

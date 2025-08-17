@@ -49,7 +49,7 @@ impl ProxyRequestCache {
                 self.map
                     .remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
                 let new_cell = Arc::new(OnceCell::new());
-                self.map.insert(key_cloned.clone(), new_cell.clone());
+                self.map.insert(key_cloned.clone(), Arc::clone(&new_cell));
                 return Box::pin(self.get_or_fetch(key_cloned, ttl, fetch_fn)).await;
             }
         }

@@ -13,7 +13,7 @@ pub fn use_script(
 
     let outputs = Rc::new(RefCell::new(vec![]));
 
-    let copy_outputs = outputs.clone();
+    let copy_outputs = Rc::clone(&outputs);
     unsafe {
         let _ = context.register_global_builtin_callable(
             "__verge_log__".into(),
@@ -125,6 +125,8 @@ fn escape_js_string_for_single_quote(s: &str) -> String {
 }
 
 #[test]
+#[allow(unused_variables)]
+#[allow(clippy::expect_used)]
 fn test_script() {
     let script = r#"
     function main(config) {
@@ -153,15 +155,13 @@ fn test_script() {
 
     let _ = serde_yaml::to_string(&config).expect("Failed to serialize config to YAML");
     let yaml_config_size = std::mem::size_of_val(&config);
-    dbg!(yaml_config_size);
     let box_yaml_config_size = std::mem::size_of_val(&Box::new(config));
-    dbg!(box_yaml_config_size);
-    dbg!(results);
     assert!(box_yaml_config_size < yaml_config_size);
 }
 
 // 测试特殊字符转义功能
 #[test]
+#[allow(clippy::expect_used)]
 fn test_escape_unescape() {
     let test_string = r#"Hello "World"!\nThis is a test with \u00A9 copyright symbol."#;
     let escaped = escape_js_string_for_single_quote(test_string);

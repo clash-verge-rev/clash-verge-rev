@@ -174,33 +174,33 @@ mod tests {
     use std::mem;
 
     #[test]
+    #[allow(unused_variables)]
+    #[allow(clippy::expect_used)]
     fn test_prfitem_from_merge_size() {
-        let merge_item = PrfItem::from_merge(Some("Merge".to_string())).unwrap();
-        dbg!(&merge_item);
+        let merge_item = PrfItem::from_merge(Some("Merge".to_string()))
+            .expect("Failed to create merge item in test");
         let prfitem_size = mem::size_of_val(&merge_item);
-        dbg!(prfitem_size);
         // Boxed version
         let boxed_merge_item = Box::new(merge_item);
         let box_prfitem_size = mem::size_of_val(&boxed_merge_item);
-        dbg!(box_prfitem_size);
         // The size of Box<T> is always pointer-sized (usually 8 bytes on 64-bit)
         // assert_eq!(box_prfitem_size, mem::size_of::<Box<PrfItem>>());
         assert!(box_prfitem_size < prfitem_size);
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn test_draft_size_non_boxed() {
         let draft = Draft::from(IRuntime::new());
         let iruntime_size = std::mem::size_of_val(&draft);
-        dbg!(iruntime_size);
         assert_eq!(iruntime_size, std::mem::size_of::<Draft<IRuntime>>());
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn test_draft_size_boxed() {
         let draft = Draft::from(Box::new(IRuntime::new()));
         let box_iruntime_size = std::mem::size_of_val(&draft);
-        dbg!(box_iruntime_size);
         assert_eq!(
             box_iruntime_size,
             std::mem::size_of::<Draft<Box<IRuntime>>>()

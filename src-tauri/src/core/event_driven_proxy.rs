@@ -97,7 +97,7 @@ impl EventDrivenProxyManager {
         let (event_tx, event_rx) = mpsc::unbounded_channel();
         let (query_tx, query_rx) = mpsc::unbounded_channel();
 
-        Self::start_event_loop(state.clone(), event_rx, query_rx);
+        Self::start_event_loop(Arc::clone(&state), event_rx, query_rx);
 
         Self {
             state,

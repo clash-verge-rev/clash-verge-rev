@@ -1460,8 +1460,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加哔哩哔哩大陆检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_bilibili_china_mainland(&client).await;
             let mut results = results.lock().await;
@@ -1471,8 +1471,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加哔哩哔哩港澳台检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_bilibili_hk_mc_tw(&client).await;
             let mut results = results.lock().await;
@@ -1482,8 +1482,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加合并的ChatGPT检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let chatgpt_results = check_chatgpt_combined(&client).await;
             let mut results = results.lock().await;
@@ -1493,8 +1493,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加Gemini检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_gemini(&client).await;
             let mut results = results.lock().await;
@@ -1504,8 +1504,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加YouTube Premium检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_youtube_premium(&client).await;
             let mut results = results.lock().await;
@@ -1515,8 +1515,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加动画疯检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_bahamut_anime(&client).await;
             let mut results = results.lock().await;
@@ -1526,8 +1526,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加 Netflix 检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_netflix(&client).await;
             let mut results = results.lock().await;
@@ -1537,8 +1537,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加 Disney+ 检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_disney_plus(&client).await;
             let mut results = results.lock().await;
@@ -1548,8 +1548,8 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
 
     // 添加 Prime Video 检测任务
     {
-        let client = client_arc.clone();
-        let results = results.clone();
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_prime_video(&client).await;
             let mut results = results.lock().await;
