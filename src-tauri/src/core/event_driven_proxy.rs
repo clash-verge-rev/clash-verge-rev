@@ -508,66 +508,29 @@ impl EventDrivenProxyManager {
 
     #[cfg(target_os = "windows")]
     async fn restore_pac_proxy(expected_url: &str) {
-        #[cfg(not(target_os = "windows"))]
-        {
-            let new_autoproxy = Autoproxy {
-                enable: true,
-                url: expected_url.to_string(),
-            };
-            logging_error!(Type::System, true, new_autoproxy.set_auto_proxy());
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            Self::execute_sysproxy_command(&["pac", expected_url]).await;
-        }
+        Self::execute_sysproxy_command(&["pac", expected_url]).await;
     }
 
     #[cfg(not(target_os = "windows"))]
     #[allow(clippy::unused_async)]
     async fn restore_pac_proxy(expected_url: &str) {
-        #[cfg(not(target_os = "windows"))]
-        {
-            let new_autoproxy = Autoproxy {
-                enable: true,
-                url: expected_url.to_string(),
-            };
-            logging_error!(Type::System, true, new_autoproxy.set_auto_proxy());
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            Self::execute_sysproxy_command(&["pac", expected_url]).await;
-        }
+        let new_autoproxy = Autoproxy {
+            enable: true,
+            url: expected_url.to_string(),
+        };
+        logging_error!(Type::System, true, new_autoproxy.set_auto_proxy());
     }
 
     #[cfg(target_os = "windows")]
     async fn restore_sys_proxy(expected: &Sysproxy) {
-        #[cfg(not(target_os = "windows"))]
-        {
-            logging_error!(Type::System, true, expected.set_system_proxy());
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            let address = format!("{}:{}", expected.host, expected.port);
-            Self::execute_sysproxy_command(&["global", &address, &expected.bypass]).await;
-        }
+        let address = format!("{}:{}", expected.host, expected.port);
+        Self::execute_sysproxy_command(&["global", &address, &expected.bypass]).await;
     }
 
     #[cfg(not(target_os = "windows"))]
     #[allow(clippy::unused_async)]
     async fn restore_sys_proxy(expected: &Sysproxy) {
-        #[cfg(not(target_os = "windows"))]
-        {
-            logging_error!(Type::System, true, expected.set_system_proxy());
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            let address = format!("{}:{}", expected.host, expected.port);
-            Self::execute_sysproxy_command(&["global", &address, &expected.bypass]).await;
-        }
+        logging_error!(Type::System, true, expected.set_system_proxy());
     }
 
     #[cfg(target_os = "windows")]
