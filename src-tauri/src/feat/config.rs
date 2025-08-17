@@ -15,7 +15,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     let res = {
         // 激活订阅
         if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
-            Config::generate().await?;
+            Config::generate()?;
             CoreManager::global().restart_core().await?;
         } else {
             if patch.get("mode").is_some() {
@@ -173,7 +173,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
 
         // Process updates based on flags
         if (update_flags & (UpdateFlags::RestartCore as i32)) != 0 {
-            Config::generate().await?;
+            Config::generate()?;
             CoreManager::global().restart_core().await?;
         }
         if (update_flags & (UpdateFlags::ClashConfig as i32)) != 0 {

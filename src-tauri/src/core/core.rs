@@ -386,7 +386,7 @@ impl CoreManager {
 
         // 1. 先生成新的配置内容
         logging!(info, Type::Config, true, "生成新的配置内容");
-        Config::generate().await?;
+        Config::generate()?;
 
         // 2. 验证配置
         match self.validate_config().await {

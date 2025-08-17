@@ -206,7 +206,7 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
                 .patch_config(patch_config.clone());
 
             // 首先重新生成配置
-            if let Err(err) = Config::generate().await {
+            if let Err(err) = Config::generate() {
                 logging!(
                     error,
                     Type::Config,
@@ -236,7 +236,7 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
             );
 
             // 重新生成配置
-            if let Err(err) = Config::generate().await {
+            if let Err(err) = Config::generate() {
                 logging!(error, Type::Config, "Failed to regenerate config: {err}");
                 return;
             }

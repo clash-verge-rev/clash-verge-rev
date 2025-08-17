@@ -72,7 +72,7 @@ impl Config {
                 .append_item(script_item.clone())?;
         }
         // 生成运行时配置
-        if let Err(err) = Self::generate().await {
+        if let Err(err) = Self::generate() {
             logging!(error, Type::Config, true, "生成运行时配置失败: {}", err);
         } else {
             logging!(info, Type::Config, true, "生成运行时配置成功");
@@ -146,8 +146,8 @@ impl Config {
     }
 
     /// 生成订阅存好
-    pub async fn generate() -> Result<()> {
-        let (config, exists_keys, logs) = enhance::enhance().await;
+    pub fn generate() -> Result<()> {
+        let (config, exists_keys, logs) = enhance::enhance();
 
         *Config::runtime().draft_mut() = Box::new(IRuntime {
             config: Some(config),
