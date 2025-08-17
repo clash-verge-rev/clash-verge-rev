@@ -96,8 +96,7 @@ impl Config {
                             error_msg
                         );
                         CoreManager::global()
-                            .use_default_config("config_validate::boot_error", &error_msg)
-                            .await?;
+                            .use_default_config("config_validate::boot_error", &error_msg)?;
                         Some(("config_validate::boot_error", error_msg))
                     } else {
                         logging!(info, Type::Config, true, "配置验证成功");
@@ -107,16 +106,13 @@ impl Config {
                 Err(err) => {
                     logging!(warn, Type::Config, true, "验证进程执行失败: {}", err);
                     CoreManager::global()
-                        .use_default_config("config_validate::process_terminated", "")
-                        .await?;
+                        .use_default_config("config_validate::process_terminated", "")?;
                     Some(("config_validate::process_terminated", String::new()))
                 }
             }
         } else {
             logging!(warn, Type::Config, true, "生成配置文件失败，使用默认配置");
-            CoreManager::global()
-                .use_default_config("config_validate::error", "")
-                .await?;
+            CoreManager::global().use_default_config("config_validate::error", "")?;
             Some(("config_validate::error", String::new()))
         };
 

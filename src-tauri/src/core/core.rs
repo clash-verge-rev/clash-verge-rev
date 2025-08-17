@@ -135,7 +135,7 @@ impl CoreManager {
         Ok(false)
     }
     /// 使用默认配置
-    pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
+    pub fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
         *Config::runtime().draft_mut() = Box::new(IRuntime {
             config: Some(Config::clash().latest_ref().0.clone()),
@@ -185,7 +185,7 @@ impl CoreManager {
                 "检测到Merge文件，仅进行语法检查: {}",
                 config_path
             );
-            return self.validate_file_syntax(config_path).await;
+            return self.validate_file_syntax(config_path);
         }
 
         // 检查是否为脚本文件
@@ -217,7 +217,7 @@ impl CoreManager {
                 "检测到脚本文件，使用JavaScript验证: {}",
                 config_path
             );
-            return self.validate_script_file(config_path).await;
+            return self.validate_script_file(config_path);
         }
 
         // 对YAML配置文件使用Clash内核验证
@@ -301,7 +301,7 @@ impl CoreManager {
         }
     }
     /// 只进行文件语法检查，不进行完整验证
-    async fn validate_file_syntax(&self, config_path: &str) -> Result<(bool, String)> {
+    fn validate_file_syntax(&self, config_path: &str) -> Result<(bool, String)> {
         logging!(info, Type::Config, true, "开始检查文件: {}", config_path);
 
         // 读取文件内容
@@ -329,7 +329,7 @@ impl CoreManager {
         }
     }
     /// 验证脚本文件语法
-    async fn validate_script_file(&self, path: &str) -> Result<(bool, String)> {
+    fn validate_script_file(&self, path: &str) -> Result<(bool, String)> {
         // 读取脚本内容
         let content = match std::fs::read_to_string(path) {
             Ok(content) => content,
@@ -843,7 +843,7 @@ impl CoreManager {
     async fn attempt_service_init(&self) -> Result<()> {
         if service::check_service_needs_reinstall().await {
             logging!(info, Type::Core, true, "服务版本不匹配或状态异常，执行重装");
-            if let Err(e) = service::reinstall_service().await {
+            if let Err(e) = service::reinstall_service() {
                 logging!(
                     warn,
                     Type::Core,
@@ -960,7 +960,7 @@ impl CoreManager {
                         true,
                         "无服务安装记录 (首次运行或状态重置)，尝试安装服务"
                     );
-                    match service::install_service().await {
+                    match service::install_service() {
                         Ok(_) => {
                             logging!(info, Type::Core, true, "服务安装成功(首次尝试)");
                             let mut new_state = service::ServiceState::default();
@@ -1065,7 +1065,7 @@ impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
         if service::is_service_available().await.is_ok() {
             if service::check_service_needs_reinstall().await {
-                service::reinstall_service().await?;
+                service::reinstall_service()?;
             }
             logging!(info, Type::Core, true, "服务可用，使用服务模式启动");
             self.start_core_by_service().await?;

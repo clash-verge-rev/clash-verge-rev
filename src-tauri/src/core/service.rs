@@ -112,7 +112,7 @@ pub struct JsonResponse {
 }
 
 #[cfg(target_os = "windows")]
-pub async fn uninstall_service() -> Result<()> {
+pub fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -146,7 +146,7 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-pub async fn install_service() -> Result<()> {
+pub fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -198,7 +198,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     // 先卸载服务
-    if let Err(err) = uninstall_service().await {
+    if let Err(err) = uninstall_service() {
         logging!(
             warn,
             Type::Service,
@@ -209,7 +209,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     // 再安装服务
-    match install_service().await {
+    match install_service() {
         Ok(_) => {
             // 记录安装信息并保存
             service_state.record_install();
@@ -228,7 +228,7 @@ pub async fn reinstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn uninstall_service() -> Result<()> {
+pub fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
     use users::get_effective_uid;
 
@@ -268,7 +268,7 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn install_service() -> Result<()> {
+pub fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
     use users::get_effective_uid;
 
@@ -326,7 +326,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     // 先卸载服务
-    if let Err(err) = uninstall_service().await {
+    if let Err(err) = uninstall_service() {
         logging!(
             warn,
             Type::Service,
@@ -337,7 +337,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     // 再安装服务
-    match install_service().await {
+    match install_service() {
         Ok(_) => {
             // 记录安装信息并保存
             service_state.record_install();
@@ -356,7 +356,7 @@ pub async fn reinstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn uninstall_service() -> Result<()> {
+pub fn uninstall_service() -> Result<()> {
     use crate::utils::i18n::t;
 
     logging!(info, Type::Service, true, "uninstall service");
@@ -392,7 +392,7 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn install_service() -> Result<()> {
+pub fn install_service() -> Result<()> {
     use crate::utils::i18n::t;
 
     logging!(info, Type::Service, true, "install service");
@@ -428,7 +428,7 @@ pub async fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn reinstall_service() -> Result<()> {
+pub fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态
@@ -446,7 +446,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     // 先卸载服务
-    if let Err(err) = uninstall_service().await {
+    if let Err(err) = uninstall_service() {
         logging!(
             warn,
             Type::Service,
@@ -457,7 +457,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     // 再安装服务
-    match install_service().await {
+    match install_service() {
         Ok(_) => {
             // 记录安装信息并保存
             service_state.record_install();
@@ -862,11 +862,9 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
         }
 
         log::info!(target: "app", "开始重装服务");
-        if let Err(err) = reinstall_service().await {
+        if let Err(err) = reinstall_service() {
             log::warn!(target: "app", "服务重装失败: {err}");
-
-            log::info!(target: "app", "尝试使用现有服务");
-            return start_with_existing_service(config_file).await;
+            bail!("Failed to reinstall service: {}", err);
         }
 
         log::info!(target: "app", "服务重装成功，尝试启动");
@@ -890,7 +888,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     if check_service_needs_reinstall().await {
         log::info!(target: "app", "服务需要重装");
 
-        if let Err(err) = reinstall_service().await {
+        if let Err(err) = reinstall_service() {
             log::warn!(target: "app", "服务重装失败: {err}");
             bail!("Failed to reinstall service: {}", err);
         }
@@ -970,7 +968,7 @@ pub async fn is_service_available() -> Result<()> {
 }
 
 /// 强制重装服务（UI修复按钮）
-pub async fn force_reinstall_service() -> Result<()> {
+pub fn force_reinstall_service() -> Result<()> {
     log::info!(target: "app", "用户请求强制重装服务");
 
     let service_state = ServiceState::default();
@@ -978,7 +976,7 @@ pub async fn force_reinstall_service() -> Result<()> {
 
     log::info!(target: "app", "已重置服务状态，开始执行重装");
 
-    match reinstall_service().await {
+    match reinstall_service() {
         Ok(()) => {
             log::info!(target: "app", "服务重装成功");
             Ok(())

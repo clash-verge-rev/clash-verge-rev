@@ -157,7 +157,7 @@ impl LogsMonitor {
         let task = tokio::spawn(async move {
             loop {
                 // Get fresh IPC path and client for each connection attempt
-                let (_ipc_path_buf, client) = match Self::create_ipc_client().await {
+                let (_ipc_path_buf, client) = match Self::create_ipc_client() {
                     Ok((path, client)) => (path, client),
                     Err(e) => {
                         logging!(error, Type::Ipc, true, "Failed to create IPC client: {}", e);
@@ -230,7 +230,7 @@ impl LogsMonitor {
         }
     }
 
-    async fn create_ipc_client() -> Result<
+    fn create_ipc_client() -> Result<
         (std::path::PathBuf, kode_bridge::IpcStreamClient),
         Box<dyn std::error::Error + Send + Sync>,
     > {
