@@ -14,6 +14,7 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::Local;
+use parking_lot::Mutex;
 use std::{
     fmt,
     fs::{create_dir_all, File},
@@ -22,7 +23,6 @@ use std::{
     sync::Arc,
 };
 use tauri_plugin_shell::{process::CommandChild, ShellExt};
-use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub struct CoreManager {
@@ -135,7 +135,7 @@ impl CoreManager {
         Ok(false)
     }
     /// 使用默认配置
-    pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
+    pub fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
         *Config::runtime().draft_mut() = Box::new(IRuntime {
             config: Some(Config::clash().latest_ref().0.clone()),
@@ -185,7 +185,7 @@ impl CoreManager {
                 "检测到Merge文件，仅进行语法检查: {}",
                 config_path
             );
-            return self.validate_file_syntax(config_path).await;
+            return self.validate_file_syntax(config_path);
         }
 
         // 检查是否为脚本文件
@@ -217,7 +217,7 @@ impl CoreManager {
                 "检测到脚本文件，使用JavaScript验证: {}",
                 config_path
             );
-            return self.validate_script_file(config_path).await;
+            return self.validate_script_file(config_path);
         }
 
         // 对YAML配置文件使用Clash内核验证
@@ -249,7 +249,11 @@ impl CoreManager {
         let clash_core = Config::verge().latest_ref().get_valid_clash_core();
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global().app_handle().ok_or_else(|| {
+            let msg = "Failed to get app handle";
+            logging!(error, Type::Core, true, "{}", msg);
+            anyhow::anyhow!(msg)
+        })?;
         let app_dir = dirs::app_home_dir()?;
         let app_dir_str = dirs::path_to_str(&app_dir)?;
         logging!(info, Type::Config, true, "验证目录: {}", app_dir_str);
@@ -297,7 +301,7 @@ impl CoreManager {
         }
     }
     /// 只进行文件语法检查，不进行完整验证
-    async fn validate_file_syntax(&self, config_path: &str) -> Result<(bool, String)> {
+    fn validate_file_syntax(&self, config_path: &str) -> Result<(bool, String)> {
         logging!(info, Type::Config, true, "开始检查文件: {}", config_path);
 
         // 读取文件内容
@@ -325,7 +329,7 @@ impl CoreManager {
         }
     }
     /// 验证脚本文件语法
-    async fn validate_script_file(&self, path: &str) -> Result<(bool, String)> {
+    fn validate_script_file(&self, path: &str) -> Result<(bool, String)> {
         // 读取脚本内容
         let content = match std::fs::read_to_string(path) {
             Ok(content) => content,
@@ -382,7 +386,7 @@ impl CoreManager {
 
         // 1. 先生成新的配置内容
         logging!(info, Type::Config, true, "生成新的配置内容");
-        Config::generate().await?;
+        Config::generate()?;
 
         // 2. 验证配置
         match self.validate_config().await {
@@ -435,7 +439,7 @@ impl CoreManager {
 
         // 获取当前管理的进程 PID
         let current_pid = {
-            let child_guard = self.child_sidecar.lock().await;
+            let child_guard = self.child_sidecar.lock();
             child_guard.as_ref().map(|child| child.pid())
         };
 
@@ -729,7 +733,7 @@ impl CoreManager {
         }
     }
 
-    async fn start_core_by_sidecar(&self) -> Result<()> {
+    fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Running core by sidecar");
         let config_file = &Config::generate_file(ConfigType::Run)?;
         let app_handle = handle::Handle::global()
@@ -783,14 +787,14 @@ impl CoreManager {
             "Started core by sidecar pid: {}",
             pid
         );
-        *self.child_sidecar.lock().await = Some(child);
-        self.set_running_mode(RunningMode::Sidecar).await;
+        *self.child_sidecar.lock() = Some(child);
+        self.set_running_mode(RunningMode::Sidecar);
         Ok(())
     }
-    async fn stop_core_by_sidecar(&self) -> Result<()> {
+    fn stop_core_by_sidecar(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Stopping core by sidecar");
 
-        if let Some(child) = self.child_sidecar.lock().await.take() {
+        if let Some(child) = self.child_sidecar.lock().take() {
             let pid = child.pid();
             child.kill()?;
             logging!(
@@ -801,7 +805,7 @@ impl CoreManager {
                 pid
             );
         }
-        self.set_running_mode(RunningMode::NotRunning).await;
+        self.set_running_mode(RunningMode::NotRunning);
         Ok(())
     }
 }
@@ -811,13 +815,13 @@ impl CoreManager {
         logging!(trace, Type::Core, true, "Running core by service");
         let config_file = &Config::generate_file(ConfigType::Run)?;
         service::run_core_by_service(config_file).await?;
-        self.set_running_mode(RunningMode::Service).await;
+        self.set_running_mode(RunningMode::Service);
         Ok(())
     }
     async fn stop_core_by_service(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Stopping core by service");
         service::stop_core_by_service().await?;
-        self.set_running_mode(RunningMode::NotRunning).await;
+        self.set_running_mode(RunningMode::NotRunning);
         Ok(())
     }
 }
@@ -839,7 +843,7 @@ impl CoreManager {
     async fn attempt_service_init(&self) -> Result<()> {
         if service::check_service_needs_reinstall().await {
             logging!(info, Type::Core, true, "服务版本不匹配或状态异常，执行重装");
-            if let Err(e) = service::reinstall_service().await {
+            if let Err(e) = service::reinstall_service() {
                 logging!(
                     warn,
                     Type::Core,
@@ -944,7 +948,7 @@ impl CoreManager {
                     true,
                     "用户偏好Sidecar模式或先前服务启动失败，使用Sidecar模式启动"
                 );
-                self.start_core_by_sidecar().await?;
+                self.start_core_by_sidecar()?;
                 // 如果 sidecar 启动成功，我们可以认为核心初始化流程到此结束
                 // 后续的 Tray::global().subscribe_traffic().await 仍然会执行
             } else {
@@ -956,7 +960,7 @@ impl CoreManager {
                         true,
                         "无服务安装记录 (首次运行或状态重置)，尝试安装服务"
                     );
-                    match service::install_service().await {
+                    match service::install_service() {
                         Ok(_) => {
                             logging!(info, Type::Core, true, "服务安装成功(首次尝试)");
                             let mut new_state = service::ServiceState::default();
@@ -980,7 +984,7 @@ impl CoreManager {
                                     final_state.last_error =
                                         Some("Newly installed service failed to start".to_string());
                                     final_state.save()?;
-                                    self.start_core_by_sidecar().await?;
+                                    self.start_core_by_sidecar()?;
                                 }
                             } else {
                                 logging!(
@@ -996,7 +1000,7 @@ impl CoreManager {
                                         .to_string(),
                                 );
                                 final_state.save()?;
-                                self.start_core_by_sidecar().await?;
+                                self.start_core_by_sidecar()?;
                             }
                         }
                         Err(err) => {
@@ -1007,7 +1011,7 @@ impl CoreManager {
                                 ..Default::default()
                             };
                             new_state.save()?;
-                            self.start_core_by_sidecar().await?;
+                            self.start_core_by_sidecar()?;
                         }
                     }
                 } else {
@@ -1036,7 +1040,7 @@ impl CoreManager {
                             }));
                         final_state.save()?;
                     }
-                    self.start_core_by_sidecar().await?;
+                    self.start_core_by_sidecar()?;
                 }
             }
         }
@@ -1047,13 +1051,13 @@ impl CoreManager {
         Ok(())
     }
 
-    pub async fn set_running_mode(&self, mode: RunningMode) {
-        let mut guard = self.running.lock().await;
+    pub fn set_running_mode(&self, mode: RunningMode) {
+        let mut guard = self.running.lock();
         *guard = mode;
     }
 
-    pub async fn get_running_mode(&self) -> RunningMode {
-        let guard = self.running.lock().await;
+    pub fn get_running_mode(&self) -> RunningMode {
+        let guard = self.running.lock();
         (*guard).clone()
     }
 
@@ -1061,7 +1065,7 @@ impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
         if service::is_service_available().await.is_ok() {
             if service::check_service_needs_reinstall().await {
-                service::reinstall_service().await?;
+                service::reinstall_service()?;
             }
             logging!(info, Type::Core, true, "服务可用，使用服务模式启动");
             self.start_core_by_service().await?;
@@ -1075,10 +1079,10 @@ impl CoreManager {
                     true,
                     "服务不可用，根据用户偏好使用Sidecar模式"
                 );
-                self.start_core_by_sidecar().await?;
+                self.start_core_by_sidecar()?;
             } else {
                 logging!(info, Type::Core, true, "服务不可用，使用Sidecar模式");
-                self.start_core_by_sidecar().await?;
+                self.start_core_by_sidecar()?;
             }
         }
         Ok(())
@@ -1086,9 +1090,9 @@ impl CoreManager {
 
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
-        match self.get_running_mode().await {
+        match self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
-            RunningMode::Sidecar => self.stop_core_by_sidecar().await,
+            RunningMode::Sidecar => self.stop_core_by_sidecar(),
             RunningMode::NotRunning => Ok(()),
         }
     }
@@ -1108,8 +1112,12 @@ impl CoreManager {
             logging!(error, Type::Core, true, "{}", error_message);
             return Err(error_message.to_string());
         }
-        let core: &str = &clash_core.clone().unwrap();
-        if !IVerge::VALID_CLASH_CORES.contains(&core) {
+        let core = clash_core.as_ref().ok_or_else(|| {
+            let msg = "Clash core should not be None";
+            logging!(error, Type::Core, true, "{}", msg);
+            msg.to_string()
+        })?;
+        if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
             let error_message = format!("Clash core invalid name: {core}");
             logging!(error, Type::Core, true, "{}", error_message);
             return Err(error_message);

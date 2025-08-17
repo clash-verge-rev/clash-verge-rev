@@ -60,7 +60,16 @@ impl AppHandleManager {
 
     /// Get the app handle, panics if it hasn't been initialized.
     pub fn get_handle(&self) -> AppHandle {
-        self.get().expect("AppHandle not initialized")
+        if let Some(handle) = self.get() {
+            handle
+        } else {
+            logging!(
+                error,
+                Type::Setup,
+                "AppHandle not initialized - ensure init() was called first"
+            );
+            std::process::exit(1)
+        }
     }
 
     /// Check if the app handle has been initialized.
@@ -181,9 +190,7 @@ mod app_init {
             builder = builder.plugin(tauri_plugin_devtools::init());
         }
 
-        builder.manage(std::sync::Mutex::new(
-            state::lightweight::LightWeightState::default(),
-        ))
+        builder.manage(Mutex::new(state::lightweight::LightWeightState::default()))
     }
 
     /// Setup deep link handling
@@ -667,7 +674,16 @@ pub fn run() {
     // Build the application
     let app = builder
         .build(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .unwrap_or_else(|e| {
+            logging!(
+                error,
+                Type::Setup,
+                true,
+                "Failed to build Tauri application: {}",
+                e
+            );
+            std::process::exit(1);
+        });
 
     app.run(|app_handle, e| match e {
         tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {

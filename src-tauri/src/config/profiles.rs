@@ -77,10 +77,11 @@ impl IProfiles {
         }
 
         if let Some(current) = patch.current {
-            let items = self.items.as_ref().unwrap();
-            let some_uid = Some(current);
-            if items.iter().any(|e| e.uid == some_uid) {
-                self.current = some_uid;
+            if let Some(items) = self.items.as_ref() {
+                let some_uid = Some(current);
+                if items.iter().any(|e| e.uid == some_uid) {
+                    self.current = some_uid;
+                }
             }
         }
 
@@ -127,7 +128,9 @@ impl IProfiles {
                 bail!("the file should not be null");
             }
 
-            let file = item.file.clone().unwrap();
+            let file = item.file.clone().ok_or_else(|| {
+                anyhow::anyhow!("file field is required when file_data is provided")
+            })?;
             let path = dirs::app_profiles_dir()?.join(&file);
 
             fs::File::create(path)
@@ -168,11 +171,12 @@ impl IProfiles {
             }
         }
 
-        if old_index.is_none() || new_index.is_none() {
-            return Ok(());
-        }
-        let item = items.remove(old_index.unwrap());
-        items.insert(new_index.unwrap(), item);
+        let (old_idx, new_idx) = match (old_index, new_index) {
+            (Some(old), Some(new)) => (old, new),
+            _ => return Ok(()),
+        };
+        let item = items.remove(old_idx);
+        items.insert(new_idx, item);
         self.items = Some(items);
         self.save_file()
     }

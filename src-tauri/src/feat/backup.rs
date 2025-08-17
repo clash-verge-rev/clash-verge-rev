@@ -57,7 +57,9 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let webdav_username = verge_data.webdav_username.clone();
     let webdav_password = verge_data.webdav_password.clone();
 
-    let backup_storage_path = app_home_dir().unwrap().join(&filename);
+    let backup_storage_path = app_home_dir()
+        .map_err(|e| anyhow::anyhow!("Failed to get app home dir: {e}"))?
+        .join(&filename);
     backup::WebDavClient::global()
         .download(filename, backup_storage_path.clone())
         .await

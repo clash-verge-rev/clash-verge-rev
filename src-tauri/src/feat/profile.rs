@@ -11,7 +11,14 @@ use anyhow::{bail, Result};
 /// Toggle proxy profile
 pub fn toggle_proxy_profile(profile_index: String) {
     AsyncHandler::spawn(|| async move {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let Some(app_handle) = handle::Handle::global().app_handle() else {
+            logging!(
+                error,
+                Type::Config,
+                "Failed to get app handle for profile toggle"
+            );
+            return;
+        };
         match cmd::patch_profiles_config_by_profile_index(app_handle, profile_index).await {
             Ok(_) => {
                 let _ = tray::Tray::global().update_menu();
@@ -50,9 +57,14 @@ pub async fn update_profile(
             log::info!(target: "app",
                 "[订阅更新] {} 是远程订阅，URL: {}",
                 uid,
-                item.url.clone().unwrap()
+                item.url.clone().ok_or_else(|| anyhow::anyhow!("Profile URL is None"))?
             );
-            Some((item.url.clone().unwrap(), item.option.clone()))
+            Some((
+                item.url
+                    .clone()
+                    .ok_or_else(|| anyhow::anyhow!("Profile URL is None"))?,
+                item.option.clone(),
+            ))
         }
     };
 
@@ -137,7 +149,13 @@ pub async fn update_profile(
                 logging!(info, Type::Config, true, "[订阅更新] 更新成功");
                 handle::Handle::refresh_clash();
                 if let Err(err) = cmd::proxy::force_refresh_proxies().await {
-                    logging!(error, Type::Config, true, "[订阅更新] 代理组刷新失败: {}", err);
+                    logging!(
+                        error,
+                        Type::Config,
+                        true,
+                        "[订阅更新] 代理组刷新失败: {}",
+                        err
+                    );
                 }
             }
             Err(err) => {

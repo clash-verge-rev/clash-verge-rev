@@ -149,7 +149,9 @@ impl Sysopt {
             use anyhow::bail;
             use tauri_plugin_shell::ShellExt;
 
-            let app_handle = Handle::global().app_handle().unwrap();
+            let app_handle = Handle::global()
+                .app_handle()
+                .ok_or_else(|| anyhow::anyhow!("App handle not available"))?;
 
             let binary_path = dirs::service_path()?;
             let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
@@ -160,23 +162,27 @@ impl Sysopt {
             let shell = app_handle.shell();
             let output = if pac_enable {
                 let address = format!("http://{proxy_host}:{pac_port}/commands/pac");
-                let output = shell
-                    .command(sysproxy_exe.as_path().to_str().unwrap())
+                let sysproxy_str = sysproxy_exe
+                    .as_path()
+                    .to_str()
+                    .ok_or_else(|| anyhow::anyhow!("Invalid sysproxy.exe path"))?;
+                shell
+                    .command(sysproxy_str)
                     .args(["pac", address.as_str()])
                     .output()
-                    .await
-                    .unwrap();
-                output
+                    .await?
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass();
-                let output = shell
-                    .command(sysproxy_exe.as_path().to_str().unwrap())
+                let sysproxy_str = sysproxy_exe
+                    .as_path()
+                    .to_str()
+                    .ok_or_else(|| anyhow::anyhow!("Invalid sysproxy.exe path"))?;
+                shell
+                    .command(sysproxy_str)
                     .args(["global", address.as_str(), bypass.as_ref()])
                     .output()
-                    .await
-                    .unwrap();
-                output
+                    .await?
             };
 
             if !output.status.success() {
@@ -218,7 +224,9 @@ impl Sysopt {
             use anyhow::bail;
             use tauri_plugin_shell::ShellExt;
 
-            let app_handle = Handle::global().app_handle().unwrap();
+            let app_handle = Handle::global()
+                .app_handle()
+                .ok_or_else(|| anyhow::anyhow!("App handle not available"))?;
 
             let binary_path = dirs::service_path()?;
             let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
@@ -228,12 +236,15 @@ impl Sysopt {
             }
 
             let shell = app_handle.shell();
+            let sysproxy_str = sysproxy_exe
+                .as_path()
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid sysproxy.exe path"))?;
             let output = shell
-                .command(sysproxy_exe.as_path().to_str().unwrap())
+                .command(sysproxy_str)
                 .args(["set", "1"])
                 .output()
-                .await
-                .unwrap();
+                .await?;
 
             if !output.status.success() {
                 bail!("sysproxy exe run failed");
@@ -279,7 +290,10 @@ impl Sysopt {
 
     /// 尝试使用原来的自启动方法
     fn try_original_autostart_method(&self, is_enable: bool) {
-        let app_handle = Handle::global().app_handle().unwrap();
+        let Some(app_handle) = Handle::global().app_handle() else {
+            log::error!(target: "app", "App handle not available for autostart");
+            return;
+        };
         let autostart_manager = app_handle.autolaunch();
 
         if is_enable {
@@ -306,7 +320,9 @@ impl Sysopt {
         }
 
         // 回退到原来的方法
-        let app_handle = Handle::global().app_handle().unwrap();
+        let app_handle = Handle::global()
+            .app_handle()
+            .ok_or_else(|| anyhow::anyhow!("App handle not available"))?;
         let autostart_manager = app_handle.autolaunch();
 
         match autostart_manager.is_enabled() {

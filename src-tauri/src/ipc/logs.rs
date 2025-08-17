@@ -28,7 +28,7 @@ impl LogItem {
 
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
 
         // Simple time formatting (HH:MM:SS)
@@ -109,9 +109,8 @@ impl LogsMonitor {
                         filter_level
                     );
                     return;
-                } else {
-                    true // Level changed
                 }
+                true // Level changed
             } else {
                 true // First time or was stopped
             }
@@ -152,12 +151,12 @@ impl LogsMonitor {
             *current_level = Some(filter_level.clone());
         }
 
-        let monitor_current = self.current.clone();
+        let monitor_current = Arc::clone(&self.current);
 
         let task = tokio::spawn(async move {
             loop {
                 // Get fresh IPC path and client for each connection attempt
-                let (_ipc_path_buf, client) = match Self::create_ipc_client().await {
+                let (_ipc_path_buf, client) = match Self::create_ipc_client() {
                     Ok((path, client)) => (path, client),
                     Err(e) => {
                         logging!(error, Type::Ipc, true, "Failed to create IPC client: {}", e);
@@ -183,7 +182,9 @@ impl LogsMonitor {
                 let _ = client
                     .get(&url)
                     .timeout(Duration::from_secs(30))
-                    .process_lines(|line| Self::process_log_line(line, monitor_current.clone()))
+                    .process_lines(|line| {
+                        Self::process_log_line(line, Arc::clone(&monitor_current))
+                    })
                     .await;
 
                 // Wait before retrying
@@ -228,7 +229,7 @@ impl LogsMonitor {
         }
     }
 
-    async fn create_ipc_client() -> Result<
+    fn create_ipc_client() -> Result<
         (std::path::PathBuf, kode_bridge::IpcStreamClient),
         Box<dyn std::error::Error + Send + Sync>,
     > {

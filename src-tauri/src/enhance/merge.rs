@@ -18,7 +18,10 @@ pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
 
     deep_merge(&mut config, &Value::from(merge));
 
-    let config = config.as_mapping().unwrap().clone();
+    let config = config.as_mapping().cloned().unwrap_or_else(|| {
+        log::error!("Failed to convert merged config to mapping, using empty mapping");
+        Mapping::new()
+    });
 
     config
 }

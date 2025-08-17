@@ -44,7 +44,7 @@ pub async fn patch_clash_mode(payload: String) -> CmdResult {
 /// 切换Clash核心
 #[tauri::command]
 pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {
-    log::info!(target: "app", "changing core to {clash_core}");
+    logging!(info, Type::Config, "changing core to {clash_core}");
 
     match CoreManager::global()
         .change_core(Some(clash_core.clone()))
@@ -54,14 +54,18 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
             // 切换内核后重启内核
             match CoreManager::global().restart_core().await {
                 Ok(_) => {
-                    log::info!(target: "app", "core changed and restarted to {clash_core}");
+                    logging!(
+                        info,
+                        Type::Core,
+                        "core changed and restarted to {clash_core}"
+                    );
                     handle::Handle::notice_message("config_core::change_success", &clash_core);
                     handle::Handle::refresh_clash();
                     Ok(None)
                 }
                 Err(err) => {
                     let error_msg = format!("Core changed but failed to restart: {err}");
-                    log::error!(target: "app", "{error_msg}");
+                    logging!(error, Type::Core, "{error_msg}");
                     handle::Handle::notice_message("config_core::change_error", &error_msg);
                     Ok(Some(error_msg))
                 }
@@ -69,7 +73,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
         }
         Err(err) => {
             let error_msg = err.to_string();
-            log::error!(target: "app", "failed to change core: {error_msg}");
+            logging!(error, Type::Core, "failed to change core: {error_msg}");
             handle::Handle::notice_message("config_core::change_error", &error_msg);
             Ok(Some(error_msg))
         }
@@ -141,7 +145,7 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     // 保存DNS配置到文件
     let yaml_str = serde_yaml::to_string(&dns_config).map_err(|e| e.to_string())?;
     fs::write(&dns_path, yaml_str).map_err(|e| e.to_string())?;
-    log::info!(target: "app", "DNS config saved to {dns_path:?}");
+    logging!(info, Type::Config, "DNS config saved to {dns_path:?}");
 
     Ok(())
 }
@@ -162,20 +166,20 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
             let dns_path = match dirs::app_home_dir() {
                 Ok(path) => path.join("dns_config.yaml"),
                 Err(e) => {
-                    log::error!(target: "app", "Failed to get home dir: {e}");
+                    logging!(error, Type::Config, "Failed to get home dir: {e}");
                     return;
                 }
             };
 
             if !dns_path.exists() {
-                log::warn!(target: "app", "DNS config file not found");
+                logging!(warn, Type::Config, "DNS config file not found");
                 return;
             }
 
             let dns_yaml = match std::fs::read_to_string(&dns_path) {
                 Ok(content) => content,
                 Err(e) => {
-                    log::error!(target: "app", "Failed to read DNS config: {e}");
+                    logging!(error, Type::Config, "Failed to read DNS config: {e}");
                     return;
                 }
             };
@@ -188,12 +192,12 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
                     patch
                 }
                 Err(e) => {
-                    log::error!(target: "app", "Failed to parse DNS config: {e}");
+                    logging!(error, Type::Config, "Failed to parse DNS config: {e}");
                     return;
                 }
             };
 
-            log::info!(target: "app", "Applying DNS config from file");
+            logging!(info, Type::Config, "Applying DNS config from file");
 
             // 重新生成配置，确保DNS配置被正确应用
             // 这里不调用patch_clash以避免将DNS配置写入config.yaml
@@ -202,37 +206,53 @@ pub fn apply_dns_config(apply: bool) -> CmdResult {
                 .patch_config(patch_config.clone());
 
             // 首先重新生成配置
-            if let Err(err) = Config::generate().await {
-                log::error!(target: "app", "Failed to regenerate config with DNS: {err}");
+            if let Err(err) = Config::generate() {
+                logging!(
+                    error,
+                    Type::Config,
+                    "Failed to regenerate config with DNS: {err}"
+                );
                 return;
             }
 
             // 然后应用新配置
             if let Err(err) = CoreManager::global().update_config().await {
-                log::error!(target: "app", "Failed to apply config with DNS: {err}");
+                logging!(
+                    error,
+                    Type::Config,
+                    "Failed to apply config with DNS: {err}"
+                );
             } else {
-                log::info!(target: "app", "DNS config successfully applied");
+                logging!(info, Type::Config, "DNS config successfully applied");
                 handle::Handle::refresh_clash();
             }
         } else {
             // 当关闭DNS设置时，不需要对配置进行任何修改
             // 直接重新生成配置，让enhance函数自动跳过DNS配置的加载
-            log::info!(target: "app", "DNS settings disabled, regenerating config");
+            logging!(
+                info,
+                Type::Config,
+                "DNS settings disabled, regenerating config"
+            );
 
             // 重新生成配置
-            if let Err(err) = Config::generate().await {
-                log::error!(target: "app", "Failed to regenerate config: {err}");
+            if let Err(err) = Config::generate() {
+                logging!(error, Type::Config, "Failed to regenerate config: {err}");
                 return;
             }
 
             // 应用新配置
             match CoreManager::global().update_config().await {
                 Ok(_) => {
-                    log::info!(target: "app", "Config regenerated successfully");
+                    logging!(info, Type::Config, "Config regenerated successfully");
                     handle::Handle::refresh_clash();
                 }
                 Err(err) => {
-                    log::error!(target: "app", "Failed to apply regenerated config: {err}");
+                    logging!(
+                        error,
+                        Type::Config,
+                        "Failed to apply regenerated config: {err}"
+                    );
                 }
             }
         }
@@ -307,7 +327,10 @@ pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
     let key = ProxyRequestCache::make_key("clash_config", "default");
     let value = cache
         .get_or_fetch(key, CONFIG_REFRESH_INTERVAL, || async {
-            manager.get_config().await.expect("fetch failed")
+            manager.get_config().await.unwrap_or_else(|e| {
+                logging!(error, Type::Cmd, "Failed to fetch clash config: {e}");
+                serde_json::Value::Object(serde_json::Map::new())
+            })
         })
         .await;
     Ok((*value).clone())

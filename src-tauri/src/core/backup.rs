@@ -117,8 +117,7 @@ impl WebDavClient {
                             attempt.follow()
                         }
                     }))
-                    .build()
-                    .unwrap(),
+                    .build()?,
             )
             .set_host(config.url)
             .set_auth(reqwest_dav::Auth::Basic(config.username, config.password))
@@ -243,12 +242,17 @@ pub fn create_backup() -> Result<(String, PathBuf), Error> {
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
     if let Ok(entries) = fs::read_dir(dirs::app_profiles_dir()?) {
         for entry in entries {
-            let entry = entry.unwrap();
+            let entry = entry?;
             let path = entry.path();
             if path.is_file() {
-                let backup_path = format!("profiles/{}", entry.file_name().to_str().unwrap());
+                let file_name_os = entry.file_name();
+                let file_name = file_name_os
+                    .to_str()
+                    .ok_or_else(|| anyhow::Error::msg("Invalid file name encoding"))?;
+                let backup_path = format!("profiles/{}", file_name);
                 zip.start_file(backup_path, options)?;
-                zip.write_all(fs::read(path).unwrap().as_slice())?;
+                let file_content = fs::read(&path)?;
+                zip.write_all(&file_content)?;
             }
         }
     }

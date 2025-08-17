@@ -51,7 +51,7 @@ where
         freshness_duration: Duration,
     ) -> Self {
         let current = Arc::new(RwLock::new(T::default()));
-        let monitor_current = current.clone();
+        let monitor_current = Arc::clone(&current);
         let endpoint_clone = endpoint.clone();
 
         // Start the monitoring task
@@ -110,7 +110,7 @@ where
             let _ = client
                 .get(&endpoint)
                 .timeout(timeout)
-                .process_lines(|line| T::parse_and_update(line, current.clone()))
+                .process_lines(|line| T::parse_and_update(line, Arc::clone(&current)))
                 .await;
 
             tokio::time::sleep(retry_interval).await;

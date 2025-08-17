@@ -19,7 +19,9 @@ impl IClashTemp {
             Ok(mut map) => {
                 template.0.keys().for_each(|key| {
                     if !map.contains_key(key) {
-                        map.insert(key.clone(), template.0.get(key).unwrap().clone());
+                        if let Some(value) = template.0.get(key) {
+                            map.insert(key.clone(), value.clone());
+                        }
                     }
                 });
                 // 确保 secret 字段存在且不为空
@@ -307,7 +309,13 @@ impl IClashTemp {
 
     pub fn guard_external_controller_ipc() -> String {
         // 总是使用当前的 IPC 路径，确保配置文件与运行时路径一致
-        path_to_str(&ipc_path().unwrap()).unwrap().to_string()
+        ipc_path()
+            .ok()
+            .and_then(|path| path_to_str(&path).ok().map(|s| s.to_string()))
+            .unwrap_or_else(|| {
+                log::error!(target: "app", "Failed to get IPC path, using default");
+                "127.0.0.1:9090".to_string()
+            })
     }
 }
 
