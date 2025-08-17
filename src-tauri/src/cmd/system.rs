@@ -25,7 +25,7 @@ static APP_START_TIME: Lazy<AtomicI64> = Lazy::new(|| {
 
 #[tauri::command]
 pub async fn export_diagnostic_info() -> CmdResult<()> {
-    let sysinfo = PlatformSpecification::new_async().await;
+    let sysinfo = PlatformSpecification::new_sync();
     let info = format!("{sysinfo:?}");
 
     let app_handle = handle::Handle::global()
@@ -40,7 +40,7 @@ pub async fn export_diagnostic_info() -> CmdResult<()> {
 
 #[tauri::command]
 pub async fn get_system_info() -> CmdResult<String> {
-    let sysinfo = PlatformSpecification::new_async().await;
+    let sysinfo = PlatformSpecification::new_sync();
     let info = format!("{sysinfo:?}");
     Ok(info)
 }
@@ -48,7 +48,7 @@ pub async fn get_system_info() -> CmdResult<String> {
 /// 获取当前内核运行模式
 #[tauri::command]
 pub async fn get_running_mode() -> Result<String, String> {
-    Ok(CoreManager::global().get_running_mode().await.to_string())
+    Ok(CoreManager::global().get_running_mode().to_string())
 }
 
 /// 获取应用的运行时间（毫秒）

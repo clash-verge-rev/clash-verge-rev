@@ -139,7 +139,7 @@ fn test_script() {
     }
   "#;
 
-    let config = r#"
+    let config = r"
     rules:
       - 111
       - 222
@@ -147,7 +147,7 @@ fn test_script() {
       enable: false
     dns:
       enable: false
-  "#;
+  ";
 
     let config = serde_yaml::from_str(config).expect("Failed to parse test config YAML");
     let (config, results) = use_script(script.into(), config, "".to_string())

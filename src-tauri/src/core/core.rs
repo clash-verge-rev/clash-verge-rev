@@ -14,6 +14,7 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::Local;
+use parking_lot::Mutex;
 use std::{
     fmt,
     fs::{create_dir_all, File},
@@ -22,7 +23,6 @@ use std::{
     sync::Arc,
 };
 use tauri_plugin_shell::{process::CommandChild, ShellExt};
-use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub struct CoreManager {
@@ -439,7 +439,7 @@ impl CoreManager {
 
         // 获取当前管理的进程 PID
         let current_pid = {
-            let child_guard = self.child_sidecar.lock().await;
+            let child_guard = self.child_sidecar.lock();
             child_guard.as_ref().map(|child| child.pid())
         };
 
@@ -733,7 +733,7 @@ impl CoreManager {
         }
     }
 
-    async fn start_core_by_sidecar(&self) -> Result<()> {
+    fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Running core by sidecar");
         let config_file = &Config::generate_file(ConfigType::Run)?;
         let app_handle = handle::Handle::global()
@@ -787,14 +787,14 @@ impl CoreManager {
             "Started core by sidecar pid: {}",
             pid
         );
-        *self.child_sidecar.lock().await = Some(child);
-        self.set_running_mode(RunningMode::Sidecar).await;
+        *self.child_sidecar.lock() = Some(child);
+        self.set_running_mode(RunningMode::Sidecar);
         Ok(())
     }
-    async fn stop_core_by_sidecar(&self) -> Result<()> {
+    fn stop_core_by_sidecar(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Stopping core by sidecar");
 
-        if let Some(child) = self.child_sidecar.lock().await.take() {
+        if let Some(child) = self.child_sidecar.lock().take() {
             let pid = child.pid();
             child.kill()?;
             logging!(
@@ -805,7 +805,7 @@ impl CoreManager {
                 pid
             );
         }
-        self.set_running_mode(RunningMode::NotRunning).await;
+        self.set_running_mode(RunningMode::NotRunning);
         Ok(())
     }
 }
@@ -815,13 +815,13 @@ impl CoreManager {
         logging!(trace, Type::Core, true, "Running core by service");
         let config_file = &Config::generate_file(ConfigType::Run)?;
         service::run_core_by_service(config_file).await?;
-        self.set_running_mode(RunningMode::Service).await;
+        self.set_running_mode(RunningMode::Service);
         Ok(())
     }
     async fn stop_core_by_service(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Stopping core by service");
         service::stop_core_by_service().await?;
-        self.set_running_mode(RunningMode::NotRunning).await;
+        self.set_running_mode(RunningMode::NotRunning);
         Ok(())
     }
 }
@@ -948,7 +948,7 @@ impl CoreManager {
                     true,
                     "用户偏好Sidecar模式或先前服务启动失败，使用Sidecar模式启动"
                 );
-                self.start_core_by_sidecar().await?;
+                self.start_core_by_sidecar()?;
                 // 如果 sidecar 启动成功，我们可以认为核心初始化流程到此结束
                 // 后续的 Tray::global().subscribe_traffic().await 仍然会执行
             } else {
@@ -984,7 +984,7 @@ impl CoreManager {
                                     final_state.last_error =
                                         Some("Newly installed service failed to start".to_string());
                                     final_state.save()?;
-                                    self.start_core_by_sidecar().await?;
+                                    self.start_core_by_sidecar()?;
                                 }
                             } else {
                                 logging!(
@@ -1000,7 +1000,7 @@ impl CoreManager {
                                         .to_string(),
                                 );
                                 final_state.save()?;
-                                self.start_core_by_sidecar().await?;
+                                self.start_core_by_sidecar()?;
                             }
                         }
                         Err(err) => {
@@ -1011,7 +1011,7 @@ impl CoreManager {
                                 ..Default::default()
                             };
                             new_state.save()?;
-                            self.start_core_by_sidecar().await?;
+                            self.start_core_by_sidecar()?;
                         }
                     }
                 } else {
@@ -1040,7 +1040,7 @@ impl CoreManager {
                             }));
                         final_state.save()?;
                     }
-                    self.start_core_by_sidecar().await?;
+                    self.start_core_by_sidecar()?;
                 }
             }
         }
@@ -1051,13 +1051,13 @@ impl CoreManager {
         Ok(())
     }
 
-    pub async fn set_running_mode(&self, mode: RunningMode) {
-        let mut guard = self.running.lock().await;
+    pub fn set_running_mode(&self, mode: RunningMode) {
+        let mut guard = self.running.lock();
         *guard = mode;
     }
 
-    pub async fn get_running_mode(&self) -> RunningMode {
-        let guard = self.running.lock().await;
+    pub fn get_running_mode(&self) -> RunningMode {
+        let guard = self.running.lock();
         (*guard).clone()
     }
 
@@ -1079,10 +1079,10 @@ impl CoreManager {
                     true,
                     "服务不可用，根据用户偏好使用Sidecar模式"
                 );
-                self.start_core_by_sidecar().await?;
+                self.start_core_by_sidecar()?;
             } else {
                 logging!(info, Type::Core, true, "服务不可用，使用Sidecar模式");
-                self.start_core_by_sidecar().await?;
+                self.start_core_by_sidecar()?;
             }
         }
         Ok(())
@@ -1090,9 +1090,9 @@ impl CoreManager {
 
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
-        match self.get_running_mode().await {
+        match self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
-            RunningMode::Sidecar => self.stop_core_by_sidecar().await,
+            RunningMode::Sidecar => self.stop_core_by_sidecar(),
             RunningMode::NotRunning => Ok(()),
         }
     }

@@ -62,10 +62,10 @@ impl PlatformSpecification {
     }
 
     // 异步方法来获取完整的系统信息
-    pub async fn new_async() -> Self {
+    pub fn new_sync() -> Self {
         let mut info = Self::new();
 
-        let running_mode = CoreManager::global().get_running_mode().await;
+        let running_mode = CoreManager::global().get_running_mode();
         info.running_mode = running_mode.to_string();
 
         info
