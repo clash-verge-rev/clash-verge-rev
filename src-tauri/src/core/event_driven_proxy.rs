@@ -307,7 +307,7 @@ impl EventDrivenProxyManager {
 
         if !current.enable || current.url != expected.url {
             log::info!(target: "app", "PAC代理设置异常，正在恢复...");
-            Self::restore_pac_proxy(&expected.url);
+            Self::restore_pac_proxy(&expected.url).await;
 
             sleep(Duration::from_millis(500)).await;
             let restored = Self::get_auto_proxy_with_timeout().await;
@@ -329,7 +329,7 @@ impl EventDrivenProxyManager {
 
         if !current.enable || current.host != expected.host || current.port != expected.port {
             log::info!(target: "app", "系统代理设置异常，正在恢复...");
-            Self::restore_sys_proxy(&expected);
+            Self::restore_sys_proxy(&expected).await;
 
             sleep(Duration::from_millis(500)).await;
             let restored = Self::get_sys_proxy_with_timeout().await;
@@ -350,10 +350,10 @@ impl EventDrivenProxyManager {
 
         if pac_enabled {
             let expected = Self::get_expected_pac_config();
-            Self::restore_pac_proxy(&expected.url);
+            Self::restore_pac_proxy(&expected.url).await;
         } else {
             let expected = Self::get_expected_sys_proxy();
-            Self::restore_sys_proxy(&expected);
+            Self::restore_sys_proxy(&expected).await;
         }
 
         Self::check_and_restore_proxy(state).await;
@@ -380,13 +380,13 @@ impl EventDrivenProxyManager {
             logging_error!(Type::System, true, disabled_sys.set_system_proxy());
 
             let expected = Self::get_expected_pac_config();
-            Self::restore_pac_proxy(&expected.url);
+            Self::restore_pac_proxy(&expected.url).await;
         } else {
             let disabled_auto = Autoproxy::default();
             logging_error!(Type::System, true, disabled_auto.set_auto_proxy());
 
             let expected = Self::get_expected_sys_proxy();
-            Self::restore_sys_proxy(&expected);
+            Self::restore_sys_proxy(&expected).await;
         }
 
         Self::update_state_timestamp(state, |s| s.pac_enabled = to_pac);
@@ -506,7 +506,7 @@ impl EventDrivenProxyManager {
         }
     }
 
-    fn restore_pac_proxy(expected_url: &str) {
+    async fn restore_pac_proxy(expected_url: &str) {
         #[cfg(not(target_os = "windows"))]
         {
             let new_autoproxy = Autoproxy {
@@ -518,11 +518,11 @@ impl EventDrivenProxyManager {
 
         #[cfg(target_os = "windows")]
         {
-            let _ = Self::execute_sysproxy_command(&["pac", expected_url]);
+            let _ = Self::execute_sysproxy_command(&["pac", expected_url]).await;
         }
     }
 
-    fn restore_sys_proxy(expected: &Sysproxy) {
+    async fn restore_sys_proxy(expected: &Sysproxy) {
         #[cfg(not(target_os = "windows"))]
         {
             logging_error!(Type::System, true, expected.set_system_proxy());
@@ -531,7 +531,7 @@ impl EventDrivenProxyManager {
         #[cfg(target_os = "windows")]
         {
             let address = format!("{}:{}", expected.host, expected.port);
-            let _ = Self::execute_sysproxy_command(&["global", &address, &expected.bypass]);
+            let _ = Self::execute_sysproxy_command(&["global", &address, &expected.bypass]).await;
         }
     }
 
