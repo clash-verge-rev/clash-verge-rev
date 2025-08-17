@@ -68,18 +68,18 @@ jobs:
           cache-all-crates: true
           shared-key: autobuild-shared
 
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        if: github.event.inputs[matrix.input] == 'true'
+        with:
+          run_install: false
+
       - name: Install Node
         if: github.event.inputs[matrix.input] == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "pnpm"
-
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        if: github.event.inputs[matrix.input] == 'true'
-        with:
-          run_install: false
 
       - name: Pnpm install and check
         if: github.event.inputs[matrix.input] == 'true'
