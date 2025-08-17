@@ -520,6 +520,7 @@ impl EventDrivenProxyManager {
         {
             logging_error!(
                 Type::System,
+                "{}",
                 Self::execute_sysproxy_command(&["pac", expected_url])
             );
         }
@@ -536,6 +537,7 @@ impl EventDrivenProxyManager {
             let address = format!("{}:{}", expected.host, expected.port);
             logging_error!(
                 Type::System,
+                "{}",
                 Self::execute_sysproxy_command(&["global", &address, &expected.bypass])
             );
         }
