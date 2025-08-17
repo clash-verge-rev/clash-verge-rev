@@ -331,7 +331,7 @@ impl EventDrivenProxyManager {
 
         if !current.enable || current.host != expected.host || current.port != expected.port {
             log::info!(target: "app", "系统代理设置异常，正在恢复...");
-            if let Err(e) = Self::restore_sys_proxy(&expected) {
+            if let Err(e) = Self::restore_sys_proxy(&expected).await {
                 log::error!(target: "app", "恢复系统代理失败: {}", e);
             }
 
@@ -359,7 +359,7 @@ impl EventDrivenProxyManager {
             }
         } else {
             let expected = Self::get_expected_sys_proxy();
-            if let Err(e) = Self::restore_sys_proxy(&expected) {
+            if let Err(e) = Self::restore_sys_proxy(&expected).await {
                 log::error!(target: "app", "启用系统代理失败: {}", e);
             }
         }
