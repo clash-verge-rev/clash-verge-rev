@@ -428,7 +428,7 @@ pub fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub fn reinstall_service() -> Result<()> {
+pub async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态
@@ -861,7 +861,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
         }
 
         log::info!(target: "app", "开始重装服务");
-        if let Err(err) = reinstall_service() {
+        if let Err(err) = reinstall_service().await {
             log::warn!(target: "app", "服务重装失败: {err}");
             bail!("Failed to reinstall service: {}", err);
         }
@@ -887,7 +887,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     if check_service_needs_reinstall().await {
         log::info!(target: "app", "服务需要重装");
 
-        if let Err(err) = reinstall_service() {
+        if let Err(err) = reinstall_service().await {
             log::warn!(target: "app", "服务重装失败: {err}");
             bail!("Failed to reinstall service: {}", err);
         }
@@ -967,7 +967,7 @@ pub async fn is_service_available() -> Result<()> {
 }
 
 /// 强制重装服务（UI修复按钮）
-pub fn force_reinstall_service() -> Result<()> {
+pub async fn force_reinstall_service() -> Result<()> {
     log::info!(target: "app", "用户请求强制重装服务");
 
     let service_state = ServiceState::default();
@@ -975,7 +975,7 @@ pub fn force_reinstall_service() -> Result<()> {
 
     log::info!(target: "app", "已重置服务状态，开始执行重装");
 
-    match reinstall_service() {
+    match reinstall_service().await {
         Ok(()) => {
             log::info!(target: "app", "服务重装成功");
             Ok(())
