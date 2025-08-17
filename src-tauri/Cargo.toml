@@ -161,10 +161,10 @@ dbg_macro = "warn"
 #print_stderr = "warn"
 
 # Performance lints for proxy application
-#clone_on_ref_ptr = "warn"
-#rc_clone_in_vec_init = "warn"
-#large_stack_arrays = "warn"
-#large_const_arrays = "warn"
+clone_on_ref_ptr = "warn"
+rc_clone_in_vec_init = "warn"
+large_stack_arrays = "warn"
+large_const_arrays = "warn"
 
 # Security lints
 #integer_division = "warn"
