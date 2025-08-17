@@ -4,24 +4,6 @@ use crate::{
     utils::i18n::t,
 };
 use anyhow::Result;
-use std::future::Future;
-
-async fn execute_service_operation_async<F, Fut, E>(service_op: F, op_type: &str) -> CmdResult
-where
-    F: FnOnce() -> Fut,
-    Fut: Future<Output = Result<(), E>>,
-    E: ToString + std::fmt::Debug,
-{
-    if let Err(e) = service_op().await {
-        let emsg = format!("{} {} failed: {}", op_type, "Service", e.to_string());
-        return Err(t(emsg.as_str()));
-    }
-    if CoreManager::global().restart_core().await.is_err() {
-        let emsg = format!("{} {} failed", "Restart", "Core");
-        return Err(t(emsg.as_str()));
-    }
-    Ok(())
-}
 
 async fn execute_service_operation_sync<F, E>(service_op: F, op_type: &str) -> CmdResult
 where
@@ -51,12 +33,12 @@ pub async fn uninstall_service() -> CmdResult {
 
 #[tauri::command]
 pub async fn reinstall_service() -> CmdResult {
-    execute_service_operation_async(service::reinstall_service, "Reinstall").await
+    execute_service_operation_sync(service::reinstall_service, "Reinstall").await
 }
 
 #[tauri::command]
 pub async fn repair_service() -> CmdResult {
-    execute_service_operation_async(service::force_reinstall_service, "Repair").await
+    execute_service_operation_sync(service::force_reinstall_service, "Repair").await
 }
 
 #[tauri::command]

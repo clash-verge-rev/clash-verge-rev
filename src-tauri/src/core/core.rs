@@ -843,7 +843,7 @@ impl CoreManager {
     async fn attempt_service_init(&self) -> Result<()> {
         if service::check_service_needs_reinstall().await {
             logging!(info, Type::Core, true, "服务版本不匹配或状态异常，执行重装");
-            if let Err(e) = service::reinstall_service().await {
+            if let Err(e) = service::reinstall_service() {
                 logging!(
                     warn,
                     Type::Core,
@@ -851,7 +851,36 @@ impl CoreManager {
                     "服务重装失败 during attempt_service_init: {}",
                     e
                 );
+                return Err(e);
             }
+            // 如果重装成功，还需要尝试启动服务
+            logging!(info, Type::Core, true, "服务重装成功，尝试启动服务");
+        }
+
+        if let Err(e) = self.start_core_by_service().await {
+            logging!(
+                warn,
+                Type::Core,
+                true,
+                "通过服务启动核心失败 during attempt_service_init: {}",
+                e
+            );
+            // 确保 prefer_sidecar 在 start_core_by_service 失败时也被设置
+            let mut state = service::ServiceState::get();
+            if !state.prefer_sidecar {
+                state.prefer_sidecar = true;
+                state.last_error = Some(format!("通过服务启动核心失败: {e}"));
+                if let Err(save_err) = state.save() {
+                    logging!(
+                        error,
+                        Type::Core,
+                        true,
+                        "保存ServiceState失败 (in attempt_service_init/start_core_by_service): {}",
+                        save_err
+                    );
+                }
+            }
+            return Err(e);
         }
         Ok(())
     }
@@ -1036,7 +1065,7 @@ impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
         if service::is_service_available().await.is_ok() {
             if service::check_service_needs_reinstall().await {
-                service::reinstall_service().await?;
+                service::reinstall_service()?;
             }
             logging!(info, Type::Core, true, "服务可用，使用服务模式启动");
             self.start_core_by_service().await?;
