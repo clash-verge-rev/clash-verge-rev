@@ -566,7 +566,7 @@ impl EventDrivenProxyManager {
             Ok(path) => path,
             Err(e) => {
                 log::error!(target: "app", "获取服务路径失败: {e}");
-                return Err(e.into());
+                return Err(e);
             }
         };
 
