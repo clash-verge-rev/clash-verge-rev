@@ -506,37 +506,39 @@ impl EventDrivenProxyManager {
         }
     }
 
-    fn restore_pac_proxy(expected_url: &str) {
+    fn restore_pac_proxy(expected_url: &str) -> Result<(), anyhow::Error> {
         #[cfg(not(target_os = "windows"))]
         {
             let new_autoproxy = Autoproxy {
                 enable: true,
                 url: expected_url.to_string(),
             };
-            logging_error!(Type::System, true, new_autoproxy.set_auto_proxy());
+            // logging_error!(Type::System, true, new_autoproxy.set_auto_proxy());
+            new_autoproxy.set_auto_proxy().into()
         }
 
         #[cfg(target_os = "windows")]
         {
-            let _ = Self::execute_sysproxy_command(&["pac", expected_url]);
+            Self::execute_sysproxy_command(&["pac", expected_url])?
         }
     }
 
-    fn restore_sys_proxy(expected: &Sysproxy) {
+    fn restore_sys_proxy(expected: &Sysproxy) -> Result<(), anyhow::Error> {
         #[cfg(not(target_os = "windows"))]
         {
-            logging_error!(Type::System, true, expected.set_system_proxy());
+            // logging_error!(Type::System, true, expected.set_system_proxy());
+            expected.set_system_proxy().into()
         }
 
         #[cfg(target_os = "windows")]
         {
             let address = format!("{}:{}", expected.host, expected.port);
-            let _ = Self::execute_sysproxy_command(&["global", &address, &expected.bypass]);
+            Self::execute_sysproxy_command(&["global", &address, &expected.bypass])?
         }
     }
 
     #[cfg(target_os = "windows")]
-    async fn execute_sysproxy_command(args: &[&str]) {
+    async fn execute_sysproxy_command(args: &[&str]) -> Result<(), E> {
         use crate::utils::dirs;
         #[allow(unused_imports)] // creation_flags必须
         use std::os::windows::process::CommandExt;
@@ -546,37 +548,22 @@ impl EventDrivenProxyManager {
             Ok(path) => path,
             Err(e) => {
                 log::error!(target: "app", "获取服务路径失败: {e}");
-                return;
+                return Err(e.into());
             }
         };
 
         let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
         if !sysproxy_exe.exists() {
             log::error!(target: "app", "sysproxy.exe 不存在");
-            return;
+            return Err("sysproxy.exe dose not exists".into());
         }
 
         let output = Command::new(sysproxy_exe)
             .args(args)
             .creation_flags(0x08000000) // CREATE_NO_WINDOW - 隐藏窗口
             .output()
-            .await;
+            .await?;
 
-        match output {
-            Ok(output) => {
-                if !output.status.success() {
-                    log::error!(target: "app", "执行sysproxy命令失败: {args:?}");
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    if !stderr.is_empty() {
-                        log::error!(target: "app", "sysproxy错误输出: {stderr}");
-                    }
-                } else {
-                    log::debug!(target: "app", "成功执行sysproxy命令: {args:?}");
-                }
-            }
-            Err(e) => {
-                log::error!(target: "app", "执行sysproxy命令出错: {e}");
-            }
-        }
+        Ok(())
     }
 }
