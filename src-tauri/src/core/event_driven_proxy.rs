@@ -307,7 +307,7 @@ impl EventDrivenProxyManager {
 
         if !current.enable || current.url != expected.url {
             log::info!(target: "app", "PAC代理设置异常，正在恢复...");
-            if let Err(e) = Self::restore_pac_proxy(&expected.url) {
+            if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
                 log::error!(target: "app", "恢复PAC代理失败: {}", e);
             }
 
@@ -354,7 +354,7 @@ impl EventDrivenProxyManager {
 
         if pac_enabled {
             let expected = Self::get_expected_pac_config();
-            if let Err(e) = Self::restore_pac_proxy(&expected.url) {
+            if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
                 log::error!(target: "app", "启用PAC代理失败: {}", e);
             }
         } else {
@@ -388,7 +388,7 @@ impl EventDrivenProxyManager {
             logging_error!(Type::System, true, disabled_sys.set_system_proxy());
 
             let expected = Self::get_expected_pac_config();
-            if let Err(e) = Self::restore_pac_proxy(&expected.url) {
+            if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
                 log::error!(target: "app", "切换到PAC模式失败: {}", e);
             }
         } else {
@@ -396,7 +396,7 @@ impl EventDrivenProxyManager {
             logging_error!(Type::System, true, disabled_auto.set_auto_proxy());
 
             let expected = Self::get_expected_sys_proxy();
-            if let Err(e) = Self::restore_sys_proxy(&expected) {
+            if let Err(e) = Self::restore_sys_proxy(&expected).await {
                 log::error!(target: "app", "切换到HTTP代理模式失败: {}", e);
             }
         }
@@ -524,7 +524,7 @@ impl EventDrivenProxyManager {
     }
 
     #[cfg(not(target_os = "windows"))]
-    fn restore_pac_proxy(expected_url: &str) -> Result<(), anyhow::Error> {
+    async fn restore_pac_proxy(expected_url: &str) -> Result<(), anyhow::Error> {
         {
             let new_autoproxy = Autoproxy {
                 enable: true,
@@ -544,7 +544,7 @@ impl EventDrivenProxyManager {
     }
 
     #[cfg(not(target_os = "windows"))]
-    fn restore_sys_proxy(expected: &Sysproxy) -> Result<(), anyhow::Error> {
+    async fn restore_sys_proxy(expected: &Sysproxy) -> Result<(), anyhow::Error> {
         {
             // logging_error!(Type::System, true, expected.set_system_proxy());
             expected
@@ -574,7 +574,7 @@ impl EventDrivenProxyManager {
         }
         anyhow::ensure!(sysproxy_exe.exists(), "sysproxy.exe does not exist");
 
-        let output = Command::new(sysproxy_exe)
+        let _output = Command::new(sysproxy_exe)
             .args(args)
             .creation_flags(0x08000000) // CREATE_NO_WINDOW - 隐藏窗口
             .output()
