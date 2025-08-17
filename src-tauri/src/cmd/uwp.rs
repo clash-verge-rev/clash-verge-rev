@@ -7,7 +7,7 @@ mod platform {
     use crate::{core::win_uwp, wrap_err};
 
     pub async fn invoke_uwp_tool() -> CmdResult {
-        wrap_err!(win_uwp::invoke_uwptools().await)
+        wrap_err!(win_uwp::invoke_uwptools())
     }
 }
 
