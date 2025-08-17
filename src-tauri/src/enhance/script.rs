@@ -68,12 +68,12 @@ pub fn use_script(
     let safe_name = escape_js_string_for_single_quote(&name);
 
     let code = format!(
-        r#"try{{
+        r"try{{
         {script};
         JSON.stringify(main({config_str},'{safe_name}')||'')
       }} catch(err) {{
         `__error_flag__ ${{err.toString()}}`
-      }}"#
+      }}"
     );
 
     if let Ok(result) = context.eval(Source::from_bytes(code.as_str())) {

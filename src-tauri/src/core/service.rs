@@ -856,9 +856,8 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
             if let Ok(()) = start_with_existing_service(config_file).await {
                 log::info!(target: "app", "尽管版本不匹配，但成功启动了服务");
                 return Ok(());
-            } else {
-                bail!("服务版本不匹配且无法重装，启动失败");
             }
+            bail!("服务版本不匹配且无法重装，启动失败");
         }
 
         log::info!(target: "app", "开始重装服务");

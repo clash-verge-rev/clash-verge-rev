@@ -109,9 +109,8 @@ impl LogsMonitor {
                         filter_level
                     );
                     return;
-                } else {
-                    true // Level changed
                 }
+                true // Level changed
             } else {
                 true // First time or was stopped
             }

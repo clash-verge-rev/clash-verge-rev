@@ -180,7 +180,6 @@ impl NotificationSystem {
                             thread::sleep(Duration::from_millis(20));
                         }
                         Err(mpsc::RecvTimeoutError::Timeout) => {
-                            continue;
                         }
                         Err(mpsc::RecvTimeoutError::Disconnected) => {
                             log::info!(

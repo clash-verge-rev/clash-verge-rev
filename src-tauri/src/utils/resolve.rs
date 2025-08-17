@@ -557,13 +557,13 @@ pub fn create_window(is_show: bool) -> bool {
                                 logging!(info, Type::Window, true, "UI已完全加载就绪");
                                 handle::Handle::global()
                                     .get_window()
-                                    .map(|window| window.eval(r#"
+                                    .map(|window| window.eval(r"
                                         const overlay = document.getElementById('initial-loading-overlay');
                                         if (overlay) {
                                             overlay.style.opacity = '0';
                                             setTimeout(() => overlay.remove(), 300);
                                         }
-                                    "#));
+                                    "));
                             }
                             Err(_) => {
                                 logging!(

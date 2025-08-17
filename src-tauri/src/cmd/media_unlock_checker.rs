@@ -1091,18 +1091,17 @@ async fn check_disney_plus(client: &Client) -> UnlockItem {
                 region: None,
                 check_time: Some(get_local_date_string()),
             };
-        } else {
-            return UnlockItem {
-                name: "Disney+".to_string(),
-                status: format!(
-                    "Failed (GraphQL error: {}, status: {})",
-                    graphql_body_text.chars().take(50).collect::<String>() + "...",
-                    graphql_status.as_u16()
-                ),
-                region: None,
-                check_time: Some(get_local_date_string()),
-            };
         }
+        return UnlockItem {
+            name: "Disney+".to_string(),
+            status: format!(
+                "Failed (GraphQL error: {}, status: {})",
+                graphql_body_text.chars().take(50).collect::<String>() + "...",
+                graphql_status.as_u16()
+            ),
+            region: None,
+            check_time: Some(get_local_date_string()),
+        };
     }
 
     // 提取国家代码

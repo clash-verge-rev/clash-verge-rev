@@ -38,9 +38,8 @@ pub async fn check_singleton() -> Result<()> {
         }
         log::error!("failed to setup singleton listen server");
         bail!("app exists");
-    } else {
-        Ok(())
     }
+    Ok(())
 }
 
 /// The embed server only be used to implement singleton process
