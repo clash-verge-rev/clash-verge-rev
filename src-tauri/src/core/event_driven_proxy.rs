@@ -518,11 +518,7 @@ impl EventDrivenProxyManager {
 
         #[cfg(target_os = "windows")]
         {
-            logging_error!(
-                Type::System,
-                "{}",
-                Self::execute_sysproxy_command(&["pac", expected_url])
-            );
+            let _ = Self::execute_sysproxy_command(&["pac", expected_url]);
         }
     }
 
@@ -535,11 +531,7 @@ impl EventDrivenProxyManager {
         #[cfg(target_os = "windows")]
         {
             let address = format!("{}:{}", expected.host, expected.port);
-            logging_error!(
-                Type::System,
-                "{}",
-                Self::execute_sysproxy_command(&["global", &address, &expected.bypass])
-            );
+            let _ = Self::execute_sysproxy_command(&["global", &address, &expected.bypass]);
         }
     }
 
