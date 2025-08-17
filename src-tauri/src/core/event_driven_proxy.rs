@@ -518,8 +518,13 @@ impl EventDrivenProxyManager {
         }
     }
 
+    #[cfg(target_os = "windows")]
+    async fn restore_pac_proxy(expected_url: &str) -> Result<(), anyhow::Error> {
+        Self::execute_sysproxy_command(&["pac", expected_url]).await
+    }
+
+    #[cfg(not(target_os = "windows"))]
     fn restore_pac_proxy(expected_url: &str) -> Result<(), anyhow::Error> {
-        #[cfg(not(target_os = "windows"))]
         {
             let new_autoproxy = Autoproxy {
                 enable: true,
@@ -530,26 +535,21 @@ impl EventDrivenProxyManager {
                 .set_auto_proxy()
                 .map_err(|e| anyhow::anyhow!("Failed to set auto proxy: {}", e))
         }
-
-        #[cfg(target_os = "windows")]
-        {
-            Self::execute_sysproxy_command(&["pac", expected_url])?
-        }
     }
 
+    #[cfg(target_os = "windows")]
+    async fn restore_sys_proxy(expected: &Sysproxy) -> Result<(), anyhow::Error> {
+        let address = format!("{}:{}", expected.host, expected.port);
+        Self::execute_sysproxy_command(&["global", &address, &expected.bypass]).await
+    }
+
+    #[cfg(not(target_os = "windows"))]
     fn restore_sys_proxy(expected: &Sysproxy) -> Result<(), anyhow::Error> {
-        #[cfg(not(target_os = "windows"))]
         {
             // logging_error!(Type::System, true, expected.set_system_proxy());
             expected
                 .set_system_proxy()
                 .map_err(|e| anyhow::anyhow!("Failed to set system proxy: {}", e))
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            let address = format!("{}:{}", expected.host, expected.port);
-            Self::execute_sysproxy_command(&["global", &address, &expected.bypass])?
         }
     }
 
@@ -571,8 +571,8 @@ impl EventDrivenProxyManager {
         let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
         if !sysproxy_exe.exists() {
             log::error!(target: "app", "sysproxy.exe 不存在");
-            return Err("sysproxy.exe dose not exists".into());
         }
+        anyhow::ensure!(sysproxy_exe.exists(), "sysproxy.exe does not exist");
 
         let output = Command::new(sysproxy_exe)
             .args(args)
