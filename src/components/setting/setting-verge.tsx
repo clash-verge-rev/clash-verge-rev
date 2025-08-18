@@ -73,13 +73,13 @@ const SettingVerge = ({ onError }: Props) => {
 
   const { verge, patchVerge, mutateVerge } = useVerge();
   const {
-    app_log_level = "info",
+    app_log_level,
     theme_mode,
-    language = "en",
+    language,
     tray_event,
-    env_type = OS === "windows" ? "powershell" : "bash",
-    startup_script = "",
-    start_page = "/",
+    env_type,
+    startup_script,
+    start_page,
     webdav_url,
     webdav_username,
     webdav_password,
@@ -204,7 +204,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem label={t("App Log Level")}>
         <GuardState
-          value={app_log_level}
+          value={app_log_level ?? "info"}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ app_log_level: e })}
@@ -221,7 +221,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem label={t("Language")}>
         <GuardState
-          value={language}
+          value={language ?? "en"}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ language: e })}
@@ -277,7 +277,7 @@ const SettingVerge = ({ onError }: Props) => {
           </IconButton>
         }>
         <GuardState
-          value={env_type}
+          value={env_type ?? (OS === "windows" ? "powershell" : "bash")}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ env_type: e })}
@@ -293,7 +293,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem label={t("Start Page")}>
         <GuardState
-          value={start_page}
+          value={start_page ?? "/"}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ start_page: e })}
@@ -312,7 +312,7 @@ const SettingVerge = ({ onError }: Props) => {
 
       <SettingItem label={t("Startup Script")}>
         <GuardState
-          value={startup_script}
+          value={startup_script ?? ""}
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ startup_script: e })}
