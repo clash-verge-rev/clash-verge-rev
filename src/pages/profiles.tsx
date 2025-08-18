@@ -48,7 +48,7 @@ import {
   RefreshRounded,
   TextSnippetOutlined,
 } from "@mui/icons-material";
-import { Box, Button, Divider, IconButton, Stack } from "@mui/material";
+import { Box, Button, Divider, IconButton } from "@mui/material";
 import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { readTextFile } from "@tauri-apps/plugin-fs";
@@ -401,7 +401,7 @@ const ProfilePage = () => {
           </Button>
         </Box>
       }>
-      <div className="bg-comment sticky top-0 z-10 mb-1 flex items-center !space-x-2 px-2 pb-1">
+      <div className="bg-comment sticky top-0 z-10 mb-1 flex items-center !space-x-2 px-2 pt-2 pb-1">
         <BaseStyledTextField
           value={url}
           variant="outlined"
