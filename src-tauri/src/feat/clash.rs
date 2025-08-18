@@ -2,7 +2,7 @@ use crate::{
     config::Config,
     core::{handle, tray, CoreManager},
     ipc::IpcManager,
-    logging, logging_error,
+    logging_error,
     process::AsyncHandler,
     utils::{logging::Type, resolve},
 };
@@ -28,14 +28,22 @@ pub fn restart_clash_core() {
 /// Restart the application
 pub fn restart_app() {
     AsyncHandler::spawn(move || async move {
-        logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+        // logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
         resolve::resolve_reset_async().await;
-        let Some(app_handle) = handle::Handle::global().app_handle() else {
-            logging!(error, Type::Core, "Failed to get app handle for restart");
-            return;
-        };
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-        tauri::process::restart(&app_handle.env());
+
+        handle::Handle::global()
+            .app_handle()
+            .map(|app_handle| {
+                tauri::process::restart(&app_handle.env());
+            })
+            .unwrap_or_else(|| {
+                logging_error!(
+                    Type::System,
+                    false,
+                    "{}",
+                    "Failed to get app handle for restart"
+                );
+            });
     });
 }
 
