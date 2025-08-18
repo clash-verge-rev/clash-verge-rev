@@ -95,8 +95,8 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
     <BaseDialog
       open={open}
       title={
-        <Box display="flex" justifyContent="space-between">
-          New Version v{updateInfo?.version}
+        <div className="flex justify-between">
+          Clash Verge Self v{updateInfo?.version}
           <Box>
             <Button
               variant="contained"
@@ -109,7 +109,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
               {t("Go to Release Page")}
             </Button>
           </Box>
-        </Box>
+        </div>
       }
       contentStyle={{ minWidth: 360, maxWidth: "60%" }}
       okBtn={t("Update")}
@@ -118,7 +118,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onUpdate}>
-      <div style={{ height: size.height - 260, overflow: "auto" }}>
+      <div style={{ maxHeight: size.height - 260, overflow: "auto" }}>
         <MarkdownPreview
           className="p-4"
           source={markdownContent}
