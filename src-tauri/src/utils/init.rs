@@ -1,9 +1,9 @@
+use crate::config::{Config, IClashConfig, IProfiles, IVerge};
 use crate::core::handle;
 use crate::core::verge_log::VergeLog;
+use crate::trace_err;
 use crate::utils::{dirs, help};
-use crate::{config::*, log_err, trace_err};
 use anyhow::Result;
-use std::fs::{self};
 use std::path::PathBuf;
 use tauri_plugin_shell::ShellExt;
 
@@ -12,40 +12,38 @@ use tauri_plugin_shell::ShellExt;
 pub fn init_config() -> Result<()> {
     VergeLog::delete_log()?;
 
-    dirs::init_portable_flag()?;
-
-    log_err!(dirs::app_home_dir().map(|app_dir| {
+    dirs::app_home_dir().map(|app_dir| {
         if !app_dir.exists() {
-            let _ = fs::create_dir_all(&app_dir);
+            let _ = std::fs::create_dir_all(&app_dir);
         }
-    }));
+    })?;
 
-    log_err!(dirs::app_profiles_dir().map(|profiles_dir| {
+    dirs::app_profiles_dir().map(|profiles_dir| {
         if !profiles_dir.exists() {
-            let _ = fs::create_dir_all(&profiles_dir);
+            let _ = std::fs::create_dir_all(&profiles_dir);
         }
-    }));
+    })?;
 
-    log_err!(dirs::clash_path().map(|path| {
+    dirs::clash_path().and_then(|path| {
         if !path.exists() {
             help::save_yaml(&path, &IClashConfig::default().0, Some("# Clash Verge"))?;
         }
-        <Result<()>>::Ok(())
-    }));
+        Ok(())
+    })?;
 
-    log_err!(dirs::verge_path().map(|path| {
+    dirs::verge_path().and_then(|path| {
         if !path.exists() {
             help::save_yaml(&path, &IVerge::template(), Some("# Clash Verge"))?;
         }
-        <Result<()>>::Ok(())
-    }));
+        Ok(())
+    })?;
 
-    log_err!(dirs::profiles_path().map(|path| {
+    dirs::profiles_path().and_then(|path| {
         if !path.exists() {
             help::save_yaml(&path, &IProfiles::template(), Some("# Clash Verge"))?;
         }
-        <Result<()>>::Ok(())
-    }));
+        Ok(())
+    })?;
 
     Ok(())
 }
@@ -58,52 +56,51 @@ pub fn init_resources() -> Result<()> {
     let backup_dir = dirs::backup_dir()?;
 
     if !app_dir.exists() {
-        let _ = fs::create_dir_all(&app_dir);
+        std::fs::create_dir_all(&app_dir)?;
     }
     if !res_dir.exists() {
-        let _ = fs::create_dir_all(&res_dir);
+        std::fs::create_dir_all(&res_dir)?;
     }
 
     if !backup_dir.exists() {
-        let _ = fs::create_dir_all(&backup_dir);
+        std::fs::create_dir_all(&backup_dir)?;
     }
 
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat", "ASN.mmdb"];
 
     // copy the resource file
     // if the source file is newer than the destination file, copy it over
+    let handle_copy = |src_path: &PathBuf, dest_path: &PathBuf, file: &str| {
+        match std::fs::copy(src_path, dest_path) {
+            Ok(_) => tracing::debug!("resources copied '{file}'"),
+            Err(err) => {
+                tracing::error!("failed to copy resources '{file}', {err}")
+            }
+        };
+    };
     for file in file_list.iter() {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
 
-        let handle_copy = || {
-            match fs::copy(&src_path, &dest_path) {
-                Ok(_) => tracing::debug!("resources copied '{file}'"),
-                Err(err) => {
-                    tracing::error!("failed to copy resources '{file}', {err}")
-                }
-            };
-        };
-
         if src_path.exists() && !dest_path.exists() {
-            handle_copy();
+            handle_copy(&src_path, &dest_path, file);
             continue;
         }
 
-        let src_modified = fs::metadata(&src_path).and_then(|m| m.modified());
-        let dest_modified = fs::metadata(&dest_path).and_then(|m| m.modified());
+        let src_modified = std::fs::metadata(&src_path).and_then(|m| m.modified());
+        let dest_modified = std::fs::metadata(&dest_path).and_then(|m| m.modified());
 
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
-                    handle_copy();
+                    handle_copy(&src_path, &dest_path, file);
                 } else {
                     tracing::debug!("skipping resource copy '{file}'");
                 }
             }
             _ => {
                 tracing::debug!("failed to get modified '{file}'");
-                handle_copy();
+                handle_copy(&src_path, &dest_path, file);
             }
         };
     }

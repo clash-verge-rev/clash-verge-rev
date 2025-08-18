@@ -42,13 +42,15 @@ pub fn run() -> Result<()> {
         return Ok(());
     }
 
+    // 初始化目录
+    init::init_config()?;
+
     let language = Config::verge().latest().language.clone().unwrap_or("zh".to_string());
     rust_i18n::set_locale(&language);
 
     // 初始化日志
     let _g = VergeLog::global().init()?;
     resolve::setup_panic_hook();
-    log_err!(init::init_config());
 
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())

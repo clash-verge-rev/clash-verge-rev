@@ -15,28 +15,24 @@ pub static CLASH_CONFIG: &str = "config.yaml";
 pub static VERGE_CONFIG: &str = "verge.yaml";
 pub static PROFILE_YAML: &str = "profiles.yaml";
 
-/// init portable flag
-pub fn init_portable_flag() -> Result<()> {
-    use tauri::utils::platform::current_exe;
-
-    let app_exe = current_exe()?;
-    if let Some(dir) = app_exe.parent() {
-        let dir = PathBuf::from(dir).join(".config/PORTABLE");
-
-        if dir.exists() {
-            PORTABLE_FLAG.get_or_init(|| true);
-        }
-    }
-    PORTABLE_FLAG.get_or_init(|| false);
-    Ok(())
-}
-
 /// get the verge app home dir
 pub fn app_home_dir() -> Result<PathBuf> {
     use tauri::utils::platform::current_exe;
 
-    let flag = PORTABLE_FLAG.get().unwrap_or(&false);
-    if *flag {
+    let flag = PORTABLE_FLAG.get_or_try_init(|| -> Result<bool> {
+        let app_exe = current_exe()?;
+        let mut flag = false;
+        if let Some(dir) = app_exe.parent() {
+            let dir = PathBuf::from(dir).join(".config/PORTABLE");
+            if dir.exists() {
+                flag = true;
+            }
+        }
+        Ok(flag)
+    });
+    if let Ok(flag) = flag
+        && *flag
+    {
         let app_exe = current_exe()?;
         let app_exe = dunce::canonicalize(app_exe)?;
         let app_dir = app_exe
