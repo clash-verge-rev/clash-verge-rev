@@ -15,6 +15,7 @@ macro_rules! draft_define {
                 RwLockReadGuard::map(self.inner.read(), |guard| &guard.0)
             }
 
+            #[allow(unused)]
             pub fn data_mut(&self) -> MappedRwLockWriteGuard<'_, $id> {
                 RwLockWriteGuard::map(self.inner.write(), |guard| &mut guard.0)
             }
@@ -65,6 +66,12 @@ macro_rules! draft_define {
             pub fn discard(&self) -> Option<$id> {
                 let mut inner = self.inner.write();
                 inner.1.take()
+            }
+
+            pub fn clear_and_replace(&self, data: $id) {
+                let mut inner = self.inner.write();
+                inner.1.take();
+                inner.0 = data;
             }
         }
 

@@ -1,7 +1,7 @@
 use super::{Draft, IClashConfig, IProfiles, IRuntime, IVerge};
 use crate::{
-    core::service,
-    enhance, feat,
+    core::{service, sysopt},
+    enhance,
     utils::{dirs, help},
 };
 use anyhow::{Result, anyhow};
@@ -112,17 +112,11 @@ impl Config {
         // need to resolve auto launch file
         let old_enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);
 
-        // discard all config draft
-        clash_config.discard();
-        verge_config.discard();
-        profiles_config.discard();
-        runtime_config.discard();
-
         // reload config data from yaml file
-        *clash_config.data_mut() = IClashConfig::new();
-        *verge_config.data_mut() = IVerge::new();
-        *profiles_config.data_mut() = IProfiles::new();
-        *runtime_config.data_mut() = IRuntime::new();
+        clash_config.clear_and_replace(IClashConfig::new());
+        verge_config.clear_and_replace(IVerge::new());
+        profiles_config.clear_and_replace(IProfiles::new());
+        runtime_config.clear_and_replace(IRuntime::new());
 
         // generate runtime config
         Self::init_config()?;
@@ -130,21 +124,22 @@ impl Config {
         // resolve auto launch
         let enable_auto_launch = verge_config.latest().enable_auto_launch.unwrap_or(false);
         if old_enable_auto_launch != enable_auto_launch {
-            feat::patch_verge(IVerge {
+            verge_config.data_mut().patch_config(IVerge {
                 enable_auto_launch: Some(enable_auto_launch),
                 ..IVerge::default()
-            })
-            .await?;
+            });
+            verge_config.data().save_file()?;
+            sysopt::Sysopt::global().update_launch()?;
         }
 
         // resolve service mode
         let enable_service_mode = verge_config.latest().enable_service_mode.unwrap_or(false);
         if enable_service_mode && service::check_service().await.is_err() {
-            feat::patch_verge(IVerge {
+            verge_config.data_mut().patch_config(IVerge {
                 enable_service_mode: Some(false),
                 ..IVerge::default()
-            })
-            .await?;
+            });
+            verge_config.data().save_file()?;
         }
 
         Ok(())

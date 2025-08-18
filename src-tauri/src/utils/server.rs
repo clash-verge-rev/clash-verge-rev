@@ -2,9 +2,10 @@ use super::{help, resolve};
 use crate::config::{Config, DEFAULT_PAC, IVerge};
 use anyhow::{Result, bail};
 use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use reqwest::ClientBuilder;
 use serde::Deserialize;
-use std::{convert::Infallible, sync::Mutex, time::Duration};
+use std::{convert::Infallible, time::Duration};
 use tokio::sync::oneshot;
 use warp::Filter;
 
@@ -113,7 +114,7 @@ pub async fn embed_server() {
 pub fn shutdown_embedded_server() {
     tracing::info!("shutting down embedded server");
     if let Some(sender) = SHUTDOWN_SENDER.get()
-        && let Some(sender) = sender.lock().unwrap().take()
+        && let Some(sender) = sender.lock().take()
     {
         sender.send(()).ok();
     }

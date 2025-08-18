@@ -151,7 +151,6 @@ impl Timer {
                         {
                             log_err!(std::fs::remove_file(archive_file), "failed to remove archive file");
                         }
-                        crate::utils::resolve::create_window();
                     }
                     None => {
                         tracing::error!("Failed to get current profile [{current}]");
