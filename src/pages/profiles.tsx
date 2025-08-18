@@ -218,17 +218,16 @@ const ProfilePage = () => {
       setUrl("");
       setImportLoading(false);
 
-      getProfiles().then((newProfiles) => {
-        mutate("getProfiles", newProfiles);
+      const newProfiles = await getProfiles();
+      mutate("getProfiles", newProfiles);
 
-        const remoteItem = newProfiles.items?.find((e) => e.type === "remote");
-        if (!newProfiles.current && remoteItem) {
-          const current = remoteItem.uid;
-          patchProfiles({ current });
-          mutateLogs();
-          setTimeout(() => activateSelected(), 2000);
-        }
-      });
+      const remoteItem = newProfiles.items?.find((e) => e.type === "remote");
+      if (!newProfiles.current && remoteItem) {
+        const current = remoteItem.uid;
+        patchProfiles({ current });
+        mutateLogs();
+        setTimeout(() => activateSelected(), 2000);
+      }
     } catch (err: any) {
       notice("error", err.message || err.toString());
       setImportLoading(false);
@@ -236,7 +235,7 @@ const ProfilePage = () => {
       setDisabled(false);
       setImportLoading(false);
     }
-  }, []);
+  }, [url]);
 
   const onSelect = useLockFn(async (current: string, force: boolean) => {
     if (current === profiles.current || activatingUids.length > 0) return;
