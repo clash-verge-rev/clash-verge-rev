@@ -78,14 +78,16 @@ pub fn delete_log() -> Result<()> {
         verge.auto_log_clean.unwrap_or(0)
     };
 
+    // 1: 1天, 2: 7天, 3: 30天, 4: 90天
     let day = match auto_log_clean {
-        1 => 7,
-        2 => 30,
-        3 => 90,
+        1 => 1,
+        2 => 7,
+        3 => 30,
+        4 => 90,
         _ => return Ok(()),
     };
 
-    log::debug!(target: "app", "try to delete log files, day: {day}");
+    log::info!(target: "app", "try to delete log files, day: {day}");
 
     // %Y-%m-%d to NaiveDateTime
     let parse_time_str = |s: &str| {

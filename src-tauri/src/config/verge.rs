@@ -390,7 +390,7 @@ impl IVerge {
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
-            auto_log_clean: Some(2),
+            auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
             webdav_url: None,
             webdav_username: None,
             webdav_password: None,
