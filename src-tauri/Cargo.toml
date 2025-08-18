@@ -76,6 +76,7 @@ scopeguard = "1.2.0"
 kode-bridge = "0.2.0"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.0"
+console-subscriber = {version = "0.4.1", optional = true}
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
@@ -107,6 +108,7 @@ tauri-plugin-updater = "2.9.0"
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 verge-dev = []
+tokio-trace = ["console-subscriber"]
 
 [profile.release]
 panic = "abort"

@@ -185,7 +185,7 @@ mod app_init {
             .plugin(tauri_plugin_shell::init())
             .plugin(tauri_plugin_deep_link::init());
 
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, not(feature = "tokio-trace")))]
         {
             builder = builder.plugin(tauri_plugin_devtools::init());
         }
