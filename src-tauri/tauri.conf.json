@@ -6,7 +6,7 @@
   "app": {
     "security": {
       "assetProtocol": {
-        "scope": ["$APPDATA/**", "$RESOURCE/../**", "$HOME/.local/**", "**"],
+        "scope": ["**"],
         "enable": true
       },
       "csp": {

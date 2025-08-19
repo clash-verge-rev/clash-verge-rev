@@ -183,10 +183,10 @@ jobs:
         run: |
           pnpm build -r cross --target ${{ matrix.target }} -b deb,rpm
 
-      - name: Portable Bundle (Linux)
-        run: pnpm portable ${{ matrix.target }} --alpha
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Portable Bundle (Linux)
+      #   run: pnpm portable ${{ matrix.target }} --alpha
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Build for Linux
       #   uses: ./.github/build-for-linux
