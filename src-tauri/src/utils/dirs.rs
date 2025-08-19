@@ -163,8 +163,13 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
     if matching_files.is_empty() {
         Ok(None)
     } else {
-        let first = path_to_str(matching_files.first().unwrap())?;
-        Ok(Some(first.to_string()))
+        match matching_files.first() {
+            Some(first_path) => {
+                let first = path_to_str(first_path)?;
+                Ok(Some(first.to_string()))
+            }
+            None => Ok(None),
+        }
     }
 }
 

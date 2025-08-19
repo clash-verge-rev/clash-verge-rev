@@ -121,9 +121,8 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
                 Err(_) => {
                     if icon_path.exists() {
                         return Ok(icon_path.to_string_lossy().to_string());
-                    } else {
-                        return Err("Failed to create temporary file".into());
                     }
+                    return Err("Failed to create temporary file".into());
                 }
             };
 

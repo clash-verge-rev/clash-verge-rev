@@ -78,14 +78,16 @@ pub fn delete_log() -> Result<()> {
         verge.auto_log_clean.unwrap_or(0)
     };
 
+    // 1: 1天, 2: 7天, 3: 30天, 4: 90天
     let day = match auto_log_clean {
-        1 => 7,
-        2 => 30,
-        3 => 90,
+        1 => 1,
+        2 => 7,
+        3 => 30,
+        4 => 90,
         _ => return Ok(()),
     };
 
-    log::debug!(target: "app", "try to delete log files, day: {day}");
+    log::info!(target: "app", "try to delete log files, day: {day}");
 
     // %Y-%m-%d to NaiveDateTime
     let parse_time_str = |s: &str| {
@@ -401,7 +403,14 @@ pub fn init_scheme() -> Result<()> {
 }
 
 pub async fn startup_script() -> Result<()> {
-    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = match handle::Handle::global().app_handle() {
+        Some(handle) => handle,
+        None => {
+            return Err(anyhow::anyhow!(
+                "app_handle not available for startup script execution"
+            ));
+        }
+    };
 
     let script_path = {
         let verge = Config::verge();

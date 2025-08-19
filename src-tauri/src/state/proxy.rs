@@ -49,7 +49,7 @@ impl ProxyRequestCache {
                 self.map
                     .remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
                 let new_cell = Arc::new(OnceCell::new());
-                self.map.insert(key_cloned.clone(), new_cell.clone());
+                self.map.insert(key_cloned.clone(), Arc::clone(&new_cell));
                 return Box::pin(self.get_or_fetch(key_cloned, ttl, fetch_fn)).await;
             }
         }
@@ -60,7 +60,13 @@ impl ProxyRequestCache {
             expires_at: Instant::now() + ttl,
         };
         let _ = cell.set(entry);
-        Arc::clone(&cell.get().unwrap().value)
+        // Safe to unwrap here as we just set the value
+        Arc::clone(
+            &cell
+                .get()
+                .unwrap_or_else(|| unreachable!("Cell value should exist after set"))
+                .value,
+        )
     }
 }
 

@@ -72,7 +72,7 @@ impl Config {
                 .append_item(script_item.clone())?;
         }
         // 生成运行时配置
-        if let Err(err) = Self::generate().await {
+        if let Err(err) = Self::generate() {
             logging!(error, Type::Config, true, "生成运行时配置失败: {}", err);
         } else {
             logging!(info, Type::Config, true, "生成运行时配置成功");
@@ -96,8 +96,7 @@ impl Config {
                             error_msg
                         );
                         CoreManager::global()
-                            .use_default_config("config_validate::boot_error", &error_msg)
-                            .await?;
+                            .use_default_config("config_validate::boot_error", &error_msg)?;
                         Some(("config_validate::boot_error", error_msg))
                     } else {
                         logging!(info, Type::Config, true, "配置验证成功");
@@ -107,16 +106,13 @@ impl Config {
                 Err(err) => {
                     logging!(warn, Type::Config, true, "验证进程执行失败: {}", err);
                     CoreManager::global()
-                        .use_default_config("config_validate::process_terminated", "")
-                        .await?;
+                        .use_default_config("config_validate::process_terminated", "")?;
                     Some(("config_validate::process_terminated", String::new()))
                 }
             }
         } else {
             logging!(warn, Type::Config, true, "生成配置文件失败，使用默认配置");
-            CoreManager::global()
-                .use_default_config("config_validate::error", "")
-                .await?;
+            CoreManager::global().use_default_config("config_validate::error", "")?;
             Some(("config_validate::error", String::new()))
         };
 
@@ -150,8 +146,8 @@ impl Config {
     }
 
     /// 生成订阅存好
-    pub async fn generate() -> Result<()> {
-        let (config, exists_keys, logs) = enhance::enhance().await;
+    pub fn generate() -> Result<()> {
+        let (config, exists_keys, logs) = enhance::enhance();
 
         *Config::runtime().draft_mut() = Box::new(IRuntime {
             config: Some(config),
@@ -174,33 +170,33 @@ mod tests {
     use std::mem;
 
     #[test]
+    #[allow(unused_variables)]
+    #[allow(clippy::expect_used)]
     fn test_prfitem_from_merge_size() {
-        let merge_item = PrfItem::from_merge(Some("Merge".to_string())).unwrap();
-        dbg!(&merge_item);
+        let merge_item = PrfItem::from_merge(Some("Merge".to_string()))
+            .expect("Failed to create merge item in test");
         let prfitem_size = mem::size_of_val(&merge_item);
-        dbg!(prfitem_size);
         // Boxed version
         let boxed_merge_item = Box::new(merge_item);
         let box_prfitem_size = mem::size_of_val(&boxed_merge_item);
-        dbg!(box_prfitem_size);
         // The size of Box<T> is always pointer-sized (usually 8 bytes on 64-bit)
         // assert_eq!(box_prfitem_size, mem::size_of::<Box<PrfItem>>());
         assert!(box_prfitem_size < prfitem_size);
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn test_draft_size_non_boxed() {
         let draft = Draft::from(IRuntime::new());
         let iruntime_size = std::mem::size_of_val(&draft);
-        dbg!(iruntime_size);
         assert_eq!(iruntime_size, std::mem::size_of::<Draft<IRuntime>>());
     }
 
     #[test]
+    #[allow(unused_variables)]
     fn test_draft_size_boxed() {
         let draft = Draft::from(Box::new(IRuntime::new()));
         let box_iruntime_size = std::mem::size_of_val(&draft);
-        dbg!(box_iruntime_size);
         assert_eq!(
             box_iruntime_size,
             std::mem::size_of::<Draft<Box<IRuntime>>>()

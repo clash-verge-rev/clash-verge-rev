@@ -2,13 +2,13 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import {
+  InputAdornment,
   List,
   ListItem,
   ListItemText,
   MenuItem,
   Select,
   TextField,
-  InputAdornment,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
@@ -185,6 +185,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
               }))
             }
           >
+            {/* 1: 1天, 2: 7天, 3: 30天, 4: 90天*/}
             {[
               { key: t("Never Clean"), value: 0 },
               { key: t("Retain _n Days", { n: 1 }), value: 1 },

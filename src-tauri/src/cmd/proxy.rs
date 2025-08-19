@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::{ipc::IpcManager, state::proxy::ProxyRequestCache};
+use crate::{ipc::IpcManager, logging, state::proxy::ProxyRequestCache, utils::logging::Type};
 use std::time::Duration;
 
 const PROXIES_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
@@ -12,7 +12,10 @@ pub async fn get_proxies() -> CmdResult<serde_json::Value> {
     let key = ProxyRequestCache::make_key("proxies", "default");
     let value = cache
         .get_or_fetch(key, PROXIES_REFRESH_INTERVAL, || async {
-            manager.get_proxies().await.expect("fetch failed")
+            manager.get_proxies().await.unwrap_or_else(|e| {
+                logging!(error, Type::Cmd, "Failed to fetch proxies: {e}");
+                serde_json::Value::Object(serde_json::Map::new())
+            })
         })
         .await;
     Ok((*value).clone())
@@ -34,7 +37,10 @@ pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
     let key = ProxyRequestCache::make_key("providers", "default");
     let value = cache
         .get_or_fetch(key, PROVIDERS_REFRESH_INTERVAL, || async {
-            manager.get_providers_proxies().await.expect("fetch failed")
+            manager.get_providers_proxies().await.unwrap_or_else(|e| {
+                logging!(error, Type::Cmd, "Failed to fetch provider proxies: {e}");
+                serde_json::Value::Object(serde_json::Map::new())
+            })
         })
         .await;
     Ok((*value).clone())

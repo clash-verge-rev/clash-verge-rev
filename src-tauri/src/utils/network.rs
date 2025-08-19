@@ -40,13 +40,37 @@ singleton_lazy!(NetworkManager, NETWORK_MANAGER, NetworkManager::new);
 impl NetworkManager {
     fn new() -> Self {
         // 创建专用的异步运行时，线程数限制为4个
-        let runtime = Builder::new_multi_thread()
+        let runtime = match Builder::new_multi_thread()
             .worker_threads(4)
             .thread_name("clash-verge-network")
             .enable_io()
             .enable_time()
             .build()
-            .expect("Failed to create network runtime");
+        {
+            Ok(runtime) => runtime,
+            Err(e) => {
+                log::error!(
+                    "Failed to create network runtime: {}. Using fallback single-threaded runtime.",
+                    e
+                );
+                // Fallback to current thread runtime
+                match Builder::new_current_thread()
+                    .enable_io()
+                    .enable_time()
+                    .thread_name("clash-verge-network-fallback")
+                    .build()
+                {
+                    Ok(fallback_runtime) => fallback_runtime,
+                    Err(fallback_err) => {
+                        log::error!(
+                            "Failed to create fallback runtime: {}. This is critical.",
+                            fallback_err
+                        );
+                        std::process::exit(1);
+                    }
+                }
+            }
+        };
 
         NetworkManager {
             runtime: Arc::new(runtime),
@@ -66,7 +90,7 @@ impl NetworkManager {
                 logging!(info, Type::Network, true, "初始化网络管理器");
 
                 // 创建无代理客户端
-                let no_proxy_client = ClientBuilder::new()
+                let no_proxy_client = match ClientBuilder::new()
                     .use_rustls_tls()
                     .no_proxy()
                     .pool_max_idle_per_host(POOL_MAX_IDLE_PER_HOST)
@@ -74,7 +98,19 @@ impl NetworkManager {
                     .connect_timeout(Duration::from_secs(10))
                     .timeout(Duration::from_secs(30))
                     .build()
-                    .expect("Failed to build no_proxy client");
+                {
+                    Ok(client) => client,
+                    Err(e) => {
+                        logging!(
+                            error,
+                            Type::Network,
+                            true,
+                            "Failed to build no_proxy client: {}",
+                            e
+                        );
+                        return;
+                    }
+                };
 
                 let mut no_proxy_guard = NetworkManager::global().no_proxy_client.lock();
                 *no_proxy_guard = Some(no_proxy_client);
@@ -214,7 +250,45 @@ impl NetworkManager {
             builder = builder.user_agent(version);
         }
 
-        let client = builder.build().expect("Failed to build custom HTTP client");
+        let client = match builder.build() {
+            Ok(client) => client,
+            Err(e) => {
+                logging!(
+                    error,
+                    Type::Network,
+                    true,
+                    "Failed to build custom HTTP client: {}",
+                    e
+                );
+                // Return a simple no-proxy client as fallback
+                match ClientBuilder::new()
+                    .use_rustls_tls()
+                    .no_proxy()
+                    .timeout(DEFAULT_REQUEST_TIMEOUT)
+                    .build()
+                {
+                    Ok(fallback_client) => fallback_client,
+                    Err(fallback_err) => {
+                        logging!(
+                            error,
+                            Type::Network,
+                            true,
+                            "Failed to create fallback client: {}",
+                            fallback_err
+                        );
+                        self.record_connection_error(&format!(
+                            "Critical client build failure: {}",
+                            fallback_err
+                        ));
+                        // Return a minimal client that will likely fail but won't panic
+                        ClientBuilder::new().build().unwrap_or_else(|_| {
+                            // If even the most basic client fails, this is truly critical
+                            std::process::exit(1);
+                        })
+                    }
+                }
+            }
+        };
 
         client.get(url)
     }

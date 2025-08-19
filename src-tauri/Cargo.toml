@@ -30,7 +30,6 @@ boa_engine = "0.20.0"
 serde_json = "1.0.142"
 serde_yaml = "0.9.34"
 once_cell = "1.21.3"
-lazy_static = "1.5.0"
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 parking_lot = "0.12.4"
@@ -41,12 +40,10 @@ tokio = { version = "1.47.1", features = [
   "time",
   "sync",
 ] }
-futures-util = "0.3.31"
 serde = { version = "1.0.219", features = ["derive"] }
 reqwest = { version = "0.12.23", features = ["json", "rustls-tls", "cookies"] }
 regex = "1.11.1"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-image = "0.25.6"
 tauri = { version = "2.7.0", features = [
   "protocol-asset",
   "devtools",
@@ -70,7 +67,6 @@ base64 = "0.22.1"
 getrandom = "0.3.3"
 futures = "0.3.31"
 sys-locale = "0.3.2"
-async-trait = "0.1.88"
 libc = "0.2.175"
 gethostname = "1.0.2"
 hmac = "0.12.1"
@@ -80,6 +76,7 @@ scopeguard = "1.2.0"
 kode-bridge = "0.2.0"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.0"
+console-subscriber = {version = "0.4.1", optional = true}
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
@@ -111,6 +108,7 @@ tauri-plugin-updater = "2.9.0"
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 verge-dev = []
+tokio-trace = ["console-subscriber"]
 
 [profile.release]
 panic = "abort"
@@ -141,4 +139,55 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
 criterion = "0.7.0"
-tempfile = "3.20.0"
+
+[lints.clippy]
+# Core categories - most important for code safety and correctness
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+
+# Critical safety lints - warn for now due to extensive existing usage
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "deny"
+unimplemented = "deny"
+
+# Development quality lints
+todo = "warn"
+dbg_macro = "warn"
+#print_stdout = "warn"
+#print_stderr = "warn"
+
+# Performance lints for proxy application
+clone_on_ref_ptr = "warn"
+rc_clone_in_vec_init = "warn"
+large_stack_arrays = "warn"
+large_const_arrays = "warn"
+
+# Security lints
+#integer_division = "warn"
+#lossy_float_literal = "warn"
+#default_numeric_fallback = "warn"
+
+# Mutex and async lints - strict control
+async_yields_async = "deny"          # Prevents missing await in async blocks
+mutex_atomic = "deny"                # Use atomics instead of Mutex<bool/int>
+mutex_integer = "deny"               # Use AtomicInt instead of Mutex<int>
+rc_mutex = "deny"                    # Single-threaded Rc with Mutex is wrong
+unused_async = "deny"               # Too many false positives in Tauri/framework code
+await_holding_lock = "deny"
+large_futures = "deny"
+future_not_send = "deny"
+
+# Common style improvements
+redundant_else = "deny"         # Too many in existing code
+needless_continue = "deny"      # Too many in existing code
+needless_raw_string_hashes = "deny"  # Too many in existing code
+
+# Disable noisy categories for existing codebase but keep them available
+#style = { level = "allow", priority = -1 }
+#complexity = { level = "allow", priority = -1 }
+#perf = { level = "allow", priority = -1 }
+#pedantic = { level = "allow", priority = -1 }
+#nursery = { level = "allow", priority = -1 }
+#restriction = { level = "allow", priority = -1 }
+

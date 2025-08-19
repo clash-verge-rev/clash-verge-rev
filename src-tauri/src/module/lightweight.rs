@@ -124,7 +124,10 @@ pub fn set_lightweight_mode(value: bool) {
 }
 
 pub fn enable_auto_light_weight_mode() {
-    Timer::global().init().unwrap();
+    if let Err(e) = Timer::global().init() {
+        logging!(error, Type::Lightweight, "Failed to initialize timer: {e}");
+        return;
+    }
     logging!(info, Type::Lightweight, true, "开启自动轻量模式");
     setup_window_close_listener();
     setup_webview_focus_listener();

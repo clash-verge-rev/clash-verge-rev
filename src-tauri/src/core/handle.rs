@@ -82,121 +82,123 @@ impl NotificationSystem {
 
         *self.last_emit_time.write() = Instant::now();
 
-        self.worker_handle = Some(
-            thread::Builder::new()
-                .name("frontend-notifier".into())
-                .spawn(move || {
-                    let handle = Handle::global();
+        match thread::Builder::new()
+            .name("frontend-notifier".into())
+            .spawn(move || {
+                let handle = Handle::global();
 
-                    while !handle.is_exiting() {
-                        match rx.recv_timeout(Duration::from_millis(100)) {
-                            Ok(event) => {
-                                let system_guard = handle.notification_system.read();
-                                if system_guard.as_ref().is_none() {
-                                    log::warn!("NotificationSystem not found in handle while processing event.");
-                                    continue;
-                                }
-                                let system = system_guard.as_ref().unwrap();
+                while !handle.is_exiting() {
+                    match rx.recv_timeout(Duration::from_millis(100)) {
+                        Ok(event) => {
+                            let system_guard = handle.notification_system.read();
+                            let Some(system) = system_guard.as_ref() else {
+                                log::warn!("NotificationSystem not found in handle while processing event.");
+                                continue;
+                            };
 
-                                let is_emergency = *system.emergency_mode.read();
+                            let is_emergency = *system.emergency_mode.read();
 
-                                if is_emergency {
-                                    if let FrontendEvent::NoticeMessage { ref status, .. } = event {
-                                        if status == "info" {
-                                            log::warn!(
-                                                "Emergency mode active, skipping info message"
-                                            );
-                                            continue;
-                                        }
+                            if is_emergency {
+                                if let FrontendEvent::NoticeMessage { ref status, .. } = event {
+                                    if status == "info" {
+                                        log::warn!(
+                                            "Emergency mode active, skipping info message"
+                                        );
+                                        continue;
                                     }
                                 }
+                            }
 
-                                if let Some(window) = handle.get_window() {
-                                    *system.last_emit_time.write() = Instant::now();
+                            if let Some(window) = handle.get_window() {
+                                *system.last_emit_time.write() = Instant::now();
 
-                                    let (event_name_str, payload_result) = match event {
-                                        FrontendEvent::RefreshClash => {
-                                            ("verge://refresh-clash-config", Ok(serde_json::json!("yes")))
-                                        }
-                                        FrontendEvent::RefreshVerge => {
-                                            ("verge://refresh-verge-config", Ok(serde_json::json!("yes")))
-                                        }
-                                        FrontendEvent::NoticeMessage { status, message } => {
-                                            match serde_json::to_value((status, message)) {
-                                                Ok(p) => ("verge://notice-message", Ok(p)),
-                                                Err(e) => {
-                                                    log::error!("Failed to serialize NoticeMessage payload: {e}");
-                                                    ("verge://notice-message", Err(e))
-                                                }
-                                            }
-                                        }
-                                        FrontendEvent::ProfileChanged { current_profile_id } => {
-                                            ("profile-changed", Ok(serde_json::json!(current_profile_id)))
-                                        }
-                                        FrontendEvent::TimerUpdated { profile_index } => {
-                                            ("verge://timer-updated", Ok(serde_json::json!(profile_index)))
-                                        }
-                                        FrontendEvent::StartupCompleted => {
-                                            ("verge://startup-completed", Ok(serde_json::json!(null)))
-                                        }
-                                        FrontendEvent::ProfileUpdateStarted { uid } => {
-                                            ("profile-update-started", Ok(serde_json::json!({ "uid": uid })))
-                                        }
-                                        FrontendEvent::ProfileUpdateCompleted { uid } => {
-                                            ("profile-update-completed", Ok(serde_json::json!({ "uid": uid })))
-                                        }
-                                    };
-
-                                    if let Ok(payload) = payload_result {
-                                        match window.emit(event_name_str, payload) {
-                                            Ok(_) => {
-                                                system.stats.total_sent.fetch_add(1, Ordering::SeqCst);
-                                                // 记录成功发送的事件
-                                                if log::log_enabled!(log::Level::Debug) {
-                                                    log::debug!("Successfully emitted event: {event_name_str}");
-                                                }
-                                            }
+                                let (event_name_str, payload_result) = match event {
+                                    FrontendEvent::RefreshClash => {
+                                        ("verge://refresh-clash-config", Ok(serde_json::json!("yes")))
+                                    }
+                                    FrontendEvent::RefreshVerge => {
+                                        ("verge://refresh-verge-config", Ok(serde_json::json!("yes")))
+                                    }
+                                    FrontendEvent::NoticeMessage { status, message } => {
+                                        match serde_json::to_value((status, message)) {
+                                            Ok(p) => ("verge://notice-message", Ok(p)),
                                             Err(e) => {
-                                                log::warn!("Failed to emit event {event_name_str}: {e}");
-                                                system.stats.total_errors.fetch_add(1, Ordering::SeqCst);
-                                                *system.stats.last_error_time.write() = Some(Instant::now());
-
-                                                let errors = system.stats.total_errors.load(Ordering::SeqCst);
-                                                const EMIT_ERROR_THRESHOLD: u64 = 10;
-                                                if errors > EMIT_ERROR_THRESHOLD && !*system.emergency_mode.read() {
-                                                    log::warn!(
-                                                        "Reached {EMIT_ERROR_THRESHOLD} emit errors, entering emergency mode"
-                                                    );
-                                                    *system.emergency_mode.write() = true;
-                                                }
+                                                log::error!("Failed to serialize NoticeMessage payload: {e}");
+                                                ("verge://notice-message", Err(e))
                                             }
                                         }
-                                    } else {
-                                        system.stats.total_errors.fetch_add(1, Ordering::SeqCst);
-                                        *system.stats.last_error_time.write() = Some(Instant::now());
-                                        log::warn!("Skipped emitting event due to payload serialization error for {event_name_str}");
+                                    }
+                                    FrontendEvent::ProfileChanged { current_profile_id } => {
+                                        ("profile-changed", Ok(serde_json::json!(current_profile_id)))
+                                    }
+                                    FrontendEvent::TimerUpdated { profile_index } => {
+                                        ("verge://timer-updated", Ok(serde_json::json!(profile_index)))
+                                    }
+                                    FrontendEvent::StartupCompleted => {
+                                        ("verge://startup-completed", Ok(serde_json::json!(null)))
+                                    }
+                                    FrontendEvent::ProfileUpdateStarted { uid } => {
+                                        ("profile-update-started", Ok(serde_json::json!({ "uid": uid })))
+                                    }
+                                    FrontendEvent::ProfileUpdateCompleted { uid } => {
+                                        ("profile-update-completed", Ok(serde_json::json!({ "uid": uid })))
+                                    }
+                                };
+
+                                if let Ok(payload) = payload_result {
+                                    match window.emit(event_name_str, payload) {
+                                        Ok(_) => {
+                                            system.stats.total_sent.fetch_add(1, Ordering::SeqCst);
+                                            // 记录成功发送的事件
+                                            if log::log_enabled!(log::Level::Debug) {
+                                                log::debug!("Successfully emitted event: {event_name_str}");
+                                            }
+                                        }
+                                        Err(e) => {
+                                            log::warn!("Failed to emit event {event_name_str}: {e}");
+                                            system.stats.total_errors.fetch_add(1, Ordering::SeqCst);
+                                            *system.stats.last_error_time.write() = Some(Instant::now());
+
+                                            let errors = system.stats.total_errors.load(Ordering::SeqCst);
+                                            const EMIT_ERROR_THRESHOLD: u64 = 10;
+                                            if errors > EMIT_ERROR_THRESHOLD && !*system.emergency_mode.read() {
+                                                log::warn!(
+                                                    "Reached {EMIT_ERROR_THRESHOLD} emit errors, entering emergency mode"
+                                                );
+                                                *system.emergency_mode.write() = true;
+                                            }
+                                        }
                                     }
                                 } else {
-                                    log::warn!("No window found, skipping event emit.");
+                                    system.stats.total_errors.fetch_add(1, Ordering::SeqCst);
+                                    *system.stats.last_error_time.write() = Some(Instant::now());
+                                    log::warn!("Skipped emitting event due to payload serialization error for {event_name_str}");
                                 }
-                                thread::sleep(Duration::from_millis(20));
+                            } else {
+                                log::warn!("No window found, skipping event emit.");
                             }
-                            Err(mpsc::RecvTimeoutError::Timeout) => {
-                                continue;
-                            }
-                            Err(mpsc::RecvTimeoutError::Disconnected) => {
-                                log::info!(
-                                    "Notification channel disconnected, exiting worker thread"
-                                );
-                                break;
-                            }
+                            thread::sleep(Duration::from_millis(20));
+                        }
+                        Err(mpsc::RecvTimeoutError::Timeout) => {
+                        }
+                        Err(mpsc::RecvTimeoutError::Disconnected) => {
+                            log::info!(
+                                "Notification channel disconnected, exiting worker thread"
+                            );
+                            break;
                         }
                     }
+                }
 
-                    log::info!("Notification worker thread exiting");
-                })
-                .expect("Failed to start notification worker thread"),
-        );
+                log::info!("Notification worker thread exiting");
+            }) {
+            Ok(handle) => {
+                self.worker_handle = Some(handle);
+            }
+            Err(e) => {
+                log::error!("Failed to start notification worker thread: {e}");
+            }
+        }
     }
 
     /// 发送事件到队列

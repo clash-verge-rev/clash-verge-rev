@@ -7,23 +7,42 @@ pub fn use_script(
     config: Mapping,
     name: String,
 ) -> Result<(Mapping, Vec<(String, String)>)> {
-    use boa_engine::{native_function::NativeFunction, Context, JsValue, Source};
+    use boa_engine::{native_function::NativeFunction, Context, JsString, JsValue, Source};
     use std::{cell::RefCell, rc::Rc};
     let mut context = Context::default();
 
     let outputs = Rc::new(RefCell::new(vec![]));
 
-    let copy_outputs = outputs.clone();
+    let copy_outputs = Rc::clone(&outputs);
     unsafe {
         let _ = context.register_global_builtin_callable(
             "__verge_log__".into(),
             2,
             NativeFunction::from_closure(
                 move |_: &JsValue, args: &[JsValue], context: &mut Context| {
-                    let level = args.first().unwrap().to_string(context)?;
-                    let level = level.to_std_string().unwrap();
-                    let data = args.get(1).unwrap().to_string(context)?;
-                    let data = data.to_std_string().unwrap();
+                    let level = args.first().ok_or_else(|| {
+                        boa_engine::JsError::from_opaque(
+                            JsString::from("Missing level argument").into(),
+                        )
+                    })?;
+                    let level = level.to_string(context)?;
+                    let level = level.to_std_string().map_err(|_| {
+                        boa_engine::JsError::from_opaque(
+                            JsString::from("Failed to convert level to string").into(),
+                        )
+                    })?;
+
+                    let data = args.get(1).ok_or_else(|| {
+                        boa_engine::JsError::from_opaque(
+                            JsString::from("Missing data argument").into(),
+                        )
+                    })?;
+                    let data = data.to_string(context)?;
+                    let data = data.to_std_string().map_err(|_| {
+                        boa_engine::JsError::from_opaque(
+                            JsString::from("Failed to convert data to string").into(),
+                        )
+                    })?;
                     let mut out = copy_outputs.borrow_mut();
                     out.push((level, data));
                     Ok(JsValue::undefined())
@@ -49,20 +68,24 @@ pub fn use_script(
     let safe_name = escape_js_string_for_single_quote(&name);
 
     let code = format!(
-        r#"try{{
+        r"try{{
         {script};
         JSON.stringify(main({config_str},'{safe_name}')||'')
       }} catch(err) {{
         `__error_flag__ ${{err.toString()}}`
-      }}"#
+      }}"
     );
 
     if let Ok(result) = context.eval(Source::from_bytes(code.as_str())) {
         if !result.is_string() {
             anyhow::bail!("main function should return object");
         }
-        let result = result.to_string(&mut context).unwrap();
-        let result = result.to_std_string().unwrap();
+        let result = result
+            .to_string(&mut context)
+            .map_err(|e| anyhow::anyhow!("Failed to convert JS result to string: {}", e))?;
+        let result = result
+            .to_std_string()
+            .map_err(|_| anyhow::anyhow!("Failed to convert JS string to std string"))?;
 
         // 直接解析JSON结果,不做其他解析
         let res: Result<Mapping, Error> = parse_json_safely(&result);
@@ -102,6 +125,8 @@ fn escape_js_string_for_single_quote(s: &str) -> String {
 }
 
 #[test]
+#[allow(unused_variables)]
+#[allow(clippy::expect_used)]
 fn test_script() {
     let script = r#"
     function main(config) {
@@ -114,7 +139,7 @@ fn test_script() {
     }
   "#;
 
-    let config = r#"
+    let config = r"
     rules:
       - 111
       - 222
@@ -122,22 +147,21 @@ fn test_script() {
       enable: false
     dns:
       enable: false
-  "#;
+  ";
 
-    let config = serde_yaml::from_str(config).unwrap();
-    let (config, results) = use_script(script.into(), config, "".to_string()).unwrap();
+    let config = serde_yaml::from_str(config).expect("Failed to parse test config YAML");
+    let (config, results) = use_script(script.into(), config, "".to_string())
+        .expect("Script execution should succeed in test");
 
-    let _ = serde_yaml::to_string(&config).unwrap();
+    let _ = serde_yaml::to_string(&config).expect("Failed to serialize config to YAML");
     let yaml_config_size = std::mem::size_of_val(&config);
-    dbg!(yaml_config_size);
     let box_yaml_config_size = std::mem::size_of_val(&Box::new(config));
-    dbg!(box_yaml_config_size);
-    dbg!(results);
     assert!(box_yaml_config_size < yaml_config_size);
 }
 
 // 测试特殊字符转义功能
 #[test]
+#[allow(clippy::expect_used)]
 fn test_escape_unescape() {
     let test_string = r#"Hello "World"!\nThis is a test with \u00A9 copyright symbol."#;
     let escaped = escape_js_string_for_single_quote(test_string);
@@ -145,13 +169,14 @@ fn test_escape_unescape() {
     println!("Escaped: {escaped}");
 
     let json_str = r#"{"key":"value","nested":{"key":"value"}}"#;
-    let parsed = parse_json_safely(json_str).unwrap();
+    let parsed = parse_json_safely(json_str).expect("Failed to parse test JSON safely");
 
     assert!(parsed.contains_key("key"));
     assert!(parsed.contains_key("nested"));
 
     let quoted_json_str = r#""{"key":"value","nested":{"key":"value"}}""#;
-    let parsed_quoted = parse_json_safely(quoted_json_str).unwrap();
+    let parsed_quoted =
+        parse_json_safely(quoted_json_str).expect("Failed to parse quoted test JSON safely");
 
     assert!(parsed_quoted.contains_key("key"));
     assert!(parsed_quoted.contains_key("nested"));

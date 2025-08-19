@@ -67,7 +67,14 @@ pub fn quit() {
     logging!(debug, Type::System, true, "启动退出流程");
 
     // 获取应用句柄并设置退出标志
-    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let Some(app_handle) = handle::Handle::global().app_handle() else {
+        logging!(
+            error,
+            Type::System,
+            "Failed to get app handle for quit operation"
+        );
+        return;
+    };
     handle::Handle::global().set_is_exiting();
 
     // 优先关闭窗口，提供立即反馈

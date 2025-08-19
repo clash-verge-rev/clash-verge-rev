@@ -1,7 +1,7 @@
 #[cfg(target_os = "macos")]
 use crate::AppHandleManager;
 use crate::{
-    config::{Config, IVerge, PrfItem},
+    config::{Config, PrfItem},
     core::*,
     logging, logging_error,
     module::lightweight::{self, auto_lightweight_mode_init},
@@ -14,10 +14,8 @@ use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
 use scopeguard;
-use serde_yaml::Mapping;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager};
-use tokio::net::TcpListener;
 
 use tauri::Url;
 //#[cfg(not(target_os = "linux"))]
@@ -107,23 +105,6 @@ pub fn reset_ui_ready() {
     logging!(info, Type::Window, true, "UI就绪状态已重置");
 }
 
-pub async fn find_unused_port() -> Result<u16> {
-    match TcpListener::bind("127.0.0.1:0").await {
-        Ok(listener) => {
-            let port = listener.local_addr()?.port();
-            Ok(port)
-        }
-        Err(_) => {
-            let port = Config::verge()
-                .latest_ref()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().latest_ref().get_mixed_port());
-            log::warn!(target: "app", "use default port: {port}");
-            Ok(port)
-        }
-    }
-}
-
 /// 异步方式处理启动后的额外任务
 pub async fn resolve_setup_async(app_handle: &AppHandle) {
     let start_time = std::time::Instant::now();
@@ -146,16 +127,6 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     logging_error!(Type::Setup, true, init::init_scheme());
 
     logging_error!(Type::Setup, true, init::startup_script().await);
-
-    if let Err(err) = resolve_random_port_config().await {
-        logging!(
-            error,
-            Type::System,
-            true,
-            "Failed to resolve random port config: {}",
-            err
-        );
-    }
 
     logging!(
         info,
@@ -344,8 +315,21 @@ pub fn create_window(is_show: bool) -> bool {
         logging!(debug, Type::Window, true, "[ScopeGuard] 窗口创建状态已重置");
     });
 
+    let app_handle = match handle::Handle::global().app_handle() {
+        Some(handle) => handle,
+        None => {
+            logging!(
+                error,
+                Type::Window,
+                true,
+                "无法获取app_handle，窗口创建失败"
+            );
+            return false;
+        }
+    };
+
     match tauri::WebviewWindowBuilder::new(
-        &handle::Handle::global().app_handle().unwrap(),
+        &app_handle,
         "main", /* the unique window label */
         tauri::WebviewUrl::App("index.html".into()),
     )
@@ -544,13 +528,13 @@ pub fn create_window(is_show: bool) -> bool {
                                 logging!(info, Type::Window, true, "UI已完全加载就绪");
                                 handle::Handle::global()
                                     .get_window()
-                                    .map(|window| window.eval(r#"
+                                    .map(|window| window.eval(r"
                                         const overlay = document.getElementById('initial-loading-overlay');
                                         if (overlay) {
                                             overlay.style.opacity = '0';
                                             setTimeout(() => overlay.remove(), 300);
                                         }
-                                    "#));
+                                    "));
                             }
                             Err(_) => {
                                 logging!(
@@ -647,7 +631,17 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                 create_window(false);
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
                     Ok(item) => {
-                        let uid = item.uid.clone().unwrap();
+                        let uid = match item.uid.clone() {
+                            Some(uid) => uid,
+                            None => {
+                                logging!(error, Type::Config, true, "Profile item missing UID");
+                                handle::Handle::notice_message(
+                                    "import_sub_url::error",
+                                    "Profile item missing UID".to_string(),
+                                );
+                                return Ok(());
+                            }
+                        };
                         let _ = wrap_err!(Config::profiles().data_mut().append_item(item));
                         handle::Handle::notice_message("import_sub_url::ok", uid);
                     }
@@ -663,72 +657,26 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
     Ok(())
 }
 
-async fn resolve_random_port_config() -> Result<()> {
-    let verge_config = Config::verge();
-    let clash_config = Config::clash();
-    let enable_random_port = verge_config
-        .latest_ref()
-        .enable_random_port
-        .unwrap_or(false);
-
-    let default_port = verge_config
-        .latest_ref()
-        .verge_mixed_port
-        .unwrap_or(clash_config.latest_ref().get_mixed_port());
-
-    let port = if enable_random_port {
-        find_unused_port().await.unwrap_or(default_port)
-    } else {
-        default_port
-    };
-
-    let port_to_save = port;
-
-    // 合并配置访问以避免锁竞争死锁
-    tokio::task::spawn_blocking(move || -> Result<()> {
-        logging!(
-            debug,
-            Type::Config,
-            true,
-            "开始合并配置更新操作，避免锁竞争"
-        );
-
-        // 按顺序更新配置，避免交叉锁定
-        {
-            let verge_accessor = Config::verge();
-            let mut verge_data = verge_accessor.data_mut();
-            verge_data.patch_config(IVerge {
-                verge_mixed_port: Some(port_to_save),
-                ..IVerge::default()
-            });
-            verge_data.save_file()?;
-        }
-
-        {
-            let clash_accessor = Config::clash();
-            let mut clash_data = clash_accessor.data_mut();
-            let mut mapping = Mapping::new();
-            mapping.insert("mixed-port".into(), port_to_save.into());
-            clash_data.patch_config(mapping);
-            clash_data.save_config()?;
-        }
-
-        logging!(debug, Type::Config, true, "配置更新操作完成");
-        Ok(())
-    })
-    .await??;
-
-    Ok(())
-}
-
 #[cfg(target_os = "macos")]
 pub async fn set_public_dns(dns_server: String) {
     use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt;
-    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = match handle::Handle::global().app_handle() {
+        Some(handle) => handle,
+        None => {
+            log::error!(target: "app", "app_handle not available for DNS configuration");
+            return;
+        }
+    };
 
     log::info!(target: "app", "try to set system dns");
-    let resource_dir = dirs::app_resources_dir().unwrap();
+    let resource_dir = match dirs::app_resources_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            log::error!(target: "app", "Failed to get resource directory: {}", e);
+            return;
+        }
+    };
     let script = resource_dir.join("set_dns.sh");
     if !script.exists() {
         log::error!(target: "app", "set_dns.sh not found");
@@ -761,9 +709,21 @@ pub async fn set_public_dns(dns_server: String) {
 pub async fn restore_public_dns() {
     use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt;
-    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let app_handle = match handle::Handle::global().app_handle() {
+        Some(handle) => handle,
+        None => {
+            log::error!(target: "app", "app_handle not available for DNS restoration");
+            return;
+        }
+    };
     log::info!(target: "app", "try to unset system dns");
-    let resource_dir = dirs::app_resources_dir().unwrap();
+    let resource_dir = match dirs::app_resources_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            log::error!(target: "app", "Failed to get resource directory: {}", e);
+            return;
+        }
+    };
     let script = resource_dir.join("unset_dns.sh");
     if !script.exists() {
         log::error!(target: "app", "unset_dns.sh not found");

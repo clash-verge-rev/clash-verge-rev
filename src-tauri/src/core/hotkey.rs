@@ -195,7 +195,9 @@ impl Hotkey {
         hotkey: &str,
         function: HotkeyFunction,
     ) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global()
+            .app_handle()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get app handle for hotkey registration"))?;
         let manager = app_handle.global_shortcut();
 
         logging!(
@@ -351,7 +353,9 @@ impl Hotkey {
     }
 
     pub fn reset(&self) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global()
+            .app_handle()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get app handle for hotkey registration"))?;
         let manager = app_handle.global_shortcut();
         manager.unregister_all()?;
         Ok(())
@@ -364,7 +368,9 @@ impl Hotkey {
     }
 
     pub fn unregister(&self, hotkey: &str) -> Result<()> {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = handle::Handle::global()
+            .app_handle()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get app handle for hotkey registration"))?;
         let manager = app_handle.global_shortcut();
         manager.unregister(hotkey)?;
         logging!(debug, Type::Hotkey, "Unregister hotkey {}", hotkey);
@@ -438,7 +444,17 @@ impl Hotkey {
 
 impl Drop for Hotkey {
     fn drop(&mut self) {
-        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let app_handle = match handle::Handle::global().app_handle() {
+            Some(handle) => handle,
+            None => {
+                logging!(
+                    error,
+                    Type::Hotkey,
+                    "Failed to get app handle during hotkey cleanup"
+                );
+                return;
+            }
+        };
         if let Err(e) = app_handle.global_shortcut().unregister_all() {
             logging!(
                 error,

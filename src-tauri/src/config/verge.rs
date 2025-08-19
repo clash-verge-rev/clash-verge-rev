@@ -138,9 +138,6 @@ pub struct IVerge {
     /// 0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天
     pub auto_log_clean: Option<i32>,
 
-    /// 是否启用随机端口
-    pub enable_random_port: Option<bool>,
-
     /// verge 的各种 port 用于覆盖 clash 的各种 port
     #[cfg(not(target_os = "windows"))]
     pub verge_redir_port: Option<u16>,
@@ -374,7 +371,6 @@ impl IVerge {
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
             proxy_host: Some("127.0.0.1".into()),
-            enable_random_port: Some(false),
             #[cfg(not(target_os = "windows"))]
             verge_redir_port: Some(7895),
             #[cfg(not(target_os = "windows"))]
@@ -394,7 +390,7 @@ impl IVerge {
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
-            auto_log_clean: Some(2),
+            auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
             webdav_url: None,
             webdav_username: None,
             webdav_password: None,
@@ -448,7 +444,6 @@ impl IVerge {
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_hover_jump_navigator);
-        patch!(enable_random_port);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);
         #[cfg(not(target_os = "windows"))]
@@ -567,7 +562,6 @@ pub struct IVergeResponse {
     pub proxy_layout_column: Option<i32>,
     pub test_list: Option<Vec<IVergeTestItem>>,
     pub auto_log_clean: Option<i32>,
-    pub enable_random_port: Option<bool>,
     #[cfg(not(target_os = "windows"))]
     pub verge_redir_port: Option<u16>,
     #[cfg(not(target_os = "windows"))]
@@ -640,7 +634,6 @@ impl From<IVerge> for IVergeResponse {
             proxy_layout_column: verge.proxy_layout_column,
             test_list: verge.test_list,
             auto_log_clean: verge.auto_log_clean,
-            enable_random_port: verge.enable_random_port,
             #[cfg(not(target_os = "windows"))]
             verge_redir_port: verge.verge_redir_port,
             #[cfg(not(target_os = "windows"))]

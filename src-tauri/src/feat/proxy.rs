@@ -2,7 +2,9 @@ use crate::{
     config::{Config, IVerge},
     core::handle,
     ipc::IpcManager,
+    logging,
     process::AsyncHandler,
+    utils::logging::Type,
 };
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -71,7 +73,14 @@ pub fn copy_clash_env() {
             .unwrap_or_else(|| "127.0.0.1".to_string())
     });
 
-    let app_handle = handle::Handle::global().app_handle().unwrap();
+    let Some(app_handle) = handle::Handle::global().app_handle() else {
+        logging!(
+            error,
+            Type::System,
+            "Failed to get app handle for proxy operation"
+        );
+        return;
+    };
     let port = {
         Config::verge()
             .latest_ref()
