@@ -62,7 +62,7 @@ async function resolvePortable() {
   const options = { owner: context.repo.owner, repo: context.repo.repo };
   const github = getOctokit(process.env.GITHUB_TOKEN);
   const tag = alpha ? "alpha" : process.env.TAG_NAME || `v${version}`;
-  console.log("[INFO]: upload to ", tag);
+  console.log(`⬆️ Uploading ${zipFile}...`);
 
   const { data: release } = await github.rest.repos.getReleaseByTag({
     ...options,
@@ -73,14 +73,14 @@ async function resolvePortable() {
     return x.name === zipFile;
   });
   if (assets.length > 0) {
+    console.log(`🗑️ Deleting old ${zipFile}...`);
     let id = assets[0].id;
     await github.rest.repos.deleteReleaseAsset({
       ...options,
       asset_id: id,
     });
+    console.log(`🗑️ Deleted old ${zipFile}`);
   }
-
-  console.log(release.name);
 
   let zipBuffer = await fs.readFile(zipFile);
   await github.rest.repos.uploadReleaseAsset({
@@ -89,6 +89,8 @@ async function resolvePortable() {
     name: zipFile,
     data: zipBuffer,
   });
+
+  console.log(`✅ Uploaded ${zipFile}`);
 }
 
 async function bundlePortableForWindows(releaseDir, zipFile) {
