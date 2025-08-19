@@ -8,6 +8,8 @@ use crate::{
     utils::{dirs::ipc_path, logging::Type},
 };
 
+const MAX_LOGS: usize = 1000; // Maximum number of logs to keep in memory
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LogData {
     #[serde(rename = "type")]
@@ -48,15 +50,15 @@ impl LogItem {
 #[derive(Debug, Clone)]
 pub struct CurrentLogs {
     pub logs: VecDeque<LogItem>,
-    pub level: String,
+    // pub level: String,
     pub last_updated: Instant,
 }
 
 impl Default for CurrentLogs {
     fn default() -> Self {
         Self {
-            logs: VecDeque::with_capacity(1000),
-            level: "info".to_string(),
+            logs: VecDeque::with_capacity(MAX_LOGS),
+            // level: "info".to_string(),
             last_updated: Instant::now(),
         }
     }
@@ -97,24 +99,24 @@ impl LogsMonitor {
         let filter_level = level.clone().unwrap_or_else(|| "info".to_string());
 
         // Check if we're already monitoring the same level
-        let level_changed = {
-            let current_level = self.current_monitoring_level.read().await;
-            if let Some(existing_level) = current_level.as_ref() {
-                if existing_level == &filter_level {
-                    logging!(
-                        info,
-                        Type::Ipc,
-                        true,
-                        "LogsMonitor: Already monitoring level '{}', skipping duplicate request",
-                        filter_level
-                    );
-                    return;
-                }
-                true // Level changed
-            } else {
-                true // First time or was stopped
-            }
-        };
+        // let level_changed = {
+        //     let current_level = self.current_monitoring_level.read().await;
+        //     if let Some(existing_level) = current_level.as_ref() {
+        //         if existing_level == &filter_level {
+        //             logging!(
+        //                 info,
+        //                 Type::Ipc,
+        //                 true,
+        //                 "LogsMonitor: Already monitoring level '{}', skipping duplicate request",
+        //                 filter_level
+        //             );
+        //             return;
+        //         }
+        //         true // Level changed
+        //     } else {
+        //         true // First time or was stopped
+        //     }
+        // };
 
         // Stop existing monitoring task if level changed or first time
         {
@@ -130,20 +132,24 @@ impl LogsMonitor {
             }
         }
 
+        // We want to keep the logs cache even if the level changes,
+        // so we don't clear it here. The cache will be cleared only when the level changes
+        // and a new task is started. This allows us to keep logs from previous levels
+        // even if the level changes during monitoring.
         // Clear logs cache when level changes to ensure fresh data
-        if level_changed {
-            let mut current = self.current.write().await;
-            current.logs.clear();
-            current.level = filter_level.clone();
-            current.mark_fresh();
-            logging!(
-                info,
-                Type::Ipc,
-                true,
-                "LogsMonitor: Cleared logs cache due to level change to '{}'",
-                filter_level
-            );
-        }
+        // if level_changed {
+        //     let mut current = self.current.write().await;
+        //     current.logs.clear();
+        //     current.level = filter_level.clone();
+        //     current.mark_fresh();
+        //     logging!(
+        //         info,
+        //         Type::Ipc,
+        //         true,
+        //         "LogsMonitor: Cleared logs cache due to level change to '{}'",
+        //         filter_level
+        //     );
+        // }
 
         // Update current monitoring level
         {
