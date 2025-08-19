@@ -12,6 +12,11 @@ Before you start contributing to the project, you need to set up your developmen
 
 ### Setup for Windows Users
 
+> [!NOTE]
+> **If you are using a Windows ARM device, you additionally need to install [LLVM](https://github.com/llvm/llvm-project/releases) (including clang) and set the environment variable.**
+>
+> Because the `ring` crate is compiled based on `clang` under Windows ARM.
+
 If you're a Windows user, you may need to perform some additional steps:
 
 - Make sure to add Rust and Node.js to your system's PATH. This is usually done during the installation process, but you can verify and manually add them if necessary.
@@ -51,11 +56,13 @@ apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
 You have two options for downloading the clash binary:
 
 - Automatically download it via the provided script:
+
   ```shell
   pnpm run prebuild
   # Use '--force' to force update to the latest version
   # pnpm run prebuild --force
   ```
+
 - Manually download it from the [Mihomo release](https://github.com/MetaCubeX/mihomo/releases). After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).
 
 ### Run the Development Server

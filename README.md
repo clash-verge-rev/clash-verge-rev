@@ -86,11 +86,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
 To run the development server, execute the following commands after all prerequisites for **Tauri** are installed:
 
-> [!NOTE]
-> **If you are using a Windows ARM device, you additionally need to install [LLVM](https://github.com/llvm/llvm-project/releases) (including clang) and set the environment variable.**
->
-> Because the `ring` crate is compiled based on `clang` under Windows ARM.
-
 ```shell
 pnpm i
 pnpm run prebuild
