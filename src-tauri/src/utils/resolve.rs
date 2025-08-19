@@ -229,7 +229,7 @@ pub fn save_window_size_position(app_handle: &AppHandle) -> Result<()> {
         let pos = win.outer_position()?;
         let pos = pos.to_logical::<f64>(scale);
         let is_maximized = win.is_maximized()?;
-        verge.window_is_maximized.replace(is_maximized);
+        verge.window_is_maximized = Some(is_maximized);
         if !is_maximized && size.width >= 600.0 && size.height >= 550.0 {
             verge.window_size_position = Some(vec![size.width, size.height, pos.x, pos.y]);
         }

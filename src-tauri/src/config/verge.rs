@@ -263,7 +263,7 @@ impl IVerge {
             auto_log_clean: Some(3),
             enable_tray: Some(true),
             show_in_dock: Some(true),
-            enable_external_controller: Some(true),
+            enable_external_controller: Some(false),
             ..Self::default()
         }
     }

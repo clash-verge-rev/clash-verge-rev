@@ -207,10 +207,10 @@ impl IProfiles {
 
         for (i, _) in items.iter().enumerate() {
             if items[i].uid == Some(active_id.clone()) {
-                old_index.replace(i);
+                old_index = Some(i);
             }
             if items[i].uid == Some(over_id.clone()) {
-                new_index.replace(i);
+                new_index = Some(i);
             }
         }
 
@@ -219,7 +219,7 @@ impl IProfiles {
         {
             let item = items.remove(old_index);
             items.insert(new_index, item);
-            self.items.replace(items);
+            self.items = Some(items);
             self.save_file()?;
         }
         Ok(())
@@ -331,7 +331,7 @@ impl IProfiles {
 
         let items = self.items.take().unwrap_or_default();
         if delete_current && let [first, ..] = items.as_slice() {
-            self.current.replace(first.uid.clone().unwrap_or_default());
+            self.current = Some(first.uid.clone().unwrap_or_default());
         }
 
         // generate new items
@@ -339,7 +339,7 @@ impl IProfiles {
             .into_iter()
             .filter(|p| !filter_uids.contains(&p.uid.clone().unwrap()))
             .collect::<Vec<PrfItem>>();
-        self.items.replace(new_items);
+        self.items = Some(new_items);
 
         self.save_file()?;
         Ok(restart_core)
