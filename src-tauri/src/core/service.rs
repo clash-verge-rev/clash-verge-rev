@@ -315,8 +315,8 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
         .clone()
         .unwrap_or("verge-mihomo".to_string());
 
-    let bin_ext = std::env::consts::EXE_SUFFIX;
-    let clash_bin = format!("{clash_core}{bin_ext}");
+    let exe_ext = std::env::consts::EXE_SUFFIX;
+    let clash_bin = format!("{clash_core}{exe_ext}");
     let bin_path = current_exe()?.with_file_name(clash_bin);
     let bin_path = dirs::path_to_str(&bin_path)?;
 

@@ -45,6 +45,18 @@ pub fn init_config() -> Result<()> {
         Ok(())
     })?;
 
+    dirs::app_logs_dir().map(|logs_dir| {
+        if !logs_dir.exists() {
+            let _ = std::fs::create_dir_all(&logs_dir);
+        }
+    })?;
+
+    dirs::app_service_logs_dir().map(|service_logs_dir| {
+        if !service_logs_dir.exists() {
+            let _ = std::fs::create_dir_all(&service_logs_dir);
+        }
+    })?;
+
     Ok(())
 }
 

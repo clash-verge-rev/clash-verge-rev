@@ -48,12 +48,23 @@ pub fn app_home_dir() -> Result<PathBuf> {
 
 /// get the resources dir
 pub fn app_resources_dir() -> Result<PathBuf> {
-    use tauri::{Env, utils::platform::resource_dir};
+    use tauri::{
+        Env,
+        utils::platform::{current_exe, resource_dir},
+    };
 
     let app_handle = handle::Handle::app_handle();
-    let res_dir = resource_dir(app_handle.package_info(), &Env::default())
-        .map_err(|_| anyhow::anyhow!("failed to get the resource dir"))?
-        .join("resources");
+    let portable = PORTABLE_FLAG.get().unwrap_or(&false);
+    let res_dir = if *portable {
+        current_exe()?
+            .parent()
+            .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?
+            .join("resources")
+    } else {
+        resource_dir(app_handle.package_info(), &Env::default())
+            .map_err(|_| anyhow::anyhow!("failed to get the resource dir"))?
+            .join("resources")
+    };
     Ok(res_dir)
 }
 
@@ -65,6 +76,10 @@ pub fn app_profiles_dir() -> Result<PathBuf> {
 /// logs dir
 pub fn app_logs_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
+}
+
+pub fn app_service_logs_dir() -> Result<PathBuf> {
+    Ok(app_logs_dir()?.join("service"))
 }
 
 pub fn clash_path() -> Result<PathBuf> {
@@ -96,7 +111,7 @@ pub fn backup_archive_file() -> Result<PathBuf> {
 pub fn service_log_file() -> Result<PathBuf> {
     use chrono::Local;
 
-    let log_dir = app_logs_dir()?.join("service");
+    let log_dir = app_service_logs_dir()?;
     let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
     let log_file = format!("{local_time}.log");
     let log_file = log_dir.join(log_file);
