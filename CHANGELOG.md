@@ -1,8 +1,8 @@
-<!--
-### 🚨 Breaking Changes
-
 ### ✨ Features
+
+- 版本更新日志窗口高度自适应
+- 创建 Linux 的便携版本
 
 ### 🐛 Bug Fixes
 
--->
+- 初始化创建必要的目录
