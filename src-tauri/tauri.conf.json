@@ -6,7 +6,10 @@
   "app": {
     "security": {
       "assetProtocol": {
-        "scope": ["**"],
+        "scope": {
+          "allow": ["**"],
+          "requireLiteralLeadingDot": false
+        },
         "enable": true
       },
       "csp": {

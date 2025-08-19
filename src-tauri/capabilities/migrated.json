@@ -11,7 +11,8 @@
     "fs:allow-exists",
     {
       "identifier": "fs:scope",
-      "allow": ["$APPDATA/**", "$RESOURCE/../**", "$HOME/.local/**", "**"]
+      "allow": ["**"],
+      "requireLiteralLeadingDot": false
     },
     "core:window:allow-create",
     "core:window:allow-center",
