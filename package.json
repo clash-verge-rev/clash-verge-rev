@@ -39,8 +39,8 @@
     "@mui/x-data-grid": "^8.10.1",
     "@tauri-apps/api": "2.8.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.0",
-    "@tauri-apps/plugin-dialog": "^2.3.2",
-    "@tauri-apps/plugin-fs": "^2.4.1",
+    "@tauri-apps/plugin-dialog": "^2.3.3",
+    "@tauri-apps/plugin-fs": "^2.4.2",
     "@tauri-apps/plugin-global-shortcut": "^2.3.0",
     "@tauri-apps/plugin-notification": "^2.3.0",
     "@tauri-apps/plugin-process": "^2.3.0",
@@ -77,11 +77,11 @@
     "swr": "^2.3.6",
     "tar": "^7.4.3",
     "types-pac": "^1.0.3",
-    "zustand": "^5.0.7"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
-    "@tauri-apps/cli": "2.8.0",
+    "@tauri-apps/cli": "2.8.1",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
     "@types/react": "19.1.10",
