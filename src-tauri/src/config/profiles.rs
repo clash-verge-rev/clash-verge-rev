@@ -345,20 +345,20 @@ impl IProfiles {
         Ok(restart_core)
     }
 
-    pub fn set_rule_providers_path(&mut self, path: HashMap<String, PathBuf>) -> Result<()> {
+    pub fn set_rule_providers_path(&mut self, path: HashMap<String, PathBuf>) {
         let current = self.current.as_ref();
-        if current.is_none() {
-            bail!("failed to get the current profile");
-        }
-        let mut items = self.items.take().unwrap_or_default();
-        for item in items.iter_mut() {
-            if item.uid.as_ref() == current {
-                item.rule_providers_path = Some(path);
-                break;
+        if let Some(current) = current {
+            let mut items = self.items.take().unwrap_or_default();
+            for item in items.iter_mut() {
+                if let Some(uid) = item.uid.as_ref()
+                    && uid == current
+                {
+                    item.rule_providers_path = Some(path);
+                    break;
+                }
             }
+            self.items = Some(items);
         }
-        self.items = Some(items);
-        Ok(())
     }
 
     /// 获取 current 指向的订阅内容

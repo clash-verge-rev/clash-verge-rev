@@ -6,7 +6,7 @@ use signal_hook::{
 };
 
 pub fn register() {
-    std::thread::spawn(move || async {
+    tauri::async_runtime::spawn(async {
         let signals = [SIGTERM, SIGINT, SIGHUP];
         let mut sigs = Signals::new(signals).unwrap();
         for signal in &mut sigs {

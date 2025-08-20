@@ -25,12 +25,9 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
         return config;
     }
 
-    let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
-        val.as_mapping().cloned().unwrap_or(Mapping::new())
-    });
+    let mut tun_val = tun_val.map_or(Mapping::new(), |val| val.as_mapping().cloned().unwrap_or_default());
 
     revise!(tun_val, "enable", enable);
-
     revise!(config, "tun", tun_val);
 
     if enable {

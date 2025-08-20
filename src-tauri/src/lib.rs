@@ -43,7 +43,7 @@ pub fn run() -> Result<()> {
     }
 
     // 初始化目录
-    init::init_config()?;
+    init::init_dirs_and_config()?;
 
     let language = Config::verge().latest().language.clone().unwrap_or("zh".to_string());
     rust_i18n::set_locale(&language);
@@ -51,6 +51,9 @@ pub fn run() -> Result<()> {
     // 初始化日志
     let _g = VergeLog::global().init()?;
     resolve::setup_panic_hook();
+
+    // delete old log file
+    VergeLog::delete_log()?;
 
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())

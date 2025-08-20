@@ -96,7 +96,7 @@ impl Tray {
     }
 
     pub fn tray_menu<R: Runtime>(app_handle: &AppHandle<R>) -> Result<Menu<R>> {
-        let version = APP_VERSION.get().expect("failed to get app version");
+        let version = APP_VERSION.get().unwrap();
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         let current = profiles.get_current();

@@ -47,14 +47,14 @@ pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -
     fs::write(path, yaml_str.as_bytes()).with_context(|| format!("failed to save file \"{path_str}\""))
 }
 
-pub fn deep_merge(dst: &mut Value, src: &Value) {
-    match (dst, src) {
-        (Value::Mapping(dst), Value::Mapping(src)) => {
+pub fn deep_merge(dest: &mut Value, src: &Value) {
+    match (dest, src) {
+        (Value::Mapping(dest), Value::Mapping(src)) => {
             for (k, v) in src {
-                deep_merge(dst.entry(k.clone()).or_insert(Value::Null), v);
+                deep_merge(dest.entry(k.clone()).or_insert(Value::Null), v);
             }
         }
-        (dst, src) => *dst = src.clone(),
+        (dest, src) => *dest = src.clone(),
     }
 }
 
@@ -84,7 +84,7 @@ pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
 
 /// get the last part of the url, if not found, return empty string
 pub fn get_last_part_and_decode(url: &str) -> Option<String> {
-    let path = url.split('?').next().unwrap_or(""); // Splits URL and takes the path part
+    let path = url.split('?').next().unwrap_or_default(); // Splits URL and takes the path part
     let segments = path.split('/').collect::<Vec<&str>>();
     let last_segment = segments.last()?;
 
@@ -179,7 +179,7 @@ pub fn find_unused_port() -> Result<u16> {
         }
         Err(_) => {
             let port = Config::clash().latest().get_mixed_port();
-            tracing::warn!("use default port: {}", port);
+            tracing::warn!("use default port: {port}");
             Ok(port)
         }
     }

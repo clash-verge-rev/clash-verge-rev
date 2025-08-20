@@ -16,13 +16,13 @@ pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
     let mut config = Value::from(config);
     let mut merge_without_append = use_lowercase(merge.clone());
     for key in MERGE_FIELDS {
-        merge_without_append.remove(key).unwrap_or_default();
+        merge_without_append.remove(key);
     }
     help::deep_merge(&mut config, &Value::from(merge_without_append));
 
     let mut config = config.as_mapping().unwrap().clone();
-    let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string());
-    let merge = use_filter(merge, &merge_list.collect::<Vec<String>>());
+    let merge_list = MERGE_FIELDS.iter().map(|s| s.to_string()).collect::<Vec<String>>();
+    let merge = use_filter(merge, &merge_list);
 
     ["rules", "proxies", "proxy-groups"].iter().for_each(|key_str| {
         let key_val = Value::from(key_str.to_string());
@@ -36,17 +36,17 @@ pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
         let post_key = Value::from(format!("append-{key_str}"));
 
         if let Some(pre_val) = merge.get(&pre_key)
-            && pre_val.is_sequence()
+            && let Some(pre_val) = pre_val.as_sequence()
         {
-            let mut pre_val = pre_val.as_sequence().unwrap().clone();
+            let mut pre_val = pre_val.clone();
             pre_val.extend(list);
             list = pre_val;
         }
 
         if let Some(post_val) = merge.get(&post_key)
-            && post_val.is_sequence()
+            && let Some(post_val) = post_val.as_sequence()
         {
-            list.extend(post_val.as_sequence().unwrap().clone());
+            list.extend(post_val.clone());
         }
 
         if !list.is_empty() {

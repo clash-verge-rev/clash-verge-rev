@@ -1,6 +1,5 @@
 use crate::config::{Config, IClashConfig, IProfiles, IVerge};
 use crate::core::handle;
-use crate::core::verge_log::VergeLog;
 use crate::trace_err;
 use crate::utils::{dirs, help};
 use anyhow::Result;
@@ -9,21 +8,44 @@ use tauri_plugin_shell::ShellExt;
 
 /// Initialize all the config files
 /// before tauri setup
-pub fn init_config() -> Result<()> {
-    VergeLog::delete_log()?;
-
-    dirs::app_home_dir().map(|app_dir| {
+pub fn init_dirs_and_config() -> Result<()> {
+    // init dirs
+    dirs::app_home_dir().and_then(|app_dir| {
         if !app_dir.exists() {
-            let _ = std::fs::create_dir_all(&app_dir);
+            std::fs::create_dir_all(&app_dir)?;
         }
+        Ok(())
     })?;
 
-    dirs::app_profiles_dir().map(|profiles_dir| {
+    dirs::app_profiles_dir().and_then(|profiles_dir| {
         if !profiles_dir.exists() {
-            let _ = std::fs::create_dir_all(&profiles_dir);
+            std::fs::create_dir_all(&profiles_dir)?;
         }
+        Ok(())
     })?;
 
+    dirs::app_logs_dir().and_then(|logs_dir| {
+        if !logs_dir.exists() {
+            std::fs::create_dir_all(&logs_dir)?;
+        }
+        Ok(())
+    })?;
+
+    dirs::app_service_logs_dir().and_then(|service_logs_dir| {
+        if !service_logs_dir.exists() {
+            std::fs::create_dir_all(&service_logs_dir)?;
+        }
+        Ok(())
+    })?;
+
+    dirs::backup_dir().and_then(|backup_dir| {
+        if !backup_dir.exists() {
+            std::fs::create_dir_all(&backup_dir)?;
+        }
+        Ok(())
+    })?;
+
+    // init yaml config
     dirs::clash_path().and_then(|path| {
         if !path.exists() {
             help::save_yaml(&path, &IClashConfig::default().0, Some("# Clash Verge"))?;
@@ -45,43 +67,28 @@ pub fn init_config() -> Result<()> {
         Ok(())
     })?;
 
-    dirs::app_logs_dir().map(|logs_dir| {
-        if !logs_dir.exists() {
-            let _ = std::fs::create_dir_all(&logs_dir);
-        }
-    })?;
-
-    dirs::app_service_logs_dir().map(|service_logs_dir| {
-        if !service_logs_dir.exists() {
-            let _ = std::fs::create_dir_all(&service_logs_dir);
-        }
-    })?;
-
     Ok(())
 }
 
 /// initialize app resources
 /// after tauri setup
 pub fn init_resources() -> Result<()> {
-    let app_dir = dirs::app_home_dir()?;
-    let res_dir = dirs::app_resources_dir()?;
-    let backup_dir = dirs::backup_dir()?;
-
-    if !app_dir.exists() {
-        std::fs::create_dir_all(&app_dir)?;
-    }
-    if !res_dir.exists() {
-        std::fs::create_dir_all(&res_dir)?;
-    }
-
-    if !backup_dir.exists() {
-        std::fs::create_dir_all(&backup_dir)?;
-    }
-
-    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat", "ASN.mmdb"];
+    let app_dir = dirs::app_home_dir().and_then(|app_dir| {
+        if !app_dir.exists() {
+            std::fs::create_dir_all(&app_dir)?;
+        }
+        Ok(app_dir)
+    })?;
+    let res_dir = dirs::app_resources_dir().and_then(|res_dir| {
+        if !res_dir.exists() {
+            std::fs::create_dir_all(&res_dir)?;
+        }
+        Ok(res_dir)
+    })?;
 
     // copy the resource file
     // if the source file is newer than the destination file, copy it over
+    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat", "ASN.mmdb"];
     let handle_copy = |src_path: &PathBuf, dest_path: &PathBuf, file: &str| {
         match std::fs::copy(src_path, dest_path) {
             Ok(_) => tracing::debug!("resources copied '{file}'"),
@@ -101,7 +108,6 @@ pub fn init_resources() -> Result<()> {
 
         let src_modified = std::fs::metadata(&src_path).and_then(|m| m.modified());
         let dest_modified = std::fs::metadata(&dest_path).and_then(|m| m.modified());
-
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
@@ -165,7 +171,7 @@ pub fn init_scheme() -> Result<()> {
 pub async fn startup_script() -> Result<()> {
     let verge = Config::verge();
     let verge = verge.latest();
-    let path = verge.startup_script.as_deref().unwrap_or("");
+    let path = verge.startup_script.as_deref().unwrap_or_default();
 
     if !path.is_empty() {
         let mut shell = "";

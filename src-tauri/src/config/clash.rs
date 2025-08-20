@@ -16,10 +16,10 @@ impl IClashConfig {
         let template = Self::default();
         match dirs::clash_path().and_then(|path| help::read_merge_mapping(&path)) {
             Ok(mut result) => {
-                let mut dst = Value::from(template.0.clone());
+                let mut dest = Value::from(template.0.clone());
                 let src = Value::from(result.clone());
-                help::deep_merge(&mut dst, &src);
-                result = dst.as_mapping().unwrap().clone();
+                help::deep_merge(&mut dest, &src);
+                result = dest.as_mapping().unwrap().clone();
                 Self(Self::guard(result))
             }
             Err(err) => {
@@ -113,25 +113,25 @@ impl IClashConfig {
     }
 
     /// merge from src into dst, but not deep merge
-    fn merge_into(dst: &mut Value, src: &Value) {
-        match (dst, src) {
+    fn merge_into(dest: &mut Value, src: &Value) {
+        match (dest, src) {
             // handle mapping value
-            (Value::Mapping(dst), Value::Mapping(src)) => {
+            (Value::Mapping(dest), Value::Mapping(src)) => {
                 for (k, v) in src {
-                    match dst.get_mut(k) {
-                        Some(dst_val) => Self::merge_into(dst_val, v),
-                        None => _ = dst.insert(k.clone(), v.clone()),
+                    match dest.get_mut(k) {
+                        Some(dest_val) => Self::merge_into(dest_val, v),
+                        None => _ = dest.insert(k.clone(), v.clone()),
                     };
                 }
             }
-            (dst, src) => *dst = src.clone(),
+            (dest, src) => *dest = src.clone(),
         }
     }
 
     pub fn patch_and_merge_config(&mut self, patch: Mapping) {
-        let mut dst = Value::from(self.0.clone());
-        Self::merge_into(&mut dst, &Value::from(patch));
-        self.0 = dst.as_mapping().unwrap().clone();
+        let mut dest = Value::from(self.0.clone());
+        Self::merge_into(&mut dest, &Value::from(patch));
+        self.0 = dest.as_mapping().unwrap().clone();
     }
 
     pub fn save_config(&self) -> Result<()> {

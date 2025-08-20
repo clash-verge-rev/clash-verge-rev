@@ -44,39 +44,43 @@ pub fn generate_rule_providers(mut config: Mapping) -> Mapping {
     let profiles = Config::profiles();
     let mut profiles = profiles.latest_mut();
     let rp_key = Value::from("rule-providers");
+
     if !config.contains_key(&rp_key) {
-        let _ = profiles.set_rule_providers_path(HashMap::new());
+        profiles.set_rule_providers_path(HashMap::new());
         return config;
     }
+
     let rp_val = config.get(&rp_key);
-    let mut rp_val = rp_val.map_or(Mapping::new(), |val| {
-        val.as_mapping().cloned().unwrap_or(Mapping::new())
-    });
+    let mut rp_val = rp_val.map_or(Mapping::new(), |val| val.as_mapping().cloned().unwrap_or_default());
     let mut absolute_path_map: HashMap<String, PathBuf> = HashMap::new();
     for (key, value) in rp_val.iter_mut() {
         let name = key.as_str().unwrap();
         let val_map = value.as_mapping_mut().unwrap();
         let path_key = Value::from("path");
+
+        // add format
         let format_key = Value::from("format");
         let rp_format = val_map.get(&format_key).cloned();
         if rp_format.is_none() {
             val_map.insert(format_key, Value::from("yaml"));
         }
-        let format_val = rp_format.as_ref().map_or("yaml", |v| v.as_str().unwrap());
+
+        // add path
         if let Some(path) = val_map.get(&path_key) {
             let path = path.as_str().unwrap();
             let absolute_path = dirs::app_home_dir().unwrap().join(path);
             absolute_path_map.insert(name.into(), absolute_path);
         } else {
             // no path value, set default path
+            let format_val = rp_format.as_ref().map_or("yaml", |v| v.as_str().unwrap_or("yaml"));
             let path = format!("./rules/{name}.{format_val}");
             let absolute_path = dirs::app_home_dir().unwrap().join(path.trim_start_matches("./"));
-            val_map.insert(path_key, Value::from(path));
+            val_map.insert(path_key, path.into());
             absolute_path_map.insert(name.into(), absolute_path);
         }
     }
-    let _ = profiles.set_rule_providers_path(absolute_path_map);
-    config.insert(rp_key, Value::from(rp_val));
+    profiles.set_rule_providers_path(absolute_path_map);
+    config.insert(rp_key, rp_val.into());
     config
 }
 
@@ -114,14 +118,14 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     tracing::info!("execute profile chains");
     execute_chains(&mut config, &profile_chain, &mut result_map);
 
-    // 合并 verge 配置的 clash 配置
+    // 合并 verge 接管的 clash 配置
     tracing::info!("merge clash config file");
     for (key, value) in clash_config.into_iter() {
         config.insert(key, value);
     }
 
     let enable_external_controller = Config::verge().latest().enable_external_controller.unwrap_or_default();
-    tracing::info!("external controller enable: {}", enable_external_controller);
+    tracing::info!("external controller enable: {enable_external_controller}");
     if !enable_external_controller {
         config.remove("external-controller");
         config.remove("external-controller-cors");
