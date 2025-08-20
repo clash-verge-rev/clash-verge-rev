@@ -14,7 +14,7 @@ const ARCH_MAP = {
   "i686-pc-windows-msvc": "x86",
   "aarch64-pc-windows-msvc": "arm64",
   // Linux
-  "x86_64-unknown-linux-gnu": "x64",
+  "x86_64-unknown-linux-gnu": "amd64",
   "i686-unknown-linux-gnu": "i386",
   "aarch64-unknown-linux-gnu": "arm64",
   "armv7-unknown-linux-gnueabihf": "armhf",
