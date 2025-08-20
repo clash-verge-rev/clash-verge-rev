@@ -177,7 +177,7 @@ jobs:
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
-      - name: Tauri build
+      - name: Tauri build for Windows-macOS-Linux
         uses: tauri-apps/tauri-action@v0
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
@@ -198,6 +198,7 @@ jobs:
           prerelease: true
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
+          includeUpdaterJson: true
 
   autobuild-arm-linux:
     name: Autobuild ARM Linux
@@ -300,7 +301,7 @@ jobs:
             gcc-arm-linux-gnueabihf \
             g++-arm-linux-gnueabihf
 
-      - name: Build for Linux
+      - name: Tauri Build for Linux
         run: |
           export PKG_CONFIG_ALLOW_CROSS=1
           if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
@@ -390,7 +391,7 @@ jobs:
           Remove-Item .\src-tauri\tauri.windows.conf.json
           Rename-Item .\src-tauri\webview2.${{ matrix.arch }}.json tauri.windows.conf.json
 
-      - name: Tauri build
+      - name: Tauri build for Windows
         id: build
         uses: tauri-apps/tauri-action@v0
         env:
@@ -401,6 +402,7 @@ jobs:
         with:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
+          includeUpdaterJson: true
 
       - name: Rename
         run: |
