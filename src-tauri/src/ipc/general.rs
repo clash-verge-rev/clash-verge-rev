@@ -1,6 +1,9 @@
+use std::time::Duration;
+
 use kode_bridge::{
     errors::{AnyError, AnyResult},
-    IpcHttpClient, LegacyResponse,
+    pool::PoolConfig,
+    ClientConfig, IpcHttpClient, LegacyResponse,
 };
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 
@@ -22,6 +25,7 @@ fn create_error(msg: impl Into<String>) -> AnyError {
 
 pub struct IpcManager {
     ipc_path: String,
+    config: ClientConfig,
 }
 
 impl IpcManager {
@@ -39,6 +43,23 @@ impl IpcManager {
         let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
         Self {
             ipc_path: ipc_path.to_string(),
+            config: ClientConfig {
+                default_timeout: Duration::from_secs(5),
+                enable_pooling: true,
+                max_retries: 3,
+                max_concurrent_requests: 32,
+                max_requests_per_second: Some(5.0),
+                pool_config: PoolConfig {
+                    max_size: 32,
+                    min_idle: 2,
+                    max_idle_time_ms: 10_000,
+                    max_retries: 3,
+                    max_concurrent_requests: 32,
+                    max_requests_per_second: Some(5.0),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
         }
     }
 }
@@ -53,7 +74,8 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<LegacyResponse> {
-        let client = IpcHttpClient::new(&self.ipc_path)?;
+        // let client = IpcHttpClient::new(&self.ipc_path)?;
+        let client = IpcHttpClient::with_config(&self.ipc_path, self.config.clone())?;
         client.request(method, path, body).await
     }
 }
