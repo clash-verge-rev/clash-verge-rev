@@ -50,7 +50,11 @@ pub async fn enhance_profiles() -> CmdResult {
 #[tauri::command]
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     let item = wrap_err!(PrfItem::from_url(&url, None, None, option).await)?;
-    wrap_err!(Config::profiles().data_mut().append_item(item))?;
+    let restart_core = wrap_err!(Config::profiles().data_mut().append_item(item))?;
+    if restart_core {
+        wrap_err!(CoreManager::global().update_config().await)?;
+        handle::Handle::refresh_clash();
+    }
     wrap_err!(handle::Handle::update_systray_part())
 }
 
@@ -63,7 +67,11 @@ pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
     let item = wrap_err!(PrfItem::from(item, file_data).await)?;
-    wrap_err!(Config::profiles().data_mut().append_item(item))?;
+    let restart_core = wrap_err!(Config::profiles().data_mut().append_item(item))?;
+    if restart_core {
+        wrap_err!(CoreManager::global().update_config().await)?;
+        handle::Handle::refresh_clash();
+    }
     wrap_err!(handle::Handle::update_systray_part())
 }
 
@@ -76,6 +84,7 @@ pub async fn update_profile(uid: String, option: Option<PrfOption>) -> CmdResult
 
 #[tauri::command]
 pub async fn delete_profile(uid: String) -> CmdResult {
+    println!("delete profile {uid}");
     let restart_core = wrap_err!(Config::profiles().data_mut().delete_item(uid))?;
     // the running profile is deleted, update the core config
     if restart_core {

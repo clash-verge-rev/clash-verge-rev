@@ -450,6 +450,7 @@ impl PrfItem {
     pub fn delete_file(&self) -> Result<()> {
         match self.file {
             Some(ref file) => {
+                tracing::debug!("delete profile [{:?}({:?})]", self.name, self.uid);
                 let path = dirs::app_profiles_dir()?.join(file);
                 fs::remove_file(path).context("failed to delete the file")
             }

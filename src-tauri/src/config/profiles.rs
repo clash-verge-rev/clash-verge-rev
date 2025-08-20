@@ -162,7 +162,8 @@ impl IProfiles {
     /// append new item
     /// if the file_data is some
     /// then should save the data to file
-    pub fn append_item(&mut self, mut item: PrfItem) -> Result<()> {
+    pub fn append_item(&mut self, mut item: PrfItem) -> Result<bool> {
+        let mut restart_core = false;
         if let Some(uid) = item.uid.clone() {
             // save the file data
             // move the field value after save
@@ -181,22 +182,30 @@ impl IProfiles {
                     .get_item_mut(parent)
                     .ok_or(anyhow!("failed to find the profile item \"uid:{parent}\""))?;
                 match profile.chain.as_mut() {
-                    Some(chain) => chain.push(uid),
-                    None => profile.chain = Some(vec![uid]),
+                    Some(chain) => chain.push(uid.clone()),
+                    None => profile.chain = Some(vec![uid.clone()]),
                 }
             }
 
-            if self.items.is_none() {
-                self.items = Some(vec![]);
+            if self.current.is_none()
+                && let Some(profile_type) = item.itype.as_ref()
+                && matches!(profile_type, ProfileType::Local | ProfileType::Remote)
+            {
+                restart_core = true;
+                self.current = Some(uid);
             }
 
             if let Some(items) = self.items.as_mut() {
                 items.push(item)
+            } else {
+                self.items = Some(vec![]);
             }
-            self.save_file()
+            self.save_file()?;
         } else {
             bail!("the uid should not be null");
         }
+
+        Ok(restart_core)
     }
 
     /// reorder items
@@ -301,26 +310,29 @@ impl IProfiles {
     /// if delete the current then return true
     pub fn delete_item(&mut self, uid: String) -> Result<bool> {
         let current = self.current.as_ref().unwrap_or(&uid);
-        let mut filter_uids: Vec<String> = Vec::new();
 
         let profile = self
             .get_item(&uid)
             .ok_or(anyhow!("failed to find the profile item \"uid:{uid}\""))?;
-        filter_uids.push(uid.clone());
-        // delete profile chain
+
+        // delete profile and profile chains
+        let mut remove_uids = vec![uid.clone()];
         if let Some(profile_chain) = profile.chain.as_ref() {
-            filter_uids.extend(profile_chain.clone());
+            remove_uids.extend(profile_chain.clone());
             profile_chain
                 .iter()
                 .filter_map(|chain_uid| self.get_item(chain_uid))
-                .for_each(|o| log_err!(o.delete_file()));
+                .for_each(|o| {
+                    tracing::debug!("delete profile chains");
+                    log_err!(o.delete_file())
+                });
         }
-        // delete profile
         profile.delete_file()?;
 
-        // delete the original uid
+        // check if need to restart core
         let delete_current = uid == *current;
         let mut restart_core = delete_current;
+
         if let Some(parent) = profile.parent.as_ref()
             && *parent == *current
             && let Some(enable) = profile.enable.as_ref()
@@ -329,19 +341,32 @@ impl IProfiles {
             restart_core = true;
         }
 
-        let items = self.items.take().unwrap_or_default();
-        if delete_current && let [first, ..] = items.as_slice() {
-            self.current = Some(first.uid.clone().unwrap_or_default());
+        if let Some(items) = self.items.as_mut() {
+            items.retain(|i| {
+                if let Some(uid_) = i.uid.as_ref()
+                    && !remove_uids.contains(uid_)
+                {
+                    true
+                } else {
+                    false
+                }
+            });
+            if delete_current {
+                if let [first, ..] = items.as_slice()
+                    && let Some(uid) = first.uid.as_ref()
+                {
+                    self.current = Some(uid.clone());
+                } else {
+                    self.current = None
+                }
+            }
+        } else {
+            tracing::debug!("reset profiles config");
+            *self = Self::template();
+            restart_core = true;
         }
-
-        // generate new items
-        let new_items = items
-            .into_iter()
-            .filter(|p| !filter_uids.contains(&p.uid.clone().unwrap()))
-            .collect::<Vec<PrfItem>>();
-        self.items = Some(new_items);
-
         self.save_file()?;
+
         Ok(restart_core)
     }
 
