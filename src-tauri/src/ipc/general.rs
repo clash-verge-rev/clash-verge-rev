@@ -74,7 +74,6 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<LegacyResponse> {
-        // let client = IpcHttpClient::new(&self.ipc_path)?;
         let client = IpcHttpClient::with_config(&self.ipc_path, self.config.clone())?;
         client.request(method, path, body).await
     }
@@ -97,11 +96,10 @@ impl IpcManager {
                     Ok(response.json()?)
                 }
             }
-            "PUT" => {
+            "PUT" | "DELETE" => {
                 if response.status == 204 {
                     Ok(serde_json::json!({"code": 204}))
                 } else {
-                    // 尝试解析JSON，如果失败则返回错误信息
                     match response.json() {
                         Ok(json) => Ok(json),
                         Err(_) => Ok(serde_json::json!({
@@ -112,7 +110,14 @@ impl IpcManager {
                     }
                 }
             }
-            _ => Ok(response.json()?),
+            _ => match response.json() {
+                Ok(json) => Ok(json),
+                Err(_) => Ok(serde_json::json!({
+                    "code": response.status,
+                    "message": response.body,
+                    "error": "failed to parse response as JSON"
+                })),
+            },
         }
     }
 
@@ -289,8 +294,8 @@ impl IpcManager {
             "name": proxy
         });
 
-        let response = match self.send_request("PUT", &url, Some(&payload)).await {
-            Ok(resp) => resp,
+        match self.send_request("PUT", &url, Some(&payload)).await {
+            Ok(_) => return Ok(()),
             Err(e) => {
                 logging!(
                     error,
@@ -299,31 +304,8 @@ impl IpcManager {
                     "IPC: updateProxy encountered error: {} (ignored, always returning true)",
                     e
                 );
-                // Always return a successful response as serde_json::Value
-                serde_json::json!({"code": 204})
+                return Ok(());
             }
-        };
-
-        if response["code"] == 204 {
-            Ok(())
-        } else {
-            let error_msg = response["message"].as_str().unwrap_or_else(|| {
-                if let Some(error) = response.get("error") {
-                    error.as_str().unwrap_or("unknown error")
-                } else {
-                    "failed to update proxy"
-                }
-            });
-
-            logging!(
-                error,
-                crate::utils::logging::Type::Ipc,
-                true,
-                "IPC: updateProxy failed: {}",
-                error_msg
-            );
-
-            Err(create_error(error_msg.to_string()))
         }
     }
 

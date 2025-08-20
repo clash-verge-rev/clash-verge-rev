@@ -73,10 +73,10 @@ hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
-kode-bridge = "0.2.0"
+kode-bridge = "0.2.1-rc1"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.0"
-console-subscriber = {version = "0.4.1", optional = true}
+console-subscriber = { version = "0.4.1", optional = true }
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
@@ -169,19 +169,19 @@ large_const_arrays = "warn"
 #default_numeric_fallback = "warn"
 
 # Mutex and async lints - strict control
-async_yields_async = "deny"          # Prevents missing await in async blocks
-mutex_atomic = "deny"                # Use atomics instead of Mutex<bool/int>
-mutex_integer = "deny"               # Use AtomicInt instead of Mutex<int>
-rc_mutex = "deny"                    # Single-threaded Rc with Mutex is wrong
-unused_async = "deny"               # Too many false positives in Tauri/framework code
+async_yields_async = "deny" # Prevents missing await in async blocks
+mutex_atomic = "deny"       # Use atomics instead of Mutex<bool/int>
+mutex_integer = "deny"      # Use AtomicInt instead of Mutex<int>
+rc_mutex = "deny"           # Single-threaded Rc with Mutex is wrong
+unused_async = "deny"       # Too many false positives in Tauri/framework code
 await_holding_lock = "deny"
 large_futures = "deny"
 future_not_send = "deny"
 
 # Common style improvements
-redundant_else = "deny"         # Too many in existing code
-needless_continue = "deny"      # Too many in existing code
-needless_raw_string_hashes = "deny"  # Too many in existing code
+redundant_else = "deny"             # Too many in existing code
+needless_continue = "deny"          # Too many in existing code
+needless_raw_string_hashes = "deny" # Too many in existing code
 
 # Disable noisy categories for existing codebase but keep them available
 #style = { level = "allow", priority = -1 }
@@ -190,4 +190,3 @@ needless_raw_string_hashes = "deny"  # Too many in existing code
 #pedantic = { level = "allow", priority = -1 }
 #nursery = { level = "allow", priority = -1 }
 #restriction = { level = "allow", priority = -1 }
-

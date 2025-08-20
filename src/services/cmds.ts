@@ -137,7 +137,10 @@ export async function getProxyDelay(
 }
 
 export async function updateProxy(group: string, proxy: string) {
-  return await invoke<void>("update_proxy_choice", { group, proxy });
+  // const start = Date.now();
+  await invoke<void>("update_proxy_choice", { group, proxy });
+  // const duration = Date.now() - start;
+  // console.log(`[API] updateProxy 耗时: ${duration}ms`);
 }
 
 export async function getProxies(): Promise<{
@@ -321,7 +324,7 @@ export async function getMemoryData() {
     usage_percent?: number;
     last_updated?: number;
   }>("get_memory_data");
-  console.log("[Memory][Service] get_memory_data 返回结果:", result);
+  // console.debug("[Memory][Service] get_memory_data 返回结果:", result);
   return result;
 }
 
@@ -330,10 +333,10 @@ export async function getFormattedTrafficData() {
   const result = await invoke<IFormattedTrafficData>(
     "get_formatted_traffic_data",
   );
-  console.log(
-    "[Traffic][Service] get_formatted_traffic_data 返回结果:",
-    result,
-  );
+  // console.debug(
+  //   "[Traffic][Service] get_formatted_traffic_data 返回结果:",
+  //   result,
+  // );
   return result;
 }
 
@@ -342,7 +345,7 @@ export async function getFormattedMemoryData() {
   const result = await invoke<IFormattedMemoryData>(
     "get_formatted_memory_data",
   );
-  console.log("[Memory][Service] get_formatted_memory_data 返回结果:", result);
+  // console.debug("[Memory][Service] get_formatted_memory_data 返回结果:", result);
   return result;
 }
 
@@ -351,10 +354,10 @@ export async function getSystemMonitorOverview() {
   const result = await invoke<ISystemMonitorOverview>(
     "get_system_monitor_overview",
   );
-  console.log(
-    "[Monitor][Service] get_system_monitor_overview 返回结果:",
-    result,
-  );
+  // console.debug(
+  //   "[Monitor][Service] get_system_monitor_overview 返回结果:",
+  //   result,
+  // );
   return result;
 }
 
@@ -555,9 +558,11 @@ export async function cmdGetProxyDelay(
 
 /// 用于profile切换等场景
 export async function forceRefreshProxies() {
+  const start = Date.now();
   console.log("[API] 强制刷新代理缓存");
   const result = await invoke<any>("force_refresh_proxies");
-  console.log("[API] 代理缓存刷新完成");
+  const duration = Date.now() - start;
+  console.log(`[API] 代理缓存刷新完成，耗时: ${duration}ms`);
   return result;
 }
 
