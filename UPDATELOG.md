@@ -1,3 +1,7 @@
+## v2.4.1
+
+Something Should Be Done
+
 ## v2.4.0
 
 ### 🏆 重大改进
