@@ -1,10 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, sync::Arc, time::Instant};
-use tokio::{sync::RwLock, task::JoinHandle, time::Duration};
+use tauri::async_runtime::JoinHandle;
+use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
     ipc::monitor::MonitorData,
-    logging, singleton_with_logging,
+    logging,
+    process::AsyncHandler,
+    singleton_with_logging,
     utils::{dirs::ipc_path, logging::Type},
 };
 
@@ -159,7 +162,7 @@ impl LogsMonitor {
 
         let monitor_current = Arc::clone(&self.current);
 
-        let task = tokio::spawn(async move {
+        let task = AsyncHandler::spawn(move || async move {
             loop {
                 // Get fresh IPC path and client for each connection attempt
                 let (_ipc_path_buf, client) = match Self::create_ipc_client() {
@@ -256,7 +259,7 @@ impl LogsMonitor {
             // We only need to accept all logs since filtering is done at the endpoint level
             let log_item = LogItem::new(log_data.log_type, log_data.payload);
 
-            tokio::spawn(async move {
+            AsyncHandler::spawn(move || async move {
                 let mut logs = current.write().await;
 
                 // Add new log

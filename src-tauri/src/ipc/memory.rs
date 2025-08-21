@@ -4,6 +4,7 @@ use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
     ipc::monitor::{IpcStreamMonitor, MonitorData, StreamingParser},
+    process::AsyncHandler,
     singleton_lazy_with_logging,
     utils::format::fmt_bytes,
 };
@@ -47,7 +48,7 @@ impl StreamingParser for CurrentMemory {
         current: Arc<RwLock<Self>>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Ok(memory) = serde_json::from_str::<MemoryData>(line.trim()) {
-            tokio::spawn(async move {
+            AsyncHandler::spawn(move || async move {
                 let mut current_guard = current.write().await;
                 current_guard.inuse = memory.inuse;
                 current_guard.oslimit = memory.oslimit;

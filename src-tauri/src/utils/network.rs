@@ -10,7 +10,7 @@ use std::{
 };
 use tokio::runtime::{Builder, Runtime};
 
-use crate::{config::Config, logging, singleton_lazy, utils::logging::Type};
+use crate::{config::Config, logging, process::AsyncHandler, singleton_lazy, utils::logging::Type};
 
 // HTTP2 相关
 const H2_CONNECTION_WINDOW_SIZE: u32 = 1024 * 1024;
@@ -351,7 +351,7 @@ impl NetworkManager {
         let (cancel_tx, cancel_rx) = tokio::sync::oneshot::channel::<()>();
 
         let url_clone = url.to_string();
-        let watchdog = tokio::spawn(async move {
+        let watchdog = AsyncHandler::spawn(move || async move {
             tokio::time::sleep(Duration::from_secs(timeout_duration)).await;
             let _ = cancel_tx.send(());
             logging!(warn, Type::Network, true, "请求超时取消: {}", url_clone);

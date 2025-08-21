@@ -4,6 +4,7 @@ use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
     ipc::monitor::{IpcStreamMonitor, MonitorData, StreamingParser},
+    process::AsyncHandler,
     singleton_lazy_with_logging,
     utils::format::fmt_bytes,
 };
@@ -68,7 +69,7 @@ impl StreamingParser for TrafficMonitorState {
         current: Arc<RwLock<Self>>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Ok(traffic) = serde_json::from_str::<TrafficData>(line.trim()) {
-            tokio::spawn(async move {
+            AsyncHandler::spawn(move || async move {
                 let mut state_guard = current.write().await;
 
                 let (up_rate, down_rate) = state_guard

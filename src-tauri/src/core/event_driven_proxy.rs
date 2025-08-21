@@ -7,6 +7,7 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use crate::config::{Config, IVerge};
 use crate::core::async_proxy_query::AsyncProxyQuery;
 use crate::logging_error;
+use crate::process::AsyncHandler;
 use crate::utils::logging::Type;
 use once_cell::sync::Lazy;
 use sysproxy::{Autoproxy, Sysproxy};
@@ -176,7 +177,7 @@ impl EventDrivenProxyManager {
         event_rx: mpsc::UnboundedReceiver<ProxyEvent>,
         query_rx: mpsc::UnboundedReceiver<QueryRequest>,
     ) {
-        tokio::spawn(async move {
+        AsyncHandler::spawn(move || async move {
             log::info!(target: "app", "事件驱动代理管理器启动");
 
             // 将 mpsc 接收器包装成 Stream，避免每次循环创建 future

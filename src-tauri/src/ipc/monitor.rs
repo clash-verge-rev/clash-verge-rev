@@ -4,6 +4,7 @@ use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
     logging,
+    process::AsyncHandler,
     utils::{dirs::ipc_path, logging::Type},
 };
 
@@ -55,7 +56,7 @@ where
         let endpoint_clone = endpoint.clone();
 
         // Start the monitoring task
-        tokio::spawn(async move {
+        AsyncHandler::spawn(move || async move {
             Self::streaming_task(monitor_current, endpoint_clone, timeout, retry_interval).await;
         });
 

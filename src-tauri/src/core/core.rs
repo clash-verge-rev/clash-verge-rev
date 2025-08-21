@@ -5,7 +5,9 @@ use crate::{
         service::{self},
     },
     ipc::IpcManager,
-    logging, logging_error, singleton_lazy,
+    logging, logging_error,
+    process::AsyncHandler,
+    singleton_lazy,
     utils::{
         dirs,
         help::{self},
@@ -763,7 +765,7 @@ impl CoreManager {
             ])
             .spawn()?;
 
-        tokio::spawn(async move {
+        AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
                 if let tauri_plugin_shell::process::CommandEvent::Stdout(line) = event {
                     if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {

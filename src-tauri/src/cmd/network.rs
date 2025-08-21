@@ -1,5 +1,6 @@
 use super::CmdResult;
 use crate::core::{async_proxy_query::AsyncProxyQuery, EventDrivenProxyManager};
+use crate::process::AsyncHandler;
 use crate::wrap_err;
 use network_interface::NetworkInterface;
 use serde_yaml::Mapping;
@@ -32,7 +33,7 @@ pub async fn get_auto_proxy() -> CmdResult<Mapping> {
 
     let current = proxy_manager.get_auto_proxy_cached();
     // 异步请求更新，立即返回缓存数据
-    tokio::spawn(async move {
+    AsyncHandler::spawn(move || async move {
         let _ = proxy_manager.get_auto_proxy_async().await;
     });
 

@@ -460,7 +460,7 @@ pub fn create_window(is_show: bool) -> bool {
                     );
 
                     // 异步监控UI状态，使用try_read避免死锁
-                    tokio::spawn(async move {
+                    AsyncHandler::spawn(move || async move {
                         logging!(
                             debug,
                             Type::Window,
