@@ -122,7 +122,7 @@ jobs:
           body_path: release.txt
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          generate_release_notes: true
+          # generate_release_notes: true
 
   release:
     name: Release Build
