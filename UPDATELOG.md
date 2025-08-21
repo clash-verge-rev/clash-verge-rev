@@ -1,6 +1,8 @@
 ## v2.4.1
 
-Something Should Be Done
+### 🚀 性能优化
+
+- 优化异步程序性能
 
 ## v2.4.0
 

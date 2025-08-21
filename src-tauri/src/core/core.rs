@@ -533,7 +533,7 @@ impl CoreManager {
             use winapi::um::winnt::HANDLE;
 
             let process_name_clone = process_name.clone();
-            let pids = tokio::task::spawn_blocking(move || -> Result<Vec<u32>> {
+            let pids = AsyncHandler::spawn_blocking(move || -> Result<Vec<u32>> {
                 let mut pids = Vec::new();
 
                 unsafe {
@@ -628,7 +628,7 @@ impl CoreManager {
             use winapi::um::processthreadsapi::{OpenProcess, TerminateProcess};
             use winapi::um::winnt::{HANDLE, PROCESS_TERMINATE};
 
-            tokio::task::spawn_blocking(move || -> bool {
+            AsyncHandler::spawn_blocking(move || -> bool {
                 unsafe {
                     let process_handle: HANDLE = OpenProcess(PROCESS_TERMINATE, 0, pid);
                     if process_handle.is_null() {
@@ -703,7 +703,7 @@ impl CoreManager {
             use winapi::um::processthreadsapi::OpenProcess;
             use winapi::um::winnt::{HANDLE, PROCESS_QUERY_INFORMATION};
 
-            let result = tokio::task::spawn_blocking(move || -> Result<bool> {
+            let result = AsyncHandler::spawn_blocking(move || -> Result<bool> {
                 unsafe {
                     let process_handle: HANDLE = OpenProcess(PROCESS_QUERY_INFORMATION, 0, pid);
                     if process_handle.is_null() {

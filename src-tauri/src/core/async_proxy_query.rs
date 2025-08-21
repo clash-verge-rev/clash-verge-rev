@@ -1,3 +1,5 @@
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+use crate::process::AsyncHandler;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tokio::time::{timeout, Duration};
@@ -74,7 +76,7 @@ impl AsyncProxyQuery {
     #[cfg(target_os = "windows")]
     async fn get_auto_proxy_impl() -> Result<AsyncAutoproxy> {
         // Windows: 从注册表读取PAC配置
-        tokio::task::spawn_blocking(move || -> Result<AsyncAutoproxy> {
+        AsyncHandler::spawn_blocking(move || -> Result<AsyncAutoproxy> {
             Self::get_pac_config_from_registry()
         })
         .await?
@@ -258,7 +260,7 @@ impl AsyncProxyQuery {
     #[cfg(target_os = "windows")]
     async fn get_system_proxy_impl() -> Result<AsyncSysproxy> {
         // Windows: 使用注册表直接读取代理设置
-        tokio::task::spawn_blocking(move || -> Result<AsyncSysproxy> {
+        AsyncHandler::spawn_blocking(move || -> Result<AsyncSysproxy> {
             Self::get_system_proxy_from_registry()
         })
         .await?

@@ -11,4 +11,12 @@ impl AsyncHandler {
     {
         async_runtime::spawn(f())
     }
+
+    pub fn spawn_blocking<T, F>(f: F) -> JoinHandle<T>
+    where
+        F: FnOnce() -> T + Send + 'static,
+        T: Send + 'static,
+    {
+        async_runtime::spawn_blocking(f)
+    }
 }

@@ -2,7 +2,9 @@ use super::CmdResult;
 use crate::{
     config::{Config, IProfiles, PrfItem, PrfOption},
     core::{handle, timer::Timer, tray::Tray, CoreManager},
-    feat, logging, ret_err,
+    feat, logging,
+    process::AsyncHandler,
+    ret_err,
     utils::{dirs, help, logging::Type},
     wrap_err,
 };
@@ -37,7 +39,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
     // 策略1: 尝试快速获取latest数据
     let latest_result = tokio::time::timeout(
         Duration::from_millis(500),
-        tokio::task::spawn_blocking(move || {
+        AsyncHandler::spawn_blocking(move || {
             let profiles = Config::profiles();
             let latest = profiles.latest_ref();
             IProfiles {
@@ -64,7 +66,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
     // 策略2: 如果快速获取失败，尝试获取data()
     let data_result = tokio::time::timeout(
         Duration::from_secs(2),
-        tokio::task::spawn_blocking(move || {
+        AsyncHandler::spawn_blocking(move || {
             let profiles = Config::profiles();
             let data = profiles.latest_ref();
             IProfiles {
@@ -102,7 +104,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
         "所有获取配置策略都失败，尝试fallback"
     );
 
-    match tokio::task::spawn_blocking(IProfiles::new).await {
+    match AsyncHandler::spawn_blocking(IProfiles::new).await {
         Ok(profiles) => {
             logging!(info, Type::Cmd, true, "使用fallback配置成功");
             Ok(profiles)
@@ -372,7 +374,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
                 match file_read_result {
                     Ok(Ok(content)) => {
-                        let yaml_parse_result = tokio::task::spawn_blocking(move || {
+                        let yaml_parse_result = AsyncHandler::spawn_blocking(move || {
                             serde_yaml::from_str::<serde_yaml::Value>(&content)
                         })
                         .await;
