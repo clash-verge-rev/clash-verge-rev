@@ -50,6 +50,22 @@ jobs:
           fi
         shell: bash
 
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Release AutoBuild Version
+        run: pnpm release-version autobuild-latest
+
       - name: Set Env
         run: |
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
@@ -73,27 +89,20 @@ jobs:
 
           ### Windows (不再支持Win7)
           #### 正常版本(推荐)
-          - 64位(常用): [Clash.Verge_${{ env.VERSION }}_x64-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe)
-          - ARM64(不常用): [Clash.Verge_${{ env.VERSION }}_arm64-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64-setup.exe)
+          - [64位(常用)](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe) | [ARM64(不常用)](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64-setup.exe)
 
           #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
-          - 64位: [Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe)
-          - ARM64: [Clash.Verge_${{ env.VERSION }}_aarch64_fixed_webview2-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64_fixed_webview2-setup.exe)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe])
 
           ### macOS
-          - Apple M芯片: [Clash.Verge_${{ env.VERSION }}_aarch64.dmg](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg)
-          - Intel芯片: [Clash.Verge_${{ env.VERSION }}_x64.dmg](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64.dmg)
+          - [Apple M芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg) | [Intel芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64.dmg)
 
           ### Linux
           #### DEB包(Debian系) 使用 apt ./路径 安装
-          - 64位: [Clash.Verge_${{ env.VERSION }}_amd64.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb)
-          - ARM64: [Clash.Verge_${{ env.VERSION }}_aarch64.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.deb)
-          - ARMv7: [Clash.Verge_${{ env.VERSION }}_armhf.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.deb) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
 
           #### RPM包(Redhat系) 使用 dnf ./路径 安装
-          - 64位: [Clash.Verge_${{ env.VERSION }}_amd64.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.rpm)
-          - ARM64: [Clash.Verge_${{ env.VERSION }}_aarch64.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.rpm)
-          - ARMv7: [Clash.Verge_${{ env.VERSION }}_armhfp.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhfp.rpm)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.rpm) |[ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhfp.rpm)
 
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
@@ -513,27 +522,20 @@ jobs:
 
           ### Windows (不再支持Win7)
           #### 正常版本(推荐)
-          - 64位(常用): [Clash.Verge_${{ env.VERSION }}_x64-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe)
-          - ARM64(不常用): [Clash.Verge_${{ env.VERSION }}_arm64-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64-setup.exe)
+          - [64位(常用)](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe) | [ARM64(不常用)](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64-setup.exe)
 
           #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
-          - 64位: [Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe)
-          - ARM64: [Clash.Verge_${{ env.VERSION }}_aarch64_fixed_webview2-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64_fixed_webview2-setup.exe)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe])
 
           ### macOS
-          - Apple M芯片: [Clash.Verge_${{ env.VERSION }}_aarch64.dmg](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg)
-          - Intel芯片: [Clash.Verge_${{ env.VERSION }}_x64.dmg](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64.dmg)
+          - [Apple M芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg) | [Intel芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64.dmg)
 
           ### Linux
           #### DEB包(Debian系) 使用 apt ./路径 安装
-          - 64位: [Clash.Verge_${{ env.VERSION }}_amd64.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb)
-          - ARM64: [Clash.Verge_${{ env.VERSION }}_aarch64.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.deb)
-          - ARMv7: [Clash.Verge_${{ env.VERSION }}_armhf.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.deb) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
 
           #### RPM包(Redhat系) 使用 dnf ./路径 安装
-          - 64位: [Clash.Verge_${{ env.VERSION }}_amd64.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.rpm)
-          - ARM64: [Clash.Verge_${{ env.VERSION }}_aarch64.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.rpm)
-          - ARMv7: [Clash.Verge_${{ env.VERSION }}_armhfp.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhfp.rpm)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.rpm) |[ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhfp.rpm)
 
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
