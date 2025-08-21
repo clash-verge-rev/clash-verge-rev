@@ -53,7 +53,9 @@ function getGitShortCommit() {
  */
 function getLatestTauriCommit() {
   try {
-    const fullHash = execSync("bash ./scripts-workflow/get_latest_tauri_commit.bash")
+    const fullHash = execSync(
+      "bash ./scripts-workflow/get_latest_tauri_commit.bash",
+    )
       .toString()
       .trim();
     return execSync(`git rev-parse --short ${fullHash}`).toString().trim();

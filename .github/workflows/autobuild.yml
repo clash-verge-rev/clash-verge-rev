@@ -459,7 +459,13 @@ jobs:
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
-    needs: [update_tag, autobuild-x86-windows-macos-linux, autobuild-arm-linux, autobuild-x86-arm-windows_webview2]
+    needs:
+      [
+        update_tag,
+        autobuild-x86-windows-macos-linux,
+        autobuild-arm-linux,
+        autobuild-x86-arm-windows_webview2,
+      ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
