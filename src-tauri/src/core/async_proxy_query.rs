@@ -1,4 +1,4 @@
-#[cfg(any(target_os = "windows", target_os = "linux"))]
+#[cfg(target_os = "windows")]
 use crate::process::AsyncHandler;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
