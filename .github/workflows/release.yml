@@ -502,10 +502,28 @@ jobs:
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
-    needs: [release-update]
+    needs: [update_tag, release-update]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Fetch UPDATE logs
+        id: fetch_update_logs
+        run: |
+          if [ -f "UPDATELOG.md" ]; then
+            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
+            if [ -n "$UPDATE_LOGS" ]; then
+              echo "Found update logs"
+              echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
+              echo "$UPDATE_LOGS" >> $GITHUB_ENV
+              echo "EOF" >> $GITHUB_ENV
+            else
+              echo "No update sections found in UPDATELOG.md"
+            fi
+          else
+            echo "UPDATELOG.md file not found"
+          fi
+        shell: bash
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -526,6 +544,53 @@ jobs:
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "DOWNLOAD_URL=https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
+          echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
+
+      - name: Generate release.txt
+        run: |
+          if [ -z "$UPDATE_LOGS" ]; then
+            echo "No update logs found, using default message"
+            UPDATE_LOGS="More new features are now supported. Check for detailed changelog soon."
+          else
+            echo "Using found update logs"
+          fi
+
+          cat > release.txt << EOF
+          $UPDATE_LOGS
+
+          ## 下载地址
+
+          ### Windows (不再支持Win7)
+          #### 正常版本(推荐)
+          - 64位(常用): [Clash.Verge_${{ env.VERSION }}_x64-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe)
+          - ARM64(不常用): [Clash.Verge_${{ env.VERSION }}_arm64-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64-setup.exe)
+
+          #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
+          - 64位: [Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe)
+          - ARM64: [Clash.Verge_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe)
+
+          ### macOS
+          - Apple M芯片: [Clash.Verge_${{ env.VERSION }}_aarch64.dmg](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg)
+          - Intel芯片: [Clash.Verge_${{ env.VERSION }}_x64.dmg](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64.dmg)
+
+          ### Linux
+          #### DEB包(Debian系) 使用 apt ./路径 安装
+          - 64位: [Clash.Verge_${{ env.VERSION }}_amd64.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb)
+          - ARM64: [Clash.Verge_${{ env.VERSION }}_aarch64.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.deb)
+          - ARMv7: [Clash.Verge_${{ env.VERSION }}_armhf.deb](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
+
+          #### RPM包(Redhat系) 使用 dnf ./路径 安装
+          - 64位: [Clash.Verge_${{ env.VERSION }}_amd64.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.rpm)
+          - ARM64: [Clash.Verge_${{ env.VERSION }}_aarch64.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.rpm)
+          - ARMv7: [Clash.Verge_${{ env.VERSION }}_armhfp.rpm](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhfp.rpm)
+
+          ### FAQ
+          - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
+
+          ### 稳定机场VPN推荐
+          - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+          Created at ${{ env.BUILDTIME }}.
+          EOF
 
       - name: Send Telegram Notification
         run: node scripts/telegram.mjs
