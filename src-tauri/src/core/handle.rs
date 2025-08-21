@@ -1,6 +1,9 @@
 use super::tray::Tray;
-use crate::{APP_HANDLE, log_err};
-use anyhow::{Result, anyhow};
+use crate::{
+    APP_HANDLE, any_err,
+    error::{AppError, AppResult},
+    log_err,
+};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt};
@@ -25,7 +28,7 @@ impl Handle {
     pub fn get_window() -> Option<WebviewWindow> {
         Self::app_handle()
             .get_webview_window("main")
-            .ok_or_else(|| anyhow!("get window error"))
+            .ok_or(any_err!("get window error"))
             .ok()
     }
 
@@ -59,24 +62,24 @@ impl Handle {
         }
     }
 
-    pub fn update_systray() -> Result<()> {
+    pub fn update_systray() -> AppResult<()> {
         Tray::update_systray(Self::app_handle())?;
         Ok(())
     }
 
     /// update the system tray state
-    pub fn update_systray_part() -> Result<()> {
+    pub fn update_systray_part() -> AppResult<()> {
         Tray::update_part(Self::app_handle())?;
         Ok(())
     }
 
-    pub fn set_tray_visible(visible: bool) -> Result<()> {
+    pub fn set_tray_visible(visible: bool) -> AppResult<()> {
         Tray::set_tray_visible(Self::app_handle(), visible)?;
         Ok(())
     }
 
     #[cfg(target_os = "macos")]
-    pub fn set_dock_visible(visible: bool) -> Result<()> {
+    pub fn set_dock_visible(visible: bool) -> AppResult<()> {
         log_err!(
             Self::app_handle().set_dock_visibility(visible),
             "failed to set visible in macos dock"
@@ -94,7 +97,7 @@ impl Handle {
         message: M,
         kind: MessageDialogKind,
         buttons: MessageDialogButtons,
-    ) -> Result<bool> {
+    ) -> AppResult<bool> {
         let status = Self::app_handle()
             .dialog()
             .message(message)

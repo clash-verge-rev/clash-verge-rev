@@ -1,10 +1,10 @@
 use super::verge_log::VergeLog;
 use crate::core::{handle, logger::Logger, service};
+use crate::error::{AppError, AppResult};
 use crate::utils::dirs;
 use crate::utils::help::find_unused_port;
-use crate::{MIHOMO_SOCKET_PATH, log_err};
+use crate::{MIHOMO_SOCKET_PATH, any_err, log_err};
 use crate::{config::*, utils};
-use anyhow::{Result, bail};
 
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -39,7 +39,7 @@ impl CoreManager {
         })
     }
 
-    pub fn init(&self) -> Result<()> {
+    pub fn init(&self) -> AppResult<()> {
         let enable_random_port = Config::verge().latest().enable_random_port.unwrap_or_default();
         if enable_random_port {
             let port = find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
@@ -64,7 +64,7 @@ impl CoreManager {
     }
 
     /// 检查订阅是否正确
-    pub async fn check_config(&self, generate_config_type: ConfigType) -> Result<()> {
+    pub async fn check_config(&self, generate_config_type: ConfigType) -> AppResult<()> {
         let config_path = Config::generate_file(generate_config_type)?;
         let config_path = dirs::path_to_str(&config_path)?;
 
@@ -91,7 +91,7 @@ impl CoreManager {
                 true => error,
                 false => &stdout,
             };
-            bail!("{error}");
+            return Err(any_err!("{error}"));
         }
 
         Ok(())
@@ -99,7 +99,7 @@ impl CoreManager {
 
     /// 启动核心
     /// TODO: 通过 service 启动的内核，Logger会丢失, 无法通过 Logger::global().set_log() 方法更新日志
-    pub async fn run_core(&self) -> Result<()> {
+    pub async fn run_core(&self) -> AppResult<()> {
         tracing::info!("run core");
         // clear logs
         Logger::global().clear_logs();
@@ -235,7 +235,7 @@ impl CoreManager {
     }
 
     /// 重启内核
-    pub fn recover_core(&self) -> Result<()> {
+    pub fn recover_core(&self) -> AppResult<()> {
         let is_service_mode = self.use_service_mode.load(Ordering::Acquire);
         let need_restart_core = self.need_restart_core.load(Ordering::Acquire);
         tracing::info!("core terminated, need to restart it? [{need_restart_core}]");
@@ -261,7 +261,7 @@ impl CoreManager {
     }
 
     /// 停止核心运行
-    pub async fn stop_core(&self) -> Result<()> {
+    pub async fn stop_core(&self) -> AppResult<()> {
         tracing::info!("stop core");
         self.need_restart_core.store(false, Ordering::Release);
         // 关闭tun模式
@@ -302,13 +302,15 @@ impl CoreManager {
     }
 
     /// 切换核心
-    pub async fn change_core(&self, clash_core: Option<String>) -> Result<()> {
+    pub async fn change_core(&self, clash_core: Option<String>) -> AppResult<()> {
         self.need_restart_core.store(false, Ordering::Release);
 
-        let clash_core = clash_core.ok_or(anyhow::anyhow!("clash core is null"))?;
+        let clash_core = clash_core.ok_or(AppError::InvalidValue("clash core is null".to_string()))?;
         const CLASH_CORES: [&str; 2] = ["verge-mihomo", "verge-mihomo-alpha"];
         if !CLASH_CORES.contains(&clash_core.as_str()) {
-            bail!("invalid clash core name \"{clash_core}\"");
+            return Err(AppError::InvalidValue(format!(
+                "invalid clash core name \"{clash_core}\""
+            )));
         }
 
         tracing::info!("change core to `{clash_core}`");
@@ -333,7 +335,7 @@ impl CoreManager {
 
     /// 更新proxies那些
     /// 如果涉及端口和外部控制则需要重启
-    pub async fn update_config(&self) -> Result<()> {
+    pub async fn update_config(&self) -> AppResult<()> {
         tracing::info!("try to update clash config");
 
         // 更新订阅

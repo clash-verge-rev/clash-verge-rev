@@ -4,13 +4,15 @@
 //! - timer 定时器
 //! - cmds 页面调用
 //!
+use crate::any_err;
 use crate::cmds;
 use crate::config::*;
 use crate::core::*;
+use crate::error::AppError;
+use crate::error::AppResult;
 use crate::log_err;
 use crate::utils::help;
 use crate::utils::resolve;
-use anyhow::{Error, Result, anyhow, bail};
 use rust_i18n::t;
 use serde_yaml::{Mapping, Value};
 use service::JsonResponse;
@@ -195,10 +197,10 @@ pub fn toggle_tun_mode() {
 }
 
 /// 安装并运行服务 (仅内核)
-async fn install_and_run_service() -> Result<()> {
+async fn install_and_run_service() -> AppResult<()> {
     if let Err(err) = cmds::service::install_service().await {
         handle::Handle::notify("Clash Verge Service", format!("{}, {}", t!("install.failed"), err));
-        return Err(anyhow!(err));
+        return Err(AppError::Service(format!("{err}")));
     }
     if let Err(err) = patch_verge(IVerge {
         enable_service_mode: Some(true),
@@ -210,7 +212,7 @@ async fn install_and_run_service() -> Result<()> {
             "Clash Verge Service",
             format!("{}, {}", t!("service.install.run.failed"), err),
         );
-        return Err(anyhow!(err));
+        return Err(err);
     }
     handle::Handle::notify("Clash Verge Service", t!("service.install.run.success"));
     handle::Handle::refresh_verge();
@@ -218,7 +220,7 @@ async fn install_and_run_service() -> Result<()> {
 }
 
 /// 修改clash的订阅
-pub async fn patch_clash(patch: Mapping) -> Result<()> {
+pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
     tracing::debug!("patch clash");
     // enable-random-port filed store in verge config, only need update verge config
     if let Some(random_val) = patch.get("enable-random-port") {
@@ -267,7 +269,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         let external_controller = external_controller.as_str().unwrap();
         let (host, port) = external_controller
             .split_once(':')
-            .ok_or(anyhow!("invalid external controller"))?;
+            .ok_or(AppError::InvalidValue("invalid external controller".to_string()))?;
         let mut mihomo = handle::Handle::mihomo_mut().await;
         mihomo.update_external_host(Some(host.to_string()));
         mihomo.update_external_port(Some(port.parse()?));
@@ -322,7 +324,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         }
 
         if update_tun_failed {
-            <Result<(), Error>>::Err(anyhow!(t!("tun.busy")))
+            <AppResult<()>>::Err(any_err!("{}", t!("tun.busy")))
         } else {
             // 重新载入订阅
             if patch.get("unified-delay").is_some() {
@@ -351,7 +353,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 Config::generate()?;
                 Config::generate_file(ConfigType::Run)?;
             }
-            <Result<()>>::Ok(())
+            <AppResult<()>>::Ok(())
         }
     };
     match res {
@@ -372,7 +374,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
 
 /// 修改verge的订阅
 /// 一般都是一个个的修改
-pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
+pub async fn patch_verge(mut patch: IVerge) -> AppResult<()> {
     // handle window size when toggle system title bar enable on linux wayland
     let enable_system_title_bar = patch.enable_system_title_bar;
     if let Some(system_title_bar) = enable_system_title_bar
@@ -414,7 +416,7 @@ pub async fn patch_verge(mut patch: IVerge) -> Result<()> {
     }
 }
 
-async fn resolve_config_settings(patch: IVerge) -> Result<()> {
+async fn resolve_config_settings(patch: IVerge) -> AppResult<()> {
     let enable_external_controller = patch.enable_external_controller;
     let auto_launch = patch.enable_auto_launch;
     let system_proxy = patch.enable_system_proxy;
@@ -514,13 +516,13 @@ async fn resolve_config_settings(patch: IVerge) -> Result<()> {
 
 /// 更新某个profile
 /// 如果更新当前订阅就激活订阅
-pub async fn update_profile(uid: &str, option: Option<PrfOption>) -> Result<()> {
+pub async fn update_profile(uid: &str, option: Option<PrfOption>) -> AppResult<()> {
     let url_opt = {
         let profiles = Config::profiles();
         let profiles = profiles.latest();
         let item = profiles
             .get_item(uid)
-            .ok_or(anyhow!("failed to find the profile item \"uid:{uid}\""))?;
+            .ok_or(any_err!("failed to find the profile item \"uid:{uid}\""))?;
         let is_remote = item.itype.as_ref().is_some_and(|s| *s == ProfileType::Remote);
 
         if let Some(url) = item.url.as_ref() {
@@ -528,7 +530,7 @@ pub async fn update_profile(uid: &str, option: Option<PrfOption>) -> Result<()> 
         } else if !is_remote {
             None
         } else {
-            bail!("failed to get the profile item url");
+            return Err(any_err!("failed to get the profile item url"));
         }
     };
 
@@ -554,7 +556,7 @@ pub async fn update_profile(uid: &str, option: Option<PrfOption>) -> Result<()> 
 }
 
 /// 更新订阅
-async fn update_core_config() -> Result<()> {
+async fn update_core_config() -> AppResult<()> {
     match CoreManager::global().update_config().await {
         Ok(_) => {
             handle::Handle::refresh_clash();
@@ -602,7 +604,7 @@ pub fn copy_clash_env(app_handle: &AppHandle) {
     };
 }
 
-pub async fn test_delay(url: String) -> Result<u32> {
+pub async fn test_delay(url: String) -> AppResult<u32> {
     use tokio::time::{Duration, Instant};
     let mut builder = reqwest::ClientBuilder::new().use_rustls_tls().no_proxy();
 

@@ -1,12 +1,12 @@
 use super::{LogMessage, use_merge, use_script};
 use crate::{
     config::{PrfItem, ProfileType},
+    error::{AppError, AppResult},
     utils::{dirs, help},
 };
-use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, io};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -90,10 +90,13 @@ impl From<PrfItem> for Option<ChainItem> {
 }
 
 impl ChainItem {
-    pub fn execute(&self, config: Mapping) -> Result<ChainExcResult> {
+    pub fn execute(&self, config: Mapping) -> AppResult<ChainExcResult> {
         let path = dirs::app_profiles_dir()?.join(&self.file);
         if !path.exists() {
-            bail!("couldn't find enhance file, {:?}", self.name)
+            return Err(AppError::Io(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("couldn't find enhance file, {}", self.name),
+            )));
         }
         let res = match self.itype {
             ChainType::Merge => {
@@ -121,7 +124,7 @@ impl ChainItem {
 }
 
 #[test]
-fn test_serde() -> anyhow::Result<()> {
+fn test_serde() -> AppResult<()> {
     let parent = Some("rhasdfwsd".to_string());
     let uid = "123".to_string();
     let name = "test".to_string();

@@ -1,7 +1,7 @@
 use crate::config::Config;
+use crate::error::AppResult;
 use crate::utils::dirs;
 use crate::{feat, log_err};
-use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -39,7 +39,7 @@ impl Timer {
     }
 
     /// restore timer
-    pub fn init(&self) -> Result<()> {
+    pub fn init(&self) -> AppResult<()> {
         self.activate_selected_task()?;
         self.refresh_profiles()?;
 
@@ -74,7 +74,7 @@ impl Timer {
         Ok(())
     }
 
-    pub fn add_async_task<F, U>(&self, id: TaskID, seconds: u64, async_task: F) -> Result<()>
+    pub fn add_async_task<F, U>(&self, id: TaskID, seconds: u64, async_task: F) -> AppResult<()>
     where
         F: Fn() -> U + 'static + Send,
         U: std::future::Future + 'static + Send,
@@ -83,27 +83,21 @@ impl Timer {
             .set_task_id(id)
             .set_maximum_parallel_runnable_num(1)
             .set_frequency_repeated_by_seconds(seconds)
-            .spawn_async_routine(async_task)
-            .context("failed to create timer task")?;
+            .spawn_async_routine(async_task)?;
 
-        self.delay_timer
-            .lock()
-            .add_task(task)
-            .context("failed to add timer task")?;
+        self.delay_timer.lock().add_task(task)?;
 
         Ok(())
     }
 
     #[allow(unused)]
-    pub fn remove_task(&self, task_id: u64) -> Result<()> {
+    pub fn remove_task(&self, task_id: u64) -> AppResult<()> {
         let delay_timer = self.delay_timer.lock();
-        delay_timer
-            .remove_task(task_id)
-            .context("failed to remove timer task")?;
+        delay_timer.remove_task(task_id)?;
         Ok(())
     }
 
-    fn activate_selected_task(&self) -> Result<()> {
+    fn activate_selected_task(&self) -> AppResult<()> {
         if !dirs::backup_archive_file()?.exists() {
             return Ok(());
         }
@@ -182,7 +176,7 @@ impl Timer {
     }
 
     /// Correctly update all cron tasks
-    pub fn refresh_profiles(&self) -> Result<()> {
+    pub fn refresh_profiles(&self) -> AppResult<()> {
         let diff_map = self.gen_diff_profiles();
 
         let mut timer_map = self.timer_map.lock();
@@ -256,16 +250,15 @@ impl Timer {
     }
 
     /// add a cron task
-    fn add_profiles_task(&self, delay_timer: &DelayTimer, uid: String, tid: TaskID, minutes: u64) -> Result<()> {
+    fn add_profiles_task(&self, delay_timer: &DelayTimer, uid: String, tid: TaskID, minutes: u64) -> AppResult<()> {
         let task = TaskBuilder::default()
             .set_task_id(tid)
             .set_maximum_parallel_runnable_num(1)
             .set_frequency_repeated_by_minutes(minutes)
             // .set_frequency_repeated_by_seconds(minutes) // for test
-            .spawn_async_routine(move || Self::update_profile_task(uid.to_owned()))
-            .context("failed to create timer task")?;
+            .spawn_async_routine(move || Self::update_profile_task(uid.to_owned()))?;
 
-        delay_timer.add_task(task).context("failed to add timer task")?;
+        delay_timer.add_task(task)?;
 
         Ok(())
     }

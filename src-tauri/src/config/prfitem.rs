@@ -1,10 +1,10 @@
 use super::Config;
 use crate::{
-    APP_VERSION,
+    APP_VERSION, any_err,
     enhance::chain::ScopeType,
+    error::{AppError, AppResult},
     utils::{dirs, help, tmpl},
 };
-use anyhow::{Context, Result, bail};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
@@ -165,11 +165,11 @@ impl PrfOption {
 impl PrfItem {
     /// From partial item
     /// must contain `itype`
-    pub async fn from(item: PrfItem, file_data: Option<String>) -> Result<PrfItem> {
+    pub async fn from(item: PrfItem, file_data: Option<String>) -> AppResult<PrfItem> {
         match item.itype {
-            None => bail!("type should not be null"),
+            None => Err(AppError::InvalidValue("type should not be null".to_string())),
             Some(ProfileType::Remote) => match item.url {
-                None => bail!("url should not be null"),
+                None => Err(AppError::InvalidValue("url should not be null".to_string())),
                 Some(url) => {
                     let name = item.name;
                     let desc = item.desc;
@@ -200,7 +200,7 @@ impl PrfItem {
 
     /// ## Local type
     /// create a new item from name/desc
-    pub fn from_local(name: String, desc: String, file_data: Option<String>) -> Result<PrfItem> {
+    pub fn from_local(name: String, desc: String, file_data: Option<String>) -> AppResult<PrfItem> {
         let uid = help::get_uid("l");
         let file = format!("{uid}.yaml");
 
@@ -223,7 +223,7 @@ impl PrfItem {
         name: Option<String>,
         desc: Option<String>,
         option: Option<PrfOption>,
-    ) -> Result<PrfItem> {
+    ) -> AppResult<PrfItem> {
         let opt_ref = option.as_ref();
         let with_proxy = opt_ref.is_some_and(|o| o.with_proxy.unwrap_or_default());
         let self_proxy = opt_ref.is_some_and(|o| o.self_proxy.unwrap_or_default());
@@ -286,7 +286,7 @@ impl PrfItem {
 
         let status_code = resp.status();
         if !StatusCode::is_success(&status_code) {
-            bail!("failed to fetch remote profile with status {status_code}")
+            return Err(any_err!("failed to fetch remote profile with status {status_code}"));
         }
 
         let header = resp.headers();
@@ -361,10 +361,10 @@ impl PrfItem {
         let data = data.trim_start_matches('\u{feff}');
 
         // check the data whether the valid yaml format
-        let yaml = serde_yaml::from_str::<Mapping>(data).context("the remote profile data is invalid yaml")?;
+        let yaml = serde_yaml::from_str::<Mapping>(data)?;
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
-            bail!("profile does not contain `proxies` or `proxy-providers`");
+            return Err(any_err!("profile does not contain `proxies` or `proxy-providers`"));
         }
 
         Ok(PrfItem {
@@ -385,7 +385,7 @@ impl PrfItem {
 
     /// ## Merge type (enhance)
     /// create the enhanced item by using `merge` rule
-    pub fn from_merge(parent: Option<String>, scope: ScopeType, name: String, desc: String) -> Result<PrfItem> {
+    pub fn from_merge(parent: Option<String>, scope: ScopeType, name: String, desc: String) -> AppResult<PrfItem> {
         let uid = help::get_uid("m");
         let file = format!("{uid}.yaml");
 
@@ -406,7 +406,7 @@ impl PrfItem {
 
     /// ## Script type (enhance)
     /// create the enhanced item by using javascript quick.js
-    pub fn from_script(parent: Option<String>, scope: ScopeType, name: String, desc: String) -> Result<PrfItem> {
+    pub fn from_script(parent: Option<String>, scope: ScopeType, name: String, desc: String) -> AppResult<PrfItem> {
         let uid = help::get_uid("s");
         let file = format!("{uid}.js"); // js ext
 
@@ -426,35 +426,38 @@ impl PrfItem {
     }
 
     /// get the file data
-    pub fn read_file(&self) -> Result<String> {
+    pub fn read_file(&self) -> AppResult<String> {
         match self.file {
             Some(ref file) => {
                 let path = dirs::app_profiles_dir()?.join(file);
-                fs::read_to_string(path).context("failed to read the file")
+                let data = fs::read_to_string(path)?;
+                Ok(data)
             }
-            None => bail!("could not find the file"),
+            None => Err(AppError::InvalidValue("could not find the file".to_string())),
         }
     }
 
     /// save the file data
-    pub fn save_file(&self, data: String) -> Result<()> {
+    pub fn save_file(&self, data: String) -> AppResult<()> {
         match self.file {
             Some(ref file) => {
                 let path = dirs::app_profiles_dir()?.join(file);
-                fs::write(path, data.as_bytes()).context("failed to save the file")
+                fs::write(path, data.as_bytes())?;
+                Ok(())
             }
-            None => bail!("could not find the file"),
+            None => Err(AppError::InvalidValue("could not find the file".to_string())),
         }
     }
 
-    pub fn delete_file(&self) -> Result<()> {
+    pub fn delete_file(&self) -> AppResult<()> {
         match self.file {
             Some(ref file) => {
                 tracing::debug!("delete profile [{:?}({:?})]", self.name, self.uid);
                 let path = dirs::app_profiles_dir()?.join(file);
-                fs::remove_file(path).context("failed to delete the file")
+                fs::remove_file(path)?;
+                Ok(())
             }
-            None => bail!("could not find the file"),
+            None => Err(AppError::InvalidValue("could not find the file".to_string())),
         }
     }
 }

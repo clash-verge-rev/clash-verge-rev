@@ -1,41 +1,44 @@
-use crate::config::Config;
-use anyhow::{Context, Result, anyhow, bail};
+use crate::error::AppResult;
+use crate::{any_err, config::Config, error::AppError};
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml::{Mapping, Value};
-use std::{fs, net::TcpListener, path::PathBuf, str::FromStr};
+use std::{fs, io, net::TcpListener, path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
-pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
+pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> AppResult<T> {
     if !path.exists() {
-        bail!("file not found \"{}\"", path.display());
+        return Err(AppError::Io(io::Error::new(
+            io::ErrorKind::NotFound,
+            format!("file not found \"{}\"", path.display()),
+        )));
     }
 
-    let yaml_str =
-        fs::read_to_string(path).with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
+    let yaml_str = fs::read_to_string(path).map_err(|_| any_err!("failed to read the file \"{}\"", path.display()))?;
 
-    serde_yaml::from_str::<T>(&yaml_str)
-        .with_context(|| format!("failed to read the file with yaml format \"{}\"", path.display()))
+    let res = serde_yaml::from_str::<T>(&yaml_str)
+        .map_err(|_| any_err!("failed to read the file with yaml format \"{}\"", path.display()))?;
+    Ok(res)
 }
 
 /// read mapping from yaml fix #165
-pub fn read_merge_mapping(path: &PathBuf) -> Result<Mapping> {
+pub fn read_merge_mapping(path: &PathBuf) -> AppResult<Mapping> {
     let mut val: Value = read_yaml(path)?;
     if val.is_null() {
         return Ok(Mapping::new());
     }
     val.apply_merge()
-        .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
+        .map_err(|_| any_err!("failed to apply merge \"{}\"", path.display()))?;
     let mapping = val
         .as_mapping()
-        .ok_or(anyhow!("failed to transform to yaml mapping \"{}\"", path.display()))?
+        .ok_or(any_err!("failed to transform to yaml mapping \"{}\"", path.display()))?
         .to_owned();
     Ok(mapping)
 }
 
 /// save the data to the file
 /// can set `prefix` string to add some comments
-pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -> Result<()> {
+pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -> AppResult<()> {
     let data_str = serde_yaml::to_string(data)?;
 
     let yaml_str = match prefix {
@@ -44,7 +47,8 @@ pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -
     };
 
     let path_str = path.as_os_str().to_string_lossy().to_string();
-    fs::write(path, yaml_str.as_bytes()).with_context(|| format!("failed to save file \"{path_str}\""))
+    fs::write(path, yaml_str.as_bytes()).map_err(|_| any_err!("failed to save file \"{path_str}\""))?;
+    Ok(())
 }
 
 pub fn deep_merge(dest: &mut Value, src: &Value) {
@@ -98,7 +102,7 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 /// open file
 /// use vscode by default
 #[cfg(not(target_os = "windows"))]
-pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
+pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> AppResult<()> {
     use tauri_plugin_opener::OpenerExt;
 
     let _ = app
@@ -114,7 +118,7 @@ pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
 // open file
 // use vscode by default
 #[cfg(target_os = "windows")]
-pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> Result<()> {
+pub fn open_file(app: tauri::AppHandle, path: PathBuf) -> AppResult<()> {
     use tauri_plugin_opener::OpenerExt;
     use tauri_plugin_shell::ShellExt;
 
@@ -171,7 +175,7 @@ pub fn local_port_available(port: u16) -> bool {
     TcpListener::bind(("127.0.0.1", port)).is_ok()
 }
 
-pub fn find_unused_port() -> Result<u16> {
+pub fn find_unused_port() -> AppResult<u16> {
     match TcpListener::bind("127.0.0.1:0") {
         Ok(listener) => {
             let port = listener.local_addr()?.port();
@@ -218,35 +222,35 @@ macro_rules! trace_err {
 
 /// wrap the anyhow error
 /// transform the error to String
-#[macro_export]
-macro_rules! wrap_err {
-    ($stat: expr) => {
-        match $stat {
-            Ok(a) => Ok(a),
-            Err(err) => {
-                tracing::error!("{}", err.to_string());
-                Err(format!("{}", err.to_string()))
-            }
-        }
-    };
-    ($stat: expr, $err_str: expr) => {
-        match $stat {
-            Ok(a) => Ok(a),
-            Err(err) => {
-                tracing::error!("{}, {}", $err_str, err.to_string());
-                Err(format!("{}, {}", $err_str, err.to_string()))
-            }
-        }
-    };
-}
+// #[macro_export]
+// macro_rules! wrap_err {
+//     ($stat: expr) => {
+//         match $stat {
+//             Ok(a) => Ok(a),
+//             Err(err) => {
+//                 tracing::error!("{}", err.to_string());
+//                 Err(format!("{}", err.to_string()))
+//             }
+//         }
+//     };
+//     ($stat: expr, $err_str: expr) => {
+//         match $stat {
+//             Ok(a) => Ok(a),
+//             Err(err) => {
+//                 tracing::error!("{}, {}", $err_str, err.to_string());
+//                 Err(format!("{}, {}", $err_str, err.to_string()))
+//             }
+//         }
+//     };
+// }
 
 /// return the string literal error
-#[macro_export]
-macro_rules! ret_err {
-    ($($arg: tt)*) => {
-        return Err(format!($($arg)*))
-    };
-}
+// #[macro_export]
+// macro_rules! ret_err {
+//     ($($arg: tt)*) => {
+//         return Err(format!($($arg)*))
+//     };
+// }
 
 #[test]
 fn test_parse_check_output() {

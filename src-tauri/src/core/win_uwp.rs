@@ -1,15 +1,21 @@
-use crate::utils::dirs;
-use anyhow::{Result, bail};
+use crate::{
+    error::{AppError, AppResult},
+    utils::dirs,
+};
 use deelevate::{PrivilegeLevel, Token};
 use runas::Command as RunasCommand;
+use std::io;
 use std::process::Command as StdCommand;
 
-pub async fn invoke_uwptools() -> Result<()> {
+pub async fn invoke_uwptools() -> AppResult<()> {
     let resource_dir = dirs::app_resources_dir()?;
     let tool_path = resource_dir.join("enableLoopback.exe");
 
     if !tool_path.exists() {
-        bail!("enableLoopback exe not found");
+        return Err(AppError::Io(io::Error::new(
+            io::ErrorKind::NotFound,
+            "enableLoopback exe not found",
+        )));
     }
 
     let token = Token::with_current_process()?;

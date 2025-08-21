@@ -1,11 +1,12 @@
 use super::{EnableFilter, PrfItem};
 use crate::{
+    any_err,
     config::ProfileType,
     enhance::chain::{ChainItem, ScopeType},
+    error::{AppError, AppResult},
     log_err,
     utils::{dirs, help},
 };
-use anyhow::{Context, Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{collections::HashMap, fs, io::Write, path::PathBuf};
@@ -38,12 +39,27 @@ impl IProfiles {
                 if profiles.items.is_none() {
                     profiles.items = Some(vec![]);
                 }
+
+                // This is old bug since 2.0.0 ~ 2.1.4 version
+                // clear profile data and delete invalid profile files
+                let mut save_file = false;
+                let mut available_files = Vec::new();
+
                 let enabled_global_chain = profiles.chain.as_deref().unwrap_or_default();
                 // compatible with the old old old version
                 if let Some(items) = profiles.items.as_mut() {
+                    let items_ = items.clone();
+                    let all_uids: Vec<String> = items_.iter().filter_map(|i| i.uid.clone()).collect();
+                    available_files = items_.iter().filter_map(|i| i.file.clone()).collect();
                     for item in items.iter_mut() {
                         if item.uid.is_none() {
                             item.uid = Some(help::get_uid("d"));
+                        }
+                        if let Some(chain) = item.chain.as_mut() {
+                            // This is old bug since 2.0.0 ~ 2.1.4 version
+                            // remove invalid chains
+                            chain.retain(|i| all_uids.contains(i));
+                            save_file = true;
                         }
                         match item.itype {
                             Some(ProfileType::Merge) | Some(ProfileType::Script) => {
@@ -57,10 +73,40 @@ impl IProfiles {
                         }
                     }
                 }
+                if save_file {
+                    log_err!(profiles.save_file());
+                }
+                // This is old bug since 2.0.0 ~ 2.1.4 version
+                // delete invalid files in profiles dir
+                if let Ok(dir) = dirs::app_profiles_dir()
+                    && let Ok(dir) = std::fs::read_dir(dir)
+                {
+                    for entry in dir.flatten() {
+                        if let Ok(file_name) = entry.file_name().into_string()
+                            && !available_files.contains(&file_name)
+                        {
+                            let _ = std::fs::remove_file(entry.path());
+                            tracing::debug!(
+                                "delete invalid profile {}, {}",
+                                entry.file_name().display(),
+                                entry.path().display()
+                            );
+                        }
+                    }
+                }
                 profiles
             }
             Err(err) => {
                 tracing::error!("{err}");
+                // delete all files in profiles dir
+                if let Ok(dir) = dirs::app_profiles_dir()
+                    && let Ok(dir) = std::fs::read_dir(dir)
+                {
+                    tracing::debug!("clear all files in profiles dir");
+                    for entry in dir.flatten() {
+                        let _ = std::fs::remove_file(entry.path());
+                    }
+                }
                 Self::template()
             }
         }
@@ -73,12 +119,12 @@ impl IProfiles {
         }
     }
 
-    pub fn save_file(&self) -> Result<()> {
+    pub fn save_file(&self) -> AppResult<()> {
         help::save_yaml(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge"))
     }
 
     /// 只修改 current、global chain
-    pub fn patch_config(&mut self, patch: IProfiles) -> Result<()> {
+    pub fn patch_config(&mut self, patch: IProfiles) -> AppResult<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
@@ -99,7 +145,7 @@ impl IProfiles {
                 for old_uid in old_chain {
                     let item = self
                         .get_item_mut(&old_uid)
-                        .ok_or(anyhow!("failed to find the profile item \"uid:{old_uid}\""))?;
+                        .ok_or(any_err!("failed to find the profile item \"uid:{old_uid}\""))?;
 
                     item.enable = Some(false);
                 }
@@ -108,7 +154,7 @@ impl IProfiles {
             for new_uid in new_chain.iter() {
                 let item = self
                     .get_item_mut(new_uid)
-                    .ok_or(anyhow!("failed to find the profile item \"uid:{new_uid}\""))?;
+                    .ok_or(any_err!("failed to find the profile item \"uid:{new_uid}\""))?;
                 item.enable = Some(true);
             }
 
@@ -162,7 +208,7 @@ impl IProfiles {
     /// append new item
     /// if the file_data is some
     /// then should save the data to file
-    pub fn append_item(&mut self, mut item: PrfItem) -> Result<bool> {
+    pub fn append_item(&mut self, mut item: PrfItem) -> AppResult<bool> {
         let mut restart_core = false;
         if let Some(uid) = item.uid.clone() {
             // save the file data
@@ -171,16 +217,13 @@ impl IProfiles {
                 && let Some(file) = item.file.as_ref()
             {
                 let path = dirs::app_profiles_dir()?.join(file);
-                fs::File::create(path)
-                    .with_context(|| format!("failed to create file \"{file}\""))?
-                    .write(file_data.as_bytes())
-                    .with_context(|| format!("failed to write to file \"{file}\""))?;
+                fs::File::create(path)?.write_all(file_data.as_bytes())?;
             }
 
             if let Some(parent) = item.parent.as_ref() {
                 let profile = self
                     .get_item_mut(parent)
-                    .ok_or(anyhow!("failed to find the profile item \"uid:{parent}\""))?;
+                    .ok_or(any_err!("failed to find the profile item \"uid:{parent}\""))?;
                 match profile.chain.as_mut() {
                     Some(chain) => chain.push(uid.clone()),
                     None => profile.chain = Some(vec![uid.clone()]),
@@ -202,14 +245,14 @@ impl IProfiles {
             }
             self.save_file()?;
         } else {
-            bail!("the uid should not be null");
+            return Err(AppError::InvalidValue("the uid should not be null".to_string()));
         }
 
         Ok(restart_core)
     }
 
     /// reorder items
-    pub fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
+    pub fn reorder(&mut self, active_id: String, over_id: String) -> AppResult<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
         let mut new_index = None;
@@ -235,7 +278,7 @@ impl IProfiles {
     }
 
     /// update the item value
-    pub fn patch_item(&mut self, uid: &str, item: PrfItem) -> Result<()> {
+    pub fn patch_item(&mut self, uid: &str, item: PrfItem) -> AppResult<()> {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
@@ -259,19 +302,19 @@ impl IProfiles {
         }
 
         self.items = Some(items);
-        bail!("failed to find the profile item \"uid:{uid}\"")
+        Err(any_err!("failed to find the profile item \"uid:{uid}\""))
     }
 
     /// be used to update the remote item
     /// only patch `updated` `extra` `file_data`
-    pub fn update_item(&mut self, uid: &str, mut item: PrfItem) -> Result<()> {
+    pub fn update_item(&mut self, uid: &str, mut item: PrfItem) -> AppResult<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
         // find the item
         self.get_item(uid)
-            .ok_or(anyhow!("failed to find the profile item \"uid:{uid}\""))?;
+            .ok_or(any_err!("failed to find the profile item \"uid:{uid}\""))?;
 
         if let Some(items) = self.items.as_mut() {
             let some_uid = Some(uid);
@@ -286,16 +329,10 @@ impl IProfiles {
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
                         let file = file.unwrap_or(item.file.take().unwrap_or(format!("{uid}.yaml")));
-
                         // the file must exists
                         each.file = Some(file.clone());
-
                         let path = dirs::app_profiles_dir()?.join(&file);
-
-                        fs::File::create(path)
-                            .with_context(|| format!("failed to create file \"{file}\""))?
-                            .write(file_data.as_bytes())
-                            .with_context(|| format!("failed to write to file \"{file}\""))?;
+                        fs::File::create(path)?.write_all(file_data.as_bytes())?;
                     }
 
                     break;
@@ -308,58 +345,82 @@ impl IProfiles {
 
     /// delete item
     /// if delete the current then return true
-    pub fn delete_item(&mut self, uid: String) -> Result<bool> {
+    pub fn delete_item(&mut self, uid: String) -> AppResult<bool> {
         let current = self.current.as_ref().unwrap_or(&uid);
-
-        let profile = self
-            .get_item(&uid)
-            .ok_or(anyhow!("failed to find the profile item \"uid:{uid}\""))?;
-
-        // delete profile and profile chains
-        let mut remove_uids = vec![uid.clone()];
-        if let Some(profile_chain) = profile.chain.as_ref() {
-            remove_uids.extend(profile_chain.clone());
-            profile_chain
-                .iter()
-                .filter_map(|chain_uid| self.get_item(chain_uid))
-                .for_each(|o| {
-                    tracing::debug!("delete profile chains");
-                    log_err!(o.delete_file())
-                });
-        }
-        profile.delete_file()?;
-
-        // check if need to restart core
-        let delete_current = uid == *current;
+        let delete_current = *current == uid;
         let mut restart_core = delete_current;
 
-        if let Some(parent) = profile.parent.as_ref()
-            && *parent == *current
-            && let Some(enable) = profile.enable.as_ref()
-            && *enable
-        {
-            restart_core = true;
-        }
+        let mut items = self.items.clone().unwrap_or_default();
+        if let Some(profile) = self.get_item(&uid) {
+            match profile.itype {
+                Some(ProfileType::Local | ProfileType::Remote) => {
+                    tracing::debug!("delete profile {:?}", profile.name);
+                    let mut remove_uids = vec![uid.clone()];
+                    if let Some(profile_chain) = profile.chain.as_ref() {
+                        remove_uids.extend(profile_chain.clone());
+                        profile_chain
+                            .iter()
+                            .filter_map(|chain_uid| self.get_item(chain_uid))
+                            .for_each(|o| {
+                                tracing::debug!("delete profile chains");
+                                log_err!(o.delete_file())
+                            });
+                    }
 
-        if let Some(items) = self.items.as_mut() {
-            items.retain(|i| {
-                if let Some(uid_) = i.uid.as_ref()
-                    && !remove_uids.contains(uid_)
-                {
-                    true
-                } else {
-                    false
+                    profile.delete_file()?;
+                    items.retain(|i| {
+                        if let Some(uid_) = i.uid.as_ref()
+                            && !remove_uids.contains(uid_)
+                        {
+                            true
+                        } else {
+                            false
+                        }
+                    });
+                    // delete current profile, use next profile
+                    if delete_current {
+                        if let Some(first) = items.first()
+                            && let Some(uid) = first.uid.as_ref()
+                        {
+                            self.current = Some(uid.clone());
+                        } else {
+                            self.current = None
+                        }
+                    }
                 }
-            });
-            if delete_current {
-                if let [first, ..] = items.as_slice()
-                    && let Some(uid) = first.uid.as_ref()
-                {
-                    self.current = Some(uid.clone());
-                } else {
-                    self.current = None
+                Some(ProfileType::Merge | ProfileType::Script) => {
+                    tracing::debug!("delete enhance script {:?}", profile.name);
+                    // delete running profile chain, need to restart core
+                    if let Some(parent) = profile.parent.as_ref()
+                        && let Some(parent_profile) = items.iter_mut().find(|i| i.uid.as_ref() == Some(parent))
+                        && let Some(chains) = parent_profile.chain.as_mut()
+                    {
+                        // update profile chains
+                        chains.retain(|i| i != &uid);
+                        if let Some(enable) = profile.enable
+                            && enable
+                            && parent == current
+                        {
+                            restart_core = true;
+                        }
+                    }
+                    // delete running global chain, need to restart core
+                    if let Some(scope) = profile.scope.as_ref()
+                        && matches!(scope, ScopeType::Global)
+                        && let Some(enable) = profile.enable
+                        && enable
+                    {
+                        restart_core = true;
+                    }
+
+                    profile.delete_file()?;
+                    items.retain(|i| i.uid != Some(uid.clone()));
+                }
+                None => {
+                    return Err(AppError::InvalidValue("profile type is null".to_string()));
                 }
             }
+            self.items = Some(items);
         } else {
             tracing::debug!("reset profiles config");
             *self = Self::template();

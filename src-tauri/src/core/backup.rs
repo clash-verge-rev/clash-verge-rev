@@ -1,5 +1,10 @@
-use crate::{config::Config, trace_err, utils::dirs};
-use anyhow::{Result, anyhow};
+use crate::{
+    any_err,
+    config::Config,
+    error::{AppError, AppResult},
+    trace_err,
+    utils::dirs,
+};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest_dav::{
@@ -23,7 +28,7 @@ const BACKUP_DIR: &str = "clash-verge-self-dev";
 
 const TIME_FORMAT_PATTERN: &str = "%Y-%m-%d_%H-%M-%S";
 
-pub fn create_backup(local_save: bool, only_backup_profiles: bool) -> Result<(String, PathBuf)> {
+pub fn create_backup(local_save: bool, only_backup_profiles: bool) -> AppResult<(String, PathBuf)> {
     let now = chrono::Local::now().format(TIME_FORMAT_PATTERN).to_string();
 
     let zip_file_name = format!(
@@ -49,7 +54,7 @@ pub fn create_backup(local_save: bool, only_backup_profiles: bool) -> Result<(St
         path: &PathBuf,
         zip_path: &str,
         options: SimpleFileOptions,
-    ) -> Result<()> {
+    ) -> AppResult<()> {
         zip.start_file(zip_path, options)?;
         zip.write_all(&fs::read(path)?)?;
         Ok(())
@@ -92,7 +97,7 @@ impl WebDav {
         })
     }
 
-    pub fn init(&'static self) -> Result<()> {
+    pub fn init(&'static self) -> AppResult<()> {
         tauri::async_runtime::spawn(async {
             let (url, username, password) = {
                 let verge = Config::verge();
@@ -115,7 +120,7 @@ impl WebDav {
         Ok(())
     }
 
-    pub async fn update_webdav_info<S: Into<String>>(&self, url: S, username: S, password: S) -> Result<()> {
+    pub async fn update_webdav_info<S: Into<String>>(&self, url: S, username: S, password: S) -> AppResult<()> {
         *self.client.lock() = None;
         let client = reqwest_dav::ClientBuilder::new()
             .set_host(url.into())
@@ -131,23 +136,23 @@ impl WebDav {
             }
             Err(e) => {
                 tracing::error!("invalid webdav config: {e:?}");
-                Err(anyhow!("connect webdav failed, {e:?}"))
+                Err(AppError::WebDav(e))
             }
         }
     }
 
-    fn get_client(&self) -> Result<reqwest_dav::Client> {
+    fn get_client(&self) -> AppResult<reqwest_dav::Client> {
         match self.client.lock().clone() {
             Some(client) => Ok(client),
             None => {
                 let msg = "Unable to create web dav client, please make sure the webdav config is correct";
-                tracing::error!("{}", msg);
-                Err(anyhow!(msg))
+                tracing::error!("{msg}");
+                Err(any_err!("{msg}"))
             }
         }
     }
 
-    pub async fn list_file_by_path(path: &str) -> Result<Vec<ListFile>> {
+    pub async fn list_file_by_path(path: &str) -> AppResult<Vec<ListFile>> {
         let client = Self::global().get_client()?;
         let files = client
             .list(path, reqwest_dav::Depth::Number(1))
@@ -161,13 +166,13 @@ impl WebDav {
         Ok(files)
     }
 
-    pub async fn list_file() -> Result<Vec<ListFile>> {
+    pub async fn list_file() -> AppResult<Vec<ListFile>> {
         let path = format!("{BACKUP_DIR}/");
         let files = Self::list_file_by_path(&path).await?;
         Ok(files)
     }
 
-    pub async fn download_file(webdav_file_name: &str, storage_path: &PathBuf) -> Result<()> {
+    pub async fn download_file(webdav_file_name: &str, storage_path: &PathBuf) -> AppResult<()> {
         let client = Self::global().get_client()?;
         let path = format!("{BACKUP_DIR}/{webdav_file_name}");
         let response = client.get(&path).await?;
@@ -176,14 +181,14 @@ impl WebDav {
         Ok(())
     }
 
-    pub async fn upload_file(file_path: &PathBuf, webdav_file_name: &str) -> Result<()> {
+    pub async fn upload_file(file_path: &PathBuf, webdav_file_name: &str) -> AppResult<()> {
         let client = Self::global().get_client()?;
         let web_dav_path = format!("{BACKUP_DIR}/{webdav_file_name}");
         client.put(&web_dav_path, fs::read(file_path)?).await?;
         Ok(())
     }
 
-    pub async fn delete_file(file_name: String) -> Result<()> {
+    pub async fn delete_file(file_name: String) -> AppResult<()> {
         let client = Self::global().get_client()?;
         let path = format!("{BACKUP_DIR}/{file_name}");
         client.delete(&path).await?;

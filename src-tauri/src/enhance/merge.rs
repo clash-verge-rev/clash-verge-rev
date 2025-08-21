@@ -57,7 +57,7 @@ pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
 }
 
 #[test]
-fn test_merge() -> anyhow::Result<()> {
+fn test_merge() -> crate::error::AppResult<()> {
     let merge = r"
     prepend-rules:
       - prepend

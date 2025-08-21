@@ -1,6 +1,9 @@
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+use crate::error::AppResult;
+
 /// 给clash内核的tun模式授权
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-pub fn grant_permission(core: String) -> anyhow::Result<()> {
+pub fn grant_permission(core: String) -> AppResult<()> {
     use std::process::Command;
     use tauri::utils::platform::current_exe;
 
@@ -39,7 +42,9 @@ pub fn grant_permission(core: String) -> anyhow::Result<()> {
     if output.status.success() {
         Ok(())
     } else {
+        use crate::{any_err, error::AppError};
+
         let stderr = std::str::from_utf8(&output.stderr).unwrap_or_default();
-        anyhow::bail!("{stderr}");
+        Err(any_err!("{stderr}"))
     }
 }

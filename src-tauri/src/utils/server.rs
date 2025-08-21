@@ -1,6 +1,9 @@
 use super::{help, resolve};
-use crate::config::{Config, DEFAULT_PAC, IVerge};
-use anyhow::{Result, bail};
+use crate::{
+    any_err,
+    config::{Config, DEFAULT_PAC, IVerge},
+    error::{AppError, AppResult},
+};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest::ClientBuilder;
@@ -18,7 +21,7 @@ struct QueryParam {
 }
 
 /// check whether there is already exists
-pub fn check_singleton() -> Result<()> {
+pub fn check_singleton() -> AppResult<()> {
     let port = IVerge::get_singleton_port();
 
     if !help::local_port_available(port) {
@@ -51,7 +54,7 @@ pub fn check_singleton() -> Result<()> {
                         .text()
                         .await?;
                 }
-                bail!("app exists");
+                return Err(any_err!("app exists"));
             }
 
             tracing::error!("failed to setup singleton listen server");

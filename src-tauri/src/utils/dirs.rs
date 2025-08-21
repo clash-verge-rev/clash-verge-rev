@@ -1,5 +1,8 @@
-use crate::core::handle;
-use anyhow::Result;
+use crate::{
+    any_err,
+    core::handle,
+    error::{AppError, AppResult},
+};
 use dirs::data_dir;
 use once_cell::sync::OnceCell;
 use std::path::PathBuf;
@@ -16,10 +19,10 @@ pub static VERGE_CONFIG: &str = "verge.yaml";
 pub static PROFILE_YAML: &str = "profiles.yaml";
 
 /// get the verge app home dir
-pub fn app_home_dir() -> Result<PathBuf> {
+pub fn app_home_dir() -> AppResult<PathBuf> {
     use tauri::utils::platform::current_exe;
 
-    let flag = PORTABLE_FLAG.get_or_try_init(|| -> Result<bool> {
+    let flag = PORTABLE_FLAG.get_or_try_init(|| -> AppResult<bool> {
         let app_exe = current_exe()?;
         let mut flag = false;
         if let Some(dir) = app_exe.parent() {
@@ -35,19 +38,15 @@ pub fn app_home_dir() -> Result<PathBuf> {
     {
         let app_exe = current_exe()?;
         let app_exe = dunce::canonicalize(app_exe)?;
-        let app_dir = app_exe
-            .parent()
-            .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
+        let app_dir = app_exe.parent().ok_or(any_err!("failed to get the portable app dir"))?;
         return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
     }
 
-    Ok(data_dir()
-        .ok_or(anyhow::anyhow!("failed to get app home dir"))?
-        .join(APP_ID))
+    Ok(data_dir().ok_or(any_err!("failed to get app home dir"))?.join(APP_ID))
 }
 
 /// get the resources dir
-pub fn app_resources_dir() -> Result<PathBuf> {
+pub fn app_resources_dir() -> AppResult<PathBuf> {
     use tauri::{
         Env,
         utils::platform::{current_exe, resource_dir},
@@ -58,57 +57,57 @@ pub fn app_resources_dir() -> Result<PathBuf> {
     let res_dir = if *portable {
         current_exe()?
             .parent()
-            .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?
+            .ok_or(any_err!("failed to get the portable app dir"))?
             .join("resources")
     } else {
         resource_dir(app_handle.package_info(), &Env::default())
-            .map_err(|_| anyhow::anyhow!("failed to get the resource dir"))?
+            .map_err(|_| any_err!("failed to get the resource dir"))?
             .join("resources")
     };
     Ok(res_dir)
 }
 
 /// profiles dir
-pub fn app_profiles_dir() -> Result<PathBuf> {
+pub fn app_profiles_dir() -> AppResult<PathBuf> {
     Ok(app_home_dir()?.join("profiles"))
 }
 
 /// logs dir
-pub fn app_logs_dir() -> Result<PathBuf> {
+pub fn app_logs_dir() -> AppResult<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
 }
 
-pub fn app_service_logs_dir() -> Result<PathBuf> {
+pub fn app_service_logs_dir() -> AppResult<PathBuf> {
     Ok(app_logs_dir()?.join("service"))
 }
 
-pub fn clash_path() -> Result<PathBuf> {
+pub fn clash_path() -> AppResult<PathBuf> {
     Ok(app_home_dir()?.join(CLASH_CONFIG))
 }
 
-pub fn verge_path() -> Result<PathBuf> {
+pub fn verge_path() -> AppResult<PathBuf> {
     Ok(app_home_dir()?.join(VERGE_CONFIG))
 }
 
-pub fn profiles_path() -> Result<PathBuf> {
+pub fn profiles_path() -> AppResult<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
 }
 
-pub fn service_path() -> Result<PathBuf> {
+pub fn service_path() -> AppResult<PathBuf> {
     let exe_ext = std::env::consts::EXE_SUFFIX;
     let service_bin = format!("clash-verge-service{}", exe_ext);
     Ok(app_resources_dir()?.join(service_bin))
 }
 
-pub fn backup_dir() -> Result<PathBuf> {
+pub fn backup_dir() -> AppResult<PathBuf> {
     Ok(app_home_dir()?.join("backup"))
 }
 
-pub fn backup_archive_file() -> Result<PathBuf> {
+pub fn backup_archive_file() -> AppResult<PathBuf> {
     Ok(app_home_dir()?.join("archive.zip"))
 }
 
-pub fn service_log_file() -> Result<PathBuf> {
+pub fn service_log_file() -> AppResult<PathBuf> {
     use chrono::Local;
 
     let log_dir = app_service_logs_dir()?;
@@ -124,10 +123,10 @@ pub fn service_log_file() -> Result<PathBuf> {
     Ok(log_file)
 }
 
-pub fn path_to_str(path: &PathBuf) -> Result<&str> {
+pub fn path_to_str(path: &PathBuf) -> AppResult<&str> {
     let path_str = path
         .as_os_str()
         .to_str()
-        .ok_or(anyhow::anyhow!("failed to get path from {:?}", path))?;
+        .ok_or(any_err!("failed to get path from {:?}", path))?;
     Ok(path_str)
 }

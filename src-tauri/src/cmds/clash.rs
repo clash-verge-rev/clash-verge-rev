@@ -1,19 +1,18 @@
 use std::collections::{HashMap, VecDeque};
 
-use anyhow::Context;
 use mihomo_rule_parser::{RuleBehavior, RuleFormat, RulePayload};
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 
 use crate::{
+    any_err,
     config::{ClashInfo, Config},
     core::{CoreManager, handle, logger, service},
     enhance::{self, LogMessage, MergeResult},
-    feat, wrap_err,
+    error::{AppError, AppResult},
+    feat,
 };
-
-use super::CmdResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CmdMergeResult {
@@ -22,36 +21,34 @@ pub struct CmdMergeResult {
 }
 
 #[tauri::command]
-pub fn get_clash_info() -> CmdResult<ClashInfo> {
+pub fn get_clash_info() -> AppResult<ClashInfo> {
     Ok(Config::clash().latest().get_client_info())
 }
 
 #[tauri::command]
-pub fn get_runtime_config() -> CmdResult<Option<Mapping>> {
+pub fn get_runtime_config() -> AppResult<Option<Mapping>> {
     Ok(Config::runtime().latest().config.clone())
 }
 
 #[tauri::command]
-pub fn get_runtime_yaml() -> CmdResult<String> {
+pub fn get_runtime_yaml() -> AppResult<String> {
     let runtime = Config::runtime();
     let runtime = runtime.latest();
     let config = runtime.config.as_ref();
-    wrap_err!(
-        config
-            .ok_or(anyhow::anyhow!(t!("config.parse.failed")))
-            .and_then(|config| serde_yaml::to_string(config).context(t!("config.convert.failed")))
-    )
+    config
+        .ok_or(any_err!("{}", t!("config.parse.failed")))
+        .and_then(|config| serde_yaml::to_string(config).map_err(AppError::SerdeYaml))
 }
 
 #[tauri::command]
-pub fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<LogMessage>>> {
+pub fn get_runtime_logs() -> AppResult<HashMap<String, Vec<LogMessage>>> {
     Ok(Config::runtime().latest().chain_logs.clone())
 }
 
 #[tauri::command]
-pub fn get_pre_merge_result(parent_uid: Option<String>, modified_uid: String) -> CmdResult<CmdMergeResult> {
-    let MergeResult { config, logs } = wrap_err!(enhance::get_pre_merge_result(parent_uid, modified_uid))?;
-    let config = wrap_err!(serde_yaml::to_string(&config))?;
+pub fn get_pre_merge_result(parent_uid: Option<String>, modified_uid: String) -> AppResult<CmdMergeResult> {
+    let MergeResult { config, logs } = enhance::get_pre_merge_result(parent_uid, modified_uid)?;
+    let config = serde_yaml::to_string(&config)?;
     Ok(CmdMergeResult { config, logs })
 }
 
@@ -60,27 +57,27 @@ pub async fn test_merge_chain(
     profile_uid: Option<String>,
     modified_uid: String,
     content: String,
-) -> CmdResult<CmdMergeResult> {
-    let MergeResult { config, logs } = wrap_err!(enhance::test_merge_chain(profile_uid, modified_uid, content).await)?;
-    let config = wrap_err!(serde_yaml::to_string(&config))?;
+) -> AppResult<CmdMergeResult> {
+    let MergeResult { config, logs } = enhance::test_merge_chain(profile_uid, modified_uid, content).await?;
+    let config = serde_yaml::to_string(&config)?;
     Ok(CmdMergeResult { config, logs })
 }
 
 #[tauri::command]
-pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
-    wrap_err!(feat::patch_clash(payload).await)
+pub async fn patch_clash_config(payload: Mapping) -> AppResult<()> {
+    feat::patch_clash(payload).await
 }
 
 #[tauri::command]
-pub async fn change_clash_core(clash_core: Option<String>) -> CmdResult {
-    wrap_err!(CoreManager::global().change_core(clash_core).await)
+pub async fn change_clash_core(clash_core: Option<String>) -> AppResult<()> {
+    CoreManager::global().change_core(clash_core).await
 }
 
 #[tauri::command]
-pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
+pub async fn get_clash_logs() -> AppResult<VecDeque<String>> {
     let enable_service_mode = Config::verge().latest().enable_service_mode.unwrap_or_default();
     let logs = if enable_service_mode {
-        let res = wrap_err!(service::get_logs().await)?;
+        let res = service::get_logs().await?;
         res.data.unwrap_or_default()
     } else {
         logger::Logger::global().get_logs().clone()
@@ -89,10 +86,10 @@ pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
 }
 
 #[tauri::command]
-pub async fn get_rule_providers_payload() -> CmdResult<HashMap<String, RulePayload>> {
+pub async fn get_rule_providers_payload() -> AppResult<HashMap<String, RulePayload>> {
     let mut res = HashMap::new();
     let mihomo = handle::Handle::mihomo().await;
-    let rule_providers = wrap_err!(mihomo.get_rule_providers().await)?;
+    let rule_providers = mihomo.get_rule_providers().await?;
     let profiles = Config::profiles();
     if let Some(rule_provider_paths) = profiles.latest().get_current_profile_rule_providers() {
         for (name, rule_provider) in rule_providers.providers.iter() {
@@ -101,15 +98,15 @@ pub async fn get_rule_providers_payload() -> CmdResult<HashMap<String, RulePaylo
                     "Domain" => RuleBehavior::Domain,
                     "IPCIDR" => RuleBehavior::IpCidr,
                     "Classical" => RuleBehavior::Classical,
-                    _ => return Err("Unknown rule behavior".into()),
+                    _ => return Err(AppError::InvalidValue("Unknown rule behavior".into())),
                 };
                 let format = match rule_provider.format.as_str() {
                     "MrsRule" => RuleFormat::Mrs,
                     "YamlRule" => RuleFormat::Yaml,
                     "TextRule" => RuleFormat::Text,
-                    _ => return Err("Unknown rule format".into()),
+                    _ => return Err(AppError::InvalidValue("Unknown rule format".into())),
                 };
-                let payload = wrap_err!(mihomo_rule_parser::parse(file_path, behavior, format))?;
+                let payload = mihomo_rule_parser::parse(file_path, behavior, format)?;
                 res.insert(name.clone(), payload);
             }
         }

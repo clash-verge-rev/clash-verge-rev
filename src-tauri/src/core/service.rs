@@ -1,7 +1,7 @@
 use crate::MIHOMO_SOCKET_PATH;
 use crate::config::Config;
+use crate::error::{AppError, AppResult};
 use crate::utils::{self, crypto, dirs};
-use anyhow::{Result, bail};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -57,14 +57,15 @@ impl<T> JsonResponse<T>
 where
     T: serde::de::DeserializeOwned,
 {
-    pub fn from_str(json_str: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json_str)
+    pub fn from_str(json_str: &str) -> AppResult<Self> {
+        let res = serde_json::from_str(json_str)?;
+        Ok(res)
     }
 }
 
 const SERVER_ID: &str = "verge-service-server";
 
-async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonResponse<T>> {
+async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> AppResult<JsonResponse<T>> {
     let path = ServerId::new(SERVER_ID).parent_folder(std::env::temp_dir());
     let client = tipsy::Endpoint::connect(path).await?;
     let mut reader = BufReader::new(client);
@@ -74,7 +75,7 @@ async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonRes
         let combined = crypto::encrypt_socket_data(&public_key, &cmd_json)?;
         reader.write_all(combined.as_bytes()).await?;
     } else {
-        bail!("failed to get rsa public key")
+        return Err(AppError::LoadKeys("failed to get rsa public key".to_string()));
     }
     // receive response
     let mut response = String::new();
@@ -84,7 +85,7 @@ async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonRes
         let res = JsonResponse::from_str(&response)?;
         Ok(res)
     } else {
-        bail!("failed to get rsa private key")
+        Err(AppError::LoadKeys("failed to get rsa private key".to_string()))
     }
 }
 
@@ -92,7 +93,7 @@ async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> Result<JsonRes
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 ///
 #[cfg(target_os = "windows")]
-pub async fn install_service() -> Result<()> {
+pub async fn install_service() -> AppResult<()> {
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
@@ -101,7 +102,7 @@ pub async fn install_service() -> Result<()> {
     let install_path = binary_path.with_file_name("install-service.exe");
 
     if !install_path.exists() {
-        bail!("installer exe not found");
+        return Err(AppError::Service("installer not fount".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
@@ -122,14 +123,17 @@ pub async fn install_service() -> Result<()> {
     };
 
     if !status.success() {
-        bail!("failed to install service with status {:?}", status.code());
+        return Err(AppError::Service(format!(
+            "failed to install service with status {:?}",
+            status.code()
+        )));
     }
 
     Ok(())
 }
 
 #[cfg(target_os = "linux")]
-pub async fn install_service() -> Result<()> {
+pub async fn install_service() -> AppResult<()> {
     use users::get_effective_uid;
 
     let binary_path = dirs::service_path()?;
@@ -137,7 +141,7 @@ pub async fn install_service() -> Result<()> {
     tracing::debug!("installer path: {}", installer_path.display());
 
     if !installer_path.exists() {
-        bail!("installer not found");
+        return Err(AppError::Service("installer not found".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
@@ -160,19 +164,22 @@ pub async fn install_service() -> Result<()> {
     };
 
     if !status.success() {
-        bail!("failed to install service with status {:?}", status.code());
+        return Err(AppError::Service(format!(
+            "failed to install service with status {:?}",
+            status.code()
+        )));
     }
 
     Ok(())
 }
 
 #[cfg(target_os = "macos")]
-pub async fn install_service() -> Result<()> {
+pub async fn install_service() -> AppResult<()> {
     let binary_path = dirs::service_path()?;
     let installer_path = binary_path.with_file_name("install-service");
 
     if !installer_path.exists() {
-        bail!("installer not found");
+        return Err(AppError::Service("installer not fount".to_string()));
     }
     let log_dir = dirs::app_logs_dir()?.join("service");
     let shell = installer_path.to_string_lossy().replace(" ", "\\\\ ");
@@ -185,7 +192,10 @@ pub async fn install_service() -> Result<()> {
     let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 
     if !status.success() {
-        bail!("failed to install service with status {:?}", status.code());
+        return Err(AppError::Service(format!(
+            "failed to install service with status {:?}",
+            status.code()
+        )));
     }
 
     Ok(())
@@ -193,7 +203,7 @@ pub async fn install_service() -> Result<()> {
 /// Uninstall the Clash Verge Service
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 #[cfg(target_os = "windows")]
-pub async fn uninstall_service() -> Result<()> {
+pub async fn uninstall_service() -> AppResult<()> {
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
@@ -202,7 +212,7 @@ pub async fn uninstall_service() -> Result<()> {
     let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
 
     if !uninstall_path.exists() {
-        bail!("uninstaller exe not found");
+        return Err(AppError::Service("uninstaller not fount".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
@@ -223,21 +233,24 @@ pub async fn uninstall_service() -> Result<()> {
     };
 
     if !status.success() {
-        bail!("failed to uninstall service with status {:?}", status.code());
+        return Err(AppError::Service(format!(
+            "failed to uninstall service with status {:?}",
+            status.code()
+        )));
     }
 
     Ok(())
 }
 
 #[cfg(target_os = "linux")]
-pub async fn uninstall_service() -> Result<()> {
+pub async fn uninstall_service() -> AppResult<()> {
     use users::get_effective_uid;
 
     let binary_path = dirs::service_path()?;
     let uninstaller_path = binary_path.with_file_name("uninstall-service");
 
     if !uninstaller_path.exists() {
-        bail!("uninstaller not found");
+        return Err(AppError::Service("uninstaller not fount".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
@@ -258,19 +271,22 @@ pub async fn uninstall_service() -> Result<()> {
     };
 
     if !status.success() {
-        bail!("failed to install service with status {:?}", status.code());
+        return Err(AppError::Service(format!(
+            "failed to uninstall service with status {:?}",
+            status.code()
+        )));
     }
 
     Ok(())
 }
 
 #[cfg(target_os = "macos")]
-pub async fn uninstall_service() -> Result<()> {
+pub async fn uninstall_service() -> AppResult<()> {
     let binary_path = dirs::service_path()?;
     let uninstaller_path = binary_path.with_file_name("uninstall-service");
 
     if !uninstaller_path.exists() {
-        bail!("uninstaller not found");
+        return Err(AppError::Service("uninstaller not fount".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
@@ -284,28 +300,31 @@ pub async fn uninstall_service() -> Result<()> {
     let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 
     if !status.success() {
-        bail!("failed to install service with status {:?}", status.code());
+        return Err(AppError::Service(format!(
+            "failed to uninstall service with status {:?}",
+            status.code()
+        )));
     }
 
     Ok(())
 }
 
 /// check the windows service status
-pub async fn check_service() -> Result<JsonResponse<ClashStatus>> {
+pub async fn check_service() -> AppResult<JsonResponse<ClashStatus>> {
     match send_command::<ClashStatus>(SocketCommand::GetClash).await {
         Ok(res) => {
             tracing::info!("connect to service success");
             Ok(res)
         }
-        Err(_) => {
-            tracing::info!("connect to service failed, error");
-            Err(anyhow::anyhow!("failed to connect service"))
+        Err(e) => {
+            tracing::error!("connect to service failed");
+            Err(e)
         }
     }
 }
 
 /// start the clash by service
-pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBuf) -> Result<()> {
+pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBuf) -> AppResult<()> {
     check_service().await?;
     stop_core_by_service().await?;
 
@@ -336,34 +355,46 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf, log_path: &PathBu
     tracing::debug!("send start clash socket command, body: {:?}", body);
     let res = send_command::<()>(SocketCommand::StartClash(body)).await?;
     if res.code != 0 {
-        bail!("socket command [StartClash] return error: {}", res.msg);
+        return Err(AppError::Service(format!(
+            "socket command [StartClash] return error: {}",
+            res.msg
+        )));
     }
 
     Ok(())
 }
 
 /// stop the clash by service
-pub(super) async fn stop_core_by_service() -> Result<()> {
+pub(super) async fn stop_core_by_service() -> AppResult<()> {
     let res = send_command::<()>(SocketCommand::StopClash).await?;
     if res.code != 0 {
-        bail!("socket command [StopClash] return error: {}", res.msg);
+        return Err(AppError::Service(format!(
+            "socket command [StopClash] return error: {}",
+            res.msg
+        )));
     }
     Ok(())
 }
 
-pub async fn get_logs() -> Result<JsonResponse<VecDeque<String>>> {
+pub async fn get_logs() -> AppResult<JsonResponse<VecDeque<String>>> {
     let res = send_command::<VecDeque<String>>(SocketCommand::GetLogs).await?;
     if res.code != 0 {
-        bail!("socket command [GetLogs] return error: {}", res.msg);
+        return Err(AppError::Service(format!(
+            "socket command [GetLogs] return error: {}",
+            res.msg
+        )));
     }
     Ok(res)
 }
 
 /// stop the service
-pub async fn stop_service() -> Result<()> {
+pub async fn stop_service() -> AppResult<()> {
     let res = send_command::<()>(SocketCommand::StopService).await?;
     if res.code != 0 {
-        bail!("socket command [StopService] return error: {}", res.msg);
+        return Err(AppError::Service(format!(
+            "socket command [StopService] return error: {}",
+            res.msg
+        )));
     }
     Ok(())
 }

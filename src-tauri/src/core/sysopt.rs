@@ -1,8 +1,9 @@
 use crate::{
+    any_err,
     config::{Config, IVerge},
+    error::{AppError, AppResult},
     log_err,
 };
-use anyhow::{Result, anyhow, bail};
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -83,7 +84,7 @@ impl Sysopt {
     }
 
     /// init the sysproxy
-    pub fn init_sysproxy(&self) -> Result<()> {
+    pub fn init_sysproxy(&self) -> AppResult<()> {
         let port = Config::clash().latest().get_mixed_port();
         let pac_port = IVerge::get_singleton_port();
 
@@ -107,7 +108,7 @@ impl Sysopt {
                 *self.old_sysproxy.lock() = old;
                 *self.cur_sysproxy.lock() = Some(sys);
             } else {
-                bail!(t!("sysproxy.update.failed"));
+                return Err(any_err!("{}", t!("sysproxy.update.failed")));
             }
 
             let old = Autoproxy::get_auto_proxy().ok();
@@ -115,7 +116,7 @@ impl Sysopt {
                 *self.cur_autoproxy.lock() = Some(auto);
                 *self.old_autoproxy.lock() = old;
             } else {
-                bail!(t!("sysproxy.pac.update.failed"));
+                return Err(any_err!("{}", t!("sysproxy.pac.update.failed")));
             }
         } else {
             auto.enable = false;
@@ -124,7 +125,7 @@ impl Sysopt {
                 *self.old_autoproxy.lock() = old;
                 *self.cur_autoproxy.lock() = Some(auto);
             } else {
-                bail!(t!("sysproxy.update.failed"));
+                return Err(any_err!("{}", t!("sysproxy.update.failed")));
             }
 
             let old = Sysproxy::get_system_proxy().ok();
@@ -132,7 +133,7 @@ impl Sysopt {
                 *self.old_sysproxy.lock() = old;
                 *self.cur_sysproxy.lock() = Some(sys);
             } else {
-                bail!(t!("sysproxy.update.failed"));
+                return Err(any_err!("{}", t!("sysproxy.update.failed")));
             }
         }
 
@@ -142,7 +143,7 @@ impl Sysopt {
     }
 
     /// update the system proxy
-    pub fn update_sysproxy(&self) -> Result<()> {
+    pub fn update_sysproxy(&self) -> AppResult<()> {
         let mut cur_sysproxy = self.cur_sysproxy.lock();
         let old_sysproxy = { self.old_sysproxy.lock().clone() };
         let mut cur_autoproxy = self.cur_autoproxy.lock();
@@ -186,11 +187,11 @@ impl Sysopt {
                     *cur_autoproxy = Some(autoproxy);
                 } else {
                     *cur_autoproxy = Some(autoproxy_);
-                    bail!(t!("sysproxy.pac.update.failed"));
+                    return Err(any_err!("{}", t!("sysproxy.pac.update.failed")));
                 }
             } else {
                 *cur_sysproxy = Some(sysproxy_);
-                bail!(t!("sysproxy.update.failed"));
+                return Err(any_err!("{}", t!("sysproxy.update.failed")));
             }
         } else {
             autoproxy.enable = false;
@@ -201,11 +202,11 @@ impl Sysopt {
                     *cur_sysproxy = Some(sysproxy);
                 } else {
                     *cur_sysproxy = Some(sysproxy_);
-                    bail!(t!("sysproxy.update.failed"));
+                    return Err(any_err!("{}", t!("sysproxy.update.failed")));
                 }
             } else {
                 *cur_autoproxy = Some(autoproxy_);
-                bail!(t!("sysproxy.pac.update.failed"));
+                return Err(any_err!("{}", t!("sysproxy.pac.update.failed")));
             }
         }
 
@@ -213,7 +214,7 @@ impl Sysopt {
     }
 
     /// reset the sysproxy
-    pub fn reset_sysproxy(&self) -> Result<()> {
+    pub fn reset_sysproxy(&self) -> AppResult<()> {
         let mut cur_sysproxy = self.cur_sysproxy.lock();
         let mut old_sysproxy = self.old_sysproxy.lock();
         let mut cur_autoproxy = self.cur_autoproxy.lock();
@@ -270,18 +271,18 @@ impl Sysopt {
     }
 
     /// init the auto launch
-    pub fn init_launch(&self) -> Result<()> {
+    pub fn init_launch(&self) -> AppResult<()> {
         let app_exe = current_exe()?;
         // let app_exe = dunce::canonicalize(app_exe)?;
         let app_name = app_exe
             .file_stem()
             .and_then(|f| f.to_str())
-            .ok_or(anyhow!("failed to get file stem"))?;
+            .ok_or(any_err!("failed to get file stem"))?;
 
         let app_path = app_exe
             .as_os_str()
             .to_str()
-            .ok_or(anyhow!("failed to get app_path"))?
+            .ok_or(any_err!("failed to get app_path"))?
             .to_string();
 
         // fix issue #26
@@ -325,7 +326,7 @@ impl Sysopt {
     }
 
     /// update the startup
-    pub fn update_launch(&self) -> Result<()> {
+    pub fn update_launch(&self) -> AppResult<()> {
         let auto_launch = self.auto_launch.lock();
 
         if auto_launch.is_none() {

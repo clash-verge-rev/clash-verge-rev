@@ -4,6 +4,7 @@ mod cmds;
 mod config;
 mod core;
 mod enhance;
+mod error;
 mod feat;
 mod shutdown;
 mod utils;
@@ -11,9 +12,9 @@ mod utils;
 use crate::{
     config::Config,
     core::handle,
+    error::AppResult,
     utils::{init, resolve, server},
 };
-use anyhow::Result;
 use core::verge_log::VergeLog;
 use once_cell::sync::OnceCell;
 use tauri::AppHandle;
@@ -35,7 +36,7 @@ pub const MIHOMO_SOCKET_PATH: &str = r"\\.\pipe\verge-mihomo";
 pub const MIHOMO_SOCKET_PATH: &str = r"\\.\pipe\verge-mihomo-dev";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() -> Result<()> {
+pub fn run() -> AppResult<()> {
     // 单例检测
     if server::check_singleton().is_err() {
         tracing::info!("app exists");

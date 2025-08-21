@@ -1,5 +1,9 @@
-use crate::{config::Config, core::handle, feat, log_err};
-use anyhow::{Result, bail};
+use crate::{
+    config::Config,
+    core::handle,
+    error::{AppError, AppResult},
+    feat, log_err,
+};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync::Arc};
@@ -18,7 +22,7 @@ impl Hotkey {
         })
     }
 
-    pub fn init(&self) -> Result<()> {
+    pub fn init(&self) -> AppResult<()> {
         let verge = Config::verge();
         let verge = verge.latest();
 
@@ -45,7 +49,7 @@ impl Hotkey {
         Ok(())
     }
 
-    fn register(&self, hotkey: &str, func: &str) -> Result<()> {
+    fn register(&self, hotkey: &str, func: &str) -> AppResult<()> {
         let app_handle = handle::Handle::app_handle();
         let manager = app_handle.global_shortcut();
 
@@ -59,7 +63,7 @@ impl Hotkey {
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
             "toggle_system_proxy" => || feat::toggle_system_proxy(),
             "toggle_tun_mode" => || feat::toggle_tun_mode(),
-            _ => bail!("invalid function \"{func}\""),
+            _ => return Err(AppError::InvalidValue(format!("invalid function \"{func}\""))),
         };
 
         manager.on_shortcut(hotkey, move |_app, hotkey, event| {
@@ -72,14 +76,14 @@ impl Hotkey {
         Ok(())
     }
 
-    fn unregister(&self, hotkey: &str) -> Result<()> {
+    fn unregister(&self, hotkey: &str) -> AppResult<()> {
         let app_handle = handle::Handle::app_handle();
         app_handle.global_shortcut().unregister(hotkey)?;
         tracing::info!("unregister hotkey {hotkey}");
         Ok(())
     }
 
-    pub fn update(&self, new_hotkeys: Vec<String>) -> Result<()> {
+    pub fn update(&self, new_hotkeys: Vec<String>) -> AppResult<()> {
         let mut current = self.current.lock();
         let old_map = Self::get_map_from_vec(&current);
         let new_map = Self::get_map_from_vec(&new_hotkeys);

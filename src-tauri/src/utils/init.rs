@@ -1,14 +1,15 @@
 use crate::config::{Config, IClashConfig, IProfiles, IVerge};
 use crate::core::handle;
-use crate::trace_err;
+use crate::error::AppError;
+use crate::error::AppResult;
 use crate::utils::{dirs, help};
-use anyhow::Result;
+use crate::{any_err, trace_err};
 use std::path::PathBuf;
 use tauri_plugin_shell::ShellExt;
 
 /// Initialize all the config files
 /// before tauri setup
-pub fn init_dirs_and_config() -> Result<()> {
+pub fn init_dirs_and_config() -> AppResult<()> {
     // init dirs
     dirs::app_home_dir().and_then(|app_dir| {
         if !app_dir.exists() {
@@ -72,7 +73,7 @@ pub fn init_dirs_and_config() -> Result<()> {
 
 /// initialize app resources
 /// after tauri setup
-pub fn init_resources() -> Result<()> {
+pub fn init_resources() -> AppResult<()> {
     let app_dir = dirs::app_home_dir().and_then(|app_dir| {
         if !app_dir.exists() {
             std::fs::create_dir_all(&app_dir)?;
@@ -128,7 +129,7 @@ pub fn init_resources() -> Result<()> {
 
 /// initialize url scheme
 #[cfg(target_os = "windows")]
-pub fn init_scheme() -> Result<()> {
+pub fn init_scheme() -> AppResult<()> {
     use tauri::utils::platform::current_exe;
     use winreg::RegKey;
     use winreg::enums::*;
@@ -149,14 +150,16 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 #[cfg(target_os = "linux")]
-pub fn init_scheme() -> Result<()> {
+pub fn init_scheme() -> AppResult<()> {
     let output = std::process::Command::new("xdg-mime")
         .arg("default")
         .arg("clash-verge.desktop")
         .arg("x-scheme-handler/clash")
         .output()?;
     if !output.status.success() {
-        return Err(anyhow::anyhow!(
+        use crate::{any_err, error::AppError};
+
+        return Err(any_err!(
             "failed to set clash scheme, {}",
             String::from_utf8_lossy(&output.stderr)
         ));
@@ -164,11 +167,11 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 #[cfg(target_os = "macos")]
-pub fn init_scheme() -> Result<()> {
+pub fn init_scheme() -> AppResult<()> {
     Ok(())
 }
 
-pub async fn startup_script() -> Result<()> {
+pub async fn startup_script() -> AppResult<()> {
     let verge = Config::verge();
     let verge = verge.latest();
     let path = verge.startup_script.as_deref().unwrap_or_default();
@@ -185,11 +188,11 @@ pub async fn startup_script() -> Result<()> {
             shell = "powershell";
         }
         if shell.is_empty() {
-            return Err(anyhow::anyhow!("unsupported script: {path}"));
+            return Err(any_err!("unsupported script: {path}"));
         }
         let current_dir = PathBuf::from(path);
         if !current_dir.exists() {
-            return Err(anyhow::anyhow!("script not found: {path}"));
+            return Err(any_err!("script not found: {path}"));
         }
         let current_dir = current_dir.parent();
         let app_handle = handle::Handle::app_handle();

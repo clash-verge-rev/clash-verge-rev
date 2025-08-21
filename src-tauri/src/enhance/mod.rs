@@ -9,15 +9,15 @@ use self::field::*;
 use self::merge::*;
 use self::script::*;
 use self::tun::*;
+use crate::any_err;
 use crate::config::Config;
 use crate::config::ConfigType;
 use crate::config::EnableFilter;
 use crate::config::ProfileType;
 use crate::core::CoreManager;
+use crate::error::AppError;
+use crate::error::AppResult;
 use crate::utils::dirs;
-use anyhow::Result;
-use anyhow::anyhow;
-use anyhow::bail;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_yaml::Mapping;
@@ -145,7 +145,7 @@ pub fn enhance() -> (Mapping, HashMap<String, ResultLog>) {
     (config, result_map)
 }
 
-pub fn get_pre_merge_result(profile_uid: Option<String>, modified_uid: String) -> Result<MergeResult> {
+pub fn get_pre_merge_result(profile_uid: Option<String>, modified_uid: String) -> AppResult<MergeResult> {
     let profiles = Config::profiles().latest().clone();
     let mut config = profiles.current_mapping().unwrap_or_default();
 
@@ -201,10 +201,17 @@ pub async fn test_merge_chain(
     profile_uid: Option<String>,
     modified_uid: String,
     content: String,
-) -> Result<MergeResult> {
+) -> AppResult<MergeResult> {
     let profiles = Config::profiles().latest().clone();
-    let running_chains = profiles.chain.as_deref().unwrap_or_default();
-    let should_build_final_config = running_chains[running_chains.len() - 1] == modified_uid;
+    let mut running_chains = profiles.chain.clone().unwrap_or_default();
+    if let Some(profile_uid) = profile_uid.as_ref()
+        && let Some(profile_item) = profiles.get_item(profile_uid)
+        && let Some(profile_chains) = profile_item.chain.clone()
+    {
+        running_chains.extend(profile_chains);
+    };
+    let should_build_final_config =
+        running_chains.is_empty() || running_chains[running_chains.len() - 1] == modified_uid;
     // 保存脚本日志
     let mut result_map = HashMap::new();
 
@@ -213,13 +220,13 @@ pub async fn test_merge_chain(
 
     let profile_item = profiles
         .get_item(&modified_uid)
-        .ok_or(anyhow!("failed to find the profile item \"uid:{modified_uid}\""))?;
+        .ok_or(any_err!("failed to find the profile item \"uid:{modified_uid}\""))?;
     tracing::info!("test merge chain {:?}", profile_item.name);
     match profile_item.itype.as_ref() {
         Some(ProfileType::Merge) => {
             let yaml_content = serde_yaml::from_str::<Value>(&content)?
                 .as_mapping()
-                .ok_or(anyhow!("invalid yaml content"))?
+                .ok_or(AppError::InvalidValue("invalid yaml content".to_string()))?
                 .to_owned();
             config = use_merge(yaml_content, config.clone());
         }
@@ -239,10 +246,10 @@ pub async fn test_merge_chain(
             result_map.insert(modified_uid, logs);
         }
         Some(_) => {
-            bail!("unsupported chain type");
+            return Err(any_err!("unsupported chain type"));
         }
         None => {
-            bail!("missing chain type");
+            return Err(AppError::InvalidValue("missing chain type".to_string()));
         }
     };
 

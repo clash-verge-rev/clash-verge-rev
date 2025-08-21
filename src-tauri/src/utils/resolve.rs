@@ -2,6 +2,7 @@ use std::backtrace::{Backtrace, BacktraceStatus};
 
 use crate::config::PrfOption;
 use crate::core::verge_log::VergeLog;
+use crate::error::AppResult;
 use crate::utils::dirs::{self, APP_ID};
 use crate::{APP_HANDLE, log_err, shutdown, trace_err, utils};
 use crate::{
@@ -10,7 +11,6 @@ use crate::{
     utils::init,
     utils::server,
 };
-use anyhow::Result;
 use rust_i18n::t;
 use tauri::{AppHandle, CloseRequestApi, Manager};
 
@@ -194,7 +194,7 @@ pub fn create_window() {
     match window {
         Ok(win) => {
             tracing::trace!("try to calculate the monitor size");
-            let center = (|| -> Result<bool> {
+            let center = (|| -> AppResult<bool> {
                 let mut center = false;
                 let monitors = win.available_monitors()?;
                 let max_width: u32 = monitors.iter().map(|m| m.size().width).sum();
@@ -219,7 +219,7 @@ pub fn create_window() {
 }
 
 /// save window size and position
-pub fn save_window_size_position(app_handle: &AppHandle) -> Result<()> {
+pub fn save_window_size_position(app_handle: &AppHandle) -> AppResult<()> {
     let verge = Config::verge();
     let mut verge = verge.latest_mut();
     if let Some(win) = app_handle.get_webview_window("main") {
