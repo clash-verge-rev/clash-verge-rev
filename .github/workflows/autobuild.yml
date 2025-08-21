@@ -53,6 +53,9 @@ jobs:
       - name: Set Env
         run: |
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
+          VERSION=$(jq -r .version package.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "DOWNLOAD_URL=https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild" >> $GITHUB_ENV
         shell: bash
 
       - run: |
@@ -66,25 +69,31 @@ jobs:
           cat > release.txt << EOF
           $UPDATE_LOGS
 
-          ## 我应该下载哪个版本？
-
-          ### MacOS
-          - MacOS intel芯片: x64.dmg
-          - MacOS apple M芯片: aarch64.dmg
-
-          ### Linux
-          - Linux 64位: amd64.deb/amd64.rpm
-          - Linux arm64 architecture: arm64.deb/aarch64.rpm
-          - Linux armv7架构: armhf.deb/armhfp.rpm
+          ## 下载地址
 
           ### Windows (不再支持Win7)
           #### 正常版本(推荐)
-          - 64位: x64-setup.exe
-          - arm64架构: arm64-setup.exe
-          #### 便携版问题很多不再提供
+          - 64位(常用): [clash-verge_${{ env.VERSION }}_x64-setup.exe](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_x64-setup.exe)
+          - ARM64(不常用): [clash-verge_${{ env.VERSION }}_arm64-setup.exe](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_arm64-setup.exe)
+
           #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
-          - 64位: x64_fixed_webview2-setup.exe
-          - arm64架构: arm64_fixed_webview2-setup.exe
+          - 64位: [clash-verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe)
+          - ARM64: [clash-verge_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe)
+
+          ### macOS
+          - Apple M芯片: [clash-verge_${{ env.VERSION }}_aarch64.dmg](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_aarch64.dmg)
+          - Intel芯片: [clash-verge_${{ env.VERSION }}_x64.dmg](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_x64.dmg)
+
+          ### Linux
+          #### DEB包(Debian系) 使用 apt ./路径 安装
+          - 64位: [clash-verge_${{ env.VERSION }}_amd64.deb](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_amd64.deb)
+          - ARM64: [clash-verge_${{ env.VERSION }}_arm64.deb](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_arm64.deb)
+          - ARMv7: [clash-verge_${{ env.VERSION }}_armhf.deb](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_armhf.deb)
+
+          #### RPM包(Redhat系) 使用 dnf ./路径 安装
+          - 64位: [clash-verge_${{ env.VERSION }}_amd64.rpm](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_amd64.rpm)
+          - ARM64: [clash-verge_${{ env.VERSION }}_aarch64.rpm](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_aarch64.rpm)
+          - ARMv7: [clash-verge_${{ env.VERSION }}_armhfp.rpm](${{ env.DOWNLOAD_URL }}/clash-verge_${{ env.VERSION }}_armhfp.rpm)
 
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
@@ -437,3 +446,39 @@ jobs:
         run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-telegram:
+    name: Notify Telegram
+    runs-on: ubuntu-latest
+    needs: [autobuild-x86-windows-macos-linux, autobuild-arm-linux, autobuild-x86-arm-windows_webview2]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get Version and Release Info
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
+          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
+          echo "DOWNLOAD_URL=https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild" >> $GITHUB_ENV
+
+      - name: Send Telegram Notification
+        run: node scripts/telegram.mjs
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          BUILD_TYPE: autobuild
+          VERSION: ${{ env.VERSION }}
+          DOWNLOAD_URL: ${{ env.DOWNLOAD_URL }}
