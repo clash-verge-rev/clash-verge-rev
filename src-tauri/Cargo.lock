@@ -1150,6 +1150,7 @@ dependencies = [
  "tauri-plugin-updater",
  "tauri-plugin-window-state",
  "tokio",
+ "tokio-stream",
  "users",
  "warp",
  "winapi",

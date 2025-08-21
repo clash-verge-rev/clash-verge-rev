@@ -2,6 +2,7 @@ use parking_lot::RwLock;
 use std::sync::Arc;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time::{sleep, timeout, Duration};
+use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
 use crate::config::{Config, IVerge};
 use crate::core::async_proxy_query::AsyncProxyQuery;
@@ -74,7 +75,7 @@ pub struct EventDrivenProxyManager {
 }
 
 #[derive(Debug)]
-struct QueryRequest {
+pub struct QueryRequest {
     response_tx: oneshot::Sender<Autoproxy>,
 }
 
@@ -170,39 +171,32 @@ impl EventDrivenProxyManager {
         }
     }
 
-    fn start_event_loop(
+    pub fn start_event_loop(
         state: Arc<RwLock<ProxyState>>,
-        mut event_rx: mpsc::UnboundedReceiver<ProxyEvent>,
-        mut query_rx: mpsc::UnboundedReceiver<QueryRequest>,
+        event_rx: mpsc::UnboundedReceiver<ProxyEvent>,
+        query_rx: mpsc::UnboundedReceiver<QueryRequest>,
     ) {
         tokio::spawn(async move {
             log::info!(target: "app", "事件驱动代理管理器启动");
 
+            // 将 mpsc 接收器包装成 Stream，避免每次循环创建 future
+            let mut event_stream = UnboundedReceiverStream::new(event_rx);
+            let mut query_stream = UnboundedReceiverStream::new(query_rx);
+
             loop {
                 tokio::select! {
-                    event = event_rx.recv() => {
-                        match event {
-                            Some(event) => {
-                                log::debug!(target: "app", "处理代理事件: {event:?}");
-                                Self::handle_event(&state, event).await;
-                            }
-                            None => {
-                                log::info!(target: "app", "事件通道关闭，代理管理器停止");
-                                break;
-                            }
-                        }
+                    Some(event) = event_stream.next() => {
+                        log::debug!(target: "app", "处理代理事件: {event:?}");
+                        Self::handle_event(&state, event).await;
                     }
-                    query = query_rx.recv() => {
-                        match query {
-                            Some(query) => {
-                                let result = Self::handle_query(&state).await;
-                                let _ = query.response_tx.send(result);
-                            }
-                            None => {
-                                log::info!(target: "app", "查询通道关闭");
-                                break;
-                            }
-                        }
+                    Some(query) = query_stream.next() => {
+                        let result = Self::handle_query(&state).await;
+                        let _ = query.response_tx.send(result);
+                    }
+                    else => {
+                        // 两个通道都关闭时退出
+                        log::info!(target: "app", "事件或查询通道关闭，代理管理器停止");
+                        break;
                     }
                 }
             }
