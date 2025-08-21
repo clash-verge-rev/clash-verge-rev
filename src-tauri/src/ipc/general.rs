@@ -295,7 +295,7 @@ impl IpcManager {
         });
 
         match self.send_request("PUT", &url, Some(&payload)).await {
-            Ok(_) => return Ok(()),
+            Ok(_) => Ok(()),
             Err(e) => {
                 logging!(
                     error,
@@ -304,7 +304,7 @@ impl IpcManager {
                     "IPC: updateProxy encountered error: {} (ignored, always returning true)",
                     e
                 );
-                return Ok(());
+                Ok(())
             }
         }
     }
