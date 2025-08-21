@@ -30,15 +30,22 @@ jobs:
 
       - name: Check tag and package.json version
         run: |
-          TAG_REF="${GITHUB_REF##*/}"
+          TAG_REF="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
           echo "Current tag: $TAG_REF"
+
           PKG_VERSION=$(jq -r .version package.json)
           echo "package.json version: $PKG_VERSION"
-          if [[ "$TAG_REF" != "v$PKG_VERSION" ]]; then
-            echo "Tag ($TAG_REF) does not match package.json version (v$PKG_VERSION)."
+
+          EXPECTED_TAG="v$PKG_VERSION"
+
+          if [[ "$TAG_REF" != "$EXPECTED_TAG" ]]; then
+            echo "❌ Version mismatch:"
+            echo "   Git tag       : $TAG_REF"
+            echo "   package.json  : $EXPECTED_TAG"
             exit 1
           fi
-          echo "Tag and package.json version are consistent."
+
+          echo "✅ Tag and package.json version are consistent."
 
   update_tag:
     name: Update tag
