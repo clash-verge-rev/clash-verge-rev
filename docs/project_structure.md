@@ -1,3 +1,6 @@
+## 完整的项目结构 / Full project structure
+
+```
 clash-verge-rev/
 ├── .editorconfig # 编辑器配置文件 / Editor configuration file
 ├── .prettierignore # Prettier忽略文件列表 / Prettier ignore file list
@@ -436,3 +439,4 @@ clash-verge-rev/
 │ │ │ ├── singleton.rs # 单例工具 / Singleton utility
 │ │ │ ├── tmpl.rs # 模板工具 / Template utility
 │ │ │ ├── window_manager.rs # 窗口管理工具 / Window management utility
+```
