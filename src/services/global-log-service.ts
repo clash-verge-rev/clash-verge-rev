@@ -52,11 +52,9 @@ export const useGlobalLogStore = create<GlobalLogStore>((set) => ({
 }));
 
 // IPC 日志获取函数
-export const fetchLogsViaIPCPeriodically = async (
-  logLevel: LogLevel = "info",
-) => {
+export const fetchLogsViaIPCPeriodically = async () => {
   try {
-    const logs = await fetchLogsViaIPC(logLevel);
+    const logs = await fetchLogsViaIPC();
     useGlobalLogStore.getState().setLogs(logs);
     console.log(`[GlobalLog-IPC] 成功获取 ${logs.length} 条日志`);
   } catch (error) {
@@ -100,12 +98,12 @@ export const initGlobalLogService = (
   startLogsStreaming(logLevel);
 
   // 立即获取一次日志
-  fetchLogsViaIPCPeriodically(logLevel);
+  fetchLogsViaIPCPeriodically();
 
   // 设置定期轮询来同步流式缓存的数据
   clearIpcPolling();
   ipcPollingInterval = setInterval(() => {
-    fetchLogsViaIPCPeriodically(logLevel);
+    fetchLogsViaIPCPeriodically();
   }, 1000); // 每1秒同步一次流式缓存
 
   // 设置连接状态
@@ -154,7 +152,7 @@ export const changeLogLevel = (level: LogLevel) => {
   if (enabled) {
     // IPC流式模式下重新启动监控
     startLogsStreaming(level);
-    fetchLogsViaIPCPeriodically(level);
+    fetchLogsViaIPCPeriodically();
   }
 };
 
