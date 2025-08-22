@@ -46,6 +46,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "pnpm"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -56,11 +57,6 @@ jobs:
         run: |
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
-
-      - name: Build Web Assets
-        run: pnpm run web:build
-        env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
 
       - name: Run Clippy
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
