@@ -115,24 +115,23 @@ impl IClashConfig {
     }
 
     /// merge from src into dst, but not deep merge
-    fn merge_into(dest: &mut Value, src: &Value) {
-        match (dest, src) {
-            // handle mapping value
-            (Value::Mapping(dest), Value::Mapping(src)) => {
-                for (k, v) in src {
-                    match dest.get_mut(k) {
-                        Some(dest_val) => Self::merge_into(dest_val, v),
-                        None => _ = dest.insert(k.clone(), v.clone()),
-                    };
-                }
-            }
-            (dest, src) => *dest = src.clone(),
-        }
-    }
+    // fn merge_into(dest: &mut Value, src: &Value) {
+    //     match (dest, src) {
+    //         (Value::Mapping(dest), Value::Mapping(src)) => {
+    //             for (k, v) in src {
+    //                 match dest.get_mut(k) {
+    //                     Some(dest_val) => Self::merge_into(dest_val, v),
+    //                     None => _ = dest.insert(k.clone(), v.clone()),
+    //                 };
+    //             }
+    //         }
+    //         (dest, src) => *dest = src.clone(),
+    //     }
+    // }
 
     pub fn patch_and_merge_config(&mut self, patch: Mapping) {
         let mut dest = Value::from(self.0.clone());
-        Self::merge_into(&mut dest, &Value::from(patch));
+        help::deep_merge(&mut dest, &Value::from(patch));
         self.0 = dest.as_mapping().unwrap().clone();
     }
 

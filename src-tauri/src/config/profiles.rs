@@ -139,9 +139,8 @@ impl IProfiles {
         }
 
         if let Some(new_chain) = patch.chain {
-            let old_chain = self.chain.clone();
             // disable old chain
-            if let Some(old_chain) = old_chain {
+            if let Some(old_chain) = self.chain.clone() {
                 for old_uid in old_chain {
                     let item = self
                         .get_item_mut(&old_uid)
