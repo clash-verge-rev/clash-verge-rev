@@ -216,7 +216,7 @@ jobs:
           prerelease: true
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
-          includeUpdaterJson: true
+          # includeUpdaterJson: true
 
   autobuild-arm-linux:
     name: Autobuild ARM Linux
@@ -420,7 +420,7 @@ jobs:
         with:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
-          includeUpdaterJson: true
+          # includeUpdaterJson: true
 
       - name: Rename
         run: |
