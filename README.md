@@ -94,13 +94,6 @@ pnpm run prebuild
 pnpm dev
 ```
 
-## Project Structure
-
-提供项目结构方便各位贡献者了解文件有助于开发！[点击我跳转](./docs/project_structure.md)
-
-Providing a project structure makes it easier for contributors to understand the files and helps with
-development! [Click here to jump](./docs/project_structure.md)
-
 ## Contributions
 
 Issue and PR welcome!
