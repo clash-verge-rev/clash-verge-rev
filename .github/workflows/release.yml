@@ -33,7 +33,7 @@ jobs:
 
           TAG_COMMIT=$(git rev-list -n 1 $TAG_REF)
           MAIN_COMMITS=$(git rev-list origin/main)
-          
+
           if echo "$MAIN_COMMITS" | grep -q "$TAG_COMMIT"; then
             echo "✅ Tag $TAG_REF is from main branch"
           else
@@ -223,8 +223,6 @@ jobs:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
           includeUpdaterJson: true
-
-
 
   release-for-linux-arm:
     name: Release Build for Linux ARM
@@ -521,7 +519,13 @@ jobs:
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
-    needs: [update_tag, release-update, release-update-for-fixed-webview2, submit-to-winget]
+    needs:
+      [
+        update_tag,
+        release-update,
+        release-update-for-fixed-webview2,
+        submit-to-winget,
+      ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
