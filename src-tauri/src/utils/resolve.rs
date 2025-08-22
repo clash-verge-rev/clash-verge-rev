@@ -14,7 +14,10 @@ use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use percent_encoding::percent_decode_str;
 use scopeguard;
-use std::time::{Duration, Instant};
+use std::{
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use tauri::{AppHandle, Manager};
 
 use tauri::Url;
@@ -106,7 +109,7 @@ pub fn reset_ui_ready() {
 }
 
 /// 异步方式处理启动后的额外任务
-pub async fn resolve_setup_async(app_handle: &AppHandle) {
+pub async fn resolve_setup_async(app_handle: Arc<AppHandle>) {
     let start_time = std::time::Instant::now();
     logging!(
         info,
@@ -162,7 +165,7 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
 
     if let Some(app_handle) = handle::Handle::global().app_handle() {
         logging!(info, Type::Tray, true, "创建系统托盘...");
-        let result = tray::Tray::global().create_tray_from_handle(&app_handle);
+        let result = tray::Tray::global().create_tray_from_handle(app_handle);
         if result.is_ok() {
             logging!(info, Type::Tray, true, "系统托盘创建成功");
         } else if let Err(e) = result {
@@ -329,7 +332,7 @@ pub fn create_window(is_show: bool) -> bool {
     };
 
     match tauri::WebviewWindowBuilder::new(
-        &app_handle,
+        &*app_handle,
         "main", /* the unique window label */
         tauri::WebviewUrl::App("index.html".into()),
     )

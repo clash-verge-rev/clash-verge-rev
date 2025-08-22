@@ -120,7 +120,7 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 }
 
 /// open file
-pub fn open_file(_: tauri::AppHandle, path: PathBuf) -> Result<()> {
+pub fn open_file(path: PathBuf) -> Result<()> {
     open::that_detached(path.as_os_str())?;
     Ok(())
 }

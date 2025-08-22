@@ -668,10 +668,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
 /// 根据profile name修改profiles
 #[tauri::command]
-pub async fn patch_profiles_config_by_profile_index(
-    _app_handle: tauri::AppHandle,
-    profile_index: String,
-) -> CmdResult<bool> {
+pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult<bool> {
     logging!(info, Type::Cmd, true, "切换配置到: {}", profile_index);
 
     let profiles = IProfiles {
@@ -718,7 +715,7 @@ pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 
 /// 查看配置文件
 #[tauri::command]
-pub fn view_profile(app_handle: tauri::AppHandle, index: String) -> CmdResult {
+pub fn view_profile(index: String) -> CmdResult {
     let file = {
         wrap_err!(Config::profiles().latest_ref().get_item(&index))?
             .file
@@ -731,7 +728,7 @@ pub fn view_profile(app_handle: tauri::AppHandle, index: String) -> CmdResult {
         ret_err!("the file not found");
     }
 
-    wrap_err!(help::open_file(app_handle, path))
+    wrap_err!(help::open_file(path))
 }
 
 /// 读取配置文件内容

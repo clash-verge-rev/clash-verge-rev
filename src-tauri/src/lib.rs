@@ -17,6 +17,7 @@ use crate::{
 };
 use config::Config;
 use parking_lot::Mutex;
+use std::sync::Arc;
 use tauri::AppHandle;
 #[cfg(target_os = "macos")]
 use tauri::Manager;
@@ -28,7 +29,7 @@ use utils::logging::Type;
 
 /// A global singleton handle to the application.
 pub struct AppHandleManager {
-    handle: Mutex<Option<AppHandle>>,
+    handle: Mutex<Option<Arc<AppHandle>>>,
 }
 
 impl AppHandleManager {
@@ -40,7 +41,7 @@ impl AppHandleManager {
     }
 
     /// Initialize the app handle manager with an app handle.
-    pub fn init(&self, handle: AppHandle) {
+    pub fn init(&self, handle: Arc<AppHandle>) {
         let mut app_handle = self.handle.lock();
         if app_handle.is_none() {
             *app_handle = Some(handle);
@@ -54,12 +55,12 @@ impl AppHandleManager {
     }
 
     /// Get the app handle if it has been initialized.
-    pub fn get(&self) -> Option<AppHandle> {
+    fn get(&self) -> Option<Arc<AppHandle>> {
         self.handle.lock().clone()
     }
 
     /// Get the app handle, panics if it hasn't been initialized.
-    pub fn get_handle(&self) -> AppHandle {
+    pub fn get_handle(&self) -> Arc<AppHandle> {
         if let Some(handle) = self.get() {
             handle
         } else {
@@ -246,12 +247,12 @@ mod app_init {
     }
 
     /// Initialize core components asynchronously
-    pub fn init_core_async(app_handle: tauri::AppHandle) {
+    pub fn init_core_async(app_handle: Arc<AppHandle>) {
         AsyncHandler::spawn(move || async move {
             logging!(info, Type::Setup, true, "异步执行应用设置...");
             match timeout(
                 Duration::from_secs(30),
-                resolve::resolve_setup_async(&app_handle),
+                resolve::resolve_setup_async(app_handle),
             )
             .await
             {
@@ -271,12 +272,12 @@ mod app_init {
     }
 
     /// Initialize core components synchronously
-    pub fn init_core_sync(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn init_core_sync(app_handle: Arc<AppHandle>) -> Result<(), Box<dyn std::error::Error>> {
         logging!(info, Type::Setup, true, "初始化AppHandleManager...");
-        AppHandleManager::global().init(app_handle.clone());
+        AppHandleManager::global().init(Arc::clone(&app_handle));
 
         logging!(info, Type::Setup, true, "初始化核心句柄...");
-        core::handle::Handle::global().init(app_handle);
+        core::handle::Handle::global().init(Arc::clone(&app_handle));
 
         logging!(info, Type::Setup, true, "初始化配置...");
         utils::init::init_config()?;
@@ -482,13 +483,16 @@ pub fn run() {
                 );
             }
 
+            let app_handle = app.handle().clone();
+            let app_handle = Arc::new(app_handle);
+
             // Initialize core components asynchronously
-            app_init::init_core_async(app.handle().clone());
+            app_init::init_core_async(Arc::clone(&app_handle));
 
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
             // Initialize core components synchronously
-            if let Err(e) = app_init::init_core_sync(app.handle()) {
+            if let Err(e) = app_init::init_core_sync(Arc::clone(&app_handle)) {
                 logging!(
                     error,
                     Type::Setup,
@@ -509,9 +513,9 @@ pub fn run() {
         use super::*;
 
         /// Handle application ready/resumed events
-        pub fn handle_ready_resumed(app_handle: &tauri::AppHandle) {
+        pub fn handle_ready_resumed(app_handle: Arc<AppHandle>) {
             logging!(info, Type::System, true, "应用就绪或恢复");
-            AppHandleManager::global().init(app_handle.clone());
+            AppHandleManager::global().init(Arc::clone(&app_handle));
 
             #[cfg(target_os = "macos")]
             {
@@ -524,7 +528,7 @@ pub fn run() {
 
         /// Handle application reopen events (macOS)
         #[cfg(target_os = "macos")]
-        pub fn handle_reopen(app_handle: &tauri::AppHandle, has_visible_windows: bool) {
+        pub fn handle_reopen(app_handle: Arc<AppHandle>, has_visible_windows: bool) {
             logging!(
                 info,
                 Type::System,
@@ -533,7 +537,7 @@ pub fn run() {
                 has_visible_windows
             );
 
-            AppHandleManager::global().init(app_handle.clone());
+            AppHandleManager::global().init(Arc::clone(&app_handle));
 
             if !has_visible_windows {
                 // 当没有可见窗口时，设置为 regular 模式并显示主窗口
@@ -685,45 +689,48 @@ pub fn run() {
             std::process::exit(1);
         });
 
-    app.run(|app_handle, e| match e {
-        tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
-            event_handlers::handle_ready_resumed(app_handle);
-        }
-        #[cfg(target_os = "macos")]
-        tauri::RunEvent::Reopen {
-            has_visible_windows,
-            ..
-        } => {
-            event_handlers::handle_reopen(app_handle, has_visible_windows);
-        }
-        tauri::RunEvent::ExitRequested { api, code, .. } => {
-            if code.is_none() {
-                api.prevent_exit();
+    app.run(|app_handle, e| {
+        let app_handle = Arc::new(app_handle.clone());
+        match e {
+            tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+                event_handlers::handle_ready_resumed(Arc::clone(&app_handle));
             }
-        }
-        tauri::RunEvent::Exit => {
-            // Avoid duplicate cleanup
-            if core::handle::Handle::global().is_exiting() {
-                return;
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen {
+                has_visible_windows,
+                ..
+            } => {
+                event_handlers::handle_reopen(app_handle, has_visible_windows);
             }
-            feat::clean();
-        }
-        tauri::RunEvent::WindowEvent { label, event, .. } => {
-            if label == "main" {
-                match event {
-                    tauri::WindowEvent::CloseRequested { .. } => {
-                        event_handlers::handle_window_close(&event);
-                    }
-                    tauri::WindowEvent::Focused(focused) => {
-                        event_handlers::handle_window_focus(focused);
-                    }
-                    tauri::WindowEvent::Destroyed => {
-                        event_handlers::handle_window_destroyed();
-                    }
-                    _ => {}
+            tauri::RunEvent::ExitRequested { api, code, .. } => {
+                if code.is_none() {
+                    api.prevent_exit();
                 }
             }
+            tauri::RunEvent::Exit => {
+                // Avoid duplicate cleanup
+                if core::handle::Handle::global().is_exiting() {
+                    return;
+                }
+                feat::clean();
+            }
+            tauri::RunEvent::WindowEvent { label, event, .. } => {
+                if label == "main" {
+                    match event {
+                        tauri::WindowEvent::CloseRequested { .. } => {
+                            event_handlers::handle_window_close(&event);
+                        }
+                        tauri::WindowEvent::Focused(focused) => {
+                            event_handlers::handle_window_focus(focused);
+                        }
+                        tauri::WindowEvent::Destroyed => {
+                            event_handlers::handle_window_destroyed();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
         }
-        _ => {}
     });
 }

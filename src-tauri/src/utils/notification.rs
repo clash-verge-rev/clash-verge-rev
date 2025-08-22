@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 
@@ -14,7 +16,7 @@ pub enum NotificationEvent<'a> {
     AppHidden,
 }
 
-fn notify(app: &AppHandle, title: &str, body: &str) {
+fn notify(app: Arc<AppHandle>, title: &str, body: &str) {
     app.notification()
         .builder()
         .title(title)
@@ -23,7 +25,7 @@ fn notify(app: &AppHandle, title: &str, body: &str) {
         .ok();
 }
 
-pub fn notify_event(app: &AppHandle, event: NotificationEvent) {
+pub fn notify_event(app: Arc<AppHandle>, event: NotificationEvent) {
     use crate::utils::i18n::t;
     match event {
         NotificationEvent::DashboardToggled => {

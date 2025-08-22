@@ -4,7 +4,7 @@ use crate::{
     utils::{dirs, logging::Type},
     wrap_err,
 };
-use tauri::Manager;
+use tauri::{AppHandle, Manager};
 
 /// 打开应用程序所在目录
 #[tauri::command]
@@ -36,7 +36,7 @@ pub fn open_web_url(url: String) -> CmdResult<()> {
 
 /// 打开/关闭开发者工具
 #[tauri::command]
-pub fn open_devtools(app_handle: tauri::AppHandle) {
+pub fn open_devtools(app_handle: AppHandle) {
     if let Some(window) = app_handle.get_webview_window("main") {
         if !window.is_devtools_open() {
             window.open_devtools();
