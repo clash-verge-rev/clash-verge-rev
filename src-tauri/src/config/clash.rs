@@ -42,9 +42,10 @@ impl IClashConfig {
             ("auto-route".into(), true.into()),
             ("strict-route".into(), false.into()),
             ("auto-detect-interface".into(), true.into()),
-            ("dns-hijack".into(), vec!["any:53"].into()),
+            ("dns-hijack".into(), vec!["any:53", "tcp://any:53"].into()),
             ("mtu".into(), 9000.into()),
         ]);
+
         let cors = Mapping::from_iter([
             ("allow-private-network".into(), false.into()),
             (
@@ -52,6 +53,7 @@ impl IClashConfig {
                 vec!["https://metacubex.github.io", "https://yacd.metacubex.one"].into(),
             ),
         ]);
+
         let profile = Mapping::from_iter([
             ("store-selected".into(), true.into()),
             ("store-fake-ip".into(), true.into()),
@@ -83,8 +85,10 @@ impl IClashConfig {
     fn guard(mut config: Mapping) -> Mapping {
         #[cfg(not(target_os = "windows"))]
         let redir_port = Self::guard_redir_port(&config);
+
         #[cfg(target_os = "linux")]
         let tproxy_port = Self::guard_tproxy_port(&config);
+
         let mixed_port = Self::guard_mixed_port(&config);
         let socks_port = Self::guard_socks_port(&config);
         let port = Self::guard_port(&config);
@@ -113,21 +117,6 @@ impl IClashConfig {
             self.0.insert(key, value);
         }
     }
-
-    /// merge from src into dst, but not deep merge
-    // fn merge_into(dest: &mut Value, src: &Value) {
-    //     match (dest, src) {
-    //         (Value::Mapping(dest), Value::Mapping(src)) => {
-    //             for (k, v) in src {
-    //                 match dest.get_mut(k) {
-    //                     Some(dest_val) => Self::merge_into(dest_val, v),
-    //                     None => _ = dest.insert(k.clone(), v.clone()),
-    //                 };
-    //             }
-    //         }
-    //         (dest, src) => *dest = src.clone(),
-    //     }
-    // }
 
     pub fn patch_and_merge_config(&mut self, patch: Mapping) {
         let mut dest = Value::from(self.0.clone());
