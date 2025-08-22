@@ -11,8 +11,8 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 
 ## Preview
 
-| Dark                             | Light                             |
-| -------------------------------- | --------------------------------- |
+| Dark                           | Light                           |
+|--------------------------------|---------------------------------|
 | ![预览](./docs/preview_dark.png) | ![预览](./docs/preview_light.png) |
 
 ## Install
@@ -24,10 +24,10 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
 #### 我应当怎样选择发行版
 
-| 版本      | 特征                                     | 链接                                                                                   |
-| :-------- | :--------------------------------------- | :------------------------------------------------------------------------------------- |
-| Stable    | 正式版，高可靠性，适合日常使用。         | [Release](https://github.com/clash-verge-rev/clash-verge-rev/releases)                 |
-| Alpha     | 早期测试版，功能未完善，可能存在缺陷。   | [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha)         |
+| 版本        | 特征                   | 链接                                                                                     |
+|:----------|:---------------------|:---------------------------------------------------------------------------------------|
+| Stable    | 正式版，高可靠性，适合日常使用。     | [Release](https://github.com/clash-verge-rev/clash-verge-rev/releases)                 |
+| Alpha     | 早期测试版，功能未完善，可能存在缺陷。  | [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha)         |
 | AutoBuild | 滚动更新版，持续集成更新，适合开发测试。 | [AutoBuild](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/autobuild) |
 
 #### 安装说明和常见问题，请到 [文档页](https://clash-verge-rev.github.io/) 查看
@@ -96,62 +96,10 @@ pnpm dev
 
 ## Project Structure
 
-下面是简易的项目结构，方便各位贡献者了解文件有助于开发！如果需要完整目录[点击我跳转](./docs/project_structure.md) / Below
-is a simplified project structure to help contributors understand the files and help with development! If you need the
-full directory [click here to jump](./docs/project_structure.md)
+提供项目结构方便各位贡献者了解文件有助于开发！[点击我跳转](./docs/project_structure.md)
 
-```
-clash-verge-rev/
-├── CONTRIBUTING.md                # 贡献指南 / Contribution guidelines
-├── LICENSE                        # 项目许可证 / Project license
-├── README.md                      # 项目说明文档 / Project description document
-├── UPDATELOG.md                   # 更新日志 / Update log
-├── crowdin.yml                    # Crowdin国际化配置 / Crowdin internationalization config
-├── package.json                   # Node.js项目依赖配置 / Node.js project dependency config
-├── pnpm-lock.yaml                 # pnpm依赖锁定文件 / pnpm dependency lock file
-├── renovate.json                  # Renovate自动更新配置 / Renovate auto-update config
-├── tsconfig.json                  # TypeScript配置 / TypeScript configuration
-├── vite.config.mts                # Vite构建配置 / Vite build configuration
-├── .github/                       # GitHub相关配置目录 / GitHub related config directory
-│   ├── FUNDING.yml                # 资助配置文件 / Funding configuration file
-│   ├── ISSUE_TEMPLATE/            # 问题模板目录 / Issue template directory
-│   └── workflows/                 # GitHub工作流配置目录 / GitHub workflows config directory
-├── docs/                          # 文档目录 / Documentation directory
-│   ├── preview_dark.png           # 深色模式预览图 / Dark mode preview image
-│   ├── preview_light.png          # 浅色模式预览图 / Light mode preview image
-│   └── project_structure.md       # 项目结构预览 / Project structure preview
-├── .devcontainer/                 # 开发容器配置目录 / Dev container config directory
-│   └── devcontainer.json          # 开发容器配置文件 / Dev container configuration file
-├── src/                           # 前端源代码目录 / Frontend source code directory
-│   ├── locales/                   # 国际化语言文件目录 / I18n language files directory
-│   ├── components/                # 前端组件目录 / Frontend components directory
-│   │   ├── home/                  # 首页组件 / Home page components
-│   │   ├── proxy/                 # 代理相关组件 / Proxy related components
-│   │   ├── profile/               # 配置文件相关组件 / Profile related components
-│   │   ├── setting/               # 设置相关组件 / Settings related components
-│   │   ├── test/                  # 测试相关组件 / Test related components
-│   │   └── layout/                # 布局组件目录 / Layout components directory
-│   ├── pages/                     # 页面组件目录 / Page components directory
-│   └── services/                  # 服务接口目录 / Service interfaces directory
-├── src-tauri/                     # Tauri后端代码目录 / Tauri backend code directory
-│   ├── .clippy.toml               # Clippy Rust代码检查配置 / Clippy Rust lint config
-│   ├── .gitignore                 # Tauri目录Git忽略文件 / Git ignore for Tauri directory
-│   ├── Cargo.lock                 # Rust依赖锁定文件 / Rust dependency lock file
-│   ├── Cargo.toml                 # Rust项目配置 / Rust project configuration
-│   ├── assets/                    # 静态资源目录 / Static assets directory
-│   ├── benches/                   # 基准测试目录 / Benchmark tests directory
-│   ├── packages/                  # Rust子包目录 / Rust sub-packages directory
-│   ├── rustfmt.toml               # Rust代码格式化配置 / Rust code formatting config
-│   ├── src/                       # Rust源代码目录 / Rust source code directory
-│   │   ├── core/                  # 核心功能模块 / Core functionality module
-│   │   ├── config/                # 配置处理模块 / Configuration handling module
-│   │   ├── enhance/               # 增强功能模块 / Enhancement module
-│   │   ├── ipc/                   # IPC通信模块 / IPC communication module
-│   │   ├── utils/                 # 工具函数模块 / Utility functions module
-│   │   └── lib.rs                 # 入口模块 / Entry module
-│   └── tauri.conf.json            # Tauri应用配置 / Tauri application config
-└── scripts-workflow/              # 工作流脚本目录 / Workflow scripts directory
-```
+Providing a project structure makes it easier for contributors to understand the files and helps with
+development! [Click here to jump](./docs/project_structure.md)
 
 ## Contributions
 
