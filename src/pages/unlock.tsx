@@ -48,8 +48,6 @@ const UnlockPage = () => {
   const [isCheckingAll, setIsCheckingAll] = useState(false);
   // 记录正在检测中的项目
   const [loadingItems, setLoadingItems] = useState<string[]>([]);
-  // 最后检测时间
-  const [lastCheckTime, setLastCheckTime] = useState<string | null>(null);
 
   // 按首字母排序项目
   const sortItemsByName = (items: UnlockItem[]) => {
@@ -93,12 +91,11 @@ const UnlockPage = () => {
   // 页面加载时获取初始检测项列表
   useEffect(() => {
     // 尝试从本地存储加载上次测试结果
-    const { items: storedItems, time } = loadResultsFromStorage();
+    const { items: storedItems } = loadResultsFromStorage();
 
     if (storedItems && storedItems.length > 0) {
       // 如果有存储的结果，优先使用
       setUnlockItems(storedItems);
-      setLastCheckTime(time);
 
       // 后台同时获取最新的初始状态（但不更新UI）
       getUnlockItems(false);
@@ -146,7 +143,6 @@ const UnlockPage = () => {
 
       setUnlockItems(sortedItems);
       const currentTime = new Date().toLocaleString();
-      setLastCheckTime(currentTime);
 
       saveResultsToStorage(sortedItems, currentTime);
 
@@ -177,7 +173,6 @@ const UnlockPage = () => {
 
         setUnlockItems(updatedItems);
         const currentTime = new Date().toLocaleString();
-        setLastCheckTime(currentTime);
 
         saveResultsToStorage(updatedItems, currentTime);
       }
@@ -217,16 +212,6 @@ const UnlockPage = () => {
     if (status === "Soon") return <AccessTimeOutlined />;
     if (status.includes("Failed")) return <HelpOutline />;
     return <HelpOutline />;
-  };
-
-  // 获取状态对应的背景色
-  const getStatusBgColor = (status: string) => {
-    if (status === "Yes") return alpha(theme.palette.success.main, 0.05);
-    if (status === "No") return alpha(theme.palette.error.main, 0.05);
-    if (status === "Soon") return alpha(theme.palette.warning.main, 0.05);
-    if (status.includes("Failed")) return alpha(theme.palette.error.main, 0.03);
-    if (status === "Completed") return alpha(theme.palette.info.main, 0.05);
-    return "transparent";
   };
 
   // 获取状态对应的边框色

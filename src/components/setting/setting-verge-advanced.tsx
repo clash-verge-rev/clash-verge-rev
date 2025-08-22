@@ -10,7 +10,6 @@ import {
   exportDiagnosticInfo,
 } from "@/services/cmds";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
-import { useVerge } from "@/hooks/use-verge";
 import { version } from "@root/package.json";
 import { DialogRef } from "@/components/base";
 import { SettingList, SettingItem } from "./mods/setting-comp";
@@ -30,10 +29,9 @@ interface Props {
   onError?: (err: Error) => void;
 }
 
-const SettingVergeAdvanced = ({ onError }: Props) => {
+const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const { t } = useTranslation();
 
-  const { verge, patchVerge, mutateVerge } = useVerge();
   const configRef = useRef<DialogRef>(null);
   const hotkeyRef = useRef<DialogRef>(null);
   const miscRef = useRef<DialogRef>(null);

@@ -203,7 +203,6 @@ const ProfilePage = () => {
     activateSelected,
     patchProfiles,
     mutateProfiles,
-    isLoading,
     error,
     isStale,
   } = useProfiles();
@@ -274,9 +273,8 @@ const ProfilePage = () => {
 
       // 增强的刷新策略
       await performRobustRefresh(preImportProfilesCount);
-    } catch (err: any) {
+    } catch {
       // 首次导入失败，尝试使用自身代理
-      const errmsg = err.message || err.toString();
       showNotice("info", t("Import failed, retrying with Clash proxy..."));
       try {
         // 使用自身代理尝试导入

@@ -32,7 +32,7 @@ export const SystemInfoCard = () => {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
   const navigate = useNavigate();
-  const { isAdminMode, isSidecarMode, mutateRunningMode } = useSystemState();
+  const { isAdminMode, isSidecarMode } = useSystemState();
   const { installServiceAndRestartCore } = useServiceInstaller();
 
   // 系统信息状态

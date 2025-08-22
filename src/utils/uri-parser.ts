@@ -53,10 +53,6 @@ function trimStr(str: string | undefined): string | undefined {
   return str ? str.trim() : str;
 }
 
-function isNotBlank(name: string) {
-  return name.trim().length !== 0;
-}
-
 function isIPv4(address: string): boolean {
   // Check if the address is IPv4
   const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
@@ -64,9 +60,9 @@ function isIPv4(address: string): boolean {
 }
 
 function isIPv6(address: string): boolean {
-  // Check if the address is IPv6
+  // Check if the address is IPv6 - simplified regex to avoid backreference issues
   const ipv6Regex =
-    /^((?=.*(::))(?!.*\3.+)(::)?)([0-9A-Fa-f]{1,4}(\3|:\b)|\3){7}[0-9A-Fa-f]{1,4}$/;
+    /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::$|^::1$|^([0-9a-fA-F]{1,4}:)*::([0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}$/;
   return ipv6Regex.test(address);
 }
 
@@ -352,6 +348,10 @@ function URI_VMESS(line: string): IProxyVmessConfig {
       params = JSON.parse(content);
     } catch (e) {
       // Shadowrocket URI format
+      console.warn(
+        "[URI_VMESS] JSON.parse(content) failed, falling back to Shadowrocket parsing:",
+        e,
+      );
       const match = /(^[^?]+?)\/?\?(.*)$/.exec(line);
       if (match) {
         let [_, base64Line, qs] = match;
@@ -432,6 +432,7 @@ function URI_VMESS(line: string): IProxyVmessConfig {
           transportHost = parsedHost;
         }
       } catch (e) {
+        console.warn("[URI_VMESS] transportHost JSON.parse failed:", e);
         // ignore JSON parse errors
       }
 
@@ -612,6 +613,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
           const parsed = JSON.parse(host);
           opts.headers = parsed;
         } catch (e) {
+          console.warn("[URI_VLESS] host JSON.parse failed:", e);
           opts.headers = { Host: host };
         }
       } else {

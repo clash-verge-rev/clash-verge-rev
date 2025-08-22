@@ -54,7 +54,7 @@ async function run() {
       execSync(`git tag ${tag}`, { stdio: "inherit" });
       execSync(`git push origin ${tag}`, { stdio: "inherit" });
       console.log(`[INFO]: Git tag ${tag} created and pushed.`);
-    } catch (e) {
+    } catch {
       console.error(`[ERROR]: Failed to create or push git tag: ${tag}`);
       process.exit(1);
     }

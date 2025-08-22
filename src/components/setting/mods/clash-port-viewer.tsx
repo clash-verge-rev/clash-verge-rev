@@ -150,22 +150,6 @@ export const ClashPortViewer = forwardRef<
     await saveSettings({ clashConfig, vergeConfig });
   });
 
-  // 优化的数字输入处理
-  const handleNumericChange =
-    (setter: (value: number) => void) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.replace(/\D+/, "");
-      if (value === "") {
-        setter(0);
-        return;
-      }
-
-      const num = parseInt(value, 10);
-      if (!isNaN(num) && num >= 0 && num <= 65535) {
-        setter(num);
-      }
-    };
-
   return (
     <BaseDialog
       open={open}

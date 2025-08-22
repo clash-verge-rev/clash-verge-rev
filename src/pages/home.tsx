@@ -3,8 +3,6 @@ import {
   Box,
   Button,
   IconButton,
-  useTheme,
-  keyframes,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -25,7 +23,6 @@ import {
   HelpOutlineRounded,
   HistoryEduOutlined,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
 import { ProxyTunCard } from "@/components/home/proxy-tun-card";
 import { ClashModeCard } from "@/components/home/clash-mode-card";
 import { EnhancedTrafficStats } from "@/components/home/enhanced-traffic-stats";
@@ -40,19 +37,6 @@ import { useLockFn } from "ahooks";
 import { entry_lightweight_mode, openWebUrl } from "@/services/cmds";
 import { TestCard } from "@/components/home/test-card";
 import { IpInfoCard } from "@/components/home/ip-info-card";
-
-// 定义旋转动画
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
-
-// 辅助函数解析URL和过期时间
-function parseUrl(url?: string) {
-  if (!url) return "-";
-  if (url.startsWith("http")) return new URL(url).host;
-  return "local";
-}
 
 // 定义首页卡片设置接口
 interface HomeCardsSettings {
@@ -203,8 +187,6 @@ export const HomePage = () => {
   const { t } = useTranslation();
   const { verge } = useVerge();
   const { current, mutateProfiles } = useProfiles();
-  const navigate = useNavigate();
-  const theme = useTheme();
 
   // 设置弹窗的状态
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -222,21 +204,6 @@ export const HomePage = () => {
       ip: true,
     },
   );
-
-  // 导航到订阅页面
-  const goToProfiles = () => {
-    navigate("/profile");
-  };
-
-  // 导航到代理页面
-  const goToProxies = () => {
-    navigate("/");
-  };
-
-  // 导航到设置页面
-  const goToSettings = () => {
-    navigate("/settings");
-  };
 
   // 文档链接函数
   const toGithubDoc = useLockFn(() => {

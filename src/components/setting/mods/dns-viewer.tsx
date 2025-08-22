@@ -24,7 +24,7 @@ import getSystem from "@/utils/get-system";
 import { invoke } from "@tauri-apps/api/core";
 import { showNotice } from "@/services/noticeService";
 
-const Item = styled(ListItem)(({ theme }) => ({
+const Item = styled(ListItem)(() => ({
   padding: "5px 2px",
   "& textarea": {
     lineHeight: 1.5,
@@ -88,7 +88,7 @@ const DEFAULT_DNS_CONFIG = {
 
 export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
-  const { clash, mutateClash, patchClash } = useClash();
+  const { clash, mutateClash } = useClash();
   const themeMode = useThemeMode();
 
   const [open, setOpen] = useState(false);
@@ -325,7 +325,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
       if (!parsedYaml) return;
 
       updateValuesFromConfig(parsedYaml);
-    } catch (err: any) {
+    } catch {
       showNotice("error", t("Invalid YAML format"));
     }
   };

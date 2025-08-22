@@ -70,7 +70,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       await patchClash({ tun });
       await mutateClash(
         (old) => ({
-          ...(old! || {}),
+          ...old!,
           tun,
         }),
         false,
@@ -118,7 +118,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
               await patchClash({ tun });
               await mutateClash(
                 (old) => ({
-                  ...(old! || {}),
+                  ...old!,
                   tun,
                 }),
                 false,

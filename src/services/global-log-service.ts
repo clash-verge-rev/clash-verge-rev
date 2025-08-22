@@ -6,7 +6,6 @@ import {
   stopLogsStreaming,
   clearLogs as clearLogsIPC,
 } from "@/services/ipc-log-service";
-import dayjs from "dayjs";
 
 // 最大日志数量
 const MAX_LOG_NUM = 1000;

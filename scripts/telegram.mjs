@@ -36,7 +36,7 @@ async function sendTelegramNotification() {
     releaseContent = readFileSync("release.txt", "utf-8");
     log_info("成功读取 release.txt 文件");
   } catch (error) {
-    log_error("无法读取 release.txt，使用默认发布说明");
+    log_error("无法读取 release.txt，使用默认发布说明", error);
     releaseContent = "更多新功能现已支持，详细更新日志请查看发布页面。";
   }
 
@@ -93,6 +93,7 @@ async function sendTelegramNotification() {
     log_error(
       `❌ Telegram 通知发送失败到 ${chatId}:`,
       error.response?.data || error.message,
+      error,
     );
     process.exit(1);
   }
@@ -100,6 +101,6 @@ async function sendTelegramNotification() {
 
 // 执行函数
 sendTelegramNotification().catch((error) => {
-  log_error("脚本执行失败:", error.message);
+  log_error("脚本执行失败:", error);
   process.exit(1);
 });

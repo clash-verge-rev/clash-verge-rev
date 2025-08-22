@@ -1,7 +1,6 @@
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { DataGrid, GridColDef, GridColumnResizeParams } from "@mui/x-data-grid";
-import { useThemeMode } from "@/services/states";
 import { truncateStr } from "@/utils/truncate-str";
 import parseTraffic from "@/utils/parse-traffic";
 import { t } from "i18next";
@@ -14,9 +13,6 @@ interface Props {
 
 export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
-  const mode = useThemeMode();
-  const isDark = mode === "light" ? false : true;
-  const backgroundColor = isDark ? "#282A36" : "#ffffff";
 
   const [columnVisible, setColumnVisible] = useState<
     Partial<Record<keyof IConnectionsItem, boolean>>

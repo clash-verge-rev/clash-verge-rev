@@ -2,15 +2,7 @@ import { BaseDialog, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { showNotice } from "@/services/noticeService";
 import { Delete as DeleteIcon } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Divider,
-  List,
-  ListItem,
-  styled,
-  TextField,
-} from "@mui/material";
+import { Box, Button, Divider, List, ListItem, TextField } from "@mui/material";
 import { useLockFn, useRequest } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";

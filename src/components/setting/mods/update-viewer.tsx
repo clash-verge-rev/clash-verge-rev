@@ -143,7 +143,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       <Box sx={{ height: "calc(100% - 10px)", overflow: "auto" }}>
         <ReactMarkdown
           components={{
-            a: ({ node, ...props }) => {
+            a: ({ ...props }) => {
               const { children } = props;
               return (
                 <a {...props} target="_blank">

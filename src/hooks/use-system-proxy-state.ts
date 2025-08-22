@@ -58,6 +58,7 @@ export const useSystemProxyState = () => {
 
         updateProxyStatus();
       } catch (error) {
+        console.warn("[useSystemProxyState] toggleSystemProxy failed:", error);
         mutateVerge({ ...verge, enable_system_proxy: !enabled }, false);
       }
     }, 0);

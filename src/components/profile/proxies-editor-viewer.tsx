@@ -154,6 +154,11 @@ export const ProxiesEditorViewer = (props: Props) => {
             names.push(proxy.name);
           }
         } catch (err: any) {
+          console.warn(
+            "[ProxiesEditorViewer] parseUri failed for line:",
+            uri,
+            err?.message || err,
+          );
           // 不阻塞主流程
         }
       }
@@ -212,6 +217,7 @@ export const ProxiesEditorViewer = (props: Props) => {
             ),
           );
         } catch (e) {
+          console.warn("[ProxiesEditorViewer] yaml.dump failed:", e);
           // 防止异常导致UI卡死
         }
       };

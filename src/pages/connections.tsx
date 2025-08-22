@@ -37,7 +37,7 @@ const ConnectionsPage = () => {
   const { t } = useTranslation();
   const pageVisible = useVisibility();
   const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
+  const _isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
 

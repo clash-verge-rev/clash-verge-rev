@@ -15,7 +15,6 @@ import {
   LinearProgress,
   alpha,
   styled,
-  useTheme,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
@@ -61,7 +60,6 @@ const parseExpire = (expire?: number) => {
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
-  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const { proxyProviders, refreshProxy, refreshProxyProviders } = useAppData();
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
@@ -312,7 +310,7 @@ export const ProviderButton = () => {
                     <IconButton
                       size="small"
                       color="primary"
-                      onClick={(e) => {
+                      onClick={() => {
                         updateProvider(key);
                       }}
                       disabled={isUpdating}

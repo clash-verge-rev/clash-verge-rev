@@ -41,7 +41,7 @@ import { execSync } from "child_process";
 function getGitShortCommit() {
   try {
     return execSync("git rev-parse --short HEAD").toString().trim();
-  } catch (e) {
+  } catch {
     console.warn("[WARN]: Failed to get git short commit, fallback to 'nogit'");
     return "nogit";
   }
@@ -59,7 +59,7 @@ function getLatestTauriCommit() {
       .toString()
       .trim();
     return execSync(`git rev-parse --short ${fullHash}`).toString().trim();
-  } catch (e) {
+  } catch {
     console.warn(
       "[WARN]: Failed to get latest Tauri commit, fallback to current git short commit",
     );

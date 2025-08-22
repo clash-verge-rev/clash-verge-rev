@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { getNetworkInterfacesInfo } from "@/services/cmds";

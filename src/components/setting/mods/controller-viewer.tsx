@@ -91,6 +91,7 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
         setCopySuccess(type);
         setTimeout(() => setCopySuccess(null));
       } catch (err) {
+        console.warn("[ControllerViewer] copy to clipboard failed:", err);
         showNotice("error", t("Failed to copy"));
       }
     },

@@ -9,11 +9,9 @@ import {
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
 import { LogLevel } from "@/hooks/use-log-data";
-import { useClashInfo } from "@/hooks/use-clash";
 import { useEnableLog } from "@/services/states";
 import { BaseEmpty, BasePage } from "@/components/base";
 import LogItem from "@/components/log/log-item";
-import { useTheme } from "@mui/material/styles";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import { SearchState } from "@/components/base/base-search-box";
@@ -29,9 +27,6 @@ import {
 const LogPage = () => {
   const { t } = useTranslation();
   const [enableLog, setEnableLog] = useEnableLog();
-  const { clashInfo } = useClashInfo();
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
   const [logLevel, setLogLevel] = useLocalStorage<LogLevel>(
     "log:log-level",
     "info",

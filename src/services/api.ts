@@ -1,5 +1,4 @@
 import axios, { AxiosInstance } from "axios";
-import { invoke } from "@tauri-apps/api/core";
 import { getClashInfo } from "./cmds";
 
 let instancePromise: Promise<AxiosInstance> = null!;

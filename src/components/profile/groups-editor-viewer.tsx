@@ -75,7 +75,7 @@ export const GroupsEditorViewer = (props: Props) => {
   const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
   const [interfaceNameList, setInterfaceNameList] = useState<string[]>([]);
-  const { control, watch, register, ...formIns } = useForm<IProxyGroupConfig>({
+  const { control, ...formIns } = useForm<IProxyGroupConfig>({
     defaultValues: {
       type: "select",
       name: "",
@@ -196,6 +196,7 @@ export const GroupsEditorViewer = (props: Props) => {
             ),
           );
         } catch (e) {
+          console.warn("[GroupsEditorViewer] yaml.dump failed:", e);
           // 防止异常导致UI卡死
         }
       };

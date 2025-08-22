@@ -40,9 +40,7 @@ export const stopLogsStreaming = async () => {
 };
 
 // Fetch logs using IPC command (now from streaming cache)
-export const fetchLogsViaIPC = async (
-  logLevel: LogLevel = "info",
-): Promise<ILogItem[]> => {
+export const fetchLogsViaIPC = async (): Promise<ILogItem[]> => {
   try {
     // Server-side filtering handles the level via /logs?level={level}
     // We just fetch all cached logs regardless of the logLevel parameter

@@ -52,7 +52,7 @@ export default defineConfig({
     rollupOptions: {
       treeshake: {
         preset: "recommended",
-        moduleSideEffects: (id) => !/\.css$/.test(id),
+        moduleSideEffects: (id) => !id.endsWith(".css"),
         tryCatchDeoptimization: false,
       },
       output: {
@@ -117,7 +117,7 @@ export default defineConfig({
             }
 
             // Small vendor packages
-            const pkg = id.match(/node_modules\/([^\/]+)/)?.[1];
+            const pkg = id.match(/node_modules\/([^/]+)/)?.[1];
             if (pkg && pkg.length < 8) return "small-vendors";
 
             // Large vendor packages

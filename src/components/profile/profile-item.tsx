@@ -315,7 +315,7 @@ export const ProfileItem = (props: Props) => {
       // 更新成功，刷新列表
       showNotice("success", t("Update subscription successfully"));
       mutate("getProfiles");
-    } catch (err: any) {
+    } catch {
       // 更新完全失败（包括后端的回退尝试）
       // 不需要做处理，后端会通过事件通知系统发送错误
     } finally {

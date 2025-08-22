@@ -8,7 +8,7 @@ const UPDATE_LOG = "UPDATELOG.md";
 export async function resolveUpdateLog(tag) {
   const cwd = process.cwd();
 
-  const reTitle = /^## v[\d\.]+/;
+  const reTitle = /^## v[\d.]+/;
   const reEnd = /^---/;
 
   const file = path.join(cwd, UPDATE_LOG);
@@ -54,7 +54,7 @@ export async function resolveUpdateLogDefault() {
 
   const data = await fsp.readFile(file, "utf-8");
 
-  const reTitle = /^## v[\d\.]+/;
+  const reTitle = /^## v[\d.]+/;
   const reEnd = /^---/;
 
   let isCapturing = false;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Box, Typography } from "@mui/material";
 import {
   ArrowDownwardRounded,
@@ -15,11 +15,6 @@ import { isDebugEnabled, gc, startTrafficService } from "@/services/cmds";
 import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
 import { LightweightTrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
 import useSWR from "swr";
-
-interface MemoryUsage {
-  inuse: number;
-  oslimit?: number;
-}
 
 // setup the traffic
 export const LayoutTraffic = () => {
@@ -46,8 +41,7 @@ export const LayoutTraffic = () => {
   const pageVisible = useVisibility();
 
   // 使用增强版的统一流量数据Hook
-  const { traffic, memory, isLoading, isDataFresh, hasValidData } =
-    useTrafficDataEnhanced();
+  const { traffic, memory } = useTrafficDataEnhanced();
 
   // 启动流量服务
   useEffect(() => {

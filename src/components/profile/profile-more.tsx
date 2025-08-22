@@ -47,11 +47,6 @@ export const ProfileMore = (props: Props) => {
     }
   });
 
-  const fnWrapper = (fn: () => void) => () => {
-    setAnchorEl(null);
-    return fn();
-  };
-
   const hasError = !!logInfo.find((e) => e[0] === "exception");
 
   const itemMenu = [

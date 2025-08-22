@@ -186,7 +186,6 @@ const Layout = () => {
   // 初始化全局日志服务
   useEffect(() => {
     if (clashInfo) {
-      const { server = "", secret = "" } = clashInfo;
       initGlobalLogService(enableLog, logLevel);
     }
   }, [clashInfo, enableLog, logLevel]);
@@ -297,7 +296,7 @@ const Layout = () => {
         setTimeout(() => {
           try {
             initialOverlay.remove();
-          } catch (e) {
+          } catch {
             console.log("[Layout] 加载指示器已被移除");
           }
         }, 300);
@@ -403,7 +402,7 @@ const Layout = () => {
           hasEventTriggered = true;
           performInitialization();
         }
-      } catch (err) {
+      } catch {
         console.log("[Layout] 后端尚未就绪，等待启动完成事件");
       }
     };

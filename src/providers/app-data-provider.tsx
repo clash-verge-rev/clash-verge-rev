@@ -368,7 +368,7 @@ export const AppDataProvider = ({
       refreshInterval: 1000, // 1秒刷新一次
       fallbackData: { up: 0, down: 0 },
       keepPreviousData: true,
-      onSuccess: (data) => {
+      onSuccess: () => {
         // console.log("[Traffic][AppDataProvider] IPC 获取到流量数据:", data);
       },
       onError: (error) => {

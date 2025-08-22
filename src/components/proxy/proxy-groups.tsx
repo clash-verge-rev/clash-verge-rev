@@ -594,15 +594,3 @@ function throttle<T extends (...args: any[]) => any>(
     }
   };
 }
-
-// 保留防抖函数以兼容其他地方可能的使用
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number,
-): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}

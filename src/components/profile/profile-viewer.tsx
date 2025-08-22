@@ -47,7 +47,12 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
     // file input
     const fileDataRef = useRef<string | null>(null);
 
-    const { control, watch, register, ...formIns } = useForm<IProfileItem>({
+    const {
+      control,
+      watch,
+      register: _register,
+      ...formIns
+    } = useForm<IProfileItem>({
       defaultValues: {
         type: "remote",
         name: "",
@@ -144,7 +149,7 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
                 if (!form.uid) throw new Error("UID not found");
                 await patchProfile(form.uid, item);
               }
-            } catch (err) {
+            } catch {
               // 首次创建/更新失败，尝试使用自身代理
               showNotice(
                 "info",
@@ -201,7 +206,9 @@ export const ProfileViewer = forwardRef<ProfileViewerRef, Props>(
         setOpen(false);
         fileDataRef.current = null;
         setTimeout(() => formIns.reset(), 500);
-      } catch {}
+      } catch (e) {
+        console.warn("[ProfileViewer] handleClose error:", e);
+      }
     };
 
     const text = {

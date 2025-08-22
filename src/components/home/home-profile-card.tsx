@@ -73,14 +73,6 @@ export interface HomeProfileCardProps {
   onProfileUpdated?: () => void;
 }
 
-// 添加一个通用的截断样式
-const truncateStyle = {
-  maxWidth: "calc(100% - 28px)",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-};
-
 // 提取独立组件减少主组件复杂度
 const ProfileDetails = ({
   current,

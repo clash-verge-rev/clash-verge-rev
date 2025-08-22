@@ -62,6 +62,7 @@ export const BaseSearchBox = (props: SearchProps) => {
       new RegExp(pattern);
       return true;
     } catch (e) {
+      console.warn("[BaseSearchBox] validateRegex error:", e);
       return false;
     }
   };

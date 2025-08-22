@@ -7,7 +7,6 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef } from "@/components/base";
-import getSystem from "@/utils/get-system";
 import { BaseLoadingOverlay } from "@/components/base";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -32,8 +31,6 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
   const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-
-  const OS = getSystem();
 
   useImperativeHandle(ref, () => ({
     open: () => {

@@ -90,7 +90,7 @@ export async function patchClashConfig(payload: Partial<IConfigData>) {
   return invoke<void>("patch_clash_config", { payload });
 }
 
-export async function patchClashMode(payload: String) {
+export async function patchClashMode(payload: string) {
   return invoke<void>("patch_clash_mode", { payload });
 }
 
@@ -248,7 +248,7 @@ export async function getProxyProviders() {
   const providers = response.providers as Record<string, IProxyProviderItem>;
 
   return Object.fromEntries(
-    Object.entries(providers).filter(([key, item]) => {
+    Object.entries(providers).filter(([, item]) => {
       const type = item.vehicleType.toLowerCase();
       return type === "http" || type === "file";
     }),
@@ -266,7 +266,7 @@ export async function getRuleProviders() {
   >;
 
   return Object.fromEntries(
-    Object.entries(providers).filter(([key, item]) => {
+    Object.entries(providers).filter(([, item]) => {
       const type = item.vehicleType.toLowerCase();
       return type === "http" || type === "file";
     }),
@@ -380,7 +380,7 @@ export async function getSystemMonitorOverviewSafe() {
       // console.warn("[Monitor][Service] 数据验证失败，使用清理后的数据");
       return systemMonitorValidator.sanitize(result);
     }
-  } catch (error) {
+  } catch {
     // console.error("[Monitor][Service] API调用失败:", error);
     // 返回安全的默认值
     const { systemMonitorValidator } = await import("@/utils/data-validator");
@@ -550,7 +550,7 @@ export async function cmdGetProxyDelay(
       // 返回一个有效的结果对象，但标记为超时
       return { delay: 1e6 };
     }
-  } catch (error) {
+  } catch {
     // 返回一个有效的结果对象，但标记为错误
     return { delay: 1e6 };
   }
@@ -646,7 +646,7 @@ export async function restoreWebDavBackup(filename: string) {
 export async function saveWebdavConfig(
   url: string,
   username: string,
-  password: String,
+  password: string,
 ) {
   return invoke<void>("save_webdav_config", {
     url,

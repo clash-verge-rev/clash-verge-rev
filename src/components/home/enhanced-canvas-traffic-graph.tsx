@@ -8,7 +8,7 @@ import {
   useRef,
   memo,
 } from "react";
-import { Box, useTheme, Tooltip, Paper, Typography } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import parseTraffic from "@/utils/parse-traffic";
 import {
@@ -124,13 +124,6 @@ export const EnhancedCanvasTrafficGraph = memo(
         background: theme.palette.background.paper,
       }),
       [theme],
-    );
-
-    // 根据时间范围获取数据点数量
-    const getPointsForTimeRange = useCallback(
-      (minutes: TimeRange): number =>
-        Math.min(minutes * 60, GRAPH_CONFIG.maxPoints),
-      [],
     );
 
     // 更新显示数据（防抖处理）
@@ -283,7 +276,6 @@ export const EnhancedCanvasTrafficGraph = memo(
         };
 
         const padding = GRAPH_CONFIG.padding;
-        const effectiveHeight = height - padding.top - padding.bottom;
 
         // 强制显示三个刻度：底部、中间、顶部
         const topY = padding.top + 10; // 避免与顶部时间范围按钮重叠
