@@ -5,10 +5,6 @@ on:
   # ! 不再使用 workflow_dispatch 触发。
   # workflow_dispatch:
   push:
-    # 应当限制在 main 分支上触发发布。
-    branches:
-      - main
-    # 应当限制 v*.*.* 的 tag 触发发布。
     tags:
       - "v*.*.*"
 permissions: write-all
@@ -27,6 +23,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if tag is from main branch
+        run: |
+          TAG_REF="${GITHUB_REF##*/}"
+          echo "Checking if tag $TAG_REF is from main branch..."
+
+          TAG_COMMIT=$(git rev-list -n 1 $TAG_REF)
+          MAIN_COMMITS=$(git rev-list origin/main)
+          
+          if echo "$MAIN_COMMITS" | grep -q "$TAG_COMMIT"; then
+            echo "✅ Tag $TAG_REF is from main branch"
+          else
+            echo "❌ Tag $TAG_REF is not from main branch"
+            echo "This release workflow only accepts tags from main branch."
+            exit 1
+          fi
 
       - name: Check tag and package.json version
         run: |
@@ -50,7 +64,7 @@ jobs:
   update_tag:
     name: Update tag
     runs-on: ubuntu-latest
-    needs: check_tag_version
+    needs: [release, release-for-linux-arm, release-for-fixed-webview2]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -133,7 +147,7 @@ jobs:
 
   release:
     name: Release Build
-    needs: [check_tag_version, update_tag]
+    needs: [check_tag_version]
     strategy:
       fail-fast: false
       matrix:
@@ -201,15 +215,20 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
-          tagName: v__VERSION__
-          releaseName: "Clash Verge Rev v__VERSION__"
-          releaseBody: "See release notes for detailed changelog."
+          tagName: ${{ github.ref_name }}
+          releaseName: "Clash Verge Rev ${{ github.ref_name }}"
+          releaseBody: "Draft release, will be updated later."
+          releaseDraft: true
+          prerelease: false
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
+          includeUpdaterJson: true
+
+
 
   release-for-linux-arm:
     name: Release Build for Linux ARM
-    needs: [check_tag_version, update_tag]
+    needs: [check_tag_version]
     strategy:
       fail-fast: false
       matrix:
@@ -332,7 +351,7 @@ jobs:
 
   release-for-fixed-webview2:
     name: Release Build for Fixed WebView2
-    needs: [check_tag_version, update_tag]
+    needs: [check_tag_version]
     strategy:
       fail-fast: false
       matrix:
@@ -479,7 +498,7 @@ jobs:
   submit-to-winget:
     name: Submit to Winget
     runs-on: ubuntu-latest
-    needs: [release-update]
+    needs: [update_tag, release-update]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -502,7 +521,7 @@ jobs:
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
-    needs: [update_tag, release-update]
+    needs: [update_tag, release-update, release-update-for-fixed-webview2, submit-to-winget]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

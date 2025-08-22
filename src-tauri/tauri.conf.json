@@ -1,5 +1,5 @@
 {
-  "version": "2.4.1",
+  "version": "2.4.0",
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "active": true,
