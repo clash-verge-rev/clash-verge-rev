@@ -48,7 +48,7 @@ export const ProxyHead = (props: Props) => {
   useEffect(() => {
     delayManager.setUrl(
       groupName,
-      testUrl || url || verge?.default_latency_test,
+      testUrl || url || verge?.default_latency_test!,
     );
   }, [groupName, testUrl, verge?.default_latency_test]);
 
