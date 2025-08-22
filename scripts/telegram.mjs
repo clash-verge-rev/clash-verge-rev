@@ -56,7 +56,10 @@ async function sendTelegramNotification() {
         } else {
           let processedLine = line.replace(
             /\[([^\]]+)\]\(([^)]+)\)/g,
-            '<a href="$2">$1</a>',
+            (match, text, url) => {
+              const encodedUrl = encodeURI(url);
+              return `<a href="${encodedUrl}">${text}</a>`;
+            },
           );
           processedLine = processedLine.replace(
             /\*\*([^*]+)\*\*/g,
@@ -71,7 +74,8 @@ async function sendTelegramNotification() {
   const formattedContent = convertMarkdownToTelegramHTML(releaseContent);
 
   const releaseTitle = isAutobuild ? "滚动更新版发布" : "正式发布";
-  const content = `<b>🎉 <a href="https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${version}">Clash Verge Rev v${version}</a> ${releaseTitle}</b>\n\n${formattedContent}`;
+  const encodedVersion = encodeURIComponent(version);
+  const content = `<b>🎉 <a href="https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${encodedVersion}">Clash Verge Rev v${version}</a> ${releaseTitle}</b>\n\n${formattedContent}`;
 
   // 发送到 Telegram
   try {
@@ -82,7 +86,7 @@ async function sendTelegramNotification() {
         text: content,
         link_preview_options: {
           is_disabled: false,
-          url: `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${version}`,
+          url: `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${encodedVersion}`,
           prefer_large_media: true,
         },
         parse_mode: "HTML",

@@ -141,6 +141,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           name: "Clash Verge Rev ${{ env.TAG_NAME }}"
           body_path: release.txt
+          draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           # generate_release_notes: true
