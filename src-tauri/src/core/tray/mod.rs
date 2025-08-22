@@ -15,6 +15,7 @@ use crate::{
 
 use anyhow::Result;
 use parking_lot::Mutex;
+use std::sync::Arc;
 use std::{
     fs,
     sync::atomic::{AtomicBool, Ordering},
@@ -244,7 +245,7 @@ impl Tray {
         // 设置更新状态
         self.menu_updating.store(true, Ordering::Release);
 
-        let result = self.update_menu_internal(&app_handle);
+        let result = self.update_menu_internal(app_handle);
 
         {
             let mut last_update = self.last_menu_update.lock();
@@ -255,7 +256,7 @@ impl Tray {
         result
     }
 
-    fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
+    fn update_menu_internal(&self, app_handle: Arc<AppHandle>) -> Result<()> {
         let verge = Config::verge().latest_ref().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -277,7 +278,7 @@ impl Tray {
         match app_handle.tray_by_id("main") {
             Some(tray) => {
                 let _ = tray.set_menu(Some(create_tray_menu(
-                    app_handle,
+                    &app_handle,
                     Some(mode.as_str()),
                     *system_proxy,
                     *tun_mode,
@@ -451,7 +452,7 @@ impl Tray {
     #[cfg(target_os = "macos")]
     pub fn unsubscribe_traffic(&self) {}
 
-    pub fn create_tray_from_handle(&self, app_handle: &AppHandle) -> Result<()> {
+    pub fn create_tray_from_handle(&self, app_handle: Arc<AppHandle>) -> Result<()> {
         log::info!(target: "app", "正在从AppHandle创建系统托盘");
 
         // 获取图标
@@ -477,7 +478,7 @@ impl Tray {
             }
         }
 
-        let tray = builder.build(app_handle)?;
+        let tray = builder.build(app_handle.as_ref())?;
 
         tray.on_tray_icon_event(|_, event| {
             let tray_event = { Config::verge().latest_ref().tray_event.clone() };

@@ -11,15 +11,7 @@ use anyhow::{bail, Result};
 /// Toggle proxy profile
 pub fn toggle_proxy_profile(profile_index: String) {
     AsyncHandler::spawn(|| async move {
-        let Some(app_handle) = handle::Handle::global().app_handle() else {
-            logging!(
-                error,
-                Type::Config,
-                "Failed to get app handle for profile toggle"
-            );
-            return;
-        };
-        match cmd::patch_profiles_config_by_profile_index(app_handle, profile_index).await {
+        match cmd::patch_profiles_config_by_profile_index(profile_index).await {
             Ok(_) => {
                 let _ = tray::Tray::global().update_menu();
             }

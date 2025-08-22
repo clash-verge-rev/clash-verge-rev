@@ -6,7 +6,7 @@ use crate::{
 use anyhow::{bail, Result};
 use parking_lot::Mutex;
 use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
-use tauri::Manager;
+use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
 
 /// Enum representing all available hotkey functions
@@ -103,7 +103,7 @@ impl Hotkey {
     }
 
     /// Execute the function associated with a hotkey function enum
-    fn execute_function(function: HotkeyFunction, app_handle: &tauri::AppHandle) {
+    fn execute_function(function: HotkeyFunction, app_handle: Arc<AppHandle>) {
         match function {
             HotkeyFunction::OpenOrCloseDashboard => {
                 logging!(
@@ -218,7 +218,7 @@ impl Hotkey {
             manager.unregister(hotkey)?;
         }
 
-        let app_handle_clone = app_handle.clone();
+        let app_handle_clone = Arc::clone(&app_handle);
         let is_quit = matches!(function, HotkeyFunction::Quit);
 
         let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey_event, event| {
@@ -229,7 +229,7 @@ impl Hotkey {
                     if let Some(window) = app_handle.get_webview_window("main") {
                         if window.is_focused().unwrap_or(false) {
                             logging!(debug, Type::Hotkey, "Executing quit function");
-                            Self::execute_function(function, &app_handle_clone);
+                            Self::execute_function(function, Arc::clone(&app_handle_clone));
                         }
                     }
                 } else {
@@ -241,14 +241,14 @@ impl Hotkey {
                         .unwrap_or(true);
 
                     if is_enable_global_hotkey {
-                        Self::execute_function(function, &app_handle_clone);
+                        Self::execute_function(function, Arc::clone(&app_handle_clone));
                     } else {
                         use crate::utils::window_manager::WindowManager;
                         let is_visible = WindowManager::is_main_window_visible();
                         let is_focused = WindowManager::is_main_window_focused();
 
                         if is_focused && is_visible {
-                            Self::execute_function(function, &app_handle_clone);
+                            Self::execute_function(function, Arc::clone(&app_handle_clone));
                         }
                     }
                 }
