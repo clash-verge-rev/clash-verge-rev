@@ -11,7 +11,7 @@ import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
 import { Paper, ThemeProvider } from "@mui/material";
 import { Outlet } from "@tanstack/react-router";
-import { listen } from "@tauri-apps/api/event";
+import { Event, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -26,6 +26,11 @@ export let portableFlag = false;
 dayjs.extend(relativeTime);
 const OS = getSystem();
 let keepUIActive = false;
+
+interface NoticePayload {
+  status: "success" | "info" | "warning" | "error";
+  msg: string;
+}
 
 const Layout = () => {
   const appWindow = getCurrentWebviewWindow();
@@ -79,19 +84,16 @@ const Layout = () => {
     });
 
     // 设置提示监听
-    const unlistenNotice = listen("verge://notice-message", ({ payload }) => {
-      const [status, msg] = payload as [string, string];
-      switch (status) {
-        case "set_config::ok":
-          notice("success", t("Clash Config Updated"));
-          break;
-        case "set_config::error":
-          notice("error", t(msg));
-          break;
-        default:
-          break;
-      }
-    });
+    const unlistenNotice = listen(
+      "verge://notice-message",
+      (e: Event<NoticePayload>) => {
+        const {
+          payload: { status, msg },
+        } = e;
+        console.log(e);
+        notice(status, t(msg));
+      },
+    );
 
     setTimeout(async () => {
       portableFlag = await getPortableFlag();

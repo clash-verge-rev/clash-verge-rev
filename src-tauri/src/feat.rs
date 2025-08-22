@@ -39,10 +39,10 @@ pub fn restart_clash_core() {
         match CoreManager::global().run_core().await {
             Ok(_) => {
                 handle::Handle::refresh_clash();
-                handle::Handle::notice_message("set_config::ok", "ok");
+                handle::Handle::notice_message(handle::NoticeStatus::Success, "Clash Config Updated");
             }
             Err(err) => {
-                handle::Handle::notice_message("set_config::error", format!("{err}"));
+                handle::Handle::notice_message(handle::NoticeStatus::Error, format!("{err}"));
                 tracing::error!(target:"app", "{err}");
             }
         }
@@ -261,7 +261,7 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
         handle::Handle::refresh_verge();
         handle::Handle::refresh_clash();
         tracing::debug!("emit notice message event");
-        handle::Handle::notice_message("set_config::ok", "ok");
+        handle::Handle::notice_message(handle::NoticeStatus::Success, "Clash Config Updated");
         return Ok(());
     }
 
@@ -560,11 +560,11 @@ async fn update_core_config() -> AppResult<()> {
     match CoreManager::global().update_config().await {
         Ok(_) => {
             handle::Handle::refresh_clash();
-            handle::Handle::notice_message("set_config::ok", "ok");
+            handle::Handle::notice_message(handle::NoticeStatus::Success, "Clash Config Updated");
             Ok(())
         }
         Err(err) => {
-            handle::Handle::notice_message("set_config::error", format!("{err}"));
+            handle::Handle::notice_message(handle::NoticeStatus::Error, format!("{err}"));
             Err(err)
         }
     }

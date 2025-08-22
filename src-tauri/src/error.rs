@@ -55,6 +55,8 @@ pub enum AppError {
     Service(String),
     #[error("load keys error: {0}")]
     LoadKeys(String),
+    #[error("invalid clash config: {0}")]
+    InvalidClashConfig(String),
 }
 
 impl Serialize for AppError {

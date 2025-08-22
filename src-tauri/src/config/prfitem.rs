@@ -364,7 +364,9 @@ impl PrfItem {
         let yaml = serde_yaml::from_str::<Mapping>(data)?;
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
-            return Err(any_err!("profile does not contain `proxies` or `proxy-providers`"));
+            return Err(AppError::InvalidClashConfig(
+                "profile does not contain `proxies` or `proxy-providers`".to_string(),
+            ));
         }
 
         Ok(PrfItem {

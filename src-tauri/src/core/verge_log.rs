@@ -152,7 +152,7 @@ impl VergeLog {
             let file_name = file.file_name();
             let file_name = file_name.to_str().unwrap_or_default();
 
-            if file_name.ends_with(".log") {
+            if file_name.ends_with(".log") && !file_name.contains("clash-verge-service") {
                 let now = Local::now();
                 let created_time = parse_time_str(&file_name[0..file_name.len() - 4])?;
                 let file_time = Local

@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 use crate::utils::dirs;
 use crate::{feat, log_err};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
@@ -12,16 +12,16 @@ use std::time::Duration;
 
 use super::handle;
 
-type TaskID = u64;
+type TaskId = u64;
 
-const ACTIVATING_SELECTED_TASK_ID: TaskID = 0;
+const ACTIVATING_SELECTED_TASK_ID: TaskId = 0;
 
 pub struct Timer {
     /// cron manager
     delay_timer: Arc<Mutex<DelayTimer>>,
 
     /// save the current state
-    timer_map: Arc<Mutex<HashMap<String, (TaskID, u64)>>>,
+    timer_map: Arc<Mutex<HashMap<String, (TaskId, u64)>>>,
 
     /// increment id, from 2, the 1 is used to activating selected task after backup file
     timer_count: Arc<AtomicU64>,
@@ -74,7 +74,7 @@ impl Timer {
         Ok(())
     }
 
-    pub fn add_async_task<F, U>(&self, id: TaskID, seconds: u64, async_task: F) -> AppResult<()>
+    pub fn add_async_task<F, U>(&self, id: TaskId, seconds: u64, async_task: F) -> AppResult<()>
     where
         F: Fn() -> U + 'static + Send,
         U: std::future::Future + 'static + Send,
@@ -250,13 +250,13 @@ impl Timer {
     }
 
     /// add a cron task
-    fn add_profiles_task(&self, delay_timer: &DelayTimer, uid: String, tid: TaskID, minutes: u64) -> AppResult<()> {
+    fn add_profiles_task(&self, delay_timer: &DelayTimer, uid: String, tid: TaskId, minutes: u64) -> AppResult<()> {
         let task = TaskBuilder::default()
             .set_task_id(tid)
             .set_maximum_parallel_runnable_num(1)
             .set_frequency_repeated_by_minutes(minutes)
             // .set_frequency_repeated_by_seconds(minutes) // for test
-            .spawn_async_routine(move || Self::update_profile_task(uid.to_owned()))?;
+            .spawn_async_routine(move || Self::update_profile_task(tid, uid.to_owned()))?;
 
         delay_timer.add_task(task)?;
 
@@ -264,15 +264,30 @@ impl Timer {
     }
 
     /// the task runner
-    async fn update_profile_task(uid: String) {
-        tracing::info!("running timer task `{uid}`");
-        crate::log_err!(feat::update_profile(&uid, None).await);
+    async fn update_profile_task(task_id: TaskId, uid: String) {
+        tracing::info!("running timer update profile `{uid}` task");
+        match feat::update_profile(&uid, None).await {
+            Ok(_) => {
+                tracing::info!("update profile successfully, refresh profiles");
+            }
+            Err(e) => {
+                if let AppError::InvalidClashConfig(msg) = e {
+                    tracing::error!("update profile `{uid}` failed, {msg}");
+                    handle::Handle::notice_message(handle::NoticeStatus::Error, msg);
+                } else {
+                    tracing::debug!("update profile `{uid}` failed, retry update after 30 seconds, {e}");
+                    tokio::time::sleep(Duration::from_secs(30)).await;
+                    log_err!(Self::global().delay_timer.lock().advance_task(task_id));
+                }
+            }
+        }
+        handle::Handle::refresh_profiles();
     }
 }
 
 #[derive(Debug)]
 enum DiffFlag {
-    Del(TaskID),
-    Add(TaskID, u64),
-    Mod(TaskID, u64),
+    Del(TaskId),
+    Add(TaskId, u64),
+    Mod(TaskId, u64),
 }

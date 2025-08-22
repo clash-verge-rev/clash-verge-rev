@@ -4,6 +4,7 @@ use crate::{
     error::{AppError, AppResult},
     log_err,
 };
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt};
@@ -11,6 +12,23 @@ use tauri_plugin_notification::NotificationExt;
 use tokio::sync::{RwLockReadGuard, RwLockWriteGuard};
 
 pub struct Handle;
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NoticeStatus {
+    Success,
+    #[allow(unused)]
+    Info,
+    #[allow(unused)]
+    Warning,
+    Error,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct NoticeMsg {
+    status: NoticeStatus,
+    msg: String,
+}
 
 impl Handle {
     pub fn app_handle() -> &'static AppHandle {
@@ -56,9 +74,16 @@ impl Handle {
         }
     }
 
-    pub fn notice_message<S: Into<String>, M: Into<String>>(status: S, msg: M) {
+    /// notification message on the front-end that the message will be converted according to the front-end i18n native language
+    pub fn notice_message<M: Into<String>>(status: NoticeStatus, msg: M) {
         if let Some(window) = Self::get_window() {
-            log_err!(window.emit("verge://notice-message", (status.into(), msg.into())));
+            log_err!(window.emit(
+                "verge://notice-message",
+                NoticeMsg {
+                    status,
+                    msg: msg.into()
+                }
+            ));
         }
     }
 
