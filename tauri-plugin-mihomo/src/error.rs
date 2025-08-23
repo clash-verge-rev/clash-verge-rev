@@ -2,11 +2,11 @@ use serde::{Serialize, ser::Serializer};
 
 use crate::mihomo::ConnectionId;
 
-pub type Result<T> = std::result::Result<T, MihomoError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
-pub enum MihomoError {
-    #[error(transparent)]
+pub enum Error {
+    #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
@@ -32,7 +32,7 @@ pub enum MihomoError {
     ParseError(String),
 }
 
-impl Serialize for MihomoError {
+impl Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -41,20 +41,27 @@ impl Serialize for MihomoError {
     }
 }
 
-impl From<tokio_tungstenite::tungstenite::Error> for MihomoError {
+impl From<tokio_tungstenite::tungstenite::Error> for Error {
     fn from(e: tokio_tungstenite::tungstenite::Error) -> Self {
-        MihomoError::Websocket(e.to_string())
+        Error::Websocket(e.to_string())
     }
 }
 
-impl From<std::string::FromUtf8Error> for MihomoError {
+impl From<std::string::FromUtf8Error> for Error {
     fn from(e: std::string::FromUtf8Error) -> Self {
-        MihomoError::ParseError(e.to_string())
+        Error::ParseError(e.to_string())
     }
 }
 
-impl From<std::num::ParseIntError> for MihomoError {
+impl From<std::num::ParseIntError> for Error {
     fn from(e: std::num::ParseIntError) -> Self {
-        MihomoError::ParseError(e.to_string())
+        Error::ParseError(e.to_string())
     }
+}
+
+#[macro_export]
+macro_rules! failed_rep {
+    ($($arg: tt)*) => {
+        return Err(Error::FailedResponse(format!($($arg)*)))
+    };
 }

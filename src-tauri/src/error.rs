@@ -5,7 +5,7 @@ pub type AppResult<T> = std::result::Result<T, AppError>;
 
 #[derive(Debug, Error)]
 pub enum AppError {
-    #[error(transparent)]
+    #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error(transparent)]
     Zip(#[from] zip::result::ZipError),
@@ -42,7 +42,7 @@ pub enum AppError {
     #[error("tauri global shortcut error: {0}")]
     ShortcutPlugin(#[from] tauri_plugin_global_shortcut::Error),
     #[error("tauri mihomo api error: {0}")]
-    MihomoPlugin(#[from] tauri_plugin_mihomo::MihomoError),
+    MihomoPlugin(#[from] tauri_plugin_mihomo::Error),
     #[error("tauri error: {0}")]
     Tauri(#[from] tauri::Error),
 

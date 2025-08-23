@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use crate::{
-    BaseConfig, Connections, GroupProxies, MihomoError, MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay,
-    ProxyProvider, ProxyProviders, Result, RuleProviders, Rules, enhance_request::LocalSocket, utils,
+    BaseConfig, Connections, Error, GroupProxies, MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay, ProxyProvider,
+    ProxyProviders, Result, RuleProviders, Rules, failed_rep, ipc_request::LocalSocket, utils,
 };
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use http::{
@@ -23,12 +23,6 @@ use tokio_tungstenite::{
     MaybeTlsStream, WebSocketStream, client_async, connect_async,
     tungstenite::{Message, client::IntoClientRequest, protocol::CloseFrame as ProtocolCloseFrame},
 };
-
-macro_rules! failed_rep {
-    ($($arg: tt)*) => {
-        return Err(MihomoError::FailedResponse(format!($($arg)*)))
-    };
-}
 
 pub(crate) type ConnectionId = u32;
 pub(crate) enum WebSocketWriter {
@@ -134,7 +128,7 @@ impl Mihomo {
                     Ok(format!("http://{host}:{port}/{suffix_url}"))
                 } else {
                     log::error!("missing external host parameter");
-                    Err(MihomoError::Io(std::io::Error::new(
+                    Err(Error::Io(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
                         "missing external host".to_string(),
                     )))
@@ -170,21 +164,21 @@ impl Mihomo {
             _ => {
                 let method_str = method.as_str().to_string();
                 log::error!("method not supported: {method_str}");
-                Err(MihomoError::MethodNotSupported(method_str))
+                Err(Error::MethodNotSupported(method_str))
             }
         }
     }
 
     async fn send_by_protocol(&self, client: RequestBuilder) -> Result<reqwest::Response> {
         match self.protocol {
-            Protocol::Http => client.send().await.map_err(MihomoError::Reqwest),
+            Protocol::Http => client.send().await.map_err(Error::Reqwest),
             Protocol::LocalSocket => {
                 if let Some(socket_path) = self.socket_path.as_ref() {
                     log::debug!("send to local socket: {socket_path}");
-                    client.send_to_local_socket(socket_path).await
+                    client.send_by_local_socket(socket_path).await
                 } else {
                     log::error!("missing socket path parameter");
-                    Err(MihomoError::Io(std::io::Error::new(
+                    Err(Error::Io(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
                         "missing socket path".to_string(),
                     )))
@@ -203,7 +197,7 @@ impl Mihomo {
                     Ok(format!("ws://{host}:{port}/{suffix_url}?token={secret}"))
                 } else {
                     log::error!("missing external host parameter");
-                    Err(MihomoError::Io(std::io::Error::new(
+                    Err(Error::Io(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
                         "missing external host".to_string(),
                     )))
@@ -233,7 +227,7 @@ impl Mihomo {
                 Ok(Message::Frame(_)) => serde_json::Value::Null, // This value can't be received.
                 Err(e) => {
                     log::error!("websocket error: {e}");
-                    serde_json::to_value(WebSocketMessage::Text(MihomoError::from(e).to_string())).unwrap()
+                    serde_json::to_value(WebSocketMessage::Text(Error::from(e).to_string())).unwrap()
                 }
             }
         };
@@ -285,7 +279,7 @@ impl Mihomo {
                             use tokio::net::UnixStream;
                             if !Path::new(socket_path).exists() {
                                 log::error!("socket path is not exists: {socket_path}");
-                                return Err(MihomoError::Io(std::io::Error::new(
+                                return Err(Error::Io(std::io::Error::new(
                                     std::io::ErrorKind::NotFound,
                                     format!("socket path: {socket_path} not found"),
                                 )));
@@ -303,7 +297,7 @@ impl Mihomo {
                                     Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => {}
                                     Err(e) => {
                                         log::error!("failed to connect to named pipe: {socket_path}, {e}");
-                                        return Err(MihomoError::FailedResponse(format!(
+                                        return Err(Error::FailedResponse(format!(
                                             "Failed to connect to named pipe: {socket_path}, {e}"
                                         )));
                                     }
@@ -362,7 +356,7 @@ impl Mihomo {
                     Ok(id)
                 } else {
                     log::error!("missing socket path parameter");
-                    Err(MihomoError::Io(std::io::Error::new(
+                    Err(Error::Io(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
                         "missing socket path".to_string(),
                     )))
@@ -390,7 +384,7 @@ impl Mihomo {
             Ok(())
         } else {
             log::error!("connection not found: {id}");
-            Err(MihomoError::ConnectionNotFound(id))
+            Err(Error::ConnectionNotFound(id))
         }
     }
 
@@ -415,7 +409,7 @@ impl Mihomo {
             Ok(())
         } else {
             log::error!("connection not found: {id}");
-            Err(MihomoError::ConnectionNotFound(id))
+            Err(Error::ConnectionNotFound(id))
         }
     }
 

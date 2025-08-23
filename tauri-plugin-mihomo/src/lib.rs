@@ -8,13 +8,13 @@ use tauri::{
 pub use models::*;
 
 mod commands;
-mod enhance_request;
 mod error;
+mod ipc_request;
 mod mihomo;
 pub mod models;
 mod utils;
 
-pub use error::{MihomoError, Result};
+pub use error::{Error, Result};
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the mihomo APIs.
 pub trait MihomoExt<R: Runtime> {
@@ -27,6 +27,7 @@ impl<R: Runtime, T: Manager<R>> crate::MihomoExt<R> for T {
     }
 }
 
+#[derive(Debug)]
 pub struct Builder {
     protocol: Protocol,
     external_host: Option<String>,
@@ -83,9 +84,6 @@ impl Builder {
         let external_port = self.external_port;
         let secret = self.secret;
         let socket_path = self.socket_path;
-        log::info!(
-            "build mihomo config, protocol: {protocol:?}, external_host: {external_host:?}, external_port: {external_port:?}, secret: {secret:?}, socket_path: {socket_path:?}"
-        );
 
         PluginBuilder::new("mihomo")
             .invoke_handler(tauri::generate_handler![

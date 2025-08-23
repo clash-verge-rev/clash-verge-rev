@@ -10,7 +10,7 @@ use http::{
 use httparse::EMPTY_HEADER;
 use rand::Rng;
 
-use crate::{MihomoError, Result};
+use crate::{Error, Result};
 
 /// 生成 WebSocket 握手密钥
 pub fn generate_websocket_key() -> String {
@@ -79,14 +79,12 @@ pub fn parse_socket_response(response_str: &str, is_chunked: bool) -> Result<req
             Ok(reqwest::Response::from(response))
         }
         Ok(httparse::Status::Partial) => {
-            log::error!("Partial response, need more data.");
-            Err(MihomoError::HttpParseError(
-                "Partial response, need more data.".to_string(),
-            ))
+            log::error!("Partial response, need more data");
+            Err(Error::HttpParseError("Partial response, need more data".to_string()))
         }
         Err(e) => {
-            log::error!("Failed to parse response: {e:?}");
-            Err(MihomoError::HttpParseError(format!("Failed to parse response: {e:?}")))
+            log::error!("Failed to parse response: {e}");
+            Err(Error::HttpParseError(format!("Failed to parse response: {e}")))
         }
     }
 }
@@ -99,26 +97,20 @@ fn decode_chunked(data: &str) -> Result<String> {
     loop {
         let mut line = String::new();
         reader.read_line(&mut line)?;
-
         // 解析块大小（十六进制）
         if let Ok(chunk_size) = usize::from_str_radix(line.trim(), 16) {
             if chunk_size == 0 {
-                // 结束块
                 break;
             }
-
             // 读取块数据
             let mut chunk = vec![0; chunk_size];
             reader.read_exact(&mut chunk)?;
             result.extend_from_slice(&chunk);
-
             // 跳过 \r\n 分隔符
             reader.read_line(&mut String::new())?;
         } else {
             log::error!("Failed to parse chunk size: {line}");
-            return Err(MihomoError::HttpParseError(format!(
-                "Failed to parse chunk size: {line}"
-            )));
+            return Err(Error::HttpParseError(format!("Failed to parse chunk size: {line}")));
         }
     }
     let body = String::from_utf8(result)?;

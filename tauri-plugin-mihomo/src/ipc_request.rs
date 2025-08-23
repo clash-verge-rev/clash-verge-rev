@@ -4,21 +4,21 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use crate::utils;
 
 pub trait LocalSocket {
-    async fn send_to_local_socket(self, socket_path: &str) -> crate::Result<reqwest::Response>;
+    async fn send_by_local_socket(self, socket_path: &str) -> crate::Result<reqwest::Response>;
 }
 
 impl LocalSocket for RequestBuilder {
-    async fn send_to_local_socket(self, socket_path: &str) -> crate::Result<reqwest::Response> {
+    async fn send_by_local_socket(self, socket_path: &str) -> crate::Result<reqwest::Response> {
         let mut stream = {
             #[cfg(unix)]
             {
                 use std::path::Path;
                 use tokio::net::UnixStream;
                 if !Path::new(socket_path).exists() {
-                    use crate::MihomoError;
+                    use crate::Error;
 
                     log::error!("socket path is not exists: {socket_path}");
-                    return Err(MihomoError::Io(std::io::Error::new(
+                    return Err(Error::Io(std::io::Error::new(
                         std::io::ErrorKind::NotFound,
                         format!("socket path: {socket_path} not found"),
                     )));
@@ -27,7 +27,7 @@ impl LocalSocket for RequestBuilder {
             }
             #[cfg(windows)]
             {
-                use crate::MihomoError;
+                use crate::Error;
                 use std::time::Duration;
                 use tokio::net::windows::named_pipe::ClientOptions;
                 use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
