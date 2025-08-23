@@ -37,7 +37,7 @@ impl LocalSocket for RequestBuilder {
                         Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
                         Err(e) => {
                             log::error!("failed to connect to named pipe: {socket_path}, {e}");
-                            return Err(MihomoError::FailedResponse(format!(
+                            return Err(Error::FailedResponse(format!(
                                 "Failed to connect to named pipe: {socket_path}, {e}"
                             )));
                         }
