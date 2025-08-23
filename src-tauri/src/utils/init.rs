@@ -19,13 +19,13 @@ use std::{
 use tauri_plugin_shell::ShellExt;
 
 /// initialize this instance's log file
-fn init_log() -> Result<()> {
+async fn init_log() -> Result<()> {
     let log_dir = dirs::app_logs_dir()?;
     if !log_dir.exists() {
         let _ = fs::create_dir_all(&log_dir);
     }
 
-    let log_level = Config::verge().latest_ref().get_log_level();
+    let log_level = Config::verge().await.latest_ref().get_log_level();
     if log_level == LevelFilter::Off {
         return Ok(());
     }
@@ -66,14 +66,14 @@ fn init_log() -> Result<()> {
 }
 
 /// 删除log文件
-pub fn delete_log() -> Result<()> {
+pub async fn delete_log() -> Result<()> {
     let log_dir = dirs::app_logs_dir()?;
     if !log_dir.exists() {
         return Ok(());
     }
 
     let auto_log_clean = {
-        let verge = Config::verge();
+        let verge = Config::verge().await;
         let verge = verge.latest_ref();
         verge.auto_log_clean.unwrap_or(0)
     };
@@ -257,7 +257,7 @@ fn init_dns_config() -> Result<()> {
 
 /// Initialize all the config files
 /// before tauri setup
-pub fn init_config() -> Result<()> {
+pub async fn init_config() -> Result<()> {
     let _ = dirs::init_portable_flag();
     let _ = init_log();
     let _ = delete_log();
@@ -289,7 +289,7 @@ pub fn init_config() -> Result<()> {
     }));
 
     // 验证并修正verge.yaml中的clash_core配置
-    crate::log_err!(IVerge::validate_and_fix_config());
+    crate::log_err!(IVerge::validate_and_fix_config().await);
 
     crate::log_err!(dirs::profiles_path().map(|path| {
         if !path.exists() {
@@ -413,7 +413,7 @@ pub async fn startup_script() -> Result<()> {
     };
 
     let script_path = {
-        let verge = Config::verge();
+        let verge = Config::verge().await;
         let verge = verge.latest_ref();
         verge.startup_script.clone().unwrap_or("".to_string())
     };

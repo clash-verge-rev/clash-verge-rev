@@ -36,7 +36,7 @@ fn open_or_close_dashboard_internal(bypass_debounce: bool) {
 
             if crate::module::lightweight::is_in_lightweight_mode() {
                 log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
-                crate::module::lightweight::exit_lightweight_mode();
+                crate::module::lightweight::exit_lightweight_mode().await;
                 log::info!(target: "app", "Creating new window after exiting lightweight mode");
                 let result = WindowManager::show_main_window();
                 log::info!(target: "app", "Window operation result: {result:?}");
@@ -50,7 +50,7 @@ fn open_or_close_dashboard_internal(bypass_debounce: bool) {
     }
     if crate::module::lightweight::is_in_lightweight_mode() {
         log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
-        crate::module::lightweight::exit_lightweight_mode();
+        AsyncHandler::spawn(|| crate::module::lightweight::exit_lightweight_mode());
         log::info!(target: "app", "Creating new window after exiting lightweight mode");
         let result = WindowManager::show_main_window();
         log::info!(target: "app", "Window operation result: {result:?}");
@@ -105,7 +105,12 @@ async fn clean_async() -> bool {
     logging!(info, Type::System, true, "开始执行异步清理操作...");
 
     // 1. 处理TUN模式
-    let tun_success = if Config::verge().data_mut().enable_tun_mode.unwrap_or(false) {
+    let tun_success = if Config::verge()
+        .await
+        .data_mut()
+        .enable_tun_mode
+        .unwrap_or(false)
+    {
         let disable_tun = serde_json::json!({"tun": {"enable": false}});
         match timeout(
             Duration::from_secs(3),
@@ -242,16 +247,17 @@ pub fn clean() -> bool {
 }
 
 #[cfg(target_os = "macos")]
-pub fn hide() {
+pub async fn hide() {
     use crate::module::lightweight::add_light_weight_timer;
 
     let enable_auto_light_weight_mode = Config::verge()
+        .await
         .data_mut()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
 
     if enable_auto_light_weight_mode {
-        add_light_weight_timer();
+        add_light_weight_timer().await;
     }
 
     if let Some(window) = handle::Handle::global().get_window() {

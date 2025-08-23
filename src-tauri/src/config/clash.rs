@@ -280,9 +280,10 @@ impl IClashTemp {
         Self::guard_server_ctrl(config)
     }
 
-    pub fn guard_external_controller_with_setting(config: &Mapping) -> String {
+    pub async fn guard_external_controller_with_setting(config: &Mapping) -> String {
         // 检查 enable_external_controller 设置，用于运行时配置生成
         let enable_external_controller = Config::verge()
+            .await
             .latest_ref()
             .enable_external_controller
             .unwrap_or(false);

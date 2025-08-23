@@ -8,6 +8,11 @@ use tauri::{async_runtime, async_runtime::JoinHandle};
 pub struct AsyncHandler;
 
 impl AsyncHandler {
+    #[allow(dead_code)]
+    pub fn handle() -> async_runtime::RuntimeHandle {
+        async_runtime::handle()
+    }
+
     #[track_caller]
     pub fn spawn<F, Fut>(f: F) -> JoinHandle<()>
     where
@@ -28,6 +33,16 @@ impl AsyncHandler {
         #[cfg(feature = "tokio-trace")]
         Self::log_task_info(&f);
         async_runtime::spawn_blocking(f)
+    }
+
+    #[track_caller]
+    pub fn block_on<Fut>(fut: Fut) -> Fut::Output
+    where
+        Fut: Future + Send + 'static,
+    {
+        #[cfg(feature = "tokio-trace")]
+        Self::log_task_info(&f);
+        async_runtime::block_on(fut)
     }
 
     #[cfg(feature = "tokio-trace")]

@@ -203,16 +203,14 @@ mod app_init {
         }
 
         app.deep_link().on_open_url(|event| {
-            AsyncHandler::spawn(move || {
-                let url = event.urls().first().map(|u| u.to_string());
-                async move {
-                    if let Some(url) = url {
-                        if let Err(e) = resolve_scheme(url).await {
-                            logging!(error, Type::Setup, true, "Failed to resolve scheme: {}", e);
-                        }
+            let url = event.urls().first().map(|u| u.to_string());
+            if let Some(url) = url {
+                tokio::task::spawn_local(async move {
+                    if let Err(e) = resolve_scheme(url).await {
+                        logging!(error, Type::Setup, true, "Failed to resolve scheme: {}", e);
                     }
-                }
-            });
+                });
+            }
         });
 
         Ok(())
@@ -272,7 +270,9 @@ mod app_init {
     }
 
     /// Initialize core components synchronously
-    pub fn init_core_sync(app_handle: Arc<AppHandle>) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn init_core_sync(
+        app_handle: Arc<AppHandle>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         logging!(info, Type::Setup, true, "初始化AppHandleManager...");
         AppHandleManager::global().init(Arc::clone(&app_handle));
 
@@ -280,7 +280,7 @@ mod app_init {
         core::handle::Handle::global().init(Arc::clone(&app_handle));
 
         logging!(info, Type::Setup, true, "初始化配置...");
-        utils::init::init_config()?;
+        utils::init::init_config().await?;
 
         logging!(info, Type::Setup, true, "初始化资源...");
         utils::init::init_resources()?;
@@ -492,16 +492,17 @@ pub fn run() {
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
             // Initialize core components synchronously
-            if let Err(e) = app_init::init_core_sync(Arc::clone(&app_handle)) {
-                logging!(
-                    error,
-                    Type::Setup,
-                    true,
-                    "Failed to initialize core components: {}",
-                    e
-                );
-                return Err(e);
-            }
+            AsyncHandler::spawn(move || async move {
+                if let Err(e) = app_init::init_core_sync(Arc::clone(&app_handle)).await {
+                    logging!(
+                        error,
+                        Type::Setup,
+                        true,
+                        "Failed to initialize core components: {}",
+                        e
+                    );
+                }
+            });
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())
@@ -580,68 +581,73 @@ pub fn run() {
 
         /// Handle window focus events
         pub fn handle_window_focus(focused: bool) {
-            let is_enable_global_hotkey = Config::verge()
-                .latest_ref()
-                .enable_global_hotkey
-                .unwrap_or(true);
+            AsyncHandler::spawn(move || async move {
+                let is_enable_global_hotkey = Config::verge()
+                    .await
+                    .latest_ref()
+                    .enable_global_hotkey
+                    .unwrap_or(true);
 
-            if focused {
+                if focused {
+                    #[cfg(target_os = "macos")]
+                    {
+                        use crate::core::hotkey::SystemHotkey;
+                        if let Err(e) = hotkey::Hotkey::global()
+                            .register_system_hotkey(SystemHotkey::CmdQ)
+                            .await
+                        {
+                            logging!(error, Type::Hotkey, true, "Failed to register CMD+Q: {}", e);
+                        }
+                        if let Err(e) = hotkey::Hotkey::global()
+                            .register_system_hotkey(SystemHotkey::CmdW)
+                            .await
+                        {
+                            logging!(error, Type::Hotkey, true, "Failed to register CMD+W: {}", e);
+                        }
+                    }
+
+                    if !is_enable_global_hotkey {
+                        if let Err(e) = hotkey::Hotkey::global().init().await {
+                            logging!(error, Type::Hotkey, true, "Failed to init hotkeys: {}", e);
+                        }
+                    }
+                    return;
+                }
+
+                // Handle unfocused state
                 #[cfg(target_os = "macos")]
                 {
                     use crate::core::hotkey::SystemHotkey;
                     if let Err(e) =
-                        hotkey::Hotkey::global().register_system_hotkey(SystemHotkey::CmdQ)
+                        hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ)
                     {
-                        logging!(error, Type::Hotkey, true, "Failed to register CMD+Q: {}", e);
+                        logging!(
+                            error,
+                            Type::Hotkey,
+                            true,
+                            "Failed to unregister CMD+Q: {}",
+                            e
+                        );
                     }
                     if let Err(e) =
-                        hotkey::Hotkey::global().register_system_hotkey(SystemHotkey::CmdW)
+                        hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW)
                     {
-                        logging!(error, Type::Hotkey, true, "Failed to register CMD+W: {}", e);
+                        logging!(
+                            error,
+                            Type::Hotkey,
+                            true,
+                            "Failed to unregister CMD+W: {}",
+                            e
+                        );
                     }
                 }
 
                 if !is_enable_global_hotkey {
-                    if let Err(e) = hotkey::Hotkey::global().init() {
-                        logging!(error, Type::Hotkey, true, "Failed to init hotkeys: {}", e);
+                    if let Err(e) = hotkey::Hotkey::global().reset() {
+                        logging!(error, Type::Hotkey, true, "Failed to reset hotkeys: {}", e);
                     }
                 }
-                return;
-            }
-
-            // Handle unfocused state
-            #[cfg(target_os = "macos")]
-            {
-                use crate::core::hotkey::SystemHotkey;
-                if let Err(e) =
-                    hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ)
-                {
-                    logging!(
-                        error,
-                        Type::Hotkey,
-                        true,
-                        "Failed to unregister CMD+Q: {}",
-                        e
-                    );
-                }
-                if let Err(e) =
-                    hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW)
-                {
-                    logging!(
-                        error,
-                        Type::Hotkey,
-                        true,
-                        "Failed to unregister CMD+W: {}",
-                        e
-                    );
-                }
-            }
-
-            if !is_enable_global_hotkey {
-                if let Err(e) = hotkey::Hotkey::global().reset() {
-                    logging!(error, Type::Hotkey, true, "Failed to reset hotkeys: {}", e);
-                }
-            }
+            });
         }
 
         /// Handle window destroyed events

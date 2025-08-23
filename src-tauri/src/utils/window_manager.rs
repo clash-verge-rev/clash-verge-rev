@@ -364,8 +364,11 @@ impl WindowManager {
 
     /// 创建新窗口,防抖避免重复调用
     fn create_new_window() -> bool {
+        use crate::process::AsyncHandler;
         use crate::utils::resolve;
-        resolve::create_window(true)
+
+        // 使用 tokio runtime 阻塞调用 async 函数
+        AsyncHandler::block_on(resolve::create_window(true))
     }
 
     /// 获取详细的窗口状态信息

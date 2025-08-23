@@ -10,7 +10,8 @@ use std::{
 };
 use tokio::runtime::{Builder, Runtime};
 
-use crate::{config::Config, logging, process::AsyncHandler, singleton_lazy, utils::logging::Type};
+use crate::utils::logging::Type;
+use crate::{config::Config, logging, process::AsyncHandler, singleton_lazy};
 
 // HTTP2 相关
 const H2_CONNECTION_WINDOW_SIZE: u32 = 1024 * 1024;
@@ -162,7 +163,7 @@ impl NetworkManager {
     }
 
     /// 创建带有自定义选项的HTTP请求
-    pub fn create_request(
+    pub async fn create_request(
         &self,
         url: &str,
         proxy_type: ProxyType,
@@ -199,10 +200,13 @@ impl NetworkManager {
                 builder = builder.no_proxy();
             }
             ProxyType::Localhost => {
-                let port = Config::verge()
-                    .latest_ref()
-                    .verge_mixed_port
-                    .unwrap_or(Config::clash().latest_ref().get_mixed_port());
+                let port = {
+                    let verge_port = Config::verge().await.latest_ref().verge_mixed_port;
+                    match verge_port {
+                        Some(port) => port,
+                        None => Config::clash().await.latest_ref().get_mixed_port(),
+                    }
+                };
 
                 let proxy_scheme = format!("http://127.0.0.1:{port}");
 
@@ -293,43 +297,6 @@ impl NetworkManager {
         client.get(url)
     }
 
-    /*     /// 执行GET请求，添加错误跟踪
-    pub async fn get(
-        &self,
-        url: &str,
-        proxy_type: ProxyType,
-        timeout_secs: Option<u64>,
-        user_agent: Option<String>,
-        accept_invalid_certs: bool,
-    ) -> Result<Response> {
-        let request = self.create_request(
-            url,
-            proxy_type,
-            timeout_secs,
-            user_agent,
-            accept_invalid_certs,
-        );
-
-        let timeout_duration = timeout_secs.unwrap_or(30);
-
-        match tokio::time::timeout(Duration::from_secs(timeout_duration), request.send()).await {
-            Ok(result) => match result {
-                Ok(response) => Ok(response),
-                Err(e) => {
-                    self.record_connection_error(&e.to_string());
-                    Err(anyhow::anyhow!("Failed to send HTTP request: {}", e))
-                }
-            },
-            Err(_) => {
-                self.record_connection_error("Request timeout");
-                Err(anyhow::anyhow!(
-                    "HTTP request timed out after {} seconds",
-                    timeout_duration
-                ))
-            }
-        }
-    } */
-
     pub async fn get_with_interrupt(
         &self,
         url: &str,
@@ -338,13 +305,15 @@ impl NetworkManager {
         user_agent: Option<String>,
         accept_invalid_certs: bool,
     ) -> Result<Response> {
-        let request = self.create_request(
-            url,
-            proxy_type,
-            timeout_secs,
-            user_agent,
-            accept_invalid_certs,
-        );
+        let request = self
+            .create_request(
+                url,
+                proxy_type,
+                timeout_secs,
+                user_agent,
+                accept_invalid_certs,
+            )
+            .await;
 
         let timeout_duration = timeout_secs.unwrap_or(20);
 

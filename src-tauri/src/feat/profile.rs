@@ -3,23 +3,20 @@ use crate::{
     config::{Config, PrfItem, PrfOption},
     core::{handle, CoreManager, *},
     logging,
-    process::AsyncHandler,
     utils::logging::Type,
 };
 use anyhow::{bail, Result};
 
 /// Toggle proxy profile
-pub fn toggle_proxy_profile(profile_index: String) {
-    AsyncHandler::spawn(|| async move {
-        match cmd::patch_profiles_config_by_profile_index(profile_index).await {
-            Ok(_) => {
-                let _ = tray::Tray::global().update_menu();
-            }
-            Err(err) => {
-                log::error!(target: "app", "{err}");
-            }
+pub async fn toggle_proxy_profile(profile_index: String) {
+    match cmd::patch_profiles_config_by_profile_index(profile_index).await {
+        Ok(_) => {
+            let _ = tray::Tray::global().update_menu();
         }
-    });
+        Err(err) => {
+            log::error!(target: "app", "{err}");
+        }
+    }
 }
 
 /// Update a profile
@@ -34,7 +31,7 @@ pub async fn update_profile(
     let auto_refresh = auto_refresh.unwrap_or(true); // 默认为true，保持兼容性
 
     let url_opt = {
-        let profiles = Config::profiles();
+        let profiles = Config::profiles().await;
         let profiles = profiles.latest_ref();
         let item = profiles.get_item(&uid)?;
         let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
@@ -69,7 +66,7 @@ pub async fn update_profile(
             match PrfItem::from_url(&url, None, None, merged_opt.clone()).await {
                 Ok(item) => {
                     log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
-                    let profiles = Config::profiles();
+                    let profiles = Config::profiles().await;
                     let mut profiles = profiles.draft_mut();
                     profiles.update_item(uid.clone(), item)?;
 
@@ -105,7 +102,7 @@ pub async fn update_profile(
                             }
 
                             // 更新到配置
-                            let profiles = Config::profiles();
+                            let profiles = Config::profiles().await;
                             let mut profiles = profiles.draft_mut();
                             profiles.update_item(uid.clone(), item.clone())?;
 

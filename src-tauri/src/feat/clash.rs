@@ -10,41 +10,37 @@ use serde_yaml::{Mapping, Value};
 use tauri::Manager;
 
 /// Restart the Clash core
-pub fn restart_clash_core() {
-    AsyncHandler::spawn(move || async move {
-        match CoreManager::global().restart_core().await {
-            Ok(_) => {
-                handle::Handle::refresh_clash();
-                handle::Handle::notice_message("set_config::ok", "ok");
-            }
-            Err(err) => {
-                handle::Handle::notice_message("set_config::error", format!("{err}"));
-                log::error!(target:"app", "{err}");
-            }
+pub async fn restart_clash_core() {
+    match CoreManager::global().restart_core().await {
+        Ok(_) => {
+            handle::Handle::refresh_clash();
+            handle::Handle::notice_message("set_config::ok", "ok");
         }
-    });
+        Err(err) => {
+            handle::Handle::notice_message("set_config::error", format!("{err}"));
+            log::error!(target:"app", "{err}");
+        }
+    }
 }
 
 /// Restart the application
-pub fn restart_app() {
-    AsyncHandler::spawn(move || async move {
-        // logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
-        resolve::resolve_reset_async().await;
+pub async fn restart_app() {
+    // logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+    resolve::resolve_reset_async().await;
 
-        handle::Handle::global()
-            .app_handle()
-            .map(|app_handle| {
-                tauri::process::restart(&app_handle.env());
-            })
-            .unwrap_or_else(|| {
-                logging_error!(
-                    Type::System,
-                    false,
-                    "{}",
-                    "Failed to get app handle for restart"
-                );
-            });
-    });
+    handle::Handle::global()
+        .app_handle()
+        .map(|app_handle| {
+            tauri::process::restart(&app_handle.env());
+        })
+        .unwrap_or_else(|| {
+            logging_error!(
+                Type::System,
+                false,
+                "{}",
+                "Failed to get app handle for restart"
+            );
+        });
 }
 
 fn after_change_clash_mode() {
@@ -67,37 +63,40 @@ fn after_change_clash_mode() {
 }
 
 /// Change Clash mode (rule/global/direct/script)
-pub fn change_clash_mode(mode: String) {
+pub async fn change_clash_mode(mode: String) {
     let mut mapping = Mapping::new();
     mapping.insert(Value::from("mode"), mode.clone().into());
     // Convert YAML mapping to JSON Value
     let json_value = serde_json::json!({
         "mode": mode
     });
-    AsyncHandler::spawn(move || async move {
-        log::debug!(target: "app", "change clash mode to {mode}");
-        match IpcManager::global().patch_configs(json_value).await {
-            Ok(_) => {
-                // 更新订阅
-                Config::clash().data_mut().patch_config(mapping);
+    log::debug!(target: "app", "change clash mode to {mode}");
+    match IpcManager::global().patch_configs(json_value).await {
+        Ok(_) => {
+            // 更新订阅
+            Config::clash().await.data_mut().patch_config(mapping);
 
-                if Config::clash().data_mut().save_config().is_ok() {
-                    handle::Handle::refresh_clash();
-                    logging_error!(Type::Tray, true, tray::Tray::global().update_menu());
-                    logging_error!(Type::Tray, true, tray::Tray::global().update_icon(None));
-                }
-
-                let is_auto_close_connection = Config::verge()
-                    .data_mut()
-                    .auto_close_connection
-                    .unwrap_or(false);
-                if is_auto_close_connection {
-                    after_change_clash_mode();
-                }
+            if Config::clash().await.data_mut().save_config().is_ok() {
+                handle::Handle::refresh_clash();
+                logging_error!(Type::Tray, true, tray::Tray::global().update_menu().await);
+                logging_error!(
+                    Type::Tray,
+                    true,
+                    tray::Tray::global().update_icon(None).await
+                );
             }
-            Err(err) => log::error!(target: "app", "{err}"),
+
+            let is_auto_close_connection = Config::verge()
+                .await
+                .data_mut()
+                .auto_close_connection
+                .unwrap_or(false);
+            if is_auto_close_connection {
+                after_change_clash_mode();
+            }
         }
-    });
+        Err(err) => log::error!(target: "app", "{err}"),
+    }
 }
 
 /// Test connection delay to a URL
@@ -106,6 +105,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     use tokio::time::Instant;
 
     let tun_mode = Config::verge()
+        .await
         .latest_ref()
         .enable_tun_mode
         .unwrap_or(false);

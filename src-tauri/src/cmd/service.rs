@@ -5,18 +5,19 @@ use crate::{
 };
 use anyhow::Result;
 
-async fn execute_service_operation_sync<F, E>(service_op: F, op_type: &str) -> CmdResult
+async fn execute_service_operation_sync<F, Fut, E>(service_op: F, op_type: &str) -> CmdResult
 where
-    F: FnOnce() -> Result<(), E>,
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = Result<(), E>>,
     E: ToString + std::fmt::Debug,
 {
-    if let Err(e) = service_op() {
+    if let Err(e) = service_op().await {
         let emsg = format!("{} {} failed: {}", op_type, "Service", e.to_string());
-        return Err(t(emsg.as_str()));
+        return Err(t(emsg.as_str()).await);
     }
     if CoreManager::global().restart_core().await.is_err() {
         let emsg = format!("{} {} failed", "Restart", "Core");
-        return Err(t(emsg.as_str()));
+        return Err(t(emsg.as_str()).await);
     }
     Ok(())
 }

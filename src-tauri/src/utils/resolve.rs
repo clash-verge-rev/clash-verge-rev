@@ -144,7 +144,7 @@ pub async fn resolve_setup_async(app_handle: Arc<AppHandle>) {
     // 启动时清理冗余的 Profile 文件
     logging!(info, Type::Setup, true, "开始清理冗余的Profile文件...");
 
-    match Config::profiles().latest_ref().auto_cleanup() {
+    match Config::profiles().await.latest_ref().auto_cleanup() {
         Ok(_) => {
             logging!(info, Type::Setup, true, "启动时Profile文件清理完成");
         }
@@ -165,7 +165,9 @@ pub async fn resolve_setup_async(app_handle: Arc<AppHandle>) {
 
     if let Some(app_handle) = handle::Handle::global().app_handle() {
         logging!(info, Type::Tray, true, "创建系统托盘...");
-        let result = tray::Tray::global().create_tray_from_handle(app_handle);
+        let result = tray::Tray::global()
+            .create_tray_from_handle(app_handle)
+            .await;
         if result.is_ok() {
             logging!(info, Type::Tray, true, "系统托盘创建成功");
         } else if let Err(e) = result {
@@ -193,7 +195,8 @@ pub async fn resolve_setup_async(app_handle: Arc<AppHandle>) {
     );
 
     // 创建窗口
-    let is_silent_start = { Config::verge().latest_ref().enable_silent_start }.unwrap_or(false);
+    let is_silent_start =
+        { Config::verge().await.latest_ref().enable_silent_start }.unwrap_or(false);
     #[cfg(target_os = "macos")]
     {
         if is_silent_start {
@@ -202,18 +205,18 @@ pub async fn resolve_setup_async(app_handle: Arc<AppHandle>) {
             AppHandleManager::global().set_activation_policy_accessory();
         }
     }
-    create_window(!is_silent_start);
+    create_window(!is_silent_start).await;
 
     // 初始化定时器
-    logging_error!(Type::System, true, timer::Timer::global().init());
+    logging_error!(Type::System, true, timer::Timer::global().init().await);
 
     // 自动进入轻量模式
-    auto_lightweight_mode_init();
+    auto_lightweight_mode_init().await;
 
-    logging_error!(Type::Tray, true, tray::Tray::global().update_part());
+    logging_error!(Type::Tray, true, tray::Tray::global().update_part().await);
 
     logging!(trace, Type::System, true, "初始化热键...");
-    logging_error!(Type::System, true, hotkey::Hotkey::global().init());
+    logging_error!(Type::System, true, hotkey::Hotkey::global().init().await);
 
     let elapsed = start_time.elapsed();
     logging!(
@@ -257,7 +260,7 @@ pub async fn resolve_reset_async() {
 }
 
 /// Create the main window
-pub fn create_window(is_show: bool) -> bool {
+pub async fn create_window(is_show: bool) -> bool {
     logging!(
         info,
         Type::Window,
@@ -268,7 +271,7 @@ pub fn create_window(is_show: bool) -> bool {
 
     if !is_show {
         logging!(info, Type::Window, true, "静默模式启动时不创建窗口");
-        lightweight::set_lightweight_mode(true);
+        lightweight::set_lightweight_mode(true).await;
         handle::Handle::notify_startup_completed();
         return false;
     }
@@ -425,7 +428,7 @@ pub fn create_window(is_show: bool) -> bool {
                 );
 
                 // 先运行轻量模式检测
-                lightweight::run_once_auto_lightweight();
+                lightweight::run_once_auto_lightweight().await;
 
                 // 发送启动完成事件，触发前端开始加载
                 logging!(
@@ -631,7 +634,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
             Some(url) => {
                 log::info!(target:"app", "decoded subscription url: {url}");
 
-                create_window(false);
+                create_window(false).await;
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
                     Ok(item) => {
                         let uid = match item.uid.clone() {
@@ -645,7 +648,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                                 return Ok(());
                             }
                         };
-                        let _ = wrap_err!(Config::profiles().data_mut().append_item(item));
+                        let _ = wrap_err!(Config::profiles().await.data_mut().append_item(item));
                         handle::Handle::notice_message("import_sub_url::ok", uid);
                     }
                     Err(e) => {

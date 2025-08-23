@@ -6,20 +6,14 @@ use serde_yaml::Mapping;
 use std::{fs, path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
-pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
+pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
     if !path.exists() {
         bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = fs::read_to_string(path)
-        .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
+    let yaml_str = tokio::fs::read_to_string(path).await?;
 
-    serde_yaml::from_str::<T>(&yaml_str).with_context(|| {
-        format!(
-            "failed to read the file with yaml format \"{}\"",
-            path.display()
-        )
-    })
+    Ok(serde_yaml::from_str::<T>(&yaml_str)?)
 }
 
 /// read mapping from yaml
@@ -60,10 +54,8 @@ pub fn read_mapping(path: &PathBuf) -> Result<Mapping> {
 }
 
 /// read mapping from yaml fix #165
-pub fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
-    let val: SeqMap = read_yaml(path)?;
-
-    Ok(val)
+pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
+    Ok(read_yaml(path).await?)
 }
 
 /// save the data to the file

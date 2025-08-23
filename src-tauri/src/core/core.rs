@@ -137,25 +137,25 @@ impl CoreManager {
         Ok(false)
     }
     /// 使用默认配置
-    pub fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
+    pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
-        *Config::runtime().draft_mut() = Box::new(IRuntime {
-            config: Some(Config::clash().latest_ref().0.clone()),
+
+        // Extract clash config before async operations
+        let clash_config = Config::clash().await.latest_ref().0.clone();
+
+        *Config::runtime().await.draft_mut() = Box::new(IRuntime {
+            config: Some(clash_config.clone()),
             exists_keys: vec![],
             chain_logs: Default::default(),
         });
-        help::save_yaml(
-            &runtime_path,
-            &Config::clash().latest_ref().0,
-            Some("# Clash Verge Runtime"),
-        )?;
+        help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime"))?;
         handle::Handle::notice_message(msg_type, msg_content);
         Ok(())
     }
     /// 验证运行时配置
     pub async fn validate_config(&self) -> Result<(bool, String)> {
         logging!(info, Type::Config, true, "生成临时配置文件用于验证");
-        let config_path = Config::generate_file(ConfigType::Check)?;
+        let config_path = Config::generate_file(ConfigType::Check).await?;
         let config_path = dirs::path_to_str(&config_path)?;
         self.validate_config_internal(config_path).await
     }
@@ -248,7 +248,7 @@ impl CoreManager {
             config_path
         );
 
-        let clash_core = Config::verge().latest_ref().get_valid_clash_core();
+        let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::global().app_handle().ok_or_else(|| {
@@ -388,7 +388,7 @@ impl CoreManager {
 
         // 1. 先生成新的配置内容
         logging!(info, Type::Config, true, "生成新的配置内容");
-        Config::generate()?;
+        Config::generate().await?;
 
         // 2. 验证配置
         match self.validate_config().await {
@@ -396,18 +396,18 @@ impl CoreManager {
                 logging!(info, Type::Config, true, "配置验证通过");
                 // 4. 验证通过后，生成正式的运行时配置
                 logging!(info, Type::Config, true, "生成运行时配置");
-                let run_path = Config::generate_file(ConfigType::Run)?;
+                let run_path = Config::generate_file(ConfigType::Run).await?;
                 logging_error!(Type::Config, true, self.put_configs_force(run_path).await);
                 Ok((true, "something".into()))
             }
             Ok((false, error_msg)) => {
                 logging!(warn, Type::Config, true, "配置验证失败: {}", error_msg);
-                Config::runtime().discard();
+                Config::runtime().await.discard();
                 Ok((false, error_msg))
             }
             Err(e) => {
                 logging!(warn, Type::Config, true, "验证过程发生错误: {}", e);
-                Config::runtime().discard();
+                Config::runtime().await.discard();
                 Err(e)
             }
         }
@@ -420,13 +420,13 @@ impl CoreManager {
         });
         match IpcManager::global().put_configs_force(run_path_str?).await {
             Ok(_) => {
-                Config::runtime().apply();
+                Config::runtime().await.apply();
                 logging!(info, Type::Core, true, "Configuration updated successfully");
                 Ok(())
             }
             Err(e) => {
                 let msg = e.to_string();
-                Config::runtime().discard();
+                Config::runtime().await.discard();
                 logging_error!(Type::Core, true, "Failed to update configuration: {}", msg);
                 Err(msg)
             }
@@ -735,13 +735,13 @@ impl CoreManager {
         }
     }
 
-    fn start_core_by_sidecar(&self) -> Result<()> {
+    async fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Running core by sidecar");
-        let config_file = &Config::generate_file(ConfigType::Run)?;
+        let config_file = &Config::generate_file(ConfigType::Run).await?;
         let app_handle = handle::Handle::global()
             .app_handle()
             .ok_or(anyhow::anyhow!("failed to get app handle"))?;
-        let clash_core = Config::verge().latest_ref().get_valid_clash_core();
+        let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         let service_log_dir = dirs::app_home_dir()?.join("logs").join("service");
@@ -815,7 +815,7 @@ impl CoreManager {
 impl CoreManager {
     async fn start_core_by_service(&self) -> Result<()> {
         logging!(trace, Type::Core, true, "Running core by service");
-        let config_file = &Config::generate_file(ConfigType::Run)?;
+        let config_file = &Config::generate_file(ConfigType::Run).await?;
         service::run_core_by_service(config_file).await?;
         self.set_running_mode(RunningMode::Service);
         Ok(())
@@ -845,7 +845,7 @@ impl CoreManager {
     async fn attempt_service_init(&self) -> Result<()> {
         if service::check_service_needs_reinstall().await {
             logging!(info, Type::Core, true, "服务版本不匹配或状态异常，执行重装");
-            if let Err(e) = service::reinstall_service() {
+            if let Err(e) = service::reinstall_service().await {
                 logging!(
                     warn,
                     Type::Core,
@@ -868,11 +868,11 @@ impl CoreManager {
                 e
             );
             // 确保 prefer_sidecar 在 start_core_by_service 失败时也被设置
-            let mut state = service::ServiceState::get();
+            let mut state = service::ServiceState::get().await;
             if !state.prefer_sidecar {
                 state.prefer_sidecar = true;
                 state.last_error = Some(format!("通过服务启动核心失败: {e}"));
-                if let Err(save_err) = state.save() {
+                if let Err(save_err) = state.save().await {
                     logging!(
                         error,
                         Type::Core,
@@ -941,7 +941,7 @@ impl CoreManager {
                 "核心未通过服务模式启动，执行Sidecar回退或首次安装逻辑"
             );
 
-            let service_state = service::ServiceState::get();
+            let service_state = service::ServiceState::get().await;
 
             if service_state.prefer_sidecar {
                 logging!(
@@ -950,7 +950,7 @@ impl CoreManager {
                     true,
                     "用户偏好Sidecar模式或先前服务启动失败，使用Sidecar模式启动"
                 );
-                self.start_core_by_sidecar()?;
+                self.start_core_by_sidecar().await?;
                 // 如果 sidecar 启动成功，我们可以认为核心初始化流程到此结束
                 // 后续的 Tray::global().subscribe_traffic().await 仍然会执行
             } else {
@@ -962,13 +962,13 @@ impl CoreManager {
                         true,
                         "无服务安装记录 (首次运行或状态重置)，尝试安装服务"
                     );
-                    match service::install_service() {
+                    match service::install_service().await {
                         Ok(_) => {
                             logging!(info, Type::Core, true, "服务安装成功(首次尝试)");
                             let mut new_state = service::ServiceState::default();
                             new_state.record_install();
                             new_state.prefer_sidecar = false;
-                            new_state.save()?;
+                            new_state.save().await?;
 
                             if service::is_service_available().await.is_ok() {
                                 logging!(info, Type::Core, true, "新安装的服务可用，尝试启动");
@@ -981,12 +981,12 @@ impl CoreManager {
                                         true,
                                         "新安装的服务启动失败，回退到Sidecar模式"
                                     );
-                                    let mut final_state = service::ServiceState::get();
+                                    let mut final_state = service::ServiceState::get().await;
                                     final_state.prefer_sidecar = true;
                                     final_state.last_error =
                                         Some("Newly installed service failed to start".to_string());
-                                    final_state.save()?;
-                                    self.start_core_by_sidecar()?;
+                                    final_state.save().await?;
+                                    self.start_core_by_sidecar().await?;
                                 }
                             } else {
                                 logging!(
@@ -995,14 +995,14 @@ impl CoreManager {
                                     true,
                                     "服务安装成功但未能连接/立即可用，回退到Sidecar模式"
                                 );
-                                let mut final_state = service::ServiceState::get();
+                                let mut final_state = service::ServiceState::get().await;
                                 final_state.prefer_sidecar = true;
                                 final_state.last_error = Some(
                                     "Newly installed service not immediately available/connectable"
                                         .to_string(),
                                 );
-                                final_state.save()?;
-                                self.start_core_by_sidecar()?;
+                                final_state.save().await?;
+                                self.start_core_by_sidecar().await?;
                             }
                         }
                         Err(err) => {
@@ -1012,8 +1012,8 @@ impl CoreManager {
                                 prefer_sidecar: true,
                                 ..Default::default()
                             };
-                            new_state.save()?;
-                            self.start_core_by_sidecar()?;
+                            new_state.save().await?;
+                            self.start_core_by_sidecar().await?;
                         }
                     }
                 } else {
@@ -1026,7 +1026,7 @@ impl CoreManager {
                         true,
                         "有服务安装记录但服务不可用/未启动，强制切换到Sidecar模式"
                     );
-                    let mut final_state = service::ServiceState::get();
+                    let mut final_state = service::ServiceState::get().await;
                     if !final_state.prefer_sidecar {
                         logging!(
                             warn,
@@ -1040,9 +1040,9 @@ impl CoreManager {
                                 "Service startup failed or unavailable before sidecar fallback"
                                     .to_string()
                             }));
-                        final_state.save()?;
+                        final_state.save().await?;
                     }
-                    self.start_core_by_sidecar()?;
+                    self.start_core_by_sidecar().await?;
                 }
             }
         }
@@ -1067,13 +1067,13 @@ impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
         if service::is_service_available().await.is_ok() {
             if service::check_service_needs_reinstall().await {
-                service::reinstall_service()?;
+                service::reinstall_service().await?;
             }
             logging!(info, Type::Core, true, "服务可用，使用服务模式启动");
             self.start_core_by_service().await?;
         } else {
             // 服务不可用，检查用户偏好
-            let service_state = service::ServiceState::get();
+            let service_state = service::ServiceState::get().await;
             if service_state.prefer_sidecar {
                 logging!(
                     info,
@@ -1081,10 +1081,10 @@ impl CoreManager {
                     true,
                     "服务不可用，根据用户偏好使用Sidecar模式"
                 );
-                self.start_core_by_sidecar()?;
+                self.start_core_by_sidecar().await?;
             } else {
                 logging!(info, Type::Core, true, "服务不可用，使用Sidecar模式");
-                self.start_core_by_sidecar()?;
+                self.start_core_by_sidecar().await?;
             }
         }
         Ok(())
@@ -1125,11 +1125,15 @@ impl CoreManager {
             return Err(error_message);
         }
 
-        Config::verge().draft_mut().clash_core = clash_core.clone();
-        Config::verge().apply();
-        logging_error!(Type::Core, true, Config::verge().latest_ref().save_file());
+        Config::verge().await.draft_mut().clash_core = clash_core.clone();
+        Config::verge().await.apply();
+        logging_error!(
+            Type::Core,
+            true,
+            Config::verge().await.latest_ref().save_file()
+        );
 
-        let run_path = Config::generate_file(ConfigType::Run).map_err(|e| {
+        let run_path = Config::generate_file(ConfigType::Run).await.map_err(|e| {
             let msg = e.to_string();
             logging_error!(Type::Core, true, "{}", msg);
             msg

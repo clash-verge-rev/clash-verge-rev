@@ -3,75 +3,87 @@ use crate::{
     core::handle,
     ipc::IpcManager,
     logging,
-    process::AsyncHandler,
     utils::logging::Type,
 };
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 /// Toggle system proxy on/off
-pub fn toggle_system_proxy() {
-    let enable = Config::verge().draft_mut().enable_system_proxy;
-    let enable = enable.unwrap_or(false);
-    let auto_close_connection = Config::verge()
-        .data_mut()
-        .auto_close_connection
-        .unwrap_or(false);
+pub async fn toggle_system_proxy() {
+    // 获取当前系统代理状态
+    let enable = {
+        let verge = Config::verge().await;
+        let enable = verge
+            .latest_ref()
+            .enable_system_proxy
+            .clone()
+            .unwrap_or(false);
+        enable
+    };
+    // 获取自动关闭连接设置
+    let auto_close_connection = {
+        let verge = Config::verge().await;
+        let auto_close = verge
+            .latest_ref()
+            .auto_close_connection
+            .clone()
+            .unwrap_or(false);
+        auto_close
+    };
 
-    AsyncHandler::spawn(move || async move {
-        // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
-        if enable && auto_close_connection {
-            if let Err(err) = IpcManager::global().close_all_connections().await {
-                log::error!(target: "app", "Failed to close all connections: {err}");
-            }
+    // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
+    if enable && auto_close_connection {
+        if let Err(err) = IpcManager::global().close_all_connections().await {
+            log::error!(target: "app", "Failed to close all connections: {err}");
         }
+    }
 
-        match super::patch_verge(
-            IVerge {
-                enable_system_proxy: Some(!enable),
-                ..IVerge::default()
-            },
-            false,
-        )
-        .await
-        {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
-        }
-    });
+    let patch_result = super::patch_verge(
+        IVerge {
+            enable_system_proxy: Some(!enable),
+            ..IVerge::default()
+        },
+        false,
+    )
+    .await;
+
+    match patch_result {
+        Ok(_) => handle::Handle::refresh_verge(),
+        Err(err) => log::error!(target: "app", "{err}"),
+    }
 }
 
 /// Toggle TUN mode on/off
-pub fn toggle_tun_mode(not_save_file: Option<bool>) {
-    let enable = Config::verge().data_mut().enable_tun_mode;
+pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
+    let enable = Config::verge().await.data_mut().enable_tun_mode;
     let enable = enable.unwrap_or(false);
 
-    AsyncHandler::spawn(async move || {
-        match super::patch_verge(
-            IVerge {
-                enable_tun_mode: Some(!enable),
-                ..IVerge::default()
-            },
-            not_save_file.unwrap_or(false),
-        )
-        .await
-        {
-            Ok(_) => handle::Handle::refresh_verge(),
-            Err(err) => log::error!(target: "app", "{err}"),
-        }
-    });
+    match super::patch_verge(
+        IVerge {
+            enable_tun_mode: Some(!enable),
+            ..IVerge::default()
+        },
+        not_save_file.unwrap_or(false),
+    )
+    .await
+    {
+        Ok(_) => handle::Handle::refresh_verge(),
+        Err(err) => log::error!(target: "app", "{err}"),
+    }
 }
 
 /// Copy proxy environment variables to clipboard
-pub fn copy_clash_env() {
+pub async fn copy_clash_env() {
     // 从环境变量获取IP地址，如果没有则从配置中获取 proxy_host，默认为 127.0.0.1
-    let clash_verge_rev_ip = env::var("CLASH_VERGE_REV_IP").unwrap_or_else(|_| {
-        Config::verge()
+    let clash_verge_rev_ip = match env::var("CLASH_VERGE_REV_IP") {
+        Ok(ip) => ip,
+        Err(_) => Config::verge()
+            .await
             .latest_ref()
             .proxy_host
             .clone()
-            .unwrap_or_else(|| "127.0.0.1".to_string())
-    });
+            .unwrap_or_else(|| "127.0.0.1".to_string()),
+    };
 
     let Some(app_handle) = handle::Handle::global().app_handle() else {
         logging!(
@@ -83,6 +95,7 @@ pub fn copy_clash_env() {
     };
     let port = {
         Config::verge()
+            .await
             .latest_ref()
             .verge_mixed_port
             .unwrap_or(7897)
@@ -91,7 +104,7 @@ pub fn copy_clash_env() {
     let socks5_proxy = format!("socks5://{clash_verge_rev_ip}:{port}");
 
     let cliboard = app_handle.clipboard();
-    let env_type = { Config::verge().latest_ref().env_type.clone() };
+    let env_type = { Config::verge().await.latest_ref().env_type.clone() };
     let env_type = match env_type {
         Some(env_type) => env_type,
         None => {

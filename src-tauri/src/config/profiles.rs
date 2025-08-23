@@ -32,22 +32,28 @@ macro_rules! patch {
 }
 
 impl IProfiles {
-    pub fn new() -> Self {
-        match dirs::profiles_path().and_then(|path| help::read_yaml::<Self>(&path)) {
-            Ok(mut profiles) => {
-                if profiles.items.is_none() {
-                    profiles.items = Some(vec![]);
-                }
-                // compatible with the old old old version
-                if let Some(items) = profiles.items.as_mut() {
-                    for item in items.iter_mut() {
-                        if item.uid.is_none() {
-                            item.uid = Some(help::get_uid("d"));
+    pub async fn new() -> Self {
+        match dirs::profiles_path() {
+            Ok(path) => match help::read_yaml::<Self>(&path).await {
+                Ok(mut profiles) => {
+                    if profiles.items.is_none() {
+                        profiles.items = Some(vec![]);
+                    }
+                    // compatible with the old old old version
+                    if let Some(items) = profiles.items.as_mut() {
+                        for item in items.iter_mut() {
+                            if item.uid.is_none() {
+                                item.uid = Some(help::get_uid("d"));
+                            }
                         }
                     }
+                    profiles
                 }
-                profiles
-            }
+                Err(err) => {
+                    log::error!(target: "app", "{err}");
+                    Self::template()
+                }
+            },
             Err(err) => {
                 log::error!(target: "app", "{err}");
                 Self::template()

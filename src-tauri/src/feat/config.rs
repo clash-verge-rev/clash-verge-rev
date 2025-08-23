@@ -10,19 +10,26 @@ use serde_yaml::Mapping;
 
 /// Patch Clash configuration
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
-    Config::clash().draft_mut().patch_config(patch.clone());
+    Config::clash()
+        .await
+        .draft_mut()
+        .patch_config(patch.clone());
 
     let res = {
         // 激活订阅
         if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
-            Config::generate()?;
+            Config::generate().await?;
             CoreManager::global().restart_core().await?;
         } else {
             if patch.get("mode").is_some() {
-                logging_error!(Type::Tray, true, tray::Tray::global().update_menu());
-                logging_error!(Type::Tray, true, tray::Tray::global().update_icon(None));
+                logging_error!(Type::Tray, true, tray::Tray::global().update_menu().await);
+                logging_error!(
+                    Type::Tray,
+                    true,
+                    tray::Tray::global().update_icon(None).await
+                );
             }
-            Config::runtime().draft_mut().patch_config(patch);
+            Config::runtime().await.draft_mut().patch_config(patch);
             CoreManager::global().update_config().await?;
         }
         handle::Handle::refresh_clash();
@@ -30,12 +37,12 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     };
     match res {
         Ok(()) => {
-            Config::clash().apply();
-            Config::clash().data_mut().save_config()?;
+            Config::clash().await.apply();
+            Config::clash().await.data_mut().save_config()?;
             Ok(())
         }
         Err(err) => {
-            Config::clash().discard();
+            Config::clash().await.discard();
             Err(err)
         }
     }
@@ -60,7 +67,10 @@ enum UpdateFlags {
 
 /// Patch Verge configuration
 pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
-    Config::verge().draft_mut().patch_config(patch.clone());
+    Config::verge()
+        .await
+        .draft_mut()
+        .patch_config(patch.clone());
 
     let tun_mode = patch.enable_tun_mode;
     let auto_launch = patch.enable_auto_launch;
@@ -173,7 +183,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
 
         // Process updates based on flags
         if (update_flags & (UpdateFlags::RestartCore as i32)) != 0 {
-            Config::generate()?;
+            Config::generate().await?;
             CoreManager::global().restart_core().await?;
         }
         if (update_flags & (UpdateFlags::ClashConfig as i32)) != 0 {
@@ -181,35 +191,35 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             handle::Handle::refresh_clash();
         }
         if (update_flags & (UpdateFlags::VergeConfig as i32)) != 0 {
-            Config::verge().draft_mut().enable_global_hotkey = enable_global_hotkey;
+            Config::verge().await.draft_mut().enable_global_hotkey = enable_global_hotkey;
             handle::Handle::refresh_verge();
         }
         if (update_flags & (UpdateFlags::Launch as i32)) != 0 {
-            sysopt::Sysopt::global().update_launch()?;
+            sysopt::Sysopt::global().update_launch().await?;
         }
         if (update_flags & (UpdateFlags::SysProxy as i32)) != 0 {
             sysopt::Sysopt::global().update_sysproxy().await?;
         }
         if (update_flags & (UpdateFlags::Hotkey as i32)) != 0 {
             if let Some(hotkeys) = patch.hotkeys {
-                hotkey::Hotkey::global().update(hotkeys)?;
+                hotkey::Hotkey::global().update(hotkeys).await?;
             }
         }
         if (update_flags & (UpdateFlags::SystrayMenu as i32)) != 0 {
-            tray::Tray::global().update_menu()?;
+            tray::Tray::global().update_menu().await?;
         }
         if (update_flags & (UpdateFlags::SystrayIcon as i32)) != 0 {
-            tray::Tray::global().update_icon(None)?;
+            tray::Tray::global().update_icon(None).await?;
         }
         if (update_flags & (UpdateFlags::SystrayTooltip as i32)) != 0 {
-            tray::Tray::global().update_tooltip()?;
+            tray::Tray::global().update_tooltip().await?;
         }
         if (update_flags & (UpdateFlags::SystrayClickBehavior as i32)) != 0 {
-            tray::Tray::global().update_click_behavior()?;
+            tray::Tray::global().update_click_behavior().await?;
         }
         if (update_flags & (UpdateFlags::LighteWeight as i32)) != 0 {
             if enable_auto_light_weight.unwrap_or(false) {
-                lightweight::enable_auto_light_weight_mode();
+                lightweight::enable_auto_light_weight_mode().await;
             } else {
                 lightweight::disable_auto_light_weight_mode();
             }
@@ -219,15 +229,15 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
     };
     match res {
         Ok(()) => {
-            Config::verge().apply();
+            Config::verge().await.apply();
             if !not_save_file {
-                Config::verge().data_mut().save_file()?;
+                Config::verge().await.data_mut().save_file()?;
             }
 
             Ok(())
         }
         Err(err) => {
-            Config::verge().discard();
+            Config::verge().await.discard();
             Err(err)
         }
     }

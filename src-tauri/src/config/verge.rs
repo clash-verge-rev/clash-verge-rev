@@ -237,9 +237,9 @@ impl IVerge {
     pub const VALID_CLASH_CORES: &'static [&'static str] = &["verge-mihomo", "verge-mihomo-alpha"];
 
     /// 验证并修正配置文件中的clash_core值
-    pub fn validate_and_fix_config() -> Result<()> {
+    pub async fn validate_and_fix_config() -> Result<()> {
         let config_path = dirs::verge_path()?;
-        let mut config = match help::read_yaml::<IVerge>(&config_path) {
+        let mut config = match help::read_yaml::<IVerge>(&config_path).await {
             Ok(config) => config,
             Err(_) => Self::template(),
         };
@@ -281,7 +281,7 @@ impl IVerge {
                 "配置文件修正完成，需要重新加载配置"
             );
 
-            Self::reload_config_after_fix(config)?;
+            Self::reload_config_after_fix(config).await?;
         } else {
             logging!(
                 info,
@@ -296,10 +296,10 @@ impl IVerge {
     }
 
     /// 配置修正后重新加载配置
-    fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
+    async fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
         use crate::config::Config;
 
-        let config_draft = Config::verge();
+        let config_draft = Config::verge().await;
         *config_draft.draft_mut() = Box::new(updated_config.clone());
         config_draft.apply();
 
@@ -335,9 +335,15 @@ impl IVerge {
         }
     }
 
-    pub fn new() -> Self {
-        match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
-            Ok(config) => config,
+    pub async fn new() -> Self {
+        match dirs::verge_path() {
+            Ok(path) => match help::read_yaml::<IVerge>(&path).await {
+                Ok(config) => config,
+                Err(err) => {
+                    log::error!(target: "app", "{err}");
+                    Self::template()
+                }
+            },
             Err(err) => {
                 log::error!(target: "app", "{err}");
                 Self::template()

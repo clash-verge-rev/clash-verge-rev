@@ -7,8 +7,8 @@ use crate::{
     utils::{dirs, help, logging::Type},
 };
 use anyhow::{anyhow, Result};
-use once_cell::sync::OnceCell;
 use std::path::PathBuf;
+use tokio::sync::OnceCell;
 use tokio::time::{sleep, Duration};
 
 pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
@@ -22,64 +22,71 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn global() -> &'static Config {
-        static CONFIG: OnceCell<Config> = OnceCell::new();
-
-        CONFIG.get_or_init(|| Config {
-            clash_config: Draft::from(Box::new(IClashTemp::new())),
-            verge_config: Draft::from(Box::new(IVerge::new())),
-            profiles_config: Draft::from(Box::new(IProfiles::new())),
-            runtime_config: Draft::from(Box::new(IRuntime::new())),
-        })
+    pub async fn global() -> &'static Config {
+        static CONFIG: OnceCell<Config> = OnceCell::const_new();
+        CONFIG
+            .get_or_init(|| async {
+                Config {
+                    clash_config: Draft::from(Box::new(IClashTemp::new())),
+                    verge_config: Draft::from(Box::new(IVerge::new().await)),
+                    profiles_config: Draft::from(Box::new(IProfiles::new().await)),
+                    runtime_config: Draft::from(Box::new(IRuntime::new())),
+                }
+            })
+            .await
     }
 
-    pub fn clash() -> Draft<Box<IClashTemp>> {
-        Self::global().clash_config.clone()
+    pub async fn clash() -> Draft<Box<IClashTemp>> {
+        Self::global().await.clash_config.clone()
     }
 
-    pub fn verge() -> Draft<Box<IVerge>> {
-        Self::global().verge_config.clone()
+    pub async fn verge() -> Draft<Box<IVerge>> {
+        Self::global().await.verge_config.clone()
     }
 
-    pub fn profiles() -> Draft<Box<IProfiles>> {
-        Self::global().profiles_config.clone()
+    pub async fn profiles() -> Draft<Box<IProfiles>> {
+        Self::global().await.profiles_config.clone()
     }
 
-    pub fn runtime() -> Draft<Box<IRuntime>> {
-        Self::global().runtime_config.clone()
+    pub async fn runtime() -> Draft<Box<IRuntime>> {
+        Self::global().await.runtime_config.clone()
     }
 
     /// 初始化订阅
     pub async fn init_config() -> Result<()> {
         if Self::profiles()
+            .await
             .latest_ref()
             .get_item(&"Merge".to_string())
             .is_err()
         {
             let merge_item = PrfItem::from_merge(Some("Merge".to_string()))?;
             Self::profiles()
+                .await
                 .data_mut()
                 .append_item(merge_item.clone())?;
         }
         if Self::profiles()
+            .await
             .latest_ref()
             .get_item(&"Script".to_string())
             .is_err()
         {
             let script_item = PrfItem::from_script(Some("Script".to_string()))?;
             Self::profiles()
+                .await
                 .data_mut()
                 .append_item(script_item.clone())?;
         }
         // 生成运行时配置
-        if let Err(err) = Self::generate() {
+        if let Err(err) = Self::generate().await {
             logging!(error, Type::Config, true, "生成运行时配置失败: {}", err);
         } else {
             logging!(info, Type::Config, true, "生成运行时配置成功");
         }
 
         // 生成运行时配置文件并验证
-        let config_result = Self::generate_file(ConfigType::Run);
+        let config_result = Self::generate_file(ConfigType::Run).await;
 
         let validation_result = if config_result.is_ok() {
             // 验证配置文件
@@ -96,7 +103,8 @@ impl Config {
                             error_msg
                         );
                         CoreManager::global()
-                            .use_default_config("config_validate::boot_error", &error_msg)?;
+                            .use_default_config("config_validate::boot_error", &error_msg)
+                            .await?;
                         Some(("config_validate::boot_error", error_msg))
                     } else {
                         logging!(info, Type::Config, true, "配置验证成功");
@@ -106,13 +114,16 @@ impl Config {
                 Err(err) => {
                     logging!(warn, Type::Config, true, "验证进程执行失败: {}", err);
                     CoreManager::global()
-                        .use_default_config("config_validate::process_terminated", "")?;
+                        .use_default_config("config_validate::process_terminated", "")
+                        .await?;
                     Some(("config_validate::process_terminated", String::new()))
                 }
             }
         } else {
             logging!(warn, Type::Config, true, "生成配置文件失败，使用默认配置");
-            CoreManager::global().use_default_config("config_validate::error", "")?;
+            CoreManager::global()
+                .use_default_config("config_validate::error", "")
+                .await?;
             Some(("config_validate::error", String::new()))
         };
 
@@ -128,13 +139,13 @@ impl Config {
     }
 
     /// 将订阅丢到对应的文件中
-    pub fn generate_file(typ: ConfigType) -> Result<PathBuf> {
+    pub async fn generate_file(typ: ConfigType) -> Result<PathBuf> {
         let path = match typ {
             ConfigType::Run => dirs::app_home_dir()?.join(RUNTIME_CONFIG),
             ConfigType::Check => dirs::app_home_dir()?.join(CHECK_CONFIG),
         };
 
-        let runtime = Config::runtime();
+        let runtime = Config::runtime().await;
         let runtime = runtime.latest_ref();
         let config = runtime
             .config
@@ -146,10 +157,10 @@ impl Config {
     }
 
     /// 生成订阅存好
-    pub fn generate() -> Result<()> {
-        let (config, exists_keys, logs) = enhance::enhance();
+    pub async fn generate() -> Result<()> {
+        let (config, exists_keys, logs) = enhance::enhance().await;
 
-        *Config::runtime().draft_mut() = Box::new(IRuntime {
+        *Config::runtime().await.draft_mut() = Box::new(IRuntime {
             config: Some(config),
             exists_keys,
             chain_logs: logs,

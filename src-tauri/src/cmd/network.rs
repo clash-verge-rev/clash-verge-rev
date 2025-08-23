@@ -31,7 +31,7 @@ pub async fn get_auto_proxy() -> CmdResult<Mapping> {
 
     let proxy_manager = EventDrivenProxyManager::global();
 
-    let current = proxy_manager.get_auto_proxy_cached();
+    let current = proxy_manager.get_auto_proxy_cached().await;
     // 异步请求更新，立即返回缓存数据
     AsyncHandler::spawn(move || async move {
         let _ = proxy_manager.get_auto_proxy_async().await;

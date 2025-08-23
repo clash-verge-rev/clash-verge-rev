@@ -163,7 +163,7 @@ impl PrfItem {
             "local" => {
                 let name = item.name.unwrap_or("Local File".into());
                 let desc = item.desc.unwrap_or("".into());
-                PrfItem::from_local(name, desc, file_data, item.option)
+                PrfItem::from_local(name, desc, file_data, item.option).await
             }
             typ => bail!("invalid profile item type \"{typ}\""),
         }
@@ -171,7 +171,7 @@ impl PrfItem {
 
     /// ## Local type
     /// create a new item from name/desc
-    pub fn from_local(
+    pub async fn from_local(
         name: String,
         desc: String,
         file_data: Option<String>,
@@ -190,6 +190,7 @@ impl PrfItem {
         if merge.is_none() {
             let merge_item = PrfItem::from_merge(None)?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(merge_item.clone())?;
             merge = merge_item.uid;
@@ -197,6 +198,7 @@ impl PrfItem {
         if script.is_none() {
             let script_item = PrfItem::from_script(None)?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(script_item.clone())?;
             script = script_item.uid;
@@ -204,6 +206,7 @@ impl PrfItem {
         if rules.is_none() {
             let rules_item = PrfItem::from_rules()?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(rules_item.clone())?;
             rules = rules_item.uid;
@@ -211,6 +214,7 @@ impl PrfItem {
         if proxies.is_none() {
             let proxies_item = PrfItem::from_proxies()?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(proxies_item.clone())?;
             proxies = proxies_item.uid;
@@ -218,6 +222,7 @@ impl PrfItem {
         if groups.is_none() {
             let groups_item = PrfItem::from_groups()?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(groups_item.clone())?;
             groups = groups_item.uid;
@@ -378,6 +383,7 @@ impl PrfItem {
         if merge.is_none() {
             let merge_item = PrfItem::from_merge(None)?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(merge_item.clone())?;
             merge = merge_item.uid;
@@ -385,6 +391,7 @@ impl PrfItem {
         if script.is_none() {
             let script_item = PrfItem::from_script(None)?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(script_item.clone())?;
             script = script_item.uid;
@@ -392,6 +399,7 @@ impl PrfItem {
         if rules.is_none() {
             let rules_item = PrfItem::from_rules()?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(rules_item.clone())?;
             rules = rules_item.uid;
@@ -399,6 +407,7 @@ impl PrfItem {
         if proxies.is_none() {
             let proxies_item = PrfItem::from_proxies()?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(proxies_item.clone())?;
             proxies = proxies_item.uid;
@@ -406,6 +415,7 @@ impl PrfItem {
         if groups.is_none() {
             let groups_item = PrfItem::from_groups()?;
             Config::profiles()
+                .await
                 .data_mut()
                 .append_item(groups_item.clone())?;
             groups = groups_item.uid;
