@@ -6,7 +6,7 @@ use crate::{
     utils::{dirs, logging::Type},
     wrap_err,
 };
-use std::fs;
+use tokio::fs;
 
 /// 保存profiles的配置
 #[tauri::command]
@@ -30,7 +30,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
 
     // 保存新的配置文件
     let file_data = file_data.ok_or("file_data is None")?;
-    wrap_err!(fs::write(&file_path, &file_data))?;
+    wrap_err!(fs::write(&file_path, &file_data).await)?;
 
     let file_path_str = file_path.to_string_lossy().to_string();
     logging!(
@@ -88,7 +88,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                     error_msg
                 );
                 // 恢复原始配置文件
-                wrap_err!(fs::write(&file_path, original_content))?;
+                wrap_err!(fs::write(&file_path, original_content).await)?;
                 // 发送合并文件专用错误通知
                 let result = (false, error_msg.clone());
                 crate::cmd::validate::handle_yaml_validation_notice(&result, "合并配置文件");
@@ -103,7 +103,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                     e
                 );
                 // 恢复原始配置文件
-                wrap_err!(fs::write(&file_path, original_content))?;
+                wrap_err!(fs::write(&file_path, original_content).await)?;
                 return Err(e.to_string());
             }
         }
@@ -127,7 +127,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                 error_msg
             );
             // 恢复原始配置文件
-            wrap_err!(fs::write(&file_path, original_content))?;
+            wrap_err!(fs::write(&file_path, original_content).await)?;
 
             // 智能判断错误类型
             let is_script_error = file_path_str.ends_with(".js")
@@ -177,7 +177,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                 e
             );
             // 恢复原始配置文件
-            wrap_err!(fs::write(&file_path, original_content))?;
+            wrap_err!(fs::write(&file_path, original_content).await)?;
             Err(e.to_string())
         }
     }

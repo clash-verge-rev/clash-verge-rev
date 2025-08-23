@@ -1,6 +1,6 @@
 use crate::{
     cmd,
-    config::{Config, PrfItem, PrfOption},
+    config::{profiles::profiles_draft_update_item_safe, Config, PrfItem, PrfOption},
     core::{handle, CoreManager, *},
     logging,
     utils::logging::Type,
@@ -67,10 +67,12 @@ pub async fn update_profile(
                 Ok(item) => {
                     log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
                     let profiles = Config::profiles().await;
-                    let mut profiles = profiles.draft_mut();
-                    profiles.update_item(uid.clone(), item)?;
 
-                    let is_current = Some(uid.clone()) == profiles.get_current();
+                    // 使用Send-safe helper函数
+                    let result = profiles_draft_update_item_safe(uid.clone(), item).await;
+                    result?;
+
+                    let is_current = Some(uid.clone()) == profiles.latest_ref().get_current();
                     log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
                     is_current && auto_refresh
                 }
@@ -103,8 +105,9 @@ pub async fn update_profile(
 
                             // 更新到配置
                             let profiles = Config::profiles().await;
-                            let mut profiles = profiles.draft_mut();
-                            profiles.update_item(uid.clone(), item.clone())?;
+
+                            // 使用 Send-safe 方法进行数据操作
+                            profiles_draft_update_item_safe(uid.clone(), item.clone()).await?;
 
                             // 获取配置名称用于通知
                             let profile_name = item.name.clone().unwrap_or_else(|| uid.clone());
@@ -112,7 +115,7 @@ pub async fn update_profile(
                             // 发送通知告知用户自动更新使用了回退机制
                             handle::Handle::notice_message("update_with_clash_proxy", profile_name);
 
-                            let is_current = Some(uid.clone()) == profiles.get_current();
+                            let is_current = Some(uid.clone()) == profiles.data_ref().get_current();
                             log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
                             is_current && auto_refresh
                         }

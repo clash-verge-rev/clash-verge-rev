@@ -41,7 +41,7 @@ impl AsyncHandler {
         Fut: Future + Send + 'static,
     {
         #[cfg(feature = "tokio-trace")]
-        Self::log_task_info(&f);
+        Self::log_task_info(&fut);
         async_runtime::block_on(fut)
     }
 

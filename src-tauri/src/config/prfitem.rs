@@ -9,8 +9,6 @@ use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{fs, time::Duration};
 
-use super::Config;
-
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
     pub uid: Option<String>,
@@ -189,42 +187,27 @@ impl PrfItem {
 
         if merge.is_none() {
             let merge_item = PrfItem::from_merge(None)?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(merge_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(merge_item.clone()).await?;
             merge = merge_item.uid;
         }
         if script.is_none() {
             let script_item = PrfItem::from_script(None)?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(script_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(script_item.clone()).await?;
             script = script_item.uid;
         }
         if rules.is_none() {
             let rules_item = PrfItem::from_rules()?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(rules_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(rules_item.clone()).await?;
             rules = rules_item.uid;
         }
         if proxies.is_none() {
             let proxies_item = PrfItem::from_proxies()?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(proxies_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(proxies_item.clone()).await?;
             proxies = proxies_item.uid;
         }
         if groups.is_none() {
             let groups_item = PrfItem::from_groups()?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(groups_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(groups_item.clone()).await?;
             groups = groups_item.uid;
         }
         Ok(PrfItem {
@@ -382,42 +365,27 @@ impl PrfItem {
 
         if merge.is_none() {
             let merge_item = PrfItem::from_merge(None)?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(merge_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(merge_item.clone()).await?;
             merge = merge_item.uid;
         }
         if script.is_none() {
             let script_item = PrfItem::from_script(None)?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(script_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(script_item.clone()).await?;
             script = script_item.uid;
         }
         if rules.is_none() {
             let rules_item = PrfItem::from_rules()?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(rules_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(rules_item.clone()).await?;
             rules = rules_item.uid;
         }
         if proxies.is_none() {
             let proxies_item = PrfItem::from_proxies()?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(proxies_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(proxies_item.clone()).await?;
             proxies = proxies_item.uid;
         }
         if groups.is_none() {
             let groups_item = PrfItem::from_groups()?;
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(groups_item.clone())?;
+            crate::config::profiles::profiles_append_item_safe(groups_item.clone()).await?;
             groups = groups_item.uid;
         }
 

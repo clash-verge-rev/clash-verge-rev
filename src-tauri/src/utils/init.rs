@@ -141,7 +141,7 @@ pub async fn delete_log() -> Result<()> {
 }
 
 /// 初始化DNS配置文件
-fn init_dns_config() -> Result<()> {
+async fn init_dns_config() -> Result<()> {
     use serde_yaml::Value;
 
     // 创建DNS子配置
@@ -249,7 +249,8 @@ fn init_dns_config() -> Result<()> {
             &dns_path,
             &default_dns_config,
             Some("# Clash Verge DNS Config"),
-        )?;
+        )
+        .await?;
     }
 
     Ok(())
@@ -274,32 +275,35 @@ pub async fn init_config() -> Result<()> {
         }
     }));
 
-    crate::log_err!(dirs::clash_path().map(|path| {
+    if let Ok(path) = dirs::clash_path() {
         if !path.exists() {
-            help::save_yaml(&path, &IClashTemp::template().0, Some("# Clash Vergeasu"))?;
+            let result =
+                help::save_yaml(&path, &IClashTemp::template().0, Some("# Clash Vergeasu")).await;
+            crate::log_err!(result);
         }
-        <Result<()>>::Ok(())
-    }));
+    }
 
-    crate::log_err!(dirs::verge_path().map(|path| {
+    if let Ok(path) = dirs::verge_path() {
         if !path.exists() {
-            help::save_yaml(&path, &IVerge::template(), Some("# Clash Verge"))?;
+            let result = help::save_yaml(&path, &IVerge::template(), Some("# Clash Verge")).await;
+            crate::log_err!(result);
         }
-        <Result<()>>::Ok(())
-    }));
+    }
 
     // 验证并修正verge.yaml中的clash_core配置
-    crate::log_err!(IVerge::validate_and_fix_config().await);
+    let result = IVerge::validate_and_fix_config().await;
+    crate::log_err!(result);
 
-    crate::log_err!(dirs::profiles_path().map(|path| {
+    if let Ok(path) = dirs::profiles_path() {
         if !path.exists() {
-            help::save_yaml(&path, &IProfiles::template(), Some("# Clash Verge"))?;
+            let result =
+                help::save_yaml(&path, &IProfiles::template(), Some("# Clash Verge")).await;
+            crate::log_err!(result);
         }
-        <Result<()>>::Ok(())
-    }));
+    }
 
     // 初始化DNS配置文件
-    let _ = init_dns_config();
+    let _ = init_dns_config().await;
 
     Ok(())
 }

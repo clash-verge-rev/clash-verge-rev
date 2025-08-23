@@ -144,7 +144,7 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
 pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     use crate::utils::dirs;
     use serde_yaml;
-    use std::fs;
+    use tokio::fs;
 
     // 获取DNS配置文件路径
     let dns_path = dirs::app_home_dir()
@@ -153,7 +153,9 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 
     // 保存DNS配置到文件
     let yaml_str = serde_yaml::to_string(&dns_config).map_err(|e| e.to_string())?;
-    fs::write(&dns_path, yaml_str).map_err(|e| e.to_string())?;
+    fs::write(&dns_path, yaml_str)
+        .await
+        .map_err(|e| e.to_string())?;
     logging!(info, Type::Config, "DNS config saved to {dns_path:?}");
 
     Ok(())
@@ -266,17 +268,19 @@ pub fn check_dns_config_exists() -> CmdResult<bool> {
 #[tauri::command]
 pub async fn get_dns_config_content() -> CmdResult<String> {
     use crate::utils::dirs;
-    use std::fs;
+    use tokio::fs;
 
     let dns_path = dirs::app_home_dir()
         .map_err(|e| e.to_string())?
         .join("dns_config.yaml");
 
-    if !dns_path.exists() {
+    if !fs::try_exists(&dns_path).await.map_err(|e| e.to_string())? {
         return Err("DNS config file not found".into());
     }
 
-    let content = fs::read_to_string(&dns_path).map_err(|e| e.to_string())?;
+    let content = fs::read_to_string(&dns_path)
+        .await
+        .map_err(|e| e.to_string())?;
     Ok(content)
 }
 

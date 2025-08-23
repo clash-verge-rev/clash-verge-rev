@@ -1,9 +1,13 @@
 use super::{prfitem::PrfItem, PrfOption};
-use crate::utils::{dirs, help};
+use crate::{
+    process::AsyncHandler,
+    utils::{dirs, help},
+};
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
-use std::{collections::HashSet, fs, io::Write};
+use std::collections::HashSet;
+use tokio::fs;
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -68,12 +72,13 @@ impl IProfiles {
         }
     }
 
-    pub fn save_file(&self) -> Result<()> {
+    pub async fn save_file(&self) -> Result<()> {
         help::save_yaml(
             &dirs::profiles_path()?,
             self,
             Some("# Profiles Config for Clash Verge"),
         )
+        .await
     }
 
     /// 只修改current，valid和chain
@@ -121,7 +126,7 @@ impl IProfiles {
     /// append new item
     /// if the file_data is some
     /// then should save the data to file
-    pub fn append_item(&mut self, mut item: PrfItem) -> Result<()> {
+    pub async fn append_item(&mut self, mut item: PrfItem) -> Result<()> {
         if item.uid.is_none() {
             bail!("the uid should not be null");
         }
@@ -139,9 +144,8 @@ impl IProfiles {
             })?;
             let path = dirs::app_profiles_dir()?.join(&file);
 
-            fs::File::create(path)
-                .with_context(|| format!("failed to create file \"{file}\""))?
-                .write(file_data.as_bytes())
+            fs::write(&path, file_data.as_bytes())
+                .await
                 .with_context(|| format!("failed to write to file \"{file}\""))?;
         }
 
@@ -159,11 +163,11 @@ impl IProfiles {
             items.push(item)
         }
 
-        self.save_file()
+        self.save_file().await
     }
 
     /// reorder items
-    pub fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
+    pub async fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
         let mut new_index = None;
@@ -184,11 +188,11 @@ impl IProfiles {
         let item = items.remove(old_idx);
         items.insert(new_idx, item);
         self.items = Some(items);
-        self.save_file()
+        self.save_file().await
     }
 
     /// update the item value
-    pub fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
+    pub async fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
@@ -204,7 +208,7 @@ impl IProfiles {
                 patch!(each, item, option);
 
                 self.items = Some(items);
-                return self.save_file();
+                return self.save_file().await;
             }
         }
 
@@ -214,7 +218,7 @@ impl IProfiles {
 
     /// be used to update the remote item
     /// only patch `updated` `extra` `file_data`
-    pub fn update_item(&mut self, uid: String, mut item: PrfItem) -> Result<()> {
+    pub async fn update_item(&mut self, uid: String, mut item: PrfItem) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
@@ -243,9 +247,8 @@ impl IProfiles {
 
                         let path = dirs::app_profiles_dir()?.join(&file);
 
-                        fs::File::create(path)
-                            .with_context(|| format!("failed to create file \"{file}\""))?
-                            .write(file_data.as_bytes())
+                        fs::write(&path, file_data.as_bytes())
+                            .await
                             .with_context(|| format!("failed to write to file \"{file}\""))?;
                     }
 
@@ -254,12 +257,12 @@ impl IProfiles {
             }
         }
 
-        self.save_file()
+        self.save_file().await
     }
 
     /// delete item
     /// if delete the current then return true
-    pub fn delete_item(&mut self, uid: String) -> Result<bool> {
+    pub async fn delete_item(&mut self, uid: String) -> Result<bool> {
         let current = self.current.as_ref().unwrap_or(&uid);
         let current = current.clone();
         let item = self.get_item(&uid)?;
@@ -392,12 +395,12 @@ impl IProfiles {
         }
 
         self.items = Some(items);
-        self.save_file()?;
+        self.save_file().await?;
         Ok(current == uid)
     }
 
     /// 获取current指向的订阅内容
-    pub fn current_mapping(&self) -> Result<Mapping> {
+    pub async fn current_mapping(&self) -> Result<Mapping> {
         match (self.current.as_ref(), self.items.as_ref()) {
             (Some(current), Some(items)) => {
                 if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
@@ -405,7 +408,7 @@ impl IProfiles {
                         Some(file) => dirs::app_profiles_dir()?.join(file),
                         None => bail!("failed to get the file field"),
                     };
-                    return help::read_mapping(&file_path);
+                    return help::read_mapping(&file_path).await;
                 }
                 bail!("failed to find the current profile \"uid:{current}\"");
             }
@@ -696,4 +699,79 @@ impl IProfiles {
             }
         }
     }
+}
+
+// 特殊的Send-safe helper函数，完全避免跨await持有guard
+use crate::config::Config;
+
+pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
+    AsyncHandler::spawn_blocking(move || {
+        tokio::runtime::Handle::current().block_on(async {
+            let profiles = Config::profiles().await;
+            let mut profiles_guard = profiles.data_mut();
+            profiles_guard.append_item(item).await
+        })
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+}
+
+pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()> {
+    AsyncHandler::spawn_blocking(move || {
+        tokio::runtime::Handle::current().block_on(async {
+            let profiles = Config::profiles().await;
+            let mut profiles_guard = profiles.data_mut();
+            profiles_guard.patch_item(index, item).await
+        })
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+}
+
+pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
+    AsyncHandler::spawn_blocking(move || {
+        tokio::runtime::Handle::current().block_on(async {
+            let profiles = Config::profiles().await;
+            let mut profiles_guard = profiles.data_mut();
+            profiles_guard.delete_item(index).await
+        })
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+}
+
+pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result<()> {
+    AsyncHandler::spawn_blocking(move || {
+        tokio::runtime::Handle::current().block_on(async {
+            let profiles = Config::profiles().await;
+            let mut profiles_guard = profiles.data_mut();
+            profiles_guard.reorder(active_id, over_id).await
+        })
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+}
+
+pub async fn profiles_save_file_safe() -> Result<()> {
+    AsyncHandler::spawn_blocking(move || {
+        tokio::runtime::Handle::current().block_on(async {
+            let profiles = Config::profiles().await;
+            let profiles_guard = profiles.data_mut();
+            profiles_guard.save_file().await
+        })
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+}
+
+pub async fn profiles_draft_update_item_safe(index: String, item: PrfItem) -> Result<()> {
+    AsyncHandler::spawn_blocking(move || {
+        tokio::runtime::Handle::current().block_on(async {
+            let profiles = Config::profiles().await;
+            let mut profiles_guard = profiles.draft_mut();
+            profiles_guard.update_item(index, item).await
+        })
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
 }

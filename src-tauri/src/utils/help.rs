@@ -3,11 +3,11 @@ use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml::Mapping;
-use std::{fs, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
 pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
-    if !path.exists() {
+    if !tokio::fs::try_exists(path).await.unwrap_or(false) {
         bail!("file not found \"{}\"", path.display());
     }
 
@@ -17,12 +17,13 @@ pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
 }
 
 /// read mapping from yaml
-pub fn read_mapping(path: &PathBuf) -> Result<Mapping> {
-    if !path.exists() {
+pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
+    if !tokio::fs::try_exists(path).await.unwrap_or(false) {
         bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = fs::read_to_string(path)
+    let yaml_str = tokio::fs::read_to_string(path)
+        .await
         .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
 
     // YAML语法检查
@@ -60,7 +61,7 @@ pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
 
 /// save the data to the file
 /// can set `prefix` string to add some comments
-pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -> Result<()> {
+pub async fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -> Result<()> {
     let data_str = serde_yaml::to_string(data)?;
 
     let yaml_str = match prefix {
@@ -69,7 +70,8 @@ pub fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -
     };
 
     let path_str = path.as_os_str().to_string_lossy().to_string();
-    fs::write(path, yaml_str.as_bytes())
+    tokio::fs::write(path, yaml_str.as_bytes())
+        .await
         .with_context(|| format!("failed to save file \"{path_str}\""))
 }
 

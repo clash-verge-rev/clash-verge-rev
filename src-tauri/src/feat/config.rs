@@ -38,7 +38,9 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     match res {
         Ok(()) => {
             Config::clash().await.apply();
-            Config::clash().await.data_mut().save_config()?;
+            // 分离数据获取和异步调用
+            let clash_data = Config::clash().await.data_mut().clone();
+            clash_data.save_config().await?;
             Ok(())
         }
         Err(err) => {
@@ -231,7 +233,9 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
         Ok(()) => {
             Config::verge().await.apply();
             if !not_save_file {
-                Config::verge().await.data_mut().save_file()?;
+                // 分离数据获取和异步调用
+                let verge_data = Config::verge().await.data_mut().clone();
+                verge_data.save_file().await?;
             }
 
             Ok(())

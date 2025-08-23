@@ -4,7 +4,7 @@ mod config;
 mod draft;
 mod encrypt;
 mod prfitem;
-mod profiles;
+pub mod profiles;
 mod runtime;
 mod verge;
 

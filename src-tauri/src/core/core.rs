@@ -148,7 +148,7 @@ impl CoreManager {
             exists_keys: vec![],
             chain_logs: Default::default(),
         });
-        help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime"))?;
+        help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime")).await?;
         handle::Handle::notice_message(msg_type, msg_content);
         Ok(())
     }
@@ -1127,11 +1127,10 @@ impl CoreManager {
 
         Config::verge().await.draft_mut().clash_core = clash_core.clone();
         Config::verge().await.apply();
-        logging_error!(
-            Type::Core,
-            true,
-            Config::verge().await.latest_ref().save_file()
-        );
+
+        // 分离数据获取和异步调用避免Send问题
+        let verge_data = Config::verge().await.latest_ref().clone();
+        logging_error!(Type::Core, true, verge_data.save_file().await);
 
         let run_path = Config::generate_file(ConfigType::Run).await.map_err(|e| {
             let msg = e.to_string();

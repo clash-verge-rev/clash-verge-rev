@@ -1,6 +1,12 @@
 use super::CmdResult;
 use crate::{
-    config::{Config, IProfiles, PrfItem, PrfOption},
+    config::{
+        profiles::{
+            profiles_append_item_safe, profiles_delete_item_safe, profiles_patch_item_safe,
+            profiles_reorder_safe, profiles_save_file_safe,
+        },
+        Config, IProfiles, PrfItem, PrfOption,
+    },
     core::{handle, timer::Timer, tray::Tray, CoreManager},
     feat, logging,
     process::AsyncHandler,
@@ -33,7 +39,6 @@ async fn cleanup_processing_state(sequence: u64, reason: &str) {
     );
 }
 
-/// 获取配置文件避免锁竞争
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
     // 策略1: 尝试快速获取latest数据
@@ -114,87 +119,76 @@ pub async fn enhance_profiles() -> CmdResult {
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     logging!(info, Type::Cmd, true, "[导入订阅] 开始导入: {}", url);
 
-    // 使用超时保护避免长时间阻塞
-    let import_result = tokio::time::timeout(
-        Duration::from_secs(60), // 60秒超时
-        async {
-            let item = PrfItem::from_url(&url, None, None, option).await?;
-            logging!(info, Type::Cmd, true, "[导入订阅] 下载完成，开始保存配置");
+    let import_result = tokio::time::timeout(Duration::from_secs(60), async {
+        let item = PrfItem::from_url(&url, None, None, option).await?;
+        logging!(info, Type::Cmd, true, "[导入订阅] 下载完成，开始保存配置");
 
-            // 获取导入前的配置数量用于验证
-            let pre_count = Config::profiles()
-                .await
-                .latest_ref()
-                .items
-                .as_ref()
-                .map_or(0, |items| items.len());
+        let profiles = Config::profiles().await;
+        let pre_count = profiles
+            .latest_ref()
+            .items
+            .as_ref()
+            .map_or(0, |items| items.len());
 
-            Config::profiles()
-                .await
-                .data_mut()
-                .append_item(item.clone())?;
+        let result = profiles_append_item_safe(item.clone()).await;
+        result?;
 
-            // 验证导入是否成功
-            let post_count = Config::profiles()
-                .await
-                .latest_ref()
-                .items
-                .as_ref()
-                .map_or(0, |items| items.len());
-            if post_count <= pre_count {
-                logging!(
-                    error,
-                    Type::Cmd,
-                    true,
-                    "[导入订阅] 配置未增加，导入可能失败"
-                );
-                return Err(anyhow::anyhow!("配置导入后数量未增加"));
-            }
+        let post_count = profiles
+            .latest_ref()
+            .items
+            .as_ref()
+            .map_or(0, |items| items.len());
+        if post_count <= pre_count {
+            logging!(
+                error,
+                Type::Cmd,
+                true,
+                "[导入订阅] 配置未增加，导入可能失败"
+            );
+            return Err(anyhow::anyhow!("配置导入后数量未增加"));
+        }
 
+        logging!(
+            info,
+            Type::Cmd,
+            true,
+            "[导入订阅] 配置保存成功，数量: {} -> {}",
+            pre_count,
+            post_count
+        );
+
+        // 立即发送配置变更通知
+        if let Some(uid) = &item.uid {
             logging!(
                 info,
                 Type::Cmd,
                 true,
-                "[导入订阅] 配置保存成功，数量: {} -> {}",
-                pre_count,
-                post_count
+                "[导入订阅] 发送配置变更通知: {}",
+                uid
             );
+            handle::Handle::notify_profile_changed(uid.clone());
+        }
 
-            // 立即发送配置变更通知
-            if let Some(uid) = &item.uid {
-                logging!(
-                    info,
-                    Type::Cmd,
-                    true,
-                    "[导入订阅] 发送配置变更通知: {}",
-                    uid
-                );
-                handle::Handle::notify_profile_changed(uid.clone());
-            }
+        // 异步保存配置文件并发送全局通知
+        let uid_clone = item.uid.clone();
+        crate::process::AsyncHandler::spawn(move || async move {
+            // 使用Send-safe helper函数
+            if let Err(e) = profiles_save_file_safe().await {
+                logging!(error, Type::Cmd, true, "[导入订阅] 保存配置文件失败: {}", e);
+            } else {
+                logging!(info, Type::Cmd, true, "[导入订阅] 配置文件保存成功");
 
-            // 异步保存配置文件并发送全局通知
-            let uid_clone = item.uid.clone();
-            crate::process::AsyncHandler::spawn(move || async move {
-                // 在异步块中重新获取锁，避免跨await问题
-                let save_result = { Config::profiles().await.data_mut().save_file() };
-
-                if let Err(e) = save_result {
-                    logging!(error, Type::Cmd, true, "[导入订阅] 保存配置文件失败: {}", e);
-                } else {
-                    logging!(info, Type::Cmd, true, "[导入订阅] 配置文件保存成功");
-
-                    // 发送全局配置更新通知
-                    if let Some(uid) = uid_clone {
-                        // 延迟发送，确保文件已完全写入
-                        tokio::time::sleep(Duration::from_millis(100)).await;
-                        handle::Handle::notify_profile_changed(uid);
-                    }
+                // 发送全局配置更新通知
+                if let Some(uid) = uid_clone {
+                    // 延迟发送，确保文件已完全写入
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    handle::Handle::notify_profile_changed(uid);
                 }
-            });
+            }
+        });
 
-            Ok(())
-        },
-    )
+        Ok(())
+    })
     .await;
 
     match import_result {
@@ -213,32 +207,31 @@ pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult
     }
 }
 
-/// 重新排序配置文件
+/// 调整profile的顺序
 #[tauri::command]
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
-    match Config::profiles()
-        .await
-        .data_mut()
-        .reorder(active_id, over_id)
-    {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::error!(target: "app", "{}", e);
-            Err(e.to_string())
+    match profiles_reorder_safe(active_id, over_id).await {
+        Ok(_) => {
+            log::info!(target: "app", "重新排序配置文件");
+            Ok(())
+        }
+        Err(err) => {
+            log::error!(target: "app", "重新排序配置文件失败: {}", err);
+            Err(format!("重新排序配置文件失败: {}", err))
         }
     }
 }
 
-/// 创建配置文件
+/// 创建新的profile
+/// 创建一个新的配置文件
 #[tauri::command]
-pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
-    let item = wrap_err!(PrfItem::from(item, file_data).await)?;
-    match Config::profiles().await.data_mut().append_item(item) {
+pub async fn create_profile(item: PrfItem, _file_data: Option<String>) -> CmdResult {
+    match profiles_append_item_safe(item).await {
         Ok(_) => Ok(()),
-        Err(e) => {
-            log::error!(target: "app", "{}", e);
-            Err(e.to_string())
-        }
+        Err(err) => match err.to_string().as_str() {
+            "the file already exists" => Err("the file already exists".into()),
+            _ => Err(format!("add profile error: {err}")),
+        },
     }
 }
 
@@ -257,10 +250,12 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 /// 删除配置文件
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
-    let should_update = wrap_err!({ Config::profiles().await.data_mut().delete_item(index) })?;
+    // 使用Send-safe helper函数
+    let should_update = wrap_err!(profiles_delete_item_safe(index).await)?;
 
     // 删除后自动清理冗余文件
-    let _ = Config::profiles().await.latest_ref().auto_cleanup();
+    let profiles = Config::profiles().await;
+    let _ = profiles.latest_ref().auto_cleanup();
 
     if should_update {
         match CoreManager::global().update_config().await {
@@ -559,7 +554,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             }
 
             // 保存配置文件
-            if let Err(e) = Config::profiles().await.data_mut().save_file() {
+            if let Err(e) = profiles_save_file_safe().await {
                 log::warn!(target: "app", "异步保存配置文件失败: {e}");
             }
 
@@ -606,7 +601,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 Config::profiles().await.apply();
 
                 crate::process::AsyncHandler::spawn(|| async move {
-                    if let Err(e) = Config::profiles().await.data_mut().save_file() {
+                    if let Err(e) = profiles_save_file_safe().await {
                         log::warn!(target: "app", "异步保存恢复配置文件失败: {e}");
                     }
                 });
@@ -697,20 +692,17 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 #[tauri::command]
 pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 保存修改前检查是否有更新 update_interval
-    let update_interval_changed =
-        if let Ok(old_profile) = Config::profiles().await.latest_ref().get_item(&index) {
-            let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
-            let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
-            old_interval != new_interval
-        } else {
-            false
-        };
+    let profiles = Config::profiles().await;
+    let update_interval_changed = if let Ok(old_profile) = profiles.latest_ref().get_item(&index) {
+        let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
+        let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
+        old_interval != new_interval
+    } else {
+        false
+    };
 
     // 保存修改
-    wrap_err!(Config::profiles()
-        .await
-        .data_mut()
-        .patch_item(index.clone(), profile))?;
+    wrap_err!(profiles_patch_item_safe(index.clone(), profile).await)?;
 
     // 如果更新间隔变更，异步刷新定时器
     if update_interval_changed {
@@ -732,8 +724,9 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 /// 查看配置文件
 #[tauri::command]
 pub async fn view_profile(index: String) -> CmdResult {
+    let profiles = Config::profiles().await;
     let file = {
-        wrap_err!(Config::profiles().await.latest_ref().get_item(&index))?
+        wrap_err!(profiles.latest_ref().get_item(&index))?
             .file
             .clone()
             .ok_or("the file field is null")
@@ -751,8 +744,8 @@ pub async fn view_profile(index: String) -> CmdResult {
 #[tauri::command]
 pub async fn read_profile_file(index: String) -> CmdResult<String> {
     let profiles = Config::profiles().await;
-    let profiles = profiles.latest_ref();
-    let item = wrap_err!(profiles.get_item(&index))?;
+    let profiles_ref = profiles.latest_ref();
+    let item = wrap_err!(profiles_ref.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
 }

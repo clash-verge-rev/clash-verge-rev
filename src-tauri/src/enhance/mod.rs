@@ -66,18 +66,25 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             _current_profile_uid,
             name,
         ) = {
+            // 分离async调用和数据获取，避免借用检查问题
+            let current = {
+                let profiles = Config::profiles().await;
+                let profiles_clone = profiles.latest_ref().clone();
+                profiles_clone.current_mapping().await.unwrap_or_default()
+            };
+
+            // 重新获取锁进行其他操作
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles_ref = profiles.latest_ref();
 
-            let current = profiles.current_mapping().unwrap_or_default();
-            let merge_uid = profiles.current_merge().unwrap_or_default();
-            let script_uid = profiles.current_script().unwrap_or_default();
-            let rules_uid = profiles.current_rules().unwrap_or_default();
-            let proxies_uid = profiles.current_proxies().unwrap_or_default();
-            let groups_uid = profiles.current_groups().unwrap_or_default();
-            let current_profile_uid = profiles.get_current().unwrap_or_default();
+            let merge_uid = profiles_ref.current_merge().unwrap_or_default();
+            let script_uid = profiles_ref.current_script().unwrap_or_default();
+            let rules_uid = profiles_ref.current_rules().unwrap_or_default();
+            let proxies_uid = profiles_ref.current_proxies().unwrap_or_default();
+            let groups_uid = profiles_ref.current_groups().unwrap_or_default();
+            let current_profile_uid = profiles_ref.get_current().unwrap_or_default();
 
-            let name = profiles
+            let name = profiles_ref
                 .get_item(&current_profile_uid)
                 .ok()
                 .and_then(|item| item.name.clone())

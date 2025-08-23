@@ -648,7 +648,8 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                                 return Ok(());
                             }
                         };
-                        let _ = wrap_err!(Config::profiles().await.data_mut().append_item(item));
+                        let _ =
+                            wrap_err!(Config::profiles().await.data_mut().append_item(item).await);
                         handle::Handle::notice_message("import_sub_url::ok", uid);
                     }
                     Err(e) => {

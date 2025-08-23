@@ -45,8 +45,12 @@ impl ServiceState {
         latest.service_state = Some(self.clone());
         *config.draft_mut() = latest;
         config.apply();
-        let result = config.latest_ref().save_file();
-        result
+
+        // 先获取数据，再异步保存，避免跨await持有锁
+        let verge_data = config.latest_ref().clone();
+        drop(config); // 显式释放锁
+
+        verge_data.save_file().await
     }
 
     // 更新安装信息
