@@ -58,5 +58,13 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
+      # This workflow runs linting using cargo clippy.
+      # Note: If the web build step is skipped,
+      # cargo clippy will fail to run due to missing web dist in the Tauri environment.
+      - name: Build Web Assets
+        run: pnpm run web:build
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
+
       - name: Run Clippy
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
