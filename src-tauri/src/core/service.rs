@@ -272,7 +272,7 @@ pub fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub fn install_service() -> Result<()> {
+pub async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
     use users::get_effective_uid;
 
@@ -312,11 +312,11 @@ pub fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub fn reinstall_service() -> Result<()> {
+pub async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态
-    let mut service_state = ServiceState::get();
+    let mut service_state = ServiceState::get().await;
 
     // 检查是否允许重装
     if !service_state.can_reinstall() {
@@ -341,19 +341,19 @@ pub fn reinstall_service() -> Result<()> {
     }
 
     // 再安装服务
-    match install_service() {
+    match install_service().await {
         Ok(_) => {
             // 记录安装信息并保存
             service_state.record_install();
             service_state.last_error = None;
-            service_state.save()?;
+            service_state.save().await?;
             Ok(())
         }
         Err(err) => {
             let error = format!("failed to install service: {err}");
             service_state.last_error = Some(error.clone());
             service_state.prefer_sidecar = true;
-            service_state.save()?;
+            service_state.save().await?;
             bail!(error)
         }
     }
