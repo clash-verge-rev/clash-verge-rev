@@ -645,8 +645,8 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
                                 return Ok(());
                             }
                         };
-                        let _ =
-                            wrap_err!(Config::profiles().await.data_mut().append_item(item).await);
+                        let result = crate::config::profiles::profiles_append_item_safe(item).await;
+                        let _ = wrap_err!(result);
                         handle::Handle::notice_message("import_sub_url::ok", uid);
                     }
                     Err(e) => {

@@ -11,18 +11,16 @@ use log4rs::{
     config::{Appender, Logger, Root},
     encode::pattern::PatternEncoder,
 };
-use std::{
-    fs::{self, DirEntry},
-    path::PathBuf,
-    str::FromStr,
-};
+use std::{path::PathBuf, str::FromStr};
 use tauri_plugin_shell::ShellExt;
+use tokio::fs;
+use tokio::fs::DirEntry;
 
 /// initialize this instance's log file
 async fn init_log() -> Result<()> {
     let log_dir = dirs::app_logs_dir()?;
     if !log_dir.exists() {
-        let _ = fs::create_dir_all(&log_dir);
+        let _ = tokio::fs::create_dir_all(&log_dir).await;
     }
 
     let log_level = Config::verge().await.latest_ref().get_log_level();
@@ -106,7 +104,7 @@ pub async fn delete_log() -> Result<()> {
         Ok(time)
     };
 
-    let process_file = |file: DirEntry| -> Result<()> {
+    let process_file = async move |file: DirEntry| -> Result<()> {
         let file_name = file.file_name();
         let file_name = file_name.to_str().unwrap_or_default();
 
@@ -121,20 +119,22 @@ pub async fn delete_log() -> Result<()> {
             let duration = now.signed_duration_since(file_time);
             if duration.num_days() > day {
                 let file_path = file.path();
-                let _ = fs::remove_file(file_path);
+                let _ = fs::remove_file(file_path).await;
                 log::info!(target: "app", "delete log file: {file_name}");
             }
         }
         Ok(())
     };
 
-    for file in fs::read_dir(&log_dir)?.flatten() {
-        let _ = process_file(file);
+    let mut log_read_dir = fs::read_dir(&log_dir).await?;
+    while let Some(entry) = log_read_dir.next_entry().await? {
+        std::mem::drop(process_file(entry));
     }
 
     let service_log_dir = log_dir.join("service");
-    for file in fs::read_dir(service_log_dir)?.flatten() {
-        let _ = process_file(file);
+    let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
+    while let Some(entry) = service_log_read_dir.next_entry().await? {
+        std::mem::drop(process_file(entry));
     }
 
     Ok(())
@@ -260,18 +260,18 @@ async fn init_dns_config() -> Result<()> {
 /// before tauri setup
 pub async fn init_config() -> Result<()> {
     let _ = dirs::init_portable_flag();
-    let _ = init_log();
-    let _ = delete_log();
+    let _ = init_log().await;
+    let _ = delete_log().await;
 
     crate::log_err!(dirs::app_home_dir().map(|app_dir| {
         if !app_dir.exists() {
-            let _ = fs::create_dir_all(&app_dir);
+            std::mem::drop(fs::create_dir_all(&app_dir));
         }
     }));
 
     crate::log_err!(dirs::app_profiles_dir().map(|profiles_dir| {
         if !profiles_dir.exists() {
-            let _ = fs::create_dir_all(&profiles_dir);
+            std::mem::drop(fs::create_dir_all(&profiles_dir));
         }
     }));
 
@@ -310,15 +310,15 @@ pub async fn init_config() -> Result<()> {
 
 /// initialize app resources
 /// after tauri setup
-pub fn init_resources() -> Result<()> {
+pub async fn init_resources() -> Result<()> {
     let app_dir = dirs::app_home_dir()?;
     let res_dir = dirs::app_resources_dir()?;
 
     if !app_dir.exists() {
-        let _ = fs::create_dir_all(&app_dir);
+        std::mem::drop(fs::create_dir_all(&app_dir));
     }
     if !res_dir.exists() {
-        let _ = fs::create_dir_all(&res_dir);
+        std::mem::drop(fs::create_dir_all(&res_dir));
     }
 
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
@@ -330,8 +330,8 @@ pub fn init_resources() -> Result<()> {
         let dest_path = app_dir.join(file);
         log::debug!(target: "app", "src_path: {src_path:?}, dest_path: {dest_path:?}");
 
-        let handle_copy = |dest: &PathBuf| {
-            match fs::copy(&src_path, dest) {
+        let handle_copy = |src: PathBuf, dest: PathBuf, file: String| async move {
+            match fs::copy(&src, &dest).await {
                 Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
                 Err(err) => {
                     log::error!(target: "app", "failed to copy resources '{file}' to '{dest:?}', {err}")
@@ -340,24 +340,24 @@ pub fn init_resources() -> Result<()> {
         };
 
         if src_path.exists() && !dest_path.exists() {
-            handle_copy(&dest_path);
+            handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
             continue;
         }
 
-        let src_modified = fs::metadata(&src_path).and_then(|m| m.modified());
-        let dest_modified = fs::metadata(&dest_path).and_then(|m| m.modified());
+        let src_modified = fs::metadata(&src_path).await.and_then(|m| m.modified());
+        let dest_modified = fs::metadata(&dest_path).await.and_then(|m| m.modified());
 
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
-                    handle_copy(&dest_path);
+                    handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
                 } else {
                     log::debug!(target: "app", "skipping resource copy '{file}'");
                 }
             }
             _ => {
                 log::debug!(target: "app", "failed to get modified '{file}'");
-                handle_copy(&dest_path);
+                handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
             }
         };
     }

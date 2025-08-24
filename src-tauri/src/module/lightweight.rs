@@ -2,6 +2,7 @@ use crate::{
     config::Config,
     core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
+    process::AsyncHandler,
     state::lightweight::LightWeightState,
     utils::logging::Type,
 };
@@ -229,7 +230,11 @@ pub async fn add_light_weight_timer() {
 fn setup_window_close_listener() -> u32 {
     if let Some(window) = handle::Handle::global().get_window() {
         let handler = window.listen("tauri://close-requested", move |_event| {
-            let _ = setup_light_weight_timer();
+            std::mem::drop(AsyncHandler::spawn(|| async {
+                if let Err(e) = setup_light_weight_timer().await {
+                    log::warn!("Failed to setup light weight timer: {e}");
+                }
+            }));
             logging!(
                 info,
                 Type::Lightweight,

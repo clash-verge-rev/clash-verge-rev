@@ -1,7 +1,8 @@
 use super::{prfitem::PrfItem, PrfOption};
 use crate::{
+    logging_error,
     process::AsyncHandler,
-    utils::{dirs, help},
+    utils::{dirs, help, logging::Type},
 };
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -288,10 +289,19 @@ impl IProfiles {
         }
         if let Some(index) = index {
             if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(|path| {
+                let _ = dirs::app_profiles_dir().map(async move |path| {
                     let path = path.join(file);
                     if path.exists() {
-                        let _ = fs::remove_file(path);
+                        let result = fs::remove_file(path.clone()).await;
+                        if let Err(err) = result {
+                            logging_error!(
+                                Type::Config,
+                                false,
+                                "[配置文件删除] 删除文件 {} 失败: {}",
+                                path.display(),
+                                err
+                            );
+                        }
                     }
                 });
             }
@@ -305,10 +315,19 @@ impl IProfiles {
         }
         if let Some(index) = merge_index {
             if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(|path| {
+                let _ = dirs::app_profiles_dir().map(async move |path| {
                     let path = path.join(file);
                     if path.exists() {
-                        let _ = fs::remove_file(path);
+                        let result = fs::remove_file(path.clone()).await;
+                        if let Err(err) = result {
+                            logging_error!(
+                                Type::Config,
+                                false,
+                                "[配置文件删除] 删除文件 {} 失败: {}",
+                                path.display(),
+                                err
+                            );
+                        }
                     }
                 });
             }
@@ -322,10 +341,19 @@ impl IProfiles {
         }
         if let Some(index) = script_index {
             if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(|path| {
+                let _ = dirs::app_profiles_dir().map(async move |path| {
                     let path = path.join(file);
                     if path.exists() {
-                        let _ = fs::remove_file(path);
+                        let result = fs::remove_file(path.clone()).await;
+                        if let Err(err) = result {
+                            logging_error!(
+                                Type::Config,
+                                false,
+                                "[配置文件删除] 删除文件 {} 失败: {}",
+                                path.display(),
+                                err
+                            );
+                        }
                     }
                 });
             }
@@ -339,10 +367,19 @@ impl IProfiles {
         }
         if let Some(index) = rules_index {
             if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(|path| {
+                let _ = dirs::app_profiles_dir().map(async move |path| {
                     let path = path.join(file);
                     if path.exists() {
-                        let _ = fs::remove_file(path);
+                        let result = fs::remove_file(path.clone()).await;
+                        if let Err(err) = result {
+                            logging_error!(
+                                Type::Config,
+                                false,
+                                "[配置文件删除] 删除文件 {} 失败: {}",
+                                path.display(),
+                                err
+                            );
+                        }
                     }
                 });
             }
@@ -356,10 +393,19 @@ impl IProfiles {
         }
         if let Some(index) = proxies_index {
             if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(|path| {
+                let _ = dirs::app_profiles_dir().map(async move |path| {
                     let path = path.join(file);
                     if path.exists() {
-                        let _ = fs::remove_file(path);
+                        let result = fs::remove_file(path.clone()).await;
+                        if let Err(err) = result {
+                            logging_error!(
+                                Type::Config,
+                                false,
+                                "[配置文件删除] 删除文件 {} 失败: {}",
+                                path.display(),
+                                err
+                            );
+                        }
                     }
                 });
             }
@@ -373,10 +419,19 @@ impl IProfiles {
         }
         if let Some(index) = groups_index {
             if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(|path| {
+                let _ = dirs::app_profiles_dir().map(async move |path| {
                     let path = path.join(file);
                     if path.exists() {
-                        let _ = fs::remove_file(path);
+                        let result = fs::remove_file(path.clone()).await;
+                        if let Err(err) = result {
+                            logging_error!(
+                                Type::Config,
+                                false,
+                                "[配置文件删除] 删除文件 {} 失败: {}",
+                                path.display(),
+                                err
+                            );
+                        }
                     }
                 });
             }

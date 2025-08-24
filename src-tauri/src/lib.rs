@@ -281,7 +281,7 @@ mod app_init {
         utils::init::init_config().await?;
 
         logging!(info, Type::Setup, true, "初始化资源...");
-        utils::init::init_resources()?;
+        utils::init::init_resources().await?;
 
         logging!(info, Type::Setup, true, "核心组件初始化完成");
         Ok(())

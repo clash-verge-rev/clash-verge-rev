@@ -1,7 +1,7 @@
 use crate::{
     cmd,
     config::{profiles::profiles_draft_update_item_safe, Config, PrfItem, PrfOption},
-    core::{handle, CoreManager, *},
+    core::{handle, tray, CoreManager},
     logging,
     utils::logging::Type,
 };
@@ -11,7 +11,10 @@ use anyhow::{bail, Result};
 pub async fn toggle_proxy_profile(profile_index: String) {
     match cmd::patch_profiles_config_by_profile_index(profile_index).await {
         Ok(_) => {
-            let _ = tray::Tray::global().update_menu();
+            let result = tray::Tray::global().update_menu().await;
+            if let Err(err) = result {
+                logging!(error, Type::Tray, true, "更新菜单失败: {}", err);
+            }
         }
         Err(err) => {
             log::error!(target: "app", "{err}");

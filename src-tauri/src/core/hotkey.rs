@@ -192,6 +192,7 @@ impl Hotkey {
     }
 
     /// Register a hotkey with function enum
+    #[allow(clippy::unused_async)]
     pub async fn register_hotkey_with_function(
         &self,
         hotkey: &str,
@@ -221,9 +222,6 @@ impl Hotkey {
         }
 
         let is_quit = matches!(function, HotkeyFunction::Quit);
-
-        let function = function; // Copy the function value so it can be moved
-        let is_quit = is_quit; // Copy is_quit so it can be moved
 
         let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey_event, event| {
             let hotkey_event_owned = *hotkey_event;

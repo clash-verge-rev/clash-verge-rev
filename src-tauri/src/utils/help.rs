@@ -61,7 +61,11 @@ pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
 
 /// save the data to the file
 /// can set `prefix` string to add some comments
-pub async fn save_yaml<T: Serialize>(path: &PathBuf, data: &T, prefix: Option<&str>) -> Result<()> {
+pub async fn save_yaml<T: Serialize + Sync>(
+    path: &PathBuf,
+    data: &T,
+    prefix: Option<&str>,
+) -> Result<()> {
     let data_str = serde_yaml::to_string(data)?;
 
     let yaml_str = match prefix {
