@@ -116,7 +116,7 @@ pub struct JsonResponse {
 }
 
 #[cfg(target_os = "windows")]
-pub fn uninstall_service() -> Result<()> {
+pub async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -150,7 +150,7 @@ pub fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-pub fn install_service() -> Result<()> {
+pub async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -184,11 +184,11 @@ pub fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-pub fn reinstall_service() -> Result<()> {
+pub async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态
-    let mut service_state = ServiceState::get();
+    let mut service_state = ServiceState::get().await;
 
     // 检查是否允许重装
     if !service_state.can_reinstall() {
@@ -213,7 +213,7 @@ pub fn reinstall_service() -> Result<()> {
     }
 
     // 再安装服务
-    match install_service() {
+    match install_service().await {
         Ok(_) => {
             // 记录安装信息并保存
             service_state.record_install();

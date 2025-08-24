@@ -339,7 +339,7 @@ impl Tray {
     }
 
     #[cfg(not(target_os = "macos"))]
-    pub fn update_icon(&self, _rate: Option<Rate>) -> Result<()> {
+    pub async fn update_icon(&self, _rate: Option<Rate>) -> Result<()> {
         let app_handle = match handle::Handle::global().app_handle() {
             Some(handle) => handle,
             None => {
@@ -361,10 +361,10 @@ impl Tray {
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
         let (_is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
-            (true, true) => TrayState::get_tun_tray_icon(),
-            (true, false) => TrayState::get_sysproxy_tray_icon(),
-            (false, true) => TrayState::get_tun_tray_icon(),
-            (false, false) => TrayState::get_common_tray_icon(),
+            (true, true) => TrayState::get_tun_tray_icon().await,
+            (true, false) => TrayState::get_sysproxy_tray_icon().await,
+            (false, true) => TrayState::get_tun_tray_icon().await,
+            (false, false) => TrayState::get_common_tray_icon().await,
         };
 
         let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
