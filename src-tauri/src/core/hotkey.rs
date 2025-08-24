@@ -104,63 +104,47 @@ impl Hotkey {
     }
 
     /// Execute the function associated with a hotkey function enum
-    fn execute_function(function: HotkeyFunction, app_handle: Arc<AppHandle>) {
+    fn execute_function(function: HotkeyFunction, app_handle: &AppHandle) {
+        let app_handle = app_handle.clone();
         match function {
             HotkeyFunction::OpenOrCloseDashboard => {
-                logging!(
-                    debug,
-                    Type::Hotkey,
-                    true,
-                    "=== Hotkey Dashboard Window Operation Start ==="
-                );
-
-                logging!(
-                    info,
-                    Type::Hotkey,
-                    true,
-                    "Using unified WindowManager for hotkey operation (bypass debounce)"
-                );
-
-                crate::feat::open_or_close_dashboard_hotkey();
-
-                logging!(
-                    debug,
-                    Type::Hotkey,
-                    "=== Hotkey Dashboard Window Operation End ==="
-                );
-                AsyncHandler::spawn(|| {
-                    notify_event(app_handle, NotificationEvent::DashboardToggled)
+                AsyncHandler::spawn(async move || {
+                    crate::feat::open_or_close_dashboard_hotkey().await;
+                    notify_event(app_handle, NotificationEvent::DashboardToggled).await;
                 });
             }
             HotkeyFunction::ClashModeRule => {
-                AsyncHandler::spawn(|| feat::change_clash_mode("rule".into()));
-                AsyncHandler::spawn(|| {
+                AsyncHandler::spawn(async move || {
+                    feat::change_clash_mode("rule".into()).await;
                     notify_event(
                         app_handle,
                         NotificationEvent::ClashModeChanged { mode: "Rule" },
                     )
+                    .await;
                 });
             }
             HotkeyFunction::ClashModeGlobal => {
-                AsyncHandler::spawn(|| feat::change_clash_mode("global".into()));
-                AsyncHandler::spawn(|| {
+                AsyncHandler::spawn(async move || {
+                    feat::change_clash_mode("global".into()).await;
                     notify_event(
                         app_handle,
                         NotificationEvent::ClashModeChanged { mode: "Global" },
                     )
+                    .await;
                 });
             }
             HotkeyFunction::ClashModeDirect => {
-                AsyncHandler::spawn(|| feat::change_clash_mode("direct".into()));
-                AsyncHandler::spawn(|| {
+                AsyncHandler::spawn(async move || {
+                    feat::change_clash_mode("direct".into()).await;
                     notify_event(
                         app_handle,
                         NotificationEvent::ClashModeChanged { mode: "Direct" },
                     )
+                    .await;
                 });
             }
             HotkeyFunction::ToggleSystemProxy => {
-                AsyncHandler::spawn(|| feat::toggle_system_proxy());
+                AsyncHandler::spawn(feat::toggle_system_proxy);
                 AsyncHandler::spawn(|| {
                     notify_event(app_handle, NotificationEvent::SystemProxyToggled)
                 });
@@ -170,19 +154,23 @@ impl Hotkey {
                 AsyncHandler::spawn(|| notify_event(app_handle, NotificationEvent::TunModeToggled));
             }
             HotkeyFunction::EntryLightweightMode => {
-                entry_lightweight_mode();
-                AsyncHandler::spawn(|| {
-                    notify_event(app_handle, NotificationEvent::LightweightModeEntered)
+                AsyncHandler::spawn(async move || {
+                    entry_lightweight_mode().await;
+                    notify_event(app_handle, NotificationEvent::LightweightModeEntered).await;
                 });
             }
             HotkeyFunction::Quit => {
-                AsyncHandler::spawn(|| notify_event(app_handle, NotificationEvent::AppQuit));
-                feat::quit();
+                AsyncHandler::spawn(async move || {
+                    notify_event(app_handle, NotificationEvent::AppQuit).await;
+                    feat::quit().await;
+                });
             }
             #[cfg(target_os = "macos")]
             HotkeyFunction::Hide => {
-                AsyncHandler::spawn(|| feat::hide());
-                AsyncHandler::spawn(|| notify_event(app_handle, NotificationEvent::AppHidden));
+                AsyncHandler::spawn(async move || {
+                    feat::hide().await;
+                    notify_event(app_handle, NotificationEvent::AppHidden).await;
+                });
             }
         }
     }
@@ -238,12 +226,12 @@ impl Hotkey {
         let is_quit = is_quit; // Copy is_quit so it can be moved
 
         let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey_event, event| {
-            // Clone all necessary data to move into the async closure
-            let app_handle_clone = Arc::new(app_handle.clone());
-            let hotkey_event_owned = hotkey_event.clone();
-            let event_owned = event.clone();
+            let hotkey_event_owned = *hotkey_event;
+            let event_owned = event;
             let function_owned = function;
             let is_quit_owned = is_quit;
+
+            let app_handle_cloned = app_handle.clone();
 
             AsyncHandler::spawn(move || async move {
                 if event_owned.state == ShortcutState::Pressed {
@@ -255,13 +243,10 @@ impl Hotkey {
                     );
 
                     if hotkey_event_owned.key == Code::KeyQ && is_quit_owned {
-                        if let Some(window) = app_handle_clone.get_webview_window("main") {
+                        if let Some(window) = app_handle_cloned.get_webview_window("main") {
                             if window.is_focused().unwrap_or(false) {
                                 logging!(debug, Type::Hotkey, "Executing quit function");
-                                Self::execute_function(
-                                    function_owned,
-                                    Arc::clone(&app_handle_clone),
-                                );
+                                Self::execute_function(function_owned, &app_handle_cloned);
                             }
                         }
                     } else {
@@ -274,17 +259,14 @@ impl Hotkey {
                             .unwrap_or(true);
 
                         if is_enable_global_hotkey {
-                            Self::execute_function(function_owned, Arc::clone(&app_handle_clone));
+                            Self::execute_function(function_owned, &app_handle_cloned);
                         } else {
                             use crate::utils::window_manager::WindowManager;
                             let is_visible = WindowManager::is_main_window_visible();
                             let is_focused = WindowManager::is_main_window_focused();
 
                             if is_focused && is_visible {
-                                Self::execute_function(
-                                    function_owned,
-                                    Arc::clone(&app_handle_clone),
-                                );
+                                Self::execute_function(function_owned, &app_handle_cloned);
                             }
                         }
                     }

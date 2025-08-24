@@ -13,21 +13,13 @@ pub async fn toggle_system_proxy() {
     // 获取当前系统代理状态
     let enable = {
         let verge = Config::verge().await;
-        let enable = verge
-            .latest_ref()
-            .enable_system_proxy
-            .clone()
-            .unwrap_or(false);
+        let enable = verge.latest_ref().enable_system_proxy.unwrap_or(false);
         enable
     };
     // 获取自动关闭连接设置
     let auto_close_connection = {
         let verge = Config::verge().await;
-        let auto_close = verge
-            .latest_ref()
-            .auto_close_connection
-            .clone()
-            .unwrap_or(false);
+        let auto_close = verge.latest_ref().auto_close_connection.unwrap_or(false);
         auto_close
     };
 

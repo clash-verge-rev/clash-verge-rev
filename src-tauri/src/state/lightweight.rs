@@ -33,7 +33,7 @@ impl LightWeightState {
     {
         let once = self.once.clone();
         once.call_once(|| {
-            AsyncHandler::spawn(|| f());
+            AsyncHandler::spawn(f);
         });
     }
     pub fn set_lightweight_mode(&mut self, value: bool) -> &Self {

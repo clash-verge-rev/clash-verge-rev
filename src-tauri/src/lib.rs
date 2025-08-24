@@ -17,7 +17,6 @@ use crate::{
 };
 use config::Config;
 use parking_lot::Mutex;
-use std::sync::Arc;
 use tauri::AppHandle;
 #[cfg(target_os = "macos")]
 use tauri::Manager;
@@ -29,7 +28,7 @@ use utils::logging::Type;
 
 /// A global singleton handle to the application.
 pub struct AppHandleManager {
-    handle: Mutex<Option<Arc<AppHandle>>>,
+    handle: Mutex<Option<AppHandle>>,
 }
 
 impl AppHandleManager {
@@ -41,7 +40,7 @@ impl AppHandleManager {
     }
 
     /// Initialize the app handle manager with an app handle.
-    pub fn init(&self, handle: Arc<AppHandle>) {
+    pub fn init(&self, handle: AppHandle) {
         let mut app_handle = self.handle.lock();
         if app_handle.is_none() {
             *app_handle = Some(handle);
@@ -55,12 +54,12 @@ impl AppHandleManager {
     }
 
     /// Get the app handle if it has been initialized.
-    fn get(&self) -> Option<Arc<AppHandle>> {
+    fn get(&self) -> Option<AppHandle> {
         self.handle.lock().clone()
     }
 
     /// Get the app handle, panics if it hasn't been initialized.
-    pub fn get_handle(&self) -> Arc<AppHandle> {
+    pub fn get_handle(&self) -> AppHandle {
         if let Some(handle) = self.get() {
             handle
         } else {
@@ -245,12 +244,13 @@ mod app_init {
     }
 
     /// Initialize core components asynchronously
-    pub fn init_core_async(app_handle: Arc<AppHandle>) {
+    pub fn init_core_async(app_handle: &AppHandle) {
+        let app_handle = app_handle.clone();
         AsyncHandler::spawn(move || async move {
             logging!(info, Type::Setup, true, "异步执行应用设置...");
             match timeout(
                 Duration::from_secs(30),
-                resolve::resolve_setup_async(app_handle),
+                resolve::resolve_setup_async(&app_handle),
             )
             .await
             {
@@ -270,14 +270,12 @@ mod app_init {
     }
 
     /// Initialize core components synchronously
-    pub async fn init_core_sync(
-        app_handle: Arc<AppHandle>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn init_core_sync(app_handle: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         logging!(info, Type::Setup, true, "初始化AppHandleManager...");
-        AppHandleManager::global().init(Arc::clone(&app_handle));
+        AppHandleManager::global().init(app_handle.clone());
 
         logging!(info, Type::Setup, true, "初始化核心句柄...");
-        core::handle::Handle::global().init(Arc::clone(&app_handle));
+        core::handle::Handle::global().init(app_handle.clone());
 
         logging!(info, Type::Setup, true, "初始化配置...");
         utils::init::init_config().await?;
@@ -484,16 +482,15 @@ pub fn run() {
             }
 
             let app_handle = app.handle().clone();
-            let app_handle = Arc::new(app_handle);
 
             // Initialize core components asynchronously
-            app_init::init_core_async(Arc::clone(&app_handle));
+            app_init::init_core_async(&app_handle);
 
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
             // Initialize core components synchronously
             AsyncHandler::spawn(move || async move {
-                if let Err(e) = app_init::init_core_sync(Arc::clone(&app_handle)).await {
+                if let Err(e) = app_init::init_core_sync(&app_handle).await {
                     logging!(
                         error,
                         Type::Setup,
@@ -514,9 +511,9 @@ pub fn run() {
         use super::*;
 
         /// Handle application ready/resumed events
-        pub fn handle_ready_resumed(app_handle: Arc<AppHandle>) {
+        pub fn handle_ready_resumed(app_handle: &AppHandle) {
             logging!(info, Type::System, true, "应用就绪或恢复");
-            AppHandleManager::global().init(Arc::clone(&app_handle));
+            AppHandleManager::global().init(app_handle.clone());
 
             #[cfg(target_os = "macos")]
             {
@@ -529,7 +526,7 @@ pub fn run() {
 
         /// Handle application reopen events (macOS)
         #[cfg(target_os = "macos")]
-        pub fn handle_reopen(app_handle: Arc<AppHandle>, has_visible_windows: bool) {
+        pub fn handle_reopen(app_handle: &AppHandle, has_visible_windows: bool) {
             logging!(
                 info,
                 Type::System,
@@ -538,7 +535,7 @@ pub fn run() {
                 has_visible_windows
             );
 
-            AppHandleManager::global().init(Arc::clone(&app_handle));
+            AppHandleManager::global().init(app_handle.clone());
 
             if !has_visible_windows {
                 // 当没有可见窗口时，设置为 regular 模式并显示主窗口
@@ -696,10 +693,9 @@ pub fn run() {
         });
 
     app.run(|app_handle, e| {
-        let app_handle = Arc::new(app_handle.clone());
         match e {
             tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
-                event_handlers::handle_ready_resumed(Arc::clone(&app_handle));
+                event_handlers::handle_ready_resumed(app_handle);
             }
             #[cfg(target_os = "macos")]
             tauri::RunEvent::Reopen {

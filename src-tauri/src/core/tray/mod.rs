@@ -18,7 +18,6 @@ use super::handle;
 use anyhow::Result;
 use futures::future::join_all;
 use parking_lot::Mutex;
-use std::sync::Arc;
 use std::{
     fs,
     sync::atomic::{AtomicBool, Ordering},
@@ -246,7 +245,7 @@ impl Tray {
         // 设置更新状态
         self.menu_updating.store(true, Ordering::Release);
 
-        let result = self.update_menu_internal(app_handle).await;
+        let result = self.update_menu_internal(&app_handle).await;
 
         {
             let mut last_update = self.last_menu_update.lock();
@@ -257,7 +256,7 @@ impl Tray {
         result
     }
 
-    async fn update_menu_internal(&self, app_handle: Arc<AppHandle>) -> Result<()> {
+    async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
         let verge = Config::verge().await.latest_ref().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -282,7 +281,7 @@ impl Tray {
             Some(tray) => {
                 let _ = tray.set_menu(Some(
                     create_tray_menu(
-                        &app_handle,
+                        app_handle,
                         Some(mode.as_str()),
                         *system_proxy,
                         *tun_mode,
@@ -465,7 +464,7 @@ impl Tray {
     #[cfg(target_os = "macos")]
     pub fn unsubscribe_traffic(&self) {}
 
-    pub async fn create_tray_from_handle(&self, app_handle: Arc<AppHandle>) -> Result<()> {
+    pub async fn create_tray_from_handle(&self, app_handle: &AppHandle) -> Result<()> {
         log::info!(target: "app", "正在从AppHandle创建系统托盘");
 
         // 获取图标
@@ -496,7 +495,7 @@ impl Tray {
             }
         }
 
-        let tray = builder.build(app_handle.as_ref())?;
+        let tray = builder.build(app_handle)?;
 
         tray.on_tray_icon_event(|_app_handle, event| {
             AsyncHandler::spawn(|| async move {
@@ -860,18 +859,15 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 let was_lightweight = crate::module::lightweight::is_in_lightweight_mode();
                 if was_lightweight {
                     crate::module::lightweight::exit_lightweight_mode().await; // Await async function
-                } else {
-                    crate::module::lightweight::entry_lightweight_mode(); // Remove .await as it's not async
-                }
-
-                if was_lightweight {
                     use crate::utils::window_manager::WindowManager;
                     let result = WindowManager::show_main_window(); // Remove .await as it's not async
                     log::info!(target: "app", "退出轻量模式后显示主窗口: {result:?}");
+                } else {
+                    crate::module::lightweight::entry_lightweight_mode().await; // Remove .await as it's not async
                 }
             }
             "quit" => {
-                feat::quit(); // Remove .await as it's not async
+                feat::quit().await; // Await async function
             }
             id if id.starts_with("profiles_") => {
                 let profile_index = &id["profiles_".len()..];

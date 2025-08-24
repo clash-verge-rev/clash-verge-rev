@@ -56,7 +56,7 @@ pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
 
 /// read mapping from yaml fix #165
 pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
-    Ok(read_yaml(path).await?)
+    read_yaml(path).await
 }
 
 /// save the data to the file

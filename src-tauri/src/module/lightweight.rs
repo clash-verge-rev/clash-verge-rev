@@ -2,7 +2,6 @@ use crate::{
     config::Config,
     core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
-    process::AsyncHandler,
     state::lightweight::LightWeightState,
     utils::logging::Type,
 };
@@ -70,7 +69,7 @@ pub async fn run_once_auto_lightweight() {
         "在静默启动的情况下，创建窗口再添加自动进入轻量模式窗口监听器"
     );
 
-    if let Some(_) = with_lightweight_status(|_| ()) {
+    if with_lightweight_status(|_| ()).is_some() {
         set_lightweight_mode(false).await;
         enable_auto_light_weight_mode().await;
 
@@ -156,7 +155,7 @@ pub fn disable_auto_light_weight_mode() {
     cancel_window_close_listener();
 }
 
-pub fn entry_lightweight_mode() {
+pub async fn entry_lightweight_mode() {
     use crate::utils::window_manager::WindowManager;
 
     let result = WindowManager::hide_main_window();
@@ -175,7 +174,7 @@ pub fn entry_lightweight_mode() {
         #[cfg(target_os = "macos")]
         AppHandleManager::global().set_activation_policy_accessory();
     }
-    AsyncHandler::spawn(|| set_lightweight_mode(true));
+    set_lightweight_mode(true).await;
     let _ = cancel_light_weight_timer();
 
     // 更新托盘显示
@@ -287,7 +286,7 @@ async fn setup_light_weight_timer() -> Result<()> {
         .set_frequency_once_by_minutes(once_by_minutes)
         .spawn_async_routine(move || async move {
             logging!(info, Type::Timer, true, "计时器到期，开始进入轻量模式");
-            entry_lightweight_mode();
+            entry_lightweight_mode().await;
         })
         .context("failed to create timer task")?;
 

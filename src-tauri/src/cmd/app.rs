@@ -48,8 +48,8 @@ pub fn open_devtools(app_handle: AppHandle) {
 
 /// 退出应用
 #[tauri::command]
-pub fn exit_app() {
-    feat::quit();
+pub async fn exit_app() {
+    feat::quit().await;
 }
 
 /// 重启应用

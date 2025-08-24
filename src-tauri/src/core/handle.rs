@@ -255,7 +255,7 @@ impl NotificationSystem {
 
 #[derive(Debug, Clone)]
 pub struct Handle {
-    pub app_handle: Arc<RwLock<Option<Arc<AppHandle>>>>,
+    pub app_handle: Arc<RwLock<Option<AppHandle>>>,
     pub is_exiting: Arc<RwLock<bool>>,
     startup_errors: Arc<RwLock<Vec<ErrorMessage>>>,
     startup_completed: Arc<RwLock<bool>>,
@@ -282,10 +282,10 @@ impl Handle {
         Self::default()
     }
 
-    pub fn init(&self, app_handle: Arc<AppHandle>) {
+    pub fn init(&self, app_handle: AppHandle) {
         {
             let mut handle = self.app_handle.write();
-            *handle = Some(Arc::clone(&app_handle));
+            *handle = Some(app_handle);
         }
 
         let mut system_opt = self.notification_system.write();
@@ -295,8 +295,8 @@ impl Handle {
     }
 
     /// 获取 AppHandle
-    pub fn app_handle(&self) -> Option<Arc<AppHandle>> {
-        self.app_handle.read().as_ref().map(Arc::clone)
+    pub fn app_handle(&self) -> Option<AppHandle> {
+        self.app_handle.read().clone()
     }
 
     pub fn get_window(&self) -> Option<WebviewWindow> {

@@ -10,19 +10,18 @@ use crate::{
 
 /// Open or close the dashboard window
 #[allow(dead_code)]
-pub fn open_or_close_dashboard() {
-    open_or_close_dashboard_internal(false)
+pub async fn open_or_close_dashboard() {
+    open_or_close_dashboard_internal(false).await
 }
 
 /// Open or close the dashboard window (hotkey call, dispatched to main thread)
 #[allow(dead_code)]
-pub fn open_or_close_dashboard_hotkey() {
-    open_or_close_dashboard_internal(true)
+pub async fn open_or_close_dashboard_hotkey() {
+    open_or_close_dashboard_internal(true).await
 }
 
 /// Internal implementation for opening/closing dashboard
-fn open_or_close_dashboard_internal(bypass_debounce: bool) {
-    use crate::process::AsyncHandler;
+async fn open_or_close_dashboard_internal(bypass_debounce: bool) {
     use crate::utils::window_manager::WindowManager;
 
     log::info!(target: "app", "Attempting to open/close dashboard (绕过防抖: {bypass_debounce})");
@@ -31,26 +30,24 @@ fn open_or_close_dashboard_internal(bypass_debounce: bool) {
     if bypass_debounce {
         log::info!(target: "app", "热键调用，调度到主线程执行窗口操作");
 
-        AsyncHandler::spawn(move || async move {
-            log::info!(target: "app", "主线程中执行热键窗口操作");
+        log::info!(target: "app", "主线程中执行热键窗口操作");
 
-            if crate::module::lightweight::is_in_lightweight_mode() {
-                log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
-                crate::module::lightweight::exit_lightweight_mode().await;
-                log::info!(target: "app", "Creating new window after exiting lightweight mode");
-                let result = WindowManager::show_main_window();
-                log::info!(target: "app", "Window operation result: {result:?}");
-                return;
-            }
+        if crate::module::lightweight::is_in_lightweight_mode() {
+            log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
+            crate::module::lightweight::exit_lightweight_mode().await;
+            log::info!(target: "app", "Creating new window after exiting lightweight mode");
+            let result = WindowManager::show_main_window();
+            log::info!(target: "app", "Window operation result: {result:?}");
+            return;
+        }
 
-            let result = WindowManager::toggle_main_window();
-            log::info!(target: "app", "Window toggle result: {result:?}");
-        });
+        let result = WindowManager::toggle_main_window();
+        log::info!(target: "app", "Window toggle result: {result:?}");
         return;
     }
     if crate::module::lightweight::is_in_lightweight_mode() {
         log::info!(target: "app", "Currently in lightweight mode, exiting lightweight mode");
-        AsyncHandler::spawn(|| crate::module::lightweight::exit_lightweight_mode());
+        crate::module::lightweight::exit_lightweight_mode().await;
         log::info!(target: "app", "Creating new window after exiting lightweight mode");
         let result = WindowManager::show_main_window();
         log::info!(target: "app", "Window operation result: {result:?}");
@@ -62,8 +59,7 @@ fn open_or_close_dashboard_internal(bypass_debounce: bool) {
 }
 
 /// 异步优化的应用退出函数
-pub fn quit() {
-    use crate::process::AsyncHandler;
+pub async fn quit() {
     logging!(debug, Type::System, true, "启动退出流程");
 
     // 获取应用句柄并设置退出标志
@@ -84,19 +80,17 @@ pub fn quit() {
     }
 
     // 使用异步任务处理资源清理，避免阻塞
-    AsyncHandler::spawn(move || async move {
-        logging!(info, Type::System, true, "开始异步清理资源");
-        let cleanup_result = clean_async().await;
+    logging!(info, Type::System, true, "开始异步清理资源");
+    let cleanup_result = clean_async().await;
 
-        logging!(
-            info,
-            Type::System,
-            true,
-            "资源清理完成，退出代码: {}",
-            if cleanup_result { 0 } else { 1 }
-        );
-        app_handle.exit(if cleanup_result { 0 } else { 1 });
-    });
+    logging!(
+        info,
+        Type::System,
+        true,
+        "资源清理完成，退出代码: {}",
+        if cleanup_result { 0 } else { 1 }
+    );
+    app_handle.exit(if cleanup_result { 0 } else { 1 });
 }
 
 async fn clean_async() -> bool {
