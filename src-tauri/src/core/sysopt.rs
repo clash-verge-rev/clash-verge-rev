@@ -177,7 +177,7 @@ impl Sysopt {
                     .await?
             } else {
                 let address = format!("{proxy_host}:{port}");
-                let bypass = get_bypass();
+                let bypass = get_bypass().await;
                 let sysproxy_str = sysproxy_exe
                     .as_path()
                     .to_str()

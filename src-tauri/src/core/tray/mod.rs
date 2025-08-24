@@ -356,7 +356,7 @@ impl Tray {
             }
         };
 
-        let verge = Config::verge().latest_ref().clone();
+        let verge = Config::verge().await.latest_ref().clone();
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 

@@ -202,7 +202,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     // 先卸载服务
-    if let Err(err) = uninstall_service() {
+    if let Err(err) = uninstall_service().await {
         logging!(
             warn,
             Type::Service,
@@ -218,14 +218,14 @@ pub async fn reinstall_service() -> Result<()> {
             // 记录安装信息并保存
             service_state.record_install();
             service_state.last_error = None;
-            service_state.save()?;
+            service_state.save().await?;
             Ok(())
         }
         Err(err) => {
             let error = format!("failed to install service: {err}");
             service_state.last_error = Some(error.clone());
             service_state.prefer_sidecar = true;
-            service_state.save()?;
+            service_state.save().await?;
             bail!(error)
         }
     }
