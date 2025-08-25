@@ -33,7 +33,7 @@ once_cell = "1.21.3"
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 parking_lot = "0.12.4"
-percent-encoding = "2.3.1"
+percent-encoding = "2.3.2"
 tokio = { version = "1.47.1", features = [
   "rt-multi-thread",
   "macros",
@@ -42,9 +42,9 @@ tokio = { version = "1.47.1", features = [
 ] }
 serde = { version = "1.0.219", features = ["derive"] }
 reqwest = { version = "0.12.23", features = ["json", "rustls-tls", "cookies"] }
-regex = "1.11.1"
+regex = "1.11.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-tauri = { version = "2.8.2", features = [
+tauri = { version = "2.8.4", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -52,12 +52,12 @@ tauri = { version = "2.8.2", features = [
   "image-png",
 ] }
 network-interface = { version = "2.0.3", features = ["serde"] }
-tauri-plugin-shell = "2.3.0"
+tauri-plugin-shell = "2.3.1"
 tauri-plugin-dialog = "2.3.3"
 tauri-plugin-fs = "2.4.2"
 tauri-plugin-process = "2.3.0"
 tauri-plugin-clipboard-manager = "2.3.0"
-tauri-plugin-deep-link = "2.4.1"
+tauri-plugin-deep-link = "2.4.2"
 tauri-plugin-devtools = "2.0.1"
 tauri-plugin-window-state = "2.4.0"
 zip = "=4.2.0"
@@ -75,7 +75,7 @@ hex = "0.4.3"
 scopeguard = "1.2.0"
 kode-bridge = "0.2.1-rc1"
 dashmap = "6.1.0"
-tauri-plugin-notification = "2.3.0"
+tauri-plugin-notification = "2.3.1"
 console-subscriber = { version = "0.4.1", optional = true }
 tokio-stream = "0.1.17"
 
