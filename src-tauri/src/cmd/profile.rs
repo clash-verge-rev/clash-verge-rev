@@ -1,6 +1,12 @@
 use super::CmdResult;
 use crate::{
-    config::{Config, IProfiles, PrfItem, PrfOption},
+    config::{
+        profiles::{
+            profiles_append_item_safe, profiles_delete_item_safe, profiles_patch_item_safe,
+            profiles_reorder_safe, profiles_save_file_safe,
+        },
+        Config, IProfiles, PrfItem, PrfOption,
+    },
     core::{handle, timer::Timer, tray::Tray, CoreManager},
     feat, logging,
     process::AsyncHandler,
@@ -33,30 +39,23 @@ async fn cleanup_processing_state(sequence: u64, reason: &str) {
     );
 }
 
-/// 获取配置文件避免锁竞争
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
     // 策略1: 尝试快速获取latest数据
-    let latest_result = tokio::time::timeout(
-        Duration::from_millis(500),
-        AsyncHandler::spawn_blocking(move || {
-            let profiles = Config::profiles();
-            let latest = profiles.latest_ref();
-            IProfiles {
-                current: latest.current.clone(),
-                items: latest.items.clone(),
-            }
-        }),
-    )
+    let latest_result = tokio::time::timeout(Duration::from_millis(500), async {
+        let profiles = Config::profiles().await;
+        let latest = profiles.latest_ref();
+        IProfiles {
+            current: latest.current.clone(),
+            items: latest.items.clone(),
+        }
+    })
     .await;
 
     match latest_result {
-        Ok(Ok(profiles)) => {
+        Ok(profiles) => {
             logging!(info, Type::Cmd, false, "快速获取配置列表成功");
             return Ok(profiles);
-        }
-        Ok(Err(join_err)) => {
-            logging!(warn, Type::Cmd, true, "快速获取配置任务失败: {}", join_err);
         }
         Err(_) => {
             logging!(warn, Type::Cmd, true, "快速获取配置超时(500ms)");
@@ -64,35 +63,29 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
     }
 
     // 策略2: 如果快速获取失败，尝试获取data()
-    let data_result = tokio::time::timeout(
-        Duration::from_secs(2),
-        AsyncHandler::spawn_blocking(move || {
-            let profiles = Config::profiles();
-            let data = profiles.latest_ref();
-            IProfiles {
-                current: data.current.clone(),
-                items: data.items.clone(),
-            }
-        }),
-    )
+    let data_result = tokio::time::timeout(Duration::from_secs(2), async {
+        let profiles = Config::profiles().await;
+        let data = profiles.latest_ref();
+        IProfiles {
+            current: data.current.clone(),
+            items: data.items.clone(),
+        }
+    })
     .await;
 
     match data_result {
-        Ok(Ok(profiles)) => {
+        Ok(profiles) => {
             logging!(info, Type::Cmd, false, "获取draft配置列表成功");
             return Ok(profiles);
         }
-        Ok(Err(join_err)) => {
+        Err(join_err) => {
             logging!(
                 error,
                 Type::Cmd,
                 true,
-                "获取draft配置任务失败: {}",
+                "获取draft配置任务失败或超时: {}",
                 join_err
             );
-        }
-        Err(_) => {
-            logging!(error, Type::Cmd, true, "获取draft配置超时(2秒)");
         }
     }
 
@@ -104,26 +97,19 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
         "所有获取配置策略都失败，尝试fallback"
     );
 
-    match AsyncHandler::spawn_blocking(IProfiles::new).await {
-        Ok(profiles) => {
-            logging!(info, Type::Cmd, true, "使用fallback配置成功");
-            Ok(profiles)
-        }
-        Err(err) => {
-            logging!(error, Type::Cmd, true, "fallback配置也失败: {}", err);
-            // 返回空配置避免崩溃
-            Ok(IProfiles {
-                current: None,
-                items: Some(vec![]),
-            })
-        }
-    }
+    Ok(IProfiles::new().await)
 }
 
 /// 增强配置文件
 #[tauri::command]
 pub async fn enhance_profiles() -> CmdResult {
-    wrap_err!(feat::enhance_profiles().await)?;
+    match feat::enhance_profiles().await {
+        Ok(_) => {}
+        Err(e) => {
+            log::error!(target: "app", "{}", e);
+            return Err(e.to_string());
+        }
+    }
     handle::Handle::refresh_clash();
     Ok(())
 }
@@ -133,82 +119,76 @@ pub async fn enhance_profiles() -> CmdResult {
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     logging!(info, Type::Cmd, true, "[导入订阅] 开始导入: {}", url);
 
-    // 使用超时保护避免长时间阻塞
-    let import_result = tokio::time::timeout(
-        Duration::from_secs(60), // 60秒超时
-        async {
-            let item = PrfItem::from_url(&url, None, None, option).await?;
-            logging!(info, Type::Cmd, true, "[导入订阅] 下载完成，开始保存配置");
+    let import_result = tokio::time::timeout(Duration::from_secs(60), async {
+        let item = PrfItem::from_url(&url, None, None, option).await?;
+        logging!(info, Type::Cmd, true, "[导入订阅] 下载完成，开始保存配置");
 
-            // 获取导入前的配置数量用于验证
-            let pre_count = Config::profiles()
-                .latest_ref()
-                .items
-                .as_ref()
-                .map_or(0, |items| items.len());
+        let profiles = Config::profiles().await;
+        let pre_count = profiles
+            .latest_ref()
+            .items
+            .as_ref()
+            .map_or(0, |items| items.len());
 
-            Config::profiles().data_mut().append_item(item.clone())?;
+        let result = profiles_append_item_safe(item.clone()).await;
+        result?;
 
-            // 验证导入是否成功
-            let post_count = Config::profiles()
-                .latest_ref()
-                .items
-                .as_ref()
-                .map_or(0, |items| items.len());
-            if post_count <= pre_count {
-                logging!(
-                    error,
-                    Type::Cmd,
-                    true,
-                    "[导入订阅] 配置未增加，导入可能失败"
-                );
-                return Err(anyhow::anyhow!("配置导入后数量未增加"));
-            }
+        let post_count = profiles
+            .latest_ref()
+            .items
+            .as_ref()
+            .map_or(0, |items| items.len());
+        if post_count <= pre_count {
+            logging!(
+                error,
+                Type::Cmd,
+                true,
+                "[导入订阅] 配置未增加，导入可能失败"
+            );
+            return Err(anyhow::anyhow!("配置导入后数量未增加"));
+        }
 
+        logging!(
+            info,
+            Type::Cmd,
+            true,
+            "[导入订阅] 配置保存成功，数量: {} -> {}",
+            pre_count,
+            post_count
+        );
+
+        // 立即发送配置变更通知
+        if let Some(uid) = &item.uid {
             logging!(
                 info,
                 Type::Cmd,
                 true,
-                "[导入订阅] 配置保存成功，数量: {} -> {}",
-                pre_count,
-                post_count
+                "[导入订阅] 发送配置变更通知: {}",
+                uid
             );
+            handle::Handle::notify_profile_changed(uid.clone());
+        }
 
-            // 立即发送配置变更通知
-            if let Some(uid) = &item.uid {
-                logging!(
-                    info,
-                    Type::Cmd,
-                    true,
-                    "[导入订阅] 发送配置变更通知: {}",
-                    uid
-                );
-                handle::Handle::notify_profile_changed(uid.clone());
-            }
+        // 异步保存配置文件并发送全局通知
+        let uid_clone = item.uid.clone();
+        crate::process::AsyncHandler::spawn(move || async move {
+            // 使用Send-safe helper函数
+            if let Err(e) = profiles_save_file_safe().await {
+                logging!(error, Type::Cmd, true, "[导入订阅] 保存配置文件失败: {}", e);
+            } else {
+                logging!(info, Type::Cmd, true, "[导入订阅] 配置文件保存成功");
 
-            // 异步保存配置文件并发送全局通知
-            let uid_clone = item.uid.clone();
-            crate::process::AsyncHandler::spawn(move || async move {
-                // 在异步块中重新获取锁，避免跨await问题
-                let save_result = { Config::profiles().data_mut().save_file() };
-
-                if let Err(e) = save_result {
-                    logging!(error, Type::Cmd, true, "[导入订阅] 保存配置文件失败: {}", e);
-                } else {
-                    logging!(info, Type::Cmd, true, "[导入订阅] 配置文件保存成功");
-
-                    // 发送全局配置更新通知
-                    if let Some(uid) = uid_clone {
-                        // 延迟发送，确保文件已完全写入
-                        tokio::time::sleep(Duration::from_millis(100)).await;
-                        handle::Handle::notify_profile_changed(uid);
-                    }
+                // 发送全局配置更新通知
+                if let Some(uid) = uid_clone {
+                    // 延迟发送，确保文件已完全写入
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    handle::Handle::notify_profile_changed(uid);
                 }
-            });
+            }
+        });
 
-            Ok(())
-        },
-    )
+        Ok(())
+    })
     .await;
 
     match import_result {
@@ -227,36 +207,66 @@ pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult
     }
 }
 
-/// 重新排序配置文件
+/// 调整profile的顺序
 #[tauri::command]
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
-    wrap_err!(Config::profiles().data_mut().reorder(active_id, over_id))
+    match profiles_reorder_safe(active_id, over_id).await {
+        Ok(_) => {
+            log::info!(target: "app", "重新排序配置文件");
+            Ok(())
+        }
+        Err(err) => {
+            log::error!(target: "app", "重新排序配置文件失败: {}", err);
+            Err(format!("重新排序配置文件失败: {}", err))
+        }
+    }
 }
 
-/// 创建配置文件
+/// 创建新的profile
+/// 创建一个新的配置文件
 #[tauri::command]
-pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
-    let item = wrap_err!(PrfItem::from(item, file_data).await)?;
-    wrap_err!(Config::profiles().data_mut().append_item(item))
+pub async fn create_profile(item: PrfItem, _file_data: Option<String>) -> CmdResult {
+    match profiles_append_item_safe(item).await {
+        Ok(_) => Ok(()),
+        Err(err) => match err.to_string().as_str() {
+            "the file already exists" => Err("the file already exists".into()),
+            _ => Err(format!("add profile error: {err}")),
+        },
+    }
 }
 
 /// 更新配置文件
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    wrap_err!(feat::update_profile(index, option, Some(true)).await)
+    match feat::update_profile(index, option, Some(true)).await {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!(target: "app", "{}", e);
+            Err(e.to_string())
+        }
+    }
 }
 
 /// 删除配置文件
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
-    let should_update = wrap_err!({ Config::profiles().data_mut().delete_item(index) })?;
+    // 使用Send-safe helper函数
+    let should_update = wrap_err!(profiles_delete_item_safe(index).await)?;
 
     // 删除后自动清理冗余文件
-    let _ = Config::profiles().latest_ref().auto_cleanup();
+    let profiles = Config::profiles().await;
+    let _ = profiles.latest_ref().auto_cleanup();
 
     if should_update {
-        wrap_err!(CoreManager::global().update_config().await)?;
-        handle::Handle::refresh_clash();
+        match CoreManager::global().update_config().await {
+            Ok(_) => {
+                handle::Handle::refresh_clash();
+            }
+            Err(e) => {
+                log::error!(target: "app", "{}", e);
+                return Err(e.to_string());
+            }
+        }
     }
     Ok(())
 }
@@ -320,7 +330,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     }
 
     // 保存当前配置，以便在验证失败时恢复
-    let current_profile = Config::profiles().latest_ref().current.clone();
+    let current_profile = Config::profiles().await.latest_ref().current.clone();
     logging!(info, Type::Cmd, true, "当前配置: {:?}", current_profile);
 
     // 如果要切换配置，先检查目标配置文件是否有语法错误
@@ -330,7 +340,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
             // 获取目标配置文件路径
             let config_file_result = {
-                let profiles_config = Config::profiles();
+                let profiles_config = Config::profiles().await;
                 let profiles_data = profiles_config.latest_ref();
                 match profiles_data.get_item(new_profile) {
                     Ok(item) => {
@@ -469,7 +479,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     let current_value = profiles.current.clone();
 
-    let _ = Config::profiles().draft_mut().patch_config(profiles);
+    let _ = Config::profiles().await.draft_mut().patch_config(profiles);
 
     // 在调用内核前再次验证请求有效性
     let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
@@ -482,7 +492,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             current_sequence,
             latest_sequence
         );
-        Config::profiles().discard();
+        Config::profiles().await.discard();
         return Ok(false);
     }
 
@@ -514,7 +524,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                     current_sequence,
                     latest_sequence
                 );
-                Config::profiles().discard();
+                Config::profiles().await.discard();
                 return Ok(false);
             }
 
@@ -525,7 +535,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 "配置更新成功，序列号: {}",
                 current_sequence
             );
-            Config::profiles().apply();
+            Config::profiles().await.apply();
             handle::Handle::refresh_clash();
 
             // 强制刷新代理缓存，确保profile切换后立即获取最新节点数据
@@ -535,20 +545,18 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 }
             });
 
-            crate::process::AsyncHandler::spawn(|| async move {
-                if let Err(e) = Tray::global().update_tooltip() {
-                    log::warn!(target: "app", "异步更新托盘提示失败: {e}");
-                }
+            if let Err(e) = Tray::global().update_tooltip().await {
+                log::warn!(target: "app", "异步更新托盘提示失败: {e}");
+            }
 
-                if let Err(e) = Tray::global().update_menu() {
-                    log::warn!(target: "app", "异步更新托盘菜单失败: {e}");
-                }
+            if let Err(e) = Tray::global().update_menu().await {
+                log::warn!(target: "app", "异步更新托盘菜单失败: {e}");
+            }
 
-                // 保存配置文件
-                if let Err(e) = Config::profiles().data_mut().save_file() {
-                    log::warn!(target: "app", "异步保存配置文件失败: {e}");
-                }
-            });
+            // 保存配置文件
+            if let Err(e) = profiles_save_file_safe().await {
+                log::warn!(target: "app", "异步保存配置文件失败: {e}");
+            }
 
             // 立即通知前端配置变更
             if let Some(current) = &current_value {
@@ -569,7 +577,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         }
         Ok(Ok((false, error_msg))) => {
             logging!(warn, Type::Cmd, true, "配置验证失败: {}", error_msg);
-            Config::profiles().discard();
+            Config::profiles().await.discard();
             // 如果验证失败，恢复到之前的配置
             if let Some(prev_profile) = current_profile {
                 logging!(
@@ -586,13 +594,14 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 // 静默恢复，不触发验证
                 wrap_err!({
                     Config::profiles()
+                        .await
                         .draft_mut()
                         .patch_config(restore_profiles)
                 })?;
-                Config::profiles().apply();
+                Config::profiles().await.apply();
 
                 crate::process::AsyncHandler::spawn(|| async move {
-                    if let Err(e) = Config::profiles().data_mut().save_file() {
+                    if let Err(e) = profiles_save_file_safe().await {
                         log::warn!(target: "app", "异步保存恢复配置文件失败: {e}");
                     }
                 });
@@ -616,7 +625,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 e,
                 current_sequence
             );
-            Config::profiles().discard();
+            Config::profiles().await.discard();
             handle::Handle::notice_message("config_validate::boot_error", e.to_string());
 
             cleanup_processing_state(current_sequence, "更新过程错误").await;
@@ -634,7 +643,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 timeout_msg,
                 current_sequence
             );
-            Config::profiles().discard();
+            Config::profiles().await.discard();
 
             if let Some(prev_profile) = current_profile {
                 logging!(
@@ -651,10 +660,11 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 };
                 wrap_err!({
                     Config::profiles()
+                        .await
                         .draft_mut()
                         .patch_config(restore_profiles)
                 })?;
-                Config::profiles().apply();
+                Config::profiles().await.apply();
             }
 
             handle::Handle::notice_message("config_validate::timeout", timeout_msg);
@@ -680,28 +690,26 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 
 /// 修改某个profile item的
 #[tauri::command]
-pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
+pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 保存修改前检查是否有更新 update_interval
-    let update_interval_changed =
-        if let Ok(old_profile) = Config::profiles().latest_ref().get_item(&index) {
-            let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
-            let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
-            old_interval != new_interval
-        } else {
-            false
-        };
+    let profiles = Config::profiles().await;
+    let update_interval_changed = if let Ok(old_profile) = profiles.latest_ref().get_item(&index) {
+        let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
+        let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
+        old_interval != new_interval
+    } else {
+        false
+    };
 
     // 保存修改
-    wrap_err!(Config::profiles()
-        .data_mut()
-        .patch_item(index.clone(), profile))?;
+    wrap_err!(profiles_patch_item_safe(index.clone(), profile).await)?;
 
     // 如果更新间隔变更，异步刷新定时器
     if update_interval_changed {
         let index_clone = index.clone();
         crate::process::AsyncHandler::spawn(move || async move {
             logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");
-            if let Err(e) = crate::core::Timer::global().refresh() {
+            if let Err(e) = crate::core::Timer::global().refresh().await {
                 logging!(error, Type::Timer, "刷新定时器失败: {}", e);
             } else {
                 // 刷新成功后发送自定义事件，不触发配置重载
@@ -715,9 +723,10 @@ pub fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 
 /// 查看配置文件
 #[tauri::command]
-pub fn view_profile(index: String) -> CmdResult {
+pub async fn view_profile(index: String) -> CmdResult {
+    let profiles = Config::profiles().await;
     let file = {
-        wrap_err!(Config::profiles().latest_ref().get_item(&index))?
+        wrap_err!(profiles.latest_ref().get_item(&index))?
             .file
             .clone()
             .ok_or("the file field is null")
@@ -733,18 +742,18 @@ pub fn view_profile(index: String) -> CmdResult {
 
 /// 读取配置文件内容
 #[tauri::command]
-pub fn read_profile_file(index: String) -> CmdResult<String> {
-    let profiles = Config::profiles();
-    let profiles = profiles.latest_ref();
-    let item = wrap_err!(profiles.get_item(&index))?;
+pub async fn read_profile_file(index: String) -> CmdResult<String> {
+    let profiles = Config::profiles().await;
+    let profiles_ref = profiles.latest_ref();
+    let item = wrap_err!(profiles_ref.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
 }
 
 /// 获取下一次更新时间
 #[tauri::command]
-pub fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
+pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
     let timer = Timer::global();
-    let next_time = timer.get_next_update_time(&uid);
+    let next_time = timer.get_next_update_time(&uid).await;
     Ok(next_time)
 }

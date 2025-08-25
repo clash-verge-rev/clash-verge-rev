@@ -1,5 +1,3 @@
-extern crate warp;
-
 use super::resolve;
 use crate::{
     config::{Config, IVerge, DEFAULT_PAC},
@@ -9,7 +7,6 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use port_scanner::local_port_available;
-use std::convert::Infallible;
 use warp::Filter;
 
 #[derive(serde::Deserialize, Debug)]
@@ -48,39 +45,51 @@ pub fn embed_server() {
     let port = IVerge::get_singleton_port();
 
     AsyncHandler::spawn(move || async move {
-        let visible = warp::path!("commands" / "visible").map(|| {
-            resolve::create_window(false);
-            warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
+        let visible = warp::path!("commands" / "visible").and_then(|| async {
+            resolve::create_window(false).await;
+            Ok::<_, warp::Rejection>(warp::reply::with_status(
+                "ok".to_string(),
+                warp::http::StatusCode::OK,
+            ))
         });
 
-        let pac = warp::path!("commands" / "pac").map(|| {
-            let content = Config::verge()
-                .latest_ref()
-                .pac_file_content
-                .clone()
-                .unwrap_or(DEFAULT_PAC.to_string());
-            let port = Config::verge()
-                .latest_ref()
-                .verge_mixed_port
-                .unwrap_or(Config::clash().latest_ref().get_mixed_port());
-            let content = content.replace("%mixed-port%", &format!("{port}"));
+        let verge_config = Config::verge().await;
+        let clash_config = Config::clash().await;
+
+        let content = verge_config
+            .latest_ref()
+            .pac_file_content
+            .clone()
+            .unwrap_or(DEFAULT_PAC.to_string());
+
+        let mixed_port = verge_config
+            .latest_ref()
+            .verge_mixed_port
+            .unwrap_or(clash_config.latest_ref().get_mixed_port());
+
+        // Clone the content and port for the closure to avoid borrowing issues
+        let pac_content = content.clone();
+        let pac_port = mixed_port;
+        let pac = warp::path!("commands" / "pac").map(move || {
+            let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
             warp::http::Response::builder()
                 .header("Content-Type", "application/x-ns-proxy-autoconfig")
-                .body(content)
+                .body(processed_content)
                 .unwrap_or_default()
         });
-        async fn scheme_handler(query: QueryParam) -> Result<String, Infallible> {
-            logging_error!(
-                Type::Setup,
-                true,
-                resolve::resolve_scheme(query.param).await
-            );
-            Ok("ok".to_string())
-        }
 
+        // Use map instead of and_then to avoid Send issues
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
-            .and_then(scheme_handler);
+            .map(|query: QueryParam| {
+                // Spawn async work in a fire-and-forget manner
+                let param = query.param.clone();
+                tokio::task::spawn_local(async move {
+                    logging_error!(Type::Setup, true, resolve::resolve_scheme(param).await);
+                });
+                warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
+            });
+
         let commands = visible.or(scheme).or(pac);
         warp::serve(commands).run(([127, 0, 0, 1], port)).await;
     });

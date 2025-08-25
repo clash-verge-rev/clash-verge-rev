@@ -8,14 +8,14 @@ use tauri::{AppHandle, Manager};
 
 /// 打开应用程序所在目录
 #[tauri::command]
-pub fn open_app_dir() -> CmdResult<()> {
+pub async fn open_app_dir() -> CmdResult<()> {
     let app_dir = wrap_err!(dirs::app_home_dir())?;
     wrap_err!(open::that(app_dir))
 }
 
 /// 打开核心所在目录
 #[tauri::command]
-pub fn open_core_dir() -> CmdResult<()> {
+pub async fn open_core_dir() -> CmdResult<()> {
     let core_dir = wrap_err!(tauri::utils::platform::current_exe())?;
     let core_dir = core_dir.parent().ok_or("failed to get core dir")?;
     wrap_err!(open::that(core_dir))
@@ -23,7 +23,7 @@ pub fn open_core_dir() -> CmdResult<()> {
 
 /// 打开日志目录
 #[tauri::command]
-pub fn open_logs_dir() -> CmdResult<()> {
+pub async fn open_logs_dir() -> CmdResult<()> {
     let log_dir = wrap_err!(dirs::app_logs_dir())?;
     wrap_err!(open::that(log_dir))
 }
@@ -48,14 +48,14 @@ pub fn open_devtools(app_handle: AppHandle) {
 
 /// 退出应用
 #[tauri::command]
-pub fn exit_app() {
-    feat::quit();
+pub async fn exit_app() {
+    feat::quit().await;
 }
 
 /// 重启应用
 #[tauri::command]
 pub async fn restart_app() -> CmdResult<()> {
-    feat::restart_app();
+    feat::restart_app().await;
     Ok(())
 }
 

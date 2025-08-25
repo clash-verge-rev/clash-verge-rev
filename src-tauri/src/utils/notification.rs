@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use crate::utils::i18n::t;
 
 use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
@@ -16,7 +16,7 @@ pub enum NotificationEvent<'a> {
     AppHidden,
 }
 
-fn notify(app: Arc<AppHandle>, title: &str, body: &str) {
+fn notify(app: &AppHandle, title: &str, body: &str) {
     app.notification()
         .builder()
         .title(title)
@@ -25,48 +25,54 @@ fn notify(app: Arc<AppHandle>, title: &str, body: &str) {
         .ok();
 }
 
-pub fn notify_event(app: Arc<AppHandle>, event: NotificationEvent) {
-    use crate::utils::i18n::t;
+pub async fn notify_event<'a>(app: AppHandle, event: NotificationEvent<'a>) {
     match event {
         NotificationEvent::DashboardToggled => {
-            notify(app, &t("DashboardToggledTitle"), &t("DashboardToggledBody"));
+            notify(
+                &app,
+                &t("DashboardToggledTitle").await,
+                &t("DashboardToggledBody").await,
+            );
         }
         NotificationEvent::ClashModeChanged { mode } => {
             notify(
-                app,
-                &t("ClashModeChangedTitle"),
-                &t_with_args("ClashModeChangedBody", mode),
+                &app,
+                &t("ClashModeChangedTitle").await,
+                &t_with_args("ClashModeChangedBody", mode).await,
             );
         }
         NotificationEvent::SystemProxyToggled => {
             notify(
-                app,
-                &t("SystemProxyToggledTitle"),
-                &t("SystemProxyToggledBody"),
+                &app,
+                &t("SystemProxyToggledTitle").await,
+                &t("SystemProxyToggledBody").await,
             );
         }
         NotificationEvent::TunModeToggled => {
-            notify(app, &t("TunModeToggledTitle"), &t("TunModeToggledBody"));
+            notify(
+                &app,
+                &t("TunModeToggledTitle").await,
+                &t("TunModeToggledBody").await,
+            );
         }
         NotificationEvent::LightweightModeEntered => {
             notify(
-                app,
-                &t("LightweightModeEnteredTitle"),
-                &t("LightweightModeEnteredBody"),
+                &app,
+                &t("LightweightModeEnteredTitle").await,
+                &t("LightweightModeEnteredBody").await,
             );
         }
         NotificationEvent::AppQuit => {
-            notify(app, &t("AppQuitTitle"), &t("AppQuitBody"));
+            notify(&app, &t("AppQuitTitle").await, &t("AppQuitBody").await);
         }
         #[cfg(target_os = "macos")]
         NotificationEvent::AppHidden => {
-            notify(app, &t("AppHiddenTitle"), &t("AppHiddenBody"));
+            notify(&app, &t("AppHiddenTitle").await, &t("AppHiddenBody").await);
         }
     }
 }
 
 // 辅助函数，带参数的i18n
-fn t_with_args(key: &str, mode: &str) -> String {
-    use crate::utils::i18n::t;
-    t(key).replace("{mode}", mode)
+async fn t_with_args(key: &str, mode: &str) -> String {
+    t(key).await.replace("{mode}", mode)
 }

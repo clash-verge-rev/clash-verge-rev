@@ -14,12 +14,12 @@ type ResultLog = Vec<(String, String)>;
 
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
-pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // config.yaml 的订阅
-    let clash_config = { Config::clash().latest_ref().0.clone() };
+    let clash_config = { Config::clash().await.latest_ref().0.clone() };
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = {
-        let verge = Config::verge();
+        let verge = Config::verge().await;
         let verge = verge.latest_ref();
         (
             Some(verge.get_valid_clash_core()),
@@ -32,18 +32,18 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     };
     #[cfg(not(target_os = "windows"))]
     let redir_enabled = {
-        let verge = Config::verge();
+        let verge = Config::verge().await;
         let verge = verge.latest_ref();
         verge.verge_redir_enabled.unwrap_or(false)
     };
     #[cfg(target_os = "linux")]
     let tproxy_enabled = {
-        let verge = Config::verge();
+        let verge = Config::verge().await;
         let verge = verge.latest_ref();
         verge.verge_tproxy_enabled.unwrap_or(false)
     };
 
-    // 从profiles里拿东西
+    // 从profiles里拿东西 - 先收集需要的数据，然后释放锁
     let (
         mut config,
         merge_item,
@@ -55,74 +55,172 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         global_script,
         profile_name,
     ) = {
-        let profiles = Config::profiles();
-        let profiles = profiles.latest_ref();
+        // 收集所有需要的数据，然后释放profiles锁
+        let (
+            current,
+            merge_uid,
+            script_uid,
+            rules_uid,
+            proxies_uid,
+            groups_uid,
+            _current_profile_uid,
+            name,
+        ) = {
+            // 分离async调用和数据获取，避免借用检查问题
+            let current = {
+                let profiles = Config::profiles().await;
+                let profiles_clone = profiles.latest_ref().clone();
+                profiles_clone.current_mapping().await.unwrap_or_default()
+            };
 
-        let current = profiles.current_mapping().unwrap_or_default();
-        let merge = profiles
-            .get_item(&profiles.current_merge().unwrap_or_default())
-            .ok()
-            .and_then(<Option<ChainItem>>::from)
-            .unwrap_or_else(|| ChainItem {
-                uid: "".into(),
-                data: ChainType::Merge(Mapping::new()),
-            });
-        let script = profiles
-            .get_item(&profiles.current_script().unwrap_or_default())
-            .ok()
-            .and_then(<Option<ChainItem>>::from)
-            .unwrap_or_else(|| ChainItem {
-                uid: "".into(),
-                data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
-            });
-        let rules = profiles
-            .get_item(&profiles.current_rules().unwrap_or_default())
-            .ok()
-            .and_then(<Option<ChainItem>>::from)
-            .unwrap_or_else(|| ChainItem {
-                uid: "".into(),
-                data: ChainType::Rules(SeqMap::default()),
-            });
-        let proxies = profiles
-            .get_item(&profiles.current_proxies().unwrap_or_default())
-            .ok()
-            .and_then(<Option<ChainItem>>::from)
-            .unwrap_or_else(|| ChainItem {
-                uid: "".into(),
-                data: ChainType::Proxies(SeqMap::default()),
-            });
-        let groups = profiles
-            .get_item(&profiles.current_groups().unwrap_or_default())
-            .ok()
-            .and_then(<Option<ChainItem>>::from)
-            .unwrap_or_else(|| ChainItem {
-                uid: "".into(),
-                data: ChainType::Groups(SeqMap::default()),
-            });
+            // 重新获取锁进行其他操作
+            let profiles = Config::profiles().await;
+            let profiles_ref = profiles.latest_ref();
 
-        let global_merge = profiles
-            .get_item(&"Merge".to_string())
-            .ok()
-            .and_then(<Option<ChainItem>>::from)
-            .unwrap_or_else(|| ChainItem {
-                uid: "Merge".into(),
-                data: ChainType::Merge(Mapping::new()),
-            });
+            let merge_uid = profiles_ref.current_merge().unwrap_or_default();
+            let script_uid = profiles_ref.current_script().unwrap_or_default();
+            let rules_uid = profiles_ref.current_rules().unwrap_or_default();
+            let proxies_uid = profiles_ref.current_proxies().unwrap_or_default();
+            let groups_uid = profiles_ref.current_groups().unwrap_or_default();
+            let current_profile_uid = profiles_ref.get_current().unwrap_or_default();
 
-        let global_script = profiles
-            .get_item(&"Script".to_string())
-            .ok()
-            .and_then(<Option<ChainItem>>::from)
-            .unwrap_or_else(|| ChainItem {
-                uid: "Script".into(),
-                data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
-            });
+            let name = profiles_ref
+                .get_item(&current_profile_uid)
+                .ok()
+                .and_then(|item| item.name.clone())
+                .unwrap_or_default();
 
-        let name = profiles
-            .get_item(&profiles.get_current().unwrap_or_default())
-            .ok()
-            .and_then(|item| item.name.clone())
-            .unwrap_or_default();
+            (
+                current,
+                merge_uid,
+                script_uid,
+                rules_uid,
+                proxies_uid,
+                groups_uid,
+                current_profile_uid,
+                name,
+            )
+        };
+
+        // 现在获取具体的items，此时profiles锁已经释放
+        let merge = {
+            let item = {
+                let profiles = Config::profiles().await;
+                let profiles = profiles.latest_ref();
+                profiles.get_item(&merge_uid).ok().cloned()
+            };
+            if let Some(item) = item {
+                <Option<ChainItem>>::from_async(&item).await
+            } else {
+                None
+            }
+        }
+        .unwrap_or_else(|| ChainItem {
+            uid: "".into(),
+            data: ChainType::Merge(Mapping::new()),
+        });
+
+        let script = {
+            let item = {
+                let profiles = Config::profiles().await;
+                let profiles = profiles.latest_ref();
+                profiles.get_item(&script_uid).ok().cloned()
+            };
+            if let Some(item) = item {
+                <Option<ChainItem>>::from_async(&item).await
+            } else {
+                None
+            }
+        }
+        .unwrap_or_else(|| ChainItem {
+            uid: "".into(),
+            data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
+        });
+
+        let rules = {
+            let item = {
+                let profiles = Config::profiles().await;
+                let profiles = profiles.latest_ref();
+                profiles.get_item(&rules_uid).ok().cloned()
+            };
+            if let Some(item) = item {
+                <Option<ChainItem>>::from_async(&item).await
+            } else {
+                None
+            }
+        }
+        .unwrap_or_else(|| ChainItem {
+            uid: "".into(),
+            data: ChainType::Rules(SeqMap::default()),
+        });
+
+        let proxies = {
+            let item = {
+                let profiles = Config::profiles().await;
+                let profiles = profiles.latest_ref();
+                profiles.get_item(&proxies_uid).ok().cloned()
+            };
+            if let Some(item) = item {
+                <Option<ChainItem>>::from_async(&item).await
+            } else {
+                None
+            }
+        }
+        .unwrap_or_else(|| ChainItem {
+            uid: "".into(),
+            data: ChainType::Proxies(SeqMap::default()),
+        });
+
+        let groups = {
+            let item = {
+                let profiles = Config::profiles().await;
+                let profiles = profiles.latest_ref();
+                profiles.get_item(&groups_uid).ok().cloned()
+            };
+            if let Some(item) = item {
+                <Option<ChainItem>>::from_async(&item).await
+            } else {
+                None
+            }
+        }
+        .unwrap_or_else(|| ChainItem {
+            uid: "".into(),
+            data: ChainType::Groups(SeqMap::default()),
+        });
+
+        let global_merge = {
+            let item = {
+                let profiles = Config::profiles().await;
+                let profiles = profiles.latest_ref();
+                profiles.get_item(&"Merge".to_string()).ok().cloned()
+            };
+            if let Some(item) = item {
+                <Option<ChainItem>>::from_async(&item).await
+            } else {
+                None
+            }
+        }
+        .unwrap_or_else(|| ChainItem {
+            uid: "Merge".into(),
+            data: ChainType::Merge(Mapping::new()),
+        });
+
+        let global_script = {
+            let item = {
+                let profiles = Config::profiles().await;
+                let profiles = profiles.latest_ref();
+                profiles.get_item(&"Script".to_string()).ok().cloned()
+            };
+            if let Some(item) = item {
+                <Option<ChainItem>>::from_async(&item).await
+            } else {
+                None
+            }
+        }
+        .unwrap_or_else(|| ChainItem {
+            uid: "Script".into(),
+            data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
+        });
 
         (
             current,
@@ -237,6 +335,7 @@ pub fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             // 处理 external-controller 键的开关逻辑
             if key.as_str() == Some("external-controller") {
                 let enable_external_controller = Config::verge()
+                    .await
                     .latest_ref()
                     .enable_external_controller
                     .unwrap_or(false);

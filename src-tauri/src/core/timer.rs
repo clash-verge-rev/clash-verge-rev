@@ -4,6 +4,7 @@ use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use parking_lot::RwLock;
 use std::{
     collections::HashMap,
+    pin::Pin,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
@@ -48,7 +49,7 @@ impl Timer {
     }
 
     /// Initialize timer with better error handling and atomic operations
-    pub fn init(&self) -> Result<()> {
+    pub async fn init(&self) -> Result<()> {
         // Use compare_exchange for thread-safe initialization check
         if self
             .initialized
@@ -62,54 +63,58 @@ impl Timer {
         logging!(info, Type::Timer, true, "Initializing timer...");
 
         // Initialize timer tasks
-        if let Err(e) = self.refresh() {
+        if let Err(e) = self.refresh().await {
             // Reset initialization flag on error
             self.initialized.store(false, Ordering::SeqCst);
             logging_error!(Type::Timer, false, "Failed to initialize timer: {}", e);
             return Err(e);
         }
 
-        let timer_map = self.timer_map.read();
-        logging!(
-            info,
-            Type::Timer,
-            "已注册的定时任务数量: {}",
-            timer_map.len()
-        );
-
-        for (uid, task) in timer_map.iter() {
+        // Log timer info first
+        {
+            let timer_map = self.timer_map.read();
             logging!(
                 info,
                 Type::Timer,
-                "注册了定时任务 - uid={}, interval={}min, task_id={}",
-                uid,
-                task.interval_minutes,
-                task.task_id
+                "已注册的定时任务数量: {}",
+                timer_map.len()
             );
+
+            for (uid, task) in timer_map.iter() {
+                logging!(
+                    info,
+                    Type::Timer,
+                    "注册了定时任务 - uid={}, interval={}min, task_id={}",
+                    uid,
+                    task.interval_minutes,
+                    task.task_id
+                );
+            }
         }
 
         let cur_timestamp = chrono::Local::now().timestamp();
 
         // Collect profiles that need immediate update
-        let profiles_to_update = if let Some(items) = Config::profiles().latest_ref().get_items() {
-            items
-                .iter()
-                .filter_map(|item| {
-                    let interval = item.option.as_ref()?.update_interval? as i64;
-                    let updated = item.updated? as i64;
-                    let uid = item.uid.as_ref()?;
+        let profiles_to_update =
+            if let Some(items) = Config::profiles().await.latest_ref().get_items() {
+                items
+                    .iter()
+                    .filter_map(|item| {
+                        let interval = item.option.as_ref()?.update_interval? as i64;
+                        let updated = item.updated? as i64;
+                        let uid = item.uid.as_ref()?;
 
-                    if interval > 0 && cur_timestamp - updated >= interval * 60 {
-                        logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
-                        Some(uid.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<String>>()
-        } else {
-            Vec::new()
-        };
+                        if interval > 0 && cur_timestamp - updated >= interval * 60 {
+                            logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
+                            Some(uid.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<String>>()
+            } else {
+                Vec::new()
+            };
 
         // Advance tasks outside of locks to minimize lock contention
         if !profiles_to_update.is_empty() {
@@ -137,9 +142,9 @@ impl Timer {
     }
 
     /// Refresh timer tasks with better error handling
-    pub fn refresh(&self) -> Result<()> {
+    pub async fn refresh(&self) -> Result<()> {
         // Generate diff outside of lock to minimize lock contention
-        let diff_map = self.gen_diff();
+        let diff_map = self.gen_diff().await;
 
         if diff_map.is_empty() {
             logging!(debug, Type::Timer, "No timer changes needed");
@@ -153,72 +158,80 @@ impl Timer {
             diff_map.len()
         );
 
-        // Apply changes while holding locks
-        let mut timer_map = self.timer_map.write();
-        let mut delay_timer = self.delay_timer.write();
+        // Apply changes - first collect operations to perform without holding locks
+        let mut operations_to_add: Vec<(String, TaskID, u64)> = Vec::new();
+        let _operations_to_remove: Vec<String> = Vec::new();
 
-        for (uid, diff) in diff_map {
-            match diff {
-                DiffFlag::Del(tid) => {
-                    timer_map.remove(&uid);
-                    if let Err(e) = delay_timer.remove_task(tid) {
-                        logging!(
-                            warn,
-                            Type::Timer,
-                            "Failed to remove task {} for uid {}: {}",
-                            tid,
-                            uid,
-                            e
-                        );
-                    } else {
-                        logging!(debug, Type::Timer, "Removed task {} for uid {}", tid, uid);
+        // Perform sync operations while holding locks
+        {
+            let mut timer_map = self.timer_map.write();
+            let delay_timer = self.delay_timer.write();
+
+            for (uid, diff) in diff_map {
+                match diff {
+                    DiffFlag::Del(tid) => {
+                        timer_map.remove(&uid);
+                        if let Err(e) = delay_timer.remove_task(tid) {
+                            logging!(
+                                warn,
+                                Type::Timer,
+                                "Failed to remove task {} for uid {}: {}",
+                                tid,
+                                uid,
+                                e
+                            );
+                        } else {
+                            logging!(debug, Type::Timer, "Removed task {} for uid {}", tid, uid);
+                        }
+                    }
+                    DiffFlag::Add(tid, interval) => {
+                        let task = TimerTask {
+                            task_id: tid,
+                            interval_minutes: interval,
+                            last_run: chrono::Local::now().timestamp(),
+                        };
+
+                        timer_map.insert(uid.clone(), task);
+                        operations_to_add.push((uid, tid, interval));
+                    }
+                    DiffFlag::Mod(tid, interval) => {
+                        // Remove old task first
+                        if let Err(e) = delay_timer.remove_task(tid) {
+                            logging!(
+                                warn,
+                                Type::Timer,
+                                "Failed to remove old task {} for uid {}: {}",
+                                tid,
+                                uid,
+                                e
+                            );
+                        }
+
+                        // Then add the new one
+                        let task = TimerTask {
+                            task_id: tid,
+                            interval_minutes: interval,
+                            last_run: chrono::Local::now().timestamp(),
+                        };
+
+                        timer_map.insert(uid.clone(), task);
+                        operations_to_add.push((uid, tid, interval));
                     }
                 }
-                DiffFlag::Add(tid, interval) => {
-                    let task = TimerTask {
-                        task_id: tid,
-                        interval_minutes: interval,
-                        last_run: chrono::Local::now().timestamp(),
-                    };
+            }
+        } // Locks are dropped here
 
-                    timer_map.insert(uid.clone(), task);
+        // Now perform async operations without holding locks
+        for (uid, tid, interval) in operations_to_add {
+            // Re-acquire locks for individual operations
+            let mut delay_timer = self.delay_timer.write();
+            if let Err(e) = self.add_task(&mut delay_timer, uid.clone(), tid, interval) {
+                logging_error!(Type::Timer, "Failed to add task for uid {}: {}", uid, e);
 
-                    if let Err(e) = self.add_task(&mut delay_timer, uid.clone(), tid, interval) {
-                        logging_error!(Type::Timer, "Failed to add task for uid {}: {}", uid, e);
-                        timer_map.remove(&uid); // Rollback on failure
-                    } else {
-                        logging!(debug, Type::Timer, "Added task {} for uid {}", tid, uid);
-                    }
-                }
-                DiffFlag::Mod(tid, interval) => {
-                    // Remove old task first
-                    if let Err(e) = delay_timer.remove_task(tid) {
-                        logging!(
-                            warn,
-                            Type::Timer,
-                            "Failed to remove old task {} for uid {}: {}",
-                            tid,
-                            uid,
-                            e
-                        );
-                    }
-
-                    // Then add the new one
-                    let task = TimerTask {
-                        task_id: tid,
-                        interval_minutes: interval,
-                        last_run: chrono::Local::now().timestamp(),
-                    };
-
-                    timer_map.insert(uid.clone(), task);
-
-                    if let Err(e) = self.add_task(&mut delay_timer, uid.clone(), tid, interval) {
-                        logging_error!(Type::Timer, "Failed to update task for uid {}: {}", uid, e);
-                        timer_map.remove(&uid); // Rollback on failure
-                    } else {
-                        logging!(debug, Type::Timer, "Updated task {} for uid {}", tid, uid);
-                    }
-                }
+                // Rollback on failure - remove from timer_map
+                self.timer_map.write().remove(&uid);
+            } else {
+                logging!(debug, Type::Timer, "Added task {} for uid {}", tid, uid);
             }
         }
 
@@ -226,10 +239,10 @@ impl Timer {
     }
 
     /// Generate map of profile UIDs to update intervals
-    fn gen_map(&self) -> HashMap<String, u64> {
+    async fn gen_map(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
-        if let Some(items) = Config::profiles().latest_ref().get_items() {
+        if let Some(items) = Config::profiles().await.latest_ref().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref() {
                     if let (Some(interval), Some(uid)) = (option.update_interval, &item.uid) {
@@ -258,9 +271,9 @@ impl Timer {
     }
 
     /// Generate differences between current and new timer configuration
-    fn gen_diff(&self) -> HashMap<String, DiffFlag> {
+    async fn gen_diff(&self) -> HashMap<String, DiffFlag> {
         let mut diff_map = HashMap::new();
-        let new_map = self.gen_map();
+        let new_map = self.gen_map().await;
 
         // Read lock for comparing current state
         let timer_map = self.timer_map.read();
@@ -349,9 +362,9 @@ impl Timer {
             .set_frequency_repeated_by_minutes(minutes)
             .spawn_async_routine(move || {
                 let uid = uid.clone();
-                async move {
+                Box::pin(async move {
                     Self::async_task(uid).await;
-                }
+                }) as Pin<Box<dyn std::future::Future<Output = ()> + Send>>
             })
             .context("failed to create timer task")?;
 
@@ -363,21 +376,23 @@ impl Timer {
     }
 
     /// Get next update time for a profile
-    pub fn get_next_update_time(&self, uid: &str) -> Option<i64> {
+    pub async fn get_next_update_time(&self, uid: &str) -> Option<i64> {
         logging!(info, Type::Timer, "获取下次更新时间，uid={}", uid);
 
-        let timer_map = self.timer_map.read();
-        let task = match timer_map.get(uid) {
-            Some(t) => t,
-            None => {
-                logging!(warn, Type::Timer, "找不到对应的定时任务，uid={}", uid);
-                return None;
+        // First extract timer task data without holding the lock across await
+        let task_interval = {
+            let timer_map = self.timer_map.read();
+            match timer_map.get(uid) {
+                Some(t) => t.interval_minutes,
+                None => {
+                    logging!(warn, Type::Timer, "找不到对应的定时任务，uid={}", uid);
+                    return None;
+                }
             }
         };
 
-        // Get the profile updated timestamp
-        let profiles_config = Config::profiles();
-        let profiles = profiles_config.latest_ref();
+        // Get the profile updated timestamp - now safe to await
+        let profiles = { Config::profiles().await.clone().data_ref() }.clone();
         let items = match profiles.get_items() {
             Some(i) => i,
             None => {
@@ -397,8 +412,8 @@ impl Timer {
         let updated = profile.updated.unwrap_or(0) as i64;
 
         // Calculate next update time
-        if updated > 0 && task.interval_minutes > 0 {
-            let next_time = updated + (task.interval_minutes as i64 * 60);
+        if updated > 0 && task_interval > 0 {
+            let next_time = updated + (task_interval as i64 * 60);
             logging!(
                 info,
                 Type::Timer,
@@ -413,7 +428,7 @@ impl Timer {
                 Type::Timer,
                 "更新时间或间隔无效，updated={}, interval={}",
                 updated,
-                task.interval_minutes
+                task_interval
             );
             None
         }
@@ -439,7 +454,7 @@ impl Timer {
         match tokio::time::timeout(std::time::Duration::from_secs(40), async {
             Self::emit_update_event(&uid, true);
 
-            let is_current = Config::profiles().latest_ref().current.as_ref() == Some(&uid);
+            let is_current = Config::profiles().await.latest_ref().current.as_ref() == Some(&uid);
             logging!(
                 info,
                 Type::Timer,

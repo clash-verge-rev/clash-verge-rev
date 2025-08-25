@@ -17,14 +17,6 @@ impl LightWeightState {
         }
     }
 
-    #[allow(unused)]
-    pub fn run_once_time<F>(&self, f: F)
-    where
-        F: FnOnce() + Send + 'static,
-    {
-        self.once.call_once(f);
-    }
-
     pub fn set_lightweight_mode(&mut self, value: bool) -> &Self {
         self.is_lightweight = value;
         if value {

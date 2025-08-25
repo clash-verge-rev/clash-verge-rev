@@ -57,8 +57,11 @@ fn get_system_language() -> String {
         .unwrap_or_else(|| DEFAULT_LANGUAGE.to_string())
 }
 
-pub fn t(key: &str) -> String {
+pub async fn t(key: &str) -> String {
+    let key = key.to_string(); // own the string
+
     let current_lang = Config::verge()
+        .await
         .latest_ref()
         .language
         .as_deref()
@@ -67,7 +70,7 @@ pub fn t(key: &str) -> String {
 
     if let Some(text) = TRANSLATIONS
         .get(&current_lang)
-        .and_then(|trans| trans.get(key))
+        .and_then(|trans| trans.get(&key))
         .and_then(|val| val.as_str())
     {
         return text.to_string();
@@ -76,12 +79,12 @@ pub fn t(key: &str) -> String {
     if current_lang != DEFAULT_LANGUAGE {
         if let Some(text) = TRANSLATIONS
             .get(DEFAULT_LANGUAGE)
-            .and_then(|trans| trans.get(key))
+            .and_then(|trans| trans.get(&key))
             .and_then(|val| val.as_str())
         {
             return text.to_string();
         }
     }
 
-    key.to_string()
+    key
 }

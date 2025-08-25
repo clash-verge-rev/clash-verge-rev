@@ -8,6 +8,11 @@ use tauri::{async_runtime, async_runtime::JoinHandle};
 pub struct AsyncHandler;
 
 impl AsyncHandler {
+    #[allow(dead_code)]
+    pub fn handle() -> async_runtime::RuntimeHandle {
+        async_runtime::handle()
+    }
+
     #[track_caller]
     pub fn spawn<F, Fut>(f: F) -> JoinHandle<()>
     where
@@ -30,13 +35,23 @@ impl AsyncHandler {
         async_runtime::spawn_blocking(f)
     }
 
+    #[track_caller]
+    pub fn block_on<Fut>(fut: Fut) -> Fut::Output
+    where
+        Fut: Future + Send + 'static,
+    {
+        #[cfg(feature = "tokio-trace")]
+        Self::log_task_info(&fut);
+        async_runtime::block_on(fut)
+    }
+
     #[cfg(feature = "tokio-trace")]
     #[track_caller]
     fn log_task_info<F>(f: &F)
     where
         F: ?Sized,
     {
-        const TRACE_MINI_SIZE: usize = 0;
+        const TRACE_MINI_SIZE: usize = 4;
         let size = std::mem::size_of_val(f);
         if size <= TRACE_MINI_SIZE {
             return;
