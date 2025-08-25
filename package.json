@@ -89,7 +89,7 @@
     "adm-zip": "0.5.16",
     "cli-color": "2.0.4",
     "clsx": "2.1.1",
-    "concurrently": "9.2.0",
+    "concurrently": "9.2.1",
     "fs-extra": "11.3.1",
     "https-proxy-agent": "7.0.6",
     "husky": "9.1.7",
