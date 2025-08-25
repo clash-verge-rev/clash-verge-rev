@@ -144,14 +144,16 @@ impl Hotkey {
                 });
             }
             HotkeyFunction::ToggleSystemProxy => {
-                AsyncHandler::spawn(feat::toggle_system_proxy);
-                AsyncHandler::spawn(|| {
-                    notify_event(app_handle, NotificationEvent::SystemProxyToggled)
+                AsyncHandler::spawn(async move || {
+                    feat::toggle_system_proxy().await;
+                    notify_event(app_handle, NotificationEvent::SystemProxyToggled).await;
                 });
             }
             HotkeyFunction::ToggleTunMode => {
-                AsyncHandler::spawn(|| feat::toggle_tun_mode(None));
-                AsyncHandler::spawn(|| notify_event(app_handle, NotificationEvent::TunModeToggled));
+                AsyncHandler::spawn(async move || {
+                    feat::toggle_tun_mode(None).await;
+                    notify_event(app_handle, NotificationEvent::TunModeToggled).await;
+                });
             }
             HotkeyFunction::EntryLightweightMode => {
                 AsyncHandler::spawn(async move || {
