@@ -331,7 +331,7 @@ pub async fn reinstall_service() -> Result<()> {
     }
 
     // 先卸载服务
-    if let Err(err) = uninstall_service() {
+    if let Err(err) = uninstall_service().await {
         logging!(
             warn,
             Type::Service,
