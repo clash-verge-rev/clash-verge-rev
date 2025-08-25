@@ -231,8 +231,9 @@ pub async fn reinstall_service() -> Result<()> {
     }
 }
 
+#[allow(clippy::unused_async)]
 #[cfg(target_os = "linux")]
-pub fn uninstall_service() -> Result<()> {
+pub async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
     use users::get_effective_uid;
 
