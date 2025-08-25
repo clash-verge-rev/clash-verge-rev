@@ -128,13 +128,13 @@ pub async fn delete_log() -> Result<()> {
 
     let mut log_read_dir = fs::read_dir(&log_dir).await?;
     while let Some(entry) = log_read_dir.next_entry().await? {
-        std::mem::drop(process_file(entry));
+        std::mem::drop(process_file(entry).await);
     }
 
     let service_log_dir = log_dir.join("service");
     let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
     while let Some(entry) = service_log_read_dir.next_entry().await? {
-        std::mem::drop(process_file(entry));
+        std::mem::drop(process_file(entry).await);
     }
 
     Ok(())
@@ -263,15 +263,15 @@ pub async fn init_config() -> Result<()> {
     let _ = init_log().await;
     let _ = delete_log().await;
 
-    crate::log_err!(dirs::app_home_dir().map(|app_dir| {
+    crate::log_err!(dirs::app_home_dir().map(|app_dir| async move {
         if !app_dir.exists() {
-            std::mem::drop(fs::create_dir_all(&app_dir));
+            std::mem::drop(fs::create_dir_all(&app_dir).await);
         }
     }));
 
-    crate::log_err!(dirs::app_profiles_dir().map(|profiles_dir| {
+    crate::log_err!(dirs::app_profiles_dir().map(|profiles_dir| async move {
         if !profiles_dir.exists() {
-            std::mem::drop(fs::create_dir_all(&profiles_dir));
+            std::mem::drop(fs::create_dir_all(&profiles_dir).await);
         }
     }));
 
@@ -315,10 +315,10 @@ pub async fn init_resources() -> Result<()> {
     let res_dir = dirs::app_resources_dir()?;
 
     if !app_dir.exists() {
-        std::mem::drop(fs::create_dir_all(&app_dir));
+        std::mem::drop(fs::create_dir_all(&app_dir).await);
     }
     if !res_dir.exists() {
-        std::mem::drop(fs::create_dir_all(&res_dir));
+        std::mem::drop(fs::create_dir_all(&res_dir).await);
     }
 
     let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
