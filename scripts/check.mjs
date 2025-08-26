@@ -1,33 +1,23 @@
 import AdmZip from "adm-zip";
 import { execSync } from "child_process";
-import clc from "cli-color";
+import { consola } from "consola";
 import fs from "fs-extra";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch from "node-fetch";
 import path from "path";
 import * as tar from "tar";
 import zlib from "zlib";
+import ora from "ora";
 
 const VERGE_SERVICE_VERSION = "v1.1.2";
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 let process_argvs = process.argv;
-const FORCE = process_argvs.includes("--force");
+let force = process_argvs.includes("--force");
 const useAlphaService = process_argvs.includes("--alpha");
 if (useAlphaService) {
   process_argvs = process_argvs.filter((item) => item !== "--alpha");
 }
-
-// log
-const log_success = (msg, ...optionalParams) =>
-  console.log(clc.green(msg), ...optionalParams);
-const log_error = (msg, ...optionalParams) =>
-  console.log(clc.red(msg), ...optionalParams);
-const log_info = (msg, ...optionalParams) =>
-  console.log(clc.bgBlue(msg), ...optionalParams);
-var debugMsg = clc.xterm(245);
-const log_debug = (msg, ...optionalParams) =>
-  console.log(debugMsg(msg), ...optionalParams);
 
 const PLATFORM_MAP = {
   "x86_64-pc-windows-msvc": "win32",
@@ -89,6 +79,27 @@ const MIHOMO_ALPHA_MAP = {
   "linux-loong64": "mihomo-linux-loong64",
 };
 
+async function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 8000 } = options; // 默认超时时间为 8 秒
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error(`fetch timeout: ${timeout}ms`);
+    } else {
+      throw new Error("fetch error: ", error);
+    }
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 // Fetch the latest alpha release version from the version.txt file
 async function getLatestAlphaVersion() {
   const options = {};
@@ -103,15 +114,15 @@ async function getLatestAlphaVersion() {
     options.agent = new HttpsProxyAgent(httpProxy);
   }
   try {
-    const response = await fetch(MIHOMO_ALPHA_VERSION_URL, {
+    const response = await fetchWithTimeout(MIHOMO_ALPHA_VERSION_URL, {
       ...options,
       method: "GET",
     });
     const v = await response.text();
     MIHOMO_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
-    log_info(`Latest alpha version: ${MIHOMO_ALPHA_VERSION}`);
+    consola.info(`Latest alpha version: ${MIHOMO_ALPHA_VERSION}`);
   } catch (error) {
-    log_error("Error fetching latest alpha version:", error.message);
+    consola.error("Error fetching latest alpha version:", error.message);
     process.exit(1);
   }
 }
@@ -138,6 +149,13 @@ const MIHOMO_MAP = {
 
 // Fetch the latest release version from the version.txt file
 async function getLatestReleaseVersion() {
+  const spinner = ora({
+    text: "get latest mihomo version",
+    color: "yellow",
+    spinner: "circle",
+  });
+  spinner.start();
+
   const options = {};
 
   const httpProxy =
@@ -150,16 +168,16 @@ async function getLatestReleaseVersion() {
     options.agent = new HttpsProxyAgent(httpProxy);
   }
   try {
-    const response = await fetch(MIHOMO_VERSION_URL, {
+    const response = await fetchWithTimeout(MIHOMO_VERSION_URL, {
       ...options,
       method: "GET",
     });
     const v = await response.text();
     MIHOMO_VERSION = v.trim(); // Trim to remove extra whitespaces
-    log_info(`Latest release version: ${MIHOMO_VERSION}`);
+    spinner.succeed(`Latest release version: ${MIHOMO_VERSION}`);
   } catch (error) {
-    log_error("Error fetching latest release version:", error.message);
-    process.exit(1);
+    spinner.fail(`Error fetching latest release version: ${error.message}`);
+    throw new Error(error);
   }
 }
 
@@ -220,11 +238,21 @@ function mihomo() {
 async function resolveSidecar(binInfo) {
   const { name, targetFile, zipFile, exeFile, downloadURL } = binInfo;
 
+  const spinner = ora({
+    text: `resolve sidecar ${name}`,
+    color: "yellow",
+    spinner: "circle",
+  });
+  spinner.start();
+
   const sidecarDir = path.join(cwd, "src-tauri", "sidecar");
   const sidecarPath = path.join(sidecarDir, targetFile);
 
   await fs.mkdirp(sidecarDir);
-  if (!FORCE && (await fs.pathExists(sidecarPath))) return;
+  if (!force && (await fs.pathExists(sidecarPath))) {
+    spinner.succeed(`${targetFile} has exists`);
+    return;
+  }
 
   const tempDir = path.join(TEMP_DIR, name);
   const tempZip = path.join(tempDir, zipFile);
@@ -233,17 +261,18 @@ async function resolveSidecar(binInfo) {
   await fs.mkdirp(tempDir);
   try {
     if (!(await fs.pathExists(tempZip))) {
-      await downloadFile(downloadURL, tempZip);
+      await downloadFile(downloadURL, tempZip, spinner);
     }
 
     if (zipFile.endsWith(".zip")) {
       const zip = new AdmZip(tempZip);
       zip.getEntries().forEach((entry) => {
-        log_debug(`"${name}" entry name`, entry.entryName);
+        spinner.text = `"${name}" entry name`;
       });
+      spinner.text = "extract zip file to temp dir";
       zip.extractAllTo(tempDir, true);
       await fs.rename(tempExe, sidecarPath);
-      log_success(`unzip finished: "${name}"`);
+      spinner.succeed(`unzip finished: "${name}"`);
     } else if (zipFile.endsWith(".tgz")) {
       // tgz
       await fs.mkdirp(tempDir);
@@ -253,14 +282,15 @@ async function resolveSidecar(binInfo) {
         //strip: 1, // 可能需要根据实际的 .tgz 文件结构调整
       });
       const files = await fs.readdir(tempDir);
-      log_debug(`"${name}" files in tempDir:`, files);
+      spinner.text = `"${name}" files in tempDir: ${files}`;
       const extractedFile = files.find((file) => file.startsWith("虚空终端-"));
       if (extractedFile) {
         const extractedFilePath = path.join(tempDir, extractedFile);
+        spinner.text = `"${name}" file renam to "${sidecarPath}"`;
         await fs.rename(extractedFilePath, sidecarPath);
-        log_debug(`"${name}" file renamed to "${sidecarPath}"`);
+        spinner.text = `"chmod 755 to "${sidecarPath}"`;
         execSync(`chmod 755 ${sidecarPath}`);
-        log_success(`chmod binary finished: "${name}"`);
+        spinner.succeed(`chmod binary finished: "${name}"`);
       } else {
         throw new Error(`Expected file not found in ${tempDir}`);
       }
@@ -270,22 +300,23 @@ async function resolveSidecar(binInfo) {
       const writeStream = fs.createWriteStream(sidecarPath);
       await new Promise((resolve, reject) => {
         const onError = (error) => {
-          log_error(`gz failed ["${name}"]: `, error.message);
+          spinner.fail(`gz failed ["${name}"]: `, error.message);
           reject(error);
         };
         readStream
           .pipe(zlib.createGunzip().on("error", onError))
           .pipe(writeStream)
           .on("finish", () => {
-            log_success(`gunzip finished: "${name}"`);
+            spinner.text = `gunzip finished: "${name}"`;
             execSync(`chmod 755 ${sidecarPath}`);
-            log_success(`chmod binary finished: "${name}"`);
+            spinner.succeed(`chmod binary finished: "${name}"`);
             resolve();
           })
           .on("error", onError);
       });
     }
   } catch (err) {
+    spinner.fail(`${err}`);
     // 需要删除文件
     await fs.remove(sidecarPath);
     throw err;
@@ -300,28 +331,39 @@ async function resolveSidecar(binInfo) {
  */
 async function resolveResource(binInfo) {
   const { file, downloadURL, localPath } = binInfo;
+  const spinner = ora({
+    text: `resolve resource ${file}`,
+    color: "yellow",
+    spinner: "circle",
+  });
+  spinner.start();
 
   const resDir = path.join(cwd, "src-tauri/resources");
   const targetPath = path.join(resDir, file);
 
-  if (!FORCE && (await fs.pathExists(targetPath))) return;
+  if (!force && (await fs.pathExists(targetPath))) {
+    spinner.succeed(`${file} has exists`);
+    return;
+  }
 
   await fs.mkdirp(resDir);
   if (downloadURL) {
-    await downloadFile(downloadURL, targetPath);
+    spinner.text = `download ${file}...`;
+    await downloadFile(downloadURL, targetPath, spinner);
   }
   if (localPath) {
+    spinner.text = `copy ${file} to ${targetPath}`;
     await fs.copyFile(localPath, targetPath);
-    log_debug(`copy file finished: "${localPath}"`);
+    spinner.text = `copy file finished: "${localPath}"`;
   }
 
-  log_success(`resolve finished: ${file}`);
+  spinner.succeed(`resolve finished: ${file}`);
 }
 
 /**
  * download file and save to `path`
  */
-async function downloadFile(url, path) {
+async function downloadFile(url, path, spinner) {
   const options = {};
 
   const httpProxy =
@@ -334,19 +376,28 @@ async function downloadFile(url, path) {
     options.agent = new HttpsProxyAgent(httpProxy);
   }
 
-  const response = await fetch(url, {
+  spinner.text = `downloading: ${url}`;
+  const response = await fetchWithTimeout(url, {
     ...options,
     method: "GET",
     headers: { "Content-Type": "application/octet-stream" },
+    timeout: 1000 * 60 * 2, // 下载文件默认超时 2 分钟
   });
   const buffer = await response.arrayBuffer();
   await fs.writeFile(path, new Uint8Array(buffer));
 
-  log_debug(`download finished: "${url}"`);
+  spinner.text = `download finished: "${url}"`;
 }
 
 // SimpleSC.dll
 const resolvePlugin = async () => {
+  const spinner = ora({
+    text: "resolve NSIS plugin (SimpleSC)",
+    color: "yellow",
+    spinner: "circle",
+  });
+  spinner.start();
+
   const url =
     "https://nsis.sourceforge.io/mediawiki/images/e/ef/NSIS_Simple_Service_Plugin_Unicode_1.30.zip";
 
@@ -360,18 +411,21 @@ const resolvePlugin = async () => {
   const pluginPath = path.join(pluginDir, "SimpleSC.dll");
   await fs.mkdirp(pluginDir);
   await fs.mkdirp(tempDir);
-  if (!FORCE && (await fs.pathExists(pluginPath))) return;
+  if (!force && (await fs.pathExists(pluginPath))) {
+    spinner.succeed("NSIS plugin (SimpleSC) has exists");
+    return;
+  }
   try {
     if (!(await fs.pathExists(tempZip))) {
-      await downloadFile(url, tempZip);
+      await downloadFile(url, tempZip, spinner);
     }
     const zip = new AdmZip(tempZip);
     zip.getEntries().forEach((entry) => {
-      log_debug(`"SimpleSC" entry name`, entry.entryName);
+      spinner.text = `"SimpleSC" entry name ${entry.entryName}`;
     });
     zip.extractAllTo(tempDir, true);
     await fs.copyFile(tempDll, pluginPath);
-    log_success(`unzip finished: "SimpleSC"`);
+    spinner.succeed(`unzip finished: "SimpleSC"`);
   } finally {
     await fs.remove(tempDir);
   }
@@ -389,7 +443,7 @@ const resolveServicePermission = async () => {
     const targetPath = path.join(resDir, f);
     if (await fs.pathExists(targetPath)) {
       execSync(`chmod 755 ${targetPath}`);
-      log_success(`chmod finished: "${f}"`);
+      consola.success(`chmod finished: "${f}"`);
     }
   }
 };
@@ -429,6 +483,13 @@ function getAlphaClashVergeServices() {
 }
 
 const resolveClashVergeService = async () => {
+  const spinner = ora({
+    text: "resolve Clash Verge Service",
+    color: "yellow",
+    spinner: "circle",
+  });
+  spinner.start();
+
   let downloadItem;
   if (useAlphaService) {
     downloadItem = getAlphaClashVergeServices();
@@ -457,10 +518,13 @@ const resolveClashVergeService = async () => {
     }
   }
 
-  if (!FORCE && !needResolve) return;
+  if (!force && !needResolve) {
+    spinner.succeed("Clash Verge Service has exitst");
+    return;
+  }
 
   if (!downloadItem) {
-    log_error("can not find service to download");
+    spinner.fail("can not find service to download");
     return;
   }
   const tempDir = path.join(TEMP_DIR, "clash-verge-service");
@@ -468,63 +532,88 @@ const resolveClashVergeService = async () => {
   await fs.mkdirp(tempDir);
   await fs.mkdirp(resourceDir);
   try {
-    await downloadFile(downloadItem.downloadURL, tempGz);
+    await downloadFile(downloadItem.downloadURL, tempGz, spinner);
     await tar.x({ cwd: resourceDir, file: tempGz });
-    log_success("unzip Clash Verge Service finished");
+    spinner.succeed("unzip Clash Verge Service finished");
   } catch (e) {
     fs.remove(tempDir);
-    log_error("resolve Clash Verge Service error, ", e);
+    spinner.fail(`resolve Clash Verge Service error, ${e}`);
   } finally {
     fs.remove(tempDir);
   }
 };
 
-const resolveSetDnsScript = () =>
-  resolveResource({
+const resolveSetDnsScript = async () => {
+  consola.info("resolve set dns script");
+  await resolveResource({
     file: "set_dns.sh",
     localPath: path.join(cwd, "scripts/set_dns.sh"),
   });
-const resolveUnSetDnsScript = () =>
-  resolveResource({
+};
+
+const resolveUnSetDnsScript = async () => {
+  consola.info("resolve unset dns script");
+  await resolveResource({
     file: "unset_dns.sh",
     localPath: path.join(cwd, "scripts/unset_dns.sh"),
   });
-const resolveMmdb = () =>
-  resolveResource({
+};
+
+const resolveMmdb = async () => {
+  consola.info("resolve Country mmdb");
+  await resolveResource({
     file: "Country.mmdb",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb`,
   });
-const resolveGeosite = () =>
-  resolveResource({
+};
+
+const resolveGeosite = async () => {
+  consola.info("resolve geosite");
+  await resolveResource({
     file: "geosite.dat",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat`,
   });
-const resolveGeoIP = () =>
-  resolveResource({
+};
+
+const resolveGeoIP = async () => {
+  consola.info("resolve geoip");
+  await resolveResource({
     file: "geoip.dat",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat`,
   });
-const resolveASN = () =>
-  resolveResource({
+};
+
+const resolveASN = async () => {
+  consola.info("resolve ASN mmdb");
+  await resolveResource({
     file: "ASN.mmdb",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb`,
   });
-const resolveEnableLoopback = () =>
-  resolveResource({
+};
+
+const resolveEnableLoopback = async () => {
+  consola.info("resolve enableLoopback.exe");
+  await resolveResource({
     file: "enableLoopback.exe",
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`,
   });
+};
 
 const tasks = [
   {
-    name: "verge-mihomo-alpha",
-    func: () =>
-      getLatestAlphaVersion().then(() => resolveSidecar(mihomoAlpha())),
+    name: "verge-mihomo",
+    func: async () => {
+      await getLatestReleaseVersion();
+      await resolveSidecar(mihomo());
+    },
     retry: 5,
   },
   {
-    name: "verge-mihomo",
-    func: () => getLatestReleaseVersion().then(() => resolveSidecar(mihomo())),
+    name: "verge-mihomo-alpha",
+    func: async () => {
+      await getLatestAlphaVersion();
+      await resolveSidecar(mihomoAlpha());
+    },
     retry: 5,
   },
   { name: "plugin", func: resolvePlugin, retry: 5, winOnly: true },
@@ -560,29 +649,46 @@ const tasks = [
 ];
 
 async function runTask() {
-  const task = tasks.shift();
-  if (!task) return;
-  if (task.winOnly && platform !== "win32") return runTask();
-  if (task.linuxOnly && platform !== "linux") return runTask();
-  if (task.unixOnly && platform === "win32") return runTask();
-  if (task.macOnly && platform !== "darwin") return runTask();
+  consola.box("check if files exists and download files");
+  const confirm = await consola.prompt("Force Check? [overwrite files]", {
+    type: "confirm",
+    cancel: "null",
+  });
+  if (confirm === null) {
+    consola.fail("check cancel");
+    return;
+  } else if (confirm) {
+    force = true;
+  }
+  while (tasks.length > 0) {
+    const task = tasks.shift();
+    if (!task) {
+      consola.success("all tasks has run finished");
+      return;
+    }
+    if (task.winOnly && platform !== "win32") continue;
+    if (task.linuxOnly && platform !== "linux") continue;
+    if (task.unixOnly && platform === "win32") continue;
+    if (task.macOnly && platform !== "darwin") continue;
 
-  for (let i = 0; i < task.retry; i++) {
-    try {
-      if (task.name === "plugin") log_info("Resolve plugin");
-      if (task.name === "service") log_info("Resolve resources");
-      if (task.name === "service_chmod") log_info("Chmod resources");
-      await task.func();
-      break;
-    } catch (err) {
-      log_error(`task::${task.name} try ${i} ==`, err.message);
-      // wait 1s
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      if (i === task.retry - 1) throw err;
+    for (let i = 0; i < task.retry; i++) {
+      try {
+        if (task.name === "plugin") consola.info("Resolve plugin");
+        if (task.name === "service") consola.info("Resolve resources");
+        if (task.name === "service_chmod") consola.info("Chmod resources");
+        await task.func();
+        break;
+      } catch (err) {
+        consola.error(
+          `task::${task.name} attempt ${i}/${task.retry}, error message: `,
+          err.message,
+        );
+        // wait 1s
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (i === task.retry - 1) throw err;
+      }
     }
   }
-  return runTask();
 }
 
 runTask();
-// runTask();
