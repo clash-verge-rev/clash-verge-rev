@@ -64,7 +64,7 @@ importers:
         version: 2.3.0
       '@tauri-apps/plugin-shell':
         specifier: ~2.3.0
-        version: 2.3.0
+        version: 2.3.1
       '@tauri-apps/plugin-updater':
         specifier: ~2.9.0
         version: 2.9.0
@@ -1853,8 +1853,8 @@ packages:
   '@tauri-apps/plugin-process@2.3.0':
     resolution: {integrity: sha512-0DNj6u+9csODiV4seSxxRbnLpeGYdojlcctCuLOCgpH9X3+ckVZIEj6H7tRQ7zqWr7kSTEWnrxtAdBb0FbtrmQ==}
 
-  '@tauri-apps/plugin-shell@2.3.0':
-    resolution: {integrity: sha512-6GIRxO2z64uxPX4CCTuhQzefvCC0ew7HjdBhMALiGw74vFBDY95VWueAHOHgNOMV4UOUAFupyidN9YulTe5xlA==}
+  '@tauri-apps/plugin-shell@2.3.1':
+    resolution: {integrity: sha512-jjs2WGDO/9z2pjNlydY/F5yYhNsscv99K5lCmU5uKjsVvQ3dRlDhhtVYoa4OLDmktLtQvgvbQjCFibMl6tgGfw==}
 
   '@tauri-apps/plugin-updater@2.9.0':
     resolution: {integrity: sha512-j++sgY8XpeDvzImTrzWA08OqqGqgkNyxczLD7FjNJJx/uXxMZFz5nDcfkyoI/rCjYuj2101Tci/r/HFmOmoxCg==}
@@ -5441,7 +5441,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.8.0
 
-  '@tauri-apps/plugin-shell@2.3.0':
+  '@tauri-apps/plugin-shell@2.3.1':
     dependencies:
       '@tauri-apps/api': 2.8.0
 
