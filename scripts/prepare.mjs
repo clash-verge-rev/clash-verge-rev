@@ -2,35 +2,63 @@ import { execSync, spawn } from "child_process";
 import { consola } from "consola";
 import ora from "ora";
 
-const isGithubAction = process.env.GITHUB_TOKEN !== undefined;
-if (!isGithubAction) {
-  consola.info("check typos installed");
-  const output = execSync("cargo install --list").toString();
-  const existsTypos = output.includes("typos-cli");
-  if (!existsTypos) {
-    consola.start("Installing typos...");
+async function installRustBinary(binaryName, command, args) {
+  return new Promise((resolve, reject) => {
+    consola.start(`Installing ${binaryName}...`);
     const spinner = ora({
-      text: "Installing typos",
+      text: `Installing ${binaryName}`,
       color: "yellow",
       spinner: "circle",
     });
     spinner.start();
 
-    const typos = spawn("cargo", ["install", "typos-cli"]);
-    typos.stdout.on("data", (data) => {
+    const child = spawn(command, args);
+    child.stdout.on("data", (data) => {
       spinner.text = data.toString().trim();
     });
-    typos.stderr.on("data", (data) => {
+    child.stderr.on("data", (data) => {
       spinner.text = data.toString().trim();
     });
-    typos.on("close", (code) => {
+    child.on("close", (code) => {
       if (code === 0) {
         spinner.succeed();
+        resolve();
       } else {
         spinner.fail();
+        reject(new Error(`Process exited with code ${code}`));
       }
     });
-  } else {
-    consola.success("typos has installed");
+    child.on("error", reject);
+  });
+}
+
+async function run() {
+  const isGithubAction = process.env.GITHUB_TOKEN !== undefined;
+  if (!isGithubAction) {
+    const output = execSync("cargo install --list").toString();
+    // typos
+    consola.info("check typos installed");
+    const existsTypos = output.includes("typos-cli");
+    if (!existsTypos) {
+      await installRustBinary("typos", "cargo", ["install", "typos-cli"]);
+    } else {
+      consola.success("typos has installed");
+    }
+
+    // prek
+    consola.info("check typos installed");
+    const existsPrek = output.includes("prek");
+    if (!existsTypos) {
+      await installRustBinary("prek", "cargo", [
+        "install",
+        "--locked",
+        "--git",
+        "https://github.com/j178/prek",
+      ]);
+    } else {
+      consola.success("prek has installed");
+    }
   }
 }
+
+run();

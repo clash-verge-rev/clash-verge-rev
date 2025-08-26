@@ -261,7 +261,7 @@ mod tests {
             .into_iter()
             .filter(|entry| {
                 let entry = entry.as_ref().expect("failed to read entry");
-                entry.path().extension().map_or(false, |ext| ext == "mrs")
+                entry.path().extension().is_some_and(|ext| ext == "mrs")
             })
             .for_each(|entry| {
                 let entry = entry.expect("failed to read entry");

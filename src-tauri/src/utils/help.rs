@@ -220,8 +220,8 @@ macro_rules! trace_err {
     };
 }
 
-/// wrap the anyhow error
-/// transform the error to String
+// /// wrap the anyhow error
+// /// transform the error to String
 // #[macro_export]
 // macro_rules! wrap_err {
 //     ($stat: expr) => {
@@ -262,9 +262,9 @@ fn test_parse_check_output() {
     configuration file xxx\n
     "#;
 
-    let res1 = parse_check_output(str1.into());
-    let res2 = parse_check_output(str2.into());
-    let res3 = parse_check_output(str3.into());
+    let res1 = parse_check_output(str1);
+    let res2 = parse_check_output(str2);
+    let res3 = parse_check_output(str3);
 
     println!("res1: {res1}");
     println!("res2: {res2}");
