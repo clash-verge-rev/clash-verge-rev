@@ -13,7 +13,7 @@ const VERGE_SERVICE_VERSION = "v1.1.2";
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 let process_argvs = process.argv;
-let force = process_argvs.includes("--force");
+const FORCE = process_argvs.includes("--force");
 const useAlphaService = process_argvs.includes("--alpha");
 if (useAlphaService) {
   process_argvs = process_argvs.filter((item) => item !== "--alpha");
@@ -249,7 +249,7 @@ async function resolveSidecar(binInfo) {
   const sidecarPath = path.join(sidecarDir, targetFile);
 
   await fs.mkdirp(sidecarDir);
-  if (!force && (await fs.pathExists(sidecarPath))) {
+  if (!FORCE && (await fs.pathExists(sidecarPath))) {
     spinner.succeed(`${targetFile} has exists`);
     return;
   }
@@ -341,7 +341,7 @@ async function resolveResource(binInfo) {
   const resDir = path.join(cwd, "src-tauri/resources");
   const targetPath = path.join(resDir, file);
 
-  if (!force && (await fs.pathExists(targetPath))) {
+  if (!FORCE && (await fs.pathExists(targetPath))) {
     spinner.succeed(`${file} has exists`);
     return;
   }
@@ -411,7 +411,7 @@ const resolvePlugin = async () => {
   const pluginPath = path.join(pluginDir, "SimpleSC.dll");
   await fs.mkdirp(pluginDir);
   await fs.mkdirp(tempDir);
-  if (!force && (await fs.pathExists(pluginPath))) {
+  if (!FORCE && (await fs.pathExists(pluginPath))) {
     spinner.succeed("NSIS plugin (SimpleSC) has exists");
     return;
   }
@@ -518,7 +518,7 @@ const resolveClashVergeService = async () => {
     }
   }
 
-  if (!force && !needResolve) {
+  if (!FORCE && !needResolve) {
     spinner.succeed("Clash Verge Service has exitst");
     return;
   }
@@ -649,17 +649,7 @@ const tasks = [
 ];
 
 async function runTask() {
-  consola.box("check if files exists and download files");
-  const confirm = await consola.prompt("Force Check? [overwrite files]", {
-    type: "confirm",
-    cancel: "null",
-  });
-  if (confirm === null) {
-    consola.fail("check cancel");
-    return;
-  } else if (confirm) {
-    force = true;
-  }
+  consola.box("Check and download files");
   while (tasks.length > 0) {
     const task = tasks.shift();
     if (!task) {
