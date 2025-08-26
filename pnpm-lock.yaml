@@ -187,7 +187,7 @@ importers:
         specifier: 9.2.1
         version: 9.2.1
       consola:
-        specifier: ^3.4.2
+        specifier: 3.4.2
         version: 3.4.2
       fs-extra:
         specifier: 11.3.1
@@ -205,7 +205,7 @@ importers:
         specifier: 3.3.2
         version: 3.3.2
       ora:
-        specifier: ^8.2.0
+        specifier: 8.2.0
         version: 8.2.0
       postcss:
         specifier: 8.5.6
