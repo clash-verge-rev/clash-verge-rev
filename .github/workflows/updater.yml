@@ -21,6 +21,8 @@ jobs:
 
       - name: Pnpm install
         run: pnpm i
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release updater file
         run: pnpm updater

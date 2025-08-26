@@ -54,6 +54,8 @@ jobs:
         run: |
           pnpm i
           pnpm check ${{ matrix.target }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Tauri build
         uses: tauri-apps/tauri-action@564aea5a8075c7a54c167bb0cf5b3255314a7f9d # v0
@@ -138,6 +140,8 @@ jobs:
         run: |
           pnpm i
           pnpm check ${{ matrix.target }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Tauri build (x86_64)
         if: startsWith(matrix.target, 'x86_64')
@@ -256,6 +260,8 @@ jobs:
 
       - name: Pnpm install
         run: pnpm i
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update changelog & Release updater file
         env:
