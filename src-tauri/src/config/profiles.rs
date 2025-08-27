@@ -742,7 +742,7 @@ use crate::config::Config;
 
 pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
     AsyncHandler::spawn_blocking(move || {
-        tokio::runtime::Handle::current().block_on(async {
+        AsyncHandler::handle().block_on(async {
             let profiles = Config::profiles().await;
             let mut profiles_guard = profiles.data_mut();
             profiles_guard.append_item(item).await
@@ -754,7 +754,7 @@ pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
 
 pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()> {
     AsyncHandler::spawn_blocking(move || {
-        tokio::runtime::Handle::current().block_on(async {
+        AsyncHandler::handle().block_on(async {
             let profiles = Config::profiles().await;
             let mut profiles_guard = profiles.data_mut();
             profiles_guard.patch_item(index, item).await
@@ -766,7 +766,7 @@ pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()
 
 pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
     AsyncHandler::spawn_blocking(move || {
-        tokio::runtime::Handle::current().block_on(async {
+        AsyncHandler::handle().block_on(async {
             let profiles = Config::profiles().await;
             let mut profiles_guard = profiles.data_mut();
             profiles_guard.delete_item(index).await
@@ -778,7 +778,7 @@ pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
 
 pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result<()> {
     AsyncHandler::spawn_blocking(move || {
-        tokio::runtime::Handle::current().block_on(async {
+        AsyncHandler::handle().block_on(async {
             let profiles = Config::profiles().await;
             let mut profiles_guard = profiles.data_mut();
             profiles_guard.reorder(active_id, over_id).await
@@ -790,7 +790,7 @@ pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result
 
 pub async fn profiles_save_file_safe() -> Result<()> {
     AsyncHandler::spawn_blocking(move || {
-        tokio::runtime::Handle::current().block_on(async {
+        AsyncHandler::handle().block_on(async {
             let profiles = Config::profiles().await;
             let profiles_guard = profiles.data_mut();
             profiles_guard.save_file().await
@@ -802,7 +802,7 @@ pub async fn profiles_save_file_safe() -> Result<()> {
 
 pub async fn profiles_draft_update_item_safe(index: String, item: PrfItem) -> Result<()> {
     AsyncHandler::spawn_blocking(move || {
-        tokio::runtime::Handle::current().block_on(async {
+        AsyncHandler::handle().block_on(async {
             let profiles = Config::profiles().await;
             let mut profiles_guard = profiles.draft_mut();
             profiles_guard.update_item(index, item).await
