@@ -1039,14 +1039,13 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 feat::toggle_proxy_profile(profile_index.into()).await; // Await async function
             }
             id if id.starts_with("proxy_") => {
-                // 处理代理节点切换: proxy_{group_name}_{proxy_name}
+                // proxy_{group_name}_{proxy_name}
                 let parts: Vec<&str> = id.splitn(3, '_').collect();
                 
                 if parts.len() == 3 && parts[0] == "proxy" {
                     let group_name = parts[1];
                     let proxy_name = parts[2];
                     
-                    // 获取当前clash配置模式
                     let current_mode = {
                         Config::clash()
                             .await
@@ -1058,31 +1057,30 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                             .to_owned()
                     };
                                         
-                    // 使用 IPC 管理器切换代理节点
-                    match IpcManager::global().update_proxy(group_name, proxy_name).await {
+                    match cmd::proxy::update_proxy_and_sync(group_name.to_string(), proxy_name.to_string()).await {
                         Ok(_) => {
-                            log::info!(target: "app", "代理节点切换成功: {} -> {} (模式: {}, 目标组: {})", group_name, proxy_name, current_mode, group_name);
-                            
-                            println!("代理节点切换成功: {} -> {} (模式: {}, 目标组: {})", group_name, proxy_name, current_mode, group_name);
-                            // 立即刷新托盘菜单
-                            if let Err(e) = Tray::global().update_menu().await {
-                                log::warn!(target: "app", "立即更新托盘菜单失败: {e}");
-                            }
-                            
-                            // 发出前端刷新事件，确保GUI及时更新
-                            if let Some(app_handle) = handle::Handle::global().app_handle() {
-                           
-                                    // 先强制刷新代理缓存，然后发送GUI刷新事件
-                                    let _ = app_handle.emit("verge://force-refresh-proxies", ());                            
-                                    // 发送GUI刷新事件
-                                    let _ = app_handle.emit("verge://refresh-proxy-config", ());
-                                    let _ = app_handle.emit("verge://refresh-clash-config", ());
-                                    
-                                    log::debug!(target: "app", "托盘代理切换事件已发送到前端");
-                            }
+                            log::info!(target: "app", " {} -> {} (模式: {})", group_name, proxy_name, current_mode);
                         }
                         Err(e) => {
-                            log::error!(target: "app", "代理节点切换失败: {} -> {}, 错误: {}", group_name, proxy_name, e);
+                            log::error!(target: "app", " {} -> {}, 错误: {:?}", group_name, proxy_name, e);
+                            
+                            match IpcManager::global().update_proxy(group_name, proxy_name).await {
+                                Ok(_) => {
+                                    log::info!(target: "app", " {} -> {}", group_name, proxy_name);
+                                
+                                    if let Err(e) = Tray::global().update_menu().await {
+                                        log::warn!(target: "app", "托盘菜单更新失败: {e}");
+                                    }
+                                    
+                                    if let Some(app_handle) = handle::Handle::global().app_handle() {
+                                        let _ = app_handle.emit("verge://force-refresh-proxies", ());
+                                        let _ = app_handle.emit("verge://refresh-proxy-config", ());
+                                    }
+                                }
+                                Err(e2) => {
+                                    log::error!(target: "app", "托盘代理切换回退也失败: {} -> {}, 错误: {}", group_name, proxy_name, e2);
+                                }
+                            }
                         }
                     }
                 }

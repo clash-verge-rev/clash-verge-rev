@@ -8,6 +8,7 @@ import {
   deleteConnection,
   getGroupProxyDelays,
   syncTrayProxySelection,
+  updateProxyAndSync,
 } from "@/services/cmds";
 import { forceRefreshProxies } from "@/services/cmds";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -344,44 +345,54 @@ export const ProxyGroups = (props: Props) => {
       const { name, now } = group;
       console.log(`[ProxyGroups] GUI代理切换: ${name} -> ${proxy.name}`);
       
-      await updateProxy(name, proxy.name);
-
-      await forceRefreshProxies();
-
-      onProxies();
-
-      // 断开连接
-      if (verge?.auto_close_connection) {
-        getConnections().then(({ connections }) => {
-          connections.forEach((conn) => {
-            if (conn.chains.includes(now!)) {
-              deleteConnection(conn.id);
-            }
-          });
-        });
-      }
-
-      // 保存到selected中
-      if (!current) return;
-      if (!current.selected) current.selected = [];
-
-      const index = current.selected.findIndex(
-        (item) => item.name === group.name,
-      );
-
-      if (index < 0) {
-        current.selected.push({ name, now: proxy.name });
-      } else {
-        current.selected[index] = { name, now: proxy.name };
-      }
-      await patchCurrent({ selected: current.selected });
-
-      // 同步托盘菜单状态
       try {
-        await syncTrayProxySelection();
-        console.log(`[ProxyGroups] 托盘状态同步成功: ${name} -> ${proxy.name}`);
+        // 1. 保存到selected中 (先保存本地状态)
+        if (current) {
+          if (!current.selected) current.selected = [];
+
+          const index = current.selected.findIndex(
+            (item) => item.name === group.name,
+          );
+
+          if (index < 0) {
+            current.selected.push({ name, now: proxy.name });
+          } else {
+            current.selected[index] = { name, now: proxy.name };
+          }
+          await patchCurrent({ selected: current.selected });
+        }
+
+        // 2. 使用统一的同步命令更新代理并同步状态
+        await updateProxyAndSync(name, proxy.name);
+        console.log(`[ProxyGroups] 代理和状态同步完成: ${name} -> ${proxy.name}`);
+
+        // 3. 刷新前端显示
+        onProxies();
+
+        // 4. 断开连接 (异步处理，不影响UI更新)
+        if (verge?.auto_close_connection) {
+          getConnections().then(({ connections }) => {
+            connections.forEach((conn) => {
+              if (conn.chains.includes(now!)) {
+                deleteConnection(conn.id);
+              }
+            });
+          });
+        }
+        
       } catch (error) {
-        console.warn("Failed to sync tray proxy selection:", error);
+        console.error(`[ProxyGroups] 代理切换失败: ${name} -> ${proxy.name}`, error);
+        // 如果统一命令失败，回退到原来的方式
+        try {
+          await updateProxy(name, proxy.name);
+          await forceRefreshProxies();
+          await syncTrayProxySelection();
+          onProxies();
+          console.log(`[ProxyGroups] 代理切换回退成功: ${name} -> ${proxy.name}`);
+        } catch (fallbackError) {
+          console.error(`[ProxyGroups] 代理切换回退也失败: ${name} -> ${proxy.name}`, fallbackError);
+          onProxies(); // 至少刷新显示
+        }
       }
     },
   );

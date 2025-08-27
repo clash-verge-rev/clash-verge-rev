@@ -1,5 +1,7 @@
+use tauri::Emitter;
+
 use super::CmdResult;
-use crate::{ipc::IpcManager, logging, state::proxy::ProxyRequestCache, utils::logging::Type};
+use crate::{core::{handle::Handle, tray::Tray}, ipc::IpcManager, logging, state::proxy::ProxyRequestCache, utils::logging::Type};
 use std::time::Duration;
 
 const PROXIES_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
@@ -58,6 +60,38 @@ pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
         }
         Err(e) => {
             logging!(error, Type::Cmd, "Failed to sync tray proxy selection: {e}");
+            Err(e.to_string())
+        }
+    }
+}
+
+/// 更新代理选择并同步托盘和GUI状态
+#[tauri::command]
+pub async fn update_proxy_and_sync(group: String, proxy: String) -> CmdResult<()> {
+
+    
+    match IpcManager::global().update_proxy(&group, &proxy).await {
+        Ok(_) => {
+            logging!(info, Type::Cmd, "Proxy updated successfully: {} -> {}", group, proxy);
+            
+            let cache = crate::state::proxy::ProxyRequestCache::global();
+            let key = crate::state::proxy::ProxyRequestCache::make_key("proxies", "default");
+            cache.map.remove(&key);
+            
+            if let Err(e) = Tray::global().update_menu().await {
+                logging!(error, Type::Cmd, "Failed to sync tray menu: {}", e);
+            }
+            
+            if let Some(app_handle) = Handle::global().app_handle() {
+                let _ = app_handle.emit("verge://force-refresh-proxies", ());
+                let _ = app_handle.emit("verge://refresh-proxy-config", ());
+            }
+            
+            logging!(info, Type::Cmd, "Proxy and sync completed successfully: {} -> {}", group, proxy);
+            Ok(())
+        }
+        Err(e) => {
+            logging!(error, Type::Cmd, "Failed to update proxy: {} -> {}, error: {}", group, proxy, e);
             Err(e.to_string())
         }
     }
