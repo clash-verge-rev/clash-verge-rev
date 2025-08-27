@@ -735,25 +735,6 @@ impl IProfiles {
                 .unwrap_or(false)
         })
     }
-
-    pub fn auto_cleanup(&self) -> Result<()> {
-        match self.cleanup_orphaned_files() {
-            Ok(result) => {
-                if !result.deleted_files.is_empty() {
-                    log::info!(
-                        target: "app",
-                        "自动清理完成，删除了 {} 个冗余文件",
-                        result.deleted_files.len()
-                    );
-                }
-                Ok(())
-            }
-            Err(e) => {
-                log::warn!(target: "app", "自动清理失败: {e}");
-                Ok(())
-            }
-        }
-    }
 }
 
 // 特殊的Send-safe helper函数，完全避免跨await持有guard

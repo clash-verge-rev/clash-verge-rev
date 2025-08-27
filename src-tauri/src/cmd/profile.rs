@@ -253,10 +253,6 @@ pub async fn delete_profile(index: String) -> CmdResult {
     // 使用Send-safe helper函数
     let should_update = wrap_err!(profiles_delete_item_safe(index).await)?;
 
-    // 删除后自动清理冗余文件
-    let profiles = Config::profiles().await;
-    let _ = profiles.latest_ref().auto_cleanup();
-
     if should_update {
         match CoreManager::global().update_config().await {
             Ok(_) => {
