@@ -143,6 +143,10 @@ export async function updateProxy(group: string, proxy: string) {
   // console.log(`[API] updateProxy 耗时: ${duration}ms`);
 }
 
+export async function syncTrayProxySelection() {
+  return invoke<void>("sync_tray_proxy_selection");
+}
+
 export async function getProxies(): Promise<{
   global: IProxyGroupItem;
   direct: IProxyItem;

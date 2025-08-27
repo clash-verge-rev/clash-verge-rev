@@ -7,6 +7,7 @@ import {
   updateProxy,
   deleteConnection,
   getGroupProxyDelays,
+  syncTrayProxySelection,
 } from "@/services/cmds";
 import { forceRefreshProxies } from "@/services/cmds";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -341,6 +342,8 @@ export const ProxyGroups = (props: Props) => {
       if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
 
       const { name, now } = group;
+      console.log(`[ProxyGroups] GUI代理切换: ${name} -> ${proxy.name}`);
+      
       await updateProxy(name, proxy.name);
 
       await forceRefreshProxies();
@@ -372,6 +375,14 @@ export const ProxyGroups = (props: Props) => {
         current.selected[index] = { name, now: proxy.name };
       }
       await patchCurrent({ selected: current.selected });
+
+      // 同步托盘菜单状态
+      try {
+        await syncTrayProxySelection();
+        console.log(`[ProxyGroups] 托盘状态同步成功: ${name} -> ${proxy.name}`);
+      } catch (error) {
+        console.warn("Failed to sync tray proxy selection:", error);
+      }
     },
   );
 
