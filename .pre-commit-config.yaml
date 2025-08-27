@@ -29,25 +29,25 @@ repos:
         description: Format mihomo-rule-parser files with rustfmt.
         entry: cargo fmt --manifest-path mihomo-rule-parser/Cargo.toml -- --check
         language: system
+        files: ^mihomo-rule-parser/
         types:
           - rust
-        files: \.rs$
       - id: cargo-fmt-tauri-plugin-mihomo
         name: cargo fmt tauri-plugin-mihomo
         description: Format tauri-plugin-mihomo files with rustfmt.
         entry: cargo fmt --manifest-path tauri-plugin-mihomo/Cargo.toml -- --check
         language: system
+        files: ^tauri-plugin-mihomo/
         types:
           - rust
-        files: \.rs$
       - id: cargo-fmt-src-tauri
         name: cargo fmt src-tauri
         description: Format src-tauri files with rustfmt.
         entry: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
         language: system
+        files: ^src-tauri/
         types:
           - rust
-        files: \.rs$
 
       # cargo check
       - id: cargo-check-mihomo-rule-parser
@@ -55,27 +55,27 @@ repos:
         description: Check the package for errors.
         entry: cargo check --manifest-path mihomo-rule-parser/Cargo.toml --all
         language: system
+        files: ^mihomo-rule-parser/
         types:
           - rust
-        files: \.rs$
         pass_filenames: false
       - id: cargo-check-tauri-plugin-mihomo
         name: cargo check tauri-plugin-mihomo
         description: Check the package for errors.
         entry: cargo check --manifest-path tauri-plugin-mihomo/Cargo.toml --all
         language: system
+        files: ^tauri-plugin-mihomo/
         types:
           - rust
-        files: \.rs$
         pass_filenames: false
       - id: cargo-check-src-tauri
         name: cargo check src-tauri
         description: Check the package for errors.
         entry: cargo check --manifest-path src-tauri/Cargo.toml --all
         language: system
+        files: ^src-tauri/
         types:
           - rust
-        files: \.rs$
         pass_filenames: false
 
       # cargo clippy
@@ -84,25 +84,25 @@ repos:
         description: Lint rust sources
         entry: cargo clippy --manifest-path mihomo-rule-parser/Cargo.toml --all-targets --all-features --tests --benches -- -D warnings
         language: system
+        files: ^mihomo-rule-parser/
         types:
           - rust
-        files: \.rs$
         pass_filenames: false
       - id: cargo-clippy-tauri-plugin-mihomo
         name: cargo clippy tauri-plugin-mihomo
         description: Lint rust sources
         entry: cargo clippy --manifest-path tauri-plugin-mihomo/Cargo.toml --all-targets --all-features --tests --benches -- -D warnings
         language: system
+        files: ^tauri-plugin-mihomo/
         types:
           - rust
-        files: \.rs$
         pass_filenames: false
       - id: cargo-clippy-src-tauri
         name: cargo clippy src-tauri
         description: Lint rust sources
         entry: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features --tests --benches -- -D warnings
         language: system
+        files: ^src-tauri/
         types:
           - rust
-        files: \.rs$
         pass_filenames: false
