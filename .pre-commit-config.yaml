@@ -1,15 +1,21 @@
 fail_fast: true
 
 repos:
-  - repo: local
+  # this will check typos and fix file automatically, but need to re-add file by using git
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.35.5
     hooks:
       - id: typos
-        name: typos
-        description: typos.
-        entry: typos
-        language: system
-        types:
-          - rust
+  - repo: local
+    hooks:
+      # no need because of using typos repo
+      # - id: typos-check
+      #   name: typos check
+      #   description: typos check.
+      #   entry: typos
+      #   language: system
+      #   types:
+      #     - rust
       - id: pretty
         name: pretty
         description: pretty.

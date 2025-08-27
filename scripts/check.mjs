@@ -59,6 +59,26 @@ const SIDECAR_HOST = target
       .toString()
       .match(/(?<=host: ).+(?=\s*)/g)[0];
 
+/* ======= mihomo stable ======= */
+const MIHOMO_VERSION_URL =
+  "https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt";
+const MIHOMO_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
+let MIHOMO_VERSION;
+
+const MIHOMO_MAP = {
+  "win32-x64": "mihomo-windows-amd64-v3",
+  "win32-ia32": "mihomo-windows-386",
+  "win32-arm64": "mihomo-windows-arm64",
+  "darwin-x64": "mihomo-darwin-amd64-v3",
+  "darwin-arm64": "mihomo-darwin-arm64",
+  "linux-x64": "mihomo-linux-amd64-v3",
+  "linux-ia32": "mihomo-linux-386",
+  "linux-arm64": "mihomo-linux-arm64",
+  "linux-arm": "mihomo-linux-armv7",
+  "linux-riscv64": "mihomo-linux-riscv64",
+  "linux-loong64": "mihomo-linux-loong64",
+};
+
 /* ======= mihomo alpha======= */
 const MIHOMO_ALPHA_VERSION_URL =
   "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt";
@@ -79,6 +99,17 @@ const MIHOMO_ALPHA_MAP = {
   "linux-loong64": "mihomo-linux-loong64",
 };
 
+// check available
+if (!MIHOMO_MAP[`${platform}-${arch}`]) {
+  throw new Error(`mihomo unsupported platform "${platform}-${arch}"`);
+}
+if (!MIHOMO_ALPHA_MAP[`${platform}-${arch}`]) {
+  throw new Error(`mihomo alpha unsupported platform "${platform}-${arch}"`);
+}
+
+/**
+ * fetch with timeout (default timeout: 8000ms)
+ */
 async function fetchWithTimeout(resource, options = {}) {
   const { timeout = 8000 } = options; // 默认超时时间为 8 秒
   const controller = new AbortController();
@@ -100,70 +131,23 @@ async function fetchWithTimeout(resource, options = {}) {
   }
 }
 
-// Fetch the latest alpha release version from the version.txt file
-async function getLatestAlphaVersion() {
-  const options = {};
-
-  const httpProxy =
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy;
-
-  if (httpProxy) {
-    options.agent = new HttpsProxyAgent(httpProxy);
-  }
-  try {
-    const response = await fetchWithTimeout(MIHOMO_ALPHA_VERSION_URL, {
-      ...options,
-      method: "GET",
-    });
-    const v = await response.text();
-    MIHOMO_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
-    consola.info(`Latest alpha version: ${MIHOMO_ALPHA_VERSION}`);
-  } catch (error) {
-    consola.error("Error fetching latest alpha version:", error.message);
-    process.exit(1);
-  }
-}
-
-/* ======= mihomo stable ======= */
-const MIHOMO_VERSION_URL =
-  "https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt";
-const MIHOMO_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`;
-let MIHOMO_VERSION;
-
-const MIHOMO_MAP = {
-  "win32-x64": "mihomo-windows-amd64-v3",
-  "win32-ia32": "mihomo-windows-386",
-  "win32-arm64": "mihomo-windows-arm64",
-  "darwin-x64": "mihomo-darwin-amd64-v3",
-  "darwin-arm64": "mihomo-darwin-arm64",
-  "linux-x64": "mihomo-linux-amd64-v3",
-  "linux-ia32": "mihomo-linux-386",
-  "linux-arm64": "mihomo-linux-arm64",
-  "linux-arm": "mihomo-linux-armv7",
-  "linux-riscv64": "mihomo-linux-riscv64",
-  "linux-loong64": "mihomo-linux-loong64",
-};
-
-// Fetch the latest release version from the version.txt file
+/**
+ * Fetch the latest release version from the `version.txt` file
+ */
 async function getLatestReleaseVersion() {
   const spinner = ora({
-    text: "get latest mihomo version",
+    text: "get latest mihomo stable version",
     color: "yellow",
     spinner: "circle",
   });
   spinner.start();
 
   const options = {};
-
   const httpProxy =
     process.env.HTTP_PROXY ||
     process.env.http_proxy ||
     process.env.HTTPS_PROXY ||
     process.env.https_proxy;
-
   if (httpProxy) {
     options.agent = new HttpsProxyAgent(httpProxy);
   }
@@ -180,24 +164,60 @@ async function getLatestReleaseVersion() {
     throw new Error(error);
   }
 }
-
-/*
- * check available
+/**
+ *  Fetch the latest alpha release version from the `version.txt` file
  */
-if (!MIHOMO_MAP[`${platform}-${arch}`]) {
-  throw new Error(
-    `clash meta alpha unsupported platform "${platform}-${arch}"`,
-  );
-}
-
-if (!MIHOMO_ALPHA_MAP[`${platform}-${arch}`]) {
-  throw new Error(
-    `clash meta alpha unsupported platform "${platform}-${arch}"`,
-  );
+async function getLatestAlphaVersion() {
+  const spinner = ora({
+    text: "get latest mihomo alpha version",
+    color: "yellow",
+    spinner: "circle",
+  });
+  spinner.start();
+  const options = {};
+  const httpProxy =
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy;
+  if (httpProxy) {
+    options.agent = new HttpsProxyAgent(httpProxy);
+  }
+  try {
+    const response = await fetchWithTimeout(MIHOMO_ALPHA_VERSION_URL, {
+      ...options,
+      method: "GET",
+    });
+    const v = await response.text();
+    MIHOMO_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
+    spinner.succeed(`Latest alpha version: ${MIHOMO_ALPHA_VERSION}`);
+  } catch (error) {
+    spinner.fail(`Error fetching latest alpha version: ${error.message}`);
+    throw new Error(error);
+  }
 }
 
 /**
- * core info
+ * mihomo stable version info
+ */
+function mihomo() {
+  const name = MIHOMO_MAP[`${platform}-${arch}`];
+  const isWin = platform === "win32";
+  const urlExt = isWin ? "zip" : "gz";
+  const downloadURL = `${MIHOMO_URL_PREFIX}/${MIHOMO_VERSION}/${name}-${MIHOMO_VERSION}.${urlExt}`;
+  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const zipFile = `${name}-${MIHOMO_VERSION}.${urlExt}`;
+  return {
+    name: "verge-mihomo",
+    targetFile: `verge-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    exeFile,
+    zipFile,
+    downloadURL,
+  };
+}
+
+/**
+ * mihomo alpha version info
  */
 function mihomoAlpha() {
   const name = MIHOMO_ALPHA_MAP[`${platform}-${arch}`];
@@ -206,7 +226,6 @@ function mihomoAlpha() {
   const downloadURL = `${MIHOMO_ALPHA_URL_PREFIX}/${name}-${MIHOMO_ALPHA_VERSION}.${urlExt}`;
   const exeFile = `${name}${isWin ? ".exe" : ""}`;
   const zipFile = `${name}-${MIHOMO_ALPHA_VERSION}.${urlExt}`;
-
   return {
     name: "verge-mihomo-alpha",
     targetFile: `verge-mihomo-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
@@ -216,22 +235,6 @@ function mihomoAlpha() {
   };
 }
 
-function mihomo() {
-  const name = MIHOMO_MAP[`${platform}-${arch}`];
-  const isWin = platform === "win32";
-  const urlExt = isWin ? "zip" : "gz";
-  const downloadURL = `${MIHOMO_URL_PREFIX}/${MIHOMO_VERSION}/${name}-${MIHOMO_VERSION}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
-  const zipFile = `${name}-${MIHOMO_VERSION}.${urlExt}`;
-
-  return {
-    name: "verge-mihomo",
-    targetFile: `verge-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
-    exeFile,
-    zipFile,
-    downloadURL,
-  };
-}
 /**
  * download sidecar and rename
  */
@@ -365,17 +368,14 @@ async function resolveResource(binInfo) {
  */
 async function downloadFile(url, path, spinner) {
   const options = {};
-
   const httpProxy =
     process.env.HTTP_PROXY ||
     process.env.http_proxy ||
     process.env.HTTPS_PROXY ||
     process.env.https_proxy;
-
   if (httpProxy) {
     options.agent = new HttpsProxyAgent(httpProxy);
   }
-
   spinner.text = `downloading: ${url}`;
   const response = await fetchWithTimeout(url, {
     ...options,
@@ -385,11 +385,14 @@ async function downloadFile(url, path, spinner) {
   });
   const buffer = await response.arrayBuffer();
   await fs.writeFile(path, new Uint8Array(buffer));
-
   spinner.text = `download finished: "${url}"`;
 }
 
-// SimpleSC.dll
+/**
+ * NSIS plugin: `SimpleSC.dll`
+ *
+ * only for Windows
+ */
 const resolvePlugin = async () => {
   const spinner = ora({
     text: "resolve NSIS plugin (SimpleSC)",
@@ -400,7 +403,6 @@ const resolvePlugin = async () => {
 
   const url =
     "https://nsis.sourceforge.io/mediawiki/images/e/ef/NSIS_Simple_Service_Plugin_Unicode_1.30.zip";
-
   const tempDir = path.join(TEMP_DIR, "SimpleSC");
   const tempZip = path.join(
     tempDir,
@@ -431,7 +433,9 @@ const resolvePlugin = async () => {
   }
 };
 
-// service chmod
+/**
+ * chmod 755 for Clash Verge Service
+ */
 const resolveServicePermission = async () => {
   const serviceExecutables = [
     "clash-verge-service",
@@ -448,8 +452,11 @@ const resolveServicePermission = async () => {
   }
 };
 
-// clash-verge-service
-
+/**
+ * Clash Verge Service Latest Version
+ *
+ * TODO: get Clash Verge Service latest version by use request
+ */
 async function getLatestClashVergeServices() {
   // TODO: Github rest api are rate-limited
   // const GET_LATEST_RELEASE_API =
@@ -473,6 +480,9 @@ async function getLatestClashVergeServices() {
   };
 }
 
+/**
+ * Clash Verge Service Latest Alpha Version
+ */
 function getAlphaClashVergeServices() {
   const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
   const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/alpha/${fileName}`;
@@ -648,6 +658,9 @@ const tasks = [
   },
 ];
 
+/**
+ * main function for run tasks
+ */
 async function runTask() {
   consola.box("Check and download files");
   while (tasks.length > 0) {
@@ -681,4 +694,5 @@ async function runTask() {
   }
 }
 
+// run
 runTask();

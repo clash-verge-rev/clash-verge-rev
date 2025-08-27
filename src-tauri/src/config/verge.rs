@@ -34,7 +34,7 @@ pub struct IVerge {
     /// enable traffic graph default is true
     pub traffic_graph: Option<bool>,
 
-    /// show memory info (only for Clash Meta)
+    /// show memory info (only for Mihomo)
     pub enable_memory_usage: Option<bool>,
 
     /// enable group icon
