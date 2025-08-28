@@ -85,7 +85,7 @@
     "@types/react-transition-group": "4.4.12",
     "@types/sortablejs": "1.15.8",
     "@vitejs/plugin-legacy": "7.2.1",
-    "@vitejs/plugin-react": "5.0.1",
+    "@vitejs/plugin-react": "5.0.2",
     "adm-zip": "0.5.16",
     "clsx": "2.1.1",
     "concurrently": "9.2.1",
