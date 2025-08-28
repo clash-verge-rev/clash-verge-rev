@@ -279,6 +279,7 @@ pub async fn create_window(is_show: bool) -> bool {
                 "静默启动但未开启自动轻量模式，保持正常模式"
             );
         }
+    }
 
     if let Some(app_handle) = handle::Handle::global().app_handle() {
         if let Some(window) = app_handle.get_webview_window("main") {
