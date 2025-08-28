@@ -294,10 +294,6 @@ impl Handle {
         }
     }
 
-    pub fn is_initialized(&self) -> bool {
-        self.app_handle().is_some()
-    }
-
     /// 获取 AppHandle
     pub fn app_handle(&self) -> Option<AppHandle> {
         self.app_handle.read().clone()
