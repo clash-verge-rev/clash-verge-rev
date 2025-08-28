@@ -252,7 +252,18 @@ pub async fn create_window(is_show: bool) -> bool {
 
     if !is_show {
         logging!(info, Type::Window, true, "静默模式启动时不创建窗口");
-        lightweight::set_lightweight_mode(true).await;
+        // 只有在启用静默启动且启用自动轻量模式时才设置轻量模式
+        let verge_config = Config::verge().await;
+        let enable_silent_start = verge_config.latest_ref().enable_silent_start.unwrap_or(false);
+        let enable_auto_lightweight = verge_config.latest_ref().enable_auto_light_weight_mode.unwrap_or(false);
+        
+        if enable_silent_start && enable_auto_lightweight {
+            logging!(info, Type::Window, true, "静默启动且开启自动轻量模式，设置轻量模式");
+            lightweight::set_lightweight_mode(true).await;
+        } else {
+            logging!(info, Type::Window, true, "静默启动但未开启自动轻量模式，保持正常模式");
+        }
+        
         handle::Handle::notify_startup_completed();
         return false;
     }
