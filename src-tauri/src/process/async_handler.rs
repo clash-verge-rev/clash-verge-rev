@@ -51,7 +51,11 @@ impl AsyncHandler {
         F: ?Sized,
     {
         const TRACE_MINI_SIZE: usize = 4;
+        const TRACE_SPECIAL_SIZE: [usize; 4] = [0, 8, 24, 64];
         let size = std::mem::size_of_val(f);
+        if TRACE_SPECIAL_SIZE.contains(&size) {
+            return;
+        }
         if size <= TRACE_MINI_SIZE {
             return;
         }
