@@ -133,23 +133,21 @@ mod app_init {
     }
 
     /// Initialize core components asynchronously
-    pub fn init_core_async() {
-        AsyncHandler::spawn(move || async move {
-            logging!(info, Type::Setup, true, "异步执行应用设置...");
-            match timeout(Duration::from_secs(30), resolve::resolve_setup_async()).await {
-                Ok(_) => {
-                    logging!(info, Type::Setup, true, "应用设置成功完成");
-                }
-                Err(_) => {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        true,
-                        "应用设置超时(30秒)，继续执行后续流程"
-                    );
-                }
+    pub async fn init_core_async() {
+        logging!(info, Type::Setup, true, "异步执行应用设置...");
+        match timeout(Duration::from_secs(30), resolve::resolve_setup_async()).await {
+            Ok(_) => {
+                logging!(info, Type::Setup, true, "应用设置成功完成");
             }
-        });
+            Err(_) => {
+                logging!(
+                    error,
+                    Type::Setup,
+                    true,
+                    "应用设置超时(30秒)，继续执行后续流程"
+                );
+            }
+        }
     }
 
     /// Initialize core components synchronously
@@ -365,12 +363,14 @@ pub fn run() {
             let app_handle = app.handle().clone();
 
             // Initialize core components asynchronously
-            app_init::init_core_async();
+            AsyncHandler::spawn_blocking(move || async move {
+                app_init::init_core_async().await;
+            });
 
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
             // Initialize core components synchronously
-            AsyncHandler::spawn(move || async move {
+            AsyncHandler::spawn_blocking(move || async move {
                 if let Err(e) = app_init::init_core_sync(&app_handle).await {
                     logging!(
                         error,

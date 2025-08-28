@@ -29,23 +29,17 @@ pub async fn resolve_setup_async() {
         init_embed_server();
     });
 
-    AsyncHandler::spawn_blocking(|| async {
+    AsyncHandler::spawn(|| async {
         init_config().await;
         init_core_manager().await;
         init_tray().await;
-    });
 
-    AsyncHandler::spawn_blocking(|| async {
         init_system_proxy().await;
         init_system_proxy_guard().await;
-    });
 
-    AsyncHandler::spawn_blocking(|| async {
         init_timer().await;
         init_auto_lightweight_mode().await;
-    });
 
-    AsyncHandler::spawn_blocking(|| async {
         init_hotkey().await;
         init_window().await;
         refresh_tray_menu().await;
