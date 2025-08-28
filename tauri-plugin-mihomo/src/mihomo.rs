@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use crate::{
-    BaseConfig, Connections, Error, GroupProxies, MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay, ProxyProvider,
-    ProxyProviders, Result, RuleProviders, Rules, failed_rep, ipc_request::LocalSocket, utils,
+    BaseConfig, Connections, CoreUpdaterChannel, Error, Groups, MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay,
+    ProxyProvider, ProxyProviders, Result, RuleProviders, Rules, failed_rep, ipc_request::LocalSocket, utils,
 };
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use http::{
@@ -500,6 +500,7 @@ impl Mihomo {
         if !response.status().is_success() {
             failed_rep!("get connections failed, {}", response.text().await?);
         }
+        // Ok(response.json::<Connections>().await?)
         Ok(response.json::<Connections>().await?)
     }
 
@@ -524,13 +525,13 @@ impl Mihomo {
     }
 
     /// 获取所有的代理组
-    pub async fn get_groups(&self) -> Result<GroupProxies> {
+    pub async fn get_groups(&self) -> Result<Groups> {
         let client = self.build_request(Method::GET, "/group")?;
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
             failed_rep!("get group error, {}", response.text().await?);
         }
-        Ok(response.json::<GroupProxies>().await?)
+        Ok(response.json::<Groups>().await?)
     }
 
     /// 获取指定名称的代理组
@@ -743,7 +744,7 @@ impl Mihomo {
         let body = json!({ "path": config_path });
         let client = self
             .build_request(Method::PUT, "/configs")?
-            .query(&[("force", &force.to_string())])
+            .query(&[("force", force)])
             .json(&body);
 
         let response = self.send_by_protocol(client).await?;
@@ -785,8 +786,10 @@ impl Mihomo {
     }
 
     /// 升级核心
-    pub async fn upgrade_core(&self) -> Result<()> {
-        let client = self.build_request(Method::POST, "/upgrade")?;
+    pub async fn upgrade_core(&self, channel: CoreUpdaterChannel, force: bool) -> Result<()> {
+        let client = self
+            .build_request(Method::POST, "/upgrade")?
+            .query(&[("channel", &channel.to_string()), ("force", &force.to_string())]);
         let response = self.send_by_protocol(client).await?;
         if !response.status().is_success() {
             match response.json::<HashMap<String, String>>().await {
@@ -838,7 +841,7 @@ impl Mihomo {
 mod test {
     use super::*;
     use crate::{ClashMode, Traffic};
-    use std::time::Duration;
+    use std::{io::Write, time::Duration};
     use tauri::ipc::InvokeResponseBody;
 
     fn mihomo() -> Mihomo {
@@ -847,14 +850,17 @@ mod test {
         } else {
             r"\\.\pipe\verge-mihomo".to_string()
         };
-        Mihomo::new(
-            Protocol::Http,
-            Some("127.0.0.1".into()),
-            Some(9090),
-            None, // no secret
-            // Some("ppr7qxGrVBu9E8dUX3BoS".into()), // has secret
-            Some(socket_path),
-        )
+        // use local socket
+        Mihomo::new(Protocol::LocalSocket, None, None, None, Some(socket_path))
+
+        // use http
+        // Mihomo::new(
+        //     Protocol::Http,
+        //     Some("127.0.0.1".into()),
+        //     Some(9090),
+        //     Some("ppr7qxGrVBu9E8dUX3BoS".into()),
+        //     None,
+        // )
     }
 
     #[tokio::test]
@@ -869,6 +875,9 @@ mod test {
         let mihomo = mihomo();
         let config = mihomo.get_base_config().await?;
         println!("{config:?}");
+        let json = serde_json::to_string_pretty(&config)?;
+        let mut file = std::fs::File::create("data.json")?;
+        file.write_all(json.as_bytes())?;
         Ok(())
     }
 
@@ -980,16 +989,24 @@ mod test {
     async fn test_upgrade_geo() -> Result<()> {
         let mihomo = mihomo();
         if let Err(e) = mihomo.upgrade_geo().await {
-            println!("upgrade core failed, {e:?}")
+            println!("upgrade core failed, {e}")
         }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_connections() -> Result<()> {
+        let mihomo = mihomo();
+        let connections = mihomo.get_connections().await?;
+        println!("{connections:?}");
         Ok(())
     }
 
     #[tokio::test]
     async fn test_upgrade_core() -> Result<()> {
         let mihomo = mihomo();
-        if let Err(e) = mihomo.upgrade_core().await {
-            println!("upgrade core failed, {e:?}")
+        if let Err(e) = mihomo.upgrade_core(CoreUpdaterChannel::Auto, false).await {
+            println!("upgrade core failed, {e}")
         }
         Ok(())
     }

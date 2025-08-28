@@ -138,7 +138,7 @@ export const ProfileItem = (props: Props) => {
     try {
       await viewProfile(uid);
     } catch (err: any) {
-      notice("error", err?.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 

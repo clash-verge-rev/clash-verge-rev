@@ -90,7 +90,7 @@ const SettingClash = ({ onError }: Props) => {
       await updateGeo();
       notice("success", t("GeoData Updated"));
     } catch (err: any) {
-      notice("error", err?.response.data.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   };
 
@@ -104,7 +104,7 @@ const SettingClash = ({ onError }: Props) => {
         }),
       );
     } catch (err: any) {
-      notice("error", err.toString());
+      notice("error", err.message || err.toString());
     }
   };
 
@@ -113,7 +113,7 @@ const SettingClash = ({ onError }: Props) => {
       await flushDNS();
       notice("success", t("Cache Flushed", { cache: "DNS" }));
     } catch (err: any) {
-      notice("error", err.toString());
+      notice("error", err.message || err.toString());
     }
   };
 

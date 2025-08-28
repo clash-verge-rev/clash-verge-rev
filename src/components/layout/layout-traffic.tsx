@@ -71,7 +71,7 @@ export const LayoutTraffic = () => {
       await restartSidecar();
       notice("success", t(`Clash Core Restarted`), 1000);
     } catch (err: any) {
-      notice("error", err?.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   }, 500);
 

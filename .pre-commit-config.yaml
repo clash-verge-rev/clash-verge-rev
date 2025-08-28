@@ -1,6 +1,15 @@
 fail_fast: true
 
 repos:
+  # prek has build-in pre-commit hooks
+  # - repo: "https://github.com/pre-commit/pre-commit-hooks"
+  #   rev: v5.0.0
+  #   hooks:
+  #     - id: trailing-whitespace
+  #     - id: end-of-file-fixer
+  #     - id: check-yaml
+  #     - id: check-toml
+  #     - id: check-added-large-files
   # this will check typos and fix file automatically, but need to re-add file by using git
   - repo: https://github.com/crate-ci/typos
     rev: v1.35.5

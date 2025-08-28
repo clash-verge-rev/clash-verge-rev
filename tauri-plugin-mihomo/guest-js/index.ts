@@ -1,286 +1,22 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
+import {
+  BaseConfig,
+  Connections,
+  CoreUpdaterChannel,
+  Groups,
+  LogLevel,
+  MihomoVersion,
+  Proxies,
+  Proxy,
+  ProxyDelay,
+  ProxyProvider,
+  ProxyProviders,
+  RuleProviders,
+  Rules,
+} from "./bindings";
 
-export interface MihomoVersion {
-  meta: boolean;
-  version: string;
-}
-
-// connections
-export interface Connections {
-  downloadTotal: number;
-  uploadTotal: number;
-  connections: Connection[];
-  memory: number;
-}
-
-export interface Connection {
-  id: string;
-  metadata: ConnectionMetaData;
-  upload: number;
-  download: number;
-  start: string;
-  chains: string[];
-  rule: string;
-  rulePayload: string;
-}
-
-export interface ConnectionMetaData {
-  network: string;
-  type: string;
-  sourceIp: string;
-  destinationIp: string;
-  sourceGeoIp: string | null;
-  destinationGeoIp: string | null;
-  sourceIpAsn: string;
-  destinationIpAsn: string | null;
-  sourcePort: number;
-  destinationPort: number;
-  inboundIp: string;
-  inboundPort: number;
-  inboundName: string;
-  inboundUser: string;
-  host: string;
-  dnsMode: string;
-  uid: number;
-  process: string;
-  processPath: string;
-  specialProxy: string;
-  specialRules: string;
-  remoteDestination: string;
-  dscp: number;
-  sniffHost: string;
-}
-
-// groups
-export interface Groups {
-  proxies: Proxy[];
-}
-
-export interface Proxy {
-  id: string;
-  alive: boolean;
-  all: string[];
-  expectedStatus: string;
-  extra: Record<string, Extra>;
-  fixed: string;
-  hidden: boolean;
-  history: DelayHistory[];
-  icon: string;
-  name: string;
-  now: string;
-  testUrl: string;
-  tfo: boolean;
-  type: ProxyType;
-  udp: boolean;
-  xudp: boolean;
-}
-
-export interface Extra {
-  alive: boolean;
-  history: DelayHistory[];
-}
-
-export interface DelayHistory {
-  time: string;
-  delay: number;
-}
-
-export enum ProxyType {
-  Direct = "Direct",
-  Reject = "Reject",
-  RejectDrop = "RejectDrop",
-  Compatible = "Compatible",
-  Pass = "Pass",
-  Dns = "Dns",
-  Shadowsocks = "Shadowsocks",
-  ShadowsocksR = "ShadowsocksR",
-  Snell = "Snell",
-  Socks5 = "Socks5",
-  Http = "Http",
-  Vmess = "Vmess",
-  Vless = "Vless",
-  Trojan = "Trojan",
-  Hysteria = "Hysteria",
-  Hysteria2 = "Hysteria2",
-  WireGuard = "WireGuard",
-  Tuic = "Tuic",
-  Ssh = "Ssh",
-  Mieru = "Mieru",
-  AnyTLS = "AnyTLS",
-  Relay = "Relay",
-  Selector = "Selector",
-  Fallback = "Fallback",
-  URLTest = "URLTest",
-  LoadBalance = "LoadBalance",
-}
-
-// providers
-export interface ProxyProviders {
-  providers: Record<string, ProxyProvider>;
-}
-
-export interface ProxyProvider {
-  expectedStatus: string;
-  name: string;
-  proxies: Proxy[];
-  testUrl: string;
-  type: string;
-  vehicleType: string;
-  subscriptionInfo: SubscriptionInfo;
-  updatedAt: string;
-}
-
-export interface SubscriptionInfo {
-  upload: number;
-  download: number;
-  total: number;
-  expire: number;
-}
-
+export * from "./bindings";
 export type MihomoGroupDelay = Record<string, number>;
-
-// proxies
-export interface Proxies {
-  proxies: Record<string, Proxy>;
-}
-
-export interface ProxyDelay {
-  delay: number;
-  message?: string;
-}
-
-// rules
-export interface Rules {
-  rules: Rule[];
-}
-
-export interface Rule {
-  type: RuleType;
-  payload: string;
-  proxy: string;
-  size: number;
-}
-
-export enum RuleType {
-  Domain = "Domain",
-  DomainSuffix = "DomainSuffix",
-  DomainKeyword = "DomainKeyword",
-  DomainRegex = "DomainRegex",
-  GeoSite = "GeoSite",
-  GeoIP = "GeoIP",
-  SrcGeoIP = "SrcGeoIP",
-  IPASN = "IPASN",
-  SrcIPASN = "SrcIPASN",
-  IPCIDR = "IPCIDR",
-  SrcIPCIDR = "SrcIPCIDR",
-  IPSuffix = "IPSuffix",
-  SrcIPSuffix = "SrcIPSuffix",
-  SrcPort = "SrcPort",
-  DstPort = "DstPort",
-  InPort = "InPort",
-  InUser = "InUser",
-  InName = "InName",
-  InType = "InType",
-  ProcessName = "ProcessName",
-  ProcessPath = "ProcessPath",
-  ProcessNameRegex = "ProcessNameRegex",
-  ProcessPathRegex = "ProcessPathRegex",
-  Match = "Match",
-  RuleSet = "RuleSet",
-  Network = "Network",
-  DSCP = "DSCP",
-  Uid = "Uid",
-  SubRules = "SubRules",
-  AND = "AND",
-  OR = "OR",
-  NOT = "NOT",
-}
-
-export interface RuleProviders {
-  providers: Record<string, RuleProvider>;
-}
-
-export interface RuleProvider {
-  behavior: string;
-  format: string;
-  name: string;
-  ruleCount: number;
-  type: string;
-  updatedAt: string;
-  vehicleType: string;
-}
-
-export interface BaseConfig {
-  port: number;
-  mixedPort: number;
-  socksPort: number;
-  redirPort: number;
-  tproxyPort: number;
-  tun: TunConfig;
-  lanAllowedIps: string[];
-  lanDisallowedIps: string[];
-  allow_lan: boolean;
-  bindAddress: string;
-  inboundTfo: boolean;
-  inboundMptcp: boolean;
-  mode: ClashMode;
-  unifiedDelay: boolean;
-  logLevel: string;
-  ipv6: boolean;
-  interfaceName: string;
-  routingMark: number;
-  geoxUrl: Record<string, string>;
-  geoAutoUpdate: boolean;
-  geoAutoUpdateInterval: number;
-  geodataMode: boolean;
-  geodataLoader: string;
-  geositeMatcher: string;
-  tcpConcurrent: boolean;
-  findProcessMode: string;
-  sniffing: boolean;
-  globalClientFingerprint: string;
-  globalUa: string;
-}
-
-export interface TunConfig {
-  enable: boolean;
-  device: string;
-  stack: TunStack;
-  dnsHijack: string[];
-  autoRoute: boolean;
-  autoDetectInterface: boolean;
-  mtu: number;
-  gsoMaxSize: number | null;
-  inet4Address: string[];
-  fileDescriptor: number;
-}
-
-export enum TunStack {
-  Mixed = "Mixed",
-  Gvisor = "gVisor",
-  System = "System",
-}
-
-export enum ClashMode {
-  Rule = "rule",
-  Global = "global",
-  Direct = "direct",
-}
-
-export interface Traffic {
-  up: number;
-  down: number;
-}
-
-export interface Memory {
-  inuse: number;
-  oslimit: number;
-}
-
-export interface Log {
-  type: string;
-  payload: string;
-}
 
 // ======================= functions =======================
 
@@ -607,10 +343,20 @@ export async function restart(): Promise<void> {
 
 // upgrade
 /**
- * 升级核心
+ * 升级核心，将当前运行中的核心升级到选择的通道的最新版
+ * @param channel 升级通道, 默认 auto
+ *    - release: 稳定版
+ *    - alpha: 测试版
+ *    - auto: 根据当前运行的核心版本自动选择升级通道
+ * @param force 是否强制升级，默认 false
+ *    - false: 若当前版本为最新版，返回当前为最新版的错误，不再执行升级操作, 否则下载最新版，覆盖升级
+ *    - true: 直接下载最新版，强制覆盖升级
  */
-export async function upgradeCore(): Promise<void> {
-  await invoke<void>("plugin:mihomo|upgrade_core");
+export async function upgradeCore(
+  channel: CoreUpdaterChannel = "auto",
+  force = false,
+): Promise<void> {
+  await invoke<void>("plugin:mihomo|upgrade_core", { channel, force });
 }
 
 /**
@@ -725,9 +471,7 @@ export class MihomoWebSocket {
    * 创建一个新的 WebSocket 连接，用于 Mihomo 的日志监控
    * @returns WebSocket 实例
    */
-  static async connect_logs(
-    level: "debug" | "info" | "warning" | "error" | "silent",
-  ): Promise<MihomoWebSocket> {
+  static async connect_logs(level: LogLevel): Promise<MihomoWebSocket> {
     const listeners: Set<(arg: Message) => void> = new Set();
     const onMessage = new Channel<Message>();
     onMessage.onmessage = (message: Message): void => {

@@ -75,6 +75,11 @@ pub fn parse_socket_response(response_str: &str, is_chunked: bool) -> Result<req
             if is_chunked {
                 body = decode_chunked(&body)?;
             }
+            // {
+            //     use std::io::Write;
+            //     let mut file = std::fs::File::create("body.json")?;
+            //     file.write_all(body.as_bytes())?;
+            // }
             let response = res_builder.body(body)?;
             Ok(reqwest::Response::from(response))
         }

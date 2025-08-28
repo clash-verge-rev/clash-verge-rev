@@ -1,253 +1,6 @@
-export interface MihomoVersion {
-  meta: boolean;
-  version: string;
-}
-export interface Connections {
-  downloadTotal: number;
-  uploadTotal: number;
-  connections: Connection[];
-  memory: number;
-}
-export interface Connection {
-  id: string;
-  metadata: ConnectionMetaData;
-  upload: number;
-  download: number;
-  start: string;
-  chains: string[];
-  rule: string;
-  rulePayload: string;
-}
-export interface ConnectionMetaData {
-  network: string;
-  type: string;
-  sourceIp: string;
-  destinationIp: string;
-  sourceGeoIp: string | null;
-  destinationGeoIp: string | null;
-  sourceIpAsn: string;
-  destinationIpAsn: string | null;
-  sourcePort: number;
-  destinationPort: number;
-  inboundIp: string;
-  inboundPort: number;
-  inboundName: string;
-  inboundUser: string;
-  host: string;
-  dnsMode: string;
-  uid: number;
-  process: string;
-  processPath: string;
-  specialProxy: string;
-  specialRules: string;
-  remoteDestination: string;
-  dscp: number;
-  sniffHost: string;
-}
-export interface Groups {
-  proxies: Proxy[];
-}
-export interface Proxy {
-  id: string;
-  alive: boolean;
-  all: string[];
-  expectedStatus: string;
-  extra: Record<string, Extra>;
-  fixed: string;
-  hidden: boolean;
-  history: DelayHistory[];
-  icon: string;
-  name: string;
-  now: string;
-  testUrl: string;
-  tfo: boolean;
-  type: ProxyType;
-  udp: boolean;
-  xudp: boolean;
-}
-export interface Extra {
-  alive: boolean;
-  history: DelayHistory[];
-}
-export interface DelayHistory {
-  time: string;
-  delay: number;
-}
-export declare enum ProxyType {
-  Direct = "Direct",
-  Reject = "Reject",
-  RejectDrop = "RejectDrop",
-  Compatible = "Compatible",
-  Pass = "Pass",
-  Dns = "Dns",
-  Shadowsocks = "Shadowsocks",
-  ShadowsocksR = "ShadowsocksR",
-  Snell = "Snell",
-  Socks5 = "Socks5",
-  Http = "Http",
-  Vmess = "Vmess",
-  Vless = "Vless",
-  Trojan = "Trojan",
-  Hysteria = "Hysteria",
-  Hysteria2 = "Hysteria2",
-  WireGuard = "WireGuard",
-  Tuic = "Tuic",
-  Ssh = "Ssh",
-  Mieru = "Mieru",
-  AnyTLS = "AnyTLS",
-  Relay = "Relay",
-  Selector = "Selector",
-  Fallback = "Fallback",
-  URLTest = "URLTest",
-  LoadBalance = "LoadBalance",
-}
-export interface ProxyProviders {
-  providers: Record<string, ProxyProvider>;
-}
-export interface ProxyProvider {
-  expectedStatus: string;
-  name: string;
-  proxies: Proxy[];
-  testUrl: string;
-  type: string;
-  vehicleType: string;
-  subscriptionInfo: SubscriptionInfo;
-  updatedAt: string;
-}
-export interface SubscriptionInfo {
-  upload: number;
-  download: number;
-  total: number;
-  expire: number;
-}
+import { BaseConfig, Connections, CoreUpdaterChannel, Groups, LogLevel, MihomoVersion, Proxies, Proxy, ProxyDelay, ProxyProvider, ProxyProviders, RuleProviders, Rules } from "./bindings";
+export * from "./bindings";
 export type MihomoGroupDelay = Record<string, number>;
-export interface Proxies {
-  proxies: Record<string, Proxy>;
-}
-export interface ProxyDelay {
-  delay: number;
-  message?: string;
-}
-export interface Rules {
-  rules: Rule[];
-}
-export interface Rule {
-  type: RuleType;
-  payload: string;
-  proxy: string;
-  size: number;
-}
-export declare enum RuleType {
-  Domain = "Domain",
-  DomainSuffix = "DomainSuffix",
-  DomainKeyword = "DomainKeyword",
-  DomainRegex = "DomainRegex",
-  GeoSite = "GeoSite",
-  GeoIP = "GeoIP",
-  SrcGeoIP = "SrcGeoIP",
-  IPASN = "IPASN",
-  SrcIPASN = "SrcIPASN",
-  IPCIDR = "IPCIDR",
-  SrcIPCIDR = "SrcIPCIDR",
-  IPSuffix = "IPSuffix",
-  SrcIPSuffix = "SrcIPSuffix",
-  SrcPort = "SrcPort",
-  DstPort = "DstPort",
-  InPort = "InPort",
-  InUser = "InUser",
-  InName = "InName",
-  InType = "InType",
-  ProcessName = "ProcessName",
-  ProcessPath = "ProcessPath",
-  ProcessNameRegex = "ProcessNameRegex",
-  ProcessPathRegex = "ProcessPathRegex",
-  Match = "Match",
-  RuleSet = "RuleSet",
-  Network = "Network",
-  DSCP = "DSCP",
-  Uid = "Uid",
-  SubRules = "SubRules",
-  AND = "AND",
-  OR = "OR",
-  NOT = "NOT",
-}
-export interface RuleProviders {
-  providers: Record<string, RuleProvider>;
-}
-export interface RuleProvider {
-  behavior: string;
-  format: string;
-  name: string;
-  ruleCount: number;
-  type: string;
-  updatedAt: string;
-  vehicleType: string;
-}
-export interface BaseConfig {
-  port: number;
-  mixedPort: number;
-  socksPort: number;
-  redirPort: number;
-  tproxyPort: number;
-  tun: TunConfig;
-  lanAllowedIps: string[];
-  lanDisallowedIps: string[];
-  allow_lan: boolean;
-  bindAddress: string;
-  inboundTfo: boolean;
-  inboundMptcp: boolean;
-  mode: ClashMode;
-  unifiedDelay: boolean;
-  logLevel: string;
-  ipv6: boolean;
-  interfaceName: string;
-  routingMark: number;
-  geoxUrl: Record<string, string>;
-  geoAutoUpdate: boolean;
-  geoAutoUpdateInterval: number;
-  geodataMode: boolean;
-  geodataLoader: string;
-  geositeMatcher: string;
-  tcpConcurrent: boolean;
-  findProcessMode: string;
-  sniffing: boolean;
-  globalClientFingerprint: string;
-  globalUa: string;
-}
-export interface TunConfig {
-  enable: boolean;
-  device: string;
-  stack: TunStack;
-  dnsHijack: string[];
-  autoRoute: boolean;
-  autoDetectInterface: boolean;
-  mtu: number;
-  gsoMaxSize: number | null;
-  inet4Address: string[];
-  fileDescriptor: number;
-}
-export declare enum TunStack {
-  Mixed = "Mixed",
-  Gvisor = "gVisor",
-  System = "System",
-}
-export declare enum ClashMode {
-  Rule = "rule",
-  Global = "global",
-  Direct = "direct",
-}
-export interface Traffic {
-  up: number;
-  down: number;
-}
-export interface Memory {
-  inuse: number;
-  oslimit: number;
-}
-export interface Log {
-  type: string;
-  payload: string;
-}
 /**
  * 更新控制器地址
  * @param controller 控制器地址, 例如：127.0.0.1:9090
@@ -304,11 +57,7 @@ export declare function getGroupByName(groupName: string): Promise<Proxy>;
  * @param timeout 超时时间（毫秒）
  * @returns 代理组里代理节点的延迟
  */
-export declare function delayGroup(
-  groupName: string,
-  testUrl: string,
-  timeout: number,
-): Promise<MihomoGroupDelay>;
+export declare function delayGroup(groupName: string, testUrl: string, timeout: number): Promise<MihomoGroupDelay>;
 /**
  * 获取所有代理提供者信息
  * @returns 所有代理提供者信息
@@ -319,23 +68,17 @@ export declare function getProxyProviders(): Promise<ProxyProviders>;
  * @param providerName 代理提供者名称
  * @returns 代理提供者信息
  */
-export declare function getProxyProviderByName(
-  providerName: string,
-): Promise<ProxyProvider>;
+export declare function getProxyProviderByName(providerName: string): Promise<ProxyProvider>;
 /**
  * 更新代理提供者信息
  * @param providerName 代理提供者名称
  */
-export declare function updateProxyProvider(
-  providerName: string,
-): Promise<void>;
+export declare function updateProxyProvider(providerName: string): Promise<void>;
 /**
  * 对指定的代理提供者进行健康检查
  * @param providerName 代理提供者名称
  */
-export declare function healthcheckProxyProvider(
-  providerName: string,
-): Promise<void>;
+export declare function healthcheckProxyProvider(providerName: string): Promise<void>;
 /**
  * 对指定代理提供者下的指定节点（非代理组）进行健康检查, 并返回新的延迟信息
  * @param providerName 代理提供者名称
@@ -344,12 +87,7 @@ export declare function healthcheckProxyProvider(
  * @param timeout 超时时间
  * @returns 该代理节点的延迟
  */
-export declare function healthcheckNodeInProvider(
-  providerName: string,
-  proxyName: string,
-  testUrl: string,
-  timeout: number,
-): Promise<ProxyDelay>;
+export declare function healthcheckNodeInProvider(providerName: string, proxyName: string, testUrl: string, timeout: number): Promise<ProxyDelay>;
 /**
  * 获取所有代理信息
  * @returns 所有代理信息
@@ -360,9 +98,7 @@ export declare function getProxies(): Promise<Proxies>;
  * @param proxyName 代理名称
  * @returns 代理信息
  */
-export declare function getProxyByName(
-  proxyName: string,
-): Promise<Proxy | null>;
+export declare function getProxyByName(proxyName: string): Promise<Proxy | null>;
 /**
  * 为指定代理选择节点
  *
@@ -370,10 +106,7 @@ export declare function getProxyByName(
  * @param proxyName 代理组名称
  * @param node 代理节点
  */
-export declare function selectNodeForProxy(
-  proxyName: string,
-  node: string,
-): Promise<void>;
+export declare function selectNodeForProxy(proxyName: string, node: string): Promise<void>;
 /**
  * 指定代理组下不再使用固定的代理节点
  *
@@ -390,11 +123,7 @@ export declare function unfixedProxy(groupName: string): Promise<void>;
  * @param timeout 超时时间
  * @returns 该代理节点的延迟信息
  */
-export declare function delayProxyByName(
-  proxyName: string,
-  testUrl: string,
-  timeout: number,
-): Promise<ProxyDelay>;
+export declare function delayProxyByName(proxyName: string, testUrl: string, timeout: number): Promise<ProxyDelay>;
 /**
  * 获取所有规则信息
  * @returns 所有规则信息
@@ -420,17 +149,12 @@ export declare function getBaseConfig(): Promise<BaseConfig>;
  * @param force 强制更新
  * @param configPath 配置文件路径
  */
-export declare function reloadConfig(
-  force: boolean,
-  configPath: string,
-): Promise<void>;
+export declare function reloadConfig(force: boolean, configPath: string): Promise<void>;
 /**
  * 更改基础配置
  * @param data 基础配置更改后的内容, 例如：{"tun": {"enabled": true}}
  */
-export declare function patchBaseConfig(
-  data: Record<string, any>,
-): Promise<void>;
+export declare function patchBaseConfig(data: Record<string, any>): Promise<void>;
 /**
  * 更新 Geo
  */
@@ -440,9 +164,16 @@ export declare function updateGeo(): Promise<void>;
  */
 export declare function restart(): Promise<void>;
 /**
- * 升级核心
+ * 升级核心，将当前运行中的核心升级到选择的通道的最新版
+ * @param channel 升级通道, 默认 auto
+ *    - release: 稳定版
+ *    - alpha: 测试版
+ *    - auto: 根据当前运行的核心版本自动选择升级通道
+ * @param force 是否强制升级，默认 false
+ *    - false: 若当前版本为最新版，返回当前为最新版的错误，不再执行升级操作, 否则下载最新版，覆盖升级
+ *    - true: 直接下载最新版，强制覆盖升级
  */
-export declare function upgradeCore(): Promise<void>;
+export declare function upgradeCore(channel?: CoreUpdaterChannel, force?: boolean): Promise<void>;
 /**
  * 更新 UI
  */
@@ -456,58 +187,51 @@ export declare function upgradeGeo(): Promise<void>;
  */
 export declare function clearAllWsConnections(): Promise<void>;
 export interface MessageKind<T, D> {
-  type: T;
-  data: D;
+    type: T;
+    data: D;
 }
 export interface CloseFrame {
-  code: number;
-  reason: string;
+    code: number;
+    reason: string;
 }
-export type Message =
-  | MessageKind<"Text", string>
-  | MessageKind<"Binary", number[]>
-  | MessageKind<"Ping", number[]>
-  | MessageKind<"Pong", number[]>
-  | MessageKind<"Close", CloseFrame | null>;
+export type Message = MessageKind<"Text", string> | MessageKind<"Binary", number[]> | MessageKind<"Ping", number[]> | MessageKind<"Pong", number[]> | MessageKind<"Close", CloseFrame | null>;
 export declare class MihomoWebSocket {
-  id: number;
-  private readonly listeners;
-  private static instances;
-  constructor(id: number, listeners: Set<(arg: Message) => void>);
-  /**
-   * 创建一个新的 WebSocket 连接，用于 Mihomo 的流量监控
-   * @returns WebSocket 实例
-   */
-  static connect_traffic(): Promise<MihomoWebSocket>;
-  /**
-   * 创建一个新的 WebSocket 连接，用于 Mihomo 的内存监控
-   * @returns WebSocket 实例
-   */
-  static connect_memory(): Promise<MihomoWebSocket>;
-  /**
-   * 创建一个新的 WebSocket 连接，用于 Mihomo 的连接监控
-   * @returns WebSocket 实例
-   */
-  static connect_connections(): Promise<MihomoWebSocket>;
-  /**
-   * 创建一个新的 WebSocket 连接，用于 Mihomo 的日志监控
-   * @returns WebSocket 实例
-   */
-  static connect_logs(
-    level: "debug" | "info" | "warning" | "error" | "silent",
-  ): Promise<MihomoWebSocket>;
-  /**
-   * 添加处理 WebSocket 连接后接受的数据的回调函数
-   * @param cb 回调函数
-   */
-  addListener(cb: (arg: Message) => void): () => void;
-  /**
-   * 关闭 WebSocket 连接
-   * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认为 0
-   */
-  close(): Promise<void>;
-  /**
-   * 清理全部的 websocket 连接资源
-   */
-  static cleanupAll(): Promise<void>;
+    id: number;
+    private readonly listeners;
+    private static instances;
+    constructor(id: number, listeners: Set<(arg: Message) => void>);
+    /**
+     * 创建一个新的 WebSocket 连接，用于 Mihomo 的流量监控
+     * @returns WebSocket 实例
+     */
+    static connect_traffic(): Promise<MihomoWebSocket>;
+    /**
+     * 创建一个新的 WebSocket 连接，用于 Mihomo 的内存监控
+     * @returns WebSocket 实例
+     */
+    static connect_memory(): Promise<MihomoWebSocket>;
+    /**
+     * 创建一个新的 WebSocket 连接，用于 Mihomo 的连接监控
+     * @returns WebSocket 实例
+     */
+    static connect_connections(): Promise<MihomoWebSocket>;
+    /**
+     * 创建一个新的 WebSocket 连接，用于 Mihomo 的日志监控
+     * @returns WebSocket 实例
+     */
+    static connect_logs(level: LogLevel): Promise<MihomoWebSocket>;
+    /**
+     * 添加处理 WebSocket 连接后接受的数据的回调函数
+     * @param cb 回调函数
+     */
+    addListener(cb: (arg: Message) => void): () => void;
+    /**
+     * 关闭 WebSocket 连接
+     * @param forceTimeout 强制关闭 WebSocket 连接等待的时间，单位: 毫秒, 默认为 0
+     */
+    close(): Promise<void>;
+    /**
+     * 清理全部的 websocket 连接资源
+     */
+    static cleanupAll(): Promise<void>;
 }

@@ -81,7 +81,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
         1000,
       );
     } catch (err: any) {
-      notice("error", err?.message || err.toString());
+      notice("error", err.message || err.toString());
     } finally {
       setChangingCore(false);
     }
@@ -100,7 +100,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
         1000,
       );
     } catch (err: any) {
-      notice("error", err?.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 
@@ -109,7 +109,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
       await restartSidecar();
       notice("success", t(`Clash Core Restarted`), 1000);
     } catch (err: any) {
-      notice("error", err?.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   }, 500);
 
@@ -127,7 +127,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
       if (err.includes("already using latest version")) {
         notice("info", t("Currently on the Latest Version"), 1000);
       } else {
-        notice("error", err?.message || err.toString());
+        notice("error", err.message || err.toString());
       }
     }
   });

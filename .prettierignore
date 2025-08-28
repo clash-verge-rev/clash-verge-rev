@@ -1,2 +1,5 @@
 tauri-plugin-mihomo/permissions
+tauri-plugin-mihomo/dist-js
+tauri-plugin-mihomo/guest-js/bindings
+
 src/routeTree.gen.ts

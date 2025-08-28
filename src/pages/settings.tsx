@@ -14,7 +14,7 @@ const SettingPage = () => {
   const { notice } = useNotice();
 
   const onError = (err: any) => {
-    notice("error", err?.message || err.toString());
+    notice("error", err.message || err.toString());
   };
 
   const openGithubRepo = useLockFn(() => {

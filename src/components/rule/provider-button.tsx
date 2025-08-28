@@ -16,7 +16,7 @@ import { throttle } from "lodash-es";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-import { updateRuleProvider } from "tauri-plugin-mihomo-api";
+import { getBaseConfig, updateRuleProvider } from "tauri-plugin-mihomo-api";
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
@@ -128,7 +128,7 @@ export const ProviderButton = () => {
         }}>
         <div>
           {entries.map(([key, item], index) => {
-            const time = dayjs(item.updatedAt);
+            const time = dayjs(item?.updatedAt);
             const error = errorItems?.includes(key);
             return (
               <div
@@ -145,11 +145,11 @@ export const ProviderButton = () => {
                     )}
                     <p className="text-primary-text text-xl">{key}</p>
                     <TypeSpan sx={{ marginLeft: "8px" }}>
-                      {item.ruleCount}
+                      {item?.ruleCount}
                     </TypeSpan>
                   </div>
-                  <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>
-                  <StyledTypeSpan>{item.behavior}</StyledTypeSpan>
+                  <StyledTypeSpan>{item?.vehicleType}</StyledTypeSpan>
+                  <StyledTypeSpan>{item?.behavior}</StyledTypeSpan>
                   <StyledTypeSpan>
                     {t("Update At")} {time.fromNow()}
                   </StyledTypeSpan>

@@ -75,7 +75,7 @@ export const TestItem = (props: Props) => {
     try {
       onDeleteItem(uid);
     } catch (err: any) {
-      notice("error", err?.message || err.toString());
+      notice("error", err.message || err.toString());
     }
   });
 

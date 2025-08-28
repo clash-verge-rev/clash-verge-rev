@@ -14,6 +14,7 @@ const changeFile = [
   "./archbuild/alpha/PKGBUILD",
   "./archbuild/local_build/PKGBUILD",
   "./archbuild/release/PKGBUILD",
+  "./archbuild/test/PKGBUILD",
 ];
 
 const version = process_argvs[2];

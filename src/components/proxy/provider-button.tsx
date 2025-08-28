@@ -98,13 +98,13 @@ export const ProviderButton = () => {
         onClose={() => setOpen(false)}>
         <div>
           {Object.entries(data || {}).map(([key, item], index) => {
-            const time = dayjs(item.updatedAt);
-            const sub = item.subscriptionInfo;
+            const time = dayjs(item?.updatedAt);
+            const sub = item?.subscriptionInfo;
             const hasSubInfo = !!sub;
-            const upload = sub?.upload || 0;
-            const download = sub?.download || 0;
-            const total = sub?.total || 0;
-            const expire = sub?.expire || 0;
+            const upload = parseInt(sub?.Upload.toString() || "0");
+            const download = parseInt(sub?.Download.toString() || "0");
+            const total = parseInt(sub?.Total.toString() || "0");
+            const expire = parseInt(sub?.Expire.toString() || "0");
             const progress = Math.round(
               ((download + upload) * 100) / (total + 0.1),
             );
@@ -115,9 +115,9 @@ export const ProviderButton = () => {
                 <div className="w-full overflow-hidden pr-4">
                   <div className="flex items-center">
                     <p className="text-primary-text text-xl">{key}</p>
-                    <TypeSpan>{item.proxies.length}</TypeSpan>
+                    <TypeSpan>{item?.proxies.length}</TypeSpan>
                   </div>
-                  <StyledTypeSpan>{item.vehicleType}</StyledTypeSpan>
+                  <StyledTypeSpan>{item?.vehicleType}</StyledTypeSpan>
                   <StyledTypeSpan>
                     {t("Update At")} {time.fromNow()}
                   </StyledTypeSpan>

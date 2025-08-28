@@ -22,7 +22,7 @@ pub enum Error {
     InvalidHeaderName(#[from] tokio_tungstenite::tungstenite::http::header::InvalidHeaderName),
     #[error("The {0} method not supported")]
     MethodNotSupported(String),
-    #[error("Response is failed, {0}")]
+    #[error("Failed Response, {0}")]
     FailedResponse(String),
     #[error(transparent)]
     HttpError(#[from] http::Error),

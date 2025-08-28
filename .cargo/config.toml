@@ -1,0 +1,2 @@
+[env]
+TS_RS_EXPORT_DIR = { value = "tauri-plugin-mihomo/guest-js/bindings/", relative = true }

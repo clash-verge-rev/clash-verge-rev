@@ -1,7 +1,0 @@
-{
-  "recommendations": [
-    "svelte.svelte-vscode",
-    "tauri-apps.tauri-vscode",
-    "rust-lang.rust-analyzer"
-  ]
-}

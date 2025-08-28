@@ -246,7 +246,7 @@ const ProfilePage = () => {
       setTimeout(() => activateSelected(), 2000);
       notice("success", t("Profile Switched"), 1000);
     } catch (err: any) {
-      notice("error", err?.message || err.toString(), 4000);
+      notice("error", err.message || err.toString(), 4000);
     } finally {
       setTimeout(() => {
         setActivatingUids([]);
@@ -263,7 +263,7 @@ const ProfilePage = () => {
       await deleteProfile(uid);
       mutateProfiles();
     } catch (err: any) {
-      notice("error", err?.message || err.toString());
+      notice("error", err.message || err.toString());
     } finally {
       if (isEnable) {
         setActivatingUids([]);

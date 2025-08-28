@@ -11,7 +11,7 @@ export const calcuProxies = async () => {
   // provider name map
   const providerMap = Object.fromEntries(
     Object.entries(providerRecord).flatMap(([provider, item]) =>
-      item.proxies.map((p) => [p.name, { ...p, provider }]),
+      item!.proxies.map((p) => [p.name, { ...p, provider }]),
     ),
   );
 
@@ -34,7 +34,7 @@ export const calcuProxies = async () => {
   let groups: IProxyGroupItem[] = Object.values(proxyRecord).reduce<
     IProxyGroupItem[]
   >((acc, each) => {
-    if (each.name !== "GLOBAL" && each.all) {
+    if (each?.name !== "GLOBAL" && each?.all) {
       acc.push({
         ...each,
         all: each.all!.map((item) => generateItem(item)),
@@ -68,12 +68,12 @@ export const calcuProxies = async () => {
 
   const proxies = [direct, reject].concat(
     Object.values(proxyRecord).filter(
-      (p) => !p.all?.length && p.name !== "DIRECT" && p.name !== "REJECT",
+      (p) => !p?.all?.length && p?.name !== "DIRECT" && p?.name !== "REJECT",
     ),
   );
 
   const _global: IProxyGroupItem = {
-    ...global,
+    ...global!,
     all: global?.all?.map((item) => generateItem(item)) || [],
   };
 
@@ -93,10 +93,10 @@ export const calcuProxyProviders = async () => {
   return Object.fromEntries(
     Object.entries(providers.providers)
       .sort()
-      .filter(([key, item]) => {
-        const type = item.vehicleType.toLowerCase();
-        return type === "http" || type === "file";
-      }),
+      .filter(
+        ([key, item]) =>
+          item?.vehicleType === "HTTP" || item?.vehicleType === "File",
+      ),
   );
 };
 
@@ -105,9 +105,9 @@ export const calcuRuleProviders = async () => {
   return Object.fromEntries(
     Object.entries(providers.providers)
       .sort()
-      .filter(([key, item]) => {
-        const type = item.vehicleType.toLowerCase();
-        return type === "http" || type === "file";
-      }),
+      .filter(
+        ([key, item]) =>
+          item?.vehicleType === "HTTP" || item?.vehicleType === "File",
+      ),
   );
 };

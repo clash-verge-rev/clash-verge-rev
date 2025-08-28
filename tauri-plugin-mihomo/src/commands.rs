@@ -57,7 +57,7 @@ pub(crate) async fn close_connections(state: State<'_, RwLock<Mihomo>>, connecti
 
 // groups
 #[command]
-pub(crate) async fn get_groups(state: State<'_, RwLock<Mihomo>>) -> Result<GroupProxies> {
+pub(crate) async fn get_groups(state: State<'_, RwLock<Mihomo>>) -> Result<Groups> {
     state.read().await.get_groups().await
 }
 
@@ -198,8 +198,12 @@ pub(crate) async fn restart(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
 
 // upgrade
 #[command]
-pub(crate) async fn upgrade_core(state: State<'_, RwLock<Mihomo>>) -> Result<()> {
-    state.read().await.upgrade_core().await
+pub(crate) async fn upgrade_core(
+    state: State<'_, RwLock<Mihomo>>,
+    channel: CoreUpdaterChannel,
+    force: bool,
+) -> Result<()> {
+    state.read().await.upgrade_core(channel, force).await
 }
 
 #[command]

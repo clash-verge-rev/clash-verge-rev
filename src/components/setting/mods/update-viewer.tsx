@@ -85,7 +85,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       });
       await relaunch();
     } catch (err: any) {
-      notice("error", err?.message || err.toString());
+      notice("error", err.message || err.toString());
     } finally {
       setUpdateState(false);
     }
