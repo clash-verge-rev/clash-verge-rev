@@ -2,6 +2,7 @@ use anyhow::Result;
 use parking_lot::Mutex;
 use reqwest::{Client, ClientBuilder, Proxy, RequestBuilder, Response};
 use std::{
+    env,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc, Once,
@@ -244,12 +245,8 @@ impl NetworkManager {
         if let Some(ua) = user_agent {
             builder = builder.user_agent(ua);
         } else {
-            use crate::utils::resolve::VERSION;
-
-            let version = match VERSION.get() {
-                Some(v) => format!("clash-verge/v{v}"),
-                None => "clash-verge/unknown".to_string(),
-            };
+            let verge_version = env!("CARGO_PKG_VERSION");
+            let version = format!("clash-verge/v{verge_version}");
 
             builder = builder.user_agent(version);
         }

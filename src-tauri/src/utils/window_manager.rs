@@ -365,7 +365,7 @@ impl WindowManager {
         use crate::utils::resolve;
 
         // 使用 tokio runtime 阻塞调用 async 函数
-        AsyncHandler::block_on(resolve::create_window(true))
+        AsyncHandler::block_on(resolve::window::create_window(true))
     }
 
     /// 获取详细的窗口状态信息

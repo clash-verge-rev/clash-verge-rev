@@ -10,11 +10,7 @@ mod state;
 mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
-use crate::{
-    core::hotkey,
-    process::AsyncHandler,
-    utils::{resolve, resolve::resolve_scheme, server},
-};
+use crate::{core::hotkey, process::AsyncHandler, utils::server};
 use config::Config;
 use parking_lot::Mutex;
 use tauri::AppHandle;
@@ -28,7 +24,10 @@ use utils::logging::Type;
 
 /// Application initialization helper functions
 mod app_init {
-    use crate::core::handle;
+    use crate::{
+        core::handle,
+        utils::resolve::{self, scheme::resolve_scheme},
+    };
 
     use super::*;
 
@@ -134,16 +133,10 @@ mod app_init {
     }
 
     /// Initialize core components asynchronously
-    pub fn init_core_async(app_handle: &AppHandle) {
-        let app_handle = app_handle.clone();
+    pub fn init_core_async() {
         AsyncHandler::spawn(move || async move {
             logging!(info, Type::Setup, true, "异步执行应用设置...");
-            match timeout(
-                Duration::from_secs(30),
-                resolve::resolve_setup_async(&app_handle),
-            )
-            .await
-            {
+            match timeout(Duration::from_secs(30), resolve::resolve_setup_async()).await {
                 Ok(_) => {
                     logging!(info, Type::Setup, true, "应用设置成功完成");
                 }
@@ -372,7 +365,7 @@ pub fn run() {
             let app_handle = app.handle().clone();
 
             // Initialize core components asynchronously
-            app_init::init_core_async(&app_handle);
+            app_init::init_core_async();
 
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 

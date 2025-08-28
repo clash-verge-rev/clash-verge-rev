@@ -78,7 +78,7 @@ pub async fn run_once_auto_lightweight() {
     }
 }
 
-pub async fn auto_lightweight_mode_init() {
+pub async fn auto_lightweight_mode_init() -> Result<()> {
     if let Some(app_handle) = handle::Handle::global().app_handle() {
         // Check if state is available before accessing it
         if app_handle.try_state::<Mutex<LightWeightState>>().is_none() {
@@ -88,7 +88,7 @@ pub async fn auto_lightweight_mode_init() {
                 true,
                 "LightWeightState 尚未初始化，跳过自动轻量模式初始化"
             );
-            return;
+            return Err(anyhow::anyhow!("LightWeightState not be initialized"));
         }
 
         let is_silent_start =
@@ -114,9 +114,12 @@ pub async fn auto_lightweight_mode_init() {
             // 确保托盘状态更新
             if let Err(e) = Tray::global().update_part().await {
                 log::warn!("Failed to update tray: {e}");
+                return Err(e);
             }
         }
     }
+
+    Ok(())
 }
 
 // 检查是否处于轻量模式
@@ -214,7 +217,7 @@ pub async fn exit_lightweight_mode() {
     handle::Handle::global().set_activation_policy_regular();
 
     // 重置UI就绪状态
-    crate::utils::resolve::reset_ui_ready();
+    crate::utils::resolve::ui::reset_ui_ready();
 
     // 更新托盘显示
     let _tray = crate::core::tray::Tray::global();
