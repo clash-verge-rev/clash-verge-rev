@@ -1,9 +1,6 @@
 use crate::{core::handle, logging, utils::logging::Type};
 use tauri::{Manager, WebviewWindow, Wry};
 
-#[cfg(target_os = "macos")]
-use crate::AppHandleManager;
-
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use scopeguard;
@@ -283,7 +280,7 @@ impl WindowManager {
         #[cfg(target_os = "macos")]
         {
             logging!(info, Type::Window, true, "应用 macOS 特定的激活策略");
-            AppHandleManager::global().set_activation_policy_regular();
+            handle::Handle::global().set_activation_policy_regular();
         }
 
         #[cfg(target_os = "windows")]

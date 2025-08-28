@@ -26,120 +26,10 @@ use tauri_plugin_deep_link::DeepLinkExt;
 use tokio::time::{timeout, Duration};
 use utils::logging::Type;
 
-/// A global singleton handle to the application.
-pub struct AppHandleManager {
-    handle: Mutex<Option<AppHandle>>,
-}
-
-impl AppHandleManager {
-    /// Create a new AppHandleManager instance
-    fn new() -> Self {
-        Self {
-            handle: Mutex::new(None),
-        }
-    }
-
-    /// Initialize the app handle manager with an app handle.
-    pub fn init(&self, handle: AppHandle) {
-        let mut app_handle = self.handle.lock();
-        if app_handle.is_none() {
-            *app_handle = Some(handle);
-            logging!(
-                info,
-                Type::Setup,
-                true,
-                "AppHandleManager initialized with handle"
-            );
-        }
-    }
-
-    /// Get the app handle if it has been initialized.
-    fn get(&self) -> Option<AppHandle> {
-        self.handle.lock().clone()
-    }
-
-    /// Get the app handle, panics if it hasn't been initialized.
-    pub fn get_handle(&self) -> AppHandle {
-        if let Some(handle) = self.get() {
-            handle
-        } else {
-            logging!(
-                error,
-                Type::Setup,
-                "AppHandle not initialized - ensure init() was called first"
-            );
-            std::process::exit(1)
-        }
-    }
-
-    /// Check if the app handle has been initialized.
-    pub fn is_initialized(&self) -> bool {
-        self.handle.lock().is_some()
-    }
-
-    #[cfg(target_os = "macos")]
-    pub fn set_activation_policy(&self, policy: tauri::ActivationPolicy) -> Result<(), String> {
-        let app_handle = self.handle.lock();
-        if let Some(app_handle) = app_handle.as_ref() {
-            app_handle
-                .set_activation_policy(policy)
-                .map_err(|e| e.to_string())
-        } else {
-            Err("AppHandle not initialized".to_string())
-        }
-    }
-
-    pub fn set_activation_policy_regular(&self) {
-        #[cfg(target_os = "macos")]
-        {
-            if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Regular) {
-                logging!(
-                    warn,
-                    Type::Setup,
-                    true,
-                    "Failed to set regular activation policy: {}",
-                    e
-                );
-            }
-        }
-    }
-
-    pub fn set_activation_policy_accessory(&self) {
-        #[cfg(target_os = "macos")]
-        {
-            if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Accessory) {
-                logging!(
-                    warn,
-                    Type::Setup,
-                    true,
-                    "Failed to set accessory activation policy: {}",
-                    e
-                );
-            }
-        }
-    }
-
-    pub fn set_activation_policy_prohibited(&self) {
-        #[cfg(target_os = "macos")]
-        {
-            if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Prohibited) {
-                logging!(
-                    warn,
-                    Type::Setup,
-                    true,
-                    "Failed to set prohibited activation policy: {}",
-                    e
-                );
-            }
-        }
-    }
-}
-
-// Use unified singleton macro
-singleton_with_logging!(AppHandleManager, INSTANCE, "AppHandleManager");
-
 /// Application initialization helper functions
 mod app_init {
+    use crate::core::handle;
+
     use super::*;
 
     /// Initialize singleton monitoring for other instances
@@ -150,8 +40,8 @@ mod app_init {
                 Ok(result) => {
                     if result.is_err() {
                         logging!(info, Type::Setup, true, "检测到已有应用实例运行");
-                        if let Some(app_handle) = AppHandleManager::global().get() {
-                            app_handle.exit(0);
+                        if handle::Handle::global().is_initialized() {
+                            handle::Handle::global().app_handle().unwrap().exit(0);
                         } else {
                             std::process::exit(0);
                         }
@@ -271,9 +161,6 @@ mod app_init {
 
     /// Initialize core components synchronously
     pub async fn init_core_sync(app_handle: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-        logging!(info, Type::Setup, true, "初始化AppHandleManager...");
-        AppHandleManager::global().init(app_handle.clone());
-
         logging!(info, Type::Setup, true, "初始化核心句柄...");
         core::handle::Handle::global().init(app_handle.clone());
 
@@ -509,12 +396,14 @@ pub fn run() {
 
     /// Event handling helper functions
     mod event_handlers {
+        use crate::core::handle;
+
         use super::*;
 
         /// Handle application ready/resumed events
         pub fn handle_ready_resumed(app_handle: &AppHandle) {
             logging!(info, Type::System, true, "应用就绪或恢复");
-            AppHandleManager::global().init(app_handle.clone());
+            handle::Handle::global().init(app_handle.clone());
 
             #[cfg(target_os = "macos")]
             {
@@ -536,11 +425,11 @@ pub fn run() {
                 has_visible_windows
             );
 
-            AppHandleManager::global().init(app_handle.clone());
+            handle::Handle::global().init(app_handle.clone());
 
             if !has_visible_windows {
                 // 当没有可见窗口时，设置为 regular 模式并显示主窗口
-                AppHandleManager::global().set_activation_policy_regular();
+                handle::Handle::global().set_activation_policy_regular();
 
                 logging!(info, Type::System, true, "没有可见窗口，尝试显示主窗口");
 
@@ -560,7 +449,7 @@ pub fn run() {
         /// Handle window close requests
         pub fn handle_window_close(api: &tauri::WindowEvent) {
             #[cfg(target_os = "macos")]
-            AppHandleManager::global().set_activation_policy_accessory();
+            handle::Handle::global().set_activation_policy_accessory();
 
             if core::handle::Handle::global().is_exiting() {
                 return;
