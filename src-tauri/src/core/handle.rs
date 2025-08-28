@@ -294,6 +294,10 @@ impl Handle {
         }
     }
 
+    pub fn is_initialized(&self) -> bool {
+        self.app_handle().is_some()
+    }
+
     /// 获取 AppHandle
     pub fn app_handle(&self) -> Option<AppHandle> {
         self.app_handle.read().clone()
@@ -520,5 +524,56 @@ impl Handle {
 
     pub fn is_exiting(&self) -> bool {
         *self.is_exiting.read()
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl Handle {
+    pub fn set_activation_policy(&self, policy: tauri::ActivationPolicy) -> Result<(), String> {
+        let app_handle = self.app_handle();
+        if let Some(app_handle) = app_handle.as_ref() {
+            app_handle
+                .set_activation_policy(policy)
+                .map_err(|e| e.to_string())
+        } else {
+            Err("AppHandle not initialized".to_string())
+        }
+    }
+
+    pub fn set_activation_policy_regular(&self) {
+        if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Regular) {
+            logging!(
+                warn,
+                Type::Setup,
+                true,
+                "Failed to set regular activation policy: {}",
+                e
+            );
+        }
+    }
+
+    pub fn set_activation_policy_accessory(&self) {
+        if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Accessory) {
+            logging!(
+                warn,
+                Type::Setup,
+                true,
+                "Failed to set accessory activation policy: {}",
+                e
+            );
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn set_activation_policy_prohibited(&self) {
+        if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Prohibited) {
+            logging!(
+                warn,
+                Type::Setup,
+                true,
+                "Failed to set prohibited activation policy: {}",
+                e
+            );
+        }
     }
 }

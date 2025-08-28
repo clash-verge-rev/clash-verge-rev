@@ -1,5 +1,3 @@
-#[cfg(target_os = "macos")]
-use crate::AppHandleManager;
 use crate::{
     config::{Config, PrfItem},
     core::*,
@@ -185,9 +183,7 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     #[cfg(target_os = "macos")]
     {
         if is_silent_start {
-            use crate::AppHandleManager;
-
-            AppHandleManager::global().set_activation_policy_accessory();
+            handle::Handle::global().set_activation_policy_accessory();
         }
     }
     create_window(!is_silent_start).await;
@@ -273,9 +269,7 @@ pub async fn create_window(is_show: bool) -> bool {
                 let _ = window.set_focus();
 
                 #[cfg(target_os = "macos")]
-                {
-                    AppHandleManager::global().set_activation_policy_regular();
-                }
+                handle::Handle::global().set_activation_policy_regular();
             }
             return true;
         }
@@ -432,9 +426,7 @@ pub async fn create_window(is_show: bool) -> bool {
                     let _ = window_clone.set_focus();
                     logging!(info, Type::Window, true, "窗口已立即显示");
                     #[cfg(target_os = "macos")]
-                    {
-                        AppHandleManager::global().set_activation_policy_regular();
-                    }
+                    handle::Handle::global().set_activation_policy_regular();
 
                     let timeout_seconds = if crate::module::lightweight::is_in_lightweight_mode() {
                         3
