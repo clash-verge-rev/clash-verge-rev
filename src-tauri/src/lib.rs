@@ -422,7 +422,7 @@ pub fn run() {
     app_init::init_singleton_check();
 
     // Initialize network manager
-    utils::network::NetworkManager::global().init();
+    utils::network::NetworkManager::new().init();
 
     // Initialize portable flag
     let _ = utils::dirs::init_portable_flag();

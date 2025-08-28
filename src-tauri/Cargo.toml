@@ -78,6 +78,7 @@ dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.1"
 console-subscriber = { version = "0.4.1", optional = true }
 tokio-stream = "0.1.17"
+isahc = { version = "1.7.2", features = ["parking_lot"] }
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
