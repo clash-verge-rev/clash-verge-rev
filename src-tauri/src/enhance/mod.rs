@@ -7,7 +7,7 @@ mod tun;
 
 use self::{chain::*, field::*, merge::*, script::*, seq::*, tun::*};
 use crate::{config::Config, utils::tmpl};
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 use std::collections::{HashMap, HashSet};
 
 type ResultLog = Vec<(String, String)>;
@@ -386,7 +386,9 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
             if dns_path.exists() {
                 if let Ok(dns_yaml) = fs::read_to_string(&dns_path) {
-                    if let Ok(dns_config) = serde_yaml::from_str::<serde_yaml::Mapping>(&dns_yaml) {
+                    if let Ok(dns_config) =
+                        serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+                    {
                         // 处理hosts配置
                         if let Some(hosts_value) = dns_config.get("hosts") {
                             if hosts_value.is_mapping() {

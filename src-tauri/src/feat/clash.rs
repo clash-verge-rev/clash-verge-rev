@@ -6,7 +6,7 @@ use crate::{
     process::AsyncHandler,
     utils::{logging::Type, resolve},
 };
-use serde_yaml::{Mapping, Value};
+use serde_yaml_ng::{Mapping, Value};
 
 /// Restart the Clash core
 pub async fn restart_clash_core() {

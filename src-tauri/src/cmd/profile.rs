@@ -381,7 +381,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 match file_read_result {
                     Ok(Ok(content)) => {
                         let yaml_parse_result = AsyncHandler::spawn_blocking(move || {
-                            serde_yaml::from_str::<serde_yaml::Value>(&content)
+                            serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&content)
                         })
                         .await;
 

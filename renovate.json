@@ -38,5 +38,5 @@
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],
-  "ignoreDeps": ["serde_yaml", "criterion"]
+  "ignoreDeps": ["criterion"]
 }

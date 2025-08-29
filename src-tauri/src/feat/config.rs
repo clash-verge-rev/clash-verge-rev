@@ -6,7 +6,7 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::Result;
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 
 /// Patch Clash configuration
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
