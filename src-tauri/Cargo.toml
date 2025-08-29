@@ -73,7 +73,7 @@ hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
-kode-bridge = "0.2.1-rc1"
+kode-bridge = "0.2.1-rc2"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.1"
 console-subscriber = { version = "0.4.1", optional = true }

@@ -10,7 +10,7 @@ use crate::{
     feat, logging,
     module::lightweight::is_in_lightweight_mode,
     singleton_lazy,
-    utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
+    utils::{dirs::find_target_icons, i18n::t},
     Type,
 };
 
@@ -186,7 +186,11 @@ impl Default for Tray {
 singleton_lazy!(Tray, TRAY, Tray::default);
 
 impl Tray {
-    pub fn init(&self) -> Result<()> {
+    pub async fn init(&self) -> Result<()> {
+        let app_handle = handle::Handle::global()
+            .app_handle()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get app handle for tray initialization"))?;
+        self.create_tray_from_handle(&app_handle).await?;
         Ok(())
     }
 
@@ -396,14 +400,6 @@ impl Tray {
             }
         };
 
-        let version = match VERSION.get() {
-            Some(v) => v,
-            None => {
-                log::warn!(target: "app", "更新托盘提示失败: 版本信息不存在");
-                return Ok(());
-            }
-        };
-
         let verge = Config::verge().await.latest_ref().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -434,6 +430,7 @@ impl Tray {
         let tun_text = t("TUN").await;
         let profile_text = t("Profile").await;
 
+        let version = env!("CARGO_PKG_VERSION");
         if let Some(tray) = app_handle.tray_by_id("main") {
             let _ = tray.set_tooltip(Some(&format!(
                 "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
@@ -459,10 +456,6 @@ impl Tray {
         self.update_tooltip().await?;
         Ok(())
     }
-
-    /// 取消订阅 traffic 数据
-    #[cfg(target_os = "macos")]
-    pub fn unsubscribe_traffic(&self) {}
 
     pub async fn create_tray_from_handle(&self, app_handle: &AppHandle) -> Result<()> {
         log::info!(target: "app", "正在从AppHandle创建系统托盘");
@@ -567,8 +560,7 @@ async fn create_tray_menu(
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
 
-    let unknown_version = String::from("unknown");
-    let version = VERSION.get().unwrap_or(&unknown_version);
+    let version = env!("CARGO_PKG_VERSION");
 
     let hotkeys = Config::verge()
         .await
