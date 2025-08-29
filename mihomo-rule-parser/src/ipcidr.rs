@@ -94,9 +94,9 @@ fn ipv4_prefixes(from: Ipv4Addr, to: Ipv4Addr) -> Vec<Prefix> {
         let mut prefix = 32 - trailing_zeros;
         let (block_start, block_size) = loop {
             // 当前前缀对应的掩码
-            let mask = u32::MAX << (32 - prefix);
+            // let mask = u32::MAX << (32 - prefix);
             // 计算 CIDR 块的网络地址（起始地址）
-            let block_start = from & mask;
+            let block_start = from;
             // 计算 CIDR 块的大小（包含的地址数量）：2^(32-prefix)
             let block_size = 1u32 << (32 - prefix);
             // 计算 CIDR 块的结束地址
@@ -143,17 +143,9 @@ fn ipv6_prefixes(from: Ipv6Addr, to: Ipv6Addr) -> Vec<Prefix> {
         let trailing_zeros = from.trailing_zeros().min(127) as u8;
         let mut prefix = 128 - trailing_zeros;
         let (block_start, block_size) = loop {
-            let mask = u128::MAX << (128 - prefix);
-            let block_start = from & mask;
-
+            // let mask = u128::MAX << (128 - prefix);
+            let block_start = from;
             let block_size = 1u128 << (128 - prefix);
-            // let block_size = match 1u128.checked_shl((128 - prefix) as u32) {
-            //     Some(s) => s,
-            //     None => {
-            //         prefix = 128;
-            //         break (from, 1);
-            //     }
-            // };
             let block_end = match block_start.checked_add(block_size.saturating_sub(1)) {
                 Some(e) => e,
                 None => u128::MAX,
@@ -276,19 +268,24 @@ mod tests {
         let rules_dir = tmp_dir.join("meta-rules-dat");
         let exists = std::fs::exists(&rules_dir)?;
         if exists {
-            // let mut child = Command::new("git")
-            //     .current_dir("meta-rules-dat")
-            //     .args(&["pull", "--force"])
-            //     .spawn()
-            //     .expect("failed to pull rules");
-            // child.wait().expect("command not running");
+            let commands: Vec<Vec<&str>> = vec![vec!["restore", "."], vec!["clean", "-fd"], vec!["pull"]];
+            commands.iter().for_each(|args| {
+                Command::new("git")
+                    .args(args)
+                    .current_dir(&rules_dir)
+                    .spawn()
+                    .expect("failed to spawn command")
+                    .wait()
+                    .expect("command not running");
+            });
         } else {
-            let mut child = Command::new("git")
+            Command::new("git")
                 .args(["clone", "-b", "meta", "https://github.com/MetaCubeX/meta-rules-dat.git"])
                 .current_dir(&tmp_dir)
                 .spawn()
-                .expect("failed to clone rules");
-            child.wait().expect("command not running");
+                .expect("failed to clone rules")
+                .wait()
+                .expect("command not running");
         }
         Ok(rules_dir)
     }

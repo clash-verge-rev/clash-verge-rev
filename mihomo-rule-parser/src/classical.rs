@@ -33,19 +33,24 @@ mod tests {
         let rules_dir = tmp_dir.join("meta-rules-dat");
         let exists = std::fs::exists(&rules_dir)?;
         if exists {
-            // let mut child = Command::new("git")
-            //     .current_dir("meta-rules-dat")
-            //     .args(&["pull", "--force"])
-            //     .spawn()
-            //     .expect("failed to pull rules");
-            // child.wait().expect("command not running");
+            let commands: Vec<Vec<&str>> = vec![vec!["restore", "."], vec!["clean", "-fd"], vec!["pull"]];
+            commands.iter().for_each(|args| {
+                Command::new("git")
+                    .args(args)
+                    .current_dir(&rules_dir)
+                    .spawn()
+                    .expect("failed to spawn command")
+                    .wait()
+                    .expect("command not running");
+            });
         } else {
-            let mut child = Command::new("git")
+            Command::new("git")
                 .args(["clone", "-b", "meta", "https://github.com/MetaCubeX/meta-rules-dat.git"])
                 .current_dir(&tmp_dir)
                 .spawn()
-                .expect("failed to clone rules");
-            child.wait().expect("command not running");
+                .expect("failed to clone rules")
+                .wait()
+                .expect("command not running");
         }
         Ok(rules_dir)
     }

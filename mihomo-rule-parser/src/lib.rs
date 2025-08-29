@@ -130,19 +130,24 @@ mod tests {
         let rules_dir = tmp_dir.join("meta-rules-dat");
         let exists = std::fs::exists(&rules_dir)?;
         if exists {
-            // let mut child = Command::new("git")
-            //     .current_dir("meta-rules-dat")
-            //     .args(&["pull", "--force"])
-            //     .spawn()
-            //     .expect("failed to pull rules");
-            // child.wait().expect("command not running");
+            let commands: Vec<Vec<&str>> = vec![vec!["restore", "."], vec!["clean", "-fd"], vec!["pull"]];
+            commands.iter().for_each(|args| {
+                Command::new("git")
+                    .args(args)
+                    .current_dir(&rules_dir)
+                    .spawn()
+                    .expect("failed to spawn command")
+                    .wait()
+                    .expect("command not running");
+            });
         } else {
-            let mut child = Command::new("git")
+            Command::new("git")
                 .args(["clone", "-b", "meta", "https://github.com/MetaCubeX/meta-rules-dat.git"])
                 .current_dir(&tmp_dir)
                 .spawn()
-                .expect("failed to clone rules");
-            child.wait().expect("command not running");
+                .expect("failed to clone rules")
+                .wait()
+                .expect("command not running");
         }
         Ok(rules_dir)
     }
@@ -303,7 +308,7 @@ mod tests {
         let mrs_dir_path = rules_dir.join("geo/geosite");
         // ipcidr
         // let check_behavior = "ipcidr";
-        // let mrs_dir_path = base_dir.join("geo/geoip");
+        // let mrs_dir_path = rules_dir.join("geo/geoip");
 
         let mrs_dir = std::fs::read_dir(&mrs_dir_path)?;
         let mut mrs_files = Vec::new();
@@ -334,8 +339,11 @@ mod tests {
                 let mihomo_convert_error_file_ = mihomo_convert_error_file.clone();
                 let check_diff_error_file_ = check_diff_error_file.clone();
                 s.spawn(move || {
-                    // let mut err_file = Vec::new();
-                    let output = std::process::Command::new("verge-mihomo")
+                    #[cfg(target_os = "windows")]
+                    let verge_mihomo_path = r"D:\Clash Verge\verge-mihomo.exe";
+                    #[cfg(target_os = "linux")]
+                    let verge_mihomo_path = "verge-mihomo";
+                    let output = std::process::Command::new(verge_mihomo_path)
                         .args([
                             "convert-ruleset",
                             check_behavior,
@@ -347,7 +355,6 @@ mod tests {
 
                     // use rust to convert mrs files to txt files
                     if output.status.success() {
-                        // println!("rust parse file name: {}", file_name);
                         let behavior = match check_behavior {
                             "domain" => RuleBehavior::Domain,
                             "ipcidr" => RuleBehavior::IpCidr,
@@ -375,13 +382,9 @@ mod tests {
             }
         });
         if !mihomo_convert_error_file.lock().unwrap().is_empty() {
-            println!(
-                "\n--------------------- mihomo convert error files (skip use rust to convert) -------------------------"
-            );
+            println!("\n--------------- mihomo convert error files (skip use rust to convert) -------------------");
             println!("{:?}", mihomo_convert_error_file.lock().unwrap());
-            println!(
-                "-----------------------------------------------------------------------------------------------------\n"
-            );
+            println!("-----------------------------------------------------------------------------------------\n");
         }
         if check_diff_error_file.lock().unwrap().is_empty() {
             println!("\n✅ all convert success!!!");
