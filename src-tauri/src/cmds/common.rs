@@ -191,14 +191,7 @@ pub async fn set_tray_visible(app_handle: tauri::AppHandle, visible: bool) -> Ap
 
 #[tauri::command]
 pub fn is_wayland() -> AppResult<bool> {
-    if cfg!(target_os = "linux") {
-        let session_type = std::env::var("XDG_SESSION_TYPE")
-            .unwrap_or("".to_string())
-            .to_lowercase();
-        Ok(session_type == "wayland")
-    } else {
-        Ok(false)
-    }
+    Ok(utils::unix_helper::is_wayland())
 }
 
 #[tauri::command]

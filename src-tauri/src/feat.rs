@@ -374,35 +374,108 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
 
 /// 修改verge的订阅
 /// 一般都是一个个的修改
-pub async fn patch_verge(mut patch: IVerge) -> AppResult<()> {
-    // handle window size when toggle system title bar enable on linux wayland
-    let enable_system_title_bar = patch.enable_system_title_bar;
-    if let Some(system_title_bar) = enable_system_title_bar
-        && cmds::common::is_wayland().unwrap_or(false)
-    {
-        tracing::debug!("calc windows size on linux wayland");
-        let verge_size_position = Config::verge().latest().window_size_position.clone();
-        if let Some(size_position) = verge_size_position {
-            let mut w = size_position[0];
-            let mut h = size_position[1];
-            let x = size_position[2];
-            let y = size_position[3];
-            if system_title_bar {
-                w += 90.;
-                h += 90.;
-            } else {
-                w -= 90.;
-                h -= 90.;
-            }
-            patch.window_size_position = Some(vec![w, h, x, y]);
-        }
-    }
-
+pub async fn patch_verge(patch: IVerge) -> AppResult<()> {
     tracing::debug!("patch verge draft");
     Config::verge().draft().patch_config(patch.clone());
 
     tracing::debug!("resolve config settings");
-    let res = resolve_config_settings(patch).await;
+    let res = {
+        let enable_external_controller = patch.enable_external_controller;
+        let auto_launch = patch.enable_auto_launch;
+        let system_proxy = patch.enable_system_proxy;
+        let pac = patch.proxy_auto_config;
+        let pac_content = patch.pac_file_content;
+        // bypass
+        let proxy_bypass = patch.system_proxy_bypass;
+        let windows_bypass = patch.windows_bypass;
+        let macos_bypass = patch.macos_bypass;
+        let linux_bypass = patch.linux_bypass;
+
+        let language = patch.language;
+        #[cfg(target_os = "macos")]
+        let tray_icon = patch.tray_icon;
+        let common_tray_icon = patch.common_tray_icon;
+        let sysproxy_tray_icon = patch.sysproxy_tray_icon;
+        let tun_tray_icon = patch.tun_tray_icon;
+        let log_level = patch.app_log_level;
+        let enable_tray = patch.enable_tray;
+        let service_mode = patch.enable_service_mode;
+        #[cfg(target_os = "macos")]
+        let show_in_dock = patch.show_in_dock;
+
+        if let Some(enable_external_controller) = enable_external_controller {
+            tracing::info!("enable external controller: {}", enable_external_controller);
+            Config::generate()?;
+            CoreManager::global().run_core().await?;
+        }
+
+        if log_level.is_some() {
+            let log_level = Config::verge().latest().get_log_level();
+            VergeLog::update_log_level(log_level)?;
+        }
+
+        if let Some(service_mode) = service_mode {
+            tracing::debug!("change service mode to {}", service_mode);
+            Config::generate()?;
+            CoreManager::global().run_core().await?;
+        }
+        if auto_launch.is_some() {
+            sysopt::Sysopt::global().update_launch()?;
+        }
+        if system_proxy.is_some()
+            || proxy_bypass.is_some()
+            || windows_bypass.is_some()
+            || macos_bypass.is_some()
+            || linux_bypass.is_some()
+            || pac.is_some()
+            || pac_content.is_some()
+        {
+            tracing::debug!("update system proxy");
+            sysopt::Sysopt::global().update_sysproxy()?;
+        }
+
+        if let Some(true) = patch.enable_proxy_guard {
+            tracing::debug!("enable system proxy guard");
+            sysopt::Sysopt::global().guard_proxy();
+        }
+
+        if let Some(hotkeys) = patch.hotkeys {
+            tracing::debug!("update global hotkeys");
+            hotkey::Hotkey::global().update(hotkeys)?;
+        }
+
+        if let Some(language) = language {
+            tracing::debug!("change app language");
+            rust_i18n::set_locale(&language);
+            handle::Handle::update_systray()?;
+        } else if system_proxy.is_some()
+            || common_tray_icon.is_some()
+            || sysproxy_tray_icon.is_some()
+            || tun_tray_icon.is_some()
+            || service_mode.is_some()
+        {
+            tracing::debug!("update tray cause by some settings changed");
+            handle::Handle::update_systray_part()?;
+        }
+        #[cfg(target_os = "macos")]
+        if tray_icon.is_some() {
+            tracing::debug!("macos tray icon changed, update tray");
+            handle::Handle::update_systray_part()?;
+        }
+
+        if let Some(enable_tray) = enable_tray {
+            tracing::debug!("toggle tray enable: {enable_tray}");
+            handle::Handle::set_tray_visible(enable_tray)?;
+        }
+
+        #[cfg(target_os = "macos")]
+        if let Some(show_in_dock) = show_in_dock {
+            tracing::debug!("toggle show in macos dock, {show_in_dock}");
+            handle::Handle::set_dock_visible(show_in_dock)?;
+        }
+
+        Ok(())
+    };
     match res {
         Ok(()) => {
             Config::verge().apply();
@@ -414,104 +487,6 @@ pub async fn patch_verge(mut patch: IVerge) -> AppResult<()> {
             Err(err)
         }
     }
-}
-
-async fn resolve_config_settings(patch: IVerge) -> AppResult<()> {
-    let enable_external_controller = patch.enable_external_controller;
-    let auto_launch = patch.enable_auto_launch;
-    let system_proxy = patch.enable_system_proxy;
-    let pac = patch.proxy_auto_config;
-    let pac_content = patch.pac_file_content;
-    // bypass
-    let proxy_bypass = patch.system_proxy_bypass;
-    let windows_bypass = patch.windows_bypass;
-    let macos_bypass = patch.macos_bypass;
-    let linux_bypass = patch.linux_bypass;
-
-    let language = patch.language;
-    #[cfg(target_os = "macos")]
-    let tray_icon = patch.tray_icon;
-    let common_tray_icon = patch.common_tray_icon;
-    let sysproxy_tray_icon = patch.sysproxy_tray_icon;
-    let tun_tray_icon = patch.tun_tray_icon;
-    let log_level = patch.app_log_level;
-    let enable_tray = patch.enable_tray;
-    let service_mode = patch.enable_service_mode;
-    #[cfg(target_os = "macos")]
-    let show_in_dock = patch.show_in_dock;
-
-    if let Some(enable_external_controller) = enable_external_controller {
-        tracing::info!("enable external controller: {}", enable_external_controller);
-        Config::generate()?;
-        CoreManager::global().run_core().await?;
-    }
-
-    if log_level.is_some() {
-        let log_level = Config::verge().latest().get_log_level();
-        VergeLog::update_log_level(log_level)?;
-    }
-
-    if let Some(service_mode) = service_mode {
-        tracing::debug!("change service mode to {}", service_mode);
-        Config::generate()?;
-        CoreManager::global().run_core().await?;
-    }
-    if auto_launch.is_some() {
-        sysopt::Sysopt::global().update_launch()?;
-    }
-    if system_proxy.is_some()
-        || proxy_bypass.is_some()
-        || windows_bypass.is_some()
-        || macos_bypass.is_some()
-        || linux_bypass.is_some()
-        || pac.is_some()
-        || pac_content.is_some()
-    {
-        tracing::debug!("update system proxy");
-        sysopt::Sysopt::global().update_sysproxy()?;
-    }
-
-    if let Some(true) = patch.enable_proxy_guard {
-        tracing::debug!("enable system proxy guard");
-        sysopt::Sysopt::global().guard_proxy();
-    }
-
-    if let Some(hotkeys) = patch.hotkeys {
-        tracing::debug!("update global hotkeys");
-        hotkey::Hotkey::global().update(hotkeys)?;
-    }
-
-    if let Some(language) = language {
-        tracing::debug!("change app language");
-        rust_i18n::set_locale(&language);
-        handle::Handle::update_systray()?;
-    } else if system_proxy.is_some()
-        || common_tray_icon.is_some()
-        || sysproxy_tray_icon.is_some()
-        || tun_tray_icon.is_some()
-        || service_mode.is_some()
-    {
-        tracing::debug!("update tray cause by some settings changed");
-        handle::Handle::update_systray_part()?;
-    }
-    #[cfg(target_os = "macos")]
-    if tray_icon.is_some() {
-        tracing::debug!("macos tray icon changed, update tray");
-        handle::Handle::update_systray_part()?;
-    }
-
-    if let Some(enable_tray) = enable_tray {
-        tracing::debug!("toggle tray enable: {enable_tray}");
-        handle::Handle::set_tray_visible(enable_tray)?;
-    }
-
-    #[cfg(target_os = "macos")]
-    if let Some(show_in_dock) = show_in_dock {
-        tracing::debug!("toggle show in macos dock, {show_in_dock}");
-        handle::Handle::set_dock_visible(show_in_dock)?;
-    }
-
-    Ok(())
 }
 
 /// 更新某个profile

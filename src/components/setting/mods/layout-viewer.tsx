@@ -2,13 +2,7 @@ import { BaseDialog, DialogRef, SwitchLovely } from "@/components/base";
 import { useNotice } from "@/components/base/notifice";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { useVerge } from "@/hooks/use-verge";
-import {
-  copyIconFile,
-  getAppDir,
-  isWayland,
-  restartApp,
-} from "@/services/cmds";
-import { sleep } from "@/utils";
+import { copyIconFile, getAppDir } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
 import { InfoRounded } from "@mui/icons-material";
 import {
@@ -45,12 +39,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const [sysproxyIcon, setSysproxyIcon] = useState("");
   const [tunIcon, setTunIcon] = useState("");
   const { enable_system_title_bar, enable_keep_ui_active } = verge || {};
-  const [wayland, setWayland] = useState(false);
 
   useEffect(() => {
-    isWayland().then((wayland) => {
-      setWayland(wayland);
-    });
     initIconPath();
   }, []);
 
@@ -108,18 +98,6 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               primary={
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <span>{t("System Title Bar")}</span>
-                  {wayland && (
-                    <Tooltip
-                      title={t("Restart Application to Apply Modifications")}
-                      placement="top">
-                      <IconButton color="inherit" size="small">
-                        <InfoRounded
-                          fontSize="inherit"
-                          style={{ cursor: "pointer", opacity: 0.75 }}
-                        />
-                      </IconButton>
-                    </Tooltip>
-                  )}
                 </Box>
               }
             />
@@ -131,13 +109,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
               onChange={(e) => onChangeData({ enable_system_title_bar: e })}
               onGuard={async (e) => {
                 await patchVerge({ enable_system_title_bar: e });
-                if (await isWayland()) {
-                  notice("info", t("App Will Be Restarted Soon"));
-                  await sleep(1000);
-                  restartApp();
-                } else {
-                  await appWindow.setDecorations(e);
-                }
+                await appWindow.setDecorations(e);
               }}>
               <SwitchLovely edge="end" />
             </GuardState>

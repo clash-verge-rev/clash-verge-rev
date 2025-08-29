@@ -185,11 +185,7 @@ pub fn create_window() {
         .shadow(true)
         .build();
     #[cfg(target_os = "linux")]
-    let window = {
-        use crate::cmds;
-        let visible = _decoration && cmds::common::is_wayland().unwrap_or(false);
-        builder.visible(visible).shadow(true).transparent(true).build()
-    };
+    let window = builder.visible(false).shadow(true).transparent(true).build();
 
     match window {
         Ok(win) => {
@@ -231,7 +227,13 @@ pub fn save_window_size_position(app_handle: &AppHandle) -> AppResult<()> {
         let is_maximized = win.is_maximized()?;
         verge.window_is_maximized = Some(is_maximized);
         if !is_maximized && size.width >= 600.0 && size.height >= 550.0 {
-            verge.window_size_position = Some(vec![size.width, size.height, pos.x, pos.y]);
+            let (width, height) =
+                if utils::unix_helper::is_wayland() && verge.enable_system_title_bar.unwrap_or_default() {
+                    (size.width + 90., size.height + 90.)
+                } else {
+                    (size.width, size.height)
+                };
+            verge.window_size_position = Some(vec![width, height, pos.x, pos.y]);
         }
     }
     verge.save_file()?;

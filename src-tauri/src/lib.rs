@@ -43,6 +43,12 @@ pub fn run() -> AppResult<()> {
         return Ok(());
     }
 
+    if utils::unix_helper::is_wayland() {
+        unsafe {
+            std::env::set_var("GDK_BACKEND", "x11");
+        }
+    }
+
     // 初始化目录
     init::init_dirs_and_config()?;
 
