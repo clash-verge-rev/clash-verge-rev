@@ -1,6 +1,6 @@
 use super::{Draft, IClashTemp, IProfiles, IRuntime, IVerge};
 use crate::{
-    config::{profiles::profiles_append_item_safe, PrfItem},
+    config::{profiles_append_item_safe, PrfItem},
     core::{handle, CoreManager},
     enhance, logging,
     process::AsyncHandler,

@@ -4,7 +4,6 @@ use crate::utils::{
     tmpl,
 };
 use anyhow::{bail, Context, Result};
-use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use std::{fs, time::Duration};
@@ -266,7 +265,7 @@ impl PrfItem {
         };
 
         // 使用网络管理器发送请求
-        let resp = match NetworkManager::global()
+        let resp = match NetworkManager::new()
             .get_with_interrupt(
                 url,
                 proxy_type,
@@ -284,7 +283,7 @@ impl PrfItem {
         };
 
         let status_code = resp.status();
-        if !StatusCode::is_success(&status_code) {
+        if !status_code.is_success() {
             bail!("failed to fetch remote profile with status {status_code}")
         }
 
@@ -350,7 +349,7 @@ impl PrfItem {
         let uid = help::get_uid("R");
         let file = format!("{uid}.yaml");
         let name = name.unwrap_or(filename.unwrap_or("Remote File".into()));
-        let data = resp.text_with_charset("utf-8").await?;
+        let data = resp.text_with_charset()?;
 
         // process the charset "UTF-8 with BOM"
         let data = data.trim_start_matches('\u{feff}');

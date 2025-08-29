@@ -2,10 +2,10 @@ use super::CmdResult;
 use crate::{
     config::{
         profiles::{
-            profiles_append_item_safe, profiles_delete_item_safe, profiles_patch_item_safe,
-            profiles_reorder_safe, profiles_save_file_safe,
+            profiles_append_item_with_filedata_safe, profiles_delete_item_safe,
+            profiles_patch_item_safe, profiles_reorder_safe, profiles_save_file_safe,
         },
-        Config, IProfiles, PrfItem, PrfOption,
+        profiles_append_item_safe, Config, IProfiles, PrfItem, PrfOption,
     },
     core::{handle, timer::Timer, tray::Tray, CoreManager},
     feat, logging,
@@ -225,8 +225,8 @@ pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
 /// 创建新的profile
 /// 创建一个新的配置文件
 #[tauri::command]
-pub async fn create_profile(item: PrfItem, _file_data: Option<String>) -> CmdResult {
-    match profiles_append_item_safe(item).await {
+pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
+    match profiles_append_item_with_filedata_safe(item, file_data).await {
         Ok(_) => Ok(()),
         Err(err) => match err.to_string().as_str() {
             "the file already exists" => Err("the file already exists".into()),
