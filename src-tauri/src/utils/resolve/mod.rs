@@ -1,4 +1,5 @@
 use tauri::AppHandle;
+use tokio::join;
 
 use crate::{
     config::Config,
@@ -28,26 +29,39 @@ pub fn resolve_setup_async(app_handle: AppHandle) {
     init_handle(app_handle);
 
     AsyncHandler::spawn_blocking(|| {
-        AsyncHandler::block_on(async {
-            println!("Starting blocking async tasks...");
+        AsyncHandler::spawn(|| async {
             init_resources().await;
             init_work_config().await;
             init_scheme();
             init_startup_script().await;
             init_embed_server();
+        })
+    });
 
-            init_timer().await;
-            init_hotkey().await;
-            init_auto_lightweight_mode().await;
+    AsyncHandler::spawn_blocking(|| {
+        AsyncHandler::block_on(async {
+            println!("Starting blocking async tasks...");
 
-            init_verge_config().await;
-            init_core_manager().await;
-            init_system_proxy().await;
-            init_system_proxy_guard();
+            let part2 = async {
+                join!(init_timer(), init_hotkey(), init_auto_lightweight_mode());
+            };
 
-            init_window().await;
-            init_tray().await;
-            refresh_tray_menu().await;
+            let part3 = async {
+                join!(
+                    init_verge_config(),
+                    init_core_manager(),
+                    init_system_proxy(),
+                    async {
+                        init_system_proxy_guard();
+                    },
+                    init_window(),
+                    init_tray(),
+                    refresh_tray_menu()
+                );
+            };
+
+            // 并发执行第二、三部分
+            join!(part2, part3);
         })
     });
 
