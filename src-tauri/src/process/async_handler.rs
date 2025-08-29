@@ -50,7 +50,7 @@ impl AsyncHandler {
     where
         F: ?Sized,
     {
-        const TRACE_SPECIAL_SIZE: [usize; 2] = [4, 24];
+        const TRACE_SPECIAL_SIZE: [usize; 3] = [0, 4, 24];
         let size = std::mem::size_of_val(f);
         if TRACE_SPECIAL_SIZE.contains(&size) {
             return;
