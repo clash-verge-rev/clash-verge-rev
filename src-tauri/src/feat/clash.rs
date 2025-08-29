@@ -7,7 +7,6 @@ use crate::{
     utils::{logging::Type, resolve},
 };
 use serde_yaml::{Mapping, Value};
-use tauri::Manager;
 
 /// Restart the Clash core
 pub async fn restart_clash_core() {
@@ -31,7 +30,7 @@ pub async fn restart_app() {
     handle::Handle::global()
         .app_handle()
         .map(|app_handle| {
-            tauri::process::restart(&app_handle.env());
+            app_handle.restart();
         })
         .unwrap_or_else(|| {
             logging_error!(
@@ -123,7 +122,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
 
     let start = Instant::now();
 
-    let response = NetworkManager::global()
+    let response = NetworkManager::new()
         .get_with_interrupt(&url, proxy_type, Some(10), user_agent, false)
         .await;
 

@@ -1,5 +1,3 @@
-#[cfg(target_os = "macos")]
-use crate::AppHandleManager;
 use crate::{
     config::{Config, PrfItem},
     core::*,
@@ -138,18 +136,6 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     logging_error!(Type::Config, true, Config::init_config().await);
     logging!(info, Type::Config, true, "配置初始化完成");
 
-    // 启动时清理冗余的 Profile 文件
-    logging!(info, Type::Setup, true, "开始清理冗余的Profile文件...");
-
-    match Config::profiles().await.latest_ref().auto_cleanup() {
-        Ok(_) => {
-            logging!(info, Type::Setup, true, "启动时Profile文件清理完成");
-        }
-        Err(e) => {
-            logging!(warn, Type::Setup, true, "启动时清理Profile文件失败: {}", e);
-        }
-    }
-
     logging!(trace, Type::Core, true, "启动核心管理器...");
     logging_error!(Type::Core, true, CoreManager::global().init().await);
 
@@ -197,9 +183,7 @@ pub async fn resolve_setup_async(app_handle: &AppHandle) {
     #[cfg(target_os = "macos")]
     {
         if is_silent_start {
-            use crate::AppHandleManager;
-
-            AppHandleManager::global().set_activation_policy_accessory();
+            handle::Handle::global().set_activation_policy_accessory();
         }
     }
     create_window(!is_silent_start).await;
@@ -285,9 +269,7 @@ pub async fn create_window(is_show: bool) -> bool {
                 let _ = window.set_focus();
 
                 #[cfg(target_os = "macos")]
-                {
-                    AppHandleManager::global().set_activation_policy_regular();
-                }
+                handle::Handle::global().set_activation_policy_regular();
             }
             return true;
         }
@@ -444,9 +426,7 @@ pub async fn create_window(is_show: bool) -> bool {
                     let _ = window_clone.set_focus();
                     logging!(info, Type::Window, true, "窗口已立即显示");
                     #[cfg(target_os = "macos")]
-                    {
-                        AppHandleManager::global().set_activation_policy_regular();
-                    }
+                    handle::Handle::global().set_activation_policy_regular();
 
                     let timeout_seconds = if crate::module::lightweight::is_in_lightweight_mode() {
                         3

@@ -1,5 +1,3 @@
-#[cfg(target_os = "macos")]
-use crate::AppHandleManager;
 use crate::{
     config::Config,
     core::{handle, sysopt, CoreManager},
@@ -259,5 +257,5 @@ pub async fn hide() {
             let _ = window.hide();
         }
     }
-    AppHandleManager::global().set_activation_policy_accessory();
+    handle::Handle::global().set_activation_policy_accessory();
 }

@@ -8,7 +8,6 @@ use tauri::{async_runtime, async_runtime::JoinHandle};
 pub struct AsyncHandler;
 
 impl AsyncHandler {
-    #[allow(dead_code)]
     pub fn handle() -> async_runtime::RuntimeHandle {
         async_runtime::handle()
     }

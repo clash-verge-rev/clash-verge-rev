@@ -9,8 +9,6 @@ use crate::{
 
 #[cfg(target_os = "macos")]
 use crate::logging_error;
-#[cfg(target_os = "macos")]
-use crate::AppHandleManager;
 
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
@@ -173,7 +171,7 @@ pub async fn entry_lightweight_mode() {
             let _ = webview.destroy();
         }
         #[cfg(target_os = "macos")]
-        AppHandleManager::global().set_activation_policy_accessory();
+        handle::Handle::global().set_activation_policy_accessory();
     }
     set_lightweight_mode(true).await;
     let _ = cancel_light_weight_timer();
@@ -213,7 +211,7 @@ pub async fn exit_lightweight_mode() {
 
     // macOS激活策略
     #[cfg(target_os = "macos")]
-    AppHandleManager::global().set_activation_policy_regular();
+    handle::Handle::global().set_activation_policy_regular();
 
     // 重置UI就绪状态
     crate::utils::resolve::reset_ui_ready();

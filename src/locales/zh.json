@@ -210,6 +210,8 @@
   "Reset to Default": "重置为默认值",
   "Tun Mode Info": "TUN（虚拟网卡）模式接管系统所有流量，启用时无须打开系统代理",
   "TUN requires Service Mode or Admin Mode": "TUN 模式需要安装服务模式或管理员模式",
+  "TUN Mode automatically disabled due to service unavailable": "由于服务不可用，TUN 模式已自动关闭",
+  "Failed to disable TUN Mode automatically": "自动关闭 TUN 模式失败",
   "System Proxy Enabled": "系统代理已启用，您的应用将通过代理访问网络",
   "System Proxy Disabled": "系统代理已关闭，建议大多数用户打开此选项",
   "TUN Mode Enabled": "TUN 模式已启用，应用将通过虚拟网卡访问网络",
