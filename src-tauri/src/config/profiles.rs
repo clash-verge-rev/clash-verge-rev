@@ -740,6 +740,22 @@ impl IProfiles {
 // 特殊的Send-safe helper函数，完全避免跨await持有guard
 use crate::config::Config;
 
+pub async fn profiles_append_item_with_filedata_safe(
+    item: PrfItem,
+    file_data: Option<String>,
+) -> Result<()> {
+    AsyncHandler::spawn_blocking(move || {
+        AsyncHandler::handle().block_on(async {
+            let item = PrfItem::from(item, file_data).await?;
+            let profiles = Config::profiles().await;
+            let mut profiles_guard = profiles.data_mut();
+            profiles_guard.append_item(item).await
+        })
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+}
+
 pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
     AsyncHandler::spawn_blocking(move || {
         AsyncHandler::handle().block_on(async {

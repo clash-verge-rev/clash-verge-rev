@@ -40,8 +40,8 @@ mod app_init {
                 Ok(result) => {
                     if result.is_err() {
                         logging!(info, Type::Setup, true, "检测到已有应用实例运行");
-                        if handle::Handle::global().is_initialized() {
-                            handle::Handle::global().app_handle().unwrap().exit(0);
+                        if let Some(app_handle) = handle::Handle::global().app_handle() {
+                            app_handle.exit(0);
                         } else {
                             std::process::exit(0);
                         }
@@ -309,7 +309,7 @@ pub fn run() {
     app_init::init_singleton_check();
 
     // Initialize network manager
-    utils::network::NetworkManager::global().init();
+    utils::network::NetworkManager::new().init();
 
     // Initialize portable flag
     let _ = utils::dirs::init_portable_flag();
