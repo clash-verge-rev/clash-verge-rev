@@ -88,7 +88,7 @@ pub async fn auto_lightweight_mode_init() -> Result<()> {
                 true,
                 "LightWeightState 尚未初始化，跳过自动轻量模式初始化"
             );
-            return Err(anyhow::anyhow!("LightWeightState not be initialized"));
+            return Err(anyhow::anyhow!("LightWeightState has not been initialized"));
         }
 
         let is_silent_start =
