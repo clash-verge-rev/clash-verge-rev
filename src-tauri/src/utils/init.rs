@@ -236,7 +236,10 @@ async fn init_dns_config() -> Result<()> {
     // 获取默认DNS和host配置
     let default_dns_config = serde_yaml_ng::Mapping::from_iter([
         ("dns".into(), Value::Mapping(dns_config)),
-        ("hosts".into(), Value::Mapping(serde_yaml_ng::Mapping::new())),
+        (
+            "hosts".into(),
+            Value::Mapping(serde_yaml_ng::Mapping::new()),
+        ),
     ]);
 
     // 检查DNS配置文件是否存在
