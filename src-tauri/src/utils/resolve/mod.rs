@@ -15,7 +15,12 @@ pub mod ui;
 pub mod window;
 pub mod window_script;
 
-pub fn resolve_setup_async(app_handle: AppHandle) {
+pub fn resolve_setup_sync(app_handle: AppHandle) {
+    init_handle(app_handle);
+    init_scheme();
+    init_embed_server();
+}
+pub fn resolve_setup_async() {
     let start_time = std::time::Instant::now();
     logging!(
         info,
@@ -24,10 +29,6 @@ pub fn resolve_setup_async(app_handle: AppHandle) {
         "开始执行异步设置任务... 线程ID: {:?}",
         std::thread::current().id()
     );
-
-    init_handle(app_handle);
-    init_scheme();
-    init_embed_server();
 
     AsyncHandler::spawn_blocking(|| async {
         init_resources().await;
