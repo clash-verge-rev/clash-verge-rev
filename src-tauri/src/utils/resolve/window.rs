@@ -261,7 +261,9 @@ pub async fn create_window(is_show: bool) -> bool {
     }
 
     // 检查 app_handle 是否存在
+    if handle::Handle::global().app_handle().is_none() {
         logging!(error, Type::Window, true, "No window found in app_handle");
+        return false;
     }
 
     // 获取窗口创建锁
