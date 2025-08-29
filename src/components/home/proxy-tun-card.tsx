@@ -232,6 +232,7 @@ export const ProxyTunCard: FC = () => {
         <ProxyControlSwitches
           onError={handleError}
           label={activeTab === "system" ? t("System Proxy") : t("Tun Mode")}
+          noRightPadding={true}
         />
       </Box>
     </Box>

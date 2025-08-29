@@ -210,6 +210,8 @@
   "Reset to Default": "Reset to Default",
   "Tun Mode Info": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
   "TUN requires Service Mode or Admin Mode": "TUN requires Service Mode or Admin Mode",
+  "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
+  "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "System Proxy Enabled": "System proxy is enabled, your applications will access the network through the proxy",
   "System Proxy Disabled": "System proxy is disabled, it is recommended for most users to turn on this option",
   "TUN Mode Enabled": "TUN mode is enabled, applications will access the network through the virtual network card",

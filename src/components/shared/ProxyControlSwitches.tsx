@@ -1,10 +1,12 @@
-import { useRef } from "react";
+import React, { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   SettingsRounded,
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
   BuildRounded,
+  DeleteForeverRounded,
+  WarningRounded,
 } from "@mui/icons-material";
 import {
   Box,
@@ -23,17 +25,24 @@ import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
+import { uninstallService, restartCore, stopCore } from "@/services/cmds";
+import { useLockFn } from "ahooks";
 
 interface ProxySwitchProps {
   label?: string;
   onError?: (err: Error) => void;
+  noRightPadding?: boolean;
 }
 
 /**
  * 可复用的代理控制开关组件
  * 包含 Tun Mode 和 System Proxy 的开关功能
  */
-const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
+const ProxyControlSwitches = ({
+  label,
+  onError,
+  noRightPadding = false,
+}: ProxySwitchProps) => {
   const { t } = useTranslation();
   const { verge, mutateVerge, patchVerge } = useVerge();
   const theme = useTheme();
@@ -42,7 +51,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const { actualState: systemProxyActualState, toggleSystemProxy } =
     useSystemProxyState();
 
-  const { isAdminMode, isServiceMode } = useSystemState();
+  const { isAdminMode, isServiceMode, mutateRunningMode } = useSystemState();
 
   const isTunAvailable = isServiceMode || isAdminMode;
 
@@ -55,7 +64,10 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   const isSystemProxyMode = label === t("System Proxy") || !label;
   const isTunMode = label === t("Tun Mode");
 
-  const onSwitchFormat = (_e: any, value: boolean) => value;
+  const onSwitchFormat = (
+    _e: React.ChangeEvent<HTMLInputElement>,
+    value: boolean,
+  ) => value;
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);
   };
@@ -63,8 +75,31 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
   // 安装系统服务
   const onInstallService = installServiceAndRestartCore;
 
+  // 卸载系统服务
+  const onUninstallService = useLockFn(async () => {
+    try {
+      showNotice("info", t("Stopping Core..."));
+      await stopCore();
+      showNotice("info", t("Uninstalling Service..."));
+      await uninstallService();
+      showNotice("success", t("Service Uninstalled Successfully"));
+      showNotice("info", t("Restarting Core..."));
+      await restartCore();
+      await mutateRunningMode();
+    } catch (err: unknown) {
+      showNotice("error", (err as Error).message || err?.toString());
+      try {
+        showNotice("info", t("Try running core as Sidecar..."));
+        await restartCore();
+        await mutateRunningMode();
+      } catch (e: unknown) {
+        showNotice("error", (e as Error)?.message || e?.toString());
+      }
+    }
+  });
+
   return (
-    <Box>
+    <Box sx={{ width: "100%" }}>
       {label && (
         <Box
           sx={{
@@ -86,6 +121,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
             alignItems: "center",
             justifyContent: "space-between",
             p: 1,
+            pr: noRightPadding ? 1 : 2,
             borderRadius: 1.5,
             bgcolor: enable_system_proxy
               ? alpha(theme.palette.success.main, 0.07)
@@ -111,12 +147,6 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
               >
                 {t("System Proxy")}
               </Typography>
-              {/*               <Typography variant="caption" color="text.secondary">
-                {sysproxy?.enable
-                  ? t("Proxy is active")
-                  : t("Enable this for most users")
-                }
-              </Typography> */}
             </Box>
           </Box>
 
@@ -155,6 +185,7 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
             alignItems: "center",
             justifyContent: "space-between",
             p: 1,
+            pr: noRightPadding ? 1 : 2,
             borderRadius: 1.5,
             bgcolor: enable_tun_mode
               ? alpha(theme.palette.success.main, 0.07)
@@ -182,6 +213,15 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
                 {t("Tun Mode")}
               </Typography>
             </Box>
+
+            {!isTunAvailable && (
+              <Tooltip
+                title={t("TUN requires Service Mode or Admin Mode")}
+                arrow
+              >
+                <WarningRounded sx={{ color: "warning.main", ml: 1 }} />
+              </Tooltip>
+            )}
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -195,6 +235,19 @@ const ProxyControlSwitches = ({ label, onError }: ProxySwitchProps) => {
                   sx={{ mr: 1, minWidth: "32px", p: "4px" }}
                 >
                   <BuildRounded fontSize="small" />
+                </Button>
+              </Tooltip>
+            )}
+
+            {isServiceMode && (
+              <Tooltip title={t("Uninstall Service")} arrow>
+                <Button
+                  color="secondary"
+                  size="small"
+                  onClick={onUninstallService}
+                  sx={{ mr: 1, minWidth: "32px", p: "4px" }}
+                >
+                  <DeleteForeverRounded fontSize="small" />
                 </Button>
               </Tooltip>
             )}
