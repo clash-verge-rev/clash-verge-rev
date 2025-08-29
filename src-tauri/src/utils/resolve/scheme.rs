@@ -2,13 +2,7 @@ use anyhow::{bail, Result};
 use percent_encoding::percent_decode_str;
 use tauri::Url;
 
-use crate::{
-    config::PrfItem,
-    core::handle,
-    logging,
-    utils::{logging::Type, resolve::window::create_window},
-    wrap_err,
-};
+use crate::{config::PrfItem, core::handle, logging, utils::logging::Type, wrap_err};
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
     log::info!(target:"app", "received deep link: {param}");
@@ -50,8 +44,7 @@ pub async fn resolve_scheme(param: String) -> Result<()> {
         match url_param {
             Some(url) => {
                 log::info!(target:"app", "decoded subscription url: {url}");
-
-                create_window(false).await;
+                // create_window(false).await;
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
                     Ok(item) => {
                         let uid = match item.uid.clone() {

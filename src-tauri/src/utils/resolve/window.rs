@@ -63,6 +63,8 @@ pub async fn create_window(is_show: bool) -> bool {
             }
             return true;
         }
+    } else {
+        println!("fuck no window");
     }
 
     let creating_lock = get_window_creating_lock();

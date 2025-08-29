@@ -1,6 +1,9 @@
+use anyhow::Result;
+use tauri::AppHandle;
+
 use crate::{
     config::Config,
-    core::{hotkey::Hotkey, sysopt, tray::Tray, CoreManager, Timer},
+    core::{handle, hotkey::Hotkey, sysopt, tray::Tray, CoreManager, Timer},
     logging, logging_error,
     module::lightweight::auto_lightweight_mode_init,
     process::AsyncHandler,
@@ -23,33 +26,35 @@ pub async fn resolve_setup_async() {
         std::thread::current().id()
     );
 
-    AsyncHandler::spawn_blocking(|| async {
-        init_scheme();
-        init_startup_script().await;
-        init_embed_server();
-    });
+    // AsyncHandler::spawn_blocking(|| async {
+    init_work_config().await;
+    init_resources().await;
+    init_scheme();
+    init_startup_script().await;
+    init_embed_server();
+    // });
 
-    AsyncHandler::spawn_blocking(|| async {
-        init_config().await;
-        init_core_manager().await;
-        init_tray().await;
-    });
+    // AsyncHandler::spawn_blocking(|| async {
+    init_verge_config().await;
+    init_core_manager().await;
+    init_tray().await;
+    // });
 
-    AsyncHandler::spawn_blocking(|| async {
-        init_system_proxy().await;
-        init_system_proxy_guard().await;
-    });
+    // AsyncHandler::spawn_blocking(|| async {
+    init_system_proxy().await;
+    init_system_proxy_guard().await;
+    // });
 
-    AsyncHandler::spawn_blocking(|| async {
-        init_timer().await;
-        init_auto_lightweight_mode().await;
-    });
+    // AsyncHandler::spawn_blocking(|| async {
+    init_timer().await;
+    init_auto_lightweight_mode().await;
+    // });
 
-    AsyncHandler::spawn_blocking(|| async {
-        init_hotkey().await;
-        init_window().await;
-        refresh_tray_menu().await;
-    });
+    // AsyncHandler::spawn_blocking(|| async {
+    init_hotkey().await;
+    init_window().await;
+    refresh_tray_menu().await;
+    // });
 
     let elapsed = start_time.elapsed();
     logging!(
@@ -93,6 +98,12 @@ pub async fn resolve_reset_async() {
     todo!()
 }
 
+pub fn init_handle(app_handle: AppHandle) -> Result<()> {
+    logging!(info, Type::Setup, true, "Initializing app handle...");
+    handle::Handle::global().init(app_handle);
+    Ok(())
+}
+
 pub(super) fn init_scheme() {
     logging!(info, Type::Setup, true, "Initializing custom URL scheme");
     logging_error!(Type::Setup, true, init::init_scheme());
@@ -101,6 +112,10 @@ pub(super) fn init_scheme() {
 pub(super) fn init_embed_server() {
     logging!(info, Type::Setup, true, "Initializing embedded server...");
     server::embed_server();
+}
+pub(super) async fn init_resources() {
+    logging!(info, Type::Setup, true, "Initializing resources...");
+    logging_error!(Type::Setup, true, init::init_resources().await);
 }
 
 pub(super) async fn init_startup_script() {
@@ -128,13 +143,28 @@ pub(super) async fn init_auto_lightweight_mode() {
     logging_error!(Type::Setup, true, auto_lightweight_mode_init().await);
 }
 
+pub async fn init_work_config() {
+    logging!(
+        info,
+        Type::Setup,
+        true,
+        "Initializing work configuration..."
+    );
+    logging_error!(Type::Setup, true, init::init_config().await);
+}
+
 pub(super) async fn init_tray() {
     logging!(info, Type::Setup, true, "Initializing system tray...");
     logging_error!(Type::Setup, true, Tray::global().init().await);
 }
 
-pub(super) async fn init_config() {
-    logging!(info, Type::Setup, true, "Initializing configuration...");
+pub(super) async fn init_verge_config() {
+    logging!(
+        info,
+        Type::Setup,
+        true,
+        "Initializing verge configuration..."
+    );
     logging_error!(Type::Setup, true, Config::init_config().await);
 }
 

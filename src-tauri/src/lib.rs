@@ -26,7 +26,7 @@ use utils::logging::Type;
 mod app_init {
     use crate::{
         core::handle,
-        utils::resolve::{self, scheme::resolve_scheme},
+        utils::resolve::{self, init_handle, scheme::resolve_scheme},
     };
 
     use super::*;
@@ -133,38 +133,13 @@ mod app_init {
     }
 
     /// Initialize core components asynchronously
-    pub fn init_core_async() {
+    pub fn init_core_async(app_handle: AppHandle) {
+        let _ = init_handle(app_handle);
+
         AsyncHandler::spawn(move || async move {
             logging!(info, Type::Setup, true, "异步执行应用设置...");
-            match timeout(Duration::from_secs(30), resolve::resolve_setup_async()).await {
-                Ok(_) => {
-                    logging!(info, Type::Setup, true, "应用设置成功完成");
-                }
-                Err(_) => {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        true,
-                        "应用设置超时(30秒)，继续执行后续流程"
-                    );
-                }
-            }
+            resolve::resolve_setup_async().await;
         });
-    }
-
-    /// Initialize core components synchronously
-    pub async fn init_core_sync(app_handle: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-        logging!(info, Type::Setup, true, "初始化核心句柄...");
-        core::handle::Handle::global().init(app_handle.clone());
-
-        logging!(info, Type::Setup, true, "初始化配置...");
-        utils::init::init_config().await?;
-
-        logging!(info, Type::Setup, true, "初始化资源...");
-        utils::init::init_resources().await?;
-
-        logging!(info, Type::Setup, true, "核心组件初始化完成");
-        Ok(())
     }
 
     /// Generate all command handlers for the application
@@ -364,23 +339,9 @@ pub fn run() {
 
             let app_handle = app.handle().clone();
 
-            // Initialize core components asynchronously
-            app_init::init_core_async();
-
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
-            // Initialize core components synchronously
-            AsyncHandler::spawn(move || async move {
-                if let Err(e) = app_init::init_core_sync(&app_handle).await {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        true,
-                        "Failed to initialize core components: {}",
-                        e
-                    );
-                }
-            });
+            app_init::init_core_async(app_handle);
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())
