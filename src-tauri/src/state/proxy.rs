@@ -33,7 +33,7 @@ impl ProxyRequestCache {
         loop {
             let now = Instant::now();
             let key_cloned = key.clone();
-            
+
             // Get or create the cell
             let cell = self
                 .map
@@ -47,7 +47,8 @@ impl ProxyRequestCache {
                     return Arc::clone(&entry.value);
                 }
                 // Entry is expired, remove it
-                self.map.remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
+                self.map
+                    .remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
                 continue; // Retry with fresh cell
             }
 
@@ -57,7 +58,7 @@ impl ProxyRequestCache {
                 value: Arc::new(value),
                 expires_at: Instant::now() + ttl,
             };
-            
+
             match cell.set(entry) {
                 Ok(_) => {
                     // Successfully set the value
@@ -70,7 +71,8 @@ impl ProxyRequestCache {
                             return Arc::clone(&existing_entry.value);
                         }
                         // Existing entry is expired, retry
-                        self.map.remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
+                        self.map
+                            .remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
                         continue;
                     }
                     // This shouldn't happen, but retry just in case
