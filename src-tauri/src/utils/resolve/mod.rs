@@ -42,7 +42,7 @@ pub async fn resolve_setup_async() {
         init_verge_config().await;
         init_core_manager().await;
         init_system_proxy().await;
-        init_system_proxy_guard().await;
+        init_system_proxy_guard();
     });
 
     AsyncHandler::spawn(|| async {
@@ -90,7 +90,6 @@ pub async fn resolve_reset_async() {
         logging!(info, Type::System, true, "Restoring system DNS settings");
         restore_public_dns().await;
     }
-    todo!()
 }
 
 pub fn init_handle(app_handle: AppHandle) -> Result<()> {
@@ -177,7 +176,7 @@ pub(super) async fn init_system_proxy() {
     );
 }
 
-pub(super) async fn init_system_proxy_guard() {
+pub(super) fn init_system_proxy_guard() {
     logging!(
         info,
         Type::Setup,
