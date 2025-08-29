@@ -10,7 +10,15 @@ mod state;
 mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
-use crate::{core::hotkey, process::AsyncHandler, utils::server};
+use crate::{
+    core::handle,
+    core::hotkey,
+    process::AsyncHandler,
+    utils::{
+        resolve::{self, scheme::resolve_scheme},
+        server,
+    },
+};
 use config::Config;
 use parking_lot::Mutex;
 use tauri::AppHandle;
@@ -24,11 +32,6 @@ use utils::logging::Type;
 
 /// Application initialization helper functions
 mod app_init {
-    use crate::{
-        core::handle,
-        utils::resolve::{self, init_handle, scheme::resolve_scheme},
-    };
-
     use super::*;
 
     /// Initialize singleton monitoring for other instances
@@ -130,14 +133,6 @@ mod app_init {
             .build();
         app.handle().plugin(window_state_plugin)?;
         Ok(())
-    }
-
-    /// Initialize core components asynchronously
-    pub fn init_core_async(app_handle: AppHandle) {
-        let _ = init_handle(app_handle);
-
-        logging!(info, Type::Setup, true, "异步执行应用设置...");
-        resolve::resolve_setup_async();
     }
 
     /// Generate all command handlers for the application
@@ -339,7 +334,8 @@ pub fn run() {
 
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
-            app_init::init_core_async(app_handle);
+            logging!(info, Type::Setup, true, "异步执行应用设置...");
+            resolve::resolve_setup_async(app_handle);
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())

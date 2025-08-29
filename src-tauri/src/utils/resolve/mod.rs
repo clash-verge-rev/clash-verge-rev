@@ -1,4 +1,3 @@
-use anyhow::Result;
 use tauri::AppHandle;
 
 use crate::{
@@ -16,7 +15,7 @@ pub mod ui;
 pub mod window;
 pub mod window_script;
 
-pub fn resolve_setup_async() {
+pub fn resolve_setup_async(app_handle: AppHandle) {
     let start_time = std::time::Instant::now();
     logging!(
         info,
@@ -25,6 +24,8 @@ pub fn resolve_setup_async() {
         "开始执行异步设置任务... 线程ID: {:?}",
         std::thread::current().id()
     );
+
+    init_handle(app_handle);
 
     AsyncHandler::spawn_blocking(|| async {
         init_work_config().await;
@@ -92,10 +93,9 @@ pub async fn resolve_reset_async() {
     }
 }
 
-pub fn init_handle(app_handle: AppHandle) -> Result<()> {
+pub fn init_handle(app_handle: AppHandle) {
     logging!(info, Type::Setup, true, "Initializing app handle...");
     handle::Handle::global().init(app_handle);
-    Ok(())
 }
 
 pub(super) fn init_scheme() {
