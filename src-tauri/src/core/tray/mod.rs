@@ -8,8 +8,9 @@ use crate::process::AsyncHandler;
 use crate::{
     cmd,
     config::Config,
-    feat, logging,
+    feat,
     ipc::IpcManager,
+    logging,
     module::lightweight::is_in_lightweight_mode,
     singleton_lazy,
     utils::{dirs::find_target_icons, i18n::t, resolve::VERSION},
@@ -70,7 +71,6 @@ pub struct Tray {
 }
 
 impl TrayState {
-
     pub async fn get_common_tray_icon() -> (bool, Vec<u8>) {
         let verge = Config::verge().await.latest_ref().clone();
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
@@ -139,7 +139,6 @@ impl TrayState {
                 include_bytes!("../../../icons/tray-icon-sys.ico").to_vec(),
             )
         }
-    
     }
 
     pub async fn get_tun_tray_icon() -> (bool, Vec<u8>) {
@@ -175,9 +174,7 @@ impl TrayState {
             )
         }
     }
-
 }
-
 
 impl Default for Tray {
     fn default() -> Self {
@@ -263,7 +260,6 @@ impl Tray {
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
-        
         let verge = Config::verge().await.latest_ref().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -315,7 +311,6 @@ impl Tray {
                 Ok(())
             }
         }
-    
     }
 
     /// 更新托盘图标
@@ -573,7 +568,6 @@ impl Tray {
 
         Ok(())
     }
-
 }
 
 async fn create_tray_menu(
@@ -586,7 +580,7 @@ async fn create_tray_menu(
     proxy_nodes_data: serde_json::Value,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
-    
+
     // 获取当前配置文件的选中代理组信息
     let current_profile_selected = {
         let profiles = Config::profiles().await;
@@ -652,36 +646,38 @@ async fn create_tray_menu(
     // 创建代理组子菜单结构
     let proxy_submenus: Vec<Submenu<Wry>> = {
         let mut submenus = Vec::new();
-        
+
         // 解析代理组数据，创建分层菜单结构
         if let Some(proxies) = proxy_nodes_data.get("proxies").and_then(|v| v.as_object()) {
-            
             for (group_name, group_data) in proxies.iter() {
-                if let (Some(group_type),Some(all_proxies)) = (group_data.get("type").and_then(|v| v.as_str()),group_data.get("all").and_then(|v| v.as_array())) {
+                if let (Some(group_type), Some(all_proxies)) = (
+                    group_data.get("type").and_then(|v| v.as_str()),
+                    group_data.get("all").and_then(|v| v.as_array()),
+                ) {
                     // 在全局模式下只显示GLOBAL组，在规则模式下显示所有Selector类型的代理组
                     let should_show_group = if mode == "global" {
                         group_name == "GLOBAL"
                     } else {
                         group_type == "Selector" && group_name != "GLOBAL"
                     };
-                    
+
                     if !should_show_group {
                         continue;
                     }
 
                     let now_proxy = group_data.get("now").and_then(|v| v.as_str()).unwrap_or("");
-                    
+
                     // 为每个代理组创建子菜单项
                     let mut group_items = Vec::new();
                     for proxy_name in all_proxies.iter() {
                         if let Some(proxy_str) = proxy_name.as_str() {
                             let is_selected = proxy_str == now_proxy;
                             let item_id = format!("proxy_{}_{}", group_name, proxy_str);
-                            
+
                             match CheckMenuItem::with_id(
                                 app_handle,
                                 item_id,
-                                proxy_str,  // 只显示节点名，不显示组名前缀
+                                proxy_str, // 只显示节点名，不显示组名前缀
                                 true,
                                 is_selected,
                                 None::<&str>,
@@ -691,14 +687,14 @@ async fn create_tray_menu(
                             }
                         }
                     }
-                    
+
                     // 创建代理组子菜单
                     if !group_items.is_empty() {
                         let group_items_refs: Vec<&dyn IsMenuItem<Wry>> = group_items
                             .iter()
                             .map(|item| item as &dyn IsMenuItem<Wry>)
                             .collect();
-                        
+
                         // 判断当前代理组是否为真正在使用中的组
                         let is_group_active = if mode == "global" {
                             // 全局模式下，只有GLOBAL组才能显示勾选
@@ -709,23 +705,23 @@ async fn create_tray_menu(
                         } else {
                             // 规则模式下：只对用户在当前配置中手动选择过的代理组显示勾选
                             // 这些组表示用户真正关心和使用的代理组
-                            let is_user_selected = current_profile_selected.iter().any(|selected| {
-                                selected.name.as_deref() == Some(group_name)
-                            });
+                            let is_user_selected = current_profile_selected
+                                .iter()
+                                .any(|selected| selected.name.as_deref() == Some(group_name));
                             is_user_selected && !now_proxy.is_empty()
                         };
-                        
+
                         // 如果组处于活动状态，在组名前添加勾选标记
                         let group_display_name = if is_group_active {
                             format!("✓ {}", group_name)
                         } else {
                             group_name.to_string()
                         };
-                        
+
                         match Submenu::with_id_and_items(
                             app_handle,
                             format!("proxy_group_{}", group_name),
-                            group_display_name,  // 使用带勾选标记的组名
+                            group_display_name, // 使用带勾选标记的组名
                             true,
                             &group_items_refs,
                         ) {
@@ -736,10 +732,9 @@ async fn create_tray_menu(
                 }
             }
         }
-        
+
         submenus
     };
-
 
     // Pre-fetch all localized strings
     let dashboard_text = t("Dashboard").await;
@@ -817,7 +812,7 @@ async fn create_tray_menu(
             .iter()
             .map(|submenu| submenu as &dyn IsMenuItem<Wry>)
             .collect();
-            
+
         Some(Submenu::with_id_and_items(
             app_handle,
             "proxies",
@@ -1033,11 +1028,11 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             id if id.starts_with("proxy_") => {
                 // proxy_{group_name}_{proxy_name}
                 let parts: Vec<&str> = id.splitn(3, '_').collect();
-                
+
                 if parts.len() == 3 && parts[0] == "proxy" {
                     let group_name = parts[1];
                     let proxy_name = parts[2];
-                    
+
                     let current_mode = {
                         Config::clash()
                             .await
@@ -1048,24 +1043,34 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                             .unwrap_or("rule")
                             .to_owned()
                     };
-                                        
-                    match cmd::proxy::update_proxy_and_sync(group_name.to_string(), proxy_name.to_string()).await {
+
+                    match cmd::proxy::update_proxy_and_sync(
+                        group_name.to_string(),
+                        proxy_name.to_string(),
+                    )
+                    .await
+                    {
                         Ok(_) => {
                             log::info!(target: "app", " {} -> {} (模式: {})", group_name, proxy_name, current_mode);
                         }
                         Err(e) => {
                             log::error!(target: "app", " {} -> {}, 错误: {:?}", group_name, proxy_name, e);
-                            
-                            match IpcManager::global().update_proxy(group_name, proxy_name).await {
+
+                            match IpcManager::global()
+                                .update_proxy(group_name, proxy_name)
+                                .await
+                            {
                                 Ok(_) => {
                                     log::info!(target: "app", " {} -> {}", group_name, proxy_name);
-                                
+
                                     if let Err(e) = Tray::global().update_menu().await {
                                         log::warn!(target: "app", "托盘菜单更新失败: {e}");
                                     }
-                                    
-                                    if let Some(app_handle) = handle::Handle::global().app_handle() {
-                                        let _ = app_handle.emit("verge://force-refresh-proxies", ());
+
+                                    if let Some(app_handle) = handle::Handle::global().app_handle()
+                                    {
+                                        let _ =
+                                            app_handle.emit("verge://force-refresh-proxies", ());
                                         let _ = app_handle.emit("verge://refresh-proxy-config", ());
                                     }
                                 }
