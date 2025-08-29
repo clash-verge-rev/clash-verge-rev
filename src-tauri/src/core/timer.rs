@@ -60,8 +60,6 @@ impl Timer {
             return Ok(());
         }
 
-        logging!(info, Type::Timer, true, "Initializing timer...");
-
         // Initialize timer tasks
         if let Err(e) = self.refresh().await {
             // Reset initialization flag on error

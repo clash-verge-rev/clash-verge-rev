@@ -6,7 +6,7 @@ use crate::{
     logging, logging_error,
     module::lightweight::auto_lightweight_mode_init,
     process::AsyncHandler,
-    utils::{init, logging::Type, resolve::window::create_window, server},
+    utils::{init, logging::Type, network::NetworkManager, resolve::window::create_window, server},
 };
 
 pub mod dns;
@@ -19,7 +19,9 @@ pub fn resolve_setup_sync(app_handle: AppHandle) {
     init_handle(app_handle);
     init_scheme();
     init_embed_server();
+    NetworkManager::new().init();
 }
+
 pub fn resolve_setup_async() {
     let start_time = std::time::Instant::now();
     logging!(
@@ -30,7 +32,7 @@ pub fn resolve_setup_async() {
         std::thread::current().id()
     );
 
-    AsyncHandler::spawn_blocking(|| async {
+    AsyncHandler::spawn(|| async {
         init_resources().await;
         init_work_config().await;
         init_startup_script().await;
@@ -57,7 +59,6 @@ pub fn resolve_setup_async() {
         elapsed
     );
 
-    // 如果初始化时间过长，记录警告
     if elapsed.as_secs() > 10 {
         logging!(
             warn,
@@ -69,6 +70,7 @@ pub fn resolve_setup_async() {
     }
 }
 
+// 其它辅助函数不变
 pub async fn resolve_reset_async() {
     logging!(info, Type::Tray, true, "Resetting system proxy");
     logging_error!(

@@ -269,9 +269,6 @@ pub fn run() {
     // Setup singleton check
     app_init::init_singleton_check();
 
-    // Initialize network manager
-    utils::network::NetworkManager::new().init();
-
     // We don't need init_portable_flag here anymore due to the init_config will do the things
     // let _ = utils::dirs::init_portable_flag();
 
