@@ -33,7 +33,7 @@ fn get_window_creating_lock() -> &'static Mutex<(bool, Instant)> {
 }
 
 /// 检查是否已存在窗口，如果存在则显示并返回 true
-async fn check_existing_window(is_show: bool) -> Option<bool> {
+fn check_existing_window(is_show: bool) -> Option<bool> {
     if let Some(app_handle) = handle::Handle::global().app_handle() {
         if let Some(window) = app_handle.get_webview_window("main") {
             logging!(info, Type::Window, true, "主窗口已存在，将显示现有窗口");
@@ -86,7 +86,7 @@ fn reset_window_creation_lock() {
 }
 
 /// 构建新的 WebView 窗口
-async fn build_new_window() -> Result<WebviewWindow, String> {
+fn build_new_window() -> Result<WebviewWindow, String> {
     let app_handle = handle::Handle::global().app_handle().ok_or_else(|| {
         logging!(
             error,
@@ -143,7 +143,7 @@ async fn setup_window_post_creation() {
 }
 
 /// 通过窗口标签处理窗口显示逻辑（减少任务大小的优化版本）
-async fn handle_window_display_by_label(window_label: String, is_show: bool) {
+fn handle_window_display_by_label(window_label: String, is_show: bool) {
     if !is_show {
         logging!(
             debug,
@@ -256,7 +256,7 @@ pub async fn create_window(is_show: bool) -> bool {
     }
 
     // 检查是否已存在窗口
-    if let Some(result) = check_existing_window(is_show).await {
+    if let Some(result) = check_existing_window(is_show) {
         return result;
     }
 
@@ -271,7 +271,7 @@ pub async fn create_window(is_show: bool) -> bool {
     }
 
     // 构建新窗口
-    let newly_created_window = match build_new_window().await {
+    let newly_created_window = match build_new_window() {
         Ok(window) => {
             // 窗口创建成功，重置锁状态
             reset_window_creation_lock();
@@ -291,7 +291,7 @@ pub async fn create_window(is_show: bool) -> bool {
 
     // 异步处理窗口后续设置，只捕获必要的小数据
     setup_window_post_creation().await;
-    handle_window_display_by_label(window_label, is_show).await;
+    handle_window_display_by_label(window_label, is_show);
 
     true
 }

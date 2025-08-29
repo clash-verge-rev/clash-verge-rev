@@ -61,22 +61,19 @@ impl ProxyRequestCache {
 
             match cell.set(entry) {
                 Ok(_) => {
-                    // Successfully set the value
-                    return Arc::clone(&cell.get().unwrap().value);
+                    // Successfully set the value, it must exist now
+                    if let Some(set_entry) = cell.get() {
+                        return Arc::clone(&set_entry.value);
+                    }
                 }
                 Err(_) => {
-                    // Someone else set the value, use theirs
                     if let Some(existing_entry) = cell.get() {
                         if existing_entry.expires_at > Instant::now() {
                             return Arc::clone(&existing_entry.value);
                         }
-                        // Existing entry is expired, retry
                         self.map
                             .remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
-                        continue;
                     }
-                    // This shouldn't happen, but retry just in case
-                    continue;
                 }
             }
         }
