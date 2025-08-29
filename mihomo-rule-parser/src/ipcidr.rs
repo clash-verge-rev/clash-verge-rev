@@ -54,49 +54,58 @@ impl Display for Prefix {
     }
 }
 
-/// 将 IPv4 地址转换为 u32 整数
+/// 将 IPv4 地址转换为 32 位无符号整数
 fn ip_to_u32(ip: Ipv4Addr) -> u32 {
     u32::from_be_bytes(ip.octets())
 }
 
-/// 将 u32 整数转换为 IPv4 地址
+/// 将 32 无符号整数转换为 IPv4 地址
 fn u32_to_ip(num: u32) -> IpAddr {
     IpAddr::V4(Ipv4Addr::from(num.to_be_bytes()))
 }
 
-/// 将 IPv6 地址转换为 u128 整数
+/// 将 IPv6 地址转换为 128 位无符号整数
 fn ip_to_u128(ip: Ipv6Addr) -> u128 {
     u128::from_be_bytes(ip.octets())
 }
 
-/// 将 u128 整数转换为 IPv6 地址
+/// 将 128 位无符号整数转换为 IPv6 地址
 fn u128_to_ip(num: u128) -> IpAddr {
     IpAddr::V6(Ipv6Addr::from(num.to_be_bytes()))
 }
 
 /// IPv4 处理
 fn ipv4_prefixes(from: Ipv4Addr, to: Ipv4Addr) -> Vec<Prefix> {
+    // IPV4 字段由 4 个数组成, 例如 192.168.3.0, 每个数由 8 位二进制组成: 11000000.10101000.00000011.00000000
     let mut from = ip_to_u32(from);
     let mut to = ip_to_u32(to);
 
     if from > to {
         std::mem::swap(&mut from, &mut to);
     }
-
+    // 存储结果的 CIDR 前缀列表
     let mut cidrs = Vec::new();
 
     while from <= to {
+        // from 地址中尾随 0 的个数, 例如 192.168.3.0 -> 3232236288 -> 11000000101010000000001100000000 尾随的 0 有 8 个
+        // 计算当前起始地址的尾部零位数（最多 31 位）
         let trailing_zeros = from.trailing_zeros().min(31) as u8;
+        // 初始前缀长度 = 32 - 尾部零位数
         let mut prefix = 32 - trailing_zeros;
         let (block_start, block_size) = loop {
+            // 当前前缀对应的掩码
             let mask = u32::MAX << (32 - prefix);
+            // 计算 CIDR 块的网络地址（起始地址）
             let block_start = from & mask;
+            // 计算 CIDR 块的大小（包含的地址数量）：2^(32-prefix)
             let block_size = 1u32 << (32 - prefix);
+            // 计算 CIDR 块的结束地址
             let block_end = match block_start.checked_add(block_size - 1) {
                 Some(e) => e,
                 None => u32::MAX,
             };
 
+            // 检查当前 CIDR 块是否完全包含在目标范围内
             if block_start >= from && block_end <= to {
                 break (block_start, block_size);
             }
@@ -107,9 +116,9 @@ fn ipv4_prefixes(from: Ipv4Addr, to: Ipv4Addr) -> Vec<Prefix> {
                 break (from, 1);
             }
         };
-
+        // 将找到的 CIDR 前缀加入结果列表
         cidrs.push(Prefix::new(u32_to_ip(block_start), prefix));
-
+        // 移动到下一个CIDR块的起始位置
         from = match block_start.checked_add(block_size) {
             Some(s) => s,
             None => break,
@@ -136,13 +145,15 @@ fn ipv6_prefixes(from: Ipv6Addr, to: Ipv6Addr) -> Vec<Prefix> {
         let (block_start, block_size) = loop {
             let mask = u128::MAX << (128 - prefix);
             let block_start = from & mask;
-            let block_size = match 1u128.checked_shl((128 - prefix) as u32) {
-                Some(s) => s,
-                None => {
-                    prefix = 128;
-                    break (from, 1);
-                }
-            };
+
+            let block_size = 1u128 << (128 - prefix);
+            // let block_size = match 1u128.checked_shl((128 - prefix) as u32) {
+            //     Some(s) => s,
+            //     None => {
+            //         prefix = 128;
+            //         break (from, 1);
+            //     }
+            // };
             let block_end = match block_start.checked_add(block_size.saturating_sub(1)) {
                 Some(e) => e,
                 None => u128::MAX,
@@ -254,15 +265,52 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload> {
 #[allow(deprecated)]
 mod tests {
 
+    use std::{path::PathBuf, process::Command};
+
     use crate::error::Result;
 
     use super::*;
 
+    fn init_meta_rules() -> Result<PathBuf> {
+        let tmp_dir = std::env::temp_dir();
+        let rules_dir = tmp_dir.join("meta-rules-dat");
+        let exists = std::fs::exists(&rules_dir)?;
+        if exists {
+            // let mut child = Command::new("git")
+            //     .current_dir("meta-rules-dat")
+            //     .args(&["pull", "--force"])
+            //     .spawn()
+            //     .expect("failed to pull rules");
+            // child.wait().expect("command not running");
+        } else {
+            let mut child = Command::new("git")
+                .args(["clone", "-b", "meta", "https://github.com/MetaCubeX/meta-rules-dat.git"])
+                .current_dir(&tmp_dir)
+                .spawn()
+                .expect("failed to clone rules");
+            child.wait().expect("command not running");
+        }
+        Ok(rules_dir)
+    }
+
+    #[test]
+    fn test_ip_range_prefix() -> Result<()> {
+        let from_addr = IpAddr::V4(Ipv4Addr::new(192, 168, 3, 0));
+        let to_addr = IpAddr::V4(Ipv4Addr::new(192, 168, 3, 96));
+        let range = IpAddr::ip_range(from_addr, to_addr);
+        let prefixes = range.prefixes();
+        for prefix in prefixes {
+            println!("{:?}", prefix);
+        }
+        Ok(())
+    }
+
     #[test]
     fn test_ipcidr_parse_from_mrs() -> Result<()> {
-        let home_dir = std::env::home_dir().expect("failed to get home dir");
-        let path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/ad.mrs");
-        let buf = std::fs::read(path)?;
+        let rules_dir = init_meta_rules()?;
+        let mut file = std::fs::File::open(rules_dir.join("geo/geoip/ad.mrs"))?;
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf)?;
         let payload = IpCidrParseStrategy::parse(&buf, RuleFormat::Mrs)?;
         println!("payload: {:?}", payload);
         Ok(())
@@ -270,9 +318,10 @@ mod tests {
 
     #[test]
     fn test_ipcidr_parse_from_yaml() -> Result<()> {
-        let home_dir = std::env::home_dir().expect("failed to get home dir");
-        let path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/ad.yaml");
-        let buf = std::fs::read(path)?;
+        let rules_dir = init_meta_rules()?;
+        let mut file = std::fs::File::open(rules_dir.join("geo/geoip/ad.yaml"))?;
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf)?;
         let payload = IpCidrParseStrategy::parse(&buf, RuleFormat::Yaml)?;
         println!("payload: {:?}", payload);
         Ok(())
@@ -280,9 +329,10 @@ mod tests {
 
     #[test]
     fn test_ipcidr_parse_from_text() -> Result<()> {
-        let home_dir = std::env::home_dir().expect("failed to get home dir");
-        let path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/ad.txt");
-        let buf = std::fs::read(path)?;
+        let rules_dir = init_meta_rules()?;
+        let mut file = std::fs::File::open(rules_dir.join("geo/geoip/ad.list"))?;
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf)?;
         let payload = IpCidrParseStrategy::parse(&buf, RuleFormat::Text)?;
         println!("payload: {:?}", payload);
         Ok(())

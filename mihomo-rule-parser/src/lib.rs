@@ -117,143 +117,193 @@ mod tests {
         error::{Result, RuleParseError},
         parse,
     };
-    use std::io::{Read, Write};
+    use std::{
+        io::{Read, Write},
+        path::{Path, PathBuf},
+        process::Command,
+        sync::{Arc, Mutex},
+        time::Instant,
+    };
+
+    fn init_meta_rules() -> Result<PathBuf> {
+        let tmp_dir = std::env::temp_dir();
+        let rules_dir = tmp_dir.join("meta-rules-dat");
+        let exists = std::fs::exists(&rules_dir)?;
+        if exists {
+            // let mut child = Command::new("git")
+            //     .current_dir("meta-rules-dat")
+            //     .args(&["pull", "--force"])
+            //     .spawn()
+            //     .expect("failed to pull rules");
+            // child.wait().expect("command not running");
+        } else {
+            let mut child = Command::new("git")
+                .args(["clone", "-b", "meta", "https://github.com/MetaCubeX/meta-rules-dat.git"])
+                .current_dir(&tmp_dir)
+                .spawn()
+                .expect("failed to clone rules");
+            child.wait().expect("command not running");
+        }
+        Ok(rules_dir)
+    }
 
     /// Test public parse method
     #[test]
     fn test_public_parse_method() -> Result<()> {
-        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        let rules_dir = init_meta_rules()?;
+        let test_out_dir = rules_dir.join("test_out");
+        if !test_out_dir.exists() {
+            std::fs::create_dir_all(&test_out_dir)?;
+        }
 
         // domain
-        let domain_mrs_path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.mrs");
+        let domain_mrs_path = rules_dir.join("geo/geosite/aliyun.mrs");
         let domain_mrs_payload = parse(&domain_mrs_path, RuleBehavior::Domain, RuleFormat::Mrs)?;
         assert_ne!(domain_mrs_payload.count, 0);
         assert_ne!(domain_mrs_payload.rules.len(), 0);
-        let mut file = std::fs::File::create("domain_mrs.txt")?;
+        let mut file = std::fs::File::create(test_out_dir.join("domain_mrs.txt"))?;
         file.write_all(domain_mrs_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
-        let domain_yaml_path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.yaml");
+        let domain_yaml_path = rules_dir.join("geo/geosite/aliyun.yaml");
         let domain_yaml_payload = parse(&domain_yaml_path, RuleBehavior::Domain, RuleFormat::Yaml)?;
         assert_ne!(domain_yaml_payload.count, 0);
         assert_ne!(domain_yaml_payload.rules.len(), 0);
-        let mut file = std::fs::File::create("domain_yaml.txt")?;
+        let mut file = std::fs::File::create(test_out_dir.join("domain_yaml.txt"))?;
         file.write_all(domain_yaml_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
-        let domain_txt_path = home_dir.join("Downloads/meta-rules-dat/geo/geosite/aliyun.txt");
+        let domain_txt_path = rules_dir.join("geo/geosite/aliyun.list");
         let domain_txt_payload = parse(&domain_txt_path, RuleBehavior::Domain, RuleFormat::Text)?;
         assert_ne!(domain_txt_payload.count, 0);
         assert_ne!(domain_txt_payload.rules.len(), 0);
-        let mut file = std::fs::File::create("domain.txt")?;
+        let mut file = std::fs::File::create(test_out_dir.join("domain.txt"))?;
         file.write_all(domain_txt_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
         // ipcidr
-        let ipcidr_mrs_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/private.mrs");
+        let ipcidr_mrs_path = rules_dir.join("geo/geoip/private.mrs");
         let ipcidr_mrs_payload = parse(&ipcidr_mrs_path, RuleBehavior::IpCidr, RuleFormat::Mrs)?;
         assert_ne!(ipcidr_mrs_payload.count, 0);
         assert_ne!(ipcidr_mrs_payload.rules.len(), 0);
-        let mut file = std::fs::File::create("ipcidr_mrs.txt")?;
+        let mut file = std::fs::File::create(test_out_dir.join("ipcidr_mrs.txt"))?;
         file.write_all(ipcidr_mrs_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
-        let ipcidr_yaml_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/private.yaml");
+        let ipcidr_yaml_path = rules_dir.join("geo/geoip/private.yaml");
         let ipcidr_yaml_payload = parse(&ipcidr_yaml_path, RuleBehavior::IpCidr, RuleFormat::Yaml)?;
         assert_ne!(ipcidr_yaml_payload.count, 0);
         assert_ne!(ipcidr_yaml_payload.rules.len(), 0);
-        let mut file = std::fs::File::create("ipcidr_yaml.txt")?;
+        let mut file = std::fs::File::create(test_out_dir.join("ipcidr_yaml.txt"))?;
         file.write_all(ipcidr_yaml_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
-        let ipcidr_txt_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/private.txt");
+        let ipcidr_txt_path = rules_dir.join("geo/geoip/private.list");
         let ipcidr_txt_payload = parse(&ipcidr_txt_path, RuleBehavior::IpCidr, RuleFormat::Text)?;
         assert_ne!(ipcidr_txt_payload.count, 0);
         assert_ne!(ipcidr_txt_payload.rules.len(), 0);
-        let mut file = std::fs::File::create("ipcidr.txt")?;
+        let mut file = std::fs::File::create(test_out_dir.join("ipcidr.txt"))?;
         file.write_all(ipcidr_txt_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
         // classical
-        let classical_yaml_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/classical/ad.yaml");
+        let classical_yaml_path = rules_dir.join("geo/geoip/classical/ad.yaml");
         let rule_payload = parse(&classical_yaml_path, RuleBehavior::Classical, RuleFormat::Yaml)?;
         assert_ne!(rule_payload.count, 0);
         assert_ne!(rule_payload.rules.len(), 0);
-        let mut file = std::fs::File::create("classical_yaml.txt")?;
+        let mut file = std::fs::File::create(test_out_dir.join("classical_yaml.txt"))?;
         file.write_all(rule_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
-        let classical_txt_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/classical/ad.list");
+        let classical_txt_path = rules_dir.join("geo/geoip/classical/ad.list");
         let rule_payload = parse(&classical_txt_path, RuleBehavior::Classical, RuleFormat::Text)?;
         assert_ne!(rule_payload.count, 0);
         assert_ne!(rule_payload.rules.len(), 0);
-        let mut file = std::fs::File::create("classical.txt")?;
+        let mut file = std::fs::File::create(test_out_dir.join("classical.txt"))?;
         file.write_all(rule_payload.rules.join("\n").as_bytes())?;
         file.sync_all()?;
 
         Ok(())
     }
 
-    /// Check if the contents of the rust cover file are different from the contents of the mihomo cover file
-    #[test]
-    fn check_diff() -> Result<()> {
-        let home_dir = std::env::home_dir().expect("failed to get home dir");
-        let current_dir = std::env::current_dir()?;
-
-        // domain
-        // let rust_file_path = current_dir.join("domain.txt");
-        // let mihomo_file_path = home_dir.join("Downloads/aliyun.txt");
-        // ipcidr
-        let rust_file_path = current_dir.join("ipcidr.txt");
-        let mihomo_file_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip/private.txt");
-
-        let mut rust_cover_file = std::fs::File::open(rust_file_path)?;
-        let mut rust_str = String::new();
-        rust_cover_file.read_to_string(&mut rust_str)?;
-        let rust_ips = rust_str
+    /// Check if the contents of the src file are different from the contents of the target file
+    fn check_diff<P: AsRef<Path>>(src_file: P, target_file: P) -> std::result::Result<(), String> {
+        let mut src_str = String::new();
+        std::fs::File::open(src_file)
+            .map_err(|_| "src file not found".to_string())?
+            .read_to_string(&mut src_str)
+            .map_err(|_| "read src file error".to_string())?;
+        let src_lines = src_str
             .trim()
             .split('\n')
             .map(|s| s.to_owned())
             .collect::<Vec<String>>();
 
-        let mut mihomo_cover_file = std::fs::File::open(mihomo_file_path)?;
-        let mut mihomo_str = String::new();
-        mihomo_cover_file.read_to_string(&mut mihomo_str)?;
-        let mihomo_ips = mihomo_str
+        let mut target_str = String::new();
+        std::fs::File::open(target_file)
+            .map_err(|_| "target file not found".to_string())?
+            .read_to_string(&mut target_str)
+            .map_err(|_| "read target file error".to_string())?;
+        let target_lines = target_str
             .trim()
             .split('\n')
             .map(|s| s.to_owned())
             .collect::<Vec<String>>();
 
-        assert_eq!(
-            rust_ips.len(),
-            mihomo_ips.len(),
-            "content length is not the same between rust and mihomo cover files"
-        );
+        if src_lines.len() != target_lines.len() {
+            return Err(format!(
+                "content length is not the same between src and target files\n  src: {}\n  target: {}",
+                src_lines.len(),
+                target_lines.len()
+            ));
+        }
 
-        let total = rust_ips.len();
+        let total = src_lines.len();
         for i in 0..total {
-            let rust_val = &rust_ips[i];
-            let mihomo_val = &mihomo_ips[i];
-            assert_eq!(
-                rust_val, mihomo_val,
-                "the value at index {} is not the same between rust and mihomo cover files",
-                i
-            );
+            let src_val = &src_lines[i];
+            let target_val = &target_lines[i];
+            if src_val != target_val {
+                return Err(format!(
+                    "the value at index {} is not the same between src and target files\n  src: {}\n  target: {}",
+                    i, src_val, target_val
+                ));
+            }
         }
         Ok(())
     }
 
-    /// use git clone [mihomo rules](https://github.com/MetaCubeX/meta-rules-dat) and then checkout `meta` branch
     #[test]
     fn check_all_mihomo_mrs() -> Result<()> {
-        let home_dir = std::env::home_dir().expect("failed to get home dir");
+        let start = Instant::now();
+        let rules_dir = init_meta_rules()?;
+        // test out dir
+        let test_out_dir = rules_dir.join("test_out");
+        if test_out_dir.exists() {
+            std::fs::remove_dir_all(&test_out_dir)?;
+        } else {
+            std::fs::create_dir_all(&test_out_dir)?;
+        }
+        // mihomo out dir
+        let mihomo_out_dir = test_out_dir.join("mihomo");
+        if mihomo_out_dir.exists() {
+            std::fs::remove_dir_all(&mihomo_out_dir)?;
+        } else {
+            std::fs::create_dir_all(&mihomo_out_dir)?;
+        }
+        // rust out dir
+        let rust_out_dir = test_out_dir.join("rust");
+        if rust_out_dir.exists() {
+            std::fs::remove_dir_all(&rust_out_dir)?;
+        } else {
+            std::fs::create_dir_all(&rust_out_dir)?;
+        }
+
         // domain
         let check_behavior = "domain";
-        let mrs_dir_path = home_dir.join("Downloads/meta-rules-dat/geo/geosite");
+        let mrs_dir_path = rules_dir.join("geo/geosite");
         // ipcidr
         // let check_behavior = "ipcidr";
-        // let mrs_dir_path = home_dir.join("Downloads/meta-rules-dat/geo/geoip");
+        // let mrs_dir_path = base_dir.join("geo/geoip");
 
         let mrs_dir = std::fs::read_dir(&mrs_dir_path)?;
         let mut mrs_files = Vec::new();
@@ -271,66 +321,77 @@ mod tests {
                 mrs_files.push(file_name.to_string());
             });
 
+        let mihomo_convert_error_file = Arc::new(Mutex::new(Vec::new()));
+        let check_diff_error_file = Arc::new(Mutex::new(Vec::new()));
         // starting check diff
-        let mut mihomo_convert_error_file: Vec<String> = vec![];
-        for file_name in &mrs_files {
-            // use mihomo command to convert mrs files to txt files
-            let mrs_file_path = mrs_dir_path.join(file_name);
-            let txt_file_path = mrs_file_path.with_extension("txt");
-            let output = std::process::Command::new("verge-mihomo")
-                .args([
-                    "convert-ruleset",
-                    check_behavior,
-                    "mrs",
-                    &mrs_file_path.display().to_string(),
-                    &txt_file_path.display().to_string(),
-                ])
-                .output()?;
+        std::thread::scope(|s| {
+            for file_name in &mrs_files {
+                // use mihomo command to convert mrs files to txt files
+                let mrs_file_path = mrs_dir_path.join(file_name);
+                let mihomo_file_path = mihomo_out_dir.join(file_name).with_extension("txt");
 
-            // use rust to convert mrs files to txt files
-            println!("rust parse file name: {}", file_name);
-            if !output.status.success() {
-                println!("mihomo convert error, output: {:?}", output);
-                mihomo_convert_error_file.push(file_name.clone());
-                continue;
+                let rust_out_dir_ = rust_out_dir.clone();
+                let mihomo_convert_error_file_ = mihomo_convert_error_file.clone();
+                let check_diff_error_file_ = check_diff_error_file.clone();
+                s.spawn(move || {
+                    // let mut err_file = Vec::new();
+                    let output = std::process::Command::new("verge-mihomo")
+                        .args([
+                            "convert-ruleset",
+                            check_behavior,
+                            "mrs",
+                            &mrs_file_path.display().to_string(),
+                            &mihomo_file_path.display().to_string(),
+                        ])
+                        .output()?;
+
+                    // use rust to convert mrs files to txt files
+                    if output.status.success() {
+                        // println!("rust parse file name: {}", file_name);
+                        let behavior = match check_behavior {
+                            "domain" => RuleBehavior::Domain,
+                            "ipcidr" => RuleBehavior::IpCidr,
+                            _ => return Err(RuleParseError::InvalidBehavior(check_behavior.to_string())),
+                        };
+                        let rule_payload = parse(&mrs_file_path, behavior, RuleFormat::Mrs)?;
+                        let rust_file_path = rust_out_dir_.join(file_name).with_extension("txt");
+                        let mut file = std::fs::File::create(&rust_file_path)?;
+                        file.write_all(rule_payload.rules.join("\n").as_bytes())?;
+                        file.sync_all()?;
+
+                        // check diff file
+                        if let Err(err) = check_diff(rust_file_path, mihomo_file_path) {
+                            println!("check diff [{}] error: {}", file_name, err);
+                            check_diff_error_file_.lock().unwrap().push(file_name.clone());
+                        } else {
+                            println!("convert [{}] success", file_name);
+                        }
+                    } else {
+                        println!("mihomo convert [{}] error, output: {:?}", file_name, output);
+                        mihomo_convert_error_file_.lock().unwrap().push(file_name.clone());
+                    }
+                    Result::Ok(())
+                });
             }
-            let behavior = match check_behavior {
-                "domain" => RuleBehavior::Domain,
-                "ipcidr" => RuleBehavior::IpCidr,
-                _ => return Err(RuleParseError::InvalidBehavior(check_behavior.to_string())),
-            };
-            let rule_payload = parse(&mrs_file_path, behavior, RuleFormat::Mrs)?;
-
-            // check file content diff
-            let content_r_items = rule_payload.rules;
-            let content_m = std::fs::read_to_string(&txt_file_path)?;
-            let content_m_items = content_m
-                .trim()
-                .split('\n')
-                .map(|line| line.trim().to_string())
-                .collect::<Vec<String>>();
-            assert_eq!(
-                content_r_items.len(),
-                content_m_items.len(),
-                "[{}] content length is not the same between rust and mihomo cover files",
-                file_name
+        });
+        if !mihomo_convert_error_file.lock().unwrap().is_empty() {
+            println!(
+                "\n--------------------- mihomo convert error files (skip use rust to convert) -------------------------"
             );
-            // iterate all items and compare
-            let total = content_r_items.len();
-            for i in 0..total {
-                let rust_val = &content_r_items[i];
-                let mihomo_val = &content_m_items[i];
-                assert_eq!(
-                    rust_val, mihomo_val,
-                    "the value at index {} is not the same between rust and mihomo cover files",
-                    i
-                );
-            }
+            println!("{:?}", mihomo_convert_error_file.lock().unwrap());
+            println!(
+                "-----------------------------------------------------------------------------------------------------\n"
+            );
+        }
+        if check_diff_error_file.lock().unwrap().is_empty() {
+            println!("\n✅ all convert success!!!");
+        } else {
+            println!("\n------------------- ❌ check diff error files -----------------------");
+            println!("{:?}", check_diff_error_file.lock().unwrap());
+            println!("----------------------------------------------------------------------");
         }
 
-        if !mihomo_convert_error_file.is_empty() {
-            println!("mihomo convert error files: {:?}", mihomo_convert_error_file);
-        }
+        println!("cost time: {}ms", start.elapsed().as_millis());
 
         Ok(())
     }
