@@ -3733,9 +3733,9 @@ dependencies = [
 
 [[package]]
 name = "kode-bridge"
-version = "0.2.1-rc1"
+version = "0.2.1-rc2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fd493b32ae4bae43f8ba30d6d4bfe28675c3468e6676bb5823c0a8b7ab6f4cc"
+checksum = "1fb8ef81e3057620f1ccc1b65fb5e26f24b29757dc81b67410d603c7e60b0839"
 dependencies = [
  "bytes",
  "futures",
