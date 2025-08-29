@@ -3,7 +3,6 @@ use crate::{
     config::{profiles_append_item_safe, PrfItem},
     core::{handle, CoreManager},
     enhance, logging,
-    process::AsyncHandler,
     utils::{dirs, help, logging::Type},
 };
 use anyhow::{anyhow, Result};

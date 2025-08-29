@@ -44,7 +44,12 @@ pub fn resolve_setup_async() {
         init_verge_config().await;
         init_core_manager().await;
         init_system_proxy().await;
-        init_system_proxy_guard();
+
+        // 在单独的 spawn 中运行 sync 函数，避免 Send 问题
+        AsyncHandler::spawn_blocking(|| {
+            init_system_proxy_guard();
+        });
+
         init_window().await;
         init_tray().await;
         refresh_tray_menu().await

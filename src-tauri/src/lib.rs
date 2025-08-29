@@ -1,3 +1,6 @@
+#![allow(non_snake_case)]
+#![recursion_limit = "512"]
+
 mod cmd;
 pub mod config;
 mod core;
