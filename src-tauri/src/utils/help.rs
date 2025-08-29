@@ -2,7 +2,7 @@ use crate::{enhance::seq::SeqMap, logging, utils::logging::Type};
 use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
 use serde::{de::DeserializeOwned, Serialize};
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 use std::{path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
@@ -13,7 +13,7 @@ pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
 
     let yaml_str = tokio::fs::read_to_string(path).await?;
 
-    Ok(serde_yaml::from_str::<T>(&yaml_str)?)
+    Ok(serde_yaml_ng::from_str::<T>(&yaml_str)?)
 }
 
 /// read mapping from yaml
@@ -27,7 +27,7 @@ pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
         .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
 
     // YAML语法检查
-    match serde_yaml::from_str::<serde_yaml::Value>(&yaml_str) {
+    match serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_str) {
         Ok(mut val) => {
             val.apply_merge()
                 .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
@@ -66,7 +66,7 @@ pub async fn save_yaml<T: Serialize + Sync>(
     data: &T,
     prefix: Option<&str>,
 ) -> Result<()> {
-    let data_str = serde_yaml::to_string(data)?;
+    let data_str = serde_yaml_ng::to_string(data)?;
 
     let yaml_str = match prefix {
         Some(prefix) => format!("{prefix}\n\n{data_str}"),

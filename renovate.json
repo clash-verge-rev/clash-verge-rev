@@ -38,5 +38,5 @@
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],
-  "ignoreDeps": ["serde_yaml", "sysinfo", "zip", "criterion"]
+  "ignoreDeps": ["serde_yaml_ng", "sysinfo", "zip", "criterion"]
 }

@@ -1,4 +1,4 @@
-use serde_yaml::{Mapping, Value};
+use serde_yaml_ng::{Mapping, Value};
 use std::collections::HashSet;
 
 pub const HANDLE_FIELDS: [&str; 12] = [

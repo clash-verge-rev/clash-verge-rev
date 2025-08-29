@@ -5,7 +5,7 @@ use crate::utils::{
 };
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 use std::{fs, time::Duration};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -355,7 +355,7 @@ impl PrfItem {
         let data = data.trim_start_matches('\u{feff}');
 
         // check the data whether the valid yaml format
-        let yaml = serde_yaml::from_str::<Mapping>(data)
+        let yaml = serde_yaml_ng::from_str::<Mapping>(data)
             .context("the remote profile data is invalid yaml")?;
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {

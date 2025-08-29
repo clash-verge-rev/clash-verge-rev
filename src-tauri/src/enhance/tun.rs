@@ -1,4 +1,4 @@
-use serde_yaml::{Mapping, Value};
+use serde_yaml_ng::{Mapping, Value};
 
 #[cfg(target_os = "macos")]
 use crate::process::AsyncHandler;

@@ -1,7 +1,7 @@
 use super::CmdResult;
 use crate::{config::*, wrap_err};
 use anyhow::Context;
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 use std::collections::HashMap;
 
 /// 获取运行时配置
@@ -19,7 +19,7 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
     wrap_err!(config
         .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
         .and_then(
-            |config| serde_yaml::to_string(config).context("failed to convert config to yaml")
+            |config| serde_yaml_ng::to_string(config).context("failed to convert config to yaml")
         ))
 }
 

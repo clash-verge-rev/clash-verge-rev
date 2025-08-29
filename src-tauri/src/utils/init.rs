@@ -142,10 +142,10 @@ pub async fn delete_log() -> Result<()> {
 
 /// 初始化DNS配置文件
 async fn init_dns_config() -> Result<()> {
-    use serde_yaml::Value;
+    use serde_yaml_ng::Value;
 
     // 创建DNS子配置
-    let dns_config = serde_yaml::Mapping::from_iter([
+    let dns_config = serde_yaml_ng::Mapping::from_iter([
         ("enable".into(), Value::Bool(true)),
         ("listen".into(), Value::String(":53".into())),
         ("enhanced-mode".into(), Value::String("fake-ip".into())),
@@ -197,7 +197,7 @@ async fn init_dns_config() -> Result<()> {
         ("fallback".into(), Value::Sequence(vec![])),
         (
             "nameserver-policy".into(),
-            Value::Mapping(serde_yaml::Mapping::new()),
+            Value::Mapping(serde_yaml_ng::Mapping::new()),
         ),
         (
             "proxy-server-nameserver".into(),
@@ -211,7 +211,7 @@ async fn init_dns_config() -> Result<()> {
         ("direct-nameserver-follow-policy".into(), Value::Bool(false)),
         (
             "fallback-filter".into(),
-            Value::Mapping(serde_yaml::Mapping::from_iter([
+            Value::Mapping(serde_yaml_ng::Mapping::from_iter([
                 ("geoip".into(), Value::Bool(true)),
                 ("geoip-code".into(), Value::String("CN".into())),
                 (
@@ -234,9 +234,9 @@ async fn init_dns_config() -> Result<()> {
     ]);
 
     // 获取默认DNS和host配置
-    let default_dns_config = serde_yaml::Mapping::from_iter([
+    let default_dns_config = serde_yaml_ng::Mapping::from_iter([
         ("dns".into(), Value::Mapping(dns_config)),
-        ("hosts".into(), Value::Mapping(serde_yaml::Mapping::new())),
+        ("hosts".into(), Value::Mapping(serde_yaml_ng::Mapping::new())),
     ]);
 
     // 检查DNS配置文件是否存在
