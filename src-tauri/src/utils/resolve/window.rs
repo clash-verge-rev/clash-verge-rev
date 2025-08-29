@@ -12,7 +12,7 @@ use crate::{
     utils::{
         logging::Type,
         resolve::{
-            ui::{get_ui_ready, update_ui_ready_stage, UiReadyStage},
+            ui::{get_ui_ready, update_ui_ready_stage, wait_for_ui_ready, UiReadyStage},
             window_script::{INITIAL_LOADING_OVERLAY, WINDOW_INITIAL_SCRIPT},
         },
     },
@@ -207,98 +207,36 @@ async fn handle_window_display_by_label(window_label: String, is_show: bool) {
     logging!(info, Type::Window, true, "窗口显示流程完成");
 }
 
-/// 监控 UI 加载状态
+/// 监控 UI 加载状态 - 优雅的事件驱动版本
 async fn monitor_ui_loading(timeout_seconds: u64) {
     logging!(
         debug,
         Type::Window,
         true,
-        "启动UI状态监控线程，超时{}秒",
+        "启动UI状态监控，使用事件驱动方式，超时{}秒",
         timeout_seconds
     );
 
-    let ui_ready_checker = || async {
-        let (mut check_count, mut consecutive_failures) = (0, 0);
+    // 使用事件驱动的方式等待 UI 就绪，完全消除轮询
+    let ui_ready = wait_for_ui_ready(timeout_seconds).await;
 
-        loop {
-            let is_ready = get_ui_ready()
-                .try_read()
-                .map(|guard| *guard)
-                .unwrap_or_else(|| {
-                    consecutive_failures += 1;
-                    if consecutive_failures > 50 {
-                        logging!(
-                            warn,
-                            Type::Window,
-                            true,
-                            "UI状态监控连续{}次无法获取读锁，可能存在死锁",
-                            consecutive_failures
-                        );
-                        consecutive_failures = 0;
-                    }
-                    false
-                });
+    if ui_ready {
+        logging!(info, Type::Window, true, "UI已完全加载就绪（事件驱动）");
+        handle::Handle::global()
+            .get_window()
+            .map(|window| window.eval(INITIAL_LOADING_OVERLAY));
+    } else {
+        logging!(
+            warn,
+            Type::Window,
+            true,
+            "UI加载监控超时({}秒)，但窗口已正常显示",
+            timeout_seconds
+        );
 
-            if is_ready {
-                logging!(
-                    debug,
-                    Type::Window,
-                    true,
-                    "UI状态监控检测到就绪信号，退出监控"
-                );
-                return;
-            }
-
-            consecutive_failures = 0;
-            tokio::time::sleep(Duration::from_millis(20)).await;
-            check_count += 1;
-
-            if check_count % 20 == 0 {
-                logging!(
-                    debug,
-                    Type::Window,
-                    true,
-                    "UI加载状态检查... ({}秒)",
-                    check_count / 10
-                );
-            }
-        }
-    };
-
-    let wait_result =
-        tokio::time::timeout(Duration::from_secs(timeout_seconds), ui_ready_checker()).await;
-
-    match wait_result {
-        Ok(_) => {
-            logging!(info, Type::Window, true, "UI已完全加载就绪");
-            handle::Handle::global()
-                .get_window()
-                .map(|window| window.eval(INITIAL_LOADING_OVERLAY));
-        }
-        Err(_) => {
-            logging!(
-                warn,
-                Type::Window,
-                true,
-                "UI加载监控超时({}秒)，但窗口已正常显示",
-                timeout_seconds
-            );
-
-            get_ui_ready()
-                .try_write()
-                .map(|mut guard| {
-                    *guard = true;
-                    logging!(info, Type::Window, true, "超时后成功设置UI就绪状态");
-                })
-                .unwrap_or_else(|| {
-                    logging!(
-                        error,
-                        Type::Window,
-                        true,
-                        "超时后无法获取UI状态写锁，可能存在严重死锁"
-                    );
-                });
-        }
+        // 超时后手动设置 UI 就绪状态（保持向后兼容性）
+        get_ui_ready().store(true, std::sync::atomic::Ordering::Release);
+        logging!(info, Type::Window, true, "超时后成功设置UI就绪状态");
     }
 }
 
