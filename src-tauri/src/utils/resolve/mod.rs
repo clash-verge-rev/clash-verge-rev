@@ -26,35 +26,30 @@ pub async fn resolve_setup_async() {
         std::thread::current().id()
     );
 
-    // AsyncHandler::spawn_blocking(|| async {
-    init_work_config().await;
-    init_resources().await;
-    init_scheme();
-    init_startup_script().await;
-    init_embed_server();
-    // });
+    AsyncHandler::spawn_blocking(|| async {
+        init_work_config().await;
+        init_resources().await;
+        init_scheme();
+        init_startup_script().await;
+        init_embed_server();
 
-    // AsyncHandler::spawn_blocking(|| async {
-    init_verge_config().await;
-    init_core_manager().await;
-    init_tray().await;
-    // });
+        init_timer().await;
+        init_hotkey().await;
+        init_auto_lightweight_mode().await;
+    });
 
-    // AsyncHandler::spawn_blocking(|| async {
-    init_system_proxy().await;
-    init_system_proxy_guard().await;
-    // });
+    AsyncHandler::spawn_blocking(|| async {
+        init_verge_config().await;
+        init_core_manager().await;
+        init_system_proxy().await;
+        init_system_proxy_guard().await;
+    });
 
-    // AsyncHandler::spawn_blocking(|| async {
-    init_timer().await;
-    init_auto_lightweight_mode().await;
-    // });
-
-    // AsyncHandler::spawn_blocking(|| async {
-    init_hotkey().await;
-    init_window().await;
-    refresh_tray_menu().await;
-    // });
+    AsyncHandler::spawn(|| async {
+        init_window().await;
+        init_tray().await;
+        refresh_tray_menu().await;
+    });
 
     let elapsed = start_time.elapsed();
     logging!(
