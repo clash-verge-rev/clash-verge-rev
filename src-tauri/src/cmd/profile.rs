@@ -14,30 +14,13 @@ use crate::{
     utils::{dirs, help, logging::Type},
     wrap_err,
 };
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
-use tokio::sync::{Mutex, RwLock};
-
-// 全局互斥锁防止并发配置更新
-static PROFILE_UPDATE_MUTEX: Mutex<()> = Mutex::const_new(());
 
 // 全局请求序列号跟踪，用于避免队列化执行
 static CURRENT_REQUEST_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
-static CURRENT_PROCESSING_PROFILE: RwLock<Option<String>> = RwLock::const_new(None);
-
-/// 清理配置处理状态
-async fn cleanup_processing_state(sequence: u64, reason: &str) {
-    *CURRENT_PROCESSING_PROFILE.write().await = None;
-    logging!(
-        info,
-        Type::Cmd,
-        true,
-        "{}，清理状态，序列号: {}",
-        reason,
-        sequence
-    );
-}
+static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
@@ -270,6 +253,12 @@ pub async fn delete_profile(index: String) -> CmdResult {
 /// 修改profiles的配置
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
+    if CURRENT_SWITCHING_PROFILE.load(Ordering::SeqCst) {
+        logging!(info, Type::Cmd, true, "当前正在切换配置，放弃请求");
+        return Ok(false);
+    }
+    CURRENT_SWITCHING_PROFILE.store(true, Ordering::SeqCst);
+
     // 为当前请求分配序列号
     let current_sequence = CURRENT_REQUEST_SEQUENCE.fetch_add(1, Ordering::SeqCst) + 1;
     let target_profile = profiles.current.clone();
@@ -282,35 +271,6 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         current_sequence,
         target_profile
     );
-
-    let mutex_result =
-        tokio::time::timeout(Duration::from_millis(100), PROFILE_UPDATE_MUTEX.lock()).await;
-
-    let _guard = match mutex_result {
-        Ok(guard) => guard,
-        Err(_) => {
-            let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-            if current_sequence < latest_sequence {
-                logging!(
-                    info,
-                    Type::Cmd,
-                    true,
-                    "检测到更新的请求 (序列号: {} < {})，放弃当前请求",
-                    current_sequence,
-                    latest_sequence
-                );
-                return Ok(false);
-            }
-            logging!(
-                info,
-                Type::Cmd,
-                true,
-                "强制获取锁以处理最新请求: {}",
-                current_sequence
-            );
-            PROFILE_UPDATE_MUTEX.lock().await
-        }
-    };
 
     let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
     if current_sequence < latest_sequence {
@@ -452,18 +412,6 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         return Ok(false);
     }
 
-    if let Some(ref profile) = target_profile {
-        *CURRENT_PROCESSING_PROFILE.write().await = Some(profile.clone());
-        logging!(
-            info,
-            Type::Cmd,
-            true,
-            "设置当前处理profile: {}, 序列号: {}",
-            profile,
-            current_sequence
-        );
-    }
-
     // 更新profiles配置
     logging!(
         info,
@@ -567,8 +515,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 handle::Handle::notify_profile_changed(current.clone());
             }
 
-            cleanup_processing_state(current_sequence, "配置切换完成").await;
-
+            CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
             Ok(true)
         }
         Ok(Ok((false, error_msg))) => {
@@ -607,9 +554,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
             // 发送验证错误通知
             handle::Handle::notice_message("config_validate::error", &error_msg);
-
-            cleanup_processing_state(current_sequence, "配置验证失败").await;
-
+            CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
             Ok(false)
         }
         Ok(Err(e)) => {
@@ -624,8 +569,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             Config::profiles().await.discard();
             handle::Handle::notice_message("config_validate::boot_error", e.to_string());
 
-            cleanup_processing_state(current_sequence, "更新过程错误").await;
-
+            CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
             Ok(false)
         }
         Err(_) => {
@@ -664,9 +608,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             }
 
             handle::Handle::notice_message("config_validate::timeout", timeout_msg);
-
-            cleanup_processing_state(current_sequence, "配置更新超时").await;
-
+            CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
             Ok(false)
         }
     }
