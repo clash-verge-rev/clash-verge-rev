@@ -344,7 +344,7 @@ export const ProxyGroups = (props: Props) => {
 
       const { name, now } = group;
       console.log(`[ProxyGroups] GUI代理切换: ${name} -> ${proxy.name}`);
-      
+
       try {
         // 1. 保存到selected中 (先保存本地状态)
         if (current) {
@@ -364,7 +364,9 @@ export const ProxyGroups = (props: Props) => {
 
         // 2. 使用统一的同步命令更新代理并同步状态
         await updateProxyAndSync(name, proxy.name);
-        console.log(`[ProxyGroups] 代理和状态同步完成: ${name} -> ${proxy.name}`);
+        console.log(
+          `[ProxyGroups] 代理和状态同步完成: ${name} -> ${proxy.name}`,
+        );
 
         // 3. 刷新前端显示
         onProxies();
@@ -379,18 +381,25 @@ export const ProxyGroups = (props: Props) => {
             });
           });
         }
-        
       } catch (error) {
-        console.error(`[ProxyGroups] 代理切换失败: ${name} -> ${proxy.name}`, error);
+        console.error(
+          `[ProxyGroups] 代理切换失败: ${name} -> ${proxy.name}`,
+          error,
+        );
         // 如果统一命令失败，回退到原来的方式
         try {
           await updateProxy(name, proxy.name);
           await forceRefreshProxies();
           await syncTrayProxySelection();
           onProxies();
-          console.log(`[ProxyGroups] 代理切换回退成功: ${name} -> ${proxy.name}`);
+          console.log(
+            `[ProxyGroups] 代理切换回退成功: ${name} -> ${proxy.name}`,
+          );
         } catch (fallbackError) {
-          console.error(`[ProxyGroups] 代理切换回退也失败: ${name} -> ${proxy.name}`, fallbackError);
+          console.error(
+            `[ProxyGroups] 代理切换回退也失败: ${name} -> ${proxy.name}`,
+            fallbackError,
+          );
           onProxies(); // 至少刷新显示
         }
       }

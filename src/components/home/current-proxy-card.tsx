@@ -29,7 +29,11 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { EnhancedCard } from "@/components/home/enhanced-card";
-import { updateProxy, deleteConnection, syncTrayProxySelection } from "@/services/cmds";
+import {
+  updateProxy,
+  deleteConnection,
+  syncTrayProxySelection,
+} from "@/services/cmds";
 import delayManager from "@/services/delay";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";

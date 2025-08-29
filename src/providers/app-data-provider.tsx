@@ -240,7 +240,7 @@ export const AppDataProvider = ({
         // 监听强制代理刷新事件(托盘代理切换立即刷新)
         const handleForceRefreshProxies = () => {
           console.log("[AppDataProvider] 强制代理刷新事件");
-          
+
           // 立即刷新，无延迟，无防抖
           forceRefreshProxies()
             .then(() => {
@@ -263,9 +263,18 @@ export const AppDataProvider = ({
         // 使用 Tauri 事件监听器替代 window 事件监听器
         const setupTauriListeners = async () => {
           try {
-            const unlistenClash = await listen("verge://refresh-clash-config", handleRefreshClash);
-            const unlistenProxy = await listen("verge://refresh-proxy-config", handleRefreshProxy);
-            const unlistenForceRefresh = await listen("verge://force-refresh-proxies", handleForceRefreshProxies);
+            const unlistenClash = await listen(
+              "verge://refresh-clash-config",
+              handleRefreshClash,
+            );
+            const unlistenProxy = await listen(
+              "verge://refresh-proxy-config",
+              handleRefreshProxy,
+            );
+            const unlistenForceRefresh = await listen(
+              "verge://force-refresh-proxies",
+              handleForceRefreshProxies,
+            );
 
             return () => {
               unlistenClash();
@@ -274,16 +283,34 @@ export const AppDataProvider = ({
             };
           } catch (error) {
             console.warn("[AppDataProvider] 设置 Tauri 事件监听器失败:", error);
-            
+
             // 降级到 window 事件监听器
-            window.addEventListener("verge://refresh-clash-config", handleRefreshClash);
-            window.addEventListener("verge://refresh-proxy-config", handleRefreshProxy);
-            window.addEventListener("verge://force-refresh-proxies", handleForceRefreshProxies);
+            window.addEventListener(
+              "verge://refresh-clash-config",
+              handleRefreshClash,
+            );
+            window.addEventListener(
+              "verge://refresh-proxy-config",
+              handleRefreshProxy,
+            );
+            window.addEventListener(
+              "verge://force-refresh-proxies",
+              handleForceRefreshProxies,
+            );
 
             return () => {
-              window.removeEventListener("verge://refresh-clash-config", handleRefreshClash);
-              window.removeEventListener("verge://refresh-proxy-config", handleRefreshProxy);
-              window.removeEventListener("verge://force-refresh-proxies", handleForceRefreshProxies);
+              window.removeEventListener(
+                "verge://refresh-clash-config",
+                handleRefreshClash,
+              );
+              window.removeEventListener(
+                "verge://refresh-proxy-config",
+                handleRefreshProxy,
+              );
+              window.removeEventListener(
+                "verge://force-refresh-proxies",
+                handleForceRefreshProxies,
+              );
             };
           }
         };
