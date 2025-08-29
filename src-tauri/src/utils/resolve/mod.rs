@@ -16,7 +16,7 @@ pub mod ui;
 pub mod window;
 pub mod window_script;
 
-pub async fn resolve_setup_async() {
+pub fn resolve_setup_async() {
     let start_time = std::time::Instant::now();
     logging!(
         info,

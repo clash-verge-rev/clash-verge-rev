@@ -136,10 +136,8 @@ mod app_init {
     pub fn init_core_async(app_handle: AppHandle) {
         let _ = init_handle(app_handle);
 
-        AsyncHandler::spawn(move || async move {
-            logging!(info, Type::Setup, true, "异步执行应用设置...");
-            resolve::resolve_setup_async().await;
-        });
+        logging!(info, Type::Setup, true, "异步执行应用设置...");
+        resolve::resolve_setup_async();
     }
 
     /// Generate all command handlers for the application
