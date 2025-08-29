@@ -264,14 +264,14 @@ pub fn create_backup() -> Result<(String, PathBuf), Error> {
     zip.write_all(fs::read(dirs::clash_path()?)?.as_slice())?;
 
     let mut verge_config: serde_json::Value =
-        serde_yaml::from_str(&fs::read_to_string(dirs::verge_path()?)?)?;
+        serde_yaml_ng::from_str(&fs::read_to_string(dirs::verge_path()?)?)?;
     if let Some(obj) = verge_config.as_object_mut() {
         obj.remove("webdav_username");
         obj.remove("webdav_password");
         obj.remove("webdav_url");
     }
     zip.start_file(dirs::VERGE_CONFIG, options)?;
-    zip.write_all(serde_yaml::to_string(&verge_config)?.as_bytes())?;
+    zip.write_all(serde_yaml_ng::to_string(&verge_config)?.as_bytes())?;
 
     zip.start_file(dirs::PROFILE_YAML, options)?;
     zip.write_all(fs::read(dirs::profiles_path()?)?.as_slice())?;

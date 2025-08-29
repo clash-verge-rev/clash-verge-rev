@@ -1,6 +1,6 @@
 use crate::enhance::field::use_keys;
 use serde::{Deserialize, Serialize};
-use serde_yaml::{Mapping, Value};
+use serde_yaml_ng::{Mapping, Value};
 use std::collections::HashMap;
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IRuntime {

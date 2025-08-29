@@ -166,7 +166,7 @@ async fn clean_async() -> bool {
     let dns_task = async {
         match timeout(
             Duration::from_millis(1000),
-            crate::utils::resolve::restore_public_dns(),
+            crate::utils::resolve::dns::restore_public_dns(),
         )
         .await
         {

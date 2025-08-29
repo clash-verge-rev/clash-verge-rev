@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_yaml::{Mapping, Sequence, Value};
+use serde_yaml_ng::{Mapping, Sequence, Value};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SeqMap {
@@ -86,7 +86,7 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
 mod tests {
     use super::*;
     #[allow(unused_imports)]
-    use serde_yaml::Value;
+    use serde_yaml_ng::Value;
 
     #[test]
     #[allow(clippy::unwrap_used)]
@@ -110,7 +110,7 @@ proxy-groups:
     - "proxy1"
 "#;
         let mut config: Mapping =
-            serde_yaml::from_str(config_str).expect("Failed to parse test config YAML");
+            serde_yaml_ng::from_str(config_str).expect("Failed to parse test config YAML");
 
         let seq = SeqMap {
             prepend: Sequence::new(),

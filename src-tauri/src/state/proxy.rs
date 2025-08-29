@@ -27,46 +27,56 @@ impl ProxyRequestCache {
 
     pub async fn get_or_fetch<F, Fut>(&self, key: String, ttl: Duration, fetch_fn: F) -> Arc<Value>
     where
-        F: Fn() -> Fut,
-        Fut: std::future::Future<Output = Value>,
+        F: Fn() -> Fut + Send + 'static,
+        Fut: std::future::Future<Output = Value> + Send + 'static,
     {
-        let now = Instant::now();
-        let key_cloned = key.clone();
-        let cell = self
-            .map
-            .entry(key)
-            .or_insert_with(|| Arc::new(OnceCell::new()))
-            .clone();
+        loop {
+            let now = Instant::now();
+            let key_cloned = key.clone();
 
-        if let Some(entry) = cell.get() {
-            if entry.expires_at > now {
-                return Arc::clone(&entry.value);
-            }
-        }
+            // Get or create the cell
+            let cell = self
+                .map
+                .entry(key_cloned.clone())
+                .or_insert_with(|| Arc::new(OnceCell::new()))
+                .clone();
 
-        if let Some(entry) = cell.get() {
-            if entry.expires_at <= now {
+            // Check if we have a valid cached entry
+            if let Some(entry) = cell.get() {
+                if entry.expires_at > now {
+                    return Arc::clone(&entry.value);
+                }
+                // Entry is expired, remove it
                 self.map
                     .remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
-                let new_cell = Arc::new(OnceCell::new());
-                self.map.insert(key_cloned.clone(), Arc::clone(&new_cell));
-                return Box::pin(self.get_or_fetch(key_cloned, ttl, fetch_fn)).await;
+                continue; // Retry with fresh cell
+            }
+
+            // Try to set a new value
+            let value = fetch_fn().await;
+            let entry = CacheEntry {
+                value: Arc::new(value),
+                expires_at: Instant::now() + ttl,
+            };
+
+            match cell.set(entry) {
+                Ok(_) => {
+                    // Successfully set the value, it must exist now
+                    if let Some(set_entry) = cell.get() {
+                        return Arc::clone(&set_entry.value);
+                    }
+                }
+                Err(_) => {
+                    if let Some(existing_entry) = cell.get() {
+                        if existing_entry.expires_at > Instant::now() {
+                            return Arc::clone(&existing_entry.value);
+                        }
+                        self.map
+                            .remove_if(&key_cloned, |_, v| Arc::ptr_eq(v, &cell));
+                    }
+                }
             }
         }
-
-        let value = fetch_fn().await;
-        let entry = CacheEntry {
-            value: Arc::new(value),
-            expires_at: Instant::now() + ttl,
-        };
-        let _ = cell.set(entry);
-        // Safe to unwrap here as we just set the value
-        Arc::clone(
-            &cell
-                .get()
-                .unwrap_or_else(|| unreachable!("Cell value should exist after set"))
-                .value,
-        )
     }
 }
 

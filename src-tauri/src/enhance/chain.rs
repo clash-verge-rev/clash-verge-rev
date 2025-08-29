@@ -3,7 +3,7 @@ use crate::{
     config::PrfItem,
     utils::{dirs, help},
 };
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 use std::fs;
 
 #[derive(Debug, Clone)]

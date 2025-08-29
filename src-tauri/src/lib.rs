@@ -1,3 +1,6 @@
+#![allow(non_snake_case)]
+#![recursion_limit = "512"]
+
 mod cmd;
 pub mod config;
 mod core;
@@ -11,9 +14,13 @@ mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
 use crate::{
+    core::handle,
     core::hotkey,
     process::AsyncHandler,
-    utils::{resolve, resolve::resolve_scheme, server},
+    utils::{
+        resolve::{self, scheme::resolve_scheme},
+        server,
+    },
 };
 use config::Config;
 use parking_lot::Mutex;
@@ -28,15 +35,13 @@ use utils::logging::Type;
 
 /// Application initialization helper functions
 mod app_init {
-    use crate::core::handle;
-
     use super::*;
 
     /// Initialize singleton monitoring for other instances
     pub fn init_singleton_check() {
         AsyncHandler::spawn(move || async move {
             logging!(info, Type::Setup, true, "开始检查单例实例...");
-            match timeout(Duration::from_secs(3), server::check_singleton()).await {
+            match timeout(Duration::from_millis(500), server::check_singleton()).await {
                 Ok(result) => {
                     if result.is_err() {
                         logging!(info, Type::Setup, true, "检测到已有应用实例运行");
@@ -130,47 +135,6 @@ mod app_init {
             .with_state_flags(tauri_plugin_window_state::StateFlags::default())
             .build();
         app.handle().plugin(window_state_plugin)?;
-        Ok(())
-    }
-
-    /// Initialize core components asynchronously
-    pub fn init_core_async(app_handle: &AppHandle) {
-        let app_handle = app_handle.clone();
-        AsyncHandler::spawn(move || async move {
-            logging!(info, Type::Setup, true, "异步执行应用设置...");
-            match timeout(
-                Duration::from_secs(30),
-                resolve::resolve_setup_async(&app_handle),
-            )
-            .await
-            {
-                Ok(_) => {
-                    logging!(info, Type::Setup, true, "应用设置成功完成");
-                }
-                Err(_) => {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        true,
-                        "应用设置超时(30秒)，继续执行后续流程"
-                    );
-                }
-            }
-        });
-    }
-
-    /// Initialize core components synchronously
-    pub async fn init_core_sync(app_handle: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-        logging!(info, Type::Setup, true, "初始化核心句柄...");
-        core::handle::Handle::global().init(app_handle.clone());
-
-        logging!(info, Type::Setup, true, "初始化配置...");
-        utils::init::init_config().await?;
-
-        logging!(info, Type::Setup, true, "初始化资源...");
-        utils::init::init_resources().await?;
-
-        logging!(info, Type::Setup, true, "核心组件初始化完成");
         Ok(())
     }
 
@@ -310,11 +274,8 @@ pub fn run() {
     // Setup singleton check
     app_init::init_singleton_check();
 
-    // Initialize network manager
-    utils::network::NetworkManager::new().init();
-
-    // Initialize portable flag
-    let _ = utils::dirs::init_portable_flag();
+    // We don't need init_portable_flag here anymore due to the init_config will do the things
+    // let _ = utils::dirs::init_portable_flag();
 
     // Set Linux environment variable
     #[cfg(target_os = "linux")]
@@ -373,23 +334,11 @@ pub fn run() {
 
             let app_handle = app.handle().clone();
 
-            // Initialize core components asynchronously
-            app_init::init_core_async(&app_handle);
-
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
-            // Initialize core components synchronously
-            AsyncHandler::spawn(move || async move {
-                if let Err(e) = app_init::init_core_sync(&app_handle).await {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        true,
-                        "Failed to initialize core components: {}",
-                        e
-                    );
-                }
-            });
+            logging!(info, Type::Setup, true, "异步执行应用设置...");
+            resolve::resolve_setup_sync(app_handle);
+            resolve::resolve_setup_async();
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())

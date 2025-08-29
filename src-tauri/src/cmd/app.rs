@@ -209,7 +209,7 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
 #[tauri::command]
 pub fn notify_ui_ready() -> CmdResult<()> {
     log::info!(target: "app", "前端UI已准备就绪");
-    crate::utils::resolve::mark_ui_ready();
+    crate::utils::resolve::ui::mark_ui_ready();
     Ok(())
 }
 
@@ -218,7 +218,7 @@ pub fn notify_ui_ready() -> CmdResult<()> {
 pub fn update_ui_stage(stage: String) -> CmdResult<()> {
     log::info!(target: "app", "UI加载阶段更新: {stage}");
 
-    use crate::utils::resolve::UiReadyStage;
+    use crate::utils::resolve::ui::UiReadyStage;
 
     let stage_enum = match stage.as_str() {
         "NotStarted" => UiReadyStage::NotStarted,
@@ -232,7 +232,7 @@ pub fn update_ui_stage(stage: String) -> CmdResult<()> {
         }
     };
 
-    crate::utils::resolve::update_ui_ready_stage(stage_enum);
+    crate::utils::resolve::ui::update_ui_ready_stage(stage_enum);
     Ok(())
 }
 
@@ -240,6 +240,6 @@ pub fn update_ui_stage(stage: String) -> CmdResult<()> {
 #[tauri::command]
 pub fn reset_ui_ready_state() -> CmdResult<()> {
     log::info!(target: "app", "重置UI就绪状态");
-    crate::utils::resolve::reset_ui_ready();
+    crate::utils::resolve::ui::reset_ui_ready();
     Ok(())
 }

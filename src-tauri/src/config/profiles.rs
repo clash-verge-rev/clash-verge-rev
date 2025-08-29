@@ -6,7 +6,7 @@ use crate::{
 };
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 use std::collections::HashSet;
 use tokio::fs;
 

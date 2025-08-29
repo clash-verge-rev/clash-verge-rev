@@ -44,9 +44,8 @@ pub async fn check_singleton() -> Result<()> {
 pub fn embed_server() {
     let port = IVerge::get_singleton_port();
 
-    AsyncHandler::spawn(move || async move {
+    AsyncHandler::spawn_blocking(move || async move {
         let visible = warp::path!("commands" / "visible").and_then(|| async {
-            resolve::create_window(false).await;
             Ok::<_, warp::Rejection>(warp::reply::with_status(
                 "ok".to_string(),
                 warp::http::StatusCode::OK,
@@ -85,7 +84,11 @@ pub fn embed_server() {
                 // Spawn async work in a fire-and-forget manner
                 let param = query.param.clone();
                 tokio::task::spawn_local(async move {
-                    logging_error!(Type::Setup, true, resolve::resolve_scheme(param).await);
+                    logging_error!(
+                        Type::Setup,
+                        true,
+                        resolve::scheme::resolve_scheme(param).await
+                    );
                 });
                 warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
             });
