@@ -41,7 +41,7 @@ mod app_init {
     pub fn init_singleton_check() {
         AsyncHandler::spawn(move || async move {
             logging!(info, Type::Setup, true, "开始检查单例实例...");
-            match timeout(Duration::from_secs(3), server::check_singleton()).await {
+            match timeout(Duration::from_millis(500), server::check_singleton()).await {
                 Ok(result) => {
                     if result.is_err() {
                         logging!(info, Type::Setup, true, "检测到已有应用实例运行");
