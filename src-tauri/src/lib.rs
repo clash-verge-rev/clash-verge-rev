@@ -272,8 +272,8 @@ pub fn run() {
     // Initialize network manager
     utils::network::NetworkManager::new().init();
 
-    // Initialize portable flag
-    let _ = utils::dirs::init_portable_flag();
+    // We don't need init_portable_flag here anymore due to the init_config will do the things
+    // let _ = utils::dirs::init_portable_flag();
 
     // Set Linux environment variable
     #[cfg(target_os = "linux")]
