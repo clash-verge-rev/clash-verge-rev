@@ -1,6 +1,6 @@
 import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig } from "vite";
@@ -34,7 +34,7 @@ export default defineConfig({
   plugins: [
     svgr(),
     tailwindcss(),
-    TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
+    tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react(),
     legacy({
       renderLegacyChunks: false,
@@ -60,20 +60,14 @@ export default defineConfig({
     outDir: "../src-tauri/frontend/dist",
     emptyOutDir: true,
     rollupOptions: {
-      input: {
-        splashscreen: path.resolve(__dirname, "src/splashscreen.html"),
-        main: path.resolve(__dirname, "src/index.html"),
-      },
       output: {
         manualChunks(id: string) {
           if (id.includes("node_modules")) {
             if (id.includes("monaco-editor")) {
               return "monaco-editor";
             }
-            return "vendor";
-          } else if (id.includes("src/components")) {
-            return "verge-components";
           }
+          return null;
         },
       },
     },

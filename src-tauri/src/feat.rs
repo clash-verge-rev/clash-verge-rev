@@ -295,7 +295,7 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
                 let value = clash_config_mapping.get(key).unwrap();
 
                 mapping.insert(key.into(), value.clone());
-                let _ = handle::Handle::mihomo().await.patch_base_config(&mapping).await;
+                handle::Handle::mihomo().await.patch_base_config(&mapping).await?;
 
                 // handle tun config
                 if key == "tun" {
@@ -324,7 +324,7 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
         }
 
         if update_tun_failed {
-            <AppResult<()>>::Err(any_err!("{}", t!("tun.busy")))
+            Err(any_err!("{}", t!("tun.busy")))
         } else {
             // 重新载入订阅
             if patch.get("unified-delay").is_some() {
@@ -342,7 +342,7 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
 
             if patch.get("mode").is_some() {
                 if Config::verge().latest().auto_close_connection.unwrap_or_default() {
-                    let _ = handle::Handle::mihomo().await.close_all_connections().await;
+                    handle::Handle::mihomo().await.close_all_connections().await?;
                 }
                 log_err!(handle::Handle::update_systray_part());
             }
@@ -353,7 +353,7 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
                 Config::generate()?;
                 Config::generate_file(ConfigType::Run)?;
             }
-            <AppResult<()>>::Ok(())
+            Ok(())
         }
     };
     match res {
