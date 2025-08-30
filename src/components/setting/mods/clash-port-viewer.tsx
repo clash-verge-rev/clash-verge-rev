@@ -9,6 +9,7 @@ import { uniq } from "lodash-es";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
+import { getBaseConfig } from "tauri-plugin-mihomo-api";
 
 const OS = getSystem();
 
@@ -83,7 +84,8 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
 
     try {
       const updatePorts: Record<string, number> = {};
-      if (OS !== "windows") {
+
+      if (OS !== "windows" && redirPort !== clashInfo?.redir_port) {
         const res = await checkPortAvailable(redirPort);
         if (!res) {
           notice("error", t("Port Conflict", { portName: "redir port" }), 4000);
@@ -91,7 +93,8 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         }
         updatePorts["redir-port"] = redirPort;
       }
-      if (OS === "linux") {
+
+      if (OS === "linux" && tproxyPort !== clashInfo?.tproxy_port) {
         const res = await checkPortAvailable(tproxyPort);
         if (!res) {
           notice(
@@ -103,24 +106,34 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
         }
         updatePorts["tproxy-port"] = tproxyPort;
       }
-      let res = await checkPortAvailable(mixedPort);
-      if (!res) {
-        notice("error", t("Port Conflict", { portName: "mixed port" }), 4000);
-        return;
+
+      if (mixedPort !== clashInfo?.mixed_port) {
+        const res = await checkPortAvailable(mixedPort);
+        if (!res) {
+          notice("error", t("Port Conflict", { portName: "mixed port" }), 4000);
+          return;
+        }
+        updatePorts["mixed-port"] = mixedPort;
       }
-      updatePorts["mixed-port"] = mixedPort;
-      res = await checkPortAvailable(socksPort);
-      if (!res) {
-        notice("error", t("Port Conflict", { portName: "socks port" }), 4000);
-        return;
+
+      if (socksPort !== clashInfo?.socks_port) {
+        const res = await checkPortAvailable(socksPort);
+        if (!res) {
+          notice("error", t("Port Conflict", { portName: "socks port" }), 4000);
+          return;
+        }
+        updatePorts["socks-port"] = socksPort;
       }
-      updatePorts["socks-port"] = socksPort;
-      res = await checkPortAvailable(port);
-      if (!res) {
-        notice("error", t("Port Conflict", { portName: "port" }), 4000);
-        return;
+
+      if (port !== clashInfo?.port) {
+        const res = await checkPortAvailable(port);
+        if (!res) {
+          notice("error", t("Port Conflict", { portName: "port" }), 4000);
+          return;
+        }
+        updatePorts["port"] = port;
       }
-      updatePorts["port"] = port;
+
       await patchInfo(updatePorts);
       await mutate("getRuntimeConfig");
       setOpen(false);

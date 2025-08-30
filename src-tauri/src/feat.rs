@@ -237,7 +237,7 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
         tmp_map.insert("socks-port".into(), 0.into());
         tmp_map.insert("redir-port".into(), 0.into());
         tmp_map.insert("tproxy-port".into(), 0.into());
-        let _ = handle::Handle::mihomo().await.patch_base_config(&tmp_map).await;
+        handle::Handle::mihomo().await.patch_base_config(&tmp_map).await?;
         // clash config
         tracing::debug!("patch latest clash config");
         Config::clash().latest_mut().patch_config(tmp_map);
