@@ -591,6 +591,7 @@ async fn create_tray_menu(
 
     let version = env!("CARGO_PKG_VERSION");
 
+
     let hotkeys = Config::verge()
         .await
         .latest_ref()
