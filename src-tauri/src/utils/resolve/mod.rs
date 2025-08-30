@@ -33,9 +33,10 @@ pub fn resolve_setup_async() {
         std::thread::current().id()
     );
 
-    AsyncHandler::spawn_blocking(|| AsyncHandler::block_on(init_work_config()));
+    // AsyncHandler::spawn_blocking(|| AsyncHandler::block_on(init_work_config()));
 
     AsyncHandler::spawn(|| async {
+        init_work_config().await;
         init_resources().await;
         init_startup_script().await;
 

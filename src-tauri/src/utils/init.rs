@@ -1,7 +1,9 @@
 use crate::{
     config::*,
     core::handle,
-    utils::{dirs, help},
+    logging,
+    process::AsyncHandler,
+    utils::{dirs, help, logging::Type},
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone};
@@ -85,7 +87,13 @@ pub async fn delete_log() -> Result<()> {
         _ => return Ok(()),
     };
 
-    log::info!(target: "app", "try to delete log files, day: {day}");
+    logging!(
+        info,
+        Type::Setup,
+        true,
+        "try to delete log files, day: {}",
+        day
+    );
 
     // %Y-%m-%d to NaiveDateTime
     let parse_time_str = |s: &str| {
@@ -120,7 +128,7 @@ pub async fn delete_log() -> Result<()> {
             if duration.num_days() > day {
                 let file_path = file.path();
                 let _ = fs::remove_file(file_path).await;
-                log::info!(target: "app", "delete log file: {file_name}");
+                logging!(info, Type::Setup, true, "delete log file: {}", file_name);
             }
         }
         Ok(())
@@ -247,7 +255,7 @@ async fn init_dns_config() -> Result<()> {
     let dns_path = app_dir.join("dns_config.yaml");
 
     if !dns_path.exists() {
-        log::info!(target: "app", "Creating default DNS config file");
+        logging!(info, Type::Setup, true, "Creating default DNS config file");
         help::save_yaml(
             &dns_path,
             &default_dns_config,
@@ -259,54 +267,120 @@ async fn init_dns_config() -> Result<()> {
     Ok(())
 }
 
-/// Initialize all the config files
-/// before tauri setup
-pub async fn init_config() -> Result<()> {
-    let _ = dirs::init_portable_flag();
-    let _ = init_log().await;
-    let _ = delete_log().await;
+/// 确保目录结构存在
+async fn ensure_directories() -> Result<()> {
+    let directories = [
+        ("app_home", dirs::app_home_dir()?),
+        ("app_profiles", dirs::app_profiles_dir()?),
+        ("app_logs", dirs::app_logs_dir()?),
+    ];
 
-    crate::log_err!(dirs::app_home_dir().map(|app_dir| async move {
-        if !app_dir.exists() {
-            std::mem::drop(fs::create_dir_all(&app_dir).await);
+    for (name, dir) in directories {
+        if !dir.exists() {
+            fs::create_dir_all(&dir).await.map_err(|e| {
+                anyhow::anyhow!("Failed to create {} directory {:?}: {}", name, dir, e)
+            })?;
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Created {} directory: {:?}",
+                name,
+                dir
+            );
         }
-    }));
+    }
 
-    crate::log_err!(dirs::app_profiles_dir().map(|profiles_dir| async move {
-        if !profiles_dir.exists() {
-            std::mem::drop(fs::create_dir_all(&profiles_dir).await);
-        }
-    }));
+    Ok(())
+}
 
+/// 初始化配置文件
+async fn initialize_config_files() -> Result<()> {
     if let Ok(path) = dirs::clash_path() {
         if !path.exists() {
-            let result =
-                help::save_yaml(&path, &IClashTemp::template().0, Some("# Clash Vergeasu")).await;
-            crate::log_err!(result);
+            let template = IClashTemp::template().0;
+            help::save_yaml(&path, &template, Some("# Clash Verge"))
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to create clash config: {}", e))?;
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Created clash config at {:?}",
+                path
+            );
         }
     }
 
     if let Ok(path) = dirs::verge_path() {
         if !path.exists() {
-            let result = help::save_yaml(&path, &IVerge::template(), Some("# Clash Verge")).await;
-            crate::log_err!(result);
+            let template = IVerge::template();
+            help::save_yaml(&path, &template, Some("# Clash Verge"))
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to create verge config: {}", e))?;
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Created verge config at {:?}",
+                path
+            );
         }
     }
-
-    // 验证并修正verge.yaml中的clash_core配置
-    let result = IVerge::validate_and_fix_config().await;
-    crate::log_err!(result);
 
     if let Ok(path) = dirs::profiles_path() {
         if !path.exists() {
-            let result =
-                help::save_yaml(&path, &IProfiles::template(), Some("# Clash Verge")).await;
-            crate::log_err!(result);
+            let template = IProfiles::template();
+            help::save_yaml(&path, &template, Some("# Clash Verge"))
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to create profiles config: {}", e))?;
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Created profiles config at {:?}",
+                path
+            );
         }
     }
 
-    // 初始化DNS配置文件
-    let _ = init_dns_config().await;
+    // 验证并修正verge配置
+    IVerge::validate_and_fix_config()
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to validate verge config: {}", e))?;
+
+    Ok(())
+}
+
+/// Initialize all the config files
+/// before tauri setup
+pub async fn init_config() -> Result<()> {
+    let _ = dirs::init_portable_flag();
+
+    if let Err(e) = init_log().await {
+        eprintln!("Failed to initialize logging: {}", e);
+    }
+
+    ensure_directories().await?;
+
+    initialize_config_files().await?;
+
+    AsyncHandler::spawn(|| async {
+        if let Err(e) = delete_log().await {
+            logging!(warn, Type::Setup, true, "Failed to clean old logs: {}", e);
+        }
+        logging!(info, Type::Setup, true, "后台日志清理任务完成");
+    });
+
+    if let Err(e) = init_dns_config().await {
+        logging!(
+            warn,
+            Type::Setup,
+            true,
+            "DNS config initialization failed: {}",
+            e
+        );
+    }
 
     Ok(())
 }
@@ -331,13 +405,30 @@ pub async fn init_resources() -> Result<()> {
     for file in file_list.iter() {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
-        log::debug!(target: "app", "src_path: {src_path:?}, dest_path: {dest_path:?}");
+        logging!(
+            debug,
+            Type::Setup,
+            true,
+            "src_path: {:?}, dest_path: {:?}",
+            src_path,
+            dest_path
+        );
 
         let handle_copy = |src: PathBuf, dest: PathBuf, file: String| async move {
             match fs::copy(&src, &dest).await {
-                Ok(_) => log::debug!(target: "app", "resources copied '{file}'"),
+                Ok(_) => {
+                    logging!(debug, Type::Setup, true, "resources copied '{}'", file);
+                }
                 Err(err) => {
-                    log::error!(target: "app", "failed to copy resources '{file}' to '{dest:?}', {err}")
+                    logging!(
+                        error,
+                        Type::Setup,
+                        true,
+                        "failed to copy resources '{}' to '{:?}', {}",
+                        file,
+                        dest,
+                        err
+                    );
                 }
             };
         };
@@ -355,11 +446,23 @@ pub async fn init_resources() -> Result<()> {
                 if src_modified > dest_modified {
                     handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
                 } else {
-                    log::debug!(target: "app", "skipping resource copy '{file}'");
+                    logging!(
+                        debug,
+                        Type::Setup,
+                        true,
+                        "skipping resource copy '{}'",
+                        file
+                    );
                 }
             }
             _ => {
-                log::debug!(target: "app", "failed to get modified '{file}'");
+                logging!(
+                    debug,
+                    Type::Setup,
+                    true,
+                    "failed to get modified '{}'",
+                    file
+                );
                 handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
             }
         };
