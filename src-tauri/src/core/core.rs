@@ -317,7 +317,7 @@ impl CoreManager {
         };
         // 对YAML文件尝试解析，只检查语法正确性
         logging!(info, Type::Config, true, "进行YAML语法检查");
-        match serde_yaml::from_str::<serde_yaml::Value>(&content) {
+        match serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&content) {
             Ok(_) => {
                 logging!(info, Type::Config, true, "YAML语法检查通过");
                 Ok((true, String::new()))

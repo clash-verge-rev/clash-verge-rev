@@ -1,4 +1,4 @@
-use serde_yaml::{Mapping, Value};
+use serde_yaml_ng::{Mapping, Value};
 
 #[cfg(target_os = "macos")]
 use crate::process::AsyncHandler;
@@ -63,8 +63,8 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             #[cfg(target_os = "macos")]
             {
                 AsyncHandler::spawn(move || async move {
-                    crate::utils::resolve::restore_public_dns().await;
-                    crate::utils::resolve::set_public_dns("223.6.6.6".to_string()).await;
+                    crate::utils::resolve::dns::restore_public_dns().await;
+                    crate::utils::resolve::dns::set_public_dns("223.6.6.6".to_string()).await;
                 });
             }
         }
@@ -75,7 +75,7 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
         // TUN未启用时，仅恢复系统DNS，不修改配置文件中的DNS设置
         #[cfg(target_os = "macos")]
         AsyncHandler::spawn(move || async move {
-            crate::utils::resolve::restore_public_dns().await;
+            crate::utils::resolve::dns::restore_public_dns().await;
         });
     }
 

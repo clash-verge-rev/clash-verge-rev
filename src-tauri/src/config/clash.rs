@@ -3,7 +3,7 @@ use crate::utils::dirs::{ipc_path, path_to_str};
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use serde_yaml::{Mapping, Value};
+use serde_yaml_ng::{Mapping, Value};
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr,

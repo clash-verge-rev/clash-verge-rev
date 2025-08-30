@@ -3,7 +3,7 @@ use crate::core::{async_proxy_query::AsyncProxyQuery, EventDrivenProxyManager};
 use crate::process::AsyncHandler;
 use crate::wrap_err;
 use network_interface::NetworkInterface;
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 
 /// get the system proxy
 #[tauri::command]

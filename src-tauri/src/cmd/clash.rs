@@ -12,7 +12,7 @@ use crate::{
     utils::logging::Type,
     wrap_err,
 };
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 use std::time::Duration;
 
 const CONFIG_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
@@ -143,7 +143,7 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
 #[tauri::command]
 pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     use crate::utils::dirs;
-    use serde_yaml;
+    use serde_yaml_ng;
     use tokio::fs;
 
     // 获取DNS配置文件路径
@@ -152,7 +152,7 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
         .join("dns_config.yaml");
 
     // 保存DNS配置到文件
-    let yaml_str = serde_yaml::to_string(&dns_config).map_err(|e| e.to_string())?;
+    let yaml_str = serde_yaml_ng::to_string(&dns_config).map_err(|e| e.to_string())?;
     fs::write(&dns_path, yaml_str)
         .await
         .map_err(|e| e.to_string())?;
@@ -187,15 +187,16 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         })?;
 
         // 解析DNS配置
-        let patch_config = serde_yaml::from_str::<serde_yaml::Mapping>(&dns_yaml).map_err(|e| {
-            logging!(error, Type::Config, "Failed to parse DNS config: {e}");
-            e.to_string()
-        })?;
+        let patch_config =
+            serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).map_err(|e| {
+                logging!(error, Type::Config, "Failed to parse DNS config: {e}");
+                e.to_string()
+            })?;
 
         logging!(info, Type::Config, "Applying DNS config from file");
 
         // 创建包含DNS配置的patch
-        let mut patch = serde_yaml::Mapping::new();
+        let mut patch = serde_yaml_ng::Mapping::new();
         patch.insert("dns".into(), patch_config.into());
 
         // 应用DNS配置到运行时配置

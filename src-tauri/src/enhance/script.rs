@@ -1,6 +1,6 @@
 use super::use_lowercase;
 use anyhow::{Error, Result};
-use serde_yaml::Mapping;
+use serde_yaml_ng::Mapping;
 
 pub fn use_script(
     script: String,
@@ -149,11 +149,11 @@ fn test_script() {
       enable: false
   ";
 
-    let config = serde_yaml::from_str(config).expect("Failed to parse test config YAML");
+    let config = serde_yaml_ng::from_str(config).expect("Failed to parse test config YAML");
     let (config, results) = use_script(script.into(), config, "".to_string())
         .expect("Script execution should succeed in test");
 
-    let _ = serde_yaml::to_string(&config).expect("Failed to serialize config to YAML");
+    let _ = serde_yaml_ng::to_string(&config).expect("Failed to serialize config to YAML");
     let yaml_config_size = std::mem::size_of_val(&config);
     let box_yaml_config_size = std::mem::size_of_val(&Box::new(config));
     assert!(box_yaml_config_size < yaml_config_size);

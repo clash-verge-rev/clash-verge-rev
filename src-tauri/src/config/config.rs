@@ -3,7 +3,6 @@ use crate::{
     config::{profiles_append_item_safe, PrfItem},
     core::{handle, CoreManager},
     enhance, logging,
-    process::AsyncHandler,
     utils::{dirs, help, logging::Type},
 };
 use anyhow::{anyhow, Result};
@@ -123,10 +122,8 @@ impl Config {
 
         // 在单独的任务中发送通知
         if let Some((msg_type, msg_content)) = validation_result {
-            AsyncHandler::spawn(move || async move {
-                sleep(Duration::from_secs(2)).await;
-                handle::Handle::notice_message(msg_type, &msg_content);
-            });
+            sleep(Duration::from_secs(2)).await;
+            handle::Handle::notice_message(msg_type, &msg_content);
         }
 
         Ok(())
