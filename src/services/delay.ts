@@ -102,16 +102,23 @@ class DelayManager {
     if (total > 30) {
       return new Promise(async (resolve) => {
         const url = this.getUrl(group);
-        const result = await delayGroup(group, url, timeout);
-        const resultNames = Object.keys(result);
-        const timeoutNames = names.filter(
-          (name) => !resultNames.includes(name),
-        );
-        timeoutNames.forEach((name) => this.setDelay(name, group, 0));
-        Object.entries(result).forEach(([name, delay]) => {
-          this.setDelay(name, group, delay);
-        });
-        resolve(null);
+        try {
+          const result = await delayGroup(group, url, timeout);
+          const resultNames = Object.keys(result);
+          const timeoutNames = names.filter(
+            (name) => !resultNames.includes(name),
+          );
+          timeoutNames.forEach((name) => this.setDelay(name, group, 0));
+          Object.entries(result).forEach(([name, delay]) => {
+            this.setDelay(name, group, delay);
+          });
+          resolve(null);
+        } catch (err) {
+          console.error(err);
+          // group delay error, which means that all proxies are timeout
+          names.forEach((name) => this.setDelay(name, group, 0));
+          resolve(null);
+        }
       });
     }
 
