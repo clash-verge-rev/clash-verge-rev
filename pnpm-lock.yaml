@@ -78,8 +78,8 @@ importers:
         specifier: ^3.8.0
         version: 3.8.0(jquery@3.7.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       dayjs:
-        specifier: 1.11.15
-        version: 1.11.15
+        specifier: 1.11.18
+        version: 1.11.18
       foxact:
         specifier: ^0.2.45
         version: 0.2.49(react@19.1.1)
@@ -2223,8 +2223,8 @@ packages:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
     engines: {node: '>= 12'}
 
-  dayjs@1.11.15:
-    resolution: {integrity: sha512-MC+DfnSWiM9APs7fpiurHGCoeIx0Gdl6QZBy+5lu8MbYKN5FZEXqOgrundfibdfhGZ15o9hzmZ2xJjZnbvgKXQ==}
+  dayjs@1.11.18:
+    resolution: {integrity: sha512-zFBQ7WFRvVRhKcWoUh+ZA1g2HVgUbsZm9sbddh8EC5iv93sui8DVVz1Npvz+r6meo9VKfa8NyLWBsQK1VvIKPA==}
 
   debug@4.4.1:
     resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
@@ -5624,7 +5624,7 @@ snapshots:
   ahooks@3.9.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@babel/runtime': 7.28.3
-      dayjs: 1.11.15
+      dayjs: 1.11.18
       intersection-observer: 0.12.2
       js-cookie: 3.0.5
       lodash: 4.17.21
@@ -5888,7 +5888,7 @@ snapshots:
 
   data-uri-to-buffer@4.0.1: {}
 
-  dayjs@1.11.15: {}
+  dayjs@1.11.18: {}
 
   debug@4.4.1:
     dependencies:
