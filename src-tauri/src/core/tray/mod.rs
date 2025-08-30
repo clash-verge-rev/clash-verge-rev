@@ -643,22 +643,19 @@ async fn create_tray_menu(
         results.into_iter().collect::<Result<Vec<_>, _>>()?
     };
 
-    // 创建代理组子菜单结构
+    // 代理组子菜单
     let proxy_submenus: Vec<Submenu<Wry>> = {
         let mut submenus = Vec::new();
 
-        // 解析代理组数据，创建分层菜单结构
+        //
         if let Some(proxies) = proxy_nodes_data.get("proxies").and_then(|v| v.as_object()) {
             for (group_name, group_data) in proxies.iter() {
-                if let (Some(group_type), Some(all_proxies)) = (
-                    group_data.get("type").and_then(|v| v.as_str()),
-                    group_data.get("all").and_then(|v| v.as_array()),
-                ) {
+                if let Some(all_proxies) = group_data.get("all").and_then(|v| v.as_array()) {
                     // 在全局模式下只显示GLOBAL组，在规则模式下显示所有Selector类型的代理组
                     let should_show_group = if mode == "global" {
                         group_name == "GLOBAL"
                     } else {
-                        group_type == "Selector" && group_name != "GLOBAL"
+                        group_name != "GLOBAL"
                     };
 
                     if !should_show_group {
@@ -667,17 +664,48 @@ async fn create_tray_menu(
 
                     let now_proxy = group_data.get("now").and_then(|v| v.as_str()).unwrap_or("");
 
-                    // 为每个代理组创建子菜单项
+                    // 每个代理组创建子菜单项
                     let mut group_items = Vec::new();
+
                     for proxy_name in all_proxies.iter() {
                         if let Some(proxy_str) = proxy_name.as_str() {
                             let is_selected = proxy_str == now_proxy;
                             let item_id = format!("proxy_{}_{}", group_name, proxy_str);
 
+                            let display_text = {
+                                if let Some(proxy_detail) = proxies.get(proxy_str) {
+                                    if let Some(history) =
+                                        proxy_detail.get("history").and_then(|h| h.as_array())
+                                    {
+                                        if let Some(last_record) = history.last() {
+                                            if let Some(delay) =
+                                                last_record.get("delay").and_then(|d| d.as_i64())
+                                            {
+                                                if delay == -1 {
+                                                    format!("{}   | -ms", proxy_str)
+                                                } else if delay >= 10000 {
+                                                    format!("{}   | -1ms", proxy_str)
+                                                } else {
+                                                    format!("{}   | {}ms", proxy_str, delay)
+                                                }
+                                            } else {
+                                                format!("{}   | -ms ", proxy_str)
+                                            }
+                                        } else {
+                                            format!("{}   | -ms ", proxy_str)
+                                        }
+                                    } else {
+                                        format!("{}   | -ms", proxy_str)
+                                    }
+                                } else {
+                                    format!("{}   | -ms ", proxy_str)
+                                }
+                            };
+
                             match CheckMenuItem::with_id(
                                 app_handle,
                                 item_id,
-                                proxy_str, // 只显示节点名，不显示组名前缀
+                                display_text, // 显示包含延迟的节点名
                                 true,
                                 is_selected,
                                 None::<&str>,
@@ -697,14 +725,11 @@ async fn create_tray_menu(
 
                         // 判断当前代理组是否为真正在使用中的组
                         let is_group_active = if mode == "global" {
-                            // 全局模式下，只有GLOBAL组才能显示勾选
                             group_name == "GLOBAL" && !now_proxy.is_empty()
                         } else if mode == "direct" {
-                            // 直连模式下，不显示任何勾选
+                            // 直连模式下 不显示任何勾选
                             false
                         } else {
-                            // 规则模式下：只对用户在当前配置中手动选择过的代理组显示勾选
-                            // 这些组表示用户真正关心和使用的代理组
                             let is_user_selected = current_profile_selected
                                 .iter()
                                 .any(|selected| selected.name.as_deref() == Some(group_name));
@@ -806,7 +831,7 @@ async fn create_tray_menu(
         &profile_menu_items_refs,
     )?;
 
-    // 创建代理主菜单（包含所有代理组子菜单）
+    // 创建代理主菜单
     let proxies_submenu = if !proxy_submenus.is_empty() {
         let proxy_submenu_refs: Vec<&dyn IsMenuItem<Wry>> = proxy_submenus
             .iter()
