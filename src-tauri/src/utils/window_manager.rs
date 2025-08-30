@@ -115,7 +115,7 @@ impl WindowManager {
     }
 
     /// 智能显示主窗口
-    pub fn show_main_window() -> WindowOperationResult {
+    pub async fn show_main_window() -> WindowOperationResult {
         // 防抖检查
         if !should_handle_window_operation() {
             return WindowOperationResult::NoAction;
@@ -138,7 +138,7 @@ impl WindowManager {
         match current_state {
             WindowState::NotExist => {
                 logging!(info, Type::Window, true, "窗口不存在，创建新窗口");
-                if Self::create_new_window() {
+                if Self::create_new_window().await {
                     logging!(info, Type::Window, true, "窗口创建成功");
                     std::thread::sleep(std::time::Duration::from_millis(100));
                     WindowOperationResult::Created
@@ -172,7 +172,7 @@ impl WindowManager {
     }
 
     /// 切换主窗口显示状态（显示/隐藏）
-    pub fn toggle_main_window() -> WindowOperationResult {
+    pub async fn toggle_main_window() -> WindowOperationResult {
         // 防抖检查
         if !should_handle_window_operation() {
             return WindowOperationResult::NoAction;
@@ -198,7 +198,7 @@ impl WindowManager {
                 // 窗口不存在，创建新窗口
                 logging!(info, Type::Window, true, "窗口不存在，将创建新窗口");
                 // 由于已经有防抖保护，直接调用内部方法
-                if Self::create_new_window() {
+                if Self::create_new_window().await {
                     WindowOperationResult::Created
                 } else {
                     WindowOperationResult::Failed
@@ -360,12 +360,10 @@ impl WindowManager {
     }
 
     /// 创建新窗口,防抖避免重复调用
-    fn create_new_window() -> bool {
-        use crate::process::AsyncHandler;
+    async fn create_new_window() -> bool {
         use crate::utils::resolve;
 
-        // 使用 tokio runtime 阻塞调用 async 函数
-        AsyncHandler::block_on(resolve::window::create_window(true))
+        resolve::window::create_window(true).await
     }
 
     /// 获取详细的窗口状态信息

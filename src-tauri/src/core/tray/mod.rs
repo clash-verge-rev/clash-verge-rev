@@ -524,7 +524,7 @@ impl Tray {
                                 log::info!(target: "app", "当前在轻量模式，正在退出轻量模式");
                                 crate::module::lightweight::exit_lightweight_mode().await;
                             }
-                            let result = WindowManager::show_main_window();
+                            let result = WindowManager::show_main_window().await;
                             log::info!(target: "app", "窗口显示结果: {result:?}");
                         }),
                         _ => Box::pin(async move {}),
@@ -822,7 +822,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     log::info!(target: "app", "当前在轻量模式，正在退出");
                     crate::module::lightweight::exit_lightweight_mode().await; // Await async function
                 }
-                let result = WindowManager::show_main_window(); // Remove .await as it's not async
+                let result = WindowManager::show_main_window().await; // Await async function
                 log::info!(target: "app", "窗口显示结果: {result:?}");
             }
             "system_proxy" => {
@@ -852,7 +852,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 if was_lightweight {
                     crate::module::lightweight::exit_lightweight_mode().await; // Await async function
                     use crate::utils::window_manager::WindowManager;
-                    let result = WindowManager::show_main_window(); // Remove .await as it's not async
+                    let result = WindowManager::show_main_window().await; // Await async function
                     log::info!(target: "app", "退出轻量模式后显示主窗口: {result:?}");
                 } else {
                     crate::module::lightweight::entry_lightweight_mode().await; // Remove .await as it's not async
