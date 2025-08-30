@@ -1,3 +1,4 @@
+use anyhow::Result;
 use tauri::AppHandle;
 
 use crate::{
@@ -32,9 +33,10 @@ pub fn resolve_setup_async() {
         std::thread::current().id()
     );
 
+    AsyncHandler::spawn_blocking(|| AsyncHandler::block_on(init_work_config()));
+
     AsyncHandler::spawn(|| async {
         init_resources().await;
-        init_work_config().await;
         init_startup_script().await;
 
         init_timer().await;
@@ -45,7 +47,6 @@ pub fn resolve_setup_async() {
         init_core_manager().await;
         init_system_proxy().await;
 
-        // 在单独的 spawn 中运行 sync 函数，避免 Send 问题
         AsyncHandler::spawn_blocking(|| {
             init_system_proxy_guard();
         });
@@ -104,6 +105,18 @@ pub fn init_handle(app_handle: AppHandle) {
 pub(super) fn init_scheme() {
     logging!(info, Type::Setup, true, "Initializing custom URL scheme");
     logging_error!(Type::Setup, true, init::init_scheme());
+}
+
+pub async fn resolve_scheme(param: String) -> Result<()> {
+    logging!(
+        info,
+        Type::Setup,
+        true,
+        "Resolving scheme for param: {}",
+        param
+    );
+    logging_error!(Type::Setup, true, scheme::resolve_scheme(param).await);
+    Ok(())
 }
 
 pub(super) fn init_embed_server() {

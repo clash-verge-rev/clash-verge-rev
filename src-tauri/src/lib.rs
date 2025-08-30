@@ -17,10 +17,7 @@ use crate::{
     core::handle,
     core::hotkey,
     process::AsyncHandler,
-    utils::{
-        resolve::{self, scheme::resolve_scheme},
-        server,
-    },
+    utils::{resolve, server},
 };
 use config::Config;
 use parking_lot::Mutex;
@@ -100,7 +97,7 @@ mod app_init {
             let url = event.urls().first().map(|u| u.to_string());
             if let Some(url) = url {
                 tokio::task::spawn_local(async move {
-                    if let Err(e) = resolve_scheme(url).await {
+                    if let Err(e) = resolve::resolve_scheme(url).await {
                         logging!(error, Type::Setup, true, "Failed to resolve scheme: {}", e);
                     }
                 });

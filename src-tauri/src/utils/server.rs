@@ -84,11 +84,7 @@ pub fn embed_server() {
                 // Spawn async work in a fire-and-forget manner
                 let param = query.param.clone();
                 tokio::task::spawn_local(async move {
-                    logging_error!(
-                        Type::Setup,
-                        true,
-                        resolve::scheme::resolve_scheme(param).await
-                    );
+                    logging_error!(Type::Setup, true, resolve::resolve_scheme(param).await);
                 });
                 warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
             });
