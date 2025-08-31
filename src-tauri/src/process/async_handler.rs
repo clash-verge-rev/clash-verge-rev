@@ -34,6 +34,7 @@ impl AsyncHandler {
         async_runtime::spawn_blocking(f)
     }
 
+    #[allow(dead_code)]
     #[track_caller]
     pub fn block_on<Fut>(fut: Fut) -> Fut::Output
     where
