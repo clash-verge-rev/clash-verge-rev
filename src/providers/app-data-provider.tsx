@@ -295,7 +295,7 @@ export const AppDataProvider = ({
     "getSystemProxy",
     getSystemProxy,
     {
-      revalidateOnFocus: true,
+      revalidateOnFocus: false, // 只有窗口在焦点时才允许切换代理
       revalidateOnReconnect: true,
       suspense: false,
       errorRetryCount: 3,
