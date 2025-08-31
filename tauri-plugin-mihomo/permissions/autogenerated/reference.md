@@ -1,48 +1,3 @@
-## Default Permission
-
-Default permissions for the plugin
-
-#### This default permission set includes the following:
-
-- `allow-update-controller`
-- `allow-update-secret`
-- `allow-get-version`
-- `allow-flush-fakeip`
-- `allow-flush-dns`
-- `allow-get-connections`
-- `allow-close-all-connections`
-- `allow-close-connections`
-- `allow-get-groups`
-- `allow-get-group-by-name`
-- `allow-delay-group`
-- `allow-get-proxy-providers`
-- `allow-get-proxy-provider-by-name`
-- `allow-update-proxy-provider`
-- `allow-healthcheck-proxy-provider`
-- `allow-healthcheck-node-in-provider`
-- `allow-get-proxies`
-- `allow-get-proxy-by-name`
-- `allow-select-node-for-proxy`
-- `allow-unfixed-proxy`
-- `allow-delay-proxy-by-name`
-- `allow-get-rules`
-- `allow-get-rule-providers`
-- `allow-update-rule-provider`
-- `allow-get-base-config`
-- `allow-reload-config`
-- `allow-patch-base-config`
-- `allow-update-geo`
-- `allow-restart`
-- `allow-upgrade-core`
-- `allow-upgrade-ui`
-- `allow-upgrade-geo`
-- `allow-ws-traffic`
-- `allow-ws-memory`
-- `allow-ws-connections`
-- `allow-ws-logs`
-- `allow-ws-disconnect`
-- `allow-clear-all-ws-connections`
-
 ## Permission Table
 
 <table>
@@ -51,32 +6,6 @@ Default permissions for the plugin
 <th>Description</th>
 </tr>
 
-
-<tr>
-<td>
-
-`mihomo:allow-clear-all-ws-connection`
-
-</td>
-<td>
-
-Enables the clear_all_ws_connection command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`mihomo:deny-clear-all-ws-connection`
-
-</td>
-<td>
-
-Denies the clear_all_ws_connection command without any pre-configured scope.
-
-</td>
-</tr>
 
 <tr>
 <td>
@@ -679,12 +608,12 @@ Denies the restart command without any pre-configured scope.
 <tr>
 <td>
 
-`mihomo:allow-select-node-for-proxy`
+`mihomo:allow-select-node-for-group`
 
 </td>
 <td>
 
-Enables the select_node_for_proxy command without any pre-configured scope.
+Enables the select_node_for_group command without any pre-configured scope.
 
 </td>
 </tr>
@@ -692,12 +621,12 @@ Enables the select_node_for_proxy command without any pre-configured scope.
 <tr>
 <td>
 
-`mihomo:deny-select-node-for-proxy`
+`mihomo:deny-select-node-for-group`
 
 </td>
 <td>
 
-Denies the select_node_for_proxy command without any pre-configured scope.
+Denies the select_node_for_group command without any pre-configured scope.
 
 </td>
 </tr>

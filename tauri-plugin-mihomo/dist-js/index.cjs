@@ -164,12 +164,12 @@ async function getProxyByName(proxyName) {
  * 为指定代理选择节点
  *
  * 一般为指定代理组下使用指定的代理节点 【代理组/节点】
- * @param proxyName 代理组名称
+ * @param groupName 代理组名称
  * @param node 代理节点
  */
-async function selectNodeForProxy(proxyName, node) {
-    await core.invoke("plugin:mihomo|select_node_for_proxy", {
-        proxyName,
+async function selectNodeForGroup(groupName, node) {
+    await core.invoke("plugin:mihomo|select_node_for_group", {
+        groupName,
         node,
     });
 }
@@ -460,7 +460,7 @@ exports.healthcheckProxyProvider = healthcheckProxyProvider;
 exports.patchBaseConfig = patchBaseConfig;
 exports.reloadConfig = reloadConfig;
 exports.restart = restart;
-exports.selectNodeForProxy = selectNodeForProxy;
+exports.selectNodeForGroup = selectNodeForGroup;
 exports.unfixedProxy = unfixedProxy;
 exports.updateController = updateController;
 exports.updateGeo = updateGeo;

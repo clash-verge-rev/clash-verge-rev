@@ -1,5 +1,15 @@
+use futures_util::{SinkExt, stream::SplitSink};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Display};
+use tokio::net::TcpStream;
+#[cfg(unix)]
+use tokio::net::UnixStream;
+#[cfg(windows)]
+use tokio::net::windows::named_pipe::NamedPipeClient;
+use tokio::sync::RwLock;
+#[cfg(unix)]
+use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use ts_rs::TS;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -323,6 +333,18 @@ pub enum LogLevel {
     SILENT,
 }
 
+impl Display for LogLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LogLevel::DEBUG => write!(f, "debug"),
+            LogLevel::INFO => write!(f, "info"),
+            LogLevel::WARNING => write!(f, "warning"),
+            LogLevel::ERROR => write!(f, "error"),
+            LogLevel::SILENT => write!(f, "silent"),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, TS)]
 #[ts(export, rename_all = "camelCase")]
 #[serde(rename_all(serialize = "camelCase", deserialize = "kebab-case"))]
@@ -372,7 +394,7 @@ impl Display for CoreUpdaterChannel {
 }
 
 /// clash mode enum
-#[derive(Debug, Serialize, Deserialize, TS, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS, PartialEq, Eq)]
 #[ts(export)]
 #[serde(rename_all = "lowercase")]
 pub enum ClashMode {
@@ -673,7 +695,7 @@ pub struct RuleProvider {
 pub struct Connections {
     pub download_total: u64,
     pub upload_total: u64,
-    pub connections: Vec<Connection>,
+    pub connections: Option<Vec<Connection>>,
     pub memory: u32,
 }
 
@@ -819,3 +841,51 @@ pub struct Log {
     pub log_type: String,
     pub payload: String,
 }
+
+// ------------- use in rust, no need export to typescript -----------------
+#[derive(Deserialize, Serialize)]
+pub struct CloseFrame {
+    pub code: u16,
+    pub reason: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(tag = "type", content = "data")]
+pub enum WebSocketMessage {
+    Text(String),
+    Binary(Vec<u8>),
+    Ping(Vec<u8>),
+    Pong(Vec<u8>),
+    Close(Option<CloseFrame>),
+}
+
+pub type ConnectionId = u32;
+pub enum WebSocketWriter {
+    TcpStreamWriter(SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>),
+    #[cfg(unix)]
+    UnixStreamWriter(SplitSink<WebSocketStream<UnixStream>, Message>),
+    #[cfg(windows)]
+    NamedPipeWriter(SplitSink<WebSocketStream<NamedPipeClient>, Message>),
+}
+
+impl WebSocketWriter {
+    pub async fn send(&mut self, message: Message) -> crate::Result<()> {
+        match self {
+            WebSocketWriter::TcpStreamWriter(write) => {
+                write.send(message).await?;
+            }
+            #[cfg(unix)]
+            WebSocketWriter::UnixStreamWriter(write) => {
+                write.send(message).await?;
+            }
+            #[cfg(windows)]
+            WebSocketWriter::NamedPipeWriter(write) => {
+                write.send(message).await?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+pub struct ConnectionManager(pub RwLock<HashMap<ConnectionId, WebSocketWriter>>);

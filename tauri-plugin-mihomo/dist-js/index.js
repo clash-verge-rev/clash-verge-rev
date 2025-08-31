@@ -162,12 +162,12 @@ async function getProxyByName(proxyName) {
  * 为指定代理选择节点
  *
  * 一般为指定代理组下使用指定的代理节点 【代理组/节点】
- * @param proxyName 代理组名称
+ * @param groupName 代理组名称
  * @param node 代理节点
  */
-async function selectNodeForProxy(proxyName, node) {
-    await invoke("plugin:mihomo|select_node_for_proxy", {
-        proxyName,
+async function selectNodeForGroup(groupName, node) {
+    await invoke("plugin:mihomo|select_node_for_group", {
+        groupName,
         node,
     });
 }
@@ -434,4 +434,4 @@ class MihomoWebSocket {
 }
 MihomoWebSocket.instances = new Set();
 
-export { MihomoWebSocket, clearAllWsConnections, closeAllConnections, closeConnections, delayGroup, delayProxyByName, flushDNS, flushFakeIp, getBaseConfig, getConnections, getGroupByName, getGroups, getProxies, getProxyByName, getProxyProviderByName, getProxyProviders, getRuleProviders, getRules, getVersion, healthcheckNodeInProvider, healthcheckProxyProvider, patchBaseConfig, reloadConfig, restart, selectNodeForProxy, unfixedProxy, updateController, updateGeo, updateProxyProvider, updateRuleProvider, updateSecret, upgradeCore, upgradeGeo, upgradeUi };
+export { MihomoWebSocket, clearAllWsConnections, closeAllConnections, closeConnections, delayGroup, delayProxyByName, flushDNS, flushFakeIp, getBaseConfig, getConnections, getGroupByName, getGroups, getProxies, getProxyByName, getProxyProviderByName, getProxyProviders, getRuleProviders, getRules, getVersion, healthcheckNodeInProvider, healthcheckProxyProvider, patchBaseConfig, reloadConfig, restart, selectNodeForGroup, unfixedProxy, updateController, updateGeo, updateProxyProvider, updateRuleProvider, updateSecret, upgradeCore, upgradeGeo, upgradeUi };

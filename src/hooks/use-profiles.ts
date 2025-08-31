@@ -5,7 +5,7 @@ import {
   patchProfilesConfig,
 } from "@/services/cmds";
 import useSWR, { mutate } from "swr";
-import { selectNodeForProxy } from "tauri-plugin-mihomo-api";
+import { selectNodeForGroup } from "tauri-plugin-mihomo-api";
 
 export const useProfiles = () => {
   const { data: profiles, mutate: mutateProfiles } = useSWR(
@@ -54,7 +54,7 @@ export const useProfiles = () => {
       if (!now || type !== "Selector") return;
       if (selectedMap[name] != null && selectedMap[name] !== now) {
         hasChange = true;
-        await selectNodeForProxy(name, selectedMap[name]);
+        await selectNodeForGroup(name, selectedMap[name]);
       }
       newSelected.push({ name, now: selectedMap[name] });
     }

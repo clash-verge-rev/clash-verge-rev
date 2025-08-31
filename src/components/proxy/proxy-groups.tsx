@@ -13,7 +13,7 @@ import {
   closeConnections,
   getConnections,
   healthcheckProxyProvider,
-  selectNodeForProxy,
+  selectNodeForGroup,
   unfixedProxy,
 } from "tauri-plugin-mihomo-api";
 import { BaseEmpty } from "../base";
@@ -49,17 +49,17 @@ export const ProxyGroups = (props: Props) => {
           unfixing = true;
           await unfixedProxy(group.name);
         } else {
-          await selectNodeForProxy(name, proxy.name);
+          await selectNodeForGroup(name, proxy.name);
         }
       } else {
-        await selectNodeForProxy(name, proxy.name);
+        await selectNodeForGroup(name, proxy.name);
       }
       onProxies();
 
       // 断开连接
       if (verge.auto_close_connection) {
         getConnections().then(({ connections }) => {
-          connections.forEach((conn) => {
+          connections?.forEach((conn) => {
             if (conn.chains.includes(now!)) {
               closeConnections(conn.id);
             }
@@ -114,7 +114,7 @@ export const ProxyGroups = (props: Props) => {
         .map((p) => p!.name);
       await delayManager.checkListDelay(names, groupName, timeout);
       if (fixedProxy) {
-        await selectNodeForProxy(groupName, fixedProxy.group.fixed!);
+        await selectNodeForGroup(groupName, fixedProxy.group.fixed!);
       }
       onProxies();
     },

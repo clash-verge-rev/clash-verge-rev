@@ -3,7 +3,7 @@ use tauri::async_runtime::RwLock;
 use tauri::ipc::Channel;
 use tauri::{State, command};
 
-use crate::mihomo::{ConnectionId, Mihomo};
+use crate::mihomo::Mihomo;
 use crate::{Result, models::*};
 
 #[command]
@@ -127,12 +127,12 @@ pub(crate) async fn get_proxy_by_name(state: State<'_, RwLock<Mihomo>>, proxy_na
 }
 
 #[command]
-pub(crate) async fn select_node_for_proxy(
+pub(crate) async fn select_node_for_group(
     state: State<'_, RwLock<Mihomo>>,
     proxy_name: String,
     node: String,
 ) -> Result<()> {
-    state.read().await.select_node_for_proxy(&proxy_name, &node).await
+    state.read().await.select_node_for_group(&proxy_name, &node).await
 }
 
 #[command]
@@ -244,10 +244,10 @@ pub(crate) async fn ws_connections(
 #[command]
 pub(crate) async fn ws_logs(
     state: State<'_, RwLock<Mihomo>>,
-    level: String,
+    level: LogLevel,
     on_message: Channel<serde_json::Value>,
 ) -> Result<ConnectionId> {
-    state.read().await.ws_logs(&level, on_message).await
+    state.read().await.ws_logs(level, on_message).await
 }
 
 // mihomo 的 websocket 应该只读取数据，没必要发送数据

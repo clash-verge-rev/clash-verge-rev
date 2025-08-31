@@ -17,7 +17,7 @@ const COMMANDS: &[&str] = &[
     "healthcheck_node_in_provider",
     "get_proxies",
     "get_proxy_by_name",
-    "select_node_for_proxy",
+    "select_node_for_group",
     "unfixed_proxy",
     "delay_proxy_by_name",
     "get_rules",

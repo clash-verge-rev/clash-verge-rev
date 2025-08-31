@@ -121,20 +121,20 @@ impl Timer {
                     Some(profile) => {
                         if let Some(selected) = profile.selected.as_ref() {
                             for selected_item in selected {
-                                if let Some(proxy_name) = selected_item.name.as_ref()
+                                if let Some(group_name) = selected_item.name.as_ref()
                                     && let Some(node) = selected_item.now.as_ref()
                                 {
-                                    if mihomo.select_node_for_proxy(proxy_name, node).await.is_err() {
+                                    if mihomo.select_node_for_group(group_name, node).await.is_err() {
                                         if mihomo.get_proxy_by_name(node).await.is_err() {
                                             tracing::error!(
-                                                "Failed to select node for proxy: {proxy_name}, node: {node}, because the node [{node}] does not exist"
+                                                "Failed to select node for proxy: {group_name}, node: {node}, because the node [{node}] does not exist"
                                             );
                                             continue;
                                         }
-                                        tracing::error!("Failed to select node for proxy: {proxy_name}, node: {node}");
+                                        tracing::error!("Failed to select node for proxy: {group_name}, node: {node}");
                                         return;
                                     } else {
-                                        tracing::info!("Selected node for proxy: {proxy_name}, node: {node}");
+                                        tracing::info!("Selected node for proxy: {group_name}, node: {node}");
                                     }
                                 }
                             }

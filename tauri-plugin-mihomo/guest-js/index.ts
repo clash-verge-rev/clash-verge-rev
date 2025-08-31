@@ -218,15 +218,15 @@ export async function getProxyByName(proxyName: string): Promise<Proxy | null> {
  * 为指定代理选择节点
  *
  * 一般为指定代理组下使用指定的代理节点 【代理组/节点】
- * @param proxyName 代理组名称
+ * @param groupName 代理组名称
  * @param node 代理节点
  */
-export async function selectNodeForProxy(
-  proxyName: string,
+export async function selectNodeForGroup(
+  groupName: string,
   node: string,
 ): Promise<void> {
-  await invoke<void>("plugin:mihomo|select_node_for_proxy", {
-    proxyName,
+  await invoke<void>("plugin:mihomo|select_node_for_group", {
+    groupName,
     node,
   });
 }

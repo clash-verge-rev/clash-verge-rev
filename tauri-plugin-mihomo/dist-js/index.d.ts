@@ -103,10 +103,10 @@ export declare function getProxyByName(proxyName: string): Promise<Proxy | null>
  * 为指定代理选择节点
  *
  * 一般为指定代理组下使用指定的代理节点 【代理组/节点】
- * @param proxyName 代理组名称
+ * @param groupName 代理组名称
  * @param node 代理节点
  */
-export declare function selectNodeForProxy(proxyName: string, node: string): Promise<void>;
+export declare function selectNodeForGroup(groupName: string, node: string): Promise<void>;
 /**
  * 指定代理组下不再使用固定的代理节点
  *

@@ -1,6 +1,6 @@
 use serde::{Serialize, ser::Serializer};
 
-use crate::mihomo::ConnectionId;
+use crate::ConnectionId;
 
 pub type Result<T> = std::result::Result<T, Error>;
 

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-select-node-for-group"
+description = "Enables the select_node_for_group command without any pre-configured scope."
+commands.allow = ["select_node_for_group"]
+
+[[permission]]
+identifier = "deny-select-node-for-group"
+description = "Denies the select_node_for_group command without any pre-configured scope."
+commands.deny = ["select_node_for_group"]

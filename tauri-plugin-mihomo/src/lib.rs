@@ -109,7 +109,7 @@ impl Builder {
                 // proxies
                 commands::get_proxies,
                 commands::get_proxy_by_name,
-                commands::select_node_for_proxy,
+                commands::select_node_for_group,
                 commands::unfixed_proxy,
                 commands::delay_proxy_by_name,
                 // rules

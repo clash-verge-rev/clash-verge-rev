@@ -5,6 +5,6 @@ import type { Connection } from "./Connection";
 export type Connections = {
     downloadTotal: bigint;
     uploadTotal: bigint;
-    connections: Array<Connection>;
+    connections: Array<Connection> | null;
     memory: number;
 };
