@@ -1,9 +1,12 @@
 use anyhow::Result;
-use isahc::http::{
-    header::{HeaderMap, HeaderValue, USER_AGENT},
-    StatusCode, Uri,
-};
 use isahc::prelude::*;
+use isahc::{
+    config::RedirectPolicy,
+    http::{
+        header::{HeaderMap, HeaderValue, USER_AGENT},
+        StatusCode, Uri,
+    },
+};
 use isahc::{config::SslOption, HttpClient};
 use std::sync::Once;
 use std::time::{Duration, Instant};
@@ -134,6 +137,8 @@ impl NetworkManager {
             if let Some(secs) = timeout_secs {
                 builder = builder.timeout(Duration::from_secs(secs));
             }
+
+            builder = builder.redirect_policy(RedirectPolicy::Follow);
 
             Ok(builder.build()?)
         };
