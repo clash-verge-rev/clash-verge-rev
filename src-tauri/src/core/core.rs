@@ -1070,22 +1070,24 @@ impl CoreManager {
                 service::reinstall_service().await?;
             }
             logging!(info, Type::Core, true, "服务可用，使用服务模式启动");
+            self.stop_core_by_service().await?;
             self.start_core_by_service().await?;
+            return Ok(());
+        };
+
+        // 服务不可用，检查用户偏好
+        let service_state = service::ServiceState::get().await;
+        if service_state.prefer_sidecar {
+            logging!(
+                info,
+                Type::Core,
+                true,
+                "服务不可用，根据用户偏好使用Sidecar模式"
+            );
+            self.start_core_by_sidecar().await?;
         } else {
-            // 服务不可用，检查用户偏好
-            let service_state = service::ServiceState::get().await;
-            if service_state.prefer_sidecar {
-                logging!(
-                    info,
-                    Type::Core,
-                    true,
-                    "服务不可用，根据用户偏好使用Sidecar模式"
-                );
-                self.start_core_by_sidecar().await?;
-            } else {
-                logging!(info, Type::Core, true, "服务不可用，使用Sidecar模式");
-                self.start_core_by_sidecar().await?;
-            }
+            logging!(info, Type::Core, true, "服务不可用，使用Sidecar模式");
+            self.start_core_by_sidecar().await?;
         }
         Ok(())
     }
@@ -1102,7 +1104,6 @@ impl CoreManager {
     /// 重启内核
     pub async fn restart_core(&self) -> Result<()> {
         self.stop_core().await?;
-
         self.start_core().await?;
         Ok(())
     }
