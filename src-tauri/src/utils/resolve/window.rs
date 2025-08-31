@@ -278,6 +278,7 @@ pub async fn create_window(is_show: bool) -> bool {
                 "静默启动但未开启自动轻量模式，保持正常模式"
             );
         }
+    }
 
     // 检查是否已存在窗口
     if let Some(result) = check_existing_window(is_show) {
