@@ -129,10 +129,10 @@ pub(crate) async fn get_proxy_by_name(state: State<'_, RwLock<Mihomo>>, proxy_na
 #[command]
 pub(crate) async fn select_node_for_group(
     state: State<'_, RwLock<Mihomo>>,
-    proxy_name: String,
+    group_name: String,
     node: String,
 ) -> Result<()> {
-    state.read().await.select_node_for_group(&proxy_name, &node).await
+    state.read().await.select_node_for_group(&group_name, &node).await
 }
 
 #[command]
