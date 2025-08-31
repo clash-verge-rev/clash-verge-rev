@@ -92,7 +92,7 @@
     "consola": "3.4.2",
     "fs-extra": "11.3.1",
     "https-proxy-agent": "7.0.6",
-    "meta-json-schema": "1.19.12",
+    "meta-json-schema": "1.19.13",
     "node-fetch": "3.3.2",
     "ora": "8.2.0",
     "postcss": "8.5.6",
