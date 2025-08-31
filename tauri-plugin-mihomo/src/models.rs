@@ -7,9 +7,7 @@ use tokio::net::UnixStream;
 #[cfg(windows)]
 use tokio::net::windows::named_pipe::NamedPipeClient;
 use tokio::sync::RwLock;
-#[cfg(unix)]
-use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
 use ts_rs::TS;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
