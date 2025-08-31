@@ -6,7 +6,7 @@ import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
 import LoadingPage from "@/pages/loading";
-import { getPortableFlag } from "@/services/cmds";
+import { isPortableVersion } from "@/services/cmds";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
 import { Paper, ThemeProvider } from "@mui/material";
@@ -96,7 +96,7 @@ const Layout = () => {
     );
 
     setTimeout(async () => {
-      portableFlag = await getPortableFlag();
+      portableFlag = await isPortableVersion();
       await appWindow.unminimize();
       await appWindow.show();
       await appWindow.setFocus();
