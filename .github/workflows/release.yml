@@ -455,7 +455,7 @@ jobs:
   release-update:
     name: Release Update
     runs-on: ubuntu-latest
-    needs: [release, release-for-linux-arm]
+    needs: [update_tag]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -480,7 +480,7 @@ jobs:
 
   release-update-for-fixed-webview2:
     runs-on: ubuntu-latest
-    needs: [release-for-fixed-webview2]
+    needs: [update_tag]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
