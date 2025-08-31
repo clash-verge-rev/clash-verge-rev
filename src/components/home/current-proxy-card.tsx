@@ -29,7 +29,11 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { EnhancedCard } from "@/components/home/enhanced-card";
-import { updateProxy, deleteConnection } from "@/services/cmds";
+import {
+  updateProxy,
+  deleteConnection,
+  syncTrayProxySelection,
+} from "@/services/cmds";
 import delayManager from "@/services/delay";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
@@ -340,6 +344,13 @@ export const CurrentProxyCard = () => {
               deleteConnection(conn.id);
             }
           });
+        }
+
+        // 同步托盘菜单状态
+        try {
+          await syncTrayProxySelection();
+        } catch (syncError) {
+          console.warn("Failed to sync tray proxy selection:", syncError);
         }
 
         // 延长刷新延迟时间

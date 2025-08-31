@@ -221,16 +221,105 @@ export const AppDataProvider = ({
           }
         };
 
-        window.addEventListener(
-          "verge://refresh-clash-config",
-          handleRefreshClash,
-        );
+        // 监听代理配置刷新事件(托盘代理切换等)
+        const handleRefreshProxy = () => {
+          const now = Date.now();
+          console.log("[AppDataProvider] 代理配置刷新事件");
 
-        return () => {
-          window.removeEventListener(
-            "verge://refresh-clash-config",
-            handleRefreshClash,
-          );
+          if (now - lastUpdateTime > refreshThrottle) {
+            lastUpdateTime = now;
+
+            setTimeout(() => {
+              refreshProxy().catch((e) =>
+                console.warn("[AppDataProvider] 代理刷新失败:", e),
+              );
+            }, 100);
+          }
+        };
+
+        // 监听强制代理刷新事件(托盘代理切换立即刷新)
+        const handleForceRefreshProxies = () => {
+          console.log("[AppDataProvider] 强制代理刷新事件");
+
+          // 立即刷新，无延迟，无防抖
+          forceRefreshProxies()
+            .then(() => {
+              console.log("[AppDataProvider] 强制刷新代理缓存完成");
+              // 强制刷新完成后，立即刷新前端显示
+              return refreshProxy();
+            })
+            .then(() => {
+              console.log("[AppDataProvider] 前端代理数据刷新完成");
+            })
+            .catch((e) => {
+              console.warn("[AppDataProvider] 强制代理刷新失败:", e);
+              // 如果强制刷新失败，尝试普通刷新
+              refreshProxy().catch((e2) =>
+                console.warn("[AppDataProvider] 普通代理刷新也失败:", e2),
+              );
+            });
+        };
+
+        // 使用 Tauri 事件监听器替代 window 事件监听器
+        const setupTauriListeners = async () => {
+          try {
+            const unlistenClash = await listen(
+              "verge://refresh-clash-config",
+              handleRefreshClash,
+            );
+            const unlistenProxy = await listen(
+              "verge://refresh-proxy-config",
+              handleRefreshProxy,
+            );
+            const unlistenForceRefresh = await listen(
+              "verge://force-refresh-proxies",
+              handleForceRefreshProxies,
+            );
+
+            return () => {
+              unlistenClash();
+              unlistenProxy();
+              unlistenForceRefresh();
+            };
+          } catch (error) {
+            console.warn("[AppDataProvider] 设置 Tauri 事件监听器失败:", error);
+
+            // 降级到 window 事件监听器
+            window.addEventListener(
+              "verge://refresh-clash-config",
+              handleRefreshClash,
+            );
+            window.addEventListener(
+              "verge://refresh-proxy-config",
+              handleRefreshProxy,
+            );
+            window.addEventListener(
+              "verge://force-refresh-proxies",
+              handleForceRefreshProxies,
+            );
+
+            return () => {
+              window.removeEventListener(
+                "verge://refresh-clash-config",
+                handleRefreshClash,
+              );
+              window.removeEventListener(
+                "verge://refresh-proxy-config",
+                handleRefreshProxy,
+              );
+              window.removeEventListener(
+                "verge://force-refresh-proxies",
+                handleForceRefreshProxies,
+              );
+            };
+          }
+        };
+
+        const cleanupTauriListeners = setupTauriListeners();
+
+        return async () => {
+          const cleanup = await cleanupTauriListeners;
+          cleanup();
         };
       } catch (error) {
         console.error("[AppDataProvider] 事件监听器设置失败:", error);
