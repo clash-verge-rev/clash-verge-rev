@@ -86,6 +86,16 @@ export async function getRuntimeLogs() {
   return invoke<Record<string, [string, string][]>>("get_runtime_logs");
 }
 
+export async function getRuntimeProxyChainConfig() {
+  return invoke<string>("get_runtime_proxy_chain_config");
+}
+
+export async function updateProxyChainConfigInRuntime(proxyChainConfig: any) {
+  return invoke<void>("update_proxy_chain_config_in_runtime", {
+    proxyChainConfig,
+  });
+}
+
 export async function patchClashConfig(payload: Partial<IConfigData>) {
   return invoke<void>("patch_clash_config", { payload });
 }
