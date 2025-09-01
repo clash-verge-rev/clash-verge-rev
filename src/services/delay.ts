@@ -74,7 +74,8 @@ class DelayManager {
       if (delay >= 0 || delay === -2) return delay;
     }
 
-    if (proxy.history.length > 0) {
+    // 添加 history 属性的安全检查
+    if (proxy.history && proxy.history.length > 0) {
       // 0ms以error显示
       return proxy.history[proxy.history.length - 1].delay || 1e6;
     }

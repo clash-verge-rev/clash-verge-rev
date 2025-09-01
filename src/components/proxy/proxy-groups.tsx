@@ -1,18 +1,9 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { useLockFn } from "ahooks";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import {
-  getConnections,
-  providerHealthCheck,
-  updateProxy,
-  deleteConnection,
-  getGroupProxyDelays,
-  syncTrayProxySelection,
-  updateProxyAndSync,
-} from "@/services/cmds";
-import { forceRefreshProxies } from "@/services/cmds";
-import { useProfiles } from "@/hooks/use-profiles";
+import { providerHealthCheck, getGroupProxyDelays } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
+import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { BaseEmpty } from "../base";
 import { useRenderList } from "./use-render-list";
 import { ProxyRender } from "./proxy-render";
@@ -205,7 +196,17 @@ export const ProxyGroups = (props: Props) => {
   const { renderList, onProxies, onHeadState } = useRenderList(mode);
 
   const { verge } = useVerge();
-  const { current, patchCurrent } = useProfiles();
+
+  // 统代理选择
+  const { handleProxyGroupChange } = useProxySelection({
+    onSuccess: () => {
+      onProxies();
+    },
+    onError: (error) => {
+      console.error("代理切换失败", error);
+      onProxies();
+    },
+  });
 
   // 获取自动滚动开关状态，默认为 true
   const enableAutoScroll = verge?.enable_hover_jump_navigator ?? true;
@@ -337,73 +338,13 @@ export const ProxyGroups = (props: Props) => {
     [letterIndexMap],
   );
 
-  // 切换分组的节点代理
-  const handleChangeProxy = useLockFn(
-    async (group: IProxyGroupItem, proxy: IProxyItem) => {
+  const handleChangeProxy = useCallback(
+    (group: IProxyGroupItem, proxy: IProxyItem) => {
       if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
 
-      const { name, now } = group;
-      console.log(`[ProxyGroups] GUI代理切换: ${name} -> ${proxy.name}`);
-
-      try {
-        // 1. 保存到selected中 (先保存本地状态)
-        if (current) {
-          if (!current.selected) current.selected = [];
-
-          const index = current.selected.findIndex(
-            (item) => item.name === group.name,
-          );
-
-          if (index < 0) {
-            current.selected.push({ name, now: proxy.name });
-          } else {
-            current.selected[index] = { name, now: proxy.name };
-          }
-          await patchCurrent({ selected: current.selected });
-        }
-
-        // 2. 使用统一的同步命令更新代理并同步状态
-        await updateProxyAndSync(name, proxy.name);
-        console.log(
-          `[ProxyGroups] 代理和状态同步完成: ${name} -> ${proxy.name}`,
-        );
-
-        // 3. 刷新前端显示
-        onProxies();
-
-        // 4. 断开连接 (异步处理，不影响UI更新)
-        if (verge?.auto_close_connection) {
-          getConnections().then(({ connections }) => {
-            connections.forEach((conn) => {
-              if (conn.chains.includes(now!)) {
-                deleteConnection(conn.id);
-              }
-            });
-          });
-        }
-      } catch (error) {
-        console.error(
-          `[ProxyGroups] 代理切换失败: ${name} -> ${proxy.name}`,
-          error,
-        );
-        // 如果统一命令失败，回退到原来的方式
-        try {
-          await updateProxy(name, proxy.name);
-          await forceRefreshProxies();
-          await syncTrayProxySelection();
-          onProxies();
-          console.log(
-            `[ProxyGroups] 代理切换回退成功: ${name} -> ${proxy.name}`,
-          );
-        } catch (fallbackError) {
-          console.error(
-            `[ProxyGroups] 代理切换回退也失败: ${name} -> ${proxy.name}`,
-            fallbackError,
-          );
-          onProxies(); // 至少刷新显示
-        }
-      }
+      handleProxyGroupChange(group, proxy);
     },
+    [handleProxyGroupChange],
   );
 
   // 测全部延迟
