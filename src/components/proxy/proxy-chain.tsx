@@ -516,16 +516,20 @@ export const ProxyChain = ({
           {proxyChain.length > 0 && (
             <IconButton
               size="small"
-              onClick={handleClearAll}
+              onClick={() => {
+                updateProxyChainConfigInRuntime(null);
+                onUpdateChain([]);
+                setHasUnsavedChanges(false);
+              }}
               sx={{
                 color: theme.palette.error.main,
                 "&:hover": {
                   backgroundColor: theme.palette.error.light + "20",
                 },
               }}
-              title={t("Clear All") || "清除全部"}
+              title={t("Delete Chain Config") || "删除链式配置"}
             >
-              <ClearAll fontSize="small" />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           )}
           <Button
@@ -551,7 +555,7 @@ export const ProxyChain = ({
                 : undefined
             }
           >
-            {isSaving ? t("Saving...") || "保存中..." : t("Save") || "保存"}
+            {isSaving ? t("Connecting...") || "连接中..." : t("Connect") || "连接"}
           </Button>
         </Box>
       </Box>

@@ -111,11 +111,11 @@ impl IRuntime {
                 config.get_mut("proxy-groups")
             {
                 proxy_groups.retain(|proxy_group| {
-                    match proxy_group.get("name").and_then(|n| n.as_str()) {
-                        Some(name) if name.starts_with("chain_") || name == "exit_node_group" => {
-                            false
-                        }
-                        _ => true,
+
+                    if matches!(proxy_group.get("name").and_then(|n| n.as_str()), Some(name) if name.starts_with("chain_") || name == "exit_node_group") {
+                        false
+                    } else {
+                       true
                     }
                 });
             }

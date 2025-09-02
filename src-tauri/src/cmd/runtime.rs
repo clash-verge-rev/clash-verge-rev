@@ -65,21 +65,44 @@ pub async fn get_runtime_proxy_chain_config() -> CmdResult<String> {
             )
             .collect::<Vec<serde_yaml_ng::Value>>();
 
+        let last_proxy_name={
+              if let Some(proxy_chain_group) = proxy_chain_groups.last() {
+                if let Some(serde_yaml_ng::Value::Sequence(nodes)) = proxy_chain_group.get("proxies") {
+                    
+                    if let Some(name) = nodes[0].to_owned().as_str() {
+                        let mut name = name.to_string();
+                        name = re.replace_all(&name, "").to_string();
+                        Some(name)
+                    }else {
+                        None
+                    }
+                }else {
+                    None
+                }
+              }else {
+                  None
+              }
+        };
+
+        
         let mut proxy_chain_nodes = proxies
             .iter()
             .filter_map(|proxy| {
-                if proxy.get("dialer-proxy").is_some() {
+                if proxy.get("dialer-proxy").is_some()  {
                     Some(proxy.to_owned())
-                } else {
+                }else {
                     None
                 }
             })
             .collect::<Vec<serde_yaml_ng::Value>>();
 
-        if let Some(exit_node) = proxy_chain_groups.last() {
-            proxy_chain_nodes.push(exit_node.to_owned());
+        if let Some(last_proxy) = proxies.iter().find(|proxy|{
+           proxy.get("name").is_some_and(|name| name.as_str() ==last_proxy_name.as_deref())
+        }) {
+            proxy_chain_nodes.push(last_proxy.to_owned());
         }
 
+        
         proxy_chain_nodes.iter_mut().for_each(|proxy_chain_node| {
             if let Some(serde_yaml_ng::Value::String(ref mut name)) =
                 proxy_chain_node.get_mut("name")
