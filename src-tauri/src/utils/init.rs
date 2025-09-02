@@ -445,14 +445,6 @@ pub async fn init_resources() -> Result<()> {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
                     handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
-                } else {
-                    logging!(
-                        debug,
-                        Type::Setup,
-                        true,
-                        "skipping resource copy '{}'",
-                        file
-                    );
                 }
             }
             _ => {

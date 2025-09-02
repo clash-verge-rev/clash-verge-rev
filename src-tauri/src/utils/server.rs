@@ -44,7 +44,7 @@ pub async fn check_singleton() -> Result<()> {
 pub fn embed_server() {
     let port = IVerge::get_singleton_port();
 
-    AsyncHandler::spawn_blocking(move || async move {
+    AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").and_then(|| async {
             Ok::<_, warp::Rejection>(warp::reply::with_status(
                 "ok".to_string(),

@@ -35,7 +35,7 @@ mod app_init {
 
     /// Initialize singleton monitoring for other instances
     pub fn init_singleton_check() {
-        AsyncHandler::spawn(move || async move {
+        AsyncHandler::spawn_blocking(move || async move {
             logging!(info, Type::Setup, true, "开始检查单例实例...");
             match timeout(Duration::from_millis(500), server::check_singleton()).await {
                 Ok(result) => {
@@ -94,7 +94,7 @@ mod app_init {
         app.deep_link().on_open_url(|event| {
             let url = event.urls().first().map(|u| u.to_string());
             if let Some(url) = url {
-                tokio::task::spawn_local(async move {
+                AsyncHandler::spawn(|| async {
                     if let Err(e) = resolve::resolve_scheme(url).await {
                         logging!(error, Type::Setup, true, "Failed to resolve scheme: {}", e);
                     }
@@ -331,9 +331,8 @@ pub fn run() {
 
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
-            logging!(info, Type::Setup, true, "异步执行应用设置...");
-            resolve::resolve_setup_sync(app_handle);
             resolve::resolve_setup_async();
+            resolve::resolve_setup_sync(app_handle);
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())
