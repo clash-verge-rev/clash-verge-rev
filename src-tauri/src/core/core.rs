@@ -1070,7 +1070,6 @@ impl CoreManager {
                 service::reinstall_service().await?;
             }
             logging!(info, Type::Core, true, "服务可用，使用服务模式启动");
-            self.stop_core_by_service().await?;
             self.start_core_by_service().await?;
             return Ok(());
         };

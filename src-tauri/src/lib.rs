@@ -20,7 +20,6 @@ use crate::{
     utils::{resolve, server},
 };
 use config::Config;
-use parking_lot::Mutex;
 use tauri::AppHandle;
 #[cfg(target_os = "macos")]
 use tauri::Manager;
