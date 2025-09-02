@@ -3,8 +3,7 @@ use crate::{
     core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
     process::AsyncHandler,
-    state::lightweight::LightWeightState,
-    utils::logging::Type,
+    utils::{logging::Type, window_manager::WindowManager},
 };
 
 #[cfg(target_os = "macos")]
@@ -12,7 +11,6 @@ use crate::logging_error;
 
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
-use parking_lot::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{Listener, Manager};
 
@@ -21,23 +19,20 @@ const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
 // 添加退出轻量模式的锁，防止并发调用
 static EXITING_LIGHTWEIGHT: AtomicBool = AtomicBool::new(false);
 
-fn with_lightweight_status<F, R>(f: F) -> Option<R>
-where
-    F: FnOnce(&mut LightWeightState) -> R,
-{
-    if let Some(app_handle) = handle::Handle::global().app_handle() {
-        // Try to get state, but don't panic if it's not managed yet
-        if let Some(state) = app_handle.try_state::<Mutex<LightWeightState>>() {
-            let mut guard = state.lock();
-            Some(f(&mut guard))
-        } else {
-            // State not managed yet, return None
-            None
-        }
+static IS_IN_LIGHTWEIGHT: AtomicBool = AtomicBool::new(false);
+
+fn inner_set_lightweight_mode(value: bool) -> bool {
+    if value {
+        logging!(info, Type::Lightweight, true, "轻量模式已开启");
     } else {
-        // App handle not available yet
-        None
+        logging!(info, Type::Lightweight, true, "轻量模式已关闭");
     }
+    IS_IN_LIGHTWEIGHT.store(value, Ordering::SeqCst);
+    value
+}
+
+fn inner_get_lightweight_mode() -> bool {
+    IS_IN_LIGHTWEIGHT.load(Ordering::SeqCst) || !WindowManager::is_main_window_exists()
 }
 
 pub async fn run_once_auto_lightweight() {
@@ -68,54 +63,38 @@ pub async fn run_once_auto_lightweight() {
         "在静默启动的情况下，创建窗口再添加自动进入轻量模式窗口监听器"
     );
 
-    if with_lightweight_status(|_| ()).is_some() {
-        set_lightweight_mode(false).await;
-        enable_auto_light_weight_mode().await;
+    enable_auto_light_weight_mode().await;
 
-        if let Err(e) = Tray::global().update_part().await {
-            log::warn!("Failed to update tray: {e}");
-        }
+    if let Err(e) = Tray::global().update_part().await {
+        log::warn!("Failed to update tray: {e}");
     }
 }
 
 pub async fn auto_lightweight_mode_init() -> Result<()> {
-    if let Some(app_handle) = handle::Handle::global().app_handle() {
-        // Check if state is available before accessing it
-        if app_handle.try_state::<Mutex<LightWeightState>>().is_none() {
-            logging!(
-                warn,
-                Type::Lightweight,
-                true,
-                "LightWeightState 尚未初始化，跳过自动轻量模式初始化"
-            );
-            return Err(anyhow::anyhow!("LightWeightState has not been initialized"));
-        }
+    let is_silent_start =
+        { Config::verge().await.latest_ref().enable_silent_start }.unwrap_or(false);
+    let enable_auto = {
+        Config::verge()
+            .await
+            .latest_ref()
+            .enable_auto_light_weight_mode
+    }
+    .unwrap_or(false);
 
-        let is_silent_start =
-            { Config::verge().await.latest_ref().enable_silent_start }.unwrap_or(false);
-        let enable_auto = {
-            Config::verge()
-                .await
-                .latest_ref()
-                .enable_auto_light_weight_mode
-        }
-        .unwrap_or(false);
+    if enable_auto && !is_silent_start {
+        logging!(
+            info,
+            Type::Lightweight,
+            true,
+            "非静默启动直接挂载自动进入轻量模式监听器！"
+        );
+        set_lightweight_mode(true).await;
+        enable_auto_light_weight_mode().await;
 
-        if enable_auto && !is_silent_start {
-            logging!(
-                info,
-                Type::Lightweight,
-                true,
-                "非静默启动直接挂载自动进入轻量模式监听器！"
-            );
-            set_lightweight_mode(true).await;
-            enable_auto_light_weight_mode().await;
-
-            // 确保托盘状态更新
-            if let Err(e) = Tray::global().update_part().await {
-                log::warn!("Failed to update tray: {e}");
-                return Err(e);
-            }
+        // 确保托盘状态更新
+        if let Err(e) = Tray::global().update_part().await {
+            log::warn!("Failed to update tray: {e}");
+            return Err(e);
         }
     }
 
@@ -124,16 +103,13 @@ pub async fn auto_lightweight_mode_init() -> Result<()> {
 
 // 检查是否处于轻量模式
 pub fn is_in_lightweight_mode() -> bool {
-    with_lightweight_status(|state| state.is_lightweight).unwrap_or(false)
+    IS_IN_LIGHTWEIGHT.load(Ordering::SeqCst)
 }
 
 // 设置轻量模式状态
 pub async fn set_lightweight_mode(value: bool) {
-    if with_lightweight_status(|state| {
-        state.set_lightweight_mode(value);
-    })
-    .is_some()
-    {
+    if inner_get_lightweight_mode() != value {
+        inner_set_lightweight_mode(value);
         // 只有在状态可用时才触发托盘更新
         if let Err(e) = Tray::global().update_part().await {
             log::warn!("Failed to update tray: {e}");
@@ -180,7 +156,7 @@ pub async fn entry_lightweight_mode() {
     let _ = cancel_light_weight_timer();
 
     // 更新托盘显示
-    let _tray = crate::core::tray::Tray::global();
+    logging_error!(Type::Lightweight, true, Tray::global().update_part().await);
 }
 
 // 添加从轻量模式恢复的函数

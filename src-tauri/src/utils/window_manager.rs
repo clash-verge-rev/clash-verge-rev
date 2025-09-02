@@ -338,6 +338,11 @@ impl WindowManager {
         }
     }
 
+    /// 检查窗口是否存在
+    pub fn is_main_window_exists() -> bool {
+        Self::get_main_window().is_some()
+    }
+
     /// 检查窗口是否可见
     pub fn is_main_window_visible() -> bool {
         Self::get_main_window()

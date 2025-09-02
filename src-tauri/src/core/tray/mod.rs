@@ -996,11 +996,11 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 }
 
                 if crate::module::lightweight::is_in_lightweight_mode() {
-                    log::info!(target: "app", "当前在轻量模式，正在退出");
+                    logging!(info, Type::Lightweight, true, "Exiting Lightweight Mode");
                     crate::module::lightweight::exit_lightweight_mode().await; // Await async function
                 }
                 let result = WindowManager::show_main_window().await; // Await async function
-                log::info!(target: "app", "窗口显示结果: {result:?}");
+                logging!(info, Type::Window, true, "Show Main Window: {result:?}");
             }
             "system_proxy" => {
                 feat::toggle_system_proxy().await; // Await async function
@@ -1030,7 +1030,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     crate::module::lightweight::exit_lightweight_mode().await; // Await async function
                     use crate::utils::window_manager::WindowManager;
                     let result = WindowManager::show_main_window().await; // Await async function
-                    log::info!(target: "app", "退出轻量模式后显示主窗口: {result:?}");
+                    logging!(info, Type::Window, true, "Show Main Window: {result:?}");
                 } else {
                     crate::module::lightweight::entry_lightweight_mode().await; // Remove .await as it's not async
                 }

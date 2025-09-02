@@ -81,8 +81,7 @@ mod app_init {
         {
             builder = builder.plugin(tauri_plugin_devtools::init());
         }
-
-        builder.manage(Mutex::new(state::lightweight::LightWeightState::default()))
+        builder
     }
 
     /// Setup deep link handling
