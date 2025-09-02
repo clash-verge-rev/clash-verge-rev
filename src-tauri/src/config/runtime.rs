@@ -105,6 +105,7 @@ impl IRuntime {
         if let Some(config) = self.config.as_mut() {
             if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get_mut("proxies") {
                 proxies.retain(|proxy| proxy.get("dialer-proxy").is_none());
+                proxies.retain(|proxy| proxy.get("name").is_some_and(|n| n.as_str().is_some_and(|n| !n.starts_with("chain_node_"))));
             }
 
             if let Some(serde_yaml_ng::Value::Sequence(proxy_groups)) =
@@ -120,15 +121,21 @@ impl IRuntime {
                 });
             }
 
+            if let Some(serde_yaml_ng::Value::Sequence(rules)) =config.get_mut("rules"){
+                rules.retain(|rule| rule.as_str() != Some("MATCH,chain_1"));
+            }
+
             if let Some(proxy_chain_config) = proxy_chain_config {
                 // println!("{:#?}",proxy_chain_config);
                 // 读取 链式代理 和链式代理组
                 if let (
                     Some(serde_yaml_ng::Value::Sequence(proxies_add)),
                     Some(serde_yaml_ng::Value::Sequence(proxy_groups_add)),
+                    // Some(serde_yaml_ng::Value::Sequence(rules_add)),
                 ) = (
                     proxy_chain_config.get("proxies"),
                     proxy_chain_config.get("proxy-groups"),
+                    // proxy_chain_config.get("rule"),
                 ) {
                     if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get_mut("proxies")
                     {
@@ -139,6 +146,14 @@ impl IRuntime {
                         config.get_mut("proxy-groups")
                     {
                         proxy_groups.extend(proxy_groups_add.to_owned());
+                    }
+
+                    if let Some(serde_yaml_ng::Value::Sequence(rules)) =
+                        config.get_mut("rules")
+                    {
+                        if let Ok(rule)= serde_yaml_ng::to_value("MATCH,chain_1"){
+                            rules.push(rule);
+                        }                        
                     }
                 }
             }

@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::{config::*, wrap_err};
+use crate::{config::*, core::CoreManager, wrap_err};
 use anyhow::Context;
 use regex::Regex;
 use serde_yaml_ng::Mapping;
@@ -129,13 +129,17 @@ pub async fn get_runtime_proxy_chain_config() -> CmdResult<String> {
 pub async fn update_proxy_chain_config_in_runtime(
     proxy_chain_config: Option<serde_yaml_ng::Value>,
 ) -> CmdResult<()> {
-    let runtime = Config::runtime().await;
-    let mut draft = runtime.draft_mut();
-    draft.update_proxy_chain_config(proxy_chain_config);
+    {
+        let runtime = Config::runtime().await;
+        let mut draft = runtime.draft_mut();
+        draft.update_proxy_chain_config(proxy_chain_config);
+        drop(draft);
+        runtime.apply();
+    }
 
-    drop(draft);
-
-    runtime.apply();
+    // 生成新的运行配置文件并通知 Clash 核心重新加载
+    let run_path = wrap_err!(Config::generate_file(ConfigType::Run).await)?;
+    wrap_err!(CoreManager::global().put_configs_force(run_path).await);
 
     Ok(())
 }

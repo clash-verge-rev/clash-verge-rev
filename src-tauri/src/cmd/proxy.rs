@@ -76,6 +76,7 @@ pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
 pub async fn update_proxy_and_sync(group: String, proxy: String) -> CmdResult<()> {
     match IpcManager::global().update_proxy(&group, &proxy).await {
         Ok(_) => {
+            // println!("Proxy updated successfully: {} -> {}", group,proxy);
             logging!(
                 info,
                 Type::Cmd,
@@ -107,6 +108,7 @@ pub async fn update_proxy_and_sync(group: String, proxy: String) -> CmdResult<()
             Ok(())
         }
         Err(e) => {
+            println!("1111111111111111");
             logging!(
                 error,
                 Type::Cmd,

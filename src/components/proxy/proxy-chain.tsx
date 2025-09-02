@@ -15,6 +15,8 @@ import {
   updateProxyChainConfigInRuntime,
   getRuntimeConfig,
   getRuntimeProxyChainConfig,
+  updateProxyAndSync,
+  updateProxy,
 } from "@/services/cmds";
 import {
   DndContext,
@@ -198,6 +200,8 @@ export const ProxyChain = ({
   const { proxies } = useAppData();
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isChainConnected, setIsChainConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   // 包装的更新链函数，用于从外部调用
   const wrappedOnUpdateChain = useCallback(
@@ -258,109 +262,122 @@ export const ProxyChain = ({
     setHasUnsavedChanges(true);
   }, [onUpdateChain]);
 
-  const handleSaveChain = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      if (proxyChain.length === 0) {
-        // Save empty config (clear chain)
+  const handleToggleChain = useCallback(async () => {
+    if (isChainConnected) {
+      // Disconnect: clear chain config
+      setIsConnecting(true);
+      try {
         await updateProxyChainConfigInRuntime(null);
-      } else {
-        // Check if chain has at least 2 nodes
-        if (proxyChain.length < 2) {
-          console.error("Chain proxy requires at least 2 nodes");
-          alert(
-            t("Chain proxy requires at least 2 nodes") ||
-              "链式代理至少需要2个节点",
-          );
-          return;
-        }
-
-        // Get original proxy configurations from runtime
-        const runtimeConfig = await getRuntimeConfig();
-        if (!runtimeConfig || !(runtimeConfig as any).proxies) {
-          console.error("Failed to get runtime config or no proxies available");
-          return;
-        }
-
-        // Build chain configuration
-        const chainProxies: any[] = [];
-        const chainGroups: any[] = [];
-
-        // Process each node in the chain
-        for (let i = 0; i < proxyChain.length; i++) {
-          const currentNode = proxyChain[i];
-
-          // Find original proxy configuration
-          const proxies = (runtimeConfig as any).proxies;
-          const originalProxy = Array.isArray(proxies)
-            ? proxies.find((p: any) => p.name === currentNode.name)
-            : null;
-
-          if (!originalProxy) {
-            console.warn(
-              `Original proxy config not found for: ${currentNode.name}`,
-            );
-            continue;
-          }
-
-          // Create modified proxy with dialer-proxy
-          const modifiedProxy = { ...originalProxy };
-
-          if (i === 0) {
-            // First node (entry point) - rename and set dialer-proxy to chain_1
-            modifiedProxy.name = `entry_node_${currentNode.name}`;
-            if (proxyChain.length > 1) {
-              modifiedProxy["dialer-proxy"] = "chain_1";
-            }
-          } else {
-            // Chain nodes - rename and set dialer-proxy to next chain or exit
-            modifiedProxy.name = `chain_node_${i}_${currentNode.name}`;
-            if (i < proxyChain.length - 1) {
-              modifiedProxy["dialer-proxy"] = `chain_${i + 1}`;
-            }
-          }
-
-          chainProxies.push(modifiedProxy);
-        }
-
-        // Create proxy groups for chain levels
-        for (let i = 1; i < proxyChain.length; i++) {
-          const currentNode = proxyChain[i];
-          chainGroups.push({
-            name: `chain_${i}`,
-            type: "select",
-            proxies: [`chain_node_${i}_${currentNode.name}`],
-          });
-        }
-
-        // Add exit_node_group for the last node
-        // if (proxyChain.length > 0) {
-        //   const lastNodeIndex = proxyChain.length - 1;
-        //   const lastNode = proxyChain[lastNodeIndex];
-        //   chainGroups.push({
-        //     name: "exit_node_group",
-        //     type: "select",
-        //     proxies: [lastNodeIndex === 0
-        //       ? `entry_node_${lastNode.name}`
-        //       : `chain_node_${lastNodeIndex}_${lastNode.name}`]
-        //   });
-        // }
-
-        const chainConfig = {
-          proxies: chainProxies,
-          "proxy-groups": chainGroups,
-        };
-
-        console.log("Saving chain config:", chainConfig);
-        await updateProxyChainConfigInRuntime(chainConfig);
+        setIsChainConnected(false);
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error("Failed to disconnect chain:", error);
+      } finally {
+        setIsConnecting(false);
       }
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error("Failed to save proxy chain config:", error);
-    } finally {
-      setIsSaving(false);
+    } else {
+      // Connect: save chain config and update proxy
+      setIsConnecting(true);
+      try {
+        if (proxyChain.length === 0) {
+          // Save empty config (clear chain)
+          await updateProxyChainConfigInRuntime(null);
+        } else {
+          // Check if chain has at least 2 nodes
+          if (proxyChain.length < 2) {
+            console.error("Chain proxy requires at least 2 nodes");
+            alert(
+              t("Chain proxy requires at least 2 nodes") ||
+                "链式代理至少需要2个节点",
+            );
+            return;
+          }
+
+          // Get original proxy configurations from runtime
+          const runtimeConfig = await getRuntimeConfig();
+          if (!runtimeConfig || !(runtimeConfig as any).proxies) {
+            console.error("Failed to get runtime config or no proxies available");
+            return;
+          }
+
+          // Build chain configuration
+          const chainProxies: any[] = [];
+          const chainGroups: any[] = [];
+
+          // Process each node in the chain
+          for (let i = 0; i < proxyChain.length; i++) {
+            const currentNode = proxyChain[i];
+
+            // Find original proxy configuration
+            const proxies = (runtimeConfig as any).proxies;
+            const originalProxy = Array.isArray(proxies)
+              ? proxies.find((p: any) => p.name === currentNode.name)
+              : null;
+
+            if (!originalProxy) {
+              console.warn(
+                `Original proxy config not found for: ${currentNode.name}`,
+              );
+              continue;
+            }
+
+            // Create modified proxy with dialer-proxy
+            const modifiedProxy = { ...originalProxy };
+
+            if (i === 0) {
+              // First node (entry point) - rename and set dialer-proxy to chain_1
+              modifiedProxy.name = `entry_node_${currentNode.name}`;
+              if (proxyChain.length > 1) {
+                modifiedProxy["dialer-proxy"] = "chain_1";
+              }
+            } else {
+              // Chain nodes - rename and set dialer-proxy to next chain or exit
+              modifiedProxy.name = `chain_node_${i}_${currentNode.name}`;
+              if (i < proxyChain.length - 1) {
+                modifiedProxy["dialer-proxy"] = `chain_${i + 1}`;
+              }
+            }
+
+            chainProxies.push(modifiedProxy);
+          }
+
+          // Create proxy groups for chain levels
+          for (let i = 1; i < proxyChain.length; i++) {
+            const currentNode = proxyChain[i];
+            chainGroups.push({
+              name: `chain_${i}`,
+              type: "select",
+              proxies: [`chain_node_${i}_${currentNode.name}`],
+            });
+          }
+
+          const chainConfig = {
+            proxies: chainProxies,
+            "proxy-groups": chainGroups,
+          };
+
+          console.log("Saving chain config:", chainConfig);
+          await updateProxyChainConfigInRuntime(chainConfig);
+          
+          // After saving config, update proxy to use the first node
+          if (proxyChain.length > 0) {
+            // chain_node_1_
+            // entry_node_
+            const firstNodeName = `chain_node_1_${proxyChain[1].name}`;
+           
+            
+            await updateProxyAndSync("chain_1", firstNodeName);
+          }
+        }
+        setIsChainConnected(true);
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error("Failed to connect chain:", error);
+      } finally {
+        setIsConnecting(false);
+      }
     }
-  }, [proxyChain]);
+  }, [proxyChain, isChainConnected, t]);
 
   // 使用ref来存储最新的状态，避免useEffect依赖问题
   const proxyChainRef = useRef(proxyChain);
@@ -536,17 +553,13 @@ export const ProxyChain = ({
             size="small"
             variant="contained"
             startIcon={<Save />}
-            onClick={handleSaveChain}
+            onClick={handleToggleChain}
             disabled={
-              isSaving || (proxyChain.length > 0 && proxyChain.length < 2)
+              isConnecting || (proxyChain.length > 0 && proxyChain.length < 2 && !isChainConnected)
             }
+            color={isChainConnected ? "error" : "primary"}
             sx={{
               minWidth: 80,
-              opacity:
-                (hasUnsavedChanges || proxyChain.length > 0) &&
-                proxyChain.length !== 1
-                  ? 1
-                  : 0.6,
             }}
             title={
               proxyChain.length === 1
@@ -555,7 +568,10 @@ export const ProxyChain = ({
                 : undefined
             }
           >
-            {isSaving ? t("Connecting...") || "连接中..." : t("Connect") || "连接"}
+            {isConnecting 
+              ? (isChainConnected ? t("Disconnecting...") || "断开中..." : t("Connecting...") || "连接中...") 
+              : (isChainConnected ? t("Disconnect") || "断开" : t("Connect") || "连接")
+            }
           </Button>
         </Box>
       </Box>
