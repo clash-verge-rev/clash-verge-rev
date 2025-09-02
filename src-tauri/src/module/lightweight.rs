@@ -90,12 +90,6 @@ pub async fn auto_lightweight_mode_init() -> Result<()> {
         );
         set_lightweight_mode(true).await;
         enable_auto_light_weight_mode().await;
-
-        // 确保托盘状态更新
-        if let Err(e) = Tray::global().update_part().await {
-            log::warn!("Failed to update tray: {e}");
-            return Err(e);
-        }
     }
 
     Ok(())

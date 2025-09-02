@@ -331,8 +331,9 @@ pub fn run() {
 
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
+            resolve::resolve_setup_handle(app_handle);
             resolve::resolve_setup_async();
-            resolve::resolve_setup_sync(app_handle);
+            resolve::resolve_setup_sync();
 
             logging!(info, Type::Setup, true, "初始化完成，继续执行");
             Ok(())

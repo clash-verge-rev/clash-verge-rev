@@ -405,14 +405,6 @@ pub async fn init_resources() -> Result<()> {
     for file in file_list.iter() {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
-        logging!(
-            debug,
-            Type::Setup,
-            true,
-            "src_path: {:?}, dest_path: {:?}",
-            src_path,
-            dest_path
-        );
 
         let handle_copy = |src: PathBuf, dest: PathBuf, file: String| async move {
             match fs::copy(&src, &dest).await {
