@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use kode_bridge::{
     errors::{AnyError, AnyResult},
-    pool::PoolConfig,
     ClientConfig, IpcHttpClient, LegacyResponse,
 };
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
@@ -42,19 +41,11 @@ impl IpcManager {
         let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
         let config = ClientConfig {
             default_timeout: Duration::from_secs(5),
-            enable_pooling: true,
-            max_retries: 3,
-            max_concurrent_requests: 64,
-            max_requests_per_second: Some(10.0),
-            pool_config: PoolConfig {
-                max_size: 64,
-                min_idle: 8,
-                max_idle_time_ms: 60_000,
-                max_retries: 3,
-                max_concurrent_requests: 64,
-                max_requests_per_second: Some(10.0),
-                ..Default::default()
-            },
+            enable_pooling: false,
+            max_retries: 4,
+            retry_delay: Duration::from_millis(125),
+            max_concurrent_requests: 16,
+            max_requests_per_second: Some(64.0),
             ..Default::default()
         };
         Self {
