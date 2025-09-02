@@ -1,3 +1,5 @@
+// use crate::utils::logging::Type;
+// use crate::{logging, singleton};
 use crate::singleton;
 use dashmap::DashMap;
 use serde_json::Value;
@@ -77,6 +79,22 @@ impl ProxyRequestCache {
                 }
             }
         }
+    }
+
+    // TODO
+    pub fn clean_default_keys(&self) {
+        // logging!(info, Type::Cache, "Cleaning proxies keys");
+        // let proxies_key = Self::make_key("proxies", "default");
+        // self.map.remove(&proxies_key);
+
+        // logging!(info, Type::Cache, "Cleaning providers keys");
+        // let providers_key = Self::make_key("providers", "default");
+        // self.map.remove(&providers_key);
+
+        // !The frontend goes crash if we clean the clash_config cache
+        // logging!(info, Type::Cache, "Cleaning clash config keys");
+        // let clash_config_key = Self::make_key("clash_config", "default");
+        // self.map.remove(&clash_config_key);
     }
 }
 

@@ -3,6 +3,7 @@ use crate::{
     core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
     process::AsyncHandler,
+    state::proxy::ProxyRequestCache,
     utils::{logging::Type, window_manager::WindowManager},
 };
 
@@ -153,6 +154,7 @@ pub async fn entry_lightweight_mode() {
     }
     set_lightweight_mode(true).await;
     let _ = cancel_light_weight_timer();
+    ProxyRequestCache::global().clean_default_keys();
 
     // 更新托盘显示
     logging_error!(Type::Lightweight, true, Tray::global().update_part().await);

@@ -24,8 +24,7 @@ fn create_error(msg: impl Into<String>) -> AnyError {
 }
 
 pub struct IpcManager {
-    ipc_path: String,
-    config: ClientConfig,
+    client: IpcHttpClient,
 }
 
 impl IpcManager {
@@ -41,25 +40,25 @@ impl IpcManager {
             std::path::PathBuf::from("/tmp/clash-verge-ipc") // fallback path
         });
         let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-        Self {
-            ipc_path: ipc_path.to_string(),
-            config: ClientConfig {
-                default_timeout: Duration::from_secs(5),
-                enable_pooling: true,
+        let config = ClientConfig {
+            default_timeout: Duration::from_secs(5),
+            enable_pooling: true,
+            max_retries: 3,
+            max_concurrent_requests: 64,
+            max_requests_per_second: Some(10.0),
+            pool_config: PoolConfig {
+                max_size: 64,
+                min_idle: 8,
+                max_idle_time_ms: 60_000,
                 max_retries: 3,
-                max_concurrent_requests: 32,
-                max_requests_per_second: Some(5.0),
-                pool_config: PoolConfig {
-                    max_size: 32,
-                    min_idle: 2,
-                    max_idle_time_ms: 10_000,
-                    max_retries: 3,
-                    max_concurrent_requests: 32,
-                    max_requests_per_second: Some(5.0),
-                    ..Default::default()
-                },
+                max_concurrent_requests: 64,
+                max_requests_per_second: Some(10.0),
                 ..Default::default()
             },
+            ..Default::default()
+        };
+        Self {
+            client: IpcHttpClient::with_config(ipc_path, config).unwrap(),
         }
     }
 }
@@ -74,8 +73,7 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<LegacyResponse> {
-        let client = IpcHttpClient::with_config(&self.ipc_path, self.config.clone())?;
-        client.request(method, path, body).await
+        self.client.request(method, path, body).await
     }
 }
 
