@@ -353,10 +353,10 @@ impl Sysopt {
         let guard_state = self.guard_state.clone();
         tauri::async_runtime::spawn(async move {
             // if it is running, exit
-            if guard_state.load(Ordering::Acquire) {
+            if guard_state.load(Ordering::SeqCst) {
                 return;
             }
-            guard_state.store(true, Ordering::Release);
+            guard_state.store(true, Ordering::SeqCst);
 
             // default duration is 10s
             let mut wait_secs = 10u64;
@@ -399,7 +399,7 @@ impl Sysopt {
                 }
             }
 
-            guard_state.store(false, Ordering::Release);
+            guard_state.store(false, Ordering::SeqCst);
         });
     }
 }

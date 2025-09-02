@@ -35,8 +35,10 @@ import { GuardState } from "./mods/guard-state";
 import { NetInfoViewer } from "./mods/net-info-viewer";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { WebUIViewer } from "./mods/web-ui-viewer";
+import { useMihomoCoresInfo } from "@/hooks/use-mihomo-cores-info";
+import { usePortable } from "@/hooks/use-portable";
 
-const isWIN = getSystem() === "windows";
+const OS = getSystem();
 
 interface Props {
   onError: (err: Error) => void;
@@ -45,17 +47,7 @@ interface Props {
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation();
   const { notice } = useNotice();
-
-  const { clash, version, patchClash } = useClash();
-  const { verge, mutateVerge, patchVerge } = useVerge();
-  const { serviceStatus, mutateCheckService } = useService();
-
-  useEffect(() => {
-    if (!verge) return;
-
-    mutateCheckService();
-  }, [verge]);
-
+  const { clash, patchClash } = useClash();
   const {
     ipv6,
     "allow-lan": allowLan,
@@ -65,11 +57,29 @@ const SettingClash = ({ onError }: Props) => {
     tun,
   } = clash ?? {};
 
+  const { verge, mutateVerge, patchVerge } = useVerge();
   const {
+    clash_core = "verge-mihomo",
     enable_random_port = false,
     enable_service_mode = false,
     enable_external_controller = false,
-  } = verge ?? {};
+  } = verge;
+  const { serviceStatus, mutateCheckService } = useService();
+
+  const { mihomoCoresInfo } = useMihomoCoresInfo();
+  const mihomoVersion =
+    mihomoCoresInfo.find((core) => core.core === clash_core)?.version ??
+    "Unknown";
+
+  const permissionsGranted =
+    mihomoCoresInfo.find((core) => core.core === clash_core)
+      ?.permissionsGranted ?? false;
+
+  const { portable } = usePortable();
+  const isLinuxPortable = portable && OS === "linux";
+  const disableTunSetting =
+    !(isLinuxPortable && permissionsGranted) && serviceStatus !== "active";
+  const [_clashLog, setClashLog] = useClashLog();
 
   const webRef = useRef<DialogRef>(null);
   const portRef = useRef<DialogRef>(null);
@@ -79,7 +89,10 @@ const SettingClash = ({ onError }: Props) => {
   const serviceRef = useRef<DialogRef>(null);
   const netInfoRef = useRef<DialogRef>(null);
 
-  const [_clashLog, setClashLog] = useClashLog();
+  useEffect(() => {
+    if (!verge) return;
+    mutateCheckService();
+  }, [verge]);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
@@ -131,11 +144,11 @@ const SettingClash = ({ onError }: Props) => {
       <NetInfoViewer ref={netInfoRef} />
 
       <SettingItem
-        disabled={serviceStatus !== "active"}
+        disabled={disableTunSetting}
         label={t("Tun Mode")}
         extra={
           <>
-            {serviceStatus !== "active" ? (
+            {disableTunSetting ? (
               <Tooltip title={t("Tun Mode Info")} placement="top">
                 <IconButton color="error" size="small">
                   <InfoRounded fontSize="inherit" />
@@ -158,7 +171,7 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           // onChange={(e) => onChangeData({ tun: { enable: e } })}
           onGuard={(e) => patchClash({ tun: { enable: e } })}>
-          <SwitchLovely disabled={serviceStatus !== "active"} edge="end" />
+          <SwitchLovely disabled={disableTunSetting} edge="end" />
         </GuardState>
       </SettingItem>
 
@@ -380,10 +393,10 @@ const SettingClash = ({ onError }: Props) => {
             />
           </IconButton>
         }>
-        <Typography sx={{ py: "7px", pr: 1 }}>{version}</Typography>
+        <Typography sx={{ py: "7px", pr: 1 }}>{mihomoVersion}</Typography>
       </SettingItem>
 
-      {isWIN && (
+      {OS === "windows" && (
         <SettingItem onClick={invoke_uwp_tool} label={t("Open UWP tool")} />
       )}
 

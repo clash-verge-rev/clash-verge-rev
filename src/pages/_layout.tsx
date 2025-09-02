@@ -3,10 +3,10 @@ import { useNotice } from "@/components/base/notifice";
 import { LayoutControl } from "@/components/layout/layout-control";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { usePortable } from "@/hooks/use-portable";
 import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
 import LoadingPage from "@/pages/loading";
-import { isPortableVersion } from "@/services/cmds";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
 import { Paper, ThemeProvider } from "@mui/material";
@@ -22,7 +22,6 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SWRConfig, mutate } from "swr";
 
-export let portableFlag = false;
 dayjs.extend(relativeTime);
 const OS = getSystem();
 let keepUIActive = false;
@@ -33,7 +32,7 @@ interface NoticePayload {
 }
 
 const Layout = () => {
-  const appWindow = getCurrentWebviewWindow();
+  usePortable();
   const [isMaximized, setIsMaximized] = useState(false);
   const { t } = useTranslation();
   const { notice } = useNotice();
@@ -45,6 +44,7 @@ const Layout = () => {
   keepUIActive = enable_keep_ui_active || false;
 
   const handleClose = (keepUIActive: boolean) => {
+    const appWindow = getCurrentWebviewWindow();
     if (keepUIActive) {
       appWindow.hide();
     } else {
@@ -53,6 +53,7 @@ const Layout = () => {
   };
 
   useEffect(() => {
+    const appWindow = getCurrentWebviewWindow();
     appWindow.isMaximized().then((maximized) => {
       setIsMaximized(maximized);
     });
@@ -90,13 +91,11 @@ const Layout = () => {
         const {
           payload: { status, msg },
         } = e;
-        console.log(e);
         notice(status, t(msg));
       },
     );
 
     setTimeout(async () => {
-      portableFlag = await isPortableVersion();
       await appWindow.unminimize();
       await appWindow.show();
       await appWindow.setFocus();
@@ -111,6 +110,7 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
+    const appWindow = getCurrentWebviewWindow();
     const unlistenResize = appWindow.onResized(() => {
       appWindow.isMaximized().then((value) => {
         if (isMaximized !== value) {

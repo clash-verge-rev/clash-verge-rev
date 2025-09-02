@@ -40,7 +40,9 @@ panic.info.display.backtrace.note: "注：使用 `RUST_BACKTRACE=1` 环境变量
 panic.info.content: "位置： %{location}:\n\n%{payload}\n\n%{limit_backtrace}...\n\n有关更多恐慌信息，请检查日志文件:\n  %{log_file}"
 
 # error result related
-tun.busy: Tun 设备或资源繁忙
+tun.busy: Tun 设备或资源繁忙, 重启核心也许能解决问题
+# 仅在 Linux 便携版本上可授权内核
+tun.need.permissions: 请在开启 Tun 模式前给核心授权, 或者安装并启用服务模式
 config.parse.failed: 无法将配置解析为 yaml 文件
 config.convert.failed: 无法将配置转换为 yaml
 runtime.config.get.failed: 无法获取运行时配置

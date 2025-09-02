@@ -48,7 +48,21 @@
     "core:window:allow-start-dragging",
     "core:window:allow-toggle-maximize",
     "core:webview:allow-print",
-    "shell:allow-execute",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "args": ["-v"],
+          "name": "sidecar/verge-mihomo",
+          "sidecar": true
+        },
+        {
+          "args": ["-v"],
+          "name": "sidecar/verge-mihomo-alpha",
+          "sidecar": true
+        }
+      ]
+    },
     "shell:allow-open",
     "dialog:allow-open",
     "notification:default",

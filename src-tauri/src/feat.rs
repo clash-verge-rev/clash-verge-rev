@@ -11,6 +11,7 @@ use crate::core::*;
 use crate::error::AppError;
 use crate::error::AppResult;
 use crate::log_err;
+use crate::utils::dirs;
 use crate::utils::help;
 use crate::utils::resolve;
 use rust_i18n::t;
@@ -144,55 +145,65 @@ pub fn toggle_tun_mode() {
     tun.insert("tun".into(), tun_val.into());
 
     tauri::async_runtime::spawn(async move {
-        match cmds::service::check_service().await {
-            Ok(JsonResponse { code: 0, .. }) => match patch_clash(tun).await {
-                Ok(_) => tracing::info!("change tun mode to {:?}", !enable),
-                Err(err) => tracing::error!("toggle tun mode failed: {err}"),
-            },
-            Ok(JsonResponse { code: 400, .. }) => {
-                // service installed but no enable, need to patch verge to enable service mode
-                if let Err(err) = patch_verge(IVerge {
-                    enable_service_mode: Some(true),
-                    ..IVerge::default()
-                })
-                .await
-                {
+        if cfg!(target_os = "linux") && dirs::is_portable_version() {
+            match patch_clash(tun).await {
+                Ok(_) => tracing::info!("change tun mode to {}", !enable),
+                Err(err) => {
+                    tracing::error!("toggle tun mode failed: {err}");
                     handle::Handle::notify("Tun Mode", format!("{toggle_failed_msg}, {err}"));
-                } else {
-                    log_err!(cmds::check_service_and_clash().await, "check service failed");
-                    handle::Handle::refresh_verge();
-                    match patch_clash(tun).await {
-                        Ok(_) => tracing::info!("change tun mode to {:?}", !enable),
-                        Err(err) => tracing::error!("{err}"),
-                    }
                 }
             }
-            Ok(response) => {
-                handle::Handle::notify("Tun Mode", format!("{}, {}", toggle_failed_msg, response.msg));
-            }
-            Err(err) => {
-                tracing::error!("toggle service mode failed: {err}");
-                let status = handle::Handle::show_block_dialog(
-                    "Clash Verge Service",
-                    t!("install.service.ask"),
-                    MessageDialogKind::Info,
-                    MessageDialogButtons::OkCancel,
-                )
-                .unwrap_or(false);
-                if status && install_and_run_service().await.is_ok() {
-                    if let Err(err) = cmds::check_service_and_clash().await {
+        } else {
+            match cmds::service::check_service().await {
+                Ok(JsonResponse { code: 0, .. }) => match patch_clash(tun).await {
+                    Ok(_) => tracing::info!("change tun mode to {}", !enable),
+                    Err(err) => tracing::error!("toggle tun mode failed: {err}"),
+                },
+                Ok(JsonResponse { code: 400, .. }) => {
+                    // service installed but no enable, need to patch verge to enable service mode
+                    if let Err(err) = patch_verge(IVerge {
+                        enable_service_mode: Some(true),
+                        ..IVerge::default()
+                    })
+                    .await
+                    {
                         handle::Handle::notify("Tun Mode", format!("{toggle_failed_msg}, {err}"));
-                    } else if let Err(err) = patch_clash(tun).await {
-                        handle::Handle::notify("Tun Mode", format!("{toggle_failed_msg}, {err}"));
-                        tracing::error!("{err}")
                     } else {
-                        tracing::info!("change tun mode to {:?}", !enable);
+                        log_err!(cmds::check_service_and_clash().await, "check service failed");
+                        handle::Handle::refresh_verge();
+                        match patch_clash(tun).await {
+                            Ok(_) => tracing::info!("change tun mode to {}", !enable),
+                            Err(err) => tracing::error!("{err}"),
+                        }
+                    }
+                }
+                Ok(response) => {
+                    handle::Handle::notify("Tun Mode", format!("{}, {}", toggle_failed_msg, response.msg));
+                }
+                Err(err) => {
+                    tracing::error!("toggle service mode failed: {err}");
+                    let status = handle::Handle::show_block_dialog(
+                        "Clash Verge Service",
+                        t!("install.service.ask"),
+                        MessageDialogKind::Info,
+                        MessageDialogButtons::OkCancel,
+                    )
+                    .unwrap_or(false);
+                    if status && install_and_run_service().await.is_ok() {
+                        if let Err(err) = cmds::check_service_and_clash().await {
+                            handle::Handle::notify("Tun Mode", format!("{toggle_failed_msg}, {err}"));
+                        } else if let Err(err) = patch_clash(tun).await {
+                            handle::Handle::notify("Tun Mode", format!("{toggle_failed_msg}, {err}"));
+                            tracing::error!("{err}")
+                        } else {
+                            tracing::info!("change tun mode to {}", !enable);
+                        }
                     }
                 }
             }
         }
 
-        let _ = handle::Handle::update_systray_part();
+        log_err!(handle::Handle::update_systray_part());
     });
 }
 
@@ -305,8 +316,7 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
                         .unwrap()
                         .get("enable")
                         .is_some_and(|val| val.as_bool().unwrap_or(false));
-                    let tun_enable_by_api = clash_basic_configs.tun.enable;
-                    if tun_enable == tun_enable_by_api {
+                    if tun_enable == clash_basic_configs.tun.enable {
                         if Config::verge().latest().auto_close_connection.unwrap_or_default() {
                             log_err!(handle::Handle::mihomo().await.close_all_connections().await);
                         }
@@ -324,6 +334,26 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
         }
 
         if update_tun_failed {
+            #[cfg(target_os = "linux")]
+            {
+                use crate::core::manager::check_permissions_granted;
+
+                if dirs::is_portable_version() && !Config::verge().latest().enable_service_mode.unwrap_or_default() {
+                    let mihomo_core = Config::verge()
+                        .latest()
+                        .clash_core
+                        .clone()
+                        .unwrap_or("verge-mihomo".to_string());
+                    if check_permissions_granted(mihomo_core)? {
+                        Err(any_err!("{}", t!("tun.busy")))
+                    } else {
+                        Err(any_err!("{}", t!("tun.need.permissions")))
+                    }
+                } else {
+                    Err(any_err!("{}", t!("tun.busy")))
+                }
+            }
+            #[cfg(not(target_os = "linux"))]
             Err(any_err!("{}", t!("tun.busy")))
         } else {
             // 重新载入订阅
@@ -404,7 +434,7 @@ pub async fn patch_verge(patch: IVerge) -> AppResult<()> {
         let show_in_dock = patch.show_in_dock;
 
         if let Some(enable_external_controller) = enable_external_controller {
-            tracing::info!("enable external controller: {}", enable_external_controller);
+            tracing::info!("enable external controller: {enable_external_controller}");
             Config::generate()?;
             CoreManager::global().run_core().await?;
         }
@@ -415,7 +445,7 @@ pub async fn patch_verge(patch: IVerge) -> AppResult<()> {
         }
 
         if let Some(service_mode) = service_mode {
-            tracing::debug!("change service mode to {}", service_mode);
+            tracing::debug!("change service mode to {service_mode}");
             Config::generate()?;
             CoreManager::global().run_core().await?;
         }

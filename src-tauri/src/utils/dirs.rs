@@ -18,6 +18,10 @@ pub static CLASH_CONFIG: &str = "config.yaml";
 pub static VERGE_CONFIG: &str = "verge.yaml";
 pub static PROFILE_YAML: &str = "profiles.yaml";
 
+pub fn is_portable_version() -> bool {
+    *PORTABLE_FLAG.get().unwrap_or(&false)
+}
+
 /// get the verge app home dir
 pub fn app_home_dir() -> AppResult<PathBuf> {
     use tauri::utils::platform::current_exe;

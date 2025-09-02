@@ -26,17 +26,18 @@ async fn mihomo_common_patch_base_config() -> Result<()> {
     let origin_mode = base_config.mode.clone();
     println!("before changed mode: {}", base_config.mode);
 
-    let body = json!({ "mode": "direct" });
+    let next_mode = ClashMode::Global;
+    let body = json!({ "mode": next_mode });
     mihomo.patch_base_config(&body).await?;
     base_config = mihomo.get_base_config().await?;
     println!("changed mode: {}", base_config.mode);
-    assert_eq!(base_config.mode, ClashMode::Direct);
+    assert_eq!(base_config.mode, next_mode);
 
     let body = json!({ "mode": origin_mode });
     mihomo.patch_base_config(&body).await?;
     base_config = mihomo.get_base_config().await?;
     println!("reset mode: {}", base_config.mode);
-    assert_eq!(base_config.mode, ClashMode::Rule);
+    assert_eq!(base_config.mode, origin_mode);
     Ok(())
 }
 

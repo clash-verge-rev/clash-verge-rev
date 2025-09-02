@@ -23,8 +23,8 @@ pub struct NetInfo {
 }
 
 #[tauri::command]
-pub fn get_portable_flag() -> AppResult<bool> {
-    Ok(*dirs::PORTABLE_FLAG.get().unwrap_or(&false))
+pub fn is_portable_version() -> AppResult<bool> {
+    Ok(dirs::is_portable_version())
 }
 
 #[tauri::command]
@@ -39,14 +39,38 @@ pub async fn restart_sidecar() -> AppResult<()> {
 }
 
 #[tauri::command]
-pub fn grant_permission(_core: String) -> AppResult<()> {
+pub fn grant_permissions(_core: String) -> AppResult<()> {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     {
         use crate::core::manager;
-        manager::grant_permission(_core)
+        manager::grant_permissions(_core)
     }
 
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    Err(any_err!("Unsupported target"))
+}
+
+#[tauri::command]
+pub fn check_permissions_granted(_core: String) -> AppResult<bool> {
+    #[cfg(target_os = "linux")]
+    {
+        use crate::core::manager;
+        manager::check_permissions_granted(_core)
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    Err(any_err!("Unsupported target"))
+}
+
+#[tauri::command]
+pub fn refresh_permissions_granted() -> AppResult<()> {
+    #[cfg(target_os = "linux")]
+    {
+        use crate::core::manager;
+        manager::refresh_permissions_granted()
+    }
+
+    #[cfg(not(target_os = "linux"))]
     Err(any_err!("Unsupported target"))
 }
 

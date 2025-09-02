@@ -1,7 +1,7 @@
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useNotice } from "@/components/base/notifice";
+import { usePortable } from "@/hooks/use-portable";
 import { useWindowSize } from "@/hooks/use-window-size";
-import { portableFlag } from "@/pages/_layout";
 import {
   useSetUpdateState,
   useThemeMode,
@@ -28,6 +28,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
   const { size } = useWindowSize();
+  const { portable } = usePortable();
 
   const { data: updateInfo } = useSWR("checkUpdate", check, {
     errorRetryCount: 2,
@@ -60,7 +61,7 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   }, [updateInfo]);
 
   const onUpdate = useLockFn(async () => {
-    if (portableFlag) {
+    if (portable) {
       notice("error", t("Portable Updater Error"));
       return;
     }
@@ -73,7 +74,6 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
     setUpdateState(true);
     try {
       await updateInfo.downloadAndInstall((e) => {
-        console.log(e);
         if (e.event === "Started") setTotal(e.data.contentLength || 100);
         if (e.event === "Progress") {
           const chunkLength = e.data.chunkLength;
