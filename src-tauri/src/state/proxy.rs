@@ -11,7 +11,7 @@ pub struct CacheEntry {
 }
 
 pub struct ProxyRequestCache {
-    pub map: DashMap<String, Arc<OnceCell<CacheEntry>>>,
+    pub map: DashMap<String, Arc<OnceCell<Box<CacheEntry>>>>,
 }
 
 impl ProxyRequestCache {
@@ -54,10 +54,10 @@ impl ProxyRequestCache {
 
             // Try to set a new value
             let value = fetch_fn().await;
-            let entry = CacheEntry {
+            let entry = Box::new(CacheEntry {
                 value: Arc::new(value),
                 expires_at: Instant::now() + ttl,
-            };
+            });
 
             match cell.set(entry) {
                 Ok(_) => {
