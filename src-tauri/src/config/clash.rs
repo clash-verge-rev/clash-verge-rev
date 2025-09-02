@@ -75,6 +75,7 @@ impl IClashConfig {
             ("external-controller-cors".into(), cors.into()),
             ("tun".into(), tun.into()),
             ("unified-delay".into(), true.into()),
+            ("ipv6".into(), true.into()),
             ("find-process-mode".into(), "strict".into()),
             ("profile".into(), profile.into()),
         ]);
