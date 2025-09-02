@@ -7,7 +7,7 @@ use crate::{
     logging, logging_error,
     module::lightweight::auto_lightweight_mode_init,
     process::AsyncHandler,
-    utils::{init, logging::Type, network::NetworkManager, resolve::window::create_window, server},
+    utils::{init, logging::Type, resolve::window::create_window, server},
 };
 
 pub mod dns;
@@ -22,9 +22,8 @@ pub fn resolve_setup_handle(app_handle: AppHandle) {
 
 pub fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
-        AsyncHandler::spawn_blocking(|| init_scheme());
-        AsyncHandler::spawn_blocking(|| init_embed_server());
-        AsyncHandler::spawn_blocking(|| NetworkManager::new().init());
+        AsyncHandler::spawn_blocking(init_scheme);
+        AsyncHandler::spawn_blocking(init_embed_server);
     });
 }
 

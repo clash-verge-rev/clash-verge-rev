@@ -6,6 +6,11 @@ use kode_bridge::{
 };
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 
+use crate::{
+    logging, singleton_with_logging,
+    utils::{dirs::ipc_path, logging::Type},
+};
+
 // 定义用于URL路径的编码集合，只编码真正必要的字符
 const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b' ') // 空格
@@ -14,8 +19,6 @@ const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b'#') // 井号
     .add(b'&') // 和号
     .add(b'%'); // 百分号
-
-use crate::{logging, singleton_with_logging, utils::dirs::ipc_path};
 
 // Helper function to create AnyError from string
 fn create_error(msg: impl Into<String>) -> AnyError {
@@ -29,13 +32,7 @@ pub struct IpcManager {
 impl IpcManager {
     fn new() -> Self {
         let ipc_path_buf = ipc_path().unwrap_or_else(|e| {
-            logging!(
-                error,
-                crate::utils::logging::Type::Ipc,
-                true,
-                "Failed to get IPC path: {}",
-                e
-            );
+            logging!(error, Type::Ipc, true, "Failed to get IPC path: {}", e);
             std::path::PathBuf::from("/tmp/clash-verge-ipc") // fallback path
         });
         let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
@@ -48,9 +45,9 @@ impl IpcManager {
             max_requests_per_second: Some(64.0),
             ..Default::default()
         };
-        Self {
-            client: IpcHttpClient::with_config(ipc_path, config).unwrap(),
-        }
+        #[allow(clippy::unwrap_used)]
+        let client = IpcHttpClient::with_config(ipc_path, config).unwrap();
+        Self { client }
     }
 }
 

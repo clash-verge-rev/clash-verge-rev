@@ -8,7 +8,6 @@ use isahc::{
     },
 };
 use isahc::{config::SslOption, HttpClient};
-use std::sync::Once;
 use std::time::{Duration, Instant};
 use sysproxy::Sysproxy;
 use tokio::sync::Mutex;
@@ -56,7 +55,6 @@ pub struct NetworkManager {
     self_proxy_client: Mutex<Option<HttpClient>>,
     system_proxy_client: Mutex<Option<HttpClient>>,
     no_proxy_client: Mutex<Option<HttpClient>>,
-    init: Once,
     last_connection_error: Mutex<Option<(Instant, String)>>,
     connection_error_count: Mutex<usize>,
 }
@@ -67,14 +65,9 @@ impl NetworkManager {
             self_proxy_client: Mutex::new(None),
             system_proxy_client: Mutex::new(None),
             no_proxy_client: Mutex::new(None),
-            init: Once::new(),
             last_connection_error: Mutex::new(None),
             connection_error_count: Mutex::new(0),
         }
-    }
-
-    pub fn init(&self) {
-        self.init.call_once(|| {});
     }
 
     async fn record_connection_error(&self, error: &str) {
