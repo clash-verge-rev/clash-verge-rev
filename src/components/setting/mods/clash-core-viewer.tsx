@@ -196,7 +196,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
               await onCoreChange(each.core);
             }}>
             <ListItemIcon>
-              <div className="mx-1 flex w-[80px] flex-col items-center">
+              <div className="mx-1 flex w-24 flex-col items-center">
                 <MetaIcon className="h-8 w-8" />
                 <div className="bg-primary-alpha text-primary-main inline-block w-fit rounded-full px-2 py-[2px] text-[10px]">
                   {each.version}
