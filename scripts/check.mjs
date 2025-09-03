@@ -341,26 +341,30 @@ async function resolveResource(binInfo) {
   });
   spinner.start();
 
-  const resDir = path.join(cwd, "src-tauri/resources");
-  const targetPath = path.join(resDir, file);
+  try {
+    const resDir = path.join(cwd, "src-tauri/resources");
+    const targetPath = path.join(resDir, file);
 
-  if (!FORCE && (await fs.pathExists(targetPath))) {
-    spinner.succeed(`${file} has exists`);
-    return;
-  }
+    if (!FORCE && (await fs.pathExists(targetPath))) {
+      spinner.succeed(`${file} has exists`);
+      return;
+    }
 
-  await fs.mkdirp(resDir);
-  if (downloadURL) {
-    spinner.text = `download ${file}...`;
-    await downloadFile(downloadURL, targetPath, spinner);
+    await fs.mkdirp(resDir);
+    if (downloadURL) {
+      spinner.text = `download ${file}...`;
+      await downloadFile(downloadURL, targetPath, spinner);
+    }
+    if (localPath) {
+      spinner.text = `copy ${file} to ${targetPath}`;
+      await fs.copyFile(localPath, targetPath);
+      spinner.text = `copy file finished: "${localPath}"`;
+    }
+    spinner.succeed(`resolve finished: ${file}`);
+  } catch (err) {
+    spinner.fail(`resolve failed: ${file}`);
+    throw new Error(err);
   }
-  if (localPath) {
-    spinner.text = `copy ${file} to ${targetPath}`;
-    await fs.copyFile(localPath, targetPath);
-    spinner.text = `copy file finished: "${localPath}"`;
-  }
-
-  spinner.succeed(`resolve finished: ${file}`);
 }
 
 /**
@@ -394,6 +398,7 @@ async function downloadFile(url, path, spinner) {
  * only for Windows
  */
 const resolvePlugin = async () => {
+  consola.info("Resolve NSIS plugin (SimpleSC)");
   const spinner = ora({
     text: "resolve NSIS plugin (SimpleSC)",
     color: "yellow",
@@ -493,6 +498,7 @@ function getAlphaClashVergeServices() {
 }
 
 const resolveClashVergeService = async () => {
+  consola.info("Download and unzip Clash Verge Service");
   const spinner = ora({
     text: "resolve Clash Verge Service",
     color: "yellow",
@@ -554,7 +560,7 @@ const resolveClashVergeService = async () => {
 };
 
 const resolveSetDnsScript = async () => {
-  consola.info("resolve set dns script");
+  consola.info("Resolve Macos set dns script");
   await resolveResource({
     file: "set_dns.sh",
     localPath: path.join(cwd, "scripts/set_dns.sh"),
@@ -562,7 +568,7 @@ const resolveSetDnsScript = async () => {
 };
 
 const resolveUnSetDnsScript = async () => {
-  consola.info("resolve unset dns script");
+  consola.info("Resolve Macos unset dns script");
   await resolveResource({
     file: "unset_dns.sh",
     localPath: path.join(cwd, "scripts/unset_dns.sh"),
@@ -570,7 +576,7 @@ const resolveUnSetDnsScript = async () => {
 };
 
 const resolveMmdb = async () => {
-  consola.info("resolve Country mmdb");
+  consola.info("Resolve Country mmdb");
   await resolveResource({
     file: "Country.mmdb",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb`,
@@ -578,7 +584,7 @@ const resolveMmdb = async () => {
 };
 
 const resolveGeosite = async () => {
-  consola.info("resolve geosite");
+  consola.info("Resolve geosite");
   await resolveResource({
     file: "geosite.dat",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat`,
@@ -586,7 +592,7 @@ const resolveGeosite = async () => {
 };
 
 const resolveGeoIP = async () => {
-  consola.info("resolve geoip");
+  consola.info("Resolve geoip");
   await resolveResource({
     file: "geoip.dat",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat`,
@@ -594,7 +600,7 @@ const resolveGeoIP = async () => {
 };
 
 const resolveASN = async () => {
-  consola.info("resolve ASN mmdb");
+  consola.info("Resolve ASN mmdb");
   await resolveResource({
     file: "ASN.mmdb",
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb`,
@@ -602,7 +608,7 @@ const resolveASN = async () => {
 };
 
 const resolveEnableLoopback = async () => {
-  consola.info("resolve enableLoopback.exe");
+  consola.info("Resolve enableLoopback.exe");
   await resolveResource({
     file: "enableLoopback.exe",
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`,
@@ -613,6 +619,7 @@ const tasks = [
   {
     name: "verge-mihomo",
     func: async () => {
+      consola.info("Download and unzip Latest Mihomo Stable Version");
       await getLatestReleaseVersion();
       await resolveSidecar(mihomo());
     },
@@ -621,6 +628,7 @@ const tasks = [
   {
     name: "verge-mihomo-alpha",
     func: async () => {
+      consola.info("Download and unzip Latest Mihomo Alpha Version");
       await getLatestAlphaVersion();
       await resolveSidecar(mihomoAlpha());
     },
@@ -676,9 +684,6 @@ async function runTask() {
 
     for (let i = 0; i < task.retry; i++) {
       try {
-        if (task.name === "plugin") consola.info("Resolve plugin");
-        if (task.name === "service") consola.info("Resolve resources");
-        if (task.name === "service_chmod") consola.info("Chmod resources");
         await task.func();
         break;
       } catch (err) {
