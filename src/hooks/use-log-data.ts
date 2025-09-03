@@ -42,7 +42,10 @@ export const useLogData = () => {
                   next(msg.data);
                   await ws.current?.close();
                   ws.current = null;
-                  timeoutRef.current = setTimeout(() => connect(), 500);
+                  timeoutRef.current = setTimeout(
+                    async () => await connect(),
+                    500,
+                  );
                 } else {
                   const data = JSON.parse(msg.data) as ILogItem;
                   // append new log item on socket message
@@ -58,7 +61,7 @@ export const useLogData = () => {
           })
           .catch((_) => {
             if (!ws.current) {
-              timeoutRef.current = setTimeout(() => connect(), 500);
+              timeoutRef.current = setTimeout(async () => await connect(), 500);
             }
           });
 
@@ -88,7 +91,7 @@ export const useLogData = () => {
     const unlistenRefreshWebsocket = listen(
       "verge://refresh-websocket",
       async () => {
-        ws.current?.close();
+        await ws.current?.close();
         setDate(Date.now());
       },
     );

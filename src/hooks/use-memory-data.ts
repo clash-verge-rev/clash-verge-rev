@@ -27,7 +27,10 @@ export const useMemoryData = () => {
                   next(msg.data, { inuse: 0 });
                   await ws.current?.close();
                   ws.current = null;
-                  timeoutRef.current = setTimeout(() => connect(), 500);
+                  timeoutRef.current = setTimeout(
+                    async () => await connect(),
+                    500,
+                  );
                 } else {
                   const data = JSON.parse(msg.data) as IMemoryUsageItem;
                   next(null, data);
@@ -37,7 +40,7 @@ export const useMemoryData = () => {
           })
           .catch((_) => {
             if (!ws.current) {
-              timeoutRef.current = setTimeout(() => connect(), 500);
+              timeoutRef.current = setTimeout(async () => await connect(), 500);
             }
           });
 
@@ -67,7 +70,7 @@ export const useMemoryData = () => {
     const unlistenRefreshWebsocket = listen(
       "verge://refresh-websocket",
       async () => {
-        ws.current?.close();
+        await ws.current?.close();
         setDate(Date.now());
       },
     );

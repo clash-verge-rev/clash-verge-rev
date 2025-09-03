@@ -29,7 +29,10 @@ export const useTrafficData = () => {
                   next(msg.data, { up: 0, down: 0 });
                   await ws.current?.close();
                   ws.current = null;
-                  timeoutRef.current = setTimeout(() => connect(), 500);
+                  timeoutRef.current = setTimeout(
+                    async () => await connect(),
+                    500,
+                  );
                 } else {
                   const data = JSON.parse(msg.data) as ITrafficItem;
                   trafficRef.current?.appendData(data);
@@ -40,7 +43,7 @@ export const useTrafficData = () => {
           })
           .catch((_) => {
             if (!ws.current) {
-              timeoutRef.current = setTimeout(() => connect(), 500);
+              timeoutRef.current = setTimeout(async () => await connect(), 500);
             }
           });
       };
@@ -71,7 +74,7 @@ export const useTrafficData = () => {
     const unlistenRefreshWebsocket = listen(
       "verge://refresh-websocket",
       async () => {
-        ws.current?.close();
+        await ws.current?.close();
         setDate(Date.now());
       },
     );

@@ -33,7 +33,10 @@ export const useConnectionData = () => {
                   next(msg.data);
                   await ws.current?.close();
                   ws.current = null;
-                  timeoutRef.current = setTimeout(() => connect(), 500);
+                  timeoutRef.current = setTimeout(
+                    async () => await connect(),
+                    500,
+                  );
                 } else {
                   const data = JSON.parse(msg.data) as IConnections;
                   next(null, (old = initConnData) => {
@@ -66,7 +69,7 @@ export const useConnectionData = () => {
           })
           .catch((_) => {
             if (!ws.current) {
-              timeoutRef.current = setTimeout(() => connect(), 500);
+              timeoutRef.current = setTimeout(async () => await connect(), 500);
             }
           });
 
@@ -96,7 +99,7 @@ export const useConnectionData = () => {
     const unlistenRefreshWebsocket = listen(
       "verge://refresh-websocket",
       async () => {
-        ws.current?.close();
+        await ws.current?.close();
         setDate(Date.now());
       },
     );
