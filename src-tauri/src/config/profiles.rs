@@ -132,14 +132,13 @@ impl IProfiles {
         if let Some(current) = patch.current {
             let items = self.items.as_deref().unwrap_or_default();
             let some_uid = Some(current);
-
             if items.iter().any(|e| e.uid == some_uid) {
                 self.current = some_uid;
             }
         }
 
         if let Some(new_chain) = patch.chain {
-            // disable old chain
+            // disable old global chain
             if let Some(old_chain) = self.chain.clone() {
                 for old_uid in old_chain {
                     let item = self
@@ -149,7 +148,7 @@ impl IProfiles {
                     item.enable = Some(false);
                 }
             }
-            // enable new chain
+            // enable new global chain
             for new_uid in new_chain.iter() {
                 let item = self
                     .get_item_mut(new_uid)

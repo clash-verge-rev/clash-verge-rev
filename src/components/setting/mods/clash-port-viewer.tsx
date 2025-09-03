@@ -50,86 +50,113 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       return;
     }
 
-    if (OS === "linux") {
-      const conflictPorts = [
-        redirPort,
-        tproxyPort,
-        mixedPort,
-        socksPort,
-        port,
-      ].filter((port) => port !== 0);
-      if (uniq(conflictPorts).length !== conflictPorts.length) {
-        notice("error", t("Port Conflict"), 4000);
-        return;
+    // don't check this using port is available
+    const usingPorts = [
+      clashInfo?.redir_port ?? 0,
+      clashInfo?.tproxy_port ?? 0,
+      clashInfo?.mixed_port ?? 0,
+      clashInfo?.socks_port ?? 0,
+      clashInfo?.port ?? 0,
+    ].filter((port) => port !== 0);
+
+    // check changing ports is unique
+    const conflictPorts = [mixedPort, socksPort, port, redirPort, tproxyPort];
+    const portNames = [
+      "mixedPort",
+      "socksPort",
+      "port",
+      "redirPort",
+      "tproxyPort",
+    ];
+    for (let i = 0; i < conflictPorts.length - 1; i++) {
+      if (conflictPorts[i] === 0) continue;
+      for (let j = i + 1; j < conflictPorts.length; j++) {
+        if (conflictPorts[i] === conflictPorts[j]) {
+          console.log(
+            portNames[i],
+            conflictPorts[i],
+            portNames[j],
+            conflictPorts[j],
+          );
+          notice("error", t("Port Conflict", { portName: portNames[j] }), 4000);
+          return;
+        }
       }
     }
-    if (OS === "macos") {
-      const conflictPorts = [redirPort, mixedPort, socksPort, port].filter(
-        (port) => port !== 0,
-      );
-      if (uniq(conflictPorts).length !== conflictPorts.length) {
-        notice("error", t("Port Conflict"), 4000);
-        return;
-      }
-    }
-    if (OS === "windows") {
-      const conflictPorts = [mixedPort, socksPort, port].filter(
-        (port) => port !== 0,
-      );
-      if (uniq(conflictPorts).length !== conflictPorts.length) {
-        notice("error", t("Port Conflict"), 4000);
-        return;
-      }
+    if (uniq(conflictPorts).length !== conflictPorts.length) {
+      notice("error", t("Port Conflict"), 4000);
+      return;
     }
 
     try {
       const updatePorts: Record<string, number> = {};
-
       if (OS !== "windows" && redirPort !== clashInfo?.redir_port) {
-        const res = await checkPortAvailable(redirPort);
-        if (!res) {
-          notice("error", t("Port Conflict", { portName: "redir port" }), 4000);
-          return;
+        if (!usingPorts.includes(redirPort)) {
+          const res = await checkPortAvailable(redirPort);
+          if (!res) {
+            notice(
+              "error",
+              t("Port Conflict", { portName: "redir port" }),
+              4000,
+            );
+            return;
+          }
         }
         updatePorts["redir-port"] = redirPort;
       }
 
       if (OS === "linux" && tproxyPort !== clashInfo?.tproxy_port) {
-        const res = await checkPortAvailable(tproxyPort);
-        if (!res) {
-          notice(
-            "error",
-            t("Port Conflict", { portName: "tproxy port" }),
-            4000,
-          );
-          return;
+        if (!usingPorts.includes(tproxyPort)) {
+          const res = await checkPortAvailable(tproxyPort);
+          if (!res) {
+            notice(
+              "error",
+              t("Port Conflict", { portName: "tproxy port" }),
+              4000,
+            );
+            return;
+          }
         }
         updatePorts["tproxy-port"] = tproxyPort;
       }
 
       if (mixedPort !== clashInfo?.mixed_port) {
-        const res = await checkPortAvailable(mixedPort);
-        if (!res) {
-          notice("error", t("Port Conflict", { portName: "mixed port" }), 4000);
-          return;
+        if (!usingPorts.includes(mixedPort)) {
+          const res = await checkPortAvailable(mixedPort);
+          if (!res) {
+            notice(
+              "error",
+              t("Port Conflict", { portName: "mixed port" }),
+              4000,
+            );
+            return;
+          }
         }
         updatePorts["mixed-port"] = mixedPort;
       }
 
       if (socksPort !== clashInfo?.socks_port) {
-        const res = await checkPortAvailable(socksPort);
-        if (!res) {
-          notice("error", t("Port Conflict", { portName: "socks port" }), 4000);
-          return;
+        if (!usingPorts.includes(socksPort)) {
+          const res = await checkPortAvailable(socksPort);
+          if (!res) {
+            notice(
+              "error",
+              t("Port Conflict", { portName: "socks port" }),
+              4000,
+            );
+            return;
+          }
         }
         updatePorts["socks-port"] = socksPort;
       }
 
       if (port !== clashInfo?.port) {
-        const res = await checkPortAvailable(port);
-        if (!res) {
-          notice("error", t("Port Conflict", { portName: "port" }), 4000);
-          return;
+        if (!usingPorts.includes(port)) {
+          const res = await checkPortAvailable(port);
+          if (!res) {
+            notice("error", t("Port Conflict", { portName: "port" }), 4000);
+            return;
+          }
         }
         updatePorts["port"] = port;
       }
