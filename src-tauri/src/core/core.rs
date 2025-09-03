@@ -113,9 +113,10 @@ impl CoreManager {
         if self.sidecar.lock().is_some() {
             self.need_restart_core.store(false, Ordering::SeqCst);
             // 关闭 tun 模式
-            tracing::debug!("disable tun mode");
+            tracing::info!("temporarily disable tun mode");
             handle::Handle::mihomo().await.patch_base_config(&disable_tun).await?;
             if let Some(sidecar) = self.sidecar.lock().take() {
+                tracing::info!("kill mihomo sidecar");
                 sidecar.kill()?;
             }
         }
@@ -172,6 +173,9 @@ impl CoreManager {
             let is_linux_portable = cfg!(target_os = "linux") && dirs::is_portable_version();
             // note: ** linux portable can enable tun mode without enable service mode, so don't patch config file to disable tun **
             if !is_linux_portable {
+                tracing::info!(
+                    "not linux portable version and run with sidecar mode, patch config to disable tun mode"
+                );
                 // tun is disable by default on sidecar mode, if service mode is disable, patch the config to disable tun mode
                 Config::clash().latest_mut().patch_and_merge_config(disable_tun.clone());
                 Config::clash().latest().save_config()?;
@@ -207,6 +211,7 @@ impl CoreManager {
         {
             let mut sidecar = self.sidecar.lock();
             if let Some(sidecar) = sidecar.take() {
+                tracing::info!("kill mihomo sidecar");
                 sidecar.kill()?;
             }
             *sidecar = Some(cmd_child);
@@ -253,6 +258,7 @@ impl CoreManager {
         }
         // 清空原来的 sidecar 值
         if let Some(sidecar) = self.sidecar.lock().take() {
+            tracing::info!("kill mihomo sidecar");
             sidecar.kill()?;
         }
         let need_restart_core_ = need_restart_core;
@@ -290,7 +296,10 @@ impl CoreManager {
         }
 
         let mut sidecar = self.sidecar.lock();
-        let _ = sidecar.take();
+        if let Some(sidecar) = sidecar.take() {
+            tracing::info!("kill mihomo sidecar");
+            sidecar.kill()?;
+        }
 
         // kill all clash process
         tracing::info!("kill all mihomo process");
