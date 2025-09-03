@@ -52,15 +52,12 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
   const [changingCore, setChangingCore] = useState("");
-  const { mihomoCoresInfo, refreshMihomoVersion, refreshMihomoPermissions } =
+  const { mihomoCoresInfo, enableGrantPermissions, muteMihomoCoresInfo } =
     useMihomoCoresInfo();
   const { serviceStatus } = useService();
 
   const { portable } = usePortable();
   const isLinuxPortable = portable && OS === "linux";
-  const showGrantPermissions =
-    isLinuxPortable &&
-    (serviceStatus === "uninstall" || serviceStatus === "unknown");
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -120,7 +117,8 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
     } catch (err: any) {
       notice("error", err.message || err.toString());
     } finally {
-      await refreshMihomoPermissions();
+      muteMihomoCoresInfo();
+      // await refreshMihomoPermissions();
     }
   });
 
@@ -150,8 +148,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
         notice("error", err.message || err.toString());
       }
     } finally {
-      await refreshMihomoPermissions();
-      await refreshMihomoVersion();
+      muteMihomoCoresInfo();
     }
   });
 
@@ -207,7 +204,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
               primary={
                 <div className="inline-flex items-center">
                   <span>{each.name}</span>
-                  {showGrantPermissions && (
+                  {enableGrantPermissions && (
                     <div
                       className={cn(
                         "ml-2 inline-block rounded-full bg-red-600/60 px-2 py-[2px] text-[10px] text-white",
@@ -232,7 +229,7 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
               />
             )}
 
-            {showGrantPermissions && (
+            {enableGrantPermissions && (
               <Button
                 variant="outlined"
                 size="small"
