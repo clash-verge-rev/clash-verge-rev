@@ -97,11 +97,11 @@ pub fn check_permissions_granted(core: String) -> AppResult<bool> {
 
 #[cfg(target_os = "linux")]
 pub fn refresh_permissions_granted() -> AppResult<()> {
+    tracing::debug!("refresh permissions granted");
     GRANTED_PERMISSIONS.write().iter_mut().for_each(|(_, v)| *v = None);
     let mihomo_cores = ["verge-mihomo", "verge-mihomo-alpha"];
     for core in mihomo_cores {
-        let granted = check_permissions_granted(core.to_string())?;
-        tracing::debug!("refresh permissions granted, core: {core}, granted: {granted}");
+        check_permissions_granted(core.to_string())?;
     }
     Ok(())
 }

@@ -32,6 +32,7 @@ const defaultValue: MihomoCoreInfo[] = [
   },
 ];
 
+const MIHOMO_CORES = ["verge-mihomo", "verge-mihomo-alpha"];
 const OS = getSystem();
 
 export const useMihomoCoresInfo = () => {
@@ -68,7 +69,7 @@ export const useMihomoCoresInfo = () => {
   }, [portable]);
 
   const refreshMihomoVersion = async () => {
-    for (let core of ["verge-mihomo", "verge-mihomo-alpha"]) {
+    for (let core of MIHOMO_CORES) {
       const output = await Command.sidecar(`sidecar/${core}`, ["-v"]).execute();
       if (output.code === 0) {
         const regex = /(alpha-\w+|v\d+(?:\.\d+)*)/gm;
@@ -108,8 +109,8 @@ export const useMihomoCoresInfo = () => {
   const refreshMihomoPermissions = async () => {
     if (enableGrantPermissions) {
       await refreshPermissionsGranted();
-      for (let core of mihomoCoresInfo) {
-        await checkMihomoPermissionsGranted(core.core);
+      for (let core of MIHOMO_CORES) {
+        await checkMihomoPermissionsGranted(core);
       }
     }
   };
