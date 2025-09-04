@@ -20,6 +20,42 @@
       "matchDatasources": ["github-runners"],
       "matchPackageNames": ["ubuntu"],
       "versioning": "22.04"
+    },
+    {
+      "matchPackageNames": ["/(plugin-clipboard-manager)/"],
+      "groupName": "tauri plugin clipboard manager deps"
+    },
+    {
+      "matchPackageNames": ["/(plugin-dialog)/"],
+      "groupName": "tauri plugin dialog deps"
+    },
+    {
+      "matchPackageNames": ["/(plugin-fs)/"],
+      "groupName": "tauri plugin fs deps"
+    },
+    {
+      "matchPackageNames": ["/(plugin-global-shortcut)/"],
+      "groupName": "tauri plugin global shortcut deps"
+    },
+    {
+      "matchPackageNames": ["/(plugin-notification)/"],
+      "groupName": "tauri plugin notification deps"
+    },
+    {
+      "matchPackageNames": ["/(plugin-opener)/"],
+      "groupName": "tauri plugin openner deps"
+    },
+    {
+      "matchPackageNames": ["/(plugin-process)/"],
+      "groupName": "tauri plugin process deps"
+    },
+    {
+      "matchPackageNames": ["/(plugin-shell)/"],
+      "groupName": "tauri plugin shell deps"
+    },
+    {
+      "matchPackageNames": ["/(plugin-updater)/"],
+      "groupName": "tauri plugin updater deps"
     }
   ]
 }
