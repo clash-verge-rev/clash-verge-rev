@@ -12,7 +12,7 @@ repos:
   #     - id: check-added-large-files
   # this will check typos and fix file automatically, but need to re-add file by using git
   - repo: https://github.com/crate-ci/typos
-    rev: v1.35.5
+    rev: v1.36.1
     hooks:
       - id: typos
   - repo: local

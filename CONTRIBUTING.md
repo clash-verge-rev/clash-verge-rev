@@ -10,8 +10,7 @@ Before you start contributing to the project, you need to set up your developmen
 
 1. **Install Rust and Node.js**: Our project requires both Rust and Node.js. Please follow the instructions provided [here](https://tauri.app/v1/guides/getting-started/prerequisites) to install them on your system.
 
-2. **Install typos and prek**: execute the `pnpm i` command to check and install them.
-   - `typos`: Source code spell checker.
+2. **Install prek**: Prek is automatically installed when project dependencies are installed via `pnpm i`.
    - `prek`: Git pre-commit hooks.
 
 ### Setup for Windows Users
