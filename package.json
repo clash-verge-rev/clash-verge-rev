@@ -102,7 +102,7 @@
     "tailwind-merge": "3.3.1",
     "tailwindcss": "4.1.12",
     "tar": "7.4.3",
-    "terser": "5.43.1",
+    "terser": "5.44.0",
     "types-pac": "1.0.3",
     "typescript": "5.9.2",
     "vite": "7.1.4",
