@@ -5,6 +5,7 @@ use tauri::Emitter;
 pub mod speed_rate;
 use crate::ipc::Rate;
 use crate::process::AsyncHandler;
+use crate::state::proxy::ProxyRequestCache;
 use crate::{
     cmd,
     config::Config,
@@ -285,13 +286,14 @@ impl Tray {
         let is_lightweight_mode = is_in_lightweight_mode();
 
         // 获取代理节点
-        let proxy_nodes_data = match IpcManager::global().get_proxies().await {
-            Ok(data) => data,
-            Err(e) => {
-                log::warn!(target: "app", "获取代理节点数据失败: {}", e);
-                serde_json::Value::Object(serde_json::Map::new())
-            }
-        };
+        let proxy_nodes_data = cmd::get_proxies().await.unwrap_or_else(|e| {
+            logging!(
+                error,
+                Type::Cmd,
+                "Failed to fetch proxies for tray menu: {e}"
+            );
+            serde_json::Value::Object(serde_json::Map::new())
+        });
 
         match app_handle.tray_by_id("main") {
             Some(tray) => {
@@ -576,17 +578,13 @@ async fn create_tray_menu(
 
     // 获取当前配置文件的选中代理组信息
     let current_profile_selected = {
-        let profiles = Config::profiles().await;
-        let profiles = profiles.latest_ref();
-        if let Some(current_profile_uid) = profiles.get_current() {
-            if let Ok(profile) = profiles.get_item(&current_profile_uid) {
-                profile.selected.clone().unwrap_or_default()
-            } else {
-                Vec::new()
-            }
-        } else {
-            Vec::new()
-        }
+        let profiles_config = Config::profiles().await;
+        let profiles_ref = profiles_config.latest_ref();
+        profiles_ref
+            .get_current()
+            .and_then(|uid| profiles_ref.get_item(&uid).ok())
+            .and_then(|profile| profile.selected.clone())
+            .unwrap_or_default()
     };
 
     let version = env!("CARGO_PKG_VERSION");
@@ -639,113 +637,99 @@ async fn create_tray_menu(
     let proxy_submenus: Vec<Submenu<Wry>> = {
         let mut submenus = Vec::new();
 
-        //
         if let Some(proxies) = proxy_nodes_data.get("proxies").and_then(|v| v.as_object()) {
             for (group_name, group_data) in proxies.iter() {
-                if let Some(all_proxies) = group_data.get("all").and_then(|v| v.as_array()) {
-                    // 在全局模式下只显示GLOBAL组，在规则模式下显示所有Selector类型的代理组
-                    let should_show_group = if mode == "global" {
-                        group_name == "GLOBAL"
-                    } else {
-                        group_name != "GLOBAL"
-                    };
+                // Filter groups based on mode
+                let should_show = match mode {
+                    "global" => group_name == "GLOBAL",
+                    _ => group_name != "GLOBAL",
+                };
 
-                    if !should_show_group {
-                        continue;
-                    }
+                if !should_show {
+                    continue;
+                }
 
-                    let now_proxy = group_data.get("now").and_then(|v| v.as_str()).unwrap_or("");
+                let Some(all_proxies) = group_data.get("all").and_then(|v| v.as_array()) else {
+                    continue;
+                };
 
-                    // 每个代理组创建子菜单项
-                    let mut group_items = Vec::new();
+                let now_proxy = group_data.get("now").and_then(|v| v.as_str()).unwrap_or("");
 
-                    for proxy_name in all_proxies.iter() {
-                        if let Some(proxy_str) = proxy_name.as_str() {
-                            let is_selected = proxy_str == now_proxy;
-                            let item_id = format!("proxy_{}_{}", group_name, proxy_str);
+                // Create proxy items
+                let group_items: Vec<CheckMenuItem<Wry>> = all_proxies
+                    .iter()
+                    .filter_map(|proxy_name| proxy_name.as_str())
+                    .filter_map(|proxy_str| {
+                        let is_selected = proxy_str == now_proxy;
+                        let item_id = format!("proxy_{}_{}", group_name, proxy_str);
 
-                            let display_text = {
-                                if let Some(proxy_detail) = proxies.get(proxy_str) {
-                                    if let Some(history) =
-                                        proxy_detail.get("history").and_then(|h| h.as_array())
-                                    {
-                                        if let Some(last_record) = history.last() {
-                                            if let Some(delay) =
-                                                last_record.get("delay").and_then(|d| d.as_i64())
-                                            {
-                                                if delay == -1 {
-                                                    format!("{}   | -ms", proxy_str)
-                                                } else if delay >= 10000 {
-                                                    format!("{}   | -1ms", proxy_str)
-                                                } else {
-                                                    format!("{}   | {}ms", proxy_str, delay)
-                                                }
-                                            } else {
-                                                format!("{}   | -ms ", proxy_str)
-                                            }
-                                        } else {
-                                            format!("{}   | -ms ", proxy_str)
-                                        }
-                                    } else {
-                                        format!("{}   | -ms", proxy_str)
-                                    }
-                                } else {
-                                    format!("{}   | -ms ", proxy_str)
-                                }
-                            };
+                        // Get delay for display
+                        let delay_text = proxies
+                            .get(proxy_str)
+                            .and_then(|p| p.get("history"))
+                            .and_then(|h| h.as_array())
+                            .and_then(|h| h.last())
+                            .and_then(|r| r.get("delay"))
+                            .and_then(|d| d.as_i64())
+                            .map(|delay| match delay {
+                                -1 => "-ms".to_string(),
+                                delay if delay >= 10000 => "-ms".to_string(),
+                                _ => format!("{}ms", delay),
+                            })
+                            .unwrap_or_else(|| "-ms".to_string());
 
-                            match CheckMenuItem::with_id(
-                                app_handle,
-                                item_id,
-                                display_text, // 显示包含延迟的节点名
-                                true,
-                                is_selected,
-                                None::<&str>,
-                            ) {
-                                Ok(item) => group_items.push(item),
-                                Err(e) => log::warn!(target: "app", "创建代理菜单项失败: {}", e),
-                            }
-                        }
-                    }
+                        let display_text = format!("{}   | {}", proxy_str, delay_text);
 
-                    // 创建代理组子菜单
-                    if !group_items.is_empty() {
-                        let group_items_refs: Vec<&dyn IsMenuItem<Wry>> = group_items
-                            .iter()
-                            .map(|item| item as &dyn IsMenuItem<Wry>)
-                            .collect();
-
-                        // 判断当前代理组是否为真正在使用中的组
-                        let is_group_active = if mode == "global" {
-                            group_name == "GLOBAL" && !now_proxy.is_empty()
-                        } else if mode == "direct" {
-                            // 直连模式下 不显示任何勾选
-                            false
-                        } else {
-                            let is_user_selected = current_profile_selected
-                                .iter()
-                                .any(|selected| selected.name.as_deref() == Some(group_name));
-                            is_user_selected && !now_proxy.is_empty()
-                        };
-
-                        // 如果组处于活动状态，在组名前添加勾选标记
-                        let group_display_name = if is_group_active {
-                            format!("✓ {}", group_name)
-                        } else {
-                            group_name.to_string()
-                        };
-
-                        match Submenu::with_id_and_items(
+                        CheckMenuItem::with_id(
                             app_handle,
-                            format!("proxy_group_{}", group_name),
-                            group_display_name, // 使用带勾选标记的组名
+                            item_id,
+                            display_text,
                             true,
-                            &group_items_refs,
-                        ) {
-                            Ok(submenu) => submenus.push(submenu),
-                            Err(e) => log::warn!(target: "app", "创建代理组子菜单失败: {}", e),
-                        }
+                            is_selected,
+                            None::<&str>,
+                        )
+                        .map_err(|e| log::warn!(target: "app", "创建代理菜单项失败: {}", e))
+                        .ok()
+                    })
+                    .collect();
+
+                if group_items.is_empty() {
+                    continue;
+                }
+
+                // Determine if group is active
+                let is_group_active = match mode {
+                    "global" => group_name == "GLOBAL" && !now_proxy.is_empty(),
+                    "direct" => false,
+                    _ => {
+                        current_profile_selected
+                            .iter()
+                            .any(|s| s.name.as_deref() == Some(group_name))
+                            && !now_proxy.is_empty()
                     }
+                };
+
+                let group_display_name = if is_group_active {
+                    format!("✓ {}", group_name)
+                } else {
+                    group_name.to_string()
+                };
+
+                let group_items_refs: Vec<&dyn IsMenuItem<Wry>> = group_items
+                    .iter()
+                    .map(|item| item as &dyn IsMenuItem<Wry>)
+                    .collect();
+
+                if let Ok(submenu) = Submenu::with_id_and_items(
+                    app_handle,
+                    format!("proxy_group_{}", group_name),
+                    group_display_name,
+                    true,
+                    &group_items_refs,
+                ) {
+                    submenus.push(submenu);
+                } else {
+                    log::warn!(target: "app", "创建代理组子菜单失败: {}", group_name);
                 }
             }
         }
@@ -1050,17 +1034,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     let group_name = parts[1];
                     let proxy_name = parts[2];
 
-                    let current_mode = {
-                        Config::clash()
-                            .await
-                            .latest_ref()
-                            .0
-                            .get("mode")
-                            .map(|val| val.as_str().unwrap_or("rule"))
-                            .unwrap_or("rule")
-                            .to_owned()
-                    };
-
                     match cmd::proxy::update_proxy_and_sync(
                         group_name.to_string(),
                         proxy_name.to_string(),
@@ -1068,31 +1041,20 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     .await
                     {
                         Ok(_) => {
-                            log::info!(target: "app", " {} -> {} (模式: {})", group_name, proxy_name, current_mode);
+                            log::info!(target: "app", "切换代理成功: {} -> {}", group_name, proxy_name);
                         }
                         Err(e) => {
-                            log::error!(target: "app", " {} -> {}, 错误: {:?}", group_name, proxy_name, e);
+                            log::error!(target: "app", "切换代理失败: {} -> {}, 错误: {:?}", group_name, proxy_name, e);
 
-                            match IpcManager::global()
+                            // Fallback to IPC update
+                            if let Ok(_) = IpcManager::global()
                                 .update_proxy(group_name, proxy_name)
                                 .await
                             {
-                                Ok(_) => {
-                                    log::info!(target: "app", " {} -> {}", group_name, proxy_name);
+                                log::info!(target: "app", "代理切换回退成功: {} -> {}", group_name, proxy_name);
 
-                                    if let Err(e) = Tray::global().update_menu().await {
-                                        log::warn!(target: "app", "托盘菜单更新失败: {e}");
-                                    }
-
-                                    if let Some(app_handle) = handle::Handle::global().app_handle()
-                                    {
-                                        let _ =
-                                            app_handle.emit("verge://force-refresh-proxies", ());
-                                        let _ = app_handle.emit("verge://refresh-proxy-config", ());
-                                    }
-                                }
-                                Err(e2) => {
-                                    log::error!(target: "app", "托盘代理切换回退也失败: {} -> {}, 错误: {}", group_name, proxy_name, e2);
+                                if let Some(app_handle) = handle::Handle::global().app_handle() {
+                                    let _ = app_handle.emit("verge://force-refresh-proxies", ());
                                 }
                             }
                         }
