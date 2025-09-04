@@ -114,7 +114,7 @@ impl CoreManager {
             self.need_restart_core.store(false, Ordering::SeqCst);
             // 关闭 tun 模式
             tracing::info!("temporarily disable tun mode");
-            // 如果内核崩溃没启动起来，此处应该忽略错误
+            // 如果此时内核启动后却无法进行通信时，忽略此错误，继续执行重启内核的操作
             log_err!(handle::Handle::mihomo().await.patch_base_config(&disable_tun).await);
             if let Some(sidecar) = self.sidecar.lock().take() {
                 tracing::info!("kill mihomo sidecar");

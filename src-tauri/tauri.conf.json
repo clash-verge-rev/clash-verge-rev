@@ -63,8 +63,8 @@
     "beforeDevCommand": "pnpm run web:dev",
     "devUrl": "http://localhost:3000/",
     "additionalWatchFolders": [
-      "../mihomo-rule-parser",
-      "../tauri-plugin-mihomo"
+      "../crates/mihomo-rule-parser",
+      "../crates/tauri-plugin-mihomo"
     ]
   },
   "plugins": {

@@ -36,17 +36,17 @@ repos:
       - id: cargo-fmt-mihomo-rule-parser
         name: cargo fmt mihomo-rule-parser
         description: Format mihomo-rule-parser files with rustfmt.
-        entry: cargo fmt --manifest-path mihomo-rule-parser/Cargo.toml -- --check
+        entry: cargo fmt --manifest-path crates/mihomo-rule-parser/Cargo.toml -- --check
         language: system
-        files: ^mihomo-rule-parser/
+        files: ^crates/mihomo-rule-parser/
         types:
           - rust
       - id: cargo-fmt-tauri-plugin-mihomo
         name: cargo fmt tauri-plugin-mihomo
         description: Format tauri-plugin-mihomo files with rustfmt.
-        entry: cargo fmt --manifest-path tauri-plugin-mihomo/Cargo.toml -- --check
+        entry: cargo fmt --manifest-path crates/tauri-plugin-mihomo/Cargo.toml -- --check
         language: system
-        files: ^tauri-plugin-mihomo/
+        files: ^crates/tauri-plugin-mihomo/
         types:
           - rust
       - id: cargo-fmt-src-tauri
@@ -62,18 +62,18 @@ repos:
       - id: cargo-check-mihomo-rule-parser
         name: cargo check mihomo-rule-parser
         description: Check the package for errors.
-        entry: cargo check --manifest-path mihomo-rule-parser/Cargo.toml --all
+        entry: cargo check --manifest-path crates/mihomo-rule-parser/Cargo.toml --all
         language: system
-        files: ^mihomo-rule-parser/
+        files: ^crates/mihomo-rule-parser/
         types:
           - rust
         pass_filenames: false
       - id: cargo-check-tauri-plugin-mihomo
         name: cargo check tauri-plugin-mihomo
         description: Check the package for errors.
-        entry: cargo check --manifest-path tauri-plugin-mihomo/Cargo.toml --all
+        entry: cargo check --manifest-path crates/tauri-plugin-mihomo/Cargo.toml --all
         language: system
-        files: ^tauri-plugin-mihomo/
+        files: ^crates/tauri-plugin-mihomo/
         types:
           - rust
         pass_filenames: false
@@ -91,18 +91,18 @@ repos:
       - id: cargo-clippy-mihomo-rule-parser
         name: cargo clippy mihomo-rule-parser
         description: Lint rust sources
-        entry: cargo clippy --manifest-path mihomo-rule-parser/Cargo.toml --all-targets --all-features --tests --benches -- -D warnings
+        entry: cargo clippy --manifest-path crates/mihomo-rule-parser/Cargo.toml --all-targets --all-features --tests --benches -- -D warnings
         language: system
-        files: ^mihomo-rule-parser/
+        files: ^crates/mihomo-rule-parser/
         types:
           - rust
         pass_filenames: false
       - id: cargo-clippy-tauri-plugin-mihomo
         name: cargo clippy tauri-plugin-mihomo
         description: Lint rust sources
-        entry: cargo clippy --manifest-path tauri-plugin-mihomo/Cargo.toml --all-targets --all-features --tests --benches -- -D warnings
+        entry: cargo clippy --manifest-path crates/tauri-plugin-mihomo/Cargo.toml --all-targets --all-features --tests --benches -- -D warnings
         language: system
-        files: ^tauri-plugin-mihomo/
+        files: ^crates/tauri-plugin-mihomo/
         types:
           - rust
         pass_filenames: false

@@ -1,5 +1,9 @@
 [files]
-extend-exclude = ["src/assets/*","tauri-plugin-mihomo/permissions/*", "tauri-plugin-mihomo/examples/*"]
+extend-exclude = [
+  "src/assets/*",
+  "crates/tauri-plugin-mihomo/permissions/*",
+  "crates/tauri-plugin-mihomo/examples/*",
+]
 
 [type.svg]
 extend-glob = ["*.svg"]

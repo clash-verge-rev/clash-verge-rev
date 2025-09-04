@@ -68,7 +68,7 @@
     "react-spinners": "^0.17.0",
     "react-virtuoso": "^4.12.8",
     "swr": "^2.3.3",
-    "tauri-plugin-mihomo-api": "file:tauri-plugin-mihomo"
+    "tauri-plugin-mihomo-api": "file:crates/tauri-plugin-mihomo"
   },
   "devDependencies": {
     "@actions/github": "6.0.1",

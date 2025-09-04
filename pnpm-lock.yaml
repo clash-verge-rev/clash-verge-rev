@@ -128,8 +128,8 @@ importers:
         specifier: ^2.3.3
         version: 2.3.6(react@19.1.1)
       tauri-plugin-mihomo-api:
-        specifier: file:tauri-plugin-mihomo
-        version: file:tauri-plugin-mihomo
+        specifier: file:crates/tauri-plugin-mihomo
+        version: file:crates/tauri-plugin-mihomo
     devDependencies:
       "@actions/github":
         specifier: 6.0.1
@@ -5553,8 +5553,8 @@ packages:
       }
     engines: { node: ">=18" }
 
-  tauri-plugin-mihomo-api@file:tauri-plugin-mihomo:
-    resolution: { directory: tauri-plugin-mihomo, type: directory }
+  tauri-plugin-mihomo-api@file:crates/tauri-plugin-mihomo:
+    resolution: { directory: crates/tauri-plugin-mihomo, type: directory }
 
   terser@5.44.0:
     resolution:
@@ -9625,7 +9625,7 @@ snapshots:
       mkdirp: 3.0.1
       yallist: 5.0.0
 
-  tauri-plugin-mihomo-api@file:tauri-plugin-mihomo:
+  tauri-plugin-mihomo-api@file:crates/tauri-plugin-mihomo:
     dependencies:
       "@tauri-apps/api": 2.8.0
 
