@@ -68,14 +68,24 @@ function getLatestTauriCommit() {
 }
 
 /**
- * 生成短时间戳（格式：YYMMDD）或带 commit（格式：YYMMDD.cc39b27）
+ * 生成短时间戳（格式：MMDD）或带 commit（格式：MMDD.cc39b27）
+ * 使用 Asia/Shanghai 时区
  * @param {boolean} withCommit 是否带 commit
  * @returns {string}
  */
 function generateShortTimestamp(withCommit = false) {
   const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    month: '2-digit',
+    day: '2-digit'
+  });
+
+  const parts = formatter.formatToParts(now);
+  const month = parts.find(part => part.type === 'month').value;
+  const day = parts.find(part => part.type === 'day').value;
+
   if (withCommit) {
     const gitShort = getGitShortCommit();
     return `${month}${day}.${gitShort}`;
