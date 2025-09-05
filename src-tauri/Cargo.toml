@@ -17,6 +17,26 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# tauri
+tauri = { version = "2", features = [
+  "protocol-asset",
+  "devtools",
+  "tray-icon",
+  "image-ico",
+  "image-png",
+] }
+tauri-plugin-notification = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-process = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-updater = "2"
+
 tokio = "1.40"
 tauri-plugin-mihomo = { path = "../crates/tauri-plugin-mihomo" }
 mihomo-rule-parser = { path = "../crates/mihomo-rule-parser" }
@@ -39,36 +59,28 @@ reqwest = { version = "0.12", features = ["rustls-tls", "json"] }
 reqwest_dav = "0.2"
 zip = "4.0"
 sysproxy = { git = "https://github.com/zzzgydi/sysproxy-rs", branch = "main" }
-tauri = { version = "2", features = [
-  "protocol-asset",
-  "devtools",
-  "tray-icon",
-  "image-ico",
-  "image-png",
-] }
-tauri-plugin-notification = "2"
-tauri-plugin-shell = "2"
-tauri-plugin-process = "2"
-tauri-plugin-clipboard-manager = "2"
-tauri-plugin-fs = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-opener = "2"
+
 rust-i18n = "3"
 rfd = { version = "0.15", default-features = false, features = [
   "tokio",
   "gtk3",
   "common-controls-v6",
 ] }
+
+# log
 tracing = "0.1"
 tracing-subscriber = { version = "0.3.19", features = ["local-time"] }
 tracing-appender = "0.2"
 time = { version = "0.3", features = ["macros", "parsing"] }
+
+# connect clash verge service by ipc
 tipsy = "0.6"
 futures-util = "0.3"
 base64 = "0.22"
 rand = "0.8"
 rsa = "0.9.8"
 aes-gcm = "0.10"
+
 network-interface = "2.0.1"
 thiserror = "2.0.16"
 
@@ -87,10 +99,6 @@ openssl = { version = "0.10", features = ["vendored"] }
 
 [target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
 signal-hook = "0.3"
-
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-global-shortcut = "2"
-tauri-plugin-updater = "2"
 
 [features]
 default = ["custom-protocol"]
