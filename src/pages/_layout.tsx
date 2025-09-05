@@ -18,6 +18,7 @@ import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
 import i18next from "i18next";
+import { debounce } from "lodash-es";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SWRConfig, mutate } from "swr";
@@ -111,13 +112,13 @@ const Layout = () => {
 
   useEffect(() => {
     const appWindow = getCurrentWebviewWindow();
-    const unlistenResize = appWindow.onResized(() => {
-      appWindow.isMaximized().then((value) => {
-        if (isMaximized !== value) {
-          setIsMaximized(value);
-        }
-      });
-    });
+    const checkMaximized = debounce(async () => {
+      const value = await appWindow.isMaximized();
+      if (isMaximized !== value) {
+        setIsMaximized(value);
+      }
+    }, 100);
+    const unlistenResize = appWindow.onResized(checkMaximized);
 
     return () => {
       unlistenResize.then((fn) => fn());
