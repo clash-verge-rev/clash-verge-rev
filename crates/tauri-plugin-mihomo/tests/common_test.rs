@@ -44,8 +44,12 @@ async fn mihomo_common_patch_base_config() -> Result<()> {
 #[tokio::test]
 async fn mihomo_common_update_geo() -> Result<()> {
     let mihomo = common::mihomo();
-    if let Err(Error::FailedResponse(msg)) = mihomo.update_geo().await {
-        println!("{msg}")
+    if let Err(err) = mihomo.update_geo().await {
+        if let Error::FailedResponse(msg) = err {
+            println!("{msg}")
+        } else {
+            return Err(err);
+        }
     }
     Ok(())
 }

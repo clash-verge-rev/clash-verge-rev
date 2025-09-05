@@ -1,4 +1,4 @@
-use tauri_plugin_mihomo::{Error, Result};
+use tauri_plugin_mihomo::{Error, Result, failed_resp};
 
 use crate::common::{TEST_URL, TIMEOUT};
 
@@ -16,11 +16,7 @@ async fn mihomo_proxy_list() -> Result<()> {
 async fn mihomo_proxy_get_by_name() -> Result<()> {
     let mihomo = common::mihomo();
     let proxies = mihomo.get_proxies().await?;
-    let proxy_name = proxies
-        .proxies
-        .keys()
-        .next()
-        .ok_or(Error::FailedResponse("empty proxies".to_string()))?;
+    let proxy_name = proxies.proxies.keys().next().ok_or(failed_resp!("empty proxies"))?;
     let proxy = mihomo.get_proxy_by_name(proxy_name).await?;
     println!("{proxy:?}");
     Ok(())
@@ -34,13 +30,13 @@ async fn mihomo_proxy_delay() -> Result<()> {
         .proxies
         .iter()
         .find(|&i| i.all.as_ref().is_some_and(|a| !a.is_empty()))
-        .ok_or(Error::FailedResponse("not found group".to_string()))?;
+        .ok_or(failed_resp!("not found group"))?;
     let proxy_name = proxy
         .all
         .as_ref()
-        .ok_or(Error::FailedResponse("field `all` is empty".to_string()))?
+        .ok_or(failed_resp!("field `all` is empty"))?
         .first()
-        .ok_or(Error::FailedResponse("get first node failed".to_string()))?;
+        .ok_or(failed_resp!("get first node failed"))?;
     let delay = mihomo.delay_proxy_by_name(proxy_name, TEST_URL, TIMEOUT).await?;
     println!("proxy [{}] delay: {:?}", proxy_name, delay);
     Ok(())

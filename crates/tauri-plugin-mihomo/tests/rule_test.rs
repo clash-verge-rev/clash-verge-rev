@@ -1,4 +1,4 @@
-use tauri_plugin_mihomo::{Error, Result};
+use tauri_plugin_mihomo::{Error, Result, failed_resp};
 
 mod common;
 
@@ -26,7 +26,7 @@ async fn mihomo_rule_update_provider() -> Result<()> {
         .providers
         .keys()
         .next()
-        .ok_or(Error::FailedResponse("no rule provider".to_string()))?;
+        .ok_or(failed_resp!("no rule provider"))?;
     println!("update rule provider: {}", provider_name);
     mihomo.update_rule_provider(provider_name).await?;
     Ok(())

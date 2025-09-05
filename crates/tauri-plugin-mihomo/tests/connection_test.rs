@@ -1,4 +1,4 @@
-use tauri_plugin_mihomo::{Error, Result};
+use tauri_plugin_mihomo::{Error, Result, ret_failed_resp};
 
 mod common;
 
@@ -16,7 +16,7 @@ async fn mihomo_connection_close() -> Result<()> {
     let mut max_count = 20;
     let connections = loop {
         if max_count == 0 {
-            return Err(Error::FailedResponse("no connections".to_string()));
+            ret_failed_resp!("no connections");
         }
         let conns = mihomo.get_connections().await?;
         if conns.connections.is_some() {
@@ -25,7 +25,6 @@ async fn mihomo_connection_close() -> Result<()> {
         max_count -= 1;
         tokio::time::sleep(std::time::Duration::from_millis(300)).await;
     };
-    assert!(connections.connections.is_some(), "no connections");
     if let Some(connections) = connections.connections
         && let Some(first) = connections.first()
     {

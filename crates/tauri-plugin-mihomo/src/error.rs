@@ -60,8 +60,15 @@ impl From<std::num::ParseIntError> for Error {
 }
 
 #[macro_export]
-macro_rules! failed_rep {
+macro_rules! failed_resp {
     ($($arg: tt)*) => {
-        return Err(Error::FailedResponse(format!($($arg)*)))
+        Error::FailedResponse(format!($($arg)*))
+    };
+}
+
+#[macro_export]
+macro_rules! ret_failed_resp {
+    ($($arg: tt)*) => {
+        return Err($crate::failed_resp!($($arg)*))
     };
 }
