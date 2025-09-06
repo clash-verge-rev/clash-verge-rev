@@ -17,8 +17,8 @@ export default defineConfig({
     svgr(),
     react(),
     legacy({
+      targets: ["edge>=109", "safari>=13"],
       renderLegacyChunks: false,
-      modernTargets: ["edge>=109", "safari>=13"],
       modernPolyfills: true,
       additionalModernPolyfills: [
         "core-js/modules/es.object.has-own.js",
@@ -42,13 +42,24 @@ export default defineConfig({
   build: {
     outDir: "../dist",
     emptyOutDir: true,
-    target: "es2020",
     minify: "terser",
     chunkSizeWarningLimit: 4000,
     reportCompressedSize: false,
     sourcemap: false,
     cssCodeSplit: true,
     cssMinify: true,
+    terserOptions: {
+      compress: {
+        drop_console: false,
+        drop_debugger: true,
+        pure_funcs: ["console.debug", "console.trace"],
+        dead_code: true,
+        unused: true,
+      },
+      mangle: {
+        safari10: true,
+      },
+    },
     rollupOptions: {
       treeshake: {
         preset: "recommended",
@@ -57,38 +68,41 @@ export default defineConfig({
       },
       output: {
         compact: true,
-        experimentalMinChunkSize: 30000,
+        experimentalMinChunkSize: 100000,
         dynamicImportInCjs: true,
         manualChunks(id) {
           if (id.includes("node_modules")) {
             // Monaco Editor should be a separate chunk
             if (id.includes("monaco-editor")) return "monaco-editor";
 
-            // React-related libraries (react, react-dom, react-router-dom, etc.)
+            // React core libraries
             if (
               id.includes("react") ||
               id.includes("react-dom") ||
-              id.includes("react-router-dom") ||
+              id.includes("react-router-dom")
+            ) {
+              return "react-core";
+            }
+
+            // React UI libraries
+            if (
               id.includes("react-transition-group") ||
               id.includes("react-error-boundary") ||
               id.includes("react-hook-form") ||
               id.includes("react-markdown") ||
               id.includes("react-virtuoso")
             ) {
-              return "react";
+              return "react-ui";
             }
 
-            // Utilities chunk: group commonly used utility libraries
+            // Material UI libraries (grouped together)
             if (
-              id.includes("axios") ||
-              id.includes("lodash-es") ||
-              id.includes("dayjs") ||
-              id.includes("js-base64") ||
-              id.includes("js-yaml") ||
-              id.includes("cli-color") ||
-              id.includes("nanoid")
+              id.includes("@mui/material") ||
+              id.includes("@mui/icons-material") ||
+              id.includes("@mui/lab") ||
+              id.includes("@mui/x-data-grid")
             ) {
-              return "utils";
+              return "mui";
             }
 
             // Tauri-related plugins: grouping together Tauri plugins
@@ -106,22 +120,35 @@ export default defineConfig({
               return "tauri-plugins";
             }
 
-            // Material UI libraries (grouped together)
+            // Utilities chunk: group commonly used utility libraries
             if (
-              id.includes("@mui/material") ||
-              id.includes("@mui/icons-material") ||
-              id.includes("@mui/lab") ||
-              id.includes("@mui/x-data-grid")
+              id.includes("axios") ||
+              id.includes("lodash-es") ||
+              id.includes("dayjs") ||
+              id.includes("js-base64") ||
+              id.includes("js-yaml") ||
+              id.includes("cli-color") ||
+              id.includes("nanoid")
             ) {
-              return "mui";
+              return "utils";
             }
 
-            // Small vendor packages
+            // Group other vendor packages together to reduce small chunks
             const pkg = id.match(/node_modules\/([^/]+)/)?.[1];
-            if (pkg && pkg.length < 8) return "small-vendors";
+            if (pkg) {
+              // Large packages get their own chunks
+              if (
+                pkg.includes("monaco") ||
+                pkg.includes("lodash") ||
+                pkg.includes("antd") ||
+                pkg.includes("emotion")
+              ) {
+                return `vendor-${pkg}`;
+              }
 
-            // Large vendor packages
-            return "large-vendor";
+              // Group all other packages together
+              return "vendor";
+            }
           }
         },
       },
@@ -135,6 +162,6 @@ export default defineConfig({
   },
 
   define: {
-    OS_PLATFORM: `"${process.platform}"`,
+    OS_PLATFORM: '"unknown"',
   },
 });
