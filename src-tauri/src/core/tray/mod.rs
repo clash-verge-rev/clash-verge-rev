@@ -5,7 +5,6 @@ use tauri::Emitter;
 pub mod speed_rate;
 use crate::ipc::Rate;
 use crate::process::AsyncHandler;
-use crate::state::proxy::ProxyRequestCache;
 use crate::{
     cmd,
     config::Config,
@@ -1047,9 +1046,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                             log::error!(target: "app", "切换代理失败: {} -> {}, 错误: {:?}", group_name, proxy_name, e);
 
                             // Fallback to IPC update
-                            if let Ok(_) = IpcManager::global()
+                            if (IpcManager::global()
                                 .update_proxy(group_name, proxy_name)
-                                .await
+                                .await)
+                                .is_ok()
                             {
                                 log::info!(target: "app", "代理切换回退成功: {} -> {}", group_name, proxy_name);
 

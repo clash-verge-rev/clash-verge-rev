@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
 import { useEffect, useCallback, useState, useRef } from "react";
@@ -11,6 +10,7 @@ import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { forceRefreshClashConfig } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
+import { useI18n } from "@/hooks/use-i18n";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import iconDark from "@/assets/image/icon_dark.svg?react";
@@ -158,6 +158,7 @@ const Layout = () => {
   const [enableLog] = useEnableLog();
   const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
   const { language, start_page } = verge ?? {};
+  const { switchLanguage } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
@@ -439,9 +440,9 @@ const Layout = () => {
   useEffect(() => {
     if (language) {
       dayjs.locale(language === "zh" ? "zh-cn" : language);
-      i18next.changeLanguage(language);
+      switchLanguage(language);
     }
-  }, [language]);
+  }, [language, switchLanguage]);
 
   useEffect(() => {
     if (start_page) {

@@ -13,16 +13,16 @@ build = "build.rs"
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.4.0", features = [] }
+tauri-build = { version = "2.4.1", features = [] }
 
 [dependencies]
 warp = { version = "0.4.2", features = ["server"] }
 anyhow = "1.0.99"
 dirs = "6.0"
 open = "5.3.2"
-log = "0.4.27"
+log = "0.4.28"
 dunce = "1.0.5"
-log4rs = "1.3.0"
+log4rs = "1.4.0"
 nanoid = "0.4"
 chrono = "0.4.41"
 sysinfo = { version = "0.37.0", features = ["network", "system"] }
@@ -44,7 +44,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 reqwest = { version = "0.12.23", features = ["json", "cookies"] }
 regex = "1.11.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-tauri = { version = "2.8.4", features = [
+tauri = { version = "2.8.5", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -53,11 +53,11 @@ tauri = { version = "2.8.4", features = [
 ] }
 network-interface = { version = "2.0.3", features = ["serde"] }
 tauri-plugin-shell = "2.3.1"
-tauri-plugin-dialog = "2.3.3"
+tauri-plugin-dialog = "2.4.0"
 tauri-plugin-fs = "2.4.2"
 tauri-plugin-process = "2.3.0"
 tauri-plugin-clipboard-manager = "2.3.0"
-tauri-plugin-deep-link = "2.4.2"
+tauri-plugin-deep-link = "2.4.3"
 tauri-plugin-devtools = "2.0.1"
 tauri-plugin-window-state = "2.4.0"
 zip = "5.0.0"
