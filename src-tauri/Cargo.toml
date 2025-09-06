@@ -60,7 +60,7 @@ tauri-plugin-clipboard-manager = "2.3.0"
 tauri-plugin-deep-link = "2.4.3"
 tauri-plugin-devtools = "2.0.1"
 tauri-plugin-window-state = "2.4.0"
-zip = "4.6.1"
+zip = "5.0.0"
 reqwest_dav = "0.2.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
