@@ -1,9 +1,13 @@
 import useSWR from "swr";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLockFn } from "ahooks";
 import { useTranslation } from "react-i18next";
 import { Box, Button, ButtonGroup } from "@mui/material";
-import { closeAllConnections, getClashConfig } from "@/services/cmds";
+import {
+  closeAllConnections,
+  getClashConfig,
+  getRuntimeProxyChainConfig,
+} from "@/services/cmds";
 import { patchClashMode } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
 import { BasePage } from "@/components/base";
@@ -12,6 +16,8 @@ import { ProviderButton } from "@/components/proxy/provider-button";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
+  const [isChainMode, setIsChainMode] = useState(false);
+  const [chainConfigData, setChainConfigData] = useState<string | null>(null);
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
@@ -37,6 +43,26 @@ const ProxyPage = () => {
     }
     await patchClashMode(mode);
     mutateClash();
+  });
+
+  const onToggleChainMode = useLockFn(async () => {
+    if (!isChainMode) {
+      // When entering chain mode, fetch the chain config data
+      try {
+        const configData = await getRuntimeProxyChainConfig();
+        setChainConfigData(configData);
+        setIsChainMode(true);
+      } catch (error) {
+        console.error("Failed to get runtime proxy chain config:", error);
+        // Set empty config data if failed
+        setChainConfigData("");
+        setIsChainMode(true);
+      }
+    } else {
+      // When exiting chain mode
+      setIsChainMode(false);
+      setChainConfigData(null);
+    }
   });
 
   useEffect(() => {
@@ -66,10 +92,23 @@ const ProxyPage = () => {
               </Button>
             ))}
           </ButtonGroup>
+
+          <Button
+            size="small"
+            variant={isChainMode ? "contained" : "outlined"}
+            onClick={onToggleChainMode}
+            sx={{ ml: 1 }}
+          >
+            {t("Chain Proxy")}
+          </Button>
         </Box>
       }
     >
-      <ProxyGroups mode={curMode!} />
+      <ProxyGroups
+        mode={curMode!}
+        isChainMode={isChainMode}
+        chainConfigData={chainConfigData}
+      />
     </BasePage>
   );
 };

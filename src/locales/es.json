@@ -32,6 +32,7 @@
   "rule": "Regla",
   "global": "Global",
   "direct": "Conexión directa",
+  "Chain Proxy": "🔗 Proxy en cadena",
   "script": "Script",
   "locate": "Nodo actual",
   "Delay check": "Prueba de latencia",

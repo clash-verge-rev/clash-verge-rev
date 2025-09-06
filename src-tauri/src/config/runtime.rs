@@ -46,4 +46,102 @@ impl IRuntime {
             }
         }
     }
+
+    //跟新链式代理配置文件
+    /// {   
+    ///     "proxies":[
+    ///         {
+    ///             name : entry_node_xxxx,
+    ///             type: xxx
+    ///             server: xxx
+    ///             port: xxx
+    ///             ports: xxx
+    ///             password: xxx
+    ///             skip-cert-verify: xxx,
+    ///             dialer-proxy : "chain_1"
+    ///        },
+    ///         {
+    ///             name : chain_node_1_xxxx,
+    ///             type: xxx
+    ///             server: xxx
+    ///             port: xxx
+    ///             ports: xxx
+    ///             password: xxx
+    ///             skip-cert-verify: xxx,
+    ///             dialer-proxy : "chain_2"
+    ///        },
+    ///         {
+    ///             name : chain_node_2_xxxx,
+    ///             type: xxx
+    ///             server: xxx
+    ///             port: xxx
+    ///             ports: xxx
+    ///             password: xxx
+    ///             skip-cert-verify: xxx,
+    ///             dialer-proxy : "chain_3"
+    ///        }
+    ///     ],
+    ///     "proxy-groups" : [
+    ///         {
+    ///             name : "chain_1",
+    ///             type: "select",
+    ///             proxies ["chain_node_1_xxxx"]
+    ///         },
+    ///         {
+    ///             name : "chain_2",
+    ///             type: "select",
+    ///             proxies ["chain_node_2_xxxx"]
+    ///         },
+    ///         {
+    ///             name : "chain_3",
+    ///             type: "select",
+    ///             proxies ["出口节点的name"]
+    ///         }
+    ///     ]
+    /// }
+    ///
+    /// 传入none 为删除
+    pub fn update_proxy_chain_config(&mut self, proxy_chain_config: Option<serde_yaml_ng::Value>) {
+        if let Some(config) = self.config.as_mut() {
+            if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get_mut("proxies") {
+                proxies.retain(|proxy| proxy.get("dialer-proxy").is_none());
+            }
+
+            if let Some(serde_yaml_ng::Value::Sequence(proxy_groups)) =
+                config.get_mut("proxy-groups")
+            {
+                proxy_groups.retain(|proxy_group| {
+                    match proxy_group.get("name").and_then(|n| n.as_str()) {
+                        Some(name) if name.starts_with("chain_") || name == "exit_node_group" => {
+                            false
+                        }
+                        _ => true,
+                    }
+                });
+            }
+
+            if let Some(proxy_chain_config) = proxy_chain_config {
+                // println!("{:#?}",proxy_chain_config);
+                // 读取 链式代理 和链式代理组
+                if let (
+                    Some(serde_yaml_ng::Value::Sequence(proxies_add)),
+                    Some(serde_yaml_ng::Value::Sequence(proxy_groups_add)),
+                ) = (
+                    proxy_chain_config.get("proxies"),
+                    proxy_chain_config.get("proxy-groups"),
+                ) {
+                    if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get_mut("proxies")
+                    {
+                        proxies.extend(proxies_add.to_owned());
+                    }
+
+                    if let Some(serde_yaml_ng::Value::Sequence(proxy_groups)) =
+                        config.get_mut("proxy-groups")
+                    {
+                        proxy_groups.extend(proxy_groups_add.to_owned());
+                    }
+                }
+            }
+        }
+    }
 }

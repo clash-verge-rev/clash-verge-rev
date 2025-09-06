@@ -32,6 +32,7 @@
   "rule": "Regel",
   "global": "Global",
   "direct": "Direktverbindung",
+  "Chain Proxy": "🔗 Ketten-Proxy",
   "script": "Skript",
   "locate": "Aktueller Knoten",
   "Delay check": "Latenztest",
