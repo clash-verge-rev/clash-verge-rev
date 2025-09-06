@@ -25,6 +25,15 @@
   --color-primary: var(--mui-palette-primary-main);
   --color-primary-main: var(--mui-palette-primary-main);
   --color-primary-alpha: var(--background-color-alpha);
+  --color-primary-alpha-10: oklch(from var(--primary-main) l c h / 0.1);
+  --color-primary-alpha-20: oklch(from var(--primary-main) l c h / 0.2);
+  --color-primary-alpha-30: oklch(from var(--primary-main) l c h / 0.3);
+  --color-primary-alpha-40: oklch(from var(--primary-main) l c h / 0.4);
+  --color-primary-alpha-50: oklch(from var(--primary-main) l c h / 0.5);
+  --color-primary-alpha-60: oklch(from var(--primary-main) l c h / 0.6);
+  --color-primary-alpha-70: oklch(from var(--primary-main) l c h / 0.7);
+  --color-primary-alpha-80: oklch(from var(--primary-main) l c h / 0.8);
+  --color-primary-alpha-90: oklch(from var(--primary-main) l c h / 0.9);
   --color-secondary-main: var(--mui-palette-secondary-main);
   --color-error-main: var(--mui-palette-error-main);
   --color-comment: var(--background-color);

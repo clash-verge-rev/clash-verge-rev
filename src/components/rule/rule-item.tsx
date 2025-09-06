@@ -1,3 +1,5 @@
+import { CustomRule } from "@/pages/rules";
+import { Update } from "@mui/icons-material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Box,
@@ -10,6 +12,7 @@ import {
   alpha,
   styled,
 } from "@mui/material";
+import dayjs from "dayjs";
 import { Virtuoso } from "react-virtuoso";
 
 interface ExpandMoreProps extends IconButtonProps {
@@ -36,7 +39,7 @@ const COLOR = [
 
 interface Props {
   index: number;
-  value: IRuleItem;
+  value: CustomRule;
   onExpand: (expanded: boolean) => void;
 }
 
@@ -53,8 +56,8 @@ const parseColor = (text: string) => {
 
 export const RuleItem = (props: Props) => {
   const { index, value, onExpand } = props;
-  const canExpandRuleItem = value.type === "RuleSet";
-  const expanded = canExpandRuleItem && value.expanded;
+  const isRuleSet = value.type === "RuleSet";
+  const expanded = isRuleSet && value.expanded;
 
   return (
     <Card
@@ -100,9 +103,17 @@ export const RuleItem = (props: Props) => {
         </Typography>
 
         <Box sx={{ userSelect: "none", width: "100%" }}>
-          <Typography component="h6" variant="subtitle1" color="text.primary">
-            {value.payload || "-"}
-          </Typography>
+          <div className="flex w-full items-center justify-between">
+            <Typography component="h6" variant="subtitle1" color="text.primary">
+              {value.payload || "-"}
+            </Typography>
+            {isRuleSet && (
+              <div className="text-primary-main bg-primary-alpha-20 ml-2 flex items-center rounded-full px-2 py-[2px] text-xs">
+                <Update className="mr-1" fontSize="inherit" />
+                <span>{dayjs(value.updateAt).fromNow()}</span>
+              </div>
+            )}
+          </div>
 
           <Typography
             component="span"
@@ -110,6 +121,11 @@ export const RuleItem = (props: Props) => {
             color="text.secondary"
             sx={{ mr: 3, minWidth: 120, display: "inline-block" }}>
             {value.type}
+            {isRuleSet && (
+              <span className="text-primary-main bg-primary-alpha-20 ml-2 inline-block rounded-full px-2 text-xs">
+                {value.behavior}
+              </span>
+            )}
           </Typography>
 
           <Typography
@@ -119,7 +135,7 @@ export const RuleItem = (props: Props) => {
             {value.proxy}
           </Typography>
         </Box>
-        {canExpandRuleItem && (
+        {isRuleSet && (
           <ExpandMore
             color="primary"
             expand={expanded}

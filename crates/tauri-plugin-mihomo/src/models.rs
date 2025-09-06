@@ -674,16 +674,36 @@ pub struct RuleProviders {
 
 #[derive(Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub enum RuleBehavior {
+    Domain,
+    #[serde(rename = "IPCIDR")]
+    IpCidr,
+    Classical,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub enum RuleFormat {
+    #[serde(rename = "YamlRule")]
+    Yaml,
+    #[serde(rename = "TextRule")]
+    Text,
+    #[serde(rename = "MrsRule")]
+    Mrs,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct RuleProvider {
-    pub behavior: String,
-    pub format: String,
+    pub behavior: RuleBehavior,
+    pub format: RuleFormat,
     pub name: String,
     pub rule_count: u32,
     #[serde(rename = "type")]
     pub provider_type: ProviderType,
     pub updated_at: String,
-    pub vehicle_type: String,
+    pub vehicle_type: VehicleType,
 }
 
 /// connections

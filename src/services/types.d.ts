@@ -59,6 +59,8 @@ interface IRuleItem {
   rules: string[];
   matchPayloadItems: string[];
   expanded: boolean;
+  behavior?: string;
+  format?: string;
 }
 
 interface IProxyItem {

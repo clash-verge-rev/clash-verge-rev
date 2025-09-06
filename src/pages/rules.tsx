@@ -1,7 +1,7 @@
 import { BaseEmpty, BasePage, BaseSearchBox } from "@/components/base";
 import { ProviderButton } from "@/components/rule/provider-button";
 import { RuleItem } from "@/components/rule/rule-item";
-import { getRuleProvidersPayload } from "@/services/cmds";
+import { getRuleProviderPayload } from "@/services/cmds";
 import ExpandIcon from "@mui/icons-material/Expand";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import { Box, IconButton } from "@mui/material";
@@ -9,38 +9,71 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import useSWR from "swr";
-import { getRules, Rule } from "tauri-plugin-mihomo-api";
+import {
+  getRuleProviders,
+  getRules,
+  Rule,
+  RuleBehavior,
+  RuleFormat,
+} from "tauri-plugin-mihomo-api";
 import LoadingPage from "./loading";
 
-type CustomRule = Rule &
+export type CustomRule = Rule &
   RulePayload & {
+    updateAt?: string;
+    behavior?: RuleBehavior;
+    format?: RuleFormat;
     expanded: boolean;
     matchPayloadItems: string[];
   };
 
 const RulesPage = () => {
   const { t } = useTranslation();
+
   const { data, isLoading } = useSWR("getRules", async () => {
     const rules = await getRules();
-    const ruleProvidersPayload = await getRuleProvidersPayload();
     const customRules = rules.rules.map((item) => {
-      const ruleName = item.payload;
-      if (ruleProvidersPayload[ruleName]) {
-        return { ...item, ...ruleProvidersPayload[ruleName] } as CustomRule;
-      }
       return item as CustomRule;
     });
     return customRules;
   });
+
+  const [customRules, setCustomRules] = useState<CustomRule[] | null>(null);
+  useEffect(() => {
+    if (!data) return;
+    getRuleProviders().then(async (ruleProviders) => {
+      const res: CustomRule[] = [];
+      for (let rule of data) {
+        const provider = ruleProviders.providers[rule.payload];
+        if (provider) {
+          let payload = await getRuleProviderPayload(
+            provider.name,
+            provider.behavior,
+            provider.format,
+          );
+          res.push({
+            ...rule,
+            ...payload,
+            behavior: provider.behavior,
+            format: provider.format,
+            updateAt: provider.updatedAt,
+          } as CustomRule);
+        } else {
+          res.push(rule as CustomRule);
+        }
+      }
+      setCustomRules(res);
+    });
+  }, [data]);
 
   const [rules, setRules] = useState<CustomRule[]>([]);
   const [match, setMatch] = useState(() => (_: string) => true);
   const hasRuleSet = rules?.findIndex((item) => item.type === "RuleSet") !== -1;
 
   useEffect(() => {
-    if (!data) return;
+    if (!customRules) return;
 
-    const filterData = data
+    const filterData = customRules
       .map((item) => {
         // 清空上一次搜索匹配的规则
         item.matchPayloadItems = [];
@@ -61,7 +94,11 @@ const RulesPage = () => {
         }
       });
     setRules(filterData);
-  }, [data, match]);
+  }, [customRules, match]);
+
+  if (customRules === null) {
+    return <LoadingPage />;
+  }
 
   return (
     <BasePage

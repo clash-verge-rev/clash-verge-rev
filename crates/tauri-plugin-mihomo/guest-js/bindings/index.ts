@@ -26,6 +26,8 @@ export * from "./ProxyProvider";
 export * from "./ProxyProviders";
 export * from "./ProxyType";
 export * from "./Rule";
+export * from "./RuleBehavior";
+export * from "./RuleFormat";
 export * from "./RuleProvider";
 export * from "./RuleProviders";
 export * from "./Rules";

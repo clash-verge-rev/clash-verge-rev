@@ -8,7 +8,7 @@ use serde_yaml::Mapping;
 use crate::{
     any_err,
     config::{ClashInfo, Config},
-    core::{CoreManager, handle, logger, service},
+    core::{CoreManager, logger, service},
     enhance::{self, LogMessage, MergeResult},
     error::{AppError, AppResult},
     feat,
@@ -86,30 +86,17 @@ pub async fn get_clash_logs() -> AppResult<VecDeque<String>> {
 }
 
 #[tauri::command]
-pub async fn get_rule_providers_payload() -> AppResult<HashMap<String, RulePayload>> {
-    let mut res = HashMap::new();
-    let mihomo = handle::Handle::mihomo().await;
-    let rule_providers = mihomo.get_rule_providers().await?;
-    let profiles = Config::profiles();
-    if let Some(rule_provider_paths) = profiles.latest().get_current_profile_rule_providers() {
-        for (name, rule_provider) in rule_providers.providers.iter() {
-            if let Some(file_path) = rule_provider_paths.get(name) {
-                let behavior = match rule_provider.behavior.as_str() {
-                    "Domain" => RuleBehavior::Domain,
-                    "IPCIDR" => RuleBehavior::IpCidr,
-                    "Classical" => RuleBehavior::Classical,
-                    _ => return Err(AppError::InvalidValue("Unknown rule behavior".into())),
-                };
-                let format = match rule_provider.format.as_str() {
-                    "MrsRule" => RuleFormat::Mrs,
-                    "YamlRule" => RuleFormat::Yaml,
-                    "TextRule" => RuleFormat::Text,
-                    _ => return Err(AppError::InvalidValue("Unknown rule format".into())),
-                };
-                let payload = mihomo_rule_parser::parse(file_path, behavior, format)?;
-                res.insert(name.clone(), payload);
-            }
-        }
-    }
-    Ok(res)
+pub async fn get_rule_provider_payload(
+    provider_name: String,
+    behavior: RuleBehavior,
+    format: RuleFormat,
+) -> AppResult<RulePayload> {
+    let file_path = Config::profiles()
+        .latest()
+        .get_current_rule_providers_path()
+        .and_then(|m| m.get(&provider_name))
+        .ok_or(any_err!("Provider not found"))?
+        .clone();
+    let payload = mihomo_rule_parser::parse(file_path, behavior, format)?;
+    Ok(payload)
 }

@@ -33,6 +33,8 @@ pub enum AppError {
     TracingSubscriber(#[from] tracing_subscriber::reload::Error),
     #[error("base64 decode error: {0}")]
     Base64Decode(#[from] base64::DecodeError),
+    #[error("task join error: {0}")]
+    TaskJoin(#[from] tokio::task::JoinError),
 
     // tauri
     #[error("tauri shell error: {0}")]

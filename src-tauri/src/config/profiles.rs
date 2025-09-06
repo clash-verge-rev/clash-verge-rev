@@ -467,7 +467,7 @@ impl IProfiles {
         }
     }
 
-    pub fn get_current_profile_rule_providers(&self) -> Option<&HashMap<String, PathBuf>> {
+    pub fn get_current_rule_providers_path(&self) -> Option<&HashMap<String, PathBuf>> {
         if let Some(current) = self.get_current()
             && let Some(item) = self.get_item(current)
         {

@@ -135,7 +135,7 @@ pub fn run() -> AppResult<()> {
             cmds::clash::get_runtime_logs,
             cmds::clash::get_pre_merge_result,
             cmds::clash::test_merge_chain,
-            cmds::clash::get_rule_providers_payload,
+            cmds::clash::get_rule_provider_payload,
             // verge
             cmds::verge::get_verge_config,
             cmds::verge::patch_verge_config,

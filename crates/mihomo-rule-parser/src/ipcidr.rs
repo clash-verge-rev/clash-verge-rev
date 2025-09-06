@@ -228,27 +228,27 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload> {
         return Err(RuleParseError::InvalidLength(length));
     }
 
-    let mut rules = Vec::<String>::with_capacity(length as usize);
+    // let mut rr: Vec<IpRange> = Vec::with_capacity(length as usize);
+    let mut rules: Vec<String> = Vec::new();
     for _ in 0..length {
-        // println!("------------------------------");
         let mut from = [0u8; 16];
         reader.read_exact(&mut from)?;
         let from_addr = IpAddr::addr_from_16(from).unmap();
-        // println!("from: {:?}", from_addr);
 
         let mut to = [0u8; 16];
         reader.read_exact(&mut to)?;
         let to_addr = IpAddr::addr_from_16(to).unmap();
-        // println!("to: {:?}", to_addr);
 
         // generate Ip range
         let range = IpAddr::ip_range(from_addr, to_addr);
+        // rr.push(range.clone());
         let prefixes = range.prefixes();
         for prefix in prefixes {
             // println!("prefix: {:?}", prefix);
             rules.push(prefix.to_string());
         }
     }
+    drop(reader);
 
     Ok(RulePayload { count, rules })
 }

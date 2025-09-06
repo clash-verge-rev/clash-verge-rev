@@ -2,6 +2,7 @@ import { LogMessage } from "@/components/profile/profile-more";
 import getSystem from "@/utils/get-system";
 import { invoke } from "@tauri-apps/api/core";
 import dayjs from "dayjs";
+import { RuleBehavior, RuleFormat } from "tauri-plugin-mihomo-api";
 
 export interface MergeResult {
   config: string;
@@ -74,8 +75,16 @@ export async function readProfileFile(index: string) {
   return invoke<string>("read_profile_file", { index });
 }
 
-export async function getRuleProvidersPayload() {
-  return invoke<Record<string, RulePayload>>("get_rule_providers_payload");
+export async function getRuleProviderPayload(
+  providerName: string,
+  behavior: RuleBehavior,
+  format: RuleFormat,
+) {
+  return invoke<RulePayload>("get_rule_provider_payload", {
+    providerName,
+    behavior,
+    format,
+  });
 }
 
 export async function saveProfileFile(uid: string, fileData: string) {

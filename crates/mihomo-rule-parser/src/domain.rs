@@ -2,10 +2,7 @@ use crate::bitmap;
 use crate::error::Result;
 use crate::{Parser, RuleBehavior, RuleFormat, RulePayload, error::RuleParseError, utils};
 use byteorder::{BigEndian, ReadBytesExt};
-use std::{
-    io::{Cursor, Read},
-    sync::{Arc, Mutex},
-};
+use std::io::{Cursor, Read};
 
 /// domain parse strategy
 pub(crate) struct DomainParseStrategy;
@@ -120,10 +117,9 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload> {
     if length < 0 {
         return Err(RuleParseError::InvalidLength(length));
     }
-    let mut leaves = Vec::<u64>::with_capacity(length as usize);
-    for _ in 0..length {
-        let data = reader.read_u64::<BigEndian>()?;
-        leaves.push(data);
+    let mut leaves = vec![0u64; length as usize];
+    for i in 0..length {
+        leaves[i as usize] = reader.read_u64::<BigEndian>()?;
     }
     domain_set.leaves = leaves;
 
@@ -132,10 +128,9 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload> {
     if length < 0 {
         return Err(RuleParseError::InvalidLength(length));
     }
-    let mut label_bit_map = Vec::<u64>::with_capacity(length as usize);
-    for _ in 0..length {
-        let data = reader.read_u64::<BigEndian>()?;
-        label_bit_map.push(data);
+    let mut label_bit_map = vec![0u64; length as usize];
+    for i in 0..length {
+        label_bit_map[i as usize] = reader.read_u64::<BigEndian>()?;
     }
     domain_set.label_bit_map = label_bit_map;
 
@@ -144,20 +139,20 @@ fn parse_from_mrs(buf: &[u8]) -> Result<RulePayload> {
     if length < 0 {
         return Err(RuleParseError::InvalidLength(length));
     }
-    let mut labels = Vec::new();
-    reader.read_to_end(&mut labels)?;
+    let mut labels = vec![0u8; length as usize];
+    reader.read_exact(&mut labels)?;
+    drop(reader);
+
     domain_set.labels = labels;
     domain_set.init();
 
     // get rules
     let mut rules: Vec<String> = vec![];
-    let keys = Arc::new(Mutex::new(Vec::new()));
-    let keys_ = keys.clone();
-    domain_set.foreach(move |key| {
-        keys_.lock().unwrap().push(key);
+    let mut keys = Vec::new();
+    domain_set.foreach(|key| {
+        keys.push(key);
         true
     });
-    let mut keys = keys.lock().unwrap();
     keys.sort();
 
     for key in keys.iter() {
