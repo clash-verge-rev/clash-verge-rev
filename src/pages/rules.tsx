@@ -30,7 +30,7 @@ export type CustomRule = Rule &
 const RulesPage = () => {
   const { t } = useTranslation();
 
-  const { data, isLoading } = useSWR("getRules", async () => {
+  const { data } = useSWR("getRules", async () => {
     const rules = await getRules();
     const customRules = rules.rules.map((item) => {
       return item as CustomRule;
@@ -96,10 +96,6 @@ const RulesPage = () => {
     setRules(filterData);
   }, [customRules, match]);
 
-  if (customRules === null) {
-    return <LoadingPage />;
-  }
-
   return (
     <BasePage
       full
@@ -163,7 +159,9 @@ const RulesPage = () => {
           marginLeft: "10px",
           borderRadius: "8px",
         }}>
-        {rules.length > 0 ? (
+        {customRules === null ? (
+          <LoadingPage />
+        ) : rules.length > 0 ? (
           <Virtuoso
             data={rules}
             totalCount={rules.length}
@@ -185,8 +183,6 @@ const RulesPage = () => {
               />
             )}
           />
-        ) : isLoading ? (
-          <LoadingPage />
         ) : (
           <BaseEmpty text="No Rules" />
         )}
