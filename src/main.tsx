@@ -13,7 +13,7 @@ import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { BrowserRouter } from "react-router-dom";
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
-import "./services/i18n";
+import { initializeLanguage } from "./services/i18n";
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
@@ -39,29 +39,47 @@ document.addEventListener("keydown", (event) => {
       ["F", "G", "H", "J", "P", "Q", "R", "U"].includes(
         event.key.toUpperCase(),
       ));
-  disabledShortcuts && event.preventDefault();
+  if (disabledShortcuts) {
+    event.preventDefault();
+  }
 });
 
-const contexts = [
-  <ThemeModeProvider />,
-  <LoadingCacheProvider />,
-  <UpdateStateProvider />,
-];
+const initializeApp = async () => {
+  try {
+    await initializeLanguage("zh");
 
-const root = createRoot(container);
-root.render(
-  <React.StrictMode>
-    <ComposeContextProvider contexts={contexts}>
-      <BaseErrorBoundary>
-        <AppDataProvider>
-          <BrowserRouter>
-            <Layout />
-          </BrowserRouter>
-        </AppDataProvider>
-      </BaseErrorBoundary>
-    </ComposeContextProvider>
-  </React.StrictMode>,
-);
+    const contexts = [
+      <ThemeModeProvider key="theme" />,
+      <LoadingCacheProvider key="loading" />,
+      <UpdateStateProvider key="update" />,
+    ];
+
+    const root = createRoot(container);
+    root.render(
+      <React.StrictMode>
+        <ComposeContextProvider contexts={contexts}>
+          <BaseErrorBoundary>
+            <AppDataProvider>
+              <BrowserRouter>
+                <Layout />
+              </BrowserRouter>
+            </AppDataProvider>
+          </BaseErrorBoundary>
+        </ComposeContextProvider>
+      </React.StrictMode>,
+    );
+  } catch (error) {
+    console.error("[main.tsx] 应用初始化失败:", error);
+    const root = createRoot(container);
+    root.render(
+      <div style={{ padding: "20px", color: "red" }}>
+        应用初始化失败: {error instanceof Error ? error.message : String(error)}
+      </div>,
+    );
+  }
+};
+
+initializeApp();
 
 // 错误处理
 window.addEventListener("error", (event) => {
