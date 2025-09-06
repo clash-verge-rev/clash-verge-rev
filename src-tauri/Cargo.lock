@@ -1689,17 +1689,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "derivative"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcc3dd5e9e9c0b295d6e1e4d811fb6f157d5ffd784b8d202fc62eac8035a770b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "derive_arbitrary"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1721,6 +1710,27 @@ dependencies = [
  "quote",
  "rustc_version 0.4.1",
  "syn 2.0.106",
+]
+
+[[package]]
+name = "derive_more"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+ "unicode-xid",
 ]
 
 [[package]]
@@ -3931,9 +3941,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.27"
+version = "0.4.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 dependencies = [
  "serde",
 ]
@@ -3946,29 +3956,30 @@ checksum = "a94d21414c1f4a51209ad204c1776a3d0765002c76c6abcb602a6f09f1e881c7"
 
 [[package]]
 name = "log4rs"
-version = "1.3.0"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0816135ae15bd0391cf284eab37e6e3ee0a6ee63d2ceeb659862bd8d0a984ca6"
+checksum = "3e947bb896e702c711fccc2bf02ab2abb6072910693818d1d6b07ee2b9dfd86c"
 dependencies = [
  "anyhow",
  "arc-swap",
  "chrono",
- "derivative",
+ "derive_more 2.0.1",
  "fnv",
  "humantime",
  "libc",
  "log",
  "log-mdc",
- "once_cell",
+ "mock_instant",
  "parking_lot 0.12.4",
- "rand 0.8.5",
+ "rand 0.9.2",
  "serde",
  "serde-value",
  "serde_json",
  "serde_yaml",
- "thiserror 1.0.69",
+ "thiserror 2.0.16",
  "thread-id",
  "typemap-ors",
+ "unicode-segmentation",
  "winapi",
 ]
 
@@ -4148,6 +4159,12 @@ dependencies = [
  "wasi 0.11.1+wasi-snapshot-preview1",
  "windows-sys 0.59.0",
 ]
+
+[[package]]
+name = "mock_instant"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dce6dd36094cac388f119d2e9dc82dc730ef91c32a6222170d630e5414b956e6"
 
 [[package]]
 name = "muda"
@@ -6241,7 +6258,7 @@ checksum = "0c37578180969d00692904465fb7f6b3d50b9a2b952b87c23d0e2e5cb5013416"
 dependencies = [
  "bitflags 1.3.2",
  "cssparser",
- "derive_more",
+ "derive_more 0.99.20",
  "fxhash",
  "log",
  "phf 0.8.0",
@@ -7009,9 +7026,9 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tauri"
-version = "2.8.4"
+version = "2.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d545ccf7b60dcd44e07c6fb5aeb09140966f0aabd5d2aa14a6821df7bc99348"
+checksum = "d4d1d3b3dc4c101ac989fd7db77e045cc6d91a25349cd410455cb5c57d510c1c"
 dependencies = [
  "anyhow",
  "bytes",
@@ -7064,9 +7081,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-build"
-version = "2.4.0"
+version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67945dbaf8920dbe3a1e56721a419a0c3d085254ab24cff5b9ad55e2b0016e0b"
+checksum = "9c432ccc9ff661803dab74c6cd78de11026a578a9307610bbc39d3c55be7943f"
 dependencies = [
  "anyhow",
  "cargo_toml",
@@ -7173,9 +7190,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-deep-link"
-version = "2.4.2"
+version = "2.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d430110d4ee102a9b673d3c03ff48098c80fe8ca71ba1ff52d8a5919538a1a6"
+checksum = "cd67112fb1131834c2a7398ffcba520dbbf62c17de3b10329acd1a3554b1a9bb"
 dependencies = [
  "dunce",
  "plist",
@@ -7221,9 +7238,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-dialog"
-version = "2.3.3"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ee5a3c416dc59d7d9aa0de5490a82d6e201c67ffe97388979d77b69b08cda40"
+checksum = "0beee42a4002bc695550599b011728d9dfabf82f767f134754ed6655e434824e"
 dependencies = [
  "log",
  "raw-window-handle",
@@ -7610,12 +7627,12 @@ dependencies = [
 
 [[package]]
 name = "thread-id"
-version = "4.2.2"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfe8f25bbdd100db7e1d34acf7fd2dc59c4bf8f7483f505eaa7d4f12f76cc0ea"
+checksum = "99043e46c5a15af379c06add30d9c93a6c0e8849de00d244c4a2c417da128d80"
 dependencies = [
  "libc",
- "winapi",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -8294,6 +8311,12 @@ name = "unicode-segmentation"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6ccf251212114b54433ec949fd6a7841275f9ada20dddd2f29e9ceea4501493"
+
+[[package]]
+name = "unicode-xid"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "universal-hash"
@@ -9772,9 +9795,9 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "4.5.0"
+version = "4.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8835eb39822904d39cb19465de1159e05d371973f0c6df3a365ad50565ddc8b9"
+checksum = "caa8cd6af31c3b31c6631b8f483848b91589021b28fffe50adada48d4f4d2ed1"
 dependencies = [
  "aes",
  "arbitrary",
