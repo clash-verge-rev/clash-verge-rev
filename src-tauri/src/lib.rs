@@ -280,17 +280,16 @@ pub fn run() {
         let desktop_env = std::env::var("XDG_CURRENT_DESKTOP")
             .unwrap_or_default()
             .to_uppercase();
-        let session_env = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
         let is_kde_desktop = desktop_env.contains("KDE");
-        let is_wayland_session = session_env.contains("wayland");
+        let is_plasma_desktop = desktop_env.contains("PLASMA");
 
-        if is_kde_desktop && is_wayland_session {
-            std::env::set_var("GDK_BACKEND", "x11");
+        if is_kde_desktop || is_plasma_desktop {
+            std::env::set_var("GTK_CSD", "0");
             logging!(
                 info,
                 Type::Setup,
                 true,
-                "KDE Wayland detected: Switched to X11 backend for better titlebar stability."
+                "KDE detected: Disabled GTK CSD for better titlebar stability."
             );
         }
     }
