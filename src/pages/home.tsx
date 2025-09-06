@@ -12,6 +12,7 @@ import {
   Checkbox,
   Tooltip,
   Grid,
+  Skeleton,
 } from "@mui/material";
 import { useVerge } from "@/hooks/use-verge";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -26,17 +27,34 @@ import {
 import { ProxyTunCard } from "@/components/home/proxy-tun-card";
 import { ClashModeCard } from "@/components/home/clash-mode-card";
 import { EnhancedTrafficStats } from "@/components/home/enhanced-traffic-stats";
-import { useState } from "react";
+import { useState, useMemo, Suspense, lazy, useCallback } from "react";
 import { HomeProfileCard } from "@/components/home/home-profile-card";
 import { EnhancedCard } from "@/components/home/enhanced-card";
 import { CurrentProxyCard } from "@/components/home/current-proxy-card";
 import { BasePage } from "@/components/base";
-import { ClashInfoCard } from "@/components/home/clash-info-card";
-import { SystemInfoCard } from "@/components/home/system-info-card";
 import { useLockFn } from "ahooks";
 import { entry_lightweight_mode, openWebUrl } from "@/services/cmds";
-import { TestCard } from "@/components/home/test-card";
-import { IpInfoCard } from "@/components/home/ip-info-card";
+
+const LazyTestCard = lazy(() =>
+  import("@/components/home/test-card").then((module) => ({
+    default: module.TestCard,
+  })),
+);
+const LazyIpInfoCard = lazy(() =>
+  import("@/components/home/ip-info-card").then((module) => ({
+    default: module.IpInfoCard,
+  })),
+);
+const LazyClashInfoCard = lazy(() =>
+  import("@/components/home/clash-info-card").then((module) => ({
+    default: module.ClashInfoCard,
+  })),
+);
+const LazySystemInfoCard = lazy(() =>
+  import("@/components/home/system-info-card").then((module) => ({
+    default: module.SystemInfoCard,
+  })),
+);
 
 // 定义首页卡片设置接口
 interface HomeCardsSettings {
@@ -190,9 +208,11 @@ export const HomePage = () => {
 
   // 设置弹窗的状态
   const [settingsOpen, setSettingsOpen] = useState(false);
+
   // 卡片显示状态
-  const [homeCards, setHomeCards] = useState<HomeCardsSettings>(
-    (verge?.home_cards as HomeCardsSettings) || {
+  const defaultCards = useMemo<HomeCardsSettings>(
+    () => ({
+      info: false,
       profile: true,
       proxy: true,
       network: true,
@@ -202,8 +222,13 @@ export const HomePage = () => {
       systeminfo: true,
       test: true,
       ip: true,
-    },
+    }),
+    [],
   );
+
+  const [homeCards, setHomeCards] = useState<HomeCardsSettings>(() => {
+    return (verge?.home_cards as HomeCardsSettings) || defaultCards;
+  });
 
   // 文档链接函数
   const toGithubDoc = useLockFn(() => {
@@ -211,9 +236,35 @@ export const HomePage = () => {
   });
 
   // 新增：打开设置弹窗
-  const openSettings = () => {
+  const openSettings = useCallback(() => {
     setSettingsOpen(true);
-  };
+  }, []);
+
+  const renderCard = useCallback(
+    (cardKey: string, component: React.ReactNode, size: number = 6) => {
+      if (!homeCards[cardKey]) return null;
+
+      return (
+        <Grid size={size} key={cardKey}>
+          {component}
+        </Grid>
+      );
+    },
+    [homeCards],
+  );
+
+  const criticalCards = useMemo(
+    () => [
+      renderCard(
+        "profile",
+        <HomeProfileCard current={current} onProfileUpdated={mutateProfiles} />,
+      ),
+      renderCard("proxy", <CurrentProxyCard />),
+      renderCard("network", <NetworkSettingsCard />),
+      renderCard("mode", <ClashModeEnhancedCard />),
+    ],
+    [homeCards, current, mutateProfiles, renderCard],
+  );
 
   // 新增：保存设置时用requestIdleCallback/setTimeout
   const handleSaveSettings = (newCards: HomeCardsSettings) => {
@@ -223,6 +274,47 @@ export const HomePage = () => {
       setTimeout(() => setHomeCards(newCards), 0);
     }
   };
+
+  const nonCriticalCards = useMemo(
+    () => [
+      renderCard(
+        "traffic",
+        <EnhancedCard
+          title={t("Traffic Stats")}
+          icon={<SpeedOutlined />}
+          iconColor="secondary"
+        >
+          <EnhancedTrafficStats />
+        </EnhancedCard>,
+        12,
+      ),
+      renderCard(
+        "test",
+        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+          <LazyTestCard />
+        </Suspense>,
+      ),
+      renderCard(
+        "ip",
+        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+          <LazyIpInfoCard />
+        </Suspense>,
+      ),
+      renderCard(
+        "clashinfo",
+        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+          <LazyClashInfoCard />
+        </Suspense>,
+      ),
+      renderCard(
+        "systeminfo",
+        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+          <LazySystemInfoCard />
+        </Suspense>,
+      ),
+    ],
+    [homeCards, t, renderCard],
+  );
 
   return (
     <BasePage
@@ -253,71 +345,9 @@ export const HomePage = () => {
       }
     >
       <Grid container spacing={1.5} columns={{ xs: 6, sm: 6, md: 12 }}>
-        {/* 订阅和当前节点部分 */}
-        {homeCards.profile && (
-          <Grid size={6}>
-            <HomeProfileCard
-              current={current}
-              onProfileUpdated={mutateProfiles}
-            />
-          </Grid>
-        )}
+        {criticalCards}
 
-        {homeCards.proxy && (
-          <Grid size={6}>
-            <CurrentProxyCard />
-          </Grid>
-        )}
-
-        {/* 代理和网络设置区域 */}
-        {homeCards.network && (
-          <Grid size={6}>
-            <NetworkSettingsCard />
-          </Grid>
-        )}
-
-        {homeCards.mode && (
-          <Grid size={6}>
-            <ClashModeEnhancedCard />
-          </Grid>
-        )}
-
-        {/* 增强的流量统计区域 */}
-        {homeCards.traffic && (
-          <Grid size={12}>
-            <EnhancedCard
-              title={t("Traffic Stats")}
-              icon={<SpeedOutlined />}
-              iconColor="secondary"
-            >
-              <EnhancedTrafficStats />
-            </EnhancedCard>
-          </Grid>
-        )}
-        {/* 测试网站部分 */}
-        {homeCards.test && (
-          <Grid size={6}>
-            <TestCard />
-          </Grid>
-        )}
-        {/* IP信息卡片 */}
-        {homeCards.ip && (
-          <Grid size={6}>
-            <IpInfoCard />
-          </Grid>
-        )}
-        {/* Clash信息 */}
-        {homeCards.clashinfo && (
-          <Grid size={6}>
-            <ClashInfoCard />
-          </Grid>
-        )}
-        {/* 系统信息 */}
-        {homeCards.systeminfo && (
-          <Grid size={6}>
-            <SystemInfoCard />
-          </Grid>
-        )}
+        {nonCriticalCards}
       </Grid>
 
       {/* 首页设置弹窗 */}
