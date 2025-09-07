@@ -1,3 +1,5 @@
+#[cfg(target_os = "windows")]
+use crate::AsyncHandler;
 use crate::{
     config::*,
     core::{

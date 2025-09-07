@@ -287,6 +287,7 @@ async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
+#[allow(clippy::unused_async)]
 async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
     use users::get_effective_uid;
