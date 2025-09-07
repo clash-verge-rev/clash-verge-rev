@@ -64,7 +64,7 @@ const META_ALPHA_MAP = {
   "win32-x64": "mihomo-windows-amd64-v2",
   "win32-ia32": "mihomo-windows-386",
   "win32-arm64": "mihomo-windows-arm64",
-  "darwin-x64": "mihomo-darwin-amd64-v2",
+  "darwin-x64": "mihomo-darwin-amd64-v1",
   "darwin-arm64": "mihomo-darwin-arm64",
   "linux-x64": "mihomo-linux-amd64-v2",
   "linux-ia32": "mihomo-linux-386",
