@@ -25,7 +25,10 @@ use tauri_plugin_mihomo::Protocol;
 rust_i18n::i18n!("locales", fallback = "en");
 
 pub static APP_VERSION: OnceCell<String> = OnceCell::new();
+
+#[cfg(target_os = "linux")]
 pub static X11_RENDER: LazyLock<RwLock<bool>> = LazyLock::new(|| RwLock::new(false));
+
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
 #[cfg(all(unix, not(feature = "verge-dev")))]
