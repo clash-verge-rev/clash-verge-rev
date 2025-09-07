@@ -109,7 +109,7 @@ export const RuleItem = (props: Props) => {
             </Typography>
             {isRuleSet && (
               <div className="text-primary-main bg-primary-alpha-20 ml-2 flex items-center rounded-full px-2 py-[2px] text-xs">
-                <Update className="mr-1" fontSize="inherit" />
+                <Update className="mr-1" fontSize="small" />
                 <span>{dayjs(value.updateAt).fromNow()}</span>
               </div>
             )}

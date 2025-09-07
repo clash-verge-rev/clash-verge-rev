@@ -17,7 +17,9 @@ use crate::{
 };
 use core::verge_log::VergeLog;
 use once_cell::sync::OnceCell;
+#[cfg(target_os = "linux")]
 use parking_lot::RwLock;
+#[cfg(target_os = "linux")]
 use std::sync::LazyLock;
 use tauri::AppHandle;
 use tauri_plugin_mihomo::Protocol;
