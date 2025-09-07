@@ -43,9 +43,14 @@ pub fn run() -> AppResult<()> {
         return Ok(());
     }
 
-    if utils::unix_helper::is_wayland() {
+    #[cfg(target_os = "linux")]
+    {
         unsafe {
-            std::env::set_var("GDK_BACKEND", "x11");
+            // Nvidia 显卡下，应用无法显示界面, 通过设置 WEBKIT_DISABLE_DMABUF_RENDERER=1 解决
+            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+            if utils::unix_helper::is_wayland() {
+                std::env::set_var("GDK_BACKEND", "x11");
+            }
         }
     }
 
