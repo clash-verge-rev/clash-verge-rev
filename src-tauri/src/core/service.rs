@@ -21,7 +21,7 @@ const MAX_REINSTALLS_PER_DAY: u32 = 3; // 每24小时最多重装3次
 const ONE_DAY_SECS: u64 = 86400; // 24小时的秒数
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
-pub struct ServiceState {
+pub struct ServiceRecord {
     pub last_install_time: u64,     // 上次安装时间戳 (Unix 时间戳，秒)
     pub install_count: u32,         // 24小时内安装次数
     pub last_check_time: u64,       // 上次检查时间
@@ -29,7 +29,41 @@ pub struct ServiceState {
     pub prefer_sidecar: bool,       // 用户是否偏好sidecar模式，如拒绝安装服务或安装失败
 }
 
-impl ServiceState {
+#[derive(Debug)]
+pub enum ServiceStatus {
+    Ready,
+    NeedsReinstall,
+    InstallRequired,
+    UninstallRequired,
+    ReinstallRequired,
+    ForceReinstallRequired,
+    Unavailable(String),
+}
+
+// 保留核心数据结构，但将HTTP特定的结构体合并为通用结构体
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct ResponseBody {
+    pub core_type: Option<String>,
+    pub bin_path: String,
+    pub config_dir: String,
+    pub log_file: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct VersionResponse {
+    pub service: String,
+    pub version: String,
+}
+
+// 保留通用的响应结构体，用于IPC通信后的数据解析
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct JsonResponse {
+    pub code: u64,
+    pub msg: String,
+    pub data: Option<ResponseBody>,
+}
+
+impl ServiceRecord {
     // 获取当前的服务状态
     pub async fn get() -> Self {
         if let Some(state) = Config::verge().await.latest_ref().service_state.clone() {
@@ -92,31 +126,8 @@ impl ServiceState {
     }
 }
 
-// 保留核心数据结构，但将HTTP特定的结构体合并为通用结构体
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct ResponseBody {
-    pub core_type: Option<String>,
-    pub bin_path: String,
-    pub config_dir: String,
-    pub log_file: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct VersionResponse {
-    pub service: String,
-    pub version: String,
-}
-
-// 保留通用的响应结构体，用于IPC通信后的数据解析
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct JsonResponse {
-    pub code: u64,
-    pub msg: String,
-    pub data: Option<ResponseBody>,
-}
-
 #[cfg(target_os = "windows")]
-pub async fn uninstall_service() -> Result<()> {
+async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -150,7 +161,7 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-pub async fn install_service() -> Result<()> {
+async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -184,11 +195,11 @@ pub async fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-pub async fn reinstall_service() -> Result<()> {
+async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态
-    let mut service_state = ServiceState::get().await;
+    let mut service_state = ServiceRecord::get().await;
 
     // 检查是否允许重装
     if !service_state.can_reinstall() {
@@ -233,7 +244,7 @@ pub async fn reinstall_service() -> Result<()> {
 
 #[allow(clippy::unused_async)]
 #[cfg(target_os = "linux")]
-pub async fn uninstall_service() -> Result<()> {
+async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
     use users::get_effective_uid;
 
@@ -273,7 +284,7 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn install_service() -> Result<()> {
+async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
     use users::get_effective_uid;
 
@@ -313,11 +324,11 @@ pub async fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub async fn reinstall_service() -> Result<()> {
+async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态
-    let mut service_state = ServiceState::get().await;
+    let mut service_state = ServiceRecord::get().await;
 
     // 检查是否允许重装
     if !service_state.can_reinstall() {
@@ -361,7 +372,7 @@ pub async fn reinstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn uninstall_service() -> Result<()> {
+async fn uninstall_service() -> Result<()> {
     use crate::utils::i18n::t;
 
     logging!(info, Type::Service, true, "uninstall service");
@@ -397,7 +408,7 @@ pub async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn install_service() -> Result<()> {
+async fn install_service() -> Result<()> {
     use crate::utils::i18n::t;
 
     logging!(info, Type::Service, true, "install service");
@@ -433,11 +444,11 @@ pub async fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn reinstall_service() -> Result<()> {
+async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
     // 获取当前服务状态
-    let mut service_state = ServiceState::get().await;
+    let mut service_state = ServiceRecord::get().await;
 
     // 检查是否允许重装
     if !service_state.can_reinstall() {
@@ -484,108 +495,36 @@ pub async fn reinstall_service() -> Result<()> {
 pub async fn check_ipc_service_status() -> Result<JsonResponse> {
     logging!(info, Type::Service, true, "开始检查服务状态 (IPC)");
 
-    // 使用IPC通信
     let payload = serde_json::json!({});
-    // logging!(debug, Type::Service, true, "发送GetClash请求");
+    let response = send_ipc_request(IpcCommand::GetClash, payload).await?;
 
-    match send_ipc_request(IpcCommand::GetClash, payload).await {
-        Ok(response) => {
-            /*             logging!(
-                debug,
-                Type::Service,
-                true,
-                "收到GetClash响应: success={}, error={:?}",
-                response.success,
-                response.error
-            ); */
-
-            if !response.success {
-                let err_msg = response.error.unwrap_or_else(|| "未知服务错误".to_string());
-                logging!(error, Type::Service, true, "服务响应错误: {}", err_msg);
-                bail!(err_msg);
-            }
-
-            match response.data {
-                Some(data) => {
-                    // 检查嵌套结构
-                    if let (Some(code), Some(msg)) = (data.get("code"), data.get("msg")) {
-                        let code_value = code.as_u64().unwrap_or(0);
-                        let msg_value = msg.as_str().unwrap_or("ok").to_string();
-
-                        // 提取嵌套的data字段并解析为ResponseBody
-                        let response_body = if let Some(nested_data) = data.get("data") {
-                            match serde_json::from_value::<ResponseBody>(nested_data.clone()) {
-                                Ok(body) => Some(body),
-                                Err(e) => {
-                                    logging!(
-                                        warn,
-                                        Type::Service,
-                                        true,
-                                        "解析嵌套的ResponseBody失败: {}; 尝试其他方式",
-                                        e
-                                    );
-                                    None
-                                }
-                            }
-                        } else {
-                            None
-                        };
-
-                        let json_response = JsonResponse {
-                            code: code_value,
-                            msg: msg_value,
-                            data: response_body,
-                        };
-
-                        logging!(
-                            info,
-                            Type::Service,
-                            true,
-                            "服务检测成功: code={}, msg={}, data存在={}",
-                            json_response.code,
-                            json_response.msg,
-                            json_response.data.is_some()
-                        );
-                        Ok(json_response)
-                    } else {
-                        // 尝试直接解析
-                        match serde_json::from_value::<JsonResponse>(data.clone()) {
-                            Ok(json_response) => {
-                                logging!(
-                                    info,
-                                    Type::Service,
-                                    true,
-                                    "服务检测成功: code={}, msg={}",
-                                    json_response.code,
-                                    json_response.msg
-                                );
-                                Ok(json_response)
-                            }
-                            Err(e) => {
-                                logging!(
-                                    error,
-                                    Type::Service,
-                                    true,
-                                    "解析服务响应失败: {}; 原始数据: {:?}",
-                                    e,
-                                    data
-                                );
-                                bail!("无法解析服务响应数据: {}", e)
-                            }
-                        }
-                    }
-                }
-                None => {
-                    logging!(error, Type::Service, true, "服务响应中没有数据");
-                    bail!("服务响应中没有数据")
-                }
-            }
-        }
-        Err(e) => {
-            logging!(error, Type::Service, true, "IPC通信失败: {}", e);
-            bail!("无法连接到Clash Verge Service: {}", e)
-        }
+    if !response.success {
+        let err_msg = response.error.unwrap_or_else(|| "未知服务错误".to_string());
+        logging!(error, Type::Service, true, "服务响应错误: {}", err_msg);
+        bail!(err_msg);
     }
+
+    let data = response
+        .data
+        .ok_or_else(|| anyhow::anyhow!("服务响应中没有数据"))?;
+
+    if let (Some(code), Some(msg)) = (data.get("code"), data.get("msg")) {
+        let code_value = code.as_u64().unwrap_or(0);
+        let msg_value = msg.as_str().unwrap_or("ok").to_string();
+
+        let response_body = data.get("data").and_then(|nested_data| {
+            serde_json::from_value::<ResponseBody>(nested_data.clone()).ok()
+        });
+
+        return Ok(JsonResponse {
+            code: code_value,
+            msg: msg_value,
+            data: response_body,
+        });
+    }
+
+    serde_json::from_value::<JsonResponse>(data)
+        .map_err(|e| anyhow::anyhow!("无法解析服务响应数据: {}", e))
 }
 
 /// 检查服务版本 - 使用IPC通信
@@ -593,314 +532,163 @@ pub async fn check_service_version() -> Result<String> {
     logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
 
     let payload = serde_json::json!({});
-    // logging!(debug, Type::Service, true, "发送GetVersion请求");
+    let response = send_ipc_request(IpcCommand::GetVersion, payload).await?;
 
-    match send_ipc_request(IpcCommand::GetVersion, payload).await {
-        Ok(response) => {
-            /*             logging!(
-                debug,
-                Type::Service,
-                true,
-                "收到GetVersion响应: success={}, error={:?}",
-                response.success,
-                response.error
-            ); */
+    if !response.success {
+        let err_msg = response
+            .error
+            .unwrap_or_else(|| "获取服务版本失败".to_string());
+        logging!(error, Type::Service, true, "获取版本错误: {}", err_msg);
+        bail!(err_msg);
+    }
 
-            if !response.success {
-                let err_msg = response
-                    .error
-                    .unwrap_or_else(|| "获取服务版本失败".to_string());
-                logging!(error, Type::Service, true, "获取版本错误: {}", err_msg);
-                bail!(err_msg);
-            }
+    let data = response
+        .data
+        .ok_or_else(|| anyhow::anyhow!("服务版本响应中没有数据"))?;
 
-            match response.data {
-                Some(data) => {
-                    if let Some(nested_data) = data.get("data") {
-                        if let Some(version) = nested_data.get("version") {
-                            if let Some(version_str) = version.as_str() {
-                                logging!(
-                                    info,
-                                    Type::Service,
-                                    true,
-                                    "获取到服务版本: {}",
-                                    version_str
-                                );
-                                return Ok(version_str.to_string());
-                            }
-                        }
-                        logging!(
-                            error,
-                            Type::Service,
-                            true,
-                            "嵌套数据中没有version字段: {:?}",
-                            nested_data
-                        );
-                    } else {
-                        // 兼容旧格式
-                        match serde_json::from_value::<VersionResponse>(data.clone()) {
-                            Ok(version_response) => {
-                                logging!(
-                                    info,
-                                    Type::Service,
-                                    true,
-                                    "获取到服务版本: {}",
-                                    version_response.version
-                                );
-                                return Ok(version_response.version);
-                            }
-                            Err(e) => {
-                                logging!(
-                                    error,
-                                    Type::Service,
-                                    true,
-                                    "解析版本响应失败: {}; 原始数据: {:?}",
-                                    e,
-                                    data
-                                );
-                                bail!("无法解析服务版本数据: {}", e)
-                            }
-                        }
-                    }
-                    bail!("响应中未找到有效的版本信息")
-                }
-                None => {
-                    logging!(error, Type::Service, true, "版本响应中没有数据");
-                    bail!("服务版本响应中没有数据")
-                }
-            }
-        }
-        Err(e) => {
-            logging!(error, Type::Service, true, "IPC通信失败: {}", e);
-            bail!("无法连接到Clash Verge Service: {}", e)
+    if let Some(nested_data) = data.get("data") {
+        if let Some(version) = nested_data.get("version").and_then(|v| v.as_str()) {
+            logging!(info, Type::Service, true, "获取到服务版本: {}", version);
+            return Ok(version.to_string());
         }
     }
+
+    let version_response: VersionResponse =
+        serde_json::from_value(data).context("无法解析服务版本数据")?;
+
+    logging!(
+        info,
+        Type::Service,
+        true,
+        "获取到服务版本: {}",
+        version_response.version
+    );
+    Ok(version_response.version)
 }
 
 /// 检查服务是否需要重装
 pub async fn check_service_needs_reinstall() -> bool {
-    logging!(info, Type::Service, true, "开始检查服务是否需要重装");
-
-    let service_state = ServiceState::get().await;
+    let service_state = ServiceRecord::get().await;
 
     if !service_state.can_reinstall() {
-        log::info!(target: "app", "服务重装检查: 处于冷却期或已达最大尝试次数");
         return false;
     }
 
-    // 检查版本和可用性
     match check_service_version().await {
-        Ok(version) => {
-            log::info!(target: "app", "服务版本检测：当前={version}, 要求={REQUIRED_SERVICE_VERSION}");
-            /*             logging!(
-                info,
-                Type::Service,
-                true,
-                "服务版本检测：当前={}, 要求={}",
-                version,
-                REQUIRED_SERVICE_VERSION
-            ); */
-
-            let needs_reinstall = version != REQUIRED_SERVICE_VERSION;
-            if needs_reinstall {
-                log::warn!(target: "app", "发现服务版本不匹配，需要重装! 当前={version}, 要求={REQUIRED_SERVICE_VERSION}");
-                logging!(warn, Type::Service, true, "服务版本不匹配，需要重装");
-
-                // log::debug!(target: "app", "当前版本字节: {:?}", version.as_bytes());
-                // log::debug!(target: "app", "要求版本字节: {:?}", REQUIRED_SERVICE_VERSION.as_bytes());
-            } else {
-                log::info!(target: "app", "服务版本匹配，无需重装");
-                // logging!(info, Type::Service, true, "服务版本匹配，无需重装");
-            }
-
-            needs_reinstall
-        }
-        Err(err) => {
-            logging!(error, Type::Service, true, "检查服务版本失败: {}", err);
-
-            // 检查服务是否可用
-            match is_service_available().await {
-                Ok(()) => {
-                    log::info!(target: "app", "服务正在运行但版本检查失败: {err}");
-                    /*                     logging!(
-                        info,
-                        Type::Service,
-                        true,
-                        "服务正在运行但版本检查失败: {}",
-                        err
-                    ); */
-                    false
-                }
-                _ => {
-                    log::info!(target: "app", "服务不可用或未运行，需要重装");
-                    // logging!(info, Type::Service, true, "服务不可用或未运行，需要重装");
-                    true
-                }
-            }
-        }
+        Ok(version) => version != REQUIRED_SERVICE_VERSION,
+        Err(_) => is_service_available().await.is_err(),
     }
 }
 
 /// 尝试使用服务启动core
 pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result<()> {
-    log::info!(target:"app", "尝试使用现有服务启动核心 (IPC)");
-    // logging!(info, Type::Service, true, "尝试使用现有服务启动核心");
+    logging!(info, Type::Service, true, "尝试使用现有服务启动核心");
 
-    let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
+    let verge_config = Config::verge().await;
+    let clash_core = verge_config.latest_ref().get_valid_clash_core();
+    drop(verge_config);
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
-    let clash_bin = format!("{clash_core}{bin_ext}");
-    let bin_path = current_exe()?.with_file_name(clash_bin);
-    let bin_path = dirs::path_to_str(&bin_path)?;
+    let bin_path = current_exe()?.with_file_name(format!("{clash_core}{bin_ext}"));
 
-    let config_dir = dirs::app_home_dir()?;
-    let config_dir = dirs::path_to_str(&config_dir)?;
-
-    let log_path = dirs::service_log_file()?;
-    let log_path = dirs::path_to_str(&log_path)?;
-
-    let config_file = dirs::path_to_str(config_file)?;
-
-    // 构建启动参数
     let payload = serde_json::json!({
         "core_type": clash_core,
-        "bin_path": bin_path,
-        "config_dir": config_dir,
-        "config_file": config_file,
-        "log_file": log_path,
+        "bin_path": dirs::path_to_str(&bin_path)?,
+        "config_dir": dirs::path_to_str(&dirs::app_home_dir()?)?,
+        "config_file": dirs::path_to_str(config_file)?,
+        "log_file": dirs::path_to_str(&dirs::service_log_file()?)?,
     });
 
-    // log::info!(target:"app", "启动服务参数: {:?}", payload);
-    // logging!(info, Type::Service, true, "发送StartClash请求");
+    let response = send_ipc_request(IpcCommand::StartClash, payload)
+        .await
+        .context("无法连接到Clash Verge Service")?;
 
-    // 使用IPC通信
-    match send_ipc_request(IpcCommand::StartClash, payload).await {
-        Ok(response) => {
-            /*             logging!(
-                info,
-                Type::Service,
-                true,
-                "收到StartClash响应: success={}, error={:?}",
-                response.success,
-                response.error
-            ); */
+    if !response.success {
+        let err_msg = response.error.unwrap_or_else(|| "启动核心失败".to_string());
+        bail!(err_msg);
+    }
 
-            if !response.success {
-                let err_msg = response.error.unwrap_or_else(|| "启动核心失败".to_string());
-                logging!(error, Type::Service, true, "启动核心失败: {}", err_msg);
-                bail!(err_msg);
+    if let Some(data) = &response.data {
+        if let Some(code) = data.get("code").and_then(|c| c.as_u64()) {
+            if code != 0 {
+                let msg = data
+                    .get("msg")
+                    .and_then(|m| m.as_str())
+                    .unwrap_or("未知错误");
+                bail!("启动核心失败: {}", msg);
             }
-
-            // 添加对嵌套JSON结构的处理
-            if let Some(data) = &response.data {
-                if let Some(code) = data.get("code") {
-                    let code_value = code.as_u64().unwrap_or(1);
-                    let msg = data
-                        .get("msg")
-                        .and_then(|m| m.as_str())
-                        .unwrap_or("未知错误");
-
-                    if code_value != 0 {
-                        logging!(
-                            error,
-                            Type::Service,
-                            true,
-                            "启动核心返回错误: code={}, msg={}",
-                            code_value,
-                            msg
-                        );
-                        bail!("启动核心失败: {}", msg);
-                    }
-                }
-            }
-
-            logging!(info, Type::Service, true, "服务成功启动核心");
-            Ok(())
-        }
-        Err(e) => {
-            logging!(error, Type::Service, true, "启动核心IPC通信失败: {}", e);
-            bail!("无法连接到Clash Verge Service: {}", e)
         }
     }
+
+    log::info!(target: "app", "服务成功启动核心");
+    Ok(())
 }
 
 // 以服务启动core
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
-    log::info!(target: "app", "正在尝试通过服务启动核心");
+    logging!(info, Type::Service, true, "正在尝试通过服务启动核心");
 
-    // 先检查服务版本，不受冷却期限制
+    // 先检查服务版本
     let version_check = match check_service_version().await {
         Ok(version) => {
-            log::info!(target: "app", "检测到服务版本: {version}, 要求版本: {REQUIRED_SERVICE_VERSION}");
-
-            if version.as_bytes() != REQUIRED_SERVICE_VERSION.as_bytes() {
-                log::warn!(target: "app", "服务版本不匹配，需要重装");
+            if version != REQUIRED_SERVICE_VERSION {
+                logging!(
+                    warn,
+                    Type::Service,
+                    true,
+                    "服务版本不匹配: {} (要求: {})",
+                    version,
+                    REQUIRED_SERVICE_VERSION
+                );
                 false
             } else {
-                log::info!(target: "app", "服务版本匹配");
+                logging!(info, Type::Service, true, "服务版本匹配");
                 true
             }
         }
         Err(err) => {
-            log::warn!(target: "app", "无法获取服务版本: {err}");
+            logging!(warn, Type::Service, true, "无法获取服务版本: {}", err);
             false
         }
     };
 
+    // 如果版本匹配且服务可用，直接使用
     if version_check && is_service_available().await.is_ok() {
-        log::info!(target: "app", "服务已在运行且版本匹配，尝试使用");
+        logging!(info, Type::Service, true, "服务已运行且版本匹配，直接使用");
         return start_with_existing_service(config_file).await;
     }
 
+    // 版本不匹配时尝试重装
     if !version_check {
-        log::info!(target: "app", "服务版本不匹配，尝试重装");
-
-        let service_state = ServiceState::get().await;
+        let service_state = ServiceRecord::get().await;
         if !service_state.can_reinstall() {
-            log::warn!(target: "app", "由于限制无法重装服务");
-            if let Ok(()) = start_with_existing_service(config_file).await {
-                log::info!(target: "app", "尽管版本不匹配，但成功启动了服务");
-                return Ok(());
-            }
-            bail!("服务版本不匹配且无法重装，启动失败");
+            logging!(
+                warn,
+                Type::Service,
+                true,
+                "版本不匹配但重装被限制，尝试强制使用"
+            );
+            return start_with_existing_service(config_file)
+                .await
+                .context("服务版本不匹配且无法重装");
         }
 
-        log::info!(target: "app", "开始重装服务");
-        if let Err(err) = reinstall_service().await {
-            log::warn!(target: "app", "服务重装失败: {err}");
-            bail!("Failed to reinstall service: {}", err);
-        }
-
-        log::info!(target: "app", "服务重装成功，尝试启动");
+        logging!(info, Type::Service, true, "开始重装服务");
+        reinstall_service().await?;
         return start_with_existing_service(config_file).await;
     }
 
-    // 检查服务状态
-    match check_ipc_service_status().await {
-        Ok(_) => {
-            log::info!(target: "app", "服务可用但未运行核心，尝试启动");
-            if let Ok(()) = start_with_existing_service(config_file).await {
-                return Ok(());
-            }
-        }
-        Err(err) => {
-            log::warn!(target: "app", "服务检查失败: {err}");
-        }
+    // 尝试启动现有服务
+    if let Ok(()) = start_with_existing_service(config_file).await {
+        return Ok(());
     }
 
-    // 服务不可用或启动失败，检查是否需要重装
+    // 服务启动失败，检查是否需要重装
     if check_service_needs_reinstall().await {
-        log::info!(target: "app", "服务需要重装");
-
-        if let Err(err) = reinstall_service().await {
-            log::warn!(target: "app", "服务重装失败: {err}");
-            bail!("Failed to reinstall service: {}", err);
-        }
-
-        log::info!(target: "app", "服务重装完成，尝试启动核心");
+        logging!(info, Type::Service, true, "服务需要重装");
+        reinstall_service().await?;
         start_with_existing_service(config_file).await
     } else {
-        log::warn!(target: "app", "服务不可用且无法重装");
         bail!("Service is not available and cannot be reinstalled at this time")
     }
 }
@@ -915,24 +703,24 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
         .context("无法连接到Clash Verge Service")?;
 
     if !response.success {
-        bail!(response.error.unwrap_or_else(|| "停止核心失败".to_string()));
+        let err_msg = response.error.unwrap_or_else(|| "停止核心失败".to_string());
+        logging!(error, Type::Service, true, "停止核心失败: {}", err_msg);
+        bail!(err_msg);
     }
 
     if let Some(data) = &response.data {
-        if let Some(code) = data.get("code") {
-            let code_value = code.as_u64().unwrap_or(1);
-            let msg = data
-                .get("msg")
-                .and_then(|m| m.as_str())
-                .unwrap_or("未知错误");
-
-            if code_value != 0 {
+        if let Some(code) = data.get("code").and_then(|c| c.as_u64()) {
+            if code != 0 {
+                let msg = data
+                    .get("msg")
+                    .and_then(|m| m.as_str())
+                    .unwrap_or("未知错误");
                 logging!(
                     error,
                     Type::Service,
                     true,
-                    "停止核心返回错误: code={}, msg={}",
-                    code_value,
+                    "停止核心失败: code={}, msg={}",
+                    code,
                     msg
                 );
                 bail!("停止核心失败: {}", msg);
@@ -940,17 +728,16 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
         }
     }
 
+    logging!(info, Type::Service, true, "服务成功停止核心");
     Ok(())
 }
 
 /// 检查服务是否正在运行
 pub async fn is_service_available() -> Result<()> {
-    logging!(info, Type::Service, true, "开始检查服务是否正在运行");
-
     match check_ipc_service_status().await {
         Ok(resp) => {
             if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
-                logging!(info, Type::Service, true, "服务正在运行");
+                logging!(info, Type::Service, true, "service is running");
                 Ok(())
             } else {
                 logging!(
@@ -971,23 +758,141 @@ pub async fn is_service_available() -> Result<()> {
     }
 }
 
-/// 强制重装服务（UI修复按钮）
-pub async fn force_reinstall_service() -> Result<()> {
-    log::info!(target: "app", "用户请求强制重装服务");
+/// 综合服务状态检查（一次性完成所有检查）
+pub async fn check_service_comprehensive() -> ServiceStatus {
+    logging!(info, Type::Service, true, "开始综合服务状态检查");
 
-    let service_state = ServiceState::default();
-    service_state.save().await?;
+    // 1. 检查用户偏好
+    let service_state = ServiceRecord::get().await;
+    if service_state.prefer_sidecar {
+        logging!(info, Type::Service, true, "用户偏好Sidecar模式");
+        return ServiceStatus::Unavailable("用户偏好Sidecar模式".to_string());
+    }
 
-    log::info!(target: "app", "已重置服务状态，开始执行重装");
+    // 2. 检查服务是否可用
+    match is_service_available().await {
+        Ok(_) => {
+            logging!(info, Type::Service, true, "服务当前可用，检查是否需要重装");
 
-    match reinstall_service().await {
-        Ok(()) => {
-            log::info!(target: "app", "服务重装成功");
-            Ok(())
+            // 3. 检查是否需要重装（版本不匹配等）
+            if check_service_needs_reinstall().await {
+                if service_state.can_reinstall() {
+                    logging!(info, Type::Service, true, "服务需要重装且允许重装");
+                    ServiceStatus::NeedsReinstall
+                } else {
+                    logging!(warn, Type::Service, true, "服务需要重装但被限制");
+                    ServiceStatus::Unavailable("重装被限制".to_string())
+                }
+            } else {
+                logging!(info, Type::Service, true, "服务就绪可用");
+                ServiceStatus::Ready
+            }
         }
-        Err(err) => {
-            log::error!(target: "app", "强制重装服务失败: {err}");
-            bail!("强制重装服务失败: {}", err)
+        Err(_) => {
+            logging!(warn, Type::Service, true, "服务不可用，检查安装状态");
+
+            // 4. 检查是否从未安装过
+            if service_state.last_install_time == 0 {
+                logging!(info, Type::Service, true, "服务从未安装，需要首次安装");
+                ServiceStatus::InstallRequired
+            } else if service_state.can_reinstall() {
+                logging!(info, Type::Service, true, "服务已安装但不可用，需要重装");
+                ServiceStatus::NeedsReinstall
+            } else {
+                let reason = format!(
+                    "服务已安装但不可用，重装被限制。上次错误: {}",
+                    service_state
+                        .last_error
+                        .unwrap_or_else(|| "未知".to_string())
+                );
+                logging!(warn, Type::Service, true, "{}", reason);
+                ServiceStatus::Unavailable(reason)
+            }
         }
     }
+}
+
+/// 根据服务状态执行相应操作
+pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
+    match status {
+        ServiceStatus::Ready => {
+            logging!(info, Type::Service, true, "服务就绪，直接启动");
+            Ok(())
+        }
+        ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
+            logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
+            reinstall_service().await?;
+            update_service_state_to_service().await
+        }
+        ServiceStatus::ForceReinstallRequired => {
+            logging!(
+                info,
+                Type::Service,
+                true,
+                "服务需要强制重装，执行强制重装流程"
+            );
+            force_reinstall_service().await?;
+            update_service_state_to_service().await
+        }
+        ServiceStatus::InstallRequired => {
+            logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
+            install_service().await?;
+            update_service_state_to_service().await
+        }
+        ServiceStatus::UninstallRequired => {
+            logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
+            uninstall_service().await?;
+            update_service_state_to_sidecar("用户手动卸载服务").await
+        }
+        ServiceStatus::Unavailable(reason) => {
+            logging!(
+                info,
+                Type::Service,
+                true,
+                "服务不可用: {}，将使用Sidecar模式",
+                reason
+            );
+            Err(anyhow::anyhow!("服务不可用: {}", reason))
+        }
+    }
+}
+
+/// 更新服务状态为偏好Sidecar
+async fn update_service_state_to_sidecar(reason: &str) -> Result<()> {
+    let mut state = ServiceRecord::get().await;
+    state.prefer_sidecar = true;
+    state.last_error = Some(reason.to_string());
+    if let Err(e) = state.save().await {
+        logging!(error, Type::Service, true, "保存ServiceState失败: {}", e);
+        return Err(e);
+    }
+    Ok(())
+}
+
+/// 更新服务状态在安装成功后
+async fn update_service_state_to_service() -> Result<()> {
+    let mut state = ServiceRecord::get().await;
+    state.record_install();
+    state.prefer_sidecar = false;
+    state.last_error = None;
+    if let Err(e) = state.save().await {
+        logging!(error, Type::Service, true, "保存ServiceState失败: {}", e);
+        return Err(e);
+    }
+    Ok(())
+}
+
+/// 强制重装服务（UI修复按钮）
+pub async fn force_reinstall_service() -> Result<()> {
+    logging!(info, Type::Service, true, "用户请求强制重装服务");
+
+    let service_state = ServiceRecord::default();
+    service_state.save().await?;
+
+    logging!(info, Type::Service, true, "已重置服务状态，开始执行重装");
+
+    reinstall_service().await.map_err(|err| {
+        logging!(error, Type::Service, true, "强制重装服务失败: {}", err);
+        err
+    })
 }

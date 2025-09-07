@@ -15,6 +15,8 @@ export function useSystemState() {
       revalidateOnFocus: false,
     },
   );
+  const isSidecarMode = runningMode === "Sidecar";
+  const isServiceMode = runningMode === "Service";
 
   // 获取管理员状态
   const { data: isAdminMode = false } = useSWR("isAdmin", isAdmin, {
@@ -22,24 +24,32 @@ export function useSystemState() {
     revalidateOnFocus: false,
   });
 
-  // 获取系统服务状态
-  const isServiceMode = runningMode === "Service";
-  const { data: isServiceOk = false } = useSWR(
+  const { data: isServiceOk = false, mutate: mutateServiceOk } = useSWR(
     "isServiceAvailable",
     isServiceAvailable,
     {
       suspense: false,
       revalidateOnFocus: false,
-      isPaused: () => !isServiceMode, // 仅在 Service 模式下请求
+      onSuccess: (data) => {
+        console.log("[useSystemState] 服务状态更新:", data);
+      },
+      onError: (error) => {
+        console.error("[useSystemState] 服务状态检查失败:", error);
+      },
+      isPaused: () => false, // 仅在非 Service 模式下暂停请求
     },
   );
+
+  const isTunModeAvailable = isAdminMode || isServiceOk;
 
   return {
     runningMode,
     isAdminMode,
-    isSidecarMode: runningMode === "Sidecar",
-    isServiceMode: runningMode === "Service",
+    isSidecarMode,
+    isServiceMode,
     isServiceOk,
+    isTunModeAvailable: isTunModeAvailable,
     mutateRunningMode,
+    mutateServiceOk,
   };
 }

@@ -1,6 +1,9 @@
 use super::CmdResult;
 use crate::{
-    core::{service, CoreManager},
+    core::{
+        service::{self, ServiceStatus},
+        CoreManager,
+    },
     utils::i18n::t,
 };
 use anyhow::Result;
@@ -24,22 +27,38 @@ where
 
 #[tauri::command]
 pub async fn install_service() -> CmdResult {
-    execute_service_operation_sync(service::install_service, "Install").await
+    execute_service_operation_sync(
+        || service::handle_service_status(ServiceStatus::InstallRequired),
+        "Install",
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn uninstall_service() -> CmdResult {
-    execute_service_operation_sync(service::uninstall_service, "Uninstall").await
+    execute_service_operation_sync(
+        || service::handle_service_status(ServiceStatus::UninstallRequired),
+        "Uninstall",
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn reinstall_service() -> CmdResult {
-    execute_service_operation_sync(service::reinstall_service, "Reinstall").await
+    execute_service_operation_sync(
+        || service::handle_service_status(ServiceStatus::ReinstallRequired),
+        "Reinstall",
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn repair_service() -> CmdResult {
-    execute_service_operation_sync(service::force_reinstall_service, "Repair").await
+    execute_service_operation_sync(
+        || service::handle_service_status(ServiceStatus::ForceReinstallRequired),
+        "Repair",
+    )
+    .await
 }
 
 #[tauri::command]

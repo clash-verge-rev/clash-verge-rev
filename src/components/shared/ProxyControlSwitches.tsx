@@ -19,8 +19,15 @@ import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
-import { uninstallService, restartCore, stopCore } from "@/services/cmds";
+import { useServiceStateSync } from "@/hooks/use-service-state-sync";
+import {
+  uninstallService,
+  restartCore,
+  stopCore,
+  isServiceAvailable,
+} from "@/services/cmds";
 import { useLockFn } from "ahooks";
+import useSWR, { mutate } from "swr";
 
 interface ProxySwitchProps {
   label?: string;
@@ -41,13 +48,18 @@ const ProxyControlSwitches = ({
   const { verge, mutateVerge, patchVerge } = useVerge();
   const theme = useTheme();
   const { installServiceAndRestartCore } = useServiceInstaller();
+  const { forceUpdateServiceState } = useServiceStateSync();
 
   const { actualState: systemProxyActualState, toggleSystemProxy } =
     useSystemProxyState();
+  const {
+    isServiceMode,
+    isTunModeAvailable,
+    mutateRunningMode,
+    mutateServiceOk,
+  } = useSystemState();
 
-  const { isAdminMode, isServiceMode, mutateRunningMode } = useSystemState();
-
-  const isTunAvailable = isServiceMode || isAdminMode;
+  const { isServiceOk } = useSystemState();
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
@@ -76,18 +88,37 @@ const ProxyControlSwitches = ({
       await stopCore();
       showNotice("info", t("Uninstalling Service..."));
       await uninstallService();
+
+      // 立即更新服务状态缓存
+      await forceUpdateServiceState(false);
+
       showNotice("success", t("Service Uninstalled Successfully"));
       showNotice("info", t("Restarting Core..."));
       await restartCore();
       await mutateRunningMode();
+      await mutateServiceOk();
+
+      // 验证最终状态
+      const finalServiceStatus = await isServiceAvailable();
+      if (finalServiceStatus !== false) {
+        console.warn("[onUninstallService] 服务状态验证不一致，强制更新");
+        await forceUpdateServiceState(finalServiceStatus);
+      }
     } catch (err: unknown) {
       showNotice("error", (err as Error).message || err?.toString());
       try {
         showNotice("info", t("Try running core as Sidecar..."));
         await restartCore();
         await mutateRunningMode();
+        await mutateServiceOk();
+
+        // 错误恢复后也要更新服务状态
+        const recoveryServiceStatus = await isServiceAvailable();
+        await forceUpdateServiceState(recoveryServiceStatus);
       } catch (e: unknown) {
         showNotice("error", (e as Error)?.message || e?.toString());
+        // 即使恢复失败，也假设服务已不可用
+        await forceUpdateServiceState(false);
       }
     }
   });
@@ -157,7 +188,7 @@ const ProxyControlSwitches = ({
             bgcolor: enable_tun_mode
               ? alpha(theme.palette.success.main, 0.07)
               : "transparent",
-            opacity: !isTunAvailable ? 0.6 : 1,
+            opacity: !isTunModeAvailable ? 0.6 : 1,
             transition: "background-color 0.3s",
           }}
         >
@@ -183,7 +214,7 @@ const ProxyControlSwitches = ({
               sx={{ ml: 1 }}
             />
 
-            {!isTunAvailable && (
+            {!isTunModeAvailable && (
               <TooltipIcon
                 title={t("TUN requires Service Mode or Admin Mode")}
                 icon={WarningRounded}
@@ -191,7 +222,7 @@ const ProxyControlSwitches = ({
               />
             )}
 
-            {!isTunAvailable && (
+            {!isServiceOk && (
               <TooltipIcon
                 title={t("Install Service")}
                 icon={BuildRounded}
@@ -201,7 +232,7 @@ const ProxyControlSwitches = ({
               />
             )}
 
-            {isServiceMode && (
+            {isServiceOk && (
               <TooltipIcon
                 title={t("Uninstall Service")}
                 icon={DeleteForeverRounded}
@@ -218,7 +249,7 @@ const ProxyControlSwitches = ({
             onCatch={onError}
             onFormat={onSwitchFormat}
             onChange={(e) => {
-              if (!isTunAvailable) {
+              if (!isTunModeAvailable) {
                 showNotice(
                   "error",
                   t("TUN requires Service Mode or Admin Mode"),
@@ -230,7 +261,7 @@ const ProxyControlSwitches = ({
               onChangeData({ enable_tun_mode: e });
             }}
             onGuard={(e) => {
-              if (!isTunAvailable) {
+              if (!isTunModeAvailable) {
                 showNotice(
                   "error",
                   t("TUN requires Service Mode or Admin Mode"),
@@ -242,7 +273,7 @@ const ProxyControlSwitches = ({
               return patchVerge({ enable_tun_mode: e });
             }}
           >
-            <Switch edge="end" disabled={!isTunAvailable} />
+            <Switch edge="end" disabled={!isTunModeAvailable} />
           </GuardState>
         </Box>
       )}
