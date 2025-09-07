@@ -1,6 +1,9 @@
 use crate::{
     config::Config,
-    core::service_ipc::{send_ipc_request, IpcCommand},
+    core::{
+        handle::Handle,
+        service_ipc::{send_ipc_request, IpcCommand},
+    },
     logging,
     utils::{dirs, logging::Type},
 };
@@ -800,6 +803,9 @@ async fn update_service_state_to_sidecar(reason: &str) -> Result<()> {
         logging!(error, Type::Service, true, "保存ServiceState失败: {}", e);
         return Err(e);
     }
+
+    Handle::refresh_verge();
+
     Ok(())
 }
 
@@ -814,6 +820,9 @@ async fn update_service_state_to_service() -> Result<()> {
         logging!(error, Type::Service, true, "保存ServiceState失败: {}", e);
         return Err(e);
     }
+
+    Handle::refresh_verge();
+
     Ok(())
 }
 
