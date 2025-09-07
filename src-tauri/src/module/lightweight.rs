@@ -63,11 +63,8 @@ pub async fn run_once_auto_lightweight() {
         "在静默启动的情况下，创建窗口再添加自动进入轻量模式窗口监听器"
     );
 
+    set_lightweight_mode(true).await;
     enable_auto_light_weight_mode().await;
-
-    if let Err(e) = Tray::global().update_part().await {
-        log::warn!("Failed to update tray: {e}");
-    }
 }
 
 pub async fn auto_lightweight_mode_init() -> Result<()> {
@@ -149,9 +146,6 @@ pub async fn entry_lightweight_mode() {
     set_lightweight_mode(true).await;
     let _ = cancel_light_weight_timer();
     ProxyRequestCache::global().clean_default_keys();
-
-    // 更新托盘显示
-    logging_error!(Type::Lightweight, true, Tray::global().update_part().await);
 }
 
 // 添加从轻量模式恢复的函数
@@ -189,9 +183,6 @@ pub async fn exit_lightweight_mode() {
 
     // 重置UI就绪状态
     crate::utils::resolve::ui::reset_ui_ready();
-
-    // 更新托盘显示
-    let _tray = crate::core::tray::Tray::global();
 }
 
 #[cfg(target_os = "macos")]
