@@ -2,7 +2,10 @@ use crate::{
     config::Config,
     core::service_ipc::{send_ipc_request, IpcCommand},
     logging,
-    utils::{dirs, logging::Type},
+    utils::{
+        dirs,
+        logging::{self, Type},
+    },
 };
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -859,6 +862,13 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
 
 /// 更新服务状态为偏好Sidecar
 async fn update_service_state_to_sidecar(reason: &str) -> Result<()> {
+    logging!(
+        info,
+        Type::Service,
+        true,
+        "更新服务状态为偏好Sidecar，原因: {}",
+        reason
+    );
     let mut state = ServiceRecord::get().await;
     state.prefer_sidecar = true;
     state.last_error = Some(reason.to_string());
@@ -871,6 +881,7 @@ async fn update_service_state_to_sidecar(reason: &str) -> Result<()> {
 
 /// 更新服务状态在安装成功后
 async fn update_service_state_to_service() -> Result<()> {
+    logging!(info, Type::Service, true, "更新服务状态为使用Service");
     let mut state = ServiceRecord::get().await;
     state.record_install();
     state.prefer_sidecar = false;

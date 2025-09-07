@@ -59,8 +59,6 @@ const ProxyControlSwitches = ({
     mutateServiceOk,
   } = useSystemState();
 
-  const { isServiceOk } = useSystemState();
-
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
 
@@ -222,7 +220,7 @@ const ProxyControlSwitches = ({
               />
             )}
 
-            {!isServiceOk && (
+            {!isServiceMode && (
               <TooltipIcon
                 title={t("Install Service")}
                 icon={BuildRounded}
@@ -232,7 +230,7 @@ const ProxyControlSwitches = ({
               />
             )}
 
-            {isServiceOk && (
+            {isServiceMode && (
               <TooltipIcon
                 title={t("Uninstall Service")}
                 icon={DeleteForeverRounded}
@@ -273,7 +271,7 @@ const ProxyControlSwitches = ({
               return patchVerge({ enable_tun_mode: e });
             }}
           >
-            <Switch edge="end" disabled={!isTunModeAvailable} />
+            <Switch edge="end" disabled={!isServiceMode} />
           </GuardState>
         </Box>
       )}

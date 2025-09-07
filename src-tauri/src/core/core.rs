@@ -382,8 +382,6 @@ impl CoreManager {
             return Ok((true, String::new()));
         }
 
-        logging!(info, Type::Config, true, "开始更新配置");
-
         // 1. 先生成新的配置内容
         logging!(info, Type::Config, true, "生成新的配置内容");
         Config::generate().await?;
@@ -391,9 +389,8 @@ impl CoreManager {
         // 2. 验证配置
         match self.validate_config().await {
             Ok((true, _)) => {
-                logging!(info, Type::Config, true, "配置验证通过");
                 // 4. 验证通过后，生成正式的运行时配置
-                logging!(info, Type::Config, true, "生成运行时配置");
+                logging!(info, Type::Config, true, "配置验证通过, 生成运行时配置");
                 let run_path = Config::generate_file(ConfigType::Run).await?;
                 logging_error!(Type::Config, true, self.put_configs_force(run_path).await);
                 Ok((true, "something".into()))
