@@ -222,17 +222,26 @@ pub fn save_window_size_position(app_handle: &AppHandle) -> AppResult<()> {
         let is_maximized = win.is_maximized()?;
         verge.window_is_maximized = Some(is_maximized);
         if !is_maximized && size.width >= 600.0 && size.height >= 550.0 {
-            let (width, height) = if !*X11_RENDER.read()
-                && utils::unix_helper::is_wayland()
-                && verge.enable_system_title_bar.unwrap_or_default()
+            #[cfg(target_os = "linux")]
             {
-                // wayland 渲染模式下，获取到的 inner size 是不正确的
-                // 因为 wayland 下的系统标题栏是 Tauri 自己绘制的，其 inner size 没有排除系统标题栏相关的大小, 所以需要自己计算
-                (size.width - 90., size.height - 138.)
-            } else {
-                (size.width, size.height)
-            };
-            verge.window_size_position = Some(vec![width, height, pos.x, pos.y]);
+                let (width, height) = if utils::unix_helper::is_rendered_by_nvidia_only() {
+                    (size.width - 90., size.height - 90.)
+                } else if !*X11_RENDER.read()
+                    && utils::unix_helper::is_wayland()
+                    && verge.enable_system_title_bar.unwrap_or_default()
+                {
+                    // wayland 渲染模式下，获取到的 inner size 是不正确的
+                    // 因为 wayland 下的系统标题栏是 Tauri 自己绘制的，其 inner size 没有排除系统标题栏相关的大小, 所以需要自己计算
+                    (size.width - 90., size.height - 138.)
+                } else {
+                    (size.width, size.height)
+                };
+                verge.window_size_position = Some(vec![width, height, pos.x, pos.y]);
+            }
+            #[cfg(not(target_os = "linux"))]
+            {
+                verge.window_size_position = Some(vec![size.width, size.height, pos.x, pos.y]);
+            }
         }
     }
     verge.save_file()?;
