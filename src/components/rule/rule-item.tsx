@@ -108,9 +108,14 @@ export const RuleItem = (props: Props) => {
               {value.payload || "-"}
             </Typography>
             {isRuleSet && (
-              <div className="text-primary-main bg-primary-alpha-20 ml-2 flex items-center rounded-full px-2 py-[2px] text-xs">
-                <Update className="mr-1" fontSize="small" />
-                <span>{dayjs(value.updateAt).fromNow()}</span>
+              <div className="flex items-center">
+                <div className="bg-primary-alpha-20 text-primary-main rounded-full px-2 text-sm">
+                  {value.count}
+                </div>
+                <div className="text-primary-main bg-primary-alpha-20 ml-2 flex items-center rounded-full px-2 py-[2px] text-xs">
+                  <Update className="mr-1" fontSize="small" />
+                  <span>{dayjs(value.updateAt).fromNow()}</span>
+                </div>
               </div>
             )}
           </div>
@@ -168,13 +173,7 @@ export const RuleItem = (props: Props) => {
               data={value.matchPayloadItems}
               increaseViewportBy={256}
               itemContent={(_index, item) => (
-                <Box
-                  sx={{
-                    userSelect: "text",
-                    marginTop: "2px",
-                    height: "20px",
-                    lineHeight: "20px",
-                  }}>
+                <div className="leading-5 select-text">
                   <Typography
                     unselectable="on"
                     component="span"
@@ -182,7 +181,7 @@ export const RuleItem = (props: Props) => {
                     color="text.primary">
                     {item}
                   </Typography>
-                </Box>
+                </div>
               )}
             />
           </Box>

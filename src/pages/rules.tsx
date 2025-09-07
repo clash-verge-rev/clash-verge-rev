@@ -23,6 +23,7 @@ export type CustomRule = Rule &
     updateAt?: string;
     behavior?: RuleBehavior;
     format?: RuleFormat;
+    count?: number;
     expanded: boolean;
     matchPayloadItems: string[];
   };
@@ -30,13 +31,19 @@ export type CustomRule = Rule &
 const RulesPage = () => {
   const { t } = useTranslation();
 
-  const { data } = useSWR("getRules", async () => {
-    const rules = await getRules();
-    const customRules = rules.rules.map((item) => {
-      return item as CustomRule;
-    });
-    return customRules;
-  });
+  const { data } = useSWR(
+    "getRules",
+    async () => {
+      const rules = await getRules();
+      const customRules = rules.rules.map((item) => {
+        return item as CustomRule;
+      });
+      return customRules;
+    },
+    {
+      revalidateOnFocus: false,
+    },
+  );
 
   const [customRules, setCustomRules] = useState<CustomRule[] | null>(null);
   useEffect(() => {
@@ -56,6 +63,7 @@ const RulesPage = () => {
             ...payload,
             behavior: provider.behavior,
             format: provider.format,
+            count: provider.ruleCount,
             updateAt: provider.updatedAt,
           } as CustomRule);
         } else {
