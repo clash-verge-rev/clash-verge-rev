@@ -14,8 +14,7 @@
 - 调整内核界面样式
 - 支持 Linux 的便携版本
 - 支持 Linux 便捷版在不启用服务模式下使用 Tun 模式
-- Linux wayland 下使用 x11 渲染程序, 提升兼容性和使用体验
-- 在使用 nvidia 显卡的 Linux 系统中，应用无法正常显示界面, 如果是 wayland 环境，不再使用 x11 渲染，避免应用卡死
+- Linux wayland 下强制使用 x11 渲染程序, 提升兼容性和使用体验 (注：在只使用 nvidia 显卡的 Linux 系统中，不强制使用 x11 渲染，避免应用卡死)
 
 ### 🐛 Bug Fixes
 
