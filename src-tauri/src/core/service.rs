@@ -2,10 +2,7 @@ use crate::{
     config::Config,
     core::service_ipc::{send_ipc_request, IpcCommand},
     logging,
-    utils::{
-        dirs,
-        logging::{self, Type},
-    },
+    utils::{dirs, logging::Type},
 };
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -129,6 +126,7 @@ impl ServiceRecord {
     }
 }
 
+#[allow(clippy::unused_async)]
 #[cfg(target_os = "windows")]
 async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
@@ -163,6 +161,7 @@ async fn uninstall_service() -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::unused_async)]
 #[cfg(target_os = "windows")]
 async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
