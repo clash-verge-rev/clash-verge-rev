@@ -268,10 +268,7 @@ pub async fn send_ipc_request(
     let request_json = serde_json::to_string(&request)?;
 
     let mut stream = match UnixStream::connect(IPC_SOCKET_NAME) {
-        Ok(s) => {
-            // logging!(info, Type::Service, true, "服务连接成功 (Unix)");
-            s
-        }
+        Ok(s) => s,
         Err(e) => {
             logging!(error, Type::Service, true, "连接到Unix套接字失败: {}", e);
             return Err(anyhow::anyhow!("无法连接到服务Unix套接字: {}", e));

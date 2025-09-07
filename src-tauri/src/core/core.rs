@@ -888,20 +888,17 @@ impl CoreManager {
 
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
-        let result = match self.get_running_mode() {
+        match self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar(),
             RunningMode::NotRunning => Ok(()),
-        };
-        result
+        }
     }
 
     /// 重启内核
     pub async fn restart_core(&self) -> Result<()> {
         logging!(info, Type::Core, true, "Restarting core");
-        logging!(info, Type::Core, true, "Stopping core");
         self.stop_core().await?;
-        logging!(info, Type::Core, true, "Starting core");
         self.start_core().await?;
         Ok(())
     }
