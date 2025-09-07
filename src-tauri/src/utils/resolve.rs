@@ -4,7 +4,7 @@ use crate::config::PrfOption;
 use crate::core::verge_log::VergeLog;
 use crate::error::AppResult;
 use crate::utils::dirs::{self, APP_ID};
-use crate::{APP_HANDLE, log_err, shutdown, trace_err, utils};
+use crate::{APP_HANDLE, X11_RENDER, log_err, shutdown, trace_err, utils};
 use crate::{
     config::{Config, PrfItem},
     core::*,
@@ -155,15 +155,6 @@ pub fn create_window() {
             let w = size.0.clamp(600.0, f64::INFINITY);
             let h = size.1.clamp(550.0, f64::INFINITY);
             builder = builder.inner_size(w, h).position(pos.0, pos.1);
-            // adjust window size on wayland when it is enable decoration
-            #[cfg(target_os = "linux")]
-            {
-                use crate::cmds;
-                let is_wayland = cmds::common::is_wayland().unwrap_or(false);
-                if _decoration && is_wayland {
-                    builder = builder.inner_size(w - 90.0, h - 90.0).position(pos.0, pos.1);
-                }
-            }
         }
         _ => {
             builder = builder.inner_size(1100.0, 750.0).center();
@@ -185,7 +176,11 @@ pub fn create_window() {
         .shadow(true)
         .build();
     #[cfg(target_os = "linux")]
-    let window = builder.visible(false).shadow(true).transparent(true).build();
+    let window = builder
+        .visible(!*X11_RENDER.read())
+        .shadow(true)
+        .transparent(true)
+        .build();
 
     match window {
         Ok(win) => {
@@ -227,12 +222,16 @@ pub fn save_window_size_position(app_handle: &AppHandle) -> AppResult<()> {
         let is_maximized = win.is_maximized()?;
         verge.window_is_maximized = Some(is_maximized);
         if !is_maximized && size.width >= 600.0 && size.height >= 550.0 {
-            let (width, height) =
-                if utils::unix_helper::is_wayland() && verge.enable_system_title_bar.unwrap_or_default() {
-                    (size.width + 90., size.height + 90.)
-                } else {
-                    (size.width, size.height)
-                };
+            let (width, height) = if !*X11_RENDER.read()
+                && utils::unix_helper::is_wayland()
+                && verge.enable_system_title_bar.unwrap_or_default()
+            {
+                // wayland 渲染模式下，获取到的 inner size 是不正确的
+                // 因为 wayland 下的系统标题栏是 Tauri 自己绘制的，其 inner size 没有排除系统标题栏相关的大小, 所以需要自己计算
+                (size.width - 90., size.height - 138.)
+            } else {
+                (size.width, size.height)
+            };
             verge.window_size_position = Some(vec![width, height, pos.x, pos.y]);
         }
     }

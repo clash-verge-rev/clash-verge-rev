@@ -17,12 +17,15 @@ use crate::{
 };
 use core::verge_log::VergeLog;
 use once_cell::sync::OnceCell;
+use parking_lot::RwLock;
+use std::sync::LazyLock;
 use tauri::AppHandle;
 use tauri_plugin_mihomo::Protocol;
 
 rust_i18n::i18n!("locales", fallback = "en");
 
 pub static APP_VERSION: OnceCell<String> = OnceCell::new();
+pub static X11_RENDER: LazyLock<RwLock<bool>> = LazyLock::new(|| RwLock::new(false));
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
 #[cfg(all(unix, not(feature = "verge-dev")))]
@@ -45,12 +48,15 @@ pub fn run() -> AppResult<()> {
 
     #[cfg(target_os = "linux")]
     {
-        unsafe {
-            // Nvidia 显卡下，应用无法显示界面, 通过设置 WEBKIT_DISABLE_DMABUF_RENDERER=1 解决
-            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-            if utils::unix_helper::is_wayland() {
+        if utils::unix_helper::is_rendered_by_nvidia_only() {
+            unsafe {
+                std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+            }
+        } else if utils::unix_helper::is_wayland() {
+            unsafe {
                 std::env::set_var("GDK_BACKEND", "x11");
             }
+            *X11_RENDER.write() = true;
         }
     }
 

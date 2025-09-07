@@ -20,3 +20,23 @@ pub fn is_wayland() -> bool {
         false
     }
 }
+
+#[cfg(target_os = "linux")]
+pub fn is_rendered_by_nvidia_only() -> bool {
+    use std::process::Command;
+
+    let output = Command::new("bash").args(["-c", "lspci | grep -i vga"]).output();
+    match output {
+        Ok(output) => {
+            if output.stdout.is_empty() {
+                false
+            } else {
+                let output_str = String::from_utf8_lossy(&output.stdout);
+                let vgas = output_str.trim().split("\n").collect::<Vec<&str>>();
+                tracing::debug!("Vga Output: {:#?}", vgas);
+                vgas.len() == 1 && String::from_utf8_lossy(&output.stdout).contains("NVIDIA")
+            }
+        }
+        Err(_) => false,
+    }
+}
