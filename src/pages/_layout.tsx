@@ -10,7 +10,6 @@ import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { forceRefreshClashConfig } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
-import {} from "@/hooks/use-service-state-sync";
 import { useI18n } from "@/hooks/use-i18n";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";

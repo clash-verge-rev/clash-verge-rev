@@ -19,7 +19,6 @@ import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
-import { useServiceStateSync } from "@/hooks/use-service-state-sync";
 import {
   uninstallService,
   restartCore,
@@ -48,7 +47,6 @@ const ProxyControlSwitches = ({
   const { verge, mutateVerge, patchVerge } = useVerge();
   const theme = useTheme();
   const { installServiceAndRestartCore } = useServiceInstaller();
-  const { forceUpdateServiceState } = useServiceStateSync();
 
   const { actualState: systemProxyActualState, toggleSystemProxy } =
     useSystemProxyState();
@@ -87,9 +85,6 @@ const ProxyControlSwitches = ({
       showNotice("info", t("Uninstalling Service..."));
       await uninstallService();
 
-      // 立即更新服务状态缓存
-      await forceUpdateServiceState(false);
-
       showNotice("success", t("Service Uninstalled Successfully"));
       showNotice("info", t("Restarting Core..."));
       await restartCore();
@@ -100,7 +95,6 @@ const ProxyControlSwitches = ({
       const finalServiceStatus = await isServiceAvailable();
       if (finalServiceStatus !== false) {
         console.warn("[onUninstallService] 服务状态验证不一致，强制更新");
-        await forceUpdateServiceState(finalServiceStatus);
       }
     } catch (err: unknown) {
       showNotice("error", (err as Error).message || err?.toString());
@@ -109,14 +103,8 @@ const ProxyControlSwitches = ({
         await restartCore();
         await mutateRunningMode();
         await mutateServiceOk();
-
-        // 错误恢复后也要更新服务状态
-        const recoveryServiceStatus = await isServiceAvailable();
-        await forceUpdateServiceState(recoveryServiceStatus);
       } catch (e: unknown) {
         showNotice("error", (e as Error)?.message || e?.toString());
-        // 即使恢复失败，也假设服务已不可用
-        await forceUpdateServiceState(false);
       }
     }
   });
