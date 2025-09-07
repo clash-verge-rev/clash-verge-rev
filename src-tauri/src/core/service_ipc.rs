@@ -269,7 +269,7 @@ pub async fn send_ipc_request(
 
     let mut stream = match UnixStream::connect(IPC_SOCKET_NAME) {
         Ok(s) => {
-            logging!(info, Type::Service, true, "服务连接成功 (Unix)");
+            // logging!(info, Type::Service, true, "服务连接成功 (Unix)");
             s
         }
         Err(e) => {

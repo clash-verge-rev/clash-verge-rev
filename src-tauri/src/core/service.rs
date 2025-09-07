@@ -579,7 +579,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     logging!(info, Type::Service, true, "正在尝试通过服务启动核心");
 
     // 先检查服务版本
-    let version_check = match check_service_version().await {
+    let version_matched = match check_service_version().await {
         Ok(version) => {
             if version != REQUIRED_SERVICE_VERSION {
                 logging!(
@@ -603,13 +603,13 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     };
 
     // 如果版本匹配且服务可用，直接使用
-    if version_check && is_service_available().await.is_ok() {
+    if version_matched {
         logging!(info, Type::Service, true, "服务已运行且版本匹配，直接使用");
         return start_with_existing_service(config_file).await;
     }
 
     // 版本不匹配时尝试重装
-    if !version_check {
+    if !version_matched {
         let service_state = ServiceRecord::get().await;
         if !service_state.can_reinstall() {
             logging!(
@@ -689,8 +689,6 @@ pub async fn is_service_available() -> Result<()> {
 
 /// 综合服务状态检查（一次性完成所有检查）
 pub async fn check_service_comprehensive() -> ServiceStatus {
-    logging!(info, Type::Service, true, "开始综合服务状态检查");
-
     // 1. 检查用户偏好
     let service_state = ServiceRecord::get().await;
     if service_state.prefer_sidecar {
@@ -713,7 +711,7 @@ pub async fn check_service_comprehensive() -> ServiceStatus {
                     ServiceStatus::Unavailable("重装被限制".to_string())
                 }
             } else {
-                logging!(info, Type::Service, true, "服务就绪可用");
+                // logging!(info, Type::Service, true, "服务就绪可用");
                 ServiceStatus::Ready
             }
         }
