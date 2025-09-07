@@ -49,12 +49,6 @@ pub struct ResponseBody {
     pub log_file: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct VersionResponse {
-    pub service: String,
-    pub version: String,
-}
-
 // 保留通用的响应结构体，用于IPC通信后的数据解析
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct JsonResponse {
@@ -495,55 +489,18 @@ async fn reinstall_service() -> Result<()> {
 }
 
 /// 检查服务状态 - 使用IPC通信
-pub async fn check_ipc_service_status() -> Result<JsonResponse> {
+async fn check_ipc_service_status() -> Result<()> {
     logging!(info, Type::Service, true, "开始检查服务状态 (IPC)");
-
-    let payload = serde_json::json!({});
-    let response = send_ipc_request(IpcCommand::GetClash, payload).await?;
-
-    if !response.success {
-        let err_msg = response.error.unwrap_or_else(|| "未知服务错误".to_string());
-        logging!(error, Type::Service, true, "服务响应错误: {}", err_msg);
-        bail!(err_msg);
-    }
-
-    let data = response
-        .data
-        .ok_or_else(|| anyhow::anyhow!("服务响应中没有数据"))?;
-
-    if let (Some(code), Some(msg)) = (data.get("code"), data.get("msg")) {
-        let code_value = code.as_u64().unwrap_or(0);
-        let msg_value = msg.as_str().unwrap_or("ok").to_string();
-
-        let response_body = data.get("data").and_then(|nested_data| {
-            serde_json::from_value::<ResponseBody>(nested_data.clone()).ok()
-        });
-
-        return Ok(JsonResponse {
-            code: code_value,
-            msg: msg_value,
-            data: response_body,
-        });
-    }
-
-    serde_json::from_value::<JsonResponse>(data)
-        .map_err(|e| anyhow::anyhow!("无法解析服务响应数据: {}", e))
+    check_service_version().await?;
+    Ok(())
 }
 
 /// 检查服务版本 - 使用IPC通信
-pub async fn check_service_version() -> Result<String> {
+async fn check_service_version() -> Result<String> {
     logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
 
     let payload = serde_json::json!({});
     let response = send_ipc_request(IpcCommand::GetVersion, payload).await?;
-
-    if !response.success {
-        let err_msg = response
-            .error
-            .unwrap_or_else(|| "获取服务版本失败".to_string());
-        logging!(error, Type::Service, true, "获取版本错误: {}", err_msg);
-        bail!(err_msg);
-    }
 
     let data = response
         .data
@@ -556,17 +513,7 @@ pub async fn check_service_version() -> Result<String> {
         }
     }
 
-    let version_response: VersionResponse =
-        serde_json::from_value(data).context("无法解析服务版本数据")?;
-
-    logging!(
-        info,
-        Type::Service,
-        true,
-        "获取到服务版本: {}",
-        version_response.version
-    );
-    Ok(version_response.version)
+    Ok("unknown".to_string())
 }
 
 /// 检查服务是否需要重装
@@ -737,28 +684,7 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
 /// 检查服务是否正在运行
 pub async fn is_service_available() -> Result<()> {
-    match check_ipc_service_status().await {
-        Ok(resp) => {
-            if resp.code == 0 && resp.msg == "ok" && resp.data.is_some() {
-                logging!(info, Type::Service, true, "service is running");
-                Ok(())
-            } else {
-                logging!(
-                    warn,
-                    Type::Service,
-                    true,
-                    "服务未正常运行: code={}, msg={}",
-                    resp.code,
-                    resp.msg
-                );
-                Ok(())
-            }
-        }
-        Err(err) => {
-            logging!(error, Type::Service, true, "检查服务运行状态失败: {}", err);
-            Err(err)
-        }
-    }
+    check_ipc_service_status().await
 }
 
 /// 综合服务状态检查（一次性完成所有检查）

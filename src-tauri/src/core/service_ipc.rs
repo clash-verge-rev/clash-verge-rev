@@ -131,8 +131,6 @@ pub async fn send_ipc_request(
         winnt::{FILE_SHARE_READ, FILE_SHARE_WRITE, GENERIC_READ, GENERIC_WRITE},
     };
 
-    logging!(info, Type::Service, true, "正在连接服务 (Windows)...");
-
     let command_type = format!("{command:?}");
 
     let request = match create_signed_request(command, payload) {
@@ -256,8 +254,6 @@ pub async fn send_ipc_request(
     payload: serde_json::Value,
 ) -> Result<IpcResponse> {
     use std::os::unix::net::UnixStream;
-
-    logging!(info, Type::Service, true, "正在连接服务 (Unix)...");
 
     let command_type = format!("{command:?}");
 

@@ -47,7 +47,7 @@ export function useServiceInstaller() {
   const waitForService = async (): Promise<boolean> => {
     showNotice("info", t("Waiting for service to be ready..."));
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       try {
@@ -59,7 +59,7 @@ export function useServiceInstaller() {
         console.error(t("Error checking service status:"), error);
       }
 
-      if (i < 4) {
+      if (i < 5) {
         showNotice(
           "info",
           t("Service not ready, retrying attempt {count}/{total}...", {
