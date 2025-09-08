@@ -3,7 +3,7 @@ use tauri::AppHandle;
 
 use crate::{
     config::Config,
-    core::{CoreManager, Timer, handle, hotkey::Hotkey, sysopt, tray::Tray},
+    core::{handle, hotkey::Hotkey, sysopt, tray::Tray, CoreManager, Timer},
     logging, logging_error,
     module::lightweight::auto_lightweight_mode_init,
     process::AsyncHandler,

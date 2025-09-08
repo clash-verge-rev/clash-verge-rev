@@ -16,12 +16,11 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_ref();
     let config = runtime.config.as_ref();
-    wrap_err!(
-        config
-            .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
-            .and_then(|config| serde_yaml_ng::to_string(config)
-                .context("failed to convert config to yaml"))
-    )
+    wrap_err!(config
+        .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
+        .and_then(
+            |config| serde_yaml_ng::to_string(config).context("failed to convert config to yaml")
+        ))
 }
 
 /// 获取运行时存在的键

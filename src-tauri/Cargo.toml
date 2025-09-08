@@ -6,7 +6,7 @@ authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
 repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
-edition = "2024"
+edition = "2021"
 build = "build.rs"
 
 [package.metadata.bundle]
@@ -117,33 +117,27 @@ verge-dev = []
 tokio-trace = ["console-subscriber"]
 
 [profile.release]
-panic = "unwind"
-codegen-units = 16
+panic = "abort"
+codegen-units = 1
 lto = true
-opt-level = 3
-debug = false
-strip = "none"
-overflow-checks = false
-rpath = false
+opt-level = "s"
+strip = true
 
 [profile.dev]
 incremental = true
-codegen-units = 64
-opt-level = 0
-debug = true
-strip = "none"
-overflow-checks = true
-lto = false
-rpath = false
+codegen-units = 256 # 增加编译单元，提升编译速度
+opt-level = 0       # 禁用优化，进一步提升编译速度
+debug = true        # 保留调试信息
+strip = false       # 不剥离符号，保留调试信息
 
 [profile.fast-release]
-inherits = "release"
-panic = "abort"
-codegen-units = 64
-lto = false
-opt-level = 0
-debug = true
-strip = false
+inherits = "release" # 继承 release 的配置
+panic = "abort"      # 与 release 相同
+codegen-units = 256  # 增加编译单元，提升编译速度
+lto = false          # 禁用 LTO，提升编译速度
+opt-level = 0        # 禁用优化，大幅提升编译速度
+debug = true         # 保留调试信息
+strip = false        # 不剥离符号，保留调试信息
 
 [lib]
 name = "app_lib"

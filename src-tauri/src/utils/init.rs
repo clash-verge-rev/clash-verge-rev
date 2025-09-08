@@ -296,52 +296,52 @@ async fn ensure_directories() -> Result<()> {
 
 /// 初始化配置文件
 async fn initialize_config_files() -> Result<()> {
-    if let Ok(path) = dirs::clash_path()
-        && !path.exists()
-    {
-        let template = IClashTemp::template().0;
-        help::save_yaml(&path, &template, Some("# Clash Verge"))
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to create clash config: {}", e))?;
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Created clash config at {:?}",
-            path
-        );
+    if let Ok(path) = dirs::clash_path() {
+        if !path.exists() {
+            let template = IClashTemp::template().0;
+            help::save_yaml(&path, &template, Some("# Clash Verge"))
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to create clash config: {}", e))?;
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Created clash config at {:?}",
+                path
+            );
+        }
     }
 
-    if let Ok(path) = dirs::verge_path()
-        && !path.exists()
-    {
-        let template = IVerge::template();
-        help::save_yaml(&path, &template, Some("# Clash Verge"))
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to create verge config: {}", e))?;
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Created verge config at {:?}",
-            path
-        );
+    if let Ok(path) = dirs::verge_path() {
+        if !path.exists() {
+            let template = IVerge::template();
+            help::save_yaml(&path, &template, Some("# Clash Verge"))
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to create verge config: {}", e))?;
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Created verge config at {:?}",
+                path
+            );
+        }
     }
 
-    if let Ok(path) = dirs::profiles_path()
-        && !path.exists()
-    {
-        let template = IProfiles::template();
-        help::save_yaml(&path, &template, Some("# Clash Verge"))
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to create profiles config: {}", e))?;
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Created profiles config at {:?}",
-            path
-        );
+    if let Ok(path) = dirs::profiles_path() {
+        if !path.exists() {
+            let template = IProfiles::template();
+            help::save_yaml(&path, &template, Some("# Clash Verge"))
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to create profiles config: {}", e))?;
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Created profiles config at {:?}",
+                path
+            );
+        }
     }
 
     // 验证并修正verge配置
@@ -459,7 +459,7 @@ pub async fn init_resources() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn init_scheme() -> Result<()> {
     use tauri::utils::platform::current_exe;
-    use winreg::{RegKey, enums::*};
+    use winreg::{enums::*, RegKey};
 
     let app_exe = current_exe()?;
     let app_exe = dunce::canonicalize(app_exe)?;

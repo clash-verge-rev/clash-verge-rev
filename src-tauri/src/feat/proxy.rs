@@ -13,22 +13,21 @@ pub async fn toggle_system_proxy() {
     // 获取当前系统代理状态
     let enable = {
         let verge = Config::verge().await;
-
-        verge.latest_ref().enable_system_proxy.unwrap_or(false)
+        let enable = verge.latest_ref().enable_system_proxy.unwrap_or(false);
+        enable
     };
     // 获取自动关闭连接设置
     let auto_close_connection = {
         let verge = Config::verge().await;
-
-        verge.latest_ref().auto_close_connection.unwrap_or(false)
+        let auto_close = verge.latest_ref().auto_close_connection.unwrap_or(false);
+        auto_close
     };
 
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
-    if enable
-        && auto_close_connection
-        && let Err(err) = IpcManager::global().close_all_connections().await
-    {
-        log::error!(target: "app", "Failed to close all connections: {err}");
+    if enable && auto_close_connection {
+        if let Err(err) = IpcManager::global().close_all_connections().await {
+            log::error!(target: "app", "Failed to close all connections: {err}");
+        }
     }
 
     let patch_result = super::patch_verge(

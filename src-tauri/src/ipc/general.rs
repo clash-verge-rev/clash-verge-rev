@@ -1,10 +1,10 @@
 use std::time::Duration;
 
 use kode_bridge::{
-    ClientConfig, IpcHttpClient, LegacyResponse,
     errors::{AnyError, AnyResult},
+    ClientConfig, IpcHttpClient, LegacyResponse,
 };
-use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 
 use crate::{
     logging, singleton_with_logging,
@@ -199,7 +199,8 @@ impl IpcManager {
         // 测速URL不再编码，直接传递
         let url = format!("/proxies/{encoded_name}/delay?url={test_url}&timeout={timeout}");
 
-        self.send_request("GET", &url, None).await
+        let response = self.send_request("GET", &url, None).await;
+        response
     }
 
     // 版本和配置相关
@@ -339,7 +340,8 @@ impl IpcManager {
         // 测速URL不再编码，直接传递
         let url = format!("/group/{encoded_group_name}/delay?url={test_url}&timeout={timeout}");
 
-        self.send_request("GET", &url, None).await
+        let response = self.send_request("GET", &url, None).await;
+        response
     }
 
     // 调试相关

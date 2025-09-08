@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::{
-    core::{CoreManager, service},
+    core::{service, CoreManager},
     utils::i18n::t,
 };
 use anyhow::Result;

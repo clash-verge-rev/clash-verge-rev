@@ -3,7 +3,7 @@ use crate::utils::{
     network::{NetworkManager, ProxyType},
     tmpl,
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use std::{fs, time::Duration};

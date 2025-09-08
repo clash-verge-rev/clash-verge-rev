@@ -1,10 +1,10 @@
 use crate::process::AsyncHandler;
-use crate::utils::notification::{NotificationEvent, notify_event};
+use crate::utils::notification::{notify_event, NotificationEvent};
 use crate::{
     config::Config, core::handle, feat, logging, logging_error,
     module::lightweight::entry_lightweight_mode, singleton_with_logging, utils::logging::Type,
 };
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use parking_lot::Mutex;
 use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
 use tauri::{AppHandle, Manager};
@@ -243,11 +243,11 @@ impl Hotkey {
                     );
 
                     if hotkey_event_owned.key == Code::KeyQ && is_quit_owned {
-                        if let Some(window) = app_handle_cloned.get_webview_window("main")
-                            && window.is_focused().unwrap_or(false)
-                        {
-                            logging!(debug, Type::Hotkey, "Executing quit function");
-                            Self::execute_function(function_owned, &app_handle_cloned);
+                        if let Some(window) = app_handle_cloned.get_webview_window("main") {
+                            if window.is_focused().unwrap_or(false) {
+                                logging!(debug, Type::Hotkey, "Executing quit function");
+                                Self::execute_function(function_owned, &app_handle_cloned);
+                            }
                         }
                     } else {
                         logging!(debug, Type::Hotkey, "Executing function directly");

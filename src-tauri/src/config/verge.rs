@@ -1,5 +1,5 @@
 use crate::{
-    config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
+    config::{deserialize_encrypted, serialize_encrypted, DEFAULT_PAC},
     logging,
     utils::{dirs, help, i18n, logging::Type},
 };

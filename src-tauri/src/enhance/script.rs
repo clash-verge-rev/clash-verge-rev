@@ -7,7 +7,7 @@ pub fn use_script(
     config: Mapping,
     name: String,
 ) -> Result<(Mapping, Vec<(String, String)>)> {
-    use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
+    use boa_engine::{native_function::NativeFunction, Context, JsString, JsValue, Source};
     use std::{cell::RefCell, rc::Rc};
     let mut context = Context::default();
 

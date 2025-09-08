@@ -1,5 +1,5 @@
 #[cfg(target_os = "windows")]
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 #[cfg(target_os = "windows")]
 use log::info;
 

@@ -1,7 +1,7 @@
 use crate::{enhance::seq::SeqMap, logging, utils::logging::Type};
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use nanoid::nanoid;
-use serde::{Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Serialize};
 use serde_yaml_ng::Mapping;
 use std::{path::PathBuf, str::FromStr};
 
@@ -154,6 +154,10 @@ macro_rules! ret_err {
 #[macro_export]
 macro_rules! t {
     ($en:expr, $zh:expr, $use_zh:expr) => {
-        if $use_zh { $zh } else { $en }
+        if $use_zh {
+            $zh
+        } else {
+            $en
+        }
     };
 }
