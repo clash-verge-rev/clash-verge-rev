@@ -7,7 +7,6 @@ use crate::{
     core::handle,
     logging,
     module::lightweight,
-    process::AsyncHandler,
     utils::{
         logging::Type,
         resolve::{
@@ -149,19 +148,10 @@ async fn setup_window_post_creation() {
 
     // 先运行轻量模式检测
     lightweight::run_once_auto_lightweight().await;
-
-    // 发送启动完成事件，触发前端开始加载
-    logging!(
-        debug,
-        Type::Window,
-        true,
-        "发送 verge://startup-completed 事件"
-    );
-    handle::Handle::notify_startup_completed();
 }
 
 /// 通过窗口标签处理窗口显示逻辑（减少任务大小的优化版本）
-fn handle_window_display_by_label(window_label: String, is_show: bool) {
+async fn handle_window_display_by_label(window_label: String, is_show: bool) {
     if !is_show {
         logging!(
             debug,
@@ -214,9 +204,7 @@ fn handle_window_display_by_label(window_label: String, is_show: bool) {
     );
 
     // 异步监控UI状态
-    AsyncHandler::spawn(move || async move {
-        monitor_ui_loading(timeout_seconds).await;
-    });
+    monitor_ui_loading(timeout_seconds).await;
 
     logging!(info, Type::Window, true, "窗口显示流程完成");
 }
@@ -304,7 +292,7 @@ pub async fn create_window(is_show: bool) -> bool {
 
     // 异步处理窗口后续设置，只捕获必要的小数据
     setup_window_post_creation().await;
-    handle_window_display_by_label(window_label, is_show);
+    handle_window_display_by_label(window_label, is_show).await;
 
     true
 }
