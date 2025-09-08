@@ -117,12 +117,12 @@ verge-dev = []
 tokio-trace = ["console-subscriber"]
 
 [profile.release]
-panic = "unwind"
+panic = "abort"
 codegen-units = 16
 lto = true
-opt-level = 3
+opt-level = "s"
 debug = false
-strip = "none"
+strip = true
 overflow-checks = false
 rpath = false
 
