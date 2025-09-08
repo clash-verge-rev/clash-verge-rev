@@ -12,7 +12,8 @@ export const useTrafficData = () => {
 
   const trafficRef = useRef<TrafficRef>(null);
   const ws = useRef<MihomoWebSocket | null>(null);
-  const ws_first_connection = useRef<boolean>(true);
+  const wsFirstConnection = useRef<boolean>(true);
+  const listenerRef = useRef<() => void | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const response = useSWRSubscription<ITrafficItem, any, string | null>(
@@ -23,7 +24,8 @@ export const useTrafficData = () => {
           .then(async (ws_) => {
             ws.current = ws_;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            ws_.addListener(async (msg) => {
+
+            listenerRef.current = ws_.addListener(async (msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
                   next(msg.data, { up: 0, down: 0 });
@@ -49,10 +51,10 @@ export const useTrafficData = () => {
       };
 
       if (
-        ws_first_connection.current ||
-        (ws.current && !ws_first_connection.current)
+        wsFirstConnection.current ||
+        (ws.current && !wsFirstConnection.current)
       ) {
-        ws_first_connection.current = false;
+        wsFirstConnection.current = false;
         if (ws.current) {
           ws.current.close();
           ws.current = null;
@@ -62,6 +64,8 @@ export const useTrafficData = () => {
 
       return () => {
         ws.current?.close();
+        listenerRef.current?.();
+        listenerRef.current = null;
       };
     },
     {

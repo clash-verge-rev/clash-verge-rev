@@ -16,30 +16,54 @@ export const useLogData = () => {
   const logLevel = clashLog.logLevel;
 
   const [date, setDate] = useLocalStorage("mihomo_logs_date", Date.now());
-  const subscriptKey = enableLog ? `getClashLog-${date}-${logLevel}` : null;
+  const subscriptKey = enableLog ? `getClashLog-${date}` : null;
 
   const ws = useRef<MihomoWebSocket | null>(null);
-  const ws_first_connection = useRef<boolean>(true);
+  const wsFirstConnection = useRef<boolean>(true);
+  const listenerRef = useRef<() => void | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const response = useSWRSubscription<ILogItem[], any, string | null>(
     subscriptKey,
     (_key, { next }) => {
-      // populate the initial logs
-
       const connect = () =>
         MihomoWebSocket.connect_logs(logLevel)
-          .then((ws_) => {
+          .then(async (ws_) => {
             ws.current = ws_;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            getClashLogs().then(
-              (logs) => next(null, logs),
-              (err) => next(err),
-            );
+
+            const logs = await getClashLogs();
+            let filterLogs: ILogItem[] = [];
+            switch (logLevel) {
+              case "debug":
+                filterLogs = logs.filter((i) =>
+                  ["debug", "info", "warning", "error"].includes(i.type),
+                );
+                break;
+              case "info":
+                filterLogs = logs.filter((i) =>
+                  ["info", "warning", "error"].includes(i.type),
+                );
+                break;
+              case "warning":
+                filterLogs = logs.filter((i) =>
+                  ["warning", "error"].includes(i.type),
+                );
+                break;
+              case "error":
+                filterLogs = logs.filter((i) => i.type === "error");
+                break;
+              case "silent":
+                filterLogs = [];
+                break;
+              default:
+                filterLogs = logs;
+                break;
+            }
+            next(null, filterLogs);
 
             const buffer: ILogItem[] = [];
             let flushTimer: NodeJS.Timeout | null = null;
-
             const flush = () => {
               if (buffer.length > 0) {
                 next(null, (l) => {
@@ -54,7 +78,7 @@ export const useLogData = () => {
               }
               flushTimer = null;
             };
-            ws_.addListener(async (msg) => {
+            listenerRef.current = ws_.addListener(async (msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
                   next(msg.data);
@@ -84,10 +108,10 @@ export const useLogData = () => {
           });
 
       if (
-        ws_first_connection.current ||
-        (ws.current && !ws_first_connection.current)
+        wsFirstConnection.current ||
+        (ws.current && !wsFirstConnection.current)
       ) {
-        ws_first_connection.current = false;
+        wsFirstConnection.current = false;
         if (ws.current) {
           ws.current.close();
           ws.current = null;
@@ -97,6 +121,8 @@ export const useLogData = () => {
 
       return () => {
         ws.current?.close();
+        listenerRef.current?.();
+        listenerRef.current = null;
       };
     },
     {
@@ -122,6 +148,12 @@ export const useLogData = () => {
   useEffect(() => {
     mutate(`$sub$${subscriptKey}`);
   }, [date]);
+
+  useEffect(() => {
+    if (!logLevel) return;
+    ws.current?.close();
+    setDate(Date.now());
+  }, [logLevel]);
 
   const refreshGetClashLog = (clear = false) => {
     if (clear) {
