@@ -184,7 +184,7 @@ pub async fn entry_lightweight_mode() -> bool {
     set_state(LightweightState::In);
 
     ProxyRequestCache::global().clean_default_keys();
-    return true;
+    true
 }
 
 // 添加从轻量模式恢复的函数
@@ -218,7 +218,7 @@ pub async fn exit_lightweight_mode() -> bool {
     set_state(LightweightState::Normal);
 
     logging!(info, Type::Lightweight, true, "轻量模式退出完成");
-    return true;
+    true
 }
 
 #[cfg(target_os = "macos")]

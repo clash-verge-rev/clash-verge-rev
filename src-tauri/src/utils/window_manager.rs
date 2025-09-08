@@ -318,7 +318,7 @@ impl WindowManager {
         }
     }
 
-    /// 隐藏主窗口
+    // /// 隐藏主窗口
     // pub fn hide_main_window() -> WindowOperationResult {
     //     logging!(info, Type::Window, true, "开始隐藏主窗口");
 
@@ -381,7 +381,7 @@ impl WindowManager {
             return WindowOperationResult::Destroyed;
         }
         logging!(warn, Type::Window, true, "窗口摧毁失败");
-        return WindowOperationResult::Failed;
+        WindowOperationResult::Failed
     }
 
     /// 获取详细的窗口状态信息
