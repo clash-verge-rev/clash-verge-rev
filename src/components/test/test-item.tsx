@@ -192,7 +192,7 @@ export const TestItem = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        MenuListProps={{ sx: { py: 0.5 } }}
+        slotProps={{ list: { sx: { py: 0.5 } } }}
         onContextMenu={(e) => {
           setAnchorEl(null);
           e.preventDefault();
@@ -215,4 +215,5 @@ const Widget = styled("div")(({ theme: { typography } }) => ({
   fontSize: 14,
   fontFamily: typography.fontFamily,
   borderRadius: "4px",
+  textTransform: "uppercase",
 }));

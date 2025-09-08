@@ -2,6 +2,7 @@ use crate::MIHOMO_SOCKET_PATH;
 use crate::config::Config;
 use crate::error::{AppError, AppResult};
 use crate::utils::{self, crypto, dirs};
+use chrono::{DateTime, Local};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -32,13 +33,14 @@ pub struct StartBody {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ClashStatus {
-    auto_restart: bool,
-    restart_retry_count: u32,
-    info: Option<ClashInfo>,
+    pub auto_restart: bool,
+    pub restart_retry_count: u8,
+    pub last_running_time: DateTime<Local>,
+    pub info: Option<ClashInfo>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-struct ClashInfo {
+pub struct ClashInfo {
     pub core_type: Option<String>,
     pub bin_path: String,
     pub config_dir: String,

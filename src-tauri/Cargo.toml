@@ -44,7 +44,7 @@ warp = { version = "0.4", features = ["server"] }
 dirs = "6.0"
 dunce = "1.0"
 nanoid = "0.4"
-chrono = "0.4"
+chrono = {version = "0.4", features = ["serde"] }
 sysinfo = "0.37"
 boa_engine = "0.20"
 serde_json = "1.0"
