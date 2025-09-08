@@ -36,6 +36,24 @@ export const useLogData = () => {
               (logs) => next(null, logs),
               (err) => next(err),
             );
+
+            const buffer: ILogItem[] = [];
+            let flushTimer: NodeJS.Timeout | null = null;
+
+            const flush = () => {
+              if (buffer.length > 0) {
+                next(null, (l) => {
+                  let newList = [...(l ?? []), ...buffer.splice(0)];
+                  if (newList.length > MAX_LOG_NUM) {
+                    newList = newList.slice(
+                      -Math.min(MAX_LOG_NUM, newList.length),
+                    );
+                  }
+                  return newList;
+                });
+              }
+              flushTimer = null;
+            };
             ws_.addListener(async (msg) => {
               if (msg.type === "Text") {
                 if (msg.data.startsWith("websocket error")) {
@@ -48,13 +66,13 @@ export const useLogData = () => {
                   );
                 } else {
                   const data = JSON.parse(msg.data) as ILogItem;
-                  // append new log item on socket message
-                  next(null, (l = []) => {
-                    const time = dayjs().format("MM-DD HH:mm:ss");
-                    if (l.length >= MAX_LOG_NUM) l.shift();
-                    const newList = [...l, { ...data, time }];
-                    return newList;
-                  });
+                  data.time = dayjs().format("MM-DD HH:mm:ss");
+                  buffer.push(data);
+
+                  // flush data
+                  if (!flushTimer) {
+                    flushTimer = setTimeout(flush, 50);
+                  }
                 }
               }
             });

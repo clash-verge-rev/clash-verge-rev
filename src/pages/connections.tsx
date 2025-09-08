@@ -75,7 +75,7 @@ const ConnectionsPage = () => {
     const closed = activeConns.filter((o) => !ids.includes(o.id));
     let newList = [...closedConns, ...closed];
     if (newList.length > MAX_CLOSED_CONNS) {
-      newList = newList.slice(newList.length - MAX_CLOSED_CONNS);
+      newList = newList.slice(-Math.min(MAX_CLOSED_CONNS, newList.length));
     }
     setClosedConns(newList);
     setActiveConns(connData.connections);
