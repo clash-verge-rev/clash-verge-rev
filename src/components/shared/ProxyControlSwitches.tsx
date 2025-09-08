@@ -19,13 +19,8 @@ import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
-import {
-  uninstallService,
-  restartCore,
-  stopCore,
-  isServiceAvailable,
-} from "@/services/cmds";
 import { useLockFn } from "ahooks";
+import { useServiceUninstaller } from "@/hooks/useServiceUninstaller";
 
 interface ProxySwitchProps {
   label?: string;
@@ -118,6 +113,7 @@ const ProxyControlSwitches = ({
   const { t } = useTranslation();
   const { verge, mutateVerge, patchVerge } = useVerge();
   const { installServiceAndRestartCore } = useServiceInstaller();
+  const { uninstallServiceAndRestartCore } = useServiceUninstaller();
   const { actualState: systemProxyActualState, toggleSystemProxy } =
     useSystemProxyState();
   const {
@@ -150,7 +146,6 @@ const ProxyControlSwitches = ({
   const onInstallService = useLockFn(async () => {
     try {
       await installServiceAndRestartCore();
-
       await mutateRunningMode();
       await mutateServiceOk();
     } catch (err) {
@@ -160,35 +155,11 @@ const ProxyControlSwitches = ({
 
   const onUninstallService = useLockFn(async () => {
     try {
-      showNotice("info", t("Stopping Core..."));
-      await stopCore();
-      showNotice("info", t("Uninstalling Service..."));
-      await uninstallService();
-      showNotice("success", t("Service Uninstalled Successfully"));
-
-      showNotice("info", t("Restarting Core..."));
-      await restartCore();
+      await uninstallServiceAndRestartCore();
       await mutateRunningMode();
       await mutateServiceOk();
-
-      const finalStatus = await isServiceAvailable();
-      if (finalStatus !== false) {
-        console.warn(
-          "[onUninstallService] Service status mismatch, forcing update",
-        );
-      }
     } catch (err) {
-      const msg = (err as Error)?.message || String(err);
-      showNotice("error", msg);
-      // fallback
-      try {
-        showNotice("info", t("Try running core as Sidecar..."));
-        await restartCore();
-        await mutateRunningMode();
-        await mutateServiceOk();
-      } catch (e) {
-        showNotice("error", (e as Error)?.message || String(e));
-      }
+      showNotice("error", (err as Error).message || String(err));
     }
   });
 
