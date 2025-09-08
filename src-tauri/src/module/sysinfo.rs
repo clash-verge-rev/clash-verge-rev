@@ -1,6 +1,6 @@
 use crate::{
     cmd::system,
-    core::{CoreManager, handle},
+    core::{handle, CoreManager},
 };
 use std::fmt::{self, Debug, Formatter};
 use sysinfo::System;
@@ -20,13 +20,7 @@ impl Debug for PlatformSpecification {
         write!(
             f,
             "System Name: {}\nSystem Version: {}\nSystem kernel Version: {}\nSystem Arch: {}\nVerge Version: {}\nRunning Mode: {}\nIs Admin: {}",
-            self.system_name,
-            self.system_version,
-            self.system_kernel_version,
-            self.system_arch,
-            self.verge_version,
-            self.running_mode,
-            self.is_admin
+            self.system_name, self.system_version, self.system_kernel_version, self.system_arch, self.verge_version, self.running_mode, self.is_admin
         )
     }
 }

@@ -7,7 +7,6 @@ use crate::{
     utils::logging::Type,
 };
 
-#[cfg(target_os = "macos")]
 use crate::logging_error;
 
 use crate::utils::window_manager::WindowManager;

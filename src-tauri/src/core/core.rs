@@ -19,12 +19,12 @@ use chrono::Local;
 use parking_lot::Mutex;
 use std::{
     fmt,
-    fs::{File, create_dir_all},
+    fs::{create_dir_all, File},
     io::Write,
     path::PathBuf,
     sync::Arc,
 };
-use tauri_plugin_shell::{ShellExt, process::CommandChild};
+use tauri_plugin_shell::{process::CommandChild, ShellExt};
 
 #[derive(Debug)]
 pub struct CoreManager {
@@ -467,18 +467,18 @@ impl CoreManager {
                 Ok((pids, process_name)) => {
                     for pid in pids {
                         // 跳过当前管理的进程
-                        if let Some(current) = current_pid
-                            && pid == current
-                        {
-                            logging!(
-                                debug,
-                                Type::Core,
-                                true,
-                                "跳过当前管理的进程: {} (PID: {})",
-                                process_name,
-                                pid
-                            );
-                            continue;
+                        if let Some(current) = current_pid {
+                            if pid == current {
+                                logging!(
+                                    debug,
+                                    Type::Core,
+                                    true,
+                                    "跳过当前管理的进程: {} (PID: {})",
+                                    process_name,
+                                    pid
+                                );
+                                continue;
+                            }
                         }
                         pids_to_kill.push((pid, process_name.clone()));
                     }
@@ -527,7 +527,7 @@ impl CoreManager {
             use std::mem;
             use winapi::um::handleapi::CloseHandle;
             use winapi::um::tlhelp32::{
-                CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
+                CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
                 TH32CS_SNAPPROCESS,
             };
             use winapi::um::winnt::HANDLE;
@@ -703,7 +703,7 @@ impl CoreManager {
             use winapi::um::processthreadsapi::OpenProcess;
             use winapi::um::winnt::{HANDLE, PROCESS_QUERY_INFORMATION};
 
-            AsyncHandler::spawn_blocking(move || -> Result<bool> {
+            let result = AsyncHandler::spawn_blocking(move || -> Result<bool> {
                 unsafe {
                     let process_handle: HANDLE = OpenProcess(PROCESS_QUERY_INFORMATION, 0, pid);
                     if process_handle.is_null() {
@@ -719,7 +719,9 @@ impl CoreManager {
                     Ok(exit_code == 259)
                 }
             })
-            .await?
+            .await?;
+
+            result
         }
 
         #[cfg(not(windows))]
@@ -765,16 +767,16 @@ impl CoreManager {
 
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
-                if let tauri_plugin_shell::process::CommandEvent::Stdout(line) = event
-                    && let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line))
-                {
-                    logging!(
-                        error,
-                        Type::Core,
-                        true,
-                        "[Sidecar] Failed to write stdout to file: {}",
-                        e
-                    );
+                if let tauri_plugin_shell::process::CommandEvent::Stdout(line) = event {
+                    if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
+                        logging!(
+                            error,
+                            Type::Core,
+                            true,
+                            "[Sidecar] Failed to write stdout to file: {}",
+                            e
+                        );
+                    }
                 }
             }
         });

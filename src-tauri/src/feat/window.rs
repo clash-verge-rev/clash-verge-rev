@@ -1,7 +1,7 @@
 use crate::utils::window_manager::WindowManager;
 use crate::{
     config::Config,
-    core::{CoreManager, handle, sysopt},
+    core::{handle, sysopt, CoreManager},
     ipc::IpcManager,
     logging,
     module::lightweight,
@@ -56,7 +56,7 @@ pub async fn quit() {
 }
 
 async fn clean_async() -> bool {
-    use tokio::time::{Duration, timeout};
+    use tokio::time::{timeout, Duration};
 
     logging!(info, Type::System, true, "开始执行异步清理操作...");
 
@@ -216,10 +216,10 @@ pub async fn hide() {
         add_light_weight_timer().await;
     }
 
-    if let Some(window) = handle::Handle::global().get_window()
-        && window.is_visible().unwrap_or(false)
-    {
-        let _ = window.hide();
+    if let Some(window) = handle::Handle::global().get_window() {
+        if window.is_visible().unwrap_or(false) {
+            let _ = window.hide();
+        }
     }
     handle::Handle::global().set_activation_policy_accessory();
 }

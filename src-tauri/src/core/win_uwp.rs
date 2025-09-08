@@ -1,7 +1,7 @@
 #![cfg(target_os = "windows")]
 
 use crate::utils::dirs;
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use deelevate::{PrivilegeLevel, Token};
 use runas::Command as RunasCommand;
 use std::process::Command as StdCommand;

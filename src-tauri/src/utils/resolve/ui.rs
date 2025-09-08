@@ -1,8 +1,8 @@
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use std::sync::{
-    Arc,
     atomic::{AtomicBool, Ordering},
+    Arc,
 };
 use tokio::sync::Notify;
 
