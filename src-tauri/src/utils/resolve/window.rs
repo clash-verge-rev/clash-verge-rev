@@ -185,11 +185,7 @@ fn handle_window_display_by_label(window_label: String, is_show: bool) {
     #[cfg(target_os = "macos")]
     handle::Handle::global().set_activation_policy_regular();
 
-    let timeout_seconds = if crate::module::lightweight::is_in_lightweight_mode() {
-        3
-    } else {
-        8
-    };
+    let timeout_seconds = 8;
 
     logging!(
         info,
@@ -250,8 +246,6 @@ pub async fn create_window(is_show: bool) -> bool {
     );
 
     if !is_show {
-        lightweight::set_lightweight_mode(true).await;
-        handle::Handle::notify_startup_completed();
         return false;
     }
 

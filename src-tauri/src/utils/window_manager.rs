@@ -18,6 +18,8 @@ pub enum WindowOperationResult {
     Hidden,
     /// 创建了新窗口
     Created,
+    /// 摧毁了窗口
+    Destroyed,
     /// 操作失败
     Failed,
     /// 无需操作
@@ -317,31 +319,26 @@ impl WindowManager {
     }
 
     /// 隐藏主窗口
-    pub fn hide_main_window() -> WindowOperationResult {
-        logging!(info, Type::Window, true, "开始隐藏主窗口");
+    // pub fn hide_main_window() -> WindowOperationResult {
+    //     logging!(info, Type::Window, true, "开始隐藏主窗口");
 
-        match Self::get_main_window() {
-            Some(window) => match window.hide() {
-                Ok(_) => {
-                    logging!(info, Type::Window, true, "窗口已隐藏");
-                    WindowOperationResult::Hidden
-                }
-                Err(e) => {
-                    logging!(warn, Type::Window, true, "隐藏窗口失败: {}", e);
-                    WindowOperationResult::Failed
-                }
-            },
-            None => {
-                logging!(info, Type::Window, true, "窗口不存在，无需隐藏");
-                WindowOperationResult::NoAction
-            }
-        }
-    }
-
-    /// 检查窗口是否存在
-    pub fn is_main_window_exists() -> bool {
-        Self::get_main_window().is_some()
-    }
+    //     match Self::get_main_window() {
+    //         Some(window) => match window.hide() {
+    //             Ok(_) => {
+    //                 logging!(info, Type::Window, true, "窗口已隐藏");
+    //                 WindowOperationResult::Hidden
+    //             }
+    //             Err(e) => {
+    //                 logging!(warn, Type::Window, true, "隐藏窗口失败: {}", e);
+    //                 WindowOperationResult::Failed
+    //             }
+    //         },
+    //         None => {
+    //             logging!(info, Type::Window, true, "窗口不存在，无需隐藏");
+    //             WindowOperationResult::NoAction
+    //         }
+    //     }
+    // }
 
     /// 检查窗口是否可见
     pub fn is_main_window_visible() -> bool {
@@ -369,6 +366,22 @@ impl WindowManager {
         use crate::utils::resolve;
 
         resolve::window::create_window(true).await
+    }
+
+    /// 摧毁窗口
+    pub fn destroy_main_window() -> WindowOperationResult {
+        if let Some(window) = Self::get_main_window() {
+            let _ = window.destroy();
+            logging!(info, Type::Window, true, "窗口已摧毁");
+            #[cfg(target_os = "macos")]
+            {
+                logging!(info, Type::Window, true, "应用 macOS 特定的激活策略");
+                handle::Handle::global().set_activation_policy_accessory();
+            }
+            return WindowOperationResult::Destroyed;
+        }
+        logging!(warn, Type::Window, true, "窗口摧毁失败");
+        return WindowOperationResult::Failed;
     }
 
     /// 获取详细的窗口状态信息
