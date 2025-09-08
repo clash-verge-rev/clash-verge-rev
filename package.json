@@ -56,7 +56,7 @@
     "framer-motion": "^12.16.0",
     "i18next": "^25.2.1",
     "lodash-es": "^4.17.21",
-    "monaco-editor": "^0.52.2",
+    "monaco-editor": "^0.53.0",
     "monaco-yaml": "^5.4.0",
     "nanoid": "^5.1.5",
     "notistack": "^3.0.2",
