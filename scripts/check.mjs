@@ -498,9 +498,10 @@ function getAlphaClashVergeServices() {
 }
 
 const resolveClashVergeService = async () => {
-  consola.info("Download and unzip Clash Verge Service");
+  const versionTag = useAlphaService ? "Alpha" : "Stable";
+  consola.info(`Download and unzip Clash Verge Service (${versionTag})`);
   const spinner = ora({
-    text: "resolve Clash Verge Service",
+    text: `resolve Clash Verge Service (${versionTag})`,
     color: "yellow",
     spinner: "circle",
   });
