@@ -1,10 +1,10 @@
 use std::time::Duration;
 
 use kode_bridge::{
-    errors::{AnyError, AnyResult},
     ClientConfig, IpcHttpClient, LegacyResponse,
+    errors::{AnyError, AnyResult},
 };
-use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
+use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
 
 use crate::{
     logging, singleton_with_logging,

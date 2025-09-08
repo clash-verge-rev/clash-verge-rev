@@ -1,12 +1,12 @@
 use once_cell::sync::OnceCell;
-use tauri::tray::TrayIconBuilder;
 use tauri::Emitter;
+use tauri::tray::TrayIconBuilder;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
 use crate::ipc::Rate;
 use crate::process::AsyncHandler;
 use crate::{
-    cmd,
+    Type, cmd,
     config::Config,
     feat,
     ipc::IpcManager,
@@ -14,7 +14,6 @@ use crate::{
     module::lightweight::is_in_lightweight_mode,
     singleton_lazy,
     utils::{dirs::find_target_icons, i18n::t},
-    Type,
 };
 
 use super::handle;
@@ -27,9 +26,9 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri::{
+    AppHandle, Wry,
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
-    AppHandle, Wry,
 };
 
 #[derive(Clone)]

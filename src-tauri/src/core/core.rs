@@ -19,12 +19,12 @@ use chrono::Local;
 use parking_lot::Mutex;
 use std::{
     fmt,
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     io::Write,
     path::PathBuf,
     sync::Arc,
 };
-use tauri_plugin_shell::{process::CommandChild, ShellExt};
+use tauri_plugin_shell::{ShellExt, process::CommandChild};
 
 #[derive(Debug)]
 pub struct CoreManager {
@@ -527,7 +527,7 @@ impl CoreManager {
             use std::mem;
             use winapi::um::handleapi::CloseHandle;
             use winapi::um::tlhelp32::{
-                CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+                CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
                 TH32CS_SNAPPROCESS,
             };
             use winapi::um::winnt::HANDLE;

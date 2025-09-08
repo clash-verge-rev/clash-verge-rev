@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::{
-    core::{handle, CoreManager},
+    core::{CoreManager, handle},
     logging,
     module::sysinfo::PlatformSpecification,
     utils::logging::Type,

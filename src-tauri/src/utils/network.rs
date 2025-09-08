@@ -1,14 +1,14 @@
 use anyhow::Result;
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use isahc::prelude::*;
+use isahc::{HttpClient, config::SslOption};
 use isahc::{
     config::RedirectPolicy,
     http::{
-        header::{HeaderMap, HeaderValue, USER_AGENT},
         StatusCode, Uri,
+        header::{HeaderMap, HeaderValue, USER_AGENT},
     },
 };
-use isahc::{config::SslOption, HttpClient};
 use std::time::{Duration, Instant};
 use sysproxy::Sysproxy;
 use tauri::Url;

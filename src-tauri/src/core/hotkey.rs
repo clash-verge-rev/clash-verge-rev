@@ -1,10 +1,10 @@
 use crate::process::AsyncHandler;
-use crate::utils::notification::{notify_event, NotificationEvent};
+use crate::utils::notification::{NotificationEvent, notify_event};
 use crate::{
     config::Config, core::handle, feat, logging, logging_error,
     module::lightweight::entry_lightweight_mode, singleton_with_logging, utils::logging::Type,
 };
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use parking_lot::Mutex;
 use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
 use tauri::{AppHandle, Manager};

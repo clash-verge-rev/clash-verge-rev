@@ -12,7 +12,7 @@ use crate::{
     utils::{
         logging::Type,
         resolve::{
-            ui::{get_ui_ready, update_ui_ready_stage, wait_for_ui_ready, UiReadyStage},
+            ui::{UiReadyStage, get_ui_ready, update_ui_ready_stage, wait_for_ui_ready},
             window_script::{INITIAL_LOADING_OVERLAY, WINDOW_INITIAL_SCRIPT},
         },
     },

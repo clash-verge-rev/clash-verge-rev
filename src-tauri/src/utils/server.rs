@@ -1,11 +1,11 @@
 use super::resolve;
 use crate::{
-    config::{Config, IVerge, DEFAULT_PAC},
+    config::{Config, DEFAULT_PAC, IVerge},
     logging_error,
     process::AsyncHandler,
     utils::logging::Type,
 };
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use port_scanner::local_port_available;
 use warp::Filter;
 

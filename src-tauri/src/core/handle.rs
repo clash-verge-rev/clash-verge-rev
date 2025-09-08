@@ -2,8 +2,9 @@ use crate::singleton;
 use parking_lot::RwLock;
 use std::{
     sync::{
+        Arc,
         atomic::{AtomicU64, Ordering},
-        mpsc, Arc,
+        mpsc,
     },
     thread,
     time::{Duration, Instant},
@@ -392,7 +393,9 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::ProfileUpdateStarted { uid });
         } else {
-            log::warn!("Notification system not initialized when trying to send ProfileUpdateStarted event.");
+            log::warn!(
+                "Notification system not initialized when trying to send ProfileUpdateStarted event."
+            );
         }
     }
 
@@ -406,7 +409,9 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::ProfileUpdateCompleted { uid });
         } else {
-            log::warn!("Notification system not initialized when trying to send ProfileUpdateCompleted event.");
+            log::warn!(
+                "Notification system not initialized when trying to send ProfileUpdateCompleted event."
+            );
         }
     }
 

@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use percent_encoding::percent_decode_str;
 use tauri::Url;
 

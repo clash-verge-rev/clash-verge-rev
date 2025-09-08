@@ -2,7 +2,7 @@
 use crate::process::AsyncHandler;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 
 #[cfg(target_os = "linux")]
 use anyhow::anyhow;
@@ -87,7 +87,7 @@ impl AsyncProxyQuery {
         use std::ptr;
         use winapi::shared::minwindef::{DWORD, HKEY};
         use winapi::um::winnt::{KEY_READ, REG_DWORD, REG_SZ};
-        use winapi::um::winreg::{RegCloseKey, RegOpenKeyExW, RegQueryValueExW, HKEY_CURRENT_USER};
+        use winapi::um::winreg::{HKEY_CURRENT_USER, RegCloseKey, RegOpenKeyExW, RegQueryValueExW};
 
         unsafe {
             let key_path = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\0"
@@ -271,7 +271,7 @@ impl AsyncProxyQuery {
         use std::ptr;
         use winapi::shared::minwindef::{DWORD, HKEY};
         use winapi::um::winnt::{KEY_READ, REG_DWORD, REG_SZ};
-        use winapi::um::winreg::{RegCloseKey, RegOpenKeyExW, RegQueryValueExW, HKEY_CURRENT_USER};
+        use winapi::um::winreg::{HKEY_CURRENT_USER, RegCloseKey, RegOpenKeyExW, RegQueryValueExW};
 
         unsafe {
             let key_path = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\0"

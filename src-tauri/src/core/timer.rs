@@ -6,8 +6,8 @@ use std::{
     collections::HashMap,
     pin::Pin,
     sync::{
-        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
 };
 
@@ -390,7 +390,8 @@ impl Timer {
         };
 
         // Get the profile updated timestamp - now safe to await
-        let profiles = { Config::profiles().await.clone().data_ref() }.clone();
+        let config_profiles = Config::profiles().await;
+        let profiles = config_profiles.data_ref().clone();
         let items = match profiles.get_items() {
             Some(i) => i,
             None => {

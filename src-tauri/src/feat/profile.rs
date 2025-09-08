@@ -1,11 +1,11 @@
 use crate::{
     cmd,
-    config::{profiles::profiles_draft_update_item_safe, Config, PrfItem, PrfOption},
-    core::{handle, tray, CoreManager},
+    config::{Config, PrfItem, PrfOption, profiles::profiles_draft_update_item_safe},
+    core::{CoreManager, handle, tray},
     logging,
     utils::logging::Type,
 };
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 /// Toggle proxy profile
 pub async fn toggle_proxy_profile(profile_index: String) {

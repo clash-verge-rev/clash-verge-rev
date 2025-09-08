@@ -1,13 +1,14 @@
 use super::CmdResult;
 use crate::{
     config::{
+        Config, IProfiles, PrfItem, PrfOption,
         profiles::{
             profiles_append_item_with_filedata_safe, profiles_delete_item_safe,
             profiles_patch_item_safe, profiles_reorder_safe, profiles_save_file_safe,
         },
-        profiles_append_item_safe, Config, IProfiles, PrfItem, PrfOption,
+        profiles_append_item_safe,
     },
-    core::{handle, timer::Timer, tray::Tray, CoreManager},
+    core::{CoreManager, handle, timer::Timer, tray::Tray},
     feat, logging,
     process::AsyncHandler,
     ret_err,
@@ -663,8 +664,9 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 #[tauri::command]
 pub async fn view_profile(index: String) -> CmdResult {
     let profiles = Config::profiles().await;
+    let profiles_ref = profiles.latest_ref();
     let file = {
-        wrap_err!(profiles.latest_ref().get_item(&index))?
+        wrap_err!(profiles_ref.get_item(&index))?
             .file
             .clone()
             .ok_or("the file field is null")

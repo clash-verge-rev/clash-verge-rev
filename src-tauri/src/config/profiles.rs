@@ -1,10 +1,10 @@
-use super::{prfitem::PrfItem, PrfOption};
+use super::{PrfOption, prfitem::PrfItem};
 use crate::{
     logging_error,
     process::AsyncHandler,
     utils::{dirs, help, logging::Type},
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use std::collections::HashSet;

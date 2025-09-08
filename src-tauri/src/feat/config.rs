@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{handle, hotkey, sysopt, tray, CoreManager},
+    core::{CoreManager, handle, hotkey, sysopt, tray},
     logging_error,
     module::lightweight,
     utils::logging::Type,

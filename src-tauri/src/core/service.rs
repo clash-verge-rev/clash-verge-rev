@@ -1,10 +1,10 @@
 use crate::{
     config::Config,
-    core::service_ipc::{send_ipc_request, IpcCommand},
+    core::service_ipc::{IpcCommand, send_ipc_request},
     logging,
     utils::{dirs, logging::Type},
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::{
     env::current_exe,
