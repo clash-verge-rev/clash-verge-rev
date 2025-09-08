@@ -318,28 +318,6 @@ impl WindowManager {
         }
     }
 
-    // /// 隐藏主窗口
-    // pub fn hide_main_window() -> WindowOperationResult {
-    //     logging!(info, Type::Window, true, "开始隐藏主窗口");
-
-    //     match Self::get_main_window() {
-    //         Some(window) => match window.hide() {
-    //             Ok(_) => {
-    //                 logging!(info, Type::Window, true, "窗口已隐藏");
-    //                 WindowOperationResult::Hidden
-    //             }
-    //             Err(e) => {
-    //                 logging!(warn, Type::Window, true, "隐藏窗口失败: {}", e);
-    //                 WindowOperationResult::Failed
-    //             }
-    //         },
-    //         None => {
-    //             logging!(info, Type::Window, true, "窗口不存在，无需隐藏");
-    //             WindowOperationResult::NoAction
-    //         }
-    //     }
-    // }
-
     /// 检查窗口是否可见
     pub fn is_main_window_visible() -> bool {
         Self::get_main_window()
