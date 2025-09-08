@@ -105,7 +105,7 @@
     "terser": "5.44.0",
     "types-pac": "1.0.3",
     "typescript": "5.9.2",
-    "vite": "7.1.4",
+    "vite": "7.1.5",
     "vite-plugin-monaco-editor": "1.1.0",
     "vite-plugin-svgr": "4.5.0"
   },
