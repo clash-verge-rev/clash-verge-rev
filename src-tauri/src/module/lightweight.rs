@@ -7,6 +7,7 @@ use crate::{
     utils::{logging::Type, window_manager::WindowManager},
 };
 
+#[cfg(target_os = "macos")]
 use crate::logging_error;
 
 use anyhow::{Context, Result};
@@ -136,13 +137,13 @@ pub async fn entry_lightweight_mode() {
         result
     );
 
-    if let Some(window) = handle::Handle::global().get_window() {
-        if let Some(webview) = window.get_webview_window("main") {
-            let _ = webview.destroy();
-        }
-        #[cfg(target_os = "macos")]
-        handle::Handle::global().set_activation_policy_accessory();
+    if let Some(window) = handle::Handle::global().get_window()
+        && let Some(webview) = window.get_webview_window("main")
+    {
+        let _ = webview.destroy();
     }
+    #[cfg(target_os = "macos")]
+    handle::Handle::global().set_activation_policy_accessory();
     set_lightweight_mode(true).await;
     let _ = cancel_light_weight_timer();
     ProxyRequestCache::global().clean_default_keys();

@@ -1,6 +1,6 @@
 use crate::{
     config::Config,
-    core::{handle, sysopt, CoreManager},
+    core::{CoreManager, handle, sysopt},
     ipc::IpcManager,
     logging,
     utils::logging::Type,
@@ -92,7 +92,7 @@ pub async fn quit() {
 }
 
 async fn clean_async() -> bool {
-    use tokio::time::{timeout, Duration};
+    use tokio::time::{Duration, timeout};
 
     logging!(info, Type::System, true, "开始执行异步清理操作...");
 
@@ -252,10 +252,10 @@ pub async fn hide() {
         add_light_weight_timer().await;
     }
 
-    if let Some(window) = handle::Handle::global().get_window() {
-        if window.is_visible().unwrap_or(false) {
-            let _ = window.hide();
-        }
+    if let Some(window) = handle::Handle::global().get_window()
+        && window.is_visible().unwrap_or(false)
+    {
+        let _ = window.hide();
     }
     handle::Handle::global().set_activation_policy_accessory();
 }

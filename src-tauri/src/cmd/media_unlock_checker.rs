@@ -618,20 +618,20 @@ async fn check_netflix(client: &Client) -> UnlockItem {
         {
             Ok(response) => {
                 // 检查重定向位置
-                if let Some(location) = response.headers().get("location") {
-                    if let Ok(location_str) = location.to_str() {
-                        // 解析位置获取区域
-                        let parts: Vec<&str> = location_str.split('/').collect();
-                        if parts.len() >= 4 {
-                            let region_code = parts[3].split('-').next().unwrap_or("unknown");
-                            let emoji = country_code_to_emoji(region_code);
-                            return UnlockItem {
-                                name: "Netflix".to_string(),
-                                status: "Yes".to_string(),
-                                region: Some(format!("{emoji}{region_code}")),
-                                check_time: Some(get_local_date_string()),
-                            };
-                        }
+                if let Some(location) = response.headers().get("location")
+                    && let Ok(location_str) = location.to_str()
+                {
+                    // 解析位置获取区域
+                    let parts: Vec<&str> = location_str.split('/').collect();
+                    if parts.len() >= 4 {
+                        let region_code = parts[3].split('-').next().unwrap_or("unknown");
+                        let emoji = country_code_to_emoji(region_code);
+                        return UnlockItem {
+                            name: "Netflix".to_string(),
+                            status: "Yes".to_string(),
+                            region: Some(format!("{emoji}{region_code}")),
+                            check_time: Some(get_local_date_string()),
+                        };
                     }
                 }
                 // 如果没有重定向，假设是美国
@@ -691,22 +691,18 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
             match response.json::<serde_json::Value>().await {
                 Ok(data) => {
                     // 尝试从数据中提取区域信息
-                    if let Some(targets) = data.get("targets").and_then(|t| t.as_array()) {
-                        if !targets.is_empty() {
-                            if let Some(location) = targets[0].get("location") {
-                                if let Some(country) =
-                                    location.get("country").and_then(|c| c.as_str())
-                                {
-                                    let emoji = country_code_to_emoji(country);
-                                    return UnlockItem {
-                                        name: "Netflix".to_string(),
-                                        status: "Yes".to_string(),
-                                        region: Some(format!("{emoji}{country}")),
-                                        check_time: Some(get_local_date_string()),
-                                    };
-                                }
-                            }
-                        }
+                    if let Some(targets) = data.get("targets").and_then(|t| t.as_array())
+                        && !targets.is_empty()
+                        && let Some(location) = targets[0].get("location")
+                        && let Some(country) = location.get("country").and_then(|c| c.as_str())
+                    {
+                        let emoji = country_code_to_emoji(country);
+                        return UnlockItem {
+                            name: "Netflix".to_string(),
+                            status: "Yes".to_string(),
+                            region: Some(format!("{emoji}{country}")),
+                            check_time: Some(get_local_date_string()),
+                        };
                     }
 
                     // 如果无法解析区域信息

@@ -1,13 +1,14 @@
 use super::CmdResult;
 use crate::{
     config::{
+        Config, IProfiles, PrfItem, PrfOption,
         profiles::{
             profiles_append_item_with_filedata_safe, profiles_delete_item_safe,
             profiles_patch_item_safe, profiles_reorder_safe, profiles_save_file_safe,
         },
-        profiles_append_item_safe, Config, IProfiles, PrfItem, PrfOption,
+        profiles_append_item_safe,
     },
-    core::{handle, timer::Timer, tray::Tray, CoreManager},
+    core::{CoreManager, handle, timer::Timer, tray::Tray},
     feat, logging,
     process::AsyncHandler,
     ret_err,
@@ -290,109 +291,106 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     logging!(info, Type::Cmd, true, "当前配置: {:?}", current_profile);
 
     // 如果要切换配置，先检查目标配置文件是否有语法错误
-    if let Some(new_profile) = profiles.current.as_ref() {
-        if current_profile.as_ref() != Some(new_profile) {
-            logging!(info, Type::Cmd, true, "正在切换到新配置: {}", new_profile);
+    if let Some(new_profile) = profiles.current.as_ref()
+        && current_profile.as_ref() != Some(new_profile)
+    {
+        logging!(info, Type::Cmd, true, "正在切换到新配置: {}", new_profile);
 
-            // 获取目标配置文件路径
-            let config_file_result = {
-                let profiles_config = Config::profiles().await;
-                let profiles_data = profiles_config.latest_ref();
-                match profiles_data.get_item(new_profile) {
-                    Ok(item) => {
-                        if let Some(file) = &item.file {
-                            let path = dirs::app_profiles_dir().map(|dir| dir.join(file));
-                            path.ok()
-                        } else {
-                            None
-                        }
-                    }
-                    Err(e) => {
-                        logging!(error, Type::Cmd, true, "获取目标配置信息失败: {}", e);
+        // 获取目标配置文件路径
+        let config_file_result = {
+            let profiles_config = Config::profiles().await;
+            let profiles_data = profiles_config.latest_ref();
+            match profiles_data.get_item(new_profile) {
+                Ok(item) => {
+                    if let Some(file) = &item.file {
+                        let path = dirs::app_profiles_dir().map(|dir| dir.join(file));
+                        path.ok()
+                    } else {
                         None
                     }
                 }
-            };
-
-            // 如果获取到文件路径，检查YAML语法
-            if let Some(file_path) = config_file_result {
-                if !file_path.exists() {
-                    logging!(
-                        error,
-                        Type::Cmd,
-                        true,
-                        "目标配置文件不存在: {}",
-                        file_path.display()
-                    );
-                    handle::Handle::notice_message(
-                        "config_validate::file_not_found",
-                        format!("{}", file_path.display()),
-                    );
-                    return Ok(false);
+                Err(e) => {
+                    logging!(error, Type::Cmd, true, "获取目标配置信息失败: {}", e);
+                    None
                 }
+            }
+        };
 
-                // 超时保护
-                let file_read_result = tokio::time::timeout(
-                    Duration::from_secs(5),
-                    tokio::fs::read_to_string(&file_path),
-                )
-                .await;
+        // 如果获取到文件路径，检查YAML语法
+        if let Some(file_path) = config_file_result {
+            if !file_path.exists() {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    true,
+                    "目标配置文件不存在: {}",
+                    file_path.display()
+                );
+                handle::Handle::notice_message(
+                    "config_validate::file_not_found",
+                    format!("{}", file_path.display()),
+                );
+                return Ok(false);
+            }
 
-                match file_read_result {
-                    Ok(Ok(content)) => {
-                        let yaml_parse_result = AsyncHandler::spawn_blocking(move || {
-                            serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&content)
-                        })
-                        .await;
+            // 超时保护
+            let file_read_result = tokio::time::timeout(
+                Duration::from_secs(5),
+                tokio::fs::read_to_string(&file_path),
+            )
+            .await;
 
-                        match yaml_parse_result {
-                            Ok(Ok(_)) => {
-                                logging!(info, Type::Cmd, true, "目标配置文件语法正确");
-                            }
-                            Ok(Err(err)) => {
-                                let error_msg = format!(" {err}");
-                                logging!(
-                                    error,
-                                    Type::Cmd,
-                                    true,
-                                    "目标配置文件存在YAML语法错误:{}",
-                                    error_msg
-                                );
-                                handle::Handle::notice_message(
-                                    "config_validate::yaml_syntax_error",
-                                    &error_msg,
-                                );
-                                return Ok(false);
-                            }
-                            Err(join_err) => {
-                                let error_msg = format!("YAML解析任务失败: {join_err}");
-                                logging!(error, Type::Cmd, true, "{}", error_msg);
-                                handle::Handle::notice_message(
-                                    "config_validate::yaml_parse_error",
-                                    &error_msg,
-                                );
-                                return Ok(false);
-                            }
+            match file_read_result {
+                Ok(Ok(content)) => {
+                    let yaml_parse_result = AsyncHandler::spawn_blocking(move || {
+                        serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&content)
+                    })
+                    .await;
+
+                    match yaml_parse_result {
+                        Ok(Ok(_)) => {
+                            logging!(info, Type::Cmd, true, "目标配置文件语法正确");
+                        }
+                        Ok(Err(err)) => {
+                            let error_msg = format!(" {err}");
+                            logging!(
+                                error,
+                                Type::Cmd,
+                                true,
+                                "目标配置文件存在YAML语法错误:{}",
+                                error_msg
+                            );
+                            handle::Handle::notice_message(
+                                "config_validate::yaml_syntax_error",
+                                &error_msg,
+                            );
+                            return Ok(false);
+                        }
+                        Err(join_err) => {
+                            let error_msg = format!("YAML解析任务失败: {join_err}");
+                            logging!(error, Type::Cmd, true, "{}", error_msg);
+                            handle::Handle::notice_message(
+                                "config_validate::yaml_parse_error",
+                                &error_msg,
+                            );
+                            return Ok(false);
                         }
                     }
-                    Ok(Err(err)) => {
-                        let error_msg = format!("无法读取目标配置文件: {err}");
-                        logging!(error, Type::Cmd, true, "{}", error_msg);
-                        handle::Handle::notice_message(
-                            "config_validate::file_read_error",
-                            &error_msg,
-                        );
-                        return Ok(false);
-                    }
-                    Err(_) => {
-                        let error_msg = "读取配置文件超时(5秒)".to_string();
-                        logging!(error, Type::Cmd, true, "{}", error_msg);
-                        handle::Handle::notice_message(
-                            "config_validate::file_read_timeout",
-                            &error_msg,
-                        );
-                        return Ok(false);
-                    }
+                }
+                Ok(Err(err)) => {
+                    let error_msg = format!("无法读取目标配置文件: {err}");
+                    logging!(error, Type::Cmd, true, "{}", error_msg);
+                    handle::Handle::notice_message("config_validate::file_read_error", &error_msg);
+                    return Ok(false);
+                }
+                Err(_) => {
+                    let error_msg = "读取配置文件超时(5秒)".to_string();
+                    logging!(error, Type::Cmd, true, "{}", error_msg);
+                    handle::Handle::notice_message(
+                        "config_validate::file_read_timeout",
+                        &error_msg,
+                    );
+                    return Ok(false);
                 }
             }
         }
@@ -663,8 +661,9 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 #[tauri::command]
 pub async fn view_profile(index: String) -> CmdResult {
     let profiles = Config::profiles().await;
+    let profiles_ref = profiles.latest_ref();
     let file = {
-        wrap_err!(profiles.latest_ref().get_item(&index))?
+        wrap_err!(profiles_ref.get_item(&index))?
             .file
             .clone()
             .ok_or("the file field is null")
