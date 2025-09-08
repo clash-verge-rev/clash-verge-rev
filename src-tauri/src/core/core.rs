@@ -467,18 +467,18 @@ impl CoreManager {
                 Ok((pids, process_name)) => {
                     for pid in pids {
                         // 跳过当前管理的进程
-                        if let Some(current) = current_pid {
-                            if pid == current {
-                                logging!(
-                                    debug,
-                                    Type::Core,
-                                    true,
-                                    "跳过当前管理的进程: {} (PID: {})",
-                                    process_name,
-                                    pid
-                                );
-                                continue;
-                            }
+                        if let Some(current) = current_pid
+                            && pid == current
+                        {
+                            logging!(
+                                debug,
+                                Type::Core,
+                                true,
+                                "跳过当前管理的进程: {} (PID: {})",
+                                process_name,
+                                pid
+                            );
+                            continue;
                         }
                         pids_to_kill.push((pid, process_name.clone()));
                     }
@@ -767,16 +767,16 @@ impl CoreManager {
 
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
-                if let tauri_plugin_shell::process::CommandEvent::Stdout(line) = event {
-                    if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
-                        logging!(
-                            error,
-                            Type::Core,
-                            true,
-                            "[Sidecar] Failed to write stdout to file: {}",
-                            e
-                        );
-                    }
+                if let tauri_plugin_shell::process::CommandEvent::Stdout(line) = event
+                    && let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line))
+                {
+                    logging!(
+                        error,
+                        Type::Core,
+                        true,
+                        "[Sidecar] Failed to write stdout to file: {}",
+                        e
+                    );
                 }
             }
         });

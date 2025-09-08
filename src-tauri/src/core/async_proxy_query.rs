@@ -402,10 +402,10 @@ impl AsyncProxyQuery {
                     http_host = host_part.trim().to_string();
                 }
             } else if line.contains("HTTPPort") {
-                if let Some(port_part) = line.split(':').nth(1) {
-                    if let Ok(port) = port_part.trim().parse::<u16>() {
-                        http_port = port;
-                    }
+                if let Some(port_part) = line.split(':').nth(1)
+                    && let Ok(port) = port_part.trim().parse::<u16>()
+                {
+                    http_port = port;
                 }
             } else if line.contains("ExceptionsList") {
                 // 解析异常列表

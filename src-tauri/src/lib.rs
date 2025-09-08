@@ -442,10 +442,10 @@ pub fn run() {
                         }
                     }
 
-                    if !is_enable_global_hotkey {
-                        if let Err(e) = hotkey::Hotkey::global().init().await {
-                            logging!(error, Type::Hotkey, true, "Failed to init hotkeys: {}", e);
-                        }
+                    if !is_enable_global_hotkey
+                        && let Err(e) = hotkey::Hotkey::global().init().await
+                    {
+                        logging!(error, Type::Hotkey, true, "Failed to init hotkeys: {}", e);
                     }
                     return;
                 }
@@ -478,10 +478,8 @@ pub fn run() {
                     }
                 }
 
-                if !is_enable_global_hotkey {
-                    if let Err(e) = hotkey::Hotkey::global().reset() {
-                        logging!(error, Type::Hotkey, true, "Failed to reset hotkeys: {}", e);
-                    }
+                if !is_enable_global_hotkey && let Err(e) = hotkey::Hotkey::global().reset() {
+                    logging!(error, Type::Hotkey, true, "Failed to reset hotkeys: {}", e);
                 }
             });
         }

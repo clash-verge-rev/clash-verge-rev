@@ -199,8 +199,7 @@ impl IpcManager {
         // 测速URL不再编码，直接传递
         let url = format!("/proxies/{encoded_name}/delay?url={test_url}&timeout={timeout}");
 
-        let response = self.send_request("GET", &url, None).await;
-        response
+        self.send_request("GET", &url, None).await
     }
 
     // 版本和配置相关
@@ -340,8 +339,7 @@ impl IpcManager {
         // 测速URL不再编码，直接传递
         let url = format!("/group/{encoded_group_name}/delay?url={test_url}&timeout={timeout}");
 
-        let response = self.send_request("GET", &url, None).await;
-        response
+        self.send_request("GET", &url, None).await
     }
 
     // 调试相关

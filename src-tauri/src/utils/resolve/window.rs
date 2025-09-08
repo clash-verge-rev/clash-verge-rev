@@ -34,22 +34,22 @@ fn get_window_creating_lock() -> &'static Mutex<(bool, Instant)> {
 
 /// 检查是否已存在窗口，如果存在则显示并返回 true
 fn check_existing_window(is_show: bool) -> Option<bool> {
-    if let Some(app_handle) = handle::Handle::global().app_handle() {
-        if let Some(window) = app_handle.get_webview_window("main") {
-            logging!(info, Type::Window, true, "主窗口已存在，将显示现有窗口");
-            if is_show {
-                if window.is_minimized().unwrap_or(false) {
-                    logging!(info, Type::Window, true, "窗口已最小化，正在取消最小化");
-                    let _ = window.unminimize();
-                }
-                let _ = window.show();
-                let _ = window.set_focus();
-
-                #[cfg(target_os = "macos")]
-                handle::Handle::global().set_activation_policy_regular();
+    if let Some(app_handle) = handle::Handle::global().app_handle()
+        && let Some(window) = app_handle.get_webview_window("main")
+    {
+        logging!(info, Type::Window, true, "主窗口已存在，将显示现有窗口");
+        if is_show {
+            if window.is_minimized().unwrap_or(false) {
+                logging!(info, Type::Window, true, "窗口已最小化，正在取消最小化");
+                let _ = window.unminimize();
             }
-            return Some(true);
+            let _ = window.show();
+            let _ = window.set_focus();
+
+            #[cfg(target_os = "macos")]
+            handle::Handle::global().set_activation_policy_regular();
         }
+        return Some(true);
     }
     None
 }

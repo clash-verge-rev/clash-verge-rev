@@ -243,11 +243,11 @@ impl Hotkey {
                     );
 
                     if hotkey_event_owned.key == Code::KeyQ && is_quit_owned {
-                        if let Some(window) = app_handle_cloned.get_webview_window("main") {
-                            if window.is_focused().unwrap_or(false) {
-                                logging!(debug, Type::Hotkey, "Executing quit function");
-                                Self::execute_function(function_owned, &app_handle_cloned);
-                            }
+                        if let Some(window) = app_handle_cloned.get_webview_window("main")
+                            && window.is_focused().unwrap_or(false)
+                        {
+                            logging!(debug, Type::Hotkey, "Executing quit function");
+                            Self::execute_function(function_owned, &app_handle_cloned);
                         }
                     } else {
                         logging!(debug, Type::Hotkey, "Executing function directly");

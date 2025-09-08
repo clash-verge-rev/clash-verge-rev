@@ -73,12 +73,11 @@ impl TrayState {
     pub async fn get_common_tray_icon() -> (bool, Vec<u8>) {
         let verge = Config::verge().await.latest_ref().clone();
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
-        if is_common_tray_icon {
-            if let Ok(Some(common_icon_path)) = find_target_icons("common") {
-                if let Ok(icon_data) = fs::read(common_icon_path) {
-                    return (true, icon_data);
-                }
-            }
+        if is_common_tray_icon
+            && let Ok(Some(common_icon_path)) = find_target_icons("common")
+            && let Ok(icon_data) = fs::read(common_icon_path)
+        {
+            return (true, icon_data);
         }
         #[cfg(target_os = "macos")]
         {
@@ -108,12 +107,11 @@ impl TrayState {
     pub async fn get_sysproxy_tray_icon() -> (bool, Vec<u8>) {
         let verge = Config::verge().await.latest_ref().clone();
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
-        if is_sysproxy_tray_icon {
-            if let Ok(Some(sysproxy_icon_path)) = find_target_icons("sysproxy") {
-                if let Ok(icon_data) = fs::read(sysproxy_icon_path) {
-                    return (true, icon_data);
-                }
-            }
+        if is_sysproxy_tray_icon
+            && let Ok(Some(sysproxy_icon_path)) = find_target_icons("sysproxy")
+            && let Ok(icon_data) = fs::read(sysproxy_icon_path)
+        {
+            return (true, icon_data);
         }
         #[cfg(target_os = "macos")]
         {
@@ -143,12 +141,11 @@ impl TrayState {
     pub async fn get_tun_tray_icon() -> (bool, Vec<u8>) {
         let verge = Config::verge().await.latest_ref().clone();
         let is_tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
-        if is_tun_tray_icon {
-            if let Ok(Some(tun_icon_path)) = find_target_icons("tun") {
-                if let Ok(icon_data) = fs::read(tun_icon_path) {
-                    return (true, icon_data);
-                }
-            }
+        if is_tun_tray_icon
+            && let Ok(Some(tun_icon_path)) = find_target_icons("tun")
+            && let Ok(icon_data) = fs::read(tun_icon_path)
+        {
+            return (true, icon_data);
         }
         #[cfg(target_os = "macos")]
         {
@@ -428,13 +425,13 @@ impl Tray {
         {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            if let Some(current_profile_uid) = profiles.get_current() {
-                if let Ok(profile) = profiles.get_item(&current_profile_uid) {
-                    current_profile_name = match &profile.name {
-                        Some(profile_name) => profile_name.to_string(),
-                        None => current_profile_name,
-                    };
-                }
+            if let Some(current_profile_uid) = profiles.get_current()
+                && let Ok(profile) = profiles.get_item(&current_profile_uid)
+            {
+                current_profile_name = match &profile.name {
+                    Some(profile_name) => profile_name.to_string(),
+                    None => current_profile_name,
+                };
             }
         }
 
