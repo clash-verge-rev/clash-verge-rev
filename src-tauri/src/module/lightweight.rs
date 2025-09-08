@@ -209,6 +209,7 @@ pub async fn exit_lightweight_mode() -> bool {
     }
 
     WindowManager::show_main_window().await;
+    WindowManager::toggle_main_window().await;
     println!("what the fuck you want");
 
     set_lightweight_mode(false).await;

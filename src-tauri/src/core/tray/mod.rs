@@ -4,7 +4,9 @@ use tauri::tray::TrayIconBuilder;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
 use crate::ipc::Rate;
+use crate::module::lightweight;
 use crate::process::AsyncHandler;
+use crate::utils::window_manager::WindowManager;
 use crate::{
     Type, cmd,
     config::Config,
@@ -528,7 +530,8 @@ impl Tray {
                             feat::toggle_tun_mode(None).await;
                         }),
                         "main_window" => Box::pin(async move {
-                            crate::module::lightweight::exit_lightweight_mode().await;
+                            lightweight::exit_lightweight_mode().await;
+                            WindowManager::toggle_main_window().await;
                         }),
                         _ => Box::pin(async move {}),
                     };
@@ -965,7 +968,8 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 if !should_handle_tray_click() {
                     return;
                 }
-                crate::module::lightweight::exit_lightweight_mode().await; // Await async function
+                lightweight::exit_lightweight_mode().await; // Await async function
+                WindowManager::toggle_main_window().await; // Await async function
             }
             "system_proxy" => {
                 feat::toggle_system_proxy().await; // Await async function
@@ -989,7 +993,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 if !should_handle_tray_click() {
                     return;
                 }
-                crate::module::lightweight::entry_lightweight_mode().await; // Await async function
+                lightweight::entry_lightweight_mode().await; // Await async function
             }
             "quit" => {
                 feat::quit().await; // Await async function
