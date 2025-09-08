@@ -703,7 +703,7 @@ impl CoreManager {
             use winapi::um::processthreadsapi::OpenProcess;
             use winapi::um::winnt::{HANDLE, PROCESS_QUERY_INFORMATION};
 
-            let result = AsyncHandler::spawn_blocking(move || -> Result<bool> {
+            AsyncHandler::spawn_blocking(move || -> Result<bool> {
                 unsafe {
                     let process_handle: HANDLE = OpenProcess(PROCESS_QUERY_INFORMATION, 0, pid);
                     if process_handle.is_null() {
@@ -719,9 +719,7 @@ impl CoreManager {
                     Ok(exit_code == 259)
                 }
             })
-            .await?;
-
-            result
+            .await?
         }
 
         #[cfg(not(windows))]

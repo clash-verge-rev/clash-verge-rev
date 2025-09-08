@@ -209,13 +209,13 @@ impl AsyncProxyQuery {
         // Linux: 检查环境变量和GNOME设置
 
         // 首先检查环境变量
-        if let Ok(auto_proxy) = std::env::var("auto_proxy") {
-            if !auto_proxy.is_empty() {
-                return Ok(AsyncAutoproxy {
-                    enable: true,
-                    url: auto_proxy,
-                });
-            }
+        if let Ok(auto_proxy) = std::env::var("auto_proxy")
+            && !auto_proxy.is_empty()
+        {
+            return Ok(AsyncAutoproxy {
+                enable: true,
+                url: auto_proxy,
+            });
         }
 
         // 尝试使用 gsettings 获取 GNOME 代理设置
@@ -224,31 +224,31 @@ impl AsyncProxyQuery {
             .output()
             .await;
 
-        if let Ok(output) = output {
-            if output.status.success() {
-                let mode = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                if mode.contains("auto") {
-                    // 获取 PAC URL
-                    let pac_output = Command::new("gsettings")
-                        .args(["get", "org.gnome.system.proxy", "autoconfig-url"])
-                        .output()
-                        .await;
+        if let Ok(output) = output
+            && output.status.success()
+        {
+            let mode = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if mode.contains("auto") {
+                // 获取 PAC URL
+                let pac_output = Command::new("gsettings")
+                    .args(["get", "org.gnome.system.proxy", "autoconfig-url"])
+                    .output()
+                    .await;
 
-                    if let Ok(pac_output) = pac_output {
-                        if pac_output.status.success() {
-                            let pac_url = String::from_utf8_lossy(&pac_output.stdout)
-                                .trim()
-                                .trim_matches('\'')
-                                .trim_matches('"')
-                                .to_string();
+                if let Ok(pac_output) = pac_output
+                    && pac_output.status.success()
+                {
+                    let pac_url = String::from_utf8_lossy(&pac_output.stdout)
+                        .trim()
+                        .trim_matches('\'')
+                        .trim_matches('"')
+                        .to_string();
 
-                            if !pac_url.is_empty() {
-                                return Ok(AsyncAutoproxy {
-                                    enable: true,
-                                    url: pac_url,
-                                });
-                            }
-                        }
+                    if !pac_url.is_empty() {
+                        return Ok(AsyncAutoproxy {
+                            enable: true,
+                            url: pac_url,
+                        });
                     }
                 }
             }
@@ -431,16 +431,16 @@ impl AsyncProxyQuery {
         // Linux: 检查环境变量和桌面环境设置
 
         // 首先检查环境变量
-        if let Ok(http_proxy) = std::env::var("http_proxy") {
-            if let Ok(proxy_info) = Self::parse_proxy_url(&http_proxy) {
-                return Ok(proxy_info);
-            }
+        if let Ok(http_proxy) = std::env::var("http_proxy")
+            && let Ok(proxy_info) = Self::parse_proxy_url(&http_proxy)
+        {
+            return Ok(proxy_info);
         }
 
-        if let Ok(https_proxy) = std::env::var("https_proxy") {
-            if let Ok(proxy_info) = Self::parse_proxy_url(&https_proxy) {
-                return Ok(proxy_info);
-            }
+        if let Ok(https_proxy) = std::env::var("https_proxy")
+            && let Ok(proxy_info) = Self::parse_proxy_url(&https_proxy)
+        {
+            return Ok(proxy_info);
         }
 
         // 尝试使用 gsettings 获取 GNOME 代理设置
@@ -449,45 +449,46 @@ impl AsyncProxyQuery {
             .output()
             .await;
 
-        if let Ok(mode_output) = mode_output {
-            if mode_output.status.success() {
-                let mode = String::from_utf8_lossy(&mode_output.stdout)
-                    .trim()
-                    .to_string();
-                if mode.contains("manual") {
-                    // 获取HTTP代理设置
-                    let host_result = Command::new("gsettings")
-                        .args(["get", "org.gnome.system.proxy.http", "host"])
-                        .output()
-                        .await;
+        if let Ok(mode_output) = mode_output
+            && mode_output.status.success()
+        {
+            let mode = String::from_utf8_lossy(&mode_output.stdout)
+                .trim()
+                .to_string();
+            if mode.contains("manual") {
+                // 获取HTTP代理设置
+                let host_result = Command::new("gsettings")
+                    .args(["get", "org.gnome.system.proxy.http", "host"])
+                    .output()
+                    .await;
 
-                    let port_result = Command::new("gsettings")
-                        .args(["get", "org.gnome.system.proxy.http", "port"])
-                        .output()
-                        .await;
+                let port_result = Command::new("gsettings")
+                    .args(["get", "org.gnome.system.proxy.http", "port"])
+                    .output()
+                    .await;
 
-                    if let (Ok(host_output), Ok(port_output)) = (host_result, port_result) {
-                        if host_output.status.success() && port_output.status.success() {
-                            let host = String::from_utf8_lossy(&host_output.stdout)
-                                .trim()
-                                .trim_matches('\'')
-                                .trim_matches('"')
-                                .to_string();
+                if let (Ok(host_output), Ok(port_output)) = (host_result, port_result)
+                    && host_output.status.success()
+                    && port_output.status.success()
+                {
+                    let host = String::from_utf8_lossy(&host_output.stdout)
+                        .trim()
+                        .trim_matches('\'')
+                        .trim_matches('"')
+                        .to_string();
 
-                            let port = String::from_utf8_lossy(&port_output.stdout)
-                                .trim()
-                                .parse::<u16>()
-                                .unwrap_or(8080);
+                    let port = String::from_utf8_lossy(&port_output.stdout)
+                        .trim()
+                        .parse::<u16>()
+                        .unwrap_or(8080);
 
-                            if !host.is_empty() {
-                                return Ok(AsyncSysproxy {
-                                    enable: true,
-                                    host,
-                                    port,
-                                    bypass: String::new(),
-                                });
-                            }
-                        }
+                    if !host.is_empty() {
+                        return Ok(AsyncSysproxy {
+                            enable: true,
+                            host,
+                            port,
+                            bypass: String::new(),
+                        });
                     }
                 }
             }
