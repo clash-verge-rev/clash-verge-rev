@@ -275,7 +275,9 @@ pub fn run() {
     // Set Linux environment variable
     #[cfg(target_os = "linux")]
     {
-        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        unsafe {
+            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        }
 
         let desktop_env = std::env::var("XDG_CURRENT_DESKTOP")
             .unwrap_or_default()
@@ -284,7 +286,9 @@ pub fn run() {
         let is_plasma_desktop = desktop_env.contains("PLASMA");
 
         if is_kde_desktop || is_plasma_desktop {
-            std::env::set_var("GTK_CSD", "0");
+            unsafe {
+                std::env::set_var("GTK_CSD", "0");
+            }
             logging!(
                 info,
                 Type::Setup,
