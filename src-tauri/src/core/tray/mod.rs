@@ -4,7 +4,9 @@ use tauri::Emitter;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
 use crate::ipc::Rate;
+use crate::module::lightweight;
 use crate::process::AsyncHandler;
+use crate::utils::window_manager::WindowManager;
 use crate::{
     cmd,
     config::Config,
@@ -532,14 +534,9 @@ impl Tray {
                             feat::toggle_tun_mode(None).await;
                         }),
                         "main_window" => Box::pin(async move {
-                            use crate::utils::window_manager::WindowManager;
-                            log::info!(target: "app", "Tray点击事件: 显示主窗口");
-                            if crate::module::lightweight::is_in_lightweight_mode() {
-                                log::info!(target: "app", "当前在轻量模式，正在退出轻量模式");
-                                crate::module::lightweight::exit_lightweight_mode().await;
-                            }
-                            let result = WindowManager::show_main_window().await;
-                            log::info!(target: "app", "窗口显示结果: {result:?}");
+                            if !lightweight::exit_lightweight_mode().await {
+                                WindowManager::toggle_main_window().await;
+                            };
                         }),
                         _ => Box::pin(async move {}),
                     };
@@ -971,19 +968,14 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 feat::change_clash_mode(mode.into()).await; // Await async function
             }
             "open_window" => {
-                use crate::utils::window_manager::WindowManager;
                 log::info!(target: "app", "托盘菜单点击: 打开窗口");
 
                 if !should_handle_tray_click() {
                     return;
                 }
-
-                if crate::module::lightweight::is_in_lightweight_mode() {
-                    logging!(info, Type::Lightweight, true, "Exiting Lightweight Mode");
-                    crate::module::lightweight::exit_lightweight_mode().await; // Await async function
-                }
-                let result = WindowManager::show_main_window().await; // Await async function
-                logging!(info, Type::Window, true, "Show Main Window: {result:?}");
+                if !lightweight::exit_lightweight_mode().await {
+                    WindowManager::toggle_main_window().await;
+                };
             }
             "system_proxy" => {
                 feat::toggle_system_proxy().await; // Await async function
@@ -1007,16 +999,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 if !should_handle_tray_click() {
                     return;
                 }
-
-                let was_lightweight = crate::module::lightweight::is_in_lightweight_mode();
-                if was_lightweight {
-                    crate::module::lightweight::exit_lightweight_mode().await; // Await async function
-                    use crate::utils::window_manager::WindowManager;
-                    let result = WindowManager::show_main_window().await; // Await async function
-                    logging!(info, Type::Window, true, "Show Main Window: {result:?}");
-                } else {
-                    crate::module::lightweight::entry_lightweight_mode().await; // Remove .await as it's not async
-                }
+                lightweight::entry_lightweight_mode().await; // Await async function
             }
             "quit" => {
                 feat::quit().await; // Await async function

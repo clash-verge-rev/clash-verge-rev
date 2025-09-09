@@ -4,35 +4,86 @@ use crate::{
     log_err, logging,
     process::AsyncHandler,
     state::proxy::ProxyRequestCache,
-    utils::{logging::Type, window_manager::WindowManager},
+    utils::logging::Type,
 };
 
+#[cfg(target_os = "macos")]
 use crate::logging_error;
 
+use crate::utils::window_manager::WindowManager;
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
-use std::sync::atomic::{AtomicBool, Ordering};
-use tauri::{Listener, Manager};
+use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
+use tauri::Listener;
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
 
-// 添加退出轻量模式的锁，防止并发调用
-static EXITING_LIGHTWEIGHT: AtomicBool = AtomicBool::new(false);
-
-static IS_IN_LIGHTWEIGHT: AtomicBool = AtomicBool::new(false);
-
-fn inner_set_lightweight_mode(value: bool) -> bool {
-    if value {
-        logging!(info, Type::Lightweight, true, "轻量模式已开启");
-    } else {
-        logging!(info, Type::Lightweight, true, "轻量模式已关闭");
-    }
-    IS_IN_LIGHTWEIGHT.store(value, Ordering::SeqCst);
-    value
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LightweightState {
+    Normal = 0,
+    In = 1,
+    Exiting = 2,
 }
 
-fn inner_get_lightweight_mode() -> bool {
-    IS_IN_LIGHTWEIGHT.load(Ordering::SeqCst) || !WindowManager::is_main_window_exists()
+impl From<u8> for LightweightState {
+    fn from(v: u8) -> Self {
+        match v {
+            1 => LightweightState::In,
+            2 => LightweightState::Exiting,
+            _ => LightweightState::Normal,
+        }
+    }
+}
+
+impl LightweightState {
+    fn as_u8(self) -> u8 {
+        self as u8
+    }
+}
+
+static LIGHTWEIGHT_STATE: AtomicU8 = AtomicU8::new(LightweightState::Normal as u8);
+
+static WINDOW_CLOSE_HANDLER: AtomicU32 = AtomicU32::new(0);
+static WEBVIEW_FOCUS_HANDLER: AtomicU32 = AtomicU32::new(0);
+
+fn set_state(new: LightweightState) {
+    LIGHTWEIGHT_STATE.store(new.as_u8(), Ordering::Release);
+    match new {
+        LightweightState::Normal => {
+            logging!(info, Type::Lightweight, true, "轻量模式已关闭");
+        }
+        LightweightState::In => {
+            logging!(info, Type::Lightweight, true, "轻量模式已开启");
+        }
+        LightweightState::Exiting => {
+            logging!(info, Type::Lightweight, true, "正在退出轻量模式");
+        }
+    }
+}
+
+fn get_state() -> LightweightState {
+    LIGHTWEIGHT_STATE.load(Ordering::Acquire).into()
+}
+
+// 检查是否处于轻量模式
+pub fn is_in_lightweight_mode() -> bool {
+    get_state() == LightweightState::In
+}
+
+// 设置轻量模式状态（仅 Normal <-> In）
+async fn set_lightweight_mode(value: bool) {
+    let current = get_state();
+    if value && current != LightweightState::In {
+        set_state(LightweightState::In);
+    } else if !value && current != LightweightState::Normal {
+        set_state(LightweightState::Normal);
+    }
+
+    // 只有在状态可用时才触发托盘更新
+    if let Err(e) = Tray::global().update_part().await {
+        log::warn!("Failed to update tray: {e}");
+    }
 }
 
 pub async fn run_once_auto_lightweight() {
@@ -85,27 +136,11 @@ pub async fn auto_lightweight_mode_init() -> Result<()> {
             true,
             "非静默启动直接挂载自动进入轻量模式监听器！"
         );
-        set_lightweight_mode(true).await;
+        set_state(LightweightState::Normal);
         enable_auto_light_weight_mode().await;
     }
 
     Ok(())
-}
-
-// 检查是否处于轻量模式
-pub fn is_in_lightweight_mode() -> bool {
-    IS_IN_LIGHTWEIGHT.load(Ordering::SeqCst)
-}
-
-// 设置轻量模式状态
-pub async fn set_lightweight_mode(value: bool) {
-    if inner_get_lightweight_mode() != value {
-        inner_set_lightweight_mode(value);
-        // 只有在状态可用时才触发托盘更新
-        if let Err(e) = Tray::global().update_part().await {
-            log::warn!("Failed to update tray: {e}");
-        }
-    }
 }
 
 pub async fn enable_auto_light_weight_mode() {
@@ -122,67 +157,69 @@ pub fn disable_auto_light_weight_mode() {
     logging!(info, Type::Lightweight, true, "关闭自动轻量模式");
     let _ = cancel_light_weight_timer();
     cancel_window_close_listener();
+    cancel_webview_focus_listener();
 }
 
-pub async fn entry_lightweight_mode() {
-    use crate::utils::window_manager::WindowManager;
-
-    let result = WindowManager::hide_main_window();
-    logging!(
-        info,
-        Type::Lightweight,
-        true,
-        "轻量模式隐藏窗口结果: {:?}",
-        result
-    );
-
-    if let Some(window) = handle::Handle::global().get_window() {
-        if let Some(webview) = window.get_webview_window("main") {
-            let _ = webview.destroy();
-        }
-        #[cfg(target_os = "macos")]
-        handle::Handle::global().set_activation_policy_accessory();
+pub async fn entry_lightweight_mode() -> bool {
+    // 尝试从 Normal -> In
+    if LIGHTWEIGHT_STATE
+        .compare_exchange(
+            LightweightState::Normal as u8,
+            LightweightState::In as u8,
+            Ordering::Acquire,
+            Ordering::Relaxed,
+        )
+        .is_err()
+    {
+        logging!(info, Type::Lightweight, true, "无需进入轻量模式，跳过调用");
+        return false;
     }
+
+    WindowManager::destroy_main_window();
+
     set_lightweight_mode(true).await;
     let _ = cancel_light_weight_timer();
+
+    // 回到 In
+    set_state(LightweightState::In);
+
     ProxyRequestCache::global().clean_default_keys();
+    true
 }
 
 // 添加从轻量模式恢复的函数
-pub async fn exit_lightweight_mode() {
-    // 使用原子操作检查是否已经在退出过程中，防止并发调用
-    if EXITING_LIGHTWEIGHT
-        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+pub async fn exit_lightweight_mode() -> bool {
+    // 尝试从 In -> Exiting
+    if LIGHTWEIGHT_STATE
+        .compare_exchange(
+            LightweightState::In as u8,
+            LightweightState::Exiting as u8,
+            Ordering::Acquire,
+            Ordering::Relaxed,
+        )
         .is_err()
     {
         logging!(
             info,
             Type::Lightweight,
             true,
-            "轻量模式退出操作已在进行中，跳过重复调用"
+            "轻量模式不在退出条件（可能已退出或正在退出），跳过调用"
         );
-        return;
+        return false;
     }
 
-    // 使用defer确保无论如何都会重置标志
-    let _guard = scopeguard::guard((), |_| {
-        EXITING_LIGHTWEIGHT.store(false, Ordering::SeqCst);
-    });
-
-    // 确保当前确实处于轻量模式才执行退出操作
-    if !is_in_lightweight_mode() {
-        logging!(info, Type::Lightweight, true, "当前不在轻量模式，无需退出");
-        return;
-    }
+    WindowManager::show_main_window().await;
+    WindowManager::toggle_main_window().await;
+    println!("what the fuck you want");
 
     set_lightweight_mode(false).await;
+    let _ = cancel_light_weight_timer();
 
-    // macOS激活策略
-    #[cfg(target_os = "macos")]
-    handle::Handle::global().set_activation_policy_regular();
+    // 回到 Normal
+    set_state(LightweightState::Normal);
 
-    // 重置UI就绪状态
-    crate::utils::resolve::ui::reset_ui_ready();
+    logging!(info, Type::Lightweight, true, "轻量模式退出完成");
+    true
 }
 
 #[cfg(target_os = "macos")]
@@ -190,7 +227,7 @@ pub async fn add_light_weight_timer() {
     logging_error!(Type::Lightweight, setup_light_weight_timer().await);
 }
 
-fn setup_window_close_listener() -> u32 {
+fn setup_window_close_listener() {
     if let Some(window) = handle::Handle::global().get_window() {
         let handler = window.listen("tauri://close-requested", move |_event| {
             std::mem::drop(AsyncHandler::spawn(|| async {
@@ -205,12 +242,22 @@ fn setup_window_close_listener() -> u32 {
                 "监听到关闭请求，开始轻量模式计时"
             );
         });
-        return handler;
+
+        WINDOW_CLOSE_HANDLER.store(handler, Ordering::Release);
     }
-    0
 }
 
-fn setup_webview_focus_listener() -> u32 {
+fn cancel_window_close_listener() {
+    if let Some(window) = handle::Handle::global().get_window() {
+        let handler = WINDOW_CLOSE_HANDLER.swap(0, Ordering::AcqRel);
+        if handler != 0 {
+            window.unlisten(handler);
+            logging!(info, Type::Lightweight, true, "取消了窗口关闭监听");
+        }
+    }
+}
+
+fn setup_webview_focus_listener() {
     if let Some(window) = handle::Handle::global().get_window() {
         let handler = window.listen("tauri://focus", move |_event| {
             log_err!(cancel_light_weight_timer());
@@ -220,15 +267,18 @@ fn setup_webview_focus_listener() -> u32 {
                 "监听到窗口获得焦点，取消轻量模式计时"
             );
         });
-        return handler;
+
+        WEBVIEW_FOCUS_HANDLER.store(handler, Ordering::Release);
     }
-    0
 }
 
-fn cancel_window_close_listener() {
+fn cancel_webview_focus_listener() {
     if let Some(window) = handle::Handle::global().get_window() {
-        window.unlisten(setup_window_close_listener());
-        logging!(info, Type::Lightweight, true, "取消了窗口关闭监听");
+        let handler = WEBVIEW_FOCUS_HANDLER.swap(0, Ordering::AcqRel);
+        if handler != 0 {
+            window.unlisten(handler);
+            logging!(info, Type::Lightweight, true, "取消了窗口焦点监听");
+        }
     }
 }
 
