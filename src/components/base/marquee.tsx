@@ -39,6 +39,12 @@ interface MarqueeProps extends ComponentPropsWithoutRef<"div"> {
    * @default 4
    */
   repeat?: number;
+
+  /**
+   * Number of pixels to scroll per second
+   * @default 30
+   */
+  speed?: number;
 }
 
 export function Marquee({
@@ -48,62 +54,62 @@ export function Marquee({
   children,
   vertical = false,
   repeat = 4,
+  speed = 30,
   ...props
 }: MarqueeProps) {
   const [applyAnimation, setApplyAnimation] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const childrenRef = useRef<HTMLDivElement>(null);
-  const firstRender = useRef(true);
 
   useEffect(() => {
-    const calcApplyAnimation = () => {
-      if (!containerRef.current) return;
-      if (!childrenRef.current && !firstRender.current) {
-        // 如果该组件已经应用了动画，并且不是第一次渲染，而且 children 已经改动，需要取消动画，重新计算是否需要应用动画
-        setApplyAnimation(false);
-        return;
-      }
-      if (!childrenRef.current) return;
-      // 首次初始化，判断是否需要应用动画
-      const childrenWidth = childrenRef.current.offsetWidth;
-      const containerWidth = containerRef.current.offsetWidth;
-      if (childrenWidth >= containerWidth + 5) {
-        const duration = (childrenWidth * repeat) / containerWidth;
+    if (!containerRef.current || !childrenRef.current) return;
+
+    const container = containerRef.current;
+    const child = childrenRef.current;
+
+    const calcAnimation = () => {
+      const childrenSize = vertical ? child.offsetHeight : child.offsetWidth;
+      const containerSize = vertical
+        ? container.offsetHeight
+        : container.offsetWidth;
+
+      const needAnimation = childrenSize >= containerSize + 5;
+      if (needAnimation) {
+        const duration = childrenSize / speed;
         document.documentElement.style.setProperty(
           "--duration",
           `${duration}s`,
         );
-        setApplyAnimation(true);
+      }
+      // 只有结果不同才更新，避免闪烁
+      if (applyAnimation !== needAnimation) {
+        setApplyAnimation(needAnimation);
       }
     };
 
-    calcApplyAnimation();
-    firstRender.current = false;
-    // 监听窗口尺寸变化
-    const handleResize = debounce(calcApplyAnimation, 300);
-    window.addEventListener("resize", handleResize);
+    // 防抖包装
+    const updateAnimation = debounce(calcAnimation, 200);
+
+    // 用 ResizeObserver 来监听尺寸变化
+    const resizeObserver = new ResizeObserver(updateAnimation);
+    resizeObserver.observe(container);
+
+    // 监听 DOM 内容变化
+    const mutationObserver = new MutationObserver(updateAnimation);
+    mutationObserver.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    // 初始化时手动跑一次
+    updateAnimation();
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
     };
-  }, [children]);
-
-  // 重新计算宽度
-  useEffect(() => {
-    if (!childrenRef.current || !containerRef.current) return;
-
-    // 排除应用动画的情况, 仅在后续渲染中, 需要重新计算判断是否应用动画的情况
-    if (applyAnimation && !firstRender.current) return;
-    const childrenWidth = childrenRef.current.offsetWidth;
-    const containerWidth = containerRef.current.offsetWidth;
-    if (childrenWidth >= containerWidth + 5) {
-      const duration = (childrenWidth * repeat) / containerWidth;
-      document.documentElement.style.setProperty("--duration", `${duration}s`);
-      if (!applyAnimation) {
-        setApplyAnimation(true);
-      }
-    }
-  }, [applyAnimation]);
+  }, [vertical, repeat, applyAnimation]);
 
   return (
     <div
@@ -111,10 +117,7 @@ export function Marquee({
       {...props}
       className={cn(
         "group flex w-full [gap:var(--gap)] overflow-hidden [--duration:5s] [--gap:1rem]",
-        {
-          "flex-row": !vertical,
-          "flex-col": vertical,
-        },
+        vertical ? "flex-col" : "flex-row",
         className,
       )}>
       {!applyAnimation ? (
@@ -122,20 +125,23 @@ export function Marquee({
           {children}
         </div>
       ) : (
-        Array(repeat)
-          .fill(0)
-          .map((_, i) => (
-            <div
-              key={i}
-              className={cn("flex shrink-0 justify-around [gap:var(--gap)]", {
-                "animate-marquee flex-row": !vertical,
-                "animate-marquee-vertical flex-col": vertical,
+        Array.from({ length: repeat }).map((_, i) => (
+          <div
+            key={i}
+            ref={i === 0 ? childrenRef : undefined}
+            className={cn(
+              "flex shrink-0 justify-around [gap:var(--gap)]",
+              vertical
+                ? "animate-marquee-vertical flex-col"
+                : "animate-marquee flex-row",
+              {
                 "group-hover:[animation-play-state:paused]": pauseOnHover,
                 "[animation-direction:reverse]": reverse,
-              })}>
-              {children}
-            </div>
-          ))
+              },
+            )}>
+            {children}
+          </div>
+        ))
       )}
     </div>
   );
