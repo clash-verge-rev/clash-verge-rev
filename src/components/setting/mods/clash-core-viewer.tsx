@@ -54,7 +54,6 @@ export const ClashCoreViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const [changingCore, setChangingCore] = useState("");
   const { mihomoCoresInfo, enableGrantPermissions, muteMihomoCoresInfo } =
     useMihomoCoresInfo();
-  const { serviceStatus } = useService();
 
   const { portable } = usePortable();
   const isLinuxPortable = portable && OS === "linux";

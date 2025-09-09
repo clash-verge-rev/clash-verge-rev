@@ -336,7 +336,7 @@ pub async fn check_service() -> AppResult<JsonResponse<ClashStatus>> {
             Ok(res)
         }
         Err(e) => {
-            tracing::error!("connect to service failed");
+            tracing::error!("connect to service failed, error: {e}");
             Err(e)
         }
     }
