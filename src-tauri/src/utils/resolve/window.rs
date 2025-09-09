@@ -1,14 +1,12 @@
-use std::time::{Duration, Instant};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
 use tauri::{Manager, WebviewWindow};
 
 use crate::{
     core::handle,
     logging,
     module::lightweight,
-    process::AsyncHandler,
     utils::{
         logging::Type,
         resolve::{
@@ -25,11 +23,16 @@ const DEFAULT_HEIGHT: f64 = 700.0;
 const MINIMAL_WIDTH: f64 = 520.0;
 const MINIMAL_HEIGHT: f64 = 520.0;
 
-// 窗口创建锁，防止并发创建窗口
-static WINDOW_CREATING: OnceCell<Mutex<(bool, Instant)>> = OnceCell::new();
+// 窗口创建状态，使用原子操作
+static WINDOW_CREATING: AtomicBool = AtomicBool::new(false);
+static LAST_CREATION_TIME: AtomicU32 = AtomicU32::new(0);
 
-fn get_window_creating_lock() -> &'static Mutex<(bool, Instant)> {
-    WINDOW_CREATING.get_or_init(|| Mutex::new((false, Instant::now())))
+/// 获取当前时间戳（秒）
+fn get_current_timestamp() -> u32 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as u32
 }
 
 /// 检查是否已存在窗口，如果存在则显示并返回 true
@@ -56,32 +59,46 @@ fn check_existing_window(is_show: bool) -> Option<bool> {
 
 /// 获取窗口创建锁，防止并发创建
 fn acquire_window_creation_lock() -> Result<(), bool> {
-    let creating_lock = get_window_creating_lock();
-    let mut creating = creating_lock.lock();
+    let current_time = get_current_timestamp();
+    let last_time = LAST_CREATION_TIME.load(Ordering::Acquire);
+    let elapsed_seconds = current_time.saturating_sub(last_time);
 
-    let (is_creating, last_time) = *creating;
-    let elapsed = last_time.elapsed();
-
-    if is_creating && elapsed < Duration::from_secs(2) {
+    // 检查是否正在创建窗口且时间间隔小于2秒
+    if WINDOW_CREATING.load(Ordering::Acquire) && elapsed_seconds < 2 {
         logging!(
             info,
             Type::Window,
             true,
-            "窗口创建请求被忽略，因为最近创建过 ({:?}ms)",
-            elapsed.as_millis()
+            "窗口创建请求被忽略，因为最近创建过 ({}秒前)",
+            elapsed_seconds
         );
         return Err(false);
     }
 
-    *creating = (true, Instant::now());
-    Ok(())
+    // 尝试获取创建锁
+    match WINDOW_CREATING.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire) {
+        Ok(_) => {
+            // 成功获取锁，更新时间戳
+            LAST_CREATION_TIME.store(current_time, Ordering::Release);
+            Ok(())
+        }
+        Err(_) => {
+            // 锁已被占用
+            logging!(
+                info,
+                Type::Window,
+                true,
+                "窗口创建请求被忽略，另一个创建过程正在进行"
+            );
+            Err(false)
+        }
+    }
 }
 
 /// 重置窗口创建锁
 fn reset_window_creation_lock() {
-    let creating_lock = get_window_creating_lock();
-    let mut creating = creating_lock.lock();
-    *creating = (false, Instant::now());
+    WINDOW_CREATING.store(false, Ordering::Release);
+    LAST_CREATION_TIME.store(get_current_timestamp(), Ordering::Release);
     logging!(debug, Type::Window, true, "窗口创建状态已重置");
 }
 
@@ -131,19 +148,10 @@ async fn setup_window_post_creation() {
 
     // 先运行轻量模式检测
     lightweight::run_once_auto_lightweight().await;
-
-    // 发送启动完成事件，触发前端开始加载
-    logging!(
-        debug,
-        Type::Window,
-        true,
-        "发送 verge://startup-completed 事件"
-    );
-    handle::Handle::notify_startup_completed();
 }
 
 /// 通过窗口标签处理窗口显示逻辑（减少任务大小的优化版本）
-fn handle_window_display_by_label(window_label: String, is_show: bool) {
+async fn handle_window_display_by_label(window_label: String, is_show: bool) {
     if !is_show {
         logging!(
             debug,
@@ -185,11 +193,7 @@ fn handle_window_display_by_label(window_label: String, is_show: bool) {
     #[cfg(target_os = "macos")]
     handle::Handle::global().set_activation_policy_regular();
 
-    let timeout_seconds = if crate::module::lightweight::is_in_lightweight_mode() {
-        3
-    } else {
-        8
-    };
+    let timeout_seconds = 8;
 
     logging!(
         info,
@@ -200,9 +204,7 @@ fn handle_window_display_by_label(window_label: String, is_show: bool) {
     );
 
     // 异步监控UI状态
-    AsyncHandler::spawn(move || async move {
-        monitor_ui_loading(timeout_seconds).await;
-    });
+    monitor_ui_loading(timeout_seconds).await;
 
     logging!(info, Type::Window, true, "窗口显示流程完成");
 }
@@ -250,8 +252,6 @@ pub async fn create_window(is_show: bool) -> bool {
     );
 
     if !is_show {
-        lightweight::set_lightweight_mode(true).await;
-        handle::Handle::notify_startup_completed();
         return false;
     }
 
@@ -292,7 +292,7 @@ pub async fn create_window(is_show: bool) -> bool {
 
     // 异步处理窗口后续设置，只捕获必要的小数据
     setup_window_post_creation().await;
-    handle_window_display_by_label(window_label, is_show);
+    handle_window_display_by_label(window_label, is_show).await;
 
     true
 }

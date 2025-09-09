@@ -21,7 +21,6 @@ enum FrontendEvent {
     NoticeMessage { status: String, message: String },
     ProfileChanged { current_profile_id: String },
     TimerUpdated { profile_index: String },
-    StartupCompleted,
     ProfileUpdateStarted { uid: String },
     ProfileUpdateCompleted { uid: String },
 }
@@ -132,9 +131,6 @@ impl NotificationSystem {
                                     }
                                     FrontendEvent::TimerUpdated { profile_index } => {
                                         ("verge://timer-updated", Ok(serde_json::json!(profile_index)))
-                                    }
-                                    FrontendEvent::StartupCompleted => {
-                                        ("verge://startup-completed", Ok(serde_json::json!(null)))
                                     }
                                     FrontendEvent::ProfileUpdateStarted { uid } => {
                                         ("profile-update-started", Ok(serde_json::json!({ "uid": uid })))
@@ -360,22 +356,6 @@ impl Handle {
         } else {
             log::warn!(
                 "Notification system not initialized when trying to send TimerUpdated event."
-            );
-        }
-    }
-
-    pub fn notify_startup_completed() {
-        let handle = Self::global();
-        if handle.is_exiting() {
-            return;
-        }
-
-        let system_opt = handle.notification_system.read();
-        if let Some(system) = system_opt.as_ref() {
-            system.send_event(FrontendEvent::StartupCompleted);
-        } else {
-            log::warn!(
-                "Notification system not initialized when trying to send StartupCompleted event."
             );
         }
     }
