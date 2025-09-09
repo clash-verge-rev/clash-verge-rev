@@ -1,6 +1,10 @@
-> [!NOTE]
+> [!IMPORTANT]
+>
+> 重构了 Clash Verge Service 构建，不再提供 `install-service` 和 `uninstall-service` 二进制文件，仅使用 `clash-verge-service` 二进制文件来完成
 >
 > 优化了 Clash Verge Service 服务重启核心的逻辑，需要手动重新安装服务模式 (`设置` -> `服务模式` -> `卸载` -> `安装`)
+>
+> **手上没有 Mac 电脑，无法测试 macOS 版本的服务模式是否正常**
 
 ### ✨ Features
 
@@ -18,9 +22,10 @@
 - 调整内核界面样式
 - 支持 Linux 的便携版本
 - 支持 Linux 便捷版在不启用服务模式下使用 Tun 模式
-- Linux wayland 下强制使用 x11 渲染程序, 提升兼容性和使用体验 (注：在只使用 nvidia 显卡的 Linux 系统中，不强制使用 x11 渲染，避免应用卡死)
+- Linux wayland 下强制使用 x11 渲染程序, 提升兼容性和使用体验 (**注：在只使用 nvidia 显卡的 Linux 系统中，不再强制使用 x11 渲染，避免应用卡死**)
 - 增强日志界面数据渲染的性能
 - 优化服务模式下的内核重启逻辑
+- 优化 Clash Verge Service 服务的安装逻辑，可直接覆盖旧的服务
 
 ### 🐛 Bug Fixes
 
@@ -33,5 +38,5 @@
 - 内核切换时动画闪烁问题
 - 缺失 ipv6 设置项的默认配置
 - 为避免一次性解析全部规则提供者负载导致前端内存占用升高且持续时间较长，现改为由前端按需请求并解析负载内容，从而有效控制内存使用（阻止不了内存增长，因为解析后的数据也有可能比较大）
-- 在使用 Nvidia 显卡的 Linux 系统中，应用无法正常显示界面
-- 前端未正确取消监听内核的 websocket 信息，导致 websocket 连接断开后还能继续监听消息
+- 在使用 nvidia 显卡的 Linux 系统中，应用无法正常显示界面
+- 前端未正确取消监听内核的 websocket 信息，导致 websocket 连接未完全断开
