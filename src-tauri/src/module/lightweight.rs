@@ -1,9 +1,9 @@
 use crate::{
+    cache::mihomo::MIHOMO_CACHE,
     config::Config,
     core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
     process::AsyncHandler,
-    state::proxy::ProxyRequestCache,
     utils::logging::Type,
 };
 
@@ -183,7 +183,8 @@ pub async fn entry_lightweight_mode() -> bool {
     // 回到 In
     set_state(LightweightState::In);
 
-    ProxyRequestCache::global().clean_default_keys();
+    MIHOMO_CACHE.inner().invalidate_all();
+
     true
 }
 

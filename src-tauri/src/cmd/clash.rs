@@ -1,21 +1,18 @@
 use super::CmdResult;
 use crate::{
-    config::Config,
-    core::{handle, CoreManager},
-};
-use crate::{
+    cache::mihomo::{CACHE_CONFIG_KEY, MIHOMO_CACHE},
     config::*,
     feat,
     ipc::{self, IpcManager},
     logging,
-    state::proxy::ProxyRequestCache,
     utils::logging::Type,
     wrap_err,
 };
+use crate::{
+    config::Config,
+    core::{handle, CoreManager},
+};
 use serde_yaml_ng::Mapping;
-use std::time::Duration;
-
-const CONFIG_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
 
 /// 复制Clash环境变量
 #[tauri::command]
@@ -317,25 +314,22 @@ pub async fn get_clash_version() -> CmdResult<serde_json::Value> {
 #[tauri::command]
 pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
     let manager = IpcManager::global();
-    let cache = ProxyRequestCache::global();
-    let key = ProxyRequestCache::make_key("clash_config", "default");
-    let value = cache
-        .get_or_fetch(key, CONFIG_REFRESH_INTERVAL, || async {
+    let value = MIHOMO_CACHE
+        .inner()
+        .get_with_by_ref(CACHE_CONFIG_KEY, async move {
             manager.get_config().await.unwrap_or_else(|e| {
                 logging!(error, Type::Cmd, "Failed to fetch clash config: {e}");
                 serde_json::Value::Object(serde_json::Map::new())
             })
         })
         .await;
-    Ok((*value).clone())
+    Ok(value)
 }
 
 /// 强制刷新Clash配置缓存
 #[tauri::command]
 pub async fn force_refresh_clash_config() -> CmdResult<serde_json::Value> {
-    let cache = ProxyRequestCache::global();
-    let key = ProxyRequestCache::make_key("clash_config", "default");
-    cache.map.remove(&key);
+    MIHOMO_CACHE.inner().invalidate(CACHE_CONFIG_KEY).await;
     get_clash_config().await
 }
 

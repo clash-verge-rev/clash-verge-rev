@@ -74,7 +74,6 @@ sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
 kode-bridge = "0.2.1-rc2"
-dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.1"
 console-subscriber = { version = "0.4.1", optional = true }
 tokio-stream = "0.1.17"
@@ -82,6 +81,7 @@ isahc = { version = "1.7.2", default-features = false, features = [
   "text-decoding",
   "parking_lot",
 ] }
+moka = { version = "0.12.10", features = ["async-lock", "atomic64", "future", "once_cell", "quanta"] }
 
 
 [target.'cfg(windows)'.dependencies]
