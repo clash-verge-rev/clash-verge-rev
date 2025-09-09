@@ -109,7 +109,7 @@ impl Hotkey {
         match function {
             HotkeyFunction::OpenOrCloseDashboard => {
                 AsyncHandler::spawn(async move || {
-                    crate::feat::open_or_close_dashboard_hotkey().await;
+                    crate::feat::open_or_close_dashboard().await;
                     notify_event(app_handle, NotificationEvent::DashboardToggled).await;
                 });
             }

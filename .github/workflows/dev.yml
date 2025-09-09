@@ -13,6 +13,11 @@ on:
         required: false
         type: boolean
         default: true
+      run_windows_arm64:
+        description: "运行 Windows ARM64"
+        required: false
+        type: boolean
+        default: true
 
 permissions: write-all
 env:
@@ -40,6 +45,11 @@ jobs:
             bundle: dmg
             id: macos-aarch64
             input: run_macos_aarch64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            bundle: nsis
+            id: windows-arm64
+            input: run_windows_arm64
 
     runs-on: ${{ matrix.os }}
     steps:

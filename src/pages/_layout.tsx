@@ -382,14 +382,6 @@ const Layout = () => {
     const setupEventListener = async () => {
       try {
         console.log("[Layout] 开始监听启动完成事件");
-        const unlisten = await listen("verge://startup-completed", () => {
-          if (!hasEventTriggered) {
-            console.log("[Layout] 收到启动完成事件，开始初始化");
-            hasEventTriggered = true;
-            performInitialization();
-          }
-        });
-        return unlisten;
       } catch (err) {
         console.error("[Layout] 监听启动完成事件失败:", err);
         return () => {};
@@ -428,14 +420,11 @@ const Layout = () => {
       }
     }, 5000);
 
-    const unlistenPromise = setupEventListener();
-
     setTimeout(checkImmediateInitialization, 100);
 
     return () => {
       clearTimeout(backupInitialization);
       clearTimeout(emergencyInitialization);
-      unlistenPromise.then((unlisten) => unlisten());
     };
   }, []);
 
