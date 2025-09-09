@@ -535,7 +535,7 @@ impl Tray {
                         }),
                         "main_window" => Box::pin(async move {
                             if !lightweight::exit_lightweight_mode().await {
-                                WindowManager::toggle_main_window().await;
+                                WindowManager::show_main_window().await;
                             };
                         }),
                         _ => Box::pin(async move {}),
@@ -974,7 +974,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     return;
                 }
                 if !lightweight::exit_lightweight_mode().await {
-                    WindowManager::toggle_main_window().await;
+                    WindowManager::show_main_window().await;
                 };
             }
             "system_proxy" => {
