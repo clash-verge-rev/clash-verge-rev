@@ -58,6 +58,7 @@ const SIDECAR_HOST = target
   : execSync("rustc -vV")
       .toString()
       .match(/(?<=host: ).+(?=\s*)/g)[0];
+const EXE_SUFFIX = platform === "win32" ? ".exe" : "";
 
 /* ======= mihomo stable ======= */
 const MIHOMO_VERSION_URL =
@@ -205,11 +206,11 @@ function mihomo() {
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
   const downloadURL = `${MIHOMO_URL_PREFIX}/${MIHOMO_VERSION}/${name}-${MIHOMO_VERSION}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const exeFile = `${name}${EXE_SUFFIX}`;
   const zipFile = `${name}-${MIHOMO_VERSION}.${urlExt}`;
   return {
     name: "verge-mihomo",
-    targetFile: `verge-mihomo-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    targetFile: `verge-mihomo-${SIDECAR_HOST}${EXE_SUFFIX}`,
     exeFile,
     zipFile,
     downloadURL,
@@ -224,11 +225,11 @@ function mihomoAlpha() {
   const isWin = platform === "win32";
   const urlExt = isWin ? "zip" : "gz";
   const downloadURL = `${MIHOMO_ALPHA_URL_PREFIX}/${name}-${MIHOMO_ALPHA_VERSION}.${urlExt}`;
-  const exeFile = `${name}${isWin ? ".exe" : ""}`;
+  const exeFile = `${name}${EXE_SUFFIX}`;
   const zipFile = `${name}-${MIHOMO_ALPHA_VERSION}.${urlExt}`;
   return {
     name: "verge-mihomo-alpha",
-    targetFile: `verge-mihomo-alpha-${SIDECAR_HOST}${isWin ? ".exe" : ""}`,
+    targetFile: `verge-mihomo-alpha-${SIDECAR_HOST}${EXE_SUFFIX}`,
     exeFile,
     zipFile,
     downloadURL,
@@ -442,18 +443,12 @@ const resolvePlugin = async () => {
  * chmod 755 for Clash Verge Service
  */
 const resolveServicePermission = async () => {
-  const serviceExecutables = [
-    "clash-verge-service",
-    "install-service",
-    "uninstall-service",
-  ];
+  const serviceExecutable = `clash-verge-service${EXE_SUFFIX}`;
   const resDir = path.join(cwd, "src-tauri", "resources");
-  for (let f of serviceExecutables) {
-    const targetPath = path.join(resDir, f);
-    if (await fs.pathExists(targetPath)) {
-      execSync(`chmod 755 ${targetPath}`);
-      consola.success(`chmod finished: "${f}"`);
-    }
+  const targetPath = path.join(resDir, serviceExecutable);
+  if (await fs.pathExists(targetPath)) {
+    execSync(`chmod 755 ${targetPath}`);
+    consola.success(`chmod finished: "${serviceExecutable}"`);
   }
 };
 
@@ -476,8 +471,7 @@ async function getLatestClashVergeServices() {
   //   file: downloadItem.name,
   //   downloadURL: downloadItem.browser_download_url,
   // };
-  const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
-  `https://github.com/oomeow/clash-verge-service/releases/download/${VERGE_SERVICE_VERSION}/clash-verge-service-aarch64-unknown-linux-gnu.tar.gz`;
+  const fileName = `clash-verge-service-${SIDECAR_HOST}${EXE_SUFFIX}`;
   const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/${VERGE_SERVICE_VERSION}/${fileName}`;
   return {
     file: fileName,
@@ -489,7 +483,7 @@ async function getLatestClashVergeServices() {
  * Clash Verge Service Latest Alpha Version
  */
 function getAlphaClashVergeServices() {
-  const fileName = `clash-verge-service-${SIDECAR_HOST}.tar.gz`;
+  const fileName = `clash-verge-service-${SIDECAR_HOST}${EXE_SUFFIX}`;
   const downloadURL = `https://github.com/oomeow/clash-verge-service/releases/download/alpha/${fileName}`;
   return {
     file: fileName,
@@ -499,65 +493,17 @@ function getAlphaClashVergeServices() {
 
 const resolveClashVergeService = async () => {
   const versionTag = useAlphaService ? "Alpha" : "Stable";
-  consola.info(`Download and unzip Clash Verge Service (${versionTag})`);
-  const spinner = ora({
-    text: `resolve Clash Verge Service (${versionTag})`,
-    color: "yellow",
-    spinner: "circle",
-  });
-  spinner.start();
-
+  consola.info(`Download Clash Verge Service (${versionTag})`);
   let downloadItem;
   if (useAlphaService) {
     downloadItem = getAlphaClashVergeServices();
   } else {
     downloadItem = await getLatestClashVergeServices();
   }
-  let serviceCheckList = [
-    "clash-verge-service",
-    "install-service",
-    "uninstall-service",
-  ];
-  if (platform === "win32") {
-    serviceCheckList = [
-      "clash-verge-service.exe",
-      "install-service.exe",
-      "uninstall-service.exe",
-    ];
-  }
-  const resourceDir = path.join(cwd, "src-tauri", "resources");
-  let needResolve = false;
-  for (let file of serviceCheckList) {
-    const targetPath = path.join(resourceDir, file);
-    if (!(await fs.pathExists(targetPath))) {
-      needResolve = true;
-      break;
-    }
-  }
-
-  if (!FORCE && !needResolve) {
-    spinner.succeed("Clash Verge Service has exitst");
-    return;
-  }
-
-  if (!downloadItem) {
-    spinner.fail("can not find service to download");
-    return;
-  }
-  const tempDir = path.join(TEMP_DIR, "clash-verge-service");
-  const tempGz = path.join(tempDir, downloadItem.file);
-  await fs.mkdirp(tempDir);
-  await fs.mkdirp(resourceDir);
-  try {
-    await downloadFile(downloadItem.downloadURL, tempGz, spinner);
-    await tar.x({ cwd: resourceDir, file: tempGz });
-    spinner.succeed("unzip Clash Verge Service finished");
-  } catch (e) {
-    fs.remove(tempDir);
-    spinner.fail(`resolve Clash Verge Service error, ${e}`);
-  } finally {
-    fs.remove(tempDir);
-  }
+  await resolveResource({
+    file: `clash-verge-service${EXE_SUFFIX}`,
+    downloadURL: downloadItem.downloadURL,
+  });
 };
 
 const resolveSetDnsScript = async () => {

@@ -65,7 +65,10 @@ where
     }
 }
 
+#[cfg(not(feature = "verge-dev"))]
 const SERVER_ID: &str = "verge-service-server";
+#[cfg(feature = "verge-dev")]
+const SERVER_ID: &str = "verge-service-server-dev";
 
 async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> AppResult<JsonResponse<T>> {
     let path = ServerId::new(SERVER_ID).parent_folder(std::env::temp_dir());
@@ -100,11 +103,10 @@ pub async fn install_service() -> AppResult<()> {
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
 
-    let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("install-service.exe");
-
+    let install_path = dirs::service_path()?;
+    tracing::debug!("clash-verge-service file path: {}", install_path.display());
     if !install_path.exists() {
-        return Err(AppError::Service("installer not fount".to_string()));
+        return Err(AppError::Service("clash-verge-service file not found".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
@@ -113,11 +115,15 @@ pub async fn install_service() -> AppResult<()> {
 
     let status = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path)
+            .arg("install")
             .arg("--log-dir")
             .arg(log_dir)
+            .arg("--server-id")
+            .arg(SERVER_ID)
             .show(false)
             .status()?,
         _ => StdCommand::new(install_path)
+            .arg("install")
             .arg("--log-dir")
             .arg(log_dir)
             .creation_flags(0x08000000)
@@ -138,12 +144,10 @@ pub async fn install_service() -> AppResult<()> {
 pub async fn install_service() -> AppResult<()> {
     use users::get_effective_uid;
 
-    let binary_path = dirs::service_path()?;
-    let installer_path = binary_path.with_file_name("install-service");
-    tracing::debug!("installer path: {}", installer_path.display());
-
+    let installer_path = dirs::service_path()?;
+    tracing::debug!("clash-verge-service file path: {}", installer_path.display());
     if !installer_path.exists() {
-        return Err(AppError::Service("installer not found".to_string()));
+        return Err(AppError::Service("clash-verge-service file not found".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
@@ -152,11 +156,19 @@ pub async fn install_service() -> AppResult<()> {
     let elevator = crate::utils::unix_helper::linux_elevator();
     let status = match get_effective_uid() {
         0 => StdCommand::new(installer_path)
+            .arg("install")
             .arg("--log-dir")
             .arg(&log_dir)
+            .arg("--server-id")
+            .arg(SERVER_ID)
             .status()?,
         _ => {
-            let execute_cmd = format!("{} --log-dir {}", installer_path.display(), log_dir.display());
+            let execute_cmd = format!(
+                "{} install --log-dir {} --server-id {}",
+                installer_path.display(),
+                log_dir.display(),
+                SERVER_ID
+            );
             StdCommand::new(elevator)
                 .arg("sh")
                 .arg("-c")
@@ -177,18 +189,19 @@ pub async fn install_service() -> AppResult<()> {
 
 #[cfg(target_os = "macos")]
 pub async fn install_service() -> AppResult<()> {
-    let binary_path = dirs::service_path()?;
-    let installer_path = binary_path.with_file_name("install-service");
-
+    let installer_path = dirs::service_path()?;
+    tracing::debug!("clash-verge-service file path: {}", installer_path.display());
     if !installer_path.exists() {
-        return Err(AppError::Service("installer not fount".to_string()));
+        return Err(AppError::Service("clash-verge-service file not found".to_string()));
     }
+
     let log_dir = dirs::app_logs_dir()?.join("service");
     let shell = installer_path.to_string_lossy().replace(" ", "\\\\ ");
     let command = format!(
-        r#"do shell script "{} --log-dir {}" with administrator privileges"#,
+        r#"do shell script "{} install --log-dir {} --server-id {}" with administrator privileges"#,
         shell,
-        log_dir.display()
+        log_dir.display(),
+        SERVER_ID
     );
 
     let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
@@ -210,11 +223,10 @@ pub async fn uninstall_service() -> AppResult<()> {
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt;
 
-    let binary_path = dirs::service_path()?;
-    let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
-
+    let uninstall_path = dirs::service_path()?;
+    tracing::debug!("clash-verge-service file path: {}", uninstall_path.display());
     if !uninstall_path.exists() {
-        return Err(AppError::Service("uninstaller not fount".to_string()));
+        return Err(AppError::Service("clash-verge-service file not found".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
@@ -223,11 +235,13 @@ pub async fn uninstall_service() -> AppResult<()> {
 
     let status = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path)
+            .arg("uninstall")
             .arg("--log-dir")
             .arg(log_dir)
             .show(false)
             .status()?,
         _ => StdCommand::new(uninstall_path)
+            .arg("uninstall")
             .arg("--log-dir")
             .arg(log_dir)
             .creation_flags(0x08000000)
@@ -248,22 +262,26 @@ pub async fn uninstall_service() -> AppResult<()> {
 pub async fn uninstall_service() -> AppResult<()> {
     use users::get_effective_uid;
 
-    let binary_path = dirs::service_path()?;
-    let uninstaller_path = binary_path.with_file_name("uninstall-service");
-
+    let uninstaller_path = dirs::service_path()?;
+    tracing::debug!("clash-verge-service file path: {}", uninstaller_path.display());
     if !uninstaller_path.exists() {
-        return Err(AppError::Service("uninstaller not fount".to_string()));
+        return Err(AppError::Service("clash-verge-service file not found".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
     let elevator = crate::utils::unix_helper::linux_elevator();
     let status = match get_effective_uid() {
         0 => StdCommand::new(uninstaller_path)
+            .arg("uninstall")
             .arg("--log-dir")
             .arg(log_dir)
             .status()?,
         _ => {
-            let execute_cmd = format!("{} --log-dir {}", uninstaller_path.display(), log_dir.display());
+            let execute_cmd = format!(
+                "{} uninstall --log-dir {}",
+                uninstaller_path.display(),
+                log_dir.display()
+            );
             StdCommand::new(elevator)
                 .arg("sh")
                 .arg("-c")
@@ -284,17 +302,16 @@ pub async fn uninstall_service() -> AppResult<()> {
 
 #[cfg(target_os = "macos")]
 pub async fn uninstall_service() -> AppResult<()> {
-    let binary_path = dirs::service_path()?;
-    let uninstaller_path = binary_path.with_file_name("uninstall-service");
-
+    let uninstaller_path = dirs::service_path()?;
+    tracing::debug!("clash-verge-service file path: {}", uninstaller_path.display());
     if !uninstaller_path.exists() {
-        return Err(AppError::Service("uninstaller not fount".to_string()));
+        return Err(AppError::Service("clash-verge-service file not found".to_string()));
     }
 
     let log_dir = dirs::app_logs_dir()?.join("service");
     let shell = uninstaller_path.to_string_lossy().replace(" ", "\\\\ ");
     let command = format!(
-        r#"do shell script "{} --log-dir {}" with administrator privileges"#,
+        r#"do shell script "{} uninstall --log-dir {}" with administrator privileges"#,
         shell,
         log_dir.display()
     );
