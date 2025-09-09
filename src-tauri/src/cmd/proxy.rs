@@ -11,17 +11,17 @@ use crate::{
 
 #[tauri::command]
 pub async fn get_proxies() -> CmdResult<serde_json::Value> {
+    let manager = IpcManager::global();
     let value = MIHOMO_CACHE
         .inner()
         .get_with_by_ref(CACHE_PROXIES_KEY, async move {
-            let manager = IpcManager::global();
-            manager.get_proxies().await.unwrap_or_else(|e| {
+            Box::new(manager.get_proxies().await.unwrap_or_else(|e| {
                 logging!(error, Type::Cmd, "Failed to fetch proxies: {e}");
                 serde_json::Value::Object(serde_json::Map::new())
-            })
+            }))
         })
         .await;
-    Ok(value)
+    Ok(*value)
 }
 
 /// 强制刷新代理缓存用于profile切换
@@ -33,17 +33,17 @@ pub async fn force_refresh_proxies() -> CmdResult<serde_json::Value> {
 
 #[tauri::command]
 pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
+    let manager = IpcManager::global();
     let value = MIHOMO_CACHE
         .inner()
         .get_with_by_ref(CACHE_PROVIDERS_KEY, async move {
-            let manager = IpcManager::global();
-            manager.get_providers_proxies().await.unwrap_or_else(|e| {
+            Box::new(manager.get_providers_proxies().await.unwrap_or_else(|e| {
                 logging!(error, Type::Cmd, "Failed to fetch provider proxies: {e}");
                 serde_json::Value::Object(serde_json::Map::new())
-            })
+            }))
         })
         .await;
-    Ok(value)
+    Ok(*value)
 }
 
 /// 同步托盘和GUI的代理选择状态
