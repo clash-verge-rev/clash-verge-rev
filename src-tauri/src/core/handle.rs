@@ -2,8 +2,9 @@ use crate::singleton;
 use parking_lot::RwLock;
 use std::{
     sync::{
+        Arc,
         atomic::{AtomicU64, Ordering},
-        mpsc, Arc,
+        mpsc,
     },
     thread,
     time::{Duration, Instant},
@@ -97,16 +98,14 @@ impl NotificationSystem {
 
                             let is_emergency = *system.emergency_mode.read();
 
-                            if is_emergency {
-                                if let FrontendEvent::NoticeMessage { ref status, .. } = event {
-                                    if status == "info" {
+                            if is_emergency
+                                && let FrontendEvent::NoticeMessage { ref status, .. } = event
+                                    && status == "info" {
                                         log::warn!(
                                             "Emergency mode active, skipping info message"
                                         );
                                         continue;
                                     }
-                                }
-                            }
 
                             if let Some(window) = handle.get_window() {
                                 *system.last_emit_time.write() = Instant::now();
@@ -199,13 +198,12 @@ impl NotificationSystem {
 
     /// 发送事件到队列
     fn send_event(&self, event: FrontendEvent) -> bool {
-        if *self.emergency_mode.read() {
-            if let FrontendEvent::NoticeMessage { ref status, .. } = event {
-                if status == "info" {
-                    log::info!("Skipping info message in emergency mode");
-                    return false;
-                }
-            }
+        if *self.emergency_mode.read()
+            && let FrontendEvent::NoticeMessage { ref status, .. } = event
+            && status == "info"
+        {
+            log::info!("Skipping info message in emergency mode");
+            return false;
         }
 
         if let Some(sender) = &self.sender {
@@ -372,7 +370,9 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::ProfileUpdateStarted { uid });
         } else {
-            log::warn!("Notification system not initialized when trying to send ProfileUpdateStarted event.");
+            log::warn!(
+                "Notification system not initialized when trying to send ProfileUpdateStarted event."
+            );
         }
     }
 
@@ -386,7 +386,9 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::ProfileUpdateCompleted { uid });
         } else {
-            log::warn!("Notification system not initialized when trying to send ProfileUpdateCompleted event.");
+            log::warn!(
+                "Notification system not initialized when trying to send ProfileUpdateCompleted event."
+            );
         }
     }
 

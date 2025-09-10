@@ -1,13 +1,11 @@
 use crate::{
     config::Config,
-    core::{
-        handle::Handle,
-        service_ipc::{send_ipc_request, IpcCommand},
-    },
+    core::handle::Handle,
+    core::service_ipc::{IpcCommand, send_ipc_request},
     logging,
     utils::{dirs, logging::Type},
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::{
     env::current_exe,
@@ -573,7 +571,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
         }
     }
 
-    log::info!(target: "app", "服务成功启动核心");
+    logging!(info, Type::Service, true, "服务成功启动核心");
     Ok(())
 }
 
@@ -661,23 +659,25 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
         bail!(err_msg);
     }
 
-    if let Some(data) = &response.data {
-        if let Some(code) = data.get("code").and_then(|c| c.as_u64()) {
-            if code != 0 {
-                let msg = data
-                    .get("msg")
-                    .and_then(|m| m.as_str())
-                    .unwrap_or("未知错误");
-                logging!(
-                    error,
-                    Type::Service,
-                    true,
-                    "停止核心失败: code={}, msg={}",
-                    code,
-                    msg
-                );
-                bail!("停止核心失败: {}", msg);
-            }
+    if let Some(data) = &response.data
+        && let Some(code) = data.get("code")
+    {
+        let code_value = code.as_u64().unwrap_or(1);
+        let msg = data
+            .get("msg")
+            .and_then(|m| m.as_str())
+            .unwrap_or("未知错误");
+
+        if code_value != 0 {
+            logging!(
+                error,
+                Type::Service,
+                true,
+                "停止核心返回错误: code={}, msg={}",
+                code_value,
+                msg
+            );
+            bail!("停止核心失败: {}", msg);
         }
     }
 

@@ -19,12 +19,12 @@ use chrono::Local;
 use parking_lot::Mutex;
 use std::{
     fmt,
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     io::Write,
     path::PathBuf,
     sync::Arc,
 };
-use tauri_plugin_shell::{process::CommandChild, ShellExt};
+use tauri_plugin_shell::{ShellExt, process::CommandChild};
 
 #[derive(Debug)]
 pub struct CoreManager {
@@ -464,18 +464,18 @@ impl CoreManager {
                 Ok((pids, process_name)) => {
                     for pid in pids {
                         // 跳过当前管理的进程
-                        if let Some(current) = current_pid {
-                            if pid == current {
-                                logging!(
-                                    debug,
-                                    Type::Core,
-                                    true,
-                                    "跳过当前管理的进程: {} (PID: {})",
-                                    process_name,
-                                    pid
-                                );
-                                continue;
-                            }
+                        if let Some(current) = current_pid
+                            && pid == current
+                        {
+                            logging!(
+                                debug,
+                                Type::Core,
+                                true,
+                                "跳过当前管理的进程: {} (PID: {})",
+                                process_name,
+                                pid
+                            );
+                            continue;
                         }
                         pids_to_kill.push((pid, process_name.clone()));
                     }
@@ -524,7 +524,7 @@ impl CoreManager {
             use std::mem;
             use winapi::um::handleapi::CloseHandle;
             use winapi::um::tlhelp32::{
-                CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+                CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
                 TH32CS_SNAPPROCESS,
             };
             use winapi::um::winnt::HANDLE;
@@ -700,7 +700,7 @@ impl CoreManager {
             use winapi::um::processthreadsapi::OpenProcess;
             use winapi::um::winnt::{HANDLE, PROCESS_QUERY_INFORMATION};
 
-            let result = AsyncHandler::spawn_blocking(move || -> Result<bool> {
+            AsyncHandler::spawn_blocking(move || -> Result<bool> {
                 unsafe {
                     let process_handle: HANDLE = OpenProcess(PROCESS_QUERY_INFORMATION, 0, pid);
                     if process_handle.is_null() {
@@ -716,9 +716,7 @@ impl CoreManager {
                     Ok(exit_code == 259)
                 }
             })
-            .await?;
-
-            result
+            .await?
         }
 
         #[cfg(not(windows))]

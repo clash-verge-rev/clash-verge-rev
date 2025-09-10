@@ -1,9 +1,9 @@
 use crate::utils::dirs::get_encryption_key;
 use aes_gcm::{
-    aead::{Aead, KeyInit},
     Aes256Gcm, Key,
+    aead::{Aead, KeyInit},
 };
-use base64::{engine::general_purpose::STANDARD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 const NONCE_LENGTH: usize = 12;

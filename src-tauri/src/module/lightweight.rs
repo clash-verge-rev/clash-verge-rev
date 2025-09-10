@@ -13,7 +13,7 @@ use crate::logging_error;
 use crate::utils::window_manager::WindowManager;
 use anyhow::{Context, Result};
 use delay_timer::prelude::TaskBuilder;
-use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicU8, AtomicU32, Ordering};
 use tauri::Listener;
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
@@ -209,8 +209,6 @@ pub async fn exit_lightweight_mode() -> bool {
     }
 
     WindowManager::show_main_window().await;
-    WindowManager::toggle_main_window().await;
-    println!("what the fuck you want");
 
     set_lightweight_mode(false).await;
     let _ = cancel_light_weight_timer();

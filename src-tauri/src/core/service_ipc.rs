@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
 use crate::process::AsyncHandler;
 use crate::{logging, utils::logging::Type};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};

@@ -1,8 +1,8 @@
 use super::CmdResult;
 use crate::{
     core::{
-        service::{self, ServiceStatus},
         CoreManager,
+        service::{self, ServiceStatus},
     },
     utils::i18n::t,
 };

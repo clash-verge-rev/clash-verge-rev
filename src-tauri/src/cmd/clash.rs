@@ -1,7 +1,7 @@
 use super::CmdResult;
 use crate::{
     config::Config,
-    core::{handle, CoreManager},
+    core::{CoreManager, handle},
 };
 use crate::{
     config::*,
@@ -166,7 +166,7 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 pub async fn apply_dns_config(apply: bool) -> CmdResult {
     use crate::{
         config::Config,
-        core::{handle, CoreManager},
+        core::{CoreManager, handle},
         utils::dirs,
     };
 
