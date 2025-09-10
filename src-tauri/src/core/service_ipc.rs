@@ -2,10 +2,16 @@
 use crate::process::AsyncHandler;
 use crate::{logging, utils::logging::Type};
 use anyhow::{Context, Result, bail};
+use backoff::{Error as BackoffError, ExponentialBackoff};
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+#[cfg(unix)]
+use tokio::net::UnixStream;
+#[cfg(windows)]
+use tokio::net::windows::named_pipe::ClientOptions;
 
 const IPC_SOCKET_NAME: &str = if cfg!(windows) {
     r"\\.\pipe\clash-verge-service"
@@ -112,162 +118,135 @@ pub fn verify_response_signature(response: &IpcResponse) -> Result<bool> {
     Ok(expected_signature == response.signature)
 }
 
-// IPC连接管理-win
-#[cfg(target_os = "windows")]
+fn create_backoff_strategy() -> ExponentialBackoff {
+    ExponentialBackoff {
+        initial_interval: Duration::from_millis(100),
+        max_interval: Duration::from_secs(3),
+        // max_elapsed_time: Some(Duration::from_secs(30)),
+        max_elapsed_time: None,
+        multiplier: 2.0,
+        ..Default::default()
+    }
+}
+
 pub async fn send_ipc_request(
     command: IpcCommand,
     payload: serde_json::Value,
 ) -> Result<IpcResponse> {
-    use std::{
-        ffi::CString,
-        fs::File,
-        io::{Read, Write},
-        os::windows::io::{FromRawHandle, RawHandle},
-        ptr,
-    };
-    use winapi::um::{
-        fileapi::{CreateFileA, OPEN_EXISTING},
-        handleapi::INVALID_HANDLE_VALUE,
-        winnt::{FILE_SHARE_READ, FILE_SHARE_WRITE, GENERIC_READ, GENERIC_WRITE},
-    };
-
     let command_type = format!("{command:?}");
 
-    let request = match create_signed_request(command, payload) {
-        Ok(req) => req,
-        Err(e) => {
-            logging!(error, Type::Service, true, "创建签名请求失败: {}", e);
-            return Err(e);
+    let operation = || async {
+        match send_ipc_request_internal(command.clone(), payload.clone()).await {
+            Ok(response) => Ok(response),
+            Err(e) => {
+                logging!(
+                    warn,
+                    Type::Service,
+                    true,
+                    "IPC请求失败，准备重试: 命令={}, 错误={}",
+                    command_type,
+                    e
+                );
+                Err(BackoffError::transient(e))
+            }
         }
     };
 
-    let request_json = serde_json::to_string(&request)?;
-
-    let result = AsyncHandler::spawn_blocking(move || -> Result<IpcResponse> {
-        let c_pipe_name = match CString::new(IPC_SOCKET_NAME) {
-            Ok(name) => name,
-            Err(e) => {
-                logging!(error, Type::Service, true, "创建CString失败: {}", e);
-                return Err(anyhow::anyhow!("创建CString失败: {}", e));
-            }
-        };
-
-        let handle = unsafe {
-            CreateFileA(
-                c_pipe_name.as_ptr(),
-                GENERIC_READ | GENERIC_WRITE,
-                FILE_SHARE_READ | FILE_SHARE_WRITE,
-                ptr::null_mut(),
-                OPEN_EXISTING,
-                0,
-                ptr::null_mut(),
-            )
-        };
-
-        if handle == INVALID_HANDLE_VALUE {
-            let error = std::io::Error::last_os_error();
+    match backoff::future::retry(create_backoff_strategy(), operation).await {
+        Ok(response) => {
+            logging!(
+                info,
+                Type::Service,
+                true,
+                "IPC请求成功: 命令={}, 成功={}",
+                command_type,
+                response.success
+            );
+            Ok(response)
+        }
+        Err(e) => {
             logging!(
                 error,
                 Type::Service,
                 true,
-                "连接到服务命名管道失败: {}",
-                error
+                "IPC请求最终失败，重试已耗尽: 命令={}, 错误={}",
+                command_type,
+                e
             );
-            return Err(anyhow::anyhow!("无法连接到服务命名管道: {}", error));
+            Err(anyhow::anyhow!("IPC请求重试失败: {}", e))
         }
+    }
+}
 
-        let mut pipe = unsafe { File::from_raw_handle(handle as RawHandle) };
-        logging!(info, Type::Service, true, "服务连接成功 (Windows)");
+// 内部IPC请求实现（不带重试）
+async fn send_ipc_request_internal(
+    command: IpcCommand,
+    payload: serde_json::Value,
+) -> Result<IpcResponse> {
+    #[cfg(target_os = "windows")]
+    {
+        send_ipc_request_windows(command, payload).await
+    }
+    #[cfg(target_family = "unix")]
+    {
+        send_ipc_request_unix(command, payload).await
+    }
+}
 
-        let request_bytes = request_json.as_bytes();
-        let len_bytes = (request_bytes.len() as u32).to_be_bytes();
+// IPC连接管理-win
+#[cfg(target_os = "windows")]
+#[cfg(target_os = "windows")]
+async fn send_ipc_request_windows(
+    command: IpcCommand,
+    payload: serde_json::Value,
+) -> Result<IpcResponse> {
+    let request = create_signed_request(command, payload)?;
+    let request_json = serde_json::to_string(&request)?;
+    let request_bytes = request_json.as_bytes();
+    let len_bytes = (request_bytes.len() as u32).to_be_bytes();
 
-        if let Err(e) = pipe.write_all(&len_bytes) {
-            logging!(error, Type::Service, true, "写入请求长度失败: {}", e);
-            return Err(anyhow::anyhow!("写入请求长度失败: {}", e));
+    let mut pipe = match ClientOptions::new().open(IPC_SOCKET_NAME) {
+        Ok(p) => p,
+        Err(e) => {
+            logging!(error, Type::Service, true, "连接到服务命名管道失败: {}", e);
+            return Err(anyhow::anyhow!("无法连接到服务命名管道: {}", e));
         }
+    };
 
-        if let Err(e) = pipe.write_all(request_bytes) {
-            logging!(error, Type::Service, true, "写入请求内容失败: {}", e);
-            return Err(anyhow::anyhow!("写入请求内容失败: {}", e));
-        }
+    logging!(info, Type::Service, true, "服务连接成功 (Windows)");
 
-        if let Err(e) = pipe.flush() {
-            logging!(error, Type::Service, true, "刷新管道失败: {}", e);
-            return Err(anyhow::anyhow!("刷新管道失败: {}", e));
-        }
+    pipe.write_all(&len_bytes).await?;
+    pipe.write_all(request_bytes).await?;
+    pipe.flush().await?;
 
-        let mut response_len_bytes = [0u8; 4];
-        if let Err(e) = pipe.read_exact(&mut response_len_bytes) {
-            logging!(error, Type::Service, true, "读取响应长度失败: {}", e);
-            return Err(anyhow::anyhow!("读取响应长度失败: {}", e));
-        }
+    let mut response_len_bytes = [0u8; 4];
+    pipe.read_exact(&mut response_len_bytes).await?;
+    let response_len = u32::from_be_bytes(response_len_bytes) as usize;
 
-        let response_len = u32::from_be_bytes(response_len_bytes) as usize;
+    let mut response_bytes = vec![0u8; response_len];
+    pipe.read_exact(&mut response_bytes).await?;
 
-        let mut response_bytes = vec![0u8; response_len];
-        if let Err(e) = pipe.read_exact(&mut response_bytes) {
-            logging!(error, Type::Service, true, "读取响应内容失败: {}", e);
-            return Err(anyhow::anyhow!("读取响应内容失败: {}", e));
-        }
+    let response: IpcResponse = serde_json::from_slice(&response_bytes)
+        .map_err(|e| anyhow::anyhow!("解析响应失败: {}", e))?;
 
-        let response: IpcResponse = match serde_json::from_slice::<IpcResponse>(&response_bytes) {
-            Ok(r) => r,
-            Err(e) => {
-                logging!(error, Type::Service, true, "服务响应解析失败: {}", e);
-                return Err(anyhow::anyhow!("解析响应失败: {}", e));
-            }
-        };
+    if !verify_response_signature(&response)? {
+        logging!(error, Type::Service, true, "服务响应签名验证失败");
+        bail!("服务响应签名验证失败");
+    }
 
-        match verify_response_signature(&response) {
-            Ok(valid) => {
-                if !valid {
-                    logging!(error, Type::Service, true, "服务响应签名验证失败");
-                    bail!("服务响应签名验证失败");
-                }
-            }
-            Err(e) => {
-                logging!(error, Type::Service, true, "验证响应签名时出错: {}", e);
-                return Err(e);
-            }
-        }
-
-        logging!(
-            info,
-            Type::Service,
-            true,
-            "IPC请求完成: 命令={}, 成功={}",
-            command_type,
-            response.success
-        );
-        Ok(response)
-    })
-    .await??;
-
-    Ok(result)
+    Ok(response)
 }
 
 // IPC连接管理-unix
 #[cfg(target_family = "unix")]
-pub async fn send_ipc_request(
+async fn send_ipc_request_unix(
     command: IpcCommand,
     payload: serde_json::Value,
 ) -> Result<IpcResponse> {
-    use std::os::unix::net::UnixStream;
-
-    let command_type = format!("{command:?}");
-
-    let request = match create_signed_request(command, payload) {
-        Ok(req) => req,
-        Err(e) => {
-            logging!(error, Type::Service, true, "创建签名请求失败: {}", e);
-            return Err(e);
-        }
-    };
-
+    let request = create_signed_request(command, payload)?;
     let request_json = serde_json::to_string(&request)?;
 
-    let mut stream = match UnixStream::connect(IPC_SOCKET_NAME) {
+    let mut stream = match UnixStream::connect(IPC_SOCKET_NAME).await {
         Ok(s) => s,
         Err(e) => {
             logging!(error, Type::Service, true, "连接到Unix套接字失败: {}", e);
@@ -278,58 +257,91 @@ pub async fn send_ipc_request(
     let request_bytes = request_json.as_bytes();
     let len_bytes = (request_bytes.len() as u32).to_be_bytes();
 
-    if let Err(e) = std::io::Write::write_all(&mut stream, &len_bytes) {
-        logging!(error, Type::Service, true, "写入请求长度失败: {}", e);
-        return Err(anyhow::anyhow!("写入请求长度失败: {}", e));
-    }
+    stream.write_all(&len_bytes).await?;
+    stream.write_all(request_bytes).await?;
+    stream.flush().await?;
 
-    if let Err(e) = std::io::Write::write_all(&mut stream, request_bytes) {
-        logging!(error, Type::Service, true, "写入请求内容失败: {}", e);
-        return Err(anyhow::anyhow!("写入请求内容失败: {}", e));
-    }
-
+    // 读取响应长度
     let mut response_len_bytes = [0u8; 4];
-    if let Err(e) = std::io::Read::read_exact(&mut stream, &mut response_len_bytes) {
-        logging!(error, Type::Service, true, "读取响应长度失败: {}", e);
-        return Err(anyhow::anyhow!("读取响应长度失败: {}", e));
-    }
-
+    stream.read_exact(&mut response_len_bytes).await?;
     let response_len = u32::from_be_bytes(response_len_bytes) as usize;
 
     let mut response_bytes = vec![0u8; response_len];
-    if let Err(e) = std::io::Read::read_exact(&mut stream, &mut response_bytes) {
-        logging!(error, Type::Service, true, "读取响应内容失败: {}", e);
-        return Err(anyhow::anyhow!("读取响应内容失败: {}", e));
+    stream.read_exact(&mut response_bytes).await?;
+
+    let response: IpcResponse = serde_json::from_slice(&response_bytes)
+        .map_err(|e| anyhow::anyhow!("解析响应失败: {}", e))?;
+
+    if !verify_response_signature(&response)? {
+        logging!(error, Type::Service, true, "服务响应签名验证失败");
+        bail!("服务响应签名验证失败");
     }
 
-    let response: IpcResponse = match serde_json::from_slice::<IpcResponse>(&response_bytes) {
-        Ok(r) => r,
-        Err(e) => {
-            logging!(error, Type::Service, true, "服务响应解析失败: {}", e,);
-            return Err(anyhow::anyhow!("解析响应失败: {}", e));
-        }
-    };
-
-    match verify_response_signature(&response) {
-        Ok(valid) => {
-            if !valid {
-                logging!(error, Type::Service, true, "服务响应签名验证失败");
-                bail!("服务响应签名验证失败");
-            }
-        }
-        Err(e) => {
-            logging!(error, Type::Service, true, "验证响应签名时出错: {}", e);
-            return Err(e);
-        }
-    }
-
-    logging!(
-        info,
-        Type::Service,
-        true,
-        "IPC请求完成: 命令={}, 成功={}",
-        command_type,
-        response.success
-    );
     Ok(response)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_signed_request() {
+        let command = IpcCommand::GetVersion;
+        let payload = serde_json::json!({"test": "data"});
+
+        let result = create_signed_request(command, payload);
+        assert!(result.is_ok());
+
+        let request = result.unwrap();
+        assert!(!request.id.is_empty());
+        assert!(!request.signature.is_empty());
+        assert_eq!(request.command, IpcCommand::GetVersion);
+    }
+
+    #[test]
+    fn test_sign_and_verify_message() {
+        let test_message = "test message for signing";
+
+        let signature_result = sign_message(test_message);
+        assert!(signature_result.is_ok());
+
+        let signature = signature_result.unwrap();
+        assert!(!signature.is_empty());
+
+        // 测试相同消息产生相同签名
+        let signature2 = sign_message(test_message).unwrap();
+        assert_eq!(signature, signature2);
+    }
+
+    #[test]
+    fn test_verify_response_signature() {
+        let response = IpcResponse {
+            id: "test-id".to_string(),
+            success: true,
+            data: Some(serde_json::json!({"result": "success"})),
+            error: None,
+            signature: String::new(),
+        };
+
+        // 创建正确的签名
+        let verification_response = IpcResponse {
+            id: response.id.clone(),
+            success: response.success,
+            data: response.data.clone(),
+            error: response.error.clone(),
+            signature: String::new(),
+        };
+
+        let message = serde_json::to_string(&verification_response).unwrap();
+        let correct_signature = sign_message(&message).unwrap();
+
+        let signed_response = IpcResponse {
+            signature: correct_signature,
+            ..response
+        };
+
+        let verification_result = verify_response_signature(&signed_response);
+        assert!(verification_result.is_ok());
+        assert!(verification_result.unwrap());
+    }
 }
