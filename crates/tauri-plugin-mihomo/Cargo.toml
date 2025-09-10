@@ -29,3 +29,6 @@ windows-sys = "0.59"
 
 [build-dependencies]
 tauri-plugin = { version = "2", features = ["build"] }
+
+[dev-dependencies]
+dotenvy = "0.15.7"

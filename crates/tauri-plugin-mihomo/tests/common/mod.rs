@@ -8,6 +8,7 @@ pub const TEST_URL: &str = "http://www.gstatic.com/generate_204";
 pub const TIMEOUT: u32 = 3000;
 
 pub fn mihomo() -> Mihomo {
+    dotenvy::dotenv().unwrap();
     let mihomo_socket = std::env::var("MIHOMO_SOCKET").unwrap_or(String::from("0"));
     if mihomo_socket == "1" {
         // use local socket
