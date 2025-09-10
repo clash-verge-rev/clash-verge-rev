@@ -6,7 +6,7 @@ authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
 repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
-edition = "2021"
+edition = "2024"
 build = "build.rs"
 
 [package.metadata.bundle]
@@ -118,26 +118,32 @@ tokio-trace = ["console-subscriber"]
 
 [profile.release]
 panic = "abort"
-codegen-units = 1
+codegen-units = 16
 lto = true
-opt-level = "s"
+opt-level = 2
+debug = false
 strip = true
+overflow-checks = false
+rpath = false
 
 [profile.dev]
 incremental = true
-codegen-units = 256 # 增加编译单元，提升编译速度
-opt-level = 0       # 禁用优化，进一步提升编译速度
-debug = true        # 保留调试信息
-strip = false       # 不剥离符号，保留调试信息
+codegen-units = 64
+opt-level = 0
+debug = true
+strip = "none"
+overflow-checks = true
+lto = false
+rpath = false
 
 [profile.fast-release]
-inherits = "release" # 继承 release 的配置
-panic = "abort"      # 与 release 相同
-codegen-units = 256  # 增加编译单元，提升编译速度
-lto = false          # 禁用 LTO，提升编译速度
-opt-level = 0        # 禁用优化，大幅提升编译速度
-debug = true         # 保留调试信息
-strip = false        # 不剥离符号，保留调试信息
+inherits = "release"
+panic = "abort"
+codegen-units = 64
+lto = false
+opt-level = 0
+debug = true
+strip = false
 
 [lib]
 name = "app_lib"

@@ -1,10 +1,10 @@
 use crate::{
     config::Config,
-    core::service_ipc::{send_ipc_request, IpcCommand},
+    core::service_ipc::{IpcCommand, send_ipc_request},
     logging,
     utils::{dirs, logging::Type},
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::{
     env::current_exe,
@@ -617,17 +617,11 @@ pub async fn check_service_version() -> Result<String> {
             match response.data {
                 Some(data) => {
                     if let Some(nested_data) = data.get("data") {
-                        if let Some(version) = nested_data.get("version") {
-                            if let Some(version_str) = version.as_str() {
-                                logging!(
-                                    info,
-                                    Type::Service,
-                                    true,
-                                    "获取到服务版本: {}",
-                                    version_str
-                                );
-                                return Ok(version_str.to_string());
-                            }
+                        if let Some(version) = nested_data.get("version")
+                            && let Some(version_str) = version.as_str()
+                        {
+                            logging!(info, Type::Service, true, "获取到服务版本: {}", version_str);
+                            return Ok(version_str.to_string());
                         }
                         logging!(
                             error,
@@ -792,25 +786,25 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
             }
 
             // 添加对嵌套JSON结构的处理
-            if let Some(data) = &response.data {
-                if let Some(code) = data.get("code") {
-                    let code_value = code.as_u64().unwrap_or(1);
-                    let msg = data
-                        .get("msg")
-                        .and_then(|m| m.as_str())
-                        .unwrap_or("未知错误");
+            if let Some(data) = &response.data
+                && let Some(code) = data.get("code")
+            {
+                let code_value = code.as_u64().unwrap_or(1);
+                let msg = data
+                    .get("msg")
+                    .and_then(|m| m.as_str())
+                    .unwrap_or("未知错误");
 
-                    if code_value != 0 {
-                        logging!(
-                            error,
-                            Type::Service,
-                            true,
-                            "启动核心返回错误: code={}, msg={}",
-                            code_value,
-                            msg
-                        );
-                        bail!("启动核心失败: {}", msg);
-                    }
+                if code_value != 0 {
+                    logging!(
+                        error,
+                        Type::Service,
+                        true,
+                        "启动核心返回错误: code={}, msg={}",
+                        code_value,
+                        msg
+                    );
+                    bail!("启动核心失败: {}", msg);
                 }
             }
 
@@ -918,25 +912,25 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
         bail!(response.error.unwrap_or_else(|| "停止核心失败".to_string()));
     }
 
-    if let Some(data) = &response.data {
-        if let Some(code) = data.get("code") {
-            let code_value = code.as_u64().unwrap_or(1);
-            let msg = data
-                .get("msg")
-                .and_then(|m| m.as_str())
-                .unwrap_or("未知错误");
+    if let Some(data) = &response.data
+        && let Some(code) = data.get("code")
+    {
+        let code_value = code.as_u64().unwrap_or(1);
+        let msg = data
+            .get("msg")
+            .and_then(|m| m.as_str())
+            .unwrap_or("未知错误");
 
-            if code_value != 0 {
-                logging!(
-                    error,
-                    Type::Service,
-                    true,
-                    "停止核心返回错误: code={}, msg={}",
-                    code_value,
-                    msg
-                );
-                bail!("停止核心失败: {}", msg);
-            }
+        if code_value != 0 {
+            logging!(
+                error,
+                Type::Service,
+                true,
+                "停止核心返回错误: code={}, msg={}",
+                code_value,
+                msg
+            );
+            bail!("停止核心失败: {}", msg);
         }
     }
 

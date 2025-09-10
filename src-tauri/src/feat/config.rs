@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{handle, hotkey, sysopt, tray, CoreManager},
+    core::{CoreManager, handle, hotkey, sysopt, tray},
     logging_error,
     module::lightweight,
     utils::logging::Type,
@@ -202,10 +202,10 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
         if (update_flags & (UpdateFlags::SysProxy as i32)) != 0 {
             sysopt::Sysopt::global().update_sysproxy().await?;
         }
-        if (update_flags & (UpdateFlags::Hotkey as i32)) != 0 {
-            if let Some(hotkeys) = patch.hotkeys {
-                hotkey::Hotkey::global().update(hotkeys).await?;
-            }
+        if (update_flags & (UpdateFlags::Hotkey as i32)) != 0
+            && let Some(hotkeys) = patch.hotkeys
+        {
+            hotkey::Hotkey::global().update(hotkeys).await?;
         }
         if (update_flags & (UpdateFlags::SystrayMenu as i32)) != 0 {
             tray::Tray::global().update_menu().await?;
