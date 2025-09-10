@@ -10,7 +10,7 @@ use crate::{
 };
 use crate::{
     config::Config,
-    core::{handle, CoreManager},
+    core::{CoreManager, handle},
 };
 use serde_yaml_ng::Mapping;
 
@@ -163,7 +163,7 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 pub async fn apply_dns_config(apply: bool) -> CmdResult {
     use crate::{
         config::Config,
-        core::{handle, CoreManager},
+        core::{CoreManager, handle},
         utils::dirs,
     };
 

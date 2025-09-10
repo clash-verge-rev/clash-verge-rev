@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::core::{async_proxy_query::AsyncProxyQuery, EventDrivenProxyManager};
+use crate::core::{EventDrivenProxyManager, async_proxy_query::AsyncProxyQuery};
 use crate::process::AsyncHandler;
 use crate::wrap_err;
 use network_interface::NetworkInterface;

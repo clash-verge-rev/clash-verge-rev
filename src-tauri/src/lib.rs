@@ -26,7 +26,7 @@ use tauri::Manager;
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 use utils::logging::Type;
 
 /// Application initialization helper functions
@@ -134,8 +134,8 @@ mod app_init {
     }
 
     /// Generate all command handlers for the application
-    pub fn generate_handlers(
-    ) -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+    pub fn generate_handlers()
+    -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
         tauri::generate_handler![
             // Common commands
             cmd::get_sys_proxy,
@@ -275,7 +275,9 @@ pub fn run() {
     // Set Linux environment variable
     #[cfg(target_os = "linux")]
     {
-        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        unsafe {
+            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        }
 
         let desktop_env = std::env::var("XDG_CURRENT_DESKTOP")
             .unwrap_or_default()
@@ -284,7 +286,9 @@ pub fn run() {
         let is_plasma_desktop = desktop_env.contains("PLASMA");
 
         if is_kde_desktop || is_plasma_desktop {
-            std::env::set_var("GTK_CSD", "0");
+            unsafe {
+                std::env::set_var("GTK_CSD", "0");
+            }
             logging!(
                 info,
                 Type::Setup,
@@ -438,10 +442,10 @@ pub fn run() {
                         }
                     }
 
-                    if !is_enable_global_hotkey {
-                        if let Err(e) = hotkey::Hotkey::global().init().await {
-                            logging!(error, Type::Hotkey, true, "Failed to init hotkeys: {}", e);
-                        }
+                    if !is_enable_global_hotkey
+                        && let Err(e) = hotkey::Hotkey::global().init().await
+                    {
+                        logging!(error, Type::Hotkey, true, "Failed to init hotkeys: {}", e);
                     }
                     return;
                 }
@@ -474,10 +478,8 @@ pub fn run() {
                     }
                 }
 
-                if !is_enable_global_hotkey {
-                    if let Err(e) = hotkey::Hotkey::global().reset() {
-                        logging!(error, Type::Hotkey, true, "Failed to reset hotkeys: {}", e);
-                    }
+                if !is_enable_global_hotkey && let Err(e) = hotkey::Hotkey::global().reset() {
+                    logging!(error, Type::Hotkey, true, "Failed to reset hotkeys: {}", e);
                 }
             });
         }

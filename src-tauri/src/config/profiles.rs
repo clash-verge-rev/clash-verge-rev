@@ -1,10 +1,10 @@
-use super::{prfitem::PrfItem, PrfOption};
+use super::{PrfOption, prfitem::PrfItem};
 use crate::{
     logging_error,
     process::AsyncHandler,
     utils::{dirs, help, logging::Type},
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use std::collections::HashSet;
@@ -88,12 +88,12 @@ impl IProfiles {
             self.items = Some(vec![]);
         }
 
-        if let Some(current) = patch.current {
-            if let Some(items) = self.items.as_ref() {
-                let some_uid = Some(current);
-                if items.iter().any(|e| e.uid == some_uid) {
-                    self.current = some_uid;
-                }
+        if let Some(current) = patch.current
+            && let Some(items) = self.items.as_ref()
+        {
+            let some_uid = Some(current);
+            if items.iter().any(|e| e.uid == some_uid) {
+                self.current = some_uid;
             }
         }
 
@@ -287,24 +287,24 @@ impl IProfiles {
                 break;
             }
         }
-        if let Some(index) = index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
+        if let Some(index) = index
+            && let Some(file) = items.remove(index).file
+        {
+            let _ = dirs::app_profiles_dir().map(async move |path| {
+                let path = path.join(file);
+                if path.exists() {
+                    let result = fs::remove_file(path.clone()).await;
+                    if let Err(err) = result {
+                        logging_error!(
+                            Type::Config,
+                            false,
+                            "[配置文件删除] 删除文件 {} 失败: {}",
+                            path.display(),
+                            err
+                        );
                     }
-                });
-            }
+                }
+            });
         }
         // get the merge index
         for (i, _) in items.iter().enumerate() {
@@ -313,24 +313,24 @@ impl IProfiles {
                 break;
             }
         }
-        if let Some(index) = merge_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
+        if let Some(index) = merge_index
+            && let Some(file) = items.remove(index).file
+        {
+            let _ = dirs::app_profiles_dir().map(async move |path| {
+                let path = path.join(file);
+                if path.exists() {
+                    let result = fs::remove_file(path.clone()).await;
+                    if let Err(err) = result {
+                        logging_error!(
+                            Type::Config,
+                            false,
+                            "[配置文件删除] 删除文件 {} 失败: {}",
+                            path.display(),
+                            err
+                        );
                     }
-                });
-            }
+                }
+            });
         }
         // get the script index
         for (i, _) in items.iter().enumerate() {
@@ -339,24 +339,24 @@ impl IProfiles {
                 break;
             }
         }
-        if let Some(index) = script_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
+        if let Some(index) = script_index
+            && let Some(file) = items.remove(index).file
+        {
+            let _ = dirs::app_profiles_dir().map(async move |path| {
+                let path = path.join(file);
+                if path.exists() {
+                    let result = fs::remove_file(path.clone()).await;
+                    if let Err(err) = result {
+                        logging_error!(
+                            Type::Config,
+                            false,
+                            "[配置文件删除] 删除文件 {} 失败: {}",
+                            path.display(),
+                            err
+                        );
                     }
-                });
-            }
+                }
+            });
         }
         // get the rules index
         for (i, _) in items.iter().enumerate() {
@@ -365,24 +365,24 @@ impl IProfiles {
                 break;
             }
         }
-        if let Some(index) = rules_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
+        if let Some(index) = rules_index
+            && let Some(file) = items.remove(index).file
+        {
+            let _ = dirs::app_profiles_dir().map(async move |path| {
+                let path = path.join(file);
+                if path.exists() {
+                    let result = fs::remove_file(path.clone()).await;
+                    if let Err(err) = result {
+                        logging_error!(
+                            Type::Config,
+                            false,
+                            "[配置文件删除] 删除文件 {} 失败: {}",
+                            path.display(),
+                            err
+                        );
                     }
-                });
-            }
+                }
+            });
         }
         // get the proxies index
         for (i, _) in items.iter().enumerate() {
@@ -391,24 +391,24 @@ impl IProfiles {
                 break;
             }
         }
-        if let Some(index) = proxies_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
+        if let Some(index) = proxies_index
+            && let Some(file) = items.remove(index).file
+        {
+            let _ = dirs::app_profiles_dir().map(async move |path| {
+                let path = path.join(file);
+                if path.exists() {
+                    let result = fs::remove_file(path.clone()).await;
+                    if let Err(err) = result {
+                        logging_error!(
+                            Type::Config,
+                            false,
+                            "[配置文件删除] 删除文件 {} 失败: {}",
+                            path.display(),
+                            err
+                        );
                     }
-                });
-            }
+                }
+            });
         }
         // get the groups index
         for (i, _) in items.iter().enumerate() {
@@ -417,24 +417,24 @@ impl IProfiles {
                 break;
             }
         }
-        if let Some(index) = groups_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
+        if let Some(index) = groups_index
+            && let Some(file) = items.remove(index).file
+        {
+            let _ = dirs::app_profiles_dir().map(async move |path| {
+                let path = path.join(file);
+                if path.exists() {
+                    let result = fs::remove_file(path.clone()).await;
+                    if let Err(err) = result {
+                        logging_error!(
+                            Type::Config,
+                            false,
+                            "[配置文件删除] 删除文件 {} 失败: {}",
+                            path.display(),
+                            err
+                        );
                     }
-                });
-            }
+                }
+            });
         }
         // delete the original uid
         if current == uid {
@@ -595,25 +595,25 @@ impl IProfiles {
 
             total_files += 1;
 
-            if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
-                if Self::is_profile_file(file_name) {
-                    // 检查是否为全局扩展文件
-                    if protected_files.contains(file_name) {
-                        log::debug!(target: "app", "保护全局扩展配置文件: {file_name}");
-                        continue;
-                    }
+            if let Some(file_name) = path.file_name().and_then(|n| n.to_str())
+                && Self::is_profile_file(file_name)
+            {
+                // 检查是否为全局扩展文件
+                if protected_files.contains(file_name) {
+                    log::debug!(target: "app", "保护全局扩展配置文件: {file_name}");
+                    continue;
+                }
 
-                    // 检查是否为活跃文件
-                    if !active_files.contains(file_name) {
-                        match std::fs::remove_file(&path) {
-                            Ok(_) => {
-                                deleted_files.push(file_name.to_string());
-                                log::info!(target: "app", "已清理冗余文件: {file_name}");
-                            }
-                            Err(e) => {
-                                failed_deletions.push(format!("{file_name}: {e}"));
-                                log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
-                            }
+                // 检查是否为活跃文件
+                if !active_files.contains(file_name) {
+                    match std::fs::remove_file(&path) {
+                        Ok(_) => {
+                            deleted_files.push(file_name.to_string());
+                            log::info!(target: "app", "已清理冗余文件: {file_name}");
+                        }
+                        Err(e) => {
+                            failed_deletions.push(format!("{file_name}: {e}"));
+                            log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
                         }
                     }
                 }
@@ -659,50 +659,44 @@ impl IProfiles {
                 }
 
                 // 对于主 profile 类型（remote/local），还需要收集其关联的扩展文件
-                if let Some(itype) = &item.itype {
-                    if itype == "remote" || itype == "local" {
-                        if let Some(option) = &item.option {
-                            // 收集关联的扩展文件
-                            if let Some(merge_uid) = &option.merge {
-                                if let Ok(merge_item) = self.get_item(merge_uid) {
-                                    if let Some(file) = &merge_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
+                if let Some(itype) = &item.itype
+                    && (itype == "remote" || itype == "local")
+                    && let Some(option) = &item.option
+                {
+                    // 收集关联的扩展文件
+                    if let Some(merge_uid) = &option.merge
+                        && let Ok(merge_item) = self.get_item(merge_uid)
+                        && let Some(file) = &merge_item.file
+                    {
+                        active_files.insert(file.clone());
+                    }
 
-                            if let Some(script_uid) = &option.script {
-                                if let Ok(script_item) = self.get_item(script_uid) {
-                                    if let Some(file) = &script_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
+                    if let Some(script_uid) = &option.script
+                        && let Ok(script_item) = self.get_item(script_uid)
+                        && let Some(file) = &script_item.file
+                    {
+                        active_files.insert(file.clone());
+                    }
 
-                            if let Some(rules_uid) = &option.rules {
-                                if let Ok(rules_item) = self.get_item(rules_uid) {
-                                    if let Some(file) = &rules_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
+                    if let Some(rules_uid) = &option.rules
+                        && let Ok(rules_item) = self.get_item(rules_uid)
+                        && let Some(file) = &rules_item.file
+                    {
+                        active_files.insert(file.clone());
+                    }
 
-                            if let Some(proxies_uid) = &option.proxies {
-                                if let Ok(proxies_item) = self.get_item(proxies_uid) {
-                                    if let Some(file) = &proxies_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
+                    if let Some(proxies_uid) = &option.proxies
+                        && let Ok(proxies_item) = self.get_item(proxies_uid)
+                        && let Some(file) = &proxies_item.file
+                    {
+                        active_files.insert(file.clone());
+                    }
 
-                            if let Some(groups_uid) = &option.groups {
-                                if let Ok(groups_item) = self.get_item(groups_uid) {
-                                    if let Some(file) = &groups_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
-                        }
+                    if let Some(groups_uid) = &option.groups
+                        && let Ok(groups_item) = self.get_item(groups_uid)
+                        && let Some(file) = &groups_item.file
+                    {
+                        active_files.insert(file.clone());
                     }
                 }
             }

@@ -1,14 +1,14 @@
 use anyhow::Result;
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use isahc::prelude::*;
+use isahc::{HttpClient, config::SslOption};
 use isahc::{
     config::RedirectPolicy,
     http::{
-        header::{HeaderMap, HeaderValue, USER_AGENT},
         StatusCode, Uri,
+        header::{HeaderMap, HeaderValue, USER_AGENT},
     },
 };
-use isahc::{config::SslOption, HttpClient};
 use std::time::{Duration, Instant};
 use sysproxy::Sysproxy;
 use tauri::Url;
@@ -88,10 +88,11 @@ impl NetworkManager {
             return true;
         }
 
-        if let Some((time, _)) = &*last_error_guard {
-            if time.elapsed() < Duration::from_secs(30) && count > 2 {
-                return true;
-            }
+        if let Some((time, _)) = &*last_error_guard
+            && time.elapsed() < Duration::from_secs(30)
+            && count > 2
+        {
+            return true;
         }
 
         false
@@ -113,7 +114,8 @@ impl NetworkManager {
     ) -> Result<HttpClient> {
         let proxy_uri_clone = proxy_uri.clone();
         let headers_clone = default_headers.clone();
-        let client = {
+
+        {
             let mut builder = HttpClient::builder();
 
             builder = match proxy_uri_clone {
@@ -136,9 +138,7 @@ impl NetworkManager {
             builder = builder.redirect_policy(RedirectPolicy::Follow);
 
             Ok(builder.build()?)
-        };
-
-        client
+        }
     }
 
     pub async fn create_request(
@@ -200,15 +200,15 @@ impl NetworkManager {
         let parsed = Url::parse(url)?;
         let mut extra_headers = HeaderMap::new();
 
-        if !parsed.username().is_empty() {
-            if let Some(pass) = parsed.password() {
-                let auth_str = format!("{}:{}", parsed.username(), pass);
-                let encoded = general_purpose::STANDARD.encode(auth_str);
-                extra_headers.insert(
-                    "Authorization",
-                    HeaderValue::from_str(&format!("Basic {}", encoded))?,
-                );
-            }
+        if !parsed.username().is_empty()
+            && let Some(pass) = parsed.password()
+        {
+            let auth_str = format!("{}:{}", parsed.username(), pass);
+            let encoded = general_purpose::STANDARD.encode(auth_str);
+            extra_headers.insert(
+                "Authorization",
+                HeaderValue::from_str(&format!("Basic {}", encoded))?,
+            );
         }
 
         let clean_url = {
