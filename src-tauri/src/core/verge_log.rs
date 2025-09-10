@@ -135,7 +135,7 @@ impl VergeLog {
         let parse_time_str = |s: &str| {
             let sa = s.split('-').collect::<Vec<&str>>();
             if sa.len() != 4 {
-                return Err(AppError::InvalidValue("invalid time str".to_string()));
+                return Err(AppError::InvalidValue(format!("invalid time str: {s}.log")));
             }
 
             let year = i32::from_str(sa[0])?;

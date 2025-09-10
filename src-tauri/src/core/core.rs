@@ -128,8 +128,8 @@ impl CoreManager {
         }
 
         // 服务模式
-        let enable = Config::verge().latest().enable_service_mode.unwrap_or_default();
-        self.use_service_mode.store(enable, Ordering::SeqCst);
+        let enable_service_mode = Config::verge().latest().enable_service_mode.unwrap_or_default();
+        self.use_service_mode.store(enable_service_mode, Ordering::SeqCst);
 
         handle::Handle::mihomo().await.clear_all_ws_connections().await?;
         let mut system = System::new();
@@ -140,7 +140,7 @@ impl CoreManager {
             proc.kill();
         }
 
-        if enable {
+        if enable_service_mode {
             // 服务模式启动失败就直接运行 sidecar
             tracing::debug!("try to run core in service mode");
             let verge_log = VergeLog::global();
