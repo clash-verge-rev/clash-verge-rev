@@ -1,5 +1,3 @@
-#[cfg(target_os = "windows")]
-use crate::process::AsyncHandler;
 use crate::{logging, utils::logging::Type};
 use anyhow::{Context, Result, bail};
 use backoff::{Error as BackoffError, ExponentialBackoff};
@@ -195,7 +193,6 @@ async fn send_ipc_request_internal(
 
 // IPC连接管理-win
 #[cfg(target_os = "windows")]
-#[cfg(target_os = "windows")]
 async fn send_ipc_request_windows(
     command: IpcCommand,
     payload: serde_json::Value,
@@ -292,10 +289,11 @@ mod tests {
         let result = create_signed_request(command, payload);
         assert!(result.is_ok());
 
-        let request = result.unwrap();
-        assert!(!request.id.is_empty());
-        assert!(!request.signature.is_empty());
-        assert_eq!(request.command, IpcCommand::GetVersion);
+        if let Ok(request) = result {
+            assert!(!request.id.is_empty());
+            assert!(!request.signature.is_empty());
+            assert_eq!(request.command, IpcCommand::GetVersion);
+        }
     }
 
     #[test]
@@ -305,11 +303,11 @@ mod tests {
         let signature_result = sign_message(test_message);
         assert!(signature_result.is_ok());
 
-        let signature = signature_result.unwrap();
+        let signature = signature_result.expect("Failed to sign message");
         assert!(!signature.is_empty());
 
         // 测试相同消息产生相同签名
-        let signature2 = sign_message(test_message).unwrap();
+        let signature2 = sign_message(test_message).expect("Failed to sign message again");
         assert_eq!(signature, signature2);
     }
 
@@ -332,8 +330,9 @@ mod tests {
             signature: String::new(),
         };
 
-        let message = serde_json::to_string(&verification_response).unwrap();
-        let correct_signature = sign_message(&message).unwrap();
+        let message =
+            serde_json::to_string(&verification_response).expect("Failed to serialize response");
+        let correct_signature = sign_message(&message).expect("Failed to sign message");
 
         let signed_response = IpcResponse {
             signature: correct_signature,
@@ -342,6 +341,6 @@ mod tests {
 
         let verification_result = verify_response_signature(&signed_response);
         assert!(verification_result.is_ok());
-        assert!(verification_result.unwrap());
+        assert!(verification_result.expect("Failed to verify signature"));
     }
 }
