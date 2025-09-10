@@ -60,9 +60,9 @@ const SettingClash = ({ onError }: Props) => {
   const { verge, mutateVerge, patchVerge } = useVerge();
   const {
     clash_core = "verge-mihomo",
-    enable_random_port = false,
-    enable_service_mode = false,
-    enable_external_controller = false,
+    enable_random_port,
+    enable_service_mode,
+    enable_external_controller,
   } = verge;
   const { serviceStatus, mutateCheckService } = useService();
 
@@ -342,7 +342,7 @@ const SettingClash = ({ onError }: Props) => {
           </Tooltip>
         }>
         <TextField
-          disabled={enable_random_port}
+          disabled={enable_random_port ?? false}
           autoComplete="off"
           size="small"
           value={clash?.["mixed-port"] ?? 7890}
@@ -365,7 +365,7 @@ const SettingClash = ({ onError }: Props) => {
           </IconButton>
         }>
         <GuardState
-          value={enable_external_controller}
+          value={enable_external_controller ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}

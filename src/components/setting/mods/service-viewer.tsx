@@ -1,11 +1,8 @@
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useNotice } from "@/components/base/notifice";
 import { useService } from "@/hooks/use-service";
-import {
-  installService,
-  patchVergeConfig,
-  uninstallService,
-} from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
+import { installService, uninstallService } from "@/services/cmds";
 import { Check, Close } from "@mui/icons-material";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
@@ -21,6 +18,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
 
   const { t } = useTranslation();
   const { notice } = useNotice();
+  const { patchVerge } = useVerge();
   const [open, setOpen] = useState(false);
 
   const { serviceStatus, mutateCheckService } = useService();
@@ -50,7 +48,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
   const onUninstall = useLockFn(async () => {
     try {
       if (enable) {
-        await patchVergeConfig({ enable_service_mode: false });
+        await patchVerge({ enable_service_mode: false });
       }
 
       await uninstallService();
@@ -66,7 +64,7 @@ export const ServiceViewer = forwardRef<DialogRef, Props>((props, ref) => {
   // fix unhandled error of the service mode
   const onDisable = useLockFn(async () => {
     try {
-      await patchVergeConfig({ enable_service_mode: false });
+      await patchVerge({ enable_service_mode: false });
       mutateCheckService();
       setOpen(false);
     } catch (err: any) {
