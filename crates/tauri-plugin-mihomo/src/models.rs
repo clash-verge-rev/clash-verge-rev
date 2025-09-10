@@ -2,13 +2,11 @@ use futures_util::{SinkExt, stream::SplitSink};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Display};
 use tokio::net::TcpStream;
-#[cfg(unix)]
-use tokio::net::UnixStream;
-#[cfg(windows)]
-use tokio::net::windows::named_pipe::NamedPipeClient;
 use tokio::sync::RwLock;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
 use ts_rs::TS;
+
+use crate::wrap_stream::WrapStream;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -880,10 +878,7 @@ pub enum WebSocketMessage {
 pub type ConnectionId = u32;
 pub enum WebSocketWriter {
     TcpStreamWriter(SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>),
-    #[cfg(unix)]
-    UnixStreamWriter(SplitSink<WebSocketStream<UnixStream>, Message>),
-    #[cfg(windows)]
-    NamedPipeWriter(SplitSink<WebSocketStream<NamedPipeClient>, Message>),
+    SocketStreamWriter(SplitSink<WebSocketStream<WrapStream>, Message>),
 }
 
 impl WebSocketWriter {
@@ -892,12 +887,7 @@ impl WebSocketWriter {
             WebSocketWriter::TcpStreamWriter(write) => {
                 write.send(message).await?;
             }
-            #[cfg(unix)]
-            WebSocketWriter::UnixStreamWriter(write) => {
-                write.send(message).await?;
-            }
-            #[cfg(windows)]
-            WebSocketWriter::NamedPipeWriter(write) => {
+            WebSocketWriter::SocketStreamWriter(write) => {
                 write.send(message).await?;
             }
         }

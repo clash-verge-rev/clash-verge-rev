@@ -2,7 +2,7 @@
 use crate::{
     BaseConfig, CloseFrame, ConnectionId, ConnectionManager, Connections, CoreUpdaterChannel, Error, Groups, LogLevel,
     MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay, ProxyProvider, ProxyProviders, Result, RuleProviders, Rules,
-    WebSocketMessage, WebSocketWriter, failed_resp, ipc_request::LocalSocket, ret_failed_resp, utils,
+    WebSocketMessage, WebSocketWriter, failed_resp, ipc_request::LocalSocket, ret_failed_resp, utils, wrap_stream,
 };
 use futures_util::StreamExt;
 use http::{
@@ -18,7 +18,6 @@ use tokio_tungstenite::{
     tungstenite::{Message, client::IntoClientRequest, protocol::CloseFrame as ProtocolCloseFrame},
 };
 
-// #[derive(Debug)]
 pub struct Mihomo {
     pub protocol: Protocol,
     pub external_host: Option<String>,
@@ -168,13 +167,12 @@ impl Mihomo {
                 let request = url.into_client_request()?;
                 let (ws_stream, _) = connect_async(request).await?;
                 let (writer, mut reader) = ws_stream.split();
-                {
-                    manager
-                        .0
-                        .write()
-                        .await
-                        .insert(id, WebSocketWriter::TcpStreamWriter(writer));
-                }
+
+                manager
+                    .0
+                    .write()
+                    .await
+                    .insert(id, WebSocketWriter::TcpStreamWriter(writer));
 
                 tauri::async_runtime::spawn(async move {
                     let on_message_ = on_message.clone();
@@ -202,38 +200,7 @@ impl Mihomo {
             Protocol::LocalSocket => {
                 if let Some(socket_path) = self.socket_path.as_ref() {
                     log::debug!("starting connect to websocket by using local socket: {socket_path}");
-                    let stream = {
-                        #[cfg(unix)]
-                        {
-                            use std::path::Path;
-                            use tokio::net::UnixStream;
-                            if !Path::new(socket_path).exists() {
-                                log::error!("socket path is not exists: {socket_path}");
-                                return Err(Error::Io(std::io::Error::new(
-                                    std::io::ErrorKind::NotFound,
-                                    format!("socket path: {socket_path} not found"),
-                                )));
-                            }
-                            UnixStream::connect(socket_path).await?
-                        }
-
-                        #[cfg(windows)]
-                        {
-                            use tokio::net::windows::named_pipe::ClientOptions;
-                            use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
-                            loop {
-                                match ClientOptions::new().open(socket_path) {
-                                    Ok(client) => break client,
-                                    Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => {}
-                                    Err(e) => {
-                                        log::error!("failed to connect to named pipe: {socket_path}, {e}");
-                                        ret_failed_resp!("Failed to connect to named pipe: {socket_path}, {e}");
-                                    }
-                                }
-                                tokio::time::sleep(Duration::from_millis(50)).await;
-                            }
-                        }
-                    };
+                    let stream = wrap_stream::connect_to_socket(socket_path).await?;
 
                     let request = Request::builder()
                         .uri(url)
@@ -245,21 +212,12 @@ impl Mihomo {
                         .body(())?;
                     let (ws_stream, _) = client_async(request, stream).await?;
                     let (writer, mut reader) = ws_stream.split();
-                    {
-                        // save writer stream
-                        #[cfg(unix)]
-                        manager
-                            .0
-                            .write()
-                            .await
-                            .insert(id, WebSocketWriter::UnixStreamWriter(writer));
-                        #[cfg(windows)]
-                        manager
-                            .0
-                            .write()
-                            .await
-                            .insert(id, WebSocketWriter::NamedPipeWriter(writer));
-                    }
+
+                    manager
+                        .0
+                        .write()
+                        .await
+                        .insert(id, WebSocketWriter::SocketStreamWriter(writer));
 
                     tauri::async_runtime::spawn(async move {
                         let on_message_ = on_message.clone();
@@ -297,7 +255,7 @@ impl Mihomo {
     async fn send(&self, id: ConnectionId, message: WebSocketMessage) -> Result<()> {
         let manager = self.connection_manager.clone();
         let mut manager = manager.0.write().await;
-        if let Some(write) = manager.get_mut(&id) {
+        if let Some(writer) = manager.get_mut(&id) {
             let data = match message {
                 WebSocketMessage::Text(t) => Message::Text(t.into()),
                 WebSocketMessage::Binary(t) => Message::Binary(t.into()),
@@ -308,7 +266,7 @@ impl Mihomo {
                     reason: v.reason.into(),
                 })),
             };
-            write.send(data).await?;
+            writer.send(data).await?;
             Ok(())
         } else {
             log::error!("connection not found: {id}");

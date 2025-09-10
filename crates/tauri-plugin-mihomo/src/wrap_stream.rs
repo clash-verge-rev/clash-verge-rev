@@ -1,3 +1,4 @@
+//! wrap IPC stream, include unix stream and namedpipe stream.
 use tokio::io::{AsyncRead, AsyncWrite};
 #[cfg(unix)]
 use tokio::net::UnixStream;
@@ -22,7 +23,7 @@ impl WrapStream {
             #[cfg(unix)]
             WrapStream::Unix(s) => s.readable().await,
             #[cfg(windows)]
-            WrapStream::NamedPipe(s) => {}
+            WrapStream::NamedPipe(s) => s.readable().await,
         }
     }
     pub async fn writable(&self) -> std::io::Result<()> {
@@ -30,7 +31,7 @@ impl WrapStream {
             #[cfg(unix)]
             WrapStream::Unix(s) => s.writable().await,
             #[cfg(windows)]
-            WrapStream::NamedPipe(s) => {}
+            WrapStream::NamedPipe(s) => s.writable().await,
         }
     }
 }
@@ -76,5 +77,46 @@ impl AsyncWrite for WrapStream {
             #[cfg(windows)]
             WrapStreamProj::NamedPipe(s) => s.poll_shutdown(cx),
         }
+    }
+}
+
+pub async fn connect_to_socket(socket_path: &str) -> crate::Result<WrapStream> {
+    #[cfg(unix)]
+    {
+        use crate::Error;
+        use std::path::Path;
+        use tokio::net::UnixStream;
+
+        if !Path::new(socket_path).exists() {
+            log::error!("socket path is not exists: {socket_path}");
+            return Err(Error::Io(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("socket path: {socket_path} not found"),
+            )));
+        }
+        Ok(WrapStream::Unix(UnixStream::connect(socket_path).await?))
+    }
+
+    #[cfg(windows)]
+    {
+        use crate::Error;
+        use std::time::Duration;
+        use tokio::net::windows::named_pipe::ClientOptions;
+        use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
+
+        let client = loop {
+            match ClientOptions::new().open(socket_path) {
+                Ok(client) => break client,
+                Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
+                Err(e) => {
+                    log::error!("failed to connect to named pipe: {socket_path}, {e}");
+                    return Err(Error::FailedResponse(format!(
+                        "Failed to connect to named pipe: {socket_path}, {e}"
+                    )));
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        };
+        Ok(WrapStream::NamedPipe(client))
     }
 }

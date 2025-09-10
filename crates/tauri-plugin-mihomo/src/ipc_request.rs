@@ -1,10 +1,6 @@
+use crate::{utils, wrap_stream};
 use reqwest::RequestBuilder;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::UnixStream;
-
-use crate::utils;
-#[cfg(unix)]
-use crate::wrap_stream::WrapStream;
 
 pub trait LocalSocket {
     async fn send_by_local_socket(self, socket_path: &str) -> crate::Result<reqwest::Response>;
@@ -12,45 +8,7 @@ pub trait LocalSocket {
 
 impl LocalSocket for RequestBuilder {
     async fn send_by_local_socket(self, socket_path: &str) -> crate::Result<reqwest::Response> {
-        #[cfg(unix)]
-        let mut stream = WrapStream::Unix(UnixStream::connect(socket_path).await?);
-        // let mut stream = {
-        //     #[cfg(unix)]
-        //     {
-        //         use std::path::Path;
-        //         use tokio::net::UnixStream;
-        //         if !Path::new(socket_path).exists() {
-        //             use crate::Error;
-
-        //             log::error!("socket path is not exists: {socket_path}");
-        //             return Err(Error::Io(std::io::Error::new(
-        //                 std::io::ErrorKind::NotFound,
-        //                 format!("socket path: {socket_path} not found"),
-        //             )));
-        //         }
-        //         UnixStream::connect(socket_path).await?
-        //     }
-        //     #[cfg(windows)]
-        //     {
-        //         use crate::Error;
-        //         use std::time::Duration;
-        //         use tokio::net::windows::named_pipe::ClientOptions;
-        //         use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
-        //         loop {
-        //             match ClientOptions::new().open(socket_path) {
-        //                 Ok(client) => break client,
-        //                 Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
-        //                 Err(e) => {
-        //                     log::error!("failed to connect to named pipe: {socket_path}, {e}");
-        //                     return Err(Error::FailedResponse(format!(
-        //                         "Failed to connect to named pipe: {socket_path}, {e}"
-        //                     )));
-        //                 }
-        //             }
-        //             tokio::time::sleep(Duration::from_millis(50)).await;
-        //         }
-        //     }
-        // };
+        let mut stream = wrap_stream::connect_to_socket(socket_path).await?;
         log::debug!("building socket request");
         let req_str = utils::build_socket_request(self)?;
         log::debug!("request string: {req_str:?}");
