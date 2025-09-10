@@ -19,7 +19,7 @@ import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
 import i18next from "i18next";
 import { debounce } from "lodash-es";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SWRConfig, mutate } from "swr";
 

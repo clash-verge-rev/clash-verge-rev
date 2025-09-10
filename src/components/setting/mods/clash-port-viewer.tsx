@@ -9,7 +9,6 @@ import { uniq } from "lodash-es";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
-import { getBaseConfig } from "tauri-plugin-mihomo-api";
 
 const OS = getSystem();
 

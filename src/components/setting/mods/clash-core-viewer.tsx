@@ -1,6 +1,9 @@
 import MetaIcon from "@/assets/image/Meta.svg?react";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useNotice } from "@/components/base/notifice";
+import { useClash } from "@/hooks/use-clash";
+import { useMihomoCoresInfo } from "@/hooks/use-mihomo-cores-info";
+import { usePortable } from "@/hooks/use-portable";
 import { useVerge } from "@/hooks/use-verge";
 import {
   changeClashCore,
@@ -30,10 +33,6 @@ import {
   MihomoWebSocket,
   upgradeCore,
 } from "tauri-plugin-mihomo-api";
-import { useService } from "@/hooks/use-service";
-import { useMihomoCoresInfo } from "@/hooks/use-mihomo-cores-info";
-import { usePortable } from "@/hooks/use-portable";
-import { useClash } from "@/hooks/use-clash";
 
 interface Props {
   serviceActive: boolean;

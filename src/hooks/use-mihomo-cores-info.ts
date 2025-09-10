@@ -2,13 +2,13 @@ import {
   checkPermissionsGranted,
   refreshPermissionsGranted,
 } from "@/services/cmds";
-import { useEffect } from "react";
 import getSystem from "@/utils/get-system";
-import { useService } from "./use-service";
 import { Command } from "@tauri-apps/plugin-shell";
-import { useVerge } from "./use-verge";
-import { usePortable } from "./use-portable";
+import { useEffect } from "react";
 import useSWR from "swr";
+import { usePortable } from "./use-portable";
+import { useService } from "./use-service";
+import { useVerge } from "./use-verge";
 
 type MihomoCoreInfo = {
   name: string;

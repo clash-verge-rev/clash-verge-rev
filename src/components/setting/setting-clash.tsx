@@ -2,6 +2,8 @@ import { DialogRef, SwitchLovely } from "@/components/base";
 import { ServiceViewer } from "@/components/setting/mods/service-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
 import { useClash } from "@/hooks/use-clash";
+import { useMihomoCoresInfo } from "@/hooks/use-mihomo-cores-info";
+import { usePortable } from "@/hooks/use-portable";
 import { useService } from "@/hooks/use-service";
 import { useVerge } from "@/hooks/use-verge";
 import { invoke_uwp_tool } from "@/services/cmds";
@@ -35,8 +37,6 @@ import { GuardState } from "./mods/guard-state";
 import { NetInfoViewer } from "./mods/net-info-viewer";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { WebUIViewer } from "./mods/web-ui-viewer";
-import { useMihomoCoresInfo } from "@/hooks/use-mihomo-cores-info";
-import { usePortable } from "@/hooks/use-portable";
 
 const OS = getSystem();
 

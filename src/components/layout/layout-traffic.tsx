@@ -12,12 +12,11 @@ import {
   MemoryOutlined,
 } from "@mui/icons-material";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
-import { useLockFn } from "ahooks";
 import { t } from "i18next";
+import { debounce } from "lodash-es";
 import { useEffect, useRef } from "react";
 import { useNotice } from "../base/notifice";
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
-import { debounce } from "lodash-es";
 
 // setup the traffic
 export const LayoutTraffic = () => {

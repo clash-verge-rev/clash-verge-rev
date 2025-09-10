@@ -16,7 +16,7 @@ import { throttle } from "lodash-es";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-import { getBaseConfig, updateRuleProvider } from "tauri-plugin-mihomo-api";
+import { updateRuleProvider } from "tauri-plugin-mihomo-api";
 
 export const ProviderButton = () => {
   const { t } = useTranslation();
