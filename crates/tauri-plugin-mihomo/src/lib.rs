@@ -13,6 +13,7 @@ mod ipc_request;
 mod mihomo;
 pub mod models;
 mod utils;
+mod wrap_stream;
 
 pub use error::{Error, Result};
 

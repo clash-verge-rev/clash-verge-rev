@@ -23,6 +23,7 @@ httparse = "1.10"
 log = "0.4"
 urlencoding = "2.1"
 ts-rs = "11.0"
+pin-project = "1.1.10"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = "0.59"
