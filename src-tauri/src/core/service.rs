@@ -507,11 +507,11 @@ async fn check_service_version() -> Result<String> {
         .data
         .ok_or_else(|| anyhow::anyhow!("服务版本响应中没有数据"))?;
 
-    if let Some(nested_data) = data.get("data") {
-        if let Some(version) = nested_data.get("version").and_then(|v| v.as_str()) {
-            logging!(info, Type::Service, true, "获取到服务版本: {}", version);
-            return Ok(version.to_string());
-        }
+    if let Some(nested_data) = data.get("data")
+        && let Some(version) = nested_data.get("version").and_then(|v| v.as_str())
+    {
+        logging!(info, Type::Service, true, "获取到服务版本: {}", version);
+        return Ok(version.to_string());
     }
 
     Ok("unknown".to_string())
@@ -559,16 +559,15 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
         bail!(err_msg);
     }
 
-    if let Some(data) = &response.data {
-        if let Some(code) = data.get("code").and_then(|c| c.as_u64()) {
-            if code != 0 {
-                let msg = data
-                    .get("msg")
-                    .and_then(|m| m.as_str())
-                    .unwrap_or("未知错误");
-                bail!("启动核心失败: {}", msg);
-            }
-        }
+    if let Some(data) = &response.data
+        && let Some(code) = data.get("code").and_then(|c| c.as_u64())
+        && code != 0
+    {
+        let msg = data
+            .get("msg")
+            .and_then(|m| m.as_str())
+            .unwrap_or("未知错误");
+        bail!("启动核心失败: {}", msg);
     }
 
     logging!(info, Type::Service, true, "服务成功启动核心");
