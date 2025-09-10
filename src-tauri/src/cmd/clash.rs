@@ -317,13 +317,13 @@ pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
     let value = MIHOMO_CACHE
         .inner()
         .get_with_by_ref(CACHE_CONFIG_KEY, async move {
-            Box::new(manager.get_config().await.unwrap_or_else(|e| {
+            manager.get_config().await.unwrap_or_else(|e| {
                 logging!(error, Type::Cmd, "Failed to fetch clash config: {e}");
                 serde_json::Value::Object(serde_json::Map::new())
-            }))
+            })
         })
         .await;
-    Ok(*value)
+    Ok(value)
 }
 
 /// 强制刷新Clash配置缓存
