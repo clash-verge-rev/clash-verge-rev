@@ -1,18 +1,19 @@
 use std::backtrace::{Backtrace, BacktraceStatus};
 
-use crate::config::PrfOption;
-use crate::core::verge_log::VergeLog;
-use crate::error::AppResult;
-use crate::utils::dirs::{self, APP_ID};
-use crate::{APP_HANDLE, log_err, shutdown, trace_err, utils};
-use crate::{
-    config::{Config, PrfItem},
-    core::*,
-    utils::init,
-    utils::server,
-};
 use rust_i18n::t;
 use tauri::{AppHandle, CloseRequestApi, Manager};
+
+use crate::{
+    APP_HANDLE,
+    config::{Config, PrfItem, PrfOption},
+    core::{verge_log::VergeLog, *},
+    error::AppResult,
+    log_err, shutdown, trace_err, utils,
+    utils::{
+        dirs::{self, APP_ID},
+        init, server,
+    },
+};
 
 /// handle something when start app
 pub async fn resolve_setup() {

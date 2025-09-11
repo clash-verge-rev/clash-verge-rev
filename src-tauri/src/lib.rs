@@ -9,20 +9,22 @@ mod feat;
 mod shutdown;
 mod utils;
 
+use core::verge_log::VergeLog;
+#[cfg(target_os = "linux")]
+use std::sync::LazyLock;
+
+use once_cell::sync::OnceCell;
+#[cfg(target_os = "linux")]
+use parking_lot::RwLock;
+use tauri::AppHandle;
+use tauri_plugin_mihomo::Protocol;
+
 use crate::{
     config::Config,
     core::handle,
     error::AppResult,
     utils::{init, resolve, server},
 };
-use core::verge_log::VergeLog;
-use once_cell::sync::OnceCell;
-#[cfg(target_os = "linux")]
-use parking_lot::RwLock;
-#[cfg(target_os = "linux")]
-use std::sync::LazyLock;
-use tauri::AppHandle;
-use tauri_plugin_mihomo::Protocol;
 
 rust_i18n::i18n!("locales", fallback = "en");
 

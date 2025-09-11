@@ -1,5 +1,6 @@
-use serde_yaml::{Mapping, Value};
 use std::collections::HashSet;
+
+use serde_yaml::{Mapping, Value};
 
 pub const SORT_FIELDS: [&str; 17] = [
     "mode",

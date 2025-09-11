@@ -1,3 +1,11 @@
+use rust_i18n::t;
+use tauri::{
+    AppHandle, Runtime,
+    image::Image,
+    menu::{CheckMenuItem, Menu, MenuBuilder, MenuEvent, MenuItemBuilder, SubmenuBuilder},
+    tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
+};
+
 use super::handle;
 use crate::{
     APP_VERSION, any_err, cmds,
@@ -5,13 +13,6 @@ use crate::{
     error::{AppError, AppResult},
     feat, log_err,
     utils::{dirs, resolve},
-};
-use rust_i18n::t;
-use tauri::{
-    AppHandle, Runtime,
-    image::Image,
-    menu::{CheckMenuItem, Menu, MenuBuilder, MenuEvent, MenuItemBuilder, SubmenuBuilder},
-    tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
 };
 
 pub const TRAY_ID: &str = "verge_tray";
@@ -358,9 +359,15 @@ impl Tray {
             "service_mode" => feat::toggle_service_mode(),
             "copy_env" => feat::copy_clash_env(app_handle),
             "open_app_dir" => log_err!(cmds::common::open_app_dir(app_handle_)),
-            "open_core_dir" => log_err!(cmds::common::open_core_dir(app_handle_)),
-            "open_logs_dir" => log_err!(cmds::common::open_logs_dir(app_handle_)),
-            "open_devtools" => log_err!(cmds::common::open_devtools(app_handle_)),
+            "open_core_dir" => {
+                log_err!(cmds::common::open_core_dir(app_handle_))
+            }
+            "open_logs_dir" => {
+                log_err!(cmds::common::open_logs_dir(app_handle_))
+            }
+            "open_devtools" => {
+                log_err!(cmds::common::open_devtools(app_handle_))
+            }
             "restart_clash" => feat::restart_clash_core(),
             "restart_app" => cmds::common::restart_app(app_handle_),
             "quit" => cmds::common::exit_app(app_handle_),

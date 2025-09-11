@@ -1,11 +1,13 @@
 #![allow(dead_code)]
-use crate::error::Result;
+use std::{fmt::Display, path::Path};
+
 use classical::ClassicalParseStrategy;
 use domain::DomainParseStrategy;
 pub use error::RuleParseError;
 use ipcidr::IpCidrParseStrategy;
 use serde::{Deserialize, Serialize};
-use std::{fmt::Display, path::Path};
+
+use crate::error::Result;
 
 mod bitmap;
 mod classical;

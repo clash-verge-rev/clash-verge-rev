@@ -1,15 +1,16 @@
-use super::tray::Tray;
-use crate::{
-    APP_HANDLE, any_err,
-    error::{AppError, AppResult},
-    log_err,
-};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt};
 use tauri_plugin_notification::NotificationExt;
 use tokio::sync::{RwLockReadGuard, RwLockWriteGuard};
+
+use super::tray::Tray;
+use crate::{
+    APP_HANDLE, any_err,
+    error::{AppError, AppResult},
+    log_err,
+};
 
 pub struct Handle;
 

@@ -33,8 +33,9 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     if enable {
         #[cfg(target_os = "macos")]
         {
-            use crate::utils::dirs;
             use std::process::Command;
+
+            use crate::utils::dirs;
 
             tracing::info!("try to set system dns");
             let resource_dir = dirs::app_resources_dir().unwrap();
@@ -57,8 +58,9 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     } else {
         #[cfg(target_os = "macos")]
         {
-            use crate::utils::dirs;
             use std::process::Command;
+
+            use crate::utils::dirs;
 
             tracing::info!("try to unset system dns");
             let resource_dir = dirs::app_resources_dir().unwrap();

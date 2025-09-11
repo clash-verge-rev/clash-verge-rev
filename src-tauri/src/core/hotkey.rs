@@ -1,13 +1,15 @@
+use std::{collections::HashMap, sync::Arc};
+
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+
 use crate::{
     config::Config,
     core::handle,
     error::{AppError, AppResult},
     feat, log_err,
 };
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
-use std::{collections::HashMap, sync::Arc};
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 pub struct Hotkey {
     current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
@@ -63,7 +65,9 @@ impl Hotkey {
             "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
             "toggle_system_proxy" => || feat::toggle_system_proxy(),
             "toggle_tun_mode" => || feat::toggle_tun_mode(),
-            _ => return Err(AppError::InvalidValue(format!("invalid function \"{func}\""))),
+            _ => {
+                return Err(AppError::InvalidValue(format!("invalid function \"{func}\"")));
+            }
         };
 
         manager.on_shortcut(hotkey, move |_app, hotkey, event| {

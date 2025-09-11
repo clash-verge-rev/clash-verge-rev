@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use tauri::async_runtime::RwLock;
-use tauri::ipc::Channel;
-use tauri::{State, command};
 
-use crate::mihomo::Mihomo;
-use crate::{Result, models::*};
+use tauri::{State, async_runtime::RwLock, command, ipc::Channel};
+
+use crate::{Result, mihomo::Mihomo, models::*};
 
 #[command]
 pub(crate) async fn update_controller(

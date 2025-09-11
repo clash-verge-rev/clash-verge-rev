@@ -1,16 +1,3 @@
-use crate::{
-    any_err,
-    config::Config,
-    error::{AppError, AppResult},
-    trace_err,
-    utils::dirs,
-};
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
-use reqwest_dav::{
-    Depth,
-    list_cmd::{ListEntity, ListFile},
-};
 use std::{
     env::{consts::OS, temp_dir},
     fs,
@@ -18,7 +5,22 @@ use std::{
     path::PathBuf,
     sync::Arc,
 };
+
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
+use reqwest_dav::{
+    Depth,
+    list_cmd::{ListEntity, ListFile},
+};
 use zip::write::SimpleFileOptions;
+
+use crate::{
+    any_err,
+    config::Config,
+    error::{AppError, AppResult},
+    trace_err,
+    utils::dirs,
+};
 
 // new backup dir
 #[cfg(not(feature = "verge-dev"))]

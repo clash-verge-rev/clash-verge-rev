@@ -1,11 +1,13 @@
+use std::{fs, path::PathBuf};
+
+use reqwest_dav::list_cmd::ListFile;
+
 use crate::{
     config::Config,
     core::backup::{self, WebDav},
     error::AppResult,
     utils::{self, dirs, resolve::resolve_reset},
 };
-use reqwest_dav::list_cmd::ListFile;
-use std::{fs, path::PathBuf};
 
 #[tauri::command]
 pub async fn create_local_backup(only_backup_profiles: bool) -> AppResult<(String, PathBuf)> {

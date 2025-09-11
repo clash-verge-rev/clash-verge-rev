@@ -1,10 +1,15 @@
-use crate::error::Result;
-use crate::{Parser, RuleBehavior, RuleFormat, RulePayload, error::RuleParseError, utils};
-use byteorder::{BigEndian, ReadBytesExt};
-use std::io::{Cursor, Read};
 use std::{
     fmt::{Debug, Display},
+    io::{Cursor, Read},
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
+};
+
+use byteorder::{BigEndian, ReadBytesExt};
+
+use crate::{
+    Parser, RuleBehavior, RuleFormat, RulePayload,
+    error::{Result, RuleParseError},
+    utils,
 };
 
 /// ipcidr parse strategy
@@ -259,9 +264,8 @@ mod tests {
 
     use std::{path::PathBuf, process::Command};
 
-    use crate::error::Result;
-
     use super::*;
+    use crate::error::Result;
 
     fn init_meta_rules() -> Result<PathBuf> {
         let tmp_dir = std::env::temp_dir();

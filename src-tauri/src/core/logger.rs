@@ -1,6 +1,7 @@
+use std::{collections::VecDeque, sync::Arc};
+
 use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard};
-use std::{collections::VecDeque, sync::Arc};
 
 const LOGS_QUEUE_LEN: usize = 100;
 

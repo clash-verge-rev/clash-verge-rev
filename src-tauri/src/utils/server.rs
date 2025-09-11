@@ -1,16 +1,18 @@
+use std::{convert::Infallible, time::Duration};
+
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
+use reqwest::ClientBuilder;
+use serde::Deserialize;
+use tokio::sync::oneshot;
+use warp::Filter;
+
 use super::{help, resolve};
 use crate::{
     any_err,
     config::{Config, DEFAULT_PAC, IVerge},
     error::{AppError, AppResult},
 };
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
-use reqwest::ClientBuilder;
-use serde::Deserialize;
-use std::{convert::Infallible, time::Duration};
-use tokio::sync::oneshot;
-use warp::Filter;
 
 // 关闭 embedded server 的信号发送端
 static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();

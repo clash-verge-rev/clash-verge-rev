@@ -14,5 +14,5 @@ use_field_init_shorthand = false
 force_explicit_abi = true
 
 # -- wait for stable --
-# imports_granularity = "Crate"
-# group_imports = "StdExternalCrate"
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"

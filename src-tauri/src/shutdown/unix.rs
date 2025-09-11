@@ -1,9 +1,10 @@
-use crate::utils::resolve;
 use signal_hook::{
     consts::{SIGHUP, SIGINT, SIGTERM},
     iterator::Signals,
     low_level,
 };
+
+use crate::utils::resolve;
 
 pub fn register() {
     tauri::async_runtime::spawn(async {

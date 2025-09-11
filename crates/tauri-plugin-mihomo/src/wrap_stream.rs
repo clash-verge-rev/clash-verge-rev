@@ -1,13 +1,15 @@
 //! wrap IPC stream, include unix stream and namedpipe stream.
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+};
+
+use pin_project::pin_project;
 use tokio::io::{AsyncRead, AsyncWrite};
 #[cfg(unix)]
 use tokio::net::UnixStream;
 #[cfg(windows)]
 use tokio::net::windows::named_pipe::NamedPipeClient;
-
-use pin_project::pin_project;
-use std::pin::Pin;
-use std::task::{Context, Poll};
 
 #[pin_project(project = WrapStreamProj)]
 pub enum WrapStream {
@@ -83,9 +85,11 @@ impl AsyncWrite for WrapStream {
 pub async fn connect_to_socket(socket_path: &str) -> crate::Result<WrapStream> {
     #[cfg(unix)]
     {
-        use crate::Error;
         use std::path::Path;
+
         use tokio::net::UnixStream;
+
+        use crate::Error;
 
         if !Path::new(socket_path).exists() {
             log::error!("socket path is not exists: {socket_path}");
@@ -99,10 +103,12 @@ pub async fn connect_to_socket(socket_path: &str) -> crate::Result<WrapStream> {
 
     #[cfg(windows)]
     {
-        use crate::Error;
         use std::time::Duration;
+
         use tokio::net::windows::named_pipe::ClientOptions;
         use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
+
+        use crate::Error;
 
         let client = loop {
             match ClientOptions::new().open(socket_path) {

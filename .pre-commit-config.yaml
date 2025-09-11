@@ -36,7 +36,7 @@ repos:
       - id: cargo-fmt-mihomo-rule-parser
         name: cargo fmt mihomo-rule-parser
         description: Format mihomo-rule-parser files with rustfmt.
-        entry: cargo fmt --manifest-path crates/mihomo-rule-parser/Cargo.toml -- --check
+        entry: cargo +nightly fmt --manifest-path crates/mihomo-rule-parser/Cargo.toml -- --check
         language: system
         files: ^crates/mihomo-rule-parser/
         types:
@@ -44,7 +44,7 @@ repos:
       - id: cargo-fmt-tauri-plugin-mihomo
         name: cargo fmt tauri-plugin-mihomo
         description: Format tauri-plugin-mihomo files with rustfmt.
-        entry: cargo fmt --manifest-path crates/tauri-plugin-mihomo/Cargo.toml -- --check
+        entry: cargo +nightly fmt --manifest-path crates/tauri-plugin-mihomo/Cargo.toml -- --check
         language: system
         files: ^crates/tauri-plugin-mihomo/
         types:
@@ -52,7 +52,7 @@ repos:
       - id: cargo-fmt-src-tauri
         name: cargo fmt src-tauri
         description: Format src-tauri files with rustfmt.
-        entry: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+        entry: cargo +nightly fmt --manifest-path src-tauri/Cargo.toml -- --check
         language: system
         files: ^src-tauri/
         types:

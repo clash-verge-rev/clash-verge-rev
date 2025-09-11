@@ -1,3 +1,8 @@
+use std::{collections::HashMap, fs, io::Write, path::PathBuf};
+
+use serde::{Deserialize, Serialize};
+use serde_yaml::Mapping;
+
 use super::{EnableFilter, PrfItem};
 use crate::{
     any_err,
@@ -7,9 +12,6 @@ use crate::{
     log_err,
     utils::{dirs, help},
 };
-use serde::{Deserialize, Serialize};
-use serde_yaml::Mapping;
-use std::{collections::HashMap, fs, io::Write, path::PathBuf};
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]

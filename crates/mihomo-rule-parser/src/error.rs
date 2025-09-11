@@ -1,6 +1,8 @@
-use crate::{RuleBehavior, RuleFormat};
 use std::io;
+
 use thiserror::Error;
+
+use crate::{RuleBehavior, RuleFormat};
 
 pub type Result<T> = std::result::Result<T, RuleParseError>;
 

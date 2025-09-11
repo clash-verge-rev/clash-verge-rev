@@ -1,16 +1,23 @@
-use crate::config::Config;
-use crate::error::{AppError, AppResult};
-use crate::utils::dirs;
-use crate::{feat, log_err};
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+    time::Duration,
+};
+
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Duration;
 
 use super::handle;
+use crate::{
+    config::Config,
+    error::{AppError, AppResult},
+    feat, log_err,
+    utils::dirs,
+};
 
 type TaskId = u64;
 

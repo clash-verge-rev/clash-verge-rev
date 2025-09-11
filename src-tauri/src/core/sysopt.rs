@@ -1,16 +1,23 @@
+use std::{
+    env::current_exe,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+};
+
+use auto_launch::{AutoLaunch, AutoLaunchBuilder};
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
+use rust_i18n::t;
+use sysproxy::{Autoproxy, Sysproxy};
+
 use crate::{
     any_err,
     config::{Config, IVerge},
     error::{AppError, AppResult},
     log_err,
 };
-use auto_launch::{AutoLaunch, AutoLaunchBuilder};
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
-use rust_i18n::t;
-use std::sync::{Arc, atomic::Ordering};
-use std::{env::current_exe, sync::atomic::AtomicBool};
-use sysproxy::{Autoproxy, Sysproxy};
 
 pub struct Sysopt {
     /// current system proxy setting
@@ -305,8 +312,9 @@ impl Sysopt {
         // fix #403
         #[cfg(target_os = "linux")]
         let app_path = {
-            use crate::core::handle::Handle;
             use tauri::Manager;
+
+            use crate::core::handle::Handle;
 
             let app_handle = Handle::app_handle();
             let appimage = app_handle.env().appimage;

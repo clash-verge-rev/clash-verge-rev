@@ -1,14 +1,16 @@
+use serde_yaml::Mapping;
+
 use super::use_lowercase;
 use crate::{
     any_err,
     enhance::LogMessage,
     error::{AppError, AppResult},
 };
-use serde_yaml::Mapping;
 
 pub fn use_script(script: String, config: Mapping) -> AppResult<(Mapping, Vec<LogMessage>)> {
-    use boa_engine::{Context, JsValue, Source, native_function::NativeFunction};
     use std::sync::{Arc, Mutex};
+
+    use boa_engine::{Context, JsValue, Source, native_function::NativeFunction};
     let mut context = Context::default();
 
     let outputs = Arc::new(Mutex::new(vec![]));

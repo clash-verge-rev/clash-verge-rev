@@ -1,11 +1,13 @@
+use std::path::PathBuf;
+
+use dirs::data_dir;
+use once_cell::sync::OnceCell;
+
 use crate::{
     any_err,
     core::handle,
     error::{AppError, AppResult},
 };
-use dirs::data_dir;
-use once_cell::sync::OnceCell;
-use std::path::PathBuf;
 
 #[cfg(not(feature = "verge-dev"))]
 pub static APP_ID: &str = "io.github.oomeow.clash-verge-self";

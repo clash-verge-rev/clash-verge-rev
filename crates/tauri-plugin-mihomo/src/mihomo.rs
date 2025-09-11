@@ -1,9 +1,6 @@
 #![allow(dead_code)]
-use crate::{
-    BaseConfig, CloseFrame, ConnectionId, ConnectionManager, Connections, CoreUpdaterChannel, Error, Groups, LogLevel,
-    MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay, ProxyProvider, ProxyProviders, Result, RuleProviders, Rules,
-    WebSocketMessage, WebSocketWriter, failed_resp, ipc_request::LocalSocket, ret_failed_resp, utils, wrap_stream,
-};
+use std::{collections::HashMap, sync::Arc, time::Duration};
+
 use futures_util::StreamExt;
 use http::{
     HeaderMap, HeaderValue, Request,
@@ -11,11 +8,16 @@ use http::{
 };
 use reqwest::{Method, RequestBuilder};
 use serde_json::json;
-use std::{collections::HashMap, sync::Arc, time::Duration};
 use tauri::ipc::Channel;
 use tokio_tungstenite::{
     client_async, connect_async,
     tungstenite::{Message, client::IntoClientRequest, protocol::CloseFrame as ProtocolCloseFrame},
+};
+
+use crate::{
+    BaseConfig, CloseFrame, ConnectionId, ConnectionManager, Connections, CoreUpdaterChannel, Error, Groups, LogLevel,
+    MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay, ProxyProvider, ProxyProviders, Result, RuleProviders, Rules,
+    WebSocketMessage, WebSocketWriter, failed_resp, ipc_request::LocalSocket, ret_failed_resp, utils, wrap_stream,
 };
 
 pub struct Mihomo {

@@ -1,3 +1,10 @@
+use std::{collections::HashMap, fs, path::PathBuf, time::Duration};
+
+use reqwest::StatusCode;
+use serde::{Deserialize, Serialize};
+use serde_yaml::Mapping;
+use sysproxy::Sysproxy;
+
 use super::Config;
 use crate::{
     APP_VERSION, any_err,
@@ -5,11 +12,6 @@ use crate::{
     error::{AppError, AppResult},
     utils::{dirs, help, tmpl},
 };
-use reqwest::StatusCode;
-use serde::{Deserialize, Serialize};
-use serde_yaml::Mapping;
-use std::{collections::HashMap, fs, path::PathBuf, time::Duration};
-use sysproxy::Sysproxy;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
@@ -333,13 +335,15 @@ impl PrfItem {
                 ..PrfOption::default()
             }),
             None => match header.get("profile-update-interval") {
-                Some(value) => match value.to_str().unwrap_or_default().parse::<u64>() {
-                    Ok(val) => Some(PrfOption {
-                        update_interval: Some(val * 60), // hour -> min
-                        ..PrfOption::default()
-                    }),
-                    Err(_) => None,
-                },
+                Some(value) => {
+                    match value.to_str().unwrap_or_default().parse::<u64>() {
+                        Ok(val) => Some(PrfOption {
+                            update_interval: Some(val * 60), // hour -> min
+                            ..PrfOption::default()
+                        }),
+                        Err(_) => None,
+                    }
+                }
                 None => None,
             },
         };

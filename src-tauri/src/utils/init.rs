@@ -1,11 +1,15 @@
-use crate::config::{Config, IClashConfig, IProfiles, IVerge};
-use crate::core::handle;
-use crate::error::AppError;
-use crate::error::AppResult;
-use crate::utils::{dirs, help};
-use crate::{any_err, trace_err};
 use std::path::PathBuf;
+
 use tauri_plugin_shell::ShellExt;
+
+use crate::{
+    any_err,
+    config::{Config, IClashConfig, IProfiles, IVerge},
+    core::handle,
+    error::{AppError, AppResult},
+    trace_err,
+    utils::{dirs, help},
+};
 
 /// Initialize all the config files
 /// before tauri setup
@@ -131,8 +135,7 @@ pub fn init_resources() -> AppResult<()> {
 #[cfg(target_os = "windows")]
 pub fn init_scheme() -> AppResult<()> {
     use tauri::utils::platform::current_exe;
-    use winreg::RegKey;
-    use winreg::enums::*;
+    use winreg::{RegKey, enums::*};
 
     let app_exe = current_exe()?;
     let app_exe = dunce::canonicalize(app_exe)?;

@@ -1,11 +1,10 @@
 pub use mihomo::Mihomo;
+pub use models::*;
 use tauri::{
     Manager, Runtime,
     async_runtime::RwLock,
     plugin::{Builder as PluginBuilder, TauriPlugin},
 };
-
-pub use models::*;
 
 mod commands;
 mod error;

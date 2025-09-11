@@ -1,8 +1,11 @@
-use crate::config::DEFAULT_PAC;
-use crate::error::AppResult;
-use crate::utils::{dirs, help};
 use serde::{Deserialize, Serialize};
 use tracing::level_filters::LevelFilter;
+
+use crate::{
+    config::DEFAULT_PAC,
+    error::AppResult,
+    utils::{dirs, help},
+};
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]

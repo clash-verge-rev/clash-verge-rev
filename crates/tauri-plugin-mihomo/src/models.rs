@@ -1,8 +1,8 @@
+use std::{collections::HashMap, fmt::Display};
+
 use futures_util::{SinkExt, stream::SplitSink};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Display};
-use tokio::net::TcpStream;
-use tokio::sync::RwLock;
+use tokio::{net::TcpStream, sync::RwLock};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
 use ts_rs::TS;
 

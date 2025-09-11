@@ -1,7 +1,7 @@
-use crate::utils::help;
+use serde_yaml::{self, Mapping, Sequence, Value};
 
 use super::{use_filter, use_lowercase};
-use serde_yaml::{self, Mapping, Sequence, Value};
+use crate::utils::help;
 
 const MERGE_FIELDS: [&str; 6] = [
     "prepend-rules",

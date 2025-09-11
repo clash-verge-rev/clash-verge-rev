@@ -1,13 +1,15 @@
-use crate::{
-    error::AppResult,
-    utils::{dirs, help},
-};
-use nanoid::nanoid;
-use serde::{Deserialize, Serialize};
-use serde_yaml::{Mapping, Value};
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr,
+};
+
+use nanoid::nanoid;
+use serde::{Deserialize, Serialize};
+use serde_yaml::{Mapping, Value};
+
+use crate::{
+    error::AppResult,
+    utils::{dirs, help},
 };
 
 #[derive(Default, Debug, Clone)]

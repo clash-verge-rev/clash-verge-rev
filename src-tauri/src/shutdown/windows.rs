@@ -1,4 +1,3 @@
-use crate::{core::handle, utils::resolve};
 use tauri::Manager;
 use windows_sys::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
@@ -8,6 +7,8 @@ use windows_sys::Win32::{
         WS_OVERLAPPED,
     },
 };
+
+use crate::{core::handle, utils::resolve};
 
 // code refer to:
 //      global-hotkey (https://github.com/tauri-apps/global-hotkey)
@@ -34,7 +35,9 @@ unsafe extern "system" fn shutdown_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lp
     // refer: https://learn.microsoft.com/zh-cn/windows/win32/shutdown/shutting-down#shutdown-notifications
     // only perform reset operations in `WM_ENDSESSION`
     match msg {
-        WM_QUERYENDSESSION => tracing::info!("System is shutting down or user is logging off."),
+        WM_QUERYENDSESSION => {
+            tracing::info!("System is shutting down or user is logging off.")
+        }
         WM_ENDSESSION => {
             tauri::async_runtime::block_on(async move {
                 tracing::info!("Session ended, system shutting down.");

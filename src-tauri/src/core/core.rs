@@ -1,20 +1,29 @@
-use super::verge_log::VergeLog;
-use crate::core::{handle, logger::Logger, service};
-use crate::error::{AppError, AppResult};
-use crate::utils::dirs;
-use crate::utils::help::find_unused_port;
-use crate::{MIHOMO_SOCKET_PATH, any_err, log_err};
-use crate::{config::*, utils};
+use std::{
+    path::PathBuf,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+};
 
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use serde_yaml::Mapping;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use sysinfo::System;
-use tauri_plugin_shell::ShellExt;
-use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::{
+    ShellExt,
+    process::{CommandChild, CommandEvent},
+};
+
+use super::verge_log::VergeLog;
+use crate::{
+    MIHOMO_SOCKET_PATH, any_err,
+    config::*,
+    core::{handle, logger::Logger, service},
+    error::{AppError, AppResult},
+    log_err, utils,
+    utils::{dirs, help::find_unused_port},
+};
 
 #[derive(Debug)]
 pub struct CoreManager {

@@ -1,8 +1,12 @@
-use crate::bitmap;
-use crate::error::Result;
-use crate::{Parser, RuleBehavior, RuleFormat, RulePayload, error::RuleParseError, utils};
-use byteorder::{BigEndian, ReadBytesExt};
 use std::io::{Cursor, Read};
+
+use byteorder::{BigEndian, ReadBytesExt};
+
+use crate::{
+    Parser, RuleBehavior, RuleFormat, RulePayload, bitmap,
+    error::{Result, RuleParseError},
+    utils,
+};
 
 /// domain parse strategy
 pub(crate) struct DomainParseStrategy;
@@ -172,9 +176,8 @@ mod tests {
 
     use std::{path::PathBuf, process::Command};
 
-    use crate::error::Result;
-
     use super::*;
+    use crate::error::Result;
 
     fn init_meta_rules() -> Result<PathBuf> {
         let tmp_dir = std::env::temp_dir();

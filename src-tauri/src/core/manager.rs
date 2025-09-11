@@ -1,8 +1,10 @@
 #![cfg(any(target_os = "macos", target_os = "linux"))]
 
-use crate::error::AppResult;
-use parking_lot::RwLock;
 use std::{collections::HashMap, sync::LazyLock};
+
+use parking_lot::RwLock;
+
+use crate::error::AppResult;
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 static GRANTED_PERMISSIONS: LazyLock<RwLock<HashMap<String, Option<bool>>>> = LazyLock::new(|| {
@@ -15,9 +17,11 @@ static GRANTED_PERMISSIONS: LazyLock<RwLock<HashMap<String, Option<bool>>>> = La
 /// 给clash内核的tun模式授权
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 pub fn grant_permissions(core: String) -> AppResult<()> {
-    use crate::utils::dirs;
     use std::process::Command;
+
     use tauri::utils::platform::current_exe;
+
+    use crate::utils::dirs;
 
     let path = current_exe()?.with_file_name(&core);
     let path = dirs::path_to_str(&path)?;
@@ -61,9 +65,11 @@ pub fn check_permissions_granted(core: String) -> AppResult<bool> {
         return Ok(*granted);
     }
 
-    use crate::utils::dirs;
     use std::process::Command;
+
     use tauri::utils::platform::current_exe;
+
+    use crate::utils::dirs;
 
     let path = current_exe()?.with_file_name(&core);
     let path = dirs::path_to_str(&path)?;

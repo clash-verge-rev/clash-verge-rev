@@ -1,15 +1,16 @@
-use crate::MIHOMO_SOCKET_PATH;
-use crate::config::Config;
-use crate::error::{AppError, AppResult};
-use crate::utils::{self, crypto, dirs};
+use std::{collections::VecDeque, env::current_exe, path::PathBuf, process::Command as StdCommand};
+
 use chrono::{DateTime, Local};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
-use std::path::PathBuf;
-use std::{env::current_exe, process::Command as StdCommand};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use tipsy::ServerId;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+use crate::{
+    MIHOMO_SOCKET_PATH,
+    config::Config,
+    error::{AppError, AppResult},
+    utils::{self, crypto, dirs},
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum SocketCommand {
@@ -99,9 +100,10 @@ async fn send_command<T: DeserializeOwned>(cmd: SocketCommand) -> AppResult<Json
 ///
 #[cfg(target_os = "windows")]
 pub async fn install_service() -> AppResult<()> {
+    use std::os::windows::process::CommandExt;
+
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
-    use std::os::windows::process::CommandExt;
 
     let install_path = dirs::service_path()?;
     tracing::debug!("clash-verge-service file path: {}", install_path.display());
@@ -219,9 +221,10 @@ pub async fn install_service() -> AppResult<()> {
 /// 该函数应该在协程或者线程中执行，避免UAC弹窗阻塞主线程
 #[cfg(target_os = "windows")]
 pub async fn uninstall_service() -> AppResult<()> {
+    use std::os::windows::process::CommandExt;
+
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
-    use std::os::windows::process::CommandExt;
 
     let uninstall_path = dirs::service_path()?;
     tracing::debug!("clash-verge-service file path: {}", uninstall_path.display());

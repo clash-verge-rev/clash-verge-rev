@@ -1,6 +1,7 @@
-use crate::{utils, wrap_stream};
 use reqwest::RequestBuilder;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+use crate::{utils, wrap_stream};
 
 pub trait LocalSocket {
     async fn send_by_local_socket(self, socket_path: &str) -> crate::Result<reqwest::Response>;

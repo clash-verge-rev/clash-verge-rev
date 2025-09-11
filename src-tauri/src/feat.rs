@@ -4,24 +4,22 @@
 //! - timer 定时器
 //! - cmds 页面调用
 //!
-use crate::any_err;
-use crate::cmds;
-use crate::config::*;
-use crate::core::*;
-use crate::error::AppError;
-use crate::error::AppResult;
-use crate::log_err;
-use crate::utils::dirs;
-use crate::utils::help;
-use crate::utils::resolve;
 use rust_i18n::t;
 use serde_yaml::{Mapping, Value};
 use service::JsonResponse;
 use tauri::AppHandle;
 use tauri_plugin_clipboard_manager::ClipboardExt;
-use tauri_plugin_dialog::MessageDialogButtons;
-use tauri_plugin_dialog::MessageDialogKind;
+use tauri_plugin_dialog::{MessageDialogButtons, MessageDialogKind};
 use verge_log::VergeLog;
+
+use crate::{
+    any_err, cmds,
+    config::*,
+    core::*,
+    error::{AppError, AppResult},
+    log_err,
+    utils::{dirs, help, resolve},
+};
 
 /// 打开面板
 pub fn open_or_close_dashboard() {
@@ -156,8 +154,12 @@ pub fn toggle_tun_mode() {
         } else {
             match cmds::service::check_service().await {
                 Ok(JsonResponse { code: 0, .. }) => match patch_clash(tun).await {
-                    Ok(_) => tracing::info!("change tun mode to {}", !enable),
-                    Err(err) => tracing::error!("toggle tun mode failed: {err}"),
+                    Ok(_) => {
+                        tracing::info!("change tun mode to {}", !enable)
+                    }
+                    Err(err) => {
+                        tracing::error!("toggle tun mode failed: {err}")
+                    }
                 },
                 Ok(JsonResponse { code: 400, .. }) => {
                     // service installed but no enable, need to patch verge to enable service mode
@@ -172,7 +174,9 @@ pub fn toggle_tun_mode() {
                         log_err!(cmds::check_service_and_clash().await, "check service failed");
                         handle::Handle::refresh_verge();
                         match patch_clash(tun).await {
-                            Ok(_) => tracing::info!("change tun mode to {}", !enable),
+                            Ok(_) => {
+                                tracing::info!("change tun mode to {}", !enable)
+                            }
                             Err(err) => tracing::error!("{err}"),
                         }
                     }

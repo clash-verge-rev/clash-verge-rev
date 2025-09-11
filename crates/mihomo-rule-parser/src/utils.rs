@@ -1,9 +1,11 @@
+use std::io::{BufRead, BufReader, Read};
+
+use byteorder::{BigEndian, ReadBytesExt};
+
 use crate::{
     RuleBehavior, RulePayload, YamlPayload,
     error::{Result, RuleParseError},
 };
-use byteorder::{BigEndian, ReadBytesExt};
-use std::io::{BufRead, BufReader, Read};
 
 /// MRSv1
 const MRS_MAGIC: [u8; 4] = [b'M', b'R', b'S', 1];

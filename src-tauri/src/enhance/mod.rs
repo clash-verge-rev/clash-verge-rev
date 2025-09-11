@@ -4,26 +4,19 @@ mod merge;
 mod script;
 mod tun;
 
-use self::chain::*;
-use self::field::*;
-use self::merge::*;
-use self::script::*;
-use self::tun::*;
-use crate::any_err;
-use crate::config::Config;
-use crate::config::ConfigType;
-use crate::config::EnableFilter;
-use crate::config::ProfileType;
-use crate::core::CoreManager;
-use crate::error::AppError;
-use crate::error::AppResult;
-use crate::utils::dirs;
-use serde::Deserialize;
-use serde::Serialize;
-use serde_yaml::Mapping;
-use serde_yaml::Value;
-use std::collections::HashMap;
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
+
+use serde::{Deserialize, Serialize};
+use serde_yaml::{Mapping, Value};
+
+use self::{chain::*, field::*, merge::*, script::*, tun::*};
+use crate::{
+    any_err,
+    config::{Config, ConfigType, EnableFilter, ProfileType},
+    core::CoreManager,
+    error::{AppError, AppResult},
+    utils::dirs,
+};
 
 type ResultLog = Vec<LogMessage>;
 

@@ -1,11 +1,12 @@
+use std::{io, process::Command as StdCommand};
+
+use deelevate::{PrivilegeLevel, Token};
+use runas::Command as RunasCommand;
+
 use crate::{
     error::{AppError, AppResult},
     utils::dirs,
 };
-use deelevate::{PrivilegeLevel, Token};
-use runas::Command as RunasCommand;
-use std::io;
-use std::process::Command as StdCommand;
 
 pub async fn invoke_uwptools() -> AppResult<()> {
     let resource_dir = dirs::app_resources_dir()?;
