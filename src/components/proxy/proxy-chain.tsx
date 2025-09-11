@@ -13,11 +13,11 @@ import { useTranslation } from "react-i18next";
 import { useAppData } from "@/providers/app-data-provider";
 import {
   updateProxyChainConfigInRuntime,
-  getRuntimeConfig,
-  getRuntimeProxyChainConfig,
   updateProxyAndSync,
-  updateProxy,
+  getProxies,
+  closeAllConnections,
 } from "@/services/cmds";
+import useSWR from "swr";
 import {
   DndContext,
   closestCenter,
@@ -40,6 +40,8 @@ import {
   DragIndicator,
   ClearAll,
   Save,
+  Link,
+  LinkOff,
 } from "@mui/icons-material";
 
 interface ProxyChainItem {
@@ -53,12 +55,6 @@ interface ParsedChainConfig {
   proxies?: Array<{
     name: string;
     type: string;
-    [key: string]: any;
-  }>;
-  "proxy-groups"?: Array<{
-    name: string;
-    type: string;
-    proxies?: string[];
     [key: string]: any;
   }>;
 }
@@ -198,20 +194,47 @@ export const ProxyChain = ({
   const theme = useTheme();
   const { t } = useTranslation();
   const { proxies } = useAppData();
-  const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isChainConnected, setIsChainConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
-  // 包装的更新链函数，用于从外部调用
-  const wrappedOnUpdateChain = useCallback(
-    (chain: ProxyChainItem[]) => {
-      onUpdateChain(chain);
-      setHasUnsavedChanges(true);
-      onMarkUnsavedChanges?.();
+  // 获取当前代理信息以检查连接状态
+  const { data: currentProxies, mutate: mutateProxies } = useSWR(
+    "getProxies",
+    getProxies,
+    {
+      revalidateOnFocus: true,
+      revalidateIfStale: true,
+      refreshInterval: 5000, // 每5秒刷新一次
     },
-    [onUpdateChain, onMarkUnsavedChanges],
   );
+
+  // 检查连接状态
+  useEffect(() => {
+    if (!currentProxies || proxyChain.length < 2) {
+      setIsConnected(false);
+      return;
+    }
+
+    // 查找 proxy_chain 代理组
+    const proxyChainGroup = currentProxies.groups.find(
+      (group) => group.name === "proxy_chain",
+    );
+    if (!proxyChainGroup || !proxyChainGroup.now) {
+      setIsConnected(false);
+      return;
+    }
+
+    // 获取用户配置的最后一个节点
+    const lastNode = proxyChain[proxyChain.length - 1];
+
+    // 检查当前选中的代理是否是配置的最后一个节点
+    if (proxyChainGroup.now === lastNode.name) {
+      setIsConnected(true);
+    } else {
+      setIsConnected(false);
+    }
+  }, [currentProxies, proxyChain]);
 
   // 监听链的变化，但排除从配置加载的情况
   const chainLengthRef = useRef(proxyChain.length);
@@ -262,91 +285,73 @@ export const ProxyChain = ({
     setHasUnsavedChanges(true);
   }, [onUpdateChain]);
 
-  const handleToggleChain = useCallback(async () => {
-    if (isChainConnected) {
-      // Disconnect: clear chain config
+  const handleConnect = useCallback(async () => {
+    if (isConnected) {
+      // 如果已连接，则断开连接
       setIsConnecting(true);
       try {
+        // 清空链式代理配置
         await updateProxyChainConfigInRuntime(null);
-        setIsChainConnected(false);
-        setHasUnsavedChanges(false);
+
+        // 切换到 DIRECT 模式断开代理连接
+        // await updateProxyAndSync("GLOBAL", "DIRECT");
+
+        // 关闭所有连接
+        await closeAllConnections();
+
+        // 刷新代理信息以更新连接状态
+        mutateProxies();
+
+        // 清空链式代理配置UI
+        // onUpdateChain([]);
+        // setHasUnsavedChanges(false);
+
+        // 强制更新连接状态
+        setIsConnected(false);
       } catch (error) {
-        console.error("Failed to disconnect chain:", error);
+        console.error("Failed to disconnect from proxy chain:", error);
+        alert(t("Failed to disconnect from proxy chain") || "断开链式代理失败");
       } finally {
         setIsConnecting(false);
       }
-    } else {
-      // Connect: save chain config and update proxy
-      setIsConnecting(true);
-      try {
-        if (proxyChain.length === 0) {
-          // Save empty config (clear chain)
-          await updateProxyChainConfigInRuntime(null);
-        } else {
-          // Check if chain has at least 2 nodes
-          if (proxyChain.length < 2) {
-            console.error("Chain proxy requires at least 2 nodes");
-            alert(
-              t("Chain proxy requires at least 2 nodes") ||
-                "链式代理至少需要2个节点",
-            );
-            return;
-          }
-
-          // Get original proxy configurations from runtime
-          const runtimeConfig = await getRuntimeConfig();
-
-          if (!runtimeConfig || !(runtimeConfig as any).proxies) {
-            console.error(
-              "Failed to get runtime config or no proxies available",
-            );
-            return;
-          }
-
-          // Build chain configuration
-          const chainProxies: any[] = [];
-
-          // Process each node in the chain
-          for (let i = 0; i < proxyChain.length; i++) {
-            const currentNode = proxyChain[i];
-
-            // Find original proxy configuration
-            const proxies = (runtimeConfig as any).proxies;
-            const originalProxy = Array.isArray(proxies)
-              ? proxies.find((p: any) => p.name === currentNode.name)
-              : null;
-
-            if (!originalProxy) {
-              console.warn(
-                `Original proxy config not found for: ${currentNode.name}`,
-              );
-              continue;
-            }
-            chainProxies.push(currentNode.name);
-          }
-          setIsChainConnected(true);
-
-          console.log("Saving chain config:", chainProxies);
-          await updateProxyChainConfigInRuntime(chainProxies);
-
-          if (proxyChain.length > 0) {
-            await updateProxy(
-              "proxy_chain",
-              chainProxies[chainProxies.length - 1],
-            );
-          }
-        }
-
-        setHasUnsavedChanges(false);
-      } catch (error) {
-        console.error("Failed to connect chain:", error);
-      } finally {
-        setIsConnecting(false);
-      }
+      return;
     }
-  }, [proxyChain, isChainConnected, t]);
 
-  // 使用ref来存储最新的状态，避免useEffect依赖问题
+    if (proxyChain.length < 2) {
+      alert(
+        t("Chain proxy requires at least 2 nodes") || "链式代理至少需要2个节点",
+      );
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      // 第一步：保存链式代理配置
+      const chainProxies = proxyChain.map((node) => node.name);
+      console.log("Saving chain config:", chainProxies);
+      await updateProxyChainConfigInRuntime(chainProxies);
+      console.log("Chain configuration saved successfully");
+
+      // 第二步：连接到代理链的最后一个节点
+      const lastNode = proxyChain[proxyChain.length - 1];
+      console.log(`Connecting to proxy chain, last node: ${lastNode.name}`);
+      await updateProxyAndSync("proxy_chain", lastNode.name);
+
+      // 刷新代理信息以更新连接状态
+      mutateProxies();
+
+      // 清除未保存标记
+      setHasUnsavedChanges(false);
+
+      console.log("Successfully connected to proxy chain");
+    } catch (error) {
+      console.error("Failed to connect to proxy chain:", error);
+      alert(t("Failed to connect to proxy chain") || "连接链式代理失败");
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [proxyChain, isConnected, t, mutateProxies]);
+
   const proxyChainRef = useRef(proxyChain);
   const onUpdateChainRef = useRef(onUpdateChain);
 
@@ -366,26 +371,15 @@ export const ProxyChain = ({
               const parsedConfig = yaml.load(
                 chainConfigData,
               ) as ParsedChainConfig;
-              if (
-                parsedConfig &&
-                parsedConfig.proxies &&
-                Array.isArray(parsedConfig.proxies)
-              ) {
-                const chainItems: ProxyChainItem[] = parsedConfig.proxies.map(
-                  (proxy, index: number) => ({
-                    id: `${proxy.name}_${Date.now()}_${index}`,
-                    name: proxy.name,
-                    type: proxy.type,
-                    delay: undefined, // Will be updated by the delay update effect
-                  }),
-                );
-                onUpdateChain(chainItems);
-                setHasUnsavedChanges(false); // Reset unsaved changes when loading from config
-              } else {
-                // Empty or invalid config, reset chain
-                onUpdateChain([]);
-                setHasUnsavedChanges(false);
-              }
+              const chainItems =
+                parsedConfig?.proxies?.map((proxy, index: number) => ({
+                  id: `${proxy.name}_${Date.now()}_${index}`,
+                  name: proxy.name,
+                  type: proxy.type,
+                  delay: undefined,
+                })) || [];
+              onUpdateChain(chainItems);
+              setHasUnsavedChanges(false);
             } catch (parseError) {
               console.error("Failed to parse YAML:", parseError);
               onUpdateChain([]);
@@ -401,25 +395,15 @@ export const ProxyChain = ({
               const parsedConfig = JSON.parse(
                 chainConfigData,
               ) as ParsedChainConfig;
-              if (
-                parsedConfig &&
-                parsedConfig.proxies &&
-                Array.isArray(parsedConfig.proxies)
-              ) {
-                const chainItems: ProxyChainItem[] = parsedConfig.proxies.map(
-                  (proxy, index: number) => ({
-                    id: `${proxy.name}_${Date.now()}_${index}`,
-                    name: proxy.name,
-                    type: proxy.type,
-                    delay: undefined,
-                  }),
-                );
-                onUpdateChain(chainItems);
-                setHasUnsavedChanges(false);
-              } else {
-                onUpdateChain([]);
-                setHasUnsavedChanges(false);
-              }
+              const chainItems =
+                parsedConfig?.proxies?.map((proxy, index: number) => ({
+                  id: `${proxy.name}_${Date.now()}_${index}`,
+                  name: proxy.name,
+                  type: proxy.type,
+                  delay: undefined,
+                })) || [];
+              onUpdateChain(chainItems);
+              setHasUnsavedChanges(false);
             } catch (jsonError) {
               console.error("Failed to parse as JSON either:", jsonError);
               onUpdateChain([]);
@@ -519,30 +503,23 @@ export const ProxyChain = ({
           <Button
             size="small"
             variant="contained"
-            startIcon={<Save />}
-            onClick={handleToggleChain}
-            disabled={
-              isConnecting ||
-              (proxyChain.length > 0 &&
-                proxyChain.length < 2 &&
-                !isChainConnected)
-            }
-            color={isChainConnected ? "error" : "primary"}
+            startIcon={isConnected ? <LinkOff /> : <Link />}
+            onClick={handleConnect}
+            disabled={isConnecting || proxyChain.length < 2}
+            color={isConnected ? "error" : "success"}
             sx={{
-              minWidth: 80,
+              minWidth: 90,
             }}
             title={
-              proxyChain.length === 1
+              proxyChain.length < 2
                 ? t("Chain proxy requires at least 2 nodes") ||
                   "链式代理至少需要2个节点"
                 : undefined
             }
           >
             {isConnecting
-              ? isChainConnected
-                ? t("Disconnecting...") || "断开中..."
-                : t("Connecting...") || "连接中..."
-              : isChainConnected
+              ? t("Connecting...") || "连接中..."
+              : isConnected
                 ? t("Disconnect") || "断开"
                 : t("Connect") || "连接"}
           </Button>
@@ -604,16 +581,6 @@ export const ProxyChain = ({
           </DndContext>
         )}
       </Box>
-
-      {proxyChain.length > 0 && (
-        <Box
-          sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            {t("Proxy Order")}: {proxyChain.map((p) => p.name).join(" → ")}
-          </Typography>
-        </Box>
-      )}
     </Paper>
   );
 };

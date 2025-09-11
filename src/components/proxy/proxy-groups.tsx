@@ -37,7 +37,10 @@ export const ProxyGroups = (props: Props) => {
     message: string;
   }>({ open: false, message: "" });
 
-  const { renderList, onProxies, onHeadState } = useRenderList(mode);
+  const { renderList, onProxies, onHeadState } = useRenderList(
+    mode,
+    isChainMode,
+  );
 
   const { verge } = useVerge();
 

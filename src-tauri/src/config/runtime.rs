@@ -92,6 +92,22 @@ impl IRuntime {
     /// 传入none 为删除
     pub fn update_proxy_chain_config(&mut self, proxy_chain_config: Option<Value>) {
         if let Some(config) = self.config.as_mut() {
+            // 获取 默认第一的代理组的名字
+            let proxy_group_name =
+                if let Some(Value::Sequence(proxy_groups)) = config.get("proxy-groups") {
+                    if let Some(Value::Mapping(proxy_group)) = proxy_groups.first() {
+                        if let Some(Value::String(proxy_group_name)) = proxy_group.get("name") {
+                            proxy_group_name.to_string()
+                        } else {
+                            "".to_string()
+                        }
+                    } else {
+                        "".to_string()
+                    }
+                } else {
+                    "".to_string()
+                };
+
             if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
                 proxies.iter_mut().for_each(|proxy| {
                     if let Some(proxy) = proxy.as_mapping_mut()
@@ -112,6 +128,7 @@ impl IRuntime {
             // 清除rules
             if let Some(Value::Sequence(rules)) = config.get_mut("rules") {
                 rules.retain(|rule| rule.as_str() != Some("MATCH,proxy_chain"));
+                rules.push(Value::String(format!("MATCH,{}", proxy_group_name)));
             }
 
             // some 则写入新配置
@@ -155,8 +172,11 @@ impl IRuntime {
                 if let Some(Value::Sequence(rules)) = config.get_mut("rules")
                     && let Ok(rule) = serde_yaml_ng::to_value("MATCH,proxy_chain")
                 {
-                    // rules.push(rule);
-                    *rules = vec![rule];
+                    rules.retain(|rule| {
+                        rule.as_str() != Some(&format!("MATCH,{}", proxy_group_name))
+                    });
+                    rules.push(rule);
+                    // *rules = vec![rule];
                 }
             }
         }

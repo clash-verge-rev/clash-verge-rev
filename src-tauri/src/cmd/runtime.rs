@@ -104,7 +104,7 @@ pub async fn get_runtime_proxy_chain_config() -> CmdResult<String> {
     }
 }
 
-/// 跟新运行时链式代理配置
+/// 更新运行时链式代理配置
 #[tauri::command]
 pub async fn update_proxy_chain_config_in_runtime(
     proxy_chain_config: Option<serde_yaml_ng::Value>,
