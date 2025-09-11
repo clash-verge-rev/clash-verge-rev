@@ -8,11 +8,10 @@ use tauri::{
 
 mod commands;
 mod error;
-mod ipc_request;
+mod ipc;
 mod mihomo;
 pub mod models;
 mod utils;
-mod wrap_stream;
 
 pub use error::{Error, Result};
 

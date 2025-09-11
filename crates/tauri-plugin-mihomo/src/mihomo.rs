@@ -17,7 +17,7 @@ use tokio_tungstenite::{
 use crate::{
     BaseConfig, CloseFrame, ConnectionId, ConnectionManager, Connections, CoreUpdaterChannel, Error, Groups, LogLevel,
     MihomoVersion, Protocol, Proxies, Proxy, ProxyDelay, ProxyProvider, ProxyProviders, Result, RuleProviders, Rules,
-    WebSocketMessage, WebSocketWriter, failed_resp, ipc_request::LocalSocket, ret_failed_resp, utils, wrap_stream,
+    WebSocketMessage, WebSocketWriter, failed_resp, ipc::LocalSocket, ret_failed_resp, utils,
 };
 
 pub struct Mihomo {
@@ -202,7 +202,7 @@ impl Mihomo {
             Protocol::LocalSocket => {
                 if let Some(socket_path) = self.socket_path.as_ref() {
                     log::debug!("starting connect to websocket by using local socket: {socket_path}");
-                    let stream = wrap_stream::connect_to_socket(socket_path).await?;
+                    let stream = crate::ipc::connect_to_socket(socket_path).await?;
 
                     let request = Request::builder()
                         .uri(url)

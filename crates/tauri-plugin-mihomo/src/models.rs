@@ -6,7 +6,7 @@ use tokio::{net::TcpStream, sync::RwLock};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
 use ts_rs::TS;
 
-use crate::wrap_stream::WrapStream;
+use crate::ipc::WrapStream;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
