@@ -7,6 +7,7 @@ import {
   closeAllConnections,
   getClashConfig,
   getRuntimeProxyChainConfig,
+  updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
 import { patchClashMode } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
@@ -16,7 +17,17 @@ import { ProviderButton } from "@/components/proxy/provider-button";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
-  const [isChainMode, setIsChainMode] = useState(false);
+
+  // 从 localStorage 恢复链式代理按钮状态
+  const [isChainMode, setIsChainMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("proxy-chain-mode-enabled");
+      return saved === "true";
+    } catch {
+      return false;
+    }
+  });
+
   const [chainConfigData, setChainConfigData] = useState<string | null>(null);
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
@@ -46,24 +57,43 @@ const ProxyPage = () => {
   });
 
   const onToggleChainMode = useLockFn(async () => {
-    if (!isChainMode) {
-      // When entering chain mode, fetch the chain config data
+    const newChainMode = !isChainMode;
+
+    if (!newChainMode) {
+      // 退出链式代理模式时，清除链式代理配置
       try {
-        const configData = await getRuntimeProxyChainConfig();
-        setChainConfigData(configData);
-        setIsChainMode(true);
+        console.log("Exiting chain mode, clearing chain configuration");
+        await updateProxyChainConfigInRuntime(null);
+        console.log("Chain configuration cleared successfully");
       } catch (error) {
-        console.error("Failed to get runtime proxy chain config:", error);
-        // Set empty config data if failed
-        setChainConfigData("");
-        setIsChainMode(true);
+        console.error("Failed to clear chain configuration:", error);
       }
+    }
+
+    setIsChainMode(newChainMode);
+
+    // 保存链式代理按钮状态到 localStorage
+    localStorage.setItem("proxy-chain-mode-enabled", newChainMode.toString());
+  });
+
+  // 当开启链式代理模式时，获取配置数据
+  useEffect(() => {
+    if (isChainMode) {
+      const fetchChainConfig = async () => {
+        try {
+          const configData = await getRuntimeProxyChainConfig();
+          setChainConfigData(configData || "");
+        } catch (error) {
+          console.error("Failed to get runtime proxy chain config:", error);
+          setChainConfigData("");
+        }
+      };
+
+      fetchChainConfig();
     } else {
-      // When exiting chain mode
-      setIsChainMode(false);
       setChainConfigData(null);
     }
-  });
+  }, [isChainMode]);
 
   useEffect(() => {
     if (curMode && !modeList.includes(curMode)) {
@@ -75,7 +105,7 @@ const ProxyPage = () => {
     <BasePage
       full
       contentStyle={{ height: "101.5%" }}
-      title={t("Proxy Groups")}
+      title={isChainMode ? t("Node Pool") : t("Proxy Groups")}
       header={
         <Box display="flex" alignItems="center" gap={1}>
           <ProviderButton />
