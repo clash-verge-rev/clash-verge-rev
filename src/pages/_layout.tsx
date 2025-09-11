@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import i18next from "i18next";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { SWRConfig, mutate } from "swr";
 import { useEffect, useCallback, useState, useRef } from "react";
@@ -11,6 +10,7 @@ import { routers } from "./_routers";
 import { getAxios } from "@/services/api";
 import { forceRefreshClashConfig } from "@/services/cmds";
 import { useVerge } from "@/hooks/use-verge";
+import { useI18n } from "@/hooks/use-i18n";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import iconDark from "@/assets/image/icon_dark.svg?react";
@@ -158,6 +158,7 @@ const Layout = () => {
   const [enableLog] = useEnableLog();
   const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
   const { language, start_page } = verge ?? {};
+  const { switchLanguage } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
@@ -378,14 +379,6 @@ const Layout = () => {
     const setupEventListener = async () => {
       try {
         console.log("[Layout] 开始监听启动完成事件");
-        const unlisten = await listen("verge://startup-completed", () => {
-          if (!hasEventTriggered) {
-            console.log("[Layout] 收到启动完成事件，开始初始化");
-            hasEventTriggered = true;
-            performInitialization();
-          }
-        });
-        return unlisten;
       } catch (err) {
         console.error("[Layout] 监听启动完成事件失败:", err);
         return () => {};
@@ -424,14 +417,11 @@ const Layout = () => {
       }
     }, 5000);
 
-    const unlistenPromise = setupEventListener();
-
     setTimeout(checkImmediateInitialization, 100);
 
     return () => {
       clearTimeout(backupInitialization);
       clearTimeout(emergencyInitialization);
-      unlistenPromise.then((unlisten) => unlisten());
     };
   }, []);
 
@@ -439,9 +429,9 @@ const Layout = () => {
   useEffect(() => {
     if (language) {
       dayjs.locale(language === "zh" ? "zh-cn" : language);
-      i18next.changeLanguage(language);
+      switchLanguage(language);
     }
-  }, [language]);
+  }, [language, switchLanguage]);
 
   useEffect(() => {
     if (start_page) {

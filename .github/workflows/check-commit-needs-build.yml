@@ -104,8 +104,8 @@ jobs:
 
           # Generate autobuild version using autobuild-latest format
           CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
-          MONTH=$(date +%m)
-          DAY=$(date +%d)
+          MONTH=$(TZ=Asia/Shanghai date +%m)
+          DAY=$(TZ=Asia/Shanghai date +%d)
           AUTOBUILD_VERSION="${CURRENT_BASE_VERSION}+autobuild.${MONTH}${DAY}.${LAST_TAURI_COMMIT}"
 
           echo "🏷️  Autobuild version: $AUTOBUILD_VERSION"

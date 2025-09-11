@@ -25,17 +25,17 @@ impl IClashTemp {
         match map_result {
             Ok(mut map) => {
                 template.0.keys().for_each(|key| {
-                    if !map.contains_key(key) {
-                        if let Some(value) = template.0.get(key) {
-                            map.insert(key.clone(), value.clone());
-                        }
+                    if !map.contains_key(key)
+                        && let Some(value) = template.0.get(key)
+                    {
+                        map.insert(key.clone(), value.clone());
                     }
                 });
                 // 确保 secret 字段存在且不为空
-                if let Some(Value::String(s)) = map.get_mut("secret") {
-                    if s.is_empty() {
-                        *s = "set-your-secret".to_string();
-                    }
+                if let Some(Value::String(s)) = map.get_mut("secret")
+                    && s.is_empty()
+                {
+                    *s = "set-your-secret".to_string();
                 }
                 Self(Self::guard(map))
             }

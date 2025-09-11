@@ -44,39 +44,39 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     config.insert(Value::String(field.into()), Value::Sequence(new_seq));
 
     // If this is proxies field, we also need to filter proxy-groups
-    if field == "proxies" {
-        if let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups") {
-            let mut new_groups = Sequence::new();
-            for group in groups {
-                if let Value::Mapping(group_map) = group {
-                    let mut new_group = group_map.clone();
-                    if let Some(Value::Sequence(proxies)) = group_map.get("proxies") {
-                        let filtered_proxies: Sequence = proxies
-                            .iter()
-                            .filter(|p| {
-                                if let Value::String(name) = p {
-                                    !delete.contains(name)
-                                } else {
-                                    true
-                                }
-                            })
-                            .cloned()
-                            .collect();
-                        new_group.insert(
-                            Value::String("proxies".into()),
-                            Value::Sequence(filtered_proxies),
-                        );
-                    }
-                    new_groups.push(Value::Mapping(new_group));
-                } else {
-                    new_groups.push(group.clone());
+    if field == "proxies"
+        && let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups")
+    {
+        let mut new_groups = Sequence::new();
+        for group in groups {
+            if let Value::Mapping(group_map) = group {
+                let mut new_group = group_map.clone();
+                if let Some(Value::Sequence(proxies)) = group_map.get("proxies") {
+                    let filtered_proxies: Sequence = proxies
+                        .iter()
+                        .filter(|p| {
+                            if let Value::String(name) = p {
+                                !delete.contains(name)
+                            } else {
+                                true
+                            }
+                        })
+                        .cloned()
+                        .collect();
+                    new_group.insert(
+                        Value::String("proxies".into()),
+                        Value::Sequence(filtered_proxies),
+                    );
                 }
+                new_groups.push(Value::Mapping(new_group));
+            } else {
+                new_groups.push(group.clone());
             }
-            config.insert(
-                Value::String("proxy-groups".into()),
-                Value::Sequence(new_groups),
-            );
         }
+        config.insert(
+            Value::String("proxy-groups".into()),
+            Value::Sequence(new_groups),
+        );
     }
 
     config

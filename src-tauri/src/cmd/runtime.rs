@@ -18,12 +18,12 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = runtime.latest_ref();
 
     let config = runtime.config.as_ref();
-
-    wrap_err!(config
-        .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
-        .and_then(
-            |config| serde_yaml_ng::to_string(config).context("failed to convert config to yaml")
-        ))
+    wrap_err!(
+        config
+            .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
+            .and_then(|config| serde_yaml_ng::to_string(config)
+                .context("failed to convert config to yaml"))
+    )
 }
 
 /// 获取运行时存在的键
@@ -105,7 +105,7 @@ pub async fn get_runtime_proxy_chain_config() -> CmdResult<String> {
         }
 
         proxy_chain_nodes.iter_mut().for_each(|proxy_chain_node| {
-            if let Some(serde_yaml_ng::Value::String(ref mut name)) =
+            if let Some(serde_yaml_ng::Value::String(name)) =
                 proxy_chain_node.get_mut("name")
             {
                 *name = re.replace_all(name, "").to_string();

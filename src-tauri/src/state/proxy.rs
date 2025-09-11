@@ -1,3 +1,5 @@
+// use crate::utils::logging::Type;
+// use crate::{logging, singleton};
 use crate::singleton;
 use dashmap::DashMap;
 use serde_json::Value;
@@ -11,7 +13,7 @@ pub struct CacheEntry {
 }
 
 pub struct ProxyRequestCache {
-    pub map: DashMap<String, Arc<OnceCell<CacheEntry>>>,
+    pub map: DashMap<String, Arc<OnceCell<Box<CacheEntry>>>>,
 }
 
 impl ProxyRequestCache {
@@ -54,10 +56,10 @@ impl ProxyRequestCache {
 
             // Try to set a new value
             let value = fetch_fn().await;
-            let entry = CacheEntry {
+            let entry = Box::new(CacheEntry {
                 value: Arc::new(value),
                 expires_at: Instant::now() + ttl,
-            };
+            });
 
             match cell.set(entry) {
                 Ok(_) => {
@@ -77,6 +79,22 @@ impl ProxyRequestCache {
                 }
             }
         }
+    }
+
+    // TODO
+    pub fn clean_default_keys(&self) {
+        // logging!(info, Type::Cache, "Cleaning proxies keys");
+        // let proxies_key = Self::make_key("proxies", "default");
+        // self.map.remove(&proxies_key);
+
+        // logging!(info, Type::Cache, "Cleaning providers keys");
+        // let providers_key = Self::make_key("providers", "default");
+        // self.map.remove(&providers_key);
+
+        // !The frontend goes crash if we clean the clash_config cache
+        // logging!(info, Type::Cache, "Cleaning clash config keys");
+        // let clash_config_key = Self::make_key("clash_config", "default");
+        // self.map.remove(&clash_config_key);
     }
 }
 

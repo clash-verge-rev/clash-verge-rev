@@ -6,8 +6,8 @@ use std::{
     collections::HashMap,
     pin::Pin,
     sync::{
-        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
 };
 
@@ -242,19 +242,18 @@ impl Timer {
 
         if let Some(items) = Config::profiles().await.latest_ref().get_items() {
             for item in items.iter() {
-                if let Some(option) = item.option.as_ref() {
-                    if let (Some(interval), Some(uid)) = (option.update_interval, &item.uid) {
-                        if interval > 0 {
-                            logging!(
-                                debug,
-                                Type::Timer,
-                                "找到定时更新配置: uid={}, interval={}min",
-                                uid,
-                                interval
-                            );
-                            new_map.insert(uid.clone(), interval);
-                        }
-                    }
+                if let Some(option) = item.option.as_ref()
+                    && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
+                    && interval > 0
+                {
+                    logging!(
+                        debug,
+                        Type::Timer,
+                        "找到定时更新配置: uid={}, interval={}min",
+                        uid,
+                        interval
+                    );
+                    new_map.insert(uid.clone(), interval);
                 }
             }
         }
@@ -390,7 +389,8 @@ impl Timer {
         };
 
         // Get the profile updated timestamp - now safe to await
-        let profiles = { Config::profiles().await.clone().data_ref() }.clone();
+        let config_profiles = Config::profiles().await;
+        let profiles = config_profiles.data_ref().clone();
         let items = match profiles.get_items() {
             Some(i) => i,
             None => {
@@ -434,7 +434,6 @@ impl Timer {
 
     /// Emit update events for frontend notification
     fn emit_update_event(_uid: &str, _is_start: bool) {
-        #[cfg(any(feature = "verge-dev", feature = "default"))]
         {
             if _is_start {
                 super::handle::Handle::notify_profile_update_started(_uid.to_string());

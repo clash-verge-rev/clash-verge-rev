@@ -19,7 +19,7 @@ import getSystem from "@/utils/get-system";
 import { routers } from "@/pages/_routers";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { ContentCopyRounded } from "@mui/icons-material";
-import { languages } from "@/services/i18n";
+import { supportedLanguages } from "@/services/i18n";
 import { showNotice } from "@/services/noticeService";
 
 interface Props {
@@ -28,7 +28,7 @@ interface Props {
 
 const OS = getSystem();
 
-const languageOptions = Object.entries(languages).map(([code, _]) => {
+const languageOptions = supportedLanguages.map((code) => {
   const labels: { [key: string]: string } = {
     en: "English",
     ru: "Русский",
@@ -39,8 +39,13 @@ const languageOptions = Object.entries(languages).map(([code, _]) => {
     ar: "العربية",
     ko: "한국어",
     tr: "Türkçe",
+    de: "Deutsch",
+    es: "Español",
+    jp: "日本語",
+    zhtw: "繁體中文",
   };
-  return { code, label: labels[code] };
+  const label = labels[code] || code;
+  return { code, label };
 });
 
 const SettingVergeBasic = ({ onError }: Props) => {

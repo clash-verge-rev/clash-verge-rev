@@ -2,7 +2,7 @@
 use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
-    core::{handle::Handle, EventDrivenProxyManager},
+    core::{EventDrivenProxyManager, handle::Handle},
     logging, logging_error, singleton_lazy,
     utils::logging::Type,
 };
@@ -24,8 +24,7 @@ static DEFAULT_BYPASS: &str = "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;
 static DEFAULT_BYPASS: &str =
     "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1";
 #[cfg(target_os = "macos")]
-static DEFAULT_BYPASS: &str =
-    "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
+static DEFAULT_BYPASS: &str = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
 
 async fn get_bypass() -> String {
     let use_default = Config::verge()

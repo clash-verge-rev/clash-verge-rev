@@ -2,8 +2,9 @@ use crate::singleton;
 use parking_lot::RwLock;
 use std::{
     sync::{
+        Arc,
         atomic::{AtomicU64, Ordering},
-        mpsc, Arc,
+        mpsc,
     },
     thread,
     time::{Duration, Instant},
@@ -20,7 +21,6 @@ enum FrontendEvent {
     NoticeMessage { status: String, message: String },
     ProfileChanged { current_profile_id: String },
     TimerUpdated { profile_index: String },
-    StartupCompleted,
     ProfileUpdateStarted { uid: String },
     ProfileUpdateCompleted { uid: String },
 }
@@ -98,16 +98,14 @@ impl NotificationSystem {
 
                             let is_emergency = *system.emergency_mode.read();
 
-                            if is_emergency {
-                                if let FrontendEvent::NoticeMessage { ref status, .. } = event {
-                                    if status == "info" {
+                            if is_emergency
+                                && let FrontendEvent::NoticeMessage { ref status, .. } = event
+                                    && status == "info" {
                                         log::warn!(
                                             "Emergency mode active, skipping info message"
                                         );
                                         continue;
                                     }
-                                }
-                            }
 
                             if let Some(window) = handle.get_window() {
                                 *system.last_emit_time.write() = Instant::now();
@@ -133,9 +131,6 @@ impl NotificationSystem {
                                     }
                                     FrontendEvent::TimerUpdated { profile_index } => {
                                         ("verge://timer-updated", Ok(serde_json::json!(profile_index)))
-                                    }
-                                    FrontendEvent::StartupCompleted => {
-                                        ("verge://startup-completed", Ok(serde_json::json!(null)))
                                     }
                                     FrontendEvent::ProfileUpdateStarted { uid } => {
                                         ("profile-update-started", Ok(serde_json::json!({ "uid": uid })))
@@ -203,13 +198,12 @@ impl NotificationSystem {
 
     /// 发送事件到队列
     fn send_event(&self, event: FrontendEvent) -> bool {
-        if *self.emergency_mode.read() {
-            if let FrontendEvent::NoticeMessage { ref status, .. } = event {
-                if status == "info" {
-                    log::info!("Skipping info message in emergency mode");
-                    return false;
-                }
-            }
+        if *self.emergency_mode.read()
+            && let FrontendEvent::NoticeMessage { ref status, .. } = event
+            && status == "info"
+        {
+            log::info!("Skipping info message in emergency mode");
+            return false;
         }
 
         if let Some(sender) = &self.sender {
@@ -366,22 +360,6 @@ impl Handle {
         }
     }
 
-    pub fn notify_startup_completed() {
-        let handle = Self::global();
-        if handle.is_exiting() {
-            return;
-        }
-
-        let system_opt = handle.notification_system.read();
-        if let Some(system) = system_opt.as_ref() {
-            system.send_event(FrontendEvent::StartupCompleted);
-        } else {
-            log::warn!(
-                "Notification system not initialized when trying to send StartupCompleted event."
-            );
-        }
-    }
-
     pub fn notify_profile_update_started(uid: String) {
         let handle = Self::global();
         if handle.is_exiting() {
@@ -392,7 +370,9 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::ProfileUpdateStarted { uid });
         } else {
-            log::warn!("Notification system not initialized when trying to send ProfileUpdateStarted event.");
+            log::warn!(
+                "Notification system not initialized when trying to send ProfileUpdateStarted event."
+            );
         }
     }
 
@@ -406,7 +386,9 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::ProfileUpdateCompleted { uid });
         } else {
-            log::warn!("Notification system not initialized when trying to send ProfileUpdateCompleted event.");
+            log::warn!(
+                "Notification system not initialized when trying to send ProfileUpdateCompleted event."
+            );
         }
     }
 

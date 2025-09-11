@@ -1,11 +1,15 @@
 use std::time::Duration;
 
 use kode_bridge::{
-    errors::{AnyError, AnyResult},
-    pool::PoolConfig,
     ClientConfig, IpcHttpClient, LegacyResponse,
+    errors::{AnyError, AnyResult},
 };
-use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
+use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+
+use crate::{
+    logging, singleton_with_logging,
+    utils::{dirs::ipc_path, logging::Type},
+};
 
 // 定义用于URL路径的编码集合，只编码真正必要的字符
 const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
@@ -16,51 +20,34 @@ const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b'&') // 和号
     .add(b'%'); // 百分号
 
-use crate::{logging, singleton_with_logging, utils::dirs::ipc_path};
-
 // Helper function to create AnyError from string
 fn create_error(msg: impl Into<String>) -> AnyError {
     Box::new(std::io::Error::other(msg.into()))
 }
 
 pub struct IpcManager {
-    ipc_path: String,
-    config: ClientConfig,
+    client: IpcHttpClient,
 }
 
 impl IpcManager {
     fn new() -> Self {
         let ipc_path_buf = ipc_path().unwrap_or_else(|e| {
-            logging!(
-                error,
-                crate::utils::logging::Type::Ipc,
-                true,
-                "Failed to get IPC path: {}",
-                e
-            );
+            logging!(error, Type::Ipc, true, "Failed to get IPC path: {}", e);
             std::path::PathBuf::from("/tmp/clash-verge-ipc") // fallback path
         });
         let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-        Self {
-            ipc_path: ipc_path.to_string(),
-            config: ClientConfig {
-                default_timeout: Duration::from_secs(5),
-                enable_pooling: true,
-                max_retries: 3,
-                max_concurrent_requests: 32,
-                max_requests_per_second: Some(5.0),
-                pool_config: PoolConfig {
-                    max_size: 32,
-                    min_idle: 2,
-                    max_idle_time_ms: 10_000,
-                    max_retries: 3,
-                    max_concurrent_requests: 32,
-                    max_requests_per_second: Some(5.0),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-        }
+        let config = ClientConfig {
+            default_timeout: Duration::from_secs(5),
+            enable_pooling: false,
+            max_retries: 4,
+            retry_delay: Duration::from_millis(125),
+            max_concurrent_requests: 16,
+            max_requests_per_second: Some(64.0),
+            ..Default::default()
+        };
+        #[allow(clippy::unwrap_used)]
+        let client = IpcHttpClient::with_config(ipc_path, config).unwrap();
+        Self { client }
     }
 }
 
@@ -74,8 +61,7 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<LegacyResponse> {
-        let client = IpcHttpClient::with_config(&self.ipc_path, self.config.clone())?;
-        client.request(method, path, body).await
+        self.client.request(method, path, body).await
     }
 }
 
@@ -213,8 +199,7 @@ impl IpcManager {
         // 测速URL不再编码，直接传递
         let url = format!("/proxies/{encoded_name}/delay?url={test_url}&timeout={timeout}");
 
-        let response = self.send_request("GET", &url, None).await;
-        response
+        self.send_request("GET", &url, None).await
     }
 
     // 版本和配置相关
@@ -359,8 +344,7 @@ impl IpcManager {
         // 测速URL不再编码，直接传递
         let url = format!("/group/{encoded_group_name}/delay?url={test_url}&timeout={timeout}");
 
-        let response = self.send_request("GET", &url, None).await;
-        response
+        self.send_request("GET", &url, None).await
     }
 
     // 调试相关

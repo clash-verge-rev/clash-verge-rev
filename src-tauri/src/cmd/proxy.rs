@@ -15,11 +15,11 @@ const PROVIDERS_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
 
 #[tauri::command]
 pub async fn get_proxies() -> CmdResult<serde_json::Value> {
-    let manager = IpcManager::global();
     let cache = ProxyRequestCache::global();
     let key = ProxyRequestCache::make_key("proxies", "default");
     let value = cache
         .get_or_fetch(key, PROXIES_REFRESH_INTERVAL, || async {
+            let manager = IpcManager::global();
             manager.get_proxies().await.unwrap_or_else(|e| {
                 logging!(error, Type::Cmd, "Failed to fetch proxies: {e}");
                 serde_json::Value::Object(serde_json::Map::new())
@@ -40,11 +40,11 @@ pub async fn force_refresh_proxies() -> CmdResult<serde_json::Value> {
 
 #[tauri::command]
 pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
-    let manager = IpcManager::global();
     let cache = ProxyRequestCache::global();
     let key = ProxyRequestCache::make_key("providers", "default");
     let value = cache
         .get_or_fetch(key, PROVIDERS_REFRESH_INTERVAL, || async {
+            let manager = IpcManager::global();
             manager.get_providers_proxies().await.unwrap_or_else(|e| {
                 logging!(error, Type::Cmd, "Failed to fetch provider proxies: {e}");
                 serde_json::Value::Object(serde_json::Map::new())

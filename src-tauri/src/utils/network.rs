@@ -1,16 +1,17 @@
 use anyhow::Result;
+use base64::{Engine as _, engine::general_purpose};
 use isahc::prelude::*;
+use isahc::{HttpClient, config::SslOption};
 use isahc::{
     config::RedirectPolicy,
     http::{
-        header::{HeaderMap, HeaderValue, USER_AGENT},
         StatusCode, Uri,
+        header::{HeaderMap, HeaderValue, USER_AGENT},
     },
 };
-use isahc::{config::SslOption, HttpClient};
-use std::sync::Once;
 use std::time::{Duration, Instant};
 use sysproxy::Sysproxy;
+use tauri::Url;
 use tokio::sync::Mutex;
 use tokio::time::timeout;
 
@@ -56,7 +57,6 @@ pub struct NetworkManager {
     self_proxy_client: Mutex<Option<HttpClient>>,
     system_proxy_client: Mutex<Option<HttpClient>>,
     no_proxy_client: Mutex<Option<HttpClient>>,
-    init: Once,
     last_connection_error: Mutex<Option<(Instant, String)>>,
     connection_error_count: Mutex<usize>,
 }
@@ -67,14 +67,9 @@ impl NetworkManager {
             self_proxy_client: Mutex::new(None),
             system_proxy_client: Mutex::new(None),
             no_proxy_client: Mutex::new(None),
-            init: Once::new(),
             last_connection_error: Mutex::new(None),
             connection_error_count: Mutex::new(0),
         }
-    }
-
-    pub fn init(&self) {
-        self.init.call_once(|| {});
     }
 
     async fn record_connection_error(&self, error: &str) {
@@ -93,10 +88,11 @@ impl NetworkManager {
             return true;
         }
 
-        if let Some((time, _)) = &*last_error_guard {
-            if time.elapsed() < Duration::from_secs(30) && count > 2 {
-                return true;
-            }
+        if let Some((time, _)) = &*last_error_guard
+            && time.elapsed() < Duration::from_secs(30)
+            && count > 2
+        {
+            return true;
         }
 
         false
@@ -118,7 +114,8 @@ impl NetworkManager {
     ) -> Result<HttpClient> {
         let proxy_uri_clone = proxy_uri.clone();
         let headers_clone = default_headers.clone();
-        let client = {
+
+        {
             let mut builder = HttpClient::builder();
 
             builder = match proxy_uri_clone {
@@ -141,9 +138,7 @@ impl NetworkManager {
             builder = builder.redirect_policy(RedirectPolicy::Follow);
 
             Ok(builder.build()?)
-        };
-
-        client
+        }
     }
 
     pub async fn create_request(
@@ -202,15 +197,40 @@ impl NetworkManager {
             self.reset_clients().await;
         }
 
+        let parsed = Url::parse(url)?;
+        let mut extra_headers = HeaderMap::new();
+
+        if !parsed.username().is_empty()
+            && let Some(pass) = parsed.password()
+        {
+            let auth_str = format!("{}:{}", parsed.username(), pass);
+            let encoded = general_purpose::STANDARD.encode(auth_str);
+            extra_headers.insert(
+                "Authorization",
+                HeaderValue::from_str(&format!("Basic {}", encoded))?,
+            );
+        }
+
+        let clean_url = {
+            let mut no_auth = parsed.clone();
+            no_auth.set_username("").ok();
+            no_auth.set_password(None).ok();
+            no_auth.to_string()
+        };
+
         let client = self
             .create_request(proxy_type, timeout_secs, user_agent, accept_invalid_certs)
             .await?;
 
         let timeout_duration = Duration::from_secs(timeout_secs.unwrap_or(20));
-        let url_owned = url.to_string();
-
         let response = match timeout(timeout_duration, async {
-            let mut response = client.get_async(&url_owned).await?;
+            let mut req = isahc::Request::get(&clean_url);
+
+            for (k, v) in extra_headers.iter() {
+                req = req.header(k, v);
+            }
+
+            let mut response = client.send_async(req.body(())?).await?;
             let status = response.status();
             let headers = response.headers().clone();
             let body = response.text().await?;

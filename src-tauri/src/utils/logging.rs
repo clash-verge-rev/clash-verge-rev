@@ -18,6 +18,7 @@ pub enum Type {
     Network,
     ProxyMode,
     Ipc,
+    // Cache,
 }
 
 impl fmt::Display for Type {
@@ -39,6 +40,7 @@ impl fmt::Display for Type {
             Type::Network => write!(f, "[Network]"),
             Type::ProxyMode => write!(f, "[ProxMode]"),
             Type::Ipc => write!(f, "[IPC]"),
+            // Type::Cache => write!(f, "[Cache]"),
         }
     }
 }
