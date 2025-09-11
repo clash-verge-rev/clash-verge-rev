@@ -71,20 +71,10 @@ export const ClashPortViewer = forwardRef<DialogRef>((props, ref) => {
       if (conflictPorts[i] === 0) continue;
       for (let j = i + 1; j < conflictPorts.length; j++) {
         if (conflictPorts[i] === conflictPorts[j]) {
-          console.log(
-            portNames[i],
-            conflictPorts[i],
-            portNames[j],
-            conflictPorts[j],
-          );
           notice("error", t("Port Conflict", { portName: portNames[j] }), 4000);
           return;
         }
       }
-    }
-    if (uniq(conflictPorts).length !== conflictPorts.length) {
-      notice("error", t("Port Conflict"), 4000);
-      return;
     }
 
     try {

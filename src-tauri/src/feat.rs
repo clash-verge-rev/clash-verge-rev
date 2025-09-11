@@ -245,9 +245,17 @@ pub async fn patch_clash(patch: Mapping) -> AppResult<()> {
         if enable_random_port {
             let port = help::find_unused_port().unwrap_or(Config::clash().latest().get_mixed_port());
             tmp_map.insert("mixed-port".into(), port.into());
-        } else {
+        } else if help::local_port_available(7890) {
             tmp_map.insert("mixed-port".into(), 7890.into());
+        } else {
+            let port = help::find_unused_port()?;
+            handle::Handle::notice_message(
+                handle::NoticeStatus::Warning,
+                format!("default port `7890` already in use, find unused port `{port}`"),
+            );
+            tmp_map.insert("mixed-port".into(), port.into());
         }
+
         tmp_map.insert("port".into(), 0.into());
         tmp_map.insert("socks-port".into(), 0.into());
         tmp_map.insert("redir-port".into(), 0.into());
