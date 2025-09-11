@@ -94,10 +94,10 @@ impl IRuntime {
         if let Some(config) = self.config.as_mut() {
             if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
                 proxies.iter_mut().for_each(|proxy| {
-                    if let Some(proxy) = proxy.as_mapping_mut() {
-                        if proxy.get("dialer-proxy").is_some() {
-                            proxy.remove("dialer-proxy");
-                        }
+                    if let Some(proxy) = proxy.as_mapping_mut()
+                        && proxy.get("dialer-proxy").is_some()
+                    {
+                        proxy.remove("dialer-proxy");
                     }
                 });
             }
@@ -127,10 +127,10 @@ impl IRuntime {
                             .iter_mut()
                             .find(|proxy| proxy.get("name") == Some(dialer_proxy))
                         {
-                            if i != 0 {
-                                if let Some(dialer_proxy) = dialer_proxies.get(i - 1) {
-                                    proxy.insert("dialer-proxy".into(), dialer_proxy.to_owned());
-                                }
+                            if i != 0
+                                && let Some(dialer_proxy) = dialer_proxies.get(i - 1)
+                            {
+                                proxy.insert("dialer-proxy".into(), dialer_proxy.to_owned());
                             }
                             if i == dialer_proxies.len() - 1 {
                                 // 添加proxy-groups
@@ -152,11 +152,11 @@ impl IRuntime {
                 }
 
                 // 添加rules
-                if let Some(Value::Sequence(rules)) = config.get_mut("rules") {
-                    if let Ok(rule) = serde_yaml_ng::to_value("MATCH,proxy_chain") {
-                        // rules.push(rule);
-                        *rules = vec![rule];
-                    }
+                if let Some(Value::Sequence(rules)) = config.get_mut("rules")
+                    && let Ok(rule) = serde_yaml_ng::to_value("MATCH,proxy_chain")
+                {
+                    // rules.push(rule);
+                    *rules = vec![rule];
                 }
             }
         }

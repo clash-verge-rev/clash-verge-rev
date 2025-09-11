@@ -1,7 +1,6 @@
 use super::CmdResult;
-use crate::{config::*, core::CoreManager, wrap_err};
+use crate::{config::*, core::CoreManager, log_err, wrap_err};
 use anyhow::Context;
-use regex::Regex;
 use serde_yaml_ng::Mapping;
 use std::collections::HashMap;
 
@@ -44,77 +43,57 @@ pub async fn get_runtime_proxy_chain_config() -> CmdResult<String> {
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_ref();
 
-    let config = wrap_err!(runtime
-        .config
-        .as_ref()
-        .ok_or(anyhow::anyhow!("failed to parse config to yaml file")))?;
-    let re = wrap_err!(Regex::new(r"^chain_node_\d+_"))?;
+    let config = wrap_err!(
+        runtime
+            .config
+            .as_ref()
+            .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
+    )?;
 
     if let (
         Some(serde_yaml_ng::Value::Sequence(proxies)),
         Some(serde_yaml_ng::Value::Sequence(proxy_groups)),
     ) = (config.get("proxies"), config.get("proxy-groups"))
     {
+        let mut proxy_name = None;
+        let mut proxies_chain = Vec::new();
+
         let proxy_chain_groups = proxy_groups
             .iter()
             .filter_map(
                 |proxy_group| match proxy_group.get("name").and_then(|n| n.as_str()) {
-                    Some(name) if name.starts_with("chain_") => Some(proxy_group.to_owned()),
+                    Some("proxy_chain") => {
+                        if let Some(serde_yaml_ng::Value::Sequence(ps)) = proxy_group.get("proxies")
+                            && let Some(x) = ps.first()
+                        {
+                            proxy_name = Some(x); //插入出口节点名字
+                        }
+                        Some(proxy_group.to_owned())
+                    }
                     _ => None,
                 },
             )
             .collect::<Vec<serde_yaml_ng::Value>>();
 
-        let last_proxy_name = {
-            if let Some(proxy_chain_group) = proxy_chain_groups.last() {
-                if let Some(serde_yaml_ng::Value::Sequence(nodes)) =
-                    proxy_chain_group.get("proxies")
-                {
-                    if let Some(name) = nodes[0].to_owned().as_str() {
-                        let mut name = name.to_string();
-                        name = re.replace_all(&name, "").to_string();
-                        Some(name)
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
+        while let Some(proxy) = proxies.iter().find(|proxy| {
+            if let serde_yaml_ng::Value::Mapping(proxy_map) = proxy {
+                proxy_map.get("name") == proxy_name && proxy_map.get("dialer-proxy").is_some()
             } else {
-                None
+                false
             }
-        };
-
-        let mut proxy_chain_nodes = proxies
-            .iter()
-            .filter_map(|proxy| {
-                if proxy.get("dialer-proxy").is_some() {
-                    Some(proxy.to_owned())
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<serde_yaml_ng::Value>>();
-
-        if let Some(last_proxy) = proxies.iter().find(|proxy| {
-            proxy
-                .get("name")
-                .is_some_and(|name| name.as_str() == last_proxy_name.as_deref())
         }) {
-            proxy_chain_nodes.push(last_proxy.to_owned());
+            proxies_chain.push(proxy.to_owned());
+            proxy_name = proxy.get("dialer-proxy");
         }
 
-        proxy_chain_nodes.iter_mut().for_each(|proxy_chain_node| {
-            if let Some(serde_yaml_ng::Value::String(name)) =
-                proxy_chain_node.get_mut("name")
-            {
-                *name = re.replace_all(name, "").to_string();
-                *name = name.replace("entry_node_", "");
-            }
-        });
+        if let Some(entry_proxy) = proxies.iter().find(|proxy| proxy.get("name") == proxy_name) {
+            proxies_chain.push(entry_proxy.to_owned());
+        }
+
+        proxies_chain.reverse();
 
         let mut config: HashMap<String, Vec<serde_yaml_ng::Value>> = HashMap::new();
-        config.insert("proxies".to_string(), proxy_chain_nodes);
+        config.insert("proxies".to_string(), proxies_chain);
         config.insert("proxy-groups".to_string(), proxy_chain_groups);
 
         wrap_err!(serde_yaml_ng::to_string(&config).context("YAML generation failed"))
@@ -140,7 +119,7 @@ pub async fn update_proxy_chain_config_in_runtime(
 
     // 生成新的运行配置文件并通知 Clash 核心重新加载
     let run_path = wrap_err!(Config::generate_file(ConfigType::Run).await)?;
-    wrap_err!(CoreManager::global().put_configs_force(run_path).await);
+    log_err!(CoreManager::global().put_configs_force(run_path).await);
 
     Ok(())
 }

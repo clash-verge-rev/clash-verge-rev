@@ -280,13 +280,8 @@ impl IpcManager {
         });
 
         match self.send_request("PUT", &url, Some(&payload)).await {
-            Ok(a) => {
-                println!("group {:#?}\nproxy {:#?}", group, proxy);
-                println!("{:#?}", a);
-                Ok(())
-            }
+            Ok(_) => Ok(()),
             Err(e) => {
-                println!("updateProxy encountered error: {:#?}", e);
                 logging!(
                     error,
                     crate::utils::logging::Type::Ipc,
