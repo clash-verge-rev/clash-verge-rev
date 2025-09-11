@@ -51,109 +51,111 @@ impl IRuntime {
     /// {   
     ///     "proxies":[
     ///         {
-    ///             name : entry_node_xxxx,
+    ///             name : 入口节点,
     ///             type: xxx
     ///             server: xxx
     ///             port: xxx
     ///             ports: xxx
     ///             password: xxx
     ///             skip-cert-verify: xxx,
-    ///             dialer-proxy : "chain_1"
     ///        },
     ///         {
-    ///             name : chain_node_1_xxxx,
+    ///             name : hop_node_1_xxxx,
     ///             type: xxx
     ///             server: xxx
     ///             port: xxx
     ///             ports: xxx
     ///             password: xxx
     ///             skip-cert-verify: xxx,
-    ///             dialer-proxy : "chain_2"
+    ///             dialer-proxy : "入口节点"
     ///        },
     ///         {
-    ///             name : chain_node_2_xxxx,
+    ///             name : 出口节点,
     ///             type: xxx
     ///             server: xxx
     ///             port: xxx
     ///             ports: xxx
     ///             password: xxx
     ///             skip-cert-verify: xxx,
-    ///             dialer-proxy : "chain_3"
+    ///             dialer-proxy : "hop_node_1_xxxx"
     ///        }
     ///     ],
     ///     "proxy-groups" : [
     ///         {
-    ///             name : "chain_1",
+    ///             name : "proxy_chain",
     ///             type: "select",
-    ///             proxies ["chain_node_1_xxxx"]
-    ///         },
-    ///         {
-    ///             name : "chain_2",
-    ///             type: "select",
-    ///             proxies ["chain_node_2_xxxx"]
-    ///         },
-    ///         {
-    ///             name : "chain_3",
-    ///             type: "select",
-    ///             proxies ["出口节点的name"]
+    ///             proxies ["出口节点"]
     ///         }
     ///     ]
     /// }
     ///
     /// 传入none 为删除
-    pub fn update_proxy_chain_config(&mut self, proxy_chain_config: Option<serde_yaml_ng::Value>) {
+    pub fn update_proxy_chain_config(&mut self, proxy_chain_config: Option<Value>) {
         if let Some(config) = self.config.as_mut() {
-            if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get_mut("proxies") {
-                proxies.retain(|proxy| proxy.get("dialer-proxy").is_none());
-                proxies.retain(|proxy| proxy.get("name").is_some_and(|n| n.as_str().is_some_and(|n| !n.starts_with("chain_node_"))));
-            }
-
-            if let Some(serde_yaml_ng::Value::Sequence(proxy_groups)) =
-                config.get_mut("proxy-groups")
-            {
-                proxy_groups.retain(|proxy_group| {
-
-                    if matches!(proxy_group.get("name").and_then(|n| n.as_str()), Some(name) if name.starts_with("chain_") || name == "exit_node_group") {
-                        false
-                    } else {
-                       true
+            if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
+                proxies.iter_mut().for_each(|proxy| {
+                    if let Some(proxy) = proxy.as_mapping_mut() {
+                        if proxy.get("dialer-proxy").is_some() {
+                            proxy.remove("dialer-proxy");
+                        }
                     }
                 });
             }
 
-            if let Some(serde_yaml_ng::Value::Sequence(rules)) =config.get_mut("rules"){
-                rules.retain(|rule| rule.as_str() != Some("MATCH,chain_1"));
+            // 清除proxy_chain代理组
+            if let Some(Value::Sequence(proxy_groups)) = config.get_mut("proxy-groups") {
+                proxy_groups.retain(|proxy_group| {
+                    !matches!(proxy_group.get("name").and_then(|n| n.as_str()), Some(name) if name== "proxy_chain")
+                });
             }
 
-            if let Some(proxy_chain_config) = proxy_chain_config {
-                // println!("{:#?}",proxy_chain_config);
-                // 读取 链式代理 和链式代理组
-                if let (
-                    Some(serde_yaml_ng::Value::Sequence(proxies_add)),
-                    Some(serde_yaml_ng::Value::Sequence(proxy_groups_add)),
-                    // Some(serde_yaml_ng::Value::Sequence(rules_add)),
-                ) = (
-                    proxy_chain_config.get("proxies"),
-                    proxy_chain_config.get("proxy-groups"),
-                    // proxy_chain_config.get("rule"),
-                ) {
-                    if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get_mut("proxies")
-                    {
-                        proxies.extend(proxies_add.to_owned());
-                    }
+            // 清除rules
+            if let Some(Value::Sequence(rules)) = config.get_mut("rules") {
+                rules.retain(|rule| rule.as_str() != Some("MATCH,proxy_chain"));
+            }
 
-                    if let Some(serde_yaml_ng::Value::Sequence(proxy_groups)) =
-                        config.get_mut("proxy-groups")
-                    {
-                        proxy_groups.extend(proxy_groups_add.to_owned());
-                    }
+            // some 则写入新配置
+            // 给proxy添加dialer-proxy字段
+            // 第一个proxy不添加dialer-proxy
+            // 然后第二个开始，dialer-proxy为上一个元素的name
+            if let Some(Value::Sequence(dialer_proxies)) = proxy_chain_config {
+                let mut proxy_chain_group = Mapping::new();
 
-                    if let Some(serde_yaml_ng::Value::Sequence(rules)) =
-                        config.get_mut("rules")
-                    {
-                        if let Ok(rule)= serde_yaml_ng::to_value("MATCH,chain_1"){
-                            rules.push(rule);
-                        }                        
+                if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
+                    for (i, dialer_proxy) in dialer_proxies.iter().enumerate() {
+                        if let Some(Value::Mapping(proxy)) = proxies
+                            .iter_mut()
+                            .find(|proxy| proxy.get("name") == Some(dialer_proxy))
+                        {
+                            if i != 0 {
+                                if let Some(dialer_proxy) = dialer_proxies.get(i - 1) {
+                                    proxy.insert("dialer-proxy".into(), dialer_proxy.to_owned());
+                                }
+                            }
+                            if i == dialer_proxies.len() - 1 {
+                                // 添加proxy-groups
+                                proxy_chain_group
+                                    .insert("name".into(), Value::String("proxy_chain".into()));
+                                proxy_chain_group
+                                    .insert("type".into(), Value::String("select".into()));
+                                proxy_chain_group.insert(
+                                    "proxies".into(),
+                                    Value::Sequence(vec![dialer_proxy.to_owned()]),
+                                );
+                            }
+                        }
+                    }
+                }
+
+                if let Some(Value::Sequence(proxy_groups)) = config.get_mut("proxy-groups") {
+                    proxy_groups.push(Value::Mapping(proxy_chain_group));
+                }
+
+                // 添加rules
+                if let Some(Value::Sequence(rules)) = config.get_mut("rules") {
+                    if let Ok(rule) = serde_yaml_ng::to_value("MATCH,proxy_chain") {
+                        // rules.push(rule);
+                        *rules = vec![rule];
                     }
                 }
             }

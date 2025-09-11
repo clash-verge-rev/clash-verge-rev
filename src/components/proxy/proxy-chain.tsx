@@ -295,14 +295,16 @@ export const ProxyChain = ({
 
           // Get original proxy configurations from runtime
           const runtimeConfig = await getRuntimeConfig();
+
           if (!runtimeConfig || !(runtimeConfig as any).proxies) {
-            console.error("Failed to get runtime config or no proxies available");
+            console.error(
+              "Failed to get runtime config or no proxies available",
+            );
             return;
           }
 
           // Build chain configuration
           const chainProxies: any[] = [];
-          const chainGroups: any[] = [];
 
           // Process each node in the chain
           for (let i = 0; i < proxyChain.length; i++) {
@@ -320,56 +322,21 @@ export const ProxyChain = ({
               );
               continue;
             }
-
-            // Create modified proxy with dialer-proxy
-            const modifiedProxy = { ...originalProxy };
-
-            if (i === 0) {
-              // First node (entry point) - rename and set dialer-proxy to chain_1
-              modifiedProxy.name = `entry_node_${currentNode.name}`;
-              if (proxyChain.length > 1) {
-                modifiedProxy["dialer-proxy"] = "chain_1";
-              }
-            } else {
-              // Chain nodes - rename and set dialer-proxy to next chain or exit
-              modifiedProxy.name = `chain_node_${i}_${currentNode.name}`;
-              if (i < proxyChain.length - 1) {
-                modifiedProxy["dialer-proxy"] = `chain_${i + 1}`;
-              }
-            }
-
-            chainProxies.push(modifiedProxy);
+            chainProxies.push(currentNode.name);
           }
+          setIsChainConnected(true);
 
-          // Create proxy groups for chain levels
-          for (let i = 1; i < proxyChain.length; i++) {
-            const currentNode = proxyChain[i];
-            chainGroups.push({
-              name: `chain_${i}`,
-              type: "select",
-              proxies: [`chain_node_${i}_${currentNode.name}`],
-            });
-          }
+          console.log("Saving chain config:", chainProxies);
+          await updateProxyChainConfigInRuntime(chainProxies);
 
-          const chainConfig = {
-            proxies: chainProxies,
-            "proxy-groups": chainGroups,
-          };
-
-          console.log("Saving chain config:", chainConfig);
-          await updateProxyChainConfigInRuntime(chainConfig);
-          
-          // After saving config, update proxy to use the first node
           if (proxyChain.length > 0) {
-            // chain_node_1_
-            // entry_node_
-            const firstNodeName = `chain_node_1_${proxyChain[1].name}`;
-           
-            
-            await updateProxyAndSync("chain_1", firstNodeName);
+            await updateProxy(
+              "proxy_chain",
+              chainProxies[chainProxies.length - 1],
+            );
           }
         }
-        setIsChainConnected(true);
+
         setHasUnsavedChanges(false);
       } catch (error) {
         console.error("Failed to connect chain:", error);
@@ -555,7 +522,10 @@ export const ProxyChain = ({
             startIcon={<Save />}
             onClick={handleToggleChain}
             disabled={
-              isConnecting || (proxyChain.length > 0 && proxyChain.length < 2 && !isChainConnected)
+              isConnecting ||
+              (proxyChain.length > 0 &&
+                proxyChain.length < 2 &&
+                !isChainConnected)
             }
             color={isChainConnected ? "error" : "primary"}
             sx={{
@@ -568,10 +538,13 @@ export const ProxyChain = ({
                 : undefined
             }
           >
-            {isConnecting 
-              ? (isChainConnected ? t("Disconnecting...") || "断开中..." : t("Connecting...") || "连接中...") 
-              : (isChainConnected ? t("Disconnect") || "断开" : t("Connect") || "连接")
-            }
+            {isConnecting
+              ? isChainConnected
+                ? t("Disconnecting...") || "断开中..."
+                : t("Connecting...") || "连接中..."
+              : isChainConnected
+                ? t("Disconnect") || "断开"
+                : t("Connect") || "连接"}
           </Button>
         </Box>
       </Box>

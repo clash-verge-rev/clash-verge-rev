@@ -287,7 +287,6 @@ impl IpcManager {
 
     // 代理相关
     pub async fn update_proxy(&self, group: &str, proxy: &str) -> AnyResult<()> {
-
         // 使用 percent-encoding 进行正确的 URL 编码
         let encoded_group = utf8_percent_encode(group, URL_PATH_ENCODE_SET).to_string();
         let url = format!("/proxies/{encoded_group}");
@@ -297,11 +296,12 @@ impl IpcManager {
 
         match self.send_request("PUT", &url, Some(&payload)).await {
             Ok(a) => {
-                println!("group {:#?}\nproxy {:#?}",group,proxy);
-                println!("{:#?}",a);
+                println!("group {:#?}\nproxy {:#?}", group, proxy);
+                println!("{:#?}", a);
                 Ok(())
-            },
+            }
             Err(e) => {
+                println!("updateProxy encountered error: {:#?}", e);
                 logging!(
                     error,
                     crate::utils::logging::Type::Ipc,
