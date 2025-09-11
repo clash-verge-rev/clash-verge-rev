@@ -118,11 +118,10 @@ pub fn verify_response_signature(response: &IpcResponse) -> Result<bool> {
 
 fn create_backoff_strategy() -> ExponentialBackoff {
     ExponentialBackoff {
-        initial_interval: Duration::from_millis(100),
-        max_interval: Duration::from_secs(3),
-        // max_elapsed_time: Some(Duration::from_secs(30)),
-        max_elapsed_time: None,
-        multiplier: 2.0,
+        initial_interval: Duration::from_millis(50),
+        max_interval: Duration::from_secs(1),
+        max_elapsed_time: Some(Duration::from_secs(3)),
+        multiplier: 1.5,
         ..Default::default()
     }
 }
