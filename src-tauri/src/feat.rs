@@ -416,6 +416,7 @@ pub async fn patch_verge(patch: IVerge) -> AppResult<()> {
     let res = {
         let enable_external_controller = patch.enable_external_controller;
         let auto_launch = patch.enable_auto_launch;
+        let silent_start_mode = patch.silent_start_mode;
         let system_proxy = patch.enable_system_proxy;
         let pac = patch.proxy_auto_config;
         let pac_content = patch.pac_file_content;
@@ -452,6 +453,12 @@ pub async fn patch_verge(patch: IVerge) -> AppResult<()> {
             tracing::debug!("change service mode to {service_mode}");
             Config::generate()?;
             CoreManager::global().run_core().await?;
+        }
+        if silent_start_mode.is_some() {
+            sysopt::Sysopt::global().init_launch()?;
+            if Config::verge().latest().enable_auto_launch.unwrap_or_default() {
+                sysopt::Sysopt::global().update_launch()?;
+            }
         }
         if auto_launch.is_some() {
             sysopt::Sysopt::global().update_launch()?;

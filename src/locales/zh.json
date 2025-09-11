@@ -159,6 +159,9 @@
   "PAC URL": "PAC地址：",
   "Auto Launch": "开机自启",
   "Silent Start": "静默启动",
+  "silent.bootup": "仅开机",
+  "silent.global": "全局",
+  "silent.off": "关闭",
 
   "Clash Setting": "Clash 设置",
   "Allow Lan": "局域网连接",

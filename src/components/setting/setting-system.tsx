@@ -1,7 +1,7 @@
 import { DialogRef, SwitchLovely } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { InfoRounded, Settings } from "@mui/icons-material";
-import { IconButton, Tooltip } from "@mui/material";
+import { Button, ButtonGroup, IconButton, Tooltip } from "@mui/material";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { GuardState } from "./mods/guard-state";
@@ -19,8 +19,12 @@ const SettingSystem = ({ onError }: Props) => {
 
   const sysproxyRef = useRef<DialogRef>(null);
 
-  const { enable_auto_launch, enable_silent_start, enable_system_proxy } =
-    verge ?? {};
+  const {
+    enable_auto_launch,
+    // enable_silent_start,
+    silent_start_mode,
+    enable_system_proxy,
+  } = verge;
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onChangeVerge = (patch: Partial<IVergeConfig>) => {
@@ -78,15 +82,17 @@ const SettingSystem = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem label={t("Silent Start")}>
-        <GuardState
-          value={enable_silent_start ?? false}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeVerge({ enable_silent_start: e })}
-          onGuard={(e) => patchVerge({ enable_silent_start: e })}>
-          <SwitchLovely edge="end" />
-        </GuardState>
+        <ButtonGroup size="small" sx={{ my: "4px" }}>
+          {(["bootup", "global", "off"] as const).map((mode) => (
+            <Button
+              key={mode}
+              variant={mode === silent_start_mode ? "contained" : "outlined"}
+              onClick={(e) => patchVerge({ silent_start_mode: mode })}
+              sx={{ textTransform: "capitalize" }}>
+              {t(`silent.${mode}`)}
+            </Button>
+          ))}
+        </ButtonGroup>
       </SettingItem>
     </SettingList>
   );

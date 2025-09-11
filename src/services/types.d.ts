@@ -248,7 +248,8 @@ interface IVergeConfig {
   enable_system_title_bar?: boolean;
   enable_keep_ui_active?: boolean;
   enable_service_mode?: boolean;
-  enable_silent_start?: boolean;
+  // enable_silent_start?: boolean;
+  silent_start_mode?: "bootup" | "global" | "off";
   enable_system_proxy?: boolean;
   proxy_auto_config?: boolean;
   pac_file_content?: string;

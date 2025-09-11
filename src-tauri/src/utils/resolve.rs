@@ -5,11 +5,12 @@ use tauri::{AppHandle, CloseRequestApi, Manager};
 
 use crate::{
     APP_HANDLE,
-    config::{Config, PrfItem, PrfOption},
+    config::{Config, PrfItem, PrfOption, SilentStartMode},
     core::{verge_log::VergeLog, *},
     error::AppResult,
-    log_err, shutdown, trace_err, utils,
+    log_err, shutdown, trace_err,
     utils::{
+        self,
         dirs::{self, APP_ID},
         init, server,
     },
@@ -48,17 +49,29 @@ pub async fn resolve_setup() {
     tracing::trace!("register os shutdown handler");
     shutdown::register();
 
-    let silent_start = Config::verge().latest().enable_silent_start.unwrap_or_default();
+    // 用于应用备份后重启
     let exists_archive_file = dirs::backup_archive_file().is_ok_and(|file| file.exists());
-    if !silent_start || exists_archive_file {
+    if exists_archive_file {
         create_window();
     }
 
+    let process_silent_start = || {
+        let silent_start = Config::verge().latest().silent_start_mode.clone().unwrap_or_default();
+        if matches!(silent_start, SilentStartMode::Bootup | SilentStartMode::Off) {
+            create_window();
+        }
+    };
+
     let argvs = std::env::args().collect::<Vec<String>>();
-    if let [_, second, ..] = argvs.as_slice()
-        && second.starts_with("clash:")
-    {
-        resolve_scheme(second.to_owned()).await;
+    if let [_, second, ..] = argvs.as_slice() {
+        if second.as_str() == "--hidden" {
+            tracing::debug!("silent start app at boot-up");
+        } else if second.starts_with("clash:") {
+            process_silent_start();
+            resolve_scheme(second.to_owned()).await;
+        }
+    } else {
+        process_silent_start();
     }
 }
 

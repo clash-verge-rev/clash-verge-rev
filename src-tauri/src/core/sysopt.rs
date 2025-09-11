@@ -14,7 +14,7 @@ use sysproxy::{Autoproxy, Sysproxy};
 
 use crate::{
     any_err,
-    config::{Config, IVerge},
+    config::{Config, IVerge, SilentStartMode},
     error::{AppError, AppResult},
     log_err,
 };
@@ -323,9 +323,17 @@ impl Sysopt {
                 .unwrap_or(app_path)
         };
 
+        let mut args = [""];
+        if let Some(silent_start_mode) = Config::verge().latest().silent_start_mode.clone()
+            && matches!(silent_start_mode, SilentStartMode::Bootup)
+        {
+            args = ["--hidden"];
+        };
+
         let auto = AutoLaunchBuilder::new()
             .set_app_name(app_name)
             .set_app_path(&app_path)
+            .set_args(&args)
             .build()?;
 
         *self.auto_launch.lock() = Some(auto);

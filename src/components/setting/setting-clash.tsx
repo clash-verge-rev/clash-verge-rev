@@ -291,7 +291,7 @@ const SettingClash = ({ onError }: Props) => {
                       mode === findProcessMode ? "contained" : "outlined"
                     }
                     onClick={(e) => patchClash({ "find-process-mode": mode })}
-                    sx={{ textTransform: "lowercase" }}>
+                    sx={{ textTransform: "capitalize" }}>
                     {t(buttonName)}
                   </Button>
                 </Tooltip>

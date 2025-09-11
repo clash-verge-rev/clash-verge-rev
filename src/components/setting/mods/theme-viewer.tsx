@@ -84,6 +84,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
           <Typography variant="h6">{t("Theme Setting")}</Typography>
           <div className="flex items-center justify-between">
             <Button
+              sx={{ textTransform: "capitalize" }}
               size="small"
               variant="outlined"
               className="!text-primary-text !mr-2"
@@ -97,6 +98,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
             </Button>
             <ButtonGroup size="small">
               <Button
+                sx={{ textTransform: "capitalize" }}
                 variant={themeMode === "light" ? "contained" : "outlined"}
                 onClick={(e) => {
                   toggleTheme(e, "light");
@@ -104,6 +106,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
                 {t("theme.light")}
               </Button>
               <Button
+                sx={{ textTransform: "capitalize" }}
                 variant={themeMode === "dark" ? "contained" : "outlined"}
                 onClick={(e) => {
                   toggleTheme(e, "dark");
@@ -158,7 +161,11 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
             disabled
             sx={{ width: 230 }}
             endAdornment={
-              <Button onClick={() => setEditorOpen(true)}>{t("Edit")}</Button>
+              <Button
+                sx={{ textTransform: "capitalize" }}
+                onClick={() => setEditorOpen(true)}>
+                {t("Edit")}
+              </Button>
             }
           />
         </Item>

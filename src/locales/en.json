@@ -159,6 +159,9 @@
   "PAC URL": "PAC URL: ",
   "Auto Launch": "Auto Launch",
   "Silent Start": "Silent Start",
+  "silent.bootup": "Boot-up Only",
+  "silent.global": "Global",
+  "silent.off": "OFF",
 
   "Clash Setting": "Clash Setting",
   "Allow Lan": "Allow Lan",

@@ -74,7 +74,11 @@ pub struct IVerge {
     pub enable_keep_ui_active: Option<bool>,
 
     /// not show the window on launch
+    ///
+    /// TODO: __即将弃用__
     pub enable_silent_start: Option<bool>,
+
+    pub silent_start_mode: Option<SilentStartMode>,
 
     /// set system proxy
     pub enable_system_proxy: Option<bool>,
@@ -84,7 +88,7 @@ pub struct IVerge {
 
     /// set system proxy bypass
     ///
-    /// *即将弃用*
+    /// TODO: __即将弃用__
     pub system_proxy_bypass: Option<String>,
 
     /// system proxy bypass for windows
@@ -171,6 +175,15 @@ pub struct IVerge {
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SilentStartMode {
+    Bootup,
+    Global,
+    #[default]
+    Off,
+}
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVergeTestItem {
     pub uid: Option<String>,
     pub name: Option<String>,
@@ -198,6 +211,7 @@ impl IVerge {
     pub fn new() -> Self {
         match dirs::verge_path().and_then(|path| help::read_yaml::<IVerge>(&path)) {
             Ok(mut config) => {
+                // 对旧字段的兼容处理
                 // 将 system_proxy_bypass 设置到对应的平台，后续将移除 system_proxy_bypass
                 if let Some(bypass) = config.system_proxy_bypass.clone() {
                     if bypass.contains(";") {
@@ -220,6 +234,16 @@ impl IVerge {
                                 config.linux_bypass = Some(bypass);
                             }
                         }
+                    }
+                }
+
+                if let Some(enable_silent_start) = config.enable_silent_start
+                    && config.silent_start_mode.is_none()
+                {
+                    if enable_silent_start {
+                        config.silent_start_mode = Some(SilentStartMode::Global);
+                    } else {
+                        config.silent_start_mode = Some(SilentStartMode::Off);
                     }
                 }
 
@@ -253,6 +277,7 @@ impl IVerge {
             tun_tray_icon: Some(false),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
+            silent_start_mode: Some(SilentStartMode::Off),
             enable_system_title_bar: Some(false),
             enable_keep_ui_active: Some(false),
             enable_system_proxy: Some(false),
@@ -307,6 +332,7 @@ impl IVerge {
         patch!(enable_service_mode);
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
+        patch!(silent_start_mode);
         patch!(enable_system_title_bar);
         patch!(enable_keep_ui_active);
         patch!(enable_random_port);
