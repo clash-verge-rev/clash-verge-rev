@@ -8,7 +8,7 @@ mod tests {
 
     #[test]
     fn default_config() {
-        let default = crate::config::RawConfig::default();
+        let default = crate::config::raw_config::RawConfig::default();
         let mut file = std::fs::File::create("config.yaml").unwrap();
         file.write_all(serde_yaml_ng::to_string(&default).unwrap().as_bytes())
             .unwrap();
