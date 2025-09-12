@@ -369,7 +369,9 @@ impl Tray {
                 log_err!(cmds::common::open_devtools(app_handle_))
             }
             "restart_clash" => feat::restart_clash_core(),
-            "restart_app" => cmds::common::restart_app(app_handle_),
+            "restart_app" => {
+                tauri::async_runtime::block_on(async move { cmds::common::restart_app(app_handle_).await })
+            }
             "quit" => cmds::common::exit_app(app_handle_),
             _ => {}
         }

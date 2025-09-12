@@ -3,10 +3,11 @@ use std::{fs, path::PathBuf};
 use reqwest_dav::list_cmd::ListFile;
 
 use crate::{
+    cmds,
     config::Config,
     core::backup::{self, WebDav},
     error::AppResult,
-    utils::{self, dirs, resolve::resolve_reset},
+    utils::dirs,
 };
 
 #[tauri::command]
@@ -21,9 +22,8 @@ pub async fn apply_local_backup(app_handle: tauri::AppHandle, file_path: String)
     let mut zip: zip::ZipArchive<fs::File> = zip::ZipArchive::new(file)?;
     zip.extract(dirs::app_home_dir()?)?;
     Config::reload().await?;
-    utils::server::shutdown_embedded_server();
-    resolve_reset().await;
-    app_handle.restart();
+    cmds::common::restart_app(app_handle).await;
+    Ok(())
 }
 
 // web dav
@@ -52,9 +52,8 @@ pub async fn download_backup_and_reload(app_handle: tauri::AppHandle, file_name:
     let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(dirs::app_home_dir()?)?;
     Config::reload().await?;
-    utils::server::shutdown_embedded_server();
-    resolve_reset().await;
-    app_handle.restart();
+    cmds::common::restart_app(app_handle).await;
+    Ok(())
 }
 
 #[tauri::command]

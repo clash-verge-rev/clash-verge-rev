@@ -241,12 +241,10 @@ pub fn get_net_info() -> AppResult<Vec<NetInfo>> {
 }
 
 #[tauri::command]
-pub fn restart_app(app_handle: tauri::AppHandle) {
+pub async fn restart_app(app_handle: tauri::AppHandle) {
     utils::server::shutdown_embedded_server();
     let _ = resolve::save_window_size_position(&app_handle);
-    tauri::async_runtime::block_on(async {
-        resolve::resolve_reset().await;
-    });
+    resolve::resolve_reset().await;
     // 开机静默启动时，通过 app_handle 的重启方法还是会携带静默启动的参数
     let mut env = app_handle.env().clone();
     tracing::debug!("app run args: {:?}", env.args_os.clone());
