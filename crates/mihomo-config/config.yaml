@@ -1,0 +1,101 @@
+authentication: []
+lan-allowed-ips:
+  - 0.0.0.0/0
+  - ::/0
+allow-lan: false
+bind-address: "*"
+mode: rule
+unified-delay: false
+log-level: info
+ipv6: true
+external-controller-cors:
+  allow-origins:
+    - "*"
+  allow-private-network: true
+external-ui: https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip
+geo-auto-update: false
+geo-update-interval: 24
+geodata-mode: false
+geodata-loader: memconservative
+tcp-concurrent: false
+find-process-mode: strict
+global-ua: clash.meta
+etag-support: true
+proxies: []
+proxy-groups: []
+rules: []
+hosts: {}
+dns:
+  enable: false
+  ipv6: false
+  ipv6-timeout: 100
+  use-hosts: true
+  use-system-hosts: true
+  nameserver:
+    - https://doh.pub/dns-query
+    - tls://223.5.5.5:853
+  fallback-filter:
+    geoip: true
+    geoip_code: CN
+    ipcidr: []
+    geosite: []
+  enhanced-mode: mapping
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - dns.msftnsci.com
+    - www.msftnsci.com
+    - www.msftconnecttest.com
+  fake-ip-filter-mode: blacklist
+  default-nameserver:
+    - 114.114.114.114
+    - 223.5.5.5
+    - 8.8.8.8
+    - 1.0.0.1
+ntp:
+  enable: false
+  server: time.apple.com
+  port: 123
+  interval: 30
+  write-to-system: false
+tun:
+  enable: false
+  device: ""
+  stack: gvisor
+  dns-hijack:
+    - 0.0.0.0:53
+  auto-route: true
+  auto-detect-interface: true
+  inet6-address:
+    - fdfe:dcba:9876::1/126
+  recvmsgx: true
+  sendmsgx: false
+tuic-server:
+  enable: false
+  max-idle-time: 15000
+  authentication-timeout: 1000
+  alpn:
+    - h3
+  max-udp-relay-packet-size: 1500
+iptables:
+  enable: false
+  inbound-interface: lo
+  bypass: []
+  dns-redirect: true
+experimental:
+  quic-go-disable-gso: true
+profile:
+  store-selected: true
+geox-url:
+  geoip: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb
+  mmdb: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
+  asn: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat
+  geosite: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
+sniffer:
+  enable: false
+  override-destination: true
+  force-domain: []
+  skip-domain: []
+  port-whitelist: []
+  force-dns-mapping: true
+  parse-pure-ip: true
+  sniff: {}

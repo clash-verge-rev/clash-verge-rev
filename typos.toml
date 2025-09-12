@@ -8,3 +8,7 @@ extend-exclude = [
 [type.svg]
 extend-glob = ["*.svg"]
 check-file = false
+
+# crates/mihomo-config/src/raw_config.rs - L654
+[default.extend-words]
+certifactes = "certifactes"
