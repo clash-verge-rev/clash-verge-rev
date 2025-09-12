@@ -247,7 +247,18 @@ pub fn restart_app(app_handle: tauri::AppHandle) {
     tauri::async_runtime::block_on(async {
         resolve::resolve_reset().await;
     });
-    app_handle.restart();
+    // 开机静默启动时，通过 app_handle 的重启方法还是会携带静默启动的参数
+    let mut env = app_handle.env().clone();
+    tracing::debug!("app run args: {:?}", env.args_os.clone());
+    if env.args_os.iter().any(|i| i == "--hidden") {
+        tracing::debug!("restart the app for the first time after it boots up");
+        env.args_os.retain(|i| i != "--hidden");
+        app_handle.cleanup_before_exit();
+        tauri::process::restart(&env);
+    } else {
+        tracing::debug!("restart the app normally");
+        app_handle.restart();
+    }
 }
 
 #[tauri::command]
