@@ -53,7 +53,7 @@
     "publisher": "Clash Verge Self",
     "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
     "copyright": "GNU General Public License v3.0",
-    "category": "Network",
+    "category": "Utility",
     "shortDescription": "A Mihomo GUI based on tauri.",
     "createUpdaterArtifacts": true
   },
