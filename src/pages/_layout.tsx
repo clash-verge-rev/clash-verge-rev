@@ -208,6 +208,9 @@ const Layout = () => {
         mutate("getVergeConfig");
         mutate("getSystemProxy");
         mutate("getAutotemProxy");
+        // 运行模式变更时也需要刷新相关状态
+        mutate("getRunningMode");
+        mutate("isServiceAvailable");
       }),
 
       addListener("verge://notice-message", ({ payload }) =>

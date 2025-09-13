@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   SettingsRounded,
@@ -19,8 +19,8 @@ import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { showNotice } from "@/services/noticeService";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
-import { uninstallService, restartCore, stopCore } from "@/services/cmds";
 import { useLockFn } from "ahooks";
+import { useServiceUninstaller } from "@/hooks/useServiceUninstaller";
 
 interface ProxySwitchProps {
   label?: string;
@@ -28,10 +28,83 @@ interface ProxySwitchProps {
   noRightPadding?: boolean;
 }
 
+interface SwitchRowProps {
+  label: string;
+  active: boolean;
+  disabled?: boolean;
+  infoTitle: string;
+  onInfoClick?: () => void;
+  extraIcons?: React.ReactNode;
+  onToggle: (value: boolean) => Promise<void>;
+  onError?: (err: Error) => void;
+  highlight?: boolean;
+}
+
 /**
- * 可复用的代理控制开关组件
- * 包含 Tun Mode 和 System Proxy 的开关功能
+ * 抽取的子组件：统一的开关 UI
  */
+const SwitchRow = ({
+  label,
+  active,
+  disabled,
+  infoTitle,
+  onInfoClick,
+  extraIcons,
+  onToggle,
+  onError,
+  highlight,
+}: SwitchRowProps) => {
+  const theme = useTheme();
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        p: 1,
+        pr: 2,
+        borderRadius: 1.5,
+        bgcolor: highlight
+          ? alpha(theme.palette.success.main, 0.07)
+          : "transparent",
+        opacity: disabled ? 0.6 : 1,
+        transition: "background-color 0.3s",
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        {active ? (
+          <PlayCircleOutlineRounded sx={{ color: "success.main", mr: 1 }} />
+        ) : (
+          <PauseCircleOutlineRounded sx={{ color: "text.disabled", mr: 1 }} />
+        )}
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 500, fontSize: "15px" }}
+        >
+          {label}
+        </Typography>
+        <TooltipIcon
+          title={infoTitle}
+          icon={SettingsRounded}
+          onClick={onInfoClick}
+          sx={{ ml: 1 }}
+        />
+        {extraIcons}
+      </Box>
+
+      <GuardState
+        value={active}
+        valueProps="checked"
+        onCatch={onError}
+        onFormat={(_, v) => v}
+        onGuard={onToggle}
+      >
+        <Switch edge="end" disabled={disabled} />
+      </GuardState>
+    </Box>
+  );
+};
+
 const ProxyControlSwitches = ({
   label,
   onError,
@@ -39,215 +112,115 @@ const ProxyControlSwitches = ({
 }: ProxySwitchProps) => {
   const { t } = useTranslation();
   const { verge, mutateVerge, patchVerge } = useVerge();
-  const theme = useTheme();
   const { installServiceAndRestartCore } = useServiceInstaller();
-
+  const { uninstallServiceAndRestartCore } = useServiceUninstaller();
   const { actualState: systemProxyActualState, toggleSystemProxy } =
     useSystemProxyState();
-
-  const { isAdminMode, isServiceMode, mutateRunningMode } = useSystemState();
-
-  const isTunAvailable = isServiceMode || isAdminMode;
+  const {
+    isServiceMode,
+    isTunModeAvailable,
+    mutateRunningMode,
+    mutateServiceOk,
+  } = useSystemState();
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
 
   const { enable_tun_mode, enable_system_proxy } = verge ?? {};
 
-  // 确定当前显示哪个开关
-  const isSystemProxyMode = label === t("System Proxy") || !label;
-  const isTunMode = label === t("Tun Mode");
+  const showErrorNotice = useCallback(
+    (msg: string) => showNotice("error", t(msg)),
+    [t],
+  );
 
-  const onSwitchFormat = (
-    _e: React.ChangeEvent<HTMLInputElement>,
-    value: boolean,
-  ) => value;
-  const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...verge, ...patch }, false);
+  const handleTunToggle = async (value: boolean) => {
+    if (!isTunModeAvailable) {
+      const msg = "TUN requires Service Mode or Admin Mode";
+      showErrorNotice(msg);
+      throw new Error(t(msg));
+    }
+    mutateVerge({ ...verge, enable_tun_mode: value }, false);
+    await patchVerge({ enable_tun_mode: value });
   };
 
-  // 安装系统服务
-  const onInstallService = installServiceAndRestartCore;
-
-  // 卸载系统服务
-  const onUninstallService = useLockFn(async () => {
+  const onInstallService = useLockFn(async () => {
     try {
-      showNotice("info", t("Stopping Core..."));
-      await stopCore();
-      showNotice("info", t("Uninstalling Service..."));
-      await uninstallService();
-      showNotice("success", t("Service Uninstalled Successfully"));
-      showNotice("info", t("Restarting Core..."));
-      await restartCore();
+      await installServiceAndRestartCore();
       await mutateRunningMode();
-    } catch (err: unknown) {
-      showNotice("error", (err as Error).message || err?.toString());
-      try {
-        showNotice("info", t("Try running core as Sidecar..."));
-        await restartCore();
-        await mutateRunningMode();
-      } catch (e: unknown) {
-        showNotice("error", (e as Error)?.message || e?.toString());
-      }
+      await mutateServiceOk();
+    } catch (err) {
+      showNotice("error", (err as Error).message || String(err));
     }
   });
 
+  const onUninstallService = useLockFn(async () => {
+    try {
+      await uninstallServiceAndRestartCore();
+      await mutateRunningMode();
+      await mutateServiceOk();
+    } catch (err) {
+      showNotice("error", (err as Error).message || String(err));
+    }
+  });
+
+  const isSystemProxyMode = label === t("System Proxy") || !label;
+  const isTunMode = label === t("Tun Mode");
+
   return (
-    <Box sx={{ width: "100%" }}>
-      {/* 仅显示当前选中的开关 */}
+    <Box sx={{ width: "100%", pr: noRightPadding ? 1 : 2 }}>
       {isSystemProxyMode && (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 1,
-            pr: noRightPadding ? 1 : 2,
-            borderRadius: 1.5,
-            bgcolor: enable_system_proxy
-              ? alpha(theme.palette.success.main, 0.07)
-              : "transparent",
-            transition: "background-color 0.3s",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {systemProxyActualState ? (
-              <PlayCircleOutlineRounded sx={{ color: "success.main", mr: 1 }} />
-            ) : (
-              <PauseCircleOutlineRounded
-                sx={{ color: "text.disabled", mr: 1 }}
-              />
-            )}
-
-            <Typography
-              variant="subtitle1"
-              sx={{ fontWeight: 500, fontSize: "15px" }}
-            >
-              {t("System Proxy")}
-            </Typography>
-            <TooltipIcon
-              title={t("System Proxy Info")}
-              icon={SettingsRounded}
-              onClick={() => sysproxyRef.current?.open()}
-              sx={{ ml: 1 }}
-            />
-          </Box>
-
-          <GuardState
-            value={systemProxyActualState}
-            valueProps="checked"
-            onCatch={onError}
-            onFormat={onSwitchFormat}
-            onGuard={(e) => toggleSystemProxy(e)}
-          >
-            <Switch edge="end" />
-          </GuardState>
-        </Box>
+        <SwitchRow
+          label={t("System Proxy")}
+          active={systemProxyActualState}
+          infoTitle={t("System Proxy Info")}
+          onInfoClick={() => sysproxyRef.current?.open()}
+          onToggle={(value) => toggleSystemProxy(value)}
+          onError={onError}
+          highlight={enable_system_proxy}
+        />
       )}
 
       {isTunMode && (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 1,
-            pr: noRightPadding ? 1 : 2,
-            borderRadius: 1.5,
-            bgcolor: enable_tun_mode
-              ? alpha(theme.palette.success.main, 0.07)
-              : "transparent",
-            opacity: !isTunAvailable ? 0.6 : 1,
-            transition: "background-color 0.3s",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {enable_tun_mode ? (
-              <PlayCircleOutlineRounded sx={{ color: "success.main", mr: 1 }} />
-            ) : (
-              <PauseCircleOutlineRounded
-                sx={{ color: "text.disabled", mr: 1 }}
-              />
-            )}
-
-            <Typography
-              variant="subtitle1"
-              sx={{ fontWeight: 500, fontSize: "15px" }}
-            >
-              {t("Tun Mode")}
-            </Typography>
-            <TooltipIcon
-              title={t("Tun Mode Info")}
-              icon={SettingsRounded}
-              onClick={() => tunRef.current?.open()}
-              sx={{ ml: 1 }}
-            />
-
-            {!isTunAvailable && (
-              <TooltipIcon
-                title={t("TUN requires Service Mode or Admin Mode")}
-                icon={WarningRounded}
-                sx={{ color: "warning.main", ml: 1 }}
-              />
-            )}
-
-            {!isTunAvailable && (
-              <TooltipIcon
-                title={t("Install Service")}
-                icon={BuildRounded}
-                color="primary"
-                onClick={onInstallService}
-                sx={{ ml: 1 }}
-              />
-            )}
-
-            {isServiceMode && (
-              <TooltipIcon
-                title={t("Uninstall Service")}
-                icon={DeleteForeverRounded}
-                color="secondary"
-                onClick={onUninstallService}
-                sx={{ ml: 1 }}
-              />
-            )}
-          </Box>
-
-          <GuardState
-            value={enable_tun_mode ?? false}
-            valueProps="checked"
-            onCatch={onError}
-            onFormat={onSwitchFormat}
-            onChange={(e) => {
-              if (!isTunAvailable) {
-                showNotice(
-                  "error",
-                  t("TUN requires Service Mode or Admin Mode"),
-                );
-                return Promise.reject(
-                  new Error(t("TUN requires Service Mode or Admin Mode")),
-                );
-              }
-              onChangeData({ enable_tun_mode: e });
-            }}
-            onGuard={(e) => {
-              if (!isTunAvailable) {
-                showNotice(
-                  "error",
-                  t("TUN requires Service Mode or Admin Mode"),
-                );
-                return Promise.reject(
-                  new Error(t("TUN requires Service Mode or Admin Mode")),
-                );
-              }
-              return patchVerge({ enable_tun_mode: e });
-            }}
-          >
-            <Switch edge="end" disabled={!isTunAvailable} />
-          </GuardState>
-        </Box>
+        <SwitchRow
+          label={t("Tun Mode")}
+          active={!!enable_tun_mode}
+          infoTitle={t("Tun Mode Info")}
+          onInfoClick={() => tunRef.current?.open()}
+          onToggle={handleTunToggle}
+          onError={onError}
+          disabled={!isServiceMode}
+          highlight={!!enable_tun_mode}
+          extraIcons={
+            <>
+              {!isServiceMode && (
+                <TooltipIcon
+                  title={t("TUN requires Service Mode or Admin Mode")}
+                  icon={WarningRounded}
+                  sx={{ color: "warning.main", ml: 1 }}
+                />
+              )}
+              {!isServiceMode ? (
+                <TooltipIcon
+                  title={t("Install Service")}
+                  icon={BuildRounded}
+                  color="primary"
+                  onClick={onInstallService}
+                  sx={{ ml: 1 }}
+                />
+              ) : (
+                <TooltipIcon
+                  title={t("Uninstall Service")}
+                  icon={DeleteForeverRounded}
+                  color="secondary"
+                  onClick={onUninstallService}
+                  sx={{ ml: 1 }}
+                />
+              )}
+            </>
+          }
+        />
       )}
 
-      {/* 引用对话框组件 */}
       <SysproxyViewer ref={sysproxyRef} />
       <TunViewer ref={tunRef} />
     </Box>

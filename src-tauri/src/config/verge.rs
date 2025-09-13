@@ -205,7 +205,7 @@ pub struct IVerge {
     pub enable_external_controller: Option<bool>,
 
     /// 服务状态跟踪
-    pub service_state: Option<crate::core::service::ServiceState>,
+    pub service_state: Option<crate::core::service::ServiceRecord>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -592,7 +592,7 @@ pub struct IVergeResponse {
     pub home_cards: Option<serde_json::Value>,
     pub enable_hover_jump_navigator: Option<bool>,
     pub enable_external_controller: Option<bool>,
-    pub service_state: Option<crate::core::service::ServiceState>,
+    pub service_state: Option<crate::core::service::ServiceRecord>,
 }
 
 impl From<IVerge> for IVergeResponse {

@@ -82,6 +82,7 @@ isahc = { version = "1.7.2", default-features = false, features = [
   "text-decoding",
   "parking_lot",
 ] }
+backoff = { version = "0.4.0", features = ["tokio"] }
 
 
 [target.'cfg(windows)'.dependencies]
