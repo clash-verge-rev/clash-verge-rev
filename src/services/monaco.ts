@@ -1,6 +1,4 @@
 import { t } from "i18next";
-import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
-import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import { configureMonacoYaml, type JSONSchema } from "monaco-yaml";
 import pac from "types-pac/pac.d.ts?raw";
 import { getTemplate } from "./cmds";
@@ -33,12 +31,16 @@ export const configureYaml = async () => {
       {
         uri: "http://example.com/meta-json-schema.json",
         fileMatch: ["**/*.clash.yaml*"],
-        schema: metaSchema as unknown as JSONSchema,
+        schema: import(
+          "meta-json-schema/schemas/meta-json-schema.json"
+        ) as unknown as JSONSchema,
       },
       {
         uri: "http://example.com/clash-verge-merge-json-schema.json",
         fileMatch: ["**/*.merge.yaml*"],
-        schema: mergeSchema as unknown as JSONSchema,
+        schema: import(
+          "meta-json-schema/schemas/clash-verge-merge-json-schema.json"
+        ) as unknown as JSONSchema,
       },
     ],
   });
