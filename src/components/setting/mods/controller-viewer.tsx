@@ -1,7 +1,10 @@
 import { BaseDialog, DialogRef, SwitchLovely } from "@/components/base";
 import { useNotice } from "@/components/base/notifice";
 import { useClashInfo } from "@/hooks/use-clash";
-import { Add, Remove, RotateLeft, Shuffle } from "@mui/icons-material";
+import Add from "@mui/icons-material/Add";
+import Remove from "@mui/icons-material/Remove";
+import RotateLeft from "@mui/icons-material/RotateLeft";
+import Shuffle from "@mui/icons-material/Shuffle";
 import {
   Box,
   IconButton,

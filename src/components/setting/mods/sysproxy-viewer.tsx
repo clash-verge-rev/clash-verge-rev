@@ -13,7 +13,10 @@ import {
   getSystemProxy,
 } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
-import { Add, InfoRounded, Remove, RotateLeft } from "@mui/icons-material";
+import Add from "@mui/icons-material/Add";
+import InfoRounded from "@mui/icons-material/InfoRounded";
+import Remove from "@mui/icons-material/Remove";
+import RotateLeft from "@mui/icons-material/RotateLeft";
 import {
   Box,
   Button,

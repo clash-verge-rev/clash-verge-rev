@@ -6,11 +6,9 @@ import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
 import { restartSidecar } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
-import {
-  ArrowDownward,
-  ArrowUpward,
-  MemoryOutlined,
-} from "@mui/icons-material";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import MemoryOutlined from "@mui/icons-material/MemoryOutlined";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { t } from "i18next";
 import { debounce } from "lodash-es";

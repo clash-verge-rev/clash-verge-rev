@@ -9,14 +9,12 @@ import {
 import { defaultOptions, generateTemplate, monaco } from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
 import { sleep } from "@/utils";
-import {
-  CheckCircleOutline,
-  ErrorOutline,
-  RadioButtonUnchecked,
-  Restore,
-  Save,
-  Terminal,
-} from "@mui/icons-material";
+import CheckCircleOutline from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutline from "@mui/icons-material/ErrorOutline";
+import RadioButtonUnchecked from "@mui/icons-material/RadioButtonUnchecked";
+import Restore from "@mui/icons-material/Restore";
+import Save from "@mui/icons-material/Save";
+import Terminal from "@mui/icons-material/Terminal";
 import { Badge, BadgeProps, IconButton, styled, Tooltip } from "@mui/material";
 import { IDisposable } from "monaco-editor";
 import { nanoid } from "nanoid";

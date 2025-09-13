@@ -1,5 +1,5 @@
 import { parseHotkey } from "@/utils/parse-hotkey";
-import { DeleteRounded } from "@mui/icons-material";
+import DeleteRounded from "@mui/icons-material/DeleteRounded";
 import { alpha, Box, IconButton, styled } from "@mui/material";
 import { useRef, useState } from "react";
 

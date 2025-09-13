@@ -1,7 +1,7 @@
 import { calcuProxyProviders } from "@/services/api";
 import { cn } from "@/utils";
 import parseTraffic from "@/utils/parse-traffic";
-import { RefreshRounded } from "@mui/icons-material";
+import RefreshRounded from "@mui/icons-material/RefreshRounded";
 import {
   Box,
   Button,

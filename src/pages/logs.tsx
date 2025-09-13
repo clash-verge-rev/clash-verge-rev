@@ -7,10 +7,8 @@ import {
 import LogItem from "@/components/log/log-item";
 import { useLogData } from "@/hooks/use-log-data";
 import { useClashLog } from "@/services/states";
-import {
-  PauseCircleOutlineRounded,
-  PlayCircleOutlineRounded,
-} from "@mui/icons-material";
+import PauseCircleOutlineRounded from "@mui/icons-material/PauseCircleOutlineRounded";
+import PlayCircleOutlineRounded from "@mui/icons-material/PlayCircleOutlineRounded";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";

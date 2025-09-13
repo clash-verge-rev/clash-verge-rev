@@ -1,6 +1,9 @@
 import { cn } from "@/utils";
-import { Cancel, CheckCircle, Info, Warning } from "@mui/icons-material";
-import CloseIcon from "@mui/icons-material/Close";
+import Cancel from "@mui/icons-material/Cancel";
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import Warning from "@mui/icons-material/Warning";
+import Info from "@mui/icons-material/Info";
+import Close from "@mui/icons-material/Close";
 import { ThemeProvider } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import { CustomContentProps, SnackbarContent, useSnackbar } from "notistack";
@@ -55,7 +58,7 @@ export const MyNoticeContainer = (props: MyNoticeContainerProps) => {
                 content={message as string}
               />
               <IconButton size="small" onClick={handleDismiss}>
-                <CloseIcon fontSize="small" className="!fill-white" />
+                <Close fontSize="small" className="!fill-white" />
               </IconButton>
             </div>
           </div>

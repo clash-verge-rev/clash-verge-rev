@@ -1,5 +1,5 @@
 import parseTraffic from "@/utils/parse-traffic";
-import { CloseRounded } from "@mui/icons-material";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import {
   IconButton,
   ListItem,

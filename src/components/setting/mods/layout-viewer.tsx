@@ -4,7 +4,7 @@ import { GuardState } from "@/components/setting/mods/guard-state";
 import { useVerge } from "@/hooks/use-verge";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
-import { InfoRounded } from "@mui/icons-material";
+import InfoRounded from "@mui/icons-material/InfoRounded";
 import {
   Box,
   Button,

@@ -8,16 +8,14 @@ import {
 } from "@/services/states";
 import { cn } from "@/utils";
 import parseTraffic from "@/utils/parse-traffic";
-import {
-  CheckCircle,
-  CloudSync,
-  Delete,
-  Edit,
-  FileOpen,
-  Home,
-  Refresh,
-  RefreshRounded,
-} from "@mui/icons-material";
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import CloudSync from "@mui/icons-material/CloudSync";
+import Delete from "@mui/icons-material/Delete";
+import Edit from "@mui/icons-material/Edit";
+import FileOpen from "@mui/icons-material/FileOpen";
+import Home from "@mui/icons-material/Home";
+import Refresh from "@mui/icons-material/Refresh";
+import RefreshRounded from "@mui/icons-material/RefreshRounded";
 import {
   Box,
   CircularProgress,

@@ -1,4 +1,5 @@
-import { Check, ContentCopy } from "@mui/icons-material";
+import Check from "@mui/icons-material/Check";
+import ContentCopy from "@mui/icons-material/ContentCopy";
 import { IconButton, IconButtonProps } from "@mui/material";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useState } from "react";

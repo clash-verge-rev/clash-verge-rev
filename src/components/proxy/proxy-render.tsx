@@ -1,10 +1,8 @@
 import { useVerge } from "@/hooks/use-verge";
 import { downloadIconCache } from "@/services/cmds";
-import {
-  ExpandLessRounded,
-  ExpandMoreRounded,
-  InboxRounded,
-} from "@mui/icons-material";
+import ExpandLessRounded from "@mui/icons-material/ExpandLessRounded";
+import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
+import InboxRounded from "@mui/icons-material/InboxRounded";
 import {
   alpha,
   Box,

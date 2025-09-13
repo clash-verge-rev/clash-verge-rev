@@ -19,14 +19,12 @@ import {
   updateWebDavInfo,
 } from "@/services/cmds";
 import getSystem from "@/utils/get-system";
-import {
-  Check,
-  CloudUpload,
-  ContentCopy,
-  Refresh,
-  Visibility,
-  VisibilityOff,
-} from "@mui/icons-material";
+import Check from "@mui/icons-material/Check";
+import CloudUpload from "@mui/icons-material/CloudUpload";
+import ContentCopy from "@mui/icons-material/ContentCopy";
+import Refresh from "@mui/icons-material/Refresh";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { TabContext, TabPanel } from "@mui/lab";
 import {
   Box,

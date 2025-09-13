@@ -61,13 +61,9 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks(id: string) {
-          if (id.includes("node_modules")) {
-            if (id.includes("monaco-editor")) {
-              return "monaco-editor";
-            }
-          }
-          return null;
+        manualChunks: {
+          monacoEditor: ["monaco-editor"],
+          muiIcons: ["@mui/icons-material"],
         },
       },
     },

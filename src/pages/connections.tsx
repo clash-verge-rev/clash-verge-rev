@@ -13,12 +13,10 @@ import { ConnectionTable } from "@/components/connection/connection-table";
 import { initConnData, useConnectionData } from "@/hooks/use-connection-data";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
-import {
-  Download,
-  TableChartRounded,
-  TableRowsRounded,
-  Upload,
-} from "@mui/icons-material";
+import Download from "@mui/icons-material/Download";
+import TableChartRounded from "@mui/icons-material/TableChartRounded";
+import TableRowsRounded from "@mui/icons-material/TableRowsRounded";
+import Upload from "@mui/icons-material/Upload";
 import {
   Box,
   Button,

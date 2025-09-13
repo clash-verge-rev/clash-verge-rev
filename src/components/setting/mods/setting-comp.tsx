@@ -1,5 +1,5 @@
 import isAsyncFunction from "@/utils/is-async-function";
-import { ChevronRightRounded } from "@mui/icons-material";
+import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
 import {
   Box,
   List,

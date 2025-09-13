@@ -1,5 +1,7 @@
 import { useVerge } from "@/hooks/use-verge";
-import { CheckCircleRounded, Close, ErrorRounded } from "@mui/icons-material";
+import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
+import Close from "@mui/icons-material/Close";
+import ErrorRounded from "@mui/icons-material/ErrorRounded";
 import { Box, IconButton, Slide, Snackbar, Typography } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { ReactNode, useEffect, useState } from "react";

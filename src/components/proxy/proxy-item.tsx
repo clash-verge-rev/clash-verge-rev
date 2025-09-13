@@ -1,7 +1,7 @@
 import { BaseLoading } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
-import { CheckCircleOutlineRounded } from "@mui/icons-material";
+import CheckCircleOutlineRounded from "@mui/icons-material/CheckCircleOutlineRounded";
 import {
   alpha,
   ListItem,

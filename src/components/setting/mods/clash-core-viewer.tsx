@@ -12,7 +12,8 @@ import {
 } from "@/services/cmds";
 import { cn } from "@/utils";
 import getSystem from "@/utils/get-system";
-import { RestartAlt, SwitchAccessShortcut } from "@mui/icons-material";
+import RestartAlt from "@mui/icons-material/RestartAlt";
+import SwitchAccessShortcut from "@mui/icons-material/SwitchAccessShortcut";
 import {
   Box,
   Button,

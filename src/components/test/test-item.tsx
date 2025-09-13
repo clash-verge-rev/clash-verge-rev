@@ -1,7 +1,7 @@
 import { BaseLoading } from "@/components/base";
 import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import delayManager from "@/services/delay";
-import { LanguageTwoTone } from "@mui/icons-material";
+import LanguageTwoTone from "@mui/icons-material/LanguageTwoTone";
 import {
   Box,
   Divider,

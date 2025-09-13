@@ -6,14 +6,12 @@ import { ProfileEditorViewer } from "@/components/profile/profile-editor-viewer"
 import { viewProfile } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 import { cn } from "@/utils";
-import {
-  Block,
-  CheckCircle,
-  Delete,
-  Edit,
-  FileOpen,
-  Terminal,
-} from "@mui/icons-material";
+import Block from "@mui/icons-material/Block";
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import Delete from "@mui/icons-material/Delete";
+import Edit from "@mui/icons-material/Edit";
+import FileOpen from "@mui/icons-material/FileOpen";
+import Terminal from "@mui/icons-material/Terminal";
 import {
   Badge,
   BadgeProps,

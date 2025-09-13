@@ -9,7 +9,9 @@ import {
   listBackup,
 } from "@/services/cmds";
 import { sleep } from "@/utils";
-import { Check, Delete, InboxRounded } from "@mui/icons-material";
+import Check from "@mui/icons-material/Check";
+import Delete from "@mui/icons-material/Delete";
+import InboxRounded from "@mui/icons-material/InboxRounded";
 import {
   Box,
   Button,

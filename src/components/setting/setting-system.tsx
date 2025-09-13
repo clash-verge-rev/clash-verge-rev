@@ -1,6 +1,7 @@
 import { DialogRef, SwitchLovely } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import { InfoRounded, Settings } from "@mui/icons-material";
+import InfoRounded from "@mui/icons-material/InfoRounded";
+import Settings from "@mui/icons-material/Settings";
 import { Button, ButtonGroup, IconButton, Tooltip } from "@mui/material";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";

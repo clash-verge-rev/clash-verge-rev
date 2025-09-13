@@ -2,13 +2,11 @@ import { LogViewer } from "@/components/profile/log-viewer";
 import { LogMessage } from "@/components/profile/profile-more";
 import { deleteProfile, patchProfile } from "@/services/cmds";
 import { cn } from "@/utils";
-import {
-  CheckCircle,
-  CircleOutlined,
-  Delete,
-  Edit,
-  Terminal,
-} from "@mui/icons-material";
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import CircleOutlined from "@mui/icons-material/CircleOutlined";
+import Delete from "@mui/icons-material/Delete";
+import Edit from "@mui/icons-material/Edit";
+import Terminal from "@mui/icons-material/Terminal";
 import {
   alpha,
   Badge,

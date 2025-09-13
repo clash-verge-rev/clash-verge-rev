@@ -41,13 +41,12 @@ import {
   rectSortingStrategy,
   SortableContext,
 } from "@dnd-kit/sortable";
-import {
-  ClearRounded,
-  ContentPasteRounded,
-  LocalFireDepartmentRounded,
-  RefreshRounded,
-  TextSnippetOutlined,
-} from "@mui/icons-material";
+import ClearRounded from "@mui/icons-material/ClearRounded";
+import ContentPasteRounded from "@mui/icons-material/ContentPasteRounded";
+import LocalFireDepartmentRounded from "@mui/icons-material/LocalFireDepartmentRounded";
+import TextSnippetOutlined from "@mui/icons-material/TextSnippetOutlined";
+import RefreshRounded from "@mui/icons-material/RefreshRounded";
+
 import { Box, Button, Divider, IconButton } from "@mui/material";
 import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
@@ -58,7 +57,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
-
 const FlexDecorationItems = memo(function FlexDecoratorItems() {
   return [...Array(20)].map((_, index) => (
     <i key={index} className="mx-[5px] my-0 flex h-0 w-[260px] grow"></i>

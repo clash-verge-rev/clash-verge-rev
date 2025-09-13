@@ -1,7 +1,8 @@
 import { BaseDialog } from "@/components/base";
 import { calcuRuleProviders } from "@/services/api";
 import { cn } from "@/utils";
-import { Error, RefreshRounded } from "@mui/icons-material";
+import Error from "@mui/icons-material/Error";
+import RefreshRounded from "@mui/icons-material/RefreshRounded";
 import {
   Box,
   Button,

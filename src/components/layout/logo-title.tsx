@@ -4,7 +4,8 @@ import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useThemeMode } from "@/services/states";
 import { cn } from "@/utils";
-import { DarkMode, LightMode } from "@mui/icons-material";
+import DarkMode from "@mui/icons-material/DarkMode";
+import LightMode from "@mui/icons-material/LightMode";
 import { AnimatePresence, motion } from "framer-motion";
 
 export const LogoTitle = ({ open }: { open: boolean }) => {

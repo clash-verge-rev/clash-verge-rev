@@ -1,11 +1,9 @@
-import {
-  CloseRounded,
-  CropSquareRounded,
-  FilterNoneRounded,
-  HorizontalRuleRounded,
-  PushPinOutlined,
-  PushPinRounded,
-} from "@mui/icons-material";
+import CloseRounded from "@mui/icons-material/CloseRounded";
+import CropSquareRounded from "@mui/icons-material/CropSquareRounded";
+import FilterNoneRounded from "@mui/icons-material/FilterNoneRounded";
+import HorizontalRuleRounded from "@mui/icons-material/HorizontalRuleRounded";
+import PushPinOutlined from "@mui/icons-material/PushPinOutlined";
+import PushPinRounded from "@mui/icons-material/PushPinRounded";
 import { Button, ButtonGroup } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useState } from "react";

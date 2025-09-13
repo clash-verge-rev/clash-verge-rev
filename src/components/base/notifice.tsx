@@ -1,4 +1,4 @@
-import { Close } from "@mui/icons-material";
+import Close from "@mui/icons-material/Close";
 import { nanoid } from "nanoid";
 import { BaseVariant, useSnackbar } from "notistack";
 import { createContext, useContext } from "react";

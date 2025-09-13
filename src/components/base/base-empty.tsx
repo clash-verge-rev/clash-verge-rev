@@ -1,4 +1,4 @@
-import { InboxRounded } from "@mui/icons-material";
+import InboxRounded from "@mui/icons-material/InboxRounded";
 import { alpha, Box, Typography } from "@mui/material";
 
 interface Props {

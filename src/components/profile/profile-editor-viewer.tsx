@@ -25,7 +25,8 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext } from "@dnd-kit/sortable";
-import { Add, ExpandMore } from "@mui/icons-material";
+import Add from "@mui/icons-material/Add";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 import {
   Button,
   Chip,

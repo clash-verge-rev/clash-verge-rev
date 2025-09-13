@@ -9,13 +9,11 @@ import { useVerge } from "@/hooks/use-verge";
 import { invoke_uwp_tool } from "@/services/cmds";
 import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
-import {
-  InfoRounded,
-  Lan,
-  PrivacyTipRounded,
-  Settings,
-  Shuffle,
-} from "@mui/icons-material";
+import InfoRounded from "@mui/icons-material/InfoRounded";
+import Lan from "@mui/icons-material/Lan";
+import PrivacyTipRounded from "@mui/icons-material/PrivacyTipRounded";
+import Settings from "@mui/icons-material/Settings";
+import Shuffle from "@mui/icons-material/Shuffle";
 import {
   Button,
   ButtonGroup,

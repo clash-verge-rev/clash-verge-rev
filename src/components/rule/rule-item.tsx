@@ -1,5 +1,5 @@
 import { CustomRule } from "@/pages/rules";
-import { Update } from "@mui/icons-material";
+import Update from "@mui/icons-material/Update";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Box,

@@ -1,10 +1,8 @@
-import {
-  CheckRounded,
-  CloseRounded,
-  DeleteRounded,
-  EditRounded,
-  OpenInNewRounded,
-} from "@mui/icons-material";
+import CheckRounded from "@mui/icons-material/CheckRounded";
+import CloseRounded from "@mui/icons-material/CloseRounded";
+import DeleteRounded from "@mui/icons-material/DeleteRounded";
+import EditRounded from "@mui/icons-material/EditRounded";
+import OpenInNewRounded from "@mui/icons-material/OpenInNewRounded";
 import {
   Divider,
   IconButton,
