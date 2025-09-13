@@ -1,8 +1,9 @@
 import { useWindowSize } from "@/hooks/use-window-size";
 import {
+  loadMonaco,
+  configureYaml,
   defaultOptions,
   generateTemplate,
-  monaco,
   registerPacCompletion,
   registerPacFunctionLib,
 } from "@/services/monaco";
@@ -17,9 +18,10 @@ import {
 import { useLockFn } from "ahooks";
 import { IDisposable } from "monaco-editor";
 import { nanoid } from "nanoid";
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotice } from "./notifice";
+import type { editor } from "monaco-editor";
 
 interface Props {
   title?: string | ReactNode;
@@ -45,19 +47,26 @@ export const EditorViewer = (props: Props) => {
   } = props;
   const { t } = useTranslation();
   const editorDomRef = useRef<any>(null);
-  const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const themeMode = useThemeMode();
+  const [monaco, setMonaco] = useState<typeof import("monaco-editor") | null>(
+    null,
+  );
   const { size } = useWindowSize();
   const { notice } = useNotice();
 
   useEffect(() => {
-    if (!open) return;
+    loadMonaco().then((instance) => {
+      setMonaco(instance);
+      configureYaml();
+    });
+    if (!open || !monaco) return;
 
     const fetchContent = Promise.resolve(property);
-    let pacFunLib: IDisposable | null = null;
-    let pacCompletion: IDisposable | null = null;
+    let pacFunLib: IDisposable | undefined = undefined;
+    let pacCompletion: IDisposable | undefined = undefined;
     let codeLens: IDisposable | null = null;
-    fetchContent.then((data) => {
+    fetchContent.then(async (data) => {
       const dom = editorDomRef.current;
 
       if (!dom) return;
@@ -78,9 +87,9 @@ export const EditorViewer = (props: Props) => {
       });
 
       if (scope && "pac" === scope) {
-        pacFunLib = registerPacFunctionLib();
-        pacCompletion = registerPacCompletion();
-        codeLens = generateTemplate({
+        pacFunLib = await registerPacFunctionLib();
+        pacCompletion = await registerPacCompletion();
+        codeLens = await generateTemplate({
           monacoInstance: instanceRef.current,
           languageSelector: ["javascript"],
           generateType: "pac",
@@ -97,11 +106,11 @@ export const EditorViewer = (props: Props) => {
       codeLens?.dispose();
       instanceRef.current = null;
     };
-  }, [open]);
+  }, [open, monaco]);
 
   // 更新 monaco 显示小地图
   useEffect(() => {
-    if (!instanceRef.current) return;
+    if (!instanceRef.current || !monaco) return;
 
     const minimap = instanceRef.current.getOption(
       monaco.editor.EditorOption.minimap,
@@ -118,7 +127,7 @@ export const EditorViewer = (props: Props) => {
         minimap: { enabled: false },
       });
     }
-  }, [size]);
+  }, [size, monaco]);
 
   const onSave = useLockFn(async () => {
     const value = instanceRef.current?.getValue();

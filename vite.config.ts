@@ -54,6 +54,7 @@ export default defineConfig({
           entry: "monaco-yaml/yaml.worker",
         },
       ],
+      publicPath: "monacoeditorwork",
     }),
   ],
   build: {

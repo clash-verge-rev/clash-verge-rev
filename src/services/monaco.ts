@@ -1,39 +1,52 @@
 import { t } from "i18next";
 import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
 import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
-import * as monaco from "monaco-editor";
-import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
+import { configureMonacoYaml, type JSONSchema } from "monaco-yaml";
 import pac from "types-pac/pac.d.ts?raw";
 import { getTemplate } from "./cmds";
+import type { editor } from "monaco-editor";
 
-export interface GenerateProps {
-  monacoInstance: monaco.editor.IStandaloneCodeEditor;
-  languageSelector: string[];
-  generateType: "merge" | "script" | "pac";
-  generateLanguage: "yaml" | "javascript";
-  showCondition: boolean;
-  onGenerateSuccess?: () => void;
-}
+// 延迟加载 Monaco Editor
+let monacoInstance: typeof import("monaco-editor") | null = null;
+
+export const loadMonaco = async () => {
+  if (!monacoInstance) {
+    monacoInstance = await import("monaco-editor");
+  }
+  return monacoInstance;
+};
+
+// 缓存配置
+let yamlConfigured = false;
+let pacLibRegistered = false;
+let pacCompletionRegistered = false;
 
 // YAML configuration editor
-configureMonacoYaml(monaco, {
-  validate: true,
-  enableSchemaRequest: true,
-  schemas: [
-    {
-      uri: "http://example.com/meta-json-schema.json",
-      fileMatch: ["**/*.clash.yaml*"],
-      schema: metaSchema as unknown as JSONSchema,
-    },
-    {
-      uri: "http://example.com/clash-verge-merge-json-schema.json",
-      fileMatch: ["**/*.merge.yaml*"],
-      schema: mergeSchema as unknown as JSONSchema,
-    },
-  ],
-});
+export const configureYaml = async () => {
+  if (yamlConfigured) return;
 
-const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
+  const monaco = await loadMonaco();
+  configureMonacoYaml(monaco, {
+    validate: true,
+    enableSchemaRequest: true,
+    schemas: [
+      {
+        uri: "http://example.com/meta-json-schema.json",
+        fileMatch: ["**/*.clash.yaml*"],
+        schema: metaSchema as unknown as JSONSchema,
+      },
+      {
+        uri: "http://example.com/clash-verge-merge-json-schema.json",
+        fileMatch: ["**/*.merge.yaml*"],
+        schema: mergeSchema as unknown as JSONSchema,
+      },
+    ],
+  });
+
+  yamlConfigured = true;
+};
+
+export const defaultOptions: editor.IStandaloneEditorConstructionOptions = {
   tabSize: 2,
   theme: "light",
   minimap: { enabled: true },
@@ -52,34 +65,58 @@ const defaultOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
 };
 
 // PAC definition
-const registerPacFunctionLib = () => {
-  return monaco.languages.typescript.javascriptDefaults.addExtraLib(
+export const registerPacFunctionLib = async () => {
+  if (pacLibRegistered) return;
+
+  const monaco = await loadMonaco();
+  let disposable = monaco.languages.typescript.javascriptDefaults.addExtraLib(
     pac,
     "pac.d.ts",
   );
+
+  pacLibRegistered = true;
+  return disposable;
 };
 
-const registerPacCompletion = () => {
-  return monaco.languages.registerCompletionItemProvider("javascript", {
-    provideCompletionItems: (model, position) => ({
-      suggestions: [
-        {
-          label: "%mixed-port%",
-          kind: monaco.languages.CompletionItemKind.Text,
-          insertText: "%mixed-port%",
-          range: {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: model.getWordUntilPosition(position).startColumn - 1,
-            endColumn: model.getWordUntilPosition(position).endColumn - 1,
+export const registerPacCompletion = async () => {
+  if (pacCompletionRegistered) return;
+
+  const monaco = await loadMonaco();
+  let disposable = monaco.languages.registerCompletionItemProvider(
+    "javascript",
+    {
+      provideCompletionItems: (model, position) => ({
+        suggestions: [
+          {
+            label: "%mixed-port%",
+            kind: monaco.languages.CompletionItemKind.Text,
+            insertText: "%mixed-port%",
+            range: {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: model.getWordUntilPosition(position).startColumn - 1,
+              endColumn: model.getWordUntilPosition(position).endColumn - 1,
+            },
           },
-        },
-      ],
-    }),
-  });
+        ],
+      }),
+    },
+  );
+
+  pacCompletionRegistered = true;
+  return disposable;
 };
 
-const generateTemplate = (props: GenerateProps) => {
+export interface GenerateProps {
+  monacoInstance: editor.IStandaloneCodeEditor;
+  languageSelector: string[];
+  generateType: "merge" | "script" | "pac";
+  generateLanguage: "yaml" | "javascript";
+  showCondition: boolean;
+  onGenerateSuccess?: () => void;
+}
+
+export const generateTemplate = async (props: GenerateProps) => {
   const {
     monacoInstance,
     languageSelector,
@@ -88,6 +125,9 @@ const generateTemplate = (props: GenerateProps) => {
     showCondition,
     onGenerateSuccess,
   } = props;
+
+  const monaco = await loadMonaco();
+
   // 生成模板的命令方法
   const generateCommand = monacoInstance.addCommand(
     0,
@@ -102,10 +142,11 @@ const generateTemplate = (props: GenerateProps) => {
 
   // 增强脚本模板生成
   return monaco.languages.registerCodeLensProvider(languageSelector, {
-    provideCodeLenses(_model, _token) {
-      if (!showCondition) {
+    provideCodeLenses(model, token) {
+      if (!showCondition || model.isDisposed()) {
         return null;
       }
+
       return {
         lenses: [
           {
@@ -130,12 +171,4 @@ const generateTemplate = (props: GenerateProps) => {
       return codeLens;
     },
   });
-};
-
-export {
-  defaultOptions,
-  generateTemplate,
-  monaco,
-  registerPacCompletion,
-  registerPacFunctionLib,
 };

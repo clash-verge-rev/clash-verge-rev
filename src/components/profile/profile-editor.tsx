@@ -6,7 +6,12 @@ import {
   saveProfileFile,
   testMergeChain,
 } from "@/services/cmds";
-import { defaultOptions, generateTemplate, monaco } from "@/services/monaco";
+import {
+  defaultOptions,
+  generateTemplate,
+  loadMonaco,
+  configureYaml,
+} from "@/services/monaco";
 import { useThemeMode } from "@/services/states";
 import { sleep } from "@/utils";
 import CheckCircleOutline from "@mui/icons-material/CheckCircleOutline";
@@ -16,7 +21,7 @@ import Restore from "@mui/icons-material/Restore";
 import Save from "@mui/icons-material/Save";
 import Terminal from "@mui/icons-material/Terminal";
 import { Badge, BadgeProps, IconButton, styled, Tooltip } from "@mui/material";
-import { IDisposable } from "monaco-editor";
+import { IDisposable, KeyCode, KeyMod, Uri } from "monaco-editor";
 import { nanoid } from "nanoid";
 import {
   ForwardedRef,
@@ -27,6 +32,8 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useNotice } from "../base/notifice";
+import type { editor } from "monaco-editor";
+import { useAsyncEffect } from "ahooks";
 
 export type ProfileEditorHandle = {
   save: () => Promise<boolean>;
@@ -87,13 +94,16 @@ export const ProfileEditor = (props: Props) => {
   const [saved, setSaved] = useState(true);
 
   // monaco
+  const [monaco, setMonaco] = useState<typeof import("monaco-editor") | null>(
+    null,
+  );
   const editorDomRef = useRef<any>(null);
-  const instanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const instanceRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   // const codeLensRef = useRef<IDisposable | null>(null);
   const editChainCondition =
-    useRef<monaco.editor.IContextKey<boolean | undefined>>(null);
+    useRef<editor.IContextKey<boolean | undefined>>(null);
   const saveChainCondition =
-    useRef<monaco.editor.IContextKey<boolean | undefined>>(null);
+    useRef<editor.IContextKey<boolean | undefined>>(null);
 
   // chain
   const [chainChecked, setChainChecked] = useState(false);
@@ -108,8 +118,12 @@ export const ProfileEditor = (props: Props) => {
 
   // 初始化创建 monaco
   useEffect(() => {
+    loadMonaco().then((instance) => {
+      setMonaco(instance);
+      configureYaml();
+    });
     const dom = editorDomRef.current;
-    if (!dom) return;
+    if (!dom || !monaco) return;
 
     // 创建 monaco
     const model = monaco.editor.createModel("", language);
@@ -136,18 +150,18 @@ export const ProfileEditor = (props: Props) => {
       instanceRef.current?.dispose();
       instanceRef.current = null;
     };
-  }, []);
+  }, [monaco]);
 
   // 读取并显示脚本内容
   useEffect(() => {
-    if (!instanceRef.current) return;
+    if (!instanceRef.current || !monaco) return;
 
     readProfileFile(profileItem.uid)
       .then(async (data) => {
         originContentRef.current = data;
         // create uri to use schemas
         const id = nanoid();
-        const uri = monaco.Uri.parse(`${id}.${type}.${language}`);
+        const uri = Uri.parse(`${id}.${type}.${language}`);
         const model = monaco.editor.createModel(data, language, uri);
         const oldModel = instanceRef.current!.getModel();
         instanceRef.current!.setModel(model);
@@ -194,7 +208,7 @@ export const ProfileEditor = (props: Props) => {
     const runCheckAction = instanceRef.current.addAction({
       id: "runChainCheck",
       label: "check run",
-      keybindings: [monaco.KeyCode.F5],
+      keybindings: [KeyCode.F5],
       keybindingContext: "textInputFocus && editChain",
       run: async (ed) => {
         await handleRunCheck(profileItem.uid);
@@ -205,7 +219,7 @@ export const ProfileEditor = (props: Props) => {
     const saveAction = instanceRef.current.addAction({
       id: "saveProfile",
       label: "save profile",
-      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+      keybindings: [KeyMod.CtrlCmd | KeyCode.KeyS],
       keybindingContext: "textInputFocus",
       run: async (_ed) => {
         await handleSave();
@@ -214,13 +228,15 @@ export const ProfileEditor = (props: Props) => {
 
     let codeLensRef: IDisposable | null = null;
     if (type !== "clash") {
-      codeLensRef = generateTemplate({
+      generateTemplate({
         monacoInstance: instanceRef.current,
         languageSelector: ["yaml", "javascript"],
         generateType: type,
         generateLanguage: language,
         showCondition: true,
         onGenerateSuccess: () => setChainChecked(false),
+      }).then((disposable) => {
+        codeLensRef = disposable;
       });
     }
 
@@ -230,11 +246,11 @@ export const ProfileEditor = (props: Props) => {
       saveAction.dispose();
       codeLensRef?.dispose();
     };
-  }, [profileItem]);
+  }, [profileItem, monaco]);
 
   // 更新 monaco 显示小地图
   useEffect(() => {
-    if (!instanceRef.current) return;
+    if (!instanceRef.current || !monaco) return;
 
     const minimap = instanceRef.current.getOption(
       monaco.editor.EditorOption.minimap,
@@ -251,7 +267,7 @@ export const ProfileEditor = (props: Props) => {
         minimap: { enabled: false },
       });
     }
-  }, [size]);
+  }, [size, monaco]);
 
   const handleRunCheck = async (currentProfileUid: string) => {
     try {
