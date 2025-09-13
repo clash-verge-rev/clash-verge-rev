@@ -12,12 +12,17 @@ import { Box, Button, LinearProgress } from "@mui/material";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { check } from "@tauri-apps/plugin-updater";
-import MarkdownPreview from "@uiw/react-markdown-preview";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
+const MarkdownPreview = React.lazy(() => import("@uiw/react-markdown-preview"));
 const OS = getSystem();
 
 export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
