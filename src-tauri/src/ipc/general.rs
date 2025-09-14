@@ -278,7 +278,6 @@ impl IpcManager {
         let payload = serde_json::json!({
             "name": proxy
         });
-
         match self.send_request("PUT", &url, Some(&payload)).await {
             Ok(_) => Ok(()),
             Err(e) => {

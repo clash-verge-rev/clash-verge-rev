@@ -46,4 +46,139 @@ impl IRuntime {
             }
         }
     }
+
+    //跟新链式代理配置文件
+    /// {   
+    ///     "proxies":[
+    ///         {
+    ///             name : 入口节点,
+    ///             type: xxx
+    ///             server: xxx
+    ///             port: xxx
+    ///             ports: xxx
+    ///             password: xxx
+    ///             skip-cert-verify: xxx,
+    ///        },
+    ///         {
+    ///             name : hop_node_1_xxxx,
+    ///             type: xxx
+    ///             server: xxx
+    ///             port: xxx
+    ///             ports: xxx
+    ///             password: xxx
+    ///             skip-cert-verify: xxx,
+    ///             dialer-proxy : "入口节点"
+    ///        },
+    ///         {
+    ///             name : 出口节点,
+    ///             type: xxx
+    ///             server: xxx
+    ///             port: xxx
+    ///             ports: xxx
+    ///             password: xxx
+    ///             skip-cert-verify: xxx,
+    ///             dialer-proxy : "hop_node_1_xxxx"
+    ///        }
+    ///     ],
+    ///     "proxy-groups" : [
+    ///         {
+    ///             name : "proxy_chain",
+    ///             type: "select",
+    ///             proxies ["出口节点"]
+    ///         }
+    ///     ]
+    /// }
+    ///
+    /// 传入none 为删除
+    pub fn update_proxy_chain_config(&mut self, proxy_chain_config: Option<Value>) {
+        if let Some(config) = self.config.as_mut() {
+            // 获取 默认第一的代理组的名字
+            let proxy_group_name =
+                if let Some(Value::Sequence(proxy_groups)) = config.get("proxy-groups") {
+                    if let Some(Value::Mapping(proxy_group)) = proxy_groups.first() {
+                        if let Some(Value::String(proxy_group_name)) = proxy_group.get("name") {
+                            proxy_group_name.to_string()
+                        } else {
+                            "".to_string()
+                        }
+                    } else {
+                        "".to_string()
+                    }
+                } else {
+                    "".to_string()
+                };
+
+            if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
+                proxies.iter_mut().for_each(|proxy| {
+                    if let Some(proxy) = proxy.as_mapping_mut()
+                        && proxy.get("dialer-proxy").is_some()
+                    {
+                        proxy.remove("dialer-proxy");
+                    }
+                });
+            }
+
+            // 清除proxy_chain代理组
+            if let Some(Value::Sequence(proxy_groups)) = config.get_mut("proxy-groups") {
+                proxy_groups.retain(|proxy_group| {
+                    !matches!(proxy_group.get("name").and_then(|n| n.as_str()), Some(name) if name== "proxy_chain")
+                });
+            }
+
+            // 清除rules
+            if let Some(Value::Sequence(rules)) = config.get_mut("rules") {
+                rules.retain(|rule| rule.as_str() != Some("MATCH,proxy_chain"));
+                rules.push(Value::String(format!("MATCH,{}", proxy_group_name)));
+            }
+
+            // some 则写入新配置
+            // 给proxy添加dialer-proxy字段
+            // 第一个proxy不添加dialer-proxy
+            // 然后第二个开始，dialer-proxy为上一个元素的name
+            if let Some(Value::Sequence(dialer_proxies)) = proxy_chain_config {
+                let mut proxy_chain_group = Mapping::new();
+
+                if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
+                    for (i, dialer_proxy) in dialer_proxies.iter().enumerate() {
+                        if let Some(Value::Mapping(proxy)) = proxies
+                            .iter_mut()
+                            .find(|proxy| proxy.get("name") == Some(dialer_proxy))
+                        {
+                            if i != 0
+                                && let Some(dialer_proxy) = dialer_proxies.get(i - 1)
+                            {
+                                proxy.insert("dialer-proxy".into(), dialer_proxy.to_owned());
+                            }
+                            if i == dialer_proxies.len() - 1 {
+                                // 添加proxy-groups
+                                proxy_chain_group
+                                    .insert("name".into(), Value::String("proxy_chain".into()));
+                                proxy_chain_group
+                                    .insert("type".into(), Value::String("select".into()));
+                                proxy_chain_group.insert(
+                                    "proxies".into(),
+                                    Value::Sequence(vec![dialer_proxy.to_owned()]),
+                                );
+                            }
+                        }
+                    }
+                }
+
+                if let Some(Value::Sequence(proxy_groups)) = config.get_mut("proxy-groups") {
+                    proxy_groups.push(Value::Mapping(proxy_chain_group));
+                }
+
+                // 添加rules
+                if let Some(Value::Sequence(rules)) = config.get_mut("rules")
+                    && let Ok(rule) = serde_yaml_ng::to_value("MATCH,proxy_chain")
+                {
+                    rules.retain(|rule| {
+                        rule.as_str() != Some(&format!("MATCH,{}", proxy_group_name))
+                    });
+                    rules.push(rule);
+                    // *rules = vec![rule];
+                }
+            }
+        }
+    }
 }

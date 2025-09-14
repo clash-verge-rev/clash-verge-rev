@@ -26,6 +26,11 @@
   "Label-Settings": "Settings",
   "Proxies": "Proxies",
   "Proxy Groups": "Proxy Groups",
+  "Node Pool": "Node Pool",
+  "Connect": "Connect",
+  "Connecting...": "Connecting...",
+  "Disconnect": "Disconnect",
+  "Failed to connect to proxy chain": "Failed to connect to proxy chain",
   "Proxy Provider": "Proxy Provider",
   "Proxy Count": "Proxy Count",
   "Update All": "Update All",
@@ -33,6 +38,13 @@
   "rule": "rule",
   "global": "global",
   "direct": "direct",
+  "Chain Proxy": "🔗 Chain Proxy",
+  "Chain Proxy Config": "Chain Proxy Config",
+  "Click nodes in order to add to proxy chain": "Click nodes in order to add to proxy chain",
+  "No proxy chain configured": "No proxy chain configured",
+  "Proxy Order": "Proxy Order",
+  "timeout": "Timeout",
+  "Clear All": "Clear All",
   "script": "script",
   "locate": "locate",
   "Delay check": "Delay check",
@@ -664,5 +676,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Controller address copied to clipboard": "Controller address copied to clipboard",
   "Secret copied to clipboard": "Secret copied to clipboard",
-  "Saving...": "Saving..."
+  "Saving...": "Saving...",
+  "Proxy node already exists in chain": "Proxy node already exists in chain"
 }

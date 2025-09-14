@@ -26,6 +26,11 @@
   "Label-Settings": "设 置",
   "Proxies": "代理",
   "Proxy Groups": "代理组",
+  "Node Pool": "节点池",
+  "Connect": "连接",
+  "Connecting...": "连接中...",
+  "Disconnect": "断开",
+  "Failed to connect to proxy chain": "连接链式代理失败",
   "Proxy Provider": "代理集合",
   "Proxy Count": "节点数量",
   "Update All": "更新全部",
@@ -33,6 +38,13 @@
   "rule": "规则",
   "global": "全局",
   "direct": "直连",
+  "Chain Proxy": "🔗 链式代理",
+  "Chain Proxy Config": "代理链配置",
+  "Click nodes in order to add to proxy chain": "顺序点击节点添加到代理链中",
+  "No proxy chain configured": "暂无代理链配置",
+  "Proxy Order": "代理顺序",
+  "timeout": "超时",
+  "Clear All": "清除全部",
   "script": "脚本",
   "locate": "当前节点",
   "Delay check": "延迟测试",
@@ -664,5 +676,6 @@
   "Failed to save configuration": "配置保存失败",
   "Controller address copied to clipboard": "控制器地址已复制到剪贴板",
   "Secret copied to clipboard": "访问密钥已复制到剪贴板",
-  "Saving...": "保存中..."
+  "Saving...": "保存中...",
+  "Proxy node already exists in chain": "该节点已在链式代理表中"
 }
