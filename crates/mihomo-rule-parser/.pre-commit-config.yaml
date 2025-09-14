@@ -1,0 +1,48 @@
+fail_fast: true
+
+repos:
+  # prek has build-in pre-commit hooks
+  # - repo: "https://github.com/pre-commit/pre-commit-hooks"
+  #   rev: v5.0.0
+  #   hooks:
+  #     - id: trailing-whitespace
+  #     - id: end-of-file-fixer
+  #     - id: check-yaml
+  #     - id: check-toml
+  #     - id: check-added-large-files
+  # this will check typos and fix file automatically, but need to re-add file by using git
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.36.2
+    hooks:
+      - id: typos
+  - repo: local
+    hooks:
+      # wait for `running multiple commands` feature to complete (https://github.com/j178/prek/issues/431)
+      # cargo fmt
+      - id: cargo-fmt
+        name: cargo fmt
+        description: Format files with rustfmt.
+        entry: cargo +nightly fmt  -- --check
+        language: system
+        types:
+          - rust
+
+      # cargo check
+      - id: cargo-check
+        name: cargo check
+        description: Check the package for errors.
+        entry: cargo check --all
+        language: system
+        types:
+          - rust
+        pass_filenames: false
+
+      # cargo clippy
+      - id: cargo-clippy
+        name: cargo clippy
+        description: Lint rust sources
+        entry: cargo clippy --all-targets --all-features --tests --benches -- -D warnings
+        language: system
+        types:
+          - rust
+        pass_filenames: false
