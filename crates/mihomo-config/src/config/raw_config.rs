@@ -1,7 +1,8 @@
 //! 配置文件的解析
+use std::collections::HashMap;
+
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -318,9 +319,13 @@ pub struct RawFallbackFilter {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DNSMode {
+    #[serde(rename = "normal")]
     Normal,
-    FakeIp,
+    #[serde(rename = "fake-ip")]
+    FakeIP,
+    #[serde(rename = "redir-host")]
     Mapping,
+    #[serde(rename = "hosts")]
     Hosts,
 }
 
@@ -491,6 +496,7 @@ pub struct RawTun {
 #[serde(rename_all = "lowercase")]
 pub enum TunStack {
     System,
+    #[serde(rename = "gVisor")]
     GVisor,
     Mixed,
 }
@@ -702,7 +708,7 @@ impl Default for RawConfig {
             vmess_config: None,
             inbound_tfo: None,
             inbound_mptcp: None,
-            authentication: Some(vec![]),
+            authentication: None,
             skip_auth_prefixes: None,
             lan_allowed_ips: Some(vec![String::from("0.0.0.0/0"), String::from("::/0")]),
             lan_disallowed_ips: None,
@@ -745,12 +751,12 @@ impl Default for RawConfig {
             disable_keep_alive: None,
             proxy_providers: None,
             rule_providers: None,
-            proxies: Some(vec![]),
-            proxy_groups: Some(vec![]),
-            rules: Some(vec![]),
+            proxies: None,
+            proxy_groups: None,
+            rules: None,
             sub_rules: None,
             listeners: None,
-            hosts: Some(HashMap::new()),
+            hosts: None,
             dns: Some(RawDNS {
                 enable: Some(false),
                 prefer_h3: None,
@@ -767,9 +773,9 @@ impl Default for RawConfig {
                 fallback_filter: Some(RawFallbackFilter {
                     geoip: Some(true),
                     geoip_code: Some(String::from("CN")),
-                    ipcidr: Some(vec![]),
+                    ipcidr: None,
                     domain: None,
-                    geosite: Some(vec![]),
+                    geosite: None,
                 }),
                 listen: None,
                 enhanced_mode: Some(DNSMode::Mapping),
@@ -803,7 +809,7 @@ impl Default for RawConfig {
             }),
             tun: Some(RawTun {
                 enable: Some(false),
-                device: Some(String::new()),
+                device: None,
                 stack: Some(TunStack::GVisor),
                 dns_hijack: Some(vec![String::from("0.0.0.0:53")]),
                 auto_route: Some(true),
@@ -863,7 +869,7 @@ impl Default for RawConfig {
             iptables: Some(RawIPTables {
                 enable: Some(false),
                 inbound_interface: Some(String::from("lo")),
-                bypass: Some(vec![]),
+                bypass: None,
                 dns_redirect: Some(true),
             }),
             experimental: Some(RawExperimental {
@@ -894,14 +900,14 @@ impl Default for RawConfig {
                 enable: Some(false),
                 override_destination: Some(true),
                 sniffing: None,
-                force_domain: Some(vec![]),
+                force_domain: None,
                 skip_src_address: None,
                 skip_dst_address: None,
-                skip_domain: Some(vec![]),
-                port_whitelist: Some(vec![]),
+                skip_domain: None,
+                port_whitelist: None,
                 force_dns_mapping: Some(true),
                 parse_pure_ip: Some(true),
-                sniff: Some(HashMap::new()),
+                sniff: None,
             }),
             tls: None,
             clash_for_android: None,

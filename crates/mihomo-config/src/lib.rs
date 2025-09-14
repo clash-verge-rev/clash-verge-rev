@@ -1,4 +1,4 @@
-mod config;
+pub mod config;
 
 #[cfg(test)]
 mod tests {

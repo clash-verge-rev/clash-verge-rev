@@ -1,4 +1,3 @@
-authentication: []
 lan-allowed-ips:
   - 0.0.0.0/0
   - ::/0
@@ -21,10 +20,6 @@ tcp-concurrent: false
 find-process-mode: strict
 global-ua: clash.meta
 etag-support: true
-proxies: []
-proxy-groups: []
-rules: []
-hosts: {}
 dns:
   enable: false
   ipv6: false
@@ -37,8 +32,6 @@ dns:
   fallback-filter:
     geoip: true
     geoip_code: CN
-    ipcidr: []
-    geosite: []
   enhanced-mode: mapping
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
@@ -59,7 +52,6 @@ ntp:
   write-to-system: false
 tun:
   enable: false
-  device: ""
   stack: gvisor
   dns-hijack:
     - 0.0.0.0:53
@@ -79,7 +71,6 @@ tuic-server:
 iptables:
   enable: false
   inbound-interface: lo
-  bypass: []
   dns-redirect: true
 experimental:
   quic-go-disable-gso: true
@@ -93,9 +84,5 @@ geox-url:
 sniffer:
   enable: false
   override-destination: true
-  force-domain: []
-  skip-domain: []
-  port-whitelist: []
   force-dns-mapping: true
   parse-pure-ip: true
-  sniff: {}

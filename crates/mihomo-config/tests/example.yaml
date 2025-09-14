@@ -1,0 +1,577 @@
+# 锚点
+pr:
+  &pr {
+    type: select,
+    proxies:
+      [
+        🚀 节点选择,
+        ♻️ 自动选择,
+        🎉 精选订阅,
+        ☢ 负载均衡-散列,
+        ☢ 负载均衡-轮询,
+        🌐 全部节点,
+        🇭🇰 香港节点,
+        🇹🇼 台湾节点,
+        🇯🇵 日本节点,
+        🇸🇬 新加坡,
+        🇰🇷 韩国,
+        🇺🇲 美国节点,
+        🇩🇪 德国节点,
+        🇬🇧 英国节点,
+        🧿 其它地区,
+        🟢 直连,
+      ],
+  }
+best:
+  &best {
+    type: url-test,
+    interval: 300,
+    tolerance: 50,
+    lazy: true,
+    use: [CFWorker, o00o, ripao, CitizenScyu, go4sharing],
+  }
+watch:
+  &watch {
+    type: url-test,
+    interval: 300,
+    tolerance: 50,
+    lazy: true,
+    use: [vxiaov],
+  }
+# 机场订阅，名称不能重复
+proxy-providers:
+  CFWorker:
+    type: http
+    interval: 1800
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+    proxy: 🟢 直连
+    url: "https://aaaaa.me/test"
+  FreeSub:
+    type: http
+    interval: 1800
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+    proxy: 🟢 直连
+    url: "https://bbbbb.com/test"
+
+# 用于下载订阅时指定UA
+global-ua: clash.meta
+
+# 全局配置
+external-controller: 127.0.0.1:9090
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: false
+
+# 流量嗅探
+sniffer:
+  enable: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  force-domain:
+    - +.v2ex.com
+  skip-domain:
+    - "Mijia Cloud"
+    - "dlg.io.mi.com"
+    - "+.push.apple.com"
+    - "+.apple.com"
+
+# 代理模式
+tun:
+  enable: true
+  stack: mixed
+  mtu: 9000
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
+  auto-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+
+# DNS模块
+dns:
+  enable: true
+  listen: 0.0.0.0:53
+  ipv6: false
+  default-nameserver:
+    - 180.76.76.76
+    - 119.29.29.29
+    - 223.5.5.5
+    - 1.2.4.8
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://223.5.5.5/dns-query
+    - https://doh.360.cn/dns-query
+    - https://dns.alidns.com/dns-query
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://1.0.0.1/dns-query
+    - 8.8.8.8
+    - 8.8.4.4
+    - tls://1.0.0.1:853
+    - tls://dns.google:853
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 0.0.0.0/8
+      - 10.0.0.0/8
+      - 100.64.0.0/10
+      - 127.0.0.0/8
+      - 169.254.0.0/16
+      - 172.16.0.0/12
+      - 192.0.0.0/24
+      - 192.0.2.0/24
+      - 192.168.0.0/16
+      - 192.88.99.0/24
+      - 198.18.0.0/15
+      - 198.51.100.0/24
+      - 203.0.113.0/24
+      - 224.0.0.0/4
+      - 240.0.0.0/4
+      - 255.255.255.255/32
+    domain:
+      - "+.facebook.com"
+      - "+.githubusercontent.com"
+      - "+.google.com"
+      - "+.youtube.com"
+
+proxies:
+  - name: "🟢 直连"
+    type: direct
+    udp: true
+
+# 策略组
+proxy-groups:
+  - {
+      name: 🚀 节点选择,
+      type: select,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Proxy.png,
+      proxies:
+        [
+          🎉 精选订阅,
+          ☢ 负载均衡-散列,
+          ☢ 负载均衡-轮询,
+          ♻️ 自动选择,
+          🌐 全部节点,
+          🇭🇰 香港节点,
+          🇹🇼 台湾节点,
+          🇯🇵 日本节点,
+          🇸🇬 新加坡,
+          🇰🇷 韩国,
+          🇺🇲 美国节点,
+          🇩🇪 德国节点,
+          🇬🇧 英国节点,
+          🧿 其它地区,
+          🟢 直连,
+        ],
+    }
+  - {
+      name: ♻️ 自动选择,
+      type: url-test,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Auto.png,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      lazy: true,
+      filter: "^((?!(直连)).)*$",
+    }
+  - {
+      name: 🎉 精选订阅,
+      <<: *best,
+      filter: "^((?!(直连)).)*$",
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Qure.png,
+    }
+  - {
+      name: ☢ 负载均衡-散列,
+      type: load-balance,
+      strategy: consistent-hashing,
+      interval:180,
+      <<: *best,
+      filter: "^((?!(直连)).)*$",
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Round_Robin_1.png,
+    }
+  - {
+      name: ☢ 负载均衡-轮询,
+      type: load-balance,
+      strategy: round-robin,
+      interval:180,
+      <<: *best,
+      filter: "^((?!(直连)).)*$",
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Round_Robin.png,
+    }
+  - {
+      name: 🌐 全部节点,
+      type: select,
+      include-all: true,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Final.png,
+    }
+  - {
+      name: 📹 YouTube,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/YouTube.png,
+    }
+  - {
+      name: 🍀 Google,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Google_Search.png,
+    }
+  - {
+      name: 📹 哔哩哔哩,
+      type: select,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/bilibili_2.png,
+      proxies:
+        [
+          🟢 直连,
+          🚀 节点选择,
+          🎉 精选订阅,
+          ☢ 负载均衡-散列,
+          ☢ 负载均衡-轮询,
+          ♻️ 自动选择,
+          🇭🇰 香港节点,
+          🇹🇼 台湾节点,
+          🇯🇵 日本节点,
+          🇸🇬 新加坡,
+          🇰🇷 韩国,
+          🇺🇲 美国节点,
+          🇩🇪 德国节点,
+          🇬🇧 英国节点,
+          🧿 其它地区,
+          🌐 全部节点,
+        ],
+    }
+  - {
+      name: 🎵 Spotify,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Spotify.png,
+    }
+  - {
+      name: 📹 巴哈姆特,
+      type: select,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Bahamut.png,
+      proxies:
+        [
+          🇹🇼 台湾节点,
+          🌐 全部节点,
+          🚀 节点选择,
+          🇭🇰 香港节点,
+          🇯🇵 日本节点,
+          🇸🇬 新加坡,
+          🇰🇷 韩国,
+          🇺🇲 美国节点,
+          🇩🇪 德国节点,
+          🇬🇧 英国节点,
+          🧿 其它地区,
+          🟢 直连,
+        ],
+    }
+  - {
+      name: 🤖 AI,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/AI.png,
+    }
+  - {
+      name: 🐬 OneDrive,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/OneDrive.png,
+    }
+  - {
+      name: 🪟 Microsoft,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Microsoft.png,
+    }
+  - {
+      name: 🎵 TikTok,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/TikTok_1.png,
+    }
+  - {
+      name: 📲 Telegram,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Telegram_X.png,
+    }
+  - {
+      name: 🎥 NETFLIX,
+      <<: *watch,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Netflix.png,
+    }
+  - {
+      name: 📖 Notion,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Notion.png,
+    }
+  - {
+      name: 💶 PayPal,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/PayPal.png,
+    }
+  - {
+      name: 🍎 Apple,
+      type: select,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Apple.png,
+      proxies:
+        [
+          🟢 直连,
+          🚀 节点选择,
+          🎉 精选订阅,
+          ♻️ 自动选择,
+          🇭🇰 香港节点,
+          🇹🇼 台湾节点,
+          🇯🇵 日本节点,
+          🇸🇬 新加坡,
+          🇰🇷 韩国,
+          🇺🇲 美国节点,
+          🇩🇪 德国节点,
+          🇬🇧 英国节点,
+          🧿 其它地区,
+          🌐 全部节点,
+        ],
+    }
+  - {
+      name: 🎯 全球直连,
+      type: select,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Proxy.png,
+      proxies: [🟢 直连, 🚀 节点选择],
+    }
+  - {
+      name: 🐟 漏网之鱼,
+      <<: *pr,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Lab.png,
+    }
+  - {
+      name: 🇭🇰 香港节点,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Hong_Kong.png,
+      type: url-test,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "港|HK|hk|Hong Kong|HongKong|hongkong",
+    }
+  - {
+      name: 🇹🇼 台湾节点,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Taiwan.png,
+      type: url-test,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "台|新北|彰化|TW|Taiwan",
+    }
+  - {
+      name: 🇸🇬 新加坡,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Singapore.png,
+      type: url-test,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "新加坡|坡|狮城|SG|Singapore",
+    }
+  - {
+      name: 🇰🇷 韩国,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Korea.png,
+      type: url-test,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "KR|Korea|KOR|首尔|韩|韓",
+    }
+  - {
+      name: 🇯🇵 日本节点,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Japan.png,
+      type: url-test,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "日本|川日|东京|大阪|泉日|埼玉|沪日|深日|[^-]日|JP|Japan",
+    }
+  - {
+      name: 🇺🇲 美国节点,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/United_States.png,
+      type: url-test,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States",
+    }
+  - {
+      name: 🇬🇧 英国节点,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/United_Kingdom.png,
+      type: url-test,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "英国|Great Britain",
+    }
+  - {
+      name: 🇩🇪 德国节点,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Germany.png,
+      type: url-test,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "德国|Germany",
+    }
+  - {
+      name: 🧿 其它地区,
+      icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Global.png,
+      type: select,
+      include-all: true,
+      tolerance: 20,
+      interval: 300,
+      filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates|英国|Great Britain|德国|Germany|KR|Korea|KOR|首尔|韩|韓)).*",
+    }
+rules:
+  - RULE-SET,apple_domain,🍎 Apple
+  - RULE-SET,ai_ip,🤖 AI
+  - RULE-SET,bilibili_domain,📹 哔哩哔哩
+  - RULE-SET,spotify_domain,🎵 Spotify
+  - RULE-SET,bahamut_domain,📹 巴哈姆特
+  - RULE-SET,youtube_domain,📹 YouTube
+  - RULE-SET,google_domain,🍀 Google
+  - RULE-SET,onedrive_domain,🐬 OneDrive
+  - RULE-SET,microsoft_domain,🪟 Microsoft
+  - RULE-SET,tiktok_domain,🎵 TikTok
+  - RULE-SET,telegram_domain,📲 Telegram
+  - RULE-SET,netflix_domain,🎥 NETFLIX
+  - RULE-SET,notion_domain,📖 Notion
+  - RULE-SET,paypal_domain,💶 PayPal
+  - RULE-SET,geolocation-!cn,🚀 节点选择
+  - RULE-SET,cn_domain,🎯 全球直连
+  - RULE-SET,google_ip,🍀 Google,no-resolve
+  - RULE-SET,netflix_ip,🎥 NETFLIX,no-resolve
+  - RULE-SET,telegram_ip,📲 Telegram,no-resolve
+  - RULE-SET,cn_ip,🎯 全球直连
+  - MATCH,🐟 漏网之鱼
+
+rule-anchor:
+  ip: &ip { type: http, interval: 86400, behavior: ipcidr, format: mrs }
+  domain: &domain { type: http, interval: 86400, behavior: domain, format: mrs }
+  qcy: &qcy { type: http, interval: 86400, behavior: domain, format: text }
+  class:
+    &class { type: http, interval: 86400, behavior: classical, format: text }
+rule-providers:
+  private_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs",
+    }
+  ai_ip:
+    {
+      <<: *ip,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/ai.mrs",
+    }
+  bahamut_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/bahamut.mrs",
+    }
+  bilibili_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/bilibili.mrs",
+    }
+  spotify_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/spotify.mrs",
+    }
+  youtube_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs",
+    }
+  google_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs",
+    }
+  telegram_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs",
+    }
+  netflix_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs",
+    }
+  notion_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/notion.mrs",
+    }
+  paypal_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/paypal.mrs",
+    }
+  onedrive_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/onedrive.mrs",
+    }
+  microsoft_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs",
+    }
+  apple_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple-cn.mrs",
+    }
+  tiktok_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs",
+    }
+  gfw_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs",
+    }
+  geolocation-!cn:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs",
+    }
+  cn_domain:
+    {
+      <<: *domain,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs",
+    }
+
+  cn_ip:
+    {
+      <<: *ip,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs",
+    }
+  google_ip:
+    {
+      <<: *ip,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs",
+    }
+  telegram_ip:
+    {
+      <<: *ip,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs",
+    }
+  netflix_ip:
+    {
+      <<: *ip,
+      url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/netflix.mrs",
+    }
