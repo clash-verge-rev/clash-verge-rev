@@ -21,8 +21,8 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 
-const MarkdownPreview = React.lazy(() => import("@uiw/react-markdown-preview"));
 const OS = getSystem();
 
 export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {

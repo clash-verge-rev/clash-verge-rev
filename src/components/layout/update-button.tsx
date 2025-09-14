@@ -1,9 +1,14 @@
 import { useVerge } from "@/hooks/use-verge";
 import { check } from "@tauri-apps/plugin-updater";
-import { useRef } from "react";
+import React, { Suspense, useRef } from "react";
 import useSWR from "swr";
 import { DialogRef } from "../base";
-import { UpdateViewer } from "../setting/mods/update-viewer";
+
+const UpdateViewer = React.lazy(() =>
+  import("../setting/mods/update-viewer").then((module) => ({
+    default: module.UpdateViewer,
+  })),
+);
 
 interface Props {
   className?: string;
@@ -30,7 +35,9 @@ export const UpdateButton = (props: Props) => {
 
   return (
     <>
-      <UpdateViewer ref={viewerRef} />
+      <Suspense>
+        <UpdateViewer ref={viewerRef} />
+      </Suspense>
 
       <button
         style={{
