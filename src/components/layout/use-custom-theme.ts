@@ -5,7 +5,6 @@ import {
   useThemeMode,
   useThemeSettings,
 } from "@/services/states";
-import getSystem from "@/utils/get-system";
 import {
   alpha,
   createTheme,
@@ -17,7 +16,6 @@ import {
 import { enUS, zhCN } from "@mui/x-data-grid/locales";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { MouseEvent, useCallback, useEffect, useMemo } from "react";
-import { flushSync } from "react-dom";
 const appWindow = getCurrentWebviewWindow();
 
 /**
@@ -259,57 +257,66 @@ export const useCustomTheme = () => {
       return;
     }
     const isDark = nextThemeMode === "light";
-    // @ts-ignore
-    // prettier-ignore
-    const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // isAppearanceTransition return true in new webkit version on arch linux, but it not actually work. so we decide to enable it only on windows.
-    if (!isAppearanceTransition || getSystem() !== "windows") {
-      setMode(isDark ? "light" : "dark");
-      if (isDark) {
-        document.documentElement.classList.remove("dark");
-      } else {
-        document.documentElement.classList.add("dark");
-      }
-      patchVerge({ theme_mode: vergeThemeMode });
-      return;
+
+    setMode(isDark ? "light" : "dark");
+    if (isDark) {
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
     }
+    patchVerge({ theme_mode: vergeThemeMode });
 
-    const x = event.clientX;
-    const y = event.clientY;
-    const endRadius = Math.hypot(
-      Math.max(x, innerWidth - x),
-      Math.max(y, innerHeight - y),
-    );
+    // // @ts-ignore
+    // // prettier-ignore
+    // const isAppearanceTransition = document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // // isAppearanceTransition return true in new webkit version on arch linux, but it not actually work. so we decide to enable it only on windows.
+    // if (!isAppearanceTransition || getSystem() !== "windows") {
+    //   setMode(isDark ? "light" : "dark");
+    //   if (isDark) {
+    //     document.documentElement.classList.remove("dark");
+    //   } else {
+    //     document.documentElement.classList.add("dark");
+    //   }
+    //   patchVerge({ theme_mode: vergeThemeMode });
+    //   return;
+    // }
 
-    const transition = document.startViewTransition(() => {
-      flushSync(() => {
-        setMode(isDark ? "light" : "dark");
-        if (isDark) {
-          document.documentElement.classList.remove("dark");
-        } else {
-          document.documentElement.classList.add("dark");
-        }
-        patchVerge({ theme_mode: vergeThemeMode });
-      });
-    });
-    transition.ready.then(() => {
-      const clipPath = [
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`,
-      ];
-      document.documentElement.animate(
-        {
-          clipPath: isDark ? [...clipPath].reverse() : clipPath,
-        },
-        {
-          duration: 400,
-          easing: "ease-out",
-          pseudoElement: isDark
-            ? "::view-transition-old(root)"
-            : "::view-transition-new(root)",
-        },
-      );
-    });
+    // const x = event.clientX;
+    // const y = event.clientY;
+    // const endRadius = Math.hypot(
+    //   Math.max(x, innerWidth - x),
+    //   Math.max(y, innerHeight - y),
+    // );
+
+    // const transition = document.startViewTransition(() => {
+    //   flushSync(() => {
+    //     setMode(isDark ? "light" : "dark");
+    //     if (isDark) {
+    //       document.documentElement.classList.remove("dark");
+    //     } else {
+    //       document.documentElement.classList.add("dark");
+    //     }
+    //     patchVerge({ theme_mode: vergeThemeMode });
+    //   });
+    // });
+    // transition.ready.then(() => {
+    //   const clipPath = [
+    //     `circle(0px at ${x}px ${y}px)`,
+    //     `circle(${endRadius}px at ${x}px ${y}px)`,
+    //   ];
+    //   document.documentElement.animate(
+    //     {
+    //       clipPath: isDark ? [...clipPath].reverse() : clipPath,
+    //     },
+    //     {
+    //       duration: 400,
+    //       easing: "ease-out",
+    //       pseudoElement: isDark
+    //         ? "::view-transition-old(root)"
+    //         : "::view-transition-new(root)",
+    //     },
+    //   );
+    // });
   };
 
   return { theme, toggleTheme };
