@@ -9,7 +9,7 @@ import * as tar from "tar";
 import zlib from "zlib";
 import ora from "ora";
 
-const VERGE_SERVICE_VERSION = "v1.1.2";
+const VERGE_SERVICE_VERSION = "v2.0.0";
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 let process_argvs = process.argv;
