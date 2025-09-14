@@ -1,0 +1,118 @@
+name: PR Bot
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  handle-command:
+    if: github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Check user permission
+        id: check
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const {data: membership} = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.payload.comment.user.login
+            });
+
+            const allowed = ["admin", "write", "maintain"];
+            if (!allowed.includes(membership.permission)) {
+              core.setFailed(`User ${context.payload.comment.user.login} is not allowed to run commands`);
+            }
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Parse command
+        id: cmd
+        run: |
+          body="${{ github.event.comment.body }}"
+          case "$body" in
+            "/build"*)
+              echo "command=build" >> $GITHUB_OUTPUT
+              ;;
+            "/test"*)
+              echo "command=test" >> $GITHUB_OUTPUT
+              ;;
+            "/deploy"*)
+              echo "command=deploy" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "command=unknown" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Run build
+        if: steps.cmd.outputs.command == 'build'
+        run: |
+          echo "Building project..."
+          mkdir dist
+          echo "Build artifact at $(date)" > dist/output.txt
+
+      - name: Run test
+        if: steps.cmd.outputs.command == 'test'
+        run: |
+          echo "Running tests..."
+          echo "✅ All tests passed!" > test-result.txt
+
+      - name: Run deploy
+        if: steps.cmd.outputs.command == 'deploy'
+        run: |
+          echo "Deploying app..."
+          echo "🚀 Deployed at $(date)" > deploy-log.txt
+
+      - name: Upload artifact
+        if: steps.cmd.outputs.command != 'unknown'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-${{ steps.cmd.outputs.command }}
+          path: |
+            dist/*
+            test-result.txt
+            deploy-log.txt
+          if-no-files-found: ignore
+
+      - name: Get artifact URL
+        if: steps.cmd.outputs.command != 'unknown'
+        id: artifact
+        run: |
+          echo "url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with result
+        if: steps.cmd.outputs.command != 'unknown'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr_number = context.payload.issue.number;
+            const cmd = "${{ steps.cmd.outputs.command }}";
+            const url = "${{ steps.artifact.outputs.url }}";
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pr_number,
+              body: `✅ Command \`${cmd}\` finished!\n[Download Artifact](${url})`
+            });
+
+      - name: Unknown command
+        if: steps.cmd.outputs.command == 'unknown'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr_number = context.payload.issue.number;
+            const body = context.payload.comment.body;
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pr_number,
+              body: `⚠️ Unknown command: \`${body}\`. Try /build, /test or /deploy.`
+            });
