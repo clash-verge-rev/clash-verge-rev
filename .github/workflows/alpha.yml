@@ -2,8 +2,12 @@ name: Alpha Build
 
 on:
   push:
-    branches: [dev]
-    tags-ignore: [updater, alpha]
+    branches:
+      - dev
+    tags-ignore:
+      - updater
+      - alpha
+      - "v*"
   workflow_dispatch:
 
 concurrency:
