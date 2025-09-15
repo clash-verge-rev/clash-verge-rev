@@ -1,6 +1,9 @@
 use crate::{
     config::Config,
-    core::service_ipc::{IpcCommand, send_ipc_request},
+    core::{
+        CoreManager, RunningMode,
+        service_ipc::{IpcCommand, send_ipc_request},
+    },
     logging,
     utils::{dirs, logging::Type},
 };
@@ -495,10 +498,12 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
     match status {
         ServiceStatus::Ready => {
             logging!(info, Type::Service, true, "服务就绪，直接启动");
+            CoreManager::global().set_running_mode(RunningMode::Service);
             Ok(())
         }
         ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
             logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
+            CoreManager::global().set_running_mode(RunningMode::Service);
             reinstall_service().await
         }
         ServiceStatus::ForceReinstallRequired => {
@@ -508,14 +513,17 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
                 true,
                 "服务需要强制重装，执行强制重装流程"
             );
+            CoreManager::global().set_running_mode(RunningMode::Service);
             force_reinstall_service().await
         }
         ServiceStatus::InstallRequired => {
             logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
+            CoreManager::global().set_running_mode(RunningMode::Service);
             install_service().await
         }
         ServiceStatus::UninstallRequired => {
             logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
+            CoreManager::global().set_running_mode(RunningMode::Sidecar);
             uninstall_service().await
         }
         ServiceStatus::Unavailable(reason) => {
@@ -526,6 +534,7 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
                 "服务不可用: {}，将使用Sidecar模式",
                 reason
             );
+            CoreManager::global().set_running_mode(RunningMode::Sidecar);
             Err(anyhow::anyhow!("服务不可用: {}", reason))
         }
     }

@@ -866,8 +866,8 @@ impl CoreManager {
 
     /// 启动核心
     pub async fn start_core(&self) -> Result<()> {
-        // 使用统一的服务状态检查
         let service_status = service::check_service_comprehensive().await;
+        logging!(info, Type::Core, true, "服务状态: {:?}", service_status);
 
         // 根据服务状态执行相应操作
         match service::handle_service_status(service_status).await {
