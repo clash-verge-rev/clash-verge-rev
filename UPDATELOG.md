@@ -4,6 +4,7 @@
 
 - 修复轻量模式退出无响应的问题
 - macOS intel Mihomo 兼容性
+- macOS Tun/系统代理 模式下图标大小不统一
 
 ## v2.4.2
 
