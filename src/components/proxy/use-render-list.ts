@@ -8,6 +8,9 @@ import {
   type HeadState,
 } from "./use-head-state";
 import { useAppData } from "@/providers/app-data-provider";
+import useSWR from "swr";
+import { getRuntimeConfig } from "@/services/cmds";
+import delayManager from "@/services/delay";
 
 // 定义代理项接口
 interface IProxyItem {
@@ -88,12 +91,22 @@ const groupProxies = <T = any>(list: T[], size: number): T[][] => {
   }, [] as T[][]);
 };
 
-export const useRenderList = (mode: string) => {
+export const useRenderList = (mode: string, isChainMode?: boolean) => {
   // 使用全局数据提供者
   const { proxies: proxiesData, refreshProxy } = useAppData();
   const { verge } = useVerge();
   const { width } = useWindowWidth();
   const [headStates, setHeadState] = useHeadStateNew();
+
+  // 获取运行时配置用于链式代理模式
+  const { data: runtimeConfig } = useSWR(
+    isChainMode ? "getRuntimeConfig" : null,
+    getRuntimeConfig,
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: true,
+    },
+  );
 
   // 计算列数
   const col = useMemo(
@@ -115,10 +128,116 @@ export const useRenderList = (mode: string) => {
     }
   }, [proxiesData, mode, refreshProxy]);
 
+  // 链式代理模式节点自动计算延迟
+  useEffect(() => {
+    if (!isChainMode || !runtimeConfig) return;
+
+    const allProxies: IProxyItem[] = Object.values(
+      (runtimeConfig as any).proxies || {},
+    );
+    if (allProxies.length === 0) return;
+
+    // 设置组监听器，当有延迟更新时自动刷新
+    const groupListener = () => {
+      console.log("[ChainMode] 延迟更新，刷新UI");
+      refreshProxy();
+    };
+
+    delayManager.setGroupListener("chain-mode", groupListener);
+
+    const calculateDelays = async () => {
+      try {
+        const timeout = verge?.default_latency_timeout || 10000;
+        const proxyNames = allProxies.map((proxy) => proxy.name);
+
+        console.log(`[ChainMode] 开始计算 ${proxyNames.length} 个节点的延迟`);
+
+        // 使用 delayManager 计算延迟，每个节点计算完成后会自动触发监听器刷新界面
+        delayManager.checkListDelay(proxyNames, "chain-mode", timeout);
+      } catch (error) {
+        console.error("Failed to calculate delays for chain mode:", error);
+      }
+    };
+
+    // 延迟执行避免阻塞
+    const handle = setTimeout(calculateDelays, 100);
+
+    return () => {
+      clearTimeout(handle);
+      // 清理组监听器
+      delayManager.removeGroupListener("chain-mode");
+    };
+  }, [
+    isChainMode,
+    runtimeConfig,
+    verge?.default_latency_timeout,
+    refreshProxy,
+  ]);
+
   // 处理渲染列表
   const renderList: IRenderItem[] = useMemo(() => {
     if (!proxiesData) return [];
 
+    // 链式代理模式下，从运行时配置读取所有 proxies
+    if (isChainMode && runtimeConfig) {
+      // 从运行时配置直接获取 proxies 列表 (需要类型断言)
+      const allProxies: IProxyItem[] = Object.values(
+        (runtimeConfig as any).proxies || {},
+      );
+
+      // 为每个节点获取延迟信息
+      const proxiesWithDelay = allProxies.map((proxy) => {
+        const delay = delayManager.getDelay(proxy.name, "chain-mode");
+        return {
+          ...proxy,
+          // 如果delayManager有延迟数据，更新history
+          history:
+            delay >= 0
+              ? [{ time: new Date().toISOString(), delay }]
+              : proxy.history || [],
+        };
+      });
+
+      // 创建一个虚拟的组来容纳所有节点
+      const virtualGroup: ProxyGroup = {
+        name: "All Proxies",
+        type: "Selector",
+        udp: false,
+        xudp: false,
+        tfo: false,
+        mptcp: false,
+        smux: false,
+        history: [],
+        now: "",
+        all: proxiesWithDelay,
+      };
+
+      // 返回节点列表（不显示组头）
+      if (col > 1) {
+        return groupProxies(proxiesWithDelay, col).map(
+          (proxyCol, colIndex) => ({
+            type: 4,
+            key: `chain-col-${colIndex}`,
+            group: virtualGroup,
+            headState: DEFAULT_STATE,
+            col,
+            proxyCol,
+            provider: proxyCol[0]?.provider,
+          }),
+        );
+      } else {
+        return proxiesWithDelay.map((proxy) => ({
+          type: 2,
+          key: `chain-${proxy.name}`,
+          group: virtualGroup,
+          proxy,
+          headState: DEFAULT_STATE,
+          provider: proxy.provider,
+        }));
+      }
+    }
+
+    // 正常模式的渲染逻辑
     const useRule = mode === "rule" || mode === "script";
     const renderGroups =
       useRule && proxiesData.groups.length
@@ -190,7 +309,7 @@ export const useRenderList = (mode: string) => {
 
     if (!useRule) return retList.slice(1);
     return retList.filter((item: IRenderItem) => !item.group.hidden);
-  }, [headStates, proxiesData, mode, col]);
+  }, [headStates, proxiesData, mode, col, isChainMode, runtimeConfig]);
 
   return {
     renderList,

@@ -28,6 +28,7 @@ import { useTranslation } from "react-i18next";
 interface RenderProps {
   item: IRenderItem;
   indent: boolean;
+  isChainMode?: boolean;
   onLocation: (group: IRenderItem["group"]) => void;
   onCheckAll: (groupName: string) => void;
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void;
@@ -39,8 +40,15 @@ interface RenderProps {
 
 export const ProxyRender = (props: RenderProps) => {
   const { t } = useTranslation();
-  const { indent, item, onLocation, onCheckAll, onHeadState, onChangeProxy } =
-    props;
+  const {
+    indent,
+    item,
+    onLocation,
+    onCheckAll,
+    onHeadState,
+    onChangeProxy,
+    isChainMode = false,
+  } = props;
   const { type, group, headState, proxy, proxyCol } = item;
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;
