@@ -1,34 +1,14 @@
 use crate::{
     config::Config,
-    core::handle::Handle,
     core::service_ipc::{IpcCommand, send_ipc_request},
     logging,
     utils::{dirs, logging::Type},
 };
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
-use std::{
-    env::current_exe,
-    path::PathBuf,
-    process::Command as StdCommand,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
 
 const REQUIRED_SERVICE_VERSION: &str = "1.1.2"; // 定义所需的服务版本号
-
-// 限制重装时间和次数的常量
-const REINSTALL_COOLDOWN_SECS: u64 = 300; // 5分钟冷却期
-const MAX_REINSTALLS_PER_DAY: u32 = 3; // 每24小时最多重装3次
-const ONE_DAY_SECS: u64 = 86400; // 24小时的秒数
-
-#[derive(Debug, Deserialize, Serialize, Clone, Default)]
-pub struct ServiceRecord {
-    pub last_install_time: u64,     // 上次安装时间戳 (Unix 时间戳，秒)
-    pub install_count: u32,         // 24小时内安装次数
-    pub last_check_time: u64,       // 上次检查时间
-    pub last_error: Option<String>, // 上次错误信息
-    pub prefer_sidecar: bool,       // 用户是否偏好sidecar模式，如拒绝安装服务或安装失败
-}
 
 #[derive(Debug)]
 pub enum ServiceStatus {
@@ -56,69 +36,6 @@ pub struct JsonResponse {
     pub code: u64,
     pub msg: String,
     pub data: Option<ResponseBody>,
-}
-
-impl ServiceRecord {
-    // 获取当前的服务状态
-    pub async fn get() -> Self {
-        if let Some(state) = Config::verge().await.latest_ref().service_state.clone() {
-            return state;
-        }
-        Self::default()
-    }
-
-    // 保存服务状态
-    pub async fn save(&self) -> Result<()> {
-        let config = Config::verge().await;
-        let mut latest = config.latest_ref().clone();
-        latest.service_state = Some(self.clone());
-        *config.draft_mut() = latest;
-        config.apply();
-
-        // 先获取数据，再异步保存，避免跨await持有锁
-        let verge_data = config.latest_ref().clone();
-        drop(config); // 显式释放锁
-
-        verge_data.save_file().await
-    }
-
-    // 更新安装信息
-    pub fn record_install(&mut self) {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-
-        // 检查是否需要重置计数器（24小时已过）
-        if now - self.last_install_time > ONE_DAY_SECS {
-            self.install_count = 0;
-        }
-
-        self.last_install_time = now;
-        self.install_count += 1;
-    }
-
-    // 检查是否可以重新安装
-    pub fn can_reinstall(&self) -> bool {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-
-        // 如果在冷却期内，不允许重装
-        if now - self.last_install_time < REINSTALL_COOLDOWN_SECS {
-            return false;
-        }
-
-        // 如果24小时内安装次数过多，也不允许
-        if now - self.last_install_time < ONE_DAY_SECS
-            && self.install_count >= MAX_REINSTALLS_PER_DAY
-        {
-            return false;
-        }
-
-        true
-    }
 }
 
 #[allow(clippy::unused_async)]
@@ -195,20 +112,6 @@ async fn install_service() -> Result<()> {
 async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
-    // 获取当前服务状态
-    let mut service_state = ServiceRecord::get().await;
-
-    // 检查是否允许重装
-    if !service_state.can_reinstall() {
-        logging!(
-            warn,
-            Type::Service,
-            true,
-            "service reinstall rejected: cooldown period or max attempts reached"
-        );
-        bail!("Service reinstallation is rate limited. Please try again later.");
-    }
-
     // 先卸载服务
     if let Err(err) = uninstall_service().await {
         logging!(
@@ -222,19 +125,9 @@ async fn reinstall_service() -> Result<()> {
 
     // 再安装服务
     match install_service().await {
-        Ok(_) => {
-            // 记录安装信息并保存
-            service_state.record_install();
-            service_state.last_error = None;
-            service_state.save().await?;
-            Ok(())
-        }
+        Ok(_) => Ok(()),
         Err(err) => {
-            let error = format!("failed to install service: {err}");
-            service_state.last_error = Some(error.clone());
-            service_state.prefer_sidecar = true;
-            service_state.save().await?;
-            bail!(error)
+            bail!(format!("failed to install service: {err}"))
         }
     }
 }
@@ -325,20 +218,6 @@ async fn install_service() -> Result<()> {
 async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
-    // 获取当前服务状态
-    let mut service_state = ServiceRecord::get().await;
-
-    // 检查是否允许重装
-    if !service_state.can_reinstall() {
-        logging!(
-            warn,
-            Type::Service,
-            true,
-            "service reinstall rejected: cooldown period or max attempts reached"
-        );
-        bail!("Service reinstallation is rate limited. Please try again later.");
-    }
-
     // 先卸载服务
     if let Err(err) = uninstall_service().await {
         logging!(
@@ -352,19 +231,9 @@ async fn reinstall_service() -> Result<()> {
 
     // 再安装服务
     match install_service().await {
-        Ok(_) => {
-            // 记录安装信息并保存
-            service_state.record_install();
-            service_state.last_error = None;
-            service_state.save().await?;
-            Ok(())
-        }
+        Ok(_) => Ok(()),
         Err(err) => {
-            let error = format!("failed to install service: {err}");
-            service_state.last_error = Some(error.clone());
-            service_state.prefer_sidecar = true;
-            service_state.save().await?;
-            bail!(error)
+            bail!(format!("failed to install service: {err}"))
         }
     }
 }
@@ -445,20 +314,6 @@ async fn install_service() -> Result<()> {
 async fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "reinstall service");
 
-    // 获取当前服务状态
-    let mut service_state = ServiceRecord::get().await;
-
-    // 检查是否允许重装
-    if !service_state.can_reinstall() {
-        logging!(
-            warn,
-            Type::Service,
-            true,
-            "service reinstall rejected: cooldown period or max attempts reached"
-        );
-        bail!("Service reinstallation is rate limited. Please try again later.");
-    }
-
     // 先卸载服务
     if let Err(err) = uninstall_service().await {
         logging!(
@@ -472,19 +327,9 @@ async fn reinstall_service() -> Result<()> {
 
     // 再安装服务
     match install_service().await {
-        Ok(_) => {
-            // 记录安装信息并保存
-            service_state.record_install();
-            service_state.last_error = None;
-            service_state.save().await?;
-            Ok(())
-        }
+        Ok(_) => Ok(()),
         Err(err) => {
-            let error = format!("failed to install service: {err}");
-            service_state.last_error = Some(error.clone());
-            service_state.prefer_sidecar = true;
-            service_state.save().await?;
-            bail!(error)
+            bail!(format!("failed to install service: {err}"))
         }
     }
 }
@@ -519,12 +364,6 @@ async fn check_service_version() -> Result<String> {
 
 /// 检查服务是否需要重装
 pub async fn check_service_needs_reinstall() -> bool {
-    let service_state = ServiceRecord::get().await;
-
-    if !service_state.can_reinstall() {
-        return false;
-    }
-
     match check_service_version().await {
         Ok(version) => version != REQUIRED_SERVICE_VERSION,
         Err(_) => is_service_available().await.is_err(),
@@ -578,69 +417,12 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     logging!(info, Type::Service, true, "正在尝试通过服务启动核心");
 
-    // 先检查服务版本
-    let version_matched = match check_service_version().await {
-        Ok(version) => {
-            if version != REQUIRED_SERVICE_VERSION {
-                logging!(
-                    warn,
-                    Type::Service,
-                    true,
-                    "服务版本不匹配: {} (要求: {})",
-                    version,
-                    REQUIRED_SERVICE_VERSION
-                );
-                false
-            } else {
-                logging!(info, Type::Service, true, "服务版本匹配");
-                true
-            }
-        }
-        Err(err) => {
-            logging!(warn, Type::Service, true, "无法获取服务版本: {}", err);
-            false
-        }
-    };
-
-    // 如果版本匹配且服务可用，直接使用
-    if version_matched {
-        logging!(info, Type::Service, true, "服务已运行且版本匹配，直接使用");
-        return start_with_existing_service(config_file).await;
-    }
-
-    // 版本不匹配时尝试重装
-    if !version_matched {
-        let service_state = ServiceRecord::get().await;
-        if !service_state.can_reinstall() {
-            logging!(
-                warn,
-                Type::Service,
-                true,
-                "版本不匹配但重装被限制，尝试强制使用"
-            );
-            return start_with_existing_service(config_file)
-                .await
-                .context("服务版本不匹配且无法重装");
-        }
-
-        logging!(info, Type::Service, true, "开始重装服务");
-        reinstall_service().await?;
-        return start_with_existing_service(config_file).await;
-    }
-
-    // 尝试启动现有服务
-    if let Ok(()) = start_with_existing_service(config_file).await {
-        return Ok(());
-    }
-
-    // 服务启动失败，检查是否需要重装
     if check_service_needs_reinstall().await {
-        logging!(info, Type::Service, true, "服务需要重装");
         reinstall_service().await?;
-        start_with_existing_service(config_file).await
-    } else {
-        bail!("Service is not available and cannot be reinstalled at this time")
     }
+
+    logging!(info, Type::Service, true, "服务已运行且版本匹配，直接使用");
+    start_with_existing_service(config_file).await
 }
 
 /// 通过服务停止core
@@ -691,52 +473,19 @@ pub async fn is_service_available() -> Result<()> {
 
 /// 综合服务状态检查（一次性完成所有检查）
 pub async fn check_service_comprehensive() -> ServiceStatus {
-    // 1. 检查用户偏好
-    let service_state = ServiceRecord::get().await;
-    if service_state.prefer_sidecar {
-        logging!(info, Type::Service, true, "用户偏好Sidecar模式");
-        return ServiceStatus::Unavailable("用户偏好Sidecar模式".to_string());
-    }
-
-    // 2. 检查服务是否可用
     match is_service_available().await {
         Ok(_) => {
             logging!(info, Type::Service, true, "服务当前可用，检查是否需要重装");
-
-            // 3. 检查是否需要重装（版本不匹配等）
             if check_service_needs_reinstall().await {
-                if service_state.can_reinstall() {
-                    logging!(info, Type::Service, true, "服务需要重装且允许重装");
-                    ServiceStatus::NeedsReinstall
-                } else {
-                    logging!(warn, Type::Service, true, "服务需要重装但被限制");
-                    ServiceStatus::Unavailable("重装被限制".to_string())
-                }
+                logging!(info, Type::Service, true, "服务需要重装且允许重装");
+                ServiceStatus::NeedsReinstall
             } else {
-                // logging!(info, Type::Service, true, "服务就绪可用");
                 ServiceStatus::Ready
             }
         }
-        Err(_) => {
+        Err(err) => {
             logging!(warn, Type::Service, true, "服务不可用，检查安装状态");
-
-            // 4. 检查是否从未安装过
-            if service_state.last_install_time == 0 {
-                logging!(info, Type::Service, true, "服务从未安装，需要首次安装");
-                ServiceStatus::InstallRequired
-            } else if service_state.can_reinstall() {
-                logging!(info, Type::Service, true, "服务已安装但不可用，需要重装");
-                ServiceStatus::NeedsReinstall
-            } else {
-                let reason = format!(
-                    "服务已安装但不可用，重装被限制。上次错误: {}",
-                    service_state
-                        .last_error
-                        .unwrap_or_else(|| "未知".to_string())
-                );
-                logging!(warn, Type::Service, true, "{}", reason);
-                ServiceStatus::Unavailable(reason)
-            }
+            ServiceStatus::Unavailable(err.to_string())
         }
     }
 }
@@ -750,8 +499,7 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
         }
         ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
             logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
-            reinstall_service().await?;
-            update_service_state_to_service().await
+            reinstall_service().await
         }
         ServiceStatus::ForceReinstallRequired => {
             logging!(
@@ -760,18 +508,15 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
                 true,
                 "服务需要强制重装，执行强制重装流程"
             );
-            force_reinstall_service().await?;
-            update_service_state_to_service().await
+            force_reinstall_service().await
         }
         ServiceStatus::InstallRequired => {
             logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
-            install_service().await?;
-            update_service_state_to_service().await
+            install_service().await
         }
         ServiceStatus::UninstallRequired => {
             logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
-            uninstall_service().await?;
-            update_service_state_to_sidecar("用户手动卸载服务").await
+            uninstall_service().await
         }
         ServiceStatus::Unavailable(reason) => {
             logging!(
@@ -786,54 +531,9 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
     }
 }
 
-/// 更新服务状态为偏好Sidecar
-async fn update_service_state_to_sidecar(reason: &str) -> Result<()> {
-    logging!(
-        info,
-        Type::Service,
-        true,
-        "更新服务状态为偏好Sidecar，原因: {}",
-        reason
-    );
-    let mut state = ServiceRecord::get().await;
-    state.prefer_sidecar = true;
-    state.last_error = Some(reason.to_string());
-    if let Err(e) = state.save().await {
-        logging!(error, Type::Service, true, "保存ServiceState失败: {}", e);
-        return Err(e);
-    }
-
-    Handle::refresh_verge();
-
-    Ok(())
-}
-
-/// 更新服务状态在安装成功后
-async fn update_service_state_to_service() -> Result<()> {
-    logging!(info, Type::Service, true, "更新服务状态为使用Service");
-    let mut state = ServiceRecord::get().await;
-    state.record_install();
-    state.prefer_sidecar = false;
-    state.last_error = None;
-    if let Err(e) = state.save().await {
-        logging!(error, Type::Service, true, "保存ServiceState失败: {}", e);
-        return Err(e);
-    }
-
-    Handle::refresh_verge();
-
-    Ok(())
-}
-
 /// 强制重装服务（UI修复按钮）
 pub async fn force_reinstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "用户请求强制重装服务");
-
-    let service_state = ServiceRecord::default();
-    service_state.save().await?;
-
-    logging!(info, Type::Service, true, "已重置服务状态，开始执行重装");
-
     reinstall_service().await.map_err(|err| {
         logging!(error, Type::Service, true, "强制重装服务失败: {}", err);
         err
