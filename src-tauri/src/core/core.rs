@@ -869,17 +869,20 @@ impl CoreManager {
         let service_status = service::check_service_comprehensive().await;
         logging!(info, Type::Core, true, "服务状态: {:?}", service_status);
 
-        // 根据服务状态执行相应操作
-        match service::handle_service_status(service_status).await {
-            Ok(_) => {
-                logging!(info, Type::Core, true, "服务模式启动成功");
-                self.start_core_by_service().await?;
+        logging_error!(
+            Type::Core,
+            true,
+            service::handle_service_status(service_status).await
+        );
+
+        match self.get_running_mode() {
+            RunningMode::Service => {
+                logging_error!(Type::Core, true, self.start_core_by_service().await);
             }
-            Err(_) => {
-                logging!(info, Type::Core, true, "服务不可用，使用Sidecar模式启动");
-                self.start_core_by_sidecar().await?;
+            RunningMode::NotRunning | RunningMode::Sidecar => {
+                logging_error!(Type::Core, true, self.start_core_by_sidecar().await);
             }
-        }
+        };
 
         Ok(())
     }
