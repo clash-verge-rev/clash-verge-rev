@@ -31,7 +31,8 @@ pub async fn install_service() -> CmdResult {
         || service::handle_service_status(ServiceStatus::InstallRequired),
         "Install",
     )
-    .await
+    .await?;
+    Ok(())
 }
 
 #[tauri::command]

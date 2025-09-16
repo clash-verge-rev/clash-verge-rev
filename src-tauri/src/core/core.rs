@@ -864,16 +864,21 @@ impl CoreManager {
         (*guard).clone()
     }
 
-    /// 启动核心
-    pub async fn start_core(&self) -> Result<()> {
+    pub async fn prestart_core(&self) -> Result<()> {
         let service_status = service::check_service_comprehensive().await;
         logging!(info, Type::Core, true, "服务状态: {:?}", service_status);
-
         logging_error!(
             Type::Core,
             true,
             service::handle_service_status(service_status).await
         );
+
+        Ok(())
+    }
+
+    /// 启动核心
+    pub async fn start_core(&self) -> Result<()> {
+        self.prestart_core().await?;
 
         match self.get_running_mode() {
             RunningMode::Service => {

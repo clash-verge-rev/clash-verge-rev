@@ -503,8 +503,9 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
         }
         ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
             logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
+            reinstall_service().await?;
             CoreManager::global().set_running_mode(RunningMode::Service);
-            reinstall_service().await
+            Ok(())
         }
         ServiceStatus::ForceReinstallRequired => {
             logging!(
@@ -513,18 +514,21 @@ pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
                 true,
                 "服务需要强制重装，执行强制重装流程"
             );
+            force_reinstall_service().await?;
             CoreManager::global().set_running_mode(RunningMode::Service);
-            force_reinstall_service().await
+            Ok(())
         }
         ServiceStatus::InstallRequired => {
             logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
+            install_service().await?;
             CoreManager::global().set_running_mode(RunningMode::Service);
-            install_service().await
+            Ok(())
         }
         ServiceStatus::UninstallRequired => {
             logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
+            uninstall_service().await?;
             CoreManager::global().set_running_mode(RunningMode::Sidecar);
-            uninstall_service().await
+            Ok(())
         }
         ServiceStatus::Unavailable(reason) => {
             logging!(
