@@ -1,19 +1,18 @@
 use crate::{
     config::Config,
-    core::{
-        CoreManager, RunningMode,
-        service_ipc::{IpcCommand, send_ipc_request},
-    },
-    logging,
+    core::service_ipc::{IpcCommand, send_ipc_request},
+    logging, logging_error,
     utils::{dirs, logging::Type},
 };
 use anyhow::{Context, Result, bail};
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
+use tokio::sync::Mutex;
 
 const REQUIRED_SERVICE_VERSION: &str = "1.1.2"; // 定义所需的服务版本号
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
     Ready,
     NeedsReinstall,
@@ -40,6 +39,9 @@ pub struct JsonResponse {
     pub msg: String,
     pub data: Option<ResponseBody>,
 }
+
+#[derive(Clone)]
+pub struct ServiceManager(ServiceStatus);
 
 #[allow(clippy::unused_async)]
 #[cfg(target_os = "windows")]
@@ -337,11 +339,13 @@ async fn reinstall_service() -> Result<()> {
     }
 }
 
-/// 检查服务状态 - 使用IPC通信
-async fn check_ipc_service_status() -> Result<()> {
-    logging!(info, Type::Service, true, "开始检查服务状态 (IPC)");
-    check_service_version().await?;
-    Ok(())
+/// 强制重装服务（UI修复按钮）
+pub async fn force_reinstall_service() -> Result<()> {
+    logging!(info, Type::Service, true, "用户请求强制重装服务");
+    reinstall_service().await.map_err(|err| {
+        logging!(error, Type::Service, true, "强制重装服务失败: {}", err);
+        err
+    })
 }
 
 /// 检查服务版本 - 使用IPC通信
@@ -369,7 +373,7 @@ async fn check_service_version() -> Result<String> {
 pub async fn check_service_needs_reinstall() -> bool {
     match check_service_version().await {
         Ok(version) => version != REQUIRED_SERVICE_VERSION,
-        Err(_) => is_service_available().await.is_err(),
+        Err(_) => false,
     }
 }
 
@@ -471,84 +475,100 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
 /// 检查服务是否正在运行
 pub async fn is_service_available() -> Result<()> {
-    check_ipc_service_status().await
+    logging!(info, Type::Service, true, "开始检查服务状态 (IPC)");
+    check_service_version().await?;
+    Ok(())
 }
 
-/// 综合服务状态检查（一次性完成所有检查）
-pub async fn check_service_comprehensive() -> ServiceStatus {
-    match is_service_available().await {
-        Ok(_) => {
-            logging!(info, Type::Service, true, "服务当前可用，检查是否需要重装");
-            if check_service_needs_reinstall().await {
-                logging!(info, Type::Service, true, "服务需要重装且允许重装");
-                ServiceStatus::NeedsReinstall
-            } else {
-                ServiceStatus::Ready
+impl ServiceManager {
+    pub fn default() -> Self {
+        Self(ServiceStatus::Unavailable("Need Checks".into()))
+    }
+
+    pub async fn current(&self) -> ServiceStatus {
+        self.0.clone()
+    }
+
+    pub async fn refresh(&mut self) -> Result<()> {
+        let status = self.check_service_comprehensive().await;
+        logging_error!(
+            Type::Service,
+            true,
+            self.handle_service_status(&status).await
+        );
+        self.0 = status;
+        Ok(())
+    }
+
+    /// 综合服务状态检查（一次性完成所有检查）
+    pub async fn check_service_comprehensive(&self) -> ServiceStatus {
+        match is_service_available().await {
+            Ok(_) => {
+                logging!(info, Type::Service, true, "服务当前可用，检查是否需要重装");
+                if check_service_needs_reinstall().await {
+                    logging!(info, Type::Service, true, "服务需要重装且允许重装");
+                    ServiceStatus::NeedsReinstall
+                } else {
+                    ServiceStatus::Ready
+                }
+            }
+            Err(err) => {
+                logging!(warn, Type::Service, true, "服务不可用，检查安装状态");
+                ServiceStatus::Unavailable(err.to_string())
             }
         }
-        Err(err) => {
-            logging!(warn, Type::Service, true, "服务不可用，检查安装状态");
-            ServiceStatus::Unavailable(err.to_string())
+    }
+
+    /// 根据服务状态执行相应操作
+    pub async fn handle_service_status(&mut self, status: &ServiceStatus) -> Result<()> {
+        match status {
+            ServiceStatus::Ready => {
+                logging!(info, Type::Service, true, "服务就绪，直接启动");
+                Ok(())
+            }
+            ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
+                logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
+                reinstall_service().await?;
+                self.0 = ServiceStatus::Ready;
+                Ok(())
+            }
+            ServiceStatus::ForceReinstallRequired => {
+                logging!(
+                    info,
+                    Type::Service,
+                    true,
+                    "服务需要强制重装，执行强制重装流程"
+                );
+                force_reinstall_service().await?;
+                self.0 = ServiceStatus::Ready;
+                Ok(())
+            }
+            ServiceStatus::InstallRequired => {
+                logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
+                install_service().await?;
+                self.0 = ServiceStatus::Ready;
+                Ok(())
+            }
+            ServiceStatus::UninstallRequired => {
+                logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
+                uninstall_service().await?;
+                self.0 = ServiceStatus::Unavailable("Service Uninstalled".into());
+                Ok(())
+            }
+            ServiceStatus::Unavailable(reason) => {
+                logging!(
+                    info,
+                    Type::Service,
+                    true,
+                    "服务不可用: {}，将使用Sidecar模式",
+                    reason
+                );
+                self.0 = ServiceStatus::Unavailable(reason.clone());
+                Err(anyhow::anyhow!("服务不可用: {}", reason))
+            }
         }
     }
 }
 
-/// 根据服务状态执行相应操作
-pub async fn handle_service_status(status: ServiceStatus) -> Result<()> {
-    match status {
-        ServiceStatus::Ready => {
-            logging!(info, Type::Service, true, "服务就绪，直接启动");
-            CoreManager::global().set_running_mode(RunningMode::Service);
-            Ok(())
-        }
-        ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
-            logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
-            reinstall_service().await?;
-            CoreManager::global().set_running_mode(RunningMode::Service);
-            Ok(())
-        }
-        ServiceStatus::ForceReinstallRequired => {
-            logging!(
-                info,
-                Type::Service,
-                true,
-                "服务需要强制重装，执行强制重装流程"
-            );
-            force_reinstall_service().await?;
-            CoreManager::global().set_running_mode(RunningMode::Service);
-            Ok(())
-        }
-        ServiceStatus::InstallRequired => {
-            logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
-            install_service().await?;
-            CoreManager::global().set_running_mode(RunningMode::Service);
-            Ok(())
-        }
-        ServiceStatus::UninstallRequired => {
-            logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
-            uninstall_service().await?;
-            CoreManager::global().set_running_mode(RunningMode::Sidecar);
-            Ok(())
-        }
-        ServiceStatus::Unavailable(reason) => {
-            logging!(
-                info,
-                Type::Service,
-                true,
-                "服务不可用: {}，将使用Sidecar模式",
-                reason
-            );
-            CoreManager::global().set_running_mode(RunningMode::Sidecar);
-            Err(anyhow::anyhow!("服务不可用: {}", reason))
-        }
-    }
-}
-
-/// 强制重装服务（UI修复按钮）
-pub async fn force_reinstall_service() -> Result<()> {
-    logging!(info, Type::Service, true, "用户请求强制重装服务");
-    reinstall_service().await.map_err(|err| {
-        logging!(error, Type::Service, true, "强制重装服务失败: {}", err);
-        err
-    })
-}
+pub static SERVICE_MANAGER: Lazy<Mutex<ServiceManager>> =
+    Lazy::new(|| Mutex::new(ServiceManager::default()));

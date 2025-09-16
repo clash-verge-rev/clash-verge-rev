@@ -4,7 +4,7 @@ use crate::{
     config::*,
     core::{
         handle,
-        service::{self},
+        service::{self, SERVICE_MANAGER, ServiceStatus},
     },
     ipc::IpcManager,
     logging, logging_error, singleton_lazy,
@@ -865,14 +865,15 @@ impl CoreManager {
     }
 
     pub async fn prestart_core(&self) -> Result<()> {
-        let service_status = service::check_service_comprehensive().await;
-        logging!(info, Type::Core, true, "服务状态: {:?}", service_status);
-        logging_error!(
-            Type::Core,
-            true,
-            service::handle_service_status(service_status).await
-        );
-
+        SERVICE_MANAGER.lock().await.refresh().await?;
+        match SERVICE_MANAGER.lock().await.current().await {
+            ServiceStatus::Ready => {
+                self.set_running_mode(RunningMode::Service);
+            }
+            _ => {
+                self.set_running_mode(RunningMode::Sidecar);
+            }
+        }
         Ok(())
     }
 
