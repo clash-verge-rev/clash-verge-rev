@@ -485,7 +485,7 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
-    pub async fn current(&self) -> ServiceStatus {
+    pub fn current(&self) -> ServiceStatus {
         self.0.clone()
     }
 

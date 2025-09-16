@@ -866,7 +866,7 @@ impl CoreManager {
 
     pub async fn prestart_core(&self) -> Result<()> {
         SERVICE_MANAGER.lock().await.refresh().await?;
-        match SERVICE_MANAGER.lock().await.current().await {
+        match SERVICE_MANAGER.lock().await.current() {
             ServiceStatus::Ready => {
                 self.set_running_mode(RunningMode::Service);
             }

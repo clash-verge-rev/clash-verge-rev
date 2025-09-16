@@ -14,12 +14,12 @@ async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) ->
         .handle_service_status(&status)
         .await
     {
-        let emsg = format!("{} Service failed: {}", op_type, e.to_string());
+        let emsg = format!("{} Service failed: {}", op_type, e);
         return Err(t(emsg.as_str()).await);
     }
     if CoreManager::global().restart_core().await.is_err() {
-        let emsg = format!("Restart Core failed");
-        return Err(t(emsg.as_str()).await);
+        let emsg = "Restart Core failed";
+        return Err(t(emsg).await);
     }
     Ok(())
 }
