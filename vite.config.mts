@@ -162,6 +162,6 @@ export default defineConfig({
   },
 
   define: {
-    OS_PLATFORM: '"unknown"',
+    OS_PLATFORM: `"${process.platform}"`,
   },
 });
