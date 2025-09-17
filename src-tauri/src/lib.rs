@@ -155,7 +155,6 @@ mod app_init {
             // Application lifecycle
             cmd::notify_ui_ready,
             cmd::update_ui_stage,
-            cmd::reset_ui_ready_state,
             cmd::get_running_mode,
             cmd::get_app_uptime,
             cmd::get_auto_launch_status,

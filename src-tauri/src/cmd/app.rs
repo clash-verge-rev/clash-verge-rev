@@ -235,11 +235,3 @@ pub fn update_ui_stage(stage: String) -> CmdResult<()> {
     crate::utils::resolve::ui::update_ui_ready_stage(stage_enum);
     Ok(())
 }
-
-/// 重置UI就绪状态
-#[tauri::command]
-pub fn reset_ui_ready_state() -> CmdResult<()> {
-    log::info!(target: "app", "重置UI就绪状态");
-    crate::utils::resolve::ui::reset_ui_ready();
-    Ok(())
-}

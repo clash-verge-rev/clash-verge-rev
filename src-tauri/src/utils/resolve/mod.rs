@@ -9,7 +9,7 @@ use crate::{
     logging, logging_error,
     module::lightweight::auto_lightweight_mode_init,
     process::AsyncHandler,
-    utils::{init, logging::Type, resolve::window::create_window, server},
+    utils::{init, logging::Type, server, window_manager::WindowManager},
 };
 
 pub mod dns;
@@ -242,5 +242,5 @@ pub(super) async fn init_window() {
             Handle::global().set_activation_policy_accessory();
         }
     }
-    create_window(!is_silent_start).await;
+    WindowManager::create_window(!is_silent_start).await;
 }

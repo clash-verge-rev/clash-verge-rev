@@ -44,7 +44,6 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
         match url_param {
             Some(url) => {
                 log::info!(target:"app", "decoded subscription url: {url}");
-                // create_window(false).await;
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
                     Ok(item) => {
                         let uid = match item.uid.clone() {
