@@ -453,8 +453,9 @@ impl Handle {
             info,
             Type::Frontend,
             true,
-            "发送{}条启动时累积的错误消息",
-            errors.len()
+            "发送{}条启动时累积的错误消息: {:?}",
+            errors.len(),
+            errors
         );
 
         // 启动单独线程处理启动错误，避免阻塞主线程

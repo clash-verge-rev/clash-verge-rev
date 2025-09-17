@@ -138,7 +138,7 @@ rpath = false
 
 [profile.fast-release]
 inherits = "release"
-panic = "abort"
+incremental = true
 codegen-units = 64
 lto = false
 opt-level = 0
