@@ -2,10 +2,10 @@ use tauri::Emitter;
 
 use super::CmdResult;
 use crate::{
+    cache::Cache,
     core::{handle::Handle, tray::Tray},
     ipc::IpcManager,
     logging,
-    state::proxy::ProxyRequestCache,
     utils::logging::Type,
 };
 use std::time::Duration;
@@ -15,8 +15,8 @@ const PROVIDERS_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
 
 #[tauri::command]
 pub async fn get_proxies() -> CmdResult<serde_json::Value> {
-    let cache = ProxyRequestCache::global();
-    let key = ProxyRequestCache::make_key("proxies", "default");
+    let cache = Cache::global();
+    let key = Cache::make_key("proxies", "default");
     let value = cache
         .get_or_fetch(key, PROXIES_REFRESH_INTERVAL, || async {
             let manager = IpcManager::global();
@@ -32,16 +32,16 @@ pub async fn get_proxies() -> CmdResult<serde_json::Value> {
 /// 强制刷新代理缓存用于profile切换
 #[tauri::command]
 pub async fn force_refresh_proxies() -> CmdResult<serde_json::Value> {
-    let cache = ProxyRequestCache::global();
-    let key = ProxyRequestCache::make_key("proxies", "default");
+    let cache = Cache::global();
+    let key = Cache::make_key("proxies", "default");
     cache.map.remove(&key);
     get_proxies().await
 }
 
 #[tauri::command]
 pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
-    let cache = ProxyRequestCache::global();
-    let key = ProxyRequestCache::make_key("providers", "default");
+    let cache = Cache::global();
+    let key = Cache::make_key("providers", "default");
     let value = cache
         .get_or_fetch(key, PROVIDERS_REFRESH_INTERVAL, || async {
             let manager = IpcManager::global();
@@ -85,8 +85,8 @@ pub async fn update_proxy_and_sync(group: String, proxy: String) -> CmdResult<()
                 proxy
             );
 
-            let cache = crate::state::proxy::ProxyRequestCache::global();
-            let key = crate::state::proxy::ProxyRequestCache::make_key("proxies", "default");
+            let cache = Cache::global();
+            let key = Cache::make_key("proxies", "default");
             cache.map.remove(&key);
 
             if let Err(e) = Tray::global().update_menu().await {

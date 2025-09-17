@@ -1,9 +1,9 @@
 use crate::{
+    cache::Cache,
     config::Config,
     core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
     process::AsyncHandler,
-    state::proxy::ProxyRequestCache,
     utils::logging::Type,
 };
 
@@ -183,7 +183,7 @@ pub async fn entry_lightweight_mode() -> bool {
     // 回到 In
     set_state(LightweightState::In);
 
-    ProxyRequestCache::global().clean_default_keys();
+    Cache::global().clean_default_keys();
     true
 }
 
