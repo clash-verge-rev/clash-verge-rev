@@ -376,7 +376,6 @@ impl WindowManager {
             }
 
             handle::Handle::global().mark_startup_completed();
-            lightweight::run_once_auto_lightweight().await;
 
             true
         })

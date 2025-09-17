@@ -87,6 +87,7 @@ async fn set_lightweight_mode(value: bool) {
 }
 
 pub async fn run_once_auto_lightweight() {
+    println!("fuck tunglies");
     let verge_config = Config::verge().await;
     let enable_auto = verge_config
         .data_mut()
@@ -96,6 +97,7 @@ pub async fn run_once_auto_lightweight() {
         .latest_ref()
         .enable_silent_start
         .unwrap_or(false);
+    println!("enable_auto: {enable_auto}, is_silent_start: {is_silent_start}");
 
     if !(enable_auto && is_silent_start) {
         logging!(
@@ -106,13 +108,6 @@ pub async fn run_once_auto_lightweight() {
         );
         return;
     }
-
-    logging!(
-        info,
-        Type::Lightweight,
-        true,
-        "在静默启动的情况下，创建窗口再添加自动进入轻量模式窗口监听器"
-    );
 
     set_lightweight_mode(true).await;
     enable_auto_light_weight_mode().await;
