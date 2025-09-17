@@ -30,7 +30,8 @@ pub struct IpcManager {
 }
 
 impl IpcManager {
-    fn new() -> Self {
+    pub fn new() -> Self {
+        logging!(info, Type::Ipc, true, "Creating new IpcManager instance");
         let ipc_path_buf = ipc_path().unwrap_or_else(|e| {
             logging!(error, Type::Ipc, true, "Failed to get IPC path: {}", e);
             std::path::PathBuf::from("/tmp/clash-verge-ipc") // fallback path
@@ -50,9 +51,6 @@ impl IpcManager {
         Self { client }
     }
 }
-
-// Use singleton macro with logging
-singleton_with_logging!(IpcManager, INSTANCE, "IpcManager");
 
 impl IpcManager {
     pub async fn request(
@@ -367,3 +365,6 @@ impl IpcManager {
 
     // 日志相关功能已迁移到 logs.rs 模块，使用流式处理
 }
+
+// Use singleton macro with logging
+singleton_with_logging!(IpcManager, INSTANCE, "IpcManager");

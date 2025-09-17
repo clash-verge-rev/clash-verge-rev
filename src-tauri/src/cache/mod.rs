@@ -1,20 +1,23 @@
 use crate::singleton;
+use anyhow::Result;
 use dashmap::DashMap;
 use serde_json::Value;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::OnceCell;
 
-pub struct CacheEntry {
-    pub value: Arc<Value>,
+pub const SHORT_TERM_TTL: Duration = Duration::from_millis(4_250);
+
+pub struct CacheEntry<T> {
+    pub value: Arc<T>,
     pub expires_at: Instant,
 }
 
-pub struct Cache {
-    pub map: DashMap<String, Arc<OnceCell<Box<CacheEntry>>>>,
+pub struct Cache<T> {
+    pub map: DashMap<String, Arc<OnceCell<Box<CacheEntry<T>>>>>,
 }
 
-impl Cache {
+impl<T> Cache<T> {
     fn new() -> Self {
         Cache {
             map: DashMap::new(),
@@ -25,10 +28,11 @@ impl Cache {
         format!("{prefix}:{id}")
     }
 
-    pub async fn get_or_fetch<F, Fut>(&self, key: String, ttl: Duration, fetch_fn: F) -> Arc<Value>
+    pub async fn get_or_fetch<F, Fut>(&self, key: String, ttl: Duration, fetch_fn: F) -> Arc<T>
     where
-        F: Fn() -> Fut + Send + 'static,
-        Fut: std::future::Future<Output = Value> + Send + 'static,
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: std::future::Future<Output = T> + Send + 'static,
+        T: Send + Sync + 'static,
     {
         loop {
             let now = Instant::now();
@@ -79,6 +83,10 @@ impl Cache {
         }
     }
 
+    // pub fn clean_key(&self, key: &str) {
+    //     self.map.remove(key);
+    // }
+
     // TODO
     pub fn clean_default_keys(&self) {
         // logging!(info, Type::Cache, "Cleaning proxies keys");
@@ -96,5 +104,8 @@ impl Cache {
     }
 }
 
-// Use singleton macro
-singleton!(Cache, INSTANCE);
+pub type CacheService = Cache<Result<String>>;
+pub type CacheProxy = Cache<Value>;
+
+singleton!(Cache<Value>, PROXY_INSTANCE);
+singleton!(Cache<Result<String>>, SERVICE_INSTANCE);

@@ -203,9 +203,6 @@ pub struct IVerge {
 
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
-
-    /// 服务状态跟踪
-    pub service_state: Option<crate::core::service::ServiceState>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -407,7 +404,6 @@ impl IVerge {
             auto_light_weight_minutes: Some(10),
             enable_dns_settings: Some(false),
             home_cards: None,
-            service_state: None,
             enable_external_controller: Some(false),
             ..Self::default()
         }
@@ -495,7 +491,6 @@ impl IVerge {
         patch!(auto_light_weight_minutes);
         patch!(enable_dns_settings);
         patch!(home_cards);
-        patch!(service_state);
         patch!(enable_external_controller);
     }
 
@@ -592,7 +587,6 @@ pub struct IVergeResponse {
     pub home_cards: Option<serde_json::Value>,
     pub enable_hover_jump_navigator: Option<bool>,
     pub enable_external_controller: Option<bool>,
-    pub service_state: Option<crate::core::service::ServiceState>,
 }
 
 impl From<IVerge> for IVergeResponse {
@@ -664,7 +658,6 @@ impl From<IVerge> for IVergeResponse {
             home_cards: verge.home_cards,
             enable_hover_jump_navigator: verge.enable_hover_jump_navigator,
             enable_external_controller: verge.enable_external_controller,
-            service_state: verge.service_state,
         }
     }
 }

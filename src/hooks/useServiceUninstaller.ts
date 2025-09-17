@@ -1,6 +1,7 @@
-import { installService, restartCore } from "@/services/cmds";
+import { restartCore, stopCore, uninstallService } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { t } from "i18next";
+import { useSystemState } from "./use-system-state";
 import { useCallback } from "react";
 
 const executeWithErrorHandling = async (
@@ -21,15 +22,20 @@ const executeWithErrorHandling = async (
   }
 };
 
-export const useServiceInstaller = () => {
-  const installServiceAndRestartCore = useCallback(async () => {
+export const useServiceUninstaller = () => {
+  const { mutateRunningMode, mutateServiceOk } = useSystemState();
+
+  const uninstallServiceAndRestartCore = useCallback(async () => {
+    await executeWithErrorHandling(() => stopCore(), "Stopping Core...");
+
     await executeWithErrorHandling(
-      () => installService(),
-      "Installing Service...",
-      "Service Installed Successfully",
+      () => uninstallService(),
+      "Uninstalling Service...",
+      "Service Uninstalled Successfully",
     );
 
     await executeWithErrorHandling(() => restartCore(), "Restarting Core...");
-  }, []);
-  return { installServiceAndRestartCore };
+  }, [mutateRunningMode, mutateServiceOk]);
+
+  return { uninstallServiceAndRestartCore };
 };
