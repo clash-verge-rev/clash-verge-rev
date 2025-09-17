@@ -1,4 +1,5 @@
 use crate::{
+    cache::{CacheService, SHORT_TERM_TTL},
     config::Config,
     core::service_ipc::{IpcCommand, send_ipc_request},
     logging, logging_error,
@@ -350,23 +351,33 @@ pub async fn force_reinstall_service() -> Result<()> {
 
 /// 检查服务版本 - 使用IPC通信
 async fn check_service_version() -> Result<String> {
-    logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
+    let cache = CacheService::global();
+    let key = CacheService::make_key("service", "version");
+    let version_arc = cache
+        .get_or_fetch(key, SHORT_TERM_TTL, || async {
+            logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
+            let payload = serde_json::json!({});
+            let response = send_ipc_request(IpcCommand::GetVersion, payload).await?;
 
-    let payload = serde_json::json!({});
-    let response = send_ipc_request(IpcCommand::GetVersion, payload).await?;
+            let data = response
+                .data
+                .ok_or_else(|| anyhow::anyhow!("服务版本响应中没有数据"))?;
 
-    let data = response
-        .data
-        .ok_or_else(|| anyhow::anyhow!("服务版本响应中没有数据"))?;
+            if let Some(nested_data) = data.get("data")
+                && let Some(version) = nested_data.get("version").and_then(|v| v.as_str())
+            {
+                logging!(info, Type::Service, true, "获取到服务版本: {}", version);
+                return Ok(version.to_string());
+            }
 
-    if let Some(nested_data) = data.get("data")
-        && let Some(version) = nested_data.get("version").and_then(|v| v.as_str())
-    {
-        logging!(info, Type::Service, true, "获取到服务版本: {}", version);
-        return Ok(version.to_string());
+            Ok("unknown".to_string())
+        })
+        .await;
+
+    match version_arc.as_ref() {
+        Ok(v) => Ok(v.clone()),
+        Err(e) => Err(anyhow::Error::msg(e.to_string())),
     }
-
-    Ok("unknown".to_string())
 }
 
 /// 检查服务是否需要重装
@@ -475,7 +486,6 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
 /// 检查服务是否正在运行
 pub async fn is_service_available() -> Result<()> {
-    logging!(info, Type::Service, true, "开始检查服务状态 (IPC)");
     check_service_version().await?;
     Ok(())
 }
