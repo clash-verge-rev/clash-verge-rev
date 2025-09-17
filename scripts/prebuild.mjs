@@ -12,7 +12,7 @@ import { glob } from "glob";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
-const FORCE = process.argv.includes("--force");
+const FORCE = process.argv.includes("--force") || process.argv.includes("-f");
 
 const PLATFORM_MAP = {
   "x86_64-pc-windows-msvc": "win32",
@@ -43,7 +43,8 @@ const ARCH_MAP = {
 
 const arg1 = process.argv.slice(2)[0];
 const arg2 = process.argv.slice(2)[1];
-const target = arg1 === "--force" ? arg2 : arg1;
+let target;
+target = arg1 === "--force" || arg1 === "-f" ? arg2 : arg1;
 const { platform, arch } = target
   ? { platform: PLATFORM_MAP[target], arch: ARCH_MAP[target] }
   : process;

@@ -24,10 +24,10 @@ log = "0.4.28"
 dunce = "1.0.5"
 log4rs = "1.4.0"
 nanoid = "0.4"
-chrono = "0.4.41"
+chrono = "0.4.42"
 sysinfo = { version = "0.37.0", features = ["network", "system"] }
 boa_engine = "0.20.0"
-serde_json = "1.0.143"
+serde_json = "1.0.145"
 serde_yaml_ng = "0.10.0"
 once_cell = "1.21.3"
 port_scanner = "0.1.5"
@@ -40,7 +40,7 @@ tokio = { version = "1.47.1", features = [
   "time",
   "sync",
 ] }
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "1.0.225", features = ["derive"] }
 reqwest = { version = "0.12.23", features = ["json", "cookies"] }
 regex = "1.11.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
@@ -60,7 +60,7 @@ tauri-plugin-clipboard-manager = "2.3.0"
 tauri-plugin-deep-link = "2.4.3"
 tauri-plugin-devtools = "2.0.1"
 tauri-plugin-window-state = "2.4.0"
-zip = "5.0.0"
+zip = "5.1.1"
 reqwest_dav = "0.2.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
@@ -73,7 +73,7 @@ hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
-kode-bridge = "0.2.1-rc2"
+kode-bridge = "0.2.1"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.1"
 console-subscriber = { version = "0.4.1", optional = true }
@@ -139,7 +139,7 @@ rpath = false
 
 [profile.fast-release]
 inherits = "release"
-panic = "abort"
+incremental = true
 codegen-units = 64
 lto = false
 opt-level = 0

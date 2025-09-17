@@ -59,8 +59,9 @@ You have two options for downloading the clash binary:
 
   ```shell
   pnpm run prebuild
-  # Use '--force' to force update to the latest version
-  # pnpm run prebuild --force
+  # Use '--force' or '-f' to update both the Mihomo core version
+  # and the Clash Verge Rev service version to the latest available.
+  pnpm run prebuild --force
   ```
 
 - Manually download it from the [Mihomo release](https://github.com/MetaCubeX/mihomo/releases). After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).

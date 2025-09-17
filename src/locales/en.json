@@ -677,5 +677,6 @@
   "Controller address copied to clipboard": "Controller address copied to clipboard",
   "Secret copied to clipboard": "Secret copied to clipboard",
   "Saving...": "Saving...",
-  "Proxy node already exists in chain": "Proxy node already exists in chain"
+  "Proxy node already exists in chain": "Proxy node already exists in chain",
+  "Detection timeout or failed": "Detection timeout or failed"
 }
