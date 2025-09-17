@@ -1,5 +1,6 @@
 use super::CmdResult;
 use crate::{
+    cache::Cache,
     config::Config,
     core::{CoreManager, handle},
 };
@@ -8,7 +9,6 @@ use crate::{
     feat,
     ipc::{self, IpcManager},
     logging,
-    state::proxy::ProxyRequestCache,
     utils::logging::Type,
     wrap_err,
 };
@@ -317,8 +317,8 @@ pub async fn get_clash_version() -> CmdResult<serde_json::Value> {
 #[tauri::command]
 pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
     let manager = IpcManager::global();
-    let cache = ProxyRequestCache::global();
-    let key = ProxyRequestCache::make_key("clash_config", "default");
+    let cache = Cache::global();
+    let key = Cache::make_key("clash_config", "default");
     let value = cache
         .get_or_fetch(key, CONFIG_REFRESH_INTERVAL, || async {
             manager.get_config().await.unwrap_or_else(|e| {
@@ -333,8 +333,8 @@ pub async fn get_clash_config() -> CmdResult<serde_json::Value> {
 /// 强制刷新Clash配置缓存
 #[tauri::command]
 pub async fn force_refresh_clash_config() -> CmdResult<serde_json::Value> {
-    let cache = ProxyRequestCache::global();
-    let key = ProxyRequestCache::make_key("clash_config", "default");
+    let cache = Cache::global();
+    let key = Cache::make_key("clash_config", "default");
     cache.map.remove(&key);
     get_clash_config().await
 }

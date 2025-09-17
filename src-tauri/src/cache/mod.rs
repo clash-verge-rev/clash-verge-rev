@@ -1,5 +1,3 @@
-// use crate::utils::logging::Type;
-// use crate::{logging, singleton};
 use crate::singleton;
 use dashmap::DashMap;
 use serde_json::Value;
@@ -12,13 +10,13 @@ pub struct CacheEntry {
     pub expires_at: Instant,
 }
 
-pub struct ProxyRequestCache {
+pub struct Cache {
     pub map: DashMap<String, Arc<OnceCell<Box<CacheEntry>>>>,
 }
 
-impl ProxyRequestCache {
+impl Cache {
     fn new() -> Self {
-        ProxyRequestCache {
+        Cache {
             map: DashMap::new(),
         }
     }
@@ -99,4 +97,4 @@ impl ProxyRequestCache {
 }
 
 // Use singleton macro
-singleton!(ProxyRequestCache, INSTANCE);
+singleton!(Cache, INSTANCE);

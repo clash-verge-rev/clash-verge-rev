@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 #![recursion_limit = "512"]
 
+mod cache;
 mod cmd;
 pub mod config;
 mod core;
@@ -9,7 +10,6 @@ mod feat;
 mod ipc;
 mod module;
 mod process;
-mod state;
 mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
