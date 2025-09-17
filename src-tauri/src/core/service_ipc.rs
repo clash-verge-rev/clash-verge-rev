@@ -151,14 +151,14 @@ pub async fn send_ipc_request(
 
     match backoff::future::retry(create_backoff_strategy(), operation).await {
         Ok(response) => {
-            logging!(
-                info,
-                Type::Service,
-                true,
-                "IPC请求成功: 命令={}, 成功={}",
-                command_type,
-                response.success
-            );
+            // logging!(
+            //     info,
+            //     Type::Service,
+            //     true,
+            //     "IPC请求成功: 命令={}, 成功={}",
+            //     command_type,
+            //     response.success
+            // );
             Ok(response)
         }
         Err(e) => {

@@ -3,7 +3,9 @@ use tauri::AppHandle;
 
 use crate::{
     config::Config,
-    core::{CoreManager, Timer, handle, hotkey::Hotkey, sysopt, tray::Tray},
+    core::{
+        CoreManager, Timer, handle, hotkey::Hotkey, service::SERVICE_MANAGER, sysopt, tray::Tray,
+    },
     logging, logging_error,
     module::lightweight::auto_lightweight_mode_init,
     process::AsyncHandler,
@@ -38,6 +40,8 @@ pub fn resolve_setup_async() {
     );
 
     AsyncHandler::spawn(|| async {
+        init_service_manager().await;
+
         futures::join!(
             init_work_config(),
             init_resources(),
@@ -183,6 +187,15 @@ pub(super) async fn init_verge_config() {
         "Initializing verge configuration..."
     );
     logging_error!(Type::Setup, true, Config::init_config().await);
+}
+
+pub(super) async fn init_service_manager() {
+    logging!(info, Type::Setup, true, "Initializing service manager...");
+    logging_error!(
+        Type::Setup,
+        true,
+        SERVICE_MANAGER.lock().await.refresh().await
+    );
 }
 
 pub(super) async fn init_core_manager() {

@@ -366,7 +366,7 @@ async fn check_service_version() -> Result<String> {
             if let Some(nested_data) = data.get("data")
                 && let Some(version) = nested_data.get("version").and_then(|v| v.as_str())
             {
-                logging!(info, Type::Service, true, "获取到服务版本: {}", version);
+                // logging!(info, Type::Service, true, "获取到服务版本: {}", version);
                 return Ok(version.to_string());
             }
 
