@@ -101,7 +101,9 @@ impl Config {
                         Some(("config_validate::boot_error", error_msg))
                     } else {
                         logging!(info, Type::Config, true, "配置验证成功");
-                        Some(("config_validate::success", String::new()))
+                        // 前端没有必要知道验证成功的消息，也没有事件驱动
+                        // Some(("config_validate::success", String::new()))
+                        None
                     }
                 }
                 Err(err) => {
