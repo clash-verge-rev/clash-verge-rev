@@ -17,7 +17,7 @@ interface Props {
 }
 
 export const ProxyItem = (props: Props) => {
-  let { type, proxy, onDelete } = props;
+  const { type, proxy, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
 
   const {

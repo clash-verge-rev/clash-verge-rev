@@ -53,7 +53,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     try {
-      let tun = {
+      const tun = {
         stack: values.stack,
         device:
           values.device === ""
@@ -97,7 +97,7 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
             variant="outlined"
             size="small"
             onClick={async () => {
-              let tun = {
+              const tun = {
                 stack: "gvisor",
                 device: OS === "macos" ? "utun1024" : "Mihomo",
                 "auto-route": true,

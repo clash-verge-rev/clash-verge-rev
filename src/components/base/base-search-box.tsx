@@ -81,8 +81,8 @@ export const BaseSearchBox = (props: SearchProps) => {
         return (content: string) => {
           if (!searchText) return true;
 
-          let item = !matchCase ? content.toLowerCase() : content;
-          let searchItem = !matchCase ? searchText.toLowerCase() : searchText;
+          const item = !matchCase ? content.toLowerCase() : content;
+          const searchItem = !matchCase ? searchText.toLowerCase() : searchText;
 
           if (useRegularExpression) {
             return new RegExp(searchItem).test(item);

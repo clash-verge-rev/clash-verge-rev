@@ -88,6 +88,7 @@
     "cross-env": "^10.0.0",
     "eslint": "^9.35.0",
     "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "glob": "^11.0.3",
     "globals": "^16.4.0",
     "https-proxy-agent": "^7.0.6",

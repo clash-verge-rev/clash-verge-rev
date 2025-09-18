@@ -19,7 +19,7 @@ interface Props {
 }
 
 export const GroupItem = (props: Props) => {
-  let { type, group, onDelete } = props;
+  const { type, group, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
 
   const {

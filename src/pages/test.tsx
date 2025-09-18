@@ -101,12 +101,12 @@ const TestPage = () => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        let old_index = testList.findIndex((x) => x.uid === active.id);
-        let new_index = testList.findIndex((x) => x.uid === over.id);
+        const old_index = testList.findIndex((x) => x.uid === active.id);
+        const new_index = testList.findIndex((x) => x.uid === over.id);
         if (old_index < 0 || new_index < 0) {
           return;
         }
-        let newList = reorder(testList, old_index, new_index);
+        const newList = reorder(testList, old_index, new_index);
         await mutateVerge({ ...verge, test_list: newList }, false);
         await patchVerge({ test_list: newList });
       }

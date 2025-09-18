@@ -379,7 +379,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
   const formatHosts = (hosts: any): string => {
     if (!hosts || typeof hosts !== "object") return "";
 
-    let result: string[] = [];
+    const result: string[] = [];
 
     Object.entries(hosts).forEach(([domain, value]) => {
       if (Array.isArray(value)) {

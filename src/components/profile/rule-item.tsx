@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const RuleItem = (props: Props) => {
-  let { type, ruleRaw, onDelete } = props;
+  const { type, ruleRaw, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
   const rule = ruleRaw.replace(",no-resolve", "");
 

@@ -172,7 +172,7 @@ function URI_SS(line: string): IProxyShadowsocksConfig {
     if (query) {
       if (/(&|\?)v2ray-plugin=/.test(query)) {
         const parsed = query.match(/(&|\?)v2ray-plugin=(.*?)(&|$)/);
-        let v2rayPlugin = parsed![2];
+        const v2rayPlugin = parsed![2];
         if (v2rayPlugin) {
           proxy.plugin = "v2ray-plugin";
           proxy["plugin-opts"] = JSON.parse(
@@ -251,7 +251,7 @@ function URI_SSR(line: string): IProxyshadowsocksRConfig {
     serverAndPort.substring(serverAndPort.lastIndexOf(":") + 1),
   );
 
-  let params = line
+  const params = line
     .substring(splitIdx + 1)
     .split("/?")[0]
     .split(":");
@@ -354,7 +354,7 @@ function URI_VMESS(line: string): IProxyVmessConfig {
       );
       const match = /(^[^?]+?)\/?\?(.*)$/.exec(line);
       if (match) {
-        let [_, base64Line, qs] = match;
+        const [_, base64Line, qs] = match;
         content = decodeBase64OrOriginal(base64Line);
 
         for (const addon of qs.split("&")) {
@@ -370,7 +370,7 @@ function URI_VMESS(line: string): IProxyVmessConfig {
         const contentMatch = /(^[^:]+?):([^:]+?)@(.*):(\d+)$/.exec(content);
 
         if (contentMatch) {
-          let [__, cipher, uuid, server, port] = contentMatch;
+          const [__, cipher, uuid, server, port] = contentMatch;
 
           params.scy = cipher;
           params.id = uuid;
@@ -501,7 +501,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
   let isShadowrocket;
   let parsed = /^(.*?)@(.*?):(\d+)\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!;
   if (!parsed) {
-    let [_, base64, other] = /^(.*?)(\?.*?$)/.exec(line)!;
+    const [_, base64, other] = /^(.*?)(\?.*?$)/.exec(line)!;
     line = `${atob(base64)}${other}`;
     parsed = /^(.*?)@(.*?):(\d+)\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!;
     isShadowrocket = true;
@@ -636,7 +636,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
     if (proxy.network === "ws") {
       proxy.servername = proxy["ws-opts"]?.headers?.Host;
     } else if (proxy.network === "http") {
-      let httpHost = proxy["http-opts"]?.headers?.Host;
+      const httpHost = proxy["http-opts"]?.headers?.Host;
       proxy.servername = Array.isArray(httpHost) ? httpHost[0] : httpHost;
     }
   }
@@ -655,7 +655,7 @@ function URI_Trojan(line: string): IProxyTrojanConfig {
 
   password = decodeURIComponent(password);
 
-  let decodedName = trimStr(decodeURIComponent(name));
+  const decodedName = trimStr(decodeURIComponent(name));
 
   name = decodedName ?? `Trojan ${server}:${portNum}`;
   const proxy: IProxyTrojanConfig = {
@@ -701,7 +701,7 @@ function URI_Trojan(line: string): IProxyTrojanConfig {
         proxy["fingerprint"] = value;
         break;
       case "encryption":
-        let encryption = value.split(";");
+        const encryption = value.split(";");
         if (encryption.length === 3) {
           proxy["ss-opts"] = {
             enabled: true,
@@ -741,7 +741,7 @@ function URI_Hysteria2(line: string): IProxyHysteria2Config {
   }
   password = decodeURIComponent(password);
 
-  let decodedName = trimStr(decodeURIComponent(name));
+  const decodedName = trimStr(decodeURIComponent(name));
 
   name = decodedName ?? `Hysteria2 ${server}:${port}`;
 
@@ -786,7 +786,7 @@ function URI_Hysteria(line: string): IProxyHysteriaConfig {
   if (isNaN(portNum)) {
     portNum = 443;
   }
-  let decodedName = trimStr(decodeURIComponent(name));
+  const decodedName = trimStr(decodeURIComponent(name));
 
   name = decodedName ?? `Hysteria ${server}:${port}`;
 
@@ -884,7 +884,7 @@ function URI_TUIC(line: string): IProxyTuicConfig {
     portNum = 443;
   }
   password = decodeURIComponent(password);
-  let decodedName = trimStr(decodeURIComponent(name));
+  const decodedName = trimStr(decodeURIComponent(name));
 
   name = decodedName ?? `TUIC ${server}:${port}`;
 
@@ -963,7 +963,7 @@ function URI_Wireguard(line: string): IProxyWireguardConfig {
     portNum = 443;
   }
   privateKey = decodeURIComponent(privateKey);
-  let decodedName = trimStr(decodeURIComponent(name));
+  const decodedName = trimStr(decodeURIComponent(name));
 
   name = decodedName ?? `WireGuard ${server}:${port}`;
   const proxy: IProxyWireguardConfig = {
@@ -1047,7 +1047,7 @@ function URI_HTTP(line: string): IProxyHttpConfig {
   if (auth) {
     auth = decodeURIComponent(auth);
   }
-  let decodedName = trimStr(decodeURIComponent(name));
+  const decodedName = trimStr(decodeURIComponent(name));
 
   name = decodedName ?? `HTTP ${server}:${portNum}`;
   const proxy: IProxyHttpConfig = {
@@ -1111,7 +1111,7 @@ function URI_SOCKS(line: string): IProxySocks5Config {
   if (auth) {
     auth = decodeURIComponent(auth);
   }
-  let decodedName = trimStr(decodeURIComponent(name));
+  const decodedName = trimStr(decodeURIComponent(name));
   name = decodedName ?? `SOCKS5 ${server}:${portNum}`;
   const proxy: IProxySocks5Config = {
     type: "socks5",

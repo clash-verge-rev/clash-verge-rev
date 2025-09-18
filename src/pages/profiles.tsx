@@ -166,7 +166,7 @@ const ProfilePage = () => {
         async (event: any) => {
           const paths = event.payload.paths;
 
-          for (let file of paths) {
+          for (const file of paths) {
             if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
               showNotice("error", t("Only YAML Files Supported"));
               continue;
@@ -181,7 +181,7 @@ const ProfilePage = () => {
                 self_proxy: false,
               },
             } as IProfileItem;
-            let data = await readTextFile(file);
+            const data = await readTextFile(file);
             await createProfile(item, data);
             await mutateProfiles();
           }
