@@ -1,7 +1,6 @@
 use crate::{
     core::handle,
     logging,
-    module::lightweight,
     utils::{logging::Type, resolve::window::build_new_window},
 };
 use std::future::Future;

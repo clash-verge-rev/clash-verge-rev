@@ -87,7 +87,6 @@ async fn set_lightweight_mode(value: bool) {
 }
 
 pub async fn run_once_auto_lightweight() {
-    println!("fuck tunglies");
     let verge_config = Config::verge().await;
     let enable_auto = verge_config
         .data_mut()
@@ -97,7 +96,6 @@ pub async fn run_once_auto_lightweight() {
         .latest_ref()
         .enable_silent_start
         .unwrap_or(false);
-    println!("enable_auto: {enable_auto}, is_silent_start: {is_silent_start}");
 
     if !(enable_auto && is_silent_start) {
         logging!(
