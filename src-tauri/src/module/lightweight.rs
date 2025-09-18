@@ -107,13 +107,6 @@ pub async fn run_once_auto_lightweight() {
         return;
     }
 
-    logging!(
-        info,
-        Type::Lightweight,
-        true,
-        "在静默启动的情况下，创建窗口再添加自动进入轻量模式窗口监听器"
-    );
-
     set_lightweight_mode(true).await;
     enable_auto_light_weight_mode().await;
 }

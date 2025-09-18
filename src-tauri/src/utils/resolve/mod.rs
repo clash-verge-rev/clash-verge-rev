@@ -7,9 +7,9 @@ use crate::{
         CoreManager, Timer, handle, hotkey::Hotkey, service::SERVICE_MANAGER, sysopt, tray::Tray,
     },
     logging, logging_error,
-    module::lightweight::auto_lightweight_mode_init,
+    module::lightweight::{auto_lightweight_mode_init, run_once_auto_lightweight},
     process::AsyncHandler,
-    utils::{init, logging::Type, resolve::window::create_window, server},
+    utils::{init, logging::Type, server, window_manager::WindowManager},
 };
 
 pub mod dns;
@@ -50,6 +50,7 @@ pub fn resolve_setup_async() {
         );
 
         init_timer().await;
+        init_once_auto_lightweight().await;
         init_auto_lightweight_mode().await;
 
         init_verge_config().await;
@@ -154,6 +155,16 @@ pub(super) async fn init_hotkey() {
     logging_error!(Type::Setup, true, Hotkey::global().init().await);
 }
 
+pub(super) async fn init_once_auto_lightweight() {
+    logging!(
+        info,
+        Type::Lightweight,
+        true,
+        "Running auto lightweight mode check..."
+    );
+    run_once_auto_lightweight().await;
+}
+
 pub(super) async fn init_auto_lightweight_mode() {
     logging!(
         info,
@@ -242,5 +253,5 @@ pub(super) async fn init_window() {
             Handle::global().set_activation_policy_accessory();
         }
     }
-    create_window(!is_silent_start).await;
+    WindowManager::create_window(!is_silent_start).await;
 }

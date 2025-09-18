@@ -51,26 +51,6 @@ fn get_ui_ready_notify() -> &'static Arc<Notify> {
     UI_READY_NOTIFY.get_or_init(|| Arc::new(Notify::new()))
 }
 
-/// 等待 UI 就绪的异步函数，使用事件驱动而非轮询
-pub async fn wait_for_ui_ready(timeout_seconds: u64) -> bool {
-    // 首先检查是否已经就绪
-    if get_ui_ready().load(Ordering::Acquire) {
-        return true;
-    }
-
-    // 使用 tokio::select! 同时等待通知和超时
-    tokio::select! {
-        _ = get_ui_ready_notify().notified() => {
-            // 收到通知后再次确认状态（防止虚假通知）
-            get_ui_ready().load(Ordering::Acquire)
-        }
-        _ = tokio::time::sleep(std::time::Duration::from_secs(timeout_seconds)) => {
-            // 超时，返回当前状态
-            get_ui_ready().load(Ordering::Acquire)
-        }
-    }
-}
-
 // 更新UI准备阶段
 pub fn update_ui_ready_stage(stage: UiReadyStage) {
     let state = get_ui_ready_state();
@@ -90,17 +70,4 @@ pub fn mark_ui_ready() {
 
     // 通知所有等待的任务
     get_ui_ready_notify().notify_waiters();
-}
-
-// 重置UI就绪状态
-pub fn reset_ui_ready() {
-    get_ui_ready().store(false, Ordering::Release);
-    {
-        let state = get_ui_ready_state();
-        let mut stage = state.stage.write();
-        *stage = UiReadyStage::NotStarted;
-    }
-    logging!(info, Type::Window, true, "UI就绪状态已重置");
-
-    // 注意：这里不需要通知，因为重置后状态变为 false
 }

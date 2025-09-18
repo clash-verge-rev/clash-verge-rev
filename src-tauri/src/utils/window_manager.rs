@@ -1,4 +1,10 @@
-use crate::{core::handle, logging, utils::logging::Type};
+use crate::{
+    core::handle,
+    logging,
+    utils::{logging::Type, resolve::window::build_new_window},
+};
+use std::future::Future;
+use std::pin::Pin;
 use tauri::{Manager, WebviewWindow, Wry};
 
 use once_cell::sync::OnceCell;
@@ -140,7 +146,7 @@ impl WindowManager {
         match current_state {
             WindowState::NotExist => {
                 logging!(info, Type::Window, true, "窗口不存在，创建新窗口");
-                if Self::create_new_window().await {
+                if Self::create_window(true).await {
                     logging!(info, Type::Window, true, "窗口创建成功");
                     std::thread::sleep(std::time::Duration::from_millis(100));
                     WindowOperationResult::Created
@@ -200,7 +206,7 @@ impl WindowManager {
                 // 窗口不存在，创建新窗口
                 logging!(info, Type::Window, true, "窗口不存在，将创建新窗口");
                 // 由于已经有防抖保护，直接调用内部方法
-                if Self::create_new_window().await {
+                if Self::create_window(true).await {
                     WindowOperationResult::Created
                 } else {
                     WindowOperationResult::Failed
@@ -340,10 +346,38 @@ impl WindowManager {
     }
 
     /// 创建新窗口,防抖避免重复调用
-    async fn create_new_window() -> bool {
-        use crate::utils::resolve;
+    pub fn create_window(is_show: bool) -> Pin<Box<dyn Future<Output = bool> + Send>> {
+        Box::pin(async move {
+            logging!(
+                info,
+                Type::Window,
+                true,
+                "开始创建/显示主窗口, is_show={}",
+                is_show
+            );
 
-        resolve::window::create_window(true).await
+            if !is_show {
+                return false;
+            }
+
+            match build_new_window() {
+                Ok(_) => {
+                    logging!(info, Type::Window, true, "新窗口创建成功");
+                }
+                Err(e) => {
+                    logging!(error, Type::Window, true, "新窗口创建失败: {}", e);
+                    return false;
+                }
+            }
+
+            if WindowOperationResult::Failed != Self::show_main_window().await {
+                return false;
+            }
+
+            handle::Handle::global().mark_startup_completed();
+
+            true
+        })
     }
 
     /// 摧毁窗口
