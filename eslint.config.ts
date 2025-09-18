@@ -12,13 +12,13 @@ export default defineConfig([
       js,
       "react-hooks": pluginReactHooks,
     },
-    extends: ["js/recommended"],
+    extends: ["js/recommended", tseslint.configs.recommended],
     languageOptions: { globals: globals.browser },
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
-  tseslint.configs.recommended,
   pluginReact.configs.flat["jsx-runtime"],
 ]);
