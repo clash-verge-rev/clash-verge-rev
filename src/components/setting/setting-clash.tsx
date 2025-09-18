@@ -5,6 +5,15 @@ import { useLockFn } from "ahooks";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { DialogRef, Switch } from "@/components/base";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { useClash } from "@/hooks/use-clash";
+import { useVerge } from "@/hooks/use-verge";
+import { invoke_uwp_tool } from "@/services/cmds";
+import { updateGeoData } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
+import getSystem from "@/utils/get-system";
+
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
 import { ClashPortViewer } from "./mods/clash-port-viewer";
 import { ControllerViewer } from "./mods/controller-viewer";
@@ -14,15 +23,6 @@ import { GuardState } from "./mods/guard-state";
 import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { WebUIViewer } from "./mods/web-ui-viewer";
-
-import { DialogRef, Switch } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { useClash } from "@/hooks/use-clash";
-import { useVerge } from "@/hooks/use-verge";
-import { invoke_uwp_tool } from "@/services/cmds";
-import { updateGeoData } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
-import getSystem from "@/utils/get-system";
 
 const isWIN = getSystem() === "windows";
 

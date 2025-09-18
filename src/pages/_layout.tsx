@@ -9,8 +9,6 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes, useNavigate } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
 
-import { routers } from "./_routers";
-
 import iconDark from "@/assets/image/icon_dark.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import LogoSvg from "@/assets/image/logo.svg?react";
@@ -24,6 +22,8 @@ import { getAxios } from "@/services/api";
 import { forceRefreshClashConfig } from "@/services/cmds";
 import { useThemeMode, useEnableLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
+
+import { routers } from "./_routers";
 
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";

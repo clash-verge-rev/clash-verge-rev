@@ -4,17 +4,17 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 
+import { useProxySelection } from "@/hooks/use-proxy-selection";
+import { useVerge } from "@/hooks/use-verge";
+import { providerHealthCheck, getGroupProxyDelays } from "@/services/cmds";
+import delayManager from "@/services/delay";
+
 import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";
 import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
-
-import { useProxySelection } from "@/hooks/use-proxy-selection";
-import { useVerge } from "@/hooks/use-verge";
-import { providerHealthCheck, getGroupProxyDelays } from "@/services/cmds";
-import delayManager from "@/services/delay";
 
 interface Props {
   mode: string;

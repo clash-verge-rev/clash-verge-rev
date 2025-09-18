@@ -4,17 +4,17 @@ import React, { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 
-import { GuardState } from "./mods/guard-state";
-import { SettingList, SettingItem } from "./mods/setting-comp";
-import { SysproxyViewer } from "./mods/sysproxy-viewer";
-import { TunViewer } from "./mods/tun-viewer";
-
 import { DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/noticeService";
+
+import { GuardState } from "./mods/guard-state";
+import { SettingList, SettingItem } from "./mods/setting-comp";
+import { SysproxyViewer } from "./mods/sysproxy-viewer";
+import { TunViewer } from "./mods/tun-viewer";
 
 interface Props {
   onError?: (err: Error) => void;

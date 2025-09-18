@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useVerge } from "./use-verge";
-
 import { changeLanguage, supportedLanguages } from "@/services/i18n";
+
+import { useVerge } from "./use-verge";
 
 export const useI18n = () => {
   const { i18n, t } = useTranslation();

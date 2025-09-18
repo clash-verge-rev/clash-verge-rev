@@ -15,14 +15,14 @@ import { exists } from "@tauri-apps/plugin-fs";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { GuardState } from "./guard-state";
-
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useVerge } from "@/hooks/use-verge";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
+
+import { GuardState } from "./guard-state";
 
 const OS = getSystem();
 

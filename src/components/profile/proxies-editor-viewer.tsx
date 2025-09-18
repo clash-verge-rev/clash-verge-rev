@@ -34,14 +34,14 @@ import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 import { Virtuoso } from "react-virtuoso";
 
-import { BaseSearchBox } from "../base/base-search-box";
-
 import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import parseUri from "@/utils/uri-parser";
+
+import { BaseSearchBox } from "../base/base-search-box";
 
 interface Props {
   profileUid: string;

@@ -1,19 +1,8 @@
 import { ContentCopyRounded } from "@mui/icons-material";
 import { Typography } from "@mui/material";
-import { version } from "@root/package.json";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-
-import { BackupViewer } from "./mods/backup-viewer";
-import { ConfigViewer } from "./mods/config-viewer";
-import { HotkeyViewer } from "./mods/hotkey-viewer";
-import { LayoutViewer } from "./mods/layout-viewer";
-import { LiteModeViewer } from "./mods/lite-mode-viewer";
-import { MiscViewer } from "./mods/misc-viewer";
-import { SettingList, SettingItem } from "./mods/setting-comp";
-import { ThemeViewer } from "./mods/theme-viewer";
-import { UpdateViewer } from "./mods/update-viewer";
 
 import { DialogRef } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
@@ -26,6 +15,17 @@ import {
   exportDiagnosticInfo,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { version } from "@root/package.json";
+
+import { BackupViewer } from "./mods/backup-viewer";
+import { ConfigViewer } from "./mods/config-viewer";
+import { HotkeyViewer } from "./mods/hotkey-viewer";
+import { LayoutViewer } from "./mods/layout-viewer";
+import { LiteModeViewer } from "./mods/lite-mode-viewer";
+import { MiscViewer } from "./mods/misc-viewer";
+import { SettingList, SettingItem } from "./mods/setting-comp";
+import { ThemeViewer } from "./mods/theme-viewer";
+import { UpdateViewer } from "./mods/update-viewer";
 
 interface Props {
   onError?: (err: Error) => void;

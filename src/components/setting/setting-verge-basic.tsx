@@ -4,6 +4,15 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
+import { DialogRef } from "@/components/base";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { useVerge } from "@/hooks/use-verge";
+import { routers } from "@/pages/_routers";
+import { copyClashEnv } from "@/services/cmds";
+import { supportedLanguages } from "@/services/i18n";
+import { showNotice } from "@/services/noticeService";
+import getSystem from "@/utils/get-system";
+
 import { BackupViewer } from "./mods/backup-viewer";
 import { ConfigViewer } from "./mods/config-viewer";
 import { GuardState } from "./mods/guard-state";
@@ -14,15 +23,6 @@ import { SettingList, SettingItem } from "./mods/setting-comp";
 import { ThemeModeSwitch } from "./mods/theme-mode-switch";
 import { ThemeViewer } from "./mods/theme-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
-
-import { DialogRef } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { useVerge } from "@/hooks/use-verge";
-import { routers } from "@/pages/_routers";
-import { copyClashEnv } from "@/services/cmds";
-import { supportedLanguages } from "@/services/i18n";
-import { showNotice } from "@/services/noticeService";
-import getSystem from "@/utils/get-system";
 
 interface Props {
   onError?: (err: Error) => void;

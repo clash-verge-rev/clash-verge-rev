@@ -1,6 +1,11 @@
 import { useEffect, useMemo } from "react";
 import useSWR from "swr";
 
+import { useVerge } from "@/hooks/use-verge";
+import { useAppData } from "@/providers/app-data-provider";
+import { getRuntimeConfig } from "@/services/cmds";
+import delayManager from "@/services/delay";
+
 import { filterSort } from "./use-filter-sort";
 import {
   useHeadStateNew,
@@ -8,11 +13,6 @@ import {
   type HeadState,
 } from "./use-head-state";
 import { useWindowWidth } from "./use-window-width";
-
-import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-provider";
-import { getRuntimeConfig } from "@/services/cmds";
-import delayManager from "@/services/delay";
 
 // 定义代理项接口
 interface IProxyItem {

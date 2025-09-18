@@ -12,12 +12,12 @@ import { useLockFn } from "ahooks";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { LogViewer } from "./log-viewer";
-import { ProfileBox } from "./profile-box";
-
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+
+import { LogViewer } from "./log-viewer";
+import { ProfileBox } from "./profile-box";
 
 interface Props {
   logInfo?: [string, string][];

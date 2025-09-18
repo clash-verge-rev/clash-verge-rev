@@ -8,13 +8,13 @@ import { useLockFn } from "ahooks";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { TestBox } from "./test-box";
-
 import { BaseLoading } from "@/components/base";
 import { useListen } from "@/hooks/use-listen";
 import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import delayManager from "@/services/delay";
 import { showNotice } from "@/services/noticeService";
+
+import { TestBox } from "./test-box";
 
 interface Props {
   id: string;

@@ -3,10 +3,10 @@ import { check } from "@tauri-apps/plugin-updater";
 import { useRef } from "react";
 import useSWR from "swr";
 
+import { useVerge } from "@/hooks/use-verge";
+
 import { DialogRef } from "../base";
 import { UpdateViewer } from "../setting/mods/update-viewer";
-
-import { useVerge } from "@/hooks/use-verge";
 
 interface Props {
   className?: string;

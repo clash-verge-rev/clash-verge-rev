@@ -7,15 +7,6 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
 
-import ConnectionsPage from "./connections";
-import HomePage from "./home";
-import LogsPage from "./logs";
-import ProfilesPage from "./profiles";
-import ProxiesPage from "./proxies";
-import RulesPage from "./rules";
-import SettingsPage from "./settings";
-import UnlockPage from "./unlock";
-
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
 import HomeSvg from "@/assets/image/itemicon/home.svg?react";
 import LogsSvg from "@/assets/image/itemicon/logs.svg?react";
@@ -25,6 +16,15 @@ import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 import UnlockSvg from "@/assets/image/itemicon/unlock.svg?react";
 import { BaseErrorBoundary } from "@/components/base";
+
+import ConnectionsPage from "./connections";
+import HomePage from "./home";
+import LogsPage from "./logs";
+import ProfilesPage from "./profiles";
+import ProxiesPage from "./proxies";
+import RulesPage from "./rules";
+import SettingsPage from "./settings";
+import UnlockPage from "./unlock";
 
 export const routers = [
   {

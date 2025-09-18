@@ -11,13 +11,13 @@ import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { StackModeSwitch } from "./stack-mode-switch";
-
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { enhanceProfiles } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
+
+import { StackModeSwitch } from "./stack-mode-switch";
 
 const OS = getSystem();
 

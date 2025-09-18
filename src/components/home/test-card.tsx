@@ -14,8 +14,6 @@ import { nanoid } from "nanoid";
 import { useEffect, useRef, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-import { EnhancedCard } from "./enhanced-card";
-
 // test icons
 import apple from "@/assets/image/test/apple.svg?raw";
 import github from "@/assets/image/test/github.svg?raw";
@@ -24,6 +22,8 @@ import youtube from "@/assets/image/test/youtube.svg?raw";
 import { TestItem } from "@/components/test/test-item";
 import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
 import { useVerge } from "@/hooks/use-verge";
+
+import { EnhancedCard } from "./enhanced-card";
 
 // 自定义滚动条样式
 const ScrollBox = styled(Box)(({ theme }) => ({

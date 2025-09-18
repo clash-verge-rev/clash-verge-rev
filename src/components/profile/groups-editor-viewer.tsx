@@ -42,8 +42,6 @@ import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 import { Virtuoso } from "react-virtuoso";
 
-import { BaseSearchBox } from "../base/base-search-box";
-
 import { Switch } from "@/components/base";
 import { GroupItem } from "@/components/profile/group-item";
 import {
@@ -54,6 +52,8 @@ import {
 import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
+
+import { BaseSearchBox } from "../base/base-search-box";
 
 interface Props {
   proxiesUid: string;

@@ -18,9 +18,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 
-import { ProfileBox } from "./profile-box";
-import { ProxiesEditorViewer } from "./proxies-editor-viewer";
-
 import { ConfirmViewer } from "@/components/profile/confirm-viewer";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { GroupsEditorViewer } from "@/components/profile/groups-editor-viewer";
@@ -35,6 +32,9 @@ import {
 import { showNotice } from "@/services/noticeService";
 import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
+
+import { ProfileBox } from "./profile-box";
+import { ProxiesEditorViewer } from "./proxies-editor-viewer";
 const round = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

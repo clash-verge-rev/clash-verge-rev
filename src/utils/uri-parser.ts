@@ -506,9 +506,11 @@ function URI_VLESS(line: string): IProxyVlessConfig {
     parsed = /^(.*?)@(.*?):(\d+)\/?(\?(.*?))?(?:#(.*?))?$/.exec(line)!;
     isShadowrocket = true;
   }
-  let [__, uuid, server, portStr, ___, addons = "", name] = parsed;
+  const [, uuidRaw, server, portStr, , addons = "", nameRaw] = parsed;
+  let uuid = uuidRaw;
+  let name = nameRaw;
   if (isShadowrocket) {
-    uuid = uuid.replace(/^.*?:/g, "");
+    uuid = uuidRaw.replace(/^.*?:/g, "");
   }
 
   const port = parseInt(portStr, 10);
@@ -598,6 +600,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
         proxy.network = "grpc";
         break;
       default: {
+        break;
       }
     }
   }

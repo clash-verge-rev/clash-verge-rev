@@ -14,7 +14,6 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { version as appVersion } from "@root/package.json";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -22,13 +21,14 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import useSWR from "swr";
 
-import { EnhancedCard } from "./enhanced-card";
-
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 import { getSystemInfo } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { version as appVersion } from "@root/package.json";
+
+import { EnhancedCard } from "./enhanced-card";
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation();

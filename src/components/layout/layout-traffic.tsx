@@ -8,8 +8,6 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
-import { TrafficGraph, type TrafficRef } from "./traffic-graph";
-
 import { LightweightTrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
@@ -17,6 +15,8 @@ import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
 import { isDebugEnabled, gc, startTrafficService } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
+
+import { TrafficGraph, type TrafficRef } from "./traffic-graph";
 
 // setup the traffic
 export const LayoutTraffic = () => {

@@ -1,13 +1,12 @@
 import {
+  PauseCircleOutlineRounded,
+  PlayCircleOutlineRounded,
   TableChartRounded,
   TableRowsRounded,
-  PlayCircleOutlineRounded,
-  PauseCircleOutlineRounded,
 } from "@mui/icons-material";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import { useLockFn } from "ahooks";
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 
@@ -37,8 +36,6 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ConnectionsPage = () => {
   const { t } = useTranslation();
   const pageVisible = useVisibility();
-  const theme = useTheme();
-  const _isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
 

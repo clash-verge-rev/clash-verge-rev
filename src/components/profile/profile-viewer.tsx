@@ -8,7 +8,6 @@ import {
   styled,
   TextField,
 } from "@mui/material";
-import { version } from "@root/package.json";
 import { useLockFn } from "ahooks";
 import {
   forwardRef,
@@ -20,12 +19,13 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { FileInput } from "./file-input";
-
 import { BaseDialog, Switch } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
 import { createProfile, patchProfile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { version } from "@root/package.json";
+
+import { FileInput } from "./file-input";
 
 interface Props {
   onChange: (isActivating?: boolean) => void;
