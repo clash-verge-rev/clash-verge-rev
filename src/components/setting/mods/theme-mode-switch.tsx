@@ -1,5 +1,5 @@
-import { useTranslation } from "react-i18next";
 import { Button, ButtonGroup } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 type ThemeValue = IVergeConfig["theme_mode"];
 

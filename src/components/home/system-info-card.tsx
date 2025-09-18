@@ -1,12 +1,3 @@
-import { useTranslation } from "react-i18next";
-import {
-  Typography,
-  Stack,
-  Divider,
-  Chip,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
 import {
   InfoOutlined,
   SettingsOutlined,
@@ -15,18 +6,29 @@ import {
   DnsOutlined,
   ExtensionOutlined,
 } from "@mui/icons-material";
-import { useVerge } from "@/hooks/use-verge";
-import { EnhancedCard } from "./enhanced-card";
-import useSWR from "swr";
-import { getSystemInfo } from "@/services/cmds";
-import { useNavigate } from "react-router-dom";
+import {
+  Typography,
+  Stack,
+  Divider,
+  Chip,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import { version as appVersion } from "@root/package.json";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
-import { showNotice } from "@/services/noticeService";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import useSWR from "swr";
+
+import { EnhancedCard } from "./enhanced-card";
+
 import { useSystemState } from "@/hooks/use-system-state";
+import { useVerge } from "@/hooks/use-verge";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
+import { getSystemInfo } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation();

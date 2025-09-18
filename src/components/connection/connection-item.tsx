@@ -1,5 +1,4 @@
-import dayjs from "dayjs";
-import { useLockFn } from "ahooks";
+import { CloseRounded } from "@mui/icons-material";
 import {
   styled,
   ListItem,
@@ -8,7 +7,9 @@ import {
   Box,
   alpha,
 } from "@mui/material";
-import { CloseRounded } from "@mui/icons-material";
+import { useLockFn } from "ahooks";
+import dayjs from "dayjs";
+
 import { deleteConnection } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
 

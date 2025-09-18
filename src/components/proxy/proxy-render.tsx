@@ -1,4 +1,9 @@
 import {
+  ExpandLessRounded,
+  ExpandMoreRounded,
+  InboxRounded,
+} from "@mui/icons-material";
+import {
   alpha,
   Box,
   ListItemText,
@@ -8,22 +13,19 @@ import {
   Chip,
   Tooltip,
 } from "@mui/material";
-import {
-  ExpandLessRounded,
-  ExpandMoreRounded,
-  InboxRounded,
-} from "@mui/icons-material";
-import { HeadState } from "./use-head-state";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { ProxyHead } from "./proxy-head";
 import { ProxyItem } from "./proxy-item";
 import { ProxyItemMini } from "./proxy-item-mini";
+import { HeadState } from "./use-head-state";
 import type { IRenderItem } from "./use-render-list";
+
 import { useVerge } from "@/hooks/use-verge";
-import { useThemeMode } from "@/services/states";
-import { useEffect, useMemo, useState } from "react";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { downloadIconCache } from "@/services/cmds";
-import { useTranslation } from "react-i18next";
+import { useThemeMode } from "@/services/states";
 
 interface RenderProps {
   item: IRenderItem;

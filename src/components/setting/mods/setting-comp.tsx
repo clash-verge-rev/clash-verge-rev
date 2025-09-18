@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import { ChevronRightRounded } from "@mui/icons-material";
 import {
   Box,
   List,
@@ -7,8 +7,9 @@ import {
   ListItemText,
   ListSubheader,
 } from "@mui/material";
-import { ChevronRightRounded } from "@mui/icons-material";
 import CircularProgress from "@mui/material/CircularProgress";
+import React, { ReactNode, useState } from "react";
+
 import isAsyncFunction from "@/utils/is-async-function";
 
 interface ItemProps {

@@ -1,4 +1,5 @@
-import { SVGProps, memo } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import RestoreIcon from "@mui/icons-material/Restore";
 import {
   Box,
   Paper,
@@ -14,15 +15,15 @@ import {
 } from "@mui/material";
 import { Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
 import { Dayjs } from "dayjs";
+import { SVGProps, memo } from "react";
+import { useTranslation } from "react-i18next";
+
 import {
   deleteWebdavBackup,
   restoreWebDavBackup,
   restartApp,
 } from "@/services/cmds";
-import DeleteIcon from "@mui/icons-material/Delete";
-import RestoreIcon from "@mui/icons-material/Restore";
 import { showNotice } from "@/services/noticeService";
 
 export type BackupFile = IWebDavFile & {

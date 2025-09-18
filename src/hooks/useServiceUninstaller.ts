@@ -1,8 +1,10 @@
+import { t } from "i18next";
+import { useCallback } from "react";
+
+import { useSystemState } from "./use-system-state";
+
 import { restartCore, stopCore, uninstallService } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
-import { t } from "i18next";
-import { useSystemState } from "./use-system-state";
-import { useCallback } from "react";
 
 const executeWithErrorHandling = async (
   operation: () => Promise<void>,

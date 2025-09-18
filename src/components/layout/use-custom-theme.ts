@@ -1,6 +1,3 @@
-import { useVerge } from "@/hooks/use-verge";
-import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
-import { useSetThemeMode, useThemeMode } from "@/services/states";
 import { alpha, createTheme, Theme as MuiTheme, Shadows } from "@mui/material";
 import {
   arSD as arXDataGrid,
@@ -16,6 +13,10 @@ import {
 import { Theme as TauriOsTheme } from "@tauri-apps/api/window";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+
+import { useVerge } from "@/hooks/use-verge";
+import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
+import { useSetThemeMode, useThemeMode } from "@/services/states";
 
 const languagePackMap: Record<string, any> = {
   zh: { ...zhXDataGrid },

@@ -1,4 +1,15 @@
-import { useTranslation } from "react-i18next";
+import {
+  SignalWifi4Bar as SignalStrong,
+  SignalWifi3Bar as SignalGood,
+  SignalWifi2Bar as SignalMedium,
+  SignalWifi1Bar as SignalWeak,
+  SignalWifi0Bar as SignalNone,
+  WifiOff as SignalError,
+  ChevronRight,
+  SortRounded,
+  AccessTimeRounded,
+  SortByAlphaRounded,
+} from "@mui/icons-material";
 import {
   Box,
   Typography,
@@ -15,23 +26,13 @@ import {
   IconButton,
 } from "@mui/material";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import {
-  SignalWifi4Bar as SignalStrong,
-  SignalWifi3Bar as SignalGood,
-  SignalWifi2Bar as SignalMedium,
-  SignalWifi1Bar as SignalWeak,
-  SignalWifi0Bar as SignalNone,
-  WifiOff as SignalError,
-  ChevronRight,
-  SortRounded,
-  AccessTimeRounded,
-  SortByAlphaRounded,
-} from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+
 import { EnhancedCard } from "@/components/home/enhanced-card";
-import delayManager from "@/services/delay";
-import { useAppData } from "@/providers/app-data-provider";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
+import { useAppData } from "@/providers/app-data-provider";
+import delayManager from "@/services/delay";
 
 // 本地存储的键名
 const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";

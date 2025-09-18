@@ -1,8 +1,13 @@
-import useSWR from "swr";
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
 import { Box, Button, ButtonGroup } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import useSWR from "swr";
+
+import { BasePage } from "@/components/base";
+import { ProviderButton } from "@/components/proxy/provider-button";
+import { ProxyGroups } from "@/components/proxy/proxy-groups";
+import { useVerge } from "@/hooks/use-verge";
 import {
   closeAllConnections,
   getClashConfig,
@@ -10,10 +15,6 @@ import {
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
 import { patchClashMode } from "@/services/cmds";
-import { useVerge } from "@/hooks/use-verge";
-import { BasePage } from "@/components/base";
-import { ProxyGroups } from "@/components/proxy/proxy-groups";
-import { ProviderButton } from "@/components/proxy/provider-button";
 
 const ProxyPage = () => {
   const { t } = useTranslation();

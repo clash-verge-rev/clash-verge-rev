@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
 import {
   Button,
   Box,
@@ -16,13 +16,14 @@ import {
   alpha,
   styled,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
-import { proxyProviderUpdate } from "@/services/cmds";
-import { useAppData } from "@/providers/app-data-provider";
-import { showNotice } from "@/services/noticeService";
-import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
 import dayjs from "dayjs";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useAppData } from "@/providers/app-data-provider";
+import { proxyProviderUpdate } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
 
 // 定义代理提供者类型

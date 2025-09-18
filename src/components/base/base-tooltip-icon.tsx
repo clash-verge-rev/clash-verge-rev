@@ -1,10 +1,10 @@
+import { InfoRounded } from "@mui/icons-material";
 import {
   Tooltip,
   IconButton,
   IconButtonProps,
   SvgIconProps,
 } from "@mui/material";
-import { InfoRounded } from "@mui/icons-material";
 
 interface Props extends IconButtonProps {
   title?: string;

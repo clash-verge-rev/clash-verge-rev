@@ -1,14 +1,4 @@
 import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { useForm, Controller } from "react-hook-form";
-import {
   Box,
   FormControl,
   InputAdornment,
@@ -18,11 +8,23 @@ import {
   styled,
   TextField,
 } from "@mui/material";
-import { createProfile, patchProfile } from "@/services/cmds";
-import { BaseDialog, Switch } from "@/components/base";
 import { version } from "@root/package.json";
+import { useLockFn } from "ahooks";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
 import { FileInput } from "./file-input";
+
+import { BaseDialog, Switch } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
+import { createProfile, patchProfile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
 interface Props {

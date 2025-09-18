@@ -1,14 +1,3 @@
-import { useRef, useCallback, memo, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import {
-  Typography,
-  Paper,
-  alpha,
-  useTheme,
-  PaletteColor,
-  Grid,
-  Box,
-} from "@mui/material";
 import {
   ArrowUpwardRounded,
   ArrowDownwardRounded,
@@ -18,18 +7,31 @@ import {
   CloudDownloadRounded,
 } from "@mui/icons-material";
 import {
+  Typography,
+  Paper,
+  alpha,
+  useTheme,
+  PaletteColor,
+  Grid,
+  Box,
+} from "@mui/material";
+import { useRef, useCallback, memo, useMemo } from "react";
+import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import useSWR from "swr";
+
+import {
   EnhancedCanvasTrafficGraph,
   type EnhancedCanvasTrafficGraphRef,
 } from "./enhanced-canvas-traffic-graph";
-import { useVisibility } from "@/hooks/use-visibility";
-import { useVerge } from "@/hooks/use-verge";
-import parseTraffic from "@/utils/parse-traffic";
-import { isDebugEnabled, gc } from "@/services/cmds";
-import { ReactNode } from "react";
-import { useAppData } from "@/providers/app-data-provider";
-import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
+
 import { TrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
-import useSWR from "swr";
+import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
+import { useVerge } from "@/hooks/use-verge";
+import { useVisibility } from "@/hooks/use-visibility";
+import { useAppData } from "@/providers/app-data-provider";
+import { isDebugEnabled, gc } from "@/services/cmds";
+import parseTraffic from "@/utils/parse-traffic";
 
 interface StatCardProps {
   icon: ReactNode;

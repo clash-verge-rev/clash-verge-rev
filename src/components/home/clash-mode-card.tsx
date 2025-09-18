@@ -1,16 +1,17 @@
-import { useTranslation } from "react-i18next";
-import { Box, Typography, Paper, Stack } from "@mui/material";
-import { useLockFn } from "ahooks";
-import { closeAllConnections } from "@/services/cmds";
-import { patchClashMode } from "@/services/cmds";
-import { useVerge } from "@/hooks/use-verge";
 import {
   LanguageRounded,
   MultipleStopRounded,
   DirectionsRounded,
 } from "@mui/icons-material";
+import { Box, Typography, Paper, Stack } from "@mui/material";
+import { useLockFn } from "ahooks";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
+import { closeAllConnections } from "@/services/cmds";
+import { patchClashMode } from "@/services/cmds";
 
 export const ClashModeCard = () => {
   const { t } = useTranslation();

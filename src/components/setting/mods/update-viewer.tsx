@@ -1,4 +1,9 @@
-import useSWR from "swr";
+import { Box, LinearProgress, Button } from "@mui/material";
+import { Event, UnlistenFn } from "@tauri-apps/api/event";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
+import { check as checkUpdate } from "@tauri-apps/plugin-updater";
+import { useLockFn } from "ahooks";
 import {
   forwardRef,
   useImperativeHandle,
@@ -6,19 +11,15 @@ import {
   useMemo,
   useEffect,
 } from "react";
-import { useLockFn } from "ahooks";
-import { Box, LinearProgress, Button } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { relaunch } from "@tauri-apps/plugin-process";
-import { check as checkUpdate } from "@tauri-apps/plugin-updater";
-import { BaseDialog, DialogRef } from "@/components/base";
-import { useUpdateState, useSetUpdateState } from "@/services/states";
-import { Event, UnlistenFn } from "@tauri-apps/api/event";
-import { portableFlag } from "@/pages/_layout";
-import { open as openUrl } from "@tauri-apps/plugin-shell";
 import ReactMarkdown from "react-markdown";
+import useSWR from "swr";
+
+import { BaseDialog, DialogRef } from "@/components/base";
 import { useListen } from "@/hooks/use-listen";
+import { portableFlag } from "@/pages/_layout";
 import { showNotice } from "@/services/noticeService";
+import { useUpdateState, useSetUpdateState } from "@/services/states";
 
 export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

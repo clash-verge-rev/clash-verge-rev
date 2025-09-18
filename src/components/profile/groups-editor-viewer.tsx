@@ -1,7 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLockFn } from "ahooks";
-import yaml from "js-yaml";
-import { useTranslation } from "react-i18next";
 import {
   DndContext,
   closestCenter,
@@ -15,6 +11,10 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
 import {
   Autocomplete,
   Box,
@@ -30,28 +30,30 @@ import {
   TextField,
   styled,
 } from "@mui/material";
+import { useLockFn } from "ahooks";
 import {
-  VerticalAlignTopRounded,
-  VerticalAlignBottomRounded,
-} from "@mui/icons-material";
+  requestIdleCallback,
+  cancelIdleCallback,
+} from "foxact/request-idle-callback";
+import yaml from "js-yaml";
+import { useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import MonacoEditor from "react-monaco-editor";
+import { Virtuoso } from "react-virtuoso";
+
+import { BaseSearchBox } from "../base/base-search-box";
+
+import { Switch } from "@/components/base";
 import { GroupItem } from "@/components/profile/group-item";
 import {
   getNetworkInterfaces,
   readProfileFile,
   saveProfileFile,
 } from "@/services/cmds";
-import { Switch } from "@/components/base";
-import getSystem from "@/utils/get-system";
-import { BaseSearchBox } from "../base/base-search-box";
-import { Virtuoso } from "react-virtuoso";
-import MonacoEditor from "react-monaco-editor";
-import { useThemeMode } from "@/services/states";
-import { Controller, useForm } from "react-hook-form";
 import { showNotice } from "@/services/noticeService";
-import {
-  requestIdleCallback,
-  cancelIdleCallback,
-} from "foxact/request-idle-callback";
+import { useThemeMode } from "@/services/states";
+import getSystem from "@/utils/get-system";
 
 interface Props {
   proxiesUid: string;

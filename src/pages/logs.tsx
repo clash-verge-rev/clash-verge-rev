@@ -1,26 +1,26 @@
-import { useMemo, useState } from "react";
-import { Box, Button, IconButton, MenuItem } from "@mui/material";
-import { Virtuoso } from "react-virtuoso";
-import { useTranslation } from "react-i18next";
-import { useLocalStorage } from "foxact/use-local-storage";
-
 import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { LogLevel } from "@/hooks/use-log-data";
-import { useEnableLog } from "@/services/states";
+import { Box, Button, IconButton, MenuItem } from "@mui/material";
+import { useLocalStorage } from "foxact/use-local-storage";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Virtuoso } from "react-virtuoso";
+
 import { BaseEmpty, BasePage } from "@/components/base";
-import LogItem from "@/components/log/log-item";
 import { BaseSearchBox } from "@/components/base/base-search-box";
-import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import { SearchState } from "@/components/base/base-search-box";
+import { BaseStyledSelect } from "@/components/base/base-styled-select";
+import LogItem from "@/components/log/log-item";
+import { LogLevel } from "@/hooks/use-log-data";
 import {
   useGlobalLogData,
   clearGlobalLogs,
   changeLogLevel,
   toggleLogEnabled,
 } from "@/services/global-log-service";
+import { useEnableLog } from "@/services/states";
 
 // 后端通过 /logs?level={level} 进行筛选，前端不再需要手动筛选日志级别
 

@@ -1,9 +1,11 @@
-import useSWR from "swr";
-import { useRef } from "react";
 import { Button } from "@mui/material";
 import { check } from "@tauri-apps/plugin-updater";
-import { UpdateViewer } from "../setting/mods/update-viewer";
+import { useRef } from "react";
+import useSWR from "swr";
+
 import { DialogRef } from "../base";
+import { UpdateViewer } from "../setting/mods/update-viewer";
+
 import { useVerge } from "@/hooks/use-verge";
 
 interface Props {

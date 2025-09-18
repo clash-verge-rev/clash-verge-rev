@@ -1,11 +1,12 @@
 // IPC-based log service using Tauri commands with streaming support
+import dayjs from "dayjs";
+
 import {
   getClashLogs,
   startLogsMonitoring,
   stopLogsMonitoring,
   clearLogs as clearLogsCmd,
 } from "@/services/cmds";
-import dayjs from "dayjs";
 
 type LogLevel = "debug" | "info" | "warning" | "error" | "all";
 

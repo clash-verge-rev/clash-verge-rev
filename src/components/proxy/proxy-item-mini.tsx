@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
 import { CheckCircleOutlineRounded } from "@mui/icons-material";
 import { alpha, Box, ListItemButton, styled, Typography } from "@mui/material";
-import { BaseLoading } from "@/components/base";
-import delayManager from "@/services/delay";
-import { useVerge } from "@/hooks/use-verge";
+import { useLockFn } from "ahooks";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+import { BaseLoading } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
+import delayManager from "@/services/delay";
 
 interface Props {
   group: IProxyGroupItem;

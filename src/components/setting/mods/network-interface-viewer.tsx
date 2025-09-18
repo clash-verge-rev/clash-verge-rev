@@ -1,12 +1,13 @@
+import { ContentCopyRounded } from "@mui/icons-material";
+import { alpha, Box, Button, IconButton } from "@mui/material";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
+import useSWR from "swr";
+
 import { BaseDialog, DialogRef } from "@/components/base";
 import { getNetworkInterfacesInfo } from "@/services/cmds";
-import { alpha, Box, Button, IconButton } from "@mui/material";
-import { ContentCopyRounded } from "@mui/icons-material";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { showNotice } from "@/services/noticeService";
-import useSWR from "swr";
 
 export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

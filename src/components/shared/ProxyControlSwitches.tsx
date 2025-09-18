@@ -1,5 +1,3 @@
-import React, { useRef, useCallback } from "react";
-import { useTranslation } from "react-i18next";
 import {
   SettingsRounded,
   PlayCircleOutlineRounded,
@@ -9,18 +7,21 @@ import {
   WarningRounded,
 } from "@mui/icons-material";
 import { Box, Typography, alpha, useTheme } from "@mui/material";
+import { useLockFn } from "ahooks";
+import React, { useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+
 import { DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
-import { useVerge } from "@/hooks/use-verge";
 import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
-import { showNotice } from "@/services/noticeService";
+import { useVerge } from "@/hooks/use-verge";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
-import { useLockFn } from "ahooks";
 import { useServiceUninstaller } from "@/hooks/useServiceUninstaller";
+import { showNotice } from "@/services/noticeService";
 
 interface ProxySwitchProps {
   label?: string;

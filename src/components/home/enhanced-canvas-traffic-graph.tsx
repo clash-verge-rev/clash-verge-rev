@@ -1,3 +1,4 @@
+import { Box, useTheme } from "@mui/material";
 import {
   forwardRef,
   useImperativeHandle,
@@ -8,13 +9,13 @@ import {
   useRef,
   memo,
 } from "react";
-import { Box, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import parseTraffic from "@/utils/parse-traffic";
+
 import {
   useTrafficGraphDataEnhanced,
   type ITrafficDataPoint,
 } from "@/hooks/use-traffic-monitor";
+import parseTraffic from "@/utils/parse-traffic";
 
 // 流量数据项接口
 interface ITrafficItem {

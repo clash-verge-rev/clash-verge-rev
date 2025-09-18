@@ -1,7 +1,3 @@
-import useSWR, { mutate } from "swr";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, Stack, Divider, Grid } from "@mui/material";
 import {
   DndContext,
   closestCenter,
@@ -15,7 +11,6 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { LoadingButton } from "@mui/lab";
 import {
   ClearRounded,
   ContentPasteRounded,
@@ -23,7 +18,31 @@ import {
   RefreshRounded,
   TextSnippetOutlined,
 } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
+import { Box, Button, IconButton, Stack, Divider, Grid } from "@mui/material";
+import { listen } from "@tauri-apps/api/event";
+import { TauriEvent } from "@tauri-apps/api/event";
+import { readText } from "@tauri-apps/plugin-clipboard-manager";
+import { readTextFile } from "@tauri-apps/plugin-fs";
+import { useLockFn } from "ahooks";
+import { throttle } from "lodash-es";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
+import useSWR, { mutate } from "swr";
+
+import { BasePage, DialogRef } from "@/components/base";
+import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+import { ProfileItem } from "@/components/profile/profile-item";
+import { ProfileMore } from "@/components/profile/profile-more";
+import {
+  ProfileViewer,
+  ProfileViewerRef,
+} from "@/components/profile/profile-viewer";
+import { ConfigViewer } from "@/components/setting/mods/config-viewer";
+import { useListen } from "@/hooks/use-listen";
+import { useProfiles } from "@/hooks/use-profiles";
+import { closeAllConnections } from "@/services/cmds";
 import {
   importProfile,
   enhanceProfiles,
@@ -35,26 +54,8 @@ import {
   createProfile,
   getProfiles,
 } from "@/services/cmds";
-import { useSetLoadingCache, useThemeMode } from "@/services/states";
-import { closeAllConnections } from "@/services/cmds";
-import { BasePage, DialogRef } from "@/components/base";
-import {
-  ProfileViewer,
-  ProfileViewerRef,
-} from "@/components/profile/profile-viewer";
-import { ProfileMore } from "@/components/profile/profile-more";
-import { ProfileItem } from "@/components/profile/profile-item";
-import { useProfiles } from "@/hooks/use-profiles";
-import { ConfigViewer } from "@/components/setting/mods/config-viewer";
-import { throttle } from "lodash-es";
-import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
-import { readTextFile } from "@tauri-apps/plugin-fs";
-import { readText } from "@tauri-apps/plugin-clipboard-manager";
-import { useLocation } from "react-router-dom";
-import { useListen } from "@/hooks/use-listen";
-import { listen } from "@tauri-apps/api/event";
-import { TauriEvent } from "@tauri-apps/api/event";
 import { showNotice } from "@/services/noticeService";
+import { useSetLoadingCache, useThemeMode } from "@/services/states";
 
 // 记录profile切换状态
 const debugProfileSwitch = (action: string, profile: string, extra?: any) => {

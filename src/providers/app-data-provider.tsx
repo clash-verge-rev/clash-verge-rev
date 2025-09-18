@@ -1,3 +1,4 @@
+import { listen } from "@tauri-apps/api/event";
 import React, {
   createContext,
   useContext,
@@ -5,8 +6,11 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { useVerge } from "@/hooks/use-verge";
 import useSWR from "swr";
+
+import { useClashInfo } from "@/hooks/use-clash";
+import { useVerge } from "@/hooks/use-verge";
+import { useVisibility } from "@/hooks/use-visibility";
 import {
   getProxies,
   getRules,
@@ -23,9 +27,6 @@ import {
   getAppUptime,
   forceRefreshProxies,
 } from "@/services/cmds";
-import { useClashInfo } from "@/hooks/use-clash";
-import { useVisibility } from "@/hooks/use-visibility";
-import { listen } from "@tauri-apps/api/event";
 
 // 连接速度计算接口
 interface ConnectionSpeedData {

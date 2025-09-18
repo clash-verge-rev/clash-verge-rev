@@ -1,6 +1,8 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
+import {
+  FormatPaintRounded,
+  OpenInFullRounded,
+  CloseFullscreenRounded,
+} from "@mui/icons-material";
 import {
   Button,
   ButtonGroup,
@@ -10,25 +12,23 @@ import {
   DialogTitle,
   IconButton,
 } from "@mui/material";
-import {
-  FormatPaintRounded,
-  OpenInFullRounded,
-  CloseFullscreenRounded,
-} from "@mui/icons-material";
-import { useThemeMode } from "@/services/states";
-import { nanoid } from "nanoid";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { showNotice } from "@/services/noticeService";
-import getSystem from "@/utils/get-system";
-import debounce from "@/utils/debounce";
-
-import * as monaco from "monaco-editor";
-import MonacoEditor from "react-monaco-editor";
-import { configureMonacoYaml } from "monaco-yaml";
+import { useLockFn } from "ahooks";
 import { type JSONSchema7 } from "json-schema";
-import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
+import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
+import * as monaco from "monaco-editor";
+import { configureMonacoYaml } from "monaco-yaml";
+import { nanoid } from "nanoid";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import MonacoEditor from "react-monaco-editor";
 import pac from "types-pac/pac.d.ts?raw";
+
+import { showNotice } from "@/services/noticeService";
+import { useThemeMode } from "@/services/states";
+import debounce from "@/utils/debounce";
+import getSystem from "@/utils/get-system";
 const appWindow = getCurrentWebviewWindow();
 
 type Language = "yaml" | "javascript" | "css";

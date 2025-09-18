@@ -1,29 +1,30 @@
-import { useMemo, useRef, useState, useCallback } from "react";
-import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, MenuItem } from "@mui/material";
-import { Virtuoso } from "react-virtuoso";
-import { useTranslation } from "react-i18next";
 import {
   TableChartRounded,
   TableRowsRounded,
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { closeAllConnections } from "@/services/cmds";
-import { useConnectionSetting } from "@/services/states";
+import { Box, Button, IconButton, MenuItem } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { useLockFn } from "ahooks";
+import { useMemo, useRef, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { Virtuoso } from "react-virtuoso";
+
 import { BaseEmpty, BasePage } from "@/components/base";
-import { ConnectionItem } from "@/components/connection/connection-item";
-import { ConnectionTable } from "@/components/connection/connection-table";
+import { BaseSearchBox } from "@/components/base/base-search-box";
+import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import {
   ConnectionDetail,
   ConnectionDetailRef,
 } from "@/components/connection/connection-detail";
-import parseTraffic from "@/utils/parse-traffic";
-import { BaseSearchBox } from "@/components/base/base-search-box";
-import { BaseStyledSelect } from "@/components/base/base-styled-select";
-import { useTheme } from "@mui/material/styles";
+import { ConnectionItem } from "@/components/connection/connection-item";
+import { ConnectionTable } from "@/components/connection/connection-table";
 import { useVisibility } from "@/hooks/use-visibility";
 import { useAppData } from "@/providers/app-data-provider";
+import { closeAllConnections } from "@/services/cmds";
+import { useConnectionSetting } from "@/services/states";
+import parseTraffic from "@/utils/parse-traffic";
 
 const initConn: IConnections = {
   uploadTotal: 0,

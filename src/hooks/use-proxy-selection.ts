@@ -1,5 +1,8 @@
-import { useCallback, useMemo } from "react";
 import { useLockFn } from "ahooks";
+import { useCallback, useMemo } from "react";
+
+import { useProfiles } from "@/hooks/use-profiles";
+import { useVerge } from "@/hooks/use-verge";
 import {
   updateProxy,
   updateProxyAndSync,
@@ -8,8 +11,6 @@ import {
   getConnections,
   deleteConnection,
 } from "@/services/cmds";
-import { useProfiles } from "@/hooks/use-profiles";
-import { useVerge } from "@/hooks/use-verge";
 
 // 缓存连接清理
 const cleanupConnections = async (previousProxy: string) => {

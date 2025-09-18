@@ -1,23 +1,3 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import {
-  Box,
-  Paper,
-  Typography,
-  IconButton,
-  Chip,
-  Alert,
-  useTheme,
-  Button,
-} from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { useAppData } from "@/providers/app-data-provider";
-import {
-  updateProxyChainConfigInRuntime,
-  updateProxyAndSync,
-  getProxies,
-  closeAllConnections,
-} from "@/services/cmds";
-import useSWR from "swr";
 import {
   DndContext,
   closestCenter,
@@ -38,11 +18,30 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Delete as DeleteIcon,
   DragIndicator,
-  ClearAll,
-  Save,
   Link,
   LinkOff,
 } from "@mui/icons-material";
+import {
+  Box,
+  Paper,
+  Typography,
+  IconButton,
+  Chip,
+  Alert,
+  useTheme,
+  Button,
+} from "@mui/material";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import useSWR from "swr";
+
+import { useAppData } from "@/providers/app-data-provider";
+import {
+  updateProxyChainConfigInRuntime,
+  updateProxyAndSync,
+  getProxies,
+  closeAllConnections,
+} from "@/services/cmds";
 
 interface ProxyChainItem {
   id: string;

@@ -1,14 +1,15 @@
+import { Box } from "@mui/material";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
-import { Box } from "@mui/material";
+
 import { BaseEmpty, BasePage } from "@/components/base";
-import RuleItem from "@/components/rule/rule-item";
-import { ProviderButton } from "@/components/rule/provider-button";
 import { BaseSearchBox } from "@/components/base/base-search-box";
 import { ScrollTopButton } from "@/components/layout/scroll-top-button";
-import { useAppData } from "@/providers/app-data-provider";
+import { ProviderButton } from "@/components/rule/provider-button";
+import RuleItem from "@/components/rule/rule-item";
 import { useVisibility } from "@/hooks/use-visibility";
+import { useAppData } from "@/providers/app-data-provider";
 
 const RulesPage = () => {
   const { t } = useTranslation();

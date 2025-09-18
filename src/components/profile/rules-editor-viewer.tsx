@@ -1,7 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLockFn } from "ahooks";
-import yaml from "js-yaml";
-import { useTranslation } from "react-i18next";
 import {
   DndContext,
   closestCenter,
@@ -16,6 +12,10 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
+import {
   Autocomplete,
   Box,
   Button,
@@ -29,19 +29,21 @@ import {
   TextField,
   styled,
 } from "@mui/material";
-import {
-  VerticalAlignTopRounded,
-  VerticalAlignBottomRounded,
-} from "@mui/icons-material";
-import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { Switch } from "@/components/base";
-import getSystem from "@/utils/get-system";
-import { RuleItem } from "@/components/profile/rule-item";
-import { BaseSearchBox } from "../base/base-search-box";
-import { Virtuoso } from "react-virtuoso";
+import { useLockFn } from "ahooks";
+import yaml from "js-yaml";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
-import { useThemeMode } from "@/services/states";
+import { Virtuoso } from "react-virtuoso";
+
+import { BaseSearchBox } from "../base/base-search-box";
+
+import { Switch } from "@/components/base";
+import { RuleItem } from "@/components/profile/rule-item";
+import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { useThemeMode } from "@/services/states";
+import getSystem from "@/utils/get-system";
 
 interface Props {
   groupsUid: string;

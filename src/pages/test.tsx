@@ -1,6 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-import { useVerge } from "@/hooks/use-verge";
-import { Box, Button, Grid } from "@mui/material";
 import {
   DndContext,
   closestCenter,
@@ -14,20 +11,22 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-
-import { useTranslation } from "react-i18next";
-import { BasePage } from "@/components/base";
-import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
-import { TestItem } from "@/components/test/test-item";
+import { Box, Button, Grid } from "@mui/material";
 import { emit } from "@tauri-apps/api/event";
 import { nanoid } from "nanoid";
-import { ScrollTopButton } from "@/components/layout/scroll-top-button";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // test icons
 import apple from "@/assets/image/test/apple.svg?raw";
 import github from "@/assets/image/test/github.svg?raw";
 import google from "@/assets/image/test/google.svg?raw";
 import youtube from "@/assets/image/test/youtube.svg?raw";
+import { BasePage } from "@/components/base";
+import { ScrollTopButton } from "@/components/layout/scroll-top-button";
+import { TestItem } from "@/components/test/test-item";
+import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
+import { useVerge } from "@/hooks/use-verge";
 
 const TestPage = () => {
   const { t } = useTranslation();

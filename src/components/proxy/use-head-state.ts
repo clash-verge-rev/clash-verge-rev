@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+
 import { ProxySortType } from "./use-filter-sort";
+
 import { useProfiles } from "@/hooks/use-profiles";
 
 export interface HeadState {

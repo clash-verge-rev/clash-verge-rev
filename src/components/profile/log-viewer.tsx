@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Button,
   Chip,
@@ -10,6 +8,9 @@ import {
   Divider,
   Typography,
 } from "@mui/material";
+import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
+
 import { BaseEmpty } from "@/components/base";
 
 interface Props {

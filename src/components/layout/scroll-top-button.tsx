@@ -1,5 +1,5 @@
-import { IconButton, Fade, SxProps, Theme } from "@mui/material";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { IconButton, Fade, SxProps, Theme } from "@mui/material";
 
 interface Props {
   onClick: () => void;

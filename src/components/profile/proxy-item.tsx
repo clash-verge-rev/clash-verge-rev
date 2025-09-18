@@ -1,3 +1,6 @@
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
 import {
   Box,
   IconButton,
@@ -6,9 +9,6 @@ import {
   alpha,
   styled,
 } from "@mui/material";
-import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 interface Props {
   type: "prepend" | "original" | "delete" | "append";

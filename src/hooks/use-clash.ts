@@ -1,5 +1,6 @@
-import useSWR, { mutate } from "swr";
 import { useLockFn } from "ahooks";
+import useSWR, { mutate } from "swr";
+
 import { getVersion } from "@/services/cmds";
 import {
   getClashInfo,
