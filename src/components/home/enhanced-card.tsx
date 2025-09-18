@@ -2,7 +2,7 @@ import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { ReactNode } from "react";
 
 // 自定义卡片组件接口
-export interface EnhancedCardProps {
+interface EnhancedCardProps {
   title: ReactNode;
   icon: ReactNode;
   action?: ReactNode;

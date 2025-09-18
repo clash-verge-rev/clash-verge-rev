@@ -112,7 +112,6 @@ export default defineConfig({
               id.includes("@tauri-apps/plugin-dialog") ||
               id.includes("@tauri-apps/plugin-fs") ||
               id.includes("@tauri-apps/plugin-global-shortcut") ||
-              id.includes("@tauri-apps/plugin-notification") ||
               id.includes("@tauri-apps/plugin-process") ||
               id.includes("@tauri-apps/plugin-shell") ||
               id.includes("@tauri-apps/plugin-updater")

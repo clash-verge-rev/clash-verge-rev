@@ -17,7 +17,7 @@ import {
 } from "@/hooks/use-traffic-monitor";
 
 // 流量数据项接口
-export interface ITrafficItem {
+interface ITrafficItem {
   up: number;
   down: number;
   timestamp?: number;

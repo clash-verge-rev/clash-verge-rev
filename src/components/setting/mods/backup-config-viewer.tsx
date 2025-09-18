@@ -17,7 +17,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { saveWebdavConfig, createWebdavBackup } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
-export interface BackupConfigViewerProps {
+interface BackupConfigViewerProps {
   onBackupSuccess: () => Promise<void>;
   onSaveSuccess: () => Promise<void>;
   onRefresh: () => Promise<void>;

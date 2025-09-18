@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, CircularProgress } from "@mui/material";
 
-export interface BaseLoadingOverlayProps {
+interface BaseLoadingOverlayProps {
   isLoading: boolean;
 }
 
@@ -29,5 +29,3 @@ export const BaseLoadingOverlay: React.FC<BaseLoadingOverlayProps> = ({
     </Box>
   );
 };
-
-export default BaseLoadingOverlay;

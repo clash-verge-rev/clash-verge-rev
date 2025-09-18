@@ -55,7 +55,7 @@ interface ProfileExtra {
   expire: number;
 }
 
-export interface ProfileItem {
+interface ProfileItem {
   uid: string;
   type?: "local" | "remote" | "merge" | "script";
   name?: string;
@@ -68,7 +68,7 @@ export interface ProfileItem {
   option?: any;
 }
 
-export interface HomeProfileCardProps {
+interface HomeProfileCardProps {
   current: ProfileItem | null | undefined;
   onProfileUpdated?: () => void;
 }

@@ -44,7 +44,7 @@ interface ProxyOption {
 }
 
 // 排序类型: 默认 | 按延迟 | 按字母
-export type ProxySortType = 0 | 1 | 2;
+type ProxySortType = 0 | 1 | 2;
 
 function convertDelayColor(delayValue: number) {
   const colorStr = delayManager.formatDelayColor(delayValue);

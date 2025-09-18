@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 
-export interface NoticeItem {
+interface NoticeItem {
   id: number;
   type: "success" | "error" | "info";
   message: ReactNode;

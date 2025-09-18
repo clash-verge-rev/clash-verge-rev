@@ -7,9 +7,9 @@ import {
 } from "@/services/cmds";
 import dayjs from "dayjs";
 
-export type LogLevel = "debug" | "info" | "warning" | "error" | "all";
+type LogLevel = "debug" | "info" | "warning" | "error" | "all";
 
-export interface ILogItem {
+interface ILogItem {
   time?: string;
   type: string;
   payload: string;

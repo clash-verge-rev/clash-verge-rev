@@ -12,7 +12,7 @@ const MAX_LOG_NUM = 1000;
 
 export type LogLevel = "debug" | "info" | "warning" | "error" | "all";
 
-export interface ILogItem {
+interface ILogItem {
   time?: string;
   type: string;
   payload: string;

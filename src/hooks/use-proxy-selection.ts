@@ -28,7 +28,7 @@ const cleanupConnections = async (previousProxy: string) => {
   }
 };
 
-export interface ProxySelectionOptions {
+interface ProxySelectionOptions {
   onSuccess?: () => void;
   onError?: (error: any) => void;
   enableConnectionCleanup?: boolean;

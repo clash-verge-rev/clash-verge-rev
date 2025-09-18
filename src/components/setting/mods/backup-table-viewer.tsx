@@ -33,7 +33,7 @@ export type BackupFile = IWebDavFile & {
 
 export const DEFAULT_ROWS_PER_PAGE = 5;
 
-export interface BackupTableViewerProps {
+interface BackupTableViewerProps {
   datasource: BackupFile[];
   page: number;
   onPageChange: (
