@@ -83,6 +83,7 @@ isahc = { version = "1.7.2", default-features = false, features = [
   "parking_lot",
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
+tauri-plugin-http = "2"
 
 
 [target.'cfg(windows)'.dependencies]

@@ -1,3 +1,4 @@
+import { fetch } from "@tauri-apps/plugin-http";
 import axios, { AxiosInstance } from "axios";
 import { getClashInfo } from "./cmds";
 
@@ -212,17 +213,19 @@ export const getIpInfo = async (): Promise<IpInfo> => {
             timeoutController.abort();
           }, service.timeout || serviceTimeout);
 
-          const response = await axios.get(service.url, {
+          const response = await fetch(service.url, {
+            method: "GET",
             signal: timeoutController.signal,
-            timeout: service.timeout || serviceTimeout,
-            // 移除了headers参数（默认会使用axios的默认User-Agent）
+            connectTimeout: service.timeout || serviceTimeout,
           });
+
+          const data = await response.json();
 
           if (timeoutId) clearTimeout(timeoutId);
 
-          if (response.data && response.data.ip) {
+          if (data && data.ip) {
             console.log(`IP检测成功，使用服务: ${service.url}`);
-            return service.mapping(response.data);
+            return service.mapping(data);
           } else {
             throw new Error(`无效的响应格式 from ${service.url}`);
           }
@@ -230,9 +233,9 @@ export const getIpInfo = async (): Promise<IpInfo> => {
           if (timeoutId) clearTimeout(timeoutId);
 
           lastError = error;
-          console.log(
+          console.warn(
             `尝试 ${attempt + 1}/${maxRetries} 失败 (${service.url}):`,
-            error.message,
+            error,
           );
 
           if (error.name === "AbortError") {
