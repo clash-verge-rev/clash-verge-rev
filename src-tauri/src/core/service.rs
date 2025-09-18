@@ -7,7 +7,6 @@ use crate::{
 };
 use anyhow::{Context, Result, bail};
 use once_cell::sync::Lazy;
-use serde::{Deserialize, Serialize};
 use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
 use tokio::sync::Mutex;
 
@@ -22,23 +21,6 @@ pub enum ServiceStatus {
     ReinstallRequired,
     ForceReinstallRequired,
     Unavailable(String),
-}
-
-// 保留核心数据结构，但将HTTP特定的结构体合并为通用结构体
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct ResponseBody {
-    pub core_type: Option<String>,
-    pub bin_path: String,
-    pub config_dir: String,
-    pub log_file: String,
-}
-
-// 保留通用的响应结构体，用于IPC通信后的数据解析
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct JsonResponse {
-    pub code: u64,
-    pub msg: String,
-    pub data: Option<ResponseBody>,
 }
 
 #[derive(Clone)]
