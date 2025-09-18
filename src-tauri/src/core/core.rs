@@ -771,7 +771,7 @@ impl CoreManager {
         self.set_running_mode(RunningMode::Sidecar);
 
         let mut log_file = std::io::BufWriter::new(File::create(log_path)?);
-        tauri::async_runtime::spawn(async move {
+        AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
