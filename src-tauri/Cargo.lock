@@ -1149,6 +1149,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
  "tauri-plugin-global-shortcut",
+ "tauri-plugin-http",
  "tauri-plugin-notification",
  "tauri-plugin-process",
  "tauri-plugin-shell",
@@ -1655,6 +1656,12 @@ dependencies = [
  "once_cell",
  "parking_lot_core 0.9.11",
 ]
+
+[[package]]
+name = "data-url"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
 
 [[package]]
 name = "deelevate"
@@ -7313,6 +7320,30 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.16",
+]
+
+[[package]]
+name = "tauri-plugin-http"
+version = "2.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "938a3d7051c9a82b431e3a0f3468f85715b3442b3c3a3913095e9fa509e2652c"
+dependencies = [
+ "bytes",
+ "cookie_store",
+ "data-url",
+ "http 1.3.1",
+ "regex",
+ "reqwest",
+ "schemars 0.8.22",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "tauri-plugin-fs",
+ "thiserror 2.0.16",
+ "tokio",
+ "url",
+ "urlpattern",
 ]
 
 [[package]]
