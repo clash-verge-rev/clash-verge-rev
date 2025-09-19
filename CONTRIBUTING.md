@@ -74,6 +74,8 @@ To run the development server, use the following command:
 pnpm dev
 # If an app instance already exists, use a different command
 pnpm dev:diff
+# To using tauri built-in dev tool
+pnpm dev:tauri
 ```
 
 ### Build the Project

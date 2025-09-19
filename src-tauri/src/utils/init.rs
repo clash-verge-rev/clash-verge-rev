@@ -3,68 +3,56 @@ use crate::{
     core::handle,
     logging,
     process::AsyncHandler,
-    utils::{dirs, help, logging::Type},
+    utils::{
+        dirs, help,
+        logging::{self, Type},
+    },
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone};
+use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, LogSpecification, Logger};
 use log::LevelFilter;
-use log4rs::{
-    append::{console::ConsoleAppender, file::FileAppender},
-    config::{Appender, Logger, Root},
-    encode::pattern::PatternEncoder,
-};
 use std::{path::PathBuf, str::FromStr};
 use tauri_plugin_shell::ShellExt;
 use tokio::fs;
 use tokio::fs::DirEntry;
 
 /// initialize this instance's log file
-async fn init_log() -> Result<()> {
-    let log_dir = dirs::app_logs_dir()?;
-    if !log_dir.exists() {
-        let _ = tokio::fs::create_dir_all(&log_dir).await;
-    }
-
+#[cfg(not(feature = "tauri-dev"))]
+pub async fn init_logger() -> Result<()> {
     let log_level = Config::verge().await.latest_ref().get_log_level();
     if log_level == LevelFilter::Off {
-        return Ok(());
+        return Err(anyhow::anyhow!("logging is disabled"));
     }
 
-    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-    let log_file = format!("{local_time}.log");
-    let log_file = log_dir.join(log_file);
+    let log_dir = dirs::app_logs_dir()?;
+    let logger = Logger::with(LogSpecification::from(log_level))
+        .log_to_file(FileSpec::default().directory(log_dir).basename(""))
+        .duplicate_to_stdout(Duplicate::Debug)
+        .format(logging::console_colored_format)
+        .format_for_files(logging::file_format)
+        .rotate(
+            // ? 总是保持单个日志最大 10 MB
+            Criterion::Size(10 * 1024 * 1024),
+            flexi_logger::Naming::TimestampsCustomFormat {
+                current_infix: Some("latest"),
+                format: "%Y-%m-%d_%H-%M-%S",
+            },
+            // TODO 提供前端设置最大保留文件数量
+            Cleanup::Never,
+        );
 
-    let log_pattern = match log_level {
-        LevelFilter::Trace => "{d(%Y-%m-%d %H:%M:%S)} {l} [{M}] - {m}{n}",
-        _ => "{d(%Y-%m-%d %H:%M:%S)} {l} - {m}{n}",
-    };
+    let _handle = logger.start()?;
 
-    let encode = Box::new(PatternEncoder::new(log_pattern));
-
-    let stdout = ConsoleAppender::builder().encoder(encode.clone()).build();
-    let tofile = FileAppender::builder().encoder(encode).build(log_file)?;
-
-    let mut logger_builder = Logger::builder();
-    let mut root_builder = Root::builder();
-
-    let log_more = log_level == LevelFilter::Trace || log_level == LevelFilter::Debug;
-
-    logger_builder = logger_builder.appenders(["file"]);
-    if log_more {
-        root_builder = root_builder.appenders(["file"]);
-    }
-
-    let (config, _) = log4rs::config::Config::builder()
-        .appender(Appender::builder().build("stdout", Box::new(stdout)))
-        .appender(Appender::builder().build("file", Box::new(tofile)))
-        .logger(logger_builder.additive(false).build("app", log_level))
-        .build_lossy(root_builder.build(log_level));
-
-    log4rs::init_config(config)?;
+    // TODO 全局 logger handle 控制
+    // GlobalLoggerProxy::global().set_inner(handle);
+    // TODO 提供前端设置等级，热更新等级
+    // logger.parse_new_spec(spec)
 
     Ok(())
 }
 
+// TODO flexi_logger 提供了最大保留天数，或许我们应该用内置删除log文件
 /// 删除log文件
 pub async fn delete_log() -> Result<()> {
     let log_dir = dirs::app_logs_dir()?;
@@ -355,11 +343,13 @@ async fn initialize_config_files() -> Result<()> {
 /// Initialize all the config files
 /// before tauri setup
 pub async fn init_config() -> Result<()> {
-    let _ = dirs::init_portable_flag();
+    // We do not need init_portable_flag here anymore due to lib.rs will to the things
+    // let _ = dirs::init_portable_flag();
 
-    if let Err(e) = init_log().await {
-        eprintln!("Failed to initialize logging: {}", e);
-    }
+    // We do not need init_log here anymore due to resolve will to the things
+    // if let Err(e) = init_log().await {
+    //     eprintln!("Failed to initialize logging: {}", e);
+    // }
 
     ensure_directories().await?;
 

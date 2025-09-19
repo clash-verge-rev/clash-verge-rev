@@ -1,4 +1,10 @@
-use std::fmt;
+use std::{fmt, io::Write, thread};
+
+use flexi_logger::DeferredNow;
+use log::{LevelFilter, Record};
+
+#[cfg(feature = "verge-dev")]
+use nu_ansi_term::Color;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
@@ -107,7 +113,8 @@ macro_rules! wrap_err {
 macro_rules! logging {
     // 带 println 的版本（支持格式化参数）
     ($level:ident, $type:expr, true, $($arg:tt)*) => {
-        println!("{} {}", $type, format_args!($($arg)*));
+        // We dont need println here anymore
+        // println!("{} {}", $type, format_args!($($arg)*));
         log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*));
     };
 
@@ -156,4 +163,54 @@ macro_rules! logging_error {
     ($type:expr, $fmt:literal $(, $arg:expr)*) => {
         logging_error!($type, false, $fmt $(, $arg)*);
     };
+}
+
+pub fn get_log_level(log_level: &LevelFilter) -> String {
+    #[cfg(feature = "verge-dev")]
+    match log_level {
+        LevelFilter::Off => Color::Fixed(8).paint("OFF").to_string(),
+        LevelFilter::Error => Color::Red.paint("ERROR").to_string(),
+        LevelFilter::Warn => Color::Yellow.paint("WARN ").to_string(),
+        LevelFilter::Info => Color::Green.paint("INFO ").to_string(),
+        LevelFilter::Debug => Color::Blue.paint("DEBUG").to_string(),
+        LevelFilter::Trace => Color::Purple.paint("TRACE").to_string(),
+    }
+    #[cfg(not(feature = "verge-dev"))]
+    log_level.to_string()
+}
+
+pub fn console_colored_format(
+    w: &mut dyn Write,
+    now: &mut DeferredNow,
+    record: &log::Record,
+) -> std::io::Result<()> {
+    let current_thread = thread::current();
+    let thread_name = current_thread.name().unwrap_or("unnamed");
+
+    let level = get_log_level(&record.level().to_level_filter());
+    let line = record.line().unwrap_or(0);
+    write!(
+        w,
+        "[{}] {} [{}:{}] T[{}] {}",
+        now.format("%H:%M:%S%.3f"),
+        level,
+        record.module_path().unwrap_or("<unnamed>"),
+        line,
+        thread_name,
+        record.args(),
+    )
+}
+
+pub fn file_format(
+    w: &mut dyn Write,
+    now: &mut DeferredNow,
+    record: &Record,
+) -> std::io::Result<()> {
+    write!(
+        w,
+        "[{}] {} {}",
+        now.format("%Y-%m-%d %H:%M:%S%.3f"),
+        record.level(),
+        record.args(),
+    )
 }

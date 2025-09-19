@@ -77,7 +77,9 @@ mod app_init {
             .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_http::init());
 
-        #[cfg(all(debug_assertions, not(feature = "tokio-trace")))]
+        // Devtools plugin only in debug mode with feature tauri-dev
+        // to avoid duplicated registering of logger since the devtools plugin also registers a logger
+        #[cfg(all(debug_assertions, not(feature = "tokio-trace"), feature = "tauri-dev"))]
         {
             builder = builder.plugin(tauri_plugin_devtools::init());
         }
@@ -271,8 +273,7 @@ pub fn run() {
     // Setup singleton check
     app_init::init_singleton_check();
 
-    // We don't need init_portable_flag here anymore due to the init_config will do the things
-    // let _ = utils::dirs::init_portable_flag();
+    let _ = utils::dirs::init_portable_flag();
 
     // Set Linux environment variable
     #[cfg(target_os = "linux")]

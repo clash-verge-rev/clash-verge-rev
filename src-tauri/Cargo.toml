@@ -22,7 +22,6 @@ dirs = "6.0"
 open = "5.3.2"
 log = "0.4.28"
 dunce = "1.0.5"
-log4rs = "1.4.0"
 nanoid = "0.4"
 chrono = "0.4.42"
 sysinfo = { version = "0.37.0", features = ["network", "system"] }
@@ -58,7 +57,6 @@ tauri-plugin-fs = "2.4.2"
 tauri-plugin-process = "2.3.0"
 tauri-plugin-clipboard-manager = "2.3.0"
 tauri-plugin-deep-link = "2.4.3"
-tauri-plugin-devtools = "2.0.1"
 tauri-plugin-window-state = "2.4.0"
 zip = "5.1.1"
 reqwest_dav = "0.2.2"
@@ -76,7 +74,6 @@ scopeguard = "1.2.0"
 kode-bridge = "0.2.1"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.1"
-console-subscriber = { version = "0.4.1", optional = true }
 tokio-stream = "0.1.17"
 isahc = { version = "1.7.2", default-features = false, features = [
   "text-decoding",
@@ -84,6 +81,19 @@ isahc = { version = "1.7.2", default-features = false, features = [
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 tauri-plugin-http = "2"
+flexi_logger = "0.31.2"
+
+[dependencies.nu-ansi-term]
+version = "0.50.1"
+optional = true
+
+[dependencies.console-subscriber]
+version = "0.4.1"
+optional = true
+
+[dependencies.tauri-plugin-devtools]
+version = "2.0.1"
+optional = true
 
 
 [target.'cfg(windows)'.dependencies]
@@ -115,8 +125,9 @@ tauri-plugin-updater = "2.9.0"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = []
-tokio-trace = ["console-subscriber"]
+verge-dev = ["dep:nu-ansi-term"]
+tauri-dev = ["dep:tauri-plugin-devtools"]
+tokio-trace = ["dep:console-subscriber"]
 
 [profile.release]
 panic = "abort"
