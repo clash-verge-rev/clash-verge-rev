@@ -1,11 +1,11 @@
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -14,7 +14,7 @@ import {
 import { Box, Button, Grid } from "@mui/material";
 import { emit } from "@tauri-apps/api/event";
 import { nanoid } from "nanoid";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 // test icons
@@ -39,32 +39,36 @@ const TestPage = () => {
   const { verge, mutateVerge, patchVerge } = useVerge();
 
   // test list
-  const testList = verge?.test_list ?? [
-    {
-      uid: nanoid(),
-      name: "Apple",
-      url: "https://www.apple.com",
-      icon: apple,
-    },
-    {
-      uid: nanoid(),
-      name: "GitHub",
-      url: "https://www.github.com",
-      icon: github,
-    },
-    {
-      uid: nanoid(),
-      name: "Google",
-      url: "https://www.google.com",
-      icon: google,
-    },
-    {
-      uid: nanoid(),
-      name: "Youtube",
-      url: "https://www.youtube.com",
-      icon: youtube,
-    },
-  ];
+  const testList = useMemo(
+    () =>
+      verge?.test_list ?? [
+        {
+          uid: nanoid(),
+          name: "Apple",
+          url: "https://www.apple.com",
+          icon: apple,
+        },
+        {
+          uid: nanoid(),
+          name: "GitHub",
+          url: "https://www.github.com",
+          icon: github,
+        },
+        {
+          uid: nanoid(),
+          name: "Google",
+          url: "https://www.google.com",
+          icon: google,
+        },
+        {
+          uid: nanoid(),
+          name: "Youtube",
+          url: "https://www.youtube.com",
+          icon: youtube,
+        },
+      ],
+    [verge],
+  );
 
   const onTestListItemChange = (
     uid: string,
@@ -117,7 +121,7 @@ const TestPage = () => {
     if (!verge?.test_list) {
       patchVerge({ test_list: testList });
     }
-  }, [verge]);
+  }, [verge, patchVerge, testList]);
 
   const viewerRef = useRef<TestViewerRef>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);

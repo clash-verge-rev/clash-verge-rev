@@ -1,19 +1,19 @@
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
+  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
   Delete as DeleteIcon,
@@ -22,25 +22,25 @@ import {
   LinkOff,
 } from "@mui/icons-material";
 import {
+  Alert,
   Box,
+  Button,
+  Chip,
+  IconButton,
   Paper,
   Typography,
-  IconButton,
-  Chip,
-  Alert,
   useTheme,
-  Button,
 } from "@mui/material";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
 import { useAppData } from "@/providers/app-data-provider";
 import {
-  updateProxyChainConfigInRuntime,
-  updateProxyAndSync,
-  getProxies,
   closeAllConnections,
+  getProxies,
+  updateProxyAndSync,
+  updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
 
 interface ProxyChainItem {

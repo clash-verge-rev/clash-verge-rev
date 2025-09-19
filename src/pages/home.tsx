@@ -1,28 +1,28 @@
 import {
-  RouterOutlined,
-  SettingsOutlined,
   DnsOutlined,
-  SpeedOutlined,
   HelpOutlineRounded,
   HistoryEduOutlined,
+  RouterOutlined,
+  SettingsOutlined,
+  SpeedOutlined,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormGroup,
-  FormControlLabel,
   Checkbox,
-  Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  FormGroup,
   Grid,
+  IconButton,
   Skeleton,
+  Tooltip,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useState, useMemo, Suspense, lazy, useCallback } from "react";
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BasePage } from "@/components/base";
@@ -264,7 +264,7 @@ const HomePage = () => {
       renderCard("network", <NetworkSettingsCard />),
       renderCard("mode", <ClashModeEnhancedCard />),
     ],
-    [homeCards, current, mutateProfiles, renderCard],
+    [current, mutateProfiles, renderCard],
   );
 
   // 新增：保存设置时用requestIdleCallback/setTimeout
@@ -314,7 +314,7 @@ const HomePage = () => {
         </Suspense>,
       ),
     ],
-    [homeCards, t, renderCard],
+    [t, renderCard],
   );
 
   return (

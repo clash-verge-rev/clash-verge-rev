@@ -1,6 +1,6 @@
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
@@ -12,9 +12,9 @@ import {
   closeAllConnections,
   getClashConfig,
   getRuntimeProxyChainConfig,
+  patchClashMode,
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
-import { patchClashMode } from "@/services/cmds";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
@@ -44,7 +44,7 @@ const ProxyPage = () => {
 
   const { verge } = useVerge();
 
-  const modeList = ["rule", "global", "direct"];
+  const modeList = useMemo(() => ["rule", "global", "direct"], []);
 
   const curMode = clashConfig?.mode?.toLowerCase();
 
@@ -100,7 +100,7 @@ const ProxyPage = () => {
     if (curMode && !modeList.includes(curMode)) {
       onChangeMode("rule");
     }
-  }, [curMode]);
+  }, [curMode, modeList, onChangeMode]);
 
   return (
     <BasePage

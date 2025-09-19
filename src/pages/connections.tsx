@@ -46,17 +46,21 @@ const ConnectionsPage = () => {
 
   const isTableLayout = setting.layout === "table";
 
-  const orderOpts: Record<string, OrderFunc> = {
-    Default: (list) =>
-      list.sort(
-        (a, b) =>
-          new Date(b.start || "0").getTime()! -
-          new Date(a.start || "0").getTime()!,
-      ),
-    "Upload Speed": (list) => list.sort((a, b) => b.curUpload! - a.curUpload!),
-    "Download Speed": (list) =>
-      list.sort((a, b) => b.curDownload! - a.curDownload!),
-  };
+  const orderOpts = useMemo<Record<string, OrderFunc>>(
+    () => ({
+      Default: (list) =>
+        list.sort(
+          (a, b) =>
+            new Date(b.start || "0").getTime()! -
+            new Date(a.start || "0").getTime()!,
+        ),
+      "Upload Speed": (list) =>
+        list.sort((a, b) => b.curUpload! - a.curUpload!),
+      "Download Speed": (list) =>
+        list.sort((a, b) => b.curDownload! - a.curDownload!),
+    }),
+    [],
+  );
 
   const [isPaused, setIsPaused] = useState(false);
   const [frozenData, setFrozenData] = useState<IConnections | null>(null);
@@ -94,7 +98,7 @@ const ConnectionsPage = () => {
     if (orderFunc) conns = orderFunc(conns);
 
     return [conns];
-  }, [displayData, match, curOrderOpt]);
+  }, [displayData, match, curOrderOpt, orderOpts]);
 
   const onCloseAll = useLockFn(closeAllConnections);
 
