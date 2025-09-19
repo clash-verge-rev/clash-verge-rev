@@ -40,6 +40,8 @@ pub fn resolve_setup_async() {
     );
 
     AsyncHandler::spawn(|| async {
+        #[cfg(not(feature = "tauri-dev"))]
+        resolve_setup_logger().await;
         init_service_manager().await;
 
         futures::join!(
@@ -117,6 +119,12 @@ pub fn init_handle(app_handle: AppHandle) {
 pub(super) fn init_scheme() {
     logging!(info, Type::Setup, true, "Initializing custom URL scheme");
     logging_error!(Type::Setup, true, init::init_scheme());
+}
+
+#[cfg(not(feature = "tauri-dev"))]
+pub(super) async fn resolve_setup_logger() {
+    logging!(info, Type::Setup, true, "Initializing global logger...");
+    logging_error!(Type::Setup, true, init::init_logger().await);
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
@@ -243,6 +251,7 @@ pub(super) async fn refresh_tray_menu() {
 }
 
 pub(super) async fn init_window() {
+    logging!(info, Type::Setup, true, "Initializing main window...");
     let is_silent_start =
         { Config::verge().await.latest_ref().enable_silent_start }.unwrap_or(false);
     #[cfg(target_os = "macos")]
