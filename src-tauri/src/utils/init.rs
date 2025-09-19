@@ -1,17 +1,20 @@
+cfg_if::cfg_if! {
+    if #[cfg(not(feature = "tauri-dev"))] {
+        use crate::utils::logging::{console_colored_format, file_format};
+        use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, LogSpecification, Logger};
+        use log::LevelFilter;
+    }
+}
+
 use crate::{
     config::*,
     core::handle,
     logging,
     process::AsyncHandler,
-    utils::{
-        dirs, help,
-        logging::{self, Type},
-    },
+    utils::{dirs, help, logging::Type},
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone};
-use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, LogSpecification, Logger};
-use log::LevelFilter;
 use std::{path::PathBuf, str::FromStr};
 use tauri_plugin_shell::ShellExt;
 use tokio::fs;
@@ -29,8 +32,8 @@ pub async fn init_logger() -> Result<()> {
     let logger = Logger::with(LogSpecification::from(log_level))
         .log_to_file(FileSpec::default().directory(log_dir).basename(""))
         .duplicate_to_stdout(Duplicate::Debug)
-        .format(logging::console_colored_format)
-        .format_for_files(logging::file_format)
+        .format(console_colored_format)
+        .format_for_files(file_format)
         .rotate(
             // ? 总是保持单个日志最大 10 MB
             Criterion::Size(10 * 1024 * 1024),

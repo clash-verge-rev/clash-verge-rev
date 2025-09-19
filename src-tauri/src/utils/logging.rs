@@ -1,10 +1,14 @@
-use std::{fmt, io::Write, thread};
-
-use flexi_logger::DeferredNow;
-use log::{LevelFilter, Record};
-
-#[cfg(feature = "verge-dev")]
-use nu_ansi_term::Color;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "tauri-dev")] {
+        use std::fmt;
+    } else {
+        #[cfg(feature = "verge-dev")]
+        use nu_ansi_term::Color;
+        use std::{fmt, io::Write, thread};
+        use flexi_logger::DeferredNow;
+        use log::{LevelFilter, Record};
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
@@ -165,6 +169,7 @@ macro_rules! logging_error {
     };
 }
 
+#[cfg(not(feature = "tauri-dev"))]
 pub fn get_log_level(log_level: &LevelFilter) -> String {
     #[cfg(feature = "verge-dev")]
     match log_level {
@@ -179,6 +184,7 @@ pub fn get_log_level(log_level: &LevelFilter) -> String {
     log_level.to_string()
 }
 
+#[cfg(not(feature = "tauri-dev"))]
 pub fn console_colored_format(
     w: &mut dyn Write,
     now: &mut DeferredNow,
@@ -201,6 +207,7 @@ pub fn console_colored_format(
     )
 }
 
+#[cfg(not(feature = "tauri-dev"))]
 pub fn file_format(
     w: &mut dyn Write,
     now: &mut DeferredNow,

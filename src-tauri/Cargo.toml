@@ -82,6 +82,7 @@ isahc = { version = "1.7.2", default-features = false, features = [
 backoff = { version = "0.4.0", features = ["tokio"] }
 tauri-plugin-http = "2"
 flexi_logger = "0.31.2"
+cfg-if = "1.0.3"
 
 [dependencies.nu-ansi-term]
 version = "0.50.1"
