@@ -29,6 +29,7 @@ pub enum Type {
     ProxyMode,
     Ipc,
     // Cache,
+    ClashVergeRev,
 }
 
 impl fmt::Display for Type {
@@ -51,6 +52,7 @@ impl fmt::Display for Type {
             Type::ProxyMode => write!(f, "[ProxMode]"),
             Type::Ipc => write!(f, "[IPC]"),
             // Type::Cache => write!(f, "[Cache]"),
+            Type::ClashVergeRev => write!(f, "[ClashVergeRev]"),
         }
     }
 }

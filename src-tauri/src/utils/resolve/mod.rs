@@ -42,6 +42,13 @@ pub fn resolve_setup_async() {
     AsyncHandler::spawn(|| async {
         #[cfg(not(feature = "tauri-dev"))]
         resolve_setup_logger().await;
+        logging!(
+            info,
+            Type::ClashVergeRev,
+            true,
+            "Version: {}",
+            env!("CARGO_PKG_VERSION")
+        );
         init_service_manager().await;
 
         futures::join!(
