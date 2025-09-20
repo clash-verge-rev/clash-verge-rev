@@ -29,10 +29,10 @@
  * Errors are logged and the process exits with code 1 on failure.
  */
 
+import { execSync } from "child_process";
+import { program } from "commander";
 import fs from "fs/promises";
 import path from "path";
-import { program } from "commander";
-import { execSync } from "child_process";
 
 /**
  * 获取当前 git 短 commit hash
@@ -287,7 +287,7 @@ async function main(versionArg) {
 
     console.log(`[INFO]: Updating versions to: ${newVersion}`);
     await updatePackageVersion(newVersion);
-    await updateCargoVersion(newVersion);
+    // await updateCargoVersion(newVersion);
     await updateTauriConfigVersion(newVersion);
     console.log("[SUCCESS]: All version updates completed successfully!");
   } catch (error) {
