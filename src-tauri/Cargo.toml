@@ -124,7 +124,7 @@ tokio-trace = ["console-subscriber"]
 [profile.release]
 panic = "abort"
 codegen-units = 16
-lto = true
+lto = "thin"
 opt-level = 2
 debug = false
 strip = true
