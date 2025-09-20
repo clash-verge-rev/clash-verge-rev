@@ -1,3 +1,5 @@
+use flexi_logger::filter::LogLineFilter;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "tauri-dev")] {
         use std::fmt;
@@ -169,6 +171,27 @@ macro_rules! logging_error {
     ($type:expr, $fmt:literal $(, $arg:expr)*) => {
         logging_error!($type, false, $fmt $(, $arg)*);
     };
+}
+
+#[cfg(not(feature = "tauri-dev"))]
+static IGNORE_MODULES: &[&str] = &["tauri", "wry"];
+#[cfg(not(feature = "tauri-dev"))]
+pub struct NoExternModule;
+#[cfg(not(feature = "tauri-dev"))]
+impl LogLineFilter for NoExternModule {
+    fn write(
+        &self,
+        now: &mut DeferredNow,
+        record: &Record,
+        log_line_writer: &dyn flexi_logger::filter::LogLineWriter,
+    ) -> std::io::Result<()> {
+        let module_path = record.module_path().unwrap_or_default();
+        if IGNORE_MODULES.iter().any(|m| module_path.starts_with(m)) {
+            Ok(())
+        } else {
+            log_line_writer.write(now, record)
+        }
+    }
 }
 
 #[cfg(not(feature = "tauri-dev"))]

@@ -1,8 +1,7 @@
 cfg_if::cfg_if! {
     if #[cfg(not(feature = "tauri-dev"))] {
-        use crate::utils::logging::{console_colored_format, file_format};
+        use crate::utils::logging::{console_colored_format, file_format, NoExternModule};
         use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, LogSpecification, Logger};
-        use log::LevelFilter;
     }
 }
 
@@ -24,9 +23,6 @@ use tokio::fs::DirEntry;
 #[cfg(not(feature = "tauri-dev"))]
 pub async fn init_logger() -> Result<()> {
     let log_level = Config::verge().await.latest_ref().get_log_level();
-    if log_level == LevelFilter::Off {
-        return Err(anyhow::anyhow!("logging is disabled"));
-    }
 
     let log_dir = dirs::app_logs_dir()?;
     let logger = Logger::with(LogSpecification::from(log_level))
@@ -43,7 +39,8 @@ pub async fn init_logger() -> Result<()> {
             },
             // TODO 提供前端设置最大保留文件数量
             Cleanup::Never,
-        );
+        )
+        .filter(Box::new(NoExternModule));
 
     let _handle = logger.start()?;
 
