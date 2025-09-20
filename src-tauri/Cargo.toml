@@ -83,18 +83,9 @@ backoff = { version = "0.4.0", features = ["tokio"] }
 tauri-plugin-http = "2"
 flexi_logger = "0.31.2"
 cfg-if = "1.0.3"
-
-[dependencies.nu-ansi-term]
-version = "0.50.1"
-optional = true
-
-[dependencies.console-subscriber]
-version = "0.4.1"
-optional = true
-
-[dependencies.tauri-plugin-devtools]
-version = "2.0.1"
-optional = false
+nu-ansi-term = { version = "0.50.1", optional = true }
+console-subscriber = { version = "0.4.1", optional = true }
+tauri-plugin-devtools = { version = "2.0.1", optional = true }
 
 
 [target.'cfg(windows)'.dependencies]
@@ -126,9 +117,9 @@ tauri-plugin-updater = "2.9.0"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["dep:nu-ansi-term"]
-tauri-dev = []
-tokio-trace = ["dep:console-subscriber"]
+verge-dev = ["nu-ansi-term"]
+tauri-dev = ["tauri-plugin-devtools"]
+tokio-trace = ["console-subscriber"]
 
 [profile.release]
 panic = "abort"
