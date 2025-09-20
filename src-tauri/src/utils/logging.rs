@@ -1,5 +1,3 @@
-use flexi_logger::filter::LogLineFilter;
-
 cfg_if::cfg_if! {
     if #[cfg(feature = "tauri-dev")] {
         use std::fmt;
@@ -9,6 +7,7 @@ cfg_if::cfg_if! {
         use std::{fmt, io::Write, thread};
         use flexi_logger::DeferredNow;
         use log::{LevelFilter, Record};
+        use flexi_logger::filter::LogLineFilter;
     }
 }
 
