@@ -287,7 +287,7 @@ async function main(versionArg) {
 
     console.log(`[INFO]: Updating versions to: ${newVersion}`);
     await updatePackageVersion(newVersion);
-    // await updateCargoVersion(newVersion);
+    await updateCargoVersion(newVersion);
     await updateTauriConfigVersion(newVersion);
     console.log("[SUCCESS]: All version updates completed successfully!");
   } catch (error) {

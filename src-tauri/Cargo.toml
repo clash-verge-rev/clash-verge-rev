@@ -85,7 +85,7 @@ flexi_logger = "0.31.2"
 cfg-if = "1.0.3"
 nu-ansi-term = { version = "0.50.1", optional = true }
 console-subscriber = { version = "0.4.1", optional = true }
-tauri-plugin-devtools = { version = "2.0.1", optional = true }
+tauri-plugin-devtools = { version = "2.0.1" }
 
 
 [target.'cfg(windows)'.dependencies]
@@ -118,7 +118,7 @@ tauri-plugin-updater = "2.9.0"
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 verge-dev = ["nu-ansi-term"]
-tauri-dev = ["tauri-plugin-devtools"]
+tauri-dev = []
 tokio-trace = ["console-subscriber"]
 
 [profile.release]
