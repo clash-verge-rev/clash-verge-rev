@@ -9,6 +9,8 @@ permissions: write-all
 env:
   TAG_NAME: autobuild
   TAG_CHANNEL: AutoBuild
+  PRE_TAG_NAME: pre-autobuild
+  PRE_TAG_CHANNEL: PreAutoBuild
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
 concurrency:
@@ -71,7 +73,7 @@ jobs:
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
           VERSION=$(jq -r .version package.json)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "DOWNLOAD_URL=https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild" >> $GITHUB_ENV
+          echo "DOWNLOAD_URL=https://github.com/clash-verge-rev/clash-verge-rev/releases/download/${{ env.PRE_TAG_NAME }}" >> $GITHUB_ENV
         shell: bash
 
       - run: |
@@ -113,11 +115,11 @@ jobs:
           Created at ${{ env.BUILDTIME }}.
           EOF
 
-      - name: Upload Release
+      - name: Upload Pre-Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          tag_name: ${{ env.PRE_TAG_NAME }}
+          name: "Clash Verge Rev ${{ env.PRE_TAG_CHANNEL }}"
           body_path: release.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -130,7 +132,7 @@ jobs:
 
     uses: clash-verge-rev/clash-verge-rev/.github/workflows/clean-old-assets.yml@dev
     with:
-      tag_name: autobuild
+      tag_name: pre-autobuild
       dry_run: false
 
   autobuild-x86-windows-macos-linux:
@@ -201,7 +203,7 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
-      - name: Release ${{ env.TAG_CHANNEL }} Version
+      - name: Release ${{ env.PRE_TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
       - name: Tauri build for Windows-macOS-Linux
@@ -218,14 +220,13 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
-          tagName: ${{ env.TAG_NAME }}
-          releaseName: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          tagName: ${{ env.PRE_TAG_NAME }}
+          releaseName: "Clash Verge Rev ${{ env.PRE_TAG_CHANNEL }}"
           releaseBody: "More new features are now supported."
           releaseDraft: false
           prerelease: true
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
-          # includeUpdaterJson: true
 
   autobuild-arm-linux:
     name: Autobuild ARM Linux
@@ -276,7 +277,7 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
-      - name: Release ${{ env.TAG_CHANNEL }} Version
+      - name: Release ${{ env.PRE_TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
       - name: Setup for linux
@@ -351,11 +352,11 @@ jobs:
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
-      - name: Upload Release
+      - name: Upload Pre-Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          tag_name: ${{ env.PRE_TAG_NAME }}
+          name: "Clash Verge Rev ${{ env.PRE_TAG_CHANNEL }}"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
@@ -408,7 +409,7 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
-      - name: Release ${{ env.TAG_CHANNEL }} Version
+      - name: Release ${{ env.PRE_TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
       - name: Download WebView2 Runtime
@@ -429,7 +430,6 @@ jobs:
         with:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
-          # includeUpdaterJson: true
 
       - name: Rename
         run: |
@@ -451,19 +451,61 @@ jobs:
             Rename-Item $file.FullName $newName
           }
 
-      - name: Upload Release
+      - name: Upload Pre-Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          tag_name: ${{ env.PRE_TAG_NAME }}
+          name: "Clash Verge Rev ${{ env.PRE_TAG_CHANNEL }}"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle
-        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
+        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.PRE_TAG_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  promote-autobuild:
+    name: Promote PreAutoBuild to AutoBuild
+    runs-on: ubuntu-latest
+    needs:
+      [
+        autobuild-x86-windows-macos-linux,
+        autobuild-arm-linux,
+        autobuild-x86-arm-windows_webview2,
+      ]
+    if: >
+      ${{
+        needs.autobuild-x86-windows-macos-linux.result == 'success' &&
+        needs.autobuild-arm-linux.result == 'success' &&
+        needs.autobuild-x86-arm-windows_webview2.result == 'success'
+      }}
+    steps:
+      - name: Install gh CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh jq
+
+      - name: Download PreAutoBuild Release Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir pre-assets
+          release_id=$(gh api repos/${{ github.repository }}/releases/tags/${{ env.PRE_TAG_NAME }} | jq .id)
+          gh release download ${{ env.PRE_TAG_NAME }} --dir pre-assets
+
+          body=$(gh api repos/${{ github.repository }}/releases/$release_id | jq -r .body)
+          echo "$body" > release.txt
+
+      - name: Publish to autobuild tag
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          body_path: release.txt
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: pre-assets/*
 
   notify-telegram:
     name: Notify Telegram
@@ -474,6 +516,7 @@ jobs:
         autobuild-x86-windows-macos-linux,
         autobuild-arm-linux,
         autobuild-x86-arm-windows_webview2,
+        promote-autobuild,
       ]
     steps:
       - name: Checkout repository
