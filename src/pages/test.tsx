@@ -1,33 +1,32 @@
-import { useEffect, useRef, useState } from "react";
-import { useVerge } from "@/hooks/use-verge";
-import { Box, Button, Grid } from "@mui/material";
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-
-import { useTranslation } from "react-i18next";
-import { BasePage } from "@/components/base";
-import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
-import { TestItem } from "@/components/test/test-item";
+import { Box, Button, Grid } from "@mui/material";
 import { emit } from "@tauri-apps/api/event";
 import { nanoid } from "nanoid";
-import { ScrollTopButton } from "@/components/layout/scroll-top-button";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // test icons
 import apple from "@/assets/image/test/apple.svg?raw";
 import github from "@/assets/image/test/github.svg?raw";
 import google from "@/assets/image/test/google.svg?raw";
 import youtube from "@/assets/image/test/youtube.svg?raw";
+import { BasePage } from "@/components/base";
+import { ScrollTopButton } from "@/components/layout/scroll-top-button";
+import { TestItem } from "@/components/test/test-item";
+import { TestViewer, TestViewerRef } from "@/components/test/test-viewer";
+import { useVerge } from "@/hooks/use-verge";
 
 const TestPage = () => {
   const { t } = useTranslation();
@@ -40,32 +39,36 @@ const TestPage = () => {
   const { verge, mutateVerge, patchVerge } = useVerge();
 
   // test list
-  const testList = verge?.test_list ?? [
-    {
-      uid: nanoid(),
-      name: "Apple",
-      url: "https://www.apple.com",
-      icon: apple,
-    },
-    {
-      uid: nanoid(),
-      name: "GitHub",
-      url: "https://www.github.com",
-      icon: github,
-    },
-    {
-      uid: nanoid(),
-      name: "Google",
-      url: "https://www.google.com",
-      icon: google,
-    },
-    {
-      uid: nanoid(),
-      name: "Youtube",
-      url: "https://www.youtube.com",
-      icon: youtube,
-    },
-  ];
+  const testList = useMemo(
+    () =>
+      verge?.test_list ?? [
+        {
+          uid: nanoid(),
+          name: "Apple",
+          url: "https://www.apple.com",
+          icon: apple,
+        },
+        {
+          uid: nanoid(),
+          name: "GitHub",
+          url: "https://www.github.com",
+          icon: github,
+        },
+        {
+          uid: nanoid(),
+          name: "Google",
+          url: "https://www.google.com",
+          icon: google,
+        },
+        {
+          uid: nanoid(),
+          name: "Youtube",
+          url: "https://www.youtube.com",
+          icon: youtube,
+        },
+      ],
+    [verge],
+  );
 
   const onTestListItemChange = (
     uid: string,
@@ -101,12 +104,12 @@ const TestPage = () => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        let old_index = testList.findIndex((x) => x.uid === active.id);
-        let new_index = testList.findIndex((x) => x.uid === over.id);
+        const old_index = testList.findIndex((x) => x.uid === active.id);
+        const new_index = testList.findIndex((x) => x.uid === over.id);
         if (old_index < 0 || new_index < 0) {
           return;
         }
-        let newList = reorder(testList, old_index, new_index);
+        const newList = reorder(testList, old_index, new_index);
         await mutateVerge({ ...verge, test_list: newList }, false);
         await patchVerge({ test_list: newList });
       }
@@ -118,7 +121,7 @@ const TestPage = () => {
     if (!verge?.test_list) {
       patchVerge({ test_list: testList });
     }
-  }, [verge]);
+  }, [verge, patchVerge, testList]);
 
   const viewerRef = useRef<TestViewerRef>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);

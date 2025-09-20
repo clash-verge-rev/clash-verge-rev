@@ -1,19 +1,3 @@
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
-import { BaseFieldset } from "@/components/base/base-fieldset";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { EditorViewer } from "@/components/profile/editor-viewer";
-import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-provider";
-import { getClashConfig } from "@/services/cmds";
-import {
-  getAutotemProxy,
-  getNetworkInterfacesInfo,
-  getSystemHostname,
-  getSystemProxy,
-  patchVergeConfig,
-} from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
-import getSystem from "@/utils/get-system";
 import { EditRounded } from "@mui/icons-material";
 import {
   Autocomplete,
@@ -36,6 +20,23 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
+
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
+import { BaseFieldset } from "@/components/base/base-fieldset";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { EditorViewer } from "@/components/profile/editor-viewer";
+import { useVerge } from "@/hooks/use-verge";
+import { useAppData } from "@/providers/app-data-provider";
+import { getClashConfig } from "@/services/cmds";
+import {
+  getAutotemProxy,
+  getNetworkInterfacesInfo,
+  getSystemHostname,
+  getSystemProxy,
+  patchVergeConfig,
+} from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
+import getSystem from "@/utils/get-system";
 
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";

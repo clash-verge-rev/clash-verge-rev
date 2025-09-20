@@ -1,7 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLockFn } from "ahooks";
-import yaml from "js-yaml";
-import { useTranslation } from "react-i18next";
 import {
   DndContext,
   closestCenter,
@@ -15,6 +11,10 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
 import {
   Autocomplete,
   Box,
@@ -30,28 +30,30 @@ import {
   TextField,
   styled,
 } from "@mui/material";
+import { useLockFn } from "ahooks";
 import {
-  VerticalAlignTopRounded,
-  VerticalAlignBottomRounded,
-} from "@mui/icons-material";
+  requestIdleCallback,
+  cancelIdleCallback,
+} from "foxact/request-idle-callback";
+import yaml from "js-yaml";
+import { useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import MonacoEditor from "react-monaco-editor";
+import { Virtuoso } from "react-virtuoso";
+
+import { Switch } from "@/components/base";
 import { GroupItem } from "@/components/profile/group-item";
 import {
   getNetworkInterfaces,
   readProfileFile,
   saveProfileFile,
 } from "@/services/cmds";
-import { Switch } from "@/components/base";
-import getSystem from "@/utils/get-system";
-import { BaseSearchBox } from "../base/base-search-box";
-import { Virtuoso } from "react-virtuoso";
-import MonacoEditor from "react-monaco-editor";
-import { useThemeMode } from "@/services/states";
-import { Controller, useForm } from "react-hook-form";
 import { showNotice } from "@/services/noticeService";
-import {
-  requestIdleCallback,
-  cancelIdleCallback,
-} from "foxact/request-idle-callback";
+import { useThemeMode } from "@/services/states";
+import getSystem from "@/utils/get-system";
+
+import { BaseSearchBox } from "../base/base-search-box";
 
 interface Props {
   proxiesUid: string;
@@ -159,8 +161,8 @@ export const GroupsEditorViewer = (props: Props) => {
     }
   };
   const fetchContent = async () => {
-    let data = await readProfileFile(property);
-    let obj = yaml.load(data) as ISeqProfileConfig | null;
+    const data = await readProfileFile(property);
+    const obj = yaml.load(data) as ISeqProfileConfig | null;
 
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
@@ -174,7 +176,7 @@ export const GroupsEditorViewer = (props: Props) => {
     if (currData === "") return;
     if (visualization !== true) return;
 
-    let obj = yaml.load(currData) as {
+    const obj = yaml.load(currData) as {
       prepend: [];
       append: [];
       delete: [];
@@ -209,21 +211,21 @@ export const GroupsEditorViewer = (props: Props) => {
   }, [prependSeq, appendSeq, deleteSeq]);
 
   const fetchProxyPolicy = async () => {
-    let data = await readProfileFile(profileUid);
-    let proxiesData = await readProfileFile(proxiesUid);
-    let originGroupsObj = yaml.load(data) as {
+    const data = await readProfileFile(profileUid);
+    const proxiesData = await readProfileFile(proxiesUid);
+    const originGroupsObj = yaml.load(data) as {
       "proxy-groups": IProxyGroupConfig[];
     } | null;
 
-    let originProxiesObj = yaml.load(data) as { proxies: [] } | null;
-    let originProxies = originProxiesObj?.proxies || [];
-    let moreProxiesObj = yaml.load(proxiesData) as ISeqProfileConfig | null;
-    let morePrependProxies = moreProxiesObj?.prepend || [];
-    let moreAppendProxies = moreProxiesObj?.append || [];
-    let moreDeleteProxies =
+    const originProxiesObj = yaml.load(data) as { proxies: [] } | null;
+    const originProxies = originProxiesObj?.proxies || [];
+    const moreProxiesObj = yaml.load(proxiesData) as ISeqProfileConfig | null;
+    const morePrependProxies = moreProxiesObj?.prepend || [];
+    const moreAppendProxies = moreProxiesObj?.append || [];
+    const moreDeleteProxies =
       moreProxiesObj?.delete || ([] as string[] | { name: string }[]);
 
-    let proxies = morePrependProxies.concat(
+    const proxies = morePrependProxies.concat(
       originProxies.filter((proxy: any) => {
         if (proxy.name) {
           return !moreDeleteProxies.includes(proxy.name);
@@ -246,28 +248,30 @@ export const GroupsEditorViewer = (props: Props) => {
     );
   };
   const fetchProfile = async () => {
-    let data = await readProfileFile(profileUid);
-    let mergeData = await readProfileFile(mergeUid);
-    let globalMergeData = await readProfileFile("Merge");
+    const data = await readProfileFile(profileUid);
+    const mergeData = await readProfileFile(mergeUid);
+    const globalMergeData = await readProfileFile("Merge");
 
-    let originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = yaml.load(data) as {
       "proxy-groups": IProxyGroupConfig[];
     } | null;
 
-    let originProviderObj = yaml.load(data) as { "proxy-providers": {} } | null;
-    let originProvider = originProviderObj?.["proxy-providers"] || {};
-
-    let moreProviderObj = yaml.load(mergeData) as {
+    const originProviderObj = yaml.load(data) as {
       "proxy-providers": {};
     } | null;
-    let moreProvider = moreProviderObj?.["proxy-providers"] || {};
+    const originProvider = originProviderObj?.["proxy-providers"] || {};
 
-    let globalProviderObj = yaml.load(globalMergeData) as {
+    const moreProviderObj = yaml.load(mergeData) as {
       "proxy-providers": {};
     } | null;
-    let globalProvider = globalProviderObj?.["proxy-providers"] || {};
+    const moreProvider = moreProviderObj?.["proxy-providers"] || {};
 
-    let provider = Object.assign(
+    const globalProviderObj = yaml.load(globalMergeData) as {
+      "proxy-providers": {};
+    } | null;
+    const globalProvider = globalProviderObj?.["proxy-providers"] || {};
+
+    const provider = Object.assign(
       {},
       originProvider,
       moreProvider,
@@ -278,7 +282,7 @@ export const GroupsEditorViewer = (props: Props) => {
     setGroupList(originGroupsObj?.["proxy-groups"] || []);
   };
   const getInterfaceNameList = async () => {
-    let list = await getNetworkInterfaces();
+    const list = await getNetworkInterfaces();
     setInterfaceNameList(list);
   };
   useEffect(() => {
@@ -293,7 +297,7 @@ export const GroupsEditorViewer = (props: Props) => {
   }, [open]);
 
   const validateGroup = () => {
-    let group = formIns.getValues();
+    const group = formIns.getValues();
     if (group.name === "") {
       throw new Error(t("Group Name Required"));
     }
@@ -794,7 +798,7 @@ export const GroupsEditorViewer = (props: Props) => {
                 }
                 increaseViewportBy={256}
                 itemContent={(index) => {
-                  let shift = filteredPrependSeq.length > 0 ? 1 : 0;
+                  const shift = filteredPrependSeq.length > 0 ? 1 : 0;
                   if (filteredPrependSeq.length > 0 && index === 0) {
                     return (
                       <DndContext
@@ -827,7 +831,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       </DndContext>
                     );
                   } else if (index < filteredGroupList.length + shift) {
-                    let newIndex = index - shift;
+                    const newIndex = index - shift;
                     return (
                       <GroupItem
                         key={`${filteredGroupList[newIndex].name}-${index}`}

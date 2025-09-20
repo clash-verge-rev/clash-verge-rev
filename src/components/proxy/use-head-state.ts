@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { ProxySortType } from "./use-filter-sort";
+
 import { useProfiles } from "@/hooks/use-profiles";
+
+import { ProxySortType } from "./use-filter-sort";
 
 export interface HeadState {
   open?: boolean;

@@ -1,5 +1,5 @@
-import { listen, UnlistenFn, EventCallback } from "@tauri-apps/api/event";
 import { event } from "@tauri-apps/api";
+import { listen, UnlistenFn, EventCallback } from "@tauri-apps/api/event";
 import { useRef } from "react";
 
 export const useListen = () => {

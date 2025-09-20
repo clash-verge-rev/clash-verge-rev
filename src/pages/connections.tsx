@@ -1,29 +1,29 @@
-import { useMemo, useRef, useState, useCallback } from "react";
-import { useLockFn } from "ahooks";
-import { Box, Button, IconButton, MenuItem } from "@mui/material";
-import { Virtuoso } from "react-virtuoso";
-import { useTranslation } from "react-i18next";
 import {
+  PauseCircleOutlineRounded,
+  PlayCircleOutlineRounded,
   TableChartRounded,
   TableRowsRounded,
-  PlayCircleOutlineRounded,
-  PauseCircleOutlineRounded,
 } from "@mui/icons-material";
-import { closeAllConnections } from "@/services/cmds";
-import { useConnectionSetting } from "@/services/states";
+import { Box, Button, IconButton, MenuItem } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Virtuoso } from "react-virtuoso";
+
 import { BaseEmpty, BasePage } from "@/components/base";
-import { ConnectionItem } from "@/components/connection/connection-item";
-import { ConnectionTable } from "@/components/connection/connection-table";
+import { BaseSearchBox } from "@/components/base/base-search-box";
+import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import {
   ConnectionDetail,
   ConnectionDetailRef,
 } from "@/components/connection/connection-detail";
-import parseTraffic from "@/utils/parse-traffic";
-import { BaseSearchBox } from "@/components/base/base-search-box";
-import { BaseStyledSelect } from "@/components/base/base-styled-select";
-import { useTheme } from "@mui/material/styles";
+import { ConnectionItem } from "@/components/connection/connection-item";
+import { ConnectionTable } from "@/components/connection/connection-table";
 import { useVisibility } from "@/hooks/use-visibility";
 import { useAppData } from "@/providers/app-data-provider";
+import { closeAllConnections } from "@/services/cmds";
+import { useConnectionSetting } from "@/services/states";
+import parseTraffic from "@/utils/parse-traffic";
 
 const initConn: IConnections = {
   uploadTotal: 0,
@@ -36,8 +36,6 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ConnectionsPage = () => {
   const { t } = useTranslation();
   const pageVisible = useVisibility();
-  const theme = useTheme();
-  const _isDark = theme.palette.mode === "dark";
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
 
@@ -48,17 +46,21 @@ const ConnectionsPage = () => {
 
   const isTableLayout = setting.layout === "table";
 
-  const orderOpts: Record<string, OrderFunc> = {
-    Default: (list) =>
-      list.sort(
-        (a, b) =>
-          new Date(b.start || "0").getTime()! -
-          new Date(a.start || "0").getTime()!,
-      ),
-    "Upload Speed": (list) => list.sort((a, b) => b.curUpload! - a.curUpload!),
-    "Download Speed": (list) =>
-      list.sort((a, b) => b.curDownload! - a.curDownload!),
-  };
+  const orderOpts = useMemo<Record<string, OrderFunc>>(
+    () => ({
+      Default: (list) =>
+        list.sort(
+          (a, b) =>
+            new Date(b.start || "0").getTime()! -
+            new Date(a.start || "0").getTime()!,
+        ),
+      "Upload Speed": (list) =>
+        list.sort((a, b) => b.curUpload! - a.curUpload!),
+      "Download Speed": (list) =>
+        list.sort((a, b) => b.curDownload! - a.curDownload!),
+    }),
+    [],
+  );
 
   const [isPaused, setIsPaused] = useState(false);
   const [frozenData, setFrozenData] = useState<IConnections | null>(null);
@@ -96,7 +98,7 @@ const ConnectionsPage = () => {
     if (orderFunc) conns = orderFunc(conns);
 
     return [conns];
-  }, [displayData, match, curOrderOpt]);
+  }, [displayData, match, curOrderOpt, orderOpts]);
 
   const onCloseAll = useLockFn(closeAllConnections);
 

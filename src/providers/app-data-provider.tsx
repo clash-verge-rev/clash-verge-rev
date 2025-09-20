@@ -1,3 +1,4 @@
+import { listen } from "@tauri-apps/api/event";
 import React, {
   createContext,
   useContext,
@@ -5,27 +6,25 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { useVerge } from "@/hooks/use-verge";
 import useSWR from "swr";
+
+import { useClashInfo } from "@/hooks/use-clash";
+import { useVerge } from "@/hooks/use-verge";
+import { useVisibility } from "@/hooks/use-visibility";
 import {
-  getProxies,
-  getRules,
+  forceRefreshProxies,
+  getAppUptime,
   getClashConfig,
+  getConnections,
+  getMemoryData,
+  getProxies,
   getProxyProviders,
   getRuleProviders,
-  getConnections,
-  getTrafficData,
-  getMemoryData,
-} from "@/services/cmds";
-import {
-  getSystemProxy,
+  getRules,
   getRunningMode,
-  getAppUptime,
-  forceRefreshProxies,
+  getSystemProxy,
+  getTrafficData,
 } from "@/services/cmds";
-import { useClashInfo } from "@/hooks/use-clash";
-import { useVisibility } from "@/hooks/use-visibility";
-import { listen } from "@tauri-apps/api/event";
 
 // 连接速度计算接口
 interface ConnectionSpeedData {
@@ -481,7 +480,7 @@ export const AppDataProvider = ({
   );
 
   // 提供统一的刷新方法
-  const refreshAll = async () => {
+  const refreshAll = React.useCallback(async () => {
     await Promise.all([
       refreshProxy(),
       refreshClashConfig(),
@@ -490,7 +489,14 @@ export const AppDataProvider = ({
       refreshProxyProviders(),
       refreshRuleProviders(),
     ]);
-  };
+  }, [
+    refreshProxy,
+    refreshClashConfig,
+    refreshRules,
+    refreshSysproxy,
+    refreshProxyProviders,
+    refreshRuleProviders,
+  ]);
 
   // 聚合所有数据
   const value = useMemo(() => {
@@ -580,6 +586,7 @@ export const AppDataProvider = ({
     refreshSysproxy,
     refreshProxyProviders,
     refreshRuleProviders,
+    refreshAll,
   ]);
 
   return (

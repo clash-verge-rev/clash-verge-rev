@@ -1,7 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLockFn } from "ahooks";
-import yaml from "js-yaml";
-import { useTranslation } from "react-i18next";
 import {
   DndContext,
   closestCenter,
@@ -16,6 +12,10 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
+import {
   Box,
   Button,
   Dialog,
@@ -27,19 +27,21 @@ import {
   TextField,
   styled,
 } from "@mui/material";
-import {
-  VerticalAlignTopRounded,
-  VerticalAlignBottomRounded,
-} from "@mui/icons-material";
+import { useLockFn } from "ahooks";
+import yaml from "js-yaml";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import MonacoEditor from "react-monaco-editor";
+import { Virtuoso } from "react-virtuoso";
+
 import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import getSystem from "@/utils/get-system";
-import { BaseSearchBox } from "../base/base-search-box";
-import { Virtuoso } from "react-virtuoso";
-import MonacoEditor from "react-monaco-editor";
-import { useThemeMode } from "@/services/states";
-import parseUri from "@/utils/uri-parser";
 import { showNotice } from "@/services/noticeService";
+import { useThemeMode } from "@/services/states";
+import getSystem from "@/utils/get-system";
+import parseUri from "@/utils/uri-parser";
+
+import { BaseSearchBox } from "../base/base-search-box";
 
 interface Props {
   profileUid: string;
@@ -132,8 +134,8 @@ export const ProxiesEditorViewer = (props: Props) => {
   };
   // 优化：异步分片解析，避免主线程阻塞，解析完成后批量setState
   const handleParseAsync = (cb: (proxies: IProxyConfig[]) => void) => {
-    let proxies: IProxyConfig[] = [];
-    let names: string[] = [];
+    const proxies: IProxyConfig[] = [];
+    const names: string[] = [];
     let uris = "";
     try {
       uris = atob(proxyUri);
@@ -148,7 +150,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       for (; idx < end; idx++) {
         const uri = lines[idx];
         try {
-          let proxy = parseUri(uri.trim());
+          const proxy = parseUri(uri.trim());
           if (!names.includes(proxy.name)) {
             proxies.push(proxy);
             names.push(proxy.name);
@@ -171,9 +173,9 @@ export const ProxiesEditorViewer = (props: Props) => {
     parseBatch();
   };
   const fetchProfile = async () => {
-    let data = await readProfileFile(profileUid);
+    const data = await readProfileFile(profileUid);
 
-    let originProxiesObj = yaml.load(data) as {
+    const originProxiesObj = yaml.load(data) as {
       proxies: IProxyConfig[];
     } | null;
 
@@ -181,8 +183,8 @@ export const ProxiesEditorViewer = (props: Props) => {
   };
 
   const fetchContent = async () => {
-    let data = await readProfileFile(property);
-    let obj = yaml.load(data) as ISeqProfileConfig | null;
+    const data = await readProfileFile(property);
+    const obj = yaml.load(data) as ISeqProfileConfig | null;
 
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
@@ -196,7 +198,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     if (currData === "") return;
     if (visualization !== true) return;
 
-    let obj = yaml.load(currData) as {
+    const obj = yaml.load(currData) as {
       prepend: [];
       append: [];
       delete: [];
@@ -342,7 +344,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                 }
                 increaseViewportBy={256}
                 itemContent={(index) => {
-                  let shift = filteredPrependSeq.length > 0 ? 1 : 0;
+                  const shift = filteredPrependSeq.length > 0 ? 1 : 0;
                   if (filteredPrependSeq.length > 0 && index === 0) {
                     return (
                       <DndContext
@@ -375,7 +377,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                       </DndContext>
                     );
                   } else if (index < filteredProxyList.length + shift) {
-                    let newIndex = index - shift;
+                    const newIndex = index - shift;
                     return (
                       <ProxyItem
                         key={`${filteredProxyList[newIndex].name}-${index}`}

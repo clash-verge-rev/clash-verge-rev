@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Box, Divider, MenuItem, Menu, styled, alpha } from "@mui/material";
-import { BaseLoading } from "@/components/base";
 import { LanguageRounded } from "@mui/icons-material";
-import { showNotice } from "@/services/noticeService";
-import { TestBox } from "./test-box";
-import delayManager from "@/services/delay";
-import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
-import { UnlistenFn } from "@tauri-apps/api/event";
+import { Box, Divider, MenuItem, Menu, styled, alpha } from "@mui/material";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { UnlistenFn } from "@tauri-apps/api/event";
+import { useLockFn } from "ahooks";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { BaseLoading } from "@/components/base";
 import { useListen } from "@/hooks/use-listen";
+import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
+import delayManager from "@/services/delay";
+import { showNotice } from "@/services/noticeService";
+
+import { TestBox } from "./test-box";
 
 interface Props {
   id: string;

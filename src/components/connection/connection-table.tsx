@@ -1,10 +1,11 @@
-import dayjs from "dayjs";
-import { useMemo, useState } from "react";
 import { DataGrid, GridColDef, GridColumnResizeParams } from "@mui/x-data-grid";
-import { truncateStr } from "@/utils/truncate-str";
-import parseTraffic from "@/utils/parse-traffic";
-import { t } from "i18next";
+import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
+import { t } from "i18next";
+import { useMemo, useState } from "react";
+
+import parseTraffic from "@/utils/parse-traffic";
+import { truncateStr } from "@/utils/truncate-str";
 
 interface Props {
   connections: IConnectionsItem[];

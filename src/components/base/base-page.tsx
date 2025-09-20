@@ -1,7 +1,8 @@
-import React, { ReactNode } from "react";
 import { Typography } from "@mui/material";
-import { BaseErrorBoundary } from "./base-error-boundary";
 import { useTheme } from "@mui/material/styles";
+import React, { ReactNode } from "react";
+
+import { BaseErrorBoundary } from "./base-error-boundary";
 
 interface Props {
   title?: React.ReactNode; // the page title

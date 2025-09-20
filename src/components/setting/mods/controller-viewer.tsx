@@ -1,7 +1,3 @@
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
-import { useClashInfo } from "@/hooks/use-clash";
-import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
 import { ContentCopy } from "@mui/icons-material";
 import {
   Alert,
@@ -18,6 +14,11 @@ import {
 import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
+import { useClashInfo } from "@/hooks/use-clash";
+import { useVerge } from "@/hooks/use-verge";
+import { showNotice } from "@/services/noticeService";
 
 export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();

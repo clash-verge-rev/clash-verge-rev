@@ -1,19 +1,20 @@
-import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { Box, Snackbar, Alert } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import { providerHealthCheck, getGroupProxyDelays } from "@/services/cmds";
-import { useVerge } from "@/hooks/use-verge";
-import { useProxySelection } from "@/hooks/use-proxy-selection";
-import { BaseEmpty } from "../base";
-import { useRenderList } from "./use-render-list";
-import { ProxyRender } from "./proxy-render";
-import delayManager from "@/services/delay";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+
+import { useProxySelection } from "@/hooks/use-proxy-selection";
+import { useVerge } from "@/hooks/use-verge";
+import { providerHealthCheck, getGroupProxyDelays } from "@/services/cmds";
+import delayManager from "@/services/delay";
+
+import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
-import { Box, styled, Snackbar, Alert } from "@mui/material";
-import { memo } from "react";
-import { createPortal } from "react-dom";
+
 import { ProxyChain } from "./proxy-chain";
+import { ProxyRender } from "./proxy-render";
+import { useRenderList } from "./use-render-list";
 
 interface Props {
   mode: string;

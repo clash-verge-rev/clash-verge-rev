@@ -1,10 +1,10 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
-import { Box, Typography, Button, Alert, Collapse } from "@mui/material";
 import {
   ErrorOutlineRounded,
   RefreshRounded,
   BugReportRounded,
 } from "@mui/icons-material";
+import { Box, Typography, Button, Alert, Collapse } from "@mui/material";
+import React, { Component, ErrorInfo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Props {

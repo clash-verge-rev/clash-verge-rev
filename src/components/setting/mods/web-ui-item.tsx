@@ -1,11 +1,3 @@
-import { useState } from "react";
-import {
-  Divider,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
 import {
   CheckRounded,
   CloseRounded,
@@ -13,6 +5,14 @@ import {
   EditRounded,
   OpenInNewRounded,
 } from "@mui/icons-material";
+import {
+  Divider,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Props {

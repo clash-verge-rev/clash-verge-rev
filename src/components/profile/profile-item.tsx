@@ -1,10 +1,6 @@
-import dayjs from "dayjs";
-import { mutate } from "swr";
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { RefreshRounded, DragIndicatorRounded } from "@mui/icons-material";
 import {
   Box,
   Typography,
@@ -15,8 +11,17 @@ import {
   Menu,
   CircularProgress,
 } from "@mui/material";
-import { RefreshRounded, DragIndicatorRounded } from "@mui/icons-material";
-import { useLoadingCache, useSetLoadingCache } from "@/services/states";
+import { open } from "@tauri-apps/plugin-shell";
+import { useLockFn } from "ahooks";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { mutate } from "swr";
+
+import { ConfirmViewer } from "@/components/profile/confirm-viewer";
+import { EditorViewer } from "@/components/profile/editor-viewer";
+import { GroupsEditorViewer } from "@/components/profile/groups-editor-viewer";
+import { RulesEditorViewer } from "@/components/profile/rules-editor-viewer";
 import {
   viewProfile,
   readProfileFile,
@@ -25,13 +30,10 @@ import {
   getNextUpdateTime,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
-import { GroupsEditorViewer } from "@/components/profile/groups-editor-viewer";
-import { RulesEditorViewer } from "@/components/profile/rules-editor-viewer";
-import { EditorViewer } from "@/components/profile/editor-viewer";
-import { ProfileBox } from "./profile-box";
+import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
-import { ConfirmViewer } from "@/components/profile/confirm-viewer";
-import { open } from "@tauri-apps/plugin-shell";
+
+import { ProfileBox } from "./profile-box";
 import { ProxiesEditorViewer } from "./proxies-editor-viewer";
 const round = keyframes`
   from { transform: rotate(0deg); }

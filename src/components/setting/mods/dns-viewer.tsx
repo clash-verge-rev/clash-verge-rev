@@ -1,6 +1,4 @@
-import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
+import { RestartAltRounded } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -14,15 +12,18 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { RestartAltRounded } from "@mui/icons-material";
-import { useClash } from "@/hooks/use-clash";
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
+import { invoke } from "@tauri-apps/api/core";
+import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
+import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
+
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
+import { useClash } from "@/hooks/use-clash";
+import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
-import { invoke } from "@tauri-apps/api/core";
-import { showNotice } from "@/services/noticeService";
 
 const Item = styled(ListItem)(() => ({
   padding: "5px 2px",
@@ -379,7 +380,7 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
   const formatHosts = (hosts: any): string => {
     if (!hosts || typeof hosts !== "object") return "";
 
-    let result: string[] = [];
+    const result: string[] = [];
 
     Object.entries(hosts).forEach(([domain, value]) => {
       if (Array.isArray(value)) {

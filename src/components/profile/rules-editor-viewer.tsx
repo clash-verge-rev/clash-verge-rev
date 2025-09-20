@@ -1,7 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLockFn } from "ahooks";
-import yaml from "js-yaml";
-import { useTranslation } from "react-i18next";
 import {
   DndContext,
   closestCenter,
@@ -16,6 +12,10 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
+import {
   Autocomplete,
   Box,
   Button,
@@ -29,19 +29,21 @@ import {
   TextField,
   styled,
 } from "@mui/material";
-import {
-  VerticalAlignTopRounded,
-  VerticalAlignBottomRounded,
-} from "@mui/icons-material";
-import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { Switch } from "@/components/base";
-import getSystem from "@/utils/get-system";
-import { RuleItem } from "@/components/profile/rule-item";
-import { BaseSearchBox } from "../base/base-search-box";
-import { Virtuoso } from "react-virtuoso";
+import { useLockFn } from "ahooks";
+import yaml from "js-yaml";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
-import { useThemeMode } from "@/services/states";
+import { Virtuoso } from "react-virtuoso";
+
+import { Switch } from "@/components/base";
+import { RuleItem } from "@/components/profile/rule-item";
+import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { useThemeMode } from "@/services/states";
+import getSystem from "@/utils/get-system";
+
+import { BaseSearchBox } from "../base/base-search-box";
 
 interface Props {
   groupsUid: string;
@@ -287,8 +289,8 @@ export const RulesEditorViewer = (props: Props) => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        let activeIndex = prependSeq.indexOf(active.id.toString());
-        let overIndex = prependSeq.indexOf(over.id.toString());
+        const activeIndex = prependSeq.indexOf(active.id.toString());
+        const overIndex = prependSeq.indexOf(over.id.toString());
         setPrependSeq(reorder(prependSeq, activeIndex, overIndex));
       }
     }
@@ -297,15 +299,15 @@ export const RulesEditorViewer = (props: Props) => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        let activeIndex = appendSeq.indexOf(active.id.toString());
-        let overIndex = appendSeq.indexOf(over.id.toString());
+        const activeIndex = appendSeq.indexOf(active.id.toString());
+        const overIndex = appendSeq.indexOf(over.id.toString());
         setAppendSeq(reorder(appendSeq, activeIndex, overIndex));
       }
     }
   };
   const fetchContent = async () => {
-    let data = await readProfileFile(property);
-    let obj = yaml.load(data) as ISeqProfileConfig | null;
+    const data = await readProfileFile(property);
+    const obj = yaml.load(data) as ISeqProfileConfig | null;
 
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
@@ -319,7 +321,7 @@ export const RulesEditorViewer = (props: Props) => {
     if (currData === "") return;
     if (visualization !== true) return;
 
-    let obj = yaml.load(currData) as ISeqProfileConfig | null;
+    const obj = yaml.load(currData) as ISeqProfileConfig | null;
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
@@ -349,21 +351,21 @@ export const RulesEditorViewer = (props: Props) => {
   }, [prependSeq, appendSeq, deleteSeq]);
 
   const fetchProfile = async () => {
-    let data = await readProfileFile(profileUid); // 原配置文件
-    let groupsData = await readProfileFile(groupsUid); // groups配置文件
-    let mergeData = await readProfileFile(mergeUid); // merge配置文件
-    let globalMergeData = await readProfileFile("Merge"); // global merge配置文件
+    const data = await readProfileFile(profileUid); // 原配置文件
+    const groupsData = await readProfileFile(groupsUid); // groups配置文件
+    const mergeData = await readProfileFile(mergeUid); // merge配置文件
+    const globalMergeData = await readProfileFile("Merge"); // global merge配置文件
 
-    let rulesObj = yaml.load(data) as { rules: [] } | null;
+    const rulesObj = yaml.load(data) as { rules: [] } | null;
 
-    let originGroupsObj = yaml.load(data) as { "proxy-groups": [] } | null;
-    let originGroups = originGroupsObj?.["proxy-groups"] || [];
-    let moreGroupsObj = yaml.load(groupsData) as ISeqProfileConfig | null;
-    let morePrependGroups = moreGroupsObj?.["prepend"] || [];
-    let moreAppendGroups = moreGroupsObj?.["append"] || [];
-    let moreDeleteGroups =
+    const originGroupsObj = yaml.load(data) as { "proxy-groups": [] } | null;
+    const originGroups = originGroupsObj?.["proxy-groups"] || [];
+    const moreGroupsObj = yaml.load(groupsData) as ISeqProfileConfig | null;
+    const morePrependGroups = moreGroupsObj?.["prepend"] || [];
+    const moreAppendGroups = moreGroupsObj?.["append"] || [];
+    const moreDeleteGroups =
       moreGroupsObj?.["delete"] || ([] as string[] | { name: string }[]);
-    let groups = morePrependGroups.concat(
+    const groups = morePrependGroups.concat(
       originGroups.filter((group: any) => {
         if (group.name) {
           return !moreDeleteGroups.includes(group.name);
@@ -374,27 +376,37 @@ export const RulesEditorViewer = (props: Props) => {
       moreAppendGroups,
     );
 
-    let originRuleSetObj = yaml.load(data) as { "rule-providers": {} } | null;
-    let originRuleSet = originRuleSetObj?.["rule-providers"] || {};
-    let moreRuleSetObj = yaml.load(mergeData) as {
+    const originRuleSetObj = yaml.load(data) as { "rule-providers": {} } | null;
+    const originRuleSet = originRuleSetObj?.["rule-providers"] || {};
+    const moreRuleSetObj = yaml.load(mergeData) as {
       "rule-providers": {};
     } | null;
-    let moreRuleSet = moreRuleSetObj?.["rule-providers"] || {};
-    let globalRuleSetObj = yaml.load(globalMergeData) as {
+    const moreRuleSet = moreRuleSetObj?.["rule-providers"] || {};
+    const globalRuleSetObj = yaml.load(globalMergeData) as {
       "rule-providers": {};
     } | null;
-    let globalRuleSet = globalRuleSetObj?.["rule-providers"] || {};
-    let ruleSet = Object.assign({}, originRuleSet, moreRuleSet, globalRuleSet);
+    const globalRuleSet = globalRuleSetObj?.["rule-providers"] || {};
+    const ruleSet = Object.assign(
+      {},
+      originRuleSet,
+      moreRuleSet,
+      globalRuleSet,
+    );
 
-    let originSubRuleObj = yaml.load(data) as { "sub-rules": {} } | null;
-    let originSubRule = originSubRuleObj?.["sub-rules"] || {};
-    let moreSubRuleObj = yaml.load(mergeData) as { "sub-rules": {} } | null;
-    let moreSubRule = moreSubRuleObj?.["sub-rules"] || {};
-    let globalSubRuleObj = yaml.load(globalMergeData) as {
+    const originSubRuleObj = yaml.load(data) as { "sub-rules": {} } | null;
+    const originSubRule = originSubRuleObj?.["sub-rules"] || {};
+    const moreSubRuleObj = yaml.load(mergeData) as { "sub-rules": {} } | null;
+    const moreSubRule = moreSubRuleObj?.["sub-rules"] || {};
+    const globalSubRuleObj = yaml.load(globalMergeData) as {
       "sub-rules": {};
     } | null;
-    let globalSubRule = globalSubRuleObj?.["sub-rules"] || {};
-    let subRule = Object.assign({}, originSubRule, moreSubRule, globalSubRule);
+    const globalSubRule = globalSubRuleObj?.["sub-rules"] || {};
+    const subRule = Object.assign(
+      {},
+      originSubRule,
+      moreSubRule,
+      globalSubRule,
+    );
     setProxyPolicyList(
       builtinProxyPolicies.concat(groups.map((group: any) => group.name)),
     );
@@ -554,7 +566,7 @@ export const RulesEditorViewer = (props: Props) => {
                   startIcon={<VerticalAlignTopRounded />}
                   onClick={() => {
                     try {
-                      let raw = validateRule();
+                      const raw = validateRule();
                       if (prependSeq.includes(raw)) return;
                       setPrependSeq([raw, ...prependSeq]);
                     } catch (err: any) {
@@ -572,7 +584,7 @@ export const RulesEditorViewer = (props: Props) => {
                   startIcon={<VerticalAlignBottomRounded />}
                   onClick={() => {
                     try {
-                      let raw = validateRule();
+                      const raw = validateRule();
                       if (appendSeq.includes(raw)) return;
                       setAppendSeq([...appendSeq, raw]);
                     } catch (err: any) {
@@ -601,7 +613,7 @@ export const RulesEditorViewer = (props: Props) => {
                 }
                 increaseViewportBy={256}
                 itemContent={(index) => {
-                  let shift = filteredPrependSeq.length > 0 ? 1 : 0;
+                  const shift = filteredPrependSeq.length > 0 ? 1 : 0;
                   if (filteredPrependSeq.length > 0 && index === 0) {
                     return (
                       <DndContext
@@ -632,7 +644,7 @@ export const RulesEditorViewer = (props: Props) => {
                       </DndContext>
                     );
                   } else if (index < filteredRuleList.length + shift) {
-                    let newIndex = index - shift;
+                    const newIndex = index - shift;
                     return (
                       <RuleItem
                         key={`${filteredRuleList[newIndex]}-${index}`}

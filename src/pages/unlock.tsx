@@ -1,29 +1,30 @@
-import { useEffect, useState } from "react";
+import {
+  AccessTimeOutlined,
+  CancelOutlined,
+  CheckCircleOutlined,
+  HelpOutline,
+  PendingOutlined,
+  RefreshRounded,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
   Card,
-  Divider,
-  Typography,
   Chip,
-  Tooltip,
   CircularProgress,
+  Divider,
+  Grid,
+  Tooltip,
+  Typography,
   alpha,
   useTheme,
-  Grid,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { BasePage, BaseEmpty } from "@/components/base";
 import { useLockFn } from "ahooks";
-import {
-  CheckCircleOutlined,
-  CancelOutlined,
-  HelpOutline,
-  PendingOutlined,
-  RefreshRounded,
-  AccessTimeOutlined,
-} from "@mui/icons-material";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { BaseEmpty, BasePage } from "@/components/base";
 import { showNotice } from "@/services/noticeService";
 
 interface UnlockItem {
@@ -44,9 +45,9 @@ const UnlockPage = () => {
   const [isCheckingAll, setIsCheckingAll] = useState(false);
   const [loadingItems, setLoadingItems] = useState<string[]>([]);
 
-  const sortItemsByName = (items: UnlockItem[]) => {
+  const sortItemsByName = useCallback((items: UnlockItem[]) => {
     return [...items].sort((a, b) => a.name.localeCompare(b.name));
-  };
+  }, []);
 
   // 保存测试结果到本地存储
   const saveResultsToStorage = (items: UnlockItem[], time: string | null) => {
@@ -81,6 +82,22 @@ const UnlockPage = () => {
     return { items: null, time: null };
   };
 
+  const getUnlockItems = useCallback(
+    async (updateUI: boolean = true) => {
+      try {
+        const items = await invoke<UnlockItem[]>("get_unlock_items");
+        const sortedItems = sortItemsByName(items);
+
+        if (updateUI) {
+          setUnlockItems(sortedItems);
+        }
+      } catch (err: any) {
+        console.error("Failed to get unlock items:", err);
+      }
+    },
+    [sortItemsByName],
+  );
+
   useEffect(() => {
     const { items: storedItems } = loadResultsFromStorage();
 
@@ -90,20 +107,7 @@ const UnlockPage = () => {
     } else {
       getUnlockItems(true);
     }
-  }, []);
-
-  const getUnlockItems = async (updateUI: boolean = true) => {
-    try {
-      const items = await invoke<UnlockItem[]>("get_unlock_items");
-      const sortedItems = sortItemsByName(items);
-
-      if (updateUI) {
-        setUnlockItems(sortedItems);
-      }
-    } catch (err: any) {
-      console.error("Failed to get unlock items:", err);
-    }
-  };
+  }, [getUnlockItems]);
 
   const invokeWithTimeout = async <T,>(
     cmd: string,

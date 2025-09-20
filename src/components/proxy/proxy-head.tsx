@@ -1,6 +1,3 @@
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Box, IconButton, TextField, SxProps } from "@mui/material";
 import {
   AccessTimeRounded,
   MyLocationRounded,
@@ -14,10 +11,15 @@ import {
   SortByAlphaRounded,
   SortRounded,
 } from "@mui/icons-material";
+import { Box, IconButton, TextField, SxProps } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { useVerge } from "@/hooks/use-verge";
-import type { HeadState } from "./use-head-state";
-import type { ProxySortType } from "./use-filter-sort";
 import delayManager from "@/services/delay";
+
+import type { ProxySortType } from "./use-filter-sort";
+import type { HeadState } from "./use-head-state";
 
 interface Props {
   sx?: SxProps;

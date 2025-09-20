@@ -1,4 +1,4 @@
-import { cmdGetProxyDelay } from "./cmds";
+import { cmdGetProxyDelay } from "@/services/cmds";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 

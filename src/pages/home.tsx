@@ -1,38 +1,39 @@
-import { useTranslation } from "react-i18next";
+import {
+  DnsOutlined,
+  HelpOutlineRounded,
+  HistoryEduOutlined,
+  RouterOutlined,
+  SettingsOutlined,
+  SpeedOutlined,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormGroup,
-  FormControlLabel,
   Checkbox,
-  Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  FormGroup,
   Grid,
+  IconButton,
   Skeleton,
+  Tooltip,
 } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { useProfiles } from "@/hooks/use-profiles";
-import {
-  RouterOutlined,
-  SettingsOutlined,
-  DnsOutlined,
-  SpeedOutlined,
-  HelpOutlineRounded,
-  HistoryEduOutlined,
-} from "@mui/icons-material";
-import { ProxyTunCard } from "@/components/home/proxy-tun-card";
-import { ClashModeCard } from "@/components/home/clash-mode-card";
-import { EnhancedTrafficStats } from "@/components/home/enhanced-traffic-stats";
-import { useState, useMemo, Suspense, lazy, useCallback } from "react";
-import { HomeProfileCard } from "@/components/home/home-profile-card";
-import { EnhancedCard } from "@/components/home/enhanced-card";
-import { CurrentProxyCard } from "@/components/home/current-proxy-card";
-import { BasePage } from "@/components/base";
 import { useLockFn } from "ahooks";
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { BasePage } from "@/components/base";
+import { ClashModeCard } from "@/components/home/clash-mode-card";
+import { CurrentProxyCard } from "@/components/home/current-proxy-card";
+import { EnhancedCard } from "@/components/home/enhanced-card";
+import { EnhancedTrafficStats } from "@/components/home/enhanced-traffic-stats";
+import { HomeProfileCard } from "@/components/home/home-profile-card";
+import { ProxyTunCard } from "@/components/home/proxy-tun-card";
+import { useProfiles } from "@/hooks/use-profiles";
+import { useVerge } from "@/hooks/use-verge";
 import { entry_lightweight_mode, openWebUrl } from "@/services/cmds";
 
 const LazyTestCard = lazy(() =>
@@ -263,7 +264,7 @@ const HomePage = () => {
       renderCard("network", <NetworkSettingsCard />),
       renderCard("mode", <ClashModeEnhancedCard />),
     ],
-    [homeCards, current, mutateProfiles, renderCard],
+    [current, mutateProfiles, renderCard],
   );
 
   // 新增：保存设置时用requestIdleCallback/setTimeout
@@ -313,7 +314,7 @@ const HomePage = () => {
         </Suspense>,
       ),
     ],
-    [homeCards, t, renderCard],
+    [t, renderCard],
   );
 
   return (

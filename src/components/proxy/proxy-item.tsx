@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
 import { CheckCircleOutlineRounded } from "@mui/icons-material";
 import {
   alpha,
@@ -12,9 +10,12 @@ import {
   SxProps,
   Theme,
 } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { useEffect, useState } from "react";
+
 import { BaseLoading } from "@/components/base";
-import delayManager from "@/services/delay";
 import { useVerge } from "@/hooks/use-verge";
+import delayManager from "@/services/delay";
 
 interface Props {
   group: IProxyGroupItem;

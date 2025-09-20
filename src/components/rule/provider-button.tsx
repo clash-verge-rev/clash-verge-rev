@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
 import {
   Button,
   Box,
@@ -15,12 +15,13 @@ import {
   alpha,
   styled,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
 import { useLockFn } from "ahooks";
-import { ruleProviderUpdate } from "@/services/cmds";
-import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
-import { useAppData } from "@/providers/app-data-provider";
 import dayjs from "dayjs";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useAppData } from "@/providers/app-data-provider";
+import { ruleProviderUpdate } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
 // 定义规则提供者类型

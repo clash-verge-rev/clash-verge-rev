@@ -1,14 +1,4 @@
 import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { useForm, Controller } from "react-hook-form";
-import {
   Box,
   FormControl,
   InputAdornment,
@@ -18,12 +8,24 @@ import {
   styled,
   TextField,
 } from "@mui/material";
-import { createProfile, patchProfile } from "@/services/cmds";
+import { useLockFn } from "ahooks";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
 import { BaseDialog, Switch } from "@/components/base";
-import { version } from "@root/package.json";
-import { FileInput } from "./file-input";
 import { useProfiles } from "@/hooks/use-profiles";
+import { createProfile, patchProfile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { version } from "@root/package.json";
+
+import { FileInput } from "./file-input";
 
 interface Props {
   onChange: (isActivating?: boolean) => void;

@@ -1,19 +1,20 @@
-import useSWR from "swr";
-import { useEffect, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
 import { Box, Button, ButtonGroup } from "@mui/material";
+import { useLockFn } from "ahooks";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import useSWR from "swr";
+
+import { BasePage } from "@/components/base";
+import { ProviderButton } from "@/components/proxy/provider-button";
+import { ProxyGroups } from "@/components/proxy/proxy-groups";
+import { useVerge } from "@/hooks/use-verge";
 import {
   closeAllConnections,
   getClashConfig,
   getRuntimeProxyChainConfig,
+  patchClashMode,
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
-import { patchClashMode } from "@/services/cmds";
-import { useVerge } from "@/hooks/use-verge";
-import { BasePage } from "@/components/base";
-import { ProxyGroups } from "@/components/proxy/proxy-groups";
-import { ProviderButton } from "@/components/proxy/provider-button";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
@@ -43,7 +44,7 @@ const ProxyPage = () => {
 
   const { verge } = useVerge();
 
-  const modeList = ["rule", "global", "direct"];
+  const modeList = useMemo(() => ["rule", "global", "direct"], []);
 
   const curMode = clashConfig?.mode?.toLowerCase();
 
@@ -99,7 +100,7 @@ const ProxyPage = () => {
     if (curMode && !modeList.includes(curMode)) {
       onChangeMode("rule");
     }
-  }, [curMode]);
+  }, [curMode, modeList, onChangeMode]);
 
   return (
     <BasePage

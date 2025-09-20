@@ -1,10 +1,11 @@
-import dayjs from "dayjs";
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
 import { Box, Button, Snackbar, useTheme } from "@mui/material";
+import { useLockFn } from "ahooks";
+import dayjs from "dayjs";
+import { t } from "i18next";
+import { forwardRef, useImperativeHandle, useState } from "react";
+
 import { deleteConnection } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
-import { t } from "i18next";
 
 export interface ConnectionDetailRef {
   open: (detail: IConnectionsItem) => void;

@@ -1,11 +1,13 @@
+import { styled, Typography } from "@mui/material";
+import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLockFn } from "ahooks";
-import { styled, Typography } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
+
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
-import { HotkeyInput } from "./hotkey-input";
+import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/noticeService";
+
+import { HotkeyInput } from "./hotkey-input";
 
 const ItemWrapper = styled("div")`
   display: flex;

@@ -1,7 +1,8 @@
-import { installService, restartCore } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
 import { t } from "i18next";
 import { useCallback } from "react";
+
+import { installService, restartCore } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
 
 const executeWithErrorHandling = async (
   operation: () => Promise<void>,

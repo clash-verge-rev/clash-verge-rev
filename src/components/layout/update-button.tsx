@@ -1,10 +1,12 @@
-import useSWR from "swr";
-import { useRef } from "react";
 import { Button } from "@mui/material";
 import { check } from "@tauri-apps/plugin-updater";
-import { UpdateViewer } from "../setting/mods/update-viewer";
-import { DialogRef } from "../base";
+import { useRef } from "react";
+import useSWR from "swr";
+
 import { useVerge } from "@/hooks/use-verge";
+
+import { DialogRef } from "../base";
+import { UpdateViewer } from "../setting/mods/update-viewer";
 
 interface Props {
   className?: string;

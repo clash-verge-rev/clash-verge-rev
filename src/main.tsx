@@ -7,19 +7,20 @@ if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
 }
 
+import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { ComposeContextProvider } from "foxact/compose-context-provider";
 import { BrowserRouter } from "react-router-dom";
+
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
+import { AppDataProvider } from "./providers/app-data-provider";
 import { initializeLanguage } from "./services/i18n";
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
-import { AppDataProvider } from "./providers/app-data-provider";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);

@@ -30,7 +30,9 @@ export const loadLanguage = async (language: string) => {
     const module = await import(`@/locales/${language}.json`);
     return module.default;
   } catch (error) {
-    console.warn(`Failed to load language ${language}, fallback to zh`);
+    console.warn(
+      `Failed to load language ${language}, fallback to zh, ${error}`,
+    );
     const fallback = await import("@/locales/zh.json");
     return fallback.default;
   }

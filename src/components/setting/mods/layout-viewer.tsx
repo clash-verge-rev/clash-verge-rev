@@ -1,5 +1,3 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   List,
   Button,
@@ -10,17 +8,21 @@ import {
   ListItemText,
   Box,
 } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { join } from "@tauri-apps/api/path";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { exists } from "@tauri-apps/plugin-fs";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { GuardState } from "./guard-state";
-import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { useVerge } from "@/hooks/use-verge";
 import { copyIconFile, getAppDir } from "@/services/cmds";
-import { join } from "@tauri-apps/api/path";
-import { exists } from "@tauri-apps/plugin-fs";
-import getSystem from "@/utils/get-system";
 import { showNotice } from "@/services/noticeService";
+import getSystem from "@/utils/get-system";
+
+import { GuardState } from "./guard-state";
 
 const OS = getSystem();
 

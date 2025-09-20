@@ -1,4 +1,12 @@
-import { useTranslation } from "react-i18next";
+import {
+  CloudUploadOutlined,
+  StorageOutlined,
+  UpdateOutlined,
+  DnsOutlined,
+  SpeedOutlined,
+  EventOutlined,
+  LaunchOutlined,
+} from "@mui/icons-material";
 import {
   Box,
   Typography,
@@ -10,24 +18,18 @@ import {
   Link,
   keyframes,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import {
-  CloudUploadOutlined,
-  StorageOutlined,
-  UpdateOutlined,
-  DnsOutlined,
-  SpeedOutlined,
-  EventOutlined,
-  LaunchOutlined,
-} from "@mui/icons-material";
-import dayjs from "dayjs";
-import parseTraffic from "@/utils/parse-traffic";
-import { useMemo, useCallback, useState } from "react";
-import { openWebUrl, updateProfile } from "@/services/cmds";
 import { useLockFn } from "ahooks";
-import { showNotice } from "@/services/noticeService";
-import { EnhancedCard } from "./enhanced-card";
+import dayjs from "dayjs";
+import { useMemo, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+
 import { useAppData } from "@/providers/app-data-provider";
+import { openWebUrl, updateProfile } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
+import parseTraffic from "@/utils/parse-traffic";
+
+import { EnhancedCard } from "./enhanced-card";
 
 // 定义旋转动画
 const round = keyframes`

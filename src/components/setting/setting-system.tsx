@@ -1,19 +1,20 @@
-import { mutate } from "swr";
+import { WarningRounded } from "@mui/icons-material";
+import { Tooltip } from "@mui/material";
 import React, { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { WarningRounded } from "@mui/icons-material";
-import { useVerge } from "@/hooks/use-verge";
+import { mutate } from "swr";
+
 import { DialogRef, Switch } from "@/components/base";
-import { SettingList, SettingItem } from "./mods/setting-comp";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
+import { useSystemState } from "@/hooks/use-system-state";
+import { useVerge } from "@/hooks/use-verge";
+import { showNotice } from "@/services/noticeService";
+
 import { GuardState } from "./mods/guard-state";
+import { SettingList, SettingItem } from "./mods/setting-comp";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import { TunViewer } from "./mods/tun-viewer";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { Tooltip } from "@mui/material";
-import { useSystemState } from "@/hooks/use-system-state";
-import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
-
-import { showNotice } from "@/services/noticeService";
 
 interface Props {
   onError?: (err: Error) => void;

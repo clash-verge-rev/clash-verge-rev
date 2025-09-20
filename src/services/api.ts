@@ -1,5 +1,6 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import axios, { AxiosInstance } from "axios";
+
 import { getClashInfo } from "./cmds";
 
 let instancePromise: Promise<AxiosInstance> = null!;

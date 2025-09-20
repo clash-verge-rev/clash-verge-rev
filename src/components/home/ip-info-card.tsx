@@ -1,14 +1,16 @@
-import { useTranslation } from "react-i18next";
-import { Box, Typography, Button, Skeleton, IconButton } from "@mui/material";
 import {
   LocationOnOutlined,
   RefreshOutlined,
   VisibilityOutlined,
   VisibilityOffOutlined,
 } from "@mui/icons-material";
-import { EnhancedCard } from "./enhanced-card";
-import { getIpInfo } from "@/services/api";
+import { Box, Typography, Button, Skeleton, IconButton } from "@mui/material";
 import { useState, useEffect, useCallback, memo } from "react";
+import { useTranslation } from "react-i18next";
+
+import { getIpInfo } from "@/services/api";
+
+import { EnhancedCard } from "./enhanced-card";
 
 // 定义刷新时间（秒）
 const IP_REFRESH_SECONDS = 300;

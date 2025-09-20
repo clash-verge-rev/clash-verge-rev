@@ -1,3 +1,6 @@
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
 import {
   Box,
   IconButton,
@@ -6,12 +9,10 @@ import {
   alpha,
   styled,
 } from "@mui/material";
-import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { downloadIconCache } from "@/services/cmds";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+
+import { downloadIconCache } from "@/services/cmds";
 interface Props {
   type: "prepend" | "original" | "delete" | "append";
   group: IProxyGroupConfig;
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export const GroupItem = (props: Props) => {
-  let { type, group, onDelete } = props;
+  const { type, group, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
 
   const {

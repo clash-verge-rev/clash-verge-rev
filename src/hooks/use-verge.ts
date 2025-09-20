@@ -1,8 +1,9 @@
-import useSWR from "swr";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { getVergeConfig, patchVergeConfig } from "@/services/cmds";
+import useSWR from "swr";
+
 import { useSystemState } from "@/hooks/use-system-state";
+import { getVergeConfig, patchVergeConfig } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
 export const useVerge = () => {

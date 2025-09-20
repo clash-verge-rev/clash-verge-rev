@@ -1,10 +1,12 @@
-import { useTranslation } from "react-i18next";
-import { Typography, Stack, Divider } from "@mui/material";
 import { DeveloperBoardOutlined } from "@mui/icons-material";
-import { useClash } from "@/hooks/use-clash";
-import { EnhancedCard } from "./enhanced-card";
+import { Typography, Stack, Divider } from "@mui/material";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useClash } from "@/hooks/use-clash";
 import { useAppData } from "@/providers/app-data-provider";
+
+import { EnhancedCard } from "./enhanced-card";
 
 // 将毫秒转换为时:分:秒格式的函数
 const formatUptime = (uptimeMs: number) => {

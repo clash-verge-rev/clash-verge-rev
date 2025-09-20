@@ -1,6 +1,7 @@
-import React, { useSyncExternalStore } from "react";
-import { Snackbar, Alert, IconButton, Box } from "@mui/material";
 import { CloseRounded } from "@mui/icons-material";
+import { Snackbar, Alert, IconButton, Box } from "@mui/material";
+import React, { useSyncExternalStore } from "react";
+
 import {
   subscribeNotices,
   hideNotice,

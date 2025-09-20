@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Button,
   Dialog,
@@ -8,6 +6,8 @@ import {
   DialogTitle,
   TextField,
 } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   onConfirm: (passwd: string) => Promise<void>;

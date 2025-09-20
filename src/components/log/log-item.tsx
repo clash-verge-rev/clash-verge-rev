@@ -1,4 +1,5 @@
 import { styled, Box } from "@mui/material";
+
 import { SearchState } from "@/components/base/base-search-box";
 
 const Item = styled(Box)(({ theme: { palette, typography } }) => ({

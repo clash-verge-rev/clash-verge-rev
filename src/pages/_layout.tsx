@@ -1,40 +1,48 @@
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import { SWRConfig, mutate } from "swr";
-import { useEffect, useCallback, useState, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { useLocation, useRoutes, useNavigate } from "react-router-dom";
 import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { routers } from "./_routers";
-import { getAxios } from "@/services/api";
-import { forceRefreshClashConfig } from "@/services/cmds";
-import { useVerge } from "@/hooks/use-verge";
-import { useI18n } from "@/hooks/use-i18n";
-import LogoSvg from "@/assets/image/logo.svg?react";
-import iconLight from "@/assets/image/icon_light.svg?react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { useLocalStorage } from "foxact/use-local-storage";
+import { useEffect, useCallback, useState, useRef } from "react";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation, useRoutes, useNavigate } from "react-router-dom";
+import { SWRConfig, mutate } from "swr";
+
 import iconDark from "@/assets/image/icon_dark.svg?react";
-import { useThemeMode, useEnableLog } from "@/services/states";
+import iconLight from "@/assets/image/icon_light.svg?react";
+import LogoSvg from "@/assets/image/logo.svg?react";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { useI18n } from "@/hooks/use-i18n";
+import { useVerge } from "@/hooks/use-verge";
+import { getAxios } from "@/services/api";
+import { forceRefreshClashConfig } from "@/services/cmds";
+import { useThemeMode, useEnableLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
+
+import { routers } from "./_routers";
+
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-import React from "react";
+
 import { useListen } from "@/hooks/use-listen";
+
 import { listen } from "@tauri-apps/api/event";
+
 import { useClashInfo } from "@/hooks/use-clash";
 import { initGlobalLogService } from "@/services/global-log-service";
+
 import { invoke } from "@tauri-apps/api/core";
+
 import { showNotice } from "@/services/noticeService";
 import { NoticeManager } from "@/components/base/NoticeManager";
-import { useLocalStorage } from "foxact/use-local-storage";
 import { LogLevel } from "@/hooks/use-log-data";
 
 const appWindow = getCurrentWebviewWindow();
-export let portableFlag = false;
+export const portableFlag = false;
 
 dayjs.extend(relativeTime);
 
