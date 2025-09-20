@@ -17,7 +17,7 @@ tauri-build = { version = "2.4.1", features = [] }
 
 [dependencies]
 warp = { version = "0.4.2", features = ["server"] }
-anyhow = "1.0.99"
+anyhow = "1.0.100"
 dirs = "6.0"
 open = "5.3.2"
 log = "0.4.28"
@@ -80,7 +80,7 @@ isahc = { version = "1.7.2", default-features = false, features = [
   "parking_lot",
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
-tauri-plugin-http = "2"
+tauri-plugin-http = "2.5.2"
 flexi_logger = "0.31.2"
 cfg-if = "1.0.3"
 nu-ansi-term = { version = "0.50.1", optional = true }
