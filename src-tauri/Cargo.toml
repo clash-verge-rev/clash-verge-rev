@@ -94,7 +94,7 @@ optional = true
 
 [dependencies.tauri-plugin-devtools]
 version = "2.0.1"
-optional = true
+optional = false
 
 
 [target.'cfg(windows)'.dependencies]
@@ -127,7 +127,7 @@ tauri-plugin-updater = "2.9.0"
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 verge-dev = ["dep:nu-ansi-term"]
-tauri-dev = ["dep:tauri-plugin-devtools"]
+tauri-dev = []
 tokio-trace = ["dep:console-subscriber"]
 
 [profile.release]
