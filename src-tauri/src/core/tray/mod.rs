@@ -875,7 +875,7 @@ async fn create_tray_menu(
 
     let lighteweight_mode = &CheckMenuItem::with_id(
         app_handle,
-        "lightweight_mode",
+        "entry_lightweight_mode",
         lightweight_mode_text,
         true,
         is_lightweight_mode,
@@ -1029,15 +1029,11 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             "restart_clash" => feat::restart_clash_core().await, // Await async function
             "restart_app" => feat::restart_app().await,          // Await async function
-            "lightweight_mode" => {
+            "entry_lightweight_mode" => {
                 if !should_handle_tray_click() {
                     return;
                 }
-                if !is_in_lightweight_mode() {
-                    lightweight::entry_lightweight_mode().await; // Await async function
-                } else {
-                    lightweight::exit_lightweight_mode().await; // Await async function
-                }
+                lightweight::entry_lightweight_mode().await; // Await async function
             }
             "quit" => {
                 feat::quit().await; // Await async function
