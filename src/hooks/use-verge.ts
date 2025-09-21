@@ -6,6 +6,11 @@ import { useSystemState } from "@/hooks/use-system-state";
 import { getVergeConfig, patchVergeConfig } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
+const autoDisableTunGuard = {
+  handled: false,
+  inProgress: false,
+};
+
 export const useVerge = () => {
   const { t } = useTranslation();
   const { isAdminMode, isServiceMode } = useSystemState();
@@ -28,22 +33,37 @@ export const useVerge = () => {
 
   // 当服务不可用且TUN模式开启时自动关闭TUN
   useEffect(() => {
-    if (enable_tun_mode && !isTunAvailable) {
-      console.log("[useVerge] 检测到服务不可用，自动关闭TUN模式");
+    const tunEnabled = Boolean(enable_tun_mode);
 
-      patchVergeConfig({ enable_tun_mode: false })
-        .then(() => {
-          mutateVerge();
-          showNotice(
-            "info",
-            t("TUN Mode automatically disabled due to service unavailable"),
-          );
-        })
-        .catch((err) => {
-          console.error("[useVerge] 自动关闭TUN模式失败:", err);
-          showNotice("error", t("Failed to disable TUN Mode automatically"));
-        });
+    if (!tunEnabled || isTunAvailable) {
+      autoDisableTunGuard.handled = false;
+      return;
     }
+
+    if (autoDisableTunGuard.inProgress || autoDisableTunGuard.handled) {
+      return;
+    }
+
+    console.log("[useVerge] 检测到服务不可用，自动关闭TUN模式");
+    autoDisableTunGuard.handled = true;
+    autoDisableTunGuard.inProgress = true;
+
+    patchVergeConfig({ enable_tun_mode: false })
+      .then(() => {
+        mutateVerge();
+        showNotice(
+          "info",
+          t("TUN Mode automatically disabled due to service unavailable"),
+        );
+      })
+      .catch((err) => {
+        console.error("[useVerge] 自动关闭TUN模式失败:", err);
+        autoDisableTunGuard.handled = false;
+        showNotice("error", t("Failed to disable TUN Mode automatically"));
+      })
+      .finally(() => {
+        autoDisableTunGuard.inProgress = false;
+      });
   }, [isTunAvailable, enable_tun_mode, mutateVerge, t]);
 
   return {
