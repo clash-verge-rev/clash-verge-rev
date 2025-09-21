@@ -999,7 +999,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     "Switch Proxy Mode To: {}",
                     mode
                 );
-                feat::change_clash_mode(mode.into()).await; // Await async function
+                feat::change_clash_mode(mode.into()).await;
             }
             "open_window" => {
                 log::info!(target: "app", "托盘菜单点击: 打开窗口");
@@ -1012,23 +1012,23 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 };
             }
             "system_proxy" => {
-                feat::toggle_system_proxy().await; // Await async function
+                feat::toggle_system_proxy().await;
             }
             "tun_mode" => {
-                feat::toggle_tun_mode(None).await; // Await async function
+                feat::toggle_tun_mode(None).await;
             }
-            "copy_env" => feat::copy_clash_env().await, // Await async function
+            "copy_env" => feat::copy_clash_env().await,
             "open_app_dir" => {
-                let _ = cmd::open_app_dir().await; // Await async function
+                let _ = cmd::open_app_dir().await;
             }
             "open_core_dir" => {
-                let _ = cmd::open_core_dir().await; // Await async function
+                let _ = cmd::open_core_dir().await;
             }
             "open_logs_dir" => {
-                let _ = cmd::open_logs_dir().await; // Await async function
+                let _ = cmd::open_logs_dir().await;
             }
-            "restart_clash" => feat::restart_clash_core().await, // Await async function
-            "restart_app" => feat::restart_app().await,          // Await async function
+            "restart_clash" => feat::restart_clash_core().await,
+            "restart_app" => feat::restart_app().await,
             "entry_lightweight_mode" => {
                 if !should_handle_tray_click() {
                     return;
@@ -1040,11 +1040,11 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 }
             }
             "quit" => {
-                feat::quit().await; // Await async function
+                feat::quit().await;
             }
             id if id.starts_with("profiles_") => {
                 let profile_index = &id["profiles_".len()..];
-                feat::toggle_proxy_profile(profile_index.into()).await; // Await async function
+                feat::toggle_proxy_profile(profile_index.into()).await;
             }
             id if id.starts_with("proxy_") => {
                 // proxy_{group_name}_{proxy_name}
