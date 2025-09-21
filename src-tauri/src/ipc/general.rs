@@ -276,9 +276,15 @@ impl IpcManager {
         let payload = serde_json::json!({
             "name": proxy
         });
+
+        // println!("group: {}, proxy: {}", group, proxy);
         match self.send_request("PUT", &url, Some(&payload)).await {
-            Ok(_) => Ok(()),
+            Ok(_) => {
+                // println!("updateProxy response: {:?}", response);
+                Ok(())
+            }
             Err(e) => {
+                // println!("updateProxy encountered error: {}", e);
                 logging!(
                     error,
                     crate::utils::logging::Type::Ipc,
