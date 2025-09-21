@@ -170,7 +170,7 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const routersEles = useRoutes(routers);
-  const { addListener, setupCloseListener } = useListen();
+  const { addListener } = useListen();
   const initRef = useRef(false);
   const [themeReady, setThemeReady] = useState(false);
 
@@ -238,7 +238,6 @@ const Layout = () => {
       };
     };
 
-    setupCloseListener();
     const cleanupWindow = setupWindowListeners();
 
     return () => {
