@@ -22,6 +22,7 @@ use super::handle;
 use anyhow::Result;
 use futures::future::join_all;
 use parking_lot::Mutex;
+use std::collections::HashMap;
 use std::{
     fs,
     sync::atomic::{AtomicBool, Ordering},
@@ -282,16 +283,6 @@ impl Tray {
             .unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
-        // 获取代理节点
-        let proxy_nodes_data = cmd::get_proxies().await.unwrap_or_else(|e| {
-            logging!(
-                error,
-                Type::Cmd,
-                "Failed to fetch proxies for tray menu: {e}"
-            );
-            serde_json::Value::Object(serde_json::Map::new())
-        });
-
         match app_handle.tray_by_id("main") {
             Some(tray) => {
                 let _ = tray.set_menu(Some(
@@ -302,7 +293,6 @@ impl Tray {
                         *tun_mode,
                         profile_uid_and_name,
                         is_lightweight_mode,
-                        proxy_nodes_data,
                     )
                     .await?,
                 ));
@@ -564,7 +554,6 @@ async fn create_tray_menu(
     tun_mode_enabled: bool,
     profile_uid_and_name: Vec<(String, String)>,
     is_lightweight_mode: bool,
-    proxy_nodes_data: serde_json::Value,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let mode = mode.unwrap_or("");
 
@@ -578,6 +567,15 @@ async fn create_tray_menu(
             .and_then(|profile| profile.selected.clone())
             .unwrap_or_default()
     };
+
+    let proxy_nodes_data = cmd::get_proxies().await.unwrap_or_else(|e| {
+        logging!(
+            error,
+            Type::Cmd,
+            "Failed to fetch proxies for tray menu: {e}"
+        );
+        serde_json::Value::Object(serde_json::Map::new())
+    });
 
     let version = env!("CARGO_PKG_VERSION");
 
@@ -628,6 +626,7 @@ async fn create_tray_menu(
     // 代理组子菜单
     let proxy_submenus: Vec<Submenu<Wry>> = {
         let mut submenus = Vec::new();
+        let mut group_name_submenus_hash = HashMap::new();
 
         if let Some(proxies) = proxy_nodes_data.get("proxies").and_then(|v| v.as_object()) {
             for (group_name, group_data) in proxies.iter() {
@@ -635,9 +634,7 @@ async fn create_tray_menu(
                 let should_show = match mode {
                     "global" => group_name == "GLOBAL",
                     _ => group_name != "GLOBAL",
-                } &&
-                // Check if the group is hidden
-                !group_data.get("hidden").and_then(|v| v.as_bool( )).unwrap_or(false);
+                };
 
                 if !should_show {
                     continue;
@@ -721,10 +718,49 @@ async fn create_tray_menu(
                     true,
                     &group_items_refs,
                 ) {
-                    submenus.push(submenu);
+                    group_name_submenus_hash.insert(group_name.to_string(), submenu);
                 } else {
                     log::warn!(target: "app", "创建代理组子菜单失败: {}", group_name);
                 }
+            }
+        }
+
+        // 获取运行时代理组配置
+        let runtime_proxy_groups_config = cmd::get_runtime_config()
+            .await
+            .map_err(|e| {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Failed to fetch runtime proxy groups for tray menu: {e}"
+                );
+            })
+            .ok()
+            .flatten()
+            .map(|config| {
+                config
+                    .get("proxy-groups")
+                    .and_then(|groups| groups.as_sequence())
+                    .map(|groups| {
+                        groups
+                            .iter()
+                            .filter_map(|group| group.get("name"))
+                            .filter_map(|name| name.as_str())
+                            .map(|name| name.to_string())
+                            .collect::<Vec<String>>()
+                    })
+                    .unwrap_or_default()
+            });
+
+        if let Some(runtime_proxy_groups_config) = runtime_proxy_groups_config {
+            for group_name in runtime_proxy_groups_config {
+                if let Some(submenu) = group_name_submenus_hash.get(&group_name) {
+                    submenus.push(submenu.clone());
+                }
+            }
+        } else {
+            for (_, submenu) in group_name_submenus_hash {
+                submenus.push(submenu);
             }
         }
 
@@ -963,7 +999,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     "Switch Proxy Mode To: {}",
                     mode
                 );
-                feat::change_clash_mode(mode.into()).await; // Await async function
+                feat::change_clash_mode(mode.into()).await;
             }
             "open_window" => {
                 log::info!(target: "app", "托盘菜单点击: 打开窗口");
@@ -976,28 +1012,27 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 };
             }
             "system_proxy" => {
-                feat::toggle_system_proxy().await; // Await async function
+                feat::toggle_system_proxy().await;
             }
             "tun_mode" => {
-                feat::toggle_tun_mode(None).await; // Await async function
+                feat::toggle_tun_mode(None).await;
             }
-            "copy_env" => feat::copy_clash_env().await, // Await async function
+            "copy_env" => feat::copy_clash_env().await,
             "open_app_dir" => {
-                let _ = cmd::open_app_dir().await; // Await async function
+                let _ = cmd::open_app_dir().await;
             }
             "open_core_dir" => {
-                let _ = cmd::open_core_dir().await; // Await async function
+                let _ = cmd::open_core_dir().await;
             }
             "open_logs_dir" => {
-                let _ = cmd::open_logs_dir().await; // Await async function
+                let _ = cmd::open_logs_dir().await;
             }
-            "restart_clash" => feat::restart_clash_core().await, // Await async function
-            "restart_app" => feat::restart_app().await,          // Await async function
+            "restart_clash" => feat::restart_clash_core().await,
+            "restart_app" => feat::restart_app().await,
             "entry_lightweight_mode" => {
                 if !should_handle_tray_click() {
                     return;
                 }
-
                 if !is_in_lightweight_mode() {
                     lightweight::entry_lightweight_mode().await; // Await async function
                 } else {
@@ -1005,11 +1040,11 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 }
             }
             "quit" => {
-                feat::quit().await; // Await async function
+                feat::quit().await;
             }
             id if id.starts_with("profiles_") => {
                 let profile_index = &id["profiles_".len()..];
-                feat::toggle_proxy_profile(profile_index.into()).await; // Await async function
+                feat::toggle_proxy_profile(profile_index.into()).await;
             }
             id if id.starts_with("proxy_") => {
                 // proxy_{group_name}_{proxy_name}

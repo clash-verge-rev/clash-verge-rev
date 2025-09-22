@@ -14,6 +14,12 @@ pub struct IVerge {
     /// silent | error | warn | info | debug | trace
     pub app_log_level: Option<String>,
 
+    /// app log max size in KB
+    pub app_log_max_size: Option<u64>,
+
+    /// app log max count
+    pub app_log_max_count: Option<usize>,
+
     // i18n
     pub language: Option<String>,
 
@@ -350,6 +356,8 @@ impl IVerge {
 
     pub fn template() -> Self {
         Self {
+            app_log_max_size: Some(128),
+            app_log_max_count: Some(8),
             clash_core: Some("verge-mihomo".into()),
             language: Some(Self::get_system_language()),
             theme_mode: Some("system".into()),
@@ -426,6 +434,9 @@ impl IVerge {
         }
 
         patch!(app_log_level);
+        patch!(app_log_max_size);
+        patch!(app_log_max_count);
+
         patch!(language);
         patch!(theme_mode);
         patch!(tray_event);
@@ -524,6 +535,8 @@ impl IVerge {
 #[derive(Debug, Clone, Serialize)]
 pub struct IVergeResponse {
     pub app_log_level: Option<String>,
+    pub app_log_max_size: Option<u64>,
+    pub app_log_max_count: Option<usize>,
     pub language: Option<String>,
     pub theme_mode: Option<String>,
     pub tray_event: Option<String>,
@@ -595,6 +608,8 @@ impl From<IVerge> for IVergeResponse {
         let valid_clash_core = verge.get_valid_clash_core();
         Self {
             app_log_level: verge.app_log_level,
+            app_log_max_size: verge.app_log_max_size,
+            app_log_max_count: verge.app_log_max_count,
             language: verge.language,
             theme_mode: verge.theme_mode,
             tray_event: verge.tray_event,

@@ -778,6 +778,8 @@ interface IProxyConfig
 
 interface IVergeConfig {
   app_log_level?: "trace" | "debug" | "info" | "warn" | "error" | string;
+  app_log_max_size?: number; // KB
+  app_log_max_count?: number;
   language?: string;
   tray_event?:
     | "main_window"

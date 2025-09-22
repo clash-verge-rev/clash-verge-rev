@@ -37,9 +37,8 @@ pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String
     Ok(Config::runtime().await.latest_ref().chain_logs.clone())
 }
 
-/// 读取运行时链式代理配置
 #[tauri::command]
-pub async fn get_runtime_proxy_chain_config() -> CmdResult<String> {
+pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> CmdResult<String> {
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_ref();
 
@@ -50,51 +49,36 @@ pub async fn get_runtime_proxy_chain_config() -> CmdResult<String> {
             .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
     )?;
 
-    if let (
-        Some(serde_yaml_ng::Value::Sequence(proxies)),
-        Some(serde_yaml_ng::Value::Sequence(proxy_groups)),
-    ) = (config.get("proxies"), config.get("proxy-groups"))
-    {
-        let mut proxy_name = None;
+    if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get("proxies") {
+        let mut proxy_name = Some(Some(proxy_chain_exit_node.as_str()));
         let mut proxies_chain = Vec::new();
-
-        let proxy_chain_groups = proxy_groups
-            .iter()
-            .filter_map(
-                |proxy_group| match proxy_group.get("name").and_then(|n| n.as_str()) {
-                    Some("proxy_chain") => {
-                        if let Some(serde_yaml_ng::Value::Sequence(ps)) = proxy_group.get("proxies")
-                            && let Some(x) = ps.first()
-                        {
-                            proxy_name = Some(x); //插入出口节点名字
-                        }
-                        Some(proxy_group.to_owned())
-                    }
-                    _ => None,
-                },
-            )
-            .collect::<Vec<serde_yaml_ng::Value>>();
 
         while let Some(proxy) = proxies.iter().find(|proxy| {
             if let serde_yaml_ng::Value::Mapping(proxy_map) = proxy {
-                proxy_map.get("name") == proxy_name && proxy_map.get("dialer-proxy").is_some()
+                proxy_map.get("name").map(|x| x.as_str()) == proxy_name
+                    && proxy_map.get("dialer-proxy").is_some()
             } else {
                 false
             }
         }) {
             proxies_chain.push(proxy.to_owned());
-            proxy_name = proxy.get("dialer-proxy");
+            proxy_name = proxy.get("dialer-proxy").map(|x| x.as_str());
         }
 
-        if let Some(entry_proxy) = proxies.iter().find(|proxy| proxy.get("name") == proxy_name) {
+        if let Some(entry_proxy) = proxies
+            .iter()
+            .find(|proxy| proxy.get("name").map(|x| x.as_str()) == proxy_name)
+            && !proxies_chain.is_empty()
+        {
+            // 添加第一个节点
             proxies_chain.push(entry_proxy.to_owned());
         }
 
         proxies_chain.reverse();
 
         let mut config: HashMap<String, Vec<serde_yaml_ng::Value>> = HashMap::new();
+
         config.insert("proxies".to_string(), proxies_chain);
-        config.insert("proxy-groups".to_string(), proxy_chain_groups);
 
         wrap_err!(serde_yaml_ng::to_string(&config).context("YAML generation failed"))
     } else {

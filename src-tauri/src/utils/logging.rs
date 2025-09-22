@@ -7,6 +7,7 @@ cfg_if::cfg_if! {
         use std::{fmt, io::Write, thread};
         use flexi_logger::DeferredNow;
         use log::{LevelFilter, Record};
+        use flexi_logger::filter::LogLineFilter;
     }
 }
 
@@ -29,6 +30,7 @@ pub enum Type {
     ProxyMode,
     Ipc,
     // Cache,
+    ClashVergeRev,
 }
 
 impl fmt::Display for Type {
@@ -51,6 +53,7 @@ impl fmt::Display for Type {
             Type::ProxyMode => write!(f, "[ProxMode]"),
             Type::Ipc => write!(f, "[IPC]"),
             // Type::Cache => write!(f, "[Cache]"),
+            Type::ClashVergeRev => write!(f, "[ClashVergeRev]"),
         }
     }
 }
@@ -167,6 +170,27 @@ macro_rules! logging_error {
     ($type:expr, $fmt:literal $(, $arg:expr)*) => {
         logging_error!($type, false, $fmt $(, $arg)*);
     };
+}
+
+#[cfg(not(feature = "tauri-dev"))]
+static IGNORE_MODULES: &[&str] = &["tauri", "wry"];
+#[cfg(not(feature = "tauri-dev"))]
+pub struct NoExternModule;
+#[cfg(not(feature = "tauri-dev"))]
+impl LogLineFilter for NoExternModule {
+    fn write(
+        &self,
+        now: &mut DeferredNow,
+        record: &Record,
+        log_line_writer: &dyn flexi_logger::filter::LogLineWriter,
+    ) -> std::io::Result<()> {
+        let module_path = record.module_path().unwrap_or_default();
+        if IGNORE_MODULES.iter().any(|m| module_path.starts_with(m)) {
+            Ok(())
+        } else {
+            log_line_writer.write(now, record)
+        }
+    }
 }
 
 #[cfg(not(feature = "tauri-dev"))]
