@@ -1034,9 +1034,9 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     return;
                 }
                 if !is_in_lightweight_mode() {
-                    lightweight::entry_lightweight_mode().await;
+                    lightweight::entry_lightweight_mode().await; // Await async function
                 } else {
-                    lightweight::exit_lightweight_mode().await;
+                    lightweight::exit_lightweight_mode().await; // Await async function
                 }
             }
             "quit" => {

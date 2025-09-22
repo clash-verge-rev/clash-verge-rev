@@ -1,12 +1,31 @@
-import { Box, Snackbar, Alert } from "@mui/material";
+import {
+  Box,
+  Snackbar,
+  Alert,
+  Chip,
+  Stack,
+  Typography,
+  IconButton,
+  Collapse,
+  Menu,
+  MenuItem,
+  Divider,
+} from "@mui/material";
+import { ArchiveOutlined, ExpandMoreRounded } from "@mui/icons-material";
 import { useLockFn } from "ahooks";
 import { useRef, useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
-import { providerHealthCheck, getGroupProxyDelays } from "@/services/cmds";
+import { useAppData } from "@/providers/app-data-provider";
+import {
+  providerHealthCheck,
+  getGroupProxyDelays,
+  updateProxyChainConfigInRuntime,
+} from "@/services/cmds";
 import delayManager from "@/services/delay";
 
 import { BaseEmpty } from "../base";
@@ -33,17 +52,35 @@ export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation();
   const { mode, isChainMode = false, chainConfigData } = props;
   const [proxyChain, setProxyChain] = useState<ProxyChainItem[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [ruleMenuAnchor, setRuleMenuAnchor] = useState<null | HTMLElement>(
+    null,
+  );
   const [duplicateWarning, setDuplicateWarning] = useState<{
     open: boolean;
     message: string;
   }>({ open: false, message: "" });
 
+  const { verge } = useVerge();
+  const { proxies: proxiesData } = useAppData();
+
+  // 当链式代理模式且规则模式下，如果没有选择代理组，默认选择第一个
+  useEffect(() => {
+    if (
+      isChainMode &&
+      mode === "rule" &&
+      !selectedGroup &&
+      proxiesData?.groups?.length > 0
+    ) {
+      setSelectedGroup(proxiesData.groups[0].name);
+    }
+  }, [isChainMode, mode, selectedGroup, proxiesData]);
+
   const { renderList, onProxies, onHeadState } = useRenderList(
     mode,
     isChainMode,
+    selectedGroup,
   );
-
-  const { verge } = useVerge();
 
   // 统代理选择
   const { handleProxyGroupChange } = useProxySelection({
@@ -141,6 +178,43 @@ export const ProxyGroups = (props: Props) => {
   const handleCloseDuplicateWarning = useCallback(() => {
     setDuplicateWarning({ open: false, message: "" });
   }, []);
+
+  // 获取当前选中的代理组信息
+  const getCurrentGroup = useCallback(() => {
+    if (!selectedGroup || !proxiesData?.groups) return null;
+    return proxiesData.groups.find(
+      (group: any) => group.name === selectedGroup,
+    );
+  }, [selectedGroup, proxiesData]);
+
+  // 获取可用的代理组列表
+  const getAvailableGroups = useCallback(() => {
+    return proxiesData?.groups || [];
+  }, [proxiesData]);
+
+  // 处理代理组选择菜单
+  const handleGroupMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setRuleMenuAnchor(event.currentTarget);
+  };
+
+  const handleGroupMenuClose = () => {
+    setRuleMenuAnchor(null);
+  };
+
+  const handleGroupSelect = (groupName: string) => {
+    setSelectedGroup(groupName);
+    handleGroupMenuClose();
+
+    // 在链式代理模式的规则模式下，切换代理组时清空链式代理配置
+    if (isChainMode && mode === "rule") {
+      updateProxyChainConfigInRuntime(null);
+      // 同时清空右侧链式代理配置
+      setProxyChain([]);
+    }
+  };
+
+  const currentGroup = getCurrentGroup();
+  const availableGroups = getAvailableGroups();
 
   const handleChangeProxy = useCallback(
     (group: IProxyGroupItem, proxy: IProxyItem) => {
@@ -257,13 +331,89 @@ export const ProxyGroups = (props: Props) => {
   }
 
   if (isChainMode) {
+    // 获取所有代理组
+    const proxyGroups = proxiesData?.groups || [];
+
     return (
       <>
         <Box sx={{ display: "flex", height: "100%", gap: 2 }}>
           <Box sx={{ flex: 1, position: "relative" }}>
+            {/* 代理规则标题和代理组按钮栏 */}
+            {mode === "rule" && proxyGroups.length > 0 && (
+              <Box sx={{ borderBottom: "1px solid", borderColor: "divider" }}>
+                {/* 代理规则标题 */}
+                <Box
+                  sx={{
+                    px: 2,
+                    py: 1.5,
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 600, fontSize: "16px" }}
+                    >
+                      {t("Proxy Rules")}
+                    </Typography>
+                    {currentGroup && (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Chip
+                          size="small"
+                          label={`${currentGroup.name} (${currentGroup.type})`}
+                          variant="outlined"
+                          sx={{
+                            fontSize: "12px",
+                            maxWidth: "200px",
+                            "& .MuiChip-label": {
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            },
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Box>
+
+                  {availableGroups.length > 0 && (
+                    <IconButton
+                      size="small"
+                      onClick={handleGroupMenuOpen}
+                      sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: "4px",
+                        padding: "4px 8px",
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ mr: 0.5, fontSize: "12px" }}
+                      >
+                        {t("Select Rules")}
+                      </Typography>
+                      <ExpandMoreRounded fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+            )}
+
             <Virtuoso
               ref={virtuosoRef}
-              style={{ height: "calc(100% - 14px)" }}
+              style={{
+                height:
+                  mode === "rule" && proxyGroups.length > 0
+                    ? "calc(100% - 80px)" // 只有标题的高度
+                    : "calc(100% - 14px)",
+              }}
               totalCount={renderList.length}
               increaseViewportBy={{ top: 200, bottom: 200 }}
               overscan={150}
@@ -297,6 +447,8 @@ export const ProxyGroups = (props: Props) => {
               proxyChain={proxyChain}
               onUpdateChain={setProxyChain}
               chainConfigData={chainConfigData}
+              mode={mode}
+              selectedGroup={selectedGroup}
             />
           </Box>
         </Box>
@@ -315,6 +467,53 @@ export const ProxyGroups = (props: Props) => {
             {duplicateWarning.message}
           </Alert>
         </Snackbar>
+
+        {/* 代理组选择菜单 */}
+        <Menu
+          anchorEl={ruleMenuAnchor}
+          open={Boolean(ruleMenuAnchor)}
+          onClose={handleGroupMenuClose}
+          PaperProps={{
+            sx: {
+              maxHeight: 300,
+              minWidth: 200,
+            },
+          }}
+        >
+          {availableGroups.map((group: any, index: number) => (
+            <MenuItem
+              key={group.name}
+              onClick={() => handleGroupSelect(group.name)}
+              selected={selectedGroup === group.name}
+              sx={{
+                fontSize: "14px",
+                py: 1,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  {group.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {group.type} · {group.all.length} 节点
+                </Typography>
+              </Box>
+            </MenuItem>
+          ))}
+          {availableGroups.length === 0 && (
+            <MenuItem disabled>
+              <Typography variant="body2" color="text.secondary">
+                暂无可用代理组
+              </Typography>
+            </MenuItem>
+          )}
+        </Menu>
       </>
     );
   }

@@ -87,8 +87,10 @@ export async function getRuntimeLogs() {
   return invoke<Record<string, [string, string][]>>("get_runtime_logs");
 }
 
-export async function getRuntimeProxyChainConfig() {
-  return invoke<string>("get_runtime_proxy_chain_config");
+export async function getRuntimeProxyChainConfig(proxyChainExitNode: String) {
+  return invoke<string>("get_runtime_proxy_chain_config", {
+    proxyChainExitNode,
+  });
 }
 
 export async function updateProxyChainConfigInRuntime(proxyChainConfig: any) {

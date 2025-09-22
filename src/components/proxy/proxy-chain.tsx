@@ -63,6 +63,8 @@ interface ProxyChainProps {
   onUpdateChain: (chain: ProxyChainItem[]) => void;
   chainConfigData?: string | null;
   onMarkUnsavedChanges?: () => void;
+  mode?: string;
+  selectedGroup?: string | null;
 }
 
 interface SortableItemProps {
@@ -189,6 +191,8 @@ export const ProxyChain = ({
   onUpdateChain,
   chainConfigData,
   onMarkUnsavedChanges,
+  mode,
+  selectedGroup,
 }: ProxyChainProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -215,25 +219,46 @@ export const ProxyChain = ({
       return;
     }
 
-    // 查找 proxy_chain 代理组
-    const proxyChainGroup = currentProxies.groups.find(
-      (group) => group.name === "proxy_chain",
-    );
-    if (!proxyChainGroup || !proxyChainGroup.now) {
-      setIsConnected(false);
-      return;
-    }
-
     // 获取用户配置的最后一个节点
     const lastNode = proxyChain[proxyChain.length - 1];
 
-    // 检查当前选中的代理是否是配置的最后一个节点
-    if (proxyChainGroup.now === lastNode.name) {
-      setIsConnected(true);
+    // 根据模式确定要检查的代理组和当前选中的代理
+    if (mode === "global") {
+      // 全局模式：检查 global 对象
+      if (!currentProxies.global || !currentProxies.global.now) {
+        setIsConnected(false);
+        return;
+      }
+
+      // 检查当前选中的代理是否是配置的最后一个节点
+      if (currentProxies.global.now === lastNode.name) {
+        setIsConnected(true);
+      } else {
+        setIsConnected(false);
+      }
     } else {
-      setIsConnected(false);
+      // 规则模式：检查指定的代理组
+      if (!selectedGroup) {
+        setIsConnected(false);
+        return;
+      }
+
+      const proxyChainGroup = currentProxies.groups.find(
+        (group) => group.name === selectedGroup,
+      );
+      if (!proxyChainGroup || !proxyChainGroup.now) {
+        setIsConnected(false);
+        return;
+      }
+
+      // 检查当前选中的代理是否是配置的最后一个节点
+      if (proxyChainGroup.now === lastNode.name) {
+        setIsConnected(true);
+      } else {
+        setIsConnected(false);
+      }
     }
-  }, [currentProxies, proxyChain]);
+  }, [currentProxies, proxyChain, mode, selectedGroup]);
 
   // 监听链的变化，但排除从配置加载的情况
   const chainLengthRef = useRef(proxyChain.length);
@@ -334,14 +359,23 @@ export const ProxyChain = ({
       // 第二步：连接到代理链的最后一个节点
       const lastNode = proxyChain[proxyChain.length - 1];
       console.log(`Connecting to proxy chain, last node: ${lastNode.name}`);
-      await updateProxyAndSync("proxy_chain", lastNode.name);
+
+      // 根据模式确定使用的代理组名称
+      if (mode !== "global" && !selectedGroup) {
+        throw new Error("规则模式下必须选择代理组");
+      }
+
+      const targetGroup = mode === "global" ? "GLOBAL" : selectedGroup;
+
+      await updateProxyAndSync(targetGroup || "GLOBAL", lastNode.name);
+      localStorage.setItem("proxy-chain-group", targetGroup || "GLOBAL");
+      localStorage.setItem("proxy-chain-exit-node", lastNode.name);
 
       // 刷新代理信息以更新连接状态
       mutateProxies();
 
       // 清除未保存标记
       setHasUnsavedChanges(false);
-
       console.log("Successfully connected to proxy chain");
     } catch (error) {
       console.error("Failed to connect to proxy chain:", error);
@@ -349,7 +383,7 @@ export const ProxyChain = ({
     } finally {
       setIsConnecting(false);
     }
-  }, [proxyChain, isConnected, t, mutateProxies]);
+  }, [proxyChain, isConnected, t, mutateProxies, mode, selectedGroup]);
 
   const proxyChainRef = useRef(proxyChain);
   const onUpdateChainRef = useRef(onUpdateChain);
@@ -504,7 +538,11 @@ export const ProxyChain = ({
             variant="contained"
             startIcon={isConnected ? <LinkOff /> : <Link />}
             onClick={handleConnect}
-            disabled={isConnecting || proxyChain.length < 2}
+            disabled={
+              isConnecting ||
+              proxyChain.length < 2 ||
+              (mode !== "global" && !selectedGroup)
+            }
             color={isConnected ? "error" : "success"}
             sx={{
               minWidth: 90,

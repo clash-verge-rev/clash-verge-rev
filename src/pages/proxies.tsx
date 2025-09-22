@@ -82,7 +82,15 @@ const ProxyPage = () => {
     if (isChainMode) {
       const fetchChainConfig = async () => {
         try {
-          const configData = await getRuntimeProxyChainConfig();
+          const exitNode = localStorage.getItem("proxy-chain-exit-node");
+
+          if (!exitNode) {
+            console.error("No proxy chain exit node found in localStorage");
+            setChainConfigData("");
+            return;
+          }
+
+          const configData = await getRuntimeProxyChainConfig(exitNode);
           setChainConfigData(configData || "");
         } catch (error) {
           console.error("Failed to get runtime proxy chain config:", error);
@@ -106,7 +114,7 @@ const ProxyPage = () => {
     <BasePage
       full
       contentStyle={{ height: "101.5%" }}
-      title={isChainMode ? t("Node Pool") : t("Proxy Groups")}
+      title={isChainMode ? t("Proxy Chain Mode") : t("Proxy Groups")}
       header={
         <Box display="flex" alignItems="center" gap={1}>
           <ProviderButton />
