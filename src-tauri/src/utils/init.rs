@@ -22,7 +22,16 @@ use tokio::fs::DirEntry;
 /// initialize this instance's log file
 #[cfg(not(feature = "tauri-dev"))]
 pub async fn init_logger() -> Result<()> {
-    let log_level = Config::verge().await.latest_ref().get_log_level();
+    // TODO 提供 runtime 级别实时修改
+    let (log_level, log_max_size, log_max_count) = {
+        let verge_guard = Config::verge().await;
+        let verge = verge_guard.latest_ref();
+        (
+            verge.get_log_level(),
+            verge.app_log_max_size.unwrap_or(128),
+            verge.app_log_max_count.unwrap_or(8),
+        )
+    };
 
     let log_dir = dirs::app_logs_dir()?;
     let logger = Logger::with(LogSpecification::from(log_level))
@@ -31,14 +40,12 @@ pub async fn init_logger() -> Result<()> {
         .format(console_colored_format)
         .format_for_files(file_format)
         .rotate(
-            // ? 总是保持单个日志最大 10 MB
-            Criterion::Size(10 * 1024 * 1024),
+            Criterion::Size(log_max_size * 1024),
             flexi_logger::Naming::TimestampsCustomFormat {
                 current_infix: Some("latest"),
                 format: "%Y-%m-%d_%H-%M-%S",
             },
-            // TODO 提供前端设置最大保留文件数量
-            Cleanup::Never,
+            Cleanup::KeepLogFiles(log_max_count),
         )
         .filter(Box::new(NoExternModule));
 

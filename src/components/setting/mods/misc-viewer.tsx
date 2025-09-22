@@ -23,6 +23,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({
     appLogLevel: "warn",
+    appLogMaxSize: 8,
+    appLogMaxCount: 12,
     autoCloseConnection: true,
     autoCheckUpdate: true,
     enableBuiltinEnhanced: true,
@@ -37,6 +39,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setValues({
         appLogLevel: verge?.app_log_level ?? "warn",
+        appLogMaxSize: verge?.app_log_max_size ?? 128,
+        appLogMaxCount: verge?.app_log_max_count ?? 8,
         autoCloseConnection: verge?.auto_close_connection ?? true,
         autoCheckUpdate: verge?.auto_check_update ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
@@ -102,6 +106,66 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
+            primary={t("App Log Max Size")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TextField
+            autoComplete="new-password"
+            size="small"
+            type="number"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            sx={{ width: 140, marginLeft: "auto" }}
+            value={values.appLogMaxSize}
+            onChange={(e) =>
+              setValues((v) => ({
+                ...v,
+                appLogMaxSize: Math.max(1, parseInt(e.target.value) || 128),
+              }))
+            }
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">{t("KB")}</InputAdornment>
+                ),
+              },
+            }}
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText
+            primary={t("App Log Max Count")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TextField
+            autoComplete="new-password"
+            size="small"
+            type="number"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            sx={{ width: 140, marginLeft: "auto" }}
+            value={values.appLogMaxCount}
+            onChange={(e) =>
+              setValues((v) => ({
+                ...v,
+                appLogMaxCount: Math.max(1, parseInt(e.target.value) || 1),
+              }))
+            }
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">{t("Files")}</InputAdornment>
+                ),
+              },
+            }}
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText
             primary={t("Auto Close Connections")}
             sx={{ maxWidth: "fit-content" }}
           />
@@ -153,7 +217,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <ListItemText primary={t("Proxy Layout Columns")} />
           <Select
             size="small"
-            sx={{ width: 135, "> div": { py: "7.5px" } }}
+            sx={{ width: 160, "> div": { py: "7.5px" } }}
             value={values.proxyLayoutColumn}
             onChange={(e) =>
               setValues((v) => ({
@@ -177,7 +241,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <ListItemText primary={t("Auto Log Clean")} />
           <Select
             size="small"
-            sx={{ width: 135, "> div": { py: "7.5px" } }}
+            sx={{ width: 160, "> div": { py: "7.5px" } }}
             value={values.autoLogClean}
             onChange={(e) =>
               setValues((v) => ({
