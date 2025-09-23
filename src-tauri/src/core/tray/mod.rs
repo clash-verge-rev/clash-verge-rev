@@ -634,7 +634,9 @@ async fn create_tray_menu(
                 let should_show = match mode {
                     "global" => group_name == "GLOBAL",
                     _ => group_name != "GLOBAL",
-                };
+                } &&
+                // Check if the group is hidden
+                !group_data.get("hidden").and_then(|v| v.as_bool()).unwrap_or(false);
 
                 if !should_show {
                     continue;
