@@ -44,7 +44,7 @@ async fn uninstall_service() -> Result<()> {
     use std::os::windows::process::CommandExt;
 
     let binary_path = dirs::service_path()?;
-    let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
+    let uninstall_path = binary_path.with_file_name("clash-verge-service-uninstall.exe");
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -79,7 +79,7 @@ async fn install_service() -> Result<()> {
     use std::os::windows::process::CommandExt;
 
     let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("install-service.exe");
+    let install_path = binary_path.with_file_name("clash-verge-service-install.exe");
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -134,7 +134,8 @@ async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
     use users::get_effective_uid;
 
-    let uninstall_path = tauri::utils::platform::current_exe()?.with_file_name("uninstall-service");
+    let uninstall_path =
+        tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall");
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -175,7 +176,8 @@ async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
     use users::get_effective_uid;
 
-    let install_path = tauri::utils::platform::current_exe()?.with_file_name("install-service");
+    let install_path =
+        tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install");
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -241,7 +243,7 @@ async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
 
     let binary_path = dirs::service_path()?;
-    let uninstall_path = binary_path.with_file_name("uninstall-service");
+    let uninstall_path = binary_path.with_file_name("clash-verge-service-uninstall");
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -277,7 +279,7 @@ async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
 
     let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("install-service");
+    let install_path = binary_path.with_file_name("clash-verge-service-install");
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));

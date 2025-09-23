@@ -807,7 +807,7 @@ impl CoreManager {
 }
 
 impl CoreManager {
-    // TODO 复用 service ipc 和 mihomo ipc
+    // TODO 先尝试复用 service mihomo ipc，失败尝试通过 service ipc 启动 mihomo ipc
     async fn start_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, true, "Running core by service");
         let config_file = &Config::generate_file(ConfigType::Run).await?;
