@@ -1100,6 +1100,7 @@ dependencies = [
  "boa_engine",
  "cfg-if",
  "chrono",
+ "clash_verge_service_ipc",
  "console-subscriber",
  "criterion",
  "dashmap 6.1.0",
@@ -1159,6 +1160,16 @@ dependencies = [
  "winapi",
  "winreg 0.55.0",
  "zip 5.1.1",
+]
+
+[[package]]
+name = "clash_verge_service_ipc"
+version = "0.1.0"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#8dcf1aa472cab1ae14ff883bbe430bffa1bf0f3e"
+dependencies = [
+ "serde",
+ "strum",
+ "strum_macros",
 ]
 
 [[package]]
@@ -6800,6 +6811,24 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+
+[[package]]
+name = "strum"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
+
+[[package]]
+name = "strum_macros"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
 
 [[package]]
 name = "subtle"

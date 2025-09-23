@@ -1,16 +1,18 @@
 use crate::{
     cache::{CacheService, SHORT_TERM_TTL},
     config::Config,
-    core::service_ipc::{IpcCommand, send_ipc_request},
     logging, logging_error,
     utils::{dirs, logging::Type},
 };
 use anyhow::{Context, Result, bail};
+use clash_verge_service_ipc::{self, IpcCommand};
+use kode_bridge::{HttpResponse, IpcHttpClient};
+use log::debug;
 use once_cell::sync::Lazy;
 use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
 use tokio::sync::Mutex;
 
-const REQUIRED_SERVICE_VERSION: &str = "1.1.2"; // 定义所需的服务版本号
+const REQUIRED_SERVICE_VERSION: &str = "2.0.0"; // 定义所需的服务版本号
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -21,6 +23,12 @@ pub enum ServiceStatus {
     ReinstallRequired,
     ForceReinstallRequired,
     Unavailable(String),
+}
+
+#[derive(serde::Deserialize)]
+pub struct ServiceIpcResponse {
+    code: u64,
+    msg: String,
 }
 
 #[derive(Clone)]
@@ -338,21 +346,12 @@ async fn check_service_version() -> Result<String> {
     let version_arc = cache
         .get_or_fetch(key, SHORT_TERM_TTL, || async {
             logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
-            let payload = serde_json::json!({});
-            let response = send_ipc_request(IpcCommand::GetVersion, payload).await?;
+            let response = send_ipc_request_get(IpcCommand::GetVersion).await?;
+            println!("versiom: {:?}", response);
 
-            let data = response
-                .data
-                .ok_or_else(|| anyhow::anyhow!("服务版本响应中没有数据"))?;
-
-            if let Some(nested_data) = data.get("data")
-                && let Some(version) = nested_data.get("version").and_then(|v| v.as_str())
-            {
-                // logging!(info, Type::Service, true, "获取到服务版本: {}", version);
-                return Ok(version.to_string());
-            }
-
-            Ok("unknown".to_string())
+            let version = response.body()?;
+            println!("version body: {:?}", version);
+            Ok(version)
         })
         .await;
 
@@ -382,31 +381,27 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     let bin_path = current_exe()?.with_file_name(format!("{clash_core}{bin_ext}"));
 
     let payload = serde_json::json!({
-        "core_type": clash_core,
-        "bin_path": dirs::path_to_str(&bin_path)?,
+        "core_path": dirs::path_to_str(&bin_path)?,
+        "config_path": dirs::path_to_str(config_file)?,
         "config_dir": dirs::path_to_str(&dirs::app_home_dir()?)?,
-        "config_file": dirs::path_to_str(config_file)?,
-        "log_file": dirs::path_to_str(&dirs::service_log_file()?)?,
+        "log_dir": dirs::path_to_str(&dirs::service_log_file()?)?,
     });
 
-    let response = send_ipc_request(IpcCommand::StartClash, payload)
+    let response = send_ipc_request_post(IpcCommand::StartClash, payload)
         .await
         .context("无法连接到Clash Verge Service")?;
+    let data = response.json::<ServiceIpcResponse>()?;
 
-    if !response.success {
-        let err_msg = response.error.unwrap_or_else(|| "启动核心失败".to_string());
-        bail!(err_msg);
-    }
-
-    if let Some(data) = &response.data
-        && let Some(code) = data.get("code").and_then(|c| c.as_u64())
-        && code != 0
-    {
-        let msg = data
-            .get("msg")
-            .and_then(|m| m.as_str())
-            .unwrap_or("未知错误");
-        bail!("启动核心失败: {}", msg);
+    if data.code != 0 {
+        logging!(
+            error,
+            Type::Service,
+            true,
+            "启动核心失败: code={}, msg={}",
+            data.code,
+            data.msg
+        );
+        bail!(data.msg);
     }
 
     logging!(info, Type::Service, true, "服务成功启动核心");
@@ -429,37 +424,22 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 pub(super) async fn stop_core_by_service() -> Result<()> {
     logging!(info, Type::Service, true, "通过服务停止核心 (IPC)");
 
-    let payload = serde_json::json!({});
-    let response = send_ipc_request(IpcCommand::StopClash, payload)
+    let response = send_ipc_request_delete(IpcCommand::StopClash)
         .await
         .context("无法连接到Clash Verge Service")?;
 
-    if !response.success {
-        let err_msg = response.error.unwrap_or_else(|| "停止核心失败".to_string());
-        logging!(error, Type::Service, true, "停止核心失败: {}", err_msg);
-        bail!(err_msg);
-    }
+    let data = response.json::<ServiceIpcResponse>()?;
 
-    if let Some(data) = &response.data
-        && let Some(code) = data.get("code")
-    {
-        let code_value = code.as_u64().unwrap_or(1);
-        let msg = data
-            .get("msg")
-            .and_then(|m| m.as_str())
-            .unwrap_or("未知错误");
-
-        if code_value != 0 {
-            logging!(
-                error,
-                Type::Service,
-                true,
-                "停止核心返回错误: code={}, msg={}",
-                code_value,
-                msg
-            );
-            bail!("停止核心失败: {}", msg);
-        }
+    if data.code != 0 {
+        logging!(
+            error,
+            Type::Service,
+            true,
+            "停止核心失败: code={}, msg={}",
+            data.code,
+            data.msg
+        );
+        bail!("停止核心失败: {}", data.msg);
     }
 
     logging!(info, Type::Service, true, "服务成功停止核心");
@@ -562,5 +542,43 @@ impl ServiceManager {
     }
 }
 
+async fn connect_ipc() -> Result<IpcHttpClient> {
+    debug!("Connecting to IPC at {}", clash_verge_service_ipc::IPC_PATH);
+    let client = kode_bridge::IpcHttpClient::new(clash_verge_service_ipc::IPC_PATH)?;
+    client.get(IpcCommand::Magic.as_ref()).send().await?;
+    Ok(client)
+}
+
+async fn send_ipc_request_post(
+    command: IpcCommand,
+    payload: serde_json::Value,
+) -> Result<HttpResponse> {
+    let client = connect_ipc().await?;
+    let response = client
+        .post(command.as_ref())
+        .json_body(&payload)
+        .send()
+        .await?;
+    Ok(response)
+}
+
+async fn send_ipc_request_get(command: IpcCommand) -> Result<HttpResponse> {
+    let client = connect_ipc().await?;
+    let response = client.get(command.as_ref()).send().await?;
+    Ok(response)
+}
+
+async fn send_ipc_request_delete(command: IpcCommand) -> Result<HttpResponse> {
+    let client = connect_ipc().await?;
+    let response = client.delete(command.as_ref()).send().await?;
+    Ok(response)
+}
+
 pub static SERVICE_MANAGER: Lazy<Mutex<ServiceManager>> =
     Lazy::new(|| Mutex::new(ServiceManager::default()));
+
+// #[tokio::test]
+// async fn test_connect() {
+//     let connect = connect_ipc().await;
+//     assert!(connect.is_ok());
+// }
