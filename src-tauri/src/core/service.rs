@@ -384,7 +384,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
         "core_path": dirs::path_to_str(&bin_path)?,
         "config_path": dirs::path_to_str(config_file)?,
         "config_dir": dirs::path_to_str(&dirs::app_home_dir()?)?,
-        "log_dir": dirs::path_to_str(&dirs::service_log_file()?)?,
+        "log_dir": dirs::path_to_str(&dirs::service_log_dir()?)?,
     });
 
     let response = send_ipc_request_post(IpcCommand::StartClash, payload)
