@@ -2,13 +2,13 @@ import js from "@eslint/js";
 import configPrettier from "eslint-config-prettier";
 import pluginImport from "eslint-plugin-import";
 import pluginPrettier from "eslint-plugin-prettier";
-import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginReactRefresh from "eslint-plugin-react-refresh";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import eslintReact from "@eslint-react/eslint-plugin";
 
 export default defineConfig([
   {
@@ -16,7 +16,6 @@ export default defineConfig([
 
     plugins: {
       js,
-      react: pluginReact,
       "react-hooks": pluginReactHooks,
       import: pluginImport,
       "react-refresh": pluginReactRefresh,
@@ -27,8 +26,7 @@ export default defineConfig([
     extends: [
       "js/recommended",
       tseslint.configs.recommended,
-      pluginReact.configs.flat.recommended,
-      pluginReact.configs.flat["jsx-runtime"],
+      eslintReact.configs["recommended-typescript"],
       configPrettier,
     ],
 
