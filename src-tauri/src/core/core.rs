@@ -7,7 +7,9 @@ use crate::{
         service::{self, SERVICE_MANAGER, ServiceStatus},
     },
     ipc::IpcManager,
-    logging, logging_error, singleton_lazy,
+    logging, logging_error,
+    process::CommandChildGuard,
+    singleton_lazy,
     utils::{
         dirs,
         help::{self},
@@ -24,12 +26,12 @@ use std::{
     path::PathBuf,
     sync::Arc,
 };
-use tauri_plugin_shell::{ShellExt, process::CommandChild};
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug)]
 pub struct CoreManager {
     running: Arc<Mutex<RunningMode>>,
-    child_sidecar: Arc<Mutex<Option<CommandChild>>>,
+    child_sidecar: Arc<Mutex<Option<CommandChildGuard>>>,
 }
 
 /// 内核运行模式
@@ -465,7 +467,7 @@ impl CoreManager {
                     for pid in pids {
                         // 跳过当前管理的进程
                         if let Some(current) = current_pid
-                            && pid == current
+                            && Some(pid) == current
                         {
                             logging!(
                                 debug,
@@ -783,21 +785,22 @@ impl CoreManager {
             "Started core by sidecar pid: {}",
             pid
         );
-        *self.child_sidecar.lock() = Some(child);
+        *self.child_sidecar.lock() = Some(CommandChildGuard::new(child));
         self.set_running_mode(RunningMode::Sidecar);
         Ok(())
     }
+
     fn stop_core_by_sidecar(&self) -> Result<()> {
         logging!(info, Type::Core, true, "Stopping core by sidecar");
 
         if let Some(child) = self.child_sidecar.lock().take() {
             let pid = child.pid();
-            child.kill()?;
+            drop(child);
             logging!(
                 trace,
                 Type::Core,
                 true,
-                "Stopped core by sidecar pid: {}",
+                "Stopped core by sidecar pid: {:?}",
                 pid
             );
         }
