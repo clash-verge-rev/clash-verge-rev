@@ -17,7 +17,7 @@ tauri-build = { version = "2.4.1", features = [] }
 
 [dependencies]
 warp = { version = "0.4.2", features = ["server"] }
-anyhow = "1.0.99"
+anyhow = "1.0.100"
 dirs = "6.0"
 open = "5.3.2"
 log = "0.4.28"
@@ -39,7 +39,7 @@ tokio = { version = "1.47.1", features = [
   "time",
   "sync",
 ] }
-serde = { version = "1.0.225", features = ["derive"] }
+serde = { version = "1.0.226", features = ["derive"] }
 reqwest = { version = "0.12.23", features = ["json", "cookies"] }
 regex = "1.11.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
@@ -80,8 +80,8 @@ isahc = { version = "1.7.2", default-features = false, features = [
   "parking_lot",
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
-tauri-plugin-http = "2"
-flexi_logger = "0.31.2"
+tauri-plugin-http = "2.5.2"
+flexi_logger = "0.31.3"
 cfg-if = "1.0.3"
 nu-ansi-term = { version = "0.50.1", optional = true }
 console-subscriber = { version = "0.4.1", optional = true }
