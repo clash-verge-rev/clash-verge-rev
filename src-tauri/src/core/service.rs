@@ -12,8 +12,6 @@ use once_cell::sync::Lazy;
 use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
 use tokio::sync::Mutex;
 
-const REQUIRED_SERVICE_VERSION: &str = "2.0.0"; // 定义所需的服务版本号
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
     Ready,
@@ -366,7 +364,7 @@ async fn check_service_version() -> Result<String> {
 /// 检查服务是否需要重装
 pub async fn check_service_needs_reinstall() -> bool {
     match check_service_version().await {
-        Ok(version) => version != REQUIRED_SERVICE_VERSION,
+        Ok(version) => version != clash_verge_service_ipc::VERSION,
         Err(_) => false,
     }
 }

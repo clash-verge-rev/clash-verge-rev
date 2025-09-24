@@ -1164,12 +1164,13 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "0.1.0"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#8dcf1aa472cab1ae14ff883bbe430bffa1bf0f3e"
+version = "2.0.0"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#909defba752d057d1d1e75f2cc5f03060ee49200"
 dependencies = [
  "serde",
  "strum",
  "strum_macros",
+ "windows-service",
 ]
 
 [[package]]
@@ -9082,6 +9083,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7084dcc306f89883455a206237404d3eaf961e5bd7e0f312f7c91f57eb44167f"
 dependencies = [
  "windows-link 0.2.0",
+]
+
+[[package]]
+name = "windows-service"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "193cae8e647981c35bc947fdd57ba7928b1fa0d4a79305f6dd2dc55221ac35ac"
+dependencies = [
+ "bitflags 2.9.4",
+ "widestring",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
