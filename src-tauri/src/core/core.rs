@@ -1,4 +1,3 @@
-#[cfg(target_os = "windows")]
 use crate::AsyncHandler;
 use crate::{
     config::*,
@@ -748,8 +747,6 @@ impl CoreManager {
 
         let log_path = service_log_dir.join(format!("sidecar_{timestamp}.log"));
 
-        let mut log_file = File::create(log_path)?;
-
         let (mut rx, child) = app_handle
             .shell()
             .sidecar(&clash_core)?
@@ -761,20 +758,6 @@ impl CoreManager {
             ])
             .spawn()?;
 
-        while let Some(event) = rx.recv().await {
-            if let tauri_plugin_shell::process::CommandEvent::Stdout(line) = event
-                && let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line))
-            {
-                logging!(
-                    error,
-                    Type::Core,
-                    true,
-                    "[Sidecar] Failed to write stdout to file: {}",
-                    e
-                );
-            }
-        }
-
         let pid = child.pid();
         logging!(
             trace,
@@ -785,6 +768,28 @@ impl CoreManager {
         );
         *self.child_sidecar.lock() = Some(child);
         self.set_running_mode(RunningMode::Sidecar);
+
+        let mut log_file = std::io::BufWriter::new(File::create(log_path)?);
+        AsyncHandler::spawn(|| async move {
+            while let Some(event) = rx.recv().await {
+                match event {
+                    tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
+                        if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
+                            eprintln!("[Sidecar] write stdout failed: {e}");
+                        }
+                    }
+                    tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
+                        let _ = writeln!(log_file, "[stderr] {}", String::from_utf8_lossy(&line));
+                    }
+                    tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
+                        let _ = writeln!(log_file, "[terminated] {:?}", term);
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        });
+
         Ok(())
     }
     fn stop_core_by_sidecar(&self) -> Result<()> {
