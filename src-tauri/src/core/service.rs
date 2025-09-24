@@ -501,14 +501,12 @@ impl ServiceManager {
         match status {
             ServiceStatus::Ready => {
                 logging!(info, Type::Service, true, "服务就绪，直接启动");
-                IpcManager::global().as_service().await?;
                 Ok(())
             }
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
                 logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
                 reinstall_service().await?;
                 self.0 = ServiceStatus::Ready;
-                IpcManager::global().as_service().await?;
                 Ok(())
             }
             ServiceStatus::ForceReinstallRequired => {
@@ -520,21 +518,18 @@ impl ServiceManager {
                 );
                 force_reinstall_service().await?;
                 self.0 = ServiceStatus::Ready;
-                IpcManager::global().as_service().await?;
                 Ok(())
             }
             ServiceStatus::InstallRequired => {
                 logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
                 install_service().await?;
                 self.0 = ServiceStatus::Ready;
-                IpcManager::global().as_service().await?;
                 Ok(())
             }
             ServiceStatus::UninstallRequired => {
                 logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
                 uninstall_service().await?;
                 self.0 = ServiceStatus::Unavailable("Service Uninstalled".into());
-                IpcManager::global().as_sidecar().await?;
                 Ok(())
             }
             ServiceStatus::Unavailable(reason) => {
@@ -546,7 +541,6 @@ impl ServiceManager {
                     reason
                 );
                 self.0 = ServiceStatus::Unavailable(reason.clone());
-                IpcManager::global().as_sidecar().await?;
                 Err(anyhow::anyhow!("服务不可用: {}", reason))
             }
         }

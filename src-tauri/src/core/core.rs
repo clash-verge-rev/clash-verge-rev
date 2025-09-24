@@ -849,10 +849,14 @@ impl CoreManager {
             );
         }
 
-        if IpcManager::global().is_service_available().await {
+        if IpcManager::global().as_service().await.is_ok()
+            && IpcManager::global().is_service_available().await
+        {
             logging!(info, Type::Core, true, "Service is available");
             self.set_running_mode(RunningMode::Service);
-        } else if IpcManager::global().is_sidecar_available().await {
+        } else if IpcManager::global().as_sidecar().await.is_ok()
+            && IpcManager::global().is_sidecar_available().await
+        {
             logging!(
                 info,
                 Type::Core,
