@@ -1,6 +1,7 @@
 #[cfg(target_os = "windows")]
 use crate::AsyncHandler;
 use crate::{
+    cmd::force_refresh_proxies,
     config::*,
     core::{
         handle,
@@ -849,14 +850,11 @@ impl CoreManager {
             );
         }
 
-        if IpcManager::global().as_service().await.is_ok()
-            && IpcManager::global().is_service_available().await
-        {
+        if IpcManager::global().is_service_available().await {
             logging!(info, Type::Core, true, "Service is available");
             self.set_running_mode(RunningMode::Service);
-        } else if IpcManager::global().as_sidecar().await.is_ok()
-            && IpcManager::global().is_sidecar_available().await
-        {
+            self.afterstart_core().await?;
+        } else if IpcManager::global().is_sidecar_available().await {
             logging!(
                 info,
                 Type::Core,
@@ -864,6 +862,7 @@ impl CoreManager {
                 "Service is not available, using sidecar"
             );
             self.set_running_mode(RunningMode::Sidecar);
+            self.afterstart_core().await?;
         } else {
             logging!(info, Type::Core, true, "No core is running");
             self.set_running_mode(RunningMode::NotRunning);
@@ -890,12 +889,20 @@ impl CoreManager {
         SERVICE_MANAGER.lock().await.refresh().await?;
         match SERVICE_MANAGER.lock().await.current() {
             ServiceStatus::Ready => {
+                logging_error!(Type::Core, true, IpcManager::global().as_service().await);
                 self.set_running_mode(RunningMode::Service);
             }
             _ => {
+                logging_error!(Type::Core, true, IpcManager::global().as_sidecar().await);
                 self.set_running_mode(RunningMode::Sidecar);
             }
         }
+        Ok(())
+    }
+
+    pub async fn afterstart_core(&self) -> Result<()> {
+        force_refresh_proxies().await.map_err(anyhow::Error::msg)?;
+        force_refresh_proxies().await.map_err(anyhow::Error::msg)?;
         Ok(())
     }
 
@@ -913,7 +920,7 @@ impl CoreManager {
                 logging_error!(Type::Core, true, IpcManager::global().as_sidecar().await);
             }
         };
-
+        self.afterstart_core().await?;
         Ok(())
     }
 

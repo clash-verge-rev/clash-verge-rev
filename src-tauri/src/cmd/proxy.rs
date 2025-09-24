@@ -15,6 +15,7 @@ const PROVIDERS_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
 
 #[tauri::command]
 pub async fn get_proxies() -> CmdResult<serde_json::Value> {
+    logging!(info, Type::Cmd, "Fetching proxies from cache or IPC...");
     let cache = CacheProxy::global();
     let key = CacheProxy::make_key("proxies", "default");
     let value = cache
@@ -40,6 +41,11 @@ pub async fn force_refresh_proxies() -> CmdResult<serde_json::Value> {
 
 #[tauri::command]
 pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
+    logging!(
+        info,
+        Type::Cmd,
+        "Fetching provider proxies from cache or IPC..."
+    );
     let cache = CacheProxy::global();
     let key = CacheProxy::make_key("providers", "default");
     let value = cache

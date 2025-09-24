@@ -52,20 +52,16 @@ pub fn resolve_setup_async() {
         );
 
         init_service_manager().await;
-        init_ipc_manager().await;
-
-        futures::join!(
-            init_work_config(),
-            init_resources(),
-            init_startup_script(),
-            init_hotkey(),
-        );
+        // 依赖 servicece 提供 guard_external_controller_ipc 选择
+        init_work_config().await;
+        futures::join!(init_resources(), init_startup_script(), init_hotkey(),);
 
         init_timer().await;
         init_once_auto_lightweight().await;
         init_auto_lightweight_mode().await;
 
         init_verge_config().await;
+        init_ipc_manager().await;
         init_core_manager().await;
 
         init_system_proxy().await;

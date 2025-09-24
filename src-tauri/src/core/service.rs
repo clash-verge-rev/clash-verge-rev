@@ -1,7 +1,6 @@
 use crate::{
     cache::{CacheService, SHORT_TERM_TTL},
     config::Config,
-    ipc::IpcManager,
     logging, logging_error,
     utils::{dirs, logging::Type},
 };
@@ -348,10 +347,8 @@ async fn check_service_version() -> Result<String> {
         .get_or_fetch(key, SHORT_TERM_TTL, || async {
             logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
             let response = send_ipc_request_get(IpcCommand::GetVersion).await?;
-            println!("versiom: {:?}", response);
 
             let version = response.body()?;
-            println!("version body: {:?}", version);
             Ok(version)
         })
         .await;

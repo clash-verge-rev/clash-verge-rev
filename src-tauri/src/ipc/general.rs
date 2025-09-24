@@ -14,7 +14,10 @@ use tokio::sync::Mutex;
 
 use crate::{
     logging, singleton_with_logging,
-    utils::dirs::{ipc_path_service, ipc_path_sidecar},
+    utils::{
+        dirs::{ipc_path_service, ipc_path_sidecar},
+        logging::Type,
+    },
 };
 
 // 定义用于URL路径的编码集合，只编码真正必要的字符
@@ -37,8 +40,10 @@ pub struct IpcManager {
     client: Arc<Mutex<Option<IpcHttpClient>>>,
 }
 
+// TODO 当前错误地把 sidecar 当作 service 启动
 impl IpcManager {
     pub fn new() -> Self {
+        logging!(warn, Type::Ipc, true, "fuck new tunglies");
         Self {
             is_service: AtomicBool::new(false),
             ipc_path: Arc::new(Mutex::new(None)),
@@ -48,9 +53,9 @@ impl IpcManager {
 
     fn config() -> ClientConfig {
         ClientConfig {
-            default_timeout: Duration::from_secs(5),
+            default_timeout: Duration::from_millis(1_750),
             enable_pooling: false,
-            max_retries: 4,
+            max_retries: 5,
             retry_delay: Duration::from_millis(125),
             max_concurrent_requests: 16,
             max_requests_per_second: Some(64.0),
@@ -58,13 +63,28 @@ impl IpcManager {
         }
     }
 
+    // Try to resue exists mihomo ipc path
     pub async fn init(&self) -> Result<()> {
-        if self.as_service().await.is_ok() {
-            return Ok(());
+        logging!(warn, Type::Ipc, true, "fuck tunglies");
+
+        match self.as_service().await {
+            Ok(()) => {
+                logging!(warn, Type::Ipc, true, "fuck tunglies service");
+                return Ok(());
+            }
+            Err(err) => {
+                logging!(warn, Type::Ipc, true, "fuck tunglies service: {}", err);
+            }
         }
 
-        if self.as_sidecar().await.is_ok() {
-            return Ok(());
+        match self.as_sidecar().await {
+            Ok(()) => {
+                logging!(warn, Type::Ipc, true, "fuck tunglies sidecar");
+                return Ok(());
+            }
+            Err(err) => {
+                logging!(warn, Type::Ipc, true, "fuck tunglies sidecar: {}", err);
+            }
         }
 
         Err(anyhow::anyhow!(
@@ -87,6 +107,15 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<LegacyResponse> {
+        logging!(
+            warn,
+            Type::Ipc,
+            true,
+            "IpcManager.request: method={}, path={}, ipc_path={:?}",
+            method,
+            path,
+            self.ipc_path.lock().await.as_ref()
+        );
         let guard = self.client.lock().await;
         let client = guard
             .as_ref()
