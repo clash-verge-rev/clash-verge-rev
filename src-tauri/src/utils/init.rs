@@ -294,7 +294,7 @@ async fn initialize_config_files() -> Result<()> {
     if let Ok(path) = dirs::clash_path()
         && !path.exists()
     {
-        let template = IClashTemp::template().0;
+        let template = IClashTemp::template().await.0;
         help::save_yaml(&path, &template, Some("# Clash Verge"))
             .await
             .map_err(|e| anyhow::anyhow!("Failed to create clash config: {}", e))?;

@@ -1,12 +1,9 @@
+use anyhow::Result;
 use kode_bridge::IpcStreamClient;
 use std::sync::Arc;
 use tokio::{sync::RwLock, time::Duration};
 
-use crate::{
-    logging,
-    process::AsyncHandler,
-    utils::{dirs::ipc_path, logging::Type},
-};
+use crate::{ipc::IpcManager, logging, process::AsyncHandler, utils::logging::Type};
 
 /// Generic base structure for IPC monitoring data with freshness tracking
 pub trait MonitorData: Clone + Send + Sync + 'static {
@@ -80,6 +77,16 @@ where
             .is_fresh_within(self.freshness_duration)
     }
 
+    async fn create_ipc_client() -> Result<IpcStreamClient> {
+        let current_ipc_path = IpcManager::global()
+            .current_ipc_path()
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Failed to get IPC path"))?;
+        let client = IpcStreamClient::new(current_ipc_path)?;
+
+        Ok(client)
+    }
+
     /// The core streaming task that can be specialized per monitor type
     async fn streaming_task(
         current: Arc<RwLock<T>>,
@@ -88,18 +95,7 @@ where
         retry_interval: Duration,
     ) {
         loop {
-            let ipc_path_buf = match ipc_path() {
-                Ok(path) => path,
-                Err(e) => {
-                    logging!(error, Type::Ipc, true, "Failed to get IPC path: {}", e);
-                    tokio::time::sleep(retry_interval).await;
-                    continue;
-                }
-            };
-
-            let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-
-            let client = match IpcStreamClient::new(ipc_path) {
+            let client = match Self::create_ipc_client().await {
                 Ok(client) => client,
                 Err(e) => {
                     logging!(error, Type::Ipc, true, "Failed to create IPC client: {}", e);

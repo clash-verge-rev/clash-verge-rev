@@ -1,14 +1,19 @@
-use std::time::Duration;
+use std::{
+    path::PathBuf,
+    sync::{Arc, atomic::AtomicBool},
+    time::Duration,
+};
 
 use kode_bridge::{
     ClientConfig, IpcHttpClient, LegacyResponse,
     errors::{AnyError, AnyResult},
 };
 use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
+use tokio::sync::Mutex;
 
 use crate::{
     logging, singleton_with_logging,
-    utils::{dirs::ipc_path, logging::Type},
+    utils::dirs::{ipc_path_service, ipc_path_sidecar},
 };
 
 // 定义用于URL路径的编码集合，只编码真正必要的字符
@@ -26,18 +31,22 @@ fn create_error(msg: impl Into<String>) -> AnyError {
 }
 
 pub struct IpcManager {
-    client: IpcHttpClient,
+    is_service: AtomicBool,
+    ipc_path: Arc<Mutex<Option<PathBuf>>>,
+    client: Arc<Mutex<Option<IpcHttpClient>>>,
 }
 
 impl IpcManager {
     pub fn new() -> Self {
-        logging!(info, Type::Ipc, true, "Creating new IpcManager instance");
-        let ipc_path_buf = ipc_path().unwrap_or_else(|e| {
-            logging!(error, Type::Ipc, true, "Failed to get IPC path: {}", e);
-            std::path::PathBuf::from("/tmp/clash-verge-ipc") // fallback path
-        });
-        let ipc_path = ipc_path_buf.to_str().unwrap_or_default();
-        let config = ClientConfig {
+        Self {
+            is_service: AtomicBool::new(false),
+            ipc_path: Arc::new(Mutex::new(None)),
+            client: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    fn config() -> ClientConfig {
+        ClientConfig {
             default_timeout: Duration::from_secs(5),
             enable_pooling: false,
             max_retries: 4,
@@ -45,10 +54,21 @@ impl IpcManager {
             max_concurrent_requests: 16,
             max_requests_per_second: Some(64.0),
             ..Default::default()
-        };
-        #[allow(clippy::unwrap_used)]
-        let client = IpcHttpClient::with_config(ipc_path, config).unwrap();
-        Self { client }
+        }
+    }
+
+    pub async fn init(&self) -> AnyResult<()> {
+        if self.as_service().await.is_ok() {
+            return Ok(());
+        }
+
+        if self.as_sidecar().await.is_ok() {
+            return Ok(());
+        }
+
+        Err(create_error(
+            "Failed to initialize IPC as service or sidecar",
+        ))
     }
 }
 
@@ -59,7 +79,57 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<LegacyResponse> {
-        self.client.request(method, path, body).await
+        let guard = self.client.lock().await;
+        let client = guard
+            .as_ref()
+            .ok_or_else(|| create_error("IpcHttpClient not initialized"))?;
+        client.request(method, path, body).await
+    }
+
+    pub async fn is_service_available(&self) -> bool {
+        self.is_initialized().await && self.is_service.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    pub async fn is_sidecar_available(&self) -> bool {
+        self.is_initialized().await && !self.is_service.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    pub async fn is_initialized(&self) -> bool {
+        self.client.lock().await.is_some()
+    }
+
+    pub async fn current_ipc_path(&self) -> Option<PathBuf> {
+        self.ipc_path.lock().await.clone()
+    }
+
+    async fn switch_ipc(&self, ipc_path: &PathBuf, is_service: bool) -> AnyResult<()> {
+        let config = Self::config();
+        let client = IpcHttpClient::with_config(ipc_path, config.clone())
+            .map_err(|e| create_error(format!("Failed to create IpcHttpClient: {}", e)))?;
+        let temp_manager = IpcManager {
+            client: Arc::new(Mutex::new(Some(client))),
+            is_service: AtomicBool::new(is_service),
+            ipc_path: Arc::new(Mutex::new(None)),
+        };
+        temp_manager.is_mihomo_running().await?;
+
+        let client = IpcHttpClient::with_config(ipc_path, config)
+            .map_err(|e| create_error(format!("Failed to create IpcHttpClient: {}", e)))?;
+        self.is_service
+            .store(is_service, std::sync::atomic::Ordering::SeqCst);
+        self.ipc_path.lock().await.replace(ipc_path.clone());
+        self.client.lock().await.replace(client);
+        Ok(())
+    }
+
+    pub async fn as_sidecar(&self) -> AnyResult<()> {
+        let sidecar_ipc = ipc_path_sidecar().unwrap_or_default();
+        self.switch_ipc(&sidecar_ipc, false).await
+    }
+
+    pub async fn as_service(&self) -> AnyResult<()> {
+        let service_ipc = ipc_path_service().unwrap_or_default();
+        self.switch_ipc(&service_ipc, true).await
     }
 }
 
@@ -70,7 +140,7 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<serde_json::Value> {
-        let response = IpcManager::global().request(method, path, body).await?;
+        let response = self.request(method, path, body).await?;
         match method {
             "GET" => Ok(response.json()?),
             "PATCH" => {
@@ -153,7 +223,6 @@ impl IpcManager {
 }
 
 impl IpcManager {
-    #[allow(dead_code)]
     pub async fn is_mihomo_running(&self) -> AnyResult<()> {
         let url = "/version";
         let _response = self.send_request("GET", url, None).await?;

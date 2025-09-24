@@ -1,15 +1,18 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, sync::Arc, time::Instant};
 use tauri::async_runtime::JoinHandle;
 use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
-    ipc::monitor::MonitorData,
+    ipc::{IpcManager, monitor::MonitorData},
     logging,
     process::AsyncHandler,
     singleton_with_logging,
-    utils::{dirs::ipc_path, logging::Type},
+    utils::logging::Type,
 };
+
+use kode_bridge::IpcStreamClient;
 
 const MAX_LOGS: usize = 1000; // Maximum number of logs to keep in memory
 
@@ -165,8 +168,8 @@ impl LogsMonitor {
         let task = AsyncHandler::spawn(move || async move {
             loop {
                 // Get fresh IPC path and client for each connection attempt
-                let (_ipc_path_buf, client) = match Self::create_ipc_client() {
-                    Ok((path, client)) => (path, client),
+                let client = match Self::create_ipc_client().await {
+                    Ok(client) => client,
                     Err(e) => {
                         logging!(error, Type::Ipc, true, "Failed to create IPC client: {}", e);
                         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -238,16 +241,14 @@ impl LogsMonitor {
         }
     }
 
-    fn create_ipc_client() -> Result<
-        (std::path::PathBuf, kode_bridge::IpcStreamClient),
-        Box<dyn std::error::Error + Send + Sync>,
-    > {
-        use kode_bridge::IpcStreamClient;
+    async fn create_ipc_client() -> Result<IpcStreamClient> {
+        let current_ipc_path = IpcManager::global()
+            .current_ipc_path()
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Failed to get IPC path"))?;
+        let client = IpcStreamClient::new(current_ipc_path)?;
 
-        let ipc_path_buf = ipc_path()?;
-        let ipc_path = ipc_path_buf.to_str().ok_or("Invalid IPC path")?;
-        let client = IpcStreamClient::new(ipc_path)?;
-        Ok((ipc_path_buf, client))
+        Ok(client)
     }
 
     fn process_log_line(

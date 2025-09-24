@@ -436,8 +436,6 @@ impl CoreManager {
 impl CoreManager {
     /// 清理多余的 mihomo 进程
     async fn cleanup_orphaned_mihomo_processes(&self) -> Result<()> {
-        logging!(info, Type::Core, true, "开始清理多余的 mihomo 进程");
-
         // 获取当前管理的进程 PID
         let current_pid = {
             let child_guard = self.child_sidecar.lock();
@@ -492,6 +490,8 @@ impl CoreManager {
             logging!(debug, Type::Core, true, "未发现多余的 mihomo 进程");
             return Ok(());
         }
+
+        logging!(info, Type::Core, true, "开始清理多余的 mihomo 进程");
 
         let mut kill_futures = Vec::new();
         for (pid, process_name) in &pids_to_kill {
@@ -810,7 +810,6 @@ impl CoreManager {
 }
 
 impl CoreManager {
-    // TODO 先尝试复用 service mihomo ipc，失败尝试通过 service ipc 启动 mihomo ipc
     async fn start_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, true, "Running core by service");
         let config_file = &Config::generate_file(ConfigType::Run).await?;
@@ -850,11 +849,26 @@ impl CoreManager {
             );
         }
 
-        // 使用简化的启动流程
-        logging!(info, Type::Core, true, "开始核心初始化");
-        self.start_core().await?;
+        if IpcManager::global().is_service_available().await {
+            logging!(info, Type::Core, true, "Service is available");
+            self.set_running_mode(RunningMode::Service);
+        } else if IpcManager::global().is_sidecar_available().await {
+            logging!(
+                info,
+                Type::Core,
+                true,
+                "Service is not available, using sidecar"
+            );
+            self.set_running_mode(RunningMode::Sidecar);
+        } else {
+            logging!(info, Type::Core, true, "No core is running");
+            self.set_running_mode(RunningMode::NotRunning);
 
-        logging!(info, Type::Core, true, "核心初始化完成");
+            logging!(info, Type::Core, true, "开始核心初始化");
+            self.start_core().await?;
+            logging!(info, Type::Core, true, "核心初始化完成");
+        }
+
         Ok(())
     }
 
@@ -888,9 +902,11 @@ impl CoreManager {
         match self.get_running_mode() {
             RunningMode::Service => {
                 logging_error!(Type::Core, true, self.start_core_by_service().await);
+                logging_error!(Type::Core, true, IpcManager::global().as_service().await);
             }
             RunningMode::NotRunning | RunningMode::Sidecar => {
                 logging_error!(Type::Core, true, self.start_core_by_sidecar().await);
+                logging_error!(Type::Core, true, IpcManager::global().as_sidecar().await);
             }
         };
 

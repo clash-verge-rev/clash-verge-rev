@@ -6,6 +6,7 @@ use crate::{
     core::{
         CoreManager, Timer, handle, hotkey::Hotkey, service::SERVICE_MANAGER, sysopt, tray::Tray,
     },
+    ipc::IpcManager,
     logging, logging_error,
     module::lightweight::{auto_lightweight_mode_init, run_once_auto_lightweight},
     process::AsyncHandler,
@@ -49,6 +50,7 @@ pub fn resolve_setup_async() {
             "Version: {}",
             env!("CARGO_PKG_VERSION")
         );
+        init_ipc_manager().await;
         init_service_manager().await;
 
         futures::join!(
@@ -222,6 +224,11 @@ pub(super) async fn init_service_manager() {
         true,
         SERVICE_MANAGER.lock().await.refresh().await
     );
+}
+
+pub(super) async fn init_ipc_manager() {
+    logging!(info, Type::Setup, true, "Initializing IPC manager...");
+    logging_error!(Type::Setup, true, IpcManager::global().init().await);
 }
 
 pub(super) async fn init_core_manager() {

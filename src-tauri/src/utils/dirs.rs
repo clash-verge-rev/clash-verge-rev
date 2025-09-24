@@ -272,18 +272,33 @@ pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
 }
 
 #[cfg(unix)]
-pub fn ipc_path() -> Result<PathBuf> {
+fn mihomo_ipc_path(suffix: &str) -> Result<PathBuf> {
     ensure_mihomo_safe_dir()
-        .map(|base_dir| base_dir.join("verge").join("verge-mihomo.sock"))
+        .map(|base_dir| base_dir.join("verge").join(suffix))
         .or_else(|| {
             app_home_dir()
                 .ok()
-                .map(|dir| dir.join("verge").join("verge-mihomo.sock"))
+                .map(|dir| dir.join("verge").join(suffix))
         })
         .ok_or_else(|| anyhow::anyhow!("Failed to determine ipc path"))
 }
 
-#[cfg(target_os = "windows")]
-pub fn ipc_path() -> Result<PathBuf> {
-    Ok(PathBuf::from(r"\\.\pipe\verge-mihomo"))
+#[cfg(unix)]
+pub fn ipc_path_sidecar() -> Result<PathBuf> {
+    mihomo_ipc_path("verge-mihomo-sidecar.sock")
+}
+
+#[cfg(unix)]
+pub fn ipc_path_service() -> Result<PathBuf> {
+    mihomo_ipc_path("verge-mihomo-service.sock")
+}
+
+#[cfg(windows)]
+pub fn ipc_path_sidecar() -> Result<PathBuf> {
+    Ok(PathBuf::from(r"\\.\pipe\verge-mihomo-sidecar"))
+}
+
+#[cfg(windows)]
+pub fn ipc_path_service() -> Result<PathBuf> {
+    Ok(PathBuf::from(r"\\.\pipe\verge-mihomo-service"))
 }
