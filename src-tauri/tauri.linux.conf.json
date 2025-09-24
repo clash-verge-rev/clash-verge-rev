@@ -5,7 +5,7 @@
     "targets": ["deb", "rpm"],
     "linux": {
       "deb": {
-        "depends": ["openssl"],
+        "depends": ["openssl", "pkexec"],
         "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
@@ -14,7 +14,7 @@
         "preRemoveScript": "./packages/linux/pre-remove.sh"
       },
       "rpm": {
-        "depends": ["openssl"],
+        "depends": ["openssl", "pkexec"],
         "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
