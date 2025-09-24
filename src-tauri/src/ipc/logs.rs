@@ -6,7 +6,7 @@ use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
     ipc::{IpcManager, monitor::MonitorData},
-    logging,
+    logging, logging_error,
     process::AsyncHandler,
     singleton_with_logging,
     utils::logging::Type,
@@ -167,6 +167,7 @@ impl LogsMonitor {
 
         let task = AsyncHandler::spawn(move || async move {
             loop {
+                logging_error!(Type::Ipc, true, IpcManager::global().ensure().await);
                 // Get fresh IPC path and client for each connection attempt
                 let client = match Self::create_ipc_client().await {
                     Ok(client) => client,

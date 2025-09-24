@@ -4,6 +4,7 @@ use std::{
     time::Duration,
 };
 
+use anyhow::Result;
 use kode_bridge::{
     ClientConfig, IpcHttpClient, LegacyResponse,
     errors::{AnyError, AnyResult},
@@ -27,7 +28,7 @@ const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
 
 // Helper function to create AnyError from string
 fn create_error(msg: impl Into<String>) -> AnyError {
-    Box::new(std::io::Error::other(msg.into()))
+    Box::<dyn std::error::Error + Send + Sync>::from(anyhow::anyhow!(msg.into()))
 }
 
 pub struct IpcManager {
@@ -57,7 +58,7 @@ impl IpcManager {
         }
     }
 
-    pub async fn init(&self) -> AnyResult<()> {
+    pub async fn init(&self) -> Result<()> {
         if self.as_service().await.is_ok() {
             return Ok(());
         }
@@ -66,9 +67,16 @@ impl IpcManager {
             return Ok(());
         }
 
-        Err(create_error(
+        Err(anyhow::anyhow!(
             "Failed to initialize IPC as service or sidecar",
         ))
+    }
+
+    pub async fn ensure(&self) -> Result<()> {
+        if !self.is_service_available().await || !&self.is_sidecar_available().await {
+            self.init().await?;
+        }
+        Ok(())
     }
 }
 
@@ -102,19 +110,22 @@ impl IpcManager {
         self.ipc_path.lock().await.clone()
     }
 
-    async fn switch_ipc(&self, ipc_path: &PathBuf, is_service: bool) -> AnyResult<()> {
+    async fn switch_ipc(&self, ipc_path: &PathBuf, is_service: bool) -> Result<()> {
         let config = Self::config();
         let client = IpcHttpClient::with_config(ipc_path, config.clone())
-            .map_err(|e| create_error(format!("Failed to create IpcHttpClient: {}", e)))?;
+            .map_err(|e| anyhow::anyhow!("Failed to create IpcHttpClient: {}", e))?;
         let temp_manager = IpcManager {
             client: Arc::new(Mutex::new(Some(client))),
             is_service: AtomicBool::new(is_service),
             ipc_path: Arc::new(Mutex::new(None)),
         };
-        temp_manager.is_mihomo_running().await?;
+        temp_manager
+            .is_mihomo_running()
+            .await
+            .map_err(|e| anyhow::anyhow!("{}", e))?;
 
         let client = IpcHttpClient::with_config(ipc_path, config)
-            .map_err(|e| create_error(format!("Failed to create IpcHttpClient: {}", e)))?;
+            .map_err(|e| anyhow::anyhow!("Failed to create IpcHttpClient: {}", e))?;
         self.is_service
             .store(is_service, std::sync::atomic::Ordering::SeqCst);
         self.ipc_path.lock().await.replace(ipc_path.clone());
@@ -122,12 +133,12 @@ impl IpcManager {
         Ok(())
     }
 
-    pub async fn as_sidecar(&self) -> AnyResult<()> {
+    pub async fn as_sidecar(&self) -> Result<()> {
         let sidecar_ipc = ipc_path_sidecar().unwrap_or_default();
         self.switch_ipc(&sidecar_ipc, false).await
     }
 
-    pub async fn as_service(&self) -> AnyResult<()> {
+    pub async fn as_service(&self) -> Result<()> {
         let service_ipc = ipc_path_service().unwrap_or_default();
         self.switch_ipc(&service_ipc, true).await
     }

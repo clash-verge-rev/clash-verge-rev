@@ -1,6 +1,6 @@
 use crate::config::Config;
-use crate::ipc::IpcManager;
-use crate::utils::dirs::{ipc_path_sidecar, path_to_str};
+use crate::core::service::SERVICE_MANAGER;
+use crate::utils::dirs::{ipc_path_service, ipc_path_sidecar, path_to_str};
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -318,11 +318,14 @@ impl IClashTemp {
     }
 
     pub async fn guard_external_controller_ipc() -> String {
-        let path = IpcManager::global()
-            .current_ipc_path()
-            .await
-            .unwrap_or_else(|| ipc_path_sidecar().unwrap_or_default());
-        path_to_str(&path).unwrap_or_default().to_string()
+        let ipc_path = if SERVICE_MANAGER.lock().await.is_service_ready() {
+            ipc_path_service()
+        } else {
+            ipc_path_sidecar()
+        }
+        .unwrap_or_default();
+
+        path_to_str(&ipc_path).unwrap_or_default().to_string()
     }
 }
 
