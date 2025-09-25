@@ -42,29 +42,40 @@ export const useSystemProxyState = () => {
   };
 
   const updateProxyStatus = async () => {
+    // 减少延迟，并发更新缓存
     await new Promise((resolve) => setTimeout(resolve, 100));
-    await mutate("getSystemProxy");
-    await mutate("getAutotemProxy");
+
+    // 并发清除缓存，获取最新status
+    await Promise.all([
+      mutate("getSystemProxy", undefined, { revalidate: true }),
+      mutate("getAutotemProxy", undefined, { revalidate: true }),
+    ]);
+
+    // 减少等待时间
+    await new Promise((resolve) => setTimeout(resolve, 50));
   };
 
-  const toggleSystemProxy = (enabled: boolean) => {
+  const toggleSystemProxy = async (enabled: boolean) => {
+    // 先更新UI状态
     mutateVerge({ ...verge, enable_system_proxy: enabled }, false);
 
-    setTimeout(async () => {
-      try {
-        if (!enabled && verge?.auto_close_connection) {
-          closeAllConnections();
-        }
-        await patchVerge({ enable_system_proxy: enabled });
-
-        updateProxyStatus();
-      } catch (error) {
-        console.warn("[useSystemProxyState] toggleSystemProxy failed:", error);
-        mutateVerge({ ...verge, enable_system_proxy: !enabled }, false);
+    try {
+      if (!enabled && verge?.auto_close_connection) {
+        await closeAllConnections();
       }
-    }, 0);
 
-    return Promise.resolve();
+      // 等待配置更新完成
+      await patchVerge({ enable_system_proxy: enabled });
+
+      // 减少延迟，快速更新代理状态
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      await updateProxyStatus();
+    } catch (error) {
+      console.warn("[useSystemProxyState] toggleSystemProxy failed:", error);
+      // 发生错误时恢复之前的状态
+      mutateVerge({ ...verge, enable_system_proxy: !enabled }, false);
+      throw error;
+    }
   };
 
   return {

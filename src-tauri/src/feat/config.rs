@@ -114,6 +114,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
 
         if tun_mode.is_some() {
             update_flags |= UpdateFlags::ClashConfig as i32;
+            update_flags |= UpdateFlags::SysProxy as i32;
             update_flags |= UpdateFlags::SystrayMenu as i32;
             update_flags |= UpdateFlags::SystrayTooltip as i32;
             update_flags |= UpdateFlags::SystrayIcon as i32;
@@ -183,7 +184,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             update_flags |= UpdateFlags::RestartCore as i32;
         }
 
-        // Process updates based on flags
+        // Process updates based on flags - 确保顺序正确
         if (update_flags & (UpdateFlags::RestartCore as i32)) != 0 {
             Config::generate().await?;
             CoreManager::global().restart_core().await?;
@@ -199,7 +200,10 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
         if (update_flags & (UpdateFlags::Launch as i32)) != 0 {
             sysopt::Sysopt::global().update_launch().await?;
         }
+        // 在配置更新完成后更新系统代理状态
         if (update_flags & (UpdateFlags::SysProxy as i32)) != 0 {
+            // 给配置变更一些时间生效
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
             sysopt::Sysopt::global().update_sysproxy().await?;
         }
         if (update_flags & (UpdateFlags::Hotkey as i32)) != 0

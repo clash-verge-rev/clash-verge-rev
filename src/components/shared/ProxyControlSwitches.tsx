@@ -140,8 +140,21 @@ const ProxyControlSwitches = ({
       showErrorNotice(msg);
       throw new Error(t(msg));
     }
+
+    // 更新UI状态
     mutateVerge({ ...verge, enable_tun_mode: value }, false);
-    await patchVerge({ enable_tun_mode: value });
+
+    try {
+      // 等待TUN配置更新完成
+      await patchVerge({ enable_tun_mode: value });
+
+      // 减少延迟，快速同步
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    } catch (error) {
+      // 回滚
+      mutateVerge({ ...verge, enable_tun_mode: !value }, false);
+      throw error;
+    }
   };
 
   const onInstallService = useLockFn(async () => {
