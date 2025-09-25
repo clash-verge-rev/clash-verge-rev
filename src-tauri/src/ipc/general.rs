@@ -109,7 +109,6 @@ impl IpcManager {
         self.inner().await.get_running_mode()
     }
 
-    // TODO
     pub async fn start(&self) -> Result<()> {
         if self.is_initialized().await {
             logging!(
@@ -130,7 +129,7 @@ impl IpcManager {
 
         self.inner().await.set_running_mode(RunningMode::NotRunning);
         self.inner().await.set_running_ipc_path(None);
-        todo!()
+        Ok(())
     }
 }
 
@@ -153,7 +152,7 @@ impl IpcManager {
     }
 
     async fn switch_ipc(&self, r: RunningMode) -> Result<()> {
-        let ipc_path = r.try_into_ipc_path_string()?;
+        let ipc_path = r.clone().try_into_ipc_path_string()?;
         let config = Self::config();
         let client = IpcHttpClient::with_config(&ipc_path, config.clone())
             .map_err(|e| anyhow::anyhow!("Failed to create IpcHttpClient: {}", e))?;

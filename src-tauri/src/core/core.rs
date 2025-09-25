@@ -4,7 +4,7 @@ use crate::{
     config::*,
     core::{
         handle,
-        service::{self, SERVICE_MANAGER},
+        service::{self},
     },
     ipc::IpcManager,
     logging, logging_error,
@@ -22,7 +22,7 @@ use parking_lot::Mutex;
 use std::{
     fmt,
     fs::{File, create_dir_all},
-    io::Write,
+    // io::Write,
     path::PathBuf,
     sync::Arc,
 };
@@ -50,19 +50,11 @@ impl RunningMode {
         matches!(self, RunningMode::Service)
     }
 
-    pub fn is_sidecar(&self) -> bool {
-        matches!(self, RunningMode::Sidecar)
-    }
+    // pub fn is_running(&self) -> bool {
+    //     matches!(self, RunningMode::Service | RunningMode::Sidecar)
+    // }
 
-    pub fn is_not_running(&self) -> bool {
-        matches!(self, RunningMode::NotRunning)
-    }
-
-    pub fn is_running(&self) -> bool {
-        matches!(self, RunningMode::Service | RunningMode::Sidecar)
-    }
-
-    pub fn into_ipc_path_string(&self) -> Option<String> {
+    pub fn to_ipc_path_string(&self) -> Option<String> {
         match self {
             RunningMode::Service => ipc_path_service()
                 .map(|path| path.to_string_lossy().into_owned())
@@ -73,8 +65,8 @@ impl RunningMode {
         }
     }
 
-    pub fn try_into_ipc_path_string(&self) -> Result<String> {
-        self.into_ipc_path_string()
+    pub fn try_into_ipc_path_string(self) -> Result<String> {
+        self.to_ipc_path_string()
             .ok_or_else(|| anyhow!("IPC path is missing with mode: {self}"))
     }
 }
@@ -784,9 +776,11 @@ impl CoreManager {
 
         let log_path = service_log_dir.join(format!("sidecar_{timestamp}.log"));
 
-        let mut log_file = File::create(log_path)?;
+        // TODO fixme: 这里应该是想把日志写到文件里，但现在先注释掉
+        let mut _log_file = File::create(log_path)?;
 
-        let (mut rx, child) = app_handle
+        // TODO fixme: 这里应该是想把日志写到文件里，但现在先注释掉
+        let (mut _rx, child) = app_handle
             .shell()
             .sidecar(&clash_core)?
             .args([
@@ -797,23 +791,9 @@ impl CoreManager {
             ])
             .spawn()?;
 
-        while let Some(event) = rx.recv().await {
-            if let tauri_plugin_shell::process::CommandEvent::Stdout(line) = event
-                && let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line))
-            {
-                logging!(
-                    error,
-                    Type::Core,
-                    true,
-                    "[Sidecar] Failed to write stdout to file: {}",
-                    e
-                );
-            }
-        }
-
         let pid = child.pid();
         logging!(
-            trace,
+            info,
             Type::Core,
             true,
             "Started core by sidecar pid: {}",
@@ -895,18 +875,26 @@ impl CoreManager {
     }
 
     pub async fn prestart_core(&self) -> Result<()> {
-        SERVICE_MANAGER.lock().await.refresh().await?;
-
-        if SERVICE_MANAGER.lock().await.is_service_ready() {
-            // IpcManager::global().try_as_service().await?;
+        if IpcManager::global()
+            .inner()
+            .await
+            .get_running_mode()
+            .is_service()
+        {
             self.set_running_mode(RunningMode::Service);
         } else {
             self.set_running_mode(RunningMode::Sidecar);
-        }
+        };
         Ok(())
     }
 
-    pub async fn afterstart_core(&self) -> Result<()> {
+    pub fn afterstart_core(&self) -> Result<()> {
+        logging!(
+            info,
+            Type::Core,
+            true,
+            "Core started successfully, and IpcManager is ready"
+        );
         // force_refresh_proxies().await.map_err(anyhow::Error::msg)?;
         // force_refresh_proxies().await.map_err(anyhow::Error::msg)?;
         Ok(())
@@ -919,16 +907,16 @@ impl CoreManager {
         match self.get_running_mode() {
             RunningMode::Service => {
                 self.start_core_by_service().await?;
-                IpcManager::global().try_as_service().await?;
                 self.set_running_mode(RunningMode::Service);
             }
             RunningMode::NotRunning | RunningMode::Sidecar => {
                 self.start_core_by_sidecar().await?;
-                IpcManager::global().try_as_sidecar().await?;
                 self.set_running_mode(RunningMode::Sidecar);
             }
         };
-        self.afterstart_core().await?;
+
+        IpcManager::global().start().await?;
+        self.afterstart_core()?;
         Ok(())
     }
 
@@ -940,6 +928,7 @@ impl CoreManager {
             RunningMode::Sidecar => self.stop_core_by_sidecar(),
             RunningMode::NotRunning => Ok(()),
         }?;
+        IpcManager::global().stop().await?;
         Ok(())
     }
 

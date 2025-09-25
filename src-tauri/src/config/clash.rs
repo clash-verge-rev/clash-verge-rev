@@ -17,7 +17,7 @@ pub struct IClashTemp(pub Mapping);
 
 impl IClashTemp {
     pub async fn new() -> Self {
-        let template = Self::template().await;
+        let template = Self::template();
         let clash_path_result = dirs::clash_path();
         let map_result = if let Ok(path) = clash_path_result {
             help::read_mapping(&path).await
@@ -64,7 +64,7 @@ impl IClashTemp {
         }
     }
 
-    pub async fn template() -> Self {
+    pub fn template() -> Self {
         let mut map = Mapping::new();
         let mut tun = Mapping::new();
         let mut cors_map = Mapping::new();
@@ -341,13 +341,16 @@ impl IClashTemp {
     }
 
     pub async fn guard_external_controller_ipc() -> String {
-        let guard_ipc = IpcManager::global()
+        IpcManager::global()
             .inner()
             .await
             .get_running_ipc_path()
-            .unwrap_or(ipc_path_sidecar().unwrap().to_string_lossy().to_string());
-        logging!(info, Type::Config, true, "Guard IPC path as: {guard_ipc}");
-        guard_ipc
+            .or_else(|| {
+                ipc_path_sidecar()
+                    .ok()
+                    .map(|p| p.to_string_lossy().to_string())
+            })
+            .unwrap_or_default()
     }
 }
 

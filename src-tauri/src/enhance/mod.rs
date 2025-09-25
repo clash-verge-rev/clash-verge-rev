@@ -350,22 +350,21 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 config.insert(key.clone(), value);
             }
 
-            #[cfg(unix)]
             {
-                if key.as_str() == Some("external-controller-unix") {
+                #[cfg(unix)]
+                let external_controller_ipc = "external-controller-unix";
+                #[cfg(windows)]
+                let external_key = "external-controller-pipe";
+                if key.as_str() == Some(external_controller_ipc) {
                     use crate::ipc::IpcManager;
                     let ipc_path = IpcManager::global()
                         .current_ipc_path()
                         .await
                         .unwrap_or_default()
                         .into();
-                    println!("fuck fuck fuck: {:?}", ipc_path);
                     config.insert(key, ipc_path);
                 }
             }
-            // TODO
-            #[cfg(windows)]
-            {}
         }
     }
 

@@ -6,8 +6,7 @@ use crate::{
 };
 use anyhow::{Context, Result, bail};
 use clash_verge_service_ipc::{self, IpcCommand};
-use kode_bridge::{HttpResponse, IpcHttpClient};
-use log::debug;
+use kode_bridge::HttpResponse;
 use once_cell::sync::Lazy;
 use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
 use tokio::sync::Mutex;
@@ -455,10 +454,6 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
-    pub fn current(&self) -> ServiceStatus {
-        self.0.clone()
-    }
-
     pub fn is_service_ready(&self) -> bool {
         self.0 == ServiceStatus::Ready
     }
@@ -486,10 +481,7 @@ impl ServiceManager {
                     ServiceStatus::Ready
                 }
             }
-            Err(err) => {
-                logging!(warn, Type::Service, true, "服务不可用");
-                ServiceStatus::Unavailable(err.to_string())
-            }
+            Err(err) => ServiceStatus::Unavailable(err.to_string()),
         }
     }
 
@@ -537,18 +529,11 @@ impl ServiceManager {
     }
 }
 
-async fn connect_ipc() -> Result<IpcHttpClient> {
-    debug!("Connecting to IPC at {}", clash_verge_service_ipc::IPC_PATH);
-    let client = kode_bridge::IpcHttpClient::new(clash_verge_service_ipc::IPC_PATH)?;
-    client.get(IpcCommand::Magic.as_ref()).send().await?;
-    Ok(client)
-}
-
 async fn send_ipc_request_post(
     command: IpcCommand,
     payload: serde_json::Value,
 ) -> Result<HttpResponse> {
-    let client = connect_ipc().await?;
+    let client = kode_bridge::IpcHttpClient::new(clash_verge_service_ipc::IPC_PATH)?;
     let response = client
         .post(command.as_ref())
         .json_body(&payload)
@@ -558,13 +543,13 @@ async fn send_ipc_request_post(
 }
 
 async fn send_ipc_request_get(command: IpcCommand) -> Result<HttpResponse> {
-    let client = connect_ipc().await?;
+    let client = kode_bridge::IpcHttpClient::new(clash_verge_service_ipc::IPC_PATH)?;
     let response = client.get(command.as_ref()).send().await?;
     Ok(response)
 }
 
 async fn send_ipc_request_delete(command: IpcCommand) -> Result<HttpResponse> {
-    let client = connect_ipc().await?;
+    let client = kode_bridge::IpcHttpClient::new(clash_verge_service_ipc::IPC_PATH)?;
     let response = client.delete(command.as_ref()).send().await?;
     Ok(response)
 }
