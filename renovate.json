@@ -35,6 +35,11 @@
       "description": "Group all npm dependencies into a single PR",
       "matchManagers": ["npm"],
       "groupName": "npm dependencies"
+    },
+    {
+      "description": "Group all GitHub Actions updates into a single PR",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],
