@@ -354,7 +354,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 #[cfg(unix)]
                 let external_controller_ipc = "external-controller-unix";
                 #[cfg(windows)]
-                let external_key = "external-controller-pipe";
+                let external_controller_ipc = "external-controller-pipe";
                 if key.as_str() == Some(external_controller_ipc) {
                     use crate::ipc::IpcManager;
                     let ipc_path = IpcManager::global()
