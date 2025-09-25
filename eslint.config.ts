@@ -1,14 +1,15 @@
 import js from "@eslint/js";
 import configPrettier from "eslint-config-prettier";
-import pluginImport from "eslint-plugin-import";
+import pluginImportX from "eslint-plugin-import-x";
 import pluginPrettier from "eslint-plugin-prettier";
-import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginReactRefresh from "eslint-plugin-react-refresh";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import eslintReact from "@eslint-react/eslint-plugin";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 
 export default defineConfig([
   {
@@ -16,9 +17,9 @@ export default defineConfig([
 
     plugins: {
       js,
-      react: pluginReact,
       "react-hooks": pluginReactHooks,
-      import: pluginImport,
+      // @ts-expect-error -- https://github.com/un-ts/eslint-plugin-import-x/issues/421
+      "import-x": pluginImportX,
       "react-refresh": pluginReactRefresh,
       "unused-imports": pluginUnusedImports,
       prettier: pluginPrettier,
@@ -27,8 +28,7 @@ export default defineConfig([
     extends: [
       "js/recommended",
       tseslint.configs.recommended,
-      pluginReact.configs.flat.recommended,
-      pluginReact.configs.flat["jsx-runtime"],
+      eslintReact.configs["recommended-typescript"],
       configPrettier,
     ],
 
@@ -40,11 +40,11 @@ export default defineConfig([
       react: {
         version: "detect",
       },
-      "import/resolver": {
-        typescript: {
+      "import-x/resolver-next": [
+        createTypeScriptImportResolver({
           project: "./tsconfig.json",
-        },
-      },
+        }),
+      ],
     },
 
     rules: {
@@ -73,8 +73,8 @@ export default defineConfig([
       ],
 
       // Import
-      "import/no-unresolved": "error",
-      "import/order": [
+      "import-x/no-unresolved": "error",
+      "import-x/order": [
         "warn",
         {
           groups: [

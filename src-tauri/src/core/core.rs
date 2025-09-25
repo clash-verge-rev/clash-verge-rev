@@ -1,4 +1,3 @@
-#[cfg(target_os = "windows")]
 use crate::AsyncHandler;
 use crate::{
     config::*,
@@ -776,11 +775,7 @@ impl CoreManager {
 
         let log_path = service_log_dir.join(format!("sidecar_{timestamp}.log"));
 
-        // TODO fixme: 这里应该是想把日志写到文件里，但现在先注释掉
-        let mut _log_file = File::create(log_path)?;
-
-        // TODO fixme: 这里应该是想把日志写到文件里，但现在先注释掉
-        let (mut _rx, child) = app_handle
+        let (mut rx, child) = app_handle
             .shell()
             .sidecar(&clash_core)?
             .args([
@@ -800,6 +795,29 @@ impl CoreManager {
             pid
         );
         *self.child_sidecar.lock() = Some(CommandChildGuard::new(child));
+        self.set_running_mode(RunningMode::Sidecar);
+
+        let mut log_file = std::io::BufWriter::new(File::create(log_path)?);
+        AsyncHandler::spawn(|| async move {
+            while let Some(event) = rx.recv().await {
+                match event {
+                    tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
+                        if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
+                            eprintln!("[Sidecar] write stdout failed: {e}");
+                        }
+                    }
+                    tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
+                        let _ = writeln!(log_file, "[stderr] {}", String::from_utf8_lossy(&line));
+                    }
+                    tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
+                        let _ = writeln!(log_file, "[terminated] {:?}", term);
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        });
+
         Ok(())
     }
 
