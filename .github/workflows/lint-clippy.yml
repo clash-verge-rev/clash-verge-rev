@@ -23,7 +23,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
