@@ -52,17 +52,21 @@ pub fn resolve_setup_async() {
         );
 
         init_service_manager().await;
-        // 依赖 servicece 提供 guard_external_controller_ipc 选择
+        init_ipc_manager().await;
+        // work config 依赖 service manager 以及 ipc manager
+        // 提供 guard_external_controller_ipc 选择
         init_work_config().await;
+
         futures::join!(init_resources(), init_startup_script(), init_hotkey(),);
 
+        // ? 放在后面初始化
         init_timer().await;
         init_once_auto_lightweight().await;
         init_auto_lightweight_mode().await;
 
         init_verge_config().await;
-        init_ipc_manager().await;
         init_core_manager().await;
+        refresh_ipc_manager().await;
 
         init_system_proxy().await;
         AsyncHandler::spawn_blocking(|| {
@@ -259,6 +263,11 @@ pub(super) fn init_system_proxy_guard() {
 pub(super) async fn refresh_tray_menu() {
     logging!(info, Type::Setup, true, "Refreshing tray menu...");
     logging_error!(Type::Setup, true, Tray::global().update_part().await);
+}
+
+pub(super) async fn refresh_ipc_manager() {
+    logging!(info, Type::Setup, true, "Refreshing IPC manager...");
+    logging_error!(Type::Setup, true, IpcManager::global().start().await)
 }
 
 pub(super) async fn init_window() {

@@ -254,7 +254,7 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
 
 #[cfg(unix)]
 pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
-    ["/var/tmp", "/tmp"]
+    ["/tmp"]
         .iter()
         .map(PathBuf::from)
         .find(|path| path.exists())

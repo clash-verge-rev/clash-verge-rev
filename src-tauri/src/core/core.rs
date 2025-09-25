@@ -1,23 +1,22 @@
 #[cfg(target_os = "windows")]
 use crate::AsyncHandler;
 use crate::{
-    cmd::force_refresh_proxies,
     config::*,
     core::{
         handle,
-        service::{self, SERVICE_MANAGER, ServiceStatus},
+        service::{self, SERVICE_MANAGER},
     },
     ipc::IpcManager,
     logging, logging_error,
     process::CommandChildGuard,
     singleton_lazy,
     utils::{
-        dirs,
+        dirs::{self, ipc_path_service, ipc_path_sidecar},
         help::{self},
         logging::Type,
     },
 };
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use chrono::Local;
 use parking_lot::Mutex;
 use std::{
@@ -44,6 +43,40 @@ pub enum RunningMode {
     Sidecar,
     /// 未运行
     NotRunning,
+}
+
+impl RunningMode {
+    pub fn is_service(&self) -> bool {
+        matches!(self, RunningMode::Service)
+    }
+
+    pub fn is_sidecar(&self) -> bool {
+        matches!(self, RunningMode::Sidecar)
+    }
+
+    pub fn is_not_running(&self) -> bool {
+        matches!(self, RunningMode::NotRunning)
+    }
+
+    pub fn is_running(&self) -> bool {
+        matches!(self, RunningMode::Service | RunningMode::Sidecar)
+    }
+
+    pub fn into_ipc_path_string(&self) -> Option<String> {
+        match self {
+            RunningMode::Service => ipc_path_service()
+                .map(|path| path.to_string_lossy().into_owned())
+                .ok(),
+            RunningMode::Sidecar | RunningMode::NotRunning => ipc_path_sidecar()
+                .map(|path| path.to_string_lossy().into_owned())
+                .ok(),
+        }
+    }
+
+    pub fn try_into_ipc_path_string(&self) -> Result<String> {
+        self.into_ipc_path_string()
+            .ok_or_else(|| anyhow!("IPC path is missing with mode: {self}"))
+    }
 }
 
 impl fmt::Display for RunningMode {
@@ -787,7 +820,6 @@ impl CoreManager {
             pid
         );
         *self.child_sidecar.lock() = Some(CommandChildGuard::new(child));
-        self.set_running_mode(RunningMode::Sidecar);
         Ok(())
     }
 
@@ -805,7 +837,6 @@ impl CoreManager {
                 pid
             );
         }
-        self.set_running_mode(RunningMode::NotRunning);
         Ok(())
     }
 }
@@ -815,13 +846,11 @@ impl CoreManager {
         logging!(info, Type::Core, true, "Running core by service");
         let config_file = &Config::generate_file(ConfigType::Run).await?;
         service::run_core_by_service(config_file).await?;
-        self.set_running_mode(RunningMode::Service);
         Ok(())
     }
     async fn stop_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, true, "Stopping core by service");
         service::stop_core_by_service().await?;
-        self.set_running_mode(RunningMode::NotRunning);
         Ok(())
     }
 }
@@ -850,27 +879,7 @@ impl CoreManager {
             );
         }
 
-        if IpcManager::global().is_service_available().await {
-            logging!(info, Type::Core, true, "Service is available");
-            self.set_running_mode(RunningMode::Service);
-            self.afterstart_core().await?;
-        } else if IpcManager::global().is_sidecar_available().await {
-            logging!(
-                info,
-                Type::Core,
-                true,
-                "Service is not available, using sidecar"
-            );
-            self.set_running_mode(RunningMode::Sidecar);
-            self.afterstart_core().await?;
-        } else {
-            logging!(info, Type::Core, true, "No core is running");
-            self.set_running_mode(RunningMode::NotRunning);
-
-            logging!(info, Type::Core, true, "开始核心初始化");
-            self.start_core().await?;
-            logging!(info, Type::Core, true, "核心初始化完成");
-        }
+        self.start_core().await?;
 
         Ok(())
     }
@@ -887,22 +896,19 @@ impl CoreManager {
 
     pub async fn prestart_core(&self) -> Result<()> {
         SERVICE_MANAGER.lock().await.refresh().await?;
-        match SERVICE_MANAGER.lock().await.current() {
-            ServiceStatus::Ready => {
-                logging_error!(Type::Core, true, IpcManager::global().as_service().await);
-                self.set_running_mode(RunningMode::Service);
-            }
-            _ => {
-                logging_error!(Type::Core, true, IpcManager::global().as_sidecar().await);
-                self.set_running_mode(RunningMode::Sidecar);
-            }
+
+        if SERVICE_MANAGER.lock().await.is_service_ready() {
+            // IpcManager::global().try_as_service().await?;
+            self.set_running_mode(RunningMode::Service);
+        } else {
+            self.set_running_mode(RunningMode::Sidecar);
         }
         Ok(())
     }
 
     pub async fn afterstart_core(&self) -> Result<()> {
-        force_refresh_proxies().await.map_err(anyhow::Error::msg)?;
-        force_refresh_proxies().await.map_err(anyhow::Error::msg)?;
+        // force_refresh_proxies().await.map_err(anyhow::Error::msg)?;
+        // force_refresh_proxies().await.map_err(anyhow::Error::msg)?;
         Ok(())
     }
 
@@ -912,12 +918,14 @@ impl CoreManager {
 
         match self.get_running_mode() {
             RunningMode::Service => {
-                logging_error!(Type::Core, true, self.start_core_by_service().await);
-                logging_error!(Type::Core, true, IpcManager::global().as_service().await);
+                self.start_core_by_service().await?;
+                IpcManager::global().try_as_service().await?;
+                self.set_running_mode(RunningMode::Service);
             }
             RunningMode::NotRunning | RunningMode::Sidecar => {
-                logging_error!(Type::Core, true, self.start_core_by_sidecar().await);
-                logging_error!(Type::Core, true, IpcManager::global().as_sidecar().await);
+                self.start_core_by_sidecar().await?;
+                IpcManager::global().try_as_sidecar().await?;
+                self.set_running_mode(RunningMode::Sidecar);
             }
         };
         self.afterstart_core().await?;
@@ -926,11 +934,13 @@ impl CoreManager {
 
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
+        self.set_running_mode(RunningMode::NotRunning);
         match self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar(),
             RunningMode::NotRunning => Ok(()),
-        }
+        }?;
+        Ok(())
     }
 
     /// 重启内核

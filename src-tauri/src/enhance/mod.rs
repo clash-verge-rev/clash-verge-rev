@@ -341,14 +341,31 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                     .unwrap_or(false);
 
                 if enable_external_controller {
-                    config.insert(key, value);
+                    config.insert(key.clone(), value);
                 } else {
                     // 如果禁用了外部控制器，设置为空字符串
-                    config.insert(key, "".into());
+                    config.insert(key.clone(), "".into());
                 }
             } else {
-                config.insert(key, value);
+                config.insert(key.clone(), value);
             }
+
+            #[cfg(unix)]
+            {
+                if key.as_str() == Some("external-controller-unix") {
+                    use crate::ipc::IpcManager;
+                    let ipc_path = IpcManager::global()
+                        .current_ipc_path()
+                        .await
+                        .unwrap_or_default()
+                        .into();
+                    println!("fuck fuck fuck: {:?}", ipc_path);
+                    config.insert(key, ipc_path);
+                }
+            }
+            // TODO
+            #[cfg(windows)]
+            {}
         }
     }
 

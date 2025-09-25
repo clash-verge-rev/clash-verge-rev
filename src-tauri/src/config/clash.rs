@@ -1,6 +1,8 @@
 use crate::config::Config;
-use crate::core::service::SERVICE_MANAGER;
-use crate::utils::dirs::{ipc_path_service, ipc_path_sidecar, path_to_str};
+use crate::ipc::IpcManager;
+use crate::logging;
+use crate::utils::dirs::ipc_path_sidecar;
+use crate::utils::logging::Type;
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -38,6 +40,21 @@ impl IClashTemp {
                 {
                     *s = "set-your-secret".to_string();
                 }
+
+                #[cfg(unix)]
+                if let Some(Value::String(s)) = map.get_mut("external-controller-unix")
+                    && s.is_empty()
+                {
+                    *s = "/tmp/verge/verge-mihomo-sidecar.sock".to_string()
+                }
+
+                #[cfg(windows)]
+                if let Some(Value::String(s)) = map.get_mut("external-controller-pipe")
+                    && s.is_empty()
+                {
+                    *s = r"\\.\pipe\verge-mihomo-sidecar".to_string()
+                }
+
                 Self(Self::guard(map).await)
             }
             Err(err) => {
@@ -72,12 +89,12 @@ impl IClashTemp {
         #[cfg(unix)]
         map.insert(
             "external-controller-unix".into(),
-            Self::guard_external_controller_ipc().await.into(),
+            "/tmp/verge/verge-mihomo-sidecar.sock".into(),
         );
         #[cfg(windows)]
         map.insert(
             "external-controller-pipe".into(),
-            Self::guard_external_controller_ipc().await.into(),
+            r"\\.\pipe\verge-mihomo-sidecar".into(),
         );
         cors_map.insert("allow-private-network".into(), true.into());
         cors_map.insert(
@@ -98,6 +115,12 @@ impl IClashTemp {
         map.insert("tun".into(), tun.into());
         map.insert("external-controller-cors".into(), cors_map.into());
         map.insert("unified-delay".into(), true.into());
+        logging!(
+            error,
+            Type::Config,
+            "temeplate unix path: {:?}",
+            map.get("external-controller-unix")
+        );
         Self(map)
     }
 
@@ -318,14 +341,13 @@ impl IClashTemp {
     }
 
     pub async fn guard_external_controller_ipc() -> String {
-        let ipc_path = if SERVICE_MANAGER.lock().await.is_service_ready() {
-            ipc_path_service()
-        } else {
-            ipc_path_sidecar()
-        }
-        .unwrap_or_default();
-
-        path_to_str(&ipc_path).unwrap_or_default().to_string()
+        let guard_ipc = IpcManager::global()
+            .inner()
+            .await
+            .get_running_ipc_path()
+            .unwrap_or(ipc_path_sidecar().unwrap().to_string_lossy().to_string());
+        logging!(info, Type::Config, true, "Guard IPC path as: {guard_ipc}");
+        guard_ipc
     }
 }
 

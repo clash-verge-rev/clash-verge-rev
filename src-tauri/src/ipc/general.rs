@@ -1,23 +1,17 @@
-use std::{
-    path::PathBuf,
-    sync::{Arc, atomic::AtomicBool},
-    time::Duration,
-};
+use std::{sync::Arc, time::Duration};
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use kode_bridge::{
     ClientConfig, IpcHttpClient, LegacyResponse,
     errors::{AnyError, AnyResult},
 };
 use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 
 use crate::{
+    core::{RunningMode, service::SERVICE_MANAGER},
     logging, singleton_with_logging,
-    utils::{
-        dirs::{ipc_path_service, ipc_path_sidecar},
-        logging::Type,
-    },
+    utils::logging::Type,
 };
 
 // 定义用于URL路径的编码集合，只编码真正必要的字符
@@ -34,28 +28,29 @@ fn create_error(msg: impl Into<String>) -> AnyError {
     Box::<dyn std::error::Error + Send + Sync>::from(anyhow::anyhow!(msg.into()))
 }
 
+pub struct IpcManagerInner {
+    running_mode: RunningMode,
+    current_ipc_path: Option<String>,
+}
+
 pub struct IpcManager {
-    is_service: AtomicBool,
-    ipc_path: Arc<Mutex<Option<PathBuf>>>,
+    inner: Arc<Mutex<IpcManagerInner>>,
     client: Arc<Mutex<Option<IpcHttpClient>>>,
 }
 
-// TODO 当前错误地把 sidecar 当作 service 启动
 impl IpcManager {
     pub fn new() -> Self {
-        logging!(warn, Type::Ipc, true, "fuck new tunglies");
         Self {
-            is_service: AtomicBool::new(false),
-            ipc_path: Arc::new(Mutex::new(None)),
+            inner: Arc::new(Mutex::new(IpcManagerInner::default())),
             client: Arc::new(Mutex::new(None)),
         }
     }
 
     fn config() -> ClientConfig {
         ClientConfig {
-            default_timeout: Duration::from_millis(1_750),
+            default_timeout: Duration::from_millis(1_250),
             enable_pooling: false,
-            max_retries: 5,
+            max_retries: 3,
             retry_delay: Duration::from_millis(125),
             max_concurrent_requests: 16,
             max_requests_per_second: Some(64.0),
@@ -63,40 +58,79 @@ impl IpcManager {
         }
     }
 
-    // Try to resue exists mihomo ipc path
-    pub async fn init(&self) -> Result<()> {
-        logging!(warn, Type::Ipc, true, "fuck tunglies");
-
-        match self.as_service().await {
-            Ok(()) => {
-                logging!(warn, Type::Ipc, true, "fuck tunglies service");
-                return Ok(());
-            }
-            Err(err) => {
-                logging!(warn, Type::Ipc, true, "fuck tunglies service: {}", err);
-            }
-        }
-
-        match self.as_sidecar().await {
-            Ok(()) => {
-                logging!(warn, Type::Ipc, true, "fuck tunglies sidecar");
-                return Ok(());
-            }
-            Err(err) => {
-                logging!(warn, Type::Ipc, true, "fuck tunglies sidecar: {}", err);
-            }
-        }
-
-        Err(anyhow::anyhow!(
-            "Failed to initialize IPC as service or sidecar",
-        ))
+    pub async fn set_client(&self, c: Option<IpcHttpClient>) -> &Self {
+        *self.client.lock().await = c;
+        self
     }
 
-    pub async fn ensure(&self) -> Result<()> {
-        if !self.is_service_available().await || !&self.is_sidecar_available().await {
-            self.init().await?;
+    pub async fn inner(&self) -> MutexGuard<'_, IpcManagerInner> {
+        self.inner.lock().await
+    }
+
+    pub async fn init(&self) -> Result<()> {
+        let service_running_mode = {
+            SERVICE_MANAGER
+                .lock()
+                .await
+                .is_service_ready()
+                .then_some(RunningMode::Service)
+                .or(Some(RunningMode::Sidecar))
         }
+        .unwrap_or(RunningMode::NotRunning);
+        self.inner
+            .lock()
+            .await
+            .set_running_mode(service_running_mode.clone());
+
+        let ipc_path_string = service_running_mode.try_into_ipc_path_string()?;
+        self.inner
+            .lock()
+            .await
+            .set_running_ipc_path(Some(ipc_path_string));
+
+        // let service_running_mode = match SERVICE_MANAGER.lock().await.is_service_ready() {
+        //     true => RunningMode::Service,
+        //     false => RunningMode::Sidecar,
+        // };
+
+        // if service_running_mode.is_service() {
+        //     self.try_as_service().await?;
+        // } else {
+        //     self.try_as_sidecar().await?;
+        // }
         Ok(())
+    }
+
+    pub async fn current_ipc_path(&self) -> Option<String> {
+        self.inner().await.get_running_ipc_path()
+    }
+
+    pub async fn current_ipc_mode(&self) -> RunningMode {
+        self.inner().await.get_running_mode()
+    }
+
+    // TODO
+    pub async fn start(&self) -> Result<()> {
+        if self.is_initialized().await {
+            logging!(
+                info,
+                Type::Ipc,
+                "Skipping duplicated initialized IPC manager"
+            );
+            return Ok(());
+        }
+
+        self.try_based_on_running_mode().await?;
+        Ok(())
+    }
+
+    pub async fn stop(&self) -> Result<()> {
+        let client = self.client.lock().await.take();
+        drop(client);
+
+        self.inner().await.set_running_mode(RunningMode::NotRunning);
+        self.inner().await.set_running_ipc_path(None);
+        todo!()
     }
 }
 
@@ -107,15 +141,6 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<LegacyResponse> {
-        logging!(
-            warn,
-            Type::Ipc,
-            true,
-            "IpcManager.request: method={}, path={}, ipc_path={:?}",
-            method,
-            path,
-            self.ipc_path.lock().await.as_ref()
-        );
         let guard = self.client.lock().await;
         let client = guard
             .as_ref()
@@ -123,53 +148,52 @@ impl IpcManager {
         client.request(method, path, body).await
     }
 
-    pub async fn is_service_available(&self) -> bool {
-        self.is_initialized().await && self.is_service.load(std::sync::atomic::Ordering::SeqCst)
-    }
-
-    pub async fn is_sidecar_available(&self) -> bool {
-        self.is_initialized().await && !self.is_service.load(std::sync::atomic::Ordering::SeqCst)
-    }
-
     pub async fn is_initialized(&self) -> bool {
         self.client.lock().await.is_some()
     }
 
-    pub async fn current_ipc_path(&self) -> Option<PathBuf> {
-        self.ipc_path.lock().await.clone()
-    }
-
-    async fn switch_ipc(&self, ipc_path: &PathBuf, is_service: bool) -> Result<()> {
+    async fn switch_ipc(&self, r: RunningMode) -> Result<()> {
+        let ipc_path = r.try_into_ipc_path_string()?;
         let config = Self::config();
-        let client = IpcHttpClient::with_config(ipc_path, config.clone())
+        let client = IpcHttpClient::with_config(&ipc_path, config.clone())
             .map_err(|e| anyhow::anyhow!("Failed to create IpcHttpClient: {}", e))?;
-        let temp_manager = IpcManager {
-            client: Arc::new(Mutex::new(Some(client))),
-            is_service: AtomicBool::new(is_service),
-            ipc_path: Arc::new(Mutex::new(None)),
-        };
+
+        let temp_manager = IpcManager::new();
+        temp_manager.set_client(Some(client)).await;
         temp_manager
             .is_mihomo_running()
             .await
             .map_err(|e| anyhow::anyhow!("{}", e))?;
 
-        let client = IpcHttpClient::with_config(ipc_path, config)
+        let client = IpcHttpClient::with_config(&ipc_path, config)
             .map_err(|e| anyhow::anyhow!("Failed to create IpcHttpClient: {}", e))?;
-        self.is_service
-            .store(is_service, std::sync::atomic::Ordering::SeqCst);
-        self.ipc_path.lock().await.replace(ipc_path.clone());
-        self.client.lock().await.replace(client);
+
+        self.set_client(Some(client)).await;
+        self.inner().await.set_running_mode(r);
+        self.inner().await.set_running_ipc_path(Some(ipc_path));
         Ok(())
     }
 
-    pub async fn as_sidecar(&self) -> Result<()> {
-        let sidecar_ipc = ipc_path_sidecar().unwrap_or_default();
-        self.switch_ipc(&sidecar_ipc, false).await
+    pub async fn try_as_sidecar(&self) -> Result<()> {
+        self.switch_ipc(RunningMode::Sidecar).await
     }
 
-    pub async fn as_service(&self) -> Result<()> {
-        let service_ipc = ipc_path_service().unwrap_or_default();
-        self.switch_ipc(&service_ipc, true).await
+    pub async fn try_as_service(&self) -> Result<()> {
+        self.switch_ipc(RunningMode::Service).await
+    }
+
+    async fn try_based_on_running_mode(&self) -> Result<()> {
+        logging!(
+            info,
+            Type::Ipc,
+            true,
+            "Try runs IPC manager as current running mode"
+        );
+        match self.current_ipc_mode().await {
+            RunningMode::Service => self.try_as_service().await,
+            RunningMode::Sidecar => self.try_as_sidecar().await,
+            RunningMode::NotRunning => bail!("IPC Manager should not running now"),
+        }
     }
 }
 
@@ -479,6 +503,33 @@ impl IpcManager {
     }
 
     // 日志相关功能已迁移到 logs.rs 模块，使用流式处理
+}
+
+impl Default for IpcManagerInner {
+    fn default() -> Self {
+        Self {
+            running_mode: RunningMode::NotRunning,
+            current_ipc_path: None,
+        }
+    }
+}
+
+impl IpcManagerInner {
+    pub fn set_running_mode(&mut self, r: RunningMode) {
+        self.running_mode = r
+    }
+
+    pub fn get_running_mode(&self) -> RunningMode {
+        self.running_mode.clone()
+    }
+
+    pub fn set_running_ipc_path(&mut self, c: Option<String>) {
+        self.current_ipc_path = c
+    }
+
+    pub fn get_running_ipc_path(&self) -> Option<String> {
+        self.current_ipc_path.clone()
+    }
 }
 
 // Use singleton macro with logging

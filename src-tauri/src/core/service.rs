@@ -487,7 +487,7 @@ impl ServiceManager {
                 }
             }
             Err(err) => {
-                logging!(warn, Type::Service, true, "服务不可用，检查安装状态");
+                logging!(warn, Type::Service, true, "服务不可用");
                 ServiceStatus::Unavailable(err.to_string())
             }
         }
@@ -530,13 +530,6 @@ impl ServiceManager {
                 Ok(())
             }
             ServiceStatus::Unavailable(reason) => {
-                logging!(
-                    info,
-                    Type::Service,
-                    true,
-                    "服务不可用: {}，将使用Sidecar模式",
-                    reason
-                );
                 self.0 = ServiceStatus::Unavailable(reason.clone());
                 Err(anyhow::anyhow!("服务不可用: {}", reason))
             }
@@ -578,9 +571,3 @@ async fn send_ipc_request_delete(command: IpcCommand) -> Result<HttpResponse> {
 
 pub static SERVICE_MANAGER: Lazy<Mutex<ServiceManager>> =
     Lazy::new(|| Mutex::new(ServiceManager::default()));
-
-// #[tokio::test]
-// async fn test_connect() {
-//     let connect = connect_ipc().await;
-//     assert!(connect.is_ok());
-// }
