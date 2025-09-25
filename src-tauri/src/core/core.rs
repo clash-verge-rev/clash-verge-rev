@@ -1,4 +1,7 @@
 use crate::AsyncHandler;
+use crate::utils::resolve::{
+    init_ipc_manager, init_service_manager, init_verge_config, init_work_config,
+};
 use crate::{
     config::*,
     core::{
@@ -940,12 +943,12 @@ impl CoreManager {
 
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
-        self.set_running_mode(RunningMode::NotRunning);
         match self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar(),
             RunningMode::NotRunning => Ok(()),
         }?;
+        self.set_running_mode(RunningMode::NotRunning);
         IpcManager::global().stop().await?;
         Ok(())
     }
@@ -954,6 +957,12 @@ impl CoreManager {
     pub async fn restart_core(&self) -> Result<()> {
         logging!(info, Type::Core, true, "Restarting core");
         self.stop_core().await?;
+
+        init_service_manager().await;
+        init_ipc_manager().await;
+        init_work_config().await;
+        init_verge_config().await;
+        // init_core_manager().await;
         self.start_core().await?;
         Ok(())
     }

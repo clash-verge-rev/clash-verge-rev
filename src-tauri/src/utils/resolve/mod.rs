@@ -208,7 +208,7 @@ pub(super) async fn init_tray() {
     logging_error!(Type::Setup, true, Tray::global().init().await);
 }
 
-pub(super) async fn init_verge_config() {
+pub async fn init_verge_config() {
     logging!(
         info,
         Type::Setup,
@@ -218,7 +218,7 @@ pub(super) async fn init_verge_config() {
     logging_error!(Type::Setup, true, Config::init_config().await);
 }
 
-pub(super) async fn init_service_manager() {
+pub async fn init_service_manager() {
     logging!(info, Type::Setup, true, "Initializing service manager...");
     logging_error!(
         Type::Setup,
@@ -227,12 +227,12 @@ pub(super) async fn init_service_manager() {
     );
 }
 
-pub(super) async fn init_ipc_manager() {
+pub async fn init_ipc_manager() {
     logging!(info, Type::Setup, true, "Initializing IPC manager...");
     logging_error!(Type::Setup, true, IpcManager::global().init().await);
 }
 
-pub(super) async fn init_core_manager() {
+pub async fn init_core_manager() {
     logging!(info, Type::Setup, true, "Initializing core manager...");
     logging_error!(Type::Setup, true, CoreManager::global().init().await);
 }

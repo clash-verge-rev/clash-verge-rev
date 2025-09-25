@@ -46,7 +46,7 @@ impl IpcManager {
         }
     }
 
-    fn config() -> ClientConfig {
+    pub fn config() -> ClientConfig {
         ClientConfig {
             default_timeout: Duration::from_millis(1_250),
             enable_pooling: false,
@@ -182,13 +182,14 @@ impl IpcManager {
     }
 
     async fn try_based_on_running_mode(&self) -> Result<()> {
+        let running_mode = self.current_ipc_mode().await;
         logging!(
             info,
             Type::Ipc,
             true,
-            "Try runs IPC manager as current running mode"
+            "Try runs IPC manager as current running mode: {running_mode}"
         );
-        match self.current_ipc_mode().await {
+        match running_mode {
             RunningMode::Service => self.try_as_service().await,
             RunningMode::Sidecar => self.try_as_sidecar().await,
             RunningMode::NotRunning => bail!("IPC Manager should not running now"),
@@ -203,6 +204,13 @@ impl IpcManager {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> AnyResult<serde_json::Value> {
+        if !self.is_initialized().await {
+            return Ok(serde_json::json!({
+                "code": 500,
+                "message:": "IPC manager is not intialized",
+                "error": "IPC manager is not intialized",
+            }));
+        }
         let response = self.request(method, path, body).await?;
         match method {
             "GET" => Ok(response.json()?),

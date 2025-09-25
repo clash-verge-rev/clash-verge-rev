@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::OnceCell;
 
-pub const SHORT_TERM_TTL: Duration = Duration::from_millis(10_250);
+pub const SHORT_TERM_TTL: Duration = Duration::from_millis(5_250);
 
 pub struct CacheEntry<T> {
     pub value: Arc<T>,

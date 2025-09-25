@@ -1,6 +1,8 @@
 use crate::{
     cache::{CacheService, SHORT_TERM_TTL},
     config::Config,
+    core::RunningMode,
+    ipc::IpcManager,
     logging, logging_error,
     utils::{dirs, logging::Type},
 };
@@ -465,6 +467,16 @@ impl ServiceManager {
             true,
             self.handle_service_status(&status).await
         );
+        match status {
+            ServiceStatus::Ready => IpcManager::global()
+                .inner()
+                .await
+                .set_running_mode(RunningMode::Service),
+            _ => IpcManager::global()
+                .inner()
+                .await
+                .set_running_mode(RunningMode::Sidecar),
+        }
         self.0 = status;
         Ok(())
     }
@@ -533,7 +545,10 @@ async fn send_ipc_request_post(
     command: IpcCommand,
     payload: serde_json::Value,
 ) -> Result<HttpResponse> {
-    let client = kode_bridge::IpcHttpClient::new(clash_verge_service_ipc::IPC_PATH)?;
+    let client = kode_bridge::IpcHttpClient::with_config(
+        clash_verge_service_ipc::IPC_PATH,
+        IpcManager::config(),
+    )?;
     let response = client
         .post(command.as_ref())
         .json_body(&payload)
@@ -543,13 +558,19 @@ async fn send_ipc_request_post(
 }
 
 async fn send_ipc_request_get(command: IpcCommand) -> Result<HttpResponse> {
-    let client = kode_bridge::IpcHttpClient::new(clash_verge_service_ipc::IPC_PATH)?;
+    let client = kode_bridge::IpcHttpClient::with_config(
+        clash_verge_service_ipc::IPC_PATH,
+        IpcManager::config(),
+    )?;
     let response = client.get(command.as_ref()).send().await?;
     Ok(response)
 }
 
 async fn send_ipc_request_delete(command: IpcCommand) -> Result<HttpResponse> {
-    let client = kode_bridge::IpcHttpClient::new(clash_verge_service_ipc::IPC_PATH)?;
+    let client = kode_bridge::IpcHttpClient::with_config(
+        clash_verge_service_ipc::IPC_PATH,
+        IpcManager::config(),
+    )?;
     let response = client.delete(command.as_ref()).send().await?;
     Ok(response)
 }
