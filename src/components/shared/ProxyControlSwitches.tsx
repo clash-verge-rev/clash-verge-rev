@@ -189,11 +189,11 @@ const ProxyControlSwitches = ({
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
-          disabled={!isServiceMode}
+          disabled={!isTunModeAvailable}
           highlight={!!enable_tun_mode}
           extraIcons={
             <>
-              {!isServiceMode && (
+              {!isTunModeAvailable && (
                 <TooltipIcon
                   title={t("TUN requires Service Mode or Admin Mode")}
                   icon={WarningRounded}

@@ -142,12 +142,10 @@ export const ProxyTunCard: FC = () => {
   );
 
   const { verge } = useVerge();
-  const { isAdminMode, isServiceMode } = useSystemState();
+  const { isTunModeAvailable } = useSystemState();
   const { actualState: systemProxyActualState } = useSystemProxyState();
 
   const { enable_tun_mode } = verge ?? {};
-
-  const isTunAvailable = isServiceMode || isAdminMode;
 
   const handleError = (err: Error) => {
     showNotice("error", err.message || err.toString());
@@ -168,7 +166,7 @@ export const ProxyTunCard: FC = () => {
       };
     } else {
       return {
-        text: !isTunAvailable
+        text: !isTunModeAvailable
           ? t("TUN Mode Service Required")
           : enable_tun_mode
             ? t("TUN Mode Enabled")
@@ -176,7 +174,13 @@ export const ProxyTunCard: FC = () => {
         tooltip: t("TUN Mode Intercept Info"),
       };
     }
-  }, [activeTab, systemProxyActualState, enable_tun_mode, isTunAvailable, t]);
+  }, [
+    activeTab,
+    systemProxyActualState,
+    enable_tun_mode,
+    isTunModeAvailable,
+    t,
+  ]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
@@ -202,7 +206,7 @@ export const ProxyTunCard: FC = () => {
           onClick={() => handleTabChange("tun")}
           icon={TroubleshootRounded}
           label={t("Tun Mode")}
-          hasIndicator={enable_tun_mode && isTunAvailable}
+          hasIndicator={enable_tun_mode && isTunModeAvailable}
         />
       </Stack>
 

@@ -8,7 +8,7 @@ import { showNotice } from "@/services/noticeService";
 
 export const useVerge = () => {
   const { t } = useTranslation();
-  const { isAdminMode, isServiceMode } = useSystemState();
+  const { isAdminMode, isServiceOk } = useSystemState();
 
   const { data: verge, mutate: mutateVerge } = useSWR(
     "getVergeConfig",
@@ -23,7 +23,7 @@ export const useVerge = () => {
     mutateVerge();
   };
 
-  const isTunAvailable = isServiceMode || isAdminMode;
+  const isTunAvailable = isAdminMode || isServiceOk;
   const { enable_tun_mode } = verge ?? {};
 
   // 当服务不可用且TUN模式开启时自动关闭TUN
