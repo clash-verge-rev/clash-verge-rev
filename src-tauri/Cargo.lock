@@ -1098,7 +1098,6 @@ dependencies = [
  "backoff",
  "base64 0.22.1",
  "boa_engine",
- "cfg-if",
  "chrono",
  "clash_verge_logger",
  "clash_verge_service_ipc",
