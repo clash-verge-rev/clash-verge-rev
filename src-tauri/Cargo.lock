@@ -1100,6 +1100,7 @@ dependencies = [
  "boa_engine",
  "cfg-if",
  "chrono",
+ "clash_verge_logger",
  "clash_verge_service_ipc",
  "console-subscriber",
  "criterion",
@@ -1120,7 +1121,6 @@ dependencies = [
  "log",
  "nanoid",
  "network-interface",
- "nu-ansi-term",
  "once_cell",
  "open",
  "parking_lot 0.12.4",
@@ -1160,6 +1160,16 @@ dependencies = [
  "winapi",
  "winreg 0.55.0",
  "zip 5.1.1",
+]
+
+[[package]]
+name = "clash_verge_logger"
+version = "0.1.0"
+source = "git+https://github.com/clash-verge-rev/clash-verge-logger#d3033b152cbf45fd04d9dee48d7aa9371dbfe99c"
+dependencies = [
+ "flexi_logger",
+ "log",
+ "nu-ansi-term",
 ]
 
 [[package]]

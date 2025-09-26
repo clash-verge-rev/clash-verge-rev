@@ -1,7 +1,7 @@
 cfg_if::cfg_if! {
     if #[cfg(not(feature = "tauri-dev"))] {
-        use crate::utils::logging::{console_colored_format, file_format, NoExternModule};
-        use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, LogSpecification, Logger};
+        use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, Logger, LogSpecBuilder};
+        use crate::utils::logging::NoModuleFilter;
     }
 }
 
@@ -34,11 +34,13 @@ pub async fn init_logger() -> Result<()> {
     };
 
     let log_dir = dirs::app_logs_dir()?;
-    let logger = Logger::with(LogSpecification::from(log_level))
+    let spec = LogSpecBuilder::new().default(log_level).build();
+
+    let logger = Logger::with(spec)
         .log_to_file(FileSpec::default().directory(log_dir).basename(""))
         .duplicate_to_stdout(Duplicate::Debug)
-        .format(console_colored_format)
-        .format_for_files(file_format)
+        .format(clash_verge_logger::console_format)
+        .format_for_files(clash_verge_logger::file_format_with_level)
         .rotate(
             Criterion::Size(log_max_size * 1024),
             flexi_logger::Naming::TimestampsCustomFormat {
@@ -47,7 +49,7 @@ pub async fn init_logger() -> Result<()> {
             },
             Cleanup::KeepLogFiles(log_max_count),
         )
-        .filter(Box::new(NoExternModule));
+        .filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
 
     let _handle = logger.start()?;
 
