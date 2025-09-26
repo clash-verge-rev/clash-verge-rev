@@ -1,6 +1,6 @@
 cfg_if::cfg_if! {
     if #[cfg(not(feature = "tauri-dev"))] {
-        use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, Logger, LogSpecBuilder};
+        use flexi_logger::{Duplicate, Logger, LogSpecBuilder};
         use crate::utils::logging::NoModuleFilter;
     }
 }
@@ -20,6 +20,7 @@ use anyhow::Result;
 use chrono::{Local, TimeZone};
 use clash_verge_service_ipc::WriterConfig;
 use flexi_logger::writers::FileLogWriter;
+use flexi_logger::{Cleanup, Criterion, FileSpec};
 use std::{path::PathBuf, str::FromStr};
 use tauri_plugin_shell::ShellExt;
 use tokio::fs;

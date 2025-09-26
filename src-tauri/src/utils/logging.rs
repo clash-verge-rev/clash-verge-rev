@@ -1,7 +1,9 @@
-use std::{fmt, sync::Arc};
-
-use flexi_logger::{DeferredNow, filter::LogLineFilter, writers::FileLogWriter};
+use flexi_logger::writers::FileLogWriter;
+#[cfg(not(feature = "tauri-dev"))]
+use flexi_logger::{DeferredNow, filter::LogLineFilter};
+#[cfg(not(feature = "tauri-dev"))]
 use log::Record;
+use std::{fmt, sync::Arc};
 use tokio::sync::Mutex;
 
 pub type SharedWriter = Arc<Mutex<FileLogWriter>>;
