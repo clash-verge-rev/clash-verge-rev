@@ -25,7 +25,7 @@ use flexi_logger::DeferredNow;
 use flexi_logger::writers::LogWriter;
 use log::Record;
 use parking_lot::Mutex;
-use std::{fmt, fs::create_dir_all, path::PathBuf, sync::Arc};
+use std::{fmt, path::PathBuf, sync::Arc};
 use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug)]
