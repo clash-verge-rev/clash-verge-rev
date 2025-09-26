@@ -1,4 +1,6 @@
 use crate::AsyncHandler;
+use crate::utils::init::sidecar_writer;
+use crate::utils::logging::SharedWriter;
 use crate::utils::resolve::{
     init_ipc_manager, init_service_manager, init_verge_config, init_work_config,
 };
@@ -19,15 +21,11 @@ use crate::{
     },
 };
 use anyhow::{Result, anyhow};
-use chrono::Local;
+use flexi_logger::DeferredNow;
+use flexi_logger::writers::LogWriter;
+use log::Record;
 use parking_lot::Mutex;
-use std::{
-    fmt,
-    fs::{File, create_dir_all},
-    io::Write,
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{fmt, fs::create_dir_all, path::PathBuf, sync::Arc};
 use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug)]
@@ -773,11 +771,6 @@ impl CoreManager {
         let service_log_dir = dirs::app_home_dir()?.join("logs").join("service");
         create_dir_all(&service_log_dir)?;
 
-        let now = Local::now();
-        let timestamp = now.format("%Y%m%d_%H%M%S").to_string();
-
-        let log_path = service_log_dir.join(format!("sidecar_{timestamp}.log"));
-
         let (mut rx, child) = app_handle
             .shell()
             .sidecar(&clash_core)?
@@ -800,20 +793,53 @@ impl CoreManager {
         *self.child_sidecar.lock() = Some(CommandChildGuard::new(child));
         self.set_running_mode(RunningMode::Sidecar);
 
-        let mut log_file = std::io::BufWriter::new(File::create(log_path)?);
+        let shared_writer: SharedWriter =
+            Arc::new(tokio::sync::Mutex::new(sidecar_writer().await?));
+
         AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
+                let w = shared_writer.lock().await;
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
-                        if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
-                            eprintln!("[Sidecar] write stdout failed: {e}");
-                        }
+                        let mut now = DeferredNow::default();
+                        let line_str = String::from_utf8_lossy(&line);
+                        let arg = format_args!("{}", line_str);
+                        let record = Record::builder()
+                            .args(arg)
+                            .level(log::Level::Info)
+                            .target("sidecar")
+                            .build();
+                        let _ = w.write(&mut now, &record);
                     }
                     tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let _ = writeln!(log_file, "[stderr] {}", String::from_utf8_lossy(&line));
+                        let mut now = DeferredNow::default();
+                        let line_str = String::from_utf8_lossy(&line);
+                        let arg = format_args!("{}", line_str);
+                        let record = Record::builder()
+                            .args(arg)
+                            .level(log::Level::Error)
+                            .target("sidecar")
+                            .build();
+                        let _ = w.write(&mut now, &record);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
-                        let _ = writeln!(log_file, "[terminated] {:?}", term);
+                        let mut now = DeferredNow::default();
+                        // Try to log the exit code and output if available
+                        let output_str = if let Some(code) = term.code {
+                            format!("Process terminated with code: {}", code)
+                        } else if let Some(signal) = term.signal {
+                            format!("Process terminated by signal: {}", signal)
+                        } else {
+                            "Process terminated".to_string()
+                        };
+                        let arg = format_args!("{}", output_str);
+                        let record = Record::builder()
+                            .args(arg)
+                            .level(log::Level::Info)
+                            .target("sidecar")
+                            .build();
+                        let _ = w.write(&mut now, &record);
+
                         break;
                     }
                     _ => {}

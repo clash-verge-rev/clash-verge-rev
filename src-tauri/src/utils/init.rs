@@ -14,6 +14,7 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone};
+use flexi_logger::writers::FileLogWriter;
 use std::{path::PathBuf, str::FromStr};
 use tauri_plugin_shell::ShellExt;
 use tokio::fs;
@@ -59,6 +60,35 @@ pub async fn init_logger() -> Result<()> {
     // logger.parse_new_spec(spec)
 
     Ok(())
+}
+
+pub async fn sidecar_writer() -> Result<FileLogWriter> {
+    let (log_max_size, log_max_count) = {
+        let verge_guard = Config::verge().await;
+        let verge = verge_guard.latest_ref();
+        (
+            verge.app_log_max_size.unwrap_or(128),
+            verge.app_log_max_count.unwrap_or(8),
+        )
+    };
+    let log_dir = dirs::app_logs_dir()?;
+    let sidecar_log_dir = log_dir.join("sidecar");
+    Ok(FileLogWriter::builder(
+        FileSpec::default()
+            .directory(sidecar_log_dir)
+            .basename("sidecar")
+            .suppress_timestamp(),
+    )
+    .format(clash_verge_logger::file_format_without_level)
+    .rotate(
+        Criterion::Size(log_max_size * 1024),
+        flexi_logger::Naming::TimestampsCustomFormat {
+            current_infix: Some("latest"),
+            format: "%Y-%m-%d_%H-%M-%S",
+        },
+        Cleanup::KeepLogFiles(log_max_count),
+    )
+    .try_build()?)
 }
 
 // TODO flexi_logger 提供了最大保留天数，或许我们应该用内置删除log文件
