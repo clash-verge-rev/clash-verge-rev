@@ -10,7 +10,11 @@ use crate::{
     core::handle,
     logging,
     process::AsyncHandler,
-    utils::{dirs, help, logging::Type},
+    utils::{
+        dirs::{self, sidecar_log_dir},
+        help,
+        logging::Type,
+    },
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone};
@@ -71,8 +75,7 @@ pub async fn sidecar_writer() -> Result<FileLogWriter> {
             verge.app_log_max_count.unwrap_or(8),
         )
     };
-    let log_dir = dirs::app_logs_dir()?;
-    let sidecar_log_dir = log_dir.join("sidecar");
+    let sidecar_log_dir = sidecar_log_dir()?;
     Ok(FileLogWriter::builder(
         FileSpec::default()
             .directory(sidecar_log_dir)
