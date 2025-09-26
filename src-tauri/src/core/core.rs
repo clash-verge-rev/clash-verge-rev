@@ -768,9 +768,6 @@ impl CoreManager {
         let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
-        let service_log_dir = dirs::app_home_dir()?.join("logs").join("service");
-        create_dir_all(&service_log_dir)?;
-
         let (mut rx, child) = app_handle
             .shell()
             .sidecar(&clash_core)?
