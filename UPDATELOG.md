@@ -4,8 +4,7 @@
 
 - Linux 打包为 `.deb` `.rpm` 提供 pkexec 依赖项
 - 支持前端修改 Clash Verge Rev 日志（最大文件大小、最大保留数量）
-- 内核日志 Sidecar / Service 受 Clash Verge Rev（最大文件大小、最大保留数量）控制
-<!-- TODO 完成 Service 日志行为约束 -->
+- 日志 Sidecar / Service 均受 Clash Verge Rev（最大文件大小、最大保留数量）控制
 
 ### 🚀 优化改进
 

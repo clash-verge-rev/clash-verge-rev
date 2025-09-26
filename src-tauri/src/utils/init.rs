@@ -11,13 +11,14 @@ use crate::{
     logging,
     process::AsyncHandler,
     utils::{
-        dirs::{self, sidecar_log_dir},
+        dirs::{self, service_log_dir, sidecar_log_dir},
         help,
         logging::Type,
     },
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone};
+use clash_verge_service_ipc::WriterConfig;
 use flexi_logger::writers::FileLogWriter;
 use std::{path::PathBuf, str::FromStr};
 use tauri_plugin_shell::ShellExt;
@@ -92,6 +93,24 @@ pub async fn sidecar_writer() -> Result<FileLogWriter> {
         Cleanup::KeepLogFiles(log_max_count),
     )
     .try_build()?)
+}
+
+pub async fn service_writer_config() -> Result<WriterConfig> {
+    let (log_max_size, log_max_count) = {
+        let verge_guard = Config::verge().await;
+        let verge = verge_guard.latest_ref();
+        (
+            verge.app_log_max_size.unwrap_or(128),
+            verge.app_log_max_count.unwrap_or(8),
+        )
+    };
+    let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.to_string();
+
+    Ok(WriterConfig {
+        directory: service_log_dir,
+        max_log_size: log_max_size * 1024,
+        max_log_files: log_max_count,
+    })
 }
 
 // TODO flexi_logger 提供了最大保留天数，或许我们应该用内置删除log文件

@@ -4,10 +4,10 @@ use crate::{
     core::RunningMode,
     ipc::IpcManager,
     logging, logging_error,
-    utils::{dirs, logging::Type},
+    utils::{dirs, init::service_writer_config, logging::Type},
 };
 use anyhow::{Context, Result, bail};
-use clash_verge_service_ipc::{self, IpcCommand};
+use clash_verge_service_ipc::{self, CoreConfig, IpcCommand, StartClash, WriterConfig};
 use kode_bridge::HttpResponse;
 use once_cell::sync::Lazy;
 use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
@@ -379,12 +379,18 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let bin_path = current_exe()?.with_file_name(format!("{clash_core}{bin_ext}"));
 
-    let payload = serde_json::json!({
-        "core_path": dirs::path_to_str(&bin_path)?,
-        "config_path": dirs::path_to_str(config_file)?,
-        "config_dir": dirs::path_to_str(&dirs::app_home_dir()?)?,
-        "log_dir": dirs::path_to_str(&dirs::service_log_dir()?)?,
-    });
+    let start_clash = StartClash {
+        core_config: CoreConfig {
+            core_path: dirs::path_to_str(&bin_path)?.to_string(),
+            config_path: dirs::path_to_str(config_file)?.to_string(),
+            config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.to_string(),
+        },
+        log_config: WriterConfig {
+            ..service_writer_config().await?
+        },
+    };
+
+    let payload = serde_json::to_value(start_clash)?;
 
     let response = send_ipc_request_post(IpcCommand::StartClash, payload)
         .await
