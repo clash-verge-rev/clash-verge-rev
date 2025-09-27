@@ -558,7 +558,7 @@ impl ServiceManager {
                 force_check_service_version()
                     .await
                     .map(|_| Err(anyhow::anyhow!("service version check passed unexpectedly")))
-                    .unwrap_or_else(|e| Ok(e))?;
+                    .unwrap_or_else(Ok)?;
                 self.0 = ServiceStatus::Unavailable("Service Uninstalled".into());
                 Ok(())
             }
