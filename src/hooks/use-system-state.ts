@@ -37,7 +37,7 @@ export function useSystemState() {
       onError: (error) => {
         console.error("[useSystemState] 服务状态检查失败:", error);
       },
-      isPaused: () => !isServiceMode, // 仅在非 Service 模式下暂停请求
+      isPaused: () => false, // 仅在非 Service 模式下暂停请求
     },
   );
 

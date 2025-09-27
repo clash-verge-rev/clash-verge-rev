@@ -48,10 +48,10 @@ impl IpcManager {
 
     pub fn config() -> ClientConfig {
         ClientConfig {
-            default_timeout: Duration::from_millis(1_250),
+            default_timeout: Duration::from_millis(1_750),
             enable_pooling: false,
             max_retries: 3,
-            retry_delay: Duration::from_millis(125),
+            retry_delay: Duration::from_millis(175),
             max_concurrent_requests: 16,
             max_requests_per_second: Some(64.0),
             ..Default::default()

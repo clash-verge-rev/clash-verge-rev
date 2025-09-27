@@ -1,5 +1,5 @@
 use crate::{
-    cache::{CacheService, SHORT_TERM_TTL},
+    cache::{CacheService, MEDIUM_TERM_TTL},
     config::Config,
     core::RunningMode,
     ipc::IpcManager,
@@ -10,7 +10,7 @@ use anyhow::{Context, Result, bail};
 use clash_verge_service_ipc::{self, CoreConfig, IpcCommand, StartClash, WriterConfig};
 use kode_bridge::HttpResponse;
 use once_cell::sync::Lazy;
-use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
+use std::{env::current_exe, path::PathBuf, process::Command as StdCommand, time::Duration};
 use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -345,8 +345,14 @@ async fn check_service_version() -> Result<String> {
     let cache = CacheService::global();
     let key = CacheService::make_key("service", "version");
     let version_arc = cache
-        .get_or_fetch(key, SHORT_TERM_TTL, || async {
-            logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
+        .get_or_fetch(key, MEDIUM_TERM_TTL, || async {
+            logging!(
+                info,
+                Type::Service,
+                true,
+                "开始检查服务版本 (IPC), 期望 IPC: {}",
+                clash_verge_service_ipc::IPC_PATH
+            );
             let response = send_ipc_request_get(IpcCommand::GetVersion).await?;
 
             let version = response.body()?;
@@ -358,6 +364,13 @@ async fn check_service_version() -> Result<String> {
         Ok(v) => Ok(v.clone()),
         Err(e) => Err(anyhow::Error::msg(e.to_string())),
     }
+}
+
+pub async fn force_check_service_version() -> Result<String> {
+    let cache = CacheService::global();
+    let key = CacheService::make_key("service", "version");
+    cache.map.remove(&key);
+    check_service_version().await
 }
 
 /// 检查服务是否需要重装
@@ -513,6 +526,8 @@ impl ServiceManager {
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
                 logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
                 reinstall_service().await?;
+                tokio::time::sleep(Duration::from_millis(500)).await;
+                force_check_service_version().await?;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
             }
@@ -524,18 +539,26 @@ impl ServiceManager {
                     "服务需要强制重装，执行强制重装流程"
                 );
                 force_reinstall_service().await?;
+                tokio::time::sleep(Duration::from_millis(500)).await;
+                force_check_service_version().await?;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
             }
             ServiceStatus::InstallRequired => {
                 logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
                 install_service().await?;
+                tokio::time::sleep(Duration::from_millis(500)).await;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
             }
             ServiceStatus::UninstallRequired => {
                 logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
                 uninstall_service().await?;
+                tokio::time::sleep(Duration::from_millis(500)).await;
+                force_check_service_version()
+                    .await
+                    .map(|_| Err(anyhow::anyhow!("service version check passed unexpectedly")))
+                    .unwrap_or_else(|e| Ok(e))?;
                 self.0 = ServiceStatus::Unavailable("Service Uninstalled".into());
                 Ok(())
             }
