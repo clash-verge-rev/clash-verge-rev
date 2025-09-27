@@ -526,7 +526,7 @@ impl ServiceManager {
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
                 logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
                 reinstall_service().await?;
-                tokio::time::sleep(Duration::from_millis(500)).await;
+                tokio::time::sleep(Duration::from_millis(175)).await;
                 force_check_service_version().await?;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
@@ -539,7 +539,7 @@ impl ServiceManager {
                     "服务需要强制重装，执行强制重装流程"
                 );
                 force_reinstall_service().await?;
-                tokio::time::sleep(Duration::from_millis(500)).await;
+                tokio::time::sleep(Duration::from_millis(175)).await;
                 force_check_service_version().await?;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
@@ -547,14 +547,14 @@ impl ServiceManager {
             ServiceStatus::InstallRequired => {
                 logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
                 install_service().await?;
-                tokio::time::sleep(Duration::from_millis(500)).await;
+                tokio::time::sleep(Duration::from_millis(175)).await;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
             }
             ServiceStatus::UninstallRequired => {
                 logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
                 uninstall_service().await?;
-                tokio::time::sleep(Duration::from_millis(500)).await;
+                tokio::time::sleep(Duration::from_millis(175)).await;
                 force_check_service_version()
                     .await
                     .map(|_| Err(anyhow::anyhow!("service version check passed unexpectedly")))
