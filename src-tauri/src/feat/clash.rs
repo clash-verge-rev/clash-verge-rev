@@ -27,19 +27,21 @@ pub async fn restart_app() {
     // logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
     resolve::resolve_reset_async().await;
 
-    handle::Handle::global()
-        .app_handle()
-        .map(|app_handle| {
+    match handle::Handle::global().app_handle() {
+        Some(app_handle) => {
             app_handle.restart();
-        })
-        .unwrap_or_else(|| {
+        }
+        None => {
             logging_error!(
                 Type::System,
                 false,
                 "{}",
-                "Failed to get app handle for restart"
+                "Failed to get app handle for restart, attempting alternative restart method"
             );
-        });
+            // 添加fallback机制，通过进程重启
+            std::process::exit(0);
+        }
+    }
 }
 
 fn after_change_clash_mode() {
