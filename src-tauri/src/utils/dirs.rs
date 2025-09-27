@@ -207,17 +207,10 @@ pub fn service_log_dir() -> Result<PathBuf> {
     Ok(log_dir)
 }
 
-#[allow(dead_code)]
-pub fn service_log_file() -> Result<PathBuf> {
-    use chrono::Local;
-
-    let log_dir = service_log_dir()?;
-
-    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
-    let log_file = format!("{local_time}.log");
-    let log_file = log_dir.join(log_file);
-
-    Ok(log_file)
+pub fn sidecar_log_dir() -> Result<PathBuf> {
+    let log_dir = app_logs_dir()?.join("sidecar");
+    let _ = std::fs::create_dir_all(&log_dir);
+    Ok(log_dir)
 }
 
 pub fn path_to_str(path: &PathBuf) -> Result<&str> {
