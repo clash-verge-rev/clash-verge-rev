@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
-    config::Config, ipc::IpcManager, logging, process::AsyncHandler, utils::logging::Type,
+    config::Config, logging, process::AsyncHandler, utils::logging::Type,
 };
 
 /// Generic base structure for IPC monitoring data with freshness tracking

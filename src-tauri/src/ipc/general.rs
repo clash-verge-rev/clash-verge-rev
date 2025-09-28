@@ -111,9 +111,9 @@ impl IpcManager {
         Ok(())
     }
 
-    pub async fn current_ipc_path(&self) -> Option<String> {
-        self.inner().await.get_running_ipc_path()
-    }
+    // pub async fn current_ipc_path(&self) -> Option<String> {
+    //     self.inner().await.get_running_ipc_path()
+    // }
 
     pub async fn current_ipc_mode(&self) -> RunningMode {
         self.inner().await.get_running_mode()

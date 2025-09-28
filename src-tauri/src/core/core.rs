@@ -1,9 +1,9 @@
 use crate::AsyncHandler;
-use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
+use crate::core::service::SERVICE_MANAGER;
 use crate::utils::init::sidecar_writer;
 use crate::utils::logging::SharedWriter;
 use crate::utils::resolve::{
-    init_core_manager, init_ipc_manager, init_service_manager, init_verge_config, init_work_config,
+    init_ipc_manager, init_service_manager,
 };
 use crate::{
     config::*,
@@ -1002,7 +1002,7 @@ impl CoreManager {
         }
         let core = match clash_core.as_ref() {
             Some(core) => Ok(core),
-            None => Err(anyhow::Error::msg(format!("Clash core should not be None"))),
+            None => Err(anyhow::Error::msg("Clash core should not be None".to_string())),
         }?;
         if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
             let error_message = format!("Clash core invalid name: {core}");

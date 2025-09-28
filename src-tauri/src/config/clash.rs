@@ -1,13 +1,8 @@
 use crate::config::Config;
-use crate::ipc::IpcManager;
-use crate::logging;
-use crate::utils::dirs::ipc_path_sidecar;
-use crate::utils::logging::Type;
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
-use std::fs;
 use std::path::Path;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
@@ -57,7 +52,7 @@ impl IClashTemp {
                     *s = r"\\.\pipe\verge-mihomo-sidecar".to_string()
                 }
 
-                Self(Self::guard(map).await)
+                Self(Self::guard(map))
             }
             Err(err) => {
                 log::error!(target: "app", "{err}");
@@ -120,7 +115,7 @@ impl IClashTemp {
         Self(map)
     }
 
-    async fn guard(mut config: Mapping) -> Mapping {
+    fn guard(mut config: Mapping) -> Mapping {
         #[cfg(not(target_os = "windows"))]
         let redir_port = Self::guard_redir_port(&config);
         #[cfg(target_os = "linux")]
@@ -461,7 +456,7 @@ async fn test_clash_info() {
         map.insert("mixed-port".into(), mp.into());
         map.insert("external-controller".into(), ec.into());
 
-        IClashTemp(IClashTemp::guard(map).await).get_client_info()
+        IClashTemp(IClashTemp::guard(map)).get_client_info()
     }
 
     fn get_result<S: Into<String>>(port: u16, server: S) -> ClashInfo {
@@ -475,7 +470,7 @@ async fn test_clash_info() {
     }
 
     assert_eq!(
-        IClashTemp(IClashTemp::guard(Mapping::new()).await).get_client_info(),
+        IClashTemp(IClashTemp::guard(Mapping::new())).get_client_info(),
         get_result(7897, "127.0.0.1:9097")
     );
 
@@ -522,13 +517,14 @@ async fn test_clash_info() {
 #[cfg(unix)]
 #[tokio::test]
 async fn test_external_controller_unix() {
+    use std::fs;
     let dir = Path::new("/tmp/verge");
     if !dir.exists() {
         assert!(fs::create_dir_all(dir).is_ok());
     }
     let mut map = Mapping::new();
     map.insert("external-controller-unix".into(), "".into());
-    let guarded = IClashTemp::guard(map.clone()).await;
+    let guarded = IClashTemp::guard(map.clone());
     let value = guarded
         .get("external-controller-unix")
         .and_then(|v| v.as_str())
@@ -540,7 +536,7 @@ async fn test_external_controller_unix() {
         "external-controller-unix".into(),
         "/tmp/verge/verge-mihomo-sidecar-custom.sock".into(),
     );
-    let guarded = IClashTemp::guard(map.clone()).await;
+    let guarded = IClashTemp::guard(map.clone());
     let value = guarded
         .get("external-controller-unix")
         .and_then(|v| v.as_str())
@@ -553,7 +549,7 @@ async fn test_external_controller_unix() {
 async fn test_external_controller_pipe() {
     let mut map = Mapping::new();
     map.insert("external-controller-pipe".into(), "".into());
-    let guarded = IClashTemp::guard(map.clone()).await;
+    let guarded = IClashTemp::guard(map.clone());
     let value = guarded
         .get("external-controller-pipe")
         .and_then(|v| v.as_str())
@@ -565,7 +561,7 @@ async fn test_external_controller_pipe() {
         "external-controller-pipe".into(),
         r"\\.\pipe\verge-mihomo-sidecar-custom".into(),
     );
-    let guarded = IClashTemp::guard(map.clone()).await;
+    let guarded = IClashTemp::guard(map.clone());
     let value = guarded
         .get("external-controller-pipe")
         .and_then(|v| v.as_str())

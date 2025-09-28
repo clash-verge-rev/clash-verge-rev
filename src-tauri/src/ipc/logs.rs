@@ -6,7 +6,7 @@ use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
     config::Config,
-    ipc::{IpcManager, monitor::MonitorData},
+    ipc::monitor::MonitorData,
     logging,
     process::AsyncHandler,
     singleton_with_logging,

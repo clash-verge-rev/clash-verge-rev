@@ -488,9 +488,9 @@ impl ServiceManager {
         }
     }
 
-    pub fn current(&self) -> ServiceStatus {
-        self.0.clone()
-    }
+    // pub fn current(&self) -> ServiceStatus {
+    //     self.0.clone()
+    // }
 
     pub fn is_service_ready(&self) -> bool {
         self.0 == ServiceStatus::Ready
