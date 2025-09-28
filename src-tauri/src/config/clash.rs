@@ -451,7 +451,7 @@ pub struct IClashFallbackFilter {
 
 #[tokio::test]
 async fn test_clash_info() {
-    async fn get_case<T: Into<Value>, D: Into<Value>>(mp: T, ec: D) -> ClashInfo {
+    fn get_case<T: Into<Value>, D: Into<Value>>(mp: T, ec: D) -> ClashInfo {
         let mut map = Mapping::new();
         map.insert("mixed-port".into(), mp.into());
         map.insert("external-controller".into(), ec.into());
@@ -474,42 +474,42 @@ async fn test_clash_info() {
         get_result(7897, "127.0.0.1:9097")
     );
 
-    assert_eq!(get_case("", "").await, get_result(7897, "127.0.0.1:9097"));
+    assert_eq!(get_case("", ""), get_result(7897, "127.0.0.1:9097"));
 
-    assert_eq!(get_case(65537, "").await, get_result(1, "127.0.0.1:9097"));
+    assert_eq!(get_case(65537, ""), get_result(1, "127.0.0.1:9097"));
 
     assert_eq!(
-        get_case(8888, "127.0.0.1:8888").await,
+        get_case(8888, "127.0.0.1:8888"),
         get_result(8888, "127.0.0.1:8888")
     );
 
     assert_eq!(
-        get_case(8888, "   :98888 ").await,
+        get_case(8888, "   :98888 "),
         get_result(8888, "127.0.0.1:9097")
     );
 
     assert_eq!(
-        get_case(8888, "0.0.0.0:8080  ").await,
+        get_case(8888, "0.0.0.0:8080  "),
         get_result(8888, "127.0.0.1:8080")
     );
 
     assert_eq!(
-        get_case(8888, "0.0.0.0:8080").await,
+        get_case(8888, "0.0.0.0:8080"),
         get_result(8888, "127.0.0.1:8080")
     );
 
     assert_eq!(
-        get_case(8888, "[::]:8080").await,
+        get_case(8888, "[::]:8080"),
         get_result(8888, "127.0.0.1:8080")
     );
 
     assert_eq!(
-        get_case(8888, "192.168.1.1:8080").await,
+        get_case(8888, "192.168.1.1:8080"),
         get_result(8888, "192.168.1.1:8080")
     );
 
     assert_eq!(
-        get_case(8888, "192.168.1.1:80800").await,
+        get_case(8888, "192.168.1.1:80800"),
         get_result(8888, "127.0.0.1:9097")
     );
 }
