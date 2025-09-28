@@ -3,9 +3,7 @@ use kode_bridge::IpcStreamClient;
 use std::sync::Arc;
 use tokio::{sync::RwLock, time::Duration};
 
-use crate::{
-    config::Config, logging, process::AsyncHandler, utils::logging::Type,
-};
+use crate::{config::Config, logging, process::AsyncHandler, utils::logging::Type};
 
 /// Generic base structure for IPC monitoring data with freshness tracking
 pub trait MonitorData: Clone + Send + Sync + 'static {

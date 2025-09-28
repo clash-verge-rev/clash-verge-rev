@@ -5,12 +5,8 @@ use tauri::async_runtime::JoinHandle;
 use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
-    config::Config,
-    ipc::monitor::MonitorData,
-    logging,
-    process::AsyncHandler,
-    singleton_with_logging,
-    utils::logging::Type,
+    config::Config, ipc::monitor::MonitorData, logging, process::AsyncHandler,
+    singleton_with_logging, utils::logging::Type,
 };
 
 use kode_bridge::IpcStreamClient;
