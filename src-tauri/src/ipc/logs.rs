@@ -5,6 +5,7 @@ use tauri::async_runtime::JoinHandle;
 use tokio::{sync::RwLock, time::Duration};
 
 use crate::{
+    config::Config,
     ipc::{IpcManager, monitor::MonitorData},
     logging,
     process::AsyncHandler,
@@ -241,12 +242,18 @@ impl LogsMonitor {
     }
 
     async fn create_ipc_client() -> Result<IpcStreamClient> {
-        let current_ipc_path = IpcManager::global()
-            .current_ipc_path()
+        let current_ipc_path = Config::clash()
             .await
-            .ok_or_else(|| anyhow::anyhow!("Failed to get IPC path"))?;
-        let client = IpcStreamClient::new(current_ipc_path)?;
-
+            .latest_ref()
+            .get_external_controller_ipc();
+        logging!(
+            info,
+            Type::Ipc,
+            true,
+            "Using IPC path: {}",
+            current_ipc_path
+        );
+        let client = IpcStreamClient::new(&current_ipc_path)?;
         Ok(client)
     }
 

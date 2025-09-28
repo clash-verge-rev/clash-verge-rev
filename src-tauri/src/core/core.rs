@@ -1,8 +1,9 @@
 use crate::AsyncHandler;
+use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use crate::utils::init::sidecar_writer;
 use crate::utils::logging::SharedWriter;
 use crate::utils::resolve::{
-    init_ipc_manager, init_service_manager, init_verge_config, init_work_config,
+    init_core_manager, init_ipc_manager, init_service_manager, init_verge_config, init_work_config,
 };
 use crate::{
     config::*,
@@ -25,6 +26,7 @@ use flexi_logger::DeferredNow;
 use flexi_logger::writers::LogWriter;
 use log::Record;
 use parking_lot::Mutex;
+use serde_yaml_ng::Mapping;
 use std::{fmt, path::PathBuf, sync::Arc};
 use tauri_plugin_shell::ShellExt;
 
@@ -437,13 +439,13 @@ impl CoreManager {
             }
         }
     }
-    pub async fn put_configs_force(&self, path_buf: PathBuf) -> Result<(), String> {
+    pub async fn put_configs_force(&self, path_buf: PathBuf) -> Result<()> {
         let run_path_str = dirs::path_to_str(&path_buf).map_err(|e| {
             let msg = e.to_string();
             logging_error!(Type::Core, true, "{}", msg);
-            msg
-        });
-        match IpcManager::global().put_configs_force(run_path_str?).await {
+            anyhow::Error::msg(msg)
+        })?;
+        match IpcManager::global().put_configs_force(run_path_str).await {
             Ok(_) => {
                 Config::runtime().await.apply();
                 logging!(info, Type::Core, true, "Configuration updated successfully");
@@ -453,7 +455,7 @@ impl CoreManager {
                 let msg = e.to_string();
                 Config::runtime().await.discard();
                 logging_error!(Type::Core, true, "Failed to update configuration: {}", msg);
-                Err(msg)
+                Err(anyhow::Error::msg(msg))
             }
         }
     }
@@ -919,6 +921,7 @@ impl CoreManager {
     }
 
     pub async fn prestart_core(&self) -> Result<()> {
+        SERVICE_MANAGER.lock().await.refresh().await?;
         if IpcManager::global()
             .inner()
             .await
@@ -929,6 +932,8 @@ impl CoreManager {
         } else {
             self.set_running_mode(RunningMode::Sidecar);
         };
+        self.prestart_ipc_path().await?;
+
         Ok(())
     }
 
@@ -983,29 +988,26 @@ impl CoreManager {
 
         init_service_manager().await;
         init_ipc_manager().await;
-        init_work_config().await;
-        init_verge_config().await;
-        // init_core_manager().await;
+        self.prestart_ipc_path().await?;
         self.start_core().await?;
         Ok(())
     }
 
     /// 切换核心
-    pub async fn change_core(&self, clash_core: Option<String>) -> Result<(), String> {
+    pub async fn change_core(&self, clash_core: Option<String>) -> Result<()> {
         if clash_core.is_none() {
             let error_message = "Clash core should not be Null";
             logging!(error, Type::Core, true, "{}", error_message);
-            return Err(error_message.to_string());
+            return Err(anyhow::Error::msg(error_message));
         }
-        let core = clash_core.as_ref().ok_or_else(|| {
-            let msg = "Clash core should not be None";
-            logging!(error, Type::Core, true, "{}", msg);
-            msg.to_string()
-        })?;
+        let core = match clash_core.as_ref() {
+            Some(core) => Ok(core),
+            None => Err(anyhow::Error::msg(format!("Clash core should not be None"))),
+        }?;
         if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
             let error_message = format!("Clash core invalid name: {core}");
             logging!(error, Type::Core, true, "{}", error_message);
-            return Err(error_message);
+            return Err(anyhow::Error::msg(error_message));
         }
 
         Config::verge().await.draft_mut().clash_core = clash_core.clone();
@@ -1018,7 +1020,79 @@ impl CoreManager {
         let run_path = Config::generate_file(ConfigType::Run).await.map_err(|e| {
             let msg = e.to_string();
             logging_error!(Type::Core, true, "{}", msg);
-            msg
+            anyhow::Error::msg(msg)
+        })?;
+
+        self.put_configs_force(run_path)
+            .await
+            .map_err(anyhow::Error::msg)?;
+
+        Ok(())
+    }
+
+    pub async fn prestart_ipc_path(&self) -> Result<()> {
+        // SERVICE_MANAGER.lock().await.refresh().await?;
+        let ipc_path_str = IpcManager::global()
+            .inner()
+            .await
+            .get_running_ipc_path()
+            .or_else(|| {
+                ipc_path_sidecar()
+                    .ok()
+                    .map(|p| p.to_string_lossy().to_string())
+            })
+            .unwrap_or_else(|| "".to_string());
+
+        let ipc_platform_key = if cfg!(unix) {
+            "external-controller-unix"
+        } else {
+            "external-controller-pipe"
+        };
+        logging!(info, Type::Core, true, "change ipc path to: {ipc_path_str}");
+
+        // let ipc_path_str = format!("/tmp/verge/fuck-mihomo-sidecar.sock");
+        let mut ipc_patch = Mapping::new();
+        ipc_patch.insert(ipc_platform_key.into(), ipc_path_str.into());
+
+        let ipc_path_guard = IClashTemp::guard_external_controller_ipc(&ipc_patch);
+        logging!(info, Type::Core, true, "guard ipc as: {ipc_path_guard}");
+
+        ipc_patch.insert(ipc_platform_key.into(), ipc_path_guard.into());
+
+        // Config::runtime()
+        //     .await
+        //     .draft_mut()
+        //     .patch_config_ipc(ipc_patch);
+
+        // Config::runtime().await.apply();
+        // Config::clash().await.apply();
+        // TODO
+
+        {
+            Config::clash()
+                .await
+                .draft_mut()
+                .patch_config(ipc_patch.clone());
+            Config::clash().await.apply();
+        }
+        {
+            let guard = Config::runtime().await;
+            let mut runtime = guard.draft_mut();
+            runtime.patch_config_ipc(ipc_patch);
+            drop(runtime);
+            drop(guard);
+            // guard.apply();
+        }
+
+        let clash_data = Config::clash().await.data_mut().clone();
+        let saved_ipc = clash_data.get_external_controller_ipc();
+        logging!(info, Type::Core, true, "saved ipc as: {saved_ipc}");
+        clash_data.save_config().await?;
+
+        let run_path = Config::generate_file(ConfigType::Run).await.map_err(|e| {
+            let msg = e.to_string();
+            logging_error!(Type::Core, true, "{}", msg);
+            anyhow::Error::msg(msg)
         })?;
 
         self.put_configs_force(run_path).await?;

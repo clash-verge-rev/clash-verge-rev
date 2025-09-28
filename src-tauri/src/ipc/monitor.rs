@@ -3,7 +3,9 @@ use kode_bridge::IpcStreamClient;
 use std::sync::Arc;
 use tokio::{sync::RwLock, time::Duration};
 
-use crate::{ipc::IpcManager, logging, process::AsyncHandler, utils::logging::Type};
+use crate::{
+    config::Config, ipc::IpcManager, logging, process::AsyncHandler, utils::logging::Type,
+};
 
 /// Generic base structure for IPC monitoring data with freshness tracking
 pub trait MonitorData: Clone + Send + Sync + 'static {
@@ -78,12 +80,18 @@ where
     }
 
     async fn create_ipc_client() -> Result<IpcStreamClient> {
-        let current_ipc_path = IpcManager::global()
-            .current_ipc_path()
+        let current_ipc_path = Config::clash()
             .await
-            .ok_or_else(|| anyhow::anyhow!("Failed to get IPC path"))?;
-        let client = IpcStreamClient::new(current_ipc_path)?;
-
+            .latest_ref()
+            .get_external_controller_ipc();
+        logging!(
+            info,
+            Type::Ipc,
+            true,
+            "Using IPC path: {}",
+            current_ipc_path
+        );
+        let client = IpcStreamClient::new(&current_ipc_path)?;
         Ok(client)
     }
 

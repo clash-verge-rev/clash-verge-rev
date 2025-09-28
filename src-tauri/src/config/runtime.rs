@@ -1,3 +1,4 @@
+use crate::config::IClashTemp;
 use crate::enhance::field::use_keys;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
@@ -115,6 +116,21 @@ impl IRuntime {
                         proxy.insert("dialer-proxy".into(), dialer_proxy.to_owned());
                     }
                 }
+            }
+        }
+    }
+
+    pub fn patch_config_ipc(&mut self, patch: Mapping) {
+        if let Some(config) = self.config.as_mut() {
+            #[cfg(unix)]
+            {
+                let ipc = IClashTemp::guard_external_controller_ipc(&patch);
+                config.insert("external-controller-unix".into(), ipc.into());
+            }
+            #[cfg(windows)]
+            {
+                let ipc = IClashTemp::guard_external_controller_ipc(&patch);
+                config.insert("external-controller-pipe".into(), ipc.into());
             }
         }
     }

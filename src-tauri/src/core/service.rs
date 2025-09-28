@@ -8,9 +8,9 @@ use crate::{
 };
 use anyhow::{Context, Result, bail};
 use clash_verge_service_ipc::{self, CoreConfig, IpcCommand, StartClash, WriterConfig};
-use kode_bridge::HttpResponse;
+use kode_bridge::{ClientConfig, HttpResponse};
 use once_cell::sync::Lazy;
-use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
+use std::{env::current_exe, path::PathBuf, process::Command as StdCommand, time::Duration};
 use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,6 +21,7 @@ pub enum ServiceStatus {
     UninstallRequired,
     ReinstallRequired,
     ForceReinstallRequired,
+    Pendding(String),
     Unavailable(String),
 }
 
@@ -475,6 +476,22 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
+    pub fn config() -> ClientConfig {
+        ClientConfig {
+            default_timeout: Duration::from_millis(2_000),
+            enable_pooling: false,
+            max_retries: 10,
+            retry_delay: Duration::from_millis(125),
+            max_concurrent_requests: 16,
+            max_requests_per_second: Some(64.0),
+            ..Default::default()
+        }
+    }
+
+    pub fn current(&self) -> ServiceStatus {
+        self.0.clone()
+    }
+
     pub fn is_service_ready(&self) -> bool {
         self.0 == ServiceStatus::Ready
     }
@@ -487,14 +504,30 @@ impl ServiceManager {
             self.handle_service_status(&status).await
         );
         match status {
-            ServiceStatus::Ready => IpcManager::global()
-                .inner()
-                .await
-                .set_running_mode(RunningMode::Service),
-            _ => IpcManager::global()
-                .inner()
-                .await
-                .set_running_mode(RunningMode::Sidecar),
+            ServiceStatus::Ready => {
+                IpcManager::global()
+                    .inner()
+                    .await
+                    .set_running_mode(RunningMode::Service);
+                logging!(
+                    info,
+                    Type::Service,
+                    true,
+                    "Refresh Service Manager as running mode: Service"
+                );
+            }
+            _ => {
+                IpcManager::global()
+                    .inner()
+                    .await
+                    .set_running_mode(RunningMode::Sidecar);
+                logging!(
+                    info,
+                    Type::Service,
+                    true,
+                    "Refresh Service Manager as running mode: SideCar"
+                );
+            }
         }
         self.0 = status;
         Ok(())
@@ -524,6 +557,7 @@ impl ServiceManager {
                 Ok(())
             }
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
+                self.0 = ServiceStatus::Pendding("Install".into());
                 logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
                 reinstall_service().await?;
                 force_check_service_version().await?;
@@ -531,6 +565,7 @@ impl ServiceManager {
                 Ok(())
             }
             ServiceStatus::ForceReinstallRequired => {
+                self.0 = ServiceStatus::Pendding("Install".into());
                 logging!(
                     info,
                     Type::Service,
@@ -543,12 +578,14 @@ impl ServiceManager {
                 Ok(())
             }
             ServiceStatus::InstallRequired => {
+                self.0 = ServiceStatus::Pendding("Install".into());
                 logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
                 install_service().await?;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
             }
             ServiceStatus::UninstallRequired => {
+                self.0 = ServiceStatus::Pendding("Uninstall".into());
                 logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
                 uninstall_service().await?;
                 force_check_service_version()
@@ -562,6 +599,10 @@ impl ServiceManager {
                 self.0 = ServiceStatus::Unavailable(reason.clone());
                 Err(anyhow::anyhow!("服务不可用: {}", reason))
             }
+            ServiceStatus::Pendding(reason) => {
+                self.0 = ServiceStatus::Unavailable(reason.clone());
+                Err(anyhow::anyhow!("服务操作中: {}", reason))
+            }
         }
     }
 }
@@ -572,7 +613,7 @@ async fn send_ipc_request_post(
 ) -> Result<HttpResponse> {
     let client = kode_bridge::IpcHttpClient::with_config(
         clash_verge_service_ipc::IPC_PATH,
-        IpcManager::config(),
+        ServiceManager::config(),
     )?;
     let response = client
         .post(command.as_ref())
@@ -585,16 +626,37 @@ async fn send_ipc_request_post(
 async fn send_ipc_request_get(command: IpcCommand) -> Result<HttpResponse> {
     let client = kode_bridge::IpcHttpClient::with_config(
         clash_verge_service_ipc::IPC_PATH,
-        IpcManager::config(),
+        ServiceManager::config(),
     )?;
     let response = client.get(command.as_ref()).send().await?;
     Ok(response)
+    // let current_service_status = {
+    //     let guard = SERVICE_MANAGER.lock().await;
+    //     guard.current()
+    // };
+
+    // match current_service_status {
+    //     ServiceStatus::Ready => {
+    //         let client = kode_bridge::IpcHttpClient::with_config(
+    //             clash_verge_service_ipc::IPC_PATH,
+    //             IpcManager::config(),
+    //         )?;
+    //         let response = client.get(command.as_ref()).send().await?;
+    //         Ok(response)
+    //     }
+    //     ServiceStatus::Unavailable(reason) => {
+    //         return Err(anyhow::anyhow!("Service Unvailable: {reason}"));
+    //     }
+    //     _ => {
+    //         return Err(anyhow::Error::msg("Service Is Pendding Now"));
+    //     }
+    // }
 }
 
 async fn send_ipc_request_delete(command: IpcCommand) -> Result<HttpResponse> {
     let client = kode_bridge::IpcHttpClient::with_config(
         clash_verge_service_ipc::IPC_PATH,
-        IpcManager::config(),
+        ServiceManager::config(),
     )?;
     let response = client.delete(command.as_ref()).send().await?;
     Ok(response)

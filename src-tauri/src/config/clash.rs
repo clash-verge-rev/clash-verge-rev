@@ -7,6 +7,8 @@ use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
+use std::fs;
+use std::path::Path;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr,
@@ -115,12 +117,6 @@ impl IClashTemp {
         map.insert("tun".into(), tun.into());
         map.insert("external-controller-cors".into(), cors_map.into());
         map.insert("unified-delay".into(), true.into());
-        logging!(
-            error,
-            Type::Config,
-            "temeplate unix path: {:?}",
-            map.get("external-controller-unix")
-        );
         Self(map)
     }
 
@@ -134,9 +130,9 @@ impl IClashTemp {
         let port = Self::guard_port(&config);
         let ctrl = Self::guard_external_controller(&config);
         #[cfg(unix)]
-        let external_controller_unix = Self::guard_external_controller_ipc().await;
+        let external_controller_unix = Self::guard_external_controller_ipc(&config);
         #[cfg(windows)]
-        let external_controller_pipe = Self::guard_external_controller_ipc().await;
+        let external_controller_pipe = Self::guard_external_controller_ipc(&config);
 
         #[cfg(not(target_os = "windows"))]
         config.insert("redir-port".into(), redir_port.into());
@@ -205,6 +201,17 @@ impl IClashTemp {
             }),
         }
     }
+
+    pub fn get_external_controller_ipc(&self) -> String {
+        #[cfg(unix)]
+        let external_controller_ipc = self.0.get("external-controller-unix");
+        #[cfg(windows)]
+        let external_controller_ipc = self.0.get("external-controller-pipe");
+        external_controller_ipc
+            .and_then(|value| value.as_str().map(|val_str| val_str.trim().to_string()))
+            .unwrap_or_else(|| Self::guard_external_controller_ipc(&Mapping::new()))
+    }
+
     #[cfg(not(target_os = "windows"))]
     pub fn guard_redir_port(config: &Mapping) -> u16 {
         let mut port = config
@@ -340,17 +347,40 @@ impl IClashTemp {
         }
     }
 
-    pub async fn guard_external_controller_ipc() -> String {
-        IpcManager::global()
-            .inner()
-            .await
-            .get_running_ipc_path()
-            .or_else(|| {
-                ipc_path_sidecar()
-                    .ok()
-                    .map(|p| p.to_string_lossy().to_string())
-            })
-            .unwrap_or_default()
+    pub fn guard_external_controller_ipc(config: &Mapping) -> String {
+        #[cfg(unix)]
+        {
+            config
+                .get("external-controller-unix")
+                .and_then(|value| value.as_str())
+                .map(|s| {
+                    let path = Path::new(s);
+                    if let Some(parent) = path.parent() {
+                        if parent.exists() {
+                            s.to_string()
+                        } else {
+                            "/tmp/verge/verge-mihomo-sidecar.sock".to_string()
+                        }
+                    } else {
+                        "/tmp/verge/verge-mihomo-sidecar.sock".to_string()
+                    }
+                })
+                .unwrap_or("/tmp/verge/verge-mihomo-sidecar.sock".to_string())
+        }
+        #[cfg(windows)]
+        {
+            config
+                .get("external-controller-pipe")
+                .and_then(|value| value.as_str())
+                .map(|s| {
+                    if s.trim().starts_with(r"\\.\pipe\") && !s.trim().is_empty() {
+                        s.to_string()
+                    } else {
+                        r"\\.\pipe\verge-mihomo-sidecar".to_string()
+                    }
+                })
+                .unwrap_or_else(|| r"\\.\pipe\verge-mihomo-sidecar".to_string())
+        }
     }
 }
 
@@ -487,4 +517,58 @@ async fn test_clash_info() {
         get_case(8888, "192.168.1.1:80800").await,
         get_result(8888, "127.0.0.1:9097")
     );
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn test_external_controller_unix() {
+    let dir = Path::new("/tmp/verge");
+    if !dir.exists() {
+        assert!(fs::create_dir_all(dir).is_ok());
+    }
+    let mut map = Mapping::new();
+    map.insert("external-controller-unix".into(), "".into());
+    let guarded = IClashTemp::guard(map.clone()).await;
+    let value = guarded
+        .get("external-controller-unix")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    assert_eq!(value, "/tmp/verge/verge-mihomo-sidecar.sock");
+
+    let mut map = Mapping::new();
+    map.insert(
+        "external-controller-unix".into(),
+        "/tmp/verge/verge-mihomo-sidecar-custom.sock".into(),
+    );
+    let guarded = IClashTemp::guard(map.clone()).await;
+    let value = guarded
+        .get("external-controller-unix")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    assert_eq!(value, "/tmp/verge/verge-mihomo-sidecar-custom.sock");
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn test_external_controller_pipe() {
+    let mut map = Mapping::new();
+    map.insert("external-controller-pipe".into(), "".into());
+    let guarded = IClashTemp::guard(map.clone()).await;
+    let value = guarded
+        .get("external-controller-pipe")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    assert_eq!(value, r"\\.\pipe\verge-mihomo-sidecar");
+
+    let mut map = Mapping::new();
+    map.insert(
+        "external-controller-pipe".into(),
+        r"\\.\pipe\verge-mihomo-sidecar-custom".into(),
+    );
+    let guarded = IClashTemp::guard(map.clone()).await;
+    let value = guarded
+        .get("external-controller-pipe")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    assert_eq!(value, r"\\.\pipe\verge-mihomo-sidecar-custom");
 }

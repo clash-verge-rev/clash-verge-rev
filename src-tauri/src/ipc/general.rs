@@ -77,12 +77,22 @@ impl IpcManager {
                 .or(Some(RunningMode::Sidecar))
         }
         .unwrap_or(RunningMode::NotRunning);
+        logging!(
+            info,
+            Type::Service,
+            "init with running mode: {service_running_mode}"
+        );
         self.inner
             .lock()
             .await
             .set_running_mode(service_running_mode.clone());
 
         let ipc_path_string = service_running_mode.try_into_ipc_path_string()?;
+        logging!(
+            info,
+            Type::Service,
+            "init with ipc path expected to: {ipc_path_string}"
+        );
         self.inner
             .lock()
             .await
