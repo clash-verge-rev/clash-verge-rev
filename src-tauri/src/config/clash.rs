@@ -3,6 +3,7 @@ use crate::utils::{dirs, help};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
+#[cfg(unix)]
 use std::path::Path;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
