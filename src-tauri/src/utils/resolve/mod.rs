@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
 use tauri::AppHandle;
 
 use crate::{
@@ -64,10 +64,10 @@ pub fn resolve_setup_async() {
 
         // 确保配置完全初始化后再启动核心管理器
         init_verge_config().await;
-        
+
         // 添加配置验证，确保运行时配置已正确生成
         verify_config_initialization().await;
-        
+
         init_core_manager().await;
 
         init_system_proxy().await;
@@ -197,44 +197,90 @@ pub(super) async fn init_auto_lightweight_mode() {
 
 /// 验证配置初始化是否成功
 pub(super) async fn verify_config_initialization() {
-    logging!(info, Type::Setup, true, "Verifying config initialization...");
-    
+    logging!(
+        info,
+        Type::Setup,
+        true,
+        "Verifying config initialization..."
+    );
+
     // 检查运行时配置是否已正确生成
     let runtime = Config::runtime().await;
     let config_exists = runtime.latest_ref().config.is_some();
     drop(runtime); // 显式释放锁
-    
+
     if !config_exists {
-        logging!(warn, Type::Setup, true, "Runtime config not found, regenerating...");
+        logging!(
+            warn,
+            Type::Setup,
+            true,
+            "Runtime config not found, regenerating..."
+        );
         // 尝试重新生成配置
         for attempt in 1..=3 {
-            logging!(info, Type::Setup, true, "Attempt {}/3 to regenerate config...", attempt);
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Attempt {}/3 to regenerate config...",
+                attempt
+            );
             if let Err(e) = Config::generate().await {
-                logging!(warn, Type::Setup, true, "Failed to generate config on attempt {}: {}", attempt, e);
+                logging!(
+                    warn,
+                    Type::Setup,
+                    true,
+                    "Failed to generate config on attempt {}: {}",
+                    attempt,
+                    e
+                );
                 if attempt == 3 {
-                    logging!(error, Type::Setup, true, "Failed to generate config after 3 attempts");
+                    logging!(
+                        error,
+                        Type::Setup,
+                        true,
+                        "Failed to generate config after 3 attempts"
+                    );
                 } else {
                     // 等待一段时间再重试
-                    tokio::time::sleep(tokio::time::Duration::from_millis(100 * attempt as u64)).await;
+                    tokio::time::sleep(tokio::time::Duration::from_millis(100 * attempt as u64))
+                        .await;
                 }
             } else {
                 // 验证配置是否已生成
                 let runtime = Config::runtime().await;
                 let config_exists = runtime.latest_ref().config.is_some();
                 drop(runtime);
-                
+
                 if config_exists {
-                    logging!(info, Type::Setup, true, "Config successfully regenerated on attempt {}", attempt);
+                    logging!(
+                        info,
+                        Type::Setup,
+                        true,
+                        "Config successfully regenerated on attempt {}",
+                        attempt
+                    );
                     break;
                 } else if attempt == 3 {
-                    logging!(error, Type::Setup, true, "Config generation succeeded but config is still missing");
+                    logging!(
+                        error,
+                        Type::Setup,
+                        true,
+                        "Config generation succeeded but config is still missing"
+                    );
                 } else {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(100 * attempt as u64)).await;
+                    tokio::time::sleep(tokio::time::Duration::from_millis(100 * attempt as u64))
+                        .await;
                 }
             }
         }
     } else {
-        logging!(info, Type::Setup, true, "Config initialization verified successfully");
+        logging!(
+            info,
+            Type::Setup,
+            true,
+            "Config initialization verified successfully"
+        );
     }
 }
 
