@@ -59,13 +59,13 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const onExportDiagnosticInfo = useCallback(async () => {
     await exportDiagnosticInfo();
     showNotice("success", t("Copy Success"), 1000);
-  }, []);
+  }, [t]);
 
   const copyVersion = useCallback(() => {
     navigator.clipboard.writeText(`v${version}`).then(() => {
       showNotice("success", t("Version copied to clipboard"), 1000);
     });
-  }, [version, t]);
+  }, [t]);
 
   return (
     <SettingList title={t("Verge Advanced Setting")}>

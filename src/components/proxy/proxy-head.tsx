@@ -31,9 +31,15 @@ interface Props {
   onHeadState: (val: Partial<HeadState>) => void;
 }
 
-export const ProxyHead = (props: Props) => {
-  const { sx = {}, url, groupName, headState, onHeadState } = props;
-
+export const ProxyHead = ({
+  sx = {},
+  url,
+  groupName,
+  headState,
+  onHeadState,
+  onLocation,
+  onCheckDelay,
+}: Props) => {
   const { showType, sortType, filterText, textState, testUrl } = headState;
 
   const { t } = useTranslation();
@@ -46,13 +52,11 @@ export const ProxyHead = (props: Props) => {
   }, []);
 
   const { verge } = useVerge();
+  const default_latency_test = verge!.default_latency_test!;
 
   useEffect(() => {
-    delayManager.setUrl(
-      groupName,
-      testUrl || url || verge?.default_latency_test!,
-    );
-  }, [groupName, testUrl, verge?.default_latency_test]);
+    delayManager.setUrl(groupName, testUrl || url || default_latency_test);
+  }, [groupName, testUrl, default_latency_test, url]);
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ...sx }}>
@@ -60,7 +64,7 @@ export const ProxyHead = (props: Props) => {
         size="small"
         color="inherit"
         title={t("locate")}
-        onClick={props.onLocation}
+        onClick={onLocation}
       >
         <MyLocationRounded />
       </IconButton>
@@ -76,7 +80,7 @@ export const ProxyHead = (props: Props) => {
             console.log(`[ProxyHead] 使用自定义测试URL: ${testUrl}`);
             onHeadState({ textState: "url" });
           }
-          props.onCheckDelay();
+          onCheckDelay();
         }}
       >
         <NetworkCheckRounded />
