@@ -10,10 +10,11 @@ import {
   Menu,
   MenuItem,
   Divider,
+  Button,
 } from "@mui/material";
 import { ArchiveOutlined, ExpandMoreRounded } from "@mui/icons-material";
 import { useLockFn } from "ahooks";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
@@ -25,6 +26,7 @@ import {
   providerHealthCheck,
   getGroupProxyDelays,
   updateProxyChainConfigInRuntime,
+  getRuntimeConfig,
 } from "@/services/cmds";
 import delayManager from "@/services/delay";
 
@@ -33,6 +35,7 @@ import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";
 import { ProxyRender } from "./proxy-render";
+import { ProxyGroupNavigator } from "./proxy-group-navigator";
 import { useRenderList } from "./use-render-list";
 
 interface Props {
@@ -326,6 +329,45 @@ export const ProxyGroups = (props: Props) => {
     }
   };
 
+  // 获取运行时配置
+  const { data: runtimeConfig } = useSWR("getRuntimeConfig", getRuntimeConfig, {
+    revalidateOnFocus: false,
+    revalidateIfStale: true,
+  });
+
+  // 获取所有代理组名称
+  const getProxyGroupNames = useCallback(() => {
+    const config = runtimeConfig as any;
+    if (!config?.["proxy-groups"]) return [];
+
+    return config["proxy-groups"]
+      .map((group: any) => group.name)
+      .filter((name: string) => name && name.trim() !== "");
+  }, [runtimeConfig]);
+
+  // 定位到指定的代理组
+  const handleGroupLocationByName = useCallback(
+    (groupName: string) => {
+      const index = renderList.findIndex(
+        (item) => item.type === 0 && item.group?.name === groupName,
+      );
+
+      if (index >= 0) {
+        virtuosoRef.current?.scrollToIndex?.({
+          index,
+          align: "start",
+          behavior: "smooth",
+        });
+      }
+    },
+    [renderList],
+  );
+
+  const proxyGroupNames = useMemo(
+    () => getProxyGroupNames(),
+    [getProxyGroupNames],
+  );
+
   if (mode === "direct") {
     return <BaseEmpty text={t("clash_mode_direct")} />;
   }
@@ -522,6 +564,14 @@ export const ProxyGroups = (props: Props) => {
     <div
       style={{ position: "relative", height: "100%", willChange: "transform" }}
     >
+      {/* 代理组导航栏 */}
+      {mode === "rule" && (
+        <ProxyGroupNavigator
+          proxyGroupNames={proxyGroupNames}
+          onGroupLocation={handleGroupLocationByName}
+        />
+      )}
+
       <Virtuoso
         ref={virtuosoRef}
         style={{ height: "calc(100% - 14px)" }}
