@@ -62,11 +62,6 @@ VIAddVersionKey "LegalCopyright" "${COPYRIGHT}"
 VIAddVersionKey "FileVersion" "${VERSION}"
 VIAddVersionKey "ProductVersion" "${VERSION}"
 
-Var service_exists
-Var is_running_error
-Var is_running_status
-Var errmsg
-
 ; Plugins path, currently exists for linux only
 !if "${PLUGINSPATH}" != ""
     !addplugindir "${PLUGINSPATH}"
@@ -517,60 +512,53 @@ FunctionEnd
 !macro StartVergeService
   ; Check if the service exists
   SimpleSC::ExistsService "clash_verge_service"
-  Pop $service_exists  ; 0: exists, other: not exists
-  ${If} $service_exists == 0
+  Pop $0  ; 0: exists, other: not exists
+  ${If} $0 == 0
     ; Check if the service is running
     SimpleSC::ServiceIsRunning "clash_verge_service"
-    Pop $is_running_error     ; 0: success, other: error
-    Pop $is_running_status    ; 1: running, 0: not running
-    ${If} $is_running_error == 0
-      ${If} $is_running_status == 0
+    Pop $1     ; 0: success, other: error
+    Pop $2     ; 1: running, 0: not running
+    ${If} $1 == 0
+      ${If} $2 == 0
         DetailPrint "Restart ${PRODUCTNAME} Service..."
         SimpleSC::StartService "clash_verge_service" "" 30
       ${EndIf}
     ${Else}
       SimpleSC::GetErrorMessage
-      Pop $errmsg
-      MessageBox MB_OK|MB_ICONSTOP "Check Service Status Error ($errmsg)"
+      Pop $3
+      MessageBox MB_OK|MB_ICONSTOP "Check Service Status Error ($3)"
     ${EndIf}
   ${EndIf}
 !macroend
 
 !macro RemoveVergeService
-  ; Check if the service exists
   SimpleSC::ExistsService "clash_verge_service"
-  Pop $0  ; 0：service exists；other: service not exists
-  ; Service exists
+  Pop $0  ; 0: service exists; other: not exists
   ${If} $0 == 0
-    Push $0
-    ; Check if the service is running
     SimpleSC::ServiceIsRunning "clash_verge_service"
-    Pop $0 ; returns an errorcode (<>0) otherwise success (0)
-    Pop $1 ; returns 1 (service is running) - returns 0 (service is not running)
-    ${If} $0 == 0
-      Push $0
-      ${If} $1 == 1
+    Pop $1 ; errorcode: 0 success, <>0 error
+    Pop $2 ; status: 1 running, 0 not running
+    ${If} $1 == 0
+      ${If} $2 == 1
         DetailPrint "Stop ${PRODUCTNAME} Service..."
         SimpleSC::StopService "clash_verge_service" 1 30
-        Pop $0 ; returns an errorcode (<>0) otherwise success (0)
-        ${If} $0 == 0
-              DetailPrint "Removing ${PRODUCTNAME} Service..."
-              SimpleSC::RemoveService "clash_verge_service"
-        ${ElseIf} $0 != 0
-                  Push $0
-                  SimpleSC::GetErrorMessage
-                  Pop $0
-                  MessageBox MB_OK|MB_ICONSTOP "${PRODUCTNAME} Service Stop Error ($0)"
+        Pop $3 ; errorcode: 0 success, <>0 error
+        ${If} $3 == 0
+          DetailPrint "Removing ${PRODUCTNAME} Service..."
+          SimpleSC::RemoveService "clash_verge_service"
+        ${Else}
+          SimpleSC::GetErrorMessage
+          Pop $4
+          MessageBox MB_OK|MB_ICONSTOP "${PRODUCTNAME} Service Stop Error ($4)"
         ${EndIf}
-  ${ElseIf} $1 == 0
+      ${Else}
         DetailPrint "Removing ${PRODUCTNAME} Service..."
         SimpleSC::RemoveService "clash_verge_service"
-  ${EndIf}
-    ${ElseIf} $0 != 0
-          Push $0
-          SimpleSC::GetErrorMessage
-          Pop $0
-          MessageBox MB_OK|MB_ICONSTOP "Check Service Status Error ($0)"
+      ${EndIf}
+    ${Else}
+      SimpleSC::GetErrorMessage
+      Pop $5
+      MessageBox MB_OK|MB_ICONSTOP "Check Service Status Error ($5)"
     ${EndIf}
   ${EndIf}
 !macroend
