@@ -62,6 +62,11 @@ VIAddVersionKey "LegalCopyright" "${COPYRIGHT}"
 VIAddVersionKey "FileVersion" "${VERSION}"
 VIAddVersionKey "ProductVersion" "${VERSION}"
 
+Var service_exists
+Var is_running_error
+Var is_running_status
+Var errmsg
+
 ; Plugins path, currently exists for linux only
 !if "${PLUGINSPATH}" != ""
     !addplugindir "${PLUGINSPATH}"
