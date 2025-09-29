@@ -512,25 +512,21 @@ FunctionEnd
 !macro StartVergeService
   ; Check if the service exists
   SimpleSC::ExistsService "clash_verge_service"
-  Pop $0  ; 0：service exists；other: service not exists
-  ; Service exists
-  ${If} $0 == 0
-    Push $0
+  Pop $service_exists  ; 0: exists, other: not exists
+  ${If} $service_exists == 0
     ; Check if the service is running
     SimpleSC::ServiceIsRunning "clash_verge_service"
-    Pop $0 ; returns an errorcode (<>0) otherwise success (0)
-    Pop $1 ; returns 1 (service is running) - returns 0 (service is not running)
-    ${If} $0 == 0
-      Push $0
-      ${If} $1 == 0
-            DetailPrint "Restart ${PRODUCTNAME} Service..."
-            SimpleSC::StartService "clash_verge_service" "" 30
+    Pop $is_running_error     ; 0: success, other: error
+    Pop $is_running_status    ; 1: running, 0: not running
+    ${If} $is_running_error == 0
+      ${If} $is_running_status == 0
+        DetailPrint "Restart ${PRODUCTNAME} Service..."
+        SimpleSC::StartService "clash_verge_service" "" 30
       ${EndIf}
-    ${ElseIf} $0 != 0
-          Push $0
-          SimpleSC::GetErrorMessage
-          Pop $0
-          MessageBox MB_OK|MB_ICONSTOP "Check Service Status Error ($0)"
+    ${Else}
+      SimpleSC::GetErrorMessage
+      Pop $errmsg
+      MessageBox MB_OK|MB_ICONSTOP "Check Service Status Error ($errmsg)"
     ${EndIf}
   ${EndIf}
 !macroend
