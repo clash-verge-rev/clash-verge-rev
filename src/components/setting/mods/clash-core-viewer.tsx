@@ -12,11 +12,11 @@ import {
   ListItemText,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 
-import { BaseDialog, DialogRef } from "@/components/base";
+import { BaseDialog } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { changeClashCore, restartCore } from "@/services/cmds";
 import {
@@ -31,7 +31,7 @@ const VALID_CORE = [
   { name: "Mihomo Alpha", core: "verge-mihomo-alpha", chip: "Alpha Version" },
 ];
 
-export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
+export const ClashCoreViewer = ({ ref, ...props }) => {
   const { t } = useTranslation();
 
   const { verge, mutateVerge } = useVerge();
@@ -169,4 +169,4 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       </List>
     </BaseDialog>
   );
-});
+};

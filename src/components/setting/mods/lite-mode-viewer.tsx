@@ -7,16 +7,16 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
+import { BaseDialog, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useVerge } from "@/hooks/use-verge";
 import { entry_lightweight_mode } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
-export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
+export const LiteModeViewer = ({ ref, ...props }) => {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
 
@@ -143,4 +143,4 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
       </List>
     </BaseDialog>
   );
-});
+};

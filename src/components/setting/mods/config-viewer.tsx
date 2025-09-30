@@ -1,12 +1,11 @@
 import { Box, Chip } from "@mui/material";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { DialogRef } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { getRuntimeYaml } from "@/services/cmds";
 
-export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
+export const ConfigViewer = ({ ref, ..._ }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [runtimeConfig, setRuntimeConfig] = useState("");
@@ -38,4 +37,4 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
       onClose={() => setOpen(false)}
     />
   );
-});
+};

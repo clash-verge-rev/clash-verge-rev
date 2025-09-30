@@ -9,7 +9,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useLockFn, useRequest } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, Switch } from "@/components/base";
@@ -30,10 +30,12 @@ interface ClashPortViewerRef {
 const generateRandomPort = () =>
   Math.floor(Math.random() * (65535 - 1025 + 1)) + 1025;
 
-export const ClashPortViewer = forwardRef<
-  ClashPortViewerRef,
-  ClashPortViewerProps
->((props, ref) => {
+export const ClashPortViewer = ({
+  ref,
+  ...props
+}: ClashPortViewerProps & {
+  ref?: React.RefObject<ClashPortViewerRef | null>;
+}) => {
   const { t } = useTranslation();
   const { clashInfo, patchInfo } = useClashInfo();
   const { verge, patchVerge } = useVerge();
@@ -348,4 +350,4 @@ export const ClashPortViewer = forwardRef<
       </List>
     </BaseDialog>
   );
-});
+};

@@ -9,16 +9,16 @@ import {
   useTheme,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, DialogRef } from "@/components/base";
+import { BaseDialog } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { defaultTheme, defaultDarkTheme } from "@/pages/_theme";
 import { showNotice } from "@/services/noticeService";
 
-export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
+export const ThemeViewer = ({ ref, ...props }) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
@@ -144,7 +144,7 @@ export const ThemeViewer = forwardRef<DialogRef>((props, ref) => {
       </List>
     </BaseDialog>
   );
-});
+};
 
 const Item = styled(ListItem)(() => ({
   padding: "5px 2px",

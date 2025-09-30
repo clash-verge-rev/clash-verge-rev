@@ -1,7 +1,7 @@
 import { TextField } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { nanoid } from "nanoid";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -19,7 +19,10 @@ export interface TestViewerRef {
 }
 
 // create or edit the test item
-export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
+export const TestViewer = ({
+  ref,
+  ...props
+}: Props & { ref?: React.RefObject<TestViewerRef | null> }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [openType, setOpenType] = useState<"new" | "edit">("new");
@@ -173,4 +176,4 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       />
     </BaseDialog>
   );
-});
+};

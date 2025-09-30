@@ -1,16 +1,10 @@
 import { Box, Paper, Divider } from "@mui/material";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import {
-  forwardRef,
-  useImperativeHandle,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import { useImperativeHandle, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, DialogRef } from "@/components/base";
+import { BaseDialog } from "@/components/base";
 import { BaseLoadingOverlay } from "@/components/base";
 import { listWebDavBackup } from "@/services/cmds";
 
@@ -25,7 +19,7 @@ dayjs.extend(customParseFormat);
 const DATE_FORMAT = "YYYY-MM-DD_HH-mm-ss";
 const FILENAME_PATTERN = /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}/;
 
-export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
+export const BackupViewer = ({ ref, ...props }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -131,4 +125,4 @@ export const BackupViewer = forwardRef<DialogRef>((props, ref) => {
       </Box>
     </BaseDialog>
   );
-});
+};

@@ -4,24 +4,18 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
-import {
-  forwardRef,
-  useImperativeHandle,
-  useState,
-  useMemo,
-  useEffect,
-} from "react";
+import { useImperativeHandle, useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import useSWR from "swr";
 
-import { BaseDialog, DialogRef } from "@/components/base";
+import { BaseDialog } from "@/components/base";
 import { useListen } from "@/hooks/use-listen";
 import { portableFlag } from "@/pages/_layout";
 import { showNotice } from "@/services/noticeService";
 import { useUpdateState, useSetUpdateState } from "@/services/states";
 
-export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
+export const UpdateViewer = ({ ref, ...props }) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
@@ -167,4 +161,4 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       )}
     </BaseDialog>
   );
-});
+};

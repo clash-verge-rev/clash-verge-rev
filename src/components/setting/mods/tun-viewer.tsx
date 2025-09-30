@@ -8,10 +8,10 @@ import {
   TextField,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
+import { BaseDialog, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { enhanceProfiles } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
@@ -21,7 +21,7 @@ import { StackModeSwitch } from "./stack-mode-switch";
 
 const OS = getSystem();
 
-export const TunViewer = forwardRef<DialogRef>((props, ref) => {
+export const TunViewer = ({ ref, ...props }) => {
   const { t } = useTranslation();
 
   const { clash, mutateClash, patchClash } = useClash();
@@ -238,4 +238,4 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       </List>
     </BaseDialog>
   );
-});
+};
