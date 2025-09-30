@@ -1,7 +1,7 @@
 use crate::{config::Config, utils::dirs};
 use once_cell::sync::Lazy;
 use serde_json::Value;
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{fs, path::PathBuf, sync::RwLock};
 use sys_locale;
 
 const DEFAULT_LANGUAGE: &str = "zh";
@@ -33,21 +33,19 @@ pub fn get_supported_languages() -> Vec<String> {
     languages
 }
 
-static TRANSLATIONS: Lazy<HashMap<String, Value>> = Lazy::new(|| {
-    let mut translations = HashMap::new();
-
-    if let Some(locales_dir) = get_locales_dir() {
-        for lang in get_supported_languages() {
-            let file_path = locales_dir.join(format!("{lang}.json"));
-            if let Ok(content) = fs::read_to_string(file_path)
-                && let Ok(json) = serde_json::from_str(&content)
-            {
-                translations.insert(lang.to_string(), json);
-            }
-        }
-    }
-    translations
+static TRANSLATIONS: Lazy<RwLock<(String, Value)>> = Lazy::new(|| {
+    let lang = get_system_language();
+    let json = load_lang_file(&lang).unwrap_or_else(|| Value::Object(Default::default()));
+    RwLock::new((lang, json))
 });
+
+fn load_lang_file(lang: &str) -> Option<Value> {
+    let locales_dir = get_locales_dir()?;
+    let file_path = locales_dir.join(format!("{lang}.json"));
+    fs::read_to_string(file_path)
+        .ok()
+        .and_then(|content| serde_json::from_str(&content).ok())
+}
 
 fn get_system_language() -> String {
     sys_locale::get_locale()
@@ -58,8 +56,6 @@ fn get_system_language() -> String {
 }
 
 pub async fn t(key: &str) -> String {
-    let key = key.to_string(); // own the string
-
     let current_lang = Config::verge()
         .await
         .latest_ref()
@@ -68,22 +64,35 @@ pub async fn t(key: &str) -> String {
         .map(String::from)
         .unwrap_or_else(get_system_language);
 
-    if let Some(text) = TRANSLATIONS
-        .get(&current_lang)
-        .and_then(|trans| trans.get(&key))
-        .and_then(|val| val.as_str())
     {
-        return text.to_string();
+        if let Ok(cache) = TRANSLATIONS.read()
+            && cache.0 == current_lang
+            && let Some(text) = cache.1.get(key).and_then(|val| val.as_str())
+        {
+            return text.to_string();
+        }
+    }
+
+    if let Some(new_json) = load_lang_file(&current_lang)
+        && let Ok(mut cache) = TRANSLATIONS.write()
+    {
+        *cache = (current_lang.clone(), new_json);
+
+        if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
+            return text.to_string();
+        }
     }
 
     if current_lang != DEFAULT_LANGUAGE
-        && let Some(text) = TRANSLATIONS
-            .get(DEFAULT_LANGUAGE)
-            .and_then(|trans| trans.get(&key))
-            .and_then(|val| val.as_str())
+        && let Some(default_json) = load_lang_file(DEFAULT_LANGUAGE)
+        && let Ok(mut cache) = TRANSLATIONS.write()
     {
-        return text.to_string();
+        *cache = (DEFAULT_LANGUAGE.to_string(), default_json);
+
+        if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
+            return text.to_string();
+        }
     }
 
-    key
+    key.to_string()
 }
