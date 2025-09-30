@@ -12,10 +12,10 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
-import { useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useVerge } from "@/hooks/use-verge";
 import { copyIconFile, getAppDir } from "@/services/cmds";
@@ -38,7 +38,7 @@ const getIcons = async (icon_dir: string, name: string) => {
   };
 };
 
-export const LayoutViewer = ({ ref, ...props }) => {
+export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const { verge, patchVerge, mutateVerge } = useVerge();
 
@@ -387,7 +387,7 @@ export const LayoutViewer = ({ ref, ...props }) => {
       </List>
     </BaseDialog>
   );
-};
+});
 
 const Item = styled(ListItem)(() => ({
   padding: "5px 2px",

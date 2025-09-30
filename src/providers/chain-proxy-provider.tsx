@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, use, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 interface ChainProxyContextType {
   isChainMode: boolean;
@@ -26,7 +26,7 @@ export const ChainProxyProvider = ({
   }, []);
 
   return (
-    <ChainProxyContext
+    <ChainProxyContext.Provider
       value={{
         isChainMode,
         setChainMode,
@@ -35,12 +35,12 @@ export const ChainProxyProvider = ({
       }}
     >
       {children}
-    </ChainProxyContext>
+    </ChainProxyContext.Provider>
   );
 };
 
 export const useChainProxy = () => {
-  const context = use(ChainProxyContext);
+  const context = useContext(ChainProxyContext);
   if (!context) {
     throw new Error("useChainProxy must be used within a ChainProxyProvider");
   }

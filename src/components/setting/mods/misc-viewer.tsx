@@ -8,15 +8,15 @@ import {
   TextField,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/noticeService";
 
-export const MiscViewer = ({ ref, ...props }) => {
+export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
 
@@ -319,4 +319,4 @@ export const MiscViewer = ({ ref, ...props }) => {
       </List>
     </BaseDialog>
   );
-};
+});

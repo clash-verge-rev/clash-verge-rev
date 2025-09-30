@@ -1,15 +1,15 @@
 import { ContentCopyRounded } from "@mui/icons-material";
 import { alpha, Box, Button, IconButton } from "@mui/material";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
-import { BaseDialog } from "@/components/base";
+import { BaseDialog, DialogRef } from "@/components/base";
 import { getNetworkInterfacesInfo } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
-export const NetworkInterfaceViewer = ({ ref, ...props }) => {
+export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [isV4, setIsV4] = useState(true);
@@ -99,7 +99,7 @@ export const NetworkInterfaceViewer = ({ ref, ...props }) => {
       ))}
     </BaseDialog>
   );
-};
+});
 
 const AddressDisplay = (props: { label: string; content: string }) => {
   const { t } = useTranslation();

@@ -1,5 +1,5 @@
 import { useTheme } from "@mui/material";
-import { useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 const maxPoint = 30;
 
@@ -24,7 +24,7 @@ export interface TrafficRef {
 /**
  * draw the traffic graph
  */
-export const TrafficGraph = ({ ref, ...props }) => {
+export const TrafficGraph = forwardRef<TrafficRef>((props, ref) => {
   const countRef = useRef(0);
   const styleRef = useRef(true);
   const listRef = useRef<TrafficData[]>(defaultList);
@@ -196,4 +196,4 @@ export const TrafficGraph = ({ ref, ...props }) => {
   }, [palette]);
 
   return <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />;
-};
+});

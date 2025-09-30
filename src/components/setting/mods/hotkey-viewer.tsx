@@ -1,9 +1,9 @@
 import { styled, Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/noticeService";
 
@@ -26,7 +26,7 @@ const HOTKEY_FUNC = [
   "entry_lightweight_mode",
 ];
 
-export const HotkeyViewer = ({ ref, ...props }) => {
+export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -117,4 +117,4 @@ export const HotkeyViewer = ({ ref, ...props }) => {
       ))}
     </BaseDialog>
   );
-};
+});

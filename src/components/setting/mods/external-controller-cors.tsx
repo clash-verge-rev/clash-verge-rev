@@ -1,7 +1,7 @@
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { Box, Button, Divider, List, ListItem, TextField } from "@mui/material";
 import { useLockFn, useRequest } from "ahooks";
-import { useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, Switch } from "@/components/base";
@@ -71,194 +71,201 @@ interface ClashHeaderConfigingRef {
   close: () => void;
 }
 
-export const HeaderConfiguration = ({ ref, ...props }) => {
-  const { t } = useTranslation();
-  const { clash, mutateClash, patchClash } = useClash();
-  const [open, setOpen] = useState(false);
+export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
+  (props, ref) => {
+    const { t } = useTranslation();
+    const { clash, mutateClash, patchClash } = useClash();
+    const [open, setOpen] = useState(false);
 
-  // CORS配置状态管理
-  const [corsConfig, setCorsConfig] = useState<{
-    allowPrivateNetwork: boolean;
-    allowOrigins: string[];
-  }>(() => {
-    const cors = clash?.["external-controller-cors"];
-    const origins = cors?.["allow-origins"] ?? [];
-    return {
-      allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
-      allowOrigins: filterBaseOriginsForUI(origins),
-    };
-  });
-
-  // 处理CORS配置变更
-  const handleCorsConfigChange = (
-    key: "allowPrivateNetwork" | "allowOrigins",
-    value: boolean | string[],
-  ) => {
-    setCorsConfig((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  // 添加新的允许来源
-  const handleAddOrigin = () => {
-    handleCorsConfigChange("allowOrigins", [...corsConfig.allowOrigins, ""]);
-  };
-
-  // 更新允许来源列表中的某一项
-  const handleUpdateOrigin = (index: number, value: string) => {
-    const newOrigins = [...corsConfig.allowOrigins];
-    newOrigins[index] = value;
-    handleCorsConfigChange("allowOrigins", newOrigins);
-  };
-
-  // 删除允许来源列表中的某一项
-  const handleDeleteOrigin = (index: number) => {
-    const newOrigins = [...corsConfig.allowOrigins];
-    newOrigins.splice(index, 1);
-    handleCorsConfigChange("allowOrigins", newOrigins);
-  };
-
-  // 保存配置请求
-  const { loading, run: saveConfig } = useRequest(
-    async () => {
-      // 保存时使用完整的源列表（包括开发URL）
-      const fullOrigins = getFullOrigins(corsConfig.allowOrigins);
-
-      await patchClash({
-        "external-controller-cors": {
-          "allow-private-network": corsConfig.allowPrivateNetwork,
-          "allow-origins": fullOrigins.filter(
-            (origin: string) => origin.trim() !== "",
-          ),
-        },
-      });
-      await mutateClash();
-    },
-    {
-      manual: true,
-      onSuccess: () => {
-        setOpen(false);
-        showNotice("success", t("Configuration saved successfully"));
-      },
-      onError: () => {
-        showNotice("error", t("Failed to save configuration"));
-      },
-    },
-  );
-
-  useImperativeHandle(ref, () => ({
-    open: () => {
+    // CORS配置状态管理
+    const [corsConfig, setCorsConfig] = useState<{
+      allowPrivateNetwork: boolean;
+      allowOrigins: string[];
+    }>(() => {
       const cors = clash?.["external-controller-cors"];
       const origins = cors?.["allow-origins"] ?? [];
-      setCorsConfig({
+      return {
         allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
         allowOrigins: filterBaseOriginsForUI(origins),
-      });
-      setOpen(true);
-    },
-    close: () => setOpen(false),
-  }));
+      };
+    });
 
-  const handleSave = useLockFn(async () => {
-    await saveConfig();
-  });
+    // 处理CORS配置变更
+    const handleCorsConfigChange = (
+      key: "allowPrivateNetwork" | "allowOrigins",
+      value: boolean | string[],
+    ) => {
+      setCorsConfig((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    };
 
-  return (
-    <BaseDialog
-      open={open}
-      title={t("External Cors Configuration")}
-      contentSx={{ width: 500 }}
-      okBtn={loading ? t("Saving...") : t("Save")}
-      cancelBtn={t("Cancel")}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
-      onOk={handleSave}
-    >
-      <List sx={{ width: "90%", padding: 2 }}>
-        <ListItem sx={{ padding: "8px 0" }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            width="100%"
-          >
-            <span style={{ fontWeight: "normal" }}>
-              {t("Allow private network access")}
-            </span>
-            <Switch
-              edge="end"
-              checked={corsConfig.allowPrivateNetwork}
-              onChange={(e) =>
-                handleCorsConfigChange("allowPrivateNetwork", e.target.checked)
-              }
-            />
-          </Box>
-        </ListItem>
+    // 添加新的允许来源
+    const handleAddOrigin = () => {
+      handleCorsConfigChange("allowOrigins", [...corsConfig.allowOrigins, ""]);
+    };
 
-        <Divider sx={{ my: 2 }} />
+    // 更新允许来源列表中的某一项
+    const handleUpdateOrigin = (index: number, value: string) => {
+      const newOrigins = [...corsConfig.allowOrigins];
+      newOrigins[index] = value;
+      handleCorsConfigChange("allowOrigins", newOrigins);
+    };
 
-        <ListItem sx={{ padding: "8px 0" }}>
-          <div style={{ width: "100%" }}>
-            <div style={{ marginBottom: 8, fontWeight: "bold" }}>
-              {t("Allowed Origins")}
-            </div>
-            {corsConfig.allowOrigins.map((origin, index) => (
+    // 删除允许来源列表中的某一项
+    const handleDeleteOrigin = (index: number) => {
+      const newOrigins = [...corsConfig.allowOrigins];
+      newOrigins.splice(index, 1);
+      handleCorsConfigChange("allowOrigins", newOrigins);
+    };
+
+    // 保存配置请求
+    const { loading, run: saveConfig } = useRequest(
+      async () => {
+        // 保存时使用完整的源列表（包括开发URL）
+        const fullOrigins = getFullOrigins(corsConfig.allowOrigins);
+
+        await patchClash({
+          "external-controller-cors": {
+            "allow-private-network": corsConfig.allowPrivateNetwork,
+            "allow-origins": fullOrigins.filter(
+              (origin: string) => origin.trim() !== "",
+            ),
+          },
+        });
+        await mutateClash();
+      },
+      {
+        manual: true,
+        onSuccess: () => {
+          setOpen(false);
+          showNotice("success", t("Configuration saved successfully"));
+        },
+        onError: () => {
+          showNotice("error", t("Failed to save configuration"));
+        },
+      },
+    );
+
+    useImperativeHandle(ref, () => ({
+      open: () => {
+        const cors = clash?.["external-controller-cors"];
+        const origins = cors?.["allow-origins"] ?? [];
+        setCorsConfig({
+          allowPrivateNetwork: cors?.["allow-private-network"] ?? true,
+          allowOrigins: filterBaseOriginsForUI(origins),
+        });
+        setOpen(true);
+      },
+      close: () => setOpen(false),
+    }));
+
+    const handleSave = useLockFn(async () => {
+      await saveConfig();
+    });
+
+    return (
+      <BaseDialog
+        open={open}
+        title={t("External Cors Configuration")}
+        contentSx={{ width: 500 }}
+        okBtn={loading ? t("Saving...") : t("Save")}
+        cancelBtn={t("Cancel")}
+        onClose={() => setOpen(false)}
+        onCancel={() => setOpen(false)}
+        onOk={handleSave}
+      >
+        <List sx={{ width: "90%", padding: 2 }}>
+          <ListItem sx={{ padding: "8px 0" }}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              width="100%"
+            >
+              <span style={{ fontWeight: "normal" }}>
+                {t("Allow private network access")}
+              </span>
+              <Switch
+                edge="end"
+                checked={corsConfig.allowPrivateNetwork}
+                onChange={(e) =>
+                  handleCorsConfigChange(
+                    "allowPrivateNetwork",
+                    e.target.checked,
+                  )
+                }
+              />
+            </Box>
+          </ListItem>
+
+          <Divider sx={{ my: 2 }} />
+
+          <ListItem sx={{ padding: "8px 0" }}>
+            <div style={{ width: "100%" }}>
+              <div style={{ marginBottom: 8, fontWeight: "bold" }}>
+                {t("Allowed Origins")}
+              </div>
+              {corsConfig.allowOrigins.map((origin, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    sx={{ fontSize: 14, marginRight: 2 }}
+                    value={origin}
+                    onChange={(e) => handleUpdateOrigin(index, e.target.value)}
+                    placeholder={t("Please enter a valid url")}
+                    inputProps={{ style: { fontSize: 14 } }}
+                  />
+                  <Button
+                    variant="contained"
+                    color="error"
+                    size="small"
+                    onClick={() => handleDeleteOrigin(index)}
+                    disabled={corsConfig.allowOrigins.length <= 0}
+                    sx={deleteButtonStyle}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleAddOrigin}
+                sx={addButtonStyle}
+              >
+                {t("Add")}
+              </Button>
+
               <div
-                key={index}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: 8,
+                  marginTop: 12,
+                  padding: 8,
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: 4,
                 }}
               >
-                <TextField
-                  fullWidth
-                  size="small"
-                  sx={{ fontSize: 14, marginRight: 2 }}
-                  value={origin}
-                  onChange={(e) => handleUpdateOrigin(index, e.target.value)}
-                  placeholder={t("Please enter a valid url")}
-                  inputProps={{ style: { fontSize: 14 } }}
-                />
-                <Button
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  onClick={() => handleDeleteOrigin(index)}
-                  disabled={corsConfig.allowOrigins.length <= 0}
-                  sx={deleteButtonStyle}
+                <div
+                  style={{ color: "#666", fontSize: 12, fontStyle: "italic" }}
                 >
-                  <DeleteIcon fontSize="small" />
-                </Button>
-              </div>
-            ))}
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleAddOrigin}
-              sx={addButtonStyle}
-            >
-              {t("Add")}
-            </Button>
-
-            <div
-              style={{
-                marginTop: 12,
-                padding: 8,
-                backgroundColor: "#f5f5f5",
-                borderRadius: 4,
-              }}
-            >
-              <div style={{ color: "#666", fontSize: 12, fontStyle: "italic" }}>
-                {t("Always included origins: {{urls}}", {
-                  urls: DEV_URLS.join(", "),
-                })}
+                  {t("Always included origins: {{urls}}", {
+                    urls: DEV_URLS.join(", "),
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        </ListItem>
-      </List>
-    </BaseDialog>
-  );
-};
+          </ListItem>
+        </List>
+      </BaseDialog>
+    );
+  },
+);

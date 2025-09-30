@@ -11,19 +11,25 @@ import {
   Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useEffect, useImperativeHandle, useMemo, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
 
-import { BaseDialog, Switch } from "@/components/base";
+import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
+import { getClashConfig } from "@/services/cmds";
 import {
   getAutotemProxy,
-  getClashConfig,
   getNetworkInterfacesInfo,
   getSystemHostname,
   getSystemProxy,
@@ -69,7 +75,7 @@ const getValidReg = (isWindows: boolean) => {
   return new RegExp(rValid);
 };
 
-export const SysproxyViewer = ({ ref, ...props }) => {
+export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
   const isWindows = getSystem() === "windows";
   const validReg = useMemo(() => getValidReg(isWindows), [isWindows]);
@@ -613,7 +619,7 @@ export const SysproxyViewer = ({ ref, ...props }) => {
       </List>
     </BaseDialog>
   );
-};
+});
 
 const FlexBox = styled("div")`
   display: flex;
