@@ -77,7 +77,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
   const onCopyClashEnv = useCallback(async () => {
     await copyClashEnv();
     showNotice("success", t("Copy Success"), 1000);
-  }, []);
+  }, [t]);
 
   return (
     <SettingList title={t("Verge Basic Setting")}>

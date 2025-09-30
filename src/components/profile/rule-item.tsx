@@ -24,6 +24,8 @@ export const RuleItem = (props: Props) => {
   const proxyPolicy = rule.match(/[^,]+$/)?.[0] ?? "";
   const ruleContent = rule.slice(ruleType.length + 1, -proxyPolicy.length - 1);
 
+  const $sortable = useSortable({ id: ruleRaw });
+
   const {
     attributes,
     listeners,
@@ -32,7 +34,7 @@ export const RuleItem = (props: Props) => {
     transition,
     isDragging,
   } = sortable
-    ? useSortable({ id: ruleRaw })
+    ? $sortable
     : {
         attributes: {},
         listeners: {},
