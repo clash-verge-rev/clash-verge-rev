@@ -1,0 +1,33 @@
+{
+  "name": "tauri-plugin-mihomo-api",
+  "version": "0.1.0",
+  "author": "oomeow",
+  "description": "Tauri plugin for Mihomo",
+  "type": "module",
+  "types": "./dist-js/index.d.ts",
+  "main": "./dist-js/index.cjs",
+  "module": "./dist-js/index.js",
+  "exports": {
+    "types": "./dist-js/index.d.ts",
+    "import": "./dist-js/index.js",
+    "require": "./dist-js/index.cjs"
+  },
+  "files": [
+    "dist-js",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "prepublishOnly": "pnpm build",
+    "pretest": "pnpm build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": ">=2.0.0-beta.6"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "12.1.4",
+    "rollup": "4.52.3",
+    "typescript": "5.9.2",
+    "tslib": "2.8.1"
+  }
+}
