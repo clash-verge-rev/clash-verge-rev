@@ -31,12 +31,12 @@ export function useSystemState() {
     {
       suspense: true,
       revalidateOnFocus: false,
-      onSuccess: (data) => {
-        console.log("[useSystemState] 服务状态更新:", data);
-      },
-      onError: (error) => {
-        console.error("[useSystemState] 服务状态检查失败:", error);
-      },
+      // onSuccess: (data) => {
+      //   console.log("[useSystemState] 服务状态更新:", data);
+      // },
+      // onError: (error) => {
+      //   console.error("[useSystemState] 服务状态检查失败:", error);
+      // },
       isPaused: () => !isServiceMode, // 仅在非 Service 模式下暂停请求
     },
   );
