@@ -20,8 +20,6 @@ use crate::{
 };
 use config::Config;
 use once_cell::sync::OnceCell;
-#[cfg(target_os = "macos")]
-use tauri::Manager;
 use tauri::{AppHandle, Manager};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
@@ -388,7 +386,7 @@ pub fn run() {
                 has_visible_windows
             );
 
-            handle::Handle::global().init(app_handle.clone());
+            handle::Handle::global().init();
 
             if !has_visible_windows {
                 // 当没有可见窗口时，设置为 regular 模式并显示主窗口

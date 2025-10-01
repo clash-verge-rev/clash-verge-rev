@@ -300,14 +300,8 @@ impl Tray {
 
     /// 更新托盘图标
     #[cfg(target_os = "macos")]
-    pub async fn update_icon(&self, _rate: Option<Rate>) -> Result<()> {
-        let app_handle = match handle::Handle::app_handle() {
-            Some(handle) => handle,
-            None => {
-                log::warn!(target: "app", "更新托盘图标失败: app_handle不存在");
-                return Ok(());
-            }
-        };
+    pub async fn update_icon(&self) -> Result<()> {
+        let app_handle = handle::Handle::app_handle();
 
         let tray = match app_handle.tray_by_id("main") {
             Some(tray) => tray,

@@ -2,13 +2,7 @@
 pub async fn set_public_dns(dns_server: String) {
     use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt;
-    let app_handle = match handle::Handle::app_handle() {
-        Some(handle) => handle,
-        None => {
-            log::error!(target: "app", "app_handle not available for DNS configuration");
-            return;
-        }
-    };
+    let app_handle = handle::Handle::app_handle();
 
     log::info!(target: "app", "try to set system dns");
     let resource_dir = match dirs::app_resources_dir() {

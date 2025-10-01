@@ -152,9 +152,7 @@ impl Sysopt {
             use anyhow::bail;
             use tauri_plugin_shell::ShellExt;
 
-            let app_handle = Handle::global()
-                .app_handle()
-                .ok_or_else(|| anyhow::anyhow!("App handle not available"))?;
+            let app_handle = Handle::app_handle();
 
             let binary_path = dirs::service_path()?;
             let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");
@@ -227,9 +225,7 @@ impl Sysopt {
             use anyhow::bail;
             use tauri_plugin_shell::ShellExt;
 
-            let app_handle = Handle::global()
-                .app_handle()
-                .ok_or_else(|| anyhow::anyhow!("App handle not available"))?;
+            let app_handle = Handle::app_handle();
 
             let binary_path = dirs::service_path()?;
             let sysproxy_exe = binary_path.with_file_name("sysproxy.exe");

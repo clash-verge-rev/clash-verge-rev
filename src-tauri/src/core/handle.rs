@@ -522,7 +522,7 @@ impl Handle {
 #[cfg(target_os = "macos")]
 impl Handle {
     pub fn set_activation_policy(&self, policy: tauri::ActivationPolicy) -> Result<(), String> {
-        let app_handle = self.app_handle();
+        let app_handle = Self::app_handle();
         if let Some(app_handle) = app_handle.as_ref() {
             app_handle
                 .set_activation_policy(policy)
