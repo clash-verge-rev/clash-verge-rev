@@ -494,15 +494,7 @@ pub fn init_scheme() -> Result<()> {
 }
 
 pub async fn startup_script() -> Result<()> {
-    let app_handle = match handle::Handle::global().app_handle() {
-        Some(handle) => handle,
-        None => {
-            return Err(anyhow::anyhow!(
-                "app_handle not available for startup script execution"
-            ));
-        }
-    };
-
+    let app_handle = handle::Handle::app_handle();
     let script_path = {
         let verge = Config::verge().await;
         let verge = verge.latest_ref();

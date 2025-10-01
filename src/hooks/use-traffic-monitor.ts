@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import useSWR from "swr";
 
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVisibility } from "@/hooks/use-visibility";
-import { getSystemMonitorOverviewSafe } from "@/services/cmds";
+import { useTrafficData } from "./use-traffic-data";
 
 // 增强的流量数据点接口
 export interface ITrafficDataPoint {
@@ -183,6 +182,9 @@ let lastValidData: ISystemMonitorOverview | null = null;
 export const useTrafficMonitorEnhanced = () => {
   const { clashInfo } = useClashInfo();
   const pageVisible = useVisibility();
+  const {
+    response: { data: traffic },
+  } = useTrafficData();
 
   // 初始化采样器
   if (!globalSampler) {
@@ -230,69 +232,87 @@ export const useTrafficMonitorEnhanced = () => {
     refCounter.onCountChange(handleCountChange);
   }, []);
 
-  // 只有在有引用时才启用SWR
-  const shouldFetch = clashInfo && pageVisible && refCounter.getCount() > 0;
+  const monitorData = useRef<ISystemMonitorOverview | null>(null);
+  useEffect(() => {
+    if (globalSampler) {
+      // 添加到采样器
+      const timestamp = Date.now();
+      const dataPoint: ITrafficDataPoint = {
+        up: traffic?.up || 0,
+        down: traffic?.down || 0,
+        timestamp,
+        name: new Date(timestamp).toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+      };
+      globalSampler.addDataPoint(dataPoint);
+      triggerUpdate();
+    }
+  }, [traffic, triggerUpdate]);
 
-  const { data: monitorData, error } = useSWR<ISystemMonitorOverview>(
-    shouldFetch ? "getSystemMonitorOverviewSafe" : null,
-    getSystemMonitorOverviewSafe,
-    {
-      refreshInterval: shouldFetch ? 1000 : 0, // 只有在需要时才刷新
-      keepPreviousData: true,
-      onSuccess: (data) => {
-        // console.log("[TrafficMonitorEnhanced] 获取到监控数据:", data);
+  // const { data: monitorData, error } = useSWR<ISystemMonitorOverview>(
+  //   shouldFetch ? "getSystemMonitorOverviewSafe" : null,
+  //   getSystemMonitorOverviewSafe,
+  //   {
+  //     refreshInterval: shouldFetch ? 1000 : 0, // 只有在需要时才刷新
+  //     keepPreviousData: true,
+  //     onSuccess: (data) => {
+  //       // console.log("[TrafficMonitorEnhanced] 获取到监控数据:", data);
 
-        if (data?.traffic?.raw && globalSampler) {
-          // 保存最后有效数据
-          lastValidData = data;
+  //       if (data?.traffic?.raw && globalSampler) {
+  //         // 保存最后有效数据
+  //         lastValidData = data;
 
-          // 添加到采样器
-          const timestamp = Date.now();
-          const dataPoint: ITrafficDataPoint = {
-            up: data.traffic.raw.up_rate || 0,
-            down: data.traffic.raw.down_rate || 0,
-            timestamp,
-            name: new Date(timestamp).toLocaleTimeString("en-US", {
-              hour12: false,
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-          };
+  //         // 添加到采样器
+  //         const timestamp = Date.now();
+  //         const dataPoint: ITrafficDataPoint = {
+  //           up: data.traffic.raw.up_rate || 0,
+  //           down: data.traffic.raw.down_rate || 0,
+  //           timestamp,
+  //           name: new Date(timestamp).toLocaleTimeString("en-US", {
+  //             hour12: false,
+  //             hour: "2-digit",
+  //             minute: "2-digit",
+  //             second: "2-digit",
+  //           }),
+  //         };
 
-          globalSampler.addDataPoint(dataPoint);
-          triggerUpdate();
-        }
-      },
-      onError: (error) => {
-        console.error(
-          "[TrafficMonitorEnhanced] 网络错误，使用最后有效数据. 错误详情:",
-          {
-            message: error?.message || "未知错误",
-            stack: error?.stack || "无堆栈信息",
-          },
-        );
-        // 网络错误时不清空数据，继续使用最后有效值
-        // 但是添加一个错误标记的数据点（流量为0）
-        if (globalSampler) {
-          const timestamp = Date.now();
-          const errorPoint: ITrafficDataPoint = {
-            up: 0,
-            down: 0,
-            timestamp,
-            name: new Date(timestamp).toLocaleTimeString("en-US", {
-              hour12: false,
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-          };
-          globalSampler.addDataPoint(errorPoint);
-          triggerUpdate();
-        }
-      },
-    },
-  );
+  //         globalSampler.addDataPoint(dataPoint);
+  //         triggerUpdate();
+  //       }
+  //     },
+  //     onError: (error) => {
+  //       console.error(
+  //         "[TrafficMonitorEnhanced] 网络错误，使用最后有效数据. 错误详情:",
+  //         {
+  //           message: error?.message || "未知错误",
+  //           stack: error?.stack || "无堆栈信息",
+  //         },
+  //       );
+  //       // 网络错误时不清空数据，继续使用最后有效值
+  //       // 但是添加一个错误标记的数据点（流量为0）
+  //       if (globalSampler) {
+  //         const timestamp = Date.now();
+  //         const errorPoint: ITrafficDataPoint = {
+  //           up: 0,
+  //           down: 0,
+  //           timestamp,
+  //           name: new Date(timestamp).toLocaleTimeString("en-US", {
+  //             hour12: false,
+  //             hour: "2-digit",
+  //             minute: "2-digit",
+  //             second: "2-digit",
+  //           }),
+  //         };
+  //         globalSampler.addDataPoint(errorPoint);
+  //         triggerUpdate();
+  //       }
+  //     },
+  //   },
+  // );
 
   // 获取指定时间范围的数据
   const getDataForTimeRange = useCallback(
@@ -324,7 +344,7 @@ export const useTrafficMonitorEnhanced = () => {
   }, []);
 
   // 构建返回的监控数据，优先使用当前数据，fallback到最后有效数据
-  const currentData = monitorData || lastValidData;
+  const currentData = monitorData.current || lastValidData;
   const trafficMonitorData = {
     traffic: currentData?.traffic || {
       raw: { up: 0, down: 0, up_rate: 0, down_rate: 0 },
@@ -355,8 +375,7 @@ export const useTrafficMonitorEnhanced = () => {
     },
 
     // 状态信息
-    isLoading: !currentData && !error,
-    error,
+    isLoading: !currentData,
     isDataFresh: currentData?.traffic?.is_fresh || false,
     hasValidData: !!lastValidData,
 
@@ -370,14 +389,13 @@ export const useTrafficMonitorEnhanced = () => {
  * 轻量级流量数据Hook
  */
 export const useTrafficDataEnhanced = () => {
-  const { monitorData, isLoading, error, isDataFresh, hasValidData } =
+  const { monitorData, isLoading, isDataFresh, hasValidData } =
     useTrafficMonitorEnhanced();
 
   return {
     traffic: monitorData.traffic,
     memory: monitorData.memory,
     isLoading,
-    error,
     isDataFresh,
     hasValidData,
   };

@@ -19,12 +19,8 @@ import { mutate } from "swr";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { changeClashCore, restartCore } from "@/services/cmds";
-import {
-  closeAllConnections,
-  upgradeCore,
-  forceRefreshClashConfig,
-} from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 
 const VALID_CORE = [
   { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
@@ -64,8 +60,6 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
 
       mutateVerge();
       setTimeout(async () => {
-        // 核心切换后强制刷新配置缓存
-        await forceRefreshClashConfig();
         mutate("getClashConfig");
         mutate("getVersion");
         setChangingCore(null);

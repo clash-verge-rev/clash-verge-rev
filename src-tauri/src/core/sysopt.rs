@@ -293,10 +293,7 @@ impl Sysopt {
 
     /// 尝试使用原来的自启动方法
     fn try_original_autostart_method(&self, is_enable: bool) {
-        let Some(app_handle) = Handle::global().app_handle() else {
-            log::error!(target: "app", "App handle not available for autostart");
-            return;
-        };
+        let app_handle = Handle::app_handle();
         let autostart_manager = app_handle.autolaunch();
 
         if is_enable {
@@ -323,9 +320,7 @@ impl Sysopt {
         }
 
         // 回退到原来的方法
-        let app_handle = Handle::global()
-            .app_handle()
-            .ok_or_else(|| anyhow::anyhow!("App handle not available"))?;
+        let app_handle = Handle::app_handle();
         let autostart_manager = app_handle.autolaunch();
 
         match autostart_manager.is_enabled() {

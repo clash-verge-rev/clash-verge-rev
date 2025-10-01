@@ -1,5 +1,4 @@
 use anyhow::Result;
-use tauri::AppHandle;
 
 use crate::{
     config::Config,
@@ -18,8 +17,8 @@ pub mod ui;
 pub mod window;
 pub mod window_script;
 
-pub fn resolve_setup_handle(app_handle: AppHandle) {
-    init_handle(app_handle);
+pub fn resolve_setup_handle() {
+    init_handle();
 }
 
 pub fn resolve_setup_sync() {
@@ -118,9 +117,9 @@ pub async fn resolve_reset_async() {
     }
 }
 
-pub fn init_handle(app_handle: AppHandle) {
+pub fn init_handle() {
     logging!(info, Type::Setup, true, "Initializing app handle...");
-    handle::Handle::global().init(app_handle);
+    handle::Handle::global().init();
 }
 
 pub(super) fn init_scheme() {

@@ -6,34 +6,19 @@ import {
 import { Box, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
 
 import { LightweightTrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
-import { useClashInfo } from "@/hooks/use-clash";
-import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
 import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
-import { isDebugEnabled, gc, startTrafficService } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
 
 import { TrafficGraph, type TrafficRef } from "./traffic-graph";
+import { useTrafficData } from "@/hooks/use-traffic-data";
+import { useMemoryData } from "@/hooks/use-memory-data";
 
 // setup the traffic
 export const LayoutTraffic = () => {
-  const { data: isDebug } = useSWR(
-    "clash-verge-rev-internal://isDebugEnabled",
-    () => isDebugEnabled(),
-    {
-      // default value before is fetched
-      fallbackData: false,
-    },
-  );
-
-  if (isDebug) {
-    console.debug("[Traffic][LayoutTraffic] 组件正在渲染");
-  }
   const { t } = useTranslation();
-  const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
 
   // whether hide traffic graph
@@ -42,31 +27,19 @@ export const LayoutTraffic = () => {
   const trafficRef = useRef<TrafficRef>(null);
   const pageVisible = useVisibility();
 
-  // 使用增强版的统一流量数据Hook
-  const { traffic, memory } = useTrafficDataEnhanced();
-
-  // 启动流量服务
-  useEffect(() => {
-    console.log(
-      "[Traffic][LayoutTraffic] useEffect 触发，clashInfo:",
-      clashInfo,
-      "pageVisible:",
-      pageVisible,
-    );
-
-    // 简化条件，只要组件挂载就尝试启动服务
-    console.log("[Traffic][LayoutTraffic] 开始启动流量服务");
-    startTrafficService().catch((error) => {
-      console.error("[Traffic][LayoutTraffic] 启动流量服务失败:", error);
-    });
-  }, []); // 移除依赖，只在组件挂载时启动一次
+  const {
+    response: { data: traffic },
+  } = useTrafficData();
+  const {
+    response: { data: memory },
+  } = useMemoryData();
 
   // 监听数据变化，为图表添加数据点
   useEffect(() => {
-    if (traffic?.raw && trafficRef.current) {
+    if (trafficRef.current) {
       trafficRef.current.appendData({
-        up: traffic.raw.up_rate || 0,
-        down: traffic.raw.down_rate || 0,
+        up: traffic?.up || 0,
+        down: traffic?.down || 0,
       });
     }
   }, [traffic]);
@@ -75,9 +48,9 @@ export const LayoutTraffic = () => {
   const displayMemory = verge?.enable_memory_usage ?? true;
 
   // 使用parseTraffic统一处理转换，保持与首页一致的显示格式
-  const [up, upUnit] = parseTraffic(traffic?.raw?.up_rate || 0);
-  const [down, downUnit] = parseTraffic(traffic?.raw?.down_rate || 0);
-  const [inuse, inuseUnit] = parseTraffic(memory?.raw?.inuse || 0);
+  const [up, upUnit] = parseTraffic(traffic?.up || 0);
+  const [down, downUnit] = parseTraffic(traffic?.down || 0);
+  const [inuse, inuseUnit] = parseTraffic(memory?.inuse || 0);
 
   const boxStyle: any = {
     display: "flex",
@@ -114,18 +87,16 @@ export const LayoutTraffic = () => {
 
         <Box display="flex" flexDirection="column" gap={0.75}>
           <Box
-            title={`${t("Upload Speed")} ${traffic?.is_fresh ? "" : "(Stale)"}`}
+            title={`${t("Upload Speed")}`}
             {...boxStyle}
             sx={{
               ...boxStyle.sx,
-              opacity: traffic?.is_fresh ? 1 : 0.6,
+              // opacity: traffic?.is_fresh ? 1 : 0.6,
             }}
           >
             <ArrowUpwardRounded
               {...iconStyle}
-              color={
-                (traffic?.raw?.up_rate || 0) > 0 ? "secondary" : "disabled"
-              }
+              color={(traffic?.up || 0) > 0 ? "secondary" : "disabled"}
             />
             <Typography {...valStyle} color="secondary">
               {up}
@@ -134,18 +105,16 @@ export const LayoutTraffic = () => {
           </Box>
 
           <Box
-            title={`${t("Download Speed")} ${traffic?.is_fresh ? "" : "(Stale)"}`}
+            title={`${t("Download Speed")}`}
             {...boxStyle}
             sx={{
               ...boxStyle.sx,
-              opacity: traffic?.is_fresh ? 1 : 0.6,
+              // opacity: traffic?.is_fresh ? 1 : 0.6,
             }}
           >
             <ArrowDownwardRounded
               {...iconStyle}
-              color={
-                (traffic?.raw?.down_rate || 0) > 0 ? "primary" : "disabled"
-              }
+              color={(traffic?.down || 0) > 0 ? "primary" : "disabled"}
             />
             <Typography {...valStyle} color="primary">
               {down}
@@ -155,15 +124,15 @@ export const LayoutTraffic = () => {
 
           {displayMemory && (
             <Box
-              title={`${t(isDebug ? "Memory Cleanup" : "Memory Usage")} ${memory?.is_fresh ? "" : "(Stale)"} ${"usage_percent" in (memory?.formatted || {}) && memory.formatted.usage_percent ? `(${memory.formatted.usage_percent.toFixed(1)}%)` : ""}`}
+              title={`${t("Memory Usage")} `}
               {...boxStyle}
               sx={{
-                cursor: isDebug ? "pointer" : "auto",
-                opacity: memory?.is_fresh ? 1 : 0.6,
+                cursor: "auto",
+                // opacity: memory?.is_fresh ? 1 : 0.6,
               }}
-              color={isDebug ? "success.main" : "disabled"}
+              color={"disabled"}
               onClick={async () => {
-                isDebug && (await gc());
+                // isDebug && (await gc());
               }}
             >
               <MemoryRounded {...iconStyle} />

@@ -1,9 +1,6 @@
 use crate::{
     config::{Config, IVerge},
     core::handle,
-    ipc::IpcManager,
-    logging,
-    utils::logging::Type,
 };
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -26,7 +23,7 @@ pub async fn toggle_system_proxy() {
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
     if enable
         && auto_close_connection
-        && let Err(err) = IpcManager::global().close_all_connections().await
+        && let Err(err) = handle::Handle::mihomo().await.close_all_connections().await
     {
         log::error!(target: "app", "Failed to close all connections: {err}");
     }
@@ -78,14 +75,7 @@ pub async fn copy_clash_env() {
             .unwrap_or_else(|| "127.0.0.1".to_string()),
     };
 
-    let Some(app_handle) = handle::Handle::global().app_handle() else {
-        logging!(
-            error,
-            Type::System,
-            "Failed to get app handle for proxy operation"
-        );
-        return;
-    };
+    let app_handle = handle::Handle::app_handle();
     let port = {
         Config::verge()
             .await

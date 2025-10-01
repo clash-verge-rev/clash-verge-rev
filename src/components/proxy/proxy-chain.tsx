@@ -37,11 +37,11 @@ import useSWR from "swr";
 
 import { useAppData } from "@/providers/app-data-provider";
 import {
-  closeAllConnections,
-  getProxies,
+  calcuProxies,
   updateProxyAndSync,
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 interface ProxyChainItem {
   id: string;
@@ -204,7 +204,7 @@ export const ProxyChain = ({
   // 获取当前代理信息以检查连接状态
   const { data: currentProxies, mutate: mutateProxies } = useSWR(
     "getProxies",
-    getProxies,
+    calcuProxies,
     {
       revalidateOnFocus: true,
       revalidateIfStale: true,

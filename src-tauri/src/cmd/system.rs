@@ -28,9 +28,7 @@ pub async fn export_diagnostic_info() -> CmdResult<()> {
     let sysinfo = PlatformSpecification::new_sync();
     let info = format!("{sysinfo:?}");
 
-    let app_handle = handle::Handle::global()
-        .app_handle()
-        .ok_or("Failed to get app handle")?;
+    let app_handle = handle::Handle::app_handle();
     let cliboard = app_handle.clipboard();
     if cliboard.write_text(info).is_err() {
         logging!(error, Type::System, "Failed to write to clipboard");

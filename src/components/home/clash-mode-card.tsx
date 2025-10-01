@@ -10,8 +10,8 @@ import { useTranslation } from "react-i18next";
 
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
-import { closeAllConnections } from "@/services/cmds";
 import { patchClashMode } from "@/services/cmds";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 export const ClashModeCard = () => {
   const { t } = useTranslation();

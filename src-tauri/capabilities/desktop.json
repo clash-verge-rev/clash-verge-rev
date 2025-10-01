@@ -24,6 +24,7 @@
     {
       "identifier": "http:default",
       "allow": [{ "url": "https://*/*" }, { "url": "http://*/*" }]
-    }
+    },
+    "mihomo:default"
   ]
 }

@@ -1,4 +1,4 @@
-import { cmdGetProxyDelay } from "@/services/cmds";
+import { delayProxyByName } from "tauri-plugin-mihomo-api";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
@@ -106,7 +106,7 @@ class DelayManager {
 
       // 使用Promise.race来实现超时控制
       const result = await Promise.race([
-        cmdGetProxyDelay(name, timeout, url),
+        delayProxyByName(name, url, timeout),
         timeoutPromise,
       ]);
 

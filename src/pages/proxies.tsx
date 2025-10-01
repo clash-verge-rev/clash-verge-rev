@@ -9,12 +9,11 @@ import { ProviderButton } from "@/components/proxy/provider-button";
 import { ProxyGroups } from "@/components/proxy/proxy-groups";
 import { useVerge } from "@/hooks/use-verge";
 import {
-  closeAllConnections,
-  getClashConfig,
   getRuntimeProxyChainConfig,
   patchClashMode,
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
+import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
 
 const ProxyPage = () => {
   const { t } = useTranslation();
@@ -33,7 +32,7 @@ const ProxyPage = () => {
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
-    getClashConfig,
+    getBaseConfig,
     {
       revalidateOnFocus: false,
       revalidateIfStale: true,

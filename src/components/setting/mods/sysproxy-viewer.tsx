@@ -11,13 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from "react";
+import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
 
@@ -27,7 +21,6 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
-import { getClashConfig } from "@/services/cmds";
 import {
   getAutotemProxy,
   getNetworkInterfacesInfo,
@@ -37,6 +30,7 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
+import { getBaseConfig } from "tauri-plugin-mihomo-api";
 
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
@@ -123,26 +117,21 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     return "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
   };
 
-  const { data: clashConfig } = useSWR("getClashConfig", getClashConfig, {
+  const { data: clashConfig } = useSWR("getClashConfig", getBaseConfig, {
     revalidateOnFocus: false,
     revalidateIfStale: true,
     dedupingInterval: 1000,
     errorRetryInterval: 5000,
   });
 
-  const [prevMixedPort, setPrevMixedPort] = useState(
-    clashConfig?.["mixed-port"],
-  );
+  const [prevMixedPort, setPrevMixedPort] = useState(clashConfig?.mixedPort);
 
-  useEffect(() => {
-    if (
-      clashConfig?.["mixed-port"] &&
-      clashConfig?.["mixed-port"] !== prevMixedPort
-    ) {
-      setPrevMixedPort(clashConfig?.["mixed-port"]);
-      resetSystemProxy();
-    }
-  }, [clashConfig?.["mixed-port"]]);
+  // useEffect(() => {
+  //   if (clashConfig?.mixedPort && clashConfig.mixedPort !== prevMixedPort) {
+  //     setPrevMixedPort(clashConfig.mixedPort);
+  //     resetSystemProxy();
+  //   }
+  // }, [clashConfig]);
 
   const resetSystemProxy = async () => {
     try {
@@ -180,7 +169,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
     if (isPacMode) {
       const host = value.proxy_host || "127.0.0.1";
-      const port = verge?.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+      const port = verge?.verge_mixed_port || clashConfig.mixedPort || 7897;
       return `${host}:${port}`;
     } else {
       return systemProxyAddress;
@@ -332,7 +321,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (pacContent) {
       pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host);
       // 将 mixed-port 转换为字符串
-      const mixedPortStr = (clashConfig?.["mixed-port"] || "").toString();
+      const mixedPortStr = (clashConfig?.mixedPort || "").toString();
       pacContent = pacContent.replace(/%mixed-port%/g, mixedPortStr);
     }
 

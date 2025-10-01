@@ -2,7 +2,6 @@ use crate::utils::window_manager::WindowManager;
 use crate::{
     config::Config,
     core::{CoreManager, handle, sysopt},
-    ipc::IpcManager,
     logging,
     module::lightweight,
     utils::logging::Type,
@@ -25,18 +24,11 @@ pub async fn quit() {
     logging!(debug, Type::System, true, "启动退出流程");
 
     // 获取应用句柄并设置退出标志
-    let Some(app_handle) = handle::Handle::global().app_handle() else {
-        logging!(
-            error,
-            Type::System,
-            "Failed to get app handle for quit operation"
-        );
-        return;
-    };
+    let app_handle = handle::Handle::app_handle();
     handle::Handle::global().set_is_exiting();
 
     // 优先关闭窗口，提供立即反馈
-    if let Some(window) = handle::Handle::global().get_window() {
+    if let Some(window) = handle::Handle::get_window() {
         let _ = window.hide();
         log::info!(target: "app", "窗口已隐藏");
     }
@@ -70,7 +62,9 @@ async fn clean_async() -> bool {
         let disable_tun = serde_json::json!({"tun": {"enable": false}});
         match timeout(
             Duration::from_secs(3),
-            IpcManager::global().patch_configs(disable_tun),
+            handle::Handle::mihomo()
+                .await
+                .patch_base_config(&disable_tun),
         )
         .await
         {
@@ -216,7 +210,7 @@ pub async fn hide() {
         add_light_weight_timer().await;
     }
 
-    if let Some(window) = handle::Handle::global().get_window()
+    if let Some(window) = handle::Handle::get_window()
         && window.is_visible().unwrap_or(false)
     {
         let _ = window.hide();

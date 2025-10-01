@@ -3,7 +3,7 @@ import useSWR, { mutate } from "swr";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
 import { getAutotemProxy } from "@/services/cmds";
-import { closeAllConnections } from "@/services/cmds";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 // 系统代理状态检测统一逻辑
 export const useSystemProxyState = () => {

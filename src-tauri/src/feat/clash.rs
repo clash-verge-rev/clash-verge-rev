@@ -1,7 +1,6 @@
 use crate::{
     config::Config,
     core::{CoreManager, handle, tray},
-    ipc::IpcManager,
     logging_error,
     process::AsyncHandler,
     utils::{logging::Type, resolve},
@@ -27,30 +26,18 @@ pub async fn restart_app() {
     // logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
     resolve::resolve_reset_async().await;
 
-    handle::Handle::global()
-        .app_handle()
-        .map(|app_handle| {
-            app_handle.restart();
-        })
-        .unwrap_or_else(|| {
-            logging_error!(
-                Type::System,
-                false,
-                "{}",
-                "Failed to get app handle for restart"
-            );
-        });
+    let app_handle = handle::Handle::app_handle();
+    app_handle.restart();
 }
 
 fn after_change_clash_mode() {
     AsyncHandler::spawn(move || async {
-        match IpcManager::global().get_connections().await {
+        let mihomo = handle::Handle::mihomo().await;
+        match mihomo.get_connections().await {
             Ok(connections) => {
-                if let Some(connections_array) = connections["connections"].as_array() {
+                if let Some(connections_array) = connections.connections {
                     for connection in connections_array {
-                        if let Some(id) = connection["id"].as_str() {
-                            let _ = IpcManager::global().delete_connection(id).await;
-                        }
+                        let _ = mihomo.close_connection(&connection.id).await;
                     }
                 }
             }
@@ -70,7 +57,11 @@ pub async fn change_clash_mode(mode: String) {
         "mode": mode
     });
     log::debug!(target: "app", "change clash mode to {mode}");
-    match IpcManager::global().patch_configs(json_value).await {
+    match handle::Handle::mihomo()
+        .await
+        .patch_base_config(&json_value)
+        .await
+    {
         Ok(_) => {
             // 更新订阅
             Config::clash().await.data_mut().patch_config(mapping);
@@ -80,11 +71,7 @@ pub async fn change_clash_mode(mode: String) {
             if clash_data.save_config().await.is_ok() {
                 handle::Handle::refresh_clash();
                 logging_error!(Type::Tray, true, tray::Tray::global().update_menu().await);
-                logging_error!(
-                    Type::Tray,
-                    true,
-                    tray::Tray::global().update_icon(None).await
-                );
+                logging_error!(Type::Tray, true, tray::Tray::global().update_icon().await);
             }
 
             let is_auto_close_connection = Config::verge()

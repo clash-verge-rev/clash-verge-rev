@@ -10,8 +10,8 @@ import {
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 
-import { deleteConnection } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
+import { closeConnections } from "tauri-plugin-mihomo-api";
 
 const Tag = styled("span")(({ theme }) => ({
   fontSize: "10px",
@@ -34,7 +34,7 @@ export const ConnectionItem = (props: Props) => {
 
   const { id, metadata, chains, start, curUpload, curDownload } = value;
 
-  const onDelete = useLockFn(async () => deleteConnection(id));
+  const onDelete = useLockFn(async () => closeConnections(id));
   const showTraffic = curUpload! >= 100 || curDownload! >= 100;
 
   return (

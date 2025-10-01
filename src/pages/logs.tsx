@@ -3,7 +3,6 @@ import {
   PauseCircleOutlineRounded,
 } from "@mui/icons-material";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
-import { useLocalStorage } from "foxact/use-local-storage";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
@@ -14,26 +13,22 @@ import { SearchState } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import LogItem from "@/components/log/log-item";
 import { LogLevel } from "@/hooks/use-log-data";
-import {
-  useGlobalLogData,
-  clearGlobalLogs,
-  changeLogLevel,
-  toggleLogEnabled,
-} from "@/services/global-log-service";
-import { useEnableLog } from "@/services/states";
-
-// 后端通过 /logs?level={level} 进行筛选，前端不再需要手动筛选日志级别
+import { toggleLogEnabled } from "@/services/global-log-service";
+import { useClashLog } from "@/services/states";
+import { useLogData } from "@/hooks/use-log-data-new";
 
 const LogPage = () => {
   const { t } = useTranslation();
-  const [enableLog, setEnableLog] = useEnableLog();
-  const [logLevel, setLogLevel] = useLocalStorage<LogLevel>(
-    "log:log-level",
-    "info",
-  );
+  const [clashLog, setClashLog] = useClashLog();
+  const enableLog = clashLog.enable;
+  const logState = clashLog.logFilter;
+
   const [match, setMatch] = useState(() => (_: string) => true);
-  const logData = useGlobalLogData("all");
   const [searchState, setSearchState] = useState<SearchState>();
+  const {
+    response: { data: logData },
+    refreshGetClashLog,
+  } = useLogData();
 
   const filterLogs = useMemo(() => {
     if (!logData || logData.length === 0) {
@@ -49,18 +44,21 @@ const LogPage = () => {
 
       const matchesSearch = match(searchText);
 
-      return matchesSearch;
+      return (
+        (logState == "all" ? true : data.type.includes(logState)) &&
+        matchesSearch
+      );
     });
-  }, [logData, match]);
+  }, [logData, logState, match]);
 
-  const handleLogLevelChange = (newLevel: LogLevel) => {
-    setLogLevel(newLevel);
-    changeLogLevel(newLevel);
+  const handleLogLevelChange = (newLevel: string) => {
+    setClashLog((pre: any) => ({ ...pre, logFilter: newLevel }));
+    // changeLogLevel(newLevel);
   };
 
   const handleToggleLog = async () => {
     await toggleLogEnabled();
-    setEnableLog(!enableLog);
+    setClashLog((pre: any) => ({ ...pre, enable: !enableLog }));
   };
 
   return (
@@ -92,7 +90,8 @@ const LogPage = () => {
             size="small"
             variant="contained"
             onClick={() => {
-              clearGlobalLogs();
+              refreshGetClashLog(true);
+              // clearGlobalLogs();
             }}
           >
             {t("Clear")}
@@ -111,13 +110,13 @@ const LogPage = () => {
         }}
       >
         <BaseStyledSelect
-          value={logLevel}
+          value={logState}
           onChange={(e) => handleLogLevelChange(e.target.value as LogLevel)}
         >
           <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="debug">DEBUG</MenuItem>
-          <MenuItem value="info">INFO</MenuItem>
-          <MenuItem value="warning">WARNING</MenuItem>
+          <MenuItem value="inf">INFO</MenuItem>
+          <MenuItem value="warn">WARN</MenuItem>
           <MenuItem value="error">ERROR</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox

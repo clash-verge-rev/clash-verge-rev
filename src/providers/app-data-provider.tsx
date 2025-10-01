@@ -12,19 +12,17 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { useVisibility } from "@/hooks/use-visibility";
 import {
-  forceRefreshProxies,
   getAppUptime,
-  getClashConfig,
-  getConnections,
-  getMemoryData,
-  getProxies,
-  getProxyProviders,
-  getRuleProviders,
-  getRules,
+  calcuProxies,
+  calcuProxyProviders,
   getRunningMode,
   getSystemProxy,
-  getTrafficData,
 } from "@/services/cmds";
+import {
+  getBaseConfig,
+  getRuleProviders,
+  getRules,
+} from "tauri-plugin-mihomo-api";
 
 // 连接速度计算接口
 interface ConnectionSpeedData {
@@ -49,14 +47,14 @@ interface AppDataContextType {
   uptime: number;
   proxyProviders: any;
   ruleProviders: any;
-  connections: {
-    data: ConnectionWithSpeed[];
-    count: number;
-    uploadTotal: number;
-    downloadTotal: number;
-  };
-  traffic: { up: number; down: number };
-  memory: { inuse: number };
+  // connections: {
+  //   data: ConnectionWithSpeed[];
+  //   count: number;
+  //   uploadTotal: number;
+  //   downloadTotal: number;
+  // };
+  // traffic: { up: number; down: number };
+  // memory: { inuse: number };
   systemProxyAddress: string;
 
   refreshProxy: () => Promise<any>;
@@ -130,7 +128,7 @@ export const AppDataProvider = ({
   // 基础数据 - 中频率更新 (5秒)
   const { data: proxiesData, mutate: refreshProxy } = useSWR(
     "getProxies",
-    getProxies,
+    calcuProxies,
     {
       refreshInterval: 5000,
       revalidateOnFocus: true,
@@ -165,21 +163,6 @@ export const AppDataProvider = ({
 
           lastProfileId = newProfileId;
           lastUpdateTime = now;
-
-          setTimeout(() => {
-            // 先执行 forceRefreshProxies，完成后稍延迟再刷新前端数据，避免页面一直 loading
-            forceRefreshProxies()
-              .catch((e) =>
-                console.warn("[AppDataProvider] forceRefreshProxies 失败:", e),
-              )
-              .finally(() => {
-                setTimeout(() => {
-                  refreshProxy().catch((e) =>
-                    console.warn("[AppDataProvider] 普通刷新也失败:", e),
-                  );
-                }, 200); // 200ms 延迟，保证后端缓存已清理
-              });
-          }, 0);
         });
 
         // 监听Clash配置刷新事件(enhance操作等)
@@ -194,18 +177,6 @@ export const AppDataProvider = ({
               try {
                 console.log("[AppDataProvider] Clash刷新 - 强制刷新代理缓存");
 
-                // 添加超时保护
-                const refreshPromise = Promise.race([
-                  forceRefreshProxies(),
-                  new Promise((_, reject) =>
-                    setTimeout(
-                      () => reject(new Error("forceRefreshProxies timeout")),
-                      8000,
-                    ),
-                  ),
-                ]);
-
-                await refreshPromise;
                 await refreshProxy();
               } catch (error) {
                 console.error(
@@ -236,29 +207,6 @@ export const AppDataProvider = ({
           }
         };
 
-        // 监听强制代理刷新事件(托盘代理切换立即刷新)
-        const handleForceRefreshProxies = () => {
-          console.log("[AppDataProvider] 强制代理刷新事件");
-
-          // 立即刷新，无延迟，无防抖
-          forceRefreshProxies()
-            .then(() => {
-              console.log("[AppDataProvider] 强制刷新代理缓存完成");
-              // 强制刷新完成后，立即刷新前端显示
-              return refreshProxy();
-            })
-            .then(() => {
-              console.log("[AppDataProvider] 前端代理数据刷新完成");
-            })
-            .catch((e) => {
-              console.warn("[AppDataProvider] 强制代理刷新失败:", e);
-              // 如果强制刷新失败，尝试普通刷新
-              refreshProxy().catch((e2) =>
-                console.warn("[AppDataProvider] 普通代理刷新也失败:", e2),
-              );
-            });
-        };
-
         // 使用 Tauri 事件监听器替代 window 事件监听器
         const setupTauriListeners = async () => {
           try {
@@ -270,15 +218,10 @@ export const AppDataProvider = ({
               "verge://refresh-proxy-config",
               handleRefreshProxy,
             );
-            const unlistenForceRefresh = await listen(
-              "verge://force-refresh-proxies",
-              handleForceRefreshProxies,
-            );
 
             return () => {
               unlistenClash();
               unlistenProxy();
-              unlistenForceRefresh();
             };
           } catch (error) {
             console.warn("[AppDataProvider] 设置 Tauri 事件监听器失败:", error);
@@ -292,10 +235,6 @@ export const AppDataProvider = ({
               "verge://refresh-proxy-config",
               handleRefreshProxy,
             );
-            window.addEventListener(
-              "verge://force-refresh-proxies",
-              handleForceRefreshProxies,
-            );
 
             return () => {
               window.removeEventListener(
@@ -305,10 +244,6 @@ export const AppDataProvider = ({
               window.removeEventListener(
                 "verge://refresh-proxy-config",
                 handleRefreshProxy,
-              );
-              window.removeEventListener(
-                "verge://force-refresh-proxies",
-                handleForceRefreshProxies,
               );
             };
           }
@@ -336,7 +271,7 @@ export const AppDataProvider = ({
 
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
     "getClashConfig",
-    getClashConfig,
+    getBaseConfig,
     {
       refreshInterval: 60000, // 60秒刷新间隔，减少频繁请求
       revalidateOnFocus: false,
@@ -348,7 +283,7 @@ export const AppDataProvider = ({
   // 提供者数据
   const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
     "getProxyProviders",
-    getProxyProviders,
+    calcuProxyProviders,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -398,86 +333,93 @@ export const AppDataProvider = ({
 
   // 高频率更新数据 (2秒)
   const { data: uptimeData } = useSWR("appUptime", getAppUptime, {
-    refreshInterval: 2000,
+    // TODO: 运行时间
+    refreshInterval: 20000,
     revalidateOnFocus: false,
     suspense: false,
   });
 
   // 连接数据 - 使用IPC轮询更新并计算速度
-  const {
-    data: connectionsData = {
-      connections: [],
-      uploadTotal: 0,
-      downloadTotal: 0,
-    },
-  } = useSWR(
-    clashInfo && pageVisible ? "getConnections" : null,
-    async () => {
-      const data = await getConnections();
-      const rawConnections: IConnectionsItem[] = data.connections || [];
+  // const {
+  //   data: connectionsData = {
+  //     connections: [],
+  //     uploadTotal: 0,
+  //     downloadTotal: 0,
+  //   },
+  // } = useSWR(
+  //   clashInfo && pageVisible ? "getConnections" : null,
+  //   async () => {
+  //     const data = await getConnections();
+  //     const rawConnections =
+  //       data.connections?.map((item) => {
+  //         // TODO: transform bigint to number
+  //         return { ...item, upload: 0, download: 0 } as IConnectionsItem;
+  //       }) || [];
 
-      // 计算带速度的连接数据
-      const connectionsWithSpeed = calculateConnectionSpeeds(rawConnections);
+  //     // 计算带速度的连接数据
+  //     const connectionsWithSpeed = calculateConnectionSpeeds(rawConnections);
 
-      // 更新上一次数据的引用
-      const currentMap = new Map<string, ConnectionSpeedData>();
-      const now = Date.now();
-      rawConnections.forEach((conn) => {
-        currentMap.set(conn.id, {
-          id: conn.id,
-          upload: conn.upload,
-          download: conn.download,
-          timestamp: now,
-        });
-      });
-      previousConnectionsRef.current = currentMap;
+  //     // 更新上一次数据的引用
+  //     const currentMap = new Map<string, ConnectionSpeedData>();
+  //     const now = Date.now();
+  //     rawConnections.forEach((conn) => {
+  //       currentMap.set(conn.id, {
+  //         id: conn.id,
+  //         upload: conn.upload,
+  //         download: conn.download,
+  //         timestamp: now,
+  //       });
+  //     });
+  //     previousConnectionsRef.current = currentMap;
 
-      return {
-        connections: connectionsWithSpeed,
-        uploadTotal: data.uploadTotal || 0,
-        downloadTotal: data.downloadTotal || 0,
-      };
-    },
-    {
-      refreshInterval: 1000, // 1秒刷新一次
-      fallbackData: { connections: [], uploadTotal: 0, downloadTotal: 0 },
-      keepPreviousData: true,
-      onError: (error) => {
-        console.error("[Connections] IPC 获取数据错误:", error);
-      },
-    },
-  );
+  //     return {
+  //       connections: connectionsWithSpeed,
+  //       uploadTotal: data.uploadTotal || 0,
+  //       downloadTotal: data.downloadTotal || 0,
+  //     };
+  //   },
+  //   {
+  //     refreshInterval: 1000, // 1秒刷新一次
+  //     fallbackData: { connections: [], uploadTotal: 0, downloadTotal: 0 },
+  //     keepPreviousData: true,
+  //     onError: (error) => {
+  //       console.error("[Connections] IPC 获取数据错误:", error);
+  //     },
+  //   },
+  // );
 
   // 流量数据 - 使用IPC轮询更新
-  const { data: trafficData = { up: 0, down: 0 } } = useSWR(
-    clashInfo && pageVisible ? "getTrafficData" : null,
-    getTrafficData,
-    {
-      refreshInterval: 1000, // 1秒刷新一次
-      fallbackData: { up: 0, down: 0 },
-      keepPreviousData: true,
-      onSuccess: () => {
-        // console.log("[Traffic][AppDataProvider] IPC 获取到流量数据:", data);
-      },
-      onError: (error) => {
-        console.error("[Traffic][AppDataProvider] IPC 获取数据错误:", error);
-      },
-    },
-  );
+  // const trafficData = { up: 0, down: 0 };
+  // const { data: trafficData = { up: 0, down: 0 } } = useSWR(
+  //   clashInfo && pageVisible ? "getTrafficData" : null,
+  //   getTrafficData,
+  //   {
+  //     refreshInterval: 1000, // 1秒刷新一次
+  //     fallbackData: { up: 0, down: 0 },
+  //     keepPreviousData: true,
+  //     onSuccess: () => {
+  //       // console.log("[Traffic][AppDataProvider] IPC 获取到流量数据:", data);
+  //     },
+  //     onError: (error) => {
+  //       console.error("[Traffic][AppDataProvider] IPC 获取数据错误:", error);
+  //     },
+  //   },
+  // );
 
   // 内存数据 - 使用IPC轮询更新
-  const { data: memoryData = { inuse: 0 } } = useSWR(
-    clashInfo && pageVisible ? "getMemoryData" : null,
-    getMemoryData,
-    {
-      refreshInterval: 2000, // 2秒刷新一次
-      fallbackData: { inuse: 0 },
-      keepPreviousData: true,
-      onError: (error) => {
-        console.error("[Memory] IPC 获取数据错误:", error);
-      },
-    },
-  );
+  // const memoryData = { inuse: 0 };
+  // const { data: memoryData = { inuse: 0 } } = useSWR(
+  //   clashInfo && pageVisible ? "getMemoryData" : null,
+  //   getMemoryData,
+  //   {
+  //     refreshInterval: 2000, // 2秒刷新一次
+  //     fallbackData: { inuse: 0 },
+  //     keepPreviousData: true,
+  //     onError: (error) => {
+  //       console.error("[Memory] IPC 获取数据错误:", error);
+  //     },
+  //   },
+  // );
 
   // 提供统一的刷新方法
   const refreshAll = React.useCallback(async () => {
@@ -510,7 +452,7 @@ export const AppDataProvider = ({
         // PAC模式：显示我们期望设置的代理地址
         const proxyHost = verge.proxy_host || "127.0.0.1";
         const proxyPort =
-          verge.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+          verge.verge_mixed_port || clashConfig.mixedPort || 7897;
         return `${proxyHost}:${proxyPort}`;
       } else {
         // HTTP代理模式：优先使用系统地址，但如果格式不正确则使用期望地址
@@ -525,7 +467,7 @@ export const AppDataProvider = ({
           // 系统地址无效，返回期望的代理地址
           const proxyHost = verge.proxy_host || "127.0.0.1";
           const proxyPort =
-            verge.verge_mixed_port || clashConfig["mixed-port"] || 7897;
+            verge.verge_mixed_port || clashConfig.mixedPort || 7897;
           return `${proxyHost}:${proxyPort}`;
         }
       }
@@ -535,26 +477,26 @@ export const AppDataProvider = ({
       // 数据
       proxies: proxiesData,
       clashConfig,
-      rules: rulesData || [],
+      rules: rulesData?.rules || [],
       sysproxy,
       runningMode,
       uptime: uptimeData || 0,
 
       // 提供者数据
       proxyProviders: proxyProviders || {},
-      ruleProviders: ruleProviders || {},
+      ruleProviders: ruleProviders?.providers || {},
 
       // 连接数据
-      connections: {
-        data: connectionsData.connections || [],
-        count: connectionsData.connections?.length || 0,
-        uploadTotal: connectionsData.uploadTotal || 0,
-        downloadTotal: connectionsData.downloadTotal || 0,
-      },
+      // connections: {
+      //   data: connectionsData.connections || [],
+      //   count: connectionsData.connections?.length || 0,
+      //   uploadTotal: connectionsData.uploadTotal || 0,
+      //   downloadTotal: connectionsData.downloadTotal || 0,
+      // },
 
       // 实时流量数据
-      traffic: trafficData,
-      memory: memoryData,
+      // traffic: trafficData,
+      // memory: memoryData,
 
       systemProxyAddress: calculateSystemProxyAddress(),
 
@@ -574,9 +516,9 @@ export const AppDataProvider = ({
     sysproxy,
     runningMode,
     uptimeData,
-    connectionsData,
-    trafficData,
-    memoryData,
+    // connectionsData,
+    // trafficData,
+    // memoryData,
     proxyProviders,
     ruleProviders,
     verge,
@@ -589,9 +531,7 @@ export const AppDataProvider = ({
     refreshAll,
   ]);
 
-  return (
-    <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
-  );
+  return <AppDataContext value={value}>{children}</AppDataContext>;
 };
 
 // 自定义Hook访问全局数据

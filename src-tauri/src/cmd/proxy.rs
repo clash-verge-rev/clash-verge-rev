@@ -3,57 +3,60 @@ use tauri::Emitter;
 use super::CmdResult;
 use crate::{
     cache::CacheProxy,
-    core::{handle::Handle, tray::Tray},
-    ipc::IpcManager,
+    core::{
+        handle::{self, Handle},
+        tray::Tray,
+    },
     logging,
     utils::logging::Type,
 };
-use std::time::Duration;
+// use std::time::Duration;
 
-const PROXIES_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
-const PROVIDERS_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
+// const PROXIES_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
+// const PROVIDERS_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
 
-#[tauri::command]
-pub async fn get_proxies() -> CmdResult<serde_json::Value> {
-    let cache = CacheProxy::global();
-    let key = CacheProxy::make_key("proxies", "default");
-    let value = cache
-        .get_or_fetch(key, PROXIES_REFRESH_INTERVAL, || async {
-            let manager = IpcManager::global();
-            manager.get_proxies().await.unwrap_or_else(|e| {
-                logging!(error, Type::Cmd, "Failed to fetch proxies: {e}");
-                serde_json::Value::Object(serde_json::Map::new())
-            })
-        })
-        .await;
-    Ok((*value).clone())
-}
+// #[tauri::command]
+// pub async fn get_proxies() -> CmdResult<serde_json::Value> {
+//     let cache = CacheProxy::global();
+//     let key = CacheProxy::make_key("proxies", "default");
+//     let value = cache
+//         .get_or_fetch(key, PROXIES_REFRESH_INTERVAL, || async {
+//             let manager = IpcManager::global();
+//             manager.get_proxies().await.unwrap_or_else(|e| {
+//                 logging!(error, Type::Cmd, "Failed to fetch proxies: {e}");
+//                 serde_json::Value::Object(serde_json::Map::new())
+//             })
+//         })
+//         .await;
+//     Ok((*value).clone())
+// }
 
 /// 强制刷新代理缓存用于profile切换
-#[tauri::command]
-pub async fn force_refresh_proxies() -> CmdResult<serde_json::Value> {
-    let cache = CacheProxy::global();
-    let key = CacheProxy::make_key("proxies", "default");
-    cache.map.remove(&key);
-    get_proxies().await
-}
+// #[tauri::command]
+// pub async fn force_refresh_proxies() -> CmdResult<serde_json::Value> {
+//     let cache = CacheProxy::global();
+//     let key = CacheProxy::make_key("proxies", "default");
+//     cache.map.remove(&key);
+//     get_proxies().await
+// }
 
-#[tauri::command]
-pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
-    let cache = CacheProxy::global();
-    let key = CacheProxy::make_key("providers", "default");
-    let value = cache
-        .get_or_fetch(key, PROVIDERS_REFRESH_INTERVAL, || async {
-            let manager = IpcManager::global();
-            manager.get_providers_proxies().await.unwrap_or_else(|e| {
-                logging!(error, Type::Cmd, "Failed to fetch provider proxies: {e}");
-                serde_json::Value::Object(serde_json::Map::new())
-            })
-        })
-        .await;
-    Ok((*value).clone())
-}
+// #[tauri::command]
+// pub async fn get_providers_proxies() -> CmdResult<serde_json::Value> {
+//     let cache = CacheProxy::global();
+//     let key = CacheProxy::make_key("providers", "default");
+//     let value = cache
+//         .get_or_fetch(key, PROVIDERS_REFRESH_INTERVAL, || async {
+//             let manager = IpcManager::global();
+//             manager.get_providers_proxies().await.unwrap_or_else(|e| {
+//                 logging!(error, Type::Cmd, "Failed to fetch provider proxies: {e}");
+//                 serde_json::Value::Object(serde_json::Map::new())
+//             })
+//         })
+//         .await;
+//     Ok((*value).clone())
+// }
 
+// TODO: 前端通过 emit 发送更新事件, tray 监听更新事件
 /// 同步托盘和GUI的代理选择状态
 #[tauri::command]
 pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
@@ -74,7 +77,11 @@ pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
 /// 更新代理选择并同步托盘和GUI状态
 #[tauri::command]
 pub async fn update_proxy_and_sync(group: String, proxy: String) -> CmdResult<()> {
-    match IpcManager::global().update_proxy(&group, &proxy).await {
+    match handle::Handle::mihomo()
+        .await
+        .select_node_for_group(&group, &proxy)
+        .await
+    {
         Ok(_) => {
             // println!("Proxy updated successfully: {} -> {}", group,proxy);
             logging!(
@@ -93,10 +100,8 @@ pub async fn update_proxy_and_sync(group: String, proxy: String) -> CmdResult<()
                 logging!(error, Type::Cmd, "Failed to sync tray menu: {}", e);
             }
 
-            if let Some(app_handle) = Handle::global().app_handle() {
-                let _ = app_handle.emit("verge://force-refresh-proxies", ());
-                let _ = app_handle.emit("verge://refresh-proxy-config", ());
-            }
+            let app_handle = Handle::app_handle();
+            let _ = app_handle.emit("verge://refresh-proxy-config", ());
 
             logging!(
                 info,

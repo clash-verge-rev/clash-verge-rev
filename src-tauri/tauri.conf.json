@@ -49,8 +49,11 @@
     "security": {
       "capabilities": ["desktop-capability", "migrated"],
       "assetProtocol": {
-        "scope": ["$APPDATA/**", "$RESOURCE/../**", "**"],
-        "enable": true
+        "enable": true,
+        "scope": {
+          "allow": ["**"],
+          "requireLiteralLeadingDot": false
+        }
       },
       "csp": null
     }

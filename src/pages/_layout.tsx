@@ -19,8 +19,7 @@ import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useI18n } from "@/hooks/use-i18n";
 import { useVerge } from "@/hooks/use-verge";
 import { getAxios } from "@/services/api";
-import { forceRefreshClashConfig } from "@/services/cmds";
-import { useThemeMode, useEnableLog } from "@/services/states";
+import { useClashLog, useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
 import { routers } from "./_routers";
@@ -33,13 +32,16 @@ import { useListen } from "@/hooks/use-listen";
 import { listen } from "@tauri-apps/api/event";
 
 import { useClashInfo } from "@/hooks/use-clash";
-import { initGlobalLogService } from "@/services/global-log-service";
 
 import { invoke } from "@tauri-apps/api/core";
 
 import { showNotice } from "@/services/noticeService";
 import { NoticeManager } from "@/components/base/NoticeManager";
 import { LogLevel } from "@/hooks/use-log-data";
+import { useMemoryData } from "@/hooks/use-memory-data";
+import { useTrafficData } from "@/hooks/use-traffic-data";
+import { useConnectionData } from "@/hooks/use-connection-data";
+import { useLogData } from "@/hooks/use-log-data-new";
 
 const appWindow = getCurrentWebviewWindow();
 export const portableFlag = false;
@@ -157,14 +159,20 @@ const handleNoticeMessage = (
 };
 
 const Layout = () => {
+  useTrafficData();
+  useMemoryData();
+  useConnectionData();
+  useLogData();
   const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
   const { verge } = useVerge();
   const { clashInfo } = useClashInfo();
-  const [enableLog] = useEnableLog();
-  const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
+  const [clashLog] = useClashLog();
+  const enableLog = clashLog.enable;
+  const logLevel = clashLog.logLevel;
+  // const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
   const { language, start_page } = verge ?? {};
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
@@ -193,19 +201,17 @@ const Layout = () => {
   );
 
   // 初始化全局日志服务
-  useEffect(() => {
-    if (clashInfo) {
-      initGlobalLogService(enableLog, logLevel);
-    }
-  }, [clashInfo, enableLog, logLevel]);
+  // useEffect(() => {
+  //   if (clashInfo) {
+  //     initGlobalLogService(enableLog, logLevel);
+  //   }
+  // }, [clashInfo, enableLog, logLevel]);
 
   // 设置监听器
   useEffect(() => {
     const listeners = [
       addListener("verge://refresh-clash-config", async () => {
         await getAxios(true);
-        // 后端配置变更事件触发，强制刷新配置缓存
-        await forceRefreshClashConfig();
         mutate("getProxies");
         mutate("getVersion");
         mutate("getClashConfig");

@@ -3,22 +3,20 @@ import { useCallback, useMemo } from "react";
 
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
+import { updateProxyAndSync, syncTrayProxySelection } from "@/services/cmds";
 import {
-  updateProxy,
-  updateProxyAndSync,
-  forceRefreshProxies,
-  syncTrayProxySelection,
+  closeConnections,
   getConnections,
-  deleteConnection,
-} from "@/services/cmds";
+  selectNodeForGroup,
+} from "tauri-plugin-mihomo-api";
 
 // 缓存连接清理
 const cleanupConnections = async (previousProxy: string) => {
   try {
     const { connections } = await getConnections();
-    const cleanupPromises = connections
+    const cleanupPromises = (connections ?? [])
       .filter((conn) => conn.chains.includes(previousProxy))
-      .map((conn) => deleteConnection(conn.id));
+      .map((conn) => closeConnections(conn.id));
 
     if (cleanupPromises.length > 0) {
       await Promise.allSettled(cleanupPromises);
@@ -98,8 +96,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         );
 
         try {
-          await updateProxy(groupName, proxyName);
-          await forceRefreshProxies();
+          await selectNodeForGroup(groupName, proxyName);
           await syncTrayProxySelection();
           onSuccess?.();
           console.log(

@@ -21,6 +21,7 @@ import {
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
+import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -89,4 +90,10 @@ window.addEventListener("error", (event) => {
 
 window.addEventListener("unhandledrejection", (event) => {
   console.error("[main.tsx] 未处理的Promise拒绝:", event.reason);
+});
+
+// 页面关闭/刷新事件
+window.addEventListener("beforeunload", async () => {
+  // 强制清理所有 WebSocket 实例, 防止内存泄漏
+  await MihomoWebSocket.cleanupAll();
 });

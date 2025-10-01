@@ -3,29 +3,21 @@ import {
   Snackbar,
   Alert,
   Chip,
-  Stack,
   Typography,
   IconButton,
-  Collapse,
   Menu,
   MenuItem,
-  Divider,
 } from "@mui/material";
-import { ArchiveOutlined, ExpandMoreRounded } from "@mui/icons-material";
+import { ExpandMoreRounded } from "@mui/icons-material";
 import { useLockFn } from "ahooks";
 import { useRef, useState, useEffect, useCallback } from "react";
-import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
-import {
-  providerHealthCheck,
-  getGroupProxyDelays,
-  updateProxyChainConfigInRuntime,
-} from "@/services/cmds";
+import { updateProxyChainConfigInRuntime } from "@/services/cmds";
 import delayManager from "@/services/delay";
 
 import { BaseEmpty } from "../base";
@@ -34,6 +26,7 @@ import { ScrollTopButton } from "../layout/scroll-top-button";
 import { ProxyChain } from "./proxy-chain";
 import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
+import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 interface Props {
   mode: string;
@@ -154,15 +147,14 @@ export const ProxyGroups = (props: Props) => {
 
   // 添加和清理滚动事件监听器
   useEffect(() => {
-    const currentScroller = scrollerRef.current;
-    if (currentScroller) {
-      currentScroller.addEventListener("scroll", handleScroll, {
-        passive: true,
-      });
-      return () => {
-        currentScroller.removeEventListener("scroll", handleScroll);
-      };
-    }
+    if (!scrollerRef.current) return;
+    scrollerRef.current.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
+    return () => {
+      scrollerRef.current?.removeEventListener("scroll", handleScroll);
+    };
   }, [handleScroll]);
 
   // 滚动到顶部
@@ -274,7 +266,7 @@ export const ProxyGroups = (props: Props) => {
     if (providers.size) {
       console.log(`[ProxyGroups] 发现提供者，数量: ${providers.size}`);
       Promise.allSettled(
-        [...providers].map((p) => providerHealthCheck(p)),
+        [...providers].map((p) => healthcheckProxyProvider(p)),
       ).then(() => {
         console.log(`[ProxyGroups] 提供者健康检查完成`);
         onProxies();
@@ -290,7 +282,7 @@ export const ProxyGroups = (props: Props) => {
     try {
       await Promise.race([
         delayManager.checkListDelay(names, groupName, timeout),
-        getGroupProxyDelays(groupName, url, timeout).then((result) => {
+        delayGroup(groupName, url, timeout).then((result) => {
           console.log(
             `[ProxyGroups] getGroupProxyDelays返回结果数量:`,
             Object.keys(result || {}).length,

@@ -42,7 +42,6 @@ import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { useListen } from "@/hooks/use-listen";
 import { useProfiles } from "@/hooks/use-profiles";
 import {
-  closeAllConnections,
   createProfile,
   deleteProfile,
   enhanceProfiles,
@@ -55,6 +54,7 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 // 记录profile切换状态
 const debugProfileSwitch = (action: string, profile: string, extra?: any) => {

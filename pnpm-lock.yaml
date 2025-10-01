@@ -128,6 +128,9 @@ importers:
       swr:
         specifier: ^2.3.6
         version: 2.3.6(react@19.1.1)
+      tauri-plugin-mihomo-api:
+        specifier: file:crates/tauri-plugin-mihomo
+        version: file:crates/tauri-plugin-mihomo
       types-pac:
         specifier: ^1.0.3
         version: 1.0.3
@@ -3785,6 +3788,9 @@ packages:
   tar@7.4.4:
     resolution: {integrity: sha512-O1z7ajPkjTgEgmTGz0v9X4eqeEXTDREPTO77pVC1Nbs86feBU1Zhdg+edzavPmYW1olxkwsqA2v4uOw6E8LeDg==}
     engines: {node: '>=18'}
+
+  tauri-plugin-mihomo-api@file:crates/tauri-plugin-mihomo:
+    resolution: {directory: crates/tauri-plugin-mihomo, type: directory}
 
   terser@5.44.0:
     resolution: {integrity: sha512-nIVck8DK+GM/0Frwd+nIhZ84pR/BX7rmXMfYwyg+Sri5oGVE99/E3KvXqpC2xHFxyqXyGHTKBSioxxplrO4I4w==}
@@ -8243,6 +8249,10 @@ snapshots:
       minipass: 7.1.2
       minizlib: 3.1.0
       yallist: 5.0.0
+
+  tauri-plugin-mihomo-api@file:crates/tauri-plugin-mihomo:
+    dependencies:
+      '@tauri-apps/api': 2.8.0
 
   terser@5.44.0:
     dependencies:
