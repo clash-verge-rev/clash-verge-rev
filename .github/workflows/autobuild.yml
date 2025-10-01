@@ -459,6 +459,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   aur-updater:
+    name: Update AUR package
     needs: [autobuild-x86-windows-macos-linux, autobuild-arm-linux]
     runs-on: ubuntu-latest
     steps:
