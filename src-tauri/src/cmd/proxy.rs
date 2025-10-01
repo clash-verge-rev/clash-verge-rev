@@ -2,7 +2,6 @@ use tauri::Emitter;
 
 use super::CmdResult;
 use crate::{
-    cache::CacheProxy,
     core::{
         handle::{self, Handle},
         tray::Tray,
@@ -92,10 +91,6 @@ pub async fn update_proxy_and_sync(group: String, proxy: String) -> CmdResult<()
                 proxy
             );
 
-            let cache = CacheProxy::global();
-            let key = CacheProxy::make_key("proxies", "default");
-            cache.map.remove(&key);
-
             if let Err(e) = Tray::global().update_menu().await {
                 logging!(error, Type::Cmd, "Failed to sync tray menu: {}", e);
             }
@@ -113,7 +108,6 @@ pub async fn update_proxy_and_sync(group: String, proxy: String) -> CmdResult<()
             Ok(())
         }
         Err(e) => {
-            println!("1111111111111111");
             logging!(
                 error,
                 Type::Cmd,

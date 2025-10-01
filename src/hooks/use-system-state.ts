@@ -12,7 +12,7 @@ export function useSystemState() {
     "getRunningMode",
     getRunningMode,
     {
-      suspense: false,
+      suspense: true,
       revalidateOnFocus: false,
     },
   );
@@ -21,7 +21,7 @@ export function useSystemState() {
 
   // 获取管理员状态
   const { data: isAdminMode = false } = useSWR("isAdmin", isAdmin, {
-    suspense: false,
+    suspense: true,
     revalidateOnFocus: false,
   });
 
@@ -29,7 +29,7 @@ export function useSystemState() {
     "isServiceAvailable",
     isServiceAvailable,
     {
-      suspense: false,
+      suspense: true,
       revalidateOnFocus: false,
       onSuccess: (data) => {
         console.log("[useSystemState] 服务状态更新:", data);

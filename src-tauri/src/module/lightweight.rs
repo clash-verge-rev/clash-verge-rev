@@ -1,5 +1,4 @@
 use crate::{
-    cache::CacheProxy,
     config::Config,
     core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
@@ -176,7 +175,6 @@ pub async fn entry_lightweight_mode() -> bool {
     // 回到 In
     set_state(LightweightState::In);
 
-    CacheProxy::global().clean_default_keys();
     true
 }
 

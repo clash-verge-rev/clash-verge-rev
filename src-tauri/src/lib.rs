@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![recursion_limit = "512"]
 
-mod cache;
+// mod cache;
 mod cmd;
 pub mod config;
 mod core;
