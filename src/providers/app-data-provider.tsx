@@ -1,28 +1,22 @@
 import { listen } from "@tauri-apps/api/event";
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
+import React, { createContext, use, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
-
-import { useClashInfo } from "@/hooks/use-clash";
-import { useVerge } from "@/hooks/use-verge";
-import { useVisibility } from "@/hooks/use-visibility";
-import {
-  getAppUptime,
-  calcuProxies,
-  calcuProxyProviders,
-  getRunningMode,
-  getSystemProxy,
-} from "@/services/cmds";
 import {
   getBaseConfig,
   getRuleProviders,
   getRules,
 } from "tauri-plugin-mihomo-api";
+
+import { useClashInfo } from "@/hooks/use-clash";
+import { useVerge } from "@/hooks/use-verge";
+import { useVisibility } from "@/hooks/use-visibility";
+import {
+  calcuProxies,
+  calcuProxyProviders,
+  getAppUptime,
+  getRunningMode,
+  getSystemProxy,
+} from "@/services/cmds";
 
 // 连接速度计算接口
 interface ConnectionSpeedData {
@@ -536,7 +530,7 @@ export const AppDataProvider = ({
 
 // 自定义Hook访问全局数据
 export const useAppData = () => {
-  const context = useContext(AppDataContext);
+  const context = use(AppDataContext);
 
   if (!context) {
     throw new Error("useAppData必须在AppDataProvider内使用");

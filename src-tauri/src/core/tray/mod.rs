@@ -1,5 +1,5 @@
 use once_cell::sync::OnceCell;
-use tauri::Emitter;
+use tauri::{Emitter};
 use tauri::tray::TrayIconBuilder;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
@@ -193,6 +193,7 @@ impl Tray {
     pub async fn init(&self) -> Result<()> {
         let app_handle = handle::Handle::app_handle();
         self.create_tray_from_handle(app_handle).await?;
+        // core::timer::Timer::global().add_update_tray_menu_task().await?;
         Ok(())
     }
 
