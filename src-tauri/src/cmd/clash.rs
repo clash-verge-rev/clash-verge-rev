@@ -106,7 +106,7 @@ pub async fn restart_core() -> CmdResult {
     result
 }
 
-/// 获取代理延迟
+// 获取代理延迟
 // #[tauri::command]
 // pub async fn clash_api_get_proxy_delay(
 //     name: String,

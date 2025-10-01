@@ -284,6 +284,7 @@ impl Handle {
     }
 
     /// 获取 AppHandle
+    #[allow(clippy::expect_used)]
     pub fn app_handle() -> &'static AppHandle {
         APP_HANDLE.get().expect("failed to get global app handle")
     }

@@ -2,7 +2,6 @@ import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useLocalStorage } from "foxact/use-local-storage";
 import { useEffect, useCallback, useState, useRef } from "react";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -37,7 +36,6 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { showNotice } from "@/services/noticeService";
 import { NoticeManager } from "@/components/base/NoticeManager";
-import { LogLevel } from "@/hooks/use-log-data";
 import { useMemoryData } from "@/hooks/use-memory-data";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 import { useConnectionData } from "@/hooks/use-connection-data";

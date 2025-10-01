@@ -31,6 +31,11 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
 };
 
+// TODO:
+// - 定时更新代理菜单(5s)
+// - 前端选择节点/代理组测速后，发送 event 事件，Tray 监听此事件
+// - 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
+
 #[derive(Clone)]
 struct TrayState {}
 
@@ -187,7 +192,7 @@ singleton_lazy!(Tray, TRAY, Tray::default);
 impl Tray {
     pub async fn init(&self) -> Result<()> {
         let app_handle = handle::Handle::app_handle();
-        self.create_tray_from_handle(&app_handle).await?;
+        self.create_tray_from_handle(app_handle).await?;
         Ok(())
     }
 
@@ -238,7 +243,7 @@ impl Tray {
         // 设置更新状态
         self.menu_updating.store(true, Ordering::Release);
 
-        let result = self.update_menu_internal(&app_handle).await;
+        let result = self.update_menu_internal(app_handle).await;
 
         {
             let mut last_update = self.last_menu_update.lock();
@@ -658,7 +663,7 @@ async fn create_tray_menu(
                 _ => {
                     current_profile_selected
                         .iter()
-                        .any(|s| s.name.as_deref() == Some(&group_name))
+                        .any(|s| s.name.as_deref() == Some(group_name))
                         && !now_proxy.is_empty()
                 }
             };

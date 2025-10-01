@@ -314,6 +314,7 @@ pub fn run() {
         .setup(|app| {
             logging!(info, Type::Setup, true, "开始应用初始化...");
 
+            #[allow(clippy::expect_used)]
             APP_HANDLE
                 .set(app.app_handle().clone())
                 .expect("failed to set global app handle");

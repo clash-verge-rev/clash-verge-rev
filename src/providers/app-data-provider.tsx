@@ -334,7 +334,7 @@ export const AppDataProvider = ({
   // 高频率更新数据 (2秒)
   const { data: uptimeData } = useSWR("appUptime", getAppUptime, {
     // TODO: 运行时间
-    refreshInterval: 20000,
+    refreshInterval: 2000,
     revalidateOnFocus: false,
     suspense: false,
   });

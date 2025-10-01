@@ -31,7 +31,7 @@ use crate::{
 //     Ok((*value).clone())
 // }
 
-/// 强制刷新代理缓存用于profile切换
+// 强制刷新代理缓存用于profile切换
 // #[tauri::command]
 // pub async fn force_refresh_proxies() -> CmdResult<serde_json::Value> {
 //     let cache = CacheProxy::global();

@@ -25,6 +25,10 @@ use std::{
 };
 use tauri_plugin_shell::{ShellExt, process::CommandChild};
 
+// TODO:
+// - 重构，提升模式切换速度
+// - 内核启动添加启动 IPC 启动参数, `-ext-ctl-unix` / `-ext-ctl-pipe`, 运行时配置需要删除相关配置项
+
 #[derive(Debug)]
 pub struct CoreManager {
     running: Arc<Mutex<RunningMode>>,

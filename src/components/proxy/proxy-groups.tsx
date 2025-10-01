@@ -17,7 +17,10 @@ import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
-import { updateProxyChainConfigInRuntime } from "@/services/cmds";
+import {
+  getRuntimeConfig,
+  updateProxyChainConfigInRuntime,
+} from "@/services/cmds";
 import delayManager from "@/services/delay";
 
 import { BaseEmpty } from "../base";
@@ -28,6 +31,8 @@ import { ProxyRender } from "./proxy-render";
 import { ProxyGroupNavigator } from "./proxy-group-navigator";
 import { useRenderList } from "./use-render-list";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
+import useSWR from "swr";
+import { useMemo } from "react";
 
 interface Props {
   mode: string;
@@ -209,6 +214,7 @@ export const ProxyGroups = (props: Props) => {
   const currentGroup = getCurrentGroup();
   const availableGroups = getAvailableGroups();
 
+  // TODO: 频繁点击切换代理节点，导致应用卡死
   const handleChangeProxy = useCallback(
     (group: IProxyGroupItem, proxy: IProxyItem) => {
       if (isChainMode) {
