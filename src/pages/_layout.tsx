@@ -1,11 +1,10 @@
-import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
+import { List, Paper, SvgIcon, ThemeProvider } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useEffect, useCallback, useState, useRef } from "react";
-import React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useRoutes, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useRoutes } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
 
 import iconDark from "@/assets/image/icon_dark.svg?react";
@@ -34,12 +33,12 @@ import { useClashInfo } from "@/hooks/use-clash";
 
 import { invoke } from "@tauri-apps/api/core";
 
-import { showNotice } from "@/services/noticeService";
 import { NoticeManager } from "@/components/base/NoticeManager";
-import { useMemoryData } from "@/hooks/use-memory-data";
-import { useTrafficData } from "@/hooks/use-traffic-data";
 import { useConnectionData } from "@/hooks/use-connection-data";
 import { useLogData } from "@/hooks/use-log-data-new";
+import { useMemoryData } from "@/hooks/use-memory-data";
+import { useTrafficData } from "@/hooks/use-traffic-data";
+import { showNotice } from "@/services/noticeService";
 
 const appWindow = getCurrentWebviewWindow();
 export const portableFlag = false;
@@ -525,15 +524,15 @@ const Layout = () => {
             borderTopRightRadius: "0px",
           }}
           onContextMenu={(e) => {
-            if (
-              OS === "windows" &&
-              !["input", "textarea"].includes(
-                e.currentTarget.tagName.toLowerCase(),
-              ) &&
-              !e.currentTarget.isContentEditable
-            ) {
-              e.preventDefault();
-            }
+            // if (
+            //   OS === "windows" &&
+            //   !["input", "textarea"].includes(
+            //     e.currentTarget.tagName.toLowerCase(),
+            //   ) &&
+            //   !e.currentTarget.isContentEditable
+            // ) {
+            //   e.preventDefault();
+            // }
           }}
           sx={[
             ({ palette }) => ({ bgcolor: palette.background.paper }),

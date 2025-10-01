@@ -1,18 +1,20 @@
+import { ExpandMoreRounded } from "@mui/icons-material";
 import {
-  Box,
-  Snackbar,
   Alert,
+  Box,
   Chip,
-  Typography,
   IconButton,
   Menu,
   MenuItem,
+  Snackbar,
+  Typography,
 } from "@mui/material";
-import { ExpandMoreRounded } from "@mui/icons-material";
 import { useLockFn } from "ahooks";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+import useSWR from "swr";
+import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
@@ -27,12 +29,9 @@ import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";
-import { ProxyRender } from "./proxy-render";
 import { ProxyGroupNavigator } from "./proxy-group-navigator";
+import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
-import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
-import useSWR from "swr";
-import { useMemo } from "react";
 
 interface Props {
   mode: string;
@@ -518,7 +517,7 @@ export const ProxyGroups = (props: Props) => {
             },
           }}
         >
-          {availableGroups.map((group: any, index: number) => (
+          {availableGroups.map((group: any, _index: number) => (
             <MenuItem
               key={group.name}
               onClick={() => handleGroupSelect(group.name)}

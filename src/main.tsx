@@ -11,6 +11,7 @@ import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
@@ -21,7 +22,6 @@ import {
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
-import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);

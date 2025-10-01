@@ -3,6 +3,7 @@ import { useLockFn } from "ahooks";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
+import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
 
 import { BasePage } from "@/components/base";
 import { ProviderButton } from "@/components/proxy/provider-button";
@@ -13,7 +14,6 @@ import {
   patchClashMode,
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
-import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
 
 const ProxyPage = () => {
   const { t } = useTranslation();

@@ -1,14 +1,14 @@
 import { useLockFn } from "ahooks";
 import { useCallback, useMemo } from "react";
-
-import { useProfiles } from "@/hooks/use-profiles";
-import { useVerge } from "@/hooks/use-verge";
-import { updateProxyAndSync, syncTrayProxySelection } from "@/services/cmds";
 import {
   closeConnections,
   getConnections,
   selectNodeForGroup,
 } from "tauri-plugin-mihomo-api";
+
+import { useProfiles } from "@/hooks/use-profiles";
+import { useVerge } from "@/hooks/use-verge";
+import { syncTrayProxySelection, updateProxyAndSync } from "@/services/cmds";
 
 // 缓存连接清理
 const cleanupConnections = async (previousProxy: string) => {
