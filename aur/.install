@@ -8,6 +8,12 @@ _bold="${_all_off}$(tput bold)"
 _blue="${_bold}$(tput setaf 4)"
 _yellow="${_bold}$(tput setaf 3)"
 
+post_install() {
+    chmod +x /usr/bin/install-service
+    chmod +x /usr/bin/uninstall-service
+    chmod +x /usr/bin/clash-verge-service
+}
+
 post_upgrade() {
     # Now let us reload Clash Verge service automatically.
     if systemctl is-active --quiet clash-verge-service.service; then
