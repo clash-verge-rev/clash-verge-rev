@@ -14,7 +14,7 @@ mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
 use crate::{
-    core::hotkey,
+    core::{handle, hotkey},
     process::AsyncHandler,
     utils::{resolve, server},
 };
@@ -559,6 +559,12 @@ pub fn run() {
                 });
             }
             tauri::RunEvent::ExitRequested { api, code, .. } => {
+                tauri::async_runtime::block_on(async {
+                    let _ = handle::Handle::mihomo()
+                        .await
+                        .clear_all_ws_connections()
+                        .await;
+                });
                 if code.is_none() {
                     api.prevent_exit();
                 }

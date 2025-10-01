@@ -280,7 +280,7 @@ export const EnhancedTrafficStats = () => {
         {/* 统计卡片区域 */}
         {statCards.map((card, _index) => (
           <Grid key={card.title} size={4}>
-            <CompactStatCard {...card} />
+            <CompactStatCard {...(card as StatCardProps)} />
           </Grid>
         ))}
       </Grid>

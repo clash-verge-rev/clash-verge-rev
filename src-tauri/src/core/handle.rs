@@ -307,6 +307,14 @@ impl Handle {
         window
     }
 
+    pub fn refresh_websocket() {
+        if let Some(window) = Self::get_window() {
+            if let Err(e) = window.emit("verge://refresh-websocket", "yes") {
+                log::error!("{e}");
+            }
+        }
+    }
+
     pub fn refresh_clash() {
         let handle = Self::global();
         if handle.is_exiting() {

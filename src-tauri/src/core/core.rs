@@ -900,6 +900,7 @@ impl CoreManager {
                 logging_error!(Type::Core, true, self.start_core_by_sidecar().await);
             }
         };
+        handle::Handle::refresh_websocket();
 
         Ok(())
     }

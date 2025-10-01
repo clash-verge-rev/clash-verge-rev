@@ -197,12 +197,18 @@ export async function calcuProxies(): Promise<{
     ),
   );
 
-  const _global: IProxyGroupItem = {
+  const _global = {
     ...global,
     all: global?.all?.map((item) => generateItem(item)) || [],
   };
 
-  return { global: _global, direct, groups, records: proxyRecord, proxies };
+  return {
+    global: _global as IProxyGroupItem,
+    direct: direct as IProxyItem,
+    groups,
+    records: proxyRecord as Record<string, IProxyItem>,
+    proxies: (proxies as IProxyItem[]) ?? [],
+  };
 }
 
 export async function calcuProxyProviders() {

@@ -546,7 +546,7 @@ async fn create_tray_menu(
             .unwrap_or_default()
     };
 
-    let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await?;
+    let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await;
 
     let version = env!("CARGO_PKG_VERSION");
 
@@ -599,96 +599,98 @@ async fn create_tray_menu(
         let mut submenus = Vec::new();
         let mut group_name_submenus_hash = HashMap::new();
 
-        for (group_name, group_data) in proxy_nodes_data.proxies.iter() {
-            // Filter groups based on mode
-            let should_show = match mode {
+        if let Ok(proxy_nodes_data) = proxy_nodes_data {
+            for (group_name, group_data) in proxy_nodes_data.proxies.iter() {
+                // Filter groups based on mode
+                let should_show = match mode {
                     "global" => group_name == "GLOBAL",
                     _ => group_name != "GLOBAL",
                 } &&
                 // Check if the group is hidden
                 !group_data.hidden.unwrap_or_default();
 
-            if !should_show {
-                continue;
-            }
-
-            let Some(all_proxies) = group_data.all.as_ref() else {
-                continue;
-            };
-
-            let now_proxy = group_data.now.as_deref().unwrap_or_default();
-
-            // Create proxy items
-            let group_items: Vec<CheckMenuItem<Wry>> = all_proxies
-                .iter()
-                .filter_map(|proxy_str| {
-                    let is_selected = *proxy_str == now_proxy;
-                    let item_id = format!("proxy_{}_{}", group_name, proxy_str);
-
-                    // Get delay for display
-                    let delay_text = proxy_nodes_data
-                        .proxies
-                        .get(proxy_str)
-                        .and_then(|h| h.history.last())
-                        .map(|h| match h.delay {
-                            0 => "-ms".to_string(),
-                            delay if delay >= 10000 => "-ms".to_string(),
-                            _ => format!("{}ms", h.delay),
-                        })
-                        .unwrap_or_else(|| "-ms".to_string());
-
-                    let display_text = format!("{}   | {}", proxy_str, delay_text);
-
-                    CheckMenuItem::with_id(
-                        app_handle,
-                        item_id,
-                        display_text,
-                        true,
-                        is_selected,
-                        None::<&str>,
-                    )
-                    .map_err(|e| log::warn!(target: "app", "创建代理菜单项失败: {}", e))
-                    .ok()
-                })
-                .collect();
-
-            if group_items.is_empty() {
-                continue;
-            }
-
-            // Determine if group is active
-            let is_group_active = match mode {
-                "global" => group_name == "GLOBAL" && !now_proxy.is_empty(),
-                "direct" => false,
-                _ => {
-                    current_profile_selected
-                        .iter()
-                        .any(|s| s.name.as_deref() == Some(group_name))
-                        && !now_proxy.is_empty()
+                if !should_show {
+                    continue;
                 }
-            };
 
-            let group_display_name = if is_group_active {
-                format!("✓ {}", group_name)
-            } else {
-                group_name.to_string()
-            };
+                let Some(all_proxies) = group_data.all.as_ref() else {
+                    continue;
+                };
 
-            let group_items_refs: Vec<&dyn IsMenuItem<Wry>> = group_items
-                .iter()
-                .map(|item| item as &dyn IsMenuItem<Wry>)
-                .collect();
+                let now_proxy = group_data.now.as_deref().unwrap_or_default();
 
-            if let Ok(submenu) = Submenu::with_id_and_items(
-                app_handle,
-                format!("proxy_group_{}", group_name),
-                group_display_name,
-                true,
-                &group_items_refs,
-            ) {
-                group_name_submenus_hash.insert(group_name.to_string(), submenu);
-            } else {
-                log::warn!(target: "app", "创建代理组子菜单失败: {}", group_name);
+                // Create proxy items
+                let group_items: Vec<CheckMenuItem<Wry>> = all_proxies
+                    .iter()
+                    .filter_map(|proxy_str| {
+                        let is_selected = *proxy_str == now_proxy;
+                        let item_id = format!("proxy_{}_{}", group_name, proxy_str);
+
+                        // Get delay for display
+                        let delay_text = proxy_nodes_data
+                            .proxies
+                            .get(proxy_str)
+                            .and_then(|h| h.history.last())
+                            .map(|h| match h.delay {
+                                0 => "-ms".to_string(),
+                                delay if delay >= 10000 => "-ms".to_string(),
+                                _ => format!("{}ms", h.delay),
+                            })
+                            .unwrap_or_else(|| "-ms".to_string());
+
+                        let display_text = format!("{}   | {}", proxy_str, delay_text);
+
+                        CheckMenuItem::with_id(
+                            app_handle,
+                            item_id,
+                            display_text,
+                            true,
+                            is_selected,
+                            None::<&str>,
+                        )
+                        .map_err(|e| log::warn!(target: "app", "创建代理菜单项失败: {}", e))
+                        .ok()
+                    })
+                    .collect();
+
+                if group_items.is_empty() {
+                    continue;
+                }
+
+                // Determine if group is active
+                let is_group_active = match mode {
+                    "global" => group_name == "GLOBAL" && !now_proxy.is_empty(),
+                    "direct" => false,
+                    _ => {
+                        current_profile_selected
+                            .iter()
+                            .any(|s| s.name.as_deref() == Some(group_name))
+                            && !now_proxy.is_empty()
+                    }
+                };
+
+                let group_display_name = if is_group_active {
+                    format!("✓ {}", group_name)
+                } else {
+                    group_name.to_string()
+                };
+
+                let group_items_refs: Vec<&dyn IsMenuItem<Wry>> = group_items
+                    .iter()
+                    .map(|item| item as &dyn IsMenuItem<Wry>)
+                    .collect();
+
+                if let Ok(submenu) = Submenu::with_id_and_items(
+                    app_handle,
+                    format!("proxy_group_{}", group_name),
+                    group_display_name,
+                    true,
+                    &group_items_refs,
+                ) {
+                    group_name_submenus_hash.insert(group_name.to_string(), submenu);
+                } else {
+                    log::warn!(target: "app", "创建代理组子菜单失败: {}", group_name);
+                }
             }
         }
 
