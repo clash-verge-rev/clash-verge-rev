@@ -523,13 +523,9 @@ impl Handle {
 impl Handle {
     pub fn set_activation_policy(&self, policy: tauri::ActivationPolicy) -> Result<(), String> {
         let app_handle = Self::app_handle();
-        if let Some(app_handle) = app_handle.as_ref() {
-            app_handle
-                .set_activation_policy(policy)
-                .map_err(|e| e.to_string())
-        } else {
-            Err("AppHandle not initialized".to_string())
-        }
+        app_handle
+            .set_activation_policy(policy)
+            .map_err(|e| e.to_string())
     }
 
     pub fn set_activation_policy_regular(&self) {
