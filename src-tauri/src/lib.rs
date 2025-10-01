@@ -377,7 +377,7 @@ pub fn run() {
 
         /// Handle application reopen events (macOS)
         #[cfg(target_os = "macos")]
-        pub async fn handle_reopen(app_handle: &AppHandle, has_visible_windows: bool) {
+        pub async fn handle_reopen(has_visible_windows: bool) {
             logging!(
                 info,
                 Type::System,
@@ -553,7 +553,7 @@ pub fn run() {
             } => {
                 let app_handle = app_handle.clone();
                 AsyncHandler::spawn(move || async move {
-                    event_handlers::handle_reopen(&app_handle, has_visible_windows).await;
+                    event_handlers::handle_reopen(has_visible_windows).await;
                 });
             }
             tauri::RunEvent::ExitRequested { api, code, .. } => {
