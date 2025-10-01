@@ -464,15 +464,15 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-    - name: update version
+      - name: update version
         run: |
           sed -i "s/pkgver=.*/pkgver=$(git describe --long 2>/dev/null | sed 's/\([^-]*-g\)/r\1/;s/-/./g' | tr -d 'v')/" aur/PKGBUILD
-    - name: Publish AUR package
-      uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
-      with:
-        pkgname: pretty-exec
-        pkgbuild: aur/PKGBUILD
-        commit_username: ${{ secrets.AUR_USERNAME }}
-        commit_email: ${{ secrets.AUR_EMAIL }}
-        ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-        commit_message: Update AUR package
+      - name: Publish AUR package
+        uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+        with:
+          pkgname: pretty-exec
+          pkgbuild: aur/PKGBUILD
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: Update AUR package
