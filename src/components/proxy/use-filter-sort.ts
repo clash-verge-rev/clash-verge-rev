@@ -11,7 +11,7 @@ export default function useFilterSort(
   filterText: string,
   sortType: ProxySortType,
 ) {
-  const [refresh, setRefresh] = useState({});
+  const [, setRefresh] = useState({});
 
   useEffect(() => {
     let last = 0;
@@ -34,7 +34,7 @@ export default function useFilterSort(
     const fp = filterProxies(proxies, groupName, filterText);
     const sp = sortProxies(fp, groupName, sortType);
     return sp;
-  }, [proxies, groupName, filterText, sortType, refresh]);
+  }, [proxies, groupName, filterText, sortType]);
 }
 
 export function filterSort(

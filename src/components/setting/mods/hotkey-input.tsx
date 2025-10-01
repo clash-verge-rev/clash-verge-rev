@@ -90,13 +90,11 @@ export const HotkeyInput = (props: Props) => {
 
         <div className="list">
           {keys.map((key, index) => (
-            <Box display="flex">
+            <Box display="flex" key={key}>
               <span className="delimiter" hidden={index === 0}>
                 +
               </span>
-              <div key={key} className="item">
-                {key}
-              </div>
+              <div className="item">{key}</div>
             </Box>
           ))}
         </div>
