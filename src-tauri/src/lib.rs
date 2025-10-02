@@ -550,7 +550,6 @@ pub fn run() {
                 has_visible_windows,
                 ..
             } => {
-                let app_handle = app_handle.clone();
                 AsyncHandler::spawn(move || async move {
                     event_handlers::handle_reopen(has_visible_windows).await;
                 });
