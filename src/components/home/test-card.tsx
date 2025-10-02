@@ -5,6 +5,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
 } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
 import { Add, NetworkCheck } from "@mui/icons-material";
@@ -196,6 +197,7 @@ export const TestCard = () => {
           onDragEnd={onDragEnd}
         >
           {renderTestItems}
+          <DragOverlay />
         </DndContext>
       </ScrollBox>
 
