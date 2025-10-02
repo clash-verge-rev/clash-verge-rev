@@ -1,5 +1,5 @@
 use once_cell::sync::OnceCell;
-use tauri::{Emitter};
+use tauri::Emitter;
 use tauri::tray::TrayIconBuilder;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
@@ -1018,14 +1018,15 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     let group_name = parts[1];
                     let proxy_name = parts[2];
 
-                    match cmd::proxy::update_proxy_and_sync(
-                        group_name.to_string(),
-                        proxy_name.to_string(),
-                    )
-                    .await
+                    match handle::Handle::mihomo()
+                        .await
+                        .select_node_for_group(group_name, proxy_name)
+                        .await
                     {
                         Ok(_) => {
                             log::info!(target: "app", "切换代理成功: {} -> {}", group_name, proxy_name);
+                            let _ = handle::Handle::app_handle()
+                                .emit("verge://refresh-proxy-config", ());
                         }
                         Err(e) => {
                             log::error!(target: "app", "切换代理失败: {} -> {}, 错误: {:?}", group_name, proxy_name, e);

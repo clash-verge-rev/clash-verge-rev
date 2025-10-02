@@ -308,10 +308,10 @@ impl Handle {
     }
 
     pub fn refresh_websocket() {
-        if let Some(window) = Self::get_window() {
-            if let Err(e) = window.emit("verge://refresh-websocket", "yes") {
-                log::error!("{e}");
-            }
+        if let Some(window) = Self::get_window()
+            && let Err(e) = window.emit("verge://refresh-websocket", "yes")
+        {
+            log::error!("{e}");
         }
     }
 

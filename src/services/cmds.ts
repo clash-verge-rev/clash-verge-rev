@@ -113,10 +113,6 @@ export async function syncTrayProxySelection() {
   return invoke<void>("sync_tray_proxy_selection");
 }
 
-export async function updateProxyAndSync(group: string, proxy: string) {
-  return invoke<void>("update_proxy_and_sync", { group, proxy });
-}
-
 export async function calcuProxies(): Promise<{
   global: IProxyGroupItem;
   direct: IProxyItem;

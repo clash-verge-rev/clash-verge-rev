@@ -194,7 +194,6 @@ mod app_init {
             // cmd::force_refresh_proxies,
             // cmd::get_providers_proxies,
             cmd::sync_tray_proxy_selection,
-            cmd::update_proxy_and_sync,
             cmd::save_dns_config,
             cmd::apply_dns_config,
             cmd::check_dns_config_exists,

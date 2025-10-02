@@ -1,5 +1,4 @@
 // IPC-based log service using Tauri commands with streaming support
-import dayjs from "dayjs";
 
 import { clearLogs as clearLogsCmd } from "@/services/cmds";
 

@@ -36,12 +36,11 @@ import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
 import { useAppData } from "@/providers/app-data-provider";
+import { calcuProxies, updateProxyChainConfigInRuntime } from "@/services/cmds";
 import {
-  calcuProxies,
-  updateProxyAndSync,
-  updateProxyChainConfigInRuntime,
-} from "@/services/cmds";
-import { closeAllConnections } from "tauri-plugin-mihomo-api";
+  closeAllConnections,
+  selectNodeForGroup,
+} from "tauri-plugin-mihomo-api";
 
 interface ProxyChainItem {
   id: string;
@@ -367,7 +366,7 @@ export const ProxyChain = ({
 
       const targetGroup = mode === "global" ? "GLOBAL" : selectedGroup;
 
-      await updateProxyAndSync(targetGroup || "GLOBAL", lastNode.name);
+      await selectNodeForGroup(targetGroup || "GLOBAL", lastNode.name);
       localStorage.setItem("proxy-chain-group", targetGroup || "GLOBAL");
       localStorage.setItem("proxy-chain-exit-node", lastNode.name);
 

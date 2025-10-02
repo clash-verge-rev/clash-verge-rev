@@ -8,7 +8,7 @@ import {
 
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
-import { syncTrayProxySelection, updateProxyAndSync } from "@/services/cmds";
+import { syncTrayProxySelection } from "@/services/cmds";
 
 // 缓存连接清理
 const cleanupConnections = async (previousProxy: string) => {
@@ -75,7 +75,8 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
           await patchCurrent({ selected: current.selected });
         }
 
-        await updateProxyAndSync(groupName, proxyName);
+        await selectNodeForGroup(groupName, proxyName);
+        await syncTrayProxySelection();
         console.log(
           `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
         );
