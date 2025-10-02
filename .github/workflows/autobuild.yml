@@ -474,7 +474,7 @@ jobs:
       - name: Publish AUR package
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
         with:
-          pkgname: pretty-exec
+          pkgname: clash-verge-rev-autobuild-bin
           pkgbuild: aur/PKGBUILD
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}
