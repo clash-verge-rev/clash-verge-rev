@@ -55,7 +55,7 @@ jobs:
             bundle: nsis
             id: windows-arm64
             input: run_windows_arm64
-          - os: linux-latest
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             bundle: deb
             id: linux-amd64
@@ -89,7 +89,7 @@ jobs:
           shared-key: autobuild-shared
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'linux-latest' && github.event.inputs[matrix.input] == 'true'
+        if: matrix.os == 'ubuntu-22.04' && github.event.inputs[matrix.input] == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
@@ -152,7 +152,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Artifacts (Linux)
-        if: matrix.os == 'linux-latest' && github.event.inputs[matrix.input] == 'true'
+        if: matrix.os == 'ubuntu-22.04' && github.event.inputs[matrix.input] == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
