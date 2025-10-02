@@ -465,12 +465,30 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Release AutoBuild Version
+        run: pnpm release-version autobuild-latest
+
       - name: update version
         run: |
           sudo apt-get update
           sudo apt-get install -y jq
-          VERSION=$(cat package.json | jq '.version' | tr -d '"' || TZ=Asia/Shanghai date)
+          VERSION=$(cat package.json | jq '.version' | tr -d '"')
           sed -i "s/pkgver=.*/pkgver=$VERSION/" aur/PKGBUILD
+
       - name: Publish AUR package
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
         with:
