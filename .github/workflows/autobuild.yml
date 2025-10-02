@@ -469,7 +469,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y jq
-          VERSION=$(cat package.json | jq '.version' | tr -d '"' TZ=Asia/Shanghai date)
+          VERSION=$(cat package.json | jq '.version' | tr -d '"' || TZ=Asia/Shanghai date)
           sed -i "s/pkgver=.*/pkgver=$VERSION/" aur/PKGBUILD
       - name: Publish AUR package
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
