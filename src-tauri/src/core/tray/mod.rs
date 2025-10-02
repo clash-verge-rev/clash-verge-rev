@@ -594,6 +594,7 @@ async fn create_tray_menu(
         let mut submenus = Vec::new();
         let mut group_name_submenus_hash = HashMap::new();
 
+        // TODO: 应用启动时，内核还未启动完全，无法获取代理节点信息
         if let Ok(proxy_nodes_data) = proxy_nodes_data {
             for (group_name, group_data) in proxy_nodes_data.proxies.iter() {
                 // Filter groups based on mode
