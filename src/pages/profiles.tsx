@@ -2,6 +2,7 @@ import {
   closestCenter,
   DndContext,
   DragEndEvent,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -898,6 +899,7 @@ const ProfilePage = () => {
             </Grid>
           </Box>
         </Box>
+        <DragOverlay />
       </DndContext>
 
       <ProfileViewer
