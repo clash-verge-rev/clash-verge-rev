@@ -9,7 +9,7 @@ license=('GPL3')
 depends=('webkit2gtk-4.1' 'gtk3' 'libayatana-appindicator' 'openssl')
 conflicts=("$_pkgname" "$_pkgname-alpha" "$_pkgname-alpha-bin" "$_pkgname-git" "clash-verge" "clash-verge-bin" "$_pkgname-bin")
 options=(!strip)
-install=.install
+install=$_pkgname.install
 
 source_x86_64=("${_pkgname}-${pkgver}-x86_64.deb::${url}/releases/download/autobuild/Clash.Verge_${pkgver}_amd64.deb")
 source_aarch64=("${_pkgname}-${pkgver}-aarch64.deb::${url}/releases/download/autobuild/Clash.Verge_${pkgver}_arm64.deb")

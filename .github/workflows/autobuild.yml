@@ -467,7 +467,7 @@ jobs:
         uses: actions/checkout@v4
       - name: update version
         run: |
-          sed -i "s/pkgver=.*/pkgver=$(git describe --long 2>/dev/null | sed 's/\([^-]*-g\)/r\1/;s/-/./g' | tr -d 'v')/" aur/PKGBUILD
+          sed -i "s/pkgver=.*/pkgver=$(cat package.json | jq '.version' | tr -d '"' Asia/Shanghai date)/" aur/PKGBUILD
       - name: Publish AUR package
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
         with:
