@@ -56,6 +56,8 @@ export default defineConfig([
         { allowConstantExport: true },
       ],
 
+      "@eslint-react/no-forward-ref": "off",
+
       // TypeScript
       "@typescript-eslint/no-explicit-any": "off",
 
