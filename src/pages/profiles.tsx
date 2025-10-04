@@ -30,6 +30,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import useSWR, { mutate } from "swr";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { BasePage, DialogRef } from "@/components/base";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
@@ -55,7 +56,6 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
-import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 // 记录profile切换状态
 const debugProfileSwitch = (action: string, profile: string, extra?: any) => {

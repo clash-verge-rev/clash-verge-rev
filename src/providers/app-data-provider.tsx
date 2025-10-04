@@ -78,50 +78,50 @@ export const AppDataProvider = ({
   const { verge } = useVerge();
 
   // 存储上一次连接数据用于速度计算
-  const previousConnectionsRef = useRef<Map<string, ConnectionSpeedData>>(
-    new Map(),
-  );
+  // const previousConnectionsRef = useRef<Map<string, ConnectionSpeedData>>(
+  //   new Map(),
+  // );
 
   // 计算连接速度的函数
-  const calculateConnectionSpeeds = (
-    currentConnections: IConnectionsItem[],
-  ): ConnectionWithSpeed[] => {
-    const now = Date.now();
-    const currentMap = new Map<string, ConnectionSpeedData>();
+  // const calculateConnectionSpeeds = (
+  //   currentConnections: IConnectionsItem[],
+  // ): ConnectionWithSpeed[] => {
+  //   const now = Date.now();
+  //   const currentMap = new Map<string, ConnectionSpeedData>();
 
-    return currentConnections.map((conn) => {
-      const connWithSpeed: ConnectionWithSpeed = {
-        ...conn,
-        curUpload: 0,
-        curDownload: 0,
-      };
+  //   return currentConnections.map((conn) => {
+  //     const connWithSpeed: ConnectionWithSpeed = {
+  //       ...conn,
+  //       curUpload: 0,
+  //       curDownload: 0,
+  //     };
 
-      const currentData: ConnectionSpeedData = {
-        id: conn.id,
-        upload: conn.upload,
-        download: conn.download,
-        timestamp: now,
-      };
+  //     const currentData: ConnectionSpeedData = {
+  //       id: conn.id,
+  //       upload: conn.upload,
+  //       download: conn.download,
+  //       timestamp: now,
+  //     };
 
-      currentMap.set(conn.id, currentData);
+  //     currentMap.set(conn.id, currentData);
 
-      const previousData = previousConnectionsRef.current.get(conn.id);
-      if (previousData) {
-        const timeDiff = (now - previousData.timestamp) / 1000; // 转换为秒
+  //     const previousData = previousConnectionsRef.current.get(conn.id);
+  //     if (previousData) {
+  //       const timeDiff = (now - previousData.timestamp) / 1000; // 转换为秒
 
-        if (timeDiff > 0) {
-          const uploadDiff = conn.upload - previousData.upload;
-          const downloadDiff = conn.download - previousData.download;
+  //       if (timeDiff > 0) {
+  //         const uploadDiff = conn.upload - previousData.upload;
+  //         const downloadDiff = conn.download - previousData.download;
 
-          // 计算每秒速度 (字节/秒)
-          connWithSpeed.curUpload = Math.max(0, uploadDiff / timeDiff);
-          connWithSpeed.curDownload = Math.max(0, downloadDiff / timeDiff);
-        }
-      }
+  //         // 计算每秒速度 (字节/秒)
+  //         connWithSpeed.curUpload = Math.max(0, uploadDiff / timeDiff);
+  //         connWithSpeed.curDownload = Math.max(0, downloadDiff / timeDiff);
+  //       }
+  //     }
 
-      return connWithSpeed;
-    });
-  };
+  //     return connWithSpeed;
+  //   });
+  // };
 
   // 基础数据 - 中频率更新 (5秒)
   const { data: proxiesData, mutate: refreshProxy } = useSWR(
