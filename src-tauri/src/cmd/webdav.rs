@@ -50,3 +50,10 @@ pub async fn delete_webdav_backup(filename: String) -> CmdResult<()> {
 pub async fn restore_webdav_backup(filename: String) -> CmdResult<()> {
     wrap_err!(feat::restore_webdav_backup(filename).await)
 }
+
+/// 重置 WebDAV 客户端连接
+#[tauri::command]
+pub fn reset_webdav_client() -> CmdResult<()> {
+    core::backup::WebDavClient::global().reset();
+    Ok(())
+}

@@ -7,6 +7,8 @@ use crate::{
     utils::{logging::Type, resolve},
 };
 use serde_yaml_ng::{Mapping, Value};
+use std::env;
+use std::process::{Command, exit};
 
 /// Restart the Clash core
 pub async fn restart_clash_core() {
@@ -27,19 +29,40 @@ pub async fn restart_app() {
     // logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
     resolve::resolve_reset_async().await;
 
-    handle::Handle::global()
-        .app_handle()
-        .map(|app_handle| {
+    match handle::Handle::global().app_handle() {
+        Some(app_handle) => {
             app_handle.restart();
-        })
-        .unwrap_or_else(|| {
+        }
+        None => {
             logging_error!(
                 Type::System,
                 false,
                 "{}",
-                "Failed to get app handle for restart"
+                "Failed to get app handle for restart, attempting alternative restart method"
             );
-        });
+            // Fallback: launch a new instance of the application and exit the current one
+
+            let current_exe = env::current_exe().unwrap_or_else(|_| {
+                exit(1); // Exit if can't find the executable path
+            });
+
+            let mut cmd = Command::new(current_exe);
+            cmd.args(env::args().skip(1));
+
+            match cmd.spawn() {
+                Ok(child) => {
+                    log::info!(target: "app", "New application instance started with PID: {}", child.id());
+                    // Successfully started new process, now exit current process
+                    exit(0);
+                }
+                Err(e) => {
+                    log::error!(target: "app", "Failed to start new application instance: {}", e);
+                    // Unable to start new process, exit with error
+                    exit(1);
+                }
+            }
+        }
+    }
 }
 
 fn after_change_clash_mode() {

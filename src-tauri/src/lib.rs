@@ -259,6 +259,7 @@ mod app_init {
             cmd::list_webdav_backup,
             cmd::delete_webdav_backup,
             cmd::restore_webdav_backup,
+            cmd::reset_webdav_client,
             // Diagnostics and system info
             cmd::export_diagnostic_info,
             cmd::get_system_info,
