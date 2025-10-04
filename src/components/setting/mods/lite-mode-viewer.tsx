@@ -1,13 +1,14 @@
 import {
+  InputAdornment,
   List,
   ListItem,
   ListItemText,
   TextField,
   Typography,
-  InputAdornment,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import type { Ref } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
@@ -16,7 +17,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { entry_lightweight_mode } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
-export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
+export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
 
@@ -143,4 +144,4 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
       </List>
     </BaseDialog>
   );
-});
+}

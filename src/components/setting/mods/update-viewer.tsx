@@ -1,16 +1,11 @@
-import { Box, LinearProgress, Button } from "@mui/material";
+import { Box, Button, LinearProgress } from "@mui/material";
 import { Event, UnlistenFn } from "@tauri-apps/api/event";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
-import {
-  forwardRef,
-  useImperativeHandle,
-  useState,
-  useMemo,
-  useEffect,
-} from "react";
+import type { Ref } from "react";
+import { useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import useSWR from "swr";
@@ -19,9 +14,9 @@ import { BaseDialog, DialogRef } from "@/components/base";
 import { useListen } from "@/hooks/use-listen";
 import { portableFlag } from "@/pages/_layout";
 import { showNotice } from "@/services/noticeService";
-import { useUpdateState, useSetUpdateState } from "@/services/states";
+import { useSetUpdateState, useUpdateState } from "@/services/states";
 
-export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
+export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
@@ -167,4 +162,4 @@ export const UpdateViewer = forwardRef<DialogRef>((props, ref) => {
       )}
     </BaseDialog>
   );
-});
+}

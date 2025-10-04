@@ -2,7 +2,7 @@ import { Box, Button, Snackbar, useTheme } from "@mui/material";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { t } from "i18next";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState, type Ref } from "react";
 
 import { deleteConnection } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
@@ -11,45 +11,43 @@ export interface ConnectionDetailRef {
   open: (detail: IConnectionsItem) => void;
 }
 
-export const ConnectionDetail = forwardRef<ConnectionDetailRef>(
-  (props, ref) => {
-    const [open, setOpen] = useState(false);
-    const [detail, setDetail] = useState<IConnectionsItem>(null!);
-    const theme = useTheme();
+export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
+  const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<IConnectionsItem>(null!);
+  const theme = useTheme();
 
-    useImperativeHandle(ref, () => ({
-      open: (detail: IConnectionsItem) => {
-        if (open) return;
-        setOpen(true);
-        setDetail(detail);
-      },
-    }));
+  useImperativeHandle(ref, () => ({
+    open: (detail: IConnectionsItem) => {
+      if (open) return;
+      setOpen(true);
+      setDetail(detail);
+    },
+  }));
 
-    const onClose = () => setOpen(false);
+  const onClose = () => setOpen(false);
 
-    return (
-      <Snackbar
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        open={open}
-        onClose={onClose}
-        sx={{
-          ".MuiSnackbarContent-root": {
-            maxWidth: "520px",
-            maxHeight: "480px",
-            overflowY: "auto",
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-          },
-        }}
-        message={
-          detail ? (
-            <InnerConnectionDetail data={detail} onClose={onClose} />
-          ) : null
-        }
-      />
-    );
-  },
-);
+  return (
+    <Snackbar
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      open={open}
+      onClose={onClose}
+      sx={{
+        ".MuiSnackbarContent-root": {
+          maxWidth: "520px",
+          maxHeight: "480px",
+          overflowY: "auto",
+          backgroundColor: theme.palette.background.paper,
+          color: theme.palette.text.primary,
+        },
+      }}
+      message={
+        detail ? (
+          <InnerConnectionDetail data={detail} onClose={onClose} />
+        ) : null
+      }
+    />
+  );
+}
 
 interface InnerProps {
   data: IConnectionsItem;
