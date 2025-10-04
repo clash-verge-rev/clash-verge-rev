@@ -207,6 +207,7 @@ pub struct TunConfig {
     pub endpoint_independent_nat: Option<bool>,
 
     #[ts(optional)]
+    #[ts(type = "number")]
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub udp_timeout: Option<i64>,
 
@@ -598,9 +599,13 @@ pub struct ProxyProvider {
 #[ts(export)]
 #[serde(rename_all = "PascalCase")]
 pub struct SubScriptionInfo {
+    #[ts(type = "number")]
     pub upload: i64,
+    #[ts(type = "number")]
     pub download: i64,
+    #[ts(type = "number")]
     pub total: i64,
+    #[ts(type = "number")]
     pub expire: i64,
 }
 
@@ -703,7 +708,9 @@ pub struct RuleProvider {
 #[ts(export)]
 #[serde(rename_all = "camelCase")]
 pub struct Connections {
+    #[ts(type = "number")]
     pub download_total: u64,
+    #[ts(type = "number")]
     pub upload_total: u64,
     pub connections: Option<Vec<Connection>>,
     pub memory: u32,
@@ -715,7 +722,9 @@ pub struct Connections {
 pub struct Connection {
     pub id: String,
     pub metadata: ConnectionMetaData,
+    #[ts(type = "number")]
     pub upload: u64,
+    #[ts(type = "number")]
     pub download: u64,
     pub start: String,
     pub chains: Vec<String>,
@@ -833,7 +842,9 @@ pub struct ConnectionMetaData {
 #[derive(Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct Traffic {
+    #[ts(type = "number")]
     pub up: u64,
+    #[ts(type = "number")]
     pub down: u64,
 }
 

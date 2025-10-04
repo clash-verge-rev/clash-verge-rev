@@ -26,20 +26,6 @@ import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
 import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
-// 定义代理提供者类型
-interface ProxyProviderItem {
-  name?: string;
-  proxies: any[];
-  updatedAt: number;
-  vehicleType: string;
-  subscriptionInfo?: {
-    Upload: number;
-    Download: number;
-    Total: number;
-    Expire: number;
-  };
-}
-
 // 样式化组件 - 类型框
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
   display: "inline-block",
@@ -180,7 +166,7 @@ export const ProviderButton = () => {
             {Object.entries(proxyProviders || {})
               .sort()
               .map(([key, item]) => {
-                const provider = item as ProxyProviderItem;
+                const provider = item;
                 const time = dayjs(provider.updatedAt);
                 const isUpdating = updating[key];
 

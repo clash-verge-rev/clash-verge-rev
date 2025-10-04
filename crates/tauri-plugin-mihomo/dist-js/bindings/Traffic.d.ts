@@ -1,4 +1,4 @@
 export type Traffic = {
-    up: bigint;
-    down: bigint;
+    up: number;
+    down: number;
 };

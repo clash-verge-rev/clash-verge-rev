@@ -1,6 +1,6 @@
 export type SubScriptionInfo = {
-    Upload: bigint;
-    Download: bigint;
-    Total: bigint;
-    Expire: bigint;
+    Upload: number;
+    Download: number;
+    Total: number;
+    Expire: number;
 };

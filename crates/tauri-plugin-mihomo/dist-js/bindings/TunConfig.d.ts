@@ -36,7 +36,7 @@ export type TunConfig = {
     includePackage?: Array<string>;
     excludePackage?: Array<string>;
     endpointIndependentNat?: boolean;
-    udpTimeout?: bigint;
+    udpTimeout?: number;
     fileDescriptor: number;
     inet4RouteAddress?: Array<string>;
     inet6RouteAddress?: Array<string>;
