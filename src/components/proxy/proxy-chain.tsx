@@ -35,7 +35,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import {
   closeAllConnections,
   getProxies,

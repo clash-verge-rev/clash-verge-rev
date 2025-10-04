@@ -1,17 +1,17 @@
-import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
+import { RefreshRounded, StorageOutlined } from "@mui/icons-material";
 import {
-  Button,
   Box,
+  Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
   IconButton,
   List,
   ListItem,
   ListItemText,
   Typography,
-  Divider,
   alpha,
   styled,
 } from "@mui/material";
@@ -20,7 +20,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import { ruleProviderUpdate } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 

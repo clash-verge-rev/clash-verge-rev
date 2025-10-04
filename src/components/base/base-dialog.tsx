@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { LoadingButton } from "@mui/lab";
 import {
   Button,

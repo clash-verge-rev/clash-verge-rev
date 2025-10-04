@@ -1,10 +1,10 @@
 import { DeveloperBoardOutlined } from "@mui/icons-material";
-import { Typography, Stack, Divider } from "@mui/material";
+import { Divider, Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useClash } from "@/hooks/use-clash";
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 
 import { EnhancedCard } from "./enhanced-card";
 

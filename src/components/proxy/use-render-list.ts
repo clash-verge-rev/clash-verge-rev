@@ -2,14 +2,14 @@ import { useEffect, useMemo } from "react";
 import useSWR from "swr";
 
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import { getRuntimeConfig } from "@/services/cmds";
 import delayManager from "@/services/delay";
 
 import { filterSort } from "./use-filter-sort";
 import {
-  useHeadStateNew,
   DEFAULT_STATE,
+  useHeadStateNew,
   type HeadState,
 } from "./use-head-state";
 import { useWindowWidth } from "./use-window-width";

@@ -20,7 +20,7 @@ import {
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
 import { useVisibility } from "@/hooks/use-visibility";
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import { closeAllConnections } from "@/services/cmds";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";

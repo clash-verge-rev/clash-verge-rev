@@ -1,37 +1,37 @@
 import {
-  SignalWifi4Bar as SignalStrong,
+  AccessTimeRounded,
+  ChevronRight,
+  WifiOff as SignalError,
   SignalWifi3Bar as SignalGood,
   SignalWifi2Bar as SignalMedium,
-  SignalWifi1Bar as SignalWeak,
   SignalWifi0Bar as SignalNone,
-  WifiOff as SignalError,
-  ChevronRight,
-  SortRounded,
-  AccessTimeRounded,
+  SignalWifi4Bar as SignalStrong,
+  SignalWifi1Bar as SignalWeak,
   SortByAlphaRounded,
+  SortRounded,
 } from "@mui/icons-material";
 import {
   Box,
-  Typography,
-  Chip,
   Button,
-  alpha,
-  useTheme,
-  Select,
-  MenuItem,
+  Chip,
   FormControl,
+  IconButton,
   InputLabel,
+  MenuItem,
+  Select,
   SelectChangeEvent,
   Tooltip,
-  IconButton,
+  Typography,
+  alpha,
+  useTheme,
 } from "@mui/material";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { EnhancedCard } from "@/components/home/enhanced-card";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import delayManager from "@/services/delay";
 
 // 本地存储的键名

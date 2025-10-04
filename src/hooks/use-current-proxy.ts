@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 
 // 定义代理组类型
 interface ProxyGroup {

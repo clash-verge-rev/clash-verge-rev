@@ -1,28 +1,28 @@
 import { ExpandMoreRounded } from "@mui/icons-material";
 import {
-  Box,
-  Snackbar,
   Alert,
+  Box,
   Chip,
-  Typography,
   IconButton,
   Menu,
   MenuItem,
+  Snackbar,
+  Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import useSWR from "swr";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import {
-  providerHealthCheck,
   getGroupProxyDelays,
-  updateProxyChainConfigInRuntime,
   getRuntimeConfig,
+  providerHealthCheck,
+  updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
 import delayManager from "@/services/delay";
 

@@ -26,10 +26,10 @@ import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-provider";
-import { getClashConfig } from "@/services/cmds";
+import { useAppData } from "@/providers/app-data-context";
 import {
   getAutotemProxy,
+  getClashConfig,
   getNetworkInterfacesInfo,
   getSystemHostname,
   getSystemProxy,
@@ -440,14 +440,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             </Typography>
           </FlexBox>
           {!value.pac && (
-            <>
-              <FlexBox>
-                <Typography className="label">{t("Server Addr")}</Typography>
-                <Typography className="value">
-                  {getSystemProxyAddress}
-                </Typography>
-              </FlexBox>
-            </>
+            <FlexBox>
+              <Typography className="label">{t("Server Addr")}</Typography>
+              <Typography className="value">{getSystemProxyAddress}</Typography>
+            </FlexBox>
           )}
           {value.pac && (
             <FlexBox>
@@ -582,39 +578,37 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         )}
 
         {value.pac && (
-          <>
-            <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
-              <ListItemText
-                primary={t("PAC Script Content")}
-                sx={{ padding: "3px 0" }}
-              />
-              <Button
-                startIcon={<EditRounded />}
-                variant="outlined"
-                onClick={() => {
-                  setEditorOpen(true);
+          <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
+            <ListItemText
+              primary={t("PAC Script Content")}
+              sx={{ padding: "3px 0" }}
+            />
+            <Button
+              startIcon={<EditRounded />}
+              variant="outlined"
+              onClick={() => {
+                setEditorOpen(true);
+              }}
+            >
+              {t("Edit")} PAC
+            </Button>
+            {editorOpen && (
+              <EditorViewer
+                open={true}
+                title={`${t("Edit")} PAC`}
+                initialData={Promise.resolve(value.pac_content ?? "")}
+                language="javascript"
+                onSave={(_prev, curr) => {
+                  let pac = DEFAULT_PAC;
+                  if (curr && curr.trim().length > 0) {
+                    pac = curr;
+                  }
+                  setValue((v) => ({ ...v, pac_content: pac }));
                 }}
-              >
-                {t("Edit")} PAC
-              </Button>
-              {editorOpen && (
-                <EditorViewer
-                  open={true}
-                  title={`${t("Edit")} PAC`}
-                  initialData={Promise.resolve(value.pac_content ?? "")}
-                  language="javascript"
-                  onSave={(_prev, curr) => {
-                    let pac = DEFAULT_PAC;
-                    if (curr && curr.trim().length > 0) {
-                      pac = curr;
-                    }
-                    setValue((v) => ({ ...v, pac_content: pac }));
-                  }}
-                  onClose={() => setEditorOpen(false)}
-                />
-              )}
-            </ListItem>
-          </>
+                onClose={() => setEditorOpen(false)}
+              />
+            )}
+          </ListItem>
         )}
       </List>
     </BaseDialog>
