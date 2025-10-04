@@ -2,14 +2,18 @@ import { listen } from "@tauri-apps/api/event";
 import React, { createContext, use, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
 import {
+  BaseConfig,
   getBaseConfig,
   getRuleProviders,
   getRules,
+  ProxyProvider,
+  Rule,
+  RuleProvider,
 } from "tauri-plugin-mihomo-api";
 
-import { useClashInfo } from "@/hooks/use-clash";
+// import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-import { useVisibility } from "@/hooks/use-visibility";
+// import { useVisibility } from "@/hooks/use-visibility";
 import {
   calcuProxies,
   calcuProxyProviders,
@@ -31,16 +35,16 @@ interface ConnectionWithSpeed extends IConnectionsItem {
   curDownload: number;
 }
 
-// 定义AppDataContext类型 - 使用宽松类型
+// 定义AppDataContext类型
 interface AppDataContextType {
   proxies: any;
-  clashConfig: any;
-  rules: any[];
+  clashConfig: BaseConfig;
+  rules: Rule[];
   sysproxy: any;
   runningMode?: string;
   uptime: number;
-  proxyProviders: any;
-  ruleProviders: any;
+  proxyProviders: Record<string, ProxyProvider>;
+  ruleProviders: Record<string, RuleProvider>;
   // connections: {
   //   data: ConnectionWithSpeed[];
   //   count: number;
@@ -69,8 +73,8 @@ export const AppDataProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const pageVisible = useVisibility();
-  const { clashInfo } = useClashInfo();
+  // const pageVisible = useVisibility();
+  // const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
 
   // 存储上一次连接数据用于速度计算
@@ -157,6 +161,8 @@ export const AppDataProvider = ({
 
           lastProfileId = newProfileId;
           lastUpdateTime = now;
+          refreshRules();
+          refreshRuleProviders();
         });
 
         // 监听Clash配置刷新事件(enhance操作等)
@@ -502,7 +508,7 @@ export const AppDataProvider = ({
       refreshProxyProviders,
       refreshRuleProviders,
       refreshAll,
-    };
+    } as AppDataContextType;
   }, [
     proxiesData,
     clashConfig,

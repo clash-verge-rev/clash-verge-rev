@@ -53,7 +53,7 @@ export const ClashInfoCard = () => {
             {t("Mixed Port")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
-            {clashConfig["mixed-port"] || "-"}
+            {clashConfig.mixedPort || "-"}
           </Typography>
         </Stack>
         <Divider />

@@ -1,12 +1,12 @@
 import { useLockFn } from "ahooks";
 import useSWR, { mutate } from "swr";
+import { getVersion } from "tauri-plugin-mihomo-api";
 
 import {
   getClashInfo,
   patchClashConfig,
   getRuntimeConfig,
 } from "@/services/cmds";
-import { getVersion } from "tauri-plugin-mihomo-api";
 
 export const useClash = () => {
   const { data: clash, mutate: mutateClash } = useSWR(

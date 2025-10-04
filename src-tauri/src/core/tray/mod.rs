@@ -31,10 +31,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
 };
 
-// TODO:
-// - 定时更新代理菜单(5s)
-// - 前端选择节点/代理组测速后，发送 event 事件，Tray 监听此事件
-// - 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
+// TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
 
 #[derive(Clone)]
 struct TrayState {}
