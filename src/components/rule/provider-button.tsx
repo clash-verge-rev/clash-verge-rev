@@ -19,18 +19,10 @@ import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-
-import { showNotice } from "@/services/noticeService";
 import { updateRuleProvider } from "tauri-plugin-mihomo-api";
-import { useAppData } from "@/providers/app-data-provider";
 
-// 定义规则提供者类型
-interface RuleProviderItem {
-  behavior: string;
-  ruleCount: number;
-  updatedAt: number;
-  vehicleType: string;
-}
+import { useAppData } from "@/providers/app-data-provider";
+import { showNotice } from "@/services/noticeService";
 
 // 辅助组件 - 类型框
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
@@ -163,7 +155,7 @@ export const ProviderButton = () => {
             {Object.entries(ruleProviders || {})
               .sort()
               .map(([key, item]) => {
-                const provider = item as RuleProviderItem;
+                const provider = item;
                 const time = dayjs(provider.updatedAt);
                 const isUpdating = updating[key];
 

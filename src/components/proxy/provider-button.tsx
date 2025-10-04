@@ -20,25 +20,11 @@ import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useAppData } from "@/providers/app-data-provider";
 import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
-import { updateProxyProvider } from "tauri-plugin-mihomo-api";
-
-// 定义代理提供者类型
-interface ProxyProviderItem {
-  name?: string;
-  proxies: any[];
-  updatedAt: number;
-  vehicleType: string;
-  subscriptionInfo?: {
-    Upload: number;
-    Download: number;
-    Total: number;
-    Expire: number;
-  };
-}
 
 // 样式化组件 - 类型框
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
@@ -180,17 +166,17 @@ export const ProviderButton = () => {
             {Object.entries(proxyProviders || {})
               .sort()
               .map(([key, item]) => {
-                const provider = item as ProxyProviderItem;
+                const provider = item;
                 const time = dayjs(provider.updatedAt);
                 const isUpdating = updating[key];
 
                 // 订阅信息
                 const sub = provider.subscriptionInfo;
                 const hasSubInfo = !!sub;
-                const upload = sub?.Upload || 0;
-                const download = sub?.Download || 0;
-                const total = sub?.Total || 0;
-                const expire = sub?.Expire || 0;
+                const upload = parseInt(sub?.Upload.toString() || "0");
+                const download = parseInt(sub?.Download.toString() || "0");
+                const total = parseInt(sub?.Total.toString() || "0");
+                const expire = parseInt(sub?.Expire.toString() || "0");
 
                 // 流量使用进度
                 const progress =
