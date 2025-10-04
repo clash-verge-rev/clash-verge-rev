@@ -1,11 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
+import React, { createContext, use, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
 
 import { useClashInfo } from "@/hooks/use-clash";
@@ -589,14 +583,12 @@ export const AppDataProvider = ({
     refreshAll,
   ]);
 
-  return (
-    <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
-  );
+  return <AppDataContext value={value}>{children}</AppDataContext>;
 };
 
 // 自定义Hook访问全局数据
 export const useAppData = () => {
-  const context = useContext(AppDataContext);
+  const context = use(AppDataContext);
 
   if (!context) {
     throw new Error("useAppData必须在AppDataProvider内使用");

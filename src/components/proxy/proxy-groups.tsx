@@ -1,23 +1,19 @@
+import { ExpandMoreRounded } from "@mui/icons-material";
 import {
   Box,
   Snackbar,
   Alert,
   Chip,
-  Stack,
   Typography,
   IconButton,
-  Collapse,
   Menu,
   MenuItem,
-  Divider,
-  Button,
 } from "@mui/material";
-import { ArchiveOutlined, ExpandMoreRounded } from "@mui/icons-material";
 import { useLockFn } from "ahooks";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+import useSWR from "swr";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
@@ -34,8 +30,8 @@ import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";
-import { ProxyRender } from "./proxy-render";
 import { ProxyGroupNavigator } from "./proxy-group-navigator";
+import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
 
 interface Props {

@@ -1,5 +1,7 @@
-import js from "@eslint/js";
+import eslintReact from "@eslint-react/eslint-plugin";
+import eslintJS from "@eslint/js";
 import configPrettier from "eslint-config-prettier";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import pluginImportX from "eslint-plugin-import-x";
 import pluginPrettier from "eslint-plugin-prettier";
 import pluginReactHooks from "eslint-plugin-react-hooks";
@@ -8,15 +10,13 @@ import pluginUnusedImports from "eslint-plugin-unused-imports";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
-import eslintReact from "@eslint-react/eslint-plugin";
-import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 
 export default defineConfig([
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
 
     plugins: {
-      js,
+      js: eslintJS,
       "react-hooks": pluginReactHooks,
       // @ts-expect-error -- https://github.com/un-ts/eslint-plugin-import-x/issues/421
       "import-x": pluginImportX,
@@ -26,7 +26,7 @@ export default defineConfig([
     },
 
     extends: [
-      "js/recommended",
+      eslintJS.configs.recommended,
       tseslint.configs.recommended,
       eslintReact.configs["recommended-typescript"],
       configPrettier,
@@ -55,6 +55,8 @@ export default defineConfig([
         "warn",
         { allowConstantExport: true },
       ],
+
+      "@eslint-react/no-forward-ref": "off",
 
       // TypeScript
       "@typescript-eslint/no-explicit-any": "off",
