@@ -294,7 +294,8 @@ impl Mihomo {
                 code: 1000.into(),
                 reason: "Disconnected by client".into(),
             }));
-            writer.send(close_message).await?;
+            // ignore send error
+            let _ = writer.send(close_message).await;
             if let Some(timeout) = force_timeout {
                 let manager_ = self.connection_manager.clone();
                 tokio::spawn(async move {

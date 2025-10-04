@@ -419,6 +419,7 @@ class MihomoWebSocket {
                 id: this.id,
                 forceTimeout: 0,
             });
+            this.listeners.clear();
         }
         catch (ignore) {
             // ignore
