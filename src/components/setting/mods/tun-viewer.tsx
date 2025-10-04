@@ -1,14 +1,15 @@
 import {
+  Box,
+  Button,
   List,
   ListItem,
   ListItemText,
-  Box,
-  Typography,
-  Button,
   TextField,
+  Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import type { Ref } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
@@ -21,7 +22,7 @@ import { StackModeSwitch } from "./stack-mode-switch";
 
 const OS = getSystem();
 
-export const TunViewer = forwardRef<DialogRef>((props, ref) => {
+export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
 
   const { clash, mutateClash, patchClash } = useClash();
@@ -238,4 +239,4 @@ export const TunViewer = forwardRef<DialogRef>((props, ref) => {
       </List>
     </BaseDialog>
   );
-});
+}

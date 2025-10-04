@@ -1,13 +1,13 @@
 import { Box, useTheme } from "@mui/material";
+import type { Ref } from "react";
 import {
-  forwardRef,
-  useImperativeHandle,
-  useState,
-  useEffect,
+  memo,
   useCallback,
+  useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
-  memo,
+  useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -44,7 +44,6 @@ interface TooltipData {
   highlightY: number; // 高亮Y轴位置
 }
 
-// Canvas图表配置
 const MAX_POINTS = 300;
 const TARGET_FPS = 15; // 降低帧率减少闪烁
 const LINE_WIDTH_UP = 2.5;
@@ -77,12 +76,18 @@ const GRAPH_CONFIG = {
   },
 };
 
+interface EnhancedCanvasTrafficGraphProps {
+  ref?: Ref<EnhancedCanvasTrafficGraphRef>;
+}
+
 /**
  * 稳定版Canvas流量图表组件
  * 修复闪烁问题，添加时间轴显示
  */
 export const EnhancedCanvasTrafficGraph = memo(
-  forwardRef<EnhancedCanvasTrafficGraphRef>((props, ref) => {
+  function EnhancedCanvasTrafficGraph({
+    ref,
+  }: EnhancedCanvasTrafficGraphProps) {
     const theme = useTheme();
     const { t } = useTranslation();
 
@@ -999,7 +1004,7 @@ export const EnhancedCanvasTrafficGraph = memo(
         </Box>
       </Box>
     );
-  }),
+  },
 );
 
 EnhancedCanvasTrafficGraph.displayName = "EnhancedCanvasTrafficGraph";

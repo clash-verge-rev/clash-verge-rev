@@ -15,7 +15,8 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
-import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
+import type { Ref } from "react";
+import { useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 
@@ -87,7 +88,7 @@ const DEFAULT_DNS_CONFIG = {
   },
 };
 
-export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
+export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
   const { clash, mutateClash } = useClash();
   const themeMode = useThemeMode();
@@ -1034,4 +1035,4 @@ export const DnsViewer = forwardRef<DialogRef>((props, ref) => {
       )}
     </BaseDialog>
   );
-});
+}
