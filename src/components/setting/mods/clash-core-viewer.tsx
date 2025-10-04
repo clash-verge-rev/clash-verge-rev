@@ -15,12 +15,12 @@ import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
+import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { changeClashCore, restartCore } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
-import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 
 const VALID_CORE = [
   { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },

@@ -34,13 +34,13 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
-
-import { useAppData } from "@/providers/app-data-provider";
-import { calcuProxies, updateProxyChainConfigInRuntime } from "@/services/cmds";
 import {
   closeAllConnections,
   selectNodeForGroup,
 } from "tauri-plugin-mihomo-api";
+
+import { useAppData } from "@/providers/app-data-provider";
+import { calcuProxies, updateProxyChainConfigInRuntime } from "@/services/cmds";
 
 interface ProxyChainItem {
   id: string;

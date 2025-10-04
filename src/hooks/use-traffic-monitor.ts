@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVisibility } from "@/hooks/use-visibility";
+
 import { useTrafficData } from "./use-traffic-data";
 
 // 增强的流量数据点接口

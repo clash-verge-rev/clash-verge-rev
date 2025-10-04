@@ -9,6 +9,7 @@ import { useLockFn } from "ahooks";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { BaseEmpty, BasePage } from "@/components/base";
 import { BaseSearchBox } from "@/components/base/base-search-box";
@@ -19,11 +20,10 @@ import {
 } from "@/components/connection/connection-detail";
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
+import { useConnectionData } from "@/hooks/use-connection-data";
 import { useVisibility } from "@/hooks/use-visibility";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
-import { closeAllConnections } from "tauri-plugin-mihomo-api";
-import { useConnectionData } from "@/hooks/use-connection-data";
 
 const initConn: IConnections = {
   uploadTotal: 0,

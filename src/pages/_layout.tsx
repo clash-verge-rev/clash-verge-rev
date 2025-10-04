@@ -1,4 +1,6 @@
 import { List, Paper, SvgIcon, ThemeProvider } from "@mui/material";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -10,13 +12,21 @@ import { SWRConfig, mutate } from "swr";
 import iconDark from "@/assets/image/icon_dark.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import LogoSvg from "@/assets/image/logo.svg?react";
+import { NoticeManager } from "@/components/base/NoticeManager";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { useClashInfo } from "@/hooks/use-clash";
+import { useConnectionData } from "@/hooks/use-connection-data";
 import { useI18n } from "@/hooks/use-i18n";
+import { useListen } from "@/hooks/use-listen";
+import { useLogData } from "@/hooks/use-log-data-new";
+import { useMemoryData } from "@/hooks/use-memory-data";
+import { useTrafficData } from "@/hooks/use-traffic-data";
 import { useVerge } from "@/hooks/use-verge";
 import { getAxios } from "@/services/api";
+import { showNotice } from "@/services/noticeService";
 import { useClashLog, useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
@@ -24,21 +34,6 @@ import { routers } from "./_routers";
 
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-
-import { useListen } from "@/hooks/use-listen";
-
-import { listen } from "@tauri-apps/api/event";
-
-import { useClashInfo } from "@/hooks/use-clash";
-
-import { invoke } from "@tauri-apps/api/core";
-
-import { NoticeManager } from "@/components/base/NoticeManager";
-import { useConnectionData } from "@/hooks/use-connection-data";
-import { useLogData } from "@/hooks/use-log-data-new";
-import { useMemoryData } from "@/hooks/use-memory-data";
-import { useTrafficData } from "@/hooks/use-traffic-data";
-import { showNotice } from "@/services/noticeService";
 
 const appWindow = getCurrentWebviewWindow();
 export const portableFlag = false;

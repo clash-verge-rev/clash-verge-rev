@@ -12,10 +12,9 @@ import { BaseSearchBox } from "@/components/base/base-search-box";
 import { SearchState } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import LogItem from "@/components/log/log-item";
-import { LogLevel } from "@/hooks/use-log-data";
-import { toggleLogEnabled } from "@/services/global-log-service";
-import { useClashLog } from "@/services/states";
 import { useLogData } from "@/hooks/use-log-data-new";
+import { toggleLogEnabled } from "@/services/global-log-service";
+import { LogFilter, useClashLog } from "@/services/states";
 
 const LogPage = () => {
   const { t } = useTranslation();
@@ -111,13 +110,13 @@ const LogPage = () => {
       >
         <BaseStyledSelect
           value={logState}
-          onChange={(e) => handleLogLevelChange(e.target.value as LogLevel)}
+          onChange={(e) => handleLogLevelChange(e.target.value as LogFilter)}
         >
           <MenuItem value="all">ALL</MenuItem>
           <MenuItem value="debug">DEBUG</MenuItem>
-          <MenuItem value="inf">INFO</MenuItem>
+          <MenuItem value="info">INFO</MenuItem>
           <MenuItem value="warn">WARN</MenuItem>
-          <MenuItem value="error">ERROR</MenuItem>
+          <MenuItem value="err">ERROR</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox
           onSearch={(matcher, state) => {

@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { updateGeo } from "tauri-plugin-mihomo-api";
 
 import { DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
@@ -11,6 +12,7 @@ import { useClash } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { invoke_uwp_tool } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
@@ -22,8 +24,6 @@ import { GuardState } from "./mods/guard-state";
 import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { WebUIViewer } from "./mods/web-ui-viewer";
-import { updateGeo } from "tauri-plugin-mihomo-api";
-import { useClashLog } from "@/services/states";
 
 const isWIN = getSystem() === "windows";
 
@@ -36,7 +36,7 @@ const SettingClash = ({ onError }: Props) => {
 
   const { clash, version, mutateClash, patchClash } = useClash();
   const { verge, patchVerge } = useVerge();
-  const [clashLog, setClashLog] = useClashLog();
+  const [, setClashLog] = useClashLog();
 
   const {
     ipv6,

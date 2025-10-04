@@ -20,11 +20,11 @@ import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useAppData } from "@/providers/app-data-provider";
 import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
-import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
 // 样式化组件 - 类型框
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({

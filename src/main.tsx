@@ -3,10 +3,6 @@
 import "./assets/styles/index.scss";
 
 import { ResizeObserver } from "@juggle/resize-observer";
-if (!window.ResizeObserver) {
-  window.ResizeObserver = ResizeObserver;
-}
-
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
 import { createRoot } from "react-dom/client";
@@ -22,6 +18,10 @@ import {
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
+
+if (!window.ResizeObserver) {
+  window.ResizeObserver = ResizeObserver;
+}
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);

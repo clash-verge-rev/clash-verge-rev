@@ -6,10 +6,12 @@ const [ThemeModeProvider, useThemeMode, useSetThemeMode] = createContextState<
   "light" | "dark"
 >("light");
 
+export type LogFilter = "all" | "debug" | "info" | "warn" | "err";
+
 interface IClashLog {
   enable: boolean;
   logLevel: LogLevel;
-  logFilter: "all" | "debug" | "inf" | "warn" | "err";
+  logFilter: LogFilter;
 }
 const defaultClashLog: IClashLog = {
   enable: true,

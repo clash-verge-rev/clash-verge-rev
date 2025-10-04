@@ -11,9 +11,16 @@ import {
   Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import useSWR, { mutate } from "swr";
+import { getBaseConfig } from "tauri-plugin-mihomo-api";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { BaseFieldset } from "@/components/base/base-fieldset";
@@ -30,7 +37,6 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
-import { getBaseConfig } from "tauri-plugin-mihomo-api";
 
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
@@ -126,12 +132,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [prevMixedPort, setPrevMixedPort] = useState(clashConfig?.mixedPort);
 
-  // useEffect(() => {
-  //   if (clashConfig?.mixedPort && clashConfig.mixedPort !== prevMixedPort) {
-  //     setPrevMixedPort(clashConfig.mixedPort);
-  //     resetSystemProxy();
-  //   }
-  // }, [clashConfig]);
+  useEffect(() => {
+    console.log("sysproxy mixed port", clashConfig?.mixedPort);
+    if (clashConfig?.mixedPort && clashConfig.mixedPort !== prevMixedPort) {
+      setPrevMixedPort(clashConfig.mixedPort);
+      resetSystemProxy();
+    }
+  }, [clashConfig?.mixedPort]);
 
   const resetSystemProxy = async () => {
     try {

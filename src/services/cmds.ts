@@ -1,8 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
+import dayjs from "dayjs";
 import { getProxies, getProxyProviders } from "tauri-plugin-mihomo-api";
 
 import { showNotice } from "@/services/noticeService";
-import dayjs from "dayjs";
 
 export async function copyClashEnv() {
   return invoke<void>("copy_clash_env");
@@ -213,7 +213,7 @@ export async function calcuProxyProviders() {
     Object.entries(providers.providers)
       .sort()
       .filter(
-        ([_key, item]) =>
+        ([_, item]) =>
           item?.vehicleType === "HTTP" || item?.vehicleType === "File",
       ),
   );

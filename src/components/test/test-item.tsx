@@ -5,7 +5,7 @@ import { Box, Divider, MenuItem, Menu, styled, alpha } from "@mui/material";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { useLockFn } from "ahooks";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseLoading } from "@/components/base";
@@ -44,11 +44,11 @@ export const TestItem = (props: Props) => {
   const [iconCachePath, setIconCachePath] = useState("");
   const { addListener } = useListen();
 
-  const onDelay = async () => {
+  const onDelay = useCallback(async () => {
     setDelay(-2);
     const result = await cmdTestDelay(url);
     setDelay(result);
-  };
+  }, [url]);
 
   useEffect(() => {
     initIconCachePath();

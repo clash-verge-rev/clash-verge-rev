@@ -1,5 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
-import React, { createContext, use, useEffect, useMemo, useRef } from "react";
+import React, { createContext, use, useEffect, useMemo } from "react";
 import useSWR from "swr";
 import {
   BaseConfig,
@@ -23,17 +23,17 @@ import {
 } from "@/services/cmds";
 
 // 连接速度计算接口
-interface ConnectionSpeedData {
-  id: string;
-  upload: number;
-  download: number;
-  timestamp: number;
-}
+// interface ConnectionSpeedData {
+//   id: string;
+//   upload: number;
+//   download: number;
+//   timestamp: number;
+// }
 
-interface ConnectionWithSpeed extends IConnectionsItem {
-  curUpload: number;
-  curDownload: number;
-}
+// interface ConnectionWithSpeed extends IConnectionsItem {
+//   curUpload: number;
+//   curDownload: number;
+// }
 
 // 定义AppDataContext类型
 interface AppDataContextType {
