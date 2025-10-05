@@ -122,6 +122,9 @@ pub async fn copy_clash_env() {
             format!("load-env {{ http_proxy: \"{http_proxy}\", https_proxy: \"{http_proxy}\" }}")
         }
         "fish" => format!("set -x http_proxy {http_proxy}; set -x https_proxy {http_proxy}"),
+        "git" => format!(
+            "git config --global http.proxy {http_proxy}\r\ngit config --global https.proxy {http_proxy}"
+        ),
         _ => {
             log::error!(target: "app", "copy_clash_env: Invalid env type! {env_type}");
             return;
