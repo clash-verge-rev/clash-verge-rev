@@ -277,6 +277,12 @@ impl Handle {
     }
 
     pub fn init(&self, app_handle: AppHandle) {
+        // 如果正在退出，不要重新初始化
+        if self.is_exiting() {
+            log::debug!("Handle::init called while exiting, skipping initialization");
+            return;
+        }
+
         {
             let mut handle = self.app_handle.write();
             *handle = Some(app_handle);
@@ -284,7 +290,12 @@ impl Handle {
 
         let mut system_opt = self.notification_system.write();
         if let Some(system) = system_opt.as_mut() {
-            system.start();
+            // 只在未运行时启动
+            if !system.is_running {
+                system.start();
+            } else {
+                log::debug!("NotificationSystem already running, skipping start");
+            }
         }
     }
 
