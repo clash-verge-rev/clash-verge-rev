@@ -172,8 +172,12 @@ export const AppDataProvider = ({
       lastUpdateTime = now;
 
       // 刷新规则数据
-      refreshRules();
-      refreshRuleProviders();
+      refreshRules().catch((error) =>
+        console.warn("[AppDataProvider] 规则刷新失败:", error),
+      );
+      refreshRuleProviders().catch((error) =>
+        console.warn("[AppDataProvider] 规则提供者刷新失败:", error),
+      );
 
       // scheduleTimeout(() => {
       //   void forceRefreshProxies()
