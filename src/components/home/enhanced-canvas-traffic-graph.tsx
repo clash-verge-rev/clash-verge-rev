@@ -989,6 +989,7 @@ export const EnhancedCanvasTrafficGraph = memo(
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                 backdropFilter: "none",
                 opacity: 1,
+                whiteSpace: "nowrap",
               }}
             >
               <Box color="text.secondary" mb={0.2}>
