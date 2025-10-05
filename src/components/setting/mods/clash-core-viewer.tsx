@@ -1,6 +1,6 @@
 import {
-  SwitchAccessShortcutRounded,
   RestartAltRounded,
+  SwitchAccessShortcutRounded,
 } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import {
@@ -12,7 +12,8 @@ import {
   ListItemText,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import type { Ref } from "react";
+import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
@@ -27,7 +28,7 @@ const VALID_CORE = [
   { name: "Mihomo Alpha", core: "verge-mihomo-alpha", chip: "Alpha Version" },
 ];
 
-export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
+export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
 
   const { verge, mutateVerge } = useVerge();
@@ -163,4 +164,4 @@ export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
       </List>
     </BaseDialog>
   );
-});
+}

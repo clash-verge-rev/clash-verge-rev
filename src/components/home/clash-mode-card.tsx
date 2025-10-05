@@ -1,17 +1,17 @@
 import {
+  DirectionsRounded,
   LanguageRounded,
   MultipleStopRounded,
-  DirectionsRounded,
 } from "@mui/icons-material";
-import { Box, Typography, Paper, Stack } from "@mui/material";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import { patchClashMode } from "@/services/cmds";
-import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 export const ClashModeCard = () => {
   const { t } = useTranslation();

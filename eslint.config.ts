@@ -1,5 +1,7 @@
-import js from "@eslint/js";
+import eslintReact from "@eslint-react/eslint-plugin";
+import eslintJS from "@eslint/js";
 import configPrettier from "eslint-config-prettier";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import pluginImportX from "eslint-plugin-import-x";
 import pluginPrettier from "eslint-plugin-prettier";
 import pluginReactHooks from "eslint-plugin-react-hooks";
@@ -8,15 +10,13 @@ import pluginUnusedImports from "eslint-plugin-unused-imports";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
-import eslintReact from "@eslint-react/eslint-plugin";
-import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 
 export default defineConfig([
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
 
     plugins: {
-      js,
+      js: eslintJS,
       "react-hooks": pluginReactHooks,
       // @ts-expect-error -- https://github.com/un-ts/eslint-plugin-import-x/issues/421
       "import-x": pluginImportX,
@@ -26,7 +26,7 @@ export default defineConfig([
     },
 
     extends: [
-      "js/recommended",
+      eslintJS.configs.recommended,
       tseslint.configs.recommended,
       eslintReact.configs["recommended-typescript"],
       configPrettier,
@@ -55,6 +55,34 @@ export default defineConfig([
         "warn",
         { allowConstantExport: true },
       ],
+
+      "@eslint-react/no-forward-ref": "off",
+
+      // React performance and production quality rules
+      "@eslint-react/no-array-index-key": "warn",
+      "@eslint-react/no-children-count": "error",
+      "@eslint-react/no-children-for-each": "error",
+      "@eslint-react/no-children-map": "error",
+      "@eslint-react/no-children-only": "error",
+      "@eslint-react/no-children-prop": "error",
+      "@eslint-react/no-children-to-array": "error",
+      "@eslint-react/no-class-component": "error",
+      "@eslint-react/no-clone-element": "error",
+      "@eslint-react/no-create-ref": "error",
+      "@eslint-react/no-default-props": "error",
+      "@eslint-react/no-direct-mutation-state": "error",
+      "@eslint-react/no-implicit-key": "error",
+      "@eslint-react/no-prop-types": "error",
+      "@eslint-react/no-set-state-in-component-did-mount": "error",
+      "@eslint-react/no-set-state-in-component-did-update": "error",
+      "@eslint-react/no-set-state-in-component-will-update": "error",
+      "@eslint-react/no-string-refs": "error",
+      "@eslint-react/no-unstable-context-value": "warn",
+      "@eslint-react/no-unstable-default-props": "warn",
+      "@eslint-react/no-unused-class-component-members": "error",
+      "@eslint-react/no-unused-state": "error",
+      "@eslint-react/no-useless-fragment": "warn",
+      "@eslint-react/prefer-destructuring-assignment": "warn",
 
       // TypeScript
       "@typescript-eslint/no-explicit-any": "off",

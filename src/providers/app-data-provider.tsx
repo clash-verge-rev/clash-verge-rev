@@ -1,14 +1,10 @@
 import { listen } from "@tauri-apps/api/event";
-import React, { createContext, use, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import useSWR from "swr";
 import {
-  BaseConfig,
   getBaseConfig,
   getRuleProviders,
   getRules,
-  ProxyProvider,
-  Rule,
-  RuleProvider,
 } from "tauri-plugin-mihomo-api";
 
 // import { useClashInfo } from "@/hooks/use-clash";
@@ -22,50 +18,7 @@ import {
   getSystemProxy,
 } from "@/services/cmds";
 
-// 连接速度计算接口
-// interface ConnectionSpeedData {
-//   id: string;
-//   upload: number;
-//   download: number;
-//   timestamp: number;
-// }
-
-// interface ConnectionWithSpeed extends IConnectionsItem {
-//   curUpload: number;
-//   curDownload: number;
-// }
-
-// 定义AppDataContext类型
-interface AppDataContextType {
-  proxies: any;
-  clashConfig: BaseConfig;
-  rules: Rule[];
-  sysproxy: any;
-  runningMode?: string;
-  uptime: number;
-  proxyProviders: Record<string, ProxyProvider>;
-  ruleProviders: Record<string, RuleProvider>;
-  // connections: {
-  //   data: ConnectionWithSpeed[];
-  //   count: number;
-  //   uploadTotal: number;
-  //   downloadTotal: number;
-  // };
-  // traffic: { up: number; down: number };
-  // memory: { inuse: number };
-  systemProxyAddress: string;
-
-  refreshProxy: () => Promise<any>;
-  refreshClashConfig: () => Promise<any>;
-  refreshRules: () => Promise<any>;
-  refreshSysproxy: () => Promise<any>;
-  refreshProxyProviders: () => Promise<any>;
-  refreshRuleProviders: () => Promise<any>;
-  refreshAll: () => Promise<any>;
-}
-
-// 创建上下文
-const AppDataContext = createContext<AppDataContextType | null>(null);
+import { AppDataContext, AppDataContextType } from "./app-data-context";
 
 // 全局数据提供者组件
 export const AppDataProvider = ({
@@ -137,135 +90,227 @@ export const AppDataProvider = ({
 
   // 监听profile和clash配置变更事件
   useEffect(() => {
-    let profileUnlisten: Promise<() => void> | undefined;
     let lastProfileId: string | null = null;
     let lastUpdateTime = 0;
     const refreshThrottle = 500;
 
-    const setupEventListeners = async () => {
-      try {
-        // 监听profile切换事件
-        profileUnlisten = listen<string>("profile-changed", (event) => {
-          const newProfileId = event.payload;
-          const now = Date.now();
+    let isUnmounted = false;
+    const scheduledTimeouts = new Set<ReturnType<typeof setTimeout>>();
+    const cleanupFns: Array<() => void> = [];
+    const fallbackWindowListeners: Array<[string, EventListener]> = [];
 
-          console.log(`[AppDataProvider] Profile切换事件: ${newProfileId}`);
-
-          if (
-            lastProfileId === newProfileId &&
-            now - lastUpdateTime < refreshThrottle
-          ) {
-            console.log("[AppDataProvider] 重复事件被防抖，跳过");
-            return;
-          }
-
-          lastProfileId = newProfileId;
-          lastUpdateTime = now;
-          refreshRules();
-          refreshRuleProviders();
-        });
-
-        // 监听Clash配置刷新事件(enhance操作等)
-        const handleRefreshClash = () => {
-          const now = Date.now();
-          console.log("[AppDataProvider] Clash配置刷新事件");
-
-          if (now - lastUpdateTime > refreshThrottle) {
-            lastUpdateTime = now;
-
-            setTimeout(async () => {
-              try {
-                console.log("[AppDataProvider] Clash刷新 - 强制刷新代理缓存");
-
-                await refreshProxy();
-              } catch (error) {
-                console.error(
-                  "[AppDataProvider] Clash刷新时强制刷新代理缓存失败:",
-                  error,
-                );
-                refreshProxy().catch((e) =>
-                  console.warn("[AppDataProvider] Clash刷新普通刷新也失败:", e),
-                );
-              }
-            }, 0);
-          }
-        };
-
-        // 监听代理配置刷新事件(托盘代理切换等)
-        const handleRefreshProxy = () => {
-          const now = Date.now();
-          console.log("[AppDataProvider] 代理配置刷新事件");
-
-          if (now - lastUpdateTime > refreshThrottle) {
-            lastUpdateTime = now;
-
-            setTimeout(() => {
-              refreshProxy().catch((e) =>
-                console.warn("[AppDataProvider] 代理刷新失败:", e),
-              );
-            }, 100);
-          }
-        };
-
-        // 使用 Tauri 事件监听器替代 window 事件监听器
-        const setupTauriListeners = async () => {
-          try {
-            const unlistenClash = await listen(
-              "verge://refresh-clash-config",
-              handleRefreshClash,
-            );
-            const unlistenProxy = await listen(
-              "verge://refresh-proxy-config",
-              handleRefreshProxy,
-            );
-
-            return () => {
-              unlistenClash();
-              unlistenProxy();
-            };
-          } catch (error) {
-            console.warn("[AppDataProvider] 设置 Tauri 事件监听器失败:", error);
-
-            // 降级到 window 事件监听器
-            window.addEventListener(
-              "verge://refresh-clash-config",
-              handleRefreshClash,
-            );
-            window.addEventListener(
-              "verge://refresh-proxy-config",
-              handleRefreshProxy,
-            );
-
-            return () => {
-              window.removeEventListener(
-                "verge://refresh-clash-config",
-                handleRefreshClash,
-              );
-              window.removeEventListener(
-                "verge://refresh-proxy-config",
-                handleRefreshProxy,
-              );
-            };
-          }
-        };
-
-        const cleanupTauriListeners = setupTauriListeners();
-
-        return async () => {
-          const cleanup = await cleanupTauriListeners;
-          cleanup();
-        };
-      } catch (error) {
-        console.error("[AppDataProvider] 事件监听器设置失败:", error);
-        return () => {};
+    const registerCleanup = (fn: () => void) => {
+      if (isUnmounted) {
+        fn();
+      } else {
+        cleanupFns.push(fn);
       }
     };
 
-    const cleanupPromise = setupEventListeners();
+    const scheduleTimeout = (
+      callback: () => void | Promise<void>,
+      delay: number,
+    ) => {
+      const timeoutId = window.setTimeout(() => {
+        scheduledTimeouts.delete(timeoutId);
+        void callback();
+      }, delay);
+
+      scheduledTimeouts.add(timeoutId);
+      return timeoutId;
+    };
+
+    const clearScheduledTimeout = (
+      timeoutId: ReturnType<typeof setTimeout>,
+    ) => {
+      if (scheduledTimeouts.has(timeoutId)) {
+        clearTimeout(timeoutId);
+        scheduledTimeouts.delete(timeoutId);
+      }
+    };
+
+    const clearAllTimeouts = () => {
+      scheduledTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
+      scheduledTimeouts.clear();
+    };
+
+    const withTimeout = async <T,>(
+      promise: Promise<T>,
+      timeoutMs: number,
+      label: string,
+    ): Promise<T> => {
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = scheduleTimeout(() => reject(new Error(label)), timeoutMs);
+      });
+
+      try {
+        return await Promise.race([promise, timeoutPromise]);
+      } finally {
+        if (timeoutId !== null) {
+          clearScheduledTimeout(timeoutId);
+        }
+      }
+    };
+
+    const handleProfileChanged = (event: { payload: string }) => {
+      const newProfileId = event.payload;
+      const now = Date.now();
+
+      console.log(`[AppDataProvider] Profile切换事件: ${newProfileId}`);
+
+      if (
+        lastProfileId === newProfileId &&
+        now - lastUpdateTime < refreshThrottle
+      ) {
+        console.log("[AppDataProvider] 重复事件被防抖，跳过");
+        return;
+      }
+
+      lastProfileId = newProfileId;
+      lastUpdateTime = now;
+
+      // scheduleTimeout(() => {
+      //   void forceRefreshProxies()
+      //     .catch((error) => {
+      //       console.warn("[AppDataProvider] forceRefreshProxies 失败:", error);
+      //     })
+      //     .finally(() => {
+      //       scheduleTimeout(() => {
+      //         refreshProxy().catch((error) => {
+      //           console.warn("[AppDataProvider] 普通刷新也失败:", error);
+      //         });
+      //       }, 200);
+      //     });
+      // }, 0);
+    };
+
+    const handleRefreshClash = () => {
+      const now = Date.now();
+      console.log("[AppDataProvider] Clash配置刷新事件");
+
+      if (now - lastUpdateTime <= refreshThrottle) {
+        return;
+      }
+
+      lastUpdateTime = now;
+
+      scheduleTimeout(async () => {
+        try {
+          console.log("[AppDataProvider] Clash刷新 - 强制刷新代理缓存");
+          // await withTimeout(
+          //   forceRefreshProxies(),
+          //   8000,
+          //   "forceRefreshProxies timeout",
+          // );
+          await refreshProxy();
+        } catch (error) {
+          console.error(
+            "[AppDataProvider] Clash刷新时强制刷新代理缓存失败:",
+            error,
+          );
+          refreshProxy().catch((e) =>
+            console.warn("[AppDataProvider] Clash刷新普通刷新也失败:", e),
+          );
+        }
+      }, 0);
+    };
+
+    const handleRefreshProxy = () => {
+      const now = Date.now();
+      console.log("[AppDataProvider] 代理配置刷新事件");
+
+      if (now - lastUpdateTime <= refreshThrottle) {
+        return;
+      }
+
+      lastUpdateTime = now;
+
+      scheduleTimeout(() => {
+        refreshProxy().catch((error) =>
+          console.warn("[AppDataProvider] 代理刷新失败:", error),
+        );
+      }, 100);
+    };
+
+    // const handleForceRefreshProxies = () => {
+    //   console.log("[AppDataProvider] 强制代理刷新事件");
+
+    //   void forceRefreshProxies()
+    //     .then(() => {
+    //       console.log("[AppDataProvider] 强制刷新代理缓存完成");
+    //       return refreshProxy();
+    //     })
+    //     .then(() => {
+    //       console.log("[AppDataProvider] 前端代理数据刷新完成");
+    //     })
+    //     .catch((error) => {
+    //       console.warn("[AppDataProvider] 强制代理刷新失败:", error);
+    //       refreshProxy().catch((fallbackError) => {
+    //         console.warn(
+    //           "[AppDataProvider] 普通代理刷新也失败:",
+    //           fallbackError,
+    //         );
+    //       });
+    //     });
+    // };
+
+    const initializeListeners = async () => {
+      try {
+        const unlistenProfile = await listen<string>(
+          "profile-changed",
+          handleProfileChanged,
+        );
+        registerCleanup(unlistenProfile);
+      } catch (error) {
+        console.error("[AppDataProvider] 监听 Profile 事件失败:", error);
+      }
+
+      try {
+        const unlistenClash = await listen(
+          "verge://refresh-clash-config",
+          handleRefreshClash,
+        );
+        const unlistenProxy = await listen(
+          "verge://refresh-proxy-config",
+          handleRefreshProxy,
+        );
+        // const unlistenForceRefresh = await listen(
+        //   "verge://force-refresh-proxies",
+        //   handleForceRefreshProxies,
+        // );
+
+        registerCleanup(() => {
+          unlistenClash();
+          unlistenProxy();
+          // unlistenForceRefresh();
+        });
+      } catch (error) {
+        console.warn("[AppDataProvider] 设置 Tauri 事件监听器失败:", error);
+
+        const fallbackHandlers: Array<[string, EventListener]> = [
+          ["verge://refresh-clash-config", handleRefreshClash],
+          ["verge://refresh-proxy-config", handleRefreshProxy],
+          // ["verge://force-refresh-proxies", handleForceRefreshProxies],
+        ];
+
+        fallbackHandlers.forEach(([eventName, handler]) => {
+          window.addEventListener(eventName, handler);
+          fallbackWindowListeners.push([eventName, handler]);
+        });
+      }
+    };
+
+    void initializeListeners();
 
     return () => {
-      profileUnlisten?.then((unlisten) => unlisten()).catch(console.error);
-      cleanupPromise.then((cleanup) => cleanup());
+      isUnmounted = true;
+      clearAllTimeouts();
+      fallbackWindowListeners.splice(0).forEach(([eventName, handler]) => {
+        window.removeEventListener(eventName, handler);
+      });
+      cleanupFns.splice(0).forEach((fn) => fn());
     };
   }, [refreshProxy]);
 
@@ -422,7 +467,7 @@ export const AppDataProvider = ({
   // );
 
   // 提供统一的刷新方法
-  const refreshAll = React.useCallback(async () => {
+  const refreshAll = useCallback(async () => {
     await Promise.all([
       refreshProxy(),
       refreshClashConfig(),
@@ -532,15 +577,4 @@ export const AppDataProvider = ({
   ]);
 
   return <AppDataContext value={value}>{children}</AppDataContext>;
-};
-
-// 自定义Hook访问全局数据
-export const useAppData = () => {
-  const context = use(AppDataContext);
-
-  if (!context) {
-    throw new Error("useAppData必须在AppDataProvider内使用");
-  }
-
-  return context;
 };

@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -9,7 +9,7 @@ import { ScrollTopButton } from "@/components/layout/scroll-top-button";
 import { ProviderButton } from "@/components/rule/provider-button";
 import RuleItem from "@/components/rule/rule-item";
 import { useVisibility } from "@/hooks/use-visibility";
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 
 const RulesPage = () => {
   const { t } = useTranslation();

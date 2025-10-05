@@ -18,7 +18,7 @@ import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import {
   getRuntimeConfig,
   updateProxyChainConfigInRuntime,

@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
@@ -20,7 +20,7 @@ import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/noticeService";
 
-export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
+export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState<null | string>(null);
@@ -217,4 +217,4 @@ export const ControllerViewer = forwardRef<DialogRef>((props, ref) => {
       </Snackbar>
     </BaseDialog>
   );
-});
+}

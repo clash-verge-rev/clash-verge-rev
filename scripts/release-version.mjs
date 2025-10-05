@@ -58,11 +58,16 @@ function getLatestTauriCommit() {
     )
       .toString()
       .trim();
-    return execSync(`git rev-parse --short ${fullHash}`).toString().trim();
-  } catch {
+    const shortHash = execSync(`git rev-parse --short ${fullHash}`)
+      .toString()
+      .trim();
+    console.log(`[INFO]: Latest Tauri-related commit: ${shortHash}`);
+    return shortHash;
+  } catch (error) {
     console.warn(
       "[WARN]: Failed to get latest Tauri commit, fallback to current git short commit",
     );
+    console.warn(`[WARN]: Error details: ${error.message}`);
     return getGitShortCommit();
   }
 }
@@ -71,9 +76,10 @@ function getLatestTauriCommit() {
  * 生成短时间戳（格式：MMDD）或带 commit（格式：MMDD.cc39b27）
  * 使用 Asia/Shanghai 时区
  * @param {boolean} withCommit 是否带 commit
+ * @param {boolean} useTauriCommit 是否使用 Tauri 相关的 commit（仅当 withCommit 为 true 时有效）
  * @returns {string}
  */
-function generateShortTimestamp(withCommit = false) {
+function generateShortTimestamp(withCommit = false, useTauriCommit = false) {
   const now = new Date();
 
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -87,7 +93,9 @@ function generateShortTimestamp(withCommit = false) {
   const day = parts.find((part) => part.type === "day").value;
 
   if (withCommit) {
-    const gitShort = getGitShortCommit();
+    const gitShort = useTauriCommit
+      ? getLatestTauriCommit()
+      : getGitShortCommit();
     return `${month}${day}.${gitShort}`;
   }
   return `${month}${day}`;
@@ -265,15 +273,17 @@ async function main(versionArg) {
       const baseVersion = getBaseVersion(currentVersion);
 
       if (versionArg.toLowerCase() === "autobuild") {
-        // 格式: 2.3.0+autobuild.250613.cc39b27
-        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp(true)}`;
+        // 格式: 2.3.0+autobuild.1004.cc39b27
+        // 使用 Tauri 相关的最新 commit hash
+        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp(true, true)}`;
       } else if (versionArg.toLowerCase() === "autobuild-latest") {
-        // 格式: 2.3.0+autobuild.0614.a1b2c3d (使用最新 Tauri 提交)
+        // 格式: 2.3.0+autobuild.1004.a1b2c3d (使用最新 Tauri 提交)
         const latestTauriCommit = getLatestTauriCommit();
         newVersion = `${baseVersion}+autobuild.${generateShortTimestamp()}.${latestTauriCommit}`;
       } else if (versionArg.toLowerCase() === "deploytest") {
-        // 格式: 2.3.0+deploytest.250613.cc39b27
-        newVersion = `${baseVersion}+deploytest.${generateShortTimestamp(true)}`;
+        // 格式: 2.3.0+deploytest.1004.cc39b27
+        // 使用 Tauri 相关的最新 commit hash
+        newVersion = `${baseVersion}+deploytest.${generateShortTimestamp(true, true)}`;
       } else {
         newVersion = `${baseVersion}-${versionArg.toLowerCase()}`;
       }

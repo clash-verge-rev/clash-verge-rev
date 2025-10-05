@@ -1,17 +1,17 @@
-import { StorageOutlined, RefreshRounded } from "@mui/icons-material";
+import { RefreshRounded, StorageOutlined } from "@mui/icons-material";
 import {
-  Button,
   Box,
+  Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
   IconButton,
   List,
   ListItem,
   ListItemText,
   Typography,
-  Divider,
   alpha,
   styled,
 } from "@mui/material";
@@ -21,7 +21,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateRuleProvider } from "tauri-plugin-mihomo-api";
 
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import { showNotice } from "@/services/noticeService";
 
 // 辅助组件 - 类型框

@@ -1,30 +1,30 @@
 import {
   CloudUploadOutlined,
-  StorageOutlined,
-  UpdateOutlined,
   DnsOutlined,
-  SpeedOutlined,
   EventOutlined,
   LaunchOutlined,
+  SpeedOutlined,
+  StorageOutlined,
+  UpdateOutlined,
 } from "@mui/icons-material";
 import {
   Box,
-  Typography,
   Button,
-  Stack,
   LinearProgress,
-  alpha,
-  useTheme,
   Link,
+  Stack,
+  Typography,
+  alpha,
   keyframes,
+  useTheme,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
-import { useMemo, useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { useAppData } from "@/providers/app-data-provider";
+import { useAppData } from "@/providers/app-data-context";
 import { openWebUrl, updateProfile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
