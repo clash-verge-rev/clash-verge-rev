@@ -196,7 +196,7 @@ pub(super) async fn init_auto_lightweight_mode() {
 }
 
 /// 验证配置初始化是否成功
-pub(super) async fn verify_config_initialization() {
+async fn verify_config_initialization() {
     logging!(
         info,
         Type::Setup,
@@ -205,27 +205,45 @@ pub(super) async fn verify_config_initialization() {
     );
 
     // 检查运行时配置是否已正确生成
-    let runtime = Config::runtime().await;
-    let config_exists = runtime.latest_ref().config.is_some();
-    drop(runtime); // 显式释放锁
-
-    if !config_exists {
+    if Config::runtime().await.latest_ref().config.is_some() {
         logging!(
-            warn,
+            info,
             Type::Setup,
             true,
-            "Runtime config not found, regenerating..."
+            "Config initialization verified successfully"
         );
-        // 尝试重新生成配置
-        for attempt in 1..=3 {
-            logging!(
-                info,
-                Type::Setup,
-                true,
-                "Attempt {}/3 to regenerate config...",
-                attempt
-            );
-            if let Err(e) = Config::generate().await {
+        return;
+    }
+
+    logging!(
+        warn,
+        Type::Setup,
+        true,
+        "Runtime config not found, regenerating..."
+    );
+
+    // 尝试重新生成配置，最多3次
+    for attempt in 1..=3 {
+        logging!(
+            info,
+            Type::Setup,
+            true,
+            "Attempt {}/3 to regenerate config...",
+            attempt
+        );
+
+        match Config::generate().await {
+            Ok(_) => {
+                logging!(
+                    info,
+                    Type::Setup,
+                    true,
+                    "Config successfully regenerated on attempt {}",
+                    attempt
+                );
+                return;
+            }
+            Err(e) => {
                 logging!(
                     warn,
                     Type::Setup,
@@ -234,6 +252,7 @@ pub(super) async fn verify_config_initialization() {
                     attempt,
                     e
                 );
+
                 if attempt == 3 {
                     logging!(
                         error,
@@ -241,46 +260,13 @@ pub(super) async fn verify_config_initialization() {
                         true,
                         "Failed to generate config after 3 attempts"
                     );
-                } else {
-                    // 等待一段时间再重试
-                    tokio::time::sleep(tokio::time::Duration::from_millis(100 * attempt as u64))
-                        .await;
+                    return;
                 }
-            } else {
-                // 验证配置是否已生成
-                let runtime = Config::runtime().await;
-                let config_exists = runtime.latest_ref().config.is_some();
-                drop(runtime);
 
-                if config_exists {
-                    logging!(
-                        info,
-                        Type::Setup,
-                        true,
-                        "Config successfully regenerated on attempt {}",
-                        attempt
-                    );
-                    break;
-                } else if attempt == 3 {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        true,
-                        "Config generation succeeded but config is still missing"
-                    );
-                } else {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(100 * attempt as u64))
-                        .await;
-                }
+                // 等待一段时间再重试
+                tokio::time::sleep(tokio::time::Duration::from_millis(100 * attempt as u64)).await;
             }
         }
-    } else {
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Config initialization verified successfully"
-        );
     }
 }
 
