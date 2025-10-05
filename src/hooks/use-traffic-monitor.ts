@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-import { useClashInfo } from "@/hooks/use-clash";
-import { useVisibility } from "@/hooks/use-visibility";
+// import { useClashInfo } from "@/hooks/use-clash";
+// import { useVisibility } from "@/hooks/use-visibility";
 
 import { useTrafficData } from "./use-traffic-data";
 
@@ -175,14 +175,14 @@ class TrafficDataSampler {
 // 全局单例
 const refCounter = new ReferenceCounter();
 let globalSampler: TrafficDataSampler | null = null;
-let lastValidData: ISystemMonitorOverview | null = null;
+// let lastValidData: ISystemMonitorOverview | null = null;
 
 /**
  * 增强的流量监控Hook - 支持数据压缩、采样和引用计数
  */
 export const useTrafficMonitorEnhanced = () => {
-  const { clashInfo } = useClashInfo();
-  const pageVisible = useVisibility();
+  // const { clashInfo } = useClashInfo();
+  // const pageVisible = useVisibility();
   const {
     response: { data: traffic },
   } = useTrafficData();
@@ -233,7 +233,7 @@ export const useTrafficMonitorEnhanced = () => {
     refCounter.onCountChange(handleCountChange);
   }, []);
 
-  const monitorData = useRef<ISystemMonitorOverview | null>(null);
+  // const monitorData = useRef<ISystemMonitorOverview | null>(null);
   useEffect(() => {
     if (globalSampler) {
       // 添加到采样器
@@ -345,28 +345,28 @@ export const useTrafficMonitorEnhanced = () => {
   }, []);
 
   // 构建返回的监控数据，优先使用当前数据，fallback到最后有效数据
-  const currentData = monitorData.current || lastValidData;
-  const trafficMonitorData = {
-    traffic: currentData?.traffic || {
-      raw: { up: 0, down: 0, up_rate: 0, down_rate: 0 },
-      formatted: {
-        up_rate: "0B",
-        down_rate: "0B",
-        total_up: "0B",
-        total_down: "0B",
-      },
-      is_fresh: false,
-    },
-    memory: currentData?.memory || {
-      raw: { inuse: 0, oslimit: 0, usage_percent: 0 },
-      formatted: { inuse: "0B", oslimit: "0B", usage_percent: 0 },
-      is_fresh: false,
-    },
-  };
+  // const currentData = monitorData.current || lastValidData;
+  // const trafficMonitorData = {
+  //   traffic: currentData?.traffic || {
+  //     raw: { up: 0, down: 0, up_rate: 0, down_rate: 0 },
+  //     formatted: {
+  //       up_rate: "0B",
+  //       down_rate: "0B",
+  //       total_up: "0B",
+  //       total_down: "0B",
+  //     },
+  //     is_fresh: false,
+  //   },
+  //   memory: currentData?.memory || {
+  //     raw: { inuse: 0, oslimit: 0, usage_percent: 0 },
+  //     formatted: { inuse: "0B", oslimit: "0B", usage_percent: 0 },
+  //     is_fresh: false,
+  //   },
+  // };
 
   return {
     // 监控数据
-    monitorData: trafficMonitorData,
+    // monitorData: trafficMonitorData,
 
     // 图表数据管理
     graphData: {
@@ -376,9 +376,9 @@ export const useTrafficMonitorEnhanced = () => {
     },
 
     // 状态信息
-    isLoading: !currentData,
-    isDataFresh: currentData?.traffic?.is_fresh || false,
-    hasValidData: !!lastValidData,
+    // isLoading: !currentData,
+    // isDataFresh: currentData?.traffic?.is_fresh || false,
+    // hasValidData: !!lastValidData,
 
     // 性能统计
     samplerStats: getSamplerStats(),
@@ -389,29 +389,28 @@ export const useTrafficMonitorEnhanced = () => {
 /**
  * 轻量级流量数据Hook
  */
-export const useTrafficDataEnhanced = () => {
-  const { monitorData, isLoading, isDataFresh, hasValidData } =
-    useTrafficMonitorEnhanced();
+// export const useTrafficDataEnhanced = () => {
+//   const { monitorData, isLoading, isDataFresh, hasValidData } =
+//     useTrafficMonitorEnhanced();
 
-  return {
-    traffic: monitorData.traffic,
-    memory: monitorData.memory,
-    isLoading,
-    isDataFresh,
-    hasValidData,
-  };
-};
+//   return {
+//     traffic: monitorData.traffic,
+//     memory: monitorData.memory,
+//     isLoading,
+//     isDataFresh,
+//     hasValidData,
+//   };
+// };
 
 /**
  * 图表数据Hook
  */
 export const useTrafficGraphDataEnhanced = () => {
-  const { graphData, isDataFresh, samplerStats, referenceCount } =
+  const { graphData, samplerStats, referenceCount } =
     useTrafficMonitorEnhanced();
 
   return {
     ...graphData,
-    isDataFresh,
     samplerStats,
     referenceCount,
   };

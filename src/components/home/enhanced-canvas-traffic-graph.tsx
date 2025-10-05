@@ -92,7 +92,7 @@ export const EnhancedCanvasTrafficGraph = memo(
     const { t } = useTranslation();
 
     // 使用增强版全局流量数据管理
-    const { dataPoints, getDataForTimeRange, isDataFresh, samplerStats } =
+    const { dataPoints, getDataForTimeRange, samplerStats } =
       useTrafficGraphDataEnhanced();
 
     // 基础状态
@@ -865,6 +865,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onClick={toggleStyle}
         />
 
         {/* 控制层覆盖 */}
@@ -962,8 +963,8 @@ export const EnhancedCanvasTrafficGraph = memo(
               lineHeight: 1.2,
             }}
           >
-            Points: {displayData.length} | Fresh: {isDataFresh ? "✓" : "✗"} |
-            Compressed: {samplerStats.compressedBufferSize}
+            Points: {displayData.length} | Compressed:{" "}
+            {samplerStats.compressedBufferSize}
           </Box>
 
           {/* 悬浮提示框 */}
