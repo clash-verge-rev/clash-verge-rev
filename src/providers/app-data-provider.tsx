@@ -171,6 +171,10 @@ export const AppDataProvider = ({
       lastProfileId = newProfileId;
       lastUpdateTime = now;
 
+      // 刷新规则数据
+      refreshRules();
+      refreshRuleProviders();
+
       // scheduleTimeout(() => {
       //   void forceRefreshProxies()
       //     .catch((error) => {
