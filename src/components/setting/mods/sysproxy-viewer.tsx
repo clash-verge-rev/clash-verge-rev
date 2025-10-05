@@ -133,7 +133,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const [prevMixedPort, setPrevMixedPort] = useState(clashConfig?.mixedPort);
 
   useEffect(() => {
-    console.log("sysproxy mixed port", clashConfig?.mixedPort);
     if (clashConfig?.mixedPort && clashConfig.mixedPort !== prevMixedPort) {
       setPrevMixedPort(clashConfig.mixedPort);
       resetSystemProxy();
