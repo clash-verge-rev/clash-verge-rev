@@ -533,10 +533,10 @@ impl IpcConnectionPool {
     async fn acquire_or_create_connection(&self, socket_path: &str) -> Result<IpcConnection> {
         // 从池中获取连接并检查其有效性
         if let Some(mut conn) = self.connections.lock().await.pop_front() {
-            log::debug!("get conneciton from pool successfully");
+            log::debug!("get connection from pool successfully");
             if !conn.is_valid() {
                 // 如果连接失效，则重新建立连接
-                log::warn!("conneciton from pool is not available, drop it and create new connection");
+                log::warn!("connection from pool is not available, drop it and create new connection");
                 drop(conn);
                 return Self::create_connection(socket_path).await;
             }
