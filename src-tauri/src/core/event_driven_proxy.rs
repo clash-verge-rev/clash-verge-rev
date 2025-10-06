@@ -197,7 +197,7 @@ impl EventDrivenProxyManager {
                     log::debug!(target: "app", "处理代理事件: {event:?}");
                     let event_clone = event.clone(); // 保存一份副本用于后续检查
                     Self::handle_event(&state, event).await;
-                    
+
                     // 检查是否是配置变更事件，如果是，则可能需要更新定时器
                     if matches!(event_clone, ProxyEvent::ConfigChanged | ProxyEvent::AppStarted) {
                         let new_config = Self::get_proxy_config().await;
