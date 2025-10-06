@@ -130,12 +130,9 @@ async fn clean_async() -> bool {
                 }
 
                 // 关闭自动代理配置
-                match Autoproxy::get_auto_proxy() {
-                    Ok(mut autoproxy) => {
-                        autoproxy.enable = false;
-                        let _ = autoproxy.set_auto_proxy();
-                    }
-                    Err(_) => {}
+                if let Ok(mut autoproxy) = Autoproxy::get_auto_proxy() {
+                    autoproxy.enable = false;
+                    let _ = autoproxy.set_auto_proxy();
                 }
 
                 return true;
