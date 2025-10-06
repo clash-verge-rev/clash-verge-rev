@@ -362,6 +362,17 @@ pub fn run() {
 
         /// Handle application ready/resumed events
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
+            // 双重检查：确保不在退出状态
+            if handle::Handle::global().is_exiting() {
+                logging!(
+                    debug,
+                    Type::System,
+                    true,
+                    "handle_ready_resumed: 应用正在退出，跳过处理"
+                );
+                return;
+            }
+
             logging!(info, Type::System, true, "应用就绪或恢复");
             handle::Handle::global().init();
 
@@ -543,6 +554,16 @@ pub fn run() {
     app.run(|app_handle, e| {
         match e {
             tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+                // 如果正在退出，忽略 Ready/Resumed 事件
+                if core::handle::Handle::global().is_exiting() {
+                    logging!(
+                        debug,
+                        Type::System,
+                        true,
+                        "忽略 Ready/Resumed 事件，应用正在退出"
+                    );
+                    return;
+                }
                 event_handlers::handle_ready_resumed(app_handle);
             }
             #[cfg(target_os = "macos")]
@@ -550,6 +571,12 @@ pub fn run() {
                 has_visible_windows,
                 ..
             } => {
+                // 如果正在退出，忽略 Reopen 事件
+                if core::handle::Handle::global().is_exiting() {
+                    logging!(debug, Type::System, true, "忽略 Reopen 事件，应用正在退出");
+                    return;
+                }
+                let app_handle = app_handle.clone();
                 AsyncHandler::spawn(move || async move {
                     event_handlers::handle_reopen(has_visible_windows).await;
                 });
@@ -561,7 +588,21 @@ pub fn run() {
                         .clear_all_ws_connections()
                         .await;
                 });
+                // 如果已经在退出流程中，不要阻止退出
+                if core::handle::Handle::global().is_exiting() {
+                    logging!(
+                        info,
+                        Type::System,
+                        true,
+                        "应用正在退出，允许 ExitRequested (code: {:?})",
+                        code
+                    );
+                    return;
+                }
+
+                // 只阻止外部的无退出码请求（如用户取消系统关机）
                 if code.is_none() {
+                    logging!(debug, Type::System, true, "阻止外部退出请求");
                     api.prevent_exit();
                 }
             }
