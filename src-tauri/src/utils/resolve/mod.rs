@@ -115,7 +115,7 @@ pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
         use dns::restore_public_dns;
 
         logging!(info, Type::System, true, "Restoring system DNS settings");
-        restore_public_dns().await?;
+        restore_public_dns().await;
     }
 
     Ok(())
