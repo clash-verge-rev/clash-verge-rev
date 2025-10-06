@@ -254,7 +254,6 @@
   "Unified Delay Info": "統一遅延を有効にすると、2回の遅延テストが行われ、接続ハンドシェイクなどによる異なるタイプのノードの遅延差を解消します。",
   "Log Level": "ログレベル",
   "Log Level Info": "ログディレクトリのServiceフォルダ内のコアログファイルにのみ適用されます。",
-  "Port Configuration": "ポート設定",
   "Random Port": "ランダムポート",
   "Mixed Port": "混合プロキシポート",
   "Socks Port": "SOCKSプロキシポート",

@@ -303,6 +303,8 @@
   "Http Port": "Http(s) Port",
   "Redir Port": "Redir Port",
   "Tproxy Port": "Tproxy Port",
+  "Port settings saved": "Port settings saved",
+  "Failed to save port settings": "Failed to save port settings",
   "External": "External",
   "Enable External Controller": "Enable External Controller",
   "External Controller": "External Controller",

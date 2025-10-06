@@ -259,7 +259,6 @@
   "Unified Delay Info": "開啟統一延遲時，會進行兩次延遲測試，以消除連接握手等帶來的不同類型節點的延遲差異",
   "Log Level": "日誌等級",
   "Log Level Info": "僅對日誌目錄 Service 文件夾下的內核日誌文件生效",
-  "Port Configuration": "端口設置",
   "Random Port": "隨機端口",
   "Mixed Port": "混合代理端口",
   "Socks Port": "SOCKS 代理端口",
