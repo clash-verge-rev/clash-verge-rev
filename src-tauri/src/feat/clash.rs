@@ -28,6 +28,41 @@ pub async fn restart_app() {
 
     let app_handle = handle::Handle::app_handle();
     app_handle.restart();
+    // TODO: PR Ref: https://github.com/clash-verge-rev/clash-verge-rev/pull/4941
+    // match handle::Handle::global().app_handle() {
+    //     Some(app_handle) => {
+    //         app_handle.restart();
+    //     }
+    //     None => {
+    //         logging_error!(
+    //             Type::System,
+    //             false,
+    //             "{}",
+    //             "Failed to get app handle for restart, attempting alternative restart method"
+    //         );
+    //         // Fallback: launch a new instance of the application and exit the current one
+
+    //         let current_exe = env::current_exe().unwrap_or_else(|_| {
+    //             exit(1); // Exit if can't find the executable path
+    //         });
+
+    //         let mut cmd = Command::new(current_exe);
+    //         cmd.args(env::args().skip(1));
+
+    //         match cmd.spawn() {
+    //             Ok(child) => {
+    //                 log::info!(target: "app", "New application instance started with PID: {}", child.id());
+    //                 // Successfully started new process, now exit current process
+    //                 exit(0);
+    //             }
+    //             Err(e) => {
+    //                 log::error!(target: "app", "Failed to start new application instance: {}", e);
+    //                 // Unable to start new process, exit with error
+    //                 exit(1);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 fn after_change_clash_mode() {
