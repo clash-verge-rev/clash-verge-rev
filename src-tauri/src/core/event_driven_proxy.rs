@@ -85,6 +85,7 @@ struct ProxyConfig {
     sys_enabled: bool,
     pac_enabled: bool,
     guard_enabled: bool,
+    guard_duration: u64,
 }
 
 static PROXY_MANAGER: Lazy<EventDrivenProxyManager> = Lazy::new(EventDrivenProxyManager::new);
@@ -184,15 +185,39 @@ impl EventDrivenProxyManager {
         let mut event_stream = UnboundedReceiverStream::new(event_rx);
         let mut query_stream = UnboundedReceiverStream::new(query_rx);
 
+        // 初始化定时器，用于周期性检查代理设置
+        let config = Self::get_proxy_config().await;
+        let mut guard_interval = tokio::time::interval(Duration::from_secs(config.guard_duration));
+        // 防止首次立即触发
+        guard_interval.tick().await;
+
         loop {
             tokio::select! {
                 Some(event) = event_stream.next() => {
                     log::debug!(target: "app", "处理代理事件: {event:?}");
+                    let event_clone = event.clone(); // 保存一份副本用于后续检查
                     Self::handle_event(&state, event).await;
+                    
+                    // 检查是否是配置变更事件，如果是，则可能需要更新定时器
+                    if matches!(event_clone, ProxyEvent::ConfigChanged | ProxyEvent::AppStarted) {
+                        let new_config = Self::get_proxy_config().await;
+                        // 重新设置定时器间隔
+                        guard_interval = tokio::time::interval(Duration::from_secs(new_config.guard_duration));
+                        // 防止首次立即触发
+                        guard_interval.tick().await;
+                    }
                 }
                 Some(query) = query_stream.next() => {
                     let result = Self::handle_query(&state).await;
                     let _ = query.response_tx.send(result);
+                }
+                _ = guard_interval.tick() => {
+                    // 定时检查代理设置
+                    let config = Self::get_proxy_config().await;
+                    if config.guard_enabled && config.sys_enabled {
+                        log::debug!(target: "app", "定时检查代理设置");
+                        Self::check_and_restore_proxy(&state).await;
+                    }
                 }
                 else => {
                     // 两个通道都关闭时退出
@@ -439,19 +464,21 @@ impl EventDrivenProxyManager {
     }
 
     async fn get_proxy_config() -> ProxyConfig {
-        let (sys_enabled, pac_enabled, guard_enabled) = {
+        let (sys_enabled, pac_enabled, guard_enabled, guard_duration) = {
             let verge_config = Config::verge().await;
             let verge = verge_config.latest_ref();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
                 verge.enable_proxy_guard.unwrap_or(false),
+                verge.proxy_guard_duration.unwrap_or(30), // 默认30秒
             )
         };
         ProxyConfig {
             sys_enabled,
             pac_enabled,
             guard_enabled,
+            guard_duration,
         }
     }
 
