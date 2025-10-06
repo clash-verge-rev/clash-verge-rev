@@ -576,7 +576,6 @@ pub fn run() {
                     logging!(debug, Type::System, true, "忽略 Reopen 事件，应用正在退出");
                     return;
                 }
-                let app_handle = app_handle.clone();
                 AsyncHandler::spawn(move || async move {
                     event_handlers::handle_reopen(has_visible_windows).await;
                 });
