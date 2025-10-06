@@ -20,11 +20,9 @@ async fn open_or_close_dashboard_internal() {
     log::info!(target: "app", "Window toggle result: {result:?}");
 }
 
-/// 异步优化的应用退出函数
 pub async fn quit() {
     logging!(debug, Type::System, true, "启动退出流程");
 
-    // 获取应用句柄并设置退出标志
     let Some(app_handle) = handle::Handle::global().app_handle() else {
         logging!(
             error,
@@ -35,13 +33,11 @@ pub async fn quit() {
     };
     handle::Handle::global().set_is_exiting();
 
-    // 优先关闭窗口，提供立即反馈
     if let Some(window) = handle::Handle::global().get_window() {
         let _ = window.hide();
         log::info!(target: "app", "窗口已隐藏");
     }
 
-    // 使用异步任务处理资源清理，避免阻塞
     logging!(info, Type::System, true, "开始异步清理资源");
     let cleanup_result = clean_async().await;
 
@@ -68,12 +64,12 @@ async fn clean_async() -> bool {
         .unwrap_or(false)
     {
         let disable_tun = serde_json::json!({"tun": {"enable": false}});
-        match timeout(
-            Duration::from_secs(3),
-            IpcManager::global().patch_configs(disable_tun),
-        )
-        .await
-        {
+        #[cfg(target_os = "windows")]
+        let tun_timeout = Duration::from_secs(2);
+        #[cfg(not(target_os = "windows"))]
+        let tun_timeout = Duration::from_secs(2);
+
+        match timeout(tun_timeout, IpcManager::global().patch_configs(disable_tun)).await {
             Ok(Ok(_)) => {
                 log::info!(target: "app", "TUN模式已禁用");
                 tokio::time::sleep(Duration::from_millis(300)).await;
@@ -81,11 +77,12 @@ async fn clean_async() -> bool {
             }
             Ok(Err(e)) => {
                 log::warn!(target: "app", "禁用TUN模式失败: {e}");
-                false
+                // 超时不阻塞退出
+                true
             }
             Err(_) => {
-                log::warn!(target: "app", "禁用TUN模式超时");
-                false
+                log::warn!(target: "app", "禁用TUN模式超时（可能系统正在关机），继续退出流程");
+                true
             }
         }
     } else {
@@ -94,33 +91,133 @@ async fn clean_async() -> bool {
 
     // 2. 系统代理重置
     let proxy_task = async {
-        match timeout(
-            Duration::from_secs(3),
-            sysopt::Sysopt::global().reset_sysproxy(),
-        )
-        .await
+        #[cfg(target_os = "windows")]
         {
-            Ok(_) => {
-                log::info!(target: "app", "系统代理已重置");
-                true
+            use sysproxy::{Autoproxy, Sysproxy};
+            use winapi::um::winuser::{GetSystemMetrics, SM_SHUTTINGDOWN};
+
+            // 检查系统代理是否开启
+            let sys_proxy_enabled = Config::verge()
+                .await
+                .latest_ref()
+                .enable_system_proxy
+                .unwrap_or(false);
+
+            if !sys_proxy_enabled {
+                log::info!(target: "app", "系统代理未启用，跳过重置");
+                return true;
             }
-            Err(_) => {
-                log::warn!(target: "app", "重置系统代理超时");
-                false
+
+            // 检查是否正在关机
+            let is_shutting_down = unsafe { GetSystemMetrics(SM_SHUTTINGDOWN) != 0 };
+
+            if is_shutting_down {
+                // sysproxy-rs 操作注册表(避免.exe的dll错误)
+                log::info!(target: "app", "检测到正在关机，syspro-rs操作注册表关闭系统代理");
+
+                match Sysproxy::get_system_proxy() {
+                    Ok(mut sysproxy) => {
+                        sysproxy.enable = false;
+                        if let Err(e) = sysproxy.set_system_proxy() {
+                            log::warn!(target: "app", "关机时关闭系统代理失败: {e}");
+                        } else {
+                            log::info!(target: "app", "系统代理已关闭（通过注册表）");
+                        }
+                    }
+                    Err(e) => {
+                        log::warn!(target: "app", "关机时获取代理设置失败: {e}");
+                    }
+                }
+
+                // 关闭自动代理配置
+                match Autoproxy::get_auto_proxy() {
+                    Ok(mut autoproxy) => {
+                        autoproxy.enable = false;
+                        let _ = autoproxy.set_auto_proxy();
+                    }
+                    Err(_) => {}
+                }
+
+                return true;
+            }
+
+            // 正常退出：使用 sysproxy.exe 重置代理
+            log::info!(target: "app", "sysproxy.exe重置系统代理");
+
+            match timeout(
+                Duration::from_secs(2),
+                sysopt::Sysopt::global().reset_sysproxy(),
+            )
+            .await
+            {
+                Ok(Ok(_)) => {
+                    log::info!(target: "app", "系统代理已重置");
+                    true
+                }
+                Ok(Err(e)) => {
+                    log::warn!(target: "app", "重置系统代理失败: {e}");
+                    true
+                }
+                Err(_) => {
+                    log::warn!(target: "app", "重置系统代理超时，继续退出流程");
+                    true
+                }
+            }
+        }
+
+        // 非 Windows 平台：正常重置代理
+        #[cfg(not(target_os = "windows"))]
+        {
+            let sys_proxy_enabled = Config::verge()
+                .await
+                .latest_ref()
+                .enable_system_proxy
+                .unwrap_or(false);
+
+            if !sys_proxy_enabled {
+                log::info!(target: "app", "系统代理未启用，跳过重置");
+                return true;
+            }
+
+            log::info!(target: "app", "开始重置系统代理...");
+
+            match timeout(
+                Duration::from_millis(1500),
+                sysopt::Sysopt::global().reset_sysproxy(),
+            )
+            .await
+            {
+                Ok(Ok(_)) => {
+                    log::info!(target: "app", "系统代理已重置");
+                    true
+                }
+                Ok(Err(e)) => {
+                    log::warn!(target: "app", "重置系统代理失败: {e}");
+                    true
+                }
+                Err(_) => {
+                    log::warn!(target: "app", "重置系统代理超时，继续退出");
+                    true
+                }
             }
         }
     };
 
     // 3. 核心服务停止
     let core_task = async {
-        match timeout(Duration::from_secs(3), CoreManager::global().stop_core()).await {
+        #[cfg(target_os = "windows")]
+        let stop_timeout = Duration::from_secs(2);
+        #[cfg(not(target_os = "windows"))]
+        let stop_timeout = Duration::from_secs(3);
+
+        match timeout(stop_timeout, CoreManager::global().stop_core()).await {
             Ok(_) => {
-                log::info!(target: "app", "核心服务已停止");
+                log::info!(target: "app", "core已停止");
                 true
             }
             Err(_) => {
-                log::warn!(target: "app", "停止核心服务超时");
-                false
+                log::warn!(target: "app", "停止core超时（可能系统正在关机），继续退出");
+                true
             }
         }
     };
@@ -181,11 +278,15 @@ pub fn clean() -> bool {
         // 使用已有的异步清理函数
         let cleanup_result = clean_async().await;
 
-        // 发送结果
         let _ = tx.send(cleanup_result);
     });
 
-    match rx.recv_timeout(std::time::Duration::from_secs(8)) {
+    #[cfg(target_os = "windows")]
+    let total_timeout = std::time::Duration::from_secs(5);
+    #[cfg(not(target_os = "windows"))]
+    let total_timeout = std::time::Duration::from_secs(8);
+
+    match rx.recv_timeout(total_timeout) {
         Ok(result) => {
             logging!(info, Type::System, true, "关闭操作完成，结果: {}", result);
             result
@@ -195,7 +296,7 @@ pub fn clean() -> bool {
                 warn,
                 Type::System,
                 true,
-                "清理操作超时，返回成功状态避免阻塞"
+                "清理操作超时(可能正在关机)，返回成功避免阻塞"
             );
             true
         }
