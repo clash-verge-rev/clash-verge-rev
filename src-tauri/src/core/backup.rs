@@ -127,13 +127,24 @@ impl WebDavClient {
             .set_auth(reqwest_dav::Auth::Basic(config.username, config.password))
             .build()?;
 
-        // 尝试检查目录是否存在，如果不存在尝试创建，但创建失败不报错
+        // 尝试检查目录是否存在，如果不存在尝试创建
         if client
             .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0))
             .await
             .is_err()
         {
-            let _ = client.mkcol(dirs::BACKUP_DIR).await;
+            match client.mkcol(dirs::BACKUP_DIR).await {
+                Ok(_) => log::info!("Successfully created backup directory"),
+                Err(e) => {
+                    log::warn!("Failed to create backup directory: {}", e);
+                    // 清除缓存，强制下次重新尝试
+                    self.reset();
+                    return Err(anyhow::Error::msg(format!(
+                        "Failed to create backup directory: {}",
+                        e
+                    )));
+                }
+            }
         }
 
         // 缓存客户端
