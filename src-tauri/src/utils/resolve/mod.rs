@@ -103,16 +103,12 @@ pub fn resolve_setup_async() {
 }
 
 // 其它辅助函数不变
-pub async fn resolve_reset_async() {
+pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
     logging!(info, Type::Tray, true, "Resetting system proxy");
-    logging_error!(
-        Type::System,
-        true,
-        sysopt::Sysopt::global().reset_sysproxy().await
-    );
+    sysopt::Sysopt::global().reset_sysproxy().await?;
 
     logging!(info, Type::Core, true, "Stopping core service");
-    logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+    CoreManager::global().stop_core().await?;
 
     #[cfg(target_os = "macos")]
     {
@@ -121,6 +117,8 @@ pub async fn resolve_reset_async() {
         logging!(info, Type::System, true, "Restoring system DNS settings");
         restore_public_dns().await;
     }
+
+    Ok(())
 }
 
 pub fn init_handle(app_handle: AppHandle) {

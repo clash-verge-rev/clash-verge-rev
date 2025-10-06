@@ -26,22 +26,35 @@ pub async fn restart_clash_core() {
 
 /// Restart the application
 pub async fn restart_app() {
-    // logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
-    resolve::resolve_reset_async().await;
+    // Step 1: Perform cleanup and check for errors
+    if let Err(err) = resolve::resolve_reset_async().await {
+        handle::Handle::notice_message(
+            "restart_app::error",
+            format!("Failed to cleanup resources: {err}"),
+        );
+        log::error!(target:"app", "Restart failed during cleanup: {err}");
+        return;
+    }
 
+    // Step 2: Attempt to get app handle and restart
     match handle::Handle::global().app_handle() {
         Some(app_handle) => {
+            handle::Handle::notice_message("restart_app::info", "Restarting application...");
             app_handle.restart();
         }
         None => {
+            handle::Handle::notice_message(
+                "restart_app::error",
+                "Failed to get app handle for restart",
+            );
             logging_error!(
                 Type::System,
                 false,
                 "{}",
-                "Failed to get app handle for restart, attempting alternative restart method"
+                "Failed to get app handle for restart"
             );
-            // Fallback: launch a new instance of the application and exit the current one
 
+            // Fallback: launch a new instance of the application and exit the current one
             let current_exe = env::current_exe().unwrap_or_else(|_| {
                 exit(1); // Exit if can't find the executable path
             });
