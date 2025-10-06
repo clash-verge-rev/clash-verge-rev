@@ -32,6 +32,14 @@ pub enum Error {
     HttpParseError(String),
     #[error("Parse error, {0}")]
     ParseError(String),
+    #[error("Connection pool init failed")]
+    ConnectionPoolInitFailed,
+    #[error("Connection pool is full")]
+    ConnectionPoolFull,
+    #[error("Connection failed")]
+    ConnectionFailed,
+    #[error("Connection lost")]
+    ConnectionLost,
 }
 
 impl Serialize for Error {

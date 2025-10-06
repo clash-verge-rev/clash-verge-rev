@@ -1,6 +1,10 @@
 use std::{
+    collections::VecDeque,
+    ops::{Deref, DerefMut},
     pin::Pin,
+    sync::{Arc, OnceLock},
     task::{Context, Poll},
+    time::{Duration, Instant},
 };
 
 use http::{
@@ -10,11 +14,15 @@ use http::{
 use httparse::EMPTY_HEADER;
 use pin_project::pin_project;
 use reqwest::RequestBuilder;
-use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, BufReader};
 #[cfg(unix)]
 use tokio::net::UnixStream;
 #[cfg(windows)]
 use tokio::net::windows::named_pipe::{ClientOptions, NamedPipeClient};
+use tokio::{
+    io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, BufReader},
+    sync::{Mutex, Semaphore, SemaphorePermit},
+    time::timeout,
+};
 #[cfg(windows)]
 use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
 
@@ -29,6 +37,33 @@ pub enum WrapStream {
 }
 
 impl WrapStream {
+    pub fn is_available(&self) -> Result<bool> {
+        match self {
+            #[cfg(unix)]
+            WrapStream::Unix(s) => {
+                use std::io::ErrorKind;
+
+                let mut buf = [0u8; 1];
+                match s.try_read(&mut buf) {
+                    Ok(n) => Ok(n != 0),
+                    Err(e) if e.kind() == ErrorKind::WouldBlock => Ok(true),
+                    Err(e) => Err(Error::Io(e)),
+                }
+            }
+            #[cfg(windows)]
+            WrapStream::NamedPipe(s) => {
+                use std::io::ErrorKind;
+
+                let mut buf = [0u8; 1];
+                match s.try_read(&mut buf) {
+                    Ok(n) => Ok(n != 0),
+                    Err(e) if e.kind() == ErrorKind::WouldBlock => Ok(true),
+                    Err(e) => Err(Error::Io(e)),
+                }
+            }
+        }
+    }
+
     pub async fn readable(&self) -> std::io::Result<()> {
         match self {
             #[cfg(unix)]
@@ -191,7 +226,7 @@ fn generate_socket_response(header: String, body: String) -> Result<reqwest::Res
     }
 }
 
-async fn read_header(reader: &mut BufReader<WrapStream>) -> Result<String> {
+async fn read_header(reader: &mut BufReader<&mut WrapStream>) -> Result<String> {
     let mut header = String::new();
     loop {
         let mut line = String::new();
@@ -210,7 +245,7 @@ async fn read_header(reader: &mut BufReader<WrapStream>) -> Result<String> {
     Ok(header)
 }
 
-async fn read_chunked_data(reader: &mut BufReader<WrapStream>) -> Result<String> {
+async fn read_chunked_data(reader: &mut BufReader<&mut WrapStream>) -> Result<String> {
     let mut body = Vec::new();
     loop {
         // 读 chunk size
@@ -243,6 +278,322 @@ async fn read_chunked_data(reader: &mut BufReader<WrapStream>) -> Result<String>
     Ok(String::from_utf8(body)?)
 }
 
+// ----------------------------------------------------------------
+//                       Connection Pool
+// ----------------------------------------------------------------
+
+// 连接池配置
+#[derive(Debug, Clone)]
+pub struct IpcPoolConfig {
+    /// 最小连接数, 默认 `3`
+    pub min_connections: usize,
+    /// 最大连接数, 默认 `10`
+    pub max_connections: usize,
+    /// 空闲超时时间, 默认 `60s`
+    pub idle_timeout: Duration,
+    /// 健康检查间隔, 默认 `60s`
+    pub health_check_interval: Duration,
+    /// 拒绝策略, 默认 `New` （无需等待连接池可用，直接创建新的 IPC 连接）
+    pub reject_policy: RejectPolicy,
+}
+
+impl Default for IpcPoolConfig {
+    fn default() -> Self {
+        Self {
+            min_connections: 3,
+            max_connections: 20,
+            idle_timeout: Duration::from_secs(60),
+            health_check_interval: Duration::from_secs(60),
+            reject_policy: RejectPolicy::New,
+        }
+    }
+}
+
+pub struct IpcPoolConfigBuilder {
+    min_connections: usize,
+    max_connections: usize,
+    idle_timeout: Duration,
+    health_check_interval: Duration,
+    reject_policy: RejectPolicy,
+}
+
+impl Default for IpcPoolConfigBuilder {
+    fn default() -> Self {
+        Self {
+            min_connections: 3,
+            max_connections: 20,
+            idle_timeout: Duration::from_secs(60),
+            health_check_interval: Duration::from_secs(60),
+            reject_policy: RejectPolicy::New,
+        }
+    }
+}
+
+impl IpcPoolConfigBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn min_connections(mut self, min_connections: usize) -> Self {
+        self.min_connections = min_connections;
+        self
+    }
+
+    pub fn max_connections(mut self, max_connections: usize) -> Self {
+        self.max_connections = max_connections;
+        self
+    }
+
+    pub fn idle_timeout(mut self, idle_timeout: Duration) -> Self {
+        self.idle_timeout = idle_timeout;
+        self
+    }
+
+    pub fn health_check_interval(mut self, health_check_interval: Duration) -> Self {
+        self.health_check_interval = health_check_interval;
+        self
+    }
+
+    pub fn reject_policy(mut self, reject_policy: RejectPolicy) -> Self {
+        self.reject_policy = reject_policy;
+        self
+    }
+
+    pub fn build(self) -> IpcPoolConfig {
+        IpcPoolConfig {
+            min_connections: self.min_connections,
+            max_connections: self.max_connections,
+            idle_timeout: self.idle_timeout,
+            health_check_interval: self.health_check_interval,
+            reject_policy: self.reject_policy,
+        }
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Default)]
+pub enum RejectPolicy {
+    #[default]
+    New, // 无需等待连接池的连接可用，直接创建新的 IPC 连接
+    Reject,            // 连接池的连接不可用时，直接拒绝
+    Timeout(Duration), // 等待连接池的连接可用的超时时间
+    Wait,              // 一直等待连接池的连接可用
+}
+
+// IPC 连接包装器
+struct IpcConnection {
+    stream: WrapStream,
+    last_used: Instant,
+}
+
+impl Deref for IpcConnection {
+    type Target = WrapStream;
+
+    fn deref(&self) -> &Self::Target {
+        &self.stream
+    }
+}
+
+impl DerefMut for IpcConnection {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.stream
+    }
+}
+
+impl IpcConnection {
+    fn new(stream: WrapStream) -> Self {
+        Self {
+            stream,
+            last_used: Instant::now(),
+        }
+    }
+
+    fn is_valid(&mut self) -> bool {
+        self.stream.is_available().unwrap_or_default()
+    }
+}
+
+// IPC 连接池
+#[derive(Clone)]
+pub struct IpcConnectionPool {
+    connections: Arc<Mutex<VecDeque<IpcConnection>>>,
+    semaphore: Arc<Semaphore>,
+    config: IpcPoolConfig,
+}
+
+static CONNECTION_POOL: OnceLock<IpcConnectionPool> = OnceLock::new();
+
+impl IpcConnectionPool {
+    fn new(config: IpcPoolConfig) -> Self {
+        let pool = IpcConnectionPool {
+            semaphore: Arc::new(Semaphore::new(config.max_connections)),
+            config,
+            connections: Arc::new(Mutex::new(VecDeque::new())),
+        };
+        // 启动清理空闲连接的任务线程
+        pool.start_clear_idle_conns_task();
+        pool
+    }
+
+    /// 初始化全局实例
+    pub fn init(config: IpcPoolConfig) -> Result<()> {
+        CONNECTION_POOL
+            .set(IpcConnectionPool::new(config))
+            .map_err(|_| Error::ConnectionPoolInitFailed)
+    }
+
+    pub fn global() -> &'static Self {
+        CONNECTION_POOL.get().expect("IpcConnectionPool is not initialized")
+    }
+
+    /// 启动清理空闲连接的任务线程
+    fn start_clear_idle_conns_task(&self) {
+        let pool = self.clone();
+
+        tauri::async_runtime::spawn(async move {
+            loop {
+                tokio::time::sleep(pool.config.health_check_interval).await;
+                pool.cleanup_idle_connections().await;
+            }
+        });
+    }
+
+    // 清理空闲连接
+    async fn cleanup_idle_connections(&self) {
+        log::debug!("cleanup idle connections");
+        let now = Instant::now();
+
+        // 移除超时空闲连接，但保留最小连接数
+        let min_to_keep = self.config.min_connections;
+        let mut kept_connections = 0;
+
+        let mut connections = self.connections.lock().await;
+        let before = connections.len();
+        connections.retain(|conn| {
+            if kept_connections < min_to_keep || now.duration_since(conn.last_used) <= self.config.idle_timeout {
+                kept_connections += 1;
+                true
+            } else {
+                false
+            }
+        });
+        log::debug!(
+            "cleanup connections done, before: {}, after: {}",
+            before,
+            connections.len()
+        );
+    }
+
+    async fn get_connection<'a>(&'a self, socket_path: &str) -> Result<(IpcConnection, SemaphorePermit<'a>)> {
+        log::debug!("get connection from pool");
+        // 确保获取 semaphore permit
+        let permit = self.acquire_permit().await?;
+        // 开始创建连接
+        let conn = self.acquire_or_create_connection(socket_path).await?;
+        Ok((conn, permit))
+    }
+
+    async fn acquire_permit<'a>(&'a self) -> Result<SemaphorePermit<'a>> {
+        log::debug!("acquire permit");
+        match self.semaphore.try_acquire() {
+            Ok(permit) => Ok(permit),
+            Err(_) => match self.config.reject_policy {
+                RejectPolicy::New => {
+                    log::debug!("max permit has acquire, add permit");
+                    self.semaphore.add_permits(1);
+                    match self.semaphore.acquire().await {
+                        Ok(permit) => Ok(permit),
+                        Err(_) => {
+                            log::error!("failed to acquire permit, forget permit");
+                            self.semaphore.forget_permits(1);
+                            Err(Error::ConnectionFailed)
+                        }
+                    }
+                }
+                RejectPolicy::Reject => Err(Error::ConnectionPoolFull),
+                RejectPolicy::Timeout(timeout_duration) => {
+                    let acquire_future = self.semaphore.acquire();
+                    match timeout(timeout_duration, acquire_future).await {
+                        Ok(Ok(permit)) => Ok(permit),
+                        Ok(Err(_)) => Err(Error::ConnectionPoolFull),
+                        Err(e) => Err(Error::Timeout(e)),
+                    }
+                }
+                RejectPolicy::Wait => {
+                    let acquire_future = self.semaphore.acquire().await;
+                    match acquire_future {
+                        Ok(permit) => Ok(permit),
+                        Err(_) => Err(Error::ConnectionPoolFull),
+                    }
+                }
+            },
+        }
+    }
+
+    async fn acquire_or_create_connection(&self, socket_path: &str) -> Result<IpcConnection> {
+        // 从池中获取连接并检查其有效性
+        if let Some(mut conn) = self.connections.lock().await.pop_front() {
+            log::debug!("get conneciton from pool successfully");
+            if !conn.is_valid() {
+                // 如果连接失效，则重新建立连接
+                log::warn!("conneciton from pool is not available, drop it and create new connection");
+                drop(conn);
+                return Self::create_connection(socket_path).await;
+            }
+            return Ok(conn);
+        }
+
+        let conn = Self::create_connection(socket_path).await?;
+        Ok(conn)
+    }
+
+    async fn create_connection(socket_path: &str) -> Result<IpcConnection> {
+        log::trace!(
+            "creating connection, available permits: {}",
+            Self::global().semaphore.available_permits()
+        );
+        match connect_to_socket(socket_path).await {
+            Ok(stream) => Ok(IpcConnection::new(stream)),
+            Err(_) => Err(Error::ConnectionFailed),
+        }
+    }
+
+    async fn release_connection(&self, mut connection: IpcConnection) {
+        let mut connections = self.connections.lock().await;
+        log::debug!(
+            "release connections, pool length: {}, available permits: {}",
+            connections.len(),
+            self.semaphore.available_permits()
+        );
+        connection.last_used = Instant::now();
+
+        if self.semaphore.available_permits() >= self.config.max_connections {
+            self.semaphore.forget_permits(1);
+            drop(connection);
+        } else {
+            log::debug!("push connection to pool");
+            connections.push_back(connection);
+        }
+    }
+
+    pub async fn clear_pool(&self) {
+        let mut connections = self.connections.lock().await;
+        for conn in connections.drain(..) {
+            drop(conn);
+        }
+        connections.clear();
+    }
+}
+
+impl Drop for IpcConnectionPool {
+    fn drop(&mut self) {
+        tauri::async_runtime::block_on(async move {
+            log::debug!("IpcConnectionPool is being dropped");
+            self.clear_pool().await;
+        });
+    }
+}
+
 pub trait LocalSocket {
     async fn send_by_local_socket(self, socket_path: &str) -> Result<reqwest::Response>;
 }
@@ -253,17 +604,19 @@ impl LocalSocket for RequestBuilder {
         let timeout = request.timeout().cloned();
 
         let process = async move {
-            let mut stream = connect_to_socket(socket_path).await?;
+            let pool = IpcConnectionPool::global();
+            let (mut conn, _permit) = pool.get_connection(socket_path).await?;
+            // let mut stream = connect_to_socket(socket_path).await?;
             log::debug!("building socket request");
             let req_str = generate_socket_request(request)?;
             log::debug!("request string: {req_str:?}");
-            stream.writable().await?;
+            conn.writable().await?;
             log::debug!("send request");
-            stream.write_all(req_str.as_bytes()).await?;
+            conn.write_all(req_str.as_bytes()).await?;
             log::debug!("wait for response");
-            stream.readable().await?;
+            conn.readable().await?;
 
-            let mut reader = BufReader::new(stream);
+            let mut reader = BufReader::new(&mut conn.stream);
 
             // 读取解析 header
             let header = read_header(&mut reader).await?;
@@ -291,8 +644,9 @@ impl LocalSocket for RequestBuilder {
                 // 使用空的 body
                 String::new()
             };
-            log::debug!("receive response success, shut down stream");
-            reader.shutdown().await?;
+            log::debug!("receive response success");
+            // reader.shutdown().await?;
+            pool.release_connection(conn).await;
             generate_socket_response(header, body)
         };
 

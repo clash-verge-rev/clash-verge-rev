@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tauri_plugin_mihomo::{Result, failed_resp};
 
 use crate::common::{TEST_URL, TIMEOUT};
@@ -43,30 +45,31 @@ async fn mihomo_proxy_delay() -> Result<()> {
 }
 
 // 并发测试节点延迟
-// #[tokio::test]
-// async fn mihomo_proxy_spawn_delay() -> Result<()> {
-//     let mihomo = common::mihomo();
-//     let groups = mihomo.get_groups().await?;
-//     let proxies = groups.proxies[0].all.as_ref().unwrap();
-//     let mut tasks = Vec::new();
-//     let arc_mihomo = Arc::new(mihomo);
-//     for _ in 0..=10 {
-//         for proxy in proxies.clone().into_iter() {
-//             let mihomo_ = Arc::clone(&arc_mihomo);
-//             tasks.push(tokio::spawn(async move {
-//                 match mihomo_.delay_proxy_by_name(&proxy, TEST_URL, TIMEOUT).await {
-//                     Ok(delay) => {
-//                         println!("{proxy}: {delay:?}");
-//                     }
-//                     Err(e) => {
-//                         println!("{proxy}: error: {e}");
-//                     }
-//                 }
-//             }));
-//         }
-//     }
-//     for task in tasks.into_iter() {
-//         task.await.unwrap();
-//     }
-//     Ok(())
-// }
+#[tokio::test]
+async fn bench_proxy_delay() -> Result<()> {
+    let mihomo = common::mihomo();
+    let groups = mihomo.get_groups().await?;
+    let proxies = groups.proxies[0].all.as_ref().unwrap();
+    let mut tasks = Vec::new();
+    let arc_mihomo = Arc::new(mihomo);
+    println!("total: {}", proxies.len() * 10);
+    for _ in 0..=10 {
+        for proxy in proxies.clone().into_iter() {
+            let mihomo_ = Arc::clone(&arc_mihomo);
+            tasks.push(tokio::spawn(async move {
+                match mihomo_.delay_proxy_by_name(&proxy, TEST_URL, TIMEOUT).await {
+                    Ok(delay) => {
+                        println!("{proxy}: {delay:?}");
+                    }
+                    Err(e) => {
+                        println!("{proxy}: error: {e}");
+                    }
+                }
+            }));
+        }
+    }
+    for task in tasks.into_iter() {
+        task.await.unwrap();
+    }
+    Ok(())
+}

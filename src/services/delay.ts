@@ -210,6 +210,7 @@ class DelayManager {
   formatDelay(delay: number, timeout = 10000) {
     if (delay === -1) return "-";
     if (delay === -2) return "testing";
+    if (delay > 1e5) return "Error";
     if (delay === 0 || delay >= timeout) return "timeout";
     return `${delay}`;
   }

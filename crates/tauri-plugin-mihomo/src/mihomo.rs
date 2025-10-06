@@ -14,7 +14,7 @@ use tokio_tungstenite::{
 };
 
 use crate::{
-    Error, Result, failed_resp,
+    Error, IpcConnectionPool, Result, failed_resp,
     ipc::LocalSocket,
     models::{
         BaseConfig, CloseFrame, ConnectionId, ConnectionManager, Connections, CoreUpdaterChannel, ErrorResponse,
@@ -54,6 +54,9 @@ impl Mihomo {
 
     pub fn update_socket_path<S: Into<String>>(&mut self, socket_path: S) {
         self.socket_path = Some(socket_path.into());
+        tauri::async_runtime::block_on(async {
+            let _ = IpcConnectionPool::global().clear_pool().await;
+        });
     }
 
     fn get_req_url(&self, suffix_url: &str) -> Result<String> {
