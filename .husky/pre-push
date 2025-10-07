@@ -4,7 +4,7 @@
 # $2: remote url (e.g., git@github.com:clash-verge-rev/clash-verge-rev.git)
 
 if git diff --cached --name-only | grep -q '^src-tauri/'; then
-    cargo clippy --manifest-path ./src-tauri/Cargo.toml
+    cargo clippy --manifest-path ./src-tauri/Cargo.toml -- -D warnings
     if [ $? -ne 0 ]; then
         echo "Clippy found issues in src-tauri. Please fix them before pushing."
         exit 1
@@ -16,7 +16,7 @@ fi
 remote_name="$1"
 if git remote get-url "$remote_name" >/dev/null 2>&1; then
     remote_url=$(git remote get-url "$remote_name")
-    if [[ "$remote_url" =~ github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$ ]]; then
+    if [[ "$remote_url" =~ github\\.com[:/]+clash-verge-rev/clash-verge-rev(\\.git)?$ ]]; then
         echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev ($remote_url)"
         echo "[pre-push] Running pnpm format:check..."
         pnpm format:check

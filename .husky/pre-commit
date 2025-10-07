@@ -1,26 +1,45 @@
 #!/bin/bash
 
-#pnpm pretty-quick --staged
+# Run lint-staged to handle formatting and linting for JS/TS files
+# This handles prettier and eslint --fix automatically
+npx lint-staged
 
-if git diff --cached --name-only | grep -q '^src/'; then
-    pnpm format:check
-    if [ $? -ne 0 ]; then
-        echo "Code format check failed in src/. Please fix formatting issues."
+# Check for any remaining linting errors in JS/TS files that weren't fixed automatically
+# Only run this if JS/TS files are staged (lint-staged already handled these)
+JS_FILES=$(git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)' || true)
+
+if [ -n "$JS_FILES" ]; then
+    echo "Verifying no remaining linting issues in staged files..."
+    # Use --max-warnings 0 to ensure no warnings either
+    if ! pnpm lint:staged --max-warnings 0; then
+        echo "ESLint found unfixable issues or warnings in staged files. Please fix them before committing."
+        echo "Files affected: $JS_FILES"
         exit 1
     fi
 fi
 
-if git diff --cached --name-only | grep -q '^src-tauri/'; then
-    cd src-tauri
+# Check for staged Rust files and handle them
+RUST_FILES=$(git diff --cached --name-only | grep -E '^src-tauri/.*\.(rs)$' || true)
+
+if [ -n "$RUST_FILES" ]; then
+    echo "Running rustfmt and clippy on staged Rust files..."
+    cd src-tauri || exit
+    # Auto-format Rust code
     cargo fmt
-    if [ $? -ne 0 ]; then
-        echo "rustfmt failed to format the code. Please fix the issues and try again."
+    # Check if there are still formatting issues after auto-formatting
+    if ! cargo fmt -- --check; then
+        echo "rustfmt still found formatting issues after auto-formatting."
+        cd ..
+        exit 1
+    fi
+    # Run clippy for linting
+    if ! cargo clippy -- -D warnings; then
+        echo "clippy found issues. Please fix them before committing."
+        cd ..
         exit 1
     fi
     cd ..
 fi
 
-#git add .
-
-# 允许提交
+# Allow commit
 exit 0
