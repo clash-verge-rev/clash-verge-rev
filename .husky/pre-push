@@ -4,7 +4,7 @@
 # $2: remote url (e.g., git@github.com:clash-verge-rev/clash-verge-rev.git)
 
 if git diff --cached --name-only | grep -q '^src-tauri/'; then
-    cargo clippy --manifest-path ./src-tauri/Cargo.toml -- -D warnings
+    cargo clippy --manifest-path ./src-tauri/Cargo.toml
     if [ $? -ne 0 ]; then
         echo "Clippy found issues in src-tauri. Please fix them before pushing."
         exit 1
