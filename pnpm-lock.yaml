@@ -214,7 +214,7 @@ importers:
         specifier: ^2.6.1
         version: 2.6.1
       lint-staged:
-        specifier: ^15.4.2
+        specifier: ^15.5.2
         version: 15.5.2
       meta-json-schema:
         specifier: ^1.19.14
