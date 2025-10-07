@@ -79,37 +79,32 @@ const ProxyPage = () => {
 
   // 当开启链式代理模式时，获取配置数据
   useEffect(() => {
-    const updateChainConfigData = () => {
+    const updateChainConfigData = async () => {
       if (isChainMode) {
-        const fetchChainConfig = async () => {
-          try {
-            const exitNode = localStorage.getItem("proxy-chain-exit-node");
+        try {
+          const exitNode = localStorage.getItem("proxy-chain-exit-node");
 
-            if (!exitNode) {
-              console.error("No proxy chain exit node found in localStorage");
-              const timer = setTimeout(() => {
-                setChainConfigData((prev) => (prev !== "" ? "" : prev));
-              }, 0);
-              return () => clearTimeout(timer);
-            }
-
-            const configData = await getRuntimeProxyChainConfig(exitNode);
-            const newData = configData || "";
-            const timer = setTimeout(() => {
-              setChainConfigData((prev) => (prev !== newData ? newData : prev));
-            }, 0);
-            return () => clearTimeout(timer);
-          } catch (error) {
-            console.error("Failed to get runtime proxy chain config:", error);
+          if (!exitNode) {
+            console.error("No proxy chain exit node found in localStorage");
             const timer = setTimeout(() => {
               setChainConfigData((prev) => (prev !== "" ? "" : prev));
             }, 0);
             return () => clearTimeout(timer);
           }
-        };
 
-        const cleanup = fetchChainConfig();
-        return cleanup;
+          const configData = await getRuntimeProxyChainConfig(exitNode);
+          const newData = configData || "";
+          const timer = setTimeout(() => {
+            setChainConfigData((prev) => (prev !== newData ? newData : prev));
+          }, 0);
+          return () => clearTimeout(timer);
+        } catch (error) {
+          console.error("Failed to get runtime proxy chain config:", error);
+          const timer = setTimeout(() => {
+            setChainConfigData((prev) => (prev !== "" ? "" : prev));
+          }, 0);
+          return () => clearTimeout(timer);
+        }
       } else {
         const timer = setTimeout(() => {
           setChainConfigData((prev) => (prev !== null ? null : prev));
@@ -118,8 +113,8 @@ const ProxyPage = () => {
       }
     };
 
-    const cleanup = updateChainConfigData();
-    return cleanup;
+    // Call the async function and handle the Promise properly
+    updateChainConfigData();
   }, [isChainMode]);
 
   useEffect(() => {

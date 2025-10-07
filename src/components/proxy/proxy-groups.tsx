@@ -54,6 +54,7 @@ export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation();
   const { mode, isChainMode = false, chainConfigData } = props;
   const [proxyChain, setProxyChain] = useState<ProxyChainItem[]>([]);
+  const [, setHasUnsavedChanges] = useState<boolean>(false);
   const [selectedGroup, setSelectedGroup] = useState<string | undefined>(
     undefined,
   );
@@ -507,6 +508,7 @@ export const ProxyGroups = (props: Props) => {
             <ProxyChain
               proxyChain={proxyChain}
               onUpdateChain={setProxyChain}
+              setHasUnsavedChanges={setHasUnsavedChanges}
               chainConfigData={chainConfigData as string | undefined}
               mode={mode}
               selectedGroup={selectedGroup}

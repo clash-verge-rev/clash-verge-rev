@@ -61,6 +61,7 @@ interface ParsedChainConfig {
 interface ProxyChainProps {
   proxyChain: ProxyChainItem[];
   onUpdateChain: (chain: ProxyChainItem[]) => void;
+  setHasUnsavedChanges: (value: boolean) => void;
   chainConfigData?: string | null;
   mode?: string;
   selectedGroup?: string;
@@ -188,6 +189,7 @@ const SortableItem = ({ proxy, index, onRemove }: SortableItemProps) => {
 export const ProxyChain = ({
   proxyChain,
   onUpdateChain,
+  setHasUnsavedChanges,
   chainConfigData,
   mode,
   selectedGroup,
@@ -196,6 +198,7 @@ export const ProxyChain = ({
   const { t } = useTranslation();
   const { proxies } = useAppData();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false); // Add isConnected state
 
   // 获取当前代理信息以检查连接状态
   const { data: currentProxies, mutate: mutateProxies } = useSWR(
@@ -267,7 +270,7 @@ export const ProxyChain = ({
       setHasUnsavedChanges(true);
     }
     chainLengthRef.current = proxyChain.length;
-  }, [proxyChain.length]);
+  }, [proxyChain.length, setHasUnsavedChanges]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -288,7 +291,7 @@ export const ProxyChain = ({
         setHasUnsavedChanges(true);
       }
     },
-    [proxyChain, onUpdateChain],
+    [proxyChain, onUpdateChain, setHasUnsavedChanges],
   );
 
   const handleRemoveProxy = useCallback(
@@ -297,7 +300,7 @@ export const ProxyChain = ({
       onUpdateChain(newChain);
       setHasUnsavedChanges(true);
     },
-    [proxyChain, onUpdateChain],
+    [proxyChain, onUpdateChain, setHasUnsavedChanges],
   );
 
   const handleConnect = useCallback(async () => {
@@ -374,7 +377,15 @@ export const ProxyChain = ({
     } finally {
       setIsConnecting(false);
     }
-  }, [proxyChain, t, mutateProxies, mode, selectedGroup]);
+  }, [
+    proxyChain,
+    t,
+    mutateProxies,
+    mode,
+    selectedGroup,
+    isConnected,
+    setHasUnsavedChanges,
+  ]);
 
   const proxyChainRef = useRef(proxyChain);
   const onUpdateChainRef = useRef(onUpdateChain);
@@ -442,7 +453,7 @@ export const ProxyChain = ({
       onUpdateChain([]);
       setHasUnsavedChanges(false);
     }
-  }, [chainConfigData, onUpdateChain]);
+  }, [chainConfigData, onUpdateChain, setHasUnsavedChanges]);
 
   // 定时更新延迟数据
   useEffect(() => {

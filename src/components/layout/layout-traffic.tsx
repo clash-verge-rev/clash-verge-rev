@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
-import { LightweightTrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
+import { LightweightTrafficErrorBoundary } from "@/components/common/traffic-error-fallback";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
 import { useVerge } from "@/hooks/use-verge";

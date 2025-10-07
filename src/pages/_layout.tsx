@@ -298,7 +298,7 @@ const Layout = () => {
     let isInitialized = false;
     let initializationAttempts = 0;
     const maxAttempts = 3;
-    let retryTimeout: NodeJS.Timeout | null = null;
+    let retryTimeout: number | null = null;
 
     const notifyBackend = async (action: string, stage?: string) => {
       try {
@@ -345,8 +345,8 @@ const Layout = () => {
         await notifyBackend("加载阶段", "Loading");
 
         await new Promise<void>((resolve) => {
-          let mountCheckTimeout: NodeJS.Timeout;
-          const overallTimeout: NodeJS.Timeout;
+          let mountCheckTimeout: number;
+          let overallTimeout: number;
 
           const checkReactMount = () => {
             const rootElement = document.getElementById("root");
@@ -427,7 +427,7 @@ const Layout = () => {
       }
     };
 
-    const backupInitialization: NodeJS.Timeout;
+    let backupInitialization: number;
     backupInitialization = setTimeout(() => {
       if (!hasEventTriggered && !isInitialized) {
         console.warn("[Layout] 备用初始化触发：1.5秒内未开始初始化");

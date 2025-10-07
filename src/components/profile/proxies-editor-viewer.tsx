@@ -56,6 +56,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const { t } = useTranslation();
   const themeMode = useThemeMode();
   const [currData, setCurrData] = useState("");
+  const [prevData, setPrevData] = useState(""); // Store original data for onSave callback
   const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
   const [proxyUri, setProxyUri] = useState<string>("");
@@ -183,12 +184,13 @@ export const ProxiesEditorViewer = (props: Props) => {
 
   const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property);
+    setPrevData(data); // Store original data
     const obj = yaml.load(data) as ISeqProfileConfig | null;
 
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
-  }, [property, setPrependSeq, setAppendSeq, setDeleteSeq]);
+  }, [property, setPrependSeq, setAppendSeq, setDeleteSeq, setPrevData]);
 
   useEffect(() => {
     const updateSequences = () => {

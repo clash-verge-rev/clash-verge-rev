@@ -11,7 +11,7 @@ import {
   Theme,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { BaseLoading } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
@@ -82,8 +82,8 @@ export const ProxyItem = (props: Props) => {
   }, [updateDelay]);
 
   const onDelay = useLockFn(async () => {
-    let timer1: NodeJS.Timeout | null = null;
-    let timer2: NodeJS.Timeout | null = null;
+    let timer1: number | null = null;
+    let timer2: number | null = null;
 
     const updateDelay = () => {
       timer1 = setTimeout(() => {
