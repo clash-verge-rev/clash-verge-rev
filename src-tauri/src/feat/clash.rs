@@ -26,7 +26,6 @@ pub async fn restart_clash_core() {
 
 /// Restart the application
 pub async fn restart_app() {
-    // Step 1: Perform cleanup and check for errors
     if let Err(err) = resolve::resolve_reset_async().await {
         handle::Handle::notice_message(
             "restart_app::error",
