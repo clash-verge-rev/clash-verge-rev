@@ -18,7 +18,7 @@ pub fn invoke_uwptools() -> Result<()> {
     let level = token.privilege_level()?;
 
     match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(tool_path).show(true).status()?,
+        PrivilegeLevel::NotPrivileged => RunasCommand::new(tool_path).status()?,
         _ => StdCommand::new(tool_path).status()?,
     };
 
