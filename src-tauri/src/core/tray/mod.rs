@@ -190,7 +190,7 @@ impl Tray {
     pub async fn init(&self) -> Result<()> {
         let app_handle = handle::Handle::app_handle();
 
-        match self.create_tray_from_handle(&app_handle).await {
+        match self.create_tray_from_handle(app_handle).await {
             Ok(_) => {
                 log::info!(target: "app", "System tray created successfully");
             }
