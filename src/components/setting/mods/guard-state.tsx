@@ -81,5 +81,6 @@ export function GuardState<T>(props: Props<T>) {
     }
     lockRef.current = false;
   };
+  // eslint-disable-next-line @eslint-react/no-clone-element
   return cloneElement(children, childProps);
 }

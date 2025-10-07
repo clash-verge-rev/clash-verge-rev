@@ -271,7 +271,7 @@ const Layout = () => {
           });
       }, 0);
     };
-  }, [handleNotice]);
+  }, [handleNotice, addListener]);
 
   useEffect(() => {
     if (initRef.current) {
@@ -447,7 +447,7 @@ const Layout = () => {
     if (start_page) {
       navigate(start_page, { replace: true });
     }
-  }, [start_page]);
+  }, [start_page, navigate]);
 
   if (!themeReady) {
     return (
@@ -590,6 +590,7 @@ const Layout = () => {
             <div className="the-bar"></div>
 
             <div className="the-content">
+              {/* eslint-disable-next-line @eslint-react/no-clone-element */}
               {React.cloneElement(routersEles, { key: location.pathname })}
             </div>
           </div>

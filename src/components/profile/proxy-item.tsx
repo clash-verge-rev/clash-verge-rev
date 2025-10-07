@@ -20,15 +20,16 @@ export const ProxyItem = (props: Props) => {
   const { type, proxy, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
 
+  const sortableResult = useSortable({ id: proxy.name });
   const {
     attributes,
     listeners,
-    setNodeRef,
+    setNodeRef: sortableSetNodeRef,
     transform,
     transition,
     isDragging,
   } = sortable
-    ? useSortable({ id: proxy.name })
+    ? sortableResult
     : {
         attributes: {},
         listeners: {},
@@ -62,7 +63,7 @@ export const ProxyItem = (props: Props) => {
       <ListItemText
         {...attributes}
         {...listeners}
-        ref={setNodeRef}
+        ref={sortable ? sortableSetNodeRef : undefined}
         sx={{ cursor: sortable ? "move" : "" }}
         primary={
           <StyledPrimary

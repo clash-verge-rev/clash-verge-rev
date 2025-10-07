@@ -209,7 +209,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
               </div>
               {corsConfig.allowOrigins.map((origin, index) => (
                 <div
-                  key={index}
+                  key={`${origin}-${index}`}
                   style={{
                     display: "flex",
                     alignItems: "center",

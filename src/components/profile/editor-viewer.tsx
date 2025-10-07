@@ -63,13 +63,13 @@ const monacoInitialization = () => {
       {
         uri: "http://example.com/meta-json-schema.json",
         fileMatch: ["**/*.clash.yaml"],
-        // @ts-ignore
+        // @ts-expect-error Schema property types don't match
         schema: metaSchema as JSONSchema7,
       },
       {
         uri: "http://example.com/clash-verge-merge-json-schema.json",
         fileMatch: ["**/*.merge.yaml"],
-        // @ts-ignore
+        // @ts-expect-error Schema property types don't match
         schema: mergeSchema as JSONSchema7,
       },
     ],
@@ -87,8 +87,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
 
   const {
     open = false,
-    title = t("Edit File"),
-    initialData = Promise.resolve(""),
+    title,
+    initialData,
     readOnly = false,
     language = "yaml",
     schema,
@@ -96,6 +96,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     onSave,
     onClose,
   } = props;
+  const initialDataValue = initialData ?? Promise.resolve("");
+  const titleValue = title ?? t("Edit File");
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(undefined);
   const prevData = useRef<string | undefined>("");
@@ -111,7 +113,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     editorRef.current = editor;
 
     // retrieve initial data
-    await initialData.then((data) => {
+    await initialDataValue.then((data) => {
       prevData.current = data;
       currData.current = data;
 
@@ -133,7 +135,9 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
 
   const handleSave = useLockFn(async () => {
     try {
-      !readOnly && onSave?.(prevData.current, currData.current);
+      if (!readOnly) {
+        onSave?.(prevData.current, currData.current);
+      }
       onClose();
     } catch (err: any) {
       showNotice("error", err.message || err.toString());
@@ -167,11 +171,11 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       editorRef.current?.dispose();
       editorRef.current = undefined;
     };
-  }, []);
+  }, [editorResize]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle>{titleValue}</DialogTitle>
 
       <DialogContent
         sx={{

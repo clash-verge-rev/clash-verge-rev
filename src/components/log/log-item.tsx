@@ -70,12 +70,13 @@ const LogItem = ({ value, searchState }: Props) => {
       const parts = text.split(new RegExp(`(${pattern})`, flags));
 
       return parts.map((part, index) => {
+        const key = `${index}-${part.substring(0, 10).replace(/\s+/g, "")}`;
         return index % 2 === 1 ? (
-          <span key={index} className="highlight">
+          <span key={key} className="highlight">
             {part}
           </span>
         ) : (
-          part
+          <span key={key}>{part}</span>
         );
       });
     } catch {

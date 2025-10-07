@@ -43,10 +43,13 @@ export const BaseDialog: React.FC<Props> = (props) => {
     disableOk,
     disableFooter,
     loading,
+    onClose,
+    onOk,
+    onCancel,
   } = props;
 
   return (
-    <Dialog open={open} onClose={props.onClose}>
+    <Dialog open={open} onClose={onClose}>
       <DialogTitle>{title}</DialogTitle>
 
       <DialogContent sx={contentSx}>{children}</DialogContent>
@@ -54,16 +57,12 @@ export const BaseDialog: React.FC<Props> = (props) => {
       {!disableFooter && (
         <DialogActions>
           {!disableCancel && (
-            <Button variant="outlined" onClick={props.onCancel}>
+            <Button variant="outlined" onClick={onCancel}>
               {cancelBtn}
             </Button>
           )}
           {!disableOk && (
-            <LoadingButton
-              loading={loading}
-              variant="contained"
-              onClick={props.onOk}
-            >
+            <LoadingButton loading={loading} variant="contained" onClick={onOk}>
               {okBtn}
             </LoadingButton>
           )}

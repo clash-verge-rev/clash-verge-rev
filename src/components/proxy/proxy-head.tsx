@@ -32,7 +32,7 @@ interface Props {
 }
 
 export const ProxyHead = ({
-  sx = {},
+  sx,
   url,
   groupName,
   headState,
@@ -40,6 +40,7 @@ export const ProxyHead = ({
   onLocation,
   onCheckDelay,
 }: Props) => {
+  const sxValue = sx ?? {};
   const { showType, sortType, filterText, textState, testUrl } = headState;
 
   const { t } = useTranslation();
@@ -59,7 +60,7 @@ export const ProxyHead = ({
   }, [groupName, testUrl, default_latency_test, url]);
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ...sx }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ...sxValue }}>
       <IconButton
         size="small"
         color="inherit"

@@ -90,11 +90,16 @@ export const SystemInfoCard = () => {
         lastCheckUpdate: new Date(now).toLocaleString(),
       }));
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         if (verge?.auto_check_update) {
           checkUpdate().catch(console.error);
         }
       }, 5000);
+
+      // 清理函数
+      return () => {
+        clearTimeout(timeoutId);
+      };
     }
   }, [verge?.auto_check_update]);
 

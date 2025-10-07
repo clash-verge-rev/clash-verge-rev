@@ -134,17 +134,16 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     clashConfig?.["mixed-port"],
   );
 
+  const mixedPort = clashConfig?.["mixed-port"];
+
   useEffect(() => {
-    if (
-      clashConfig?.["mixed-port"] &&
-      clashConfig?.["mixed-port"] !== prevMixedPort
-    ) {
-      setPrevMixedPort(clashConfig?.["mixed-port"]);
+    if (mixedPort && mixedPort !== prevMixedPort) {
+      setPrevMixedPort(mixedPort);
       resetSystemProxy();
     }
-  }, [clashConfig?.["mixed-port"]]);
+  }, [mixedPort, prevMixedPort, resetSystemProxy]);
 
-  const resetSystemProxy = async () => {
+  const resetSystemProxy = useCallback(async () => {
     try {
       const currentSysProxy = await getSystemProxy();
       const currentAutoProxy = await getAutotemProxy();
@@ -168,7 +167,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     } catch (err: any) {
       showNotice("error", err.toString());
     }
-  };
+  }, [value, mutate]);
 
   const { systemProxyAddress } = useAppData();
 

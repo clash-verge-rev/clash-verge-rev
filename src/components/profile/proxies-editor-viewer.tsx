@@ -172,7 +172,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     }
     parseBatch();
   };
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid);
 
     const originProxiesObj = yaml.load(data) as {
@@ -180,19 +180,16 @@ export const ProxiesEditorViewer = (props: Props) => {
     } | null;
 
     setProxyList(originProxiesObj?.proxies || []);
-  };
+  }, [profileUid, setProxyList]);
 
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property);
     const obj = yaml.load(data) as ISeqProfileConfig | null;
 
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
-
-    setPrevData(data);
-    setCurrData(data);
-  };
+  }, [property, setPrependSeq, setAppendSeq, setDeleteSeq]);
 
   useEffect(() => {
     if (currData === "") return;
@@ -206,7 +203,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
-  }, [visualization]);
+  }, [currData, visualization]);
 
   useEffect(() => {
     if (prependSeq && appendSeq && deleteSeq) {
@@ -235,7 +232,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     if (!open) return;
     fetchContent();
     fetchProfile();
-  }, [open]);
+  }, [open, fetchContent, fetchProfile]);
 
   const handleSave = useLockFn(async () => {
     try {
@@ -360,7 +357,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                           {filteredPrependSeq.map((item, index) => {
                             return (
                               <ProxyItem
-                                key={`${item.name}-${index}`}
+                                key={item.name}
                                 type="prepend"
                                 proxy={item}
                                 onDelete={() => {
@@ -420,7 +417,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                           {filteredAppendSeq.map((item, index) => {
                             return (
                               <ProxyItem
-                                key={`${item.name}-${index}`}
+                                key={item.name}
                                 type="append"
                                 proxy={item}
                                 onDelete={() => {

@@ -45,12 +45,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   // file input
   const fileDataRef = useRef<string | null>(null);
 
-  const {
-    control,
-    watch,
-    register: _register,
-    ...formIns
-  } = useForm<IProfileItem>({
+  const { control, watch, register, ...formIns } = useForm<IProfileItem>({
     defaultValues: {
       type: "remote",
       name: "",
@@ -84,11 +79,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
 
   useEffect(() => {
     if (selfProxy) formIns.setValue("option.with_proxy", false);
-  }, [selfProxy]);
+  }, [selfProxy, formIns]);
 
   useEffect(() => {
     if (withProxy) formIns.setValue("option.self_proxy", false);
-  }, [withProxy]);
+  }, [withProxy, formIns]);
 
   const handleOk = useLockFn(
     formIns.handleSubmit(async (form) => {

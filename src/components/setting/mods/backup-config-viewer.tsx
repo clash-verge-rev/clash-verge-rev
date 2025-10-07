@@ -74,7 +74,7 @@ export const BackupConfigViewer = memo(
       if (webdav_url && webdav_username && webdav_password) {
         onInit();
       }
-    }, []);
+    }, [webdav_url, webdav_username, webdav_password, onInit]);
 
     const checkForm = () => {
       const username = usernameRef.current?.value;

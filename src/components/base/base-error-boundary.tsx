@@ -21,9 +21,8 @@ interface Props {
 }
 
 export const BaseErrorBoundary = (props: Props) => {
+  const { children } = props;
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      {props.children}
-    </ErrorBoundary>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>{children}</ErrorBoundary>
   );
 };

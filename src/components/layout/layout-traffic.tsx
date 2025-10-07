@@ -59,7 +59,7 @@ export const LayoutTraffic = () => {
     startTrafficService().catch((error) => {
       console.error("[Traffic][LayoutTraffic] 启动流量服务失败:", error);
     });
-  }, []); // 移除依赖，只在组件挂载时启动一次
+  }, [clashInfo, pageVisible]); // 移除依赖，只在组件挂载时启动一次
 
   // 监听数据变化，为图表添加数据点
   useEffect(() => {
@@ -163,7 +163,9 @@ export const LayoutTraffic = () => {
               }}
               color={isDebug ? "success.main" : "disabled"}
               onClick={async () => {
-                isDebug && (await gc());
+                if (isDebug) {
+                  await gc();
+                }
               }}
             >
               <MemoryRounded {...iconStyle} />

@@ -174,7 +174,9 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       context.lineWidth = upLineWidth;
       context.strokeStyle = upLineColor;
       lineStyle ? drawBezier(listUp, offset) : drawLine(listUp, offset);
+
       context.stroke();
+
       context.closePath();
 
       context.beginPath();
@@ -182,7 +184,9 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       context.lineWidth = downLineWidth;
       context.strokeStyle = downLineColor;
       lineStyle ? drawBezier(listDown, offset) : drawLine(listDown, offset);
+
       context.stroke();
+
       context.closePath();
 
       raf = requestAnimationFrame(() => drawGraph(now));

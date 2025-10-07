@@ -160,7 +160,7 @@ export const GroupsEditorViewer = (props: Props) => {
       }
     }
   };
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property);
     const obj = yaml.load(data) as ISeqProfileConfig | null;
 
@@ -170,7 +170,14 @@ export const GroupsEditorViewer = (props: Props) => {
 
     setPrevData(data);
     setCurrData(data);
-  };
+  }, [
+    property,
+    setPrependSeq,
+    setAppendSeq,
+    setDeleteSeq,
+    setPrevData,
+    setCurrData,
+  ]);
 
   useEffect(() => {
     if (currData === "") return;
@@ -184,7 +191,7 @@ export const GroupsEditorViewer = (props: Props) => {
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
-  }, [visualization]);
+  }, [currData, visualization]);
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
@@ -210,7 +217,7 @@ export const GroupsEditorViewer = (props: Props) => {
     }
   }, [prependSeq, appendSeq, deleteSeq]);
 
-  const fetchProxyPolicy = async () => {
+  const fetchProxyPolicy = useCallback(async () => {
     const data = await readProfileFile(profileUid);
     const proxiesData = await readProfileFile(proxiesUid);
     const originGroupsObj = yaml.load(data) as {
@@ -246,8 +253,15 @@ export const GroupsEditorViewer = (props: Props) => {
         proxies.map((proxy: any) => proxy.name),
       ),
     );
-  };
-  const fetchProfile = async () => {
+  }, [
+    profileUid,
+    proxiesUid,
+    prependSeq,
+    appendSeq,
+    deleteSeq,
+    setProxyPolicyList,
+  ]);
+  const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid);
     const mergeData = await readProfileFile(mergeUid);
     const globalMergeData = await readProfileFile("Merge");
@@ -257,17 +271,17 @@ export const GroupsEditorViewer = (props: Props) => {
     } | null;
 
     const originProviderObj = yaml.load(data) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, any>;
     } | null;
     const originProvider = originProviderObj?.["proxy-providers"] || {};
 
     const moreProviderObj = yaml.load(mergeData) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, any>;
     } | null;
     const moreProvider = moreProviderObj?.["proxy-providers"] || {};
 
     const globalProviderObj = yaml.load(globalMergeData) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, any>;
     } | null;
     const globalProvider = globalProviderObj?.["proxy-providers"] || {};
 
@@ -280,21 +294,27 @@ export const GroupsEditorViewer = (props: Props) => {
 
     setProxyProviderList(Object.keys(provider));
     setGroupList(originGroupsObj?.["proxy-groups"] || []);
-  };
-  const getInterfaceNameList = async () => {
+  }, [profileUid, mergeUid, setProxyProviderList, setGroupList]);
+  const getInterfaceNameList = useCallback(async () => {
     const list = await getNetworkInterfaces();
     setInterfaceNameList(list);
-  };
+  }, [setInterfaceNameList]);
   useEffect(() => {
     fetchProxyPolicy();
-  }, [prependSeq, appendSeq, deleteSeq]);
+  }, [prependSeq, appendSeq, deleteSeq, fetchProxyPolicy]);
   useEffect(() => {
     if (!open) return;
     fetchContent();
     fetchProxyPolicy();
     fetchProfile();
     getInterfaceNameList();
-  }, [open]);
+  }, [
+    open,
+    fetchContent,
+    fetchProxyPolicy,
+    fetchProfile,
+    getInterfaceNameList,
+  ]);
 
   const validateGroup = () => {
     const group = formIns.getValues();
@@ -811,10 +831,10 @@ export const GroupsEditorViewer = (props: Props) => {
                             return x.name;
                           })}
                         >
-                          {filteredPrependSeq.map((item, index) => {
+                          {filteredPrependSeq.map((item, _index) => {
                             return (
                               <GroupItem
-                                key={`${item.name}-${index}`}
+                                key={item.name}
                                 type="prepend"
                                 group={item}
                                 onDelete={() => {
@@ -871,10 +891,10 @@ export const GroupsEditorViewer = (props: Props) => {
                             return x.name;
                           })}
                         >
-                          {filteredAppendSeq.map((item, index) => {
+                          {filteredAppendSeq.map((item, _index) => {
                             return (
                               <GroupItem
-                                key={`${item.name}-${index}`}
+                                key={item.name}
                                 type="append"
                                 group={item}
                                 onDelete={() => {

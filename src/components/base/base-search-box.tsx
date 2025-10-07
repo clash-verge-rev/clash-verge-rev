@@ -102,16 +102,24 @@ export const BaseSearchBox = (props: SearchProps) => {
     };
   }, [matchCase, matchWholeWord, useRegularExpression, t]);
 
+  const { onSearch } = props;
+
   useEffect(() => {
     if (!inputRef.current) return;
     const value = inputRef.current.value;
-    props.onSearch(createMatcher(value), {
+    onSearch(createMatcher(value), {
       text: value,
       matchCase,
       matchWholeWord,
       useRegularExpression,
     });
-  }, [matchCase, matchWholeWord, useRegularExpression, createMatcher]);
+  }, [
+    matchCase,
+    matchWholeWord,
+    useRegularExpression,
+    createMatcher,
+    onSearch,
+  ]);
 
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target?.value ?? "";

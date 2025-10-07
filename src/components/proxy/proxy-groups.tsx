@@ -518,7 +518,7 @@ export const ProxyGroups = (props: Props) => {
             },
           }}
         >
-          {availableGroups.map((group: any, index: number) => (
+          {availableGroups.map((group: any) => (
             <MenuItem
               key={group.name}
               onClick={() => handleGroupSelect(group.name)}

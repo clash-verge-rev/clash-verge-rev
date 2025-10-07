@@ -80,7 +80,7 @@ export const BackupTableViewer = memo(
           <TableBody>
             {datasource.length > 0 ? (
               datasource?.map((file, index) => (
-                <TableRow key={index}>
+                <TableRow key={`${file.filename}-${file.backup_time.format()}`}>
                   <TableCell component="th" scope="row">
                     {file.platform === "windows" ? (
                       <WindowsIcon className="h-full w-full" />

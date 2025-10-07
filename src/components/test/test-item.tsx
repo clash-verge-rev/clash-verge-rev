@@ -5,7 +5,7 @@ import { Box, Divider, MenuItem, Menu, styled, alpha } from "@mui/material";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { useLockFn } from "ahooks";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseLoading } from "@/components/base";
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export const TestItem = (props: Props) => {
-  const { itemData, onEdit, onDelete: onDeleteItem } = props;
+  const { id, itemData, onEdit, onDelete: onDeleteItem } = props;
   const {
     attributes,
     listeners,
@@ -33,7 +33,7 @@ export const TestItem = (props: Props) => {
     transition,
     isDragging,
   } = useSortable({
-    id: props.id,
+    id,
   });
 
   const { t } = useTranslation();
@@ -44,27 +44,27 @@ export const TestItem = (props: Props) => {
   const [iconCachePath, setIconCachePath] = useState("");
   const { addListener } = useListen();
 
-  const onDelay = async () => {
+  const onDelay = useCallback(async () => {
     setDelay(-2);
     const result = await cmdTestDelay(url);
     setDelay(result);
-  };
+  }, [url]);
 
   useEffect(() => {
     initIconCachePath();
-  }, [icon]);
+  }, [icon, initIconCachePath]);
 
-  async function initIconCachePath() {
+  const initIconCachePath = useCallback(async () => {
     if (icon && icon.trim().startsWith("http")) {
       const fileName = uid + "-" + getFileName(icon);
       const iconPath = await downloadIconCache(icon, fileName);
       setIconCachePath(convertFileSrc(iconPath));
     }
-  }
+  }, [icon, uid, getFileName, setIconCachePath]);
 
-  function getFileName(url: string) {
+  const getFileName = useCallback((url: string) => {
     return url.substring(url.lastIndexOf("/") + 1);
-  }
+  }, []);
 
   const onEditTest = () => {
     setAnchorEl(null);

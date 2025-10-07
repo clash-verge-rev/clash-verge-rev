@@ -27,7 +27,8 @@ interface Props {
 
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
-  const { id, logInfo = [], onSave } = props;
+  const { id, logInfo, onSave } = props;
+  const logInfoValue = logInfo ?? [];
 
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -49,7 +50,7 @@ export const ProfileMore = (props: Props) => {
     }
   });
 
-  const hasError = !!logInfo.find((e) => e[0] === "exception");
+  const hasError = !!logInfoValue.find((e) => e[0] === "exception");
 
   const itemMenu = [
     { label: "Edit File", handler: onEditFile },
@@ -173,18 +174,16 @@ export const ProfileMore = (props: Props) => {
           schema={id === "Merge" ? "clash" : undefined}
           onSave={async (prev, curr) => {
             await saveProfileFile(id, curr ?? "");
-            onSave && onSave(prev, curr);
+            if (onSave) onSave(prev, curr);
           }}
           onClose={() => setFileOpen(false)}
         />
       )}
-      {logOpen && (
-        <LogViewer
-          open={logOpen}
-          logInfo={logInfo}
-          onClose={() => setLogOpen(false)}
-        />
-      )}
+      <LogViewer
+        open={logOpen}
+        logInfo={logInfoValue}
+        onClose={() => setLogOpen(false)}
+      />
     </>
   );
 };

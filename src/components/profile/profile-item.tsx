@@ -52,8 +52,17 @@ interface Props {
 }
 
 export const ProfileItem = (props: Props) => {
-  const { selected, activating, itemData, onSelect, onEdit, onSave, onDelete } =
-    props;
+  const {
+    id,
+    selected,
+    activating,
+    itemData,
+    onSelect,
+    onEdit,
+    onSave,
+    onDelete,
+  } = props;
+
   const {
     attributes,
     listeners,
@@ -62,7 +71,7 @@ export const ProfileItem = (props: Props) => {
     transition,
     isDragging,
   } = useSortable({
-    id: props.id,
+    id,
   });
 
   const { t } = useTranslation();
@@ -148,7 +157,12 @@ export const ProfileItem = (props: Props) => {
     if (showNextUpdate) {
       fetchNextUpdateTime();
     }
-  }, [showNextUpdate, itemData.option?.update_interval, updated]);
+  }, [
+    showNextUpdate,
+    itemData.option?.update_interval,
+    updated,
+    fetchNextUpdateTime,
+  ]);
 
   // 订阅定时器更新事件
   useEffect(() => {
@@ -178,7 +192,7 @@ export const ProfileItem = (props: Props) => {
         handleTimerUpdate as EventListener,
       );
     };
-  }, [showNextUpdate, itemData.uid]);
+  }, [showNextUpdate, itemData.uid, fetchNextUpdateTime]);
 
   // local file mode
   // remote file mode
@@ -454,7 +468,7 @@ export const ProfileItem = (props: Props) => {
         handleUpdateCompleted as EventListener,
       );
     };
-  }, [itemData.uid, showNextUpdate]);
+  }, [itemData.uid, showNextUpdate, setLoadingCache, fetchNextUpdateTime]);
 
   return (
     <Box
@@ -690,7 +704,7 @@ export const ProfileItem = (props: Props) => {
           schema="clash"
           onSave={async (prev, curr) => {
             await saveProfileFile(uid, curr ?? "");
-            onSave && onSave(prev, curr);
+            if (onSave) onSave(prev, curr);
           }}
           onClose={() => setFileOpen(false)}
         />
@@ -736,7 +750,7 @@ export const ProfileItem = (props: Props) => {
           schema="clash"
           onSave={async (prev, curr) => {
             await saveProfileFile(option?.merge ?? "", curr ?? "");
-            onSave && onSave(prev, curr);
+            if (onSave) onSave(prev, curr);
           }}
           onClose={() => setMergeOpen(false)}
         />
@@ -748,7 +762,7 @@ export const ProfileItem = (props: Props) => {
           language="javascript"
           onSave={async (prev, curr) => {
             await saveProfileFile(option?.script ?? "", curr ?? "");
-            onSave && onSave(prev, curr);
+            if (onSave) onSave(prev, curr);
           }}
           onClose={() => setScriptOpen(false)}
         />

@@ -254,7 +254,14 @@ export const EnhancedTrafficStats = () => {
         </div>
       </Paper>
     );
-  }, [trafficGraph, pageVisible, theme.palette.divider, isDebug]);
+  }, [
+    trafficGraph,
+    pageVisible,
+    theme.palette.divider,
+    isDebug,
+    isDataFresh,
+    traffic?.is_fresh,
+  ]);
 
   // 使用useMemo计算统计卡片配置
   const statCards = useMemo(
@@ -320,8 +327,8 @@ export const EnhancedTrafficStats = () => {
           </Grid>
         )}
         {/* 统计卡片区域 */}
-        {statCards.map((card, index) => (
-          <Grid key={index} size={4}>
+        {statCards.map((card) => (
+          <Grid key={card.title} size={4}>
             <CompactStatCard {...card} />
           </Grid>
         ))}

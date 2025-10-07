@@ -23,15 +23,16 @@ export const GroupItem = (props: Props) => {
   const { type, group, onDelete } = props;
   const sortable = type === "prepend" || type === "append";
 
+  const sortableResult = useSortable({ id: group.name });
   const {
     attributes,
     listeners,
-    setNodeRef,
+    setNodeRef: sortableSetNodeRef,
     transform,
     transition,
     isDragging,
   } = sortable
-    ? useSortable({ id: group.name })
+    ? sortableResult
     : {
         attributes: {},
         listeners: {},
@@ -45,20 +46,20 @@ export const GroupItem = (props: Props) => {
 
   useEffect(() => {
     initIconCachePath();
-  }, [group]);
+  }, [group, initIconCachePath]);
 
-  async function initIconCachePath() {
+  const initIconCachePath = useCallback(async () => {
     if (group.icon && group.icon.trim().startsWith("http")) {
       const fileName =
         group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
       const iconPath = await downloadIconCache(group.icon, fileName);
       setIconCachePath(convertFileSrc(iconPath));
     }
-  }
+  }, [group, getFileName, setIconCachePath]);
 
-  function getFileName(url: string) {
+  const getFileName = useCallback((url: string) => {
     return url.substring(url.lastIndexOf("/") + 1);
-  }
+  }, []);
 
   return (
     <ListItem
@@ -110,7 +111,7 @@ export const GroupItem = (props: Props) => {
       <ListItemText
         {...attributes}
         {...listeners}
-        ref={setNodeRef}
+        ref={sortable ? sortableSetNodeRef : undefined}
         sx={{ cursor: sortable ? "move" : "" }}
         primary={
           <StyledPrimary

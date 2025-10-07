@@ -62,9 +62,8 @@ interface ProxyChainProps {
   proxyChain: ProxyChainItem[];
   onUpdateChain: (chain: ProxyChainItem[]) => void;
   chainConfigData?: string | null;
-  onMarkUnsavedChanges?: () => void;
   mode?: string;
-  selectedGroup?: string | null;
+  selectedGroup?: string;
 }
 
 interface SortableItemProps {
@@ -190,7 +189,6 @@ export const ProxyChain = ({
   proxyChain,
   onUpdateChain,
   chainConfigData,
-  onMarkUnsavedChanges,
   mode,
   selectedGroup,
 }: ProxyChainProps) => {
