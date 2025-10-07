@@ -282,6 +282,21 @@ pub fn run() {
             std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
         }
 
+        // Force X11 backend for tray icon compatibility on Wayland
+        let is_wayland = std::env::var("WAYLAND_DISPLAY").is_ok();
+        if is_wayland {
+            unsafe {
+                std::env::set_var("GDK_BACKEND", "x11");
+                std::env::remove_var("WAYLAND_DISPLAY");
+            }
+            logging!(
+                info,
+                Type::Setup,
+                true,
+                "Wayland detected: Forcing X11 backend for tray icon compatibility"
+            );
+        }
+
         let desktop_env = std::env::var("XDG_CURRENT_DESKTOP")
             .unwrap_or_default()
             .to_uppercase();

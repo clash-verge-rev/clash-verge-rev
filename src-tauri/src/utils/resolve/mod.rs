@@ -204,6 +204,17 @@ pub async fn init_work_config() {
 }
 
 pub(super) async fn init_tray() {
+    // Check if tray should be disabled via environment variable
+    if std::env::var("CLASH_VERGE_DISABLE_TRAY").unwrap_or_default() == "1" {
+        logging!(
+            info,
+            Type::Setup,
+            true,
+            "System tray disabled via --no-tray flag"
+        );
+        return;
+    }
+
     logging!(info, Type::Setup, true, "Initializing system tray...");
     logging_error!(Type::Setup, true, Tray::global().init().await);
 }

@@ -192,8 +192,18 @@ impl Tray {
         let app_handle = handle::Handle::global()
             .app_handle()
             .ok_or_else(|| anyhow::anyhow!("Failed to get app handle for tray initialization"))?;
-        self.create_tray_from_handle(&app_handle).await?;
-        Ok(())
+
+        match self.create_tray_from_handle(&app_handle).await {
+            Ok(_) => {
+                log::info!(target: "app", "System tray created successfully");
+                Ok(())
+            }
+            Err(e) => {
+                log::warn!(target: "app", "System tray creation failed: {}, Application will continue running without tray icon", e);
+                // Don't return error, let application continue running without tray
+                Ok(())
+            }
+        }
     }
 
     /// 更新托盘点击行为
