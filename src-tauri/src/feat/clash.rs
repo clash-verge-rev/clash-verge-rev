@@ -23,43 +23,53 @@ pub async fn restart_clash_core() {
 
 /// Restart the application
 pub async fn restart_app() {
-    // logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
-    resolve::resolve_reset_async().await;
+    if let Err(err) = resolve::resolve_reset_async().await {
+        handle::Handle::notice_message(
+            "restart_app::error",
+            format!("Failed to cleanup resources: {err}"),
+        );
+        log::error!(target:"app", "Restart failed during cleanup: {err}");
+        return;
+    }
 
     let app_handle = handle::Handle::app_handle();
     app_handle.restart();
-    // TODO: PR Ref: https://github.com/clash-verge-rev/clash-verge-rev/pull/4941
-    // match handle::Handle::global().app_handle() {
-    //     Some(app_handle) => {
-    //         app_handle.restart();
+    // TODO: PR Ref: https://github.com/clash-verge-rev/clash-verge-rev/pull/4960
+    // handle::Handle::notice_message("restart_app::info", "Restarting application...");
+
+    // // Use the manual restart method consistently to ensure reliability across platforms
+    // // This addresses the issue where app_handle.restart() doesn't work properly on Windows
+    // let current_exe = match env::current_exe() {
+    //     Ok(path) => path,
+    //     Err(_) => {
+    //         // If we can't get the current executable path, try to use the fallback method
+    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
+    //             app_handle.restart();
+    //         }
+    //         exit(1); // If we reach here, either app_handle was None or restart() failed to restart
     //     }
-    //     None => {
-    //         logging_error!(
-    //             Type::System,
-    //             false,
-    //             "{}",
-    //             "Failed to get app handle for restart, attempting alternative restart method"
-    //         );
-    //         // Fallback: launch a new instance of the application and exit the current one
+    // };
 
-    //         let current_exe = env::current_exe().unwrap_or_else(|_| {
-    //             exit(1); // Exit if can't find the executable path
-    //         });
+    // let mut cmd = Command::new(current_exe);
+    // cmd.args(env::args().skip(1));
 
-    //         let mut cmd = Command::new(current_exe);
-    //         cmd.args(env::args().skip(1));
-
-    //         match cmd.spawn() {
-    //             Ok(child) => {
-    //                 log::info!(target: "app", "New application instance started with PID: {}", child.id());
-    //                 // Successfully started new process, now exit current process
-    //                 exit(0);
-    //             }
-    //             Err(e) => {
-    //                 log::error!(target: "app", "Failed to start new application instance: {}", e);
-    //                 // Unable to start new process, exit with error
-    //                 exit(1);
-    //             }
+    // match cmd.spawn() {
+    //     Ok(child) => {
+    //         log::info!(target: "app", "New application instance started with PID: {}", child.id());
+    //         // Successfully started new process, now exit current process
+    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
+    //             app_handle.exit(0);
+    //         } else {
+    //             exit(0);
+    //         }
+    //     }
+    //     Err(e) => {
+    //         log::error!(target: "app", "Failed to start new application instance: {}", e);
+    //         // If manual spawn fails, try the original restart method as a last resort
+    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
+    //             app_handle.restart();
+    //         } else {
+    //             exit(1);
     //         }
     //     }
     // }

@@ -65,7 +65,7 @@ pub fn resolve_setup_async() {
         init_verge_config().await;
 
         // 添加配置验证，确保运行时配置已正确生成
-        verify_config_initialization().await;
+        Config::verify_config_initialization().await;
 
         init_core_manager().await;
 
@@ -102,16 +102,12 @@ pub fn resolve_setup_async() {
 }
 
 // 其它辅助函数不变
-pub async fn resolve_reset_async() {
+pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
     logging!(info, Type::Tray, true, "Resetting system proxy");
-    logging_error!(
-        Type::System,
-        true,
-        sysopt::Sysopt::global().reset_sysproxy().await
-    );
+    sysopt::Sysopt::global().reset_sysproxy().await?;
 
     logging!(info, Type::Core, true, "Stopping core service");
-    logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+    CoreManager::global().stop_core().await?;
 
     #[cfg(target_os = "macos")]
     {
@@ -120,6 +116,8 @@ pub async fn resolve_reset_async() {
         logging!(info, Type::System, true, "Restoring system DNS settings");
         restore_public_dns().await;
     }
+
+    Ok(())
 }
 
 pub fn init_handle() {
@@ -194,81 +192,6 @@ pub(super) async fn init_auto_lightweight_mode() {
     logging_error!(Type::Setup, true, auto_lightweight_mode_init().await);
 }
 
-/// 验证配置初始化是否成功
-async fn verify_config_initialization() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Verifying config initialization..."
-    );
-
-    // 检查运行时配置是否已正确生成
-    if Config::runtime().await.latest_ref().config.is_some() {
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Config initialization verified successfully"
-        );
-        return;
-    }
-
-    logging!(
-        warn,
-        Type::Setup,
-        true,
-        "Runtime config not found, regenerating..."
-    );
-
-    // 尝试重新生成配置，最多3次
-    for attempt in 1..=3 {
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Attempt {}/3 to regenerate config...",
-            attempt
-        );
-
-        match Config::generate().await {
-            Ok(_) => {
-                logging!(
-                    info,
-                    Type::Setup,
-                    true,
-                    "Config successfully regenerated on attempt {}",
-                    attempt
-                );
-                return;
-            }
-            Err(e) => {
-                logging!(
-                    warn,
-                    Type::Setup,
-                    true,
-                    "Failed to generate config on attempt {}: {}",
-                    attempt,
-                    e
-                );
-
-                if attempt == 3 {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        true,
-                        "Failed to generate config after 3 attempts"
-                    );
-                    return;
-                }
-
-                // 等待一段时间再重试
-                tokio::time::sleep(tokio::time::Duration::from_millis(100 * attempt as u64)).await;
-            }
-        }
-    }
-}
-
 pub async fn init_work_config() {
     logging!(
         info,
@@ -280,6 +203,17 @@ pub async fn init_work_config() {
 }
 
 pub(super) async fn init_tray() {
+    // Check if tray should be disabled via environment variable
+    if std::env::var("CLASH_VERGE_DISABLE_TRAY").unwrap_or_default() == "1" {
+        logging!(
+            info,
+            Type::Setup,
+            true,
+            "System tray disabled via --no-tray flag"
+        );
+        return;
+    }
+
     logging!(info, Type::Setup, true, "Initializing system tray...");
     logging_error!(Type::Setup, true, Tray::global().init().await);
 }

@@ -210,8 +210,21 @@ pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
 /// 创建一个新的配置文件
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
-    match profiles_append_item_with_filedata_safe(item, file_data).await {
-        Ok(_) => Ok(()),
+    match profiles_append_item_with_filedata_safe(item.clone(), file_data).await {
+        Ok(_) => {
+            // 发送配置变更通知
+            if let Some(uid) = &item.uid {
+                logging!(
+                    info,
+                    Type::Cmd,
+                    true,
+                    "[创建订阅] 发送配置变更通知: {}",
+                    uid
+                );
+                handle::Handle::notify_profile_changed(uid.clone());
+            }
+            Ok(())
+        }
         Err(err) => match err.to_string().as_str() {
             "the file already exists" => Err("the file already exists".into()),
             _ => Err(format!("add profile error: {err}")),
@@ -235,12 +248,21 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
     // 使用Send-safe helper函数
-    let should_update = wrap_err!(profiles_delete_item_safe(index).await)?;
+    let should_update = wrap_err!(profiles_delete_item_safe(index.clone()).await)?;
 
     if should_update {
         match CoreManager::global().update_config().await {
             Ok(_) => {
                 handle::Handle::refresh_clash();
+                // 发送配置变更通知
+                logging!(
+                    info,
+                    Type::Cmd,
+                    true,
+                    "[删除订阅] 发送配置变更通知: {}",
+                    index
+                );
+                handle::Handle::notify_profile_changed(index);
             }
             Err(e) => {
                 log::error!(target: "app", "{}", e);

@@ -254,7 +254,6 @@
   "Unified Delay Info": "Al habilitar la latencia unificada, se realizarán dos pruebas de latencia para eliminar las diferencias de latencia entre diferentes tipos de nodos causadas por el handshake de conexión, etc.",
   "Log Level": "Nivel de registro",
   "Log Level Info": "Solo se aplica al archivo de registro del núcleo en la carpeta Service del directorio de registros.",
-  "Port Configuration": "Configuración de puertos",
   "Random Port": "Puerto aleatorio",
   "Mixed Port": "Puerto de proxy mixto",
   "Socks Port": "Puerto de proxy SOCKS",

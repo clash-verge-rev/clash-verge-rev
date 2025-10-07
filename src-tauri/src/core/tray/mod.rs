@@ -189,9 +189,18 @@ singleton_lazy!(Tray, TRAY, Tray::default);
 impl Tray {
     pub async fn init(&self) -> Result<()> {
         let app_handle = handle::Handle::app_handle();
-        self.create_tray_from_handle(app_handle).await?;
-        // core::timer::Timer::global().add_update_tray_menu_task().await?;
-        Ok(())
+
+        match self.create_tray_from_handle(&app_handle).await {
+            Ok(_) => {
+                log::info!(target: "app", "System tray created successfully");
+                Ok(())
+            }
+            Err(e) => {
+                log::warn!(target: "app", "System tray creation failed: {}, Application will continue running without tray icon", e);
+                // Don't return error, let application continue running without tray
+                Ok(())
+            }
+        }
     }
 
     /// 更新托盘点击行为

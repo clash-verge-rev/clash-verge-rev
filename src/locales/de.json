@@ -254,7 +254,6 @@
   "Unified Delay Info": "Wenn die einheitliche Latenz aktiviert ist, werden zwei Latenztests durchgeführt, um die Latenzunterschiede zwischen verschiedenen Knotentypen aufgrund von Verbindungsaufbau und anderen Faktoren zu eliminieren.",
   "Log Level": "Protokolliergrad",
   "Log Level Info": "Dies wirkt sich nur auf die Kernprotokolldateien im Verzeichnis Service im Protokollverzeichnis aus.",
-  "Port Configuration": "Porteinstellungen",
   "Random Port": "Zufälliger Port",
   "Mixed Port": "Mischter Proxy-Port",
   "Socks Port": "SOCKS-Proxy-Port",

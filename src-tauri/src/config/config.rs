@@ -6,9 +6,11 @@ use crate::{
     utils::{dirs, help, logging::Type},
 };
 use anyhow::{Result, anyhow};
+use backoff::{Error as BackoffError, ExponentialBackoff};
 use std::path::PathBuf;
+use std::time::Duration;
 use tokio::sync::OnceCell;
-use tokio::time::{Duration, sleep};
+use tokio::time::sleep;
 
 pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
 pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
@@ -162,6 +164,73 @@ impl Config {
         });
 
         Ok(())
+    }
+
+    pub async fn verify_config_initialization() {
+        logging!(
+            info,
+            Type::Setup,
+            true,
+            "Verifying config initialization..."
+        );
+
+        let backoff_strategy = ExponentialBackoff {
+            initial_interval: std::time::Duration::from_millis(100),
+            max_interval: std::time::Duration::from_secs(2),
+            max_elapsed_time: Some(std::time::Duration::from_secs(10)),
+            multiplier: 2.0,
+            ..Default::default()
+        };
+
+        let operation = || async {
+            if Config::runtime().await.latest_ref().config.is_some() {
+                logging!(
+                    info,
+                    Type::Setup,
+                    true,
+                    "Config initialization verified successfully"
+                );
+                return Ok::<(), BackoffError<anyhow::Error>>(());
+            }
+
+            logging!(
+                warn,
+                Type::Setup,
+                true,
+                "Runtime config not found, attempting to regenerate..."
+            );
+
+            match Config::generate().await {
+                Ok(_) => {
+                    logging!(info, Type::Setup, true, "Config successfully regenerated");
+                    Ok(())
+                }
+                Err(e) => {
+                    logging!(warn, Type::Setup, true, "Failed to generate config: {}", e);
+                    Err(BackoffError::transient(e))
+                }
+            }
+        };
+
+        match backoff::future::retry(backoff_strategy, operation).await {
+            Ok(_) => {
+                logging!(
+                    info,
+                    Type::Setup,
+                    true,
+                    "Config initialization verified with backoff retry"
+                );
+            }
+            Err(e) => {
+                logging!(
+                    error,
+                    Type::Setup,
+                    true,
+                    "Failed to verify config initialization after retries: {}",
+                    e
+                );
+            }
+        }
     }
 }
 
