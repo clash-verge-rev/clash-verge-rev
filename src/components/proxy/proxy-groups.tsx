@@ -54,7 +54,9 @@ export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation();
   const { mode, isChainMode = false, chainConfigData } = props;
   const [proxyChain, setProxyChain] = useState<ProxyChainItem[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | undefined>(
+    undefined,
+  );
   const [ruleMenuAnchor, setRuleMenuAnchor] = useState<null | HTMLElement>(
     null,
   );
@@ -68,7 +70,7 @@ export const ProxyGroups = (props: Props) => {
 
   // 当链式代理模式且规则模式下，如果没有选择代理组，默认选择第一个
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
 
     if (
       isChainMode &&
@@ -114,7 +116,7 @@ export const ProxyGroups = (props: Props) => {
   useEffect(() => {
     if (renderList.length === 0) return;
 
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     try {
       const savedPositions = localStorage.getItem("proxy-scroll-positions");
@@ -505,7 +507,7 @@ export const ProxyGroups = (props: Props) => {
             <ProxyChain
               proxyChain={proxyChain}
               onUpdateChain={setProxyChain}
-              chainConfigData={chainConfigData}
+              chainConfigData={chainConfigData as string | undefined}
               mode={mode}
               selectedGroup={selectedGroup}
             />

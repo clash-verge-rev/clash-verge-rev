@@ -31,7 +31,7 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 import { Virtuoso } from "react-virtuoso";

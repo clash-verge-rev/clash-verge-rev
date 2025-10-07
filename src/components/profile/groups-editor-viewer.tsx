@@ -36,7 +36,7 @@ import {
   cancelIdleCallback,
 } from "foxact/request-idle-callback";
 import yaml from "js-yaml";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";

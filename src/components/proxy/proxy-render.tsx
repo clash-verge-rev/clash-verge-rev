@@ -59,6 +59,23 @@ export const ProxyRender = (props: RenderProps) => {
   const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
   const [iconCachePath, setIconCachePath] = useState("");
 
+  const getFileName = useCallback((url: string) => {
+    return url.substring(url.lastIndexOf("/") + 1);
+  }, []);
+
+  const initIconCachePath = useCallback(async () => {
+    if (group.icon && group.icon.trim().startsWith("http")) {
+      const fileName =
+        group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
+      const iconPath = await downloadIconCache(group.icon, fileName);
+      setIconCachePath(convertFileSrc(iconPath));
+    }
+  }, [group, getFileName, setIconCachePath]);
+
+  useEffect(() => {
+    initIconCachePath();
+  }, [group, initIconCachePath]);
+
   const proxyColItemsMemo = useMemo(() => {
     if (type === 4 && proxyCol) {
       return proxyCol?.map((proxy) => (
@@ -74,23 +91,6 @@ export const ProxyRender = (props: RenderProps) => {
     }
     return null;
   }, [type, proxyCol, group, headState, item.key, onChangeProxy]);
-
-  useEffect(() => {
-    initIconCachePath();
-  }, [group, initIconCachePath]);
-
-  const initIconCachePath = useCallback(async () => {
-    if (group.icon && group.icon.trim().startsWith("http")) {
-      const fileName =
-        group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
-      const iconPath = await downloadIconCache(group.icon, fileName);
-      setIconCachePath(convertFileSrc(iconPath));
-    }
-  }, [group, getFileName, setIconCachePath]);
-
-  const getFileName = useCallback((url: string) => {
-    return url.substring(url.lastIndexOf("/") + 1);
-  }, []);
 
   if (type === 0) {
     return (

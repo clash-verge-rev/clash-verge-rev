@@ -63,7 +63,7 @@ export const ProfileItem = (props: Props) => {
     onDelete,
   } = props;
 
-  const timeoutIdRef = useRef<NodeJS.Timeout>();
+  const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     attributes,

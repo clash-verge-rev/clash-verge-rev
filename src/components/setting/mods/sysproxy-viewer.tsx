@@ -13,6 +13,7 @@ import {
 import { useLockFn } from "ahooks";
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -134,14 +135,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const mixedPort = clashConfig?.["mixed-port"];
   const prevMixedPortRef = useRef(mixedPort);
 
-  useEffect(() => {
-    const prevMixedPort = prevMixedPortRef.current;
-    if (mixedPort && mixedPort !== prevMixedPort) {
-      prevMixedPortRef.current = mixedPort;
-      resetSystemProxy();
-    }
-  }, [mixedPort, resetSystemProxy]);
-
   const resetSystemProxy = useCallback(async () => {
     try {
       const currentSysProxy = await getSystemProxy();
@@ -167,6 +160,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       showNotice("error", err.toString());
     }
   }, [value]);
+
+  useEffect(() => {
+    const prevMixedPort = prevMixedPortRef.current;
+    if (mixedPort && mixedPort !== prevMixedPort) {
+      prevMixedPortRef.current = mixedPort;
+      resetSystemProxy();
+    }
+  }, [mixedPort, resetSystemProxy]);
 
   const { systemProxyAddress } = useAppData();
 

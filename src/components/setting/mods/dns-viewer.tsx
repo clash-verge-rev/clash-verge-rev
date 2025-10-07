@@ -16,7 +16,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
 import type { Ref } from "react";
-import { useEffect, useImperativeHandle, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 
@@ -189,45 +189,74 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
   };
 
-  const updateValuesFromConfig = useCallback((config: any) => {
-    if (!config) return;
+  const updateValuesFromConfig = useCallback(
+    (config: any) => {
+      if (!config) return;
 
-    // 提取dns配置
-    const dnsConfig = config.dns || {};
-    // 提取hosts配置（与dns同级）
-    const hostsConfig = config.hosts || {};
+      // 提取dns配置
+      const dnsConfig = config.dns || {};
+      // 提取hosts配置（与dns同级）
+      const hostsConfig = config.hosts || {};
 
-    const enhancedMode =
-      dnsConfig["enhanced-mode"] || DEFAULT_DNS_CONFIG["enhanced-mode"];
-    const validEnhancedMode =
-      enhancedMode === "fake-ip" || enhancedMode === "redir-host"
-        ? enhancedMode
-        : DEFAULT_DNS_CONFIG["enhanced-mode"];
+      const enhancedMode =
+        dnsConfig["enhanced-mode"] || DEFAULT_DNS_CONFIG["enhanced-mode"];
+      const validEnhancedMode =
+        enhancedMode === "fake-ip" || enhancedMode === "redir-host"
+          ? enhancedMode
+          : DEFAULT_DNS_CONFIG["enhanced-mode"];
 
-    const fakeIpFilterMode =
-      dnsConfig["fake-ip-filter-mode"] ||
-      DEFAULT_DNS_CONFIG["fake-ip-filter-mode"];
+      const fakeIpFilterMode =
+        dnsConfig["fake-ip-filter-mode"] ||
+        DEFAULT_DNS_CONFIG["fake-ip-filter-mode"];
 
-    // 设置表单值
-    setValue("enable", !!dnsConfig.enable);
-    setValue("listen", dnsConfig.listen || DEFAULT_DNS_CONFIG.listen);
-    setValue("enhancedMode", validEnhancedMode);
-    setValue(
-      "fakeIpRange",
-      dnsConfig["fake-ip-range"] || DEFAULT_DNS_CONFIG["fake-ip-range"],
-    );
-    setValue("fakeIpFilter", dnsConfig["fake-ip-filter"] || []);
-    setValue("fakeIpFilterMode", fakeIpFilterMode);
-    setValue("defaultNameserver", dnsConfig["default-nameserver"] || []);
-    setValue("nameserver", dnsConfig.nameserver || []);
-    setValue("fallback", dnsConfig.fallback || []);
-    setValue("fallbackFilter", dnsConfig["fallback-filter"] || {});
-    setValue(
-      "proxyServerNameserver",
-      dnsConfig["proxy-server-nameserver"] || [],
-    );
-    setValue("nameserverPolicy", hostsConfig || {});
-  }, []);
+      // 设置表单值
+      setValues((prev) => ({
+        ...prev,
+        enable: !!dnsConfig.enable,
+        listen: dnsConfig.listen || DEFAULT_DNS_CONFIG.listen,
+        enhancedMode: validEnhancedMode,
+        fakeIpRange:
+          dnsConfig["fake-ip-range"] || DEFAULT_DNS_CONFIG["fake-ip-range"],
+        fakeIpFilter: Array.isArray(dnsConfig["fake-ip-filter"])
+          ? dnsConfig["fake-ip-filter"].join(", ")
+          : typeof dnsConfig["fake-ip-filter"] === "string"
+            ? dnsConfig["fake-ip-filter"]
+            : DEFAULT_DNS_CONFIG["fake-ip-filter"].join(", "),
+        fakeIpFilterMode: fakeIpFilterMode,
+        defaultNameserver: Array.isArray(dnsConfig["default-nameserver"])
+          ? dnsConfig["default-nameserver"].join(", ")
+          : typeof dnsConfig["default-nameserver"] === "string"
+            ? dnsConfig["default-nameserver"]
+            : DEFAULT_DNS_CONFIG["default-nameserver"].join(", "),
+        nameserver: Array.isArray(dnsConfig.nameserver)
+          ? dnsConfig.nameserver.join(", ")
+          : typeof dnsConfig.nameserver === "string"
+            ? dnsConfig.nameserver
+            : DEFAULT_DNS_CONFIG.nameserver.join(", "),
+        fallback: Array.isArray(dnsConfig.fallback)
+          ? dnsConfig.fallback.join(", ")
+          : typeof dnsConfig.fallback === "string"
+            ? dnsConfig.fallback
+            : DEFAULT_DNS_CONFIG.fallback.join(", "),
+        proxyServerNameserver: Array.isArray(
+          dnsConfig["proxy-server-nameserver"],
+        )
+          ? dnsConfig["proxy-server-nameserver"].join(", ")
+          : typeof dnsConfig["proxy-server-nameserver"] === "string"
+            ? dnsConfig["proxy-server-nameserver"]
+            : DEFAULT_DNS_CONFIG["proxy-server-nameserver"]?.join(", ") || "",
+        nameserverPolicy:
+          typeof hostsConfig === "object"
+            ? Object.entries(hostsConfig)
+                .map(([k, v]) => `${k}=${Array.isArray(v) ? v.join(";") : v}`)
+                .join(", ")
+            : typeof hostsConfig === "string"
+              ? hostsConfig
+              : "",
+      }));
+    },
+    [setValues],
+  );
 
   // 重置为默认值
   const resetToDefaults = () => {
@@ -263,8 +292,128 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     });
 
     // 更新YAML编辑器内容
-    updateYamlFromValues();
+    // We'll call updateYamlFromValues after it's defined
   };
+
+  const generateDnsConfig = useCallback(() => {
+    const dnsConfig: any = {
+      enable: values.enable,
+      listen: values.listen,
+      "enhanced-mode": values.enhancedMode,
+      "fake-ip-range": values.fakeIpRange,
+    };
+
+    // fake-ip模式下的特殊配置
+    if (values.enhancedMode === "fake-ip") {
+      if (values.fakeIpFilter?.length) {
+        dnsConfig["fake-ip-filter"] = values.fakeIpFilter
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      if (values.fakeIpFilterMode) {
+        dnsConfig["fake-ip-filter-mode"] = values.fakeIpFilterMode;
+      }
+    }
+
+    // 默认nameserver
+    if (values.defaultNameserver?.length) {
+      dnsConfig["default-nameserver"] = values.defaultNameserver
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    // nameserver
+    if (values.nameserver?.length) {
+      dnsConfig.nameserver = values.nameserver
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    // fallback
+    if (values.fallback?.length) {
+      dnsConfig.fallback = values.fallback
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    // fallback-filter
+    const fallbackFilter: any = {};
+    if (values.fallbackGeoip) {
+      fallbackFilter.geoip = values.fallbackGeoip;
+    }
+    if (values.fallbackGeoipCode) {
+      fallbackFilter["geoip-code"] = values.fallbackGeoipCode;
+    }
+    if (values.fallbackIpcidr?.length) {
+      fallbackFilter.ipcidr = values.fallbackIpcidr
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    if (values.fallbackDomain?.length) {
+      fallbackFilter.domain = values.fallbackDomain
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    if (Object.keys(fallbackFilter).length > 0) {
+      dnsConfig["fallback-filter"] = fallbackFilter;
+    }
+
+    // proxy-server-nameserver
+    if (values.proxyServerNameserver?.length) {
+      dnsConfig["proxy-server-nameserver"] = values.proxyServerNameserver
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    // direct-nameserver
+    if (values.directNameserver?.length) {
+      dnsConfig["direct-nameserver"] = values.directNameserver
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    // direct-nameserver-follow-policy
+    if (values.directNameserverFollowPolicy) {
+      dnsConfig["direct-nameserver-follow-policy"] =
+        values.directNameserverFollowPolicy;
+    }
+
+    return dnsConfig;
+  }, [values]);
+
+  // 解析hosts字符串为对象
+  const parseHosts = useCallback((str: string): Record<string, any> => {
+    const result: Record<string, any> = {};
+    if (!str) return result;
+
+    str.split(",").forEach((item) => {
+      const parts = item.trim().split("=");
+      if (parts.length < 2) return;
+
+      const domain = parts[0].trim();
+      const valueStr = parts.slice(1).join("=").trim();
+
+      // 检查是否包含多个分号分隔的IP
+      if (valueStr.includes(";")) {
+        result[domain] = valueStr
+          .split(";")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      } else {
+        result[domain] = valueStr;
+      }
+    });
+
+    return result;
+  }, []);
 
   // 从表单值更新YAML内容
   const updateYamlFromValues = useCallback(() => {
@@ -295,32 +444,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
   }, [yamlContent, updateValuesFromConfig, t]);
 
-  // 解析hosts字符串为对象
-  const parseHosts = useCallback((str: string): Record<string, any> => {
-    const result: Record<string, any> = {};
-    if (!str) return result;
-
-    str.split(",").forEach((item) => {
-      const parts = item.trim().split("=");
-      if (parts.length < 2) return;
-
-      const domain = parts[0].trim();
-      const valueStr = parts.slice(1).join("=").trim();
-
-      // 检查是否包含多个分号分隔的IP
-      if (valueStr.includes(";")) {
-        result[domain] = valueStr
-          .split(";")
-          .map((s) => s.trim())
-          .filter(Boolean);
-      } else {
-        result[domain] = valueStr;
-      }
-    });
-
-    return result;
-  }, []);
-
   // 初始化时设置默认YAML
   useEffect(() => {
     updateYamlFromValues();
@@ -334,52 +457,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       updateYamlFromValues();
     }
   }, [visualization, updateValuesFromYaml, updateYamlFromValues]);
-
-  const generateDnsConfig = useCallback(() => {
-    const dnsConfig: any = {
-      enable: values.enable,
-      listen: values.listen,
-      "enhanced-mode": values.enhancedMode,
-      "fake-ip-range": values.fakeIpRange,
-    };
-
-    // fake-ip模式下的特殊配置
-    if (values.enhancedMode === "fake-ip") {
-      if (values.fakeIpFilter?.length) {
-        dnsConfig["fake-ip-filter"] = values.fakeIpFilter;
-      }
-      if (values.fakeIpFilterMode) {
-        dnsConfig["fake-ip-filter-mode"] = values.fakeIpFilterMode;
-      }
-    }
-
-    // 默认nameserver
-    if (values.defaultNameserver?.length) {
-      dnsConfig["default-nameserver"] = values.defaultNameserver;
-    }
-
-    // nameserver
-    if (values.nameserver?.length) {
-      dnsConfig.nameserver = values.nameserver;
-    }
-
-    // fallback
-    if (values.fallback?.length) {
-      dnsConfig.fallback = values.fallback;
-    }
-
-    // fallback-filter
-    if (Object.keys(values.fallbackFilter || {}).length) {
-      dnsConfig["fallback-filter"] = values.fallbackFilter;
-    }
-
-    // proxy-server-nameserver
-    if (values.proxyServerNameserver?.length) {
-      dnsConfig["proxy-server-nameserver"] = values.proxyServerNameserver;
-    }
-
-    return dnsConfig;
-  }, [values]);
 
   // 处理保存操作
   const onSave = useLockFn(async () => {

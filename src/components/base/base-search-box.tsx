@@ -108,8 +108,6 @@ export const BaseSearchBox = ({
     };
   }, [matchCase, matchWholeWord, useRegularExpression, t]);
 
-  const { onSearch } = props;
-
   useEffect(() => {
     if (!inputRef.current) return;
     const value = inputRef.current.value;
@@ -139,7 +137,7 @@ export const BaseSearchBox = ({
       }
     }
 
-    props.onSearch(createMatcher(value), {
+    onSearch(createMatcher(value), {
       text: value,
       matchCase,
       matchWholeWord,

@@ -44,15 +44,9 @@ export const TestItem = (props: Props) => {
   const [iconCachePath, setIconCachePath] = useState("");
   const { addListener } = useListen();
 
-  const onDelay = useCallback(async () => {
-    setDelay(-2);
-    const result = await cmdTestDelay(url);
-    setDelay(result);
-  }, [url]);
-
-  useEffect(() => {
-    initIconCachePath();
-  }, [icon, initIconCachePath]);
+  const getFileName = useCallback((url: string) => {
+    return url.substring(url.lastIndexOf("/") + 1);
+  }, []);
 
   const initIconCachePath = useCallback(async () => {
     if (icon && icon.trim().startsWith("http")) {
@@ -62,9 +56,15 @@ export const TestItem = (props: Props) => {
     }
   }, [icon, uid, getFileName, setIconCachePath]);
 
-  const getFileName = useCallback((url: string) => {
-    return url.substring(url.lastIndexOf("/") + 1);
-  }, []);
+  useEffect(() => {
+    initIconCachePath();
+  }, [icon, initIconCachePath]);
+
+  const onDelay = useCallback(async () => {
+    setDelay(-2);
+    const result = await cmdTestDelay(url);
+    setDelay(result);
+  }, [url]);
 
   const onEditTest = () => {
     setAnchorEl(null);
