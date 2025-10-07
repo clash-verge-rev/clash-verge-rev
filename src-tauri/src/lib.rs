@@ -1,13 +1,11 @@
 #![allow(non_snake_case)]
 #![recursion_limit = "512"]
 
-// mod cache;
 mod cmd;
 pub mod config;
 mod core;
 mod enhance;
 mod feat;
-// mod ipc;
 mod module;
 mod process;
 mod utils;
@@ -190,45 +188,13 @@ mod app_init {
             cmd::update_proxy_chain_config_in_runtime,
             cmd::invoke_uwp_tool,
             cmd::copy_clash_env,
-            // cmd::get_proxies,
-            // cmd::force_refresh_proxies,
-            // cmd::get_providers_proxies,
             cmd::sync_tray_proxy_selection,
             cmd::save_dns_config,
             cmd::apply_dns_config,
             cmd::check_dns_config_exists,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,
-            // cmd::get_clash_version,
-            // cmd::get_clash_config,
-            // cmd::force_refresh_clash_config,
-            // cmd::update_geo_data,
-            // cmd::upgrade_clash_core,
-            // cmd::get_clash_rules,
-            // cmd::update_proxy_choice,
-            // cmd::get_proxy_providers,
-            // cmd::get_rule_providers,
-            // cmd::proxy_provider_health_check,
-            // cmd::update_proxy_provider,
-            // cmd::update_rule_provider,
-            // cmd::get_clash_connections,
-            // cmd::delete_clash_connection,
-            // cmd::close_all_clash_connections,
-            // cmd::get_group_proxy_delays,
-            // cmd::is_clash_debug_enabled,
-            // cmd::clash_gc,
-            // Logging and monitoring
             cmd::get_clash_logs,
-            // cmd::start_logs_monitoring,
-            // cmd::stop_logs_monitoring,
-            // cmd::clear_logs,
-            // cmd::get_traffic_data,
-            // cmd::get_memory_data,
-            // cmd::get_formatted_traffic_data,
-            // cmd::get_formatted_memory_data,
-            // cmd::get_system_monitor_overview,
-            // cmd::start_traffic_service,
-            // cmd::stop_traffic_service,
             // Verge configuration
             cmd::get_verge_config,
             cmd::patch_verge_config,
@@ -256,8 +222,6 @@ mod app_init {
             // Script validation
             cmd::script_validate_notice,
             cmd::validate_script_file,
-            // Clash API
-            // cmd::clash_api_get_proxy_delay,
             // Backup and WebDAV
             cmd::create_webdav_backup,
             cmd::save_webdav_config,

@@ -1,6 +1,3 @@
-[env]
-TS_RS_EXPORT_DIR = { value = "crates/tauri-plugin-mihomo/guest-js/bindings/", relative = true }
-
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
 
