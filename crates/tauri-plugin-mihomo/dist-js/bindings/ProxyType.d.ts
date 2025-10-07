@@ -1,1 +1,0 @@
-export type ProxyType = "Direct" | "Reject" | "RejectDrop" | "Compatible" | "Pass" | "Dns" | "Shadowsocks" | "ShadowsocksR" | "Snell" | "Socks5" | "Http" | "Vmess" | "Vless" | "Trojan" | "Hysteria" | "Hysteria2" | "WireGuard" | "Tuic" | "Ssh" | "Mieru" | "AnyTLS" | "Relay" | "Selector" | "Fallback" | "URLTest" | "LoadBalance";

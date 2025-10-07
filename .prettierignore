@@ -8,8 +8,3 @@ src-tauri/target/
 src-tauri/gen/
 
 target
-
-crates/tauri-plugin-mihomo/dist-js
-crates/tauri-plugin-mihomo/examples
-crates/tauri-plugin-mihomo/guest-js/bindings
-crates/tauri-plugin-mihomo/permissions

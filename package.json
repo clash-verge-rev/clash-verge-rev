@@ -72,7 +72,7 @@
     "swr": "^2.3.6",
     "types-pac": "^1.0.3",
     "zustand": "^5.0.8",
-    "tauri-plugin-mihomo-api": "file:crates/tauri-plugin-mihomo"
+    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo"
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",

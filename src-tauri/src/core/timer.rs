@@ -140,7 +140,7 @@ impl Timer {
     }
 
     /// 每 3 秒更新系统托盘菜单，总共执行 3 次
-    pub async fn add_update_tray_menu_task(&self) -> Result<()> {
+    pub fn add_update_tray_menu_task(&self) -> Result<()> {
         let tid = self.timer_count.fetch_add(1, Ordering::SeqCst);
         let delay_timer = self.delay_timer.write();
         let task = TaskBuilder::default()
