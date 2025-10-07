@@ -35,15 +35,21 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
   },
 }));
 
-export const BaseSearchBox = (props: SearchProps) => {
+export const BaseSearchBox = ({
+  placeholder,
+  matchCase: matchCaseProp,
+  matchWholeWord: matchWholeWordProp,
+  useRegularExpression: useRegularExpressionProp,
+  onSearch,
+}: SearchProps) => {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [matchCase, setMatchCase] = useState(props.matchCase ?? false);
+  const [matchCase, setMatchCase] = useState(matchCaseProp ?? false);
   const [matchWholeWord, setMatchWholeWord] = useState(
-    props.matchWholeWord ?? false,
+    matchWholeWordProp ?? false,
   );
   const [useRegularExpression, setUseRegularExpression] = useState(
-    props.useRegularExpression ?? false,
+    useRegularExpressionProp ?? false,
   );
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -151,7 +157,7 @@ export const BaseSearchBox = (props: SearchProps) => {
         size="small"
         variant="outlined"
         spellCheck="false"
-        placeholder={props.placeholder ?? t("Filter conditions")}
+        placeholder={placeholder ?? t("Filter conditions")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
         error={!!errorMessage}

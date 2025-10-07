@@ -16,6 +16,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -130,18 +131,16 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     errorRetryInterval: 5000,
   });
 
-  const [prevMixedPort, setPrevMixedPort] = useState(
-    clashConfig?.["mixed-port"],
-  );
-
   const mixedPort = clashConfig?.["mixed-port"];
+  const prevMixedPortRef = useRef(mixedPort);
 
   useEffect(() => {
+    const prevMixedPort = prevMixedPortRef.current;
     if (mixedPort && mixedPort !== prevMixedPort) {
-      setPrevMixedPort(mixedPort);
+      prevMixedPortRef.current = mixedPort;
       resetSystemProxy();
     }
-  }, [mixedPort, prevMixedPort, resetSystemProxy]);
+  }, [mixedPort, resetSystemProxy]);
 
   const resetSystemProxy = useCallback(async () => {
     try {
@@ -167,7 +166,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     } catch (err: any) {
       showNotice("error", err.toString());
     }
-  }, [value, mutate]);
+  }, [value]);
 
   const { systemProxyAddress } = useAppData();
 

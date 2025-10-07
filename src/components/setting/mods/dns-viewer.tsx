@@ -189,48 +189,45 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
   };
 
-  const updateValuesFromConfig = useCallback(
-    (config: any) => {
-      if (!config) return;
+  const updateValuesFromConfig = useCallback((config: any) => {
+    if (!config) return;
 
-      // 提取dns配置
-      const dnsConfig = config.dns || {};
-      // 提取hosts配置（与dns同级）
-      const hostsConfig = config.hosts || {};
+    // 提取dns配置
+    const dnsConfig = config.dns || {};
+    // 提取hosts配置（与dns同级）
+    const hostsConfig = config.hosts || {};
 
-      const enhancedMode =
-        dnsConfig["enhanced-mode"] || DEFAULT_DNS_CONFIG["enhanced-mode"];
-      const validEnhancedMode =
-        enhancedMode === "fake-ip" || enhancedMode === "redir-host"
-          ? enhancedMode
-          : DEFAULT_DNS_CONFIG["enhanced-mode"];
+    const enhancedMode =
+      dnsConfig["enhanced-mode"] || DEFAULT_DNS_CONFIG["enhanced-mode"];
+    const validEnhancedMode =
+      enhancedMode === "fake-ip" || enhancedMode === "redir-host"
+        ? enhancedMode
+        : DEFAULT_DNS_CONFIG["enhanced-mode"];
 
-      const fakeIpFilterMode =
-        dnsConfig["fake-ip-filter-mode"] ||
-        DEFAULT_DNS_CONFIG["fake-ip-filter-mode"];
+    const fakeIpFilterMode =
+      dnsConfig["fake-ip-filter-mode"] ||
+      DEFAULT_DNS_CONFIG["fake-ip-filter-mode"];
 
-      // 设置表单值
-      setValue("enable", !!dnsConfig.enable);
-      setValue("listen", dnsConfig.listen || DEFAULT_DNS_CONFIG.listen);
-      setValue("enhancedMode", validEnhancedMode);
-      setValue(
-        "fakeIpRange",
-        dnsConfig["fake-ip-range"] || DEFAULT_DNS_CONFIG["fake-ip-range"],
-      );
-      setValue("fakeIpFilter", dnsConfig["fake-ip-filter"] || []);
-      setValue("fakeIpFilterMode", fakeIpFilterMode);
-      setValue("defaultNameserver", dnsConfig["default-nameserver"] || []);
-      setValue("nameserver", dnsConfig.nameserver || []);
-      setValue("fallback", dnsConfig.fallback || []);
-      setValue("fallbackFilter", dnsConfig["fallback-filter"] || {});
-      setValue(
-        "proxyServerNameserver",
-        dnsConfig["proxy-server-nameserver"] || [],
-      );
-      setValue("nameserverPolicy", hostsConfig || {});
-    },
-    [setValue],
-  );
+    // 设置表单值
+    setValue("enable", !!dnsConfig.enable);
+    setValue("listen", dnsConfig.listen || DEFAULT_DNS_CONFIG.listen);
+    setValue("enhancedMode", validEnhancedMode);
+    setValue(
+      "fakeIpRange",
+      dnsConfig["fake-ip-range"] || DEFAULT_DNS_CONFIG["fake-ip-range"],
+    );
+    setValue("fakeIpFilter", dnsConfig["fake-ip-filter"] || []);
+    setValue("fakeIpFilterMode", fakeIpFilterMode);
+    setValue("defaultNameserver", dnsConfig["default-nameserver"] || []);
+    setValue("nameserver", dnsConfig.nameserver || []);
+    setValue("fallback", dnsConfig.fallback || []);
+    setValue("fallbackFilter", dnsConfig["fallback-filter"] || {});
+    setValue(
+      "proxyServerNameserver",
+      dnsConfig["proxy-server-nameserver"] || [],
+    );
+    setValue("nameserverPolicy", hostsConfig || {});
+  }, []);
 
   // 重置为默认值
   const resetToDefaults = () => {
@@ -284,7 +281,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
 
     setYamlContent(yaml.dump(config, { forceQuotes: true }));
-  }, [values]);
+  }, [values, generateDnsConfig, parseHosts]);
 
   // 从YAML更新表单值
   const updateValuesFromYaml = useCallback(() => {
@@ -297,71 +294,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       showNotice("error", t("Invalid YAML format"));
     }
   }, [yamlContent, updateValuesFromConfig, t]);
-
-  // 解析nameserver-policy为对象
-  const parseNameserverPolicy = (str: string): Record<string, any> => {
-    const result: Record<string, any> = {};
-    if (!str) return result;
-
-    // 处理geosite:xxx,yyy格式
-    const ruleRegex = /\s*([^=]+?)\s*=\s*([^,]+)(?:,|$)/g;
-    let match;
-
-    while ((match = ruleRegex.exec(str)) !== null) {
-      const [, domainsPart, serversPart] = match;
-
-      // 处理域名部分
-      let domains;
-      if (domainsPart.startsWith("geosite:")) {
-        domains = [domainsPart.trim()];
-      } else {
-        domains = [domainsPart.trim()];
-      }
-
-      // 处理服务器部分
-      const servers = serversPart.split(";").map((s) => s.trim());
-
-      // 为每个域名组分配相同的服务器列表
-      domains.forEach((domain) => {
-        result[domain] = servers;
-      });
-    }
-
-    return result;
-  };
-
-  // 格式化nameserver-policy为字符串
-  const formatNameserverPolicy = (policy: any): string => {
-    if (!policy || typeof policy !== "object") return "";
-
-    // 直接将对象转换为字符串格式
-    return Object.entries(policy)
-      .map(([domain, servers]) => {
-        const serversStr = Array.isArray(servers) ? servers.join(";") : servers;
-        return `${domain}=${serversStr}`;
-      })
-      .join(", ");
-  };
-
-  // 格式化hosts为字符串
-  const formatHosts = (hosts: any): string => {
-    if (!hosts || typeof hosts !== "object") return "";
-
-    const result: string[] = [];
-
-    Object.entries(hosts).forEach(([domain, value]) => {
-      if (Array.isArray(value)) {
-        // 处理数组格式的IP
-        const ipsStr = value.join(";");
-        result.push(`${domain}=${ipsStr}`);
-      } else {
-        // 处理单个IP或域名
-        result.push(`${domain}=${value}`);
-      }
-    });
-
-    return result.join(", ");
-  };
 
   // 解析hosts字符串为对象
   const parseHosts = useCallback((str: string): Record<string, any> => {
@@ -402,15 +334,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       updateYamlFromValues();
     }
   }, [visualization, updateValuesFromYaml, updateYamlFromValues]);
-
-  // 解析列表字符串为数组
-  const parseList = (str: string): string[] => {
-    if (!str?.trim()) return [];
-    return str
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  };
 
   const generateDnsConfig = useCallback(() => {
     const dnsConfig: any = {

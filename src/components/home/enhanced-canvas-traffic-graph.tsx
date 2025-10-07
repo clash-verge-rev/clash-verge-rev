@@ -1,14 +1,5 @@
-import { Box, useTheme } from "@mui/material";
-import type { Ref } from "react";
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useTheme } from "@mui/material";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -133,15 +124,18 @@ export const EnhancedCanvasTrafficGraph = memo(
     );
 
     // 更新显示数据（防抖处理）
-    const updateDisplayDataDebounced = useMemo(() => {
-      let timeoutId: number;
-      return (newData: ITrafficDataPoint[]) => {
-        clearTimeout(timeoutId);
-        timeoutId = window.setTimeout(() => {
+    const timeoutRef = useRef<number>();
+    const updateDisplayDataDebounced = useCallback(
+      (newData: ITrafficDataPoint[]) => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = window.setTimeout(() => {
           setDisplayData(newData);
         }, 50); // 50ms防抖
-      };
-    }, []);
+      },
+      [],
+    );
 
     // 监听数据变化
     useEffect(() => {

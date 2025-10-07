@@ -14,7 +14,7 @@ import {
 import { open } from "@tauri-apps/plugin-shell";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 
@@ -62,6 +62,8 @@ export const ProfileItem = (props: Props) => {
     onSave,
     onDelete,
   } = props;
+
+  const timeoutIdRef = useRef<NodeJS.Timeout>();
 
   const {
     attributes,
@@ -173,7 +175,7 @@ export const ProfileItem = (props: Props) => {
       // 只有当更新的是当前配置时才刷新显示
       if (updatedUid === itemData.uid && showNextUpdate) {
         console.log(`收到定时器更新事件: uid=${updatedUid}`);
-        setTimeout(() => {
+        timeoutIdRef.current = setTimeout(() => {
           fetchNextUpdateTime(true);
         }, 1000);
       }
@@ -191,6 +193,11 @@ export const ProfileItem = (props: Props) => {
         "verge://timer-updated",
         handleTimerUpdate as EventListener,
       );
+
+      // 清理定时器
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+      }
     };
   }, [showNextUpdate, itemData.uid, fetchNextUpdateTime]);
 

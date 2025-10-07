@@ -831,7 +831,7 @@ export const GroupsEditorViewer = (props: Props) => {
                             return x.name;
                           })}
                         >
-                          {filteredPrependSeq.map((item, _index) => {
+                          {filteredPrependSeq.map((item, _) => {
                             return (
                               <GroupItem
                                 key={item.name}
@@ -891,7 +891,7 @@ export const GroupsEditorViewer = (props: Props) => {
                             return x.name;
                           })}
                         >
-                          {filteredAppendSeq.map((item, _index) => {
+                          {filteredAppendSeq.map((item, _) => {
                             return (
                               <GroupItem
                                 key={item.name}

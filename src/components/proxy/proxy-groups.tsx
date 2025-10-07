@@ -34,6 +34,9 @@ import { ProxyGroupNavigator } from "./proxy-group-navigator";
 import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
 
+// Footer component for Virtuoso
+const FooterComponent = () => <div style={{ height: "8px" }} />;
+
 interface Props {
   mode: string;
   isChainMode?: boolean;
@@ -65,14 +68,22 @@ export const ProxyGroups = (props: Props) => {
 
   // 当链式代理模式且规则模式下，如果没有选择代理组，默认选择第一个
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+
     if (
       isChainMode &&
       mode === "rule" &&
       !selectedGroup &&
       proxiesData?.groups?.length > 0
     ) {
-      setSelectedGroup(proxiesData.groups[0].name);
+      timeoutId = setTimeout(() => {
+        setSelectedGroup(proxiesData.groups[0].name);
+      }, 0);
     }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [isChainMode, mode, selectedGroup, proxiesData]);
 
   const { renderList, onProxies, onHeadState } = useRenderList(
@@ -103,6 +114,8 @@ export const ProxyGroups = (props: Props) => {
   useEffect(() => {
     if (renderList.length === 0) return;
 
+    let timeoutId: NodeJS.Timeout | null = null;
+
     try {
       const savedPositions = localStorage.getItem("proxy-scroll-positions");
       if (savedPositions) {
@@ -111,7 +124,7 @@ export const ProxyGroups = (props: Props) => {
         const savedPosition = positions[mode];
 
         if (savedPosition !== undefined) {
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
             virtuosoRef.current?.scrollTo({
               top: savedPosition,
               behavior: "auto",
@@ -122,6 +135,10 @@ export const ProxyGroups = (props: Props) => {
     } catch (e) {
       console.error("Error restoring scroll position:", e);
     }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [mode, renderList]);
 
   // 改为使用节流函数保存滚动位置
@@ -140,16 +157,20 @@ export const ProxyGroups = (props: Props) => {
     [mode],
   );
 
-  // 使用改进的滚动处理
-  const handleScroll = useCallback(
-    throttle((e: any) => {
-      const scrollTop = e.target.scrollTop;
-      setShowScrollTop(scrollTop > 100);
-      // 使用稳定的节流来保存位置，而不是setTimeout
-      saveScrollPosition(scrollTop);
-    }, 500), // 增加到500ms以确保平滑滚动
+  // Memoize the throttle function
+  const throttledHandler = useMemo(
+    () =>
+      throttle((e: any) => {
+        const scrollTop = e.target.scrollTop;
+        setShowScrollTop(scrollTop > 100);
+        // 使用稳定的节流来保存位置，而不是setTimeout
+        saveScrollPosition(scrollTop);
+      }, 500),
     [saveScrollPosition],
   );
+
+  // 使用改进的滚动处理
+  const handleScroll = useCallback(throttledHandler, [throttledHandler]);
 
   // 添加和清理滚动事件监听器
   useEffect(() => {
@@ -460,7 +481,7 @@ export const ProxyGroups = (props: Props) => {
                 scrollerRef.current = ref as Element;
               }}
               components={{
-                Footer: () => <div style={{ height: "8px" }} />,
+                Footer: FooterComponent,
               }}
               initialScrollTop={scrollPositionRef.current[mode]}
               computeItemKey={(index) => renderList[index].key}
@@ -579,7 +600,7 @@ export const ProxyGroups = (props: Props) => {
           scrollerRef.current = ref as Element;
         }}
         components={{
-          Footer: () => <div style={{ height: "8px" }} />,
+          Footer: FooterComponent,
         }}
         // 添加平滑滚动设置
         initialScrollTop={scrollPositionRef.current[mode]}

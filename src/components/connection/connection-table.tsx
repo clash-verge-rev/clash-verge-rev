@@ -28,7 +28,7 @@ export const ConnectionTable = (props: Props) => {
     {},
   );
 
-  const [columns] = useState<GridColDef[]>(() => [
+  const [columns, _setColumns] = useState<GridColDef[]>(() => [
     {
       field: "host",
       headerName: t("Host"),
