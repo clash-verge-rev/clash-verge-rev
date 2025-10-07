@@ -193,14 +193,17 @@ impl Tray {
         match self.create_tray_from_handle(&app_handle).await {
             Ok(_) => {
                 log::info!(target: "app", "System tray created successfully");
-                Ok(())
             }
             Err(e) => {
-                log::warn!(target: "app", "System tray creation failed: {}, Application will continue running without tray icon", e);
                 // Don't return error, let application continue running without tray
-                Ok(())
+                log::warn!(target: "app", "System tray creation failed: {}, Application will continue running without tray icon", e);
             }
         }
+        // TODO: 初始化时，暂时使用此方法更新系统托盘菜单，有效避免代理节点菜单空白
+        crate::core::timer::Timer::global()
+            .add_update_tray_menu_task()
+            .await?;
+        Ok(())
     }
 
     /// 更新托盘点击行为
