@@ -55,7 +55,6 @@ export const ProxiesEditorViewer = (props: Props) => {
   const { profileUid, property, open, onClose, onSave } = props;
   const { t } = useTranslation();
   const themeMode = useThemeMode();
-  const [prevData, setPrevData] = useState("");
   const [currData, setCurrData] = useState("");
   const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
@@ -192,17 +191,40 @@ export const ProxiesEditorViewer = (props: Props) => {
   }, [property, setPrependSeq, setAppendSeq, setDeleteSeq]);
 
   useEffect(() => {
-    if (currData === "") return;
-    if (visualization !== true) return;
+    const updateSequences = () => {
+      const obj = yaml.load(currData) as {
+        prepend: [];
+        append: [];
+        delete: [];
+      } | null;
 
-    const obj = yaml.load(currData) as {
-      prepend: [];
-      append: [];
-      delete: [];
-    } | null;
-    setPrependSeq(obj?.prepend || []);
-    setAppendSeq(obj?.append || []);
-    setDeleteSeq(obj?.delete || []);
+      const newPrependSeq = obj?.prepend || [];
+      const newAppendSeq = obj?.append || [];
+      const newDeleteSeq = obj?.delete || [];
+
+      // Use setTimeout to defer the state updates
+      const timer = setTimeout(() => {
+        setPrependSeq((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(newPrependSeq)
+            ? newPrependSeq
+            : prev,
+        );
+        setAppendSeq((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(newAppendSeq)
+            ? newAppendSeq
+            : prev,
+        );
+        setDeleteSeq((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(newDeleteSeq)
+            ? newDeleteSeq
+            : prev,
+        );
+      }, 0);
+
+      return () => clearTimeout(timer);
+    };
+
+    updateSequences();
   }, [currData, visualization]);
 
   useEffect(() => {
@@ -223,7 +245,9 @@ export const ProxiesEditorViewer = (props: Props) => {
       if (window.requestIdleCallback) {
         window.requestIdleCallback(serialize);
       } else {
-        setTimeout(serialize, 0);
+        const timeoutId = setTimeout(serialize, 0);
+        // Clean up the timeout in case the component unmounts
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [prependSeq, appendSeq, deleteSeq]);
@@ -354,7 +378,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                             return x.name;
                           })}
                         >
-                          {filteredPrependSeq.map((item, index) => {
+                          {filteredPrependSeq.map((item) => {
                             return (
                               <ProxyItem
                                 key={item.name}
@@ -414,7 +438,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                             return x.name;
                           })}
                         >
-                          {filteredAppendSeq.map((item, index) => {
+                          {filteredAppendSeq.map((item) => {
                             return (
                               <ProxyItem
                                 key={item.name}

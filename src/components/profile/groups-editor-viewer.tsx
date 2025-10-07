@@ -36,7 +36,7 @@ import {
   cancelIdleCallback,
 } from "foxact/request-idle-callback";
 import yaml from "js-yaml";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
@@ -180,18 +180,39 @@ export const GroupsEditorViewer = (props: Props) => {
   ]);
 
   useEffect(() => {
-    if (currData === "") return;
-    if (visualization !== true) return;
-
     const obj = yaml.load(currData) as {
       prepend: [];
       append: [];
       delete: [];
     } | null;
-    setPrependSeq(obj?.prepend || []);
-    setAppendSeq(obj?.append || []);
-    setDeleteSeq(obj?.delete || []);
+
+    const newPrependSeq = obj?.prepend || [];
+    const newAppendSeq = obj?.append || [];
+    const newDeleteSeq = obj?.delete || [];
+
+    // Use setTimeout to defer the state updates
+    const timer = setTimeout(() => {
+      setPrependSeq((prev) =>
+        JSON.stringify(prev) !== JSON.stringify(newPrependSeq)
+          ? newPrependSeq
+          : prev,
+      );
+      setAppendSeq((prev) =>
+        JSON.stringify(prev) !== JSON.stringify(newAppendSeq)
+          ? newAppendSeq
+          : prev,
+      );
+      setDeleteSeq((prev) =>
+        JSON.stringify(prev) !== JSON.stringify(newDeleteSeq)
+          ? newDeleteSeq
+          : prev,
+      );
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [currData, visualization]);
+
+  const serializeDataRef = useRef<number | null>(null);
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
@@ -210,9 +231,17 @@ export const GroupsEditorViewer = (props: Props) => {
         }
       };
 
-      const handle = requestIdleCallback(serialize);
+      if (serializeDataRef.current) {
+        cancelIdleCallback(serializeDataRef.current);
+      }
+
+      serializeDataRef.current = requestIdleCallback(serialize);
+
       return () => {
-        cancelIdleCallback(handle);
+        if (serializeDataRef.current) {
+          cancelIdleCallback(serializeDataRef.current);
+          serializeDataRef.current = null;
+        }
       };
     }
   }, [prependSeq, appendSeq, deleteSeq]);
@@ -299,10 +328,14 @@ export const GroupsEditorViewer = (props: Props) => {
     const list = await getNetworkInterfaces();
     setInterfaceNameList(list);
   }, [setInterfaceNameList]);
-  useEffect(() => {
+  const updateProxyPolicy = useCallback(() => {
     fetchProxyPolicy();
-  }, [prependSeq, appendSeq, deleteSeq, fetchProxyPolicy]);
+  }, [fetchProxyPolicy]);
+
   useEffect(() => {
+    updateProxyPolicy();
+  }, [prependSeq, appendSeq, deleteSeq, updateProxyPolicy]);
+  const initializeData = useCallback(() => {
     if (!open) return;
     fetchContent();
     fetchProxyPolicy();
@@ -315,6 +348,10 @@ export const GroupsEditorViewer = (props: Props) => {
     fetchProfile,
     getInterfaceNameList,
   ]);
+
+  useEffect(() => {
+    initializeData();
+  }, [initializeData]);
 
   const validateGroup = () => {
     const group = formIns.getValues();

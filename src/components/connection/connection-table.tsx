@@ -28,93 +28,96 @@ export const ConnectionTable = (props: Props) => {
     {},
   );
 
-  const [columns, _setColumns] = useState<GridColDef[]>(() => [
-    {
-      field: "host",
-      headerName: t("Host"),
-      width: columnWidths["host"] || 220,
-      minWidth: 180,
-    },
-    {
-      field: "download",
-      headerName: t("Downloaded"),
-      width: columnWidths["download"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" "),
-    },
-    {
-      field: "upload",
-      headerName: t("Uploaded"),
-      width: columnWidths["upload"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" "),
-    },
-    {
-      field: "dlSpeed",
-      headerName: t("DL Speed"),
-      width: columnWidths["dlSpeed"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
-    },
-    {
-      field: "ulSpeed",
-      headerName: t("UL Speed"),
-      width: columnWidths["ulSpeed"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
-    },
-    {
-      field: "chains",
-      headerName: t("Chains"),
-      width: columnWidths["chains"] || 340,
-      minWidth: 180,
-    },
-    {
-      field: "rule",
-      headerName: t("Rule"),
-      width: columnWidths["rule"] || 280,
-      minWidth: 180,
-    },
-    {
-      field: "process",
-      headerName: t("Process"),
-      width: columnWidths["process"] || 220,
-      minWidth: 180,
-    },
-    {
-      field: "time",
-      headerName: t("Time"),
-      width: columnWidths["time"] || 120,
-      minWidth: 100,
-      align: "right",
-      headerAlign: "right",
-      sortComparator: (v1: string, v2: string) =>
-        new Date(v2).getTime() - new Date(v1).getTime(),
-      valueFormatter: (value: number) => dayjs(value).fromNow(),
-    },
-    {
-      field: "source",
-      headerName: t("Source"),
-      width: columnWidths["source"] || 200,
-      minWidth: 130,
-    },
-    {
-      field: "remoteDestination",
-      headerName: t("Destination"),
-      width: columnWidths["remoteDestination"] || 200,
-      minWidth: 130,
-    },
-    {
-      field: "type",
-      headerName: t("Type"),
-      width: columnWidths["type"] || 160,
-      minWidth: 100,
-    },
-  ]);
+  const columnsData = useMemo<GridColDef[]>(
+    () => [
+      {
+        field: "host",
+        headerName: t("Host"),
+        width: columnWidths["host"] || 220,
+        minWidth: 180,
+      },
+      {
+        field: "download",
+        headerName: t("Downloaded"),
+        width: columnWidths["download"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" "),
+      },
+      {
+        field: "upload",
+        headerName: t("Uploaded"),
+        width: columnWidths["upload"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" "),
+      },
+      {
+        field: "dlSpeed",
+        headerName: t("DL Speed"),
+        width: columnWidths["dlSpeed"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
+      },
+      {
+        field: "ulSpeed",
+        headerName: t("UL Speed"),
+        width: columnWidths["ulSpeed"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
+      },
+      {
+        field: "chains",
+        headerName: t("Chains"),
+        width: columnWidths["chains"] || 340,
+        minWidth: 180,
+      },
+      {
+        field: "rule",
+        headerName: t("Rule"),
+        width: columnWidths["rule"] || 280,
+        minWidth: 180,
+      },
+      {
+        field: "process",
+        headerName: t("Process"),
+        width: columnWidths["process"] || 220,
+        minWidth: 180,
+      },
+      {
+        field: "time",
+        headerName: t("Time"),
+        width: columnWidths["time"] || 120,
+        minWidth: 100,
+        align: "right",
+        headerAlign: "right",
+        sortComparator: (v1: string, v2: string) =>
+          new Date(v2).getTime() - new Date(v1).getTime(),
+        valueFormatter: (value: number) => dayjs(value).fromNow(),
+      },
+      {
+        field: "source",
+        headerName: t("Source"),
+        width: columnWidths["source"] || 200,
+        minWidth: 130,
+      },
+      {
+        field: "remoteDestination",
+        headerName: t("Destination"),
+        width: columnWidths["remoteDestination"] || 200,
+        minWidth: 130,
+      },
+      {
+        field: "type",
+        headerName: t("Type"),
+        width: columnWidths["type"] || 160,
+        minWidth: 100,
+      },
+    ],
+    [columnWidths],
+  );
 
   const handleColumnResize = (params: GridColumnResizeParams) => {
     const { colDef, width } = params;
@@ -158,7 +161,7 @@ export const ConnectionTable = (props: Props) => {
     <DataGrid
       hideFooter
       rows={connRows}
-      columns={columns}
+      columns={columnsData}
       onRowClick={(e) => onShowDetail(e.row.connectionData)}
       density="compact"
       sx={{

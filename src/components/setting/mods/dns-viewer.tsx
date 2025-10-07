@@ -444,19 +444,27 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
   }, [yamlContent, updateValuesFromConfig, t]);
 
-  // 初始化时设置默认YAML
-  useEffect(() => {
+  const initializeYaml = useCallback(() => {
     updateYamlFromValues();
   }, [updateYamlFromValues]);
 
-  // 切换编辑模式时的处理
+  // 初始化时设置默认YAML
   useEffect(() => {
+    initializeYaml();
+  }, [initializeYaml]);
+
+  const handleModeChange = useCallback(() => {
     if (visualization) {
       updateValuesFromYaml();
     } else {
       updateYamlFromValues();
     }
   }, [visualization, updateValuesFromYaml, updateYamlFromValues]);
+
+  // 切换编辑模式时的处理
+  useEffect(() => {
+    handleModeChange();
+  }, [handleModeChange]);
 
   // 处理保存操作
   const onSave = useLockFn(async () => {

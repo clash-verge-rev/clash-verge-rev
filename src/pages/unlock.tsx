@@ -99,15 +99,28 @@ const UnlockPage = () => {
   );
 
   useEffect(() => {
-    const { items: storedItems } = loadResultsFromStorage();
+    const updateUnlockItems = () => {
+      const { items: storedItems } = loadResultsFromStorage();
 
-    if (storedItems && storedItems.length > 0) {
-      setUnlockItems(storedItems);
-      getUnlockItems(false);
-    } else {
-      getUnlockItems(true);
-    }
-  }, [getUnlockItems]);
+      if (storedItems && storedItems.length > 0) {
+        const timer = setTimeout(() => {
+          setUnlockItems((prev) => {
+            const sortedItems = sortItemsByName(storedItems);
+            return JSON.stringify(prev) !== JSON.stringify(sortedItems)
+              ? sortedItems
+              : prev;
+          });
+        }, 0);
+        getUnlockItems(false);
+        return () => clearTimeout(timer);
+      } else {
+        getUnlockItems(true);
+      }
+    };
+
+    const cleanup = updateUnlockItems();
+    return cleanup;
+  }, [getUnlockItems, sortItemsByName]);
 
   const invokeWithTimeout = async <T,>(
     cmd: string,

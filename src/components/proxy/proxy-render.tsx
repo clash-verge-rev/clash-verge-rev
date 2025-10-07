@@ -42,15 +42,8 @@ interface RenderProps {
 
 export const ProxyRender = (props: RenderProps) => {
   const { t } = useTranslation();
-  const {
-    indent,
-    item,
-    onLocation,
-    onCheckAll,
-    onHeadState,
-    onChangeProxy,
-    isChainMode = false,
-  } = props;
+  const { indent, item, onLocation, onCheckAll, onHeadState, onChangeProxy } =
+    props;
   const { type, group, headState, proxy, proxyCol } = item;
   const { verge } = useVerge();
   const enable_group_icon = verge?.enable_group_icon ?? true;

@@ -37,8 +37,8 @@ export const LogViewer = (props: Props) => {
           pb: 1,
         }}
       >
-        {logInfo.map(([level, log], index) => (
-          <Fragment key={`${log.substring(0, 20)}-${index}`}>
+        {logInfo.map(([level, log]) => (
+          <Fragment key={`${level}-${log.substring(0, 20)}-${Date.now()}`}>
             <Typography color="text.secondary" component="div">
               <Chip
                 label={level}

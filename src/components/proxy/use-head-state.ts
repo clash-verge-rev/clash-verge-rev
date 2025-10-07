@@ -31,26 +31,45 @@ export function useHeadStateNew() {
 
   const [state, setState] = useState<Record<string, HeadState>>({});
 
-  useEffect(() => {
-    if (!current) {
-      setState({});
-      return;
-    }
-
-    try {
-      const data = JSON.parse(
-        localStorage.getItem(HEAD_STATE_KEY)!,
-      ) as HeadStateStorage;
-
-      const value = data[current] || {};
-
-      if (value && typeof value === "object") {
-        setState(value);
-      } else {
-        setState({});
+  const loadHeadState = useCallback(() => {
+    const updateState = async () => {
+      if (!current) {
+        setState((prev) =>
+          JSON.stringify(prev) !== JSON.stringify({}) ? {} : prev,
+        );
+        return;
       }
-    } catch {}
+
+      try {
+        const data = JSON.parse(
+          localStorage.getItem(HEAD_STATE_KEY)!,
+        ) as HeadStateStorage;
+
+        const value = data[current] || {};
+
+        if (value && typeof value === "object") {
+          setState((prev) =>
+            JSON.stringify(prev) !== JSON.stringify(value) ? value : prev,
+          );
+        } else {
+          setState((prev) =>
+            JSON.stringify(prev) !== JSON.stringify({}) ? {} : prev,
+          );
+        }
+      } catch {
+        setState((prev) =>
+          JSON.stringify(prev) !== JSON.stringify({}) ? {} : prev,
+        );
+      }
+    };
+
+    updateState();
   }, [current]);
+
+  useEffect(() => {
+    const cleanup = loadHeadState();
+    return cleanup;
+  }, [loadHeadState]);
 
   const setHeadState = useCallback(
     (groupName: string, obj: Partial<HeadState>) => {

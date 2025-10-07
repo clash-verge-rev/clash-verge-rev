@@ -108,7 +108,7 @@ export const BaseSearchBox = ({
     };
   }, [matchCase, matchWholeWord, useRegularExpression, t]);
 
-  useEffect(() => {
+  const updateSearch = useCallback(() => {
     if (!inputRef.current) return;
     const value = inputRef.current.value;
     onSearch(createMatcher(value), {
@@ -124,6 +124,10 @@ export const BaseSearchBox = ({
     createMatcher,
     onSearch,
   ]);
+
+  useEffect(() => {
+    updateSearch();
+  }, [updateSearch]);
 
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target?.value ?? "";

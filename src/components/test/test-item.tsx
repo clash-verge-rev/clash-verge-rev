@@ -102,12 +102,12 @@ export const TestItem = (props: Props) => {
     return () => {
       if (unlistenFn) {
         console.log(
-          `TestItem for ${props.id} unmounting or url changed, cleaning up test-all listener.`,
+          `TestItem for ${id} unmounting or url changed, cleaning up test-all listener.`,
         );
         unlistenFn();
       }
     };
-  }, [url, addListener, onDelay, props.id]);
+  }, [url, addListener, onDelay, id]);
 
   return (
     <Box

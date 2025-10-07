@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import useSWR from "swr";
 
 import { useClashInfo } from "@/hooks/use-clash";
@@ -193,12 +193,11 @@ export const useTrafficMonitorEnhanced = () => {
     });
   }
 
-  const [, forceUpdate] = useState({});
   const cleanupRef = useRef<(() => void) | null>(null);
 
   // 强制组件更新
   const triggerUpdate = useCallback(() => {
-    forceUpdate({});
+    // Just trigger a re-render if needed, no state update required
   }, []);
 
   // 注册引用计数

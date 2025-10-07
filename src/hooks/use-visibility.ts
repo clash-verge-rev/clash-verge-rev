@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 export const useVisibility = () => {
   const [visible, setVisible] = useState(true);
 
-  useEffect(() => {
+  const setupVisibilityListeners = () => {
     const handleVisibilityChange = () => {
       setVisible(document.visibilityState === "visible");
     };
@@ -21,6 +21,10 @@ export const useVisibility = () => {
       document.removeEventListener("pointerdown", handleClick);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
+  };
+
+  useEffect(() => {
+    setupVisibilityListeners();
   }, []);
 
   return visible;

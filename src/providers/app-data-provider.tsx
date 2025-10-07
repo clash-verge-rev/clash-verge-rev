@@ -103,7 +103,6 @@ export const AppDataProvider = ({
     let isUnmounted = false;
     const scheduledTimeouts = new Set<ReturnType<typeof setTimeout>>();
     const cleanupFns: Array<() => void> = [];
-    const fallbackWindowListeners: Array<[string, EventListener]> = [];
 
     const registerCleanup = (fn: () => void) => {
       if (isUnmounted) {
@@ -301,9 +300,19 @@ export const AppDataProvider = ({
           ["verge://force-refresh-proxies", handleForceRefreshProxies],
         ];
 
+        // Add fallback listeners directly and register cleanup
+        const addedListeners: Array<[string, EventListener]> = [];
         fallbackHandlers.forEach(([eventName, handler]) => {
+          // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
           window.addEventListener(eventName, handler);
-          fallbackWindowListeners.push([eventName, handler]);
+          addedListeners.push([eventName, handler]);
+        });
+
+        // Register cleanup for the added listeners
+        registerCleanup(() => {
+          addedListeners.forEach(([eventName, handler]) => {
+            window.removeEventListener(eventName, handler);
+          });
         });
       }
     };
@@ -313,9 +322,6 @@ export const AppDataProvider = ({
     return () => {
       isUnmounted = true;
       clearAllTimeouts();
-      fallbackWindowListeners.splice(0).forEach(([eventName, handler]) => {
-        window.removeEventListener(eventName, handler);
-      });
       cleanupFns.splice(0).forEach((fn) => fn());
     };
   }, [refreshProxy]);

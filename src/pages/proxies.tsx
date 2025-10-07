@@ -79,29 +79,47 @@ const ProxyPage = () => {
 
   // 当开启链式代理模式时，获取配置数据
   useEffect(() => {
-    if (isChainMode) {
-      const fetchChainConfig = async () => {
-        try {
-          const exitNode = localStorage.getItem("proxy-chain-exit-node");
+    const updateChainConfigData = () => {
+      if (isChainMode) {
+        const fetchChainConfig = async () => {
+          try {
+            const exitNode = localStorage.getItem("proxy-chain-exit-node");
 
-          if (!exitNode) {
-            console.error("No proxy chain exit node found in localStorage");
-            setChainConfigData("");
-            return;
+            if (!exitNode) {
+              console.error("No proxy chain exit node found in localStorage");
+              const timer = setTimeout(() => {
+                setChainConfigData((prev) => (prev !== "" ? "" : prev));
+              }, 0);
+              return () => clearTimeout(timer);
+            }
+
+            const configData = await getRuntimeProxyChainConfig(exitNode);
+            const newData = configData || "";
+            const timer = setTimeout(() => {
+              setChainConfigData((prev) => (prev !== newData ? newData : prev));
+            }, 0);
+            return () => clearTimeout(timer);
+          } catch (error) {
+            console.error("Failed to get runtime proxy chain config:", error);
+            const timer = setTimeout(() => {
+              setChainConfigData((prev) => (prev !== "" ? "" : prev));
+            }, 0);
+            return () => clearTimeout(timer);
           }
+        };
 
-          const configData = await getRuntimeProxyChainConfig(exitNode);
-          setChainConfigData(configData || "");
-        } catch (error) {
-          console.error("Failed to get runtime proxy chain config:", error);
-          setChainConfigData("");
-        }
-      };
+        const cleanup = fetchChainConfig();
+        return cleanup;
+      } else {
+        const timer = setTimeout(() => {
+          setChainConfigData((prev) => (prev !== null ? null : prev));
+        }, 0);
+        return () => clearTimeout(timer);
+      }
+    };
 
-      fetchChainConfig();
-    } else {
-      setChainConfigData(null);
-    }
+    const cleanup = updateChainConfigData();
+    return cleanup;
   }, [isChainMode]);
 
   useEffect(() => {

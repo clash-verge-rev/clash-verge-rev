@@ -242,7 +242,6 @@ export const RulesEditorViewer = (props: Props) => {
   const { t } = useTranslation();
   const themeMode = useThemeMode();
 
-  const [prevData, setPrevData] = useState("");
   const [currData, setCurrData] = useState("");
   const [visualization, setVisualization] = useState(true);
   const [match, setMatch] = useState(() => (_: string) => true);
@@ -315,13 +314,36 @@ export const RulesEditorViewer = (props: Props) => {
   }, [property, setPrependSeq, setAppendSeq, setDeleteSeq]);
 
   useEffect(() => {
-    if (currData === "") return;
-    if (visualization !== true) return;
+    const updateSequences = () => {
+      const obj = yaml.load(currData) as ISeqProfileConfig | null;
 
-    const obj = yaml.load(currData) as ISeqProfileConfig | null;
-    setPrependSeq(obj?.prepend || []);
-    setAppendSeq(obj?.append || []);
-    setDeleteSeq(obj?.delete || []);
+      const newPrependSeq = obj?.prepend || [];
+      const newAppendSeq = obj?.append || [];
+      const newDeleteSeq = obj?.delete || [];
+
+      // Use setTimeout to defer the state updates
+      const timer = setTimeout(() => {
+        setPrependSeq((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(newPrependSeq)
+            ? newPrependSeq
+            : prev,
+        );
+        setAppendSeq((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(newAppendSeq)
+            ? newAppendSeq
+            : prev,
+        );
+        setDeleteSeq((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(newDeleteSeq)
+            ? newDeleteSeq
+            : prev,
+        );
+      }, 0);
+
+      return () => clearTimeout(timer);
+    };
+
+    updateSequences();
   }, [currData, visualization]);
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
@@ -342,7 +364,9 @@ export const RulesEditorViewer = (props: Props) => {
       if (window.requestIdleCallback) {
         window.requestIdleCallback(serialize);
       } else {
-        setTimeout(serialize, 0);
+        const timeoutId = setTimeout(serialize, 0);
+        // Clean up the timeout in case the component unmounts
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [prependSeq, appendSeq, deleteSeq]);
@@ -637,7 +661,7 @@ export const RulesEditorViewer = (props: Props) => {
                             return x;
                           })}
                         >
-                          {filteredPrependSeq.map((item, index) => {
+                          {filteredPrependSeq.map((item) => {
                             return (
                               <RuleItem
                                 key={item}
@@ -693,7 +717,7 @@ export const RulesEditorViewer = (props: Props) => {
                             return x;
                           })}
                         >
-                          {filteredAppendSeq.map((item, index) => {
+                          {filteredAppendSeq.map((item) => {
                             return (
                               <RuleItem
                                 key={item}

@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const PasswordInput = (props: Props) => {
-  const { open, onConfirm } = props;
+  const { onConfirm } = props;
 
   const { t } = useTranslation();
   const [passwd, setPasswd] = useState("");

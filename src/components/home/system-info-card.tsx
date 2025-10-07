@@ -43,29 +43,29 @@ export const SystemInfoCard = () => {
     lastCheckUpdate: "-",
   });
 
-  // 初始化系统信息
-  useEffect(() => {
-    getSystemInfo()
-      .then((info) => {
-        const lines = info.split("\n");
-        if (lines.length > 0) {
-          const sysName = lines[0].split(": ")[1] || "";
-          let sysVersion = lines[1].split(": ")[1] || "";
+  const updateSystemState = useCallback(async () => {
+    try {
+      const info = await getSystemInfo();
+      const lines = info.split("\n");
+      if (lines.length > 0) {
+        const sysName = lines[0].split(": ")[1] || "";
+        let sysVersion = lines[1].split(": ")[1] || "";
 
-          if (
-            sysName &&
-            sysVersion.toLowerCase().startsWith(sysName.toLowerCase())
-          ) {
-            sysVersion = sysVersion.substring(sysName.length).trim();
-          }
-
-          setSystemState((prev) => ({
-            ...prev,
-            osInfo: `${sysName} ${sysVersion}`,
-          }));
+        if (
+          sysName &&
+          sysVersion.toLowerCase().startsWith(sysName.toLowerCase())
+        ) {
+          sysVersion = sysVersion.substring(sysName.length).trim();
         }
-      })
-      .catch(console.error);
+
+        setSystemState((prev) => ({
+          ...prev,
+          osInfo: `${sysName} ${sysVersion}`,
+        }));
+      }
+    } catch (error) {
+      console.error(error);
+    }
 
     // 获取最后检查更新时间
     const lastCheck = localStorage.getItem("last_check_update");
@@ -103,24 +103,27 @@ export const SystemInfoCard = () => {
     }
   }, [verge?.auto_check_update]);
 
+  // 初始化系统信息
+  useEffect(() => {
+    updateSystemState();
+  }, [updateSystemState]);
+
+  const checkForUpdates = useCallback(async () => {
+    const now = Date.now();
+    localStorage.setItem("last_check_update", now.toString());
+    setSystemState((prev) => ({
+      ...prev,
+      lastCheckUpdate: new Date(now).toLocaleString(),
+    }));
+    return await checkUpdate();
+  }, []);
+
   // 自动检查更新逻辑
-  useSWR(
-    verge?.auto_check_update ? "checkUpdate" : null,
-    async () => {
-      const now = Date.now();
-      localStorage.setItem("last_check_update", now.toString());
-      setSystemState((prev) => ({
-        ...prev,
-        lastCheckUpdate: new Date(now).toLocaleString(),
-      }));
-      return await checkUpdate();
-    },
-    {
-      revalidateOnFocus: false,
-      refreshInterval: 24 * 60 * 60 * 1000, // 每天检查一次
-      dedupingInterval: 60 * 60 * 1000, // 1小时内不重复检查
-    },
-  );
+  useSWR(verge?.auto_check_update ? "checkUpdate" : null, checkForUpdates, {
+    revalidateOnFocus: false,
+    refreshInterval: 24 * 60 * 60 * 1000, // 每天检查一次
+    dedupingInterval: 60 * 60 * 1000, // 1小时内不重复检查
+  });
 
   // 导航到设置页面
   const goToSettings = useCallback(() => {

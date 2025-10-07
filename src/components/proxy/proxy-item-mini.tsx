@@ -41,12 +41,38 @@ export const ProxyItemMini = (props: Props) => {
 
   useEffect(() => {
     if (!proxy) return;
-    setDelay(delayManager.getDelayFix(proxy, group.name));
+
+    const updateDelay = () => {
+      const newDelay = delayManager.getDelayFix(proxy, group.name);
+      const timer = setTimeout(() => {
+        setDelay((prev) => (prev !== newDelay ? newDelay : prev));
+      }, 0);
+      return () => clearTimeout(timer);
+    };
+
+    const cleanup = updateDelay();
+    return cleanup;
   }, [proxy, group.name]);
 
   const onDelay = useLockFn(async () => {
-    setDelay(-2);
-    setDelay(await delayManager.checkDelay(proxy.name, group.name, timeout));
+    const timer1 = setTimeout(() => {
+      setDelay(-2);
+    }, 0);
+
+    const result = await delayManager.checkDelay(
+      proxy.name,
+      group.name,
+      timeout,
+    );
+
+    const timer2 = setTimeout(() => {
+      setDelay((prev) => (prev !== result ? result : prev));
+    }, 0);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   });
 
   return (

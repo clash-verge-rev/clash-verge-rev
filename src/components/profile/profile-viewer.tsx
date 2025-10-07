@@ -45,7 +45,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   // file input
   const fileDataRef = useRef<string | null>(null);
 
-  const { control, watch, register, ...formIns } = useForm<IProfileItem>({
+  const { control, watch, ...formIns } = useForm<IProfileItem>({
     defaultValues: {
       type: "remote",
       name: "",

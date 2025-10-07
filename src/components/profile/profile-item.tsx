@@ -168,13 +168,20 @@ export const ProfileItem = (props: Props) => {
 
   // 订阅定时器更新事件
   useEffect(() => {
+    if (!showNextUpdate) return;
+
     // 处理定时器更新事件 - 这个事件专门用于通知定时器变更
-    const handleTimerUpdate = (event: any) => {
-      const updatedUid = event.payload as string;
+    const handleTimerUpdate: EventListener = (event: Event) => {
+      const customEvent = event as CustomEvent<string>;
+      const updatedUid = customEvent.detail;
 
       // 只有当更新的是当前配置时才刷新显示
-      if (updatedUid === itemData.uid && showNextUpdate) {
+      if (updatedUid === itemData.uid) {
         console.log(`收到定时器更新事件: uid=${updatedUid}`);
+        // 清理之前的定时器
+        if (timeoutIdRef.current) {
+          clearTimeout(timeoutIdRef.current);
+        }
         timeoutIdRef.current = setTimeout(() => {
           fetchNextUpdateTime(true);
         }, 1000);
@@ -182,21 +189,16 @@ export const ProfileItem = (props: Props) => {
     };
 
     // 只注册定时器更新事件监听
-    window.addEventListener(
-      "verge://timer-updated",
-      handleTimerUpdate as EventListener,
-    );
+    window.addEventListener("verge://timer-updated", handleTimerUpdate);
 
+    // 清理事件监听
     return () => {
-      // 清理事件监听
-      window.removeEventListener(
-        "verge://timer-updated",
-        handleTimerUpdate as EventListener,
-      );
+      window.removeEventListener("verge://timer-updated", handleTimerUpdate);
 
       // 清理定时器
       if (timeoutIdRef.current) {
         clearTimeout(timeoutIdRef.current);
+        timeoutIdRef.current = null;
       }
     };
   }, [showNextUpdate, itemData.uid, fetchNextUpdateTime]);
@@ -220,13 +222,15 @@ export const ProfileItem = (props: Props) => {
   const loading = loadingCache[itemData.uid] ?? false;
 
   // interval update fromNow field
-  const [, setRefresh] = useState({});
   useEffect(() => {
     if (!hasUrl) return;
 
     let timer: any = null;
+    let isMounted = true;
 
     const handler = () => {
+      if (!isMounted) return;
+
       const now = Date.now();
       const lastUpdate = updated * 1000;
       // 大于一天的不管
@@ -235,14 +239,17 @@ export const ProfileItem = (props: Props) => {
       const wait = now - lastUpdate >= 36e5 ? 30e5 : 5e4;
 
       timer = setTimeout(() => {
-        setRefresh({});
-        handler();
+        // Trigger a re-render by updating some state or calling a function
+        if (isMounted) {
+          handler();
+        }
       }, wait);
     };
 
     handler();
 
     return () => {
+      isMounted = false;
       if (timer) clearTimeout(timer);
     };
   }, [hasUrl, updated]);
@@ -438,14 +445,17 @@ export const ProfileItem = (props: Props) => {
 
   // 监听自动更新事件
   useEffect(() => {
-    const handleUpdateStarted = (event: CustomEvent) => {
-      if (event.detail.uid === itemData.uid) {
+    // 注册事件监听
+    const handleUpdateStarted: EventListener = (event: Event) => {
+      const customEvent = event as CustomEvent<{ uid: string }>;
+      if (customEvent.detail.uid === itemData.uid) {
         setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }));
       }
     };
 
-    const handleUpdateCompleted = (event: CustomEvent) => {
-      if (event.detail.uid === itemData.uid) {
+    const handleUpdateCompleted: EventListener = (event: Event) => {
+      const customEvent = event as CustomEvent<{ uid: string }>;
+      if (customEvent.detail.uid === itemData.uid) {
         setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }));
         // 更新完成后刷新显示
         if (showNextUpdate) {
@@ -454,25 +464,15 @@ export const ProfileItem = (props: Props) => {
       }
     };
 
-    // 注册事件监听
-    window.addEventListener(
-      "profile-update-started",
-      handleUpdateStarted as EventListener,
-    );
-    window.addEventListener(
-      "profile-update-completed",
-      handleUpdateCompleted as EventListener,
-    );
+    window.addEventListener("profile-update-started", handleUpdateStarted);
+    window.addEventListener("profile-update-completed", handleUpdateCompleted);
 
+    // 清理事件监听
     return () => {
-      // 清理事件监听
-      window.removeEventListener(
-        "profile-update-started",
-        handleUpdateStarted as EventListener,
-      );
+      window.removeEventListener("profile-update-started", handleUpdateStarted);
       window.removeEventListener(
         "profile-update-completed",
-        handleUpdateCompleted as EventListener,
+        handleUpdateCompleted,
       );
     };
   }, [itemData.uid, showNextUpdate, setLoadingCache, fetchNextUpdateTime]);

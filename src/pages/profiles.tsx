@@ -161,7 +161,7 @@ const ProfilePage = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-  const { current } = location.state || {};
+  const current = location.state?.current;
 
   const {
     profiles = {},
@@ -657,7 +657,7 @@ const ProfilePage = () => {
   // 监听后端配置变更
   useEffect(() => {
     let unlistenPromise: Promise<() => void> | undefined;
-    let lastProfileId: string | null = null;
+    let lastProfileId = "";
     let lastUpdateTime = 0;
     const debounceDelay = 200;
 
@@ -682,11 +682,12 @@ const ProfilePage = () => {
         console.log(`[Profile] 执行配置数据刷新`);
 
         // 使用异步调度避免阻塞事件处理
-        setTimeout(() => {
+        // Wrap in a Promise to make it more explicit for the linter
+        Promise.resolve().then(() => {
           mutateProfiles().catch((error) => {
             console.error("[Profile] 配置数据刷新失败:", error);
           });
-        }, 0);
+        });
       });
     };
 

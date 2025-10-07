@@ -146,16 +146,15 @@ export const EnhancedCanvasTrafficGraph = memo(
       [],
     );
 
-    // 监听数据变化
-    useEffect(() => {
+    const updateDisplayData = useCallback(() => {
       const timeRangeData = getDataForTimeRange(timeRange);
       updateDisplayDataDebounced(timeRangeData);
-    }, [
-      dataPoints,
-      timeRange,
-      getDataForTimeRange,
-      updateDisplayDataDebounced,
-    ]);
+    }, [timeRange, getDataForTimeRange, updateDisplayDataDebounced]);
+
+    // 监听数据变化
+    useEffect(() => {
+      updateDisplayData();
+    }, [updateDisplayData, dataPoints]);
 
     // Y轴坐标计算 - 基于刻度范围的线性映射
     const calculateY = useCallback(

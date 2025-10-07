@@ -54,7 +54,7 @@ export const ProxyItem = (props: Props) => {
   const [delay, setDelay] = useState(-1);
   const { verge } = useVerge();
   const timeout = verge?.default_latency_timeout || 10000;
-  useEffect(() => {
+  const setupDelayListener = useCallback(() => {
     if (isPreset) return;
     delayManager.setListener(proxy.name, group.name, setDelay);
 
@@ -64,13 +64,48 @@ export const ProxyItem = (props: Props) => {
   }, [proxy.name, group.name, isPreset]);
 
   useEffect(() => {
+    setupDelayListener();
+  }, [setupDelayListener]);
+
+  const updateDelay = useCallback(() => {
     if (!proxy) return;
-    setDelay(delayManager.getDelayFix(proxy, group.name));
+    const newDelay = delayManager.getDelayFix(proxy, group.name);
+    setDelay((prev) => (prev !== newDelay ? newDelay : prev));
   }, [group.name, proxy]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateDelay();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [updateDelay]);
+
   const onDelay = useLockFn(async () => {
-    setDelay(-2);
-    setDelay(await delayManager.checkDelay(proxy.name, group.name, timeout));
+    let timer1: NodeJS.Timeout | null = null;
+    let timer2: NodeJS.Timeout | null = null;
+
+    const updateDelay = () => {
+      timer1 = setTimeout(() => {
+        setDelay(-2);
+      }, 0);
+
+      delayManager
+        .checkDelay(proxy.name, group.name, timeout)
+        .then((result) => {
+          timer2 = setTimeout(() => {
+            setDelay((prev) => (prev !== result ? result : prev));
+          }, 0);
+        });
+    };
+
+    updateDelay();
+
+    // Cleanup function
+    return () => {
+      if (timer1) clearTimeout(timer1);
+      if (timer2) clearTimeout(timer2);
+    };
   });
 
   return (

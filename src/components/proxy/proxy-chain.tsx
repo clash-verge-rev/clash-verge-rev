@@ -195,9 +195,7 @@ export const ProxyChain = ({
   const theme = useTheme();
   const { t } = useTranslation();
   const { proxies } = useAppData();
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
 
   // 获取当前代理信息以检查连接状态
   const { data: currentProxies, mutate: mutateProxies } = useSWR(
@@ -302,11 +300,6 @@ export const ProxyChain = ({
     [proxyChain, onUpdateChain],
   );
 
-  const handleClearAll = useCallback(() => {
-    onUpdateChain([]);
-    setHasUnsavedChanges(true);
-  }, [onUpdateChain]);
-
   const handleConnect = useCallback(async () => {
     if (isConnected) {
       // 如果已连接，则断开连接
@@ -381,7 +374,7 @@ export const ProxyChain = ({
     } finally {
       setIsConnecting(false);
     }
-  }, [proxyChain, isConnected, t, mutateProxies, mode, selectedGroup]);
+  }, [proxyChain, t, mutateProxies, mode, selectedGroup]);
 
   const proxyChainRef = useRef(proxyChain);
   const onUpdateChainRef = useRef(onUpdateChain);

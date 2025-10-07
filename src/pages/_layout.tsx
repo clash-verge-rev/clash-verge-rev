@@ -1,45 +1,40 @@
 import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useLocalStorage } from "foxact/use-local-storage";
-import { useEffect, useCallback, useState, useRef } from "react";
 import React from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoutes, useNavigate } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
 
+import "dayjs/locale/ru";
+import "dayjs/locale/zh-cn";
+
 import iconDark from "@/assets/image/icon_dark.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import LogoSvg from "@/assets/image/logo.svg?react";
+import { NoticeManager } from "@/components/base/NoticeManager";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { useClashInfo } from "@/hooks/use-clash";
 import { useI18n } from "@/hooks/use-i18n";
+import { useListen } from "@/hooks/use-listen";
+import { LogLevel } from "@/hooks/use-log-data";
 import { useVerge } from "@/hooks/use-verge";
 import { getAxios } from "@/services/api";
 import { forceRefreshClashConfig } from "@/services/cmds";
+import { initGlobalLogService } from "@/services/global-log-service";
+import { showNotice } from "@/services/noticeService";
 import { useThemeMode, useEnableLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
 import { routers } from "./_routers";
-
-import "dayjs/locale/ru";
-import "dayjs/locale/zh-cn";
-
-import { useListen } from "@/hooks/use-listen";
-
-import { listen } from "@tauri-apps/api/event";
-
-import { useClashInfo } from "@/hooks/use-clash";
-import { initGlobalLogService } from "@/services/global-log-service";
-
-import { invoke } from "@tauri-apps/api/core";
-
-import { showNotice } from "@/services/noticeService";
-import { NoticeManager } from "@/components/base/NoticeManager";
-import { LogLevel } from "@/hooks/use-log-data";
 
 const appWindow = getCurrentWebviewWindow();
 export const portableFlag = false;
@@ -173,9 +168,20 @@ const Layout = () => {
   const { addListener } = useListen();
   const initRef = useRef(false);
   const [themeReady, setThemeReady] = useState(false);
+  const themeUpdatedRef = useRef(false);
 
   useEffect(() => {
-    setThemeReady(true);
+    if (!themeUpdatedRef.current) {
+      themeUpdatedRef.current = true;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setThemeReady(true);
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, [theme]);
 
   const handleNotice = useCallback(
@@ -192,15 +198,18 @@ const Layout = () => {
     [t, navigate],
   );
 
-  // 初始化全局日志服务
-  useEffect(() => {
+  const initializeGlobalLogService = useCallback(() => {
     if (clashInfo) {
       initGlobalLogService(enableLog, logLevel);
     }
   }, [clashInfo, enableLog, logLevel]);
 
-  // 设置监听器
+  // 初始化全局日志服务
   useEffect(() => {
+    initializeGlobalLogService();
+  }, [initializeGlobalLogService]);
+
+  const setupListeners = useCallback(() => {
     const listeners = [
       addListener("verge://refresh-clash-config", async () => {
         await getAxios(true);
@@ -273,6 +282,11 @@ const Layout = () => {
     };
   }, [handleNotice, addListener]);
 
+  // 设置监听器
+  useEffect(() => {
+    setupListeners();
+  }, [setupListeners]);
+
   useEffect(() => {
     if (initRef.current) {
       console.log("[Layout] 初始化代码已执行过，跳过");
@@ -284,6 +298,7 @@ const Layout = () => {
     let isInitialized = false;
     let initializationAttempts = 0;
     const maxAttempts = 3;
+    let retryTimeout: NodeJS.Timeout | null = null;
 
     const notifyBackend = async (action: string, stage?: string) => {
       try {
@@ -304,13 +319,14 @@ const Layout = () => {
       if (initialOverlay) {
         console.log("[Layout] 移除加载指示器");
         initialOverlay.style.opacity = "0";
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           try {
             initialOverlay.remove();
           } catch {
             console.log("[Layout] 加载指示器已被移除");
           }
         }, 300);
+        return () => clearTimeout(timeoutId);
       }
     };
 
@@ -324,25 +340,30 @@ const Layout = () => {
       console.log(`[Layout] 开始第 ${initializationAttempts} 次初始化尝试`);
 
       try {
-        removeLoadingOverlay();
+        const cleanupFn = removeLoadingOverlay();
 
         await notifyBackend("加载阶段", "Loading");
 
         await new Promise<void>((resolve) => {
+          let mountCheckTimeout: NodeJS.Timeout;
+          const overallTimeout: NodeJS.Timeout;
+
           const checkReactMount = () => {
             const rootElement = document.getElementById("root");
             if (rootElement && rootElement.children.length > 0) {
               console.log("[Layout] React组件已挂载");
+              if (overallTimeout) clearTimeout(overallTimeout);
               resolve();
             } else {
-              setTimeout(checkReactMount, 50);
+              mountCheckTimeout = setTimeout(checkReactMount, 50);
             }
           };
 
           checkReactMount();
 
-          setTimeout(() => {
+          overallTimeout = setTimeout(() => {
             console.log("[Layout] React组件挂载检查超时，继续执行");
+            if (mountCheckTimeout) clearTimeout(mountCheckTimeout);
             resolve();
           }, 2000);
         });
@@ -359,6 +380,11 @@ const Layout = () => {
 
         isInitialized = true;
         console.log(`[Layout] 第 ${initializationAttempts} 次初始化完成`);
+
+        // Clean up the timeout if needed
+        if (cleanupFn) {
+          cleanupFn();
+        }
       } catch (error) {
         console.error(
           `[Layout] 第 ${initializationAttempts} 次初始化失败:`,
@@ -369,7 +395,7 @@ const Layout = () => {
           console.log(
             `[Layout] 将在500ms后进行第 ${initializationAttempts + 1} 次重试`,
           );
-          setTimeout(performInitialization, 500);
+          retryTimeout = setTimeout(performInitialization, 500);
         } else {
           console.error("[Layout] 所有初始化尝试都失败，执行紧急初始化");
 
@@ -386,15 +412,6 @@ const Layout = () => {
 
     let hasEventTriggered = false;
 
-    const setupEventListener = async () => {
-      try {
-        console.log("[Layout] 开始监听启动完成事件");
-      } catch (err) {
-        console.error("[Layout] 监听启动完成事件失败:", err);
-        return () => {};
-      }
-    };
-
     const checkImmediateInitialization = async () => {
       try {
         console.log("[Layout] 检查后端是否已就绪");
@@ -410,7 +427,8 @@ const Layout = () => {
       }
     };
 
-    const backupInitialization = setTimeout(() => {
+    const backupInitialization: NodeJS.Timeout;
+    backupInitialization = setTimeout(() => {
       if (!hasEventTriggered && !isInitialized) {
         console.warn("[Layout] 备用初始化触发：1.5秒内未开始初始化");
         hasEventTriggered = true;
@@ -427,27 +445,46 @@ const Layout = () => {
       }
     }, 5000);
 
-    setTimeout(checkImmediateInitialization, 100);
+    const immediateInitialization = setTimeout(
+      checkImmediateInitialization,
+      100,
+    );
 
-    return () => {
+    const cleanup = () => {
+      console.log("[Layout] 执行清理操作");
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+        retryTimeout = null;
+      }
       clearTimeout(backupInitialization);
       clearTimeout(emergencyInitialization);
+      clearTimeout(immediateInitialization);
     };
+
+    return cleanup;
   }, []);
 
-  // 语言和起始页设置
-  useEffect(() => {
+  const updateLanguage = useCallback(() => {
     if (language) {
       dayjs.locale(language === "zh" ? "zh-cn" : language);
       switchLanguage(language);
     }
   }, [language, switchLanguage]);
 
+  // 语言和起始页设置
   useEffect(() => {
+    updateLanguage();
+  }, [updateLanguage]);
+
+  const navigateToStartPage = useCallback(() => {
     if (start_page) {
       navigate(start_page, { replace: true });
     }
   }, [start_page, navigate]);
+
+  useEffect(() => {
+    navigateToStartPage();
+  }, [navigateToStartPage]);
 
   if (!themeReady) {
     return (

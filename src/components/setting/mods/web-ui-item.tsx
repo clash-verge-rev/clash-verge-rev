@@ -78,11 +78,6 @@ export const WebUIItem = (props: Props) => {
     );
   }
 
-  const html = value
-    ?.replace("%host", "<span>%host</span>")
-    .replace("%port", "<span>%port</span>")
-    .replace("%secret", "<span>%secret</span>");
-
   return (
     <>
       <Stack spacing={0.75} direction="row" alignItems="center" mt={1} mb={1}>
@@ -98,8 +93,24 @@ export const WebUIItem = (props: Props) => {
               color: palette.primary.main,
             },
           })}
-          dangerouslySetInnerHTML={{ __html: html || "NULL" }}
-        />
+        >
+          {value ? (
+            <span>
+              {value.split(/(%host|%port|%secret)/).map((part) => {
+                if (
+                  part === "%host" ||
+                  part === "%port" ||
+                  part === "%secret"
+                ) {
+                  return <span key={part}>{part}</span>;
+                }
+                return <span key={part}>{part}</span>;
+              })}
+            </span>
+          ) : (
+            "NULL"
+          )}
+        </Typography>
         <IconButton
           size="small"
           title={t("Open URL")}

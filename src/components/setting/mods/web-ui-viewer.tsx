@@ -120,7 +120,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       {webUIList.map((item, index) => (
         <WebUIItem
-          key={`${item}-${index}`}
+          key={item || `empty-${index}`}
           value={item}
           onChange={(v) => handleChange(index, v)}
           onDelete={() => handleDelete(index)}

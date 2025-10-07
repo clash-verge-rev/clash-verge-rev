@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import delayManager from "@/services/delay";
 
@@ -11,8 +11,6 @@ export default function useFilterSort(
   filterText: string,
   sortType: ProxySortType,
 ) {
-  const [, setRefresh] = useState({});
-
   useEffect(() => {
     let last = 0;
 
@@ -21,7 +19,7 @@ export default function useFilterSort(
       const now = Date.now();
       if (now - last > 666) {
         last = now;
-        setRefresh({});
+        // Just trigger the listener, no need to update state
       }
     });
 

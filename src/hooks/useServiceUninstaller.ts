@@ -25,7 +25,7 @@ const executeWithErrorHandling = async (
 };
 
 export const useServiceUninstaller = () => {
-  const { mutateRunningMode, mutateServiceOk } = useSystemState();
+  useSystemState();
 
   const uninstallServiceAndRestartCore = useCallback(async () => {
     await executeWithErrorHandling(() => stopCore(), "Stopping Core...");
