@@ -16,7 +16,7 @@ fi
 remote_name="$1"
 if git remote get-url "$remote_name" >/dev/null 2>&1; then
     remote_url=$(git remote get-url "$remote_name")
-    if [[ "$remote_url" =~ github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$ ]]; then
+    if [[ "$remote_url" =~ github\\.com[:/]+clash-verge-rev/clash-verge-rev(\\.git)?$ ]]; then
         echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev ($remote_url)"
         echo "[pre-push] Running pnpm format:check..."
         pnpm format:check
