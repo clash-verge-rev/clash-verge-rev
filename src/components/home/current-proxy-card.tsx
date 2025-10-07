@@ -1,4 +1,3 @@
-import React from "react";
 import {
   AccessTimeRounded,
   ChevronRight,
@@ -28,6 +27,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
+import React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -52,7 +52,9 @@ interface ProxyOption {
 // 排序类型: 默认 | 按延迟 | 按字母
 type ProxySortType = 0 | 1 | 2;
 
-function convertDelayColor(delayValue: number): "success" | "warning" | "error" | "primary" | "default" {
+function convertDelayColor(
+  delayValue: number,
+): "success" | "warning" | "error" | "primary" | "default" {
   const colorStr = delayManager.formatDelayColor(delayValue);
   if (!colorStr) return "default";
 
@@ -72,7 +74,11 @@ function convertDelayColor(delayValue: number): "success" | "warning" | "error" 
   }
 }
 
-function getSignalIcon(delay: number): { icon: React.ReactElement; text: string; color: string } {
+function getSignalIcon(delay: number): {
+  icon: React.ReactElement;
+  text: string;
+  color: string;
+} {
   if (delay < 0)
     return { icon: <SignalNone />, text: "未测试", color: "text.secondary" };
   if (delay >= 10000)
@@ -84,15 +90,6 @@ function getSignalIcon(delay: number): { icon: React.ReactElement; text: string;
   if (delay >= 200)
     return { icon: <SignalGood />, text: "延迟良好", color: "info.main" };
   return { icon: <SignalStrong />, text: "延迟极佳", color: "success.main" };
-}
-
-// 简单的防抖函数
-function debounce<T extends (...args: any[]) => any>(fn: T, ms = 100) {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return function (this: any, ...args: Parameters<T>) {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn.apply(this, args), ms);
-  };
 }
 
 export const CurrentProxyCard = () => {
@@ -178,6 +175,7 @@ export const CurrentProxyCard = () => {
 
     // 根据模式确定初始组
     if (isGlobalMode) {
+      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
       setState((prev) => ({
         ...prev,
         selection: {
@@ -186,6 +184,7 @@ export const CurrentProxyCard = () => {
         },
       }));
     } else if (isDirectMode) {
+      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
       setState((prev) => ({
         ...prev,
         selection: {
@@ -195,6 +194,7 @@ export const CurrentProxyCard = () => {
       }));
     } else {
       const savedGroup = localStorage.getItem(STORAGE_KEY_GROUP);
+      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
       setState((prev) => ({
         ...prev,
         selection: {
@@ -209,6 +209,7 @@ export const CurrentProxyCard = () => {
   useEffect(() => {
     if (!proxies) return;
 
+    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
     setState((prev) => {
       // 只保留 Selector 类型的组用于选择
       const filteredGroups = proxies.groups
@@ -276,11 +277,18 @@ export const CurrentProxyCard = () => {
   }, [proxies, isGlobalMode, isDirectMode]);
 
   // 使用防抖包装状态更新
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const debouncedSetState = useCallback(
-    debounce((updateFn: (prev: ProxyState) => ProxyState) => {
-      setState(updateFn);
-    }, 300),
-    [],
+    (updateFn: (prev: ProxyState) => ProxyState) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        setState(updateFn);
+      }, 300);
+    },
+    [setState],
   );
 
   // 处理代理组变更
@@ -753,7 +761,7 @@ export const CurrentProxyCard = () => {
             >
               {isDirectMode
                 ? null
-                : proxyOptions.map((proxy, index) => {
+                : proxyOptions.map((proxy) => {
                     const delayValue =
                       state.proxyData.records[proxy.name] &&
                       state.selection.group
@@ -764,7 +772,7 @@ export const CurrentProxyCard = () => {
                         : -1;
                     return (
                       <MenuItem
-                        key={`${proxy.name}-${index}`}
+                        key={proxy.name}
                         value={proxy.name}
                         sx={{
                           display: "flex",
