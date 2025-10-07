@@ -1,6 +1,8 @@
+import React from "react";
 import {
   AccessTimeRounded,
   ChevronRight,
+  NetworkCheckRounded,
   WifiOff as SignalError,
   SignalWifi3Bar as SignalGood,
   SignalWifi2Bar as SignalMedium,
@@ -25,13 +27,16 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
+import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { EnhancedCard } from "@/components/home/enhanced-card";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
+import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-context";
+import { getGroupProxyDelays, providerHealthCheck } from "@/services/cmds";
 import delayManager from "@/services/delay";
 
 // 本地存储的键名
@@ -47,7 +52,7 @@ interface ProxyOption {
 // 排序类型: 默认 | 按延迟 | 按字母
 type ProxySortType = 0 | 1 | 2;
 
-function convertDelayColor(delayValue: number) {
+function convertDelayColor(delayValue: number): "success" | "warning" | "error" | "primary" | "default" {
   const colorStr = delayManager.formatDelayColor(delayValue);
   if (!colorStr) return "default";
 
@@ -67,7 +72,7 @@ function convertDelayColor(delayValue: number) {
   }
 }
 
-function getSignalIcon(delay: number) {
+function getSignalIcon(delay: number): { icon: React.ReactElement; text: string; color: string } {
   if (delay < 0)
     return { icon: <SignalNone />, text: "未测试", color: "text.secondary" };
   if (delay >= 10000)
@@ -82,9 +87,9 @@ function getSignalIcon(delay: number) {
 }
 
 // 简单的防抖函数
-function debounce(fn: Function, ms = 100) {
+function debounce<T extends (...args: any[]) => any>(fn: T, ms = 100) {
   let timeoutId: ReturnType<typeof setTimeout>;
-  return function (this: any, ...args: any[]) {
+  return function (this: any, ...args: Parameters<T>) {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn.apply(this, args), ms);
   };
@@ -95,6 +100,7 @@ export const CurrentProxyCard = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { proxies, clashConfig, refreshProxy } = useAppData();
+  const { verge } = useVerge();
 
   // 统一代理选择器
   const { handleSelectChange } = useProxySelection({
@@ -279,7 +285,7 @@ export const CurrentProxyCard = () => {
 
   // 处理代理组变更
   const handleGroupChange = useCallback(
-    (event: SelectChangeEvent) => {
+    (event: SelectChangeEvent<string>) => {
       if (isGlobalMode || isDirectMode) return;
 
       const newGroup = event.target.value;
@@ -314,7 +320,7 @@ export const CurrentProxyCard = () => {
 
   // 处理代理节点变更
   const handleProxyChange = useCallback(
-    (event: SelectChangeEvent) => {
+    (event: SelectChangeEvent<string>) => {
       if (isDirectMode) return;
 
       const newProxy = event.target.value;
@@ -399,6 +405,85 @@ export const CurrentProxyCard = () => {
     localStorage.setItem(STORAGE_KEY_SORT_TYPE, newSortType.toString());
   }, [sortType]);
 
+  // 延迟测试
+  const handleCheckDelay = useLockFn(async () => {
+    const groupName = state.selection.group;
+    if (!groupName || isDirectMode) return;
+
+    console.log(`[CurrentProxyCard] 开始测试所有延迟，组: ${groupName}`);
+
+    const timeout = verge?.default_latency_timeout || 10000;
+
+    // 获取当前组的所有代理
+    const proxyNames: string[] = [];
+    const providers: Set<string> = new Set();
+
+    if (isGlobalMode && proxies?.global) {
+      // 全局模式
+      const allProxies = proxies.global.all
+        .filter((p: any) => {
+          const name = typeof p === "string" ? p : p.name;
+          return name !== "DIRECT" && name !== "REJECT";
+        })
+        .map((p: any) => (typeof p === "string" ? p : p.name));
+
+      allProxies.forEach((name: string) => {
+        const proxy = state.proxyData.records[name];
+        if (proxy?.provider) {
+          providers.add(proxy.provider);
+        } else {
+          proxyNames.push(name);
+        }
+      });
+    } else {
+      // 规则模式
+      const group = state.proxyData.groups.find((g) => g.name === groupName);
+      if (group) {
+        group.all.forEach((name: string) => {
+          const proxy = state.proxyData.records[name];
+          if (proxy?.provider) {
+            providers.add(proxy.provider);
+          } else {
+            proxyNames.push(name);
+          }
+        });
+      }
+    }
+
+    console.log(
+      `[CurrentProxyCard] 找到代理数量: ${proxyNames.length}, 提供者数量: ${providers.size}`,
+    );
+
+    // 测试提供者的节点
+    if (providers.size > 0) {
+      console.log(`[CurrentProxyCard] 开始测试提供者节点`);
+      await Promise.allSettled(
+        [...providers].map((p) => providerHealthCheck(p)),
+      );
+    }
+
+    // 测试非提供者的节点
+    if (proxyNames.length > 0) {
+      const url = delayManager.getUrl(groupName);
+      console.log(`[CurrentProxyCard] 测试URL: ${url}, 超时: ${timeout}ms`);
+
+      try {
+        await Promise.race([
+          delayManager.checkListDelay(proxyNames, groupName, timeout),
+          getGroupProxyDelays(groupName, url, timeout),
+        ]);
+        console.log(`[CurrentProxyCard] 延迟测试完成，组: ${groupName}`);
+      } catch (error) {
+        console.error(
+          `[CurrentProxyCard] 延迟测试出错，组: ${groupName}`,
+          error,
+        );
+      }
+    }
+
+    refreshProxy();
+  });
+
   // 排序代理函数（增加非空校验）
   const sortProxies = useCallback(
     (proxies: ProxyOption[]) => {
@@ -474,7 +559,7 @@ export const CurrentProxyCard = () => {
   ]);
 
   // 获取排序图标
-  const getSortIcon = () => {
+  const getSortIcon = (): React.ReactElement => {
     switch (sortType) {
       case 1:
         return <AccessTimeRounded fontSize="small" />;
@@ -486,7 +571,7 @@ export const CurrentProxyCard = () => {
   };
 
   // 获取排序提示文本
-  const getSortTooltip = () => {
+  const getSortTooltip = (): string => {
     switch (sortType) {
       case 0:
         return t("Sort by default");
@@ -517,13 +602,24 @@ export const CurrentProxyCard = () => {
       }
       iconColor={currentProxy ? "primary" : undefined}
       action={
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip title={t("Delay check")}>
+            <span>
+              <IconButton
+                size="small"
+                color="inherit"
+                onClick={handleCheckDelay}
+                disabled={isDirectMode}
+              >
+                <NetworkCheckRounded />
+              </IconButton>
+            </span>
+          </Tooltip>
           <Tooltip title={getSortTooltip()}>
             <IconButton
               size="small"
               color="inherit"
               onClick={handleSortTypeChange}
-              sx={{ mr: 1 }}
             >
               {getSortIcon()}
             </IconButton>
