@@ -1,9 +1,9 @@
 use crate::{
     config::Config,
-    core::{CoreManager, handle, tray},
+    core::{handle, tray, CoreManager},
     logging_error,
     process::AsyncHandler,
-    utils::{logging::Type, resolve},
+    utils::{self, logging::Type, resolve},
 };
 use serde_yaml_ng::{Mapping, Value};
 
@@ -23,6 +23,7 @@ pub async fn restart_clash_core() {
 
 /// Restart the application
 pub async fn restart_app() {
+    utils::server::shutdown_embedded_server();
     if let Err(err) = resolve::resolve_reset_async().await {
         handle::Handle::notice_message(
             "restart_app::error",
