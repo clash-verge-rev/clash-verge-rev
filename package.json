@@ -3,6 +3,7 @@
   "version": "2.4.3",
   "license": "GPL-3.0-only",
   "scripts": {
+    "prepare": "husky || true",
     "dev": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
     "dev:diff": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
     "dev:trace": "cross-env RUST_BACKTRACE=full RUSTFLAGS=\"--cfg tokio_unstable\" tauri dev -f verge-dev tokio-trace",
@@ -105,6 +106,7 @@
     "glob": "^11.0.3",
     "globals": "^16.4.0",
     "https-proxy-agent": "^7.0.6",
+    "husky": "^9.1.7",
     "jiti": "^2.6.1",
     "lint-staged": "^16.2.3",
     "meta-json-schema": "^1.19.14",

@@ -25,6 +25,7 @@ env:
   TAG_CHANNEL: Alpha
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
+  HUSKY: 0
 concurrency:
   group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
 
