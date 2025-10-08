@@ -49,6 +49,7 @@ pub async fn check_singleton() -> Result<()> {
 /// maybe it can be used as pac server later
 pub fn embed_server() {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
+    #[allow(clippy::expect_used)]
     SHUTDOWN_SENDER
         .set(Mutex::new(Some(shutdown_tx)))
         .expect("failed to set shutdown signal for embedded server");
