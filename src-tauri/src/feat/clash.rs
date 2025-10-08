@@ -1,6 +1,6 @@
 use crate::{
     config::Config,
-    core::{handle, tray, CoreManager},
+    core::{CoreManager, handle, tray},
     logging_error,
     process::AsyncHandler,
     utils::{self, logging::Type, resolve},
