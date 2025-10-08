@@ -247,30 +247,59 @@ pub fn run() {
     // Set Linux environment variable
     #[cfg(target_os = "linux")]
     {
-        unsafe {
-            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-        }
-
-        // Force X11 backend for tray icon compatibility on Wayland
-        let is_wayland = std::env::var("WAYLAND_DISPLAY").is_ok();
-        if is_wayland {
-            unsafe {
-                std::env::set_var("GDK_BACKEND", "x11");
-                std::env::remove_var("WAYLAND_DISPLAY");
-            }
-            logging!(
-                info,
-                Type::Setup,
-                true,
-                "Wayland detected: Forcing X11 backend for tray icon compatibility"
-            );
-        }
-
         let desktop_env = std::env::var("XDG_CURRENT_DESKTOP")
             .unwrap_or_default()
             .to_uppercase();
         let is_kde_desktop = desktop_env.contains("KDE");
         let is_plasma_desktop = desktop_env.contains("PLASMA");
+
+        let is_wayland_session = std::env::var("XDG_SESSION_TYPE")
+            .map(|value| value.eq_ignore_ascii_case("wayland"))
+            .unwrap_or(false)
+            || std::env::var("WAYLAND_DISPLAY").is_ok();
+        let prefer_native_wayland = is_wayland_session && (is_kde_desktop || is_plasma_desktop);
+        let dmabuf_override = std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER");
+
+        if prefer_native_wayland {
+            if matches!(dmabuf_override.as_deref(), Ok("1")) {
+                unsafe {
+                    std::env::remove_var("WEBKIT_DISABLE_DMABUF_RENDERER");
+                }
+                logging!(
+                    info,
+                    Type::Setup,
+                    true,
+                    "Wayland + KDE detected: Re-enabled WebKit DMABUF renderer to avoid Cairo surface failures."
+                );
+            } else {
+                logging!(
+                    info,
+                    Type::Setup,
+                    true,
+                    "Wayland + KDE detected: Using native Wayland backend for reliable rendering."
+                );
+            }
+        } else {
+            if dmabuf_override.is_err() {
+                unsafe {
+                    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+                }
+            }
+
+            // Force X11 backend for tray icon compatibility on Wayland
+            if is_wayland_session {
+                unsafe {
+                    std::env::set_var("GDK_BACKEND", "x11");
+                    std::env::remove_var("WAYLAND_DISPLAY");
+                }
+                logging!(
+                    info,
+                    Type::Setup,
+                    true,
+                    "Wayland detected: Forcing X11 backend for tray icon compatibility"
+                );
+            }
+        }
 
         if is_kde_desktop || is_plasma_desktop {
             unsafe {
