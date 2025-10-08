@@ -19,6 +19,7 @@ import {
   RefreshRounded,
   TextSnippetOutlined,
   CheckBoxOutlineBlankRounded,
+  CheckBoxRounded,
   IndeterminateCheckBoxRounded,
   DeleteRounded,
 } from "@mui/icons-material";
@@ -692,6 +693,16 @@ const ProfilePage = () => {
     );
   };
 
+  const getSelectionState = () => {
+    if (selectedProfiles.size === 0) {
+      return 'none'; // 无选择
+    } else if (selectedProfiles.size === profileItems.length) {
+      return 'all'; // 全选
+    } else {
+      return 'partial'; // 部分选择
+    }
+  };
+
   const deleteSelectedProfiles = useLockFn(async () => {
     if (selectedProfiles.size === 0) return;
 
@@ -797,6 +808,16 @@ const ProfilePage = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {!batchMode ? (
             <>
+              {/* Batch mode toggle button */}
+              <IconButton
+                size="small"
+                color="inherit"
+                title={t("Batch Operations")}
+                onClick={toggleBatchMode}
+              >
+                <CheckBoxOutlineBlankRounded />
+              </IconButton>
+
               <IconButton
                 size="small"
                 color="inherit"
@@ -822,16 +843,6 @@ const ProfilePage = () => {
                 onClick={() => onEnhance(true)}
               >
                 <LocalFireDepartmentRounded />
-              </IconButton>
-
-              {/* Batch mode toggle button */}
-              <IconButton
-                size="small"
-                color="inherit"
-                title={t("Batch Operations")}
-                onClick={toggleBatchMode}
-              >
-                <CheckBoxOutlineBlankRounded />
               </IconButton>
 
               {/* 故障检测和紧急恢复按钮 */}
@@ -865,7 +876,9 @@ const ProfilePage = () => {
                   isAllSelected() ? clearAllSelections : selectAllProfiles
                 }
               >
-                {isAllSelected() ? (
+                {getSelectionState() === 'all' ? (
+                  <CheckBoxRounded />
+                ) : getSelectionState() === 'partial' ? (
                   <IndeterminateCheckBoxRounded />
                 ) : (
                   <CheckBoxOutlineBlankRounded />
