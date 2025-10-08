@@ -589,5 +589,13 @@
   "No (IP Banned By Disney+)": "Нет (IP забанен Disney+)",
   "Unsupported Country/Region": "Страна/регион не поддерживается",
   "Failed (Network Connection)": "Ошибка подключения",
-  "Invalid Profile URL": "Недопустимая ссылка на профиль, введите адрес, начинающийся с http:// или https://"
+  "Invalid Profile URL": "Недопустимая ссылка на профиль, введите адрес, начинающийся с http:// или https://",
+  "Batch Operations": "Пакетные операции",
+  "Delete Selected Profiles": "Удалить выбранные профили",
+  "Deselect All": "Отменить выбор всех",
+  "Done": "Готово",
+  "items": "элементы",
+  "Select All": "Выбрать все",
+  "Selected": "Выбрано",
+  "Selected profiles deleted successfully": "Выбранные профили успешно удалены"
 }
