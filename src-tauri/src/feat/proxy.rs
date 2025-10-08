@@ -1,6 +1,8 @@
 use crate::{
+    cmd,
     config::{Config, IVerge},
-    core::handle,
+    core::{handle, service},
+    utils::notification::{NotificationEvent, notify_event},
 };
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -45,6 +47,12 @@ pub async fn toggle_system_proxy() {
 
 /// Toggle TUN mode on/off
 pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
+    if !cmd::system::is_admin().unwrap_or_default()
+        && service::is_service_available().await.is_err()
+    {
+        notify_event(NotificationEvent::TunModeNeedService).await;
+        return;
+    }
     let enable = Config::verge().await.data_mut().enable_tun_mode;
     let enable = enable.unwrap_or(false);
 

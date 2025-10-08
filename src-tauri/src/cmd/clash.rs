@@ -7,9 +7,6 @@ use crate::{
 };
 use crate::{config::*, feat, logging, utils::logging::Type, wrap_err};
 use serde_yaml_ng::Mapping;
-// use std::time::Duration;
-
-// const CONFIG_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
 
 /// 复制Clash环境变量
 #[tauri::command]
