@@ -695,11 +695,11 @@ const ProfilePage = () => {
 
   const getSelectionState = () => {
     if (selectedProfiles.size === 0) {
-      return 'none'; // 无选择
+      return "none"; // 无选择
     } else if (selectedProfiles.size === profileItems.length) {
-      return 'all'; // 全选
+      return "all"; // 全选
     } else {
-      return 'partial'; // 部分选择
+      return "partial"; // 部分选择
     }
   };
 
@@ -876,9 +876,9 @@ const ProfilePage = () => {
                   isAllSelected() ? clearAllSelections : selectAllProfiles
                 }
               >
-                {getSelectionState() === 'all' ? (
+                {getSelectionState() === "all" ? (
                   <CheckBoxRounded />
-                ) : getSelectionState() === 'partial' ? (
+                ) : getSelectionState() === "partial" ? (
                   <IndeterminateCheckBoxRounded />
                 ) : (
                   <CheckBoxOutlineBlankRounded />
