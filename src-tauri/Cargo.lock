@@ -2244,9 +2244,9 @@ dependencies = [
 
 [[package]]
 name = "flexi_logger"
-version = "0.31.5"
+version = "0.31.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2e6950c82d35cd4812bec062a174bb49323aa3796572363effa1e2733737a68"
+checksum = "ec8ef54b052574866f68674c7646369a05dda785cf0ab8e3be94992fd92cd64b"
 dependencies = [
  "chrono",
  "log",
@@ -3078,7 +3078,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.4.10",
+ "socket2 0.5.10",
  "tokio",
  "tower-service",
  "tracing",
