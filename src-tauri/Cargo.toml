@@ -81,7 +81,7 @@ isahc = { version = "1.7.2", default-features = false, features = [
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 tauri-plugin-http = "2.5.2"
-flexi_logger = "0.31.4"
+flexi_logger = "0.31.5"
 cfg-if = "1.0.3"
 nu-ansi-term = { version = "0.50.1", optional = true }
 console-subscriber = { version = "0.4.1", optional = true }
