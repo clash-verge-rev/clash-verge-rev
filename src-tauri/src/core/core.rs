@@ -1,5 +1,8 @@
 use crate::AsyncHandler;
 use crate::core::logger::Logger;
+use crate::process::CommandChildGuard;
+use crate::utils::init::sidecar_writer;
+use crate::utils::logging::SharedWriter;
 use crate::{
     config::*,
     core::{
@@ -14,16 +17,12 @@ use crate::{
     },
 };
 use anyhow::Result;
-use chrono::Local;
+use flexi_logger::DeferredNow;
+use flexi_logger::writers::LogWriter;
+use log::Record;
 use parking_lot::Mutex;
-use std::{
-    fmt,
-    fs::{File, create_dir_all},
-    io::Write,
-    path::PathBuf,
-    sync::Arc,
-};
-use tauri_plugin_shell::{ShellExt, process::CommandChild};
+use std::{fmt, path::PathBuf, sync::Arc};
+use tauri_plugin_shell::ShellExt;
 
 // TODO:
 // - 重构，提升模式切换速度
@@ -32,7 +31,7 @@ use tauri_plugin_shell::{ShellExt, process::CommandChild};
 #[derive(Debug)]
 pub struct CoreManager {
     running: Arc<Mutex<RunningMode>>,
-    child_sidecar: Arc<Mutex<Option<CommandChild>>>,
+    child_sidecar: Arc<Mutex<Option<CommandChildGuard>>>,
 }
 
 /// 内核运行模式
@@ -468,7 +467,7 @@ impl CoreManager {
                     for pid in pids {
                         // 跳过当前管理的进程
                         if let Some(current) = current_pid
-                            && pid == current
+                            && Some(pid) == current
                         {
                             logging!(
                                 debug,
@@ -741,14 +740,6 @@ impl CoreManager {
         let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
-        let service_log_dir = dirs::app_home_dir()?.join("logs").join("service");
-        create_dir_all(&service_log_dir)?;
-
-        let now = Local::now();
-        let timestamp = now.format("%Y%m%d_%H%M%S").to_string();
-
-        let log_path = service_log_dir.join(format!("sidecar_{timestamp}.log"));
-
         let (mut rx, child) = app_handle
             .shell()
             .sidecar(&clash_core)?
@@ -768,27 +759,60 @@ impl CoreManager {
             "Started core by sidecar pid: {}",
             pid
         );
-        *self.child_sidecar.lock() = Some(child);
+        *self.child_sidecar.lock() = Some(CommandChildGuard::new(child));
         self.set_running_mode(RunningMode::Sidecar);
 
-        let mut log_file = std::io::BufWriter::new(File::create(log_path)?);
+        let shared_writer: SharedWriter =
+            Arc::new(tokio::sync::Mutex::new(sidecar_writer().await?));
+
         AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
+                let w = shared_writer.lock().await;
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
+                        let mut now = DeferredNow::default();
+                        let line_str = String::from_utf8_lossy(&line);
+                        let arg = format_args!("{}", line_str);
+                        let record = Record::builder()
+                            .args(arg)
+                            .level(log::Level::Error)
+                            .target("sidecar")
+                            .build();
+                        let _ = w.write(&mut now, &record);
+
                         let line = String::from_utf8_lossy(&line);
                         Logger::global().append_log(line.to_string());
-                        if let Err(e) = writeln!(log_file, "{}", line) {
-                            eprintln!("[Sidecar] write stdout failed: {e}");
-                        }
                     }
                     tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
+                        let mut now = DeferredNow::default();
+                        let line_str = String::from_utf8_lossy(&line);
+                        let arg = format_args!("{}", line_str);
+                        let record = Record::builder()
+                            .args(arg)
+                            .level(log::Level::Error)
+                            .target("sidecar")
+                            .build();
+                        let _ = w.write(&mut now, &record);
+
                         let line = String::from_utf8_lossy(&line);
                         Logger::global().append_log(line.to_string());
-                        let _ = writeln!(log_file, "[stderr] {}", line);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
-                        let _ = writeln!(log_file, "[terminated] {:?}", term);
+                        let mut now = DeferredNow::default();
+                        let output_str = if let Some(code) = term.code {
+                            format!("Process terminated with code: {}", code)
+                        } else if let Some(signal) = term.signal {
+                            format!("Process terminated by signal: {}", signal)
+                        } else {
+                            "Process terminated".to_string()
+                        };
+                        let arg = format_args!("{}", output_str);
+                        let record = Record::builder()
+                            .args(arg)
+                            .level(log::Level::Info)
+                            .target("sidecar")
+                            .build();
+                        let _ = w.write(&mut now, &record);
                         break;
                     }
                     _ => {}
@@ -803,12 +827,12 @@ impl CoreManager {
 
         if let Some(child) = self.child_sidecar.lock().take() {
             let pid = child.pid();
-            child.kill()?;
+            drop(child);
             logging!(
                 trace,
                 Type::Core,
                 true,
-                "Stopped core by sidecar pid: {}",
+                "Stopped core by sidecar pid: {:?}",
                 pid
             );
         }

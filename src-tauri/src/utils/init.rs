@@ -1,19 +1,23 @@
-cfg_if::cfg_if! {
-    if #[cfg(not(feature = "tauri-dev"))] {
-        use crate::utils::logging::{console_colored_format, file_format, NoExternModule};
-        use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, LogSpecification, Logger};
-    }
-}
-
+#[cfg(not(feature = "tauri-dev"))]
+use crate::utils::logging::NoModuleFilter;
 use crate::{
     config::*,
     core::handle,
     logging,
     process::AsyncHandler,
-    utils::{dirs, help, logging::Type},
+    utils::{
+        dirs::{self, service_log_dir, sidecar_log_dir},
+        help,
+        logging::Type,
+    },
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone};
+use clash_verge_service_ipc::WriterConfig;
+use flexi_logger::writers::FileLogWriter;
+use flexi_logger::{Cleanup, Criterion, FileSpec};
+#[cfg(not(feature = "tauri-dev"))]
+use flexi_logger::{Duplicate, LogSpecBuilder, Logger};
 use std::{path::PathBuf, str::FromStr};
 use tauri_plugin_shell::ShellExt;
 use tokio::fs;
@@ -34,11 +38,13 @@ pub async fn init_logger() -> Result<()> {
     };
 
     let log_dir = dirs::app_logs_dir()?;
-    let logger = Logger::with(LogSpecification::from(log_level))
+    let spec = LogSpecBuilder::new().default(log_level).build();
+
+    let logger = Logger::with(spec)
         .log_to_file(FileSpec::default().directory(log_dir).basename(""))
         .duplicate_to_stdout(Duplicate::Debug)
-        .format(console_colored_format)
-        .format_for_files(file_format)
+        .format(clash_verge_logger::console_format)
+        .format_for_files(clash_verge_logger::file_format_with_level)
         .rotate(
             Criterion::Size(log_max_size * 1024),
             flexi_logger::Naming::TimestampsCustomFormat {
@@ -47,7 +53,7 @@ pub async fn init_logger() -> Result<()> {
             },
             Cleanup::KeepLogFiles(log_max_count),
         )
-        .filter(Box::new(NoExternModule));
+        .filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
 
     let _handle = logger.start()?;
 
@@ -57,6 +63,54 @@ pub async fn init_logger() -> Result<()> {
     // logger.parse_new_spec(spec)
 
     Ok(())
+}
+
+pub async fn sidecar_writer() -> Result<FileLogWriter> {
+    let (log_max_size, log_max_count) = {
+        let verge_guard = Config::verge().await;
+        let verge = verge_guard.latest_ref();
+        (
+            verge.app_log_max_size.unwrap_or(128),
+            verge.app_log_max_count.unwrap_or(8),
+        )
+    };
+    let sidecar_log_dir = sidecar_log_dir()?;
+    Ok(FileLogWriter::builder(
+        FileSpec::default()
+            .directory(sidecar_log_dir)
+            .basename("sidecar")
+            .suppress_timestamp(),
+    )
+    .format(clash_verge_logger::file_format_without_level)
+    .rotate(
+        Criterion::Size(log_max_size * 1024),
+        flexi_logger::Naming::TimestampsCustomFormat {
+            current_infix: Some("latest"),
+            format: "%Y-%m-%d_%H-%M-%S",
+        },
+        Cleanup::KeepLogFiles(log_max_count),
+    )
+    .try_build()?)
+}
+
+//  TODO 后续迁移新 service  时使用
+#[allow(dead_code)]
+pub async fn service_writer_config() -> Result<WriterConfig> {
+    let (log_max_size, log_max_count) = {
+        let verge_guard = Config::verge().await;
+        let verge = verge_guard.latest_ref();
+        (
+            verge.app_log_max_size.unwrap_or(128),
+            verge.app_log_max_count.unwrap_or(8),
+        )
+    };
+    let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.to_string();
+
+    Ok(WriterConfig {
+        directory: service_log_dir,
+        max_log_size: log_max_size * 1024,
+        max_log_files: log_max_count,
+    })
 }
 
 // TODO flexi_logger 提供了最大保留天数，或许我们应该用内置删除log文件

@@ -144,6 +144,7 @@ pub fn service_path() -> Result<PathBuf> {
     Ok(res_dir.join("clash-verge-service.exe"))
 }
 
+// TODO 迁移 Service日志后删除
 pub fn service_log_file() -> Result<PathBuf> {
     use chrono::Local;
 
@@ -156,6 +157,20 @@ pub fn service_log_file() -> Result<PathBuf> {
     let _ = std::fs::create_dir_all(&log_dir);
 
     Ok(log_file)
+}
+
+pub fn sidecar_log_dir() -> Result<PathBuf> {
+    let log_dir = app_logs_dir()?.join("sidecar");
+    let _ = std::fs::create_dir_all(&log_dir);
+
+    Ok(log_dir)
+}
+
+pub fn service_log_dir() -> Result<PathBuf> {
+    let log_dir = app_logs_dir()?.join("service");
+    let _ = std::fs::create_dir_all(&log_dir);
+
+    Ok(log_dir)
 }
 
 pub fn path_to_str(path: &PathBuf) -> Result<&str> {

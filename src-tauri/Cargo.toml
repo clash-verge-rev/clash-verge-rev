@@ -71,7 +71,6 @@ hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
-kode-bridge = "0.3.3"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.1"
 tokio-stream = "0.1.17"
@@ -82,11 +81,11 @@ isahc = { version = "1.7.2", default-features = false, features = [
 backoff = { version = "0.4.0", features = ["tokio"] }
 tauri-plugin-http = "2.5.2"
 flexi_logger = "0.31.5"
-cfg-if = "1.0.3"
-nu-ansi-term = { version = "0.50.1", optional = true }
 console-subscriber = { version = "0.4.1", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
+clash_verge_logger = { version = "0.1.0", git = "https://github.com/clash-verge-rev/clash-verge-logger" }
+clash_verge_service_ipc = { version = "2.0.7", git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
 
 
 [target.'cfg(windows)'.dependencies]
@@ -118,7 +117,7 @@ tauri-plugin-updater = "2.9.0"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["nu-ansi-term"]
+verge-dev = ["clash_verge_logger/color"]
 tauri-dev = []
 tokio-trace = ["console-subscriber"]
 

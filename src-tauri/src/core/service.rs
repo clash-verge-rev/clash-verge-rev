@@ -381,6 +381,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
         "bin_path": dirs::path_to_str(&bin_path)?,
         "config_dir": dirs::path_to_str(&dirs::app_home_dir()?)?,
         "config_file": dirs::path_to_str(config_file)?,
+        // TODO 迁移 Service日志后删除
         "log_file": dirs::path_to_str(&dirs::service_log_file()?)?,
     });
 
