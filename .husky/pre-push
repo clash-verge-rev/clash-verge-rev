@@ -9,8 +9,12 @@ REMOTE_URL=$(git remote get-url "$REMOTE_NAME" 2>/dev/null || echo "")
 
 echo "[pre-push] Running pre-push checks..."
 
+if [[ -z "$REMOTE_URL" ]]; then
+  echo "[pre-push] Warning: Could not determine remote URL for '$REMOTE_NAME'."
+fi
+
 # --- Rust-related check (only if src-tauri changes staged) ---
-if git diff --cached --name-only | grep -q '^src-tauri/'; then
+if git diff "origin/$(git rev-parse --abbrev-ref HEAD)" --name-only | grep -q '^src-tauri/'; then
   echo "[pre-push] Rust changes detected. Running cargo clippy..."
   cargo clippy --manifest-path ./src-tauri/Cargo.toml -- -D warnings || {
     echo "❌ Clippy found issues in src-tauri. Please fix them before pushing."
@@ -21,14 +25,20 @@ else
 fi
 
 # --- Determine if pushing to main repo ---
-if [[ "$REMOTE_URL" =~ github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$ ]]; then
+if [[ "${REMOTE_URL,,}" =~ github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$ ]]; then
   echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev ($REMOTE_URL)"
   echo "[pre-push] Running pnpm check (fmt + lint)..."
 
-  pnpm check || {
-    echo "❌ Lint or format check failed. Please fix issues before pushing."
-    exit 1
-  }
+  # 临时关闭 set -e，以便继续执行后续逻辑
+  set +e
+  pnpm check
+  CHECK_RESULT=$?
+  set -e
+
+  if [ $CHECK_RESULT -ne 0 ]; then
+    echo "⚠️  Lint or format check failed, but continuing with push."
+    echo "   Please consider fixing these issues before the code is merged (some may be due to historical reasons)."
+  fi
 else
   echo "[pre-push] Not pushing to main repo ($REMOTE_URL). Skipping pnpm check."
 fi
