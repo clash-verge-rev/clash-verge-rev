@@ -606,5 +606,13 @@
   "Originals Only": "Yalnızca Orijinaller",
   "No (IP Banned By Disney+)": "Hayır (IP Disney+ Tarafından Yasaklandı)",
   "Unsupported Country/Region": "Desteklenmeyen Ülke/Bölge",
-  "Failed (Network Connection)": "Başarısız (Ağ Bağlantısı)"
+  "Failed (Network Connection)": "Başarısız (Ağ Bağlantısı)",
+  "Batch Operations": "Toplu İşlemler",
+  "Delete Selected Profiles": "Seçili Profilleri Sil",
+  "Deselect All": "Tüm Seçimi Kaldır",
+  "Done": "Tamam",
+  "items": "öğeler",
+  "Select All": "Tümünü Seç",
+  "Selected": "Seçildi",
+  "Selected profiles deleted successfully": "Seçili profiller başarıyla silindi"
 }

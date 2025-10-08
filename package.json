@@ -106,7 +106,7 @@
     "globals": "^16.4.0",
     "https-proxy-agent": "^7.0.6",
     "jiti": "^2.6.1",
-    "lint-staged": "^15.4.2",
+    "lint-staged": "^16.2.3",
     "meta-json-schema": "^1.19.14",
     "node-fetch": "^3.3.2",
     "prettier": "^3.6.2",
