@@ -561,5 +561,13 @@
   "Copy to clipboard": "クリックしてコピー",
   "Port Config": "ポート設定",
   "Configuration saved successfully": "ランダム設定を保存完了",
-  "Enable one-click random API port and key. Click to randomize the port and key": "ワンクリックでランダム API ポートとキーを有効化。ポートとキーをランダム化するにはクリックしてください"
+  "Enable one-click random API port and key. Click to randomize the port and key": "ワンクリックでランダム API ポートとキーを有効化。ポートとキーをランダム化するにはクリックしてください",
+  "Batch Operations": "バッチ操作",
+  "Delete Selected Profiles": "選択したプロファイルを削除",
+  "Deselect All": "すべての選択を解除",
+  "Done": "完了",
+  "items": "アイテム",
+  "Select All": "すべて選択",
+  "Selected": "選択済み",
+  "Selected profiles deleted successfully": "選択したプロファイルが正常に削除されました"
 }

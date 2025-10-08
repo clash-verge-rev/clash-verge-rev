@@ -682,5 +682,13 @@
   "Secret copied to clipboard": "Secret copied to clipboard",
   "Saving...": "Saving...",
   "Proxy node already exists in chain": "Proxy node already exists in chain",
-  "Detection timeout or failed": "Detection timeout or failed"
+  "Detection timeout or failed": "Detection timeout or failed",
+  "Batch Operations": "Batch Operations",
+  "Delete Selected Profiles": "Delete Selected Profiles",
+  "Deselect All": "Deselect All",
+  "Done": "Done",
+  "items": "items",
+  "Select All": "Select All",
+  "Selected": "Selected",
+  "Selected profiles deleted successfully": "Selected profiles deleted successfully"
 }
