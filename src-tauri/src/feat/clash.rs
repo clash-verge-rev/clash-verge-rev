@@ -35,45 +35,6 @@ pub async fn restart_app() {
 
     let app_handle = handle::Handle::app_handle();
     app_handle.restart();
-    // TODO: PR Ref: https://github.com/clash-verge-rev/clash-verge-rev/pull/4960
-    // handle::Handle::notice_message("restart_app::info", "Restarting application...");
-
-    // // Use the manual restart method consistently to ensure reliability across platforms
-    // // This addresses the issue where app_handle.restart() doesn't work properly on Windows
-    // let current_exe = match env::current_exe() {
-    //     Ok(path) => path,
-    //     Err(_) => {
-    //         // If we can't get the current executable path, try to use the fallback method
-    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
-    //             app_handle.restart();
-    //         }
-    //         exit(1); // If we reach here, either app_handle was None or restart() failed to restart
-    //     }
-    // };
-
-    // let mut cmd = Command::new(current_exe);
-    // cmd.args(env::args().skip(1));
-
-    // match cmd.spawn() {
-    //     Ok(child) => {
-    //         log::info!(target: "app", "New application instance started with PID: {}", child.id());
-    //         // Successfully started new process, now exit current process
-    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
-    //             app_handle.exit(0);
-    //         } else {
-    //             exit(0);
-    //         }
-    //     }
-    //     Err(e) => {
-    //         log::error!(target: "app", "Failed to start new application instance: {}", e);
-    //         // If manual spawn fails, try the original restart method as a last resort
-    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
-    //             app_handle.restart();
-    //         } else {
-    //             exit(1);
-    //         }
-    //     }
-    // }
 }
 
 fn after_change_clash_mode() {
