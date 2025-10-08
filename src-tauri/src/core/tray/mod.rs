@@ -412,17 +412,24 @@ impl Tray {
         let tun_text = t("TUN").await;
         let profile_text = t("Profile").await;
 
-        let version = env!("CARGO_PKG_VERSION");
+        let v = env!("CARGO_PKG_VERSION");
+        let reassembled_version = v.split_once('+').map_or(v.to_string(), |(main, rest)| {
+            format!("{main}+{}", rest.split('.').next().unwrap_or(""))
+        });
+
+        let tooltip = format!(
+            "Clash Verge {}\n{}: {}\n{}: {}\n{}: {}",
+            reassembled_version,
+            sys_proxy_text,
+            switch_map[system_proxy],
+            tun_text,
+            switch_map[tun_mode],
+            profile_text,
+            current_profile_name
+        );
+
         if let Some(tray) = app_handle.tray_by_id("main") {
-            let _ = tray.set_tooltip(Some(&format!(
-                "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
-                sys_proxy_text,
-                switch_map[system_proxy],
-                tun_text,
-                switch_map[tun_mode],
-                profile_text,
-                current_profile_name
-            )));
+            let _ = tray.set_tooltip(Some(&tooltip));
         } else {
             log::warn!(target: "app", "更新托盘提示失败: 托盘不存在");
         }
