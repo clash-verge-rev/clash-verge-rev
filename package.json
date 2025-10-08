@@ -23,16 +23,17 @@
     "release:autobuild": "pnpm release-version autobuild",
     "release:deploytest": "pnpm release-version deploytest",
     "publish-version": "node scripts/publish-version.mjs",
-    "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
-    "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml",
-    "lint": "eslint -c eslint.config.ts --cache --cache-location .eslintcache src",
-    "lint:fix": "eslint -c eslint.config.ts --cache --cache-location .eslintcache --fix src",
+    "fmt": "run-s fmt:prettier fmt:eslint fmt:rust",
+    "fmt:prettier": "prettier --write .",
+    "fmt:eslint": "eslint -c eslint.config.ts --cache --cache-location .eslintcache --fix src",
+    "fmt:rust": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
+    "lint": "run-s lint:prettier lint:ts lint:eslint lint:clippy",
+    "lint:prettier": "prettier --check .",
+    "lint:ts": "tsc --noEmit",
+    "lint:eslint": "eslint -c eslint.config.ts --cache --cache-location .eslintcache src",
+    "lint:clippy": "cargo clippy --manifest-path ./src-tauri/Cargo.toml",
     "lint:staged": "eslint -c eslint.config.ts --cache --cache-location .eslintcache",
-    "lint:all": "node scripts/lint-all.mjs",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "type-check": "tsc --noEmit",
-    "validate": "pnpm format:check && pnpm lint && pnpm type-check"
+    "check": "run-s fmt lint"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -75,9 +76,9 @@
     "react-router-dom": "7.9.3",
     "react-virtuoso": "^4.14.1",
     "swr": "^2.3.6",
+    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo",
     "types-pac": "^1.0.3",
-    "zustand": "^5.0.8",
-    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
@@ -109,6 +110,7 @@
     "lint-staged": "^16.2.3",
     "meta-json-schema": "^1.19.14",
     "node-fetch": "^3.3.2",
+    "npm-run-all2": "^8.0.4",
     "prettier": "^3.6.2",
     "sass": "^1.93.2",
     "tar": "^7.5.1",

@@ -1,147 +1,141 @@
 # CONTRIBUTING
 
-Thank you for your interest in contributing to Clash Verge Rev! This document provides guidelines and instructions to help you set up your development environment and start contributing.
+Thank you for your interest in contributing to **Clash Verge Rev**!  
+This document provides guidelines and instructions to help you set up your development environment and start contributing to the project.
 
 ## Development Setup
 
-Before you start contributing to the project, you need to set up your development environment. Here are the steps you need to follow:
+Before contributing, you need to set up your development environment. Follow these steps:
 
 ### Prerequisites
 
-1. **Install Rust and Node.js**: Our project requires both Rust and Node.js. Please follow the instructions provided [here](https://tauri.app/start/prerequisites/) to install them on your system.
+1. **Install Rust and Node.js**: This project requires both Rust and Node.js. Follow the instructions provided [here](https://tauri.app/start/prerequisites/) to install them on your system.
 
 ### Setup for Windows Users
 
 > [!NOTE]
-> **If you are using a Windows ARM device, you additionally need to install [LLVM](https://github.com/llvm/llvm-project/releases) (including clang) and set the environment variable.**
 >
-> Because the `ring` crate is compiled based on `clang` under Windows ARM.
+> If you are using a **Windows ARM** device, you also need to install [LLVM](https://github.com/llvm/llvm-project/releases) (including `clang`) and set the appropriate environment variable.  
+> This is because the `ring` crate relies on `clang` for compilation on Windows ARM.
 
-If you're a Windows user, you may need to perform some additional steps:
+Additional steps for Windows users:
 
-- Make sure to add Rust and Node.js to your system's PATH. This is usually done during the installation process, but you can verify and manually add them if necessary.
-- The gnu `patch` tool should be installed
+- Ensure Rust and Node.js are added to your system's PATH (usually done during installation, but verify manually if needed).
+- Make sure the GNU `patch` tool is installed.
+- When setting up the Rust environment, **only use the Windows MSVC toolchain**. To configure:
 
-When you setup `Rust` environment, Only use toolchain with `Windows MSVC` , to change settings follow command:
-
-```shell
+```bash
 rustup target add x86_64-pc-windows-msvc
-rustup set default-host x86_64-pc-windows-msvc
+rustup default stable-x86_64-pc-windows-msvc
 ```
 
-### Install Node.js Package
+### Install Node.js Package Manager
 
-After installing Rust and Node.js, install the necessary Node.js and Node Package Manager:
+Install `pnpm` globally:
 
-```shell
-npm install pnpm -g
+```bash
+npm install -g pnpm
 ```
 
-### Install Dependencies
+### Install Project Dependencies
 
-Install node packages
+Install Node.js packages:
 
-```shell
+```bash
 pnpm install
 ```
 
-Install apt packages ONLY for Ubuntu
+Install Ubuntu-specific packages (if using Ubuntu):
 
-```shell
-apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+```bash
+sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 ```
 
 ### Download the Mihomo Core Binary
 
-You have two options for downloading the clash binary:
+You have two options to obtain the Mihomo core binary:
 
-- Automatically download it via the provided script:
+1. **Automatically via script**:
 
-  ```shell
-  pnpm run prebuild
-  # Use '--force' or '-f' to update both the Mihomo core version
-  # and the Clash Verge Rev service version to the latest available.
-  pnpm run prebuild --force
-  ```
+```bash
+pnpm run prebuild
+# Use '--force' (or '-f') to update both the Mihomo core
+# and the Clash Verge Rev service to the latest version
+pnpm run prebuild --force
+```
 
-- Manually download it from the [Mihomo release](https://github.com/MetaCubeX/mihomo/releases). After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).
+2. **Manually from the [Mihomo release page](https://github.com/MetaCubeX/mihomo/releases)**:  
+   After downloading, rename the binary according to the [Tauri configuration](https://tauri.app/v1/api/config#bundleconfig.externalbin).
 
 ### Run the Development Server
 
-To run the development server, use the following command:
+To start the development server:
 
-```shell
+```bash
 pnpm dev
-# If an app instance already exists, use a different command
+# If an instance is already running, use:
 pnpm dev:diff
-# To using tauri built-in dev tool
+# To use Tauri's built-in dev tool:
 pnpm dev:tauri
 ```
 
 ### Build the Project
 
-To build this project:
+To build the project:
 
-```shell
+```bash
 pnpm build
 ```
 
-For a faster build, use the following command
+For a faster build (less optimized, larger binary):
 
-```shell
+```bash
 pnpm build:fast
 ```
 
-This uses Rust's fast-release profile which significantly reduces compilation time by disabling optimization and LTO. The resulting binary will be larger and less performant than the standard build, but it's useful for testing changes quickly.
+> This uses Rust's fast-release profile to reduce compilation time. The resulting binary may be larger and less performant but is useful for quick testing.  
+> Build artifacts will be displayed in the terminal log.
 
-The `Artifacts` will display in the `log` in the Terminal.
+### Clean Build
 
-### Build clean
+To clean Rust build artifacts:
 
-To clean rust build:
-
-```shell
+```bash
 pnpm clean
 ```
 
 ### Portable Version (Windows Only)
 
-To package portable version after the build:
+To package a portable version after building:
 
-```shell
+```bash
 pnpm portable
 ```
 
 ## Contributing Your Changes
 
-#### Before commit your changes
+### Before committing your changes
 
-If you changed the rust code, it's recommanded to execute code style formatting and quailty checks.
-
-1. Code quailty checks
+Don't forget to run code style formatting and quality checks:
 
 ```bash
-# For rust backend
-$ clash-verge-rev: pnpm clippy
-# For frontend (not yet).
+# Run both formatting and linting
+pnpm check
+
+# Format code only
+pnpm fmt
+
+# Check code quality only
+pnpm lint
 ```
 
-2. Code style formatting
+### Submitting Your Changes
 
-```bash
-# For rust backend
-$ clash-verge-rev: cd src-tauri
-$ clash-verge-rev/src-tauri: cargo fmt
-# For frontend
-$ clash-verge-rev: pnpm format:check
-$ clash-verge-rev: pnpm format
-```
+Once you have made your changes, follow these steps:
 
-Once you have made your changes:
+1. Fork the repository
+2. Create a new branch for your feature or bug fix
+3. Commit your changes with clear and concise messages
+4. Push your branch to your fork and submit a pull request
 
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Commit your changes with clear and concise commit messages.
-4. Push your branch to your fork and submit a pull request to our repository.
-
-We appreciate your contributions and look forward to your active participation in our project!
+We appreciate your contributions and look forward to seeing them in the project!

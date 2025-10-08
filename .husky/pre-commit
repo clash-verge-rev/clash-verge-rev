@@ -1,45 +1,46 @@
 #!/bin/bash
+set -euo pipefail
 
-# Run lint-staged to handle formatting and linting for JS/TS files
-# This handles prettier and eslint --fix automatically
-npx lint-staged
+echo "[pre-commit] Running pre-commit checks..."
 
-# Check for any remaining linting errors in JS/TS files that weren't fixed automatically
-# Only run this if JS/TS files are staged (lint-staged already handled these)
-JS_FILES=$(git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)' || true)
-
+# --- JS/TS stage check ---
+JS_FILES=$(git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' || true)
 if [ -n "$JS_FILES" ]; then
-    echo "Verifying no remaining linting issues in staged files..."
-    # Use --max-warnings 0 to ensure no warnings either
-    if ! pnpm lint:staged --max-warnings 0; then
-        echo "ESLint found unfixable issues or warnings in staged files. Please fix them before committing."
-        echo "Files affected: $JS_FILES"
-        exit 1
-    fi
+  echo "[pre-commit] JS/TS files detected. Running lint-staged..."
+  npx lint-staged
+
+  echo "[pre-commit] Verifying no remaining ESLint issues..."
+  if ! pnpm lint:staged --max-warnings 0; then
+    echo "❌ ESLint found unfixable issues or warnings in staged JS/TS files."
+    echo "Files affected: $JS_FILES"
+    exit 1
+  fi
+else
+  echo "[pre-commit] No JS/TS files staged. Skipping lint-staged."
 fi
 
-# Check for staged Rust files and handle them
-RUST_FILES=$(git diff --cached --name-only | grep -E '^src-tauri/.*\.(rs)$' || true)
-
+# --- Rust stage check ---
+RUST_FILES=$(git diff --cached --name-only | grep -E '^src-tauri/.*\.rs$' || true)
 if [ -n "$RUST_FILES" ]; then
-    echo "Running rustfmt and clippy on staged Rust files..."
-    cd src-tauri || exit
-    # Auto-format Rust code
-    cargo fmt
-    # Check if there are still formatting issues after auto-formatting
-    if ! cargo fmt -- --check; then
-        echo "rustfmt still found formatting issues after auto-formatting."
-        cd ..
-        exit 1
-    fi
-    # Run clippy for linting
-    if ! cargo clippy; then
-        echo "clippy found issues. Please fix them before committing."
-        cd ..
-        exit 1
-    fi
-    cd ..
+  echo "[pre-commit] Rust files detected. Running rustfmt + clippy..."
+
+  # Auto-format
+  cargo fmt --manifest-path ./src-tauri/Cargo.toml
+
+  # Verify format
+  if ! cargo fmt --manifest-path ./src-tauri/Cargo.toml -- --check; then
+    echo "❌ rustfmt found issues after auto-formatting."
+    exit 1
+  fi
+
+  # Run clippy with warnings as errors
+  if ! cargo clippy --manifest-path ./src-tauri/Cargo.toml -- -D warnings; then
+    echo "❌ clippy found issues. Please fix them before committing."
+    exit 1
+  fi
+else
+  echo "[pre-commit] No Rust files staged. Skipping clippy."
 fi
 
-# Allow commit
+echo "✅ All pre-commit checks passed!"
 exit 0
