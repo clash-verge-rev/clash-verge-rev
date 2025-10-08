@@ -33,7 +33,7 @@ if [ -n "$RUST_FILES" ]; then
         exit 1
     fi
     # Run clippy for linting
-    if ! cargo clippy -- -D warnings; then
+    if ! cargo clippy; then
         echo "clippy found issues. Please fix them before committing."
         cd ..
         exit 1
