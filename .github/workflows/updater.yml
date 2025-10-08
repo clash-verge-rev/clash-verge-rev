@@ -2,6 +2,9 @@ name: Updater CI
 
 on: workflow_dispatch
 permissions: write-all
+env:
+  HUSKY: 0
+
 jobs:
   release-update:
     runs-on: ubuntu-latest

@@ -11,6 +11,7 @@ env:
   TAG_CHANNEL: AutoBuild
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
+  HUSKY: 0
 concurrency:
   group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}

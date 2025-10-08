@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  HUSKY: 0
+
 jobs:
   cargo-check:
     # Treat all Rust compiler warnings as errors

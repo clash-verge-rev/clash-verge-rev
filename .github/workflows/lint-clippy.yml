@@ -3,6 +3,8 @@ name: Clippy Lint
 on:
   pull_request:
   workflow_dispatch:
+env:
+  HUSKY: 0
 
 jobs:
   clippy:

@@ -7,6 +7,9 @@ name: Check Formatting
 on:
   pull_request:
 
+env:
+  HUSKY: 0
+
 jobs:
   rustfmt:
     runs-on: ubuntu-latest
