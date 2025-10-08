@@ -682,5 +682,13 @@
   "Secret copied to clipboard": "访问密钥已复制到剪贴板",
   "Saving...": "保存中...",
   "Proxy node already exists in chain": "该节点已在链式代理表中",
-  "Detection timeout or failed": "检测超时或失败"
+  "Detection timeout or failed": "检测超时或失败",
+  "Batch Operations": "批量操作",
+  "Delete Selected Profiles": "删除选中订阅",
+  "Deselect All": "取消全选",
+  "Done": "完成",
+  "items": "项目",
+  "Select All": "全选",
+  "Selected": "已选中",
+  "Selected profiles deleted successfully": "选中的订阅已成功删除"
 }

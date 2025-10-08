@@ -1,6 +1,11 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { RefreshRounded, DragIndicatorRounded } from "@mui/icons-material";
+import {
+  RefreshRounded,
+  DragIndicatorRounded,
+  CheckBoxRounded,
+  CheckBoxOutlineBlankRounded,
+} from "@mui/icons-material";
 import {
   Box,
   Typography,
@@ -49,11 +54,24 @@ interface Props {
   onEdit: () => void;
   onSave?: (prev?: string, curr?: string) => void;
   onDelete: () => void;
+  batchMode?: boolean;
+  isSelected?: boolean;
+  onSelectionChange?: () => void;
 }
 
 export const ProfileItem = (props: Props) => {
-  const { selected, activating, itemData, onSelect, onEdit, onSave, onDelete } =
-    props;
+  const {
+    selected,
+    activating,
+    itemData,
+    onSelect,
+    onEdit,
+    onSave,
+    onDelete,
+    batchMode,
+    isSelected,
+    onSelectionChange,
+  } = props;
   const {
     attributes,
     listeners,
@@ -363,7 +381,12 @@ export const ProfileItem = (props: Props) => {
       label: "Delete",
       handler: () => {
         setAnchorEl(null);
-        setConfirmOpen(true);
+        if (batchMode) {
+          // If in batch mode, just toggle selection instead of showing delete confirmation
+          onSelectionChange && onSelectionChange();
+        } else {
+          setConfirmOpen(true);
+        }
       },
       disabled: false,
     },
@@ -402,7 +425,12 @@ export const ProfileItem = (props: Props) => {
       label: "Delete",
       handler: () => {
         setAnchorEl(null);
-        setConfirmOpen(true);
+        if (batchMode) {
+          // If in batch mode, just toggle selection instead of showing delete confirmation
+          onSelectionChange && onSelectionChange();
+        } else {
+          setConfirmOpen(true);
+        }
       },
       disabled: false,
     },
@@ -510,9 +538,29 @@ export const ProfileItem = (props: Props) => {
         )}
         <Box position="relative">
           <Box sx={{ display: "flex", justifyContent: "start" }}>
+            {batchMode && (
+              <IconButton
+                size="small"
+                sx={{ padding: "2px", marginRight: "4px", marginLeft: "-8px" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectionChange && onSelectionChange();
+                }}
+              >
+                {isSelected ? (
+                  <CheckBoxRounded color="primary" />
+                ) : (
+                  <CheckBoxOutlineBlankRounded />
+                )}
+              </IconButton>
+            )}
             <Box
               ref={setNodeRef}
-              sx={{ display: "flex", margin: "auto 0" }}
+              sx={{
+                display: "flex",
+                margin: "auto 0",
+                ...(batchMode && { marginLeft: "-4px" }),
+              }}
               {...attributes}
               {...listeners}
             >
@@ -527,7 +575,7 @@ export const ProfileItem = (props: Props) => {
             </Box>
 
             <Typography
-              width="calc(100% - 36px)"
+              width={batchMode ? "calc(100% - 56px)" : "calc(100% - 36px)"}
               sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
               variant="h6"
               component="h2"
