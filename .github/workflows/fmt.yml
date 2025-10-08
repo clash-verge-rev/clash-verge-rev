@@ -69,7 +69,7 @@ jobs:
         if: steps.check_web.outputs.web == 'true'
       - run: pnpm install --frozen-lockfile
         if: steps.check_web.outputs.web == 'true'
-      - run: pnpm format:check
+      - run: pnpm lint:prettier
         if: steps.check_web.outputs.web == 'true'
 
   # taplo:
