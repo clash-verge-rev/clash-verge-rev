@@ -105,6 +105,7 @@
     "glob": "^11.0.3",
     "globals": "^16.4.0",
     "https-proxy-agent": "^7.0.6",
+    "husky": "^9.1.7",
     "jiti": "^2.6.1",
     "lint-staged": "^16.2.3",
     "meta-json-schema": "^1.19.14",
