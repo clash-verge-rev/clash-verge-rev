@@ -2,117 +2,102 @@
   width: 100%;
   height: 100vh;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
 
-  &__left {
-    flex: 1 0 200px;
+  .layout-content {
+    /* New container for the flex layout */
     display: flex;
-    height: 100%;
-    width: 100%;
-    // max-width: 225px;
-    // min-width: 225px;
-    // padding: 16px 0 8px;
-    padding: 0px 0px 8px;
-    // position: relative;
-    flex-direction: column;
-    align-self: stretch;
-    box-sizing: border-box;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+    flex: 1; /* Take remaining height */
     overflow: hidden;
-    border-right: 1px solid var(--divider-color);
-    // background-color: var(--background-color-alpha);
 
-    // $maxLogo: 100px;
-
-    .the-logo {
-      position: relative;
-      flex: 1 0 58px;
-      // width: 100%;
+    &__left {
+      flex: 1 0 200px;
       display: flex;
       height: 100%;
-      padding: 0px 20px;
+      width: 100%;
+      padding: 0 0 8px;
       flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
       align-self: stretch;
-      // border-bottom: 1px solid var(--divider-color);
-      // max-width: $maxLogo + 32px;
-      // max-height: $maxLogo;
-      // margin: 0 auto;
-      // padding: 0 auto;
-      // text-align: center;
       box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      overflow: hidden;
+      border-right: 1px solid var(--divider-color);
 
-      img,
-      svg {
-        width: 100%;
+      .the-logo {
+        position: relative;
+        flex: 1 0 58px;
+        display: flex;
         height: 100%;
-        pointer-events: none;
-        // fill: var(--primary-main);
+        padding: 0 20px;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        align-self: stretch;
+        box-sizing: border-box;
 
-        // #bg {
-        //   fill: var(--background-color);
-        // }
+        img,
+        svg {
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+        }
+
+        .the-newbtn {
+          position: absolute;
+          right: 10px;
+          top: 15px;
+          border-radius: 8px;
+          padding: 2px 4px;
+          transform: scale(0.8);
+        }
       }
 
-      .the-newbtn {
+      .the-menu {
+        flex: 1 1 80%;
+        overflow-y: auto;
+        margin-bottom: 0px;
+        padding-top: 4px;
+      }
+
+      .the-traffic {
+        flex: 0 0 60px;
+
+        > div {
+          margin: 0 auto;
+          padding: 0 20px;
+        }
+      }
+    }
+
+    &__right {
+      position: relative;
+      flex: 1 1 100%;
+      height: 100%;
+
+      .the-bar {
+        height: 36px;
+        display: flex;
+        justify-content: end;
+        box-sizing: border-box;
+        z-index: 2;
+
+        .the-dragbar {
+          margin-top: 5px;
+          app-region: drag;
+        }
+      }
+
+      .the-content {
         position: absolute;
-        right: 10px;
-        top: 15px;
-        border-radius: 8px;
-        padding: 2px 4px;
-        transform: scale(0.8);
+        top: 0;
+        left: 0;
+        right: 1px;
+        bottom: 0px;
       }
-    }
-
-    .the-menu {
-      flex: 1 1 80%;
-      overflow-y: auto;
-      margin-bottom: 0px;
-      padding-top: 4px;
-    }
-
-    .the-traffic {
-      flex: 0 0 60px;
-
-      > div {
-        margin: 0 auto;
-        padding: 0px 20px;
-      }
-    }
-  }
-
-  &__right {
-    position: relative;
-    flex: 1 1 100%;
-    height: 100%;
-    // background-color: var(--background-color-alpha);
-
-    .the-bar {
-      // position: absolute;
-      // top: 0px;
-      // right: 0px;
-      height: 36px;
-      display: flex;
-      // align-items: center;
-      justify-content: end;
-      box-sizing: border-box;
-      z-index: 2;
-      .the-dragbar {
-        margin-top: 5px;
-        app-region: drag;
-      }
-    }
-
-    .the-content {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 1px;
-      bottom: 0px;
     }
   }
 }
@@ -121,11 +106,17 @@
 .windows,
 .unknown {
   &.layout {
-    //.layout__left {
-    //  padding-top: 24px;
-    //}
+    .the_titlebar {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      padding: 10px;
+      box-sizing: border-box;
+      height: 36px;
+      border-bottom: 1px solid var(--divider-color);
+    }
 
-    .layout__left .the-logo {
+    .layout-content__left .the-logo {
       flex: 1 0 58px;
       margin-top: 10px;
       margin-left: 10px;
@@ -135,7 +126,7 @@
       padding-bottom: 16px;
     }
 
-    .layout__right .the-content {
+    .layout-content__right .the-content {
       top: 5px;
     }
   }
@@ -143,15 +134,25 @@
 
 .macos {
   &.layout {
-    .layout__left {
+    .the_titlebar {
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      padding: 10px;
+      box-sizing: border-box;
+      height: 36px;
+      border-bottom: 1px solid var(--divider-color);
+    }
+
+    .layout-content__left {
       padding-top: 5px;
     }
 
-    .layout__right .the-content {
+    .layout-content__right .the-content {
       top: 5px;
     }
 
-    .layout__left .the-newbtn {
+    .layout-content__left .the-newbtn {
       right: 9px;
       top: 2px;
     }

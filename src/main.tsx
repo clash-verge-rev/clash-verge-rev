@@ -10,6 +10,7 @@ import { BrowserRouter } from "react-router-dom";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 import { BaseErrorBoundary } from "./components/base";
+import { WindowProvider } from "./hooks/use-window";
 import Layout from "./pages/_layout";
 import { AppDataProvider } from "./providers/app-data-provider";
 import { initializeLanguage } from "./services/i18n";
@@ -61,11 +62,13 @@ const initializeApp = async () => {
       <React.StrictMode>
         <ComposeContextProvider contexts={contexts}>
           <BaseErrorBoundary>
-            <AppDataProvider>
-              <BrowserRouter>
-                <Layout />
-              </BrowserRouter>
-            </AppDataProvider>
+            <WindowProvider>
+              <AppDataProvider>
+                <BrowserRouter>
+                  <Layout />
+                </BrowserRouter>
+              </AppDataProvider>
+            </WindowProvider>
           </BaseErrorBoundary>
         </ComposeContextProvider>
       </React.StrictMode>,
