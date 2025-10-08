@@ -1,12 +1,12 @@
 import {
-  List,
+  Box,
   Button,
-  Select,
-  MenuItem,
-  styled,
+  List,
   ListItem,
   ListItemText,
-  Box,
+  MenuItem,
+  Select,
+  styled,
 } from "@mui/material";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
@@ -18,10 +18,10 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useVerge } from "@/hooks/use-verge";
+import { useWindowDecorations } from "@/hooks/use-window";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
-
 import { GuardState } from "./guard-state";
 
 const OS = getSystem();
@@ -46,6 +46,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
   const [commonIcon, setCommonIcon] = useState("");
   const [sysproxyIcon, setSysproxyIcon] = useState("");
   const [tunIcon, setTunIcon] = useState("");
+
+  const { decorated, toggleDecorations } = useWindowDecorations();
 
   useEffect(() => {
     initIconPath();
@@ -108,6 +110,21 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
     >
       <List>
+        <Item>
+          <ListItemText primary={t("Prefer System Titlebar")} />
+          <GuardState
+            value={decorated}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={async (e) => {
+              await toggleDecorations();
+            }}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+
         <Item>
           <ListItemText primary={t("Traffic Graph")} />
           <GuardState

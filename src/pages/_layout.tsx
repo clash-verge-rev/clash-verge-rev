@@ -4,7 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useRoutes } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
@@ -25,6 +25,7 @@ import { useLogData } from "@/hooks/use-log-data-new";
 import { useMemoryData } from "@/hooks/use-memory-data";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 import { useVerge } from "@/hooks/use-verge";
+import { useWindowDecorations } from "@/hooks/use-window";
 import { getAxios } from "@/services/api";
 import { showNotice } from "@/services/noticeService";
 import { useClashLog, useThemeMode } from "@/services/states";
@@ -34,6 +35,9 @@ import { routers } from "./_routers";
 
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
+
+import { WindowControls } from "@/components/controller/window-controller";
+// 删除重复导入
 
 const appWindow = getCurrentWebviewWindow();
 export const portableFlag = false;
@@ -173,6 +177,26 @@ const Layout = () => {
   const { addListener } = useListen();
   const initRef = useRef(false);
   const [themeReady, setThemeReady] = useState(false);
+
+  const windowControls = useRef<any>(null);
+  const { decorated } = useWindowDecorations();
+
+  const customTitlebar = useMemo(() => {
+    console.debug(
+      "[Layout] Titlebar rendering - decorated:",
+      decorated,
+      "| showing:",
+      !decorated,
+    );
+    if (!decorated) {
+      return (
+        <div className="the_titlebar" data-tauri-drag-region="true">
+          <WindowControls ref={windowControls} />
+        </div>
+      );
+    }
+    return null;
+  }, [decorated]);
 
   useEffect(() => {
     setThemeReady(true);
@@ -389,7 +413,7 @@ const Layout = () => {
         console.log("[Layout] 开始监听启动完成事件");
       } catch (err) {
         console.error("[Layout] 监听启动完成事件失败:", err);
-        return () => {};
+        return () => { };
       }
     };
 
@@ -420,7 +444,7 @@ const Layout = () => {
       if (!isInitialized) {
         console.error("[Layout] 紧急初始化触发：5秒内未完成初始化");
         removeLoadingOverlay();
-        notifyBackend("UI就绪").catch(() => {});
+        notifyBackend("UI就绪").catch(() => { });
         isInitialized = true;
       }
     }, 5000);
@@ -495,6 +519,7 @@ const Layout = () => {
       }}
     >
       <ThemeProvider theme={theme}>
+        {/* 左侧底部窗口控制按钮 */}
         <NoticeManager />
         <div
           style={{
@@ -534,62 +559,66 @@ const Layout = () => {
             ({ palette }) => ({ bgcolor: palette.background.paper }),
             OS === "linux"
               ? {
-                  borderRadius: "8px",
-                  border: "1px solid var(--divider-color)",
-                  width: "100vw",
-                  height: "100vh",
-                }
+                borderRadius: "8px",
+                border: "1px solid var(--divider-color)",
+                width: "100vw",
+                height: "100vh",
+              }
               : {},
           ]}
         >
-          <div className="layout__left">
-            <div className="the-logo" data-tauri-drag-region="true">
-              <div
-                data-tauri-drag-region="true"
-                style={{
-                  height: "27px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <SvgIcon
-                  component={isDark ? iconDark : iconLight}
+          {/* Custom titlebar - rendered only when decorated is false, memoized for performance */}
+          {customTitlebar}
+
+          <div className="layout-content">
+            <div className="layout-content__left">
+              <div className="the-logo" data-tauri-drag-region="false">
+                <div
+                  data-tauri-drag-region="true"
                   style={{
-                    height: "36px",
-                    width: "36px",
-                    marginTop: "-3px",
-                    marginRight: "5px",
-                    marginLeft: "-3px",
+                    height: "27px",
+                    display: "flex",
+                    justifyContent: "space-between",
                   }}
-                  inheritViewBox
-                />
-                <LogoSvg fill={isDark ? "white" : "black"} />
-              </div>
-              <UpdateButton className="the-newbtn" />
-            </div>
-
-            <List className="the-menu">
-              {routers.map((router) => (
-                <LayoutItem
-                  key={router.label}
-                  to={router.path}
-                  icon={router.icon}
                 >
-                  {t(router.label)}
-                </LayoutItem>
-              ))}
-            </List>
+                  <SvgIcon
+                    component={isDark ? iconDark : iconLight}
+                    style={{
+                      height: "36px",
+                      width: "36px",
+                      marginTop: "-3px",
+                      marginRight: "5px",
+                      marginLeft: "-3px",
+                    }}
+                    inheritViewBox
+                  />
+                  <LogoSvg fill={isDark ? "white" : "black"} />
+                </div>
+                <UpdateButton className="the-newbtn" />
+              </div>
 
-            <div className="the-traffic">
-              <LayoutTraffic />
+              <List className="the-menu">
+                {routers.map((router) => (
+                  <LayoutItem
+                    key={router.label}
+                    to={router.path}
+                    icon={router.icon}
+                  >
+                    {t(router.label)}
+                  </LayoutItem>
+                ))}
+              </List>
+
+              <div className="the-traffic">
+                <LayoutTraffic />
+              </div>
             </div>
-          </div>
 
-          <div className="layout__right">
-            <div className="the-bar"></div>
-
-            <div className="the-content">
-              {React.cloneElement(routersEles, { key: location.pathname })}
+            <div className="layout-content__right">
+              <div className="the-bar"></div>
+              <div className="the-content">
+                {React.cloneElement(routersEles, { key: location.pathname })}
+              </div>
             </div>
           </div>
         </Paper>

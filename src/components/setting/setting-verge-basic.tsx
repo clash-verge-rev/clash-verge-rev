@@ -1,5 +1,5 @@
 import { ContentCopyRounded } from "@mui/icons-material";
-import { Button, MenuItem, Select, Input } from "@mui/material";
+import { Button, Input, MenuItem, Select } from "@mui/material";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,7 +19,7 @@ import { GuardState } from "./mods/guard-state";
 import { HotkeyViewer } from "./mods/hotkey-viewer";
 import { LayoutViewer } from "./mods/layout-viewer";
 import { MiscViewer } from "./mods/misc-viewer";
-import { SettingList, SettingItem } from "./mods/setting-comp";
+import { SettingItem, SettingList } from "./mods/setting-comp";
 import { ThemeModeSwitch } from "./mods/theme-mode-switch";
 import { ThemeViewer } from "./mods/theme-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
