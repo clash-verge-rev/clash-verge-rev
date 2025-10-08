@@ -86,6 +86,7 @@ cfg-if = "1.0.3"
 nu-ansi-term = { version = "0.50.1", optional = true }
 console-subscriber = { version = "0.4.1", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
+tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
 
 
 [target.'cfg(windows)'.dependencies]

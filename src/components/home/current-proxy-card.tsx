@@ -36,8 +36,8 @@ import { EnhancedCard } from "@/components/home/enhanced-card";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-context";
-import { getGroupProxyDelays, providerHealthCheck } from "@/services/cmds";
 import delayManager from "@/services/delay";
+import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 // 本地存储的键名
 const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";
@@ -466,7 +466,7 @@ export const CurrentProxyCard = () => {
     if (providers.size > 0) {
       console.log(`[CurrentProxyCard] 开始测试提供者节点`);
       await Promise.allSettled(
-        [...providers].map((p) => providerHealthCheck(p)),
+        [...providers].map((p) => healthcheckProxyProvider(p)),
       );
     }
 
@@ -478,7 +478,7 @@ export const CurrentProxyCard = () => {
       try {
         await Promise.race([
           delayManager.checkListDelay(proxyNames, groupName, timeout),
-          getGroupProxyDelays(groupName, url, timeout),
+          delayGroup(groupName, url, timeout),
         ]);
         console.log(`[CurrentProxyCard] 延迟测试完成，组: ${groupName}`);
       } catch (error) {

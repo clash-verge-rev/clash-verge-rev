@@ -16,16 +16,11 @@ import type { Ref } from "react";
 import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
+import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import {
-  changeClashCore,
-  closeAllConnections,
-  forceRefreshClashConfig,
-  restartCore,
-  upgradeCore,
-} from "@/services/cmds";
+import { changeClashCore, restartCore } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
 const VALID_CORE = [
@@ -66,8 +61,6 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       mutateVerge();
       setTimeout(async () => {
-        // 核心切换后强制刷新配置缓存
-        await forceRefreshClashConfig();
         mutate("getClashConfig");
         mutate("getVersion");
         setChangingCore(null);

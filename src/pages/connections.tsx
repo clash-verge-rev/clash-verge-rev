@@ -9,6 +9,7 @@ import { useLockFn } from "ahooks";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { BaseEmpty, BasePage } from "@/components/base";
 import { BaseSearchBox } from "@/components/base/base-search-box";
@@ -19,9 +20,8 @@ import {
 } from "@/components/connection/connection-detail";
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
+import { useConnectionData } from "@/hooks/use-connection-data";
 import { useVisibility } from "@/hooks/use-visibility";
-import { useAppData } from "@/providers/app-data-context";
-import { closeAllConnections } from "@/services/cmds";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
 
@@ -39,8 +39,9 @@ const ConnectionsPage = () => {
   const [match, setMatch] = useState(() => (_: string) => true);
   const [curOrderOpt, setOrderOpt] = useState("Default");
 
-  // 使用全局数据
-  const { connections } = useAppData();
+  const {
+    response: { data: connections },
+  } = useConnectionData();
 
   const [setting, setSetting] = useConnectionSetting();
 
@@ -72,30 +73,30 @@ const ConnectionsPage = () => {
     if (isPaused) {
       return (
         frozenData ?? {
-          uploadTotal: connections.uploadTotal,
-          downloadTotal: connections.downloadTotal,
-          connections: connections.data,
+          uploadTotal: connections?.uploadTotal,
+          downloadTotal: connections?.downloadTotal,
+          connections: connections?.connections,
         }
       );
     }
 
     return {
-      uploadTotal: connections.uploadTotal,
-      downloadTotal: connections.downloadTotal,
-      connections: connections.data,
+      uploadTotal: connections?.uploadTotal,
+      downloadTotal: connections?.downloadTotal,
+      connections: connections?.connections,
     };
   }, [isPaused, frozenData, connections, pageVisible]);
 
   const [filterConn] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
-    let conns = displayData.connections.filter((conn) => {
+    let conns = displayData.connections?.filter((conn) => {
       const { host, destinationIP, process } = conn.metadata;
       return (
         match(host || "") || match(destinationIP || "") || match(process || "")
       );
     });
 
-    if (orderFunc) conns = orderFunc(conns);
+    if (orderFunc) conns = orderFunc(conns ?? []);
 
     return [conns];
   }, [displayData, match, curOrderOpt, orderOpts]);
@@ -112,9 +113,9 @@ const ConnectionsPage = () => {
     setIsPaused((prev) => {
       if (!prev) {
         setFrozenData({
-          uploadTotal: connections.uploadTotal,
-          downloadTotal: connections.downloadTotal,
-          connections: connections.data,
+          uploadTotal: connections?.uploadTotal ?? 0,
+          downloadTotal: connections?.downloadTotal ?? 0,
+          connections: connections?.connections ?? [],
         });
       } else {
         setFrozenData(null);
@@ -206,7 +207,7 @@ const ConnectionsPage = () => {
         <BaseSearchBox onSearch={handleSearch} />
       </Box>
 
-      {filterConn.length === 0 ? (
+      {!filterConn || filterConn.length === 0 ? (
         <BaseEmpty />
       ) : isTableLayout ? (
         <ConnectionTable

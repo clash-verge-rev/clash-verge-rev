@@ -1,5 +1,4 @@
 use crate::{
-    cache::CacheProxy,
     config::Config,
     core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
@@ -176,7 +175,6 @@ pub async fn entry_lightweight_mode() -> bool {
     // 回到 In
     set_state(LightweightState::In);
 
-    CacheProxy::global().clean_default_keys();
     true
 }
 
@@ -219,7 +217,7 @@ pub async fn add_light_weight_timer() {
 }
 
 fn setup_window_close_listener() {
-    if let Some(window) = handle::Handle::global().get_window() {
+    if let Some(window) = handle::Handle::get_window() {
         let handler = window.listen("tauri://close-requested", move |_event| {
             std::mem::drop(AsyncHandler::spawn(|| async {
                 if let Err(e) = setup_light_weight_timer().await {
@@ -239,7 +237,7 @@ fn setup_window_close_listener() {
 }
 
 fn cancel_window_close_listener() {
-    if let Some(window) = handle::Handle::global().get_window() {
+    if let Some(window) = handle::Handle::get_window() {
         let handler = WINDOW_CLOSE_HANDLER.swap(0, Ordering::AcqRel);
         if handler != 0 {
             window.unlisten(handler);
@@ -249,7 +247,7 @@ fn cancel_window_close_listener() {
 }
 
 fn setup_webview_focus_listener() {
-    if let Some(window) = handle::Handle::global().get_window() {
+    if let Some(window) = handle::Handle::get_window() {
         let handler = window.listen("tauri://focus", move |_event| {
             log_err!(cancel_light_weight_timer());
             logging!(
@@ -264,7 +262,7 @@ fn setup_webview_focus_listener() {
 }
 
 fn cancel_webview_focus_listener() {
-    if let Some(window) = handle::Handle::global().get_window() {
+    if let Some(window) = handle::Handle::get_window() {
         let handler = WEBVIEW_FOCUS_HANDLER.swap(0, Ordering::AcqRel);
         if handler != 0 {
             window.unlisten(handler);

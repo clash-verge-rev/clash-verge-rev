@@ -4,8 +4,8 @@ import dayjs from "dayjs";
 import { t } from "i18next";
 import { useImperativeHandle, useState, type Ref } from "react";
 
-import { deleteConnection } from "@/services/cmds";
 import parseTraffic from "@/utils/parse-traffic";
+import { closeConnections } from "tauri-plugin-mihomo-api";
 
 export interface ConnectionDetailRef {
   open: (detail: IConnectionsItem) => void;
@@ -97,7 +97,7 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     { label: t("Type"), value: `${metadata.type}(${metadata.network})` },
   ];
 
-  const onDelete = useLockFn(async () => deleteConnection(data.id));
+  const onDelete = useLockFn(async () => closeConnections(data.id));
 
   return (
     <Box sx={{ userSelect: "text", color: theme.palette.text.secondary }}>

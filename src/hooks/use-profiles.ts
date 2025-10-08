@@ -1,12 +1,12 @@
 import useSWR, { mutate } from "swr";
+import { selectNodeForGroup } from "tauri-plugin-mihomo-api";
 
 import {
   getProfiles,
   patchProfile,
   patchProfilesConfig,
-  forceRefreshProxies,
 } from "@/services/cmds";
-import { getProxies, updateProxy } from "@/services/cmds";
+import { calcuProxies } from "@/services/cmds";
 
 export const useProfiles = () => {
   const {
@@ -72,7 +72,7 @@ export const useProfiles = () => {
       console.log("[ActivateSelected] 开始处理代理选择");
 
       const [proxiesData, profileData] = await Promise.all([
-        getProxies(),
+        calcuProxies(),
         getProfiles(),
       ]);
 
@@ -124,7 +124,7 @@ export const useProfiles = () => {
             `[ActivateSelected] 需要切换代理组 ${name}: ${now} -> ${targetProxy}`,
           );
           hasChange = true;
-          updateProxy(name, targetProxy);
+          selectNodeForGroup(name, targetProxy);
         }
 
         newSelected.push({ name, now: targetProxy || now });
@@ -141,11 +141,8 @@ export const useProfiles = () => {
         await patchProfile(profileData.current!, { selected: newSelected });
         console.log("[ActivateSelected] 代理选择配置保存成功");
 
-        // 切换节点后强制刷新后端缓存
-        await forceRefreshProxies();
-
         setTimeout(() => {
-          mutate("getProxies", getProxies());
+          mutate("getProxies", calcuProxies());
         }, 100);
       } catch (error: any) {
         console.error(

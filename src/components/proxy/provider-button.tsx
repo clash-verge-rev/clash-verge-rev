@@ -20,25 +20,11 @@ import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useAppData } from "@/providers/app-data-context";
-import { proxyProviderUpdate } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
-
-// 定义代理提供者类型
-interface ProxyProviderItem {
-  name?: string;
-  proxies: any[];
-  updatedAt: number;
-  vehicleType: string;
-  subscriptionInfo?: {
-    Upload: number;
-    Download: number;
-    Total: number;
-    Expire: number;
-  };
-}
 
 // 样式化组件 - 类型框
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
@@ -74,7 +60,7 @@ export const ProviderButton = () => {
       // 设置更新状态
       setUpdating((prev) => ({ ...prev, [name]: true }));
 
-      await proxyProviderUpdate(name);
+      await updateProxyProvider(name);
 
       // 刷新数据
       await refreshProxy();
@@ -115,7 +101,7 @@ export const ProviderButton = () => {
       // 改为串行逐个更新所有provider
       for (const name of allProviders) {
         try {
-          await proxyProviderUpdate(name);
+          await updateProxyProvider(name);
           // 每个更新完成后更新状态
           setUpdating((prev) => ({ ...prev, [name]: false }));
         } catch (err) {
@@ -177,161 +163,164 @@ export const ProviderButton = () => {
 
         <DialogContent>
           <List sx={{ py: 0, minHeight: 250 }}>
-            {Object.entries(proxyProviders || {}).map(([key, item]) => {
-              const provider = item as ProxyProviderItem;
-              const time = dayjs(provider.updatedAt);
-              const isUpdating = updating[key];
+            {Object.entries(proxyProviders || {})
+              .sort()
+              .map(([key, item]) => {
+                const provider = item;
+                const time = dayjs(provider.updatedAt);
+                const isUpdating = updating[key];
 
-              // 订阅信息
-              const sub = provider.subscriptionInfo;
-              const hasSubInfo = !!sub;
-              const upload = sub?.Upload || 0;
-              const download = sub?.Download || 0;
-              const total = sub?.Total || 0;
-              const expire = sub?.Expire || 0;
+                // 订阅信息
+                const sub = provider.subscriptionInfo;
+                const hasSubInfo = !!sub;
+                const upload = sub?.Upload || 0;
+                const download = sub?.Download || 0;
+                const total = sub?.Total || 0;
+                const expire = sub?.Expire || 0;
 
-              // 流量使用进度
-              const progress =
-                total > 0
-                  ? Math.min(
-                      Math.round(((download + upload) * 100) / total) + 1,
-                      100,
-                    )
-                  : 0;
+                // 流量使用进度
+                const progress =
+                  total > 0
+                    ? Math.min(
+                        Math.round(((download + upload) * 100) / total) + 1,
+                        100,
+                      )
+                    : 0;
 
-              return (
-                <ListItem
-                  key={key}
-                  sx={[
-                    {
-                      p: 0,
-                      mb: "8px",
-                      borderRadius: 2,
-                      overflow: "hidden",
-                      transition: "all 0.2s",
-                    },
-                    ({ palette: { mode, primary } }) => {
-                      const bgcolor = mode === "light" ? "#ffffff" : "#24252f";
-                      const hoverColor =
-                        mode === "light"
-                          ? alpha(primary.main, 0.1)
-                          : alpha(primary.main, 0.2);
+                return (
+                  <ListItem
+                    key={key}
+                    sx={[
+                      {
+                        p: 0,
+                        mb: "8px",
+                        borderRadius: 2,
+                        overflow: "hidden",
+                        transition: "all 0.2s",
+                      },
+                      ({ palette: { mode, primary } }) => {
+                        const bgcolor =
+                          mode === "light" ? "#ffffff" : "#24252f";
+                        const hoverColor =
+                          mode === "light"
+                            ? alpha(primary.main, 0.1)
+                            : alpha(primary.main, 0.2);
 
-                      return {
-                        backgroundColor: bgcolor,
-                        "&:hover": {
-                          backgroundColor: hoverColor,
-                        },
-                      };
-                    },
-                  ]}
-                >
-                  <ListItemText
-                    sx={{ px: 2, py: 1 }}
-                    primary={
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          component="div"
-                          noWrap
-                          title={key}
-                          sx={{ display: "flex", alignItems: "center" }}
-                        >
-                          <span style={{ marginRight: "8px" }}>{key}</span>
-                          <TypeBox component="span">
-                            {provider.proxies.length}
-                          </TypeBox>
-                          <TypeBox component="span">
-                            {provider.vehicleType}
-                          </TypeBox>
-                        </Typography>
-
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          noWrap
-                        >
-                          <small>{t("Update At")}: </small>
-                          {time.fromNow()}
-                        </Typography>
-                      </Box>
-                    }
-                    secondary={
-                      <>
-                        {/* 订阅信息 */}
-                        {hasSubInfo && (
-                          <>
-                            <Box
-                              sx={{
-                                mb: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <span title={t("Used / Total") as string}>
-                                {parseTraffic(upload + download)} /{" "}
-                                {parseTraffic(total)}
-                              </span>
-                              <span title={t("Expire Time") as string}>
-                                {parseExpire(expire)}
-                              </span>
-                            </Box>
-
-                            {/* 进度条 */}
-                            <LinearProgress
-                              variant="determinate"
-                              value={progress}
-                              sx={{
-                                height: 6,
-                                borderRadius: 3,
-                                opacity: total > 0 ? 1 : 0,
-                              }}
-                            />
-                          </>
-                        )}
-                      </>
-                    }
-                  />
-                  <Divider orientation="vertical" flexItem />
-                  <Box
-                    sx={{
-                      width: 40,
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
+                        return {
+                          backgroundColor: bgcolor,
+                          "&:hover": {
+                            backgroundColor: hoverColor,
+                          },
+                        };
+                      },
+                    ]}
                   >
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => {
-                        updateProvider(key);
-                      }}
-                      disabled={isUpdating}
+                    <ListItemText
+                      sx={{ px: 2, py: 1 }}
+                      primary={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle1"
+                            component="div"
+                            noWrap
+                            title={key}
+                            sx={{ display: "flex", alignItems: "center" }}
+                          >
+                            <span style={{ marginRight: "8px" }}>{key}</span>
+                            <TypeBox component="span">
+                              {provider.proxies.length}
+                            </TypeBox>
+                            <TypeBox component="span">
+                              {provider.vehicleType}
+                            </TypeBox>
+                          </Typography>
+
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                          >
+                            <small>{t("Update At")}: </small>
+                            {time.fromNow()}
+                          </Typography>
+                        </Box>
+                      }
+                      secondary={
+                        <>
+                          {/* 订阅信息 */}
+                          {hasSubInfo && (
+                            <>
+                              <Box
+                                sx={{
+                                  mb: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                }}
+                              >
+                                <span title={t("Used / Total") as string}>
+                                  {parseTraffic(upload + download)} /{" "}
+                                  {parseTraffic(total)}
+                                </span>
+                                <span title={t("Expire Time") as string}>
+                                  {parseExpire(expire)}
+                                </span>
+                              </Box>
+
+                              {/* 进度条 */}
+                              <LinearProgress
+                                variant="determinate"
+                                value={progress}
+                                sx={{
+                                  height: 6,
+                                  borderRadius: 3,
+                                  opacity: total > 0 ? 1 : 0,
+                                }}
+                              />
+                            </>
+                          )}
+                        </>
+                      }
+                    />
+                    <Divider orientation="vertical" flexItem />
+                    <Box
                       sx={{
-                        animation: isUpdating
-                          ? "spin 1s linear infinite"
-                          : "none",
-                        "@keyframes spin": {
-                          "0%": { transform: "rotate(0deg)" },
-                          "100%": { transform: "rotate(360deg)" },
-                        },
+                        width: 40,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
                       }}
-                      title={t("Update Provider") as string}
                     >
-                      <RefreshRounded />
-                    </IconButton>
-                  </Box>
-                </ListItem>
-              );
-            })}
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => {
+                          updateProvider(key);
+                        }}
+                        disabled={isUpdating}
+                        sx={{
+                          animation: isUpdating
+                            ? "spin 1s linear infinite"
+                            : "none",
+                          "@keyframes spin": {
+                            "0%": { transform: "rotate(0deg)" },
+                            "100%": { transform: "rotate(360deg)" },
+                          },
+                        }}
+                        title={t("Update Provider") as string}
+                      >
+                        <RefreshRounded />
+                      </IconButton>
+                    </Box>
+                  </ListItem>
+                );
+              })}
           </List>
         </DialogContent>
 

@@ -3,14 +3,11 @@
 import "./assets/styles/index.scss";
 
 import { ResizeObserver } from "@juggle/resize-observer";
-if (!window.ResizeObserver) {
-  window.ResizeObserver = ResizeObserver;
-}
-
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 import { BaseErrorBoundary } from "./components/base";
 import Layout from "./pages/_layout";
@@ -21,6 +18,10 @@ import {
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
+
+if (!window.ResizeObserver) {
+  window.ResizeObserver = ResizeObserver;
+}
 
 const mainElementId = "root";
 const container = document.getElementById(mainElementId);
@@ -89,4 +90,10 @@ window.addEventListener("error", (event) => {
 
 window.addEventListener("unhandledrejection", (event) => {
   console.error("[main.tsx] 未处理的Promise拒绝:", event.reason);
+});
+
+// 页面关闭/刷新事件
+window.addEventListener("beforeunload", async () => {
+  // 强制清理所有 WebSocket 实例, 防止内存泄漏
+  await MihomoWebSocket.cleanupAll();
 });

@@ -5,6 +5,7 @@ mod core;
 pub mod event_driven_proxy;
 pub mod handle;
 pub mod hotkey;
+pub mod logger;
 pub mod service;
 pub mod service_ipc;
 pub mod sysopt;

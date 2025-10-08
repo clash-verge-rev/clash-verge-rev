@@ -1,24 +1,22 @@
 import { useLockFn } from "ahooks";
 import { useCallback, useMemo } from "react";
+import {
+  closeConnections,
+  getConnections,
+  selectNodeForGroup,
+} from "tauri-plugin-mihomo-api";
 
 import { useProfiles } from "@/hooks/use-profiles";
 import { useVerge } from "@/hooks/use-verge";
-import {
-  updateProxy,
-  updateProxyAndSync,
-  forceRefreshProxies,
-  syncTrayProxySelection,
-  getConnections,
-  deleteConnection,
-} from "@/services/cmds";
+import { syncTrayProxySelection } from "@/services/cmds";
 
 // 缓存连接清理
 const cleanupConnections = async (previousProxy: string) => {
   try {
     const { connections } = await getConnections();
-    const cleanupPromises = connections
+    const cleanupPromises = (connections ?? [])
       .filter((conn) => conn.chains.includes(previousProxy))
-      .map((conn) => deleteConnection(conn.id));
+      .map((conn) => closeConnections(conn.id));
 
     if (cleanupPromises.length > 0) {
       await Promise.allSettled(cleanupPromises);
@@ -77,7 +75,8 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
           await patchCurrent({ selected: current.selected });
         }
 
-        await updateProxyAndSync(groupName, proxyName);
+        await selectNodeForGroup(groupName, proxyName);
+        await syncTrayProxySelection();
         console.log(
           `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
         );
@@ -98,8 +97,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         );
 
         try {
-          await updateProxy(groupName, proxyName);
-          await forceRefreshProxies();
+          await selectNodeForGroup(groupName, proxyName);
           await syncTrayProxySelection();
           onSuccess?.();
           console.log(

@@ -74,7 +74,7 @@ const RulesPage = () => {
         <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
       </Box>
 
-      {filteredRules.length > 0 ? (
+      {filteredRules && filteredRules.length > 0 ? (
         <>
           <Virtuoso
             ref={virtuosoRef}

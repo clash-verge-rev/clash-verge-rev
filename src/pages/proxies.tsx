@@ -3,14 +3,13 @@ import { useLockFn } from "ahooks";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
+import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
 
 import { BasePage } from "@/components/base";
 import { ProviderButton } from "@/components/proxy/provider-button";
 import { ProxyGroups } from "@/components/proxy/proxy-groups";
 import { useVerge } from "@/hooks/use-verge";
 import {
-  closeAllConnections,
-  getClashConfig,
   getRuntimeProxyChainConfig,
   patchClashMode,
   updateProxyChainConfigInRuntime,
@@ -33,7 +32,7 @@ const ProxyPage = () => {
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
-    getClashConfig,
+    getBaseConfig,
     {
       revalidateOnFocus: false,
       revalidateIfStale: true,

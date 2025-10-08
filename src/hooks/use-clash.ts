@@ -1,12 +1,11 @@
 import { useLockFn } from "ahooks";
 import useSWR, { mutate } from "swr";
+import { getVersion } from "tauri-plugin-mihomo-api";
 
-import { getVersion } from "@/services/cmds";
 import {
   getClashInfo,
   patchClashConfig,
   getRuntimeConfig,
-  forceRefreshClashConfig,
 } from "@/services/cmds";
 
 export const useClash = () => {
@@ -25,11 +24,9 @@ export const useClash = () => {
     mutateClash();
   });
 
-  const version = versionData?.premium
-    ? `${versionData.version} Premium`
-    : versionData?.meta
-      ? `${versionData.version} Mihomo`
-      : versionData?.version || "-";
+  const version = versionData?.meta
+    ? `${versionData.version} Mihomo`
+    : versionData?.version || "-";
 
   return {
     clash,
@@ -123,10 +120,7 @@ export const useClashInfo = () => {
 
     await patchClashConfig(patch);
     mutateInfo();
-    // 配置修改后强制刷新缓存
-    await forceRefreshClashConfig();
     mutate("getClashConfig");
-    // IPC调用不需要刷新axios实例
   };
 
   return {

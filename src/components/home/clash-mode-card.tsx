@@ -7,10 +7,11 @@ import { Box, Paper, Stack, Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-context";
-import { closeAllConnections, patchClashMode } from "@/services/cmds";
+import { patchClashMode } from "@/services/cmds";
 
 export const ClashModeCard = () => {
   const { t } = useTranslation();

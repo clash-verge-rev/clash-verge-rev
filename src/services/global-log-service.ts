@@ -3,7 +3,6 @@ import { create } from "zustand";
 
 import {
   fetchLogsViaIPC,
-  startLogsStreaming,
   stopLogsStreaming,
   clearLogs as clearLogsIPC,
 } from "@/services/ipc-log-service";
@@ -96,7 +95,7 @@ export const initGlobalLogService = (
   console.log("[GlobalLog-IPC] 启用IPC流式日志服务");
 
   // 启动流式监控
-  startLogsStreaming(logLevel);
+  // startLogsStreaming(logLevel);
 
   // 立即获取一次日志
   fetchLogsViaIPCPeriodically();
@@ -152,7 +151,7 @@ export const changeLogLevel = (level: LogLevel) => {
 
   if (enabled) {
     // IPC流式模式下重新启动监控
-    startLogsStreaming(level);
+    // startLogsStreaming(level);
     fetchLogsViaIPCPeriodically();
   }
 };
@@ -180,11 +179,11 @@ export const clearGlobalLogs = () => {
 };
 
 // 自定义钩子，用于获取过滤后的日志数据
-export const useGlobalLogData = (logLevel: LogLevel = "all") => {
+export const useGlobalLogData = (logLevel: LogLevel = "info") => {
   const logs = useGlobalLogStore((state) => state.logs);
 
   // 根据当前选择的日志等级过滤日志
-  if (logLevel === "all") {
+  if (logLevel === "info") {
     return logs;
   } else {
     return logs.filter((log) => log.type.toLowerCase() === logLevel);

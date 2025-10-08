@@ -34,14 +34,13 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
-
-import { useAppData } from "@/providers/app-data-context";
 import {
   closeAllConnections,
-  getProxies,
-  updateProxyAndSync,
-  updateProxyChainConfigInRuntime,
-} from "@/services/cmds";
+  selectNodeForGroup,
+} from "tauri-plugin-mihomo-api";
+
+import { useAppData } from "@/providers/app-data-context";
+import { calcuProxies, updateProxyChainConfigInRuntime } from "@/services/cmds";
 
 interface ProxyChainItem {
   id: string;
@@ -204,7 +203,7 @@ export const ProxyChain = ({
   // 获取当前代理信息以检查连接状态
   const { data: currentProxies, mutate: mutateProxies } = useSWR(
     "getProxies",
-    getProxies,
+    calcuProxies,
     {
       revalidateOnFocus: true,
       revalidateIfStale: true,
@@ -367,7 +366,7 @@ export const ProxyChain = ({
 
       const targetGroup = mode === "global" ? "GLOBAL" : selectedGroup;
 
-      await updateProxyAndSync(targetGroup || "GLOBAL", lastNode.name);
+      await selectNodeForGroup(targetGroup || "GLOBAL", lastNode.name);
       localStorage.setItem("proxy-chain-group", targetGroup || "GLOBAL");
       localStorage.setItem("proxy-chain-exit-node", lastNode.name);
 

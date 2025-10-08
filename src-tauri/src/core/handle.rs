@@ -1,4 +1,4 @@
-use crate::singleton;
+use crate::{APP_HANDLE, singleton};
 use parking_lot::RwLock;
 use std::{
     sync::{
@@ -10,6 +10,8 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
+use tauri_plugin_mihomo::{Mihomo, MihomoExt};
+use tokio::sync::{RwLockReadGuard, RwLockWriteGuard};
 
 use crate::{logging, utils::logging::Type};
 
@@ -107,7 +109,7 @@ impl NotificationSystem {
                                         continue;
                                     }
 
-                            if let Some(window) = handle.get_window() {
+                            if let Some(window) = Handle::get_window() {
                                 *system.last_emit_time.write() = Instant::now();
 
                                 let (event_name_str, payload_result) = match event {
@@ -249,7 +251,6 @@ impl NotificationSystem {
 
 #[derive(Debug, Clone)]
 pub struct Handle {
-    pub app_handle: Arc<RwLock<Option<AppHandle>>>,
     pub is_exiting: Arc<RwLock<bool>>,
     startup_errors: Arc<RwLock<Vec<ErrorMessage>>>,
     startup_completed: Arc<RwLock<bool>>,
@@ -259,7 +260,6 @@ pub struct Handle {
 impl Default for Handle {
     fn default() -> Self {
         Self {
-            app_handle: Arc::new(RwLock::new(None)),
             is_exiting: Arc::new(RwLock::new(false)),
             startup_errors: Arc::new(RwLock::new(Vec::new())),
             startup_completed: Arc::new(RwLock::new(false)),
@@ -276,16 +276,11 @@ impl Handle {
         Self::default()
     }
 
-    pub fn init(&self, app_handle: AppHandle) {
+    pub fn init(&self) {
         // 如果正在退出，不要重新初始化
         if self.is_exiting() {
             log::debug!("Handle::init called while exiting, skipping initialization");
             return;
-        }
-
-        {
-            let mut handle = self.app_handle.write();
-            *handle = Some(app_handle);
         }
 
         let mut system_opt = self.notification_system.write();
@@ -300,12 +295,22 @@ impl Handle {
     }
 
     /// 获取 AppHandle
-    pub fn app_handle(&self) -> Option<AppHandle> {
-        self.app_handle.read().clone()
+    #[allow(clippy::expect_used)]
+    pub fn app_handle() -> &'static AppHandle {
+        APP_HANDLE.get().expect("failed to get global app handle")
     }
 
-    pub fn get_window(&self) -> Option<WebviewWindow> {
-        let app_handle = self.app_handle()?;
+    pub async fn mihomo() -> RwLockReadGuard<'static, Mihomo> {
+        Self::app_handle().mihomo().read().await
+    }
+
+    #[allow(unused)]
+    pub async fn mihomo_mut() -> RwLockWriteGuard<'static, Mihomo> {
+        Self::app_handle().mihomo().write().await
+    }
+
+    pub fn get_window() -> Option<WebviewWindow> {
+        let app_handle = Self::app_handle();
         let window: Option<WebviewWindow> = app_handle.get_webview_window("main");
         if window.is_none() {
             log::debug!(target:"app", "main window not found");
@@ -520,14 +525,10 @@ impl Handle {
 #[cfg(target_os = "macos")]
 impl Handle {
     pub fn set_activation_policy(&self, policy: tauri::ActivationPolicy) -> Result<(), String> {
-        let app_handle = self.app_handle();
-        if let Some(app_handle) = app_handle.as_ref() {
-            app_handle
-                .set_activation_policy(policy)
-                .map_err(|e| e.to_string())
-        } else {
-            Err("AppHandle not initialized".to_string())
-        }
+        let app_handle = Self::app_handle();
+        app_handle
+            .set_activation_policy(policy)
+            .map_err(|e| e.to_string())
     }
 
     pub fn set_activation_policy_regular(&self) {

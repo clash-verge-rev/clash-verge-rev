@@ -14,14 +14,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import useSWR from "swr";
+import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-context";
 import {
-  getGroupProxyDelays,
   getRuntimeConfig,
-  providerHealthCheck,
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
 import delayManager from "@/services/delay";
@@ -153,15 +152,14 @@ export const ProxyGroups = (props: Props) => {
 
   // 添加和清理滚动事件监听器
   useEffect(() => {
-    const currentScroller = scrollerRef.current;
-    if (currentScroller) {
-      currentScroller.addEventListener("scroll", handleScroll, {
-        passive: true,
-      });
-      return () => {
-        currentScroller.removeEventListener("scroll", handleScroll);
-      };
-    }
+    if (!scrollerRef.current) return;
+    scrollerRef.current.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
+    return () => {
+      scrollerRef.current?.removeEventListener("scroll", handleScroll);
+    };
   }, [handleScroll]);
 
   // 滚动到顶部
@@ -215,6 +213,7 @@ export const ProxyGroups = (props: Props) => {
   const currentGroup = getCurrentGroup();
   const availableGroups = getAvailableGroups();
 
+  // TODO: 频繁点击切换代理节点，导致应用卡死
   const handleChangeProxy = useCallback(
     (group: IProxyGroupItem, proxy: IProxyItem) => {
       if (isChainMode) {
@@ -273,7 +272,7 @@ export const ProxyGroups = (props: Props) => {
     if (providers.size) {
       console.log(`[ProxyGroups] 发现提供者，数量: ${providers.size}`);
       Promise.allSettled(
-        [...providers].map((p) => providerHealthCheck(p)),
+        [...providers].map((p) => healthcheckProxyProvider(p)),
       ).then(() => {
         console.log(`[ProxyGroups] 提供者健康检查完成`);
         onProxies();
@@ -289,7 +288,7 @@ export const ProxyGroups = (props: Props) => {
     try {
       await Promise.race([
         delayManager.checkListDelay(names, groupName, timeout),
-        getGroupProxyDelays(groupName, url, timeout).then((result) => {
+        delayGroup(groupName, url, timeout).then((result) => {
           console.log(
             `[ProxyGroups] getGroupProxyDelays返回结果数量:`,
             Object.keys(result || {}).length,
@@ -518,7 +517,7 @@ export const ProxyGroups = (props: Props) => {
             },
           }}
         >
-          {availableGroups.map((group: any, index: number) => (
+          {availableGroups.map((group: any, _index: number) => (
             <MenuItem
               key={group.name}
               onClick={() => handleGroupSelect(group.name)}

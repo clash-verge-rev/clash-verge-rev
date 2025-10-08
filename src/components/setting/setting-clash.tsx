@@ -4,14 +4,15 @@ import { invoke } from "@tauri-apps/api/core";
 import { useLockFn } from "ahooks";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { updateGeo } from "tauri-plugin-mihomo-api";
 
 import { DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useClash } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { invoke_uwp_tool } from "@/services/cmds";
-import { updateGeoData } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
 import { ClashCoreViewer } from "./mods/clash-core-viewer";
@@ -35,6 +36,7 @@ const SettingClash = ({ onError }: Props) => {
 
   const { clash, version, mutateClash, patchClash } = useClash();
   const { verge, patchVerge } = useVerge();
+  const [, setClashLog] = useClashLog();
 
   const {
     ipv6,
@@ -64,7 +66,7 @@ const SettingClash = ({ onError }: Props) => {
   };
   const onUpdateGeo = async () => {
     try {
-      await updateGeoData();
+      await updateGeo();
       showNotice("success", t("GeoData Updated"));
     } catch (err: any) {
       showNotice("error", err?.response.data.message || err.toString());
@@ -186,7 +188,10 @@ const SettingClash = ({ onError }: Props) => {
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ "log-level": e })}
-          onGuard={(e) => patchClash({ "log-level": e })}
+          onGuard={(e) => {
+            setClashLog((pre: any) => ({ ...pre, logLevel: e }));
+            return patchClash({ "log-level": e });
+          }}
         >
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="debug">Debug</MenuItem>

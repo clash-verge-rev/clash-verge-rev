@@ -1,45 +1,39 @@
-import { List, Paper, ThemeProvider, SvgIcon } from "@mui/material";
+import { List, Paper, SvgIcon, ThemeProvider } from "@mui/material";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useLocalStorage } from "foxact/use-local-storage";
-import { useEffect, useCallback, useState, useRef } from "react";
-import React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useRoutes, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useRoutes } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
 
 import iconDark from "@/assets/image/icon_dark.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import LogoSvg from "@/assets/image/logo.svg?react";
+import { NoticeManager } from "@/components/base/NoticeManager";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { useClashInfo } from "@/hooks/use-clash";
+import { useConnectionData } from "@/hooks/use-connection-data";
 import { useI18n } from "@/hooks/use-i18n";
+import { useListen } from "@/hooks/use-listen";
+import { useLogData } from "@/hooks/use-log-data-new";
+import { useMemoryData } from "@/hooks/use-memory-data";
+import { useTrafficData } from "@/hooks/use-traffic-data";
 import { useVerge } from "@/hooks/use-verge";
 import { getAxios } from "@/services/api";
-import { forceRefreshClashConfig } from "@/services/cmds";
-import { useThemeMode, useEnableLog } from "@/services/states";
+import { showNotice } from "@/services/noticeService";
+import { useClashLog, useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
 import { routers } from "./_routers";
 
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-
-import { useListen } from "@/hooks/use-listen";
-
-import { listen } from "@tauri-apps/api/event";
-
-import { useClashInfo } from "@/hooks/use-clash";
-import { initGlobalLogService } from "@/services/global-log-service";
-
-import { invoke } from "@tauri-apps/api/core";
-
-import { showNotice } from "@/services/noticeService";
-import { NoticeManager } from "@/components/base/NoticeManager";
-import { LogLevel } from "@/hooks/use-log-data";
 
 const appWindow = getCurrentWebviewWindow();
 export const portableFlag = false;
@@ -157,14 +151,20 @@ const handleNoticeMessage = (
 };
 
 const Layout = () => {
+  useTrafficData();
+  useMemoryData();
+  useConnectionData();
+  useLogData();
   const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
   const { verge } = useVerge();
   const { clashInfo } = useClashInfo();
-  const [enableLog] = useEnableLog();
-  const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
+  const [clashLog] = useClashLog();
+  const enableLog = clashLog.enable;
+  const logLevel = clashLog.logLevel;
+  // const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
   const { language, start_page } = verge ?? {};
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
@@ -193,19 +193,17 @@ const Layout = () => {
   );
 
   // 初始化全局日志服务
-  useEffect(() => {
-    if (clashInfo) {
-      initGlobalLogService(enableLog, logLevel);
-    }
-  }, [clashInfo, enableLog, logLevel]);
+  // useEffect(() => {
+  //   if (clashInfo) {
+  //     initGlobalLogService(enableLog, logLevel);
+  //   }
+  // }, [clashInfo, enableLog, logLevel]);
 
   // 设置监听器
   useEffect(() => {
     const listeners = [
       addListener("verge://refresh-clash-config", async () => {
         await getAxios(true);
-        // 后端配置变更事件触发，强制刷新配置缓存
-        await forceRefreshClashConfig();
         mutate("getProxies");
         mutate("getVersion");
         mutate("getClashConfig");
@@ -521,15 +519,16 @@ const Layout = () => {
             borderTopRightRadius: "0px",
           }}
           onContextMenu={(e) => {
-            if (
-              OS === "windows" &&
-              !["input", "textarea"].includes(
-                e.currentTarget.tagName.toLowerCase(),
-              ) &&
-              !e.currentTarget.isContentEditable
-            ) {
-              e.preventDefault();
-            }
+            // TODO: 禁止右键菜单
+            // if (
+            //   OS === "windows" &&
+            //   !["input", "textarea"].includes(
+            //     e.currentTarget.tagName.toLowerCase(),
+            //   ) &&
+            //   !e.currentTarget.isContentEditable
+            // ) {
+            //   e.preventDefault();
+            // }
           }}
           sx={[
             ({ palette }) => ({ bgcolor: palette.background.paper }),

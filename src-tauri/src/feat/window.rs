@@ -2,7 +2,6 @@ use crate::utils::window_manager::WindowManager;
 use crate::{
     config::Config,
     core::{CoreManager, handle, sysopt},
-    ipc::IpcManager,
     logging,
     module::lightweight,
     utils::logging::Type,
@@ -23,17 +22,12 @@ async fn open_or_close_dashboard_internal() {
 pub async fn quit() {
     logging!(debug, Type::System, true, "启动退出流程");
 
-    let Some(app_handle) = handle::Handle::global().app_handle() else {
-        logging!(
-            error,
-            Type::System,
-            "Failed to get app handle for quit operation"
-        );
-        return;
-    };
+    // 获取应用句柄并设置退出标志
+    let app_handle = handle::Handle::app_handle();
     handle::Handle::global().set_is_exiting();
 
-    if let Some(window) = handle::Handle::global().get_window() {
+    // 优先关闭窗口，提供立即反馈
+    if let Some(window) = handle::Handle::get_window() {
         let _ = window.hide();
         log::info!(target: "app", "窗口已隐藏");
     }
@@ -69,7 +63,14 @@ async fn clean_async() -> bool {
         #[cfg(not(target_os = "windows"))]
         let tun_timeout = Duration::from_secs(2);
 
-        match timeout(tun_timeout, IpcManager::global().patch_configs(disable_tun)).await {
+        match timeout(
+            tun_timeout,
+            handle::Handle::mihomo()
+                .await
+                .patch_base_config(&disable_tun),
+        )
+        .await
+        {
             Ok(Ok(_)) => {
                 log::info!(target: "app", "TUN模式已禁用");
                 tokio::time::sleep(Duration::from_millis(300)).await;
@@ -314,7 +315,7 @@ pub async fn hide() {
         add_light_weight_timer().await;
     }
 
-    if let Some(window) = handle::Handle::global().get_window()
+    if let Some(window) = handle::Handle::get_window()
         && window.is_visible().unwrap_or(false)
     {
         let _ = window.hide();

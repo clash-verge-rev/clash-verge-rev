@@ -6,3 +6,5 @@ pnpm-lock.yaml
 
 src-tauri/target/
 src-tauri/gen/
+
+target

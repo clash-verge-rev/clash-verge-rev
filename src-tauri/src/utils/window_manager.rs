@@ -67,7 +67,7 @@ fn should_handle_window_operation() -> bool {
     let now = Instant::now();
     let elapsed = now.duration_since(*last_operation);
 
-    log::debug!(target: "app", "[防抖] 检查窗口操作间隔: {}ms (需要>={}ms)", 
+    log::debug!(target: "app", "[防抖] 检查窗口操作间隔: {}ms (需要>={}ms)",
               elapsed.as_millis(), WINDOW_OPERATION_DEBOUNCE_MS);
 
     if elapsed >= Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS) {
@@ -76,7 +76,7 @@ fn should_handle_window_operation() -> bool {
         log::info!(target: "app", "[防抖] 窗口操作被允许执行");
         true
     } else {
-        log::warn!(target: "app", "[防抖] 窗口操作被防抖机制忽略，距离上次操作 {}ms < {}ms", 
+        log::warn!(target: "app", "[防抖] 窗口操作被防抖机制忽略，距离上次操作 {}ms < {}ms",
                   elapsed.as_millis(), WINDOW_OPERATION_DEBOUNCE_MS);
         false
     }
@@ -117,9 +117,8 @@ impl WindowManager {
 
     /// 获取主窗口实例
     pub fn get_main_window() -> Option<WebviewWindow<Wry>> {
-        handle::Handle::global()
-            .app_handle()
-            .and_then(|app| app.get_webview_window("main"))
+        let app_handle = handle::Handle::app_handle();
+        app_handle.get_webview_window("main")
     }
 
     /// 智能显示主窗口

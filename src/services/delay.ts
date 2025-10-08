@@ -1,4 +1,4 @@
-import { cmdGetProxyDelay } from "@/services/cmds";
+import { delayProxyByName } from "tauri-plugin-mihomo-api";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
@@ -106,7 +106,7 @@ class DelayManager {
 
       // 使用Promise.race来实现超时控制
       const result = await Promise.race([
-        cmdGetProxyDelay(name, timeout, url),
+        delayProxyByName(name, url, timeout),
         timeoutPromise,
       ]);
 
@@ -210,13 +210,14 @@ class DelayManager {
   formatDelay(delay: number, timeout = 10000) {
     if (delay === -1) return "-";
     if (delay === -2) return "testing";
-    if (delay >= timeout) return "timeout";
+    if (delay === 0 || (delay >= timeout && delay <= 1e5)) return "timeout";
+    if (delay > 1e5) return "Error";
     return `${delay}`;
   }
 
   formatDelayColor(delay: number, timeout = 10000) {
     if (delay < 0) return "";
-    if (delay >= timeout) return "error.main";
+    if (delay === 0 || delay >= timeout) return "error.main";
     if (delay >= 10000) return "error.main";
     if (delay >= 400) return "warning.main";
     if (delay >= 250) return "primary.main";

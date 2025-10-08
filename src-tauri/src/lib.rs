@@ -1,33 +1,31 @@
 #![allow(non_snake_case)]
 #![recursion_limit = "512"]
 
-mod cache;
 mod cmd;
 pub mod config;
 mod core;
 mod enhance;
 mod feat;
-mod ipc;
 mod module;
 mod process;
 mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
 use crate::{
-    core::handle,
-    core::hotkey,
+    core::{handle, hotkey},
     process::AsyncHandler,
     utils::{resolve, server},
 };
 use config::Config;
-use tauri::AppHandle;
-#[cfg(target_os = "macos")]
-use tauri::Manager;
+use once_cell::sync::OnceCell;
+use tauri::{AppHandle, Manager};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
 use tokio::time::{Duration, timeout};
 use utils::logging::Type;
+
+pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
 /// Application initialization helper functions
 mod app_init {
@@ -41,7 +39,7 @@ mod app_init {
                 Ok(result) => {
                     if result.is_err() {
                         logging!(info, Type::Setup, true, "检测到已有应用实例运行");
-                        if let Some(app_handle) = handle::Handle::global().app_handle() {
+                        if let Some(app_handle) = APP_HANDLE.get() {
                             app_handle.exit(0);
                         } else {
                             std::process::exit(0);
@@ -75,7 +73,13 @@ mod app_init {
             .plugin(tauri_plugin_dialog::init())
             .plugin(tauri_plugin_shell::init())
             .plugin(tauri_plugin_deep_link::init())
-            .plugin(tauri_plugin_http::init());
+            .plugin(tauri_plugin_http::init())
+            .plugin(
+                tauri_plugin_mihomo::Builder::new()
+                    .protocol(tauri_plugin_mihomo::models::Protocol::LocalSocket)
+                    .socket_path(crate::config::IClashTemp::guard_external_controller_ipc())
+                    .build(),
+            );
 
         // Devtools plugin only in debug mode with feature tauri-dev
         // to avoid duplicated registering of logger since the devtools plugin also registers a logger
@@ -184,46 +188,13 @@ mod app_init {
             cmd::update_proxy_chain_config_in_runtime,
             cmd::invoke_uwp_tool,
             cmd::copy_clash_env,
-            cmd::get_proxies,
-            cmd::force_refresh_proxies,
-            cmd::get_providers_proxies,
             cmd::sync_tray_proxy_selection,
-            cmd::update_proxy_and_sync,
             cmd::save_dns_config,
             cmd::apply_dns_config,
             cmd::check_dns_config_exists,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,
-            cmd::get_clash_version,
-            cmd::get_clash_config,
-            cmd::force_refresh_clash_config,
-            cmd::update_geo_data,
-            cmd::upgrade_clash_core,
-            cmd::get_clash_rules,
-            cmd::update_proxy_choice,
-            cmd::get_proxy_providers,
-            cmd::get_rule_providers,
-            cmd::proxy_provider_health_check,
-            cmd::update_proxy_provider,
-            cmd::update_rule_provider,
-            cmd::get_clash_connections,
-            cmd::delete_clash_connection,
-            cmd::close_all_clash_connections,
-            cmd::get_group_proxy_delays,
-            cmd::is_clash_debug_enabled,
-            cmd::clash_gc,
-            // Logging and monitoring
             cmd::get_clash_logs,
-            cmd::start_logs_monitoring,
-            cmd::stop_logs_monitoring,
-            cmd::clear_logs,
-            cmd::get_traffic_data,
-            cmd::get_memory_data,
-            cmd::get_formatted_traffic_data,
-            cmd::get_formatted_memory_data,
-            cmd::get_system_monitor_overview,
-            cmd::start_traffic_service,
-            cmd::stop_traffic_service,
             // Verge configuration
             cmd::get_verge_config,
             cmd::patch_verge_config,
@@ -251,8 +222,6 @@ mod app_init {
             // Script validation
             cmd::script_validate_notice,
             cmd::validate_script_file,
-            // Clash API
-            cmd::clash_api_get_proxy_delay,
             // Backup and WebDAV
             cmd::create_webdav_backup,
             cmd::save_webdav_config,
@@ -321,6 +290,11 @@ pub fn run() {
         .setup(|app| {
             logging!(info, Type::Setup, true, "开始应用初始化...");
 
+            #[allow(clippy::expect_used)]
+            APP_HANDLE
+                .set(app.app_handle().clone())
+                .expect("failed to set global app handle");
+
             // Setup autostart plugin
             if let Err(e) = app_init::setup_autostart(app) {
                 logging!(error, Type::Setup, true, "Failed to setup autostart: {}", e);
@@ -348,11 +322,9 @@ pub fn run() {
                 );
             }
 
-            let app_handle = app.handle().clone();
-
             logging!(info, Type::Setup, true, "执行主要设置操作...");
 
-            resolve::resolve_setup_handle(app_handle);
+            resolve::resolve_setup_handle();
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
 
@@ -368,7 +340,7 @@ pub fn run() {
         use super::*;
 
         /// Handle application ready/resumed events
-        pub fn handle_ready_resumed(app_handle: &AppHandle) {
+        pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             // 双重检查：确保不在退出状态
             if handle::Handle::global().is_exiting() {
                 logging!(
@@ -381,11 +353,11 @@ pub fn run() {
             }
 
             logging!(info, Type::System, true, "应用就绪或恢复");
-            handle::Handle::global().init(app_handle.clone());
+            handle::Handle::global().init();
 
             #[cfg(target_os = "macos")]
             {
-                if let Some(window) = app_handle.get_webview_window("main") {
+                if let Some(window) = _app_handle.get_webview_window("main") {
                     logging!(info, Type::Window, true, "设置macOS窗口标题");
                     let _ = window.set_title("Clash Verge");
                 }
@@ -394,7 +366,7 @@ pub fn run() {
 
         /// Handle application reopen events (macOS)
         #[cfg(target_os = "macos")]
-        pub async fn handle_reopen(app_handle: &AppHandle, has_visible_windows: bool) {
+        pub async fn handle_reopen(has_visible_windows: bool) {
             logging!(
                 info,
                 Type::System,
@@ -403,7 +375,7 @@ pub fn run() {
                 has_visible_windows
             );
 
-            handle::Handle::global().init(app_handle.clone());
+            handle::Handle::global().init();
 
             if !has_visible_windows {
                 // 当没有可见窗口时，设置为 regular 模式并显示主窗口
@@ -436,7 +408,7 @@ pub fn run() {
             log::info!(target: "app", "closing window...");
             if let tauri::WindowEvent::CloseRequested { api, .. } = api {
                 api.prevent_close();
-                if let Some(window) = core::handle::Handle::global().get_window() {
+                if let Some(window) = core::handle::Handle::get_window() {
                     let _ = window.hide();
                 } else {
                     logging!(warn, Type::Window, true, "尝试隐藏窗口但窗口不存在");
@@ -583,12 +555,17 @@ pub fn run() {
                     logging!(debug, Type::System, true, "忽略 Reopen 事件，应用正在退出");
                     return;
                 }
-                let app_handle = app_handle.clone();
                 AsyncHandler::spawn(move || async move {
-                    event_handlers::handle_reopen(&app_handle, has_visible_windows).await;
+                    event_handlers::handle_reopen(has_visible_windows).await;
                 });
             }
             tauri::RunEvent::ExitRequested { api, code, .. } => {
+                tauri::async_runtime::block_on(async {
+                    let _ = handle::Handle::mihomo()
+                        .await
+                        .clear_all_ws_connections()
+                        .await;
+                });
                 // 如果已经在退出流程中，不要阻止退出
                 if core::handle::Handle::global().is_exiting() {
                     logging!(

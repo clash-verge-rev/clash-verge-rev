@@ -23,11 +23,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         } else {
             if patch.get("mode").is_some() {
                 logging_error!(Type::Tray, true, tray::Tray::global().update_menu().await);
-                logging_error!(
-                    Type::Tray,
-                    true,
-                    tray::Tray::global().update_icon(None).await
-                );
+                logging_error!(Type::Tray, true, tray::Tray::global().update_icon().await);
             }
             Config::runtime().await.draft_mut().patch_config(patch);
             CoreManager::global().update_config().await?;
@@ -211,7 +207,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             tray::Tray::global().update_menu().await?;
         }
         if (update_flags & (UpdateFlags::SystrayIcon as i32)) != 0 {
-            tray::Tray::global().update_icon(None).await?;
+            tray::Tray::global().update_icon().await?;
         }
         if (update_flags & (UpdateFlags::SystrayTooltip as i32)) != 0 {
             tray::Tray::global().update_tooltip().await?;

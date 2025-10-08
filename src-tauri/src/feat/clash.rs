@@ -1,14 +1,11 @@
 use crate::{
     config::Config,
     core::{CoreManager, handle, tray},
-    ipc::IpcManager,
     logging_error,
     process::AsyncHandler,
     utils::{logging::Type, resolve},
 };
 use serde_yaml_ng::{Mapping, Value};
-use std::env;
-use std::process::{Command, exit};
 
 /// Restart the Clash core
 pub async fn restart_clash_core() {
@@ -35,55 +32,57 @@ pub async fn restart_app() {
         return;
     }
 
-    handle::Handle::notice_message("restart_app::info", "Restarting application...");
+    let app_handle = handle::Handle::app_handle();
+    app_handle.restart();
+    // TODO: PR Ref: https://github.com/clash-verge-rev/clash-verge-rev/pull/4960
+    // handle::Handle::notice_message("restart_app::info", "Restarting application...");
 
-    // Use the manual restart method consistently to ensure reliability across platforms
-    // This addresses the issue where app_handle.restart() doesn't work properly on Windows
-    let current_exe = match env::current_exe() {
-        Ok(path) => path,
-        Err(_) => {
-            // If we can't get the current executable path, try to use the fallback method
-            if let Some(app_handle) = handle::Handle::global().app_handle() {
-                app_handle.restart();
-            }
-            exit(1); // If we reach here, either app_handle was None or restart() failed to restart
-        }
-    };
+    // // Use the manual restart method consistently to ensure reliability across platforms
+    // // This addresses the issue where app_handle.restart() doesn't work properly on Windows
+    // let current_exe = match env::current_exe() {
+    //     Ok(path) => path,
+    //     Err(_) => {
+    //         // If we can't get the current executable path, try to use the fallback method
+    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
+    //             app_handle.restart();
+    //         }
+    //         exit(1); // If we reach here, either app_handle was None or restart() failed to restart
+    //     }
+    // };
 
-    let mut cmd = Command::new(current_exe);
-    cmd.args(env::args().skip(1));
+    // let mut cmd = Command::new(current_exe);
+    // cmd.args(env::args().skip(1));
 
-    match cmd.spawn() {
-        Ok(child) => {
-            log::info!(target: "app", "New application instance started with PID: {}", child.id());
-            // Successfully started new process, now exit current process
-            if let Some(app_handle) = handle::Handle::global().app_handle() {
-                app_handle.exit(0);
-            } else {
-                exit(0);
-            }
-        }
-        Err(e) => {
-            log::error!(target: "app", "Failed to start new application instance: {}", e);
-            // If manual spawn fails, try the original restart method as a last resort
-            if let Some(app_handle) = handle::Handle::global().app_handle() {
-                app_handle.restart();
-            } else {
-                exit(1);
-            }
-        }
-    }
+    // match cmd.spawn() {
+    //     Ok(child) => {
+    //         log::info!(target: "app", "New application instance started with PID: {}", child.id());
+    //         // Successfully started new process, now exit current process
+    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
+    //             app_handle.exit(0);
+    //         } else {
+    //             exit(0);
+    //         }
+    //     }
+    //     Err(e) => {
+    //         log::error!(target: "app", "Failed to start new application instance: {}", e);
+    //         // If manual spawn fails, try the original restart method as a last resort
+    //         if let Some(app_handle) = handle::Handle::global().app_handle() {
+    //             app_handle.restart();
+    //         } else {
+    //             exit(1);
+    //         }
+    //     }
+    // }
 }
 
 fn after_change_clash_mode() {
     AsyncHandler::spawn(move || async {
-        match IpcManager::global().get_connections().await {
+        let mihomo = handle::Handle::mihomo().await;
+        match mihomo.get_connections().await {
             Ok(connections) => {
-                if let Some(connections_array) = connections["connections"].as_array() {
+                if let Some(connections_array) = connections.connections {
                     for connection in connections_array {
-                        if let Some(id) = connection["id"].as_str() {
-                            let _ = IpcManager::global().delete_connection(id).await;
-                        }
+                        let _ = mihomo.close_connection(&connection.id).await;
                     }
                 }
             }
@@ -103,7 +102,11 @@ pub async fn change_clash_mode(mode: String) {
         "mode": mode
     });
     log::debug!(target: "app", "change clash mode to {mode}");
-    match IpcManager::global().patch_configs(json_value).await {
+    match handle::Handle::mihomo()
+        .await
+        .patch_base_config(&json_value)
+        .await
+    {
         Ok(_) => {
             // 更新订阅
             Config::clash().await.data_mut().patch_config(mapping);
@@ -113,11 +116,7 @@ pub async fn change_clash_mode(mode: String) {
             if clash_data.save_config().await.is_ok() {
                 handle::Handle::refresh_clash();
                 logging_error!(Type::Tray, true, tray::Tray::global().update_menu().await);
-                logging_error!(
-                    Type::Tray,
-                    true,
-                    tray::Tray::global().update_icon(None).await
-                );
+                logging_error!(Type::Tray, true, tray::Tray::global().update_icon().await);
             }
 
             let is_auto_close_connection = Config::verge()

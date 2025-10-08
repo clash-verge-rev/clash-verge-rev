@@ -1,4 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
+import dayjs from "dayjs";
+import { getProxies, getProxyProviders } from "tauri-plugin-mihomo-api";
 
 import { showNotice } from "@/services/noticeService";
 
@@ -107,64 +109,11 @@ export async function patchClashMode(payload: string) {
   return invoke<void>("patch_clash_mode", { payload });
 }
 
-// New IPC-based API functions to replace HTTP API calls
-export async function getVersion() {
-  return invoke<{
-    premium: boolean;
-    meta?: boolean;
-    version: string;
-  }>("get_clash_version");
-}
-
-export async function getClashConfig() {
-  return invoke<IConfigData>("get_clash_config");
-}
-
-export async function forceRefreshClashConfig() {
-  return invoke<IConfigData>("force_refresh_clash_config");
-}
-
-export async function updateGeoData() {
-  return invoke<void>("update_geo_data");
-}
-
-export async function upgradeCore() {
-  return invoke<void>("upgrade_clash_core");
-}
-
-export async function getRules() {
-  const response = await invoke<{ rules: IRuleItem[] }>("get_clash_rules");
-  return response?.rules || [];
-}
-
-export async function getProxyDelay(
-  name: string,
-  url?: string,
-  timeout?: number,
-) {
-  return invoke<{ delay: number }>("clash_api_get_proxy_delay", {
-    name,
-    url,
-    timeout: timeout || 10000,
-  });
-}
-
-export async function updateProxy(group: string, proxy: string) {
-  // const start = Date.now();
-  await invoke<void>("update_proxy_choice", { group, proxy });
-  // const duration = Date.now() - start;
-  // console.log(`[API] updateProxy 耗时: ${duration}ms`);
-}
-
 export async function syncTrayProxySelection() {
   return invoke<void>("sync_tray_proxy_selection");
 }
 
-export async function updateProxyAndSync(group: string, proxy: string) {
-  return invoke<void>("update_proxy_and_sync", { group, proxy });
-}
-
-export async function getProxies(): Promise<{
+export async function calcuProxies(): Promise<{
   global: IProxyGroupItem;
   direct: IProxyItem;
   groups: IProxyGroupItem[];
@@ -172,19 +121,17 @@ export async function getProxies(): Promise<{
   proxies: IProxyItem[];
 }> {
   const [proxyResponse, providerResponse] = await Promise.all([
-    invoke<{ proxies: Record<string, IProxyItem> }>("get_proxies"),
-    invoke<{ providers: Record<string, IProxyProviderItem> }>(
-      "get_providers_proxies",
-    ),
+    getProxies(),
+    calcuProxyProviders(),
   ]);
 
   const proxyRecord = proxyResponse.proxies;
-  const providerRecord = providerResponse.providers || {};
+  const providerRecord = providerResponse;
 
   // provider name map
   const providerMap = Object.fromEntries(
     Object.entries(providerRecord).flatMap(([provider, item]) =>
-      item.proxies.map((p) => [p.name, { ...p, provider }]),
+      item!.proxies.map((p) => [p.name, { ...p, provider }]),
     ),
   );
 
@@ -209,7 +156,7 @@ export async function getProxies(): Promise<{
   let groups: IProxyGroupItem[] = Object.values(proxyRecord).reduce<
     IProxyGroupItem[]
   >((acc, each) => {
-    if (each.name !== "GLOBAL" && each.all) {
+    if (each?.name !== "GLOBAL" && each?.all) {
       acc.push({
         ...each,
         all: each.all!.map((item) => generateItem(item)),
@@ -242,209 +189,57 @@ export async function getProxies(): Promise<{
 
   const proxies = [direct, reject].concat(
     Object.values(proxyRecord).filter(
-      (p) => !p.all?.length && p.name !== "DIRECT" && p.name !== "REJECT",
+      (p) => !p?.all?.length && p?.name !== "DIRECT" && p?.name !== "REJECT",
     ),
   );
 
-  const _global: IProxyGroupItem = {
+  const _global = {
     ...global,
     all: global?.all?.map((item) => generateItem(item)) || [],
   };
 
-  return { global: _global, direct, groups, records: proxyRecord, proxies };
+  return {
+    global: _global as IProxyGroupItem,
+    direct: direct as IProxyItem,
+    groups,
+    records: proxyRecord as Record<string, IProxyItem>,
+    proxies: (proxies as IProxyItem[]) ?? [],
+  };
 }
 
-export async function getProxyProviders() {
-  const response = await invoke<{
-    providers: Record<string, IProxyProviderItem>;
-  }>("get_providers_proxies");
-  if (!response || !response.providers) {
-    console.warn(
-      "getProxyProviders: Invalid response structure, returning empty object",
-    );
-    return {};
-  }
-
-  const providers = response.providers as Record<string, IProxyProviderItem>;
-
+export async function calcuProxyProviders() {
+  const providers = await getProxyProviders();
   return Object.fromEntries(
-    Object.entries(providers).filter(([, item]) => {
-      const type = item.vehicleType.toLowerCase();
-      return type === "http" || type === "file";
-    }),
+    Object.entries(providers.providers)
+      .sort()
+      .filter(
+        ([_, item]) =>
+          item?.vehicleType === "HTTP" || item?.vehicleType === "File",
+      ),
   );
-}
-
-export async function getRuleProviders() {
-  const response = await invoke<{
-    providers: Record<string, IRuleProviderItem>;
-  }>("get_rule_providers");
-
-  const providers = (response.providers || {}) as Record<
-    string,
-    IRuleProviderItem
-  >;
-
-  return Object.fromEntries(
-    Object.entries(providers).filter(([, item]) => {
-      const type = item.vehicleType.toLowerCase();
-      return type === "http" || type === "file";
-    }),
-  );
-}
-
-export async function providerHealthCheck(name: string) {
-  return invoke<void>("proxy_provider_health_check", { name });
-}
-
-export async function proxyProviderUpdate(name: string) {
-  return invoke<void>("update_proxy_provider", { name });
-}
-
-export async function ruleProviderUpdate(name: string) {
-  return invoke<void>("update_rule_provider", { name });
-}
-
-export async function getConnections() {
-  return invoke<IConnections>("get_clash_connections");
-}
-
-export async function deleteConnection(id: string) {
-  return invoke<void>("delete_clash_connection", { id });
-}
-
-export async function closeAllConnections() {
-  return invoke<void>("close_all_clash_connections");
-}
-
-export async function getGroupProxyDelays(
-  groupName: string,
-  url?: string,
-  timeout?: number,
-) {
-  return invoke<Record<string, number>>("get_group_proxy_delays", {
-    groupName,
-    url,
-    timeout,
-  });
-}
-
-export async function getTrafficData() {
-  // console.log("[Traffic][Service] 开始调用 get_traffic_data");
-  const result = await invoke<ITrafficItem>("get_traffic_data");
-  // console.log("[Traffic][Service] get_traffic_data 返回结果:", result);
-  return result;
-}
-
-export async function getMemoryData() {
-  console.log("[Memory][Service] 开始调用 get_memory_data");
-  const result = await invoke<{
-    inuse: number;
-    oslimit?: number;
-    usage_percent?: number;
-    last_updated?: number;
-  }>("get_memory_data");
-  // console.debug("[Memory][Service] get_memory_data 返回结果:", result);
-  return result;
-}
-
-export async function getFormattedTrafficData() {
-  console.log("[Traffic][Service] 开始调用 get_formatted_traffic_data");
-  const result = await invoke<IFormattedTrafficData>(
-    "get_formatted_traffic_data",
-  );
-  // console.debug(
-  //   "[Traffic][Service] get_formatted_traffic_data 返回结果:",
-  //   result,
-  // );
-  return result;
-}
-
-export async function getFormattedMemoryData() {
-  console.log("[Memory][Service] 开始调用 get_formatted_memory_data");
-  const result = await invoke<IFormattedMemoryData>(
-    "get_formatted_memory_data",
-  );
-  // console.debug("[Memory][Service] get_formatted_memory_data 返回结果:", result);
-  return result;
-}
-
-export async function getSystemMonitorOverview() {
-  console.log("[Monitor][Service] 开始调用 get_system_monitor_overview");
-  const result = await invoke<ISystemMonitorOverview>(
-    "get_system_monitor_overview",
-  );
-  // console.debug(
-  //   "[Monitor][Service] get_system_monitor_overview 返回结果:",
-  //   result,
-  // );
-  return result;
-}
-
-// 带数据验证的安全版本
-export async function getSystemMonitorOverviewSafe() {
-  // console.log(
-  //   "[Monitor][Service] 开始调用安全版本 get_system_monitor_overview",
-  // );
-  try {
-    const result = await invoke<any>("get_system_monitor_overview");
-    // console.log("[Monitor][Service] 原始数据:", result);
-
-    // 导入验证器（动态导入避免循环依赖）
-    const { systemMonitorValidator } = await import("@/utils/data-validator");
-
-    if (systemMonitorValidator.validate(result)) {
-      // console.log("[Monitor][Service] 数据验证通过");
-      return result as ISystemMonitorOverview;
-    } else {
-      // console.warn("[Monitor][Service] 数据验证失败，使用清理后的数据");
-      return systemMonitorValidator.sanitize(result);
-    }
-  } catch {
-    // console.error("[Monitor][Service] API调用失败:", error);
-    // 返回安全的默认值
-    const { systemMonitorValidator } = await import("@/utils/data-validator");
-    return systemMonitorValidator.sanitize(null);
-  }
-}
-
-export async function startTrafficService() {
-  console.log("[Traffic][Service] 开始调用 start_traffic_service");
-  try {
-    const result = await invoke<void>("start_traffic_service");
-    console.log("[Traffic][Service] start_traffic_service 调用成功");
-    return result;
-  } catch (error) {
-    console.error("[Traffic][Service] start_traffic_service 调用失败:", error);
-    throw error;
-  }
-}
-
-export async function stopTrafficService() {
-  console.log("[Traffic][Service] 开始调用 stop_traffic_service");
-  const result = await invoke<void>("stop_traffic_service");
-  console.log("[Traffic][Service] stop_traffic_service 调用成功");
-  return result;
-}
-
-export async function isDebugEnabled() {
-  return invoke<boolean>("is_clash_debug_enabled");
-}
-
-export async function gc() {
-  return invoke<void>("clash_gc");
 }
 
 export async function getClashLogs() {
-  return invoke<any>("get_clash_logs");
-}
+  const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/;
+  const newRegex = /(.+?)\s+(.+?)\s+(.+)/;
+  const logs = await invoke<string[]>("get_clash_logs");
 
-export async function startLogsMonitoring(level?: string) {
-  return invoke<void>("start_logs_monitoring", { level });
-}
+  return logs.reduce<ILogItem[]>((acc, log) => {
+    const result = log.match(regex);
+    if (result) {
+      const [_, _time, type, payload] = result;
+      const time = dayjs(_time).format("MM-DD HH:mm:ss");
+      acc.push({ time, type, payload });
+      return acc;
+    }
 
-export async function stopLogsMonitoring() {
-  return invoke<void>("stop_logs_monitoring");
+    const result2 = log.match(newRegex);
+    if (result2) {
+      const [_, time, type, payload] = result2;
+      acc.push({ time, type, payload });
+    }
+    return acc;
+  }, []);
 }
 
 export async function clearLogs() {
@@ -574,16 +369,6 @@ export async function cmdGetProxyDelay(
     // 返回一个有效的结果对象，但标记为错误
     return { delay: 1e6 };
   }
-}
-
-/// 用于profile切换等场景
-export async function forceRefreshProxies() {
-  const start = Date.now();
-  console.log("[API] 强制刷新代理缓存");
-  const result = await invoke<any>("force_refresh_proxies");
-  const duration = Date.now() - start;
-  console.log(`[API] 代理缓存刷新完成，耗时: ${duration}ms`);
-  return result;
 }
 
 export async function cmdTestDelay(url: string) {

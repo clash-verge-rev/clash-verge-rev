@@ -1,11 +1,11 @@
 use crate::AsyncHandler;
+use crate::core::logger::Logger;
 use crate::{
     config::*,
     core::{
         handle,
         service::{self, SERVICE_MANAGER, ServiceStatus},
     },
-    ipc::IpcManager,
     logging, logging_error, singleton_lazy,
     utils::{
         dirs,
@@ -24,6 +24,10 @@ use std::{
     sync::Arc,
 };
 use tauri_plugin_shell::{ShellExt, process::CommandChild};
+
+// TODO:
+// - 重构，提升模式切换速度
+// - 内核启动添加启动 IPC 启动参数, `-ext-ctl-unix` / `-ext-ctl-pipe`, 运行时配置需要删除相关配置项
 
 #[derive(Debug)]
 pub struct CoreManager {
@@ -250,11 +254,7 @@ impl CoreManager {
         let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
         logging!(info, Type::Config, true, "使用内核: {}", clash_core);
 
-        let app_handle = handle::Handle::global().app_handle().ok_or_else(|| {
-            let msg = "Failed to get app handle";
-            logging!(error, Type::Core, true, "{}", msg);
-            anyhow::anyhow!(msg)
-        })?;
+        let app_handle = handle::Handle::app_handle();
         let app_dir = dirs::app_home_dir()?;
         let app_dir_str = dirs::path_to_str(&app_dir)?;
         logging!(info, Type::Config, true, "验证目录: {}", app_dir_str);
@@ -414,7 +414,11 @@ impl CoreManager {
             logging_error!(Type::Core, true, "{}", msg);
             msg
         });
-        match IpcManager::global().put_configs_force(run_path_str?).await {
+        match handle::Handle::mihomo()
+            .await
+            .reload_config(true, run_path_str?)
+            .await
+        {
             Ok(_) => {
                 Config::runtime().await.apply();
                 logging!(info, Type::Core, true, "Configuration updated successfully");
@@ -733,9 +737,7 @@ impl CoreManager {
         logging!(info, Type::Core, true, "Running core by sidecar");
 
         let config_file = &Config::generate_file(ConfigType::Run).await?;
-        let app_handle = handle::Handle::global()
-            .app_handle()
-            .ok_or(anyhow::anyhow!("failed to get app handle"))?;
+        let app_handle = handle::Handle::app_handle();
         let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
@@ -774,12 +776,16 @@ impl CoreManager {
             while let Some(event) = rx.recv().await {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
-                        if let Err(e) = writeln!(log_file, "{}", String::from_utf8_lossy(&line)) {
+                        let line = String::from_utf8_lossy(&line);
+                        Logger::global().append_log(line.to_string());
+                        if let Err(e) = writeln!(log_file, "{}", line) {
                             eprintln!("[Sidecar] write stdout failed: {e}");
                         }
                     }
                     tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let _ = writeln!(log_file, "[stderr] {}", String::from_utf8_lossy(&line));
+                        let line = String::from_utf8_lossy(&line);
+                        Logger::global().append_log(line.to_string());
+                        let _ = writeln!(log_file, "[stderr] {}", line);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let _ = writeln!(log_file, "[terminated] {:?}", term);
@@ -900,6 +906,7 @@ impl CoreManager {
 
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
+        Logger::global().clear_logs();
         match self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar(),

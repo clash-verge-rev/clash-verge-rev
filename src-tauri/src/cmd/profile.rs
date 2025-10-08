@@ -503,11 +503,11 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             handle::Handle::refresh_clash();
 
             // 强制刷新代理缓存，确保profile切换后立即获取最新节点数据
-            crate::process::AsyncHandler::spawn(|| async move {
-                if let Err(e) = super::proxy::force_refresh_proxies().await {
-                    log::warn!(target: "app", "强制刷新代理缓存失败: {e}");
-                }
-            });
+            // crate::process::AsyncHandler::spawn(|| async move {
+            //     if let Err(e) = super::proxy::force_refresh_proxies().await {
+            //         log::warn!(target: "app", "强制刷新代理缓存失败: {e}");
+            //     }
+            // });
 
             if let Err(e) = Tray::global().update_tooltip().await {
                 log::warn!(target: "app", "异步更新托盘提示失败: {e}");

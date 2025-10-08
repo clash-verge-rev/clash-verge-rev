@@ -1,22 +1,28 @@
 import { createContext, use } from "react";
+import {
+  BaseConfig,
+  ProxyProvider,
+  Rule,
+  RuleProvider,
+} from "tauri-plugin-mihomo-api";
 
 export interface AppDataContextType {
   proxies: any;
-  clashConfig: any;
-  rules: any[];
+  clashConfig: BaseConfig;
+  rules: Rule[];
   sysproxy: any;
   runningMode?: string;
   uptime: number;
-  proxyProviders: any;
-  ruleProviders: any;
-  connections: {
-    data: ConnectionWithSpeed[];
-    count: number;
-    uploadTotal: number;
-    downloadTotal: number;
-  };
-  traffic: { up: number; down: number };
-  memory: { inuse: number };
+  proxyProviders: Record<string, ProxyProvider>;
+  ruleProviders: Record<string, RuleProvider>;
+  // connections: {
+  //   data: ConnectionWithSpeed[];
+  //   count: number;
+  //   uploadTotal: number;
+  //   downloadTotal: number;
+  // };
+  // traffic: { up: number; down: number };
+  // memory: { inuse: number };
   systemProxyAddress: string;
 
   refreshProxy: () => Promise<any>;

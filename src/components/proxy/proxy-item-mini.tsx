@@ -37,12 +37,12 @@ export const ProxyItemMini = (props: Props) => {
     return () => {
       delayManager.removeListener(proxy.name, group.name);
     };
-  }, [proxy.name, group.name]);
+  }, [isPreset, proxy.name, group.name]);
 
   useEffect(() => {
     if (!proxy) return;
     setDelay(delayManager.getDelayFix(proxy, group.name));
-  }, [proxy]);
+  }, [proxy, group.name]);
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);
@@ -200,7 +200,7 @@ export const ProxyItemMini = (props: Props) => {
           </Widget>
         )}
 
-        {delay > 0 && (
+        {delay >= 0 && (
           // 显示延迟
           <Widget
             className="the-delay"
@@ -220,7 +220,7 @@ export const ProxyItemMini = (props: Props) => {
             {delayManager.formatDelay(delay, timeout)}
           </Widget>
         )}
-        {delay !== -2 && delay <= 0 && selected && (
+        {proxy.type !== "Direct" && delay !== -2 && delay < 0 && selected && (
           // 展示已选择的icon
           <CheckCircleOutlineRounded
             className="the-icon"
