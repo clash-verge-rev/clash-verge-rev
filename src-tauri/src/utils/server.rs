@@ -100,7 +100,7 @@ pub fn embed_server() {
             });
 
         let commands = visible.or(scheme).or(pac);
-        tauri::async_runtime::spawn(async move {
+        AsyncHandler::spawn(move || async move {
             warp::serve(commands)
                 .bind(([127, 0, 0, 1], port))
                 .await
