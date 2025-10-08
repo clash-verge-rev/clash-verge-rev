@@ -72,7 +72,7 @@
     "react-i18next": "16.0.0",
     "react-markdown": "10.1.0",
     "react-monaco-editor": "0.59.0",
-    "react-router-dom": "7.9.3",
+    "react-router-dom": "7.9.4",
     "react-virtuoso": "^4.14.1",
     "swr": "^2.3.6",
     "types-pac": "^1.0.3",
