@@ -3,6 +3,7 @@
   "version": "2.4.3",
   "license": "GPL-3.0-only",
   "scripts": {
+    "prepare": "husky || true",
     "dev": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
     "dev:diff": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
     "dev:trace": "cross-env RUST_BACKTRACE=full RUSTFLAGS=\"--cfg tokio_unstable\" tauri dev -f verge-dev tokio-trace",
