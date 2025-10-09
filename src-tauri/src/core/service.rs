@@ -1,10 +1,10 @@
 use crate::{
     config::Config,
-    core::service_ipc::{IpcCommand, send_ipc_request},
     logging, logging_error,
-    utils::{dirs, logging::Type},
+    utils::{dirs, init::service_writer_config, logging::Type},
 };
 use anyhow::{Context, Result, bail};
+use clash_verge_service_ipc::CoreConfig;
 use once_cell::sync::Lazy;
 use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
 use tokio::sync::Mutex;
@@ -35,7 +35,7 @@ async fn uninstall_service() -> Result<()> {
     use std::os::windows::process::CommandExt;
 
     let binary_path = dirs::service_path()?;
-    let uninstall_path = binary_path.with_file_name("uninstall-service.exe");
+    let uninstall_path = binary_path.with_file_name("clash-verge-service-uninstall.exe");
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -70,7 +70,7 @@ async fn install_service() -> Result<()> {
     use std::os::windows::process::CommandExt;
 
     let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("install-service.exe");
+    let install_path = binary_path.with_file_name("clash-verge-service-install.exe");
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -125,7 +125,8 @@ async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
     use users::get_effective_uid;
 
-    let uninstall_path = tauri::utils::platform::current_exe()?.with_file_name("uninstall-service");
+    let uninstall_path =
+        tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall");
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -166,7 +167,8 @@ async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
     use users::get_effective_uid;
 
-    let install_path = tauri::utils::platform::current_exe()?.with_file_name("install-service");
+    let install_path =
+        tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install");
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -232,7 +234,7 @@ async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, true, "uninstall service");
 
     let binary_path = dirs::service_path()?;
-    let uninstall_path = binary_path.with_file_name("uninstall-service");
+    let uninstall_path = binary_path.with_file_name("clash-verge-service-uninstall");
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -268,7 +270,7 @@ async fn install_service() -> Result<()> {
     logging!(info, Type::Service, true, "install service");
 
     let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("install-service");
+    let install_path = binary_path.with_file_name("clash-verge-service-install");
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -334,21 +336,18 @@ pub async fn force_reinstall_service() -> Result<()> {
 async fn check_service_version() -> Result<String> {
     let version_arc: Result<String> = {
         logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
-        let payload = serde_json::json!({});
-        let response = send_ipc_request(IpcCommand::GetVersion, payload).await?;
+        let response = clash_verge_service_ipc::get_version()
+            .await
+            .context("无法连接到Clash Verge Service")?;
 
-        let data = response
-            .data
-            .ok_or_else(|| anyhow::anyhow!("服务版本响应中没有数据"))?;
-
-        if let Some(nested_data) = data.get("data")
-            && let Some(version) = nested_data.get("version").and_then(|v| v.as_str())
-        {
-            // logging!(info, Type::Service, true, "获取到服务版本: {}", version);
-            Ok(version.to_string())
-        } else {
-            Ok("unknown".to_string())
+        if response.code > 0 {
+            let err_msg = response.message;
+            logging!(error, Type::Service, true, "获取服务版本失败: {}", err_msg);
+            return Err(anyhow::anyhow!(err_msg));
         }
+
+        let version = response.data.unwrap_or("unknown".to_string());
+        Ok(version)
     };
 
     match version_arc.as_ref() {
@@ -376,33 +375,23 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let bin_path = current_exe()?.with_file_name(format!("{clash_core}{bin_ext}"));
 
-    let payload = serde_json::json!({
-        "core_type": clash_core,
-        "bin_path": dirs::path_to_str(&bin_path)?,
-        "config_dir": dirs::path_to_str(&dirs::app_home_dir()?)?,
-        "config_file": dirs::path_to_str(config_file)?,
-        // TODO 迁移 Service日志后删除
-        "log_file": dirs::path_to_str(&dirs::service_log_file()?)?,
-    });
+    let payload = &clash_verge_service_ipc::ClashConfig {
+        core_config: CoreConfig {
+            config_path: dirs::path_to_str(config_file)?.to_string(),
+            core_path: dirs::path_to_str(&bin_path)?.to_string(),
+            config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.to_string(),
+        },
+        log_config: service_writer_config().await?,
+    };
 
-    let response = send_ipc_request(IpcCommand::StartClash, payload)
+    let response = clash_verge_service_ipc::start_clash(&payload)
         .await
         .context("无法连接到Clash Verge Service")?;
 
-    if !response.success {
-        let err_msg = response.error.unwrap_or_else(|| "启动核心失败".to_string());
+    if response.code > 0 {
+        let err_msg = response.message;
+        logging!(error, Type::Service, true, "启动核心失败: {}", err_msg);
         bail!(err_msg);
-    }
-
-    if let Some(data) = &response.data
-        && let Some(code) = data.get("code").and_then(|c| c.as_u64())
-        && code != 0
-    {
-        let msg = data
-            .get("msg")
-            .and_then(|m| m.as_str())
-            .unwrap_or("未知错误");
-        bail!("启动核心失败: {}", msg);
     }
 
     logging!(info, Type::Service, true, "服务成功启动核心");
@@ -425,37 +414,14 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 pub(super) async fn stop_core_by_service() -> Result<()> {
     logging!(info, Type::Service, true, "通过服务停止核心 (IPC)");
 
-    let payload = serde_json::json!({});
-    let response = send_ipc_request(IpcCommand::StopClash, payload)
+    let response = clash_verge_service_ipc::stop_clash()
         .await
         .context("无法连接到Clash Verge Service")?;
 
-    if !response.success {
-        let err_msg = response.error.unwrap_or_else(|| "停止核心失败".to_string());
+    if response.code > 0 {
+        let err_msg = response.message;
         logging!(error, Type::Service, true, "停止核心失败: {}", err_msg);
         bail!(err_msg);
-    }
-
-    if let Some(data) = &response.data
-        && let Some(code) = data.get("code")
-    {
-        let code_value = code.as_u64().unwrap_or(1);
-        let msg = data
-            .get("msg")
-            .and_then(|m| m.as_str())
-            .unwrap_or("未知错误");
-
-        if code_value != 0 {
-            logging!(
-                error,
-                Type::Service,
-                true,
-                "停止核心返回错误: code={}, msg={}",
-                code_value,
-                msg
-            );
-            bail!("停止核心失败: {}", msg);
-        }
     }
 
     logging!(info, Type::Service, true, "服务成功停止核心");
