@@ -4,7 +4,13 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useRoutes } from "react-router-dom";
 import { SWRConfig, mutate } from "swr";
@@ -13,6 +19,7 @@ import iconDark from "@/assets/image/icon_dark.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import { NoticeManager } from "@/components/base/NoticeManager";
+import { WindowControls } from "@/components/controller/window-controller";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
@@ -35,9 +42,6 @@ import { routers } from "./_routers";
 
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-
-import { WindowControls } from "@/components/controller/window-controller";
-// 删除重复导入
 
 const appWindow = getCurrentWebviewWindow();
 export const portableFlag = false;
@@ -160,15 +164,12 @@ const Layout = () => {
   useConnectionData();
   useLogData();
   const mode = useThemeMode();
-  const isDark = mode === "light" ? false : true;
+  const isDark = mode !== "light";
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
   const { verge } = useVerge();
-  const { clashInfo } = useClashInfo();
-  const [clashLog] = useClashLog();
-  const enableLog = clashLog.enable;
-  const logLevel = clashLog.logLevel;
-  // const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
+  useClashInfo();
+  useClashLog();
   const { language, start_page } = verge ?? {};
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
@@ -176,7 +177,7 @@ const Layout = () => {
   const routersEles = useRoutes(routers);
   const { addListener } = useListen();
   const initRef = useRef(false);
-  const [themeReady, setThemeReady] = useState(false);
+  const [themeReady, activateTheme] = useReducer(() => true, false);
 
   const windowControls = useRef<any>(null);
   const { decorated } = useWindowDecorations();
@@ -187,6 +188,8 @@ const Layout = () => {
       decorated,
       "| showing:",
       !decorated,
+      "| theme mode:",
+      mode,
     );
     if (!decorated) {
       return (
@@ -196,22 +199,22 @@ const Layout = () => {
       );
     }
     return null;
-  }, [decorated]);
+  }, [decorated, mode]);
 
   useEffect(() => {
-    setThemeReady(true);
+    activateTheme();
   }, [theme]);
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {
       const [status, msg] = payload;
-      setTimeout(() => {
+      queueMicrotask(() => {
         try {
           handleNoticeMessage(status, msg, t, navigate);
         } catch (error) {
           console.error("[Layout] 处理通知消息失败:", error);
         }
-      }, 0);
+      });
     },
     [t, navigate],
   );
@@ -260,10 +263,10 @@ const Layout = () => {
       };
     };
 
-    const cleanupWindow = setupWindowListeners();
+    const cleanupWindowPromise = setupWindowListeners();
 
     return () => {
-      setTimeout(() => {
+      queueMicrotask(() => {
         listeners.forEach((listener) => {
           if (typeof listener.then === "function") {
             listener
@@ -280,7 +283,7 @@ const Layout = () => {
           }
         });
 
-        cleanupWindow
+        cleanupWindowPromise
           .then((cleanup) => {
             try {
               cleanup();
@@ -291,9 +294,9 @@ const Layout = () => {
           .catch((error) => {
             console.error("[Layout] 获取cleanup函数失败:", error);
           });
-      }, 0);
+      });
     };
-  }, [handleNotice]);
+  }, [addListener, handleNotice]);
 
   useEffect(() => {
     if (initRef.current) {
@@ -302,6 +305,16 @@ const Layout = () => {
     }
     console.log("[Layout] 开始执行初始化代码");
     initRef.current = true;
+
+    const timers = new Set<number>();
+    const scheduleTimeout = (callback: () => void, delay = 0) => {
+      const timeoutId = window.setTimeout(() => {
+        timers.delete(timeoutId);
+        callback();
+      }, delay);
+      timers.add(timeoutId);
+      return timeoutId;
+    };
 
     let isInitialized = false;
     let initializationAttempts = 0;
@@ -326,7 +339,7 @@ const Layout = () => {
       if (initialOverlay) {
         console.log("[Layout] 移除加载指示器");
         initialOverlay.style.opacity = "0";
-        setTimeout(() => {
+        scheduleTimeout(() => {
           try {
             initialOverlay.remove();
           } catch {
@@ -357,13 +370,13 @@ const Layout = () => {
               console.log("[Layout] React组件已挂载");
               resolve();
             } else {
-              setTimeout(checkReactMount, 50);
+              scheduleTimeout(checkReactMount, 50);
             }
           };
 
           checkReactMount();
 
-          setTimeout(() => {
+          scheduleTimeout(() => {
             console.log("[Layout] React组件挂载检查超时，继续执行");
             resolve();
           }, 2000);
@@ -391,7 +404,7 @@ const Layout = () => {
           console.log(
             `[Layout] 将在500ms后进行第 ${initializationAttempts + 1} 次重试`,
           );
-          setTimeout(performInitialization, 500);
+          scheduleTimeout(performInitialization, 500);
         } else {
           console.error("[Layout] 所有初始化尝试都失败，执行紧急初始化");
 
@@ -408,15 +421,6 @@ const Layout = () => {
 
     let hasEventTriggered = false;
 
-    const setupEventListener = async () => {
-      try {
-        console.log("[Layout] 开始监听启动完成事件");
-      } catch (err) {
-        console.error("[Layout] 监听启动完成事件失败:", err);
-        return () => { };
-      }
-    };
-
     const checkImmediateInitialization = async () => {
       try {
         console.log("[Layout] 检查后端是否已就绪");
@@ -432,7 +436,7 @@ const Layout = () => {
       }
     };
 
-    const backupInitialization = setTimeout(() => {
+    const backupInitialization = scheduleTimeout(() => {
       if (!hasEventTriggered && !isInitialized) {
         console.warn("[Layout] 备用初始化触发：1.5秒内未开始初始化");
         hasEventTriggered = true;
@@ -440,20 +444,28 @@ const Layout = () => {
       }
     }, 1500);
 
-    const emergencyInitialization = setTimeout(() => {
+    const emergencyInitialization = scheduleTimeout(() => {
       if (!isInitialized) {
         console.error("[Layout] 紧急初始化触发：5秒内未完成初始化");
         removeLoadingOverlay();
-        notifyBackend("UI就绪").catch(() => { });
+        notifyBackend("UI就绪").catch(() => {});
         isInitialized = true;
       }
     }, 5000);
 
-    setTimeout(checkImmediateInitialization, 100);
+    const immediateInitialization = scheduleTimeout(
+      checkImmediateInitialization,
+      100,
+    );
 
     return () => {
-      clearTimeout(backupInitialization);
-      clearTimeout(emergencyInitialization);
+      window.clearTimeout(backupInitialization);
+      window.clearTimeout(emergencyInitialization);
+      window.clearTimeout(immediateInitialization);
+      timers.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      timers.clear();
     };
   }, []);
 
@@ -469,7 +481,7 @@ const Layout = () => {
     if (start_page) {
       navigate(start_page, { replace: true });
     }
-  }, [start_page]);
+  }, [navigate, start_page]);
 
   if (!themeReady) {
     return (
@@ -543,27 +555,27 @@ const Layout = () => {
             borderTopLeftRadius: "0px",
             borderTopRightRadius: "0px",
           }}
-          onContextMenu={(e) => {
+          onContextMenu={() => {
             // TODO: 禁止右键菜单
             // if (
             //   OS === "windows" &&
             //   !["input", "textarea"].includes(
-            //     e.currentTarget.tagName.toLowerCase(),
+            //     event.currentTarget.tagName.toLowerCase(),
             //   ) &&
-            //   !e.currentTarget.isContentEditable
+            //   !event.currentTarget.isContentEditable
             // ) {
-            //   e.preventDefault();
+            //   event.preventDefault();
             // }
           }}
           sx={[
             ({ palette }) => ({ bgcolor: palette.background.paper }),
             OS === "linux"
               ? {
-                borderRadius: "8px",
-                border: "1px solid var(--divider-color)",
-                width: "100vw",
-                height: "100vh",
-              }
+                  borderRadius: "8px",
+                  border: "1px solid var(--divider-color)",
+                  width: "100vw",
+                  height: "100vh",
+                }
               : {},
           ]}
         >
@@ -617,7 +629,11 @@ const Layout = () => {
             <div className="layout-content__right">
               <div className="the-bar"></div>
               <div className="the-content">
-                {React.cloneElement(routersEles, { key: location.pathname })}
+                {routersEles ? (
+                  <React.Fragment key={location.pathname}>
+                    {routersEles}
+                  </React.Fragment>
+                ) : null}
               </div>
             </div>
           </div>
