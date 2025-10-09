@@ -52,11 +52,13 @@ export const ProxyHead = ({
   }, []);
 
   const { verge } = useVerge();
-  const default_latency_test = verge!.default_latency_test!;
+  const defaultLatencyUrl =
+    verge?.default_latency_test?.trim() ||
+    "https://cp.cloudflare.com/generate_204";
 
   useEffect(() => {
-    delayManager.setUrl(groupName, testUrl || url || default_latency_test);
-  }, [groupName, testUrl, default_latency_test, url]);
+    delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl);
+  }, [groupName, testUrl, defaultLatencyUrl, url]);
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ...sx }}>
