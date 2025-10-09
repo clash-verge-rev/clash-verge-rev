@@ -193,8 +193,6 @@ const Layout = () => {
       decorated,
       "| showing:",
       !decorated,
-      "| theme mode:",
-      mode,
     );
     if (!decorated) {
       return (
@@ -204,7 +202,7 @@ const Layout = () => {
       );
     }
     return null;
-  }, [decorated, mode]);
+  }, [decorated]);
 
   useEffect(() => {
     setThemeReady(true);
