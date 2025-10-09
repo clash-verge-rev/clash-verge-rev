@@ -57,6 +57,28 @@ impl fmt::Display for RunningMode {
 
 use crate::config::IVerge;
 
+fn write_sidecar_log(
+    writer: &dyn LogWriter,
+    now: &mut DeferredNow,
+    level: log::Level,
+    message: String,
+) -> String {
+    let boxed = message.into_boxed_str();
+    let leaked = Box::leak(boxed);
+    let leaked_ptr = leaked as *mut str;
+    let args = format_args!("{}", leaked);
+    {
+        let record = Record::builder()
+            .args(args)
+            .level(level)
+            .target("sidecar")
+            .build();
+        let _ = writer.write(now, &record);
+    }
+    // SAFETY: `leaked` originated from `Box::leak` above; reboxing frees it immediately after use.
+    unsafe { String::from(Box::from_raw(leaked_ptr)) }
+}
+
 impl CoreManager {
     /// 检查文件是否为脚本文件
     fn is_script_file(&self, path: &str) -> Result<bool> {
@@ -771,48 +793,26 @@ impl CoreManager {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
                         let mut now = DeferredNow::default();
-                        let line_str = String::from_utf8_lossy(&line);
-                        let arg = format_args!("{}", line_str);
-                        let record = Record::builder()
-                            .args(arg)
-                            .level(log::Level::Error)
-                            .target("sidecar")
-                            .build();
-                        let _ = w.write(&mut now, &record);
-
-                        let line = String::from_utf8_lossy(&line);
-                        Logger::global().append_log(line.to_string());
+                        let message = String::from_utf8_lossy(&line).into_owned();
+                        let message = write_sidecar_log(&*w, &mut now, log::Level::Error, message);
+                        Logger::global().append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
-                        let line_str = String::from_utf8_lossy(&line);
-                        let arg = format_args!("{}", line_str);
-                        let record = Record::builder()
-                            .args(arg)
-                            .level(log::Level::Error)
-                            .target("sidecar")
-                            .build();
-                        let _ = w.write(&mut now, &record);
-
-                        let line = String::from_utf8_lossy(&line);
-                        Logger::global().append_log(line.to_string());
+                        let message = String::from_utf8_lossy(&line).into_owned();
+                        let message = write_sidecar_log(&*w, &mut now, log::Level::Error, message);
+                        Logger::global().append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let mut now = DeferredNow::default();
-                        let output_str = if let Some(code) = term.code {
+                        let message = if let Some(code) = term.code {
                             format!("Process terminated with code: {}", code)
                         } else if let Some(signal) = term.signal {
                             format!("Process terminated by signal: {}", signal)
                         } else {
                             "Process terminated".to_string()
                         };
-                        let arg = format_args!("{}", output_str);
-                        let record = Record::builder()
-                            .args(arg)
-                            .level(log::Level::Info)
-                            .target("sidecar")
-                            .build();
-                        let _ = w.write(&mut now, &record);
+                        write_sidecar_log(&*w, &mut now, log::Level::Info, message);
                         break;
                     }
                     _ => {}
