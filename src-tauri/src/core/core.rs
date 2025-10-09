@@ -64,16 +64,17 @@ fn write_sidecar_log(
     message: String,
 ) -> String {
     let boxed = message.into_boxed_str();
-    let leaked = Box::leak(boxed);
+    let leaked: &'static mut str = Box::leak(boxed);
     let leaked_ptr = leaked as *mut str;
-    let args = format_args!("{}", leaked);
     {
-        let record = Record::builder()
-            .args(args)
-            .level(level)
-            .target("sidecar")
-            .build();
-        let _ = writer.write(now, &record);
+        let _ = writer.write(
+            now,
+            &Record::builder()
+                .args(format_args!("{}", &*leaked))
+                .level(level)
+                .target("sidecar")
+                .build(),
+        );
     }
     // SAFETY: `leaked` originated from `Box::leak` above; reboxing frees it immediately after use.
     unsafe { String::from(Box::from_raw(leaked_ptr)) }
