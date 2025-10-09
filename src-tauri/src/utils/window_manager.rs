@@ -369,7 +369,7 @@ impl WindowManager {
                 }
             }
 
-            if WindowOperationResult::Failed != Self::show_main_window().await {
+            if WindowOperationResult::Failed == Self::show_main_window().await {
                 return false;
             }
 
