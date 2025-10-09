@@ -375,7 +375,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let bin_path = current_exe()?.with_file_name(format!("{clash_core}{bin_ext}"));
 
-    let payload = &clash_verge_service_ipc::ClashConfig {
+    let payload = clash_verge_service_ipc::ClashConfig {
         core_config: CoreConfig {
             config_path: dirs::path_to_str(config_file)?.to_string(),
             core_path: dirs::path_to_str(&bin_path)?.to_string(),
