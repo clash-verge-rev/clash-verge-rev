@@ -51,6 +51,9 @@ impl IClashTemp {
         let mut tun = Mapping::new();
         let mut cors_map = Mapping::new();
         tun.insert("enable".into(), false.into());
+        #[cfg(target_os = "linux")]
+        tun.insert("stack".into(), "mixed".into());
+        #[cfg(not(target_os = "linux"))]
         tun.insert("stack".into(), "gvisor".into());
         tun.insert("auto-route".into(), true.into());
         tun.insert("strict-route".into(), false.into());

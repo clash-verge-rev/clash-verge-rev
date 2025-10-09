@@ -1,3 +1,4 @@
+use crate::utils;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     config::Config,
@@ -21,6 +22,7 @@ async fn open_or_close_dashboard_internal() {
 
 pub async fn quit() {
     logging!(debug, Type::System, true, "启动退出流程");
+    utils::server::shutdown_embedded_server();
 
     // 获取应用句柄并设置退出标志
     let app_handle = handle::Handle::app_handle();

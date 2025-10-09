@@ -29,6 +29,26 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     });
 
     if enable {
+        #[cfg(target_os = "linux")]
+        {
+            let stack_key = Value::from("stack");
+            let should_override = match tun_val.get(&stack_key) {
+                Some(value) => value
+                    .as_str()
+                    .map(|stack| stack.eq_ignore_ascii_case("gvisor"))
+                    .unwrap_or(false),
+                None => true,
+            };
+
+            if should_override {
+                revise!(tun_val, "stack", "mixed");
+                log::warn!(
+                    target: "app",
+                    "gVisor TUN stack detected on Linux; falling back to 'mixed' for compatibility"
+                );
+            }
+        }
+
         // 读取DNS配置
         let dns_key = Value::from("dns");
         let dns_val = config.get(&dns_key);
