@@ -53,6 +53,13 @@ export const useCustomTheme = () => {
       return;
     }
 
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function"
+    ) {
+      return;
+    }
+
     let isMounted = true;
 
     const timerId = setTimeout(() => {
@@ -89,6 +96,44 @@ export const useCustomTheme = () => {
         });
     };
   }, [theme_mode, appWindow, setMode]);
+
+  useEffect(() => {
+    if (theme_mode !== "system") {
+      return;
+    }
+
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const syncMode = (isDark: boolean) => setMode(isDark ? "dark" : "light");
+    const handleChange = (event: MediaQueryListEvent) =>
+      syncMode(event.matches);
+
+    syncMode(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+
+    type MediaQueryListLegacy = MediaQueryList & {
+      addListener?: (
+        listener: (this: MediaQueryList, event: MediaQueryListEvent) => void,
+      ) => void;
+      removeListener?: (
+        listener: (this: MediaQueryList, event: MediaQueryListEvent) => void,
+      ) => void;
+    };
+
+    const legacyQuery = mediaQuery as MediaQueryListLegacy;
+    legacyQuery.addListener?.(handleChange);
+    return () => legacyQuery.removeListener?.(handleChange);
+  }, [theme_mode, setMode]);
 
   useEffect(() => {
     if (theme_mode === undefined) {
