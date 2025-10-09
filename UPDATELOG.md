@@ -44,6 +44,7 @@
 - 修复 Windows 深色模式下首次启动客户端标题栏颜色异常
 - 修复静默启动不加载完整 WebView 的问题
 - 修复 Linux WebKit 网络进程的崩溃
+- 修复 Linux GNOME/KDE 桌面下，应用主题颜色选择“系统”后，不随操作系统主题（Dark/Light）切换
 
 ## v2.4.2
 
