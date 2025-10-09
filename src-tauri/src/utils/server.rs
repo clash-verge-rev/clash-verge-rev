@@ -101,16 +101,14 @@ pub fn embed_server() {
             });
 
         let commands = visible.or(scheme).or(pac);
-        AsyncHandler::spawn(move || async move {
-            warp::serve(commands)
-                .bind(([127, 0, 0, 1], port))
-                .await
-                .graceful(async {
-                    shutdown_rx.await.ok();
-                })
-                .run()
-                .await;
-        });
+        warp::serve(commands)
+            .bind(([127, 0, 0, 1], port))
+            .await
+            .graceful(async {
+                shutdown_rx.await.ok();
+            })
+            .run()
+            .await;
     });
 }
 
