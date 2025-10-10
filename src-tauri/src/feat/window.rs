@@ -8,7 +8,7 @@ use crate::{
     utils::logging::Type,
 };
 
-/// Open or close the dashboard window
+/// Public API: open or close the dashboard
 pub async fn open_or_close_dashboard() {
     open_or_close_dashboard_internal().await
 }
@@ -21,7 +21,7 @@ async fn open_or_close_dashboard_internal() {
 }
 
 pub async fn quit() {
-    logging!(debug, Type::System, true, "启动退出流程");
+    logging!(debug, Type::System, "启动退出流程");
     utils::server::shutdown_embedded_server();
 
     // 获取应用句柄并设置退出标志
@@ -34,13 +34,12 @@ pub async fn quit() {
         log::info!(target: "app", "窗口已隐藏");
     }
 
-    logging!(info, Type::System, true, "开始异步清理资源");
+    logging!(info, Type::System, "开始异步清理资源");
     let cleanup_result = clean_async().await;
 
     logging!(
         info,
         Type::System,
-        true,
         "资源清理完成，退出代码: {}",
         if cleanup_result { 0 } else { 1 }
     );
@@ -50,7 +49,7 @@ pub async fn quit() {
 async fn clean_async() -> bool {
     use tokio::time::{Duration, timeout};
 
-    logging!(info, Type::System, true, "开始执行异步清理操作...");
+    logging!(info, Type::System, "开始执行异步清理操作...");
 
     // 1. 处理TUN模式
     let tun_success = if Config::verge()
@@ -255,7 +254,6 @@ async fn clean_async() -> bool {
     logging!(
         info,
         Type::System,
-        true,
         "异步关闭操作完成 - TUN: {}, 代理: {}, 核心: {}, DNS: {}, 总体: {}",
         tun_success,
         proxy_success,
@@ -273,7 +271,7 @@ pub fn clean() -> bool {
     let (tx, rx) = std::sync::mpsc::channel();
 
     AsyncHandler::spawn(move || async move {
-        logging!(info, Type::System, true, "开始执行关闭操作...");
+        logging!(info, Type::System, "开始执行关闭操作...");
 
         // 使用已有的异步清理函数
         let cleanup_result = clean_async().await;
@@ -288,14 +286,13 @@ pub fn clean() -> bool {
 
     match rx.recv_timeout(total_timeout) {
         Ok(result) => {
-            logging!(info, Type::System, true, "关闭操作完成，结果: {}", result);
+            logging!(info, Type::System, "关闭操作完成，结果: {}", result);
             result
         }
         Err(_) => {
             logging!(
                 warn,
                 Type::System,
-                true,
                 "清理操作超时(可能正在关机)，返回成功避免阻塞"
             );
             true

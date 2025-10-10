@@ -113,18 +113,6 @@ macro_rules! wrap_err {
 
 #[macro_export]
 macro_rules! logging {
-    // 带 println 的版本（支持格式化参数）
-    ($level:ident, $type:expr, true, $($arg:tt)*) => {
-        // We dont need println here anymore
-        // println!("{} {}", $type, format_args!($($arg)*));
-        log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*));
-    };
-
-    // 带 println 的版本（使用 false 明确不打印）
-    ($level:ident, $type:expr, false, $($arg:tt)*) => {
-        log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*));
-    };
-
     // 不带 print 参数的版本（默认不打印）
     ($level:ident, $type:expr, $($arg:tt)*) => {
         log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*));
@@ -133,37 +121,16 @@ macro_rules! logging {
 
 #[macro_export]
 macro_rules! logging_error {
-    // 1. 处理 Result<T, E>，带打印控制
-    ($type:expr, $print:expr, $expr:expr) => {
-        match $expr {
-            Ok(_) => {},
-            Err(err) => {
-                if $print {
-                    println!("[{}] Error: {}", $type, err);
-                }
-                log::error!(target: "app", "[{}] {}", $type, err);
-            }
-        }
-    };
-
-    // 2. 处理 Result<T, E>，默认不打印
+    // Handle Result<T, E>
     ($type:expr, $expr:expr) => {
         if let Err(err) = $expr {
             log::error!(target: "app", "[{}] {}", $type, err);
         }
     };
 
-    // 3. 处理格式化字符串，带打印控制
-    ($type:expr, $print:expr, $fmt:literal $(, $arg:expr)*) => {
-        if $print {
-            println!("[{}] {}", $type, format_args!($fmt $(, $arg)*));
-        }
-        log::error!(target: "app", "[{}] {}", $type, format_args!($fmt $(, $arg)*));
-    };
-
-    // 4. 处理格式化字符串，不带 bool 时，默认 `false`
+    // Handle formatted message: always print to stdout and log as error
     ($type:expr, $fmt:literal $(, $arg:expr)*) => {
-        logging_error!($type, false, $fmt $(, $arg)*);
+        log::error!(target: "app", "[{}] {}", $type, format_args!($fmt $(, $arg)*));
     };
 }
 

@@ -230,7 +230,12 @@ impl Sysopt {
     pub async fn update_launch(&self) -> Result<()> {
         let enable_auto_launch = { Config::verge().await.latest_ref().enable_auto_launch };
         let is_enable = enable_auto_launch.unwrap_or(false);
-        logging!(info, true, "Setting auto-launch state to: {:?}", is_enable);
+        logging!(
+            info,
+            Type::System,
+            "Setting auto-launch state to: {:?}",
+            is_enable
+        );
 
         // 首先尝试使用快捷方式方法
         #[cfg(target_os = "windows")]
@@ -266,9 +271,9 @@ impl Sysopt {
         let autostart_manager = app_handle.autolaunch();
 
         if is_enable {
-            logging_error!(Type::System, true, "{:?}", autostart_manager.enable());
+            logging_error!(Type::System, "{:?}", autostart_manager.enable());
         } else {
-            logging_error!(Type::System, true, "{:?}", autostart_manager.disable());
+            logging_error!(Type::System, "{:?}", autostart_manager.disable());
         }
     }
 

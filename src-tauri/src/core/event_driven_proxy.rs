@@ -401,8 +401,8 @@ impl EventDrivenProxyManager {
             let disabled_sys = Sysproxy::default();
             let disabled_auto = Autoproxy::default();
 
-            logging_error!(Type::System, true, disabled_auto.set_auto_proxy());
-            logging_error!(Type::System, true, disabled_sys.set_system_proxy());
+            logging_error!(Type::System, disabled_auto.set_auto_proxy());
+            logging_error!(Type::System, disabled_sys.set_system_proxy());
         }
     }
 
@@ -411,7 +411,7 @@ impl EventDrivenProxyManager {
 
         if to_pac {
             let disabled_sys = Sysproxy::default();
-            logging_error!(Type::System, true, disabled_sys.set_system_proxy());
+            logging_error!(Type::System, disabled_sys.set_system_proxy());
 
             let expected = Self::get_expected_pac_config().await;
             if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
@@ -419,7 +419,7 @@ impl EventDrivenProxyManager {
             }
         } else {
             let disabled_auto = Autoproxy::default();
-            logging_error!(Type::System, true, disabled_auto.set_auto_proxy());
+            logging_error!(Type::System, disabled_auto.set_auto_proxy());
 
             let expected = Self::get_expected_sys_proxy().await;
             if let Err(e) = Self::restore_sys_proxy(&expected).await {

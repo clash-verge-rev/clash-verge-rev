@@ -971,13 +971,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         match event.id.as_ref() {
             mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
                 let mode = &mode[0..mode.len() - 5]; // Removing the "_mode" suffix
-                logging!(
-                    info,
-                    Type::ProxyMode,
-                    true,
-                    "Switch Proxy Mode To: {}",
-                    mode
-                );
+                logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", mode);
                 feat::change_clash_mode(mode.into()).await;
             }
             "open_window" => {

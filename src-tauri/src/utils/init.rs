@@ -136,13 +136,7 @@ pub async fn delete_log() -> Result<()> {
         _ => return Ok(()),
     };
 
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "try to delete log files, day: {}",
-        day
-    );
+    logging!(info, Type::Setup, "try to delete log files, day: {}", day);
 
     // %Y-%m-%d to NaiveDateTime
     let parse_time_str = |s: &str| {
@@ -177,7 +171,7 @@ pub async fn delete_log() -> Result<()> {
             if duration.num_days() > day {
                 let file_path = file.path();
                 let _ = fs::remove_file(file_path).await;
-                logging!(info, Type::Setup, true, "delete log file: {}", file_name);
+                logging!(info, Type::Setup, "delete log file: {}", file_name);
             }
         }
         Ok(())
@@ -304,7 +298,7 @@ async fn init_dns_config() -> Result<()> {
     let dns_path = app_dir.join("dns_config.yaml");
 
     if !dns_path.exists() {
-        logging!(info, Type::Setup, true, "Creating default DNS config file");
+        logging!(info, Type::Setup, "Creating default DNS config file");
         help::save_yaml(
             &dns_path,
             &default_dns_config,
@@ -329,14 +323,7 @@ async fn ensure_directories() -> Result<()> {
             fs::create_dir_all(&dir).await.map_err(|e| {
                 anyhow::anyhow!("Failed to create {} directory {:?}: {}", name, dir, e)
             })?;
-            logging!(
-                info,
-                Type::Setup,
-                true,
-                "Created {} directory: {:?}",
-                name,
-                dir
-            );
+            logging!(info, Type::Setup, "Created {} directory: {:?}", name, dir);
         }
     }
 
@@ -352,13 +339,7 @@ async fn initialize_config_files() -> Result<()> {
         help::save_yaml(&path, &template, Some("# Clash Verge"))
             .await
             .map_err(|e| anyhow::anyhow!("Failed to create clash config: {}", e))?;
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Created clash config at {:?}",
-            path
-        );
+        logging!(info, Type::Setup, "Created clash config at {:?}", path);
     }
 
     if let Ok(path) = dirs::verge_path()
@@ -368,13 +349,7 @@ async fn initialize_config_files() -> Result<()> {
         help::save_yaml(&path, &template, Some("# Clash Verge"))
             .await
             .map_err(|e| anyhow::anyhow!("Failed to create verge config: {}", e))?;
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Created verge config at {:?}",
-            path
-        );
+        logging!(info, Type::Setup, "Created verge config at {:?}", path);
     }
 
     if let Ok(path) = dirs::profiles_path()
@@ -384,13 +359,7 @@ async fn initialize_config_files() -> Result<()> {
         help::save_yaml(&path, &template, Some("# Clash Verge"))
             .await
             .map_err(|e| anyhow::anyhow!("Failed to create profiles config: {}", e))?;
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Created profiles config at {:?}",
-            path
-        );
+        logging!(info, Type::Setup, "Created profiles config at {:?}", path);
     }
 
     // 验证并修正verge配置
@@ -418,19 +387,13 @@ pub async fn init_config() -> Result<()> {
 
     AsyncHandler::spawn(|| async {
         if let Err(e) = delete_log().await {
-            logging!(warn, Type::Setup, true, "Failed to clean old logs: {}", e);
+            logging!(warn, Type::Setup, "Failed to clean old logs: {}", e);
         }
-        logging!(info, Type::Setup, true, "后台日志清理任务完成");
+        logging!(info, Type::Setup, "后台日志清理任务完成");
     });
 
     if let Err(e) = init_dns_config().await {
-        logging!(
-            warn,
-            Type::Setup,
-            true,
-            "DNS config initialization failed: {}",
-            e
-        );
+        logging!(warn, Type::Setup, "DNS config initialization failed: {}", e);
     }
 
     Ok(())
@@ -460,13 +423,12 @@ pub async fn init_resources() -> Result<()> {
         let handle_copy = |src: PathBuf, dest: PathBuf, file: String| async move {
             match fs::copy(&src, &dest).await {
                 Ok(_) => {
-                    logging!(debug, Type::Setup, true, "resources copied '{}'", file);
+                    logging!(debug, Type::Setup, "resources copied '{}'", file);
                 }
                 Err(err) => {
                     logging!(
                         error,
                         Type::Setup,
-                        true,
                         "failed to copy resources '{}' to '{:?}', {}",
                         file,
                         dest,
@@ -491,13 +453,7 @@ pub async fn init_resources() -> Result<()> {
                 }
             }
             _ => {
-                logging!(
-                    debug,
-                    Type::Setup,
-                    true,
-                    "failed to get modified '{}'",
-                    file
-                );
+                logging!(debug, Type::Setup, "failed to get modified '{}'", file);
                 handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
             }
         };

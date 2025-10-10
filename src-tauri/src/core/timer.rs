@@ -64,7 +64,7 @@ impl Timer {
         if let Err(e) = self.refresh().await {
             // Reset initialization flag on error
             self.initialized.store(false, Ordering::SeqCst);
-            logging_error!(Type::Timer, false, "Failed to initialize timer: {}", e);
+            logging_error!(Type::Timer, "Failed to initialize timer: {}", e);
             return Err(e);
         }
 
@@ -501,7 +501,7 @@ impl Timer {
                 }
             },
             Err(_) => {
-                logging_error!(Type::Timer, false, "Timer task timed out for uid: {}", uid);
+                logging_error!(Type::Timer, "Timer task timed out for uid: {}", uid);
             }
         }
 
