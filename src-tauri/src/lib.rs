@@ -250,17 +250,35 @@ pub fn run() {
         let desktop_env = std::env::var("XDG_CURRENT_DESKTOP")
             .unwrap_or_default()
             .to_uppercase();
+        let session_desktop = std::env::var("XDG_SESSION_DESKTOP")
+            .unwrap_or_default()
+            .to_uppercase();
+        let desktop_session = std::env::var("DESKTOP_SESSION")
+            .unwrap_or_default()
+            .to_uppercase();
         let is_kde_desktop = desktop_env.contains("KDE");
         let is_plasma_desktop = desktop_env.contains("PLASMA");
+        let is_hyprland_desktop = desktop_env.contains("HYPR")
+            || session_desktop.contains("HYPR")
+            || desktop_session.contains("HYPR");
 
         let is_wayland_session = std::env::var("XDG_SESSION_TYPE")
             .map(|value| value.eq_ignore_ascii_case("wayland"))
             .unwrap_or(false)
             || std::env::var("WAYLAND_DISPLAY").is_ok();
-        let prefer_native_wayland = is_wayland_session && (is_kde_desktop || is_plasma_desktop);
+        let prefer_native_wayland =
+            is_wayland_session && (is_kde_desktop || is_plasma_desktop || is_hyprland_desktop);
         let dmabuf_override = std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER");
 
         if prefer_native_wayland {
+            let compositor_label = if is_hyprland_desktop {
+                "Hyprland"
+            } else if is_plasma_desktop {
+                "KDE Plasma"
+            } else {
+                "KDE"
+            };
+
             if matches!(dmabuf_override.as_deref(), Ok("1")) {
                 unsafe {
                     std::env::remove_var("WEBKIT_DISABLE_DMABUF_RENDERER");
@@ -269,14 +287,16 @@ pub fn run() {
                     info,
                     Type::Setup,
                     true,
-                    "Wayland + KDE detected: Re-enabled WebKit DMABUF renderer to avoid Cairo surface failures."
+                    "Wayland + {} detected: Re-enabled WebKit DMABUF renderer to avoid Cairo surface failures.",
+                    compositor_label
                 );
             } else {
                 logging!(
                     info,
                     Type::Setup,
                     true,
-                    "Wayland + KDE detected: Using native Wayland backend for reliable rendering."
+                    "Wayland + {} detected: Using native Wayland backend for reliable rendering.",
+                    compositor_label
                 );
             }
         } else {
