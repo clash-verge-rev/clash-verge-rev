@@ -1,9 +1,6 @@
 use super::CmdResult;
 use crate::{
-    core::{
-        CoreManager,
-        service::{self, SERVICE_MANAGER, ServiceStatus},
-    },
+    core::service::{self, SERVICE_MANAGER, ServiceStatus},
     utils::i18n::t,
 };
 
@@ -16,10 +13,6 @@ async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) ->
     {
         let emsg = format!("{} Service failed: {}", op_type, e);
         return Err(t(emsg.as_str()).await);
-    }
-    if CoreManager::global().restart_core().await.is_err() {
-        let emsg = "Restart Core failed";
-        return Err(t(emsg).await);
     }
     Ok(())
 }

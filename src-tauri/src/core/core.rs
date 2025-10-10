@@ -1,5 +1,6 @@
 use crate::AsyncHandler;
 use crate::core::logger::Logger;
+use crate::core::service::is_service_ipc_path_exists;
 use crate::process::CommandChildGuard;
 use crate::utils::init::sidecar_writer;
 use crate::utils::logging::SharedWriter;
@@ -870,7 +871,6 @@ impl CoreManager {
     }
 
     pub async fn prestart_core(&self) -> Result<()> {
-        logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.refresh().await);
         match SERVICE_MANAGER.lock().await.current() {
             ServiceStatus::Ready => {
                 self.set_running_mode(RunningMode::Service);
@@ -912,7 +912,9 @@ impl CoreManager {
     pub async fn restart_core(&self) -> Result<()> {
         logging!(info, Type::Core, "Restarting core");
         self.stop_core().await?;
-        logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.init().await);
+        if SERVICE_MANAGER.lock().await.init().await.is_ok() {
+            logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.refresh().await);
+        }
         self.start_core().await?;
         Ok(())
     }

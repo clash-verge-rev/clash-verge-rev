@@ -3,7 +3,11 @@ use anyhow::Result;
 use crate::{
     config::Config,
     core::{
-        CoreManager, Timer, handle, hotkey::Hotkey, service::SERVICE_MANAGER, sysopt, tray::Tray,
+        CoreManager, Timer, handle,
+        hotkey::Hotkey,
+        service::{SERVICE_MANAGER, is_service_ipc_path_exists},
+        sysopt,
+        tray::Tray,
     },
     logging, logging_error,
     module::lightweight::{auto_lightweight_mode_init, run_once_auto_lightweight},
@@ -189,6 +193,14 @@ pub(super) async fn init_verge_config() {
 
 pub(super) async fn init_service_manager() {
     logging!(info, Type::Setup, "Initializing service manager...");
+    if !is_service_ipc_path_exists() {
+        logging!(
+            warn,
+            Type::Setup,
+            "Service IPC path does not exist, service may be unavailable"
+        );
+        return;
+    }
     if SERVICE_MANAGER.lock().await.init().await.is_ok() {
         logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.refresh().await);
     }

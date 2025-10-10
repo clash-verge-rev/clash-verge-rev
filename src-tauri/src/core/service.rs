@@ -6,7 +6,12 @@ use crate::{
 use anyhow::{Context, Result, bail};
 use clash_verge_service_ipc::CoreConfig;
 use once_cell::sync::Lazy;
-use std::{env::current_exe, path::PathBuf, process::Command as StdCommand, time::Duration};
+use std::{
+    env::current_exe,
+    path::{Path, PathBuf},
+    process::Command as StdCommand,
+    time::Duration,
+};
 use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -411,6 +416,10 @@ pub async fn is_service_available() -> Result<()> {
     Ok(())
 }
 
+pub fn is_service_ipc_path_exists() -> bool {
+    Path::new(clash_verge_service_ipc::IPC_PATH).exists()
+}
+
 impl ServiceManager {
     pub fn default() -> Self {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
@@ -418,9 +427,9 @@ impl ServiceManager {
 
     pub async fn init(&mut self) -> Result<()> {
         let config = clash_verge_service_ipc::IpcConfig {
-            default_timeout: Duration::from_millis(200),
-            max_retries: 3,
-            retry_delay: Duration::from_millis(200),
+            default_timeout: Duration::from_millis(30),
+            retry_delay: Duration::from_millis(1500),
+            max_retries: 6,
         };
         if let Err(e) = clash_verge_service_ipc::connect(Some(config)).await {
             self.0 = ServiceStatus::Unavailable("服务连接失败: {e}".to_string());
@@ -495,11 +504,6 @@ impl ServiceManager {
                 self.0 = ServiceStatus::Unavailable(reason.clone());
                 return Err(anyhow::anyhow!("服务不可用: {}", reason));
             }
-        }
-        // 等待 socket 完全拉取
-        #[cfg(unix)]
-        if self.0 == ServiceStatus::Ready {
-            tokio::time::sleep(Duration::from_millis(375)).await;
         }
         Ok(())
     }
