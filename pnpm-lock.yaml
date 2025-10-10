@@ -36,8 +36,8 @@ importers:
         specifier: ^7.3.4
         version: 7.3.4(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@mui/x-data-grid':
-        specifier: ^8.13.1
-        version: 8.13.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.4(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.3(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        specifier: ^8.14.0
+        version: 8.14.0(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.4(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.3(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@tauri-apps/api':
         specifier: 2.8.0
         version: 2.8.0
@@ -130,13 +130,13 @@ importers:
         version: 2.3.6(react@19.2.0)
       tauri-plugin-mihomo-api:
         specifier: git+https://github.com/clash-verge-rev/tauri-plugin-mihomo
-        version: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/bb87804b09460b7ca2bd4a492b8878b0b5399cb5
+        version: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7818a0a8f55c03ee7eba3fd7433faef29adf38ac
       types-pac:
         specifier: ^1.0.3
         version: 1.0.3
       zustand:
         specifier: ^5.0.8
-        version: 5.0.8(@types/react@19.2.2)(react@19.2.0)(use-sync-external-store@1.5.0(react@19.2.0))
+        version: 5.0.8(@types/react@19.2.2)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     devDependencies:
       '@actions/github':
         specifier: ^6.0.1
@@ -1252,8 +1252,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@mui/x-data-grid@8.13.1':
-    resolution: {integrity: sha512-64MlyukMoGEDLT3kqdm6tw+rocgMayChj+h+fdAwqD4+2NMQoD5wZElQE+xTNmU0/DPv710X4ENceBRt2hMuGw==}
+  '@mui/x-data-grid@8.14.0':
+    resolution: {integrity: sha512-bzUpD83Wx4mawkgquDQUUbLLnpF+JP7Pe7YQx1ixS6W/AlUwXAVagPTOijwchHvlx0Ky11dJvOQAfrnWu6an/Q==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@emotion/react': ^11.9.0
@@ -1268,14 +1268,14 @@ packages:
       '@emotion/styled':
         optional: true
 
-  '@mui/x-internals@8.13.1':
-    resolution: {integrity: sha512-OKQyCJ9uxtMpjBZCOEQGOR5MhgL1f9HjI4qZHuaLxxtDATK5rcBbVjBF67hI8FzXeF1wrcZP2wsjc4AgGpAo9g==}
+  '@mui/x-internals@8.14.0':
+    resolution: {integrity: sha512-esYyl61nuuFXiN631TWuPh2tqdoyTdBI/4UXgwH3rytF8jiWvy6prPBPRHEH1nvW3fgw9FoBI48FlOO+yEI8xg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@mui/x-virtualizer@0.2.2':
-    resolution: {integrity: sha512-+ZcGYh/9ykoEofzcAWcJ3n6TBXzCc2ETvytho30wRkYv1ez+8yps0ezns/QvC4JqXBge/3y+e+QatIYjkTltdw==}
+  '@mui/x-virtualizer@0.2.3':
+    resolution: {integrity: sha512-CZ+VxFmeJaTduAOlSyo5cVek0PV5Y8gm4coyaHEpCvms207J9AoMUKqWIcdwsVGlTH1Y71j35xT/MwHKutZiNw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -3873,8 +3873,8 @@ packages:
     resolution: {integrity: sha512-nlGpxf+hv0v7GkWBK2V9spgactGOp0qvfWRxUMjqHyzrt3SgwE48DIv/FhqPHJYLHpgW1opq3nERbz5Anq7n1g==}
     engines: {node: '>=18'}
 
-  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/bb87804b09460b7ca2bd4a492b8878b0b5399cb5:
-    resolution: {tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/bb87804b09460b7ca2bd4a492b8878b0b5399cb5}
+  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7818a0a8f55c03ee7eba3fd7433faef29adf38ac:
+    resolution: {tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7818a0a8f55c03ee7eba3fd7433faef29adf38ac}
     version: 0.1.0
 
   terser@5.44.0:
@@ -4019,8 +4019,8 @@ packages:
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
-  use-sync-external-store@1.5.0:
-    resolution: {integrity: sha512-Rb46I4cGGVBmjamjphe8L/UnvJD+uPPtTkNvX5mZgqdbavhI4EbgIWJiIHXJ8bc/i9EQGPRh4DwEURJ552Do0A==}
+  use-sync-external-store@1.6.0:
+    resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -5371,40 +5371,40 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.2
 
-  '@mui/x-data-grid@8.13.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.4(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.3(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@mui/x-data-grid@8.14.0(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.4(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.3(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@mui/material': 7.3.4(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@mui/system': 7.3.3(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0)
       '@mui/utils': 7.3.3(@types/react@19.2.2)(react@19.2.0)
-      '@mui/x-internals': 8.13.1(@types/react@19.2.2)(react@19.2.0)
-      '@mui/x-virtualizer': 0.2.2(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@mui/x-internals': 8.14.0(@types/react@19.2.2)(react@19.2.0)
+      '@mui/x-virtualizer': 0.2.3(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       clsx: 2.1.1
       prop-types: 15.8.1
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
-      use-sync-external-store: 1.5.0(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
     optionalDependencies:
       '@emotion/react': 11.14.0(@types/react@19.2.2)(react@19.2.0)
       '@emotion/styled': 11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0)
     transitivePeerDependencies:
       - '@types/react'
 
-  '@mui/x-internals@8.13.1(@types/react@19.2.2)(react@19.2.0)':
+  '@mui/x-internals@8.14.0(@types/react@19.2.2)(react@19.2.0)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@mui/utils': 7.3.3(@types/react@19.2.2)(react@19.2.0)
       react: 19.2.0
       reselect: 5.1.1
-      use-sync-external-store: 1.5.0(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
     transitivePeerDependencies:
       - '@types/react'
 
-  '@mui/x-virtualizer@0.2.2(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@mui/x-virtualizer@0.2.3(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@mui/utils': 7.3.3(@types/react@19.2.2)(react@19.2.0)
-      '@mui/x-internals': 8.13.1(@types/react@19.2.2)(react@19.2.0)
+      '@mui/x-internals': 8.14.0(@types/react@19.2.2)(react@19.2.0)
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
     transitivePeerDependencies:
@@ -8426,7 +8426,7 @@ snapshots:
     dependencies:
       dequal: 2.0.3
       react: 19.2.0
-      use-sync-external-store: 1.5.0(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
 
   synckit@0.11.11:
     dependencies:
@@ -8442,7 +8442,7 @@ snapshots:
       minizlib: 3.1.0
       yallist: 5.0.0
 
-  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/bb87804b09460b7ca2bd4a492b8878b0b5399cb5:
+  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7818a0a8f55c03ee7eba3fd7433faef29adf38ac:
     dependencies:
       '@tauri-apps/api': 2.8.0
 
@@ -8644,7 +8644,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  use-sync-external-store@1.5.0(react@19.2.0):
+  use-sync-external-store@1.6.0(react@19.2.0):
     dependencies:
       react: 19.2.0
 
@@ -8792,10 +8792,10 @@ snapshots:
 
   zod@4.1.11: {}
 
-  zustand@5.0.8(@types/react@19.2.2)(react@19.2.0)(use-sync-external-store@1.5.0(react@19.2.0)):
+  zustand@5.0.8(@types/react@19.2.2)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0)):
     optionalDependencies:
       '@types/react': 19.2.2
       react: 19.2.0
-      use-sync-external-store: 1.5.0(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
 
   zwitch@2.0.4: {}

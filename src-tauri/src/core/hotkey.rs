@@ -294,7 +294,6 @@ impl Hotkey {
         logging!(
             debug,
             Type::Hotkey,
-            true,
             "Initializing global hotkeys: {}",
             enable_global_hotkey
         );
@@ -310,7 +309,6 @@ impl Hotkey {
             logging!(
                 debug,
                 Type::Hotkey,
-                true,
                 "Has {} hotkeys need to register",
                 hotkeys.len()
             );
@@ -325,7 +323,6 @@ impl Hotkey {
                         logging!(
                             debug,
                             Type::Hotkey,
-                            true,
                             "Registering hotkey: {} -> {}",
                             key,
                             func
@@ -334,7 +331,6 @@ impl Hotkey {
                             logging!(
                                 error,
                                 Type::Hotkey,
-                                true,
                                 "Failed to register hotkey {} -> {}: {:?}",
                                 key,
                                 func,
@@ -356,7 +352,6 @@ impl Hotkey {
                         logging!(
                             error,
                             Type::Hotkey,
-                            true,
                             "Invalid hotkey configuration: `{}`:`{}`",
                             key,
                             func
@@ -467,7 +462,6 @@ impl Drop for Hotkey {
             logging!(
                 error,
                 Type::Hotkey,
-                true,
                 "Error unregistering all hotkeys: {:?}",
                 e
             );

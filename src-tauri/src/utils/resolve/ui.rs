@@ -66,7 +66,7 @@ pub fn update_ui_ready_stage(stage: UiReadyStage) {
 // 标记UI已准备就绪
 pub fn mark_ui_ready() {
     get_ui_ready().store(true, Ordering::Release);
-    logging!(info, Type::Window, true, "UI已标记为完全就绪");
+    logging!(info, Type::Window, "UI已标记为完全就绪");
 
     // 通知所有等待的任务
     get_ui_ready_notify().notify_waiters();

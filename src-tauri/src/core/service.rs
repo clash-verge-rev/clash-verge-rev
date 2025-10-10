@@ -26,7 +26,7 @@ pub struct ServiceManager(ServiceStatus);
 #[allow(clippy::unused_async)]
 #[cfg(target_os = "windows")]
 async fn uninstall_service() -> Result<()> {
-    logging!(info, Type::Service, true, "uninstall service");
+    logging!(info, Type::Service, "uninstall service");
 
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
@@ -61,7 +61,7 @@ async fn uninstall_service() -> Result<()> {
 #[allow(clippy::unused_async)]
 #[cfg(target_os = "windows")]
 async fn install_service() -> Result<()> {
-    logging!(info, Type::Service, true, "install service");
+    logging!(info, Type::Service, "install service");
 
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
@@ -95,17 +95,11 @@ async fn install_service() -> Result<()> {
 
 #[cfg(target_os = "windows")]
 async fn reinstall_service() -> Result<()> {
-    logging!(info, Type::Service, true, "reinstall service");
+    logging!(info, Type::Service, "reinstall service");
 
     // 先卸载服务
     if let Err(err) = uninstall_service().await {
-        logging!(
-            warn,
-            Type::Service,
-            true,
-            "failed to uninstall service: {}",
-            err
-        );
+        logging!(warn, Type::Service, "failed to uninstall service: {}", err);
     }
 
     // 再安装服务
@@ -120,7 +114,7 @@ async fn reinstall_service() -> Result<()> {
 #[allow(clippy::unused_async)]
 #[cfg(target_os = "linux")]
 async fn uninstall_service() -> Result<()> {
-    logging!(info, Type::Service, true, "uninstall service");
+    logging!(info, Type::Service, "uninstall service");
     use users::get_effective_uid;
 
     let uninstall_path =
@@ -144,7 +138,6 @@ async fn uninstall_service() -> Result<()> {
     logging!(
         info,
         Type::Service,
-        true,
         "uninstall status code:{}",
         status.code().unwrap_or(-1)
     );
@@ -162,7 +155,7 @@ async fn uninstall_service() -> Result<()> {
 #[cfg(target_os = "linux")]
 #[allow(clippy::unused_async)]
 async fn install_service() -> Result<()> {
-    logging!(info, Type::Service, true, "install service");
+    logging!(info, Type::Service, "install service");
     use users::get_effective_uid;
 
     let install_path =
@@ -186,7 +179,6 @@ async fn install_service() -> Result<()> {
     logging!(
         info,
         Type::Service,
-        true,
         "install status code:{}",
         status.code().unwrap_or(-1)
     );
@@ -203,7 +195,7 @@ async fn install_service() -> Result<()> {
 
 #[cfg(target_os = "linux")]
 async fn reinstall_service() -> Result<()> {
-    logging!(info, Type::Service, true, "reinstall service");
+    logging!(info, Type::Service, "reinstall service");
 
     // 先卸载服务
     if let Err(err) = uninstall_service().await {
@@ -229,7 +221,7 @@ async fn reinstall_service() -> Result<()> {
 async fn uninstall_service() -> Result<()> {
     use crate::utils::i18n::t;
 
-    logging!(info, Type::Service, true, "uninstall service");
+    logging!(info, Type::Service, "uninstall service");
 
     let binary_path = dirs::service_path()?;
     let uninstall_path = binary_path.with_file_name("clash-verge-service-uninstall");
@@ -245,7 +237,7 @@ async fn uninstall_service() -> Result<()> {
         r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#
     );
 
-    // logging!(debug, Type::Service, true, "uninstall command: {}", command);
+    // logging!(debug, Type::Service, "uninstall command: {}", command);
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])
@@ -265,7 +257,7 @@ async fn uninstall_service() -> Result<()> {
 async fn install_service() -> Result<()> {
     use crate::utils::i18n::t;
 
-    logging!(info, Type::Service, true, "install service");
+    logging!(info, Type::Service, "install service");
 
     let binary_path = dirs::service_path()?;
     let install_path = binary_path.with_file_name("clash-verge-service-install");
@@ -281,7 +273,7 @@ async fn install_service() -> Result<()> {
         r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
     );
 
-    // logging!(debug, Type::Service, true, "install command: {}", command);
+    // logging!(debug, Type::Service, "install command: {}", command);
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])
@@ -299,17 +291,11 @@ async fn install_service() -> Result<()> {
 
 #[cfg(target_os = "macos")]
 async fn reinstall_service() -> Result<()> {
-    logging!(info, Type::Service, true, "reinstall service");
+    logging!(info, Type::Service, "reinstall service");
 
     // 先卸载服务
     if let Err(err) = uninstall_service().await {
-        logging!(
-            warn,
-            Type::Service,
-            true,
-            "failed to uninstall service: {}",
-            err
-        );
+        logging!(warn, Type::Service, "failed to uninstall service: {}", err);
     }
 
     // 再安装服务
@@ -323,9 +309,9 @@ async fn reinstall_service() -> Result<()> {
 
 /// 强制重装服务（UI修复按钮）
 pub async fn force_reinstall_service() -> Result<()> {
-    logging!(info, Type::Service, true, "用户请求强制重装服务");
+    logging!(info, Type::Service, "用户请求强制重装服务");
     reinstall_service().await.map_err(|err| {
-        logging!(error, Type::Service, true, "强制重装服务失败: {}", err);
+        logging!(error, Type::Service, "强制重装服务失败: {}", err);
         err
     })
 }
@@ -333,13 +319,13 @@ pub async fn force_reinstall_service() -> Result<()> {
 /// 检查服务版本 - 使用IPC通信
 async fn check_service_version() -> Result<String> {
     let version_arc: Result<String> = {
-        logging!(info, Type::Service, true, "开始检查服务版本 (IPC)");
+        logging!(info, Type::Service, "开始检查服务版本 (IPC)");
         let response = clash_verge_service_ipc::get_version()
             .await
             .context("无法连接到Clash Verge Service")?;
         if response.code > 0 {
             let err_msg = response.message;
-            logging!(error, Type::Service, true, "获取服务版本失败: {}", err_msg);
+            logging!(error, Type::Service, "获取服务版本失败: {}", err_msg);
             return Err(anyhow::anyhow!(err_msg));
         }
 
@@ -363,7 +349,7 @@ pub async fn check_service_needs_reinstall() -> bool {
 
 /// 尝试使用服务启动core
 pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result<()> {
-    logging!(info, Type::Service, true, "尝试使用现有服务启动核心");
+    logging!(info, Type::Service, "尝试使用现有服务启动核心");
 
     let verge_config = Config::verge().await;
     let clash_core = verge_config.latest_ref().get_valid_clash_core();
@@ -387,29 +373,29 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 
     if response.code > 0 {
         let err_msg = response.message;
-        logging!(error, Type::Service, true, "启动核心失败: {}", err_msg);
+        logging!(error, Type::Service, "启动核心失败: {}", err_msg);
         bail!(err_msg);
     }
 
-    logging!(info, Type::Service, true, "服务成功启动核心");
+    logging!(info, Type::Service, "服务成功启动核心");
     Ok(())
 }
 
 // 以服务启动core
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
-    logging!(info, Type::Service, true, "正在尝试通过服务启动核心");
+    logging!(info, Type::Service, "正在尝试通过服务启动核心");
 
     if check_service_needs_reinstall().await {
         reinstall_service().await?;
     }
 
-    logging!(info, Type::Service, true, "服务已运行且版本匹配，直接使用");
+    logging!(info, Type::Service, "服务已运行且版本匹配，直接使用");
     start_with_existing_service(config_file).await
 }
 
 /// 通过服务停止core
 pub(super) async fn stop_core_by_service() -> Result<()> {
-    logging!(info, Type::Service, true, "通过服务停止核心 (IPC)");
+    logging!(info, Type::Service, "通过服务停止核心 (IPC)");
 
     let response = clash_verge_service_ipc::stop_clash()
         .await
@@ -417,11 +403,11 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
     if response.code > 0 {
         let err_msg = response.message;
-        logging!(error, Type::Service, true, "停止核心失败: {}", err_msg);
+        logging!(error, Type::Service, "停止核心失败: {}", err_msg);
         bail!(err_msg);
     }
 
-    logging!(info, Type::Service, true, "服务成功停止核心");
+    logging!(info, Type::Service, "服务成功停止核心");
     Ok(())
 }
 
@@ -452,11 +438,7 @@ impl ServiceManager {
 
     pub async fn refresh(&mut self) -> Result<()> {
         let status = self.check_service_comprehensive().await;
-        logging_error!(
-            Type::Service,
-            true,
-            self.handle_service_status(&status).await
-        );
+        logging_error!(Type::Service, self.handle_service_status(&status).await);
         self.0 = status;
         Ok(())
     }
@@ -465,16 +447,16 @@ impl ServiceManager {
     pub async fn check_service_comprehensive(&self) -> ServiceStatus {
         match is_service_available().await {
             Ok(_) => {
-                logging!(info, Type::Service, true, "服务当前可用，检查是否需要重装");
+                logging!(info, Type::Service, "服务当前可用，检查是否需要重装");
                 if check_service_needs_reinstall().await {
-                    logging!(info, Type::Service, true, "服务需要重装且允许重装");
+                    logging!(info, Type::Service, "服务需要重装且允许重装");
                     ServiceStatus::NeedsReinstall
                 } else {
                     ServiceStatus::Ready
                 }
             }
             Err(err) => {
-                logging!(warn, Type::Service, true, "服务不可用，检查安装状态");
+                logging!(warn, Type::Service, "服务不可用，检查安装状态");
                 ServiceStatus::Unavailable(err.to_string())
             }
         }
@@ -484,34 +466,29 @@ impl ServiceManager {
     pub async fn handle_service_status(&mut self, status: &ServiceStatus) -> Result<()> {
         match status {
             ServiceStatus::Ready => {
-                logging!(info, Type::Service, true, "服务就绪，直接启动");
+                logging!(info, Type::Service, "服务就绪，直接启动");
                 Ok(())
             }
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
-                logging!(info, Type::Service, true, "服务需要重装，执行重装流程");
+                logging!(info, Type::Service, "服务需要重装，执行重装流程");
                 reinstall_service().await?;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
             }
             ServiceStatus::ForceReinstallRequired => {
-                logging!(
-                    info,
-                    Type::Service,
-                    true,
-                    "服务需要强制重装，执行强制重装流程"
-                );
+                logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
                 force_reinstall_service().await?;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
             }
             ServiceStatus::InstallRequired => {
-                logging!(info, Type::Service, true, "需要安装服务，执行安装流程");
+                logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 install_service().await?;
                 self.0 = ServiceStatus::Ready;
                 Ok(())
             }
             ServiceStatus::UninstallRequired => {
-                logging!(info, Type::Service, true, "服务需要卸载，执行卸载流程");
+                logging!(info, Type::Service, "服务需要卸载，执行卸载流程");
                 uninstall_service().await?;
                 self.0 = ServiceStatus::Unavailable("Service Uninstalled".into());
                 Ok(())
@@ -520,7 +497,6 @@ impl ServiceManager {
                 logging!(
                     info,
                     Type::Service,
-                    true,
                     "服务不可用: {}，将使用Sidecar模式",
                     reason
                 );

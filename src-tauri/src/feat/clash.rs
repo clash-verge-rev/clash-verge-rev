@@ -77,8 +77,8 @@ pub async fn change_clash_mode(mode: String) {
             let clash_data = Config::clash().await.data_mut().clone();
             if clash_data.save_config().await.is_ok() {
                 handle::Handle::refresh_clash();
-                logging_error!(Type::Tray, true, tray::Tray::global().update_menu().await);
-                logging_error!(Type::Tray, true, tray::Tray::global().update_icon().await);
+                logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
+                logging_error!(Type::Tray, tray::Tray::global().update_icon().await);
             }
 
             let is_auto_close_connection = Config::verge()

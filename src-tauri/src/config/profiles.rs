@@ -297,7 +297,6 @@ impl IProfiles {
                     if let Err(err) = result {
                         logging_error!(
                             Type::Config,
-                            false,
                             "[配置文件删除] 删除文件 {} 失败: {}",
                             path.display(),
                             err
@@ -323,7 +322,6 @@ impl IProfiles {
                     if let Err(err) = result {
                         logging_error!(
                             Type::Config,
-                            false,
                             "[配置文件删除] 删除文件 {} 失败: {}",
                             path.display(),
                             err
@@ -349,7 +347,6 @@ impl IProfiles {
                     if let Err(err) = result {
                         logging_error!(
                             Type::Config,
-                            false,
                             "[配置文件删除] 删除文件 {} 失败: {}",
                             path.display(),
                             err
@@ -375,7 +372,6 @@ impl IProfiles {
                     if let Err(err) = result {
                         logging_error!(
                             Type::Config,
-                            false,
                             "[配置文件删除] 删除文件 {} 失败: {}",
                             path.display(),
                             err
@@ -401,7 +397,6 @@ impl IProfiles {
                     if let Err(err) = result {
                         logging_error!(
                             Type::Config,
-                            false,
                             "[配置文件删除] 删除文件 {} 失败: {}",
                             path.display(),
                             err
@@ -427,7 +422,6 @@ impl IProfiles {
                     if let Err(err) = result {
                         logging_error!(
                             Type::Config,
-                            false,
                             "[配置文件删除] 删除文件 {} 失败: {}",
                             path.display(),
                             err

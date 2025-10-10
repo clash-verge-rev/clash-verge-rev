@@ -97,7 +97,6 @@ impl CoreManager {
                 logging!(
                     warn,
                     Type::Config,
-                    true,
                     "无法读取文件以检测类型: {}, 错误: {}",
                     path,
                     err
@@ -155,7 +154,6 @@ impl CoreManager {
         logging!(
             debug,
             Type::Config,
-            true,
             "无法确定文件类型，默认当作YAML处理: {}",
             path
         );
@@ -179,7 +177,7 @@ impl CoreManager {
     }
     /// 验证运行时配置
     pub async fn validate_config(&self) -> Result<(bool, String)> {
-        logging!(info, Type::Config, true, "生成临时配置文件用于验证");
+        logging!(info, Type::Config, "生成临时配置文件用于验证");
         let config_path = Config::generate_file(ConfigType::Check).await?;
         let config_path = dirs::path_to_str(&config_path)?;
         self.validate_config_internal(config_path).await
@@ -192,7 +190,7 @@ impl CoreManager {
     ) -> Result<(bool, String)> {
         // 检查程序是否正在退出，如果是则跳过验证
         if handle::Handle::global().is_exiting() {
-            logging!(info, Type::Core, true, "应用正在退出，跳过验证");
+            logging!(info, Type::Core, "应用正在退出，跳过验证");
             return Ok((true, String::new()));
         }
 
@@ -208,7 +206,6 @@ impl CoreManager {
             logging!(
                 info,
                 Type::Config,
-                true,
                 "检测到Merge文件，仅进行语法检查: {}",
                 config_path
             );
@@ -226,7 +223,6 @@ impl CoreManager {
                     logging!(
                         warn,
                         Type::Config,
-                        true,
                         "无法确定文件类型: {}, 错误: {}",
                         config_path,
                         err
@@ -240,7 +236,6 @@ impl CoreManager {
             logging!(
                 info,
                 Type::Config,
-                true,
                 "检测到脚本文件，使用JavaScript验证: {}",
                 config_path
             );
@@ -251,7 +246,6 @@ impl CoreManager {
         logging!(
             info,
             Type::Config,
-            true,
             "使用Clash内核验证配置文件: {}",
             config_path
         );
@@ -261,25 +255,19 @@ impl CoreManager {
     async fn validate_config_internal(&self, config_path: &str) -> Result<(bool, String)> {
         // 检查程序是否正在退出，如果是则跳过验证
         if handle::Handle::global().is_exiting() {
-            logging!(info, Type::Core, true, "应用正在退出，跳过验证");
+            logging!(info, Type::Core, "应用正在退出，跳过验证");
             return Ok((true, String::new()));
         }
 
-        logging!(
-            info,
-            Type::Config,
-            true,
-            "开始验证配置文件: {}",
-            config_path
-        );
+        logging!(info, Type::Config, "开始验证配置文件: {}", config_path);
 
         let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
-        logging!(info, Type::Config, true, "使用内核: {}", clash_core);
+        logging!(info, Type::Config, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::app_handle();
         let app_dir = dirs::app_home_dir()?;
         let app_dir_str = dirs::path_to_str(&app_dir)?;
-        logging!(info, Type::Config, true, "验证目录: {}", app_dir_str);
+        logging!(info, Type::Config, "验证目录: {}", app_dir_str);
 
         // 使用子进程运行clash验证配置
         let output = app_handle
@@ -297,14 +285,14 @@ impl CoreManager {
         let has_error =
             !output.status.success() || error_keywords.iter().any(|&kw| stderr.contains(kw));
 
-        logging!(info, Type::Config, true, "-------- 验证结果 --------");
+        logging!(info, Type::Config, "-------- 验证结果 --------");
 
         if !stderr.is_empty() {
-            logging!(info, Type::Config, true, "stderr输出:\n{}", stderr);
+            logging!(info, Type::Config, "stderr输出:\n{}", stderr);
         }
 
         if has_error {
-            logging!(info, Type::Config, true, "发现错误，开始处理错误信息");
+            logging!(info, Type::Config, "发现错误，开始处理错误信息");
             let error_msg = if !stdout.is_empty() {
                 stdout.to_string()
             } else if !stderr.is_empty() {
@@ -315,38 +303,38 @@ impl CoreManager {
                 "验证进程被终止".to_string()
             };
 
-            logging!(info, Type::Config, true, "-------- 验证结束 --------");
+            logging!(info, Type::Config, "-------- 验证结束 --------");
             Ok((false, error_msg)) // 返回错误消息给调用者处理
         } else {
-            logging!(info, Type::Config, true, "验证成功");
-            logging!(info, Type::Config, true, "-------- 验证结束 --------");
+            logging!(info, Type::Config, "验证成功");
+            logging!(info, Type::Config, "-------- 验证结束 --------");
             Ok((true, String::new()))
         }
     }
     /// 只进行文件语法检查，不进行完整验证
     fn validate_file_syntax(&self, config_path: &str) -> Result<(bool, String)> {
-        logging!(info, Type::Config, true, "开始检查文件: {}", config_path);
+        logging!(info, Type::Config, "开始检查文件: {}", config_path);
 
         // 读取文件内容
         let content = match std::fs::read_to_string(config_path) {
             Ok(content) => content,
             Err(err) => {
                 let error_msg = format!("Failed to read file: {err}");
-                logging!(error, Type::Config, true, "无法读取文件: {}", error_msg);
+                logging!(error, Type::Config, "无法读取文件: {}", error_msg);
                 return Ok((false, error_msg));
             }
         };
         // 对YAML文件尝试解析，只检查语法正确性
-        logging!(info, Type::Config, true, "进行YAML语法检查");
+        logging!(info, Type::Config, "进行YAML语法检查");
         match serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&content) {
             Ok(_) => {
-                logging!(info, Type::Config, true, "YAML语法检查通过");
+                logging!(info, Type::Config, "YAML语法检查通过");
                 Ok((true, String::new()))
             }
             Err(err) => {
                 // 使用标准化的前缀，以便错误处理函数能正确识别
                 let error_msg = format!("YAML syntax error: {err}");
-                logging!(error, Type::Config, true, "YAML语法错误: {}", error_msg);
+                logging!(error, Type::Config, "YAML语法错误: {}", error_msg);
                 Ok((false, error_msg))
             }
         }
@@ -358,13 +346,13 @@ impl CoreManager {
             Ok(content) => content,
             Err(err) => {
                 let error_msg = format!("Failed to read script file: {err}");
-                logging!(warn, Type::Config, true, "脚本语法错误: {}", err);
+                logging!(warn, Type::Config, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 return Ok((false, error_msg));
             }
         };
 
-        logging!(debug, Type::Config, true, "验证脚本文件: {}", path);
+        logging!(debug, Type::Config, "验证脚本文件: {}", path);
 
         // 使用boa引擎进行基本语法检查
         use boa_engine::{Context, Source};
@@ -374,7 +362,7 @@ impl CoreManager {
 
         match result {
             Ok(_) => {
-                logging!(debug, Type::Config, true, "脚本语法验证通过: {}", path);
+                logging!(debug, Type::Config, "脚本语法验证通过: {}", path);
 
                 // 检查脚本是否包含main函数
                 if !content.contains("function main")
@@ -382,7 +370,7 @@ impl CoreManager {
                     && !content.contains("let main")
                 {
                     let error_msg = "Script must contain a main function";
-                    logging!(warn, Type::Config, true, "脚本缺少main函数: {}", path);
+                    logging!(warn, Type::Config, "脚本缺少main函数: {}", path);
                     //handle::Handle::notice_message("config_validate::script_missing_main", error_msg);
                     return Ok((false, error_msg.to_string()));
                 }
@@ -391,7 +379,7 @@ impl CoreManager {
             }
             Err(err) => {
                 let error_msg = format!("Script syntax error: {err}");
-                logging!(warn, Type::Config, true, "脚本语法错误: {}", err);
+                logging!(warn, Type::Config, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 Ok((false, error_msg))
             }
@@ -401,30 +389,30 @@ impl CoreManager {
     pub async fn update_config(&self) -> Result<(bool, String)> {
         // 检查程序是否正在退出，如果是则跳过完整验证流程
         if handle::Handle::global().is_exiting() {
-            logging!(info, Type::Config, true, "应用正在退出，跳过验证");
+            logging!(info, Type::Config, "应用正在退出，跳过验证");
             return Ok((true, String::new()));
         }
 
         // 1. 先生成新的配置内容
-        logging!(info, Type::Config, true, "生成新的配置内容");
+        logging!(info, Type::Config, "生成新的配置内容");
         Config::generate().await?;
 
         // 2. 验证配置
         match self.validate_config().await {
             Ok((true, _)) => {
                 // 4. 验证通过后，生成正式的运行时配置
-                logging!(info, Type::Config, true, "配置验证通过, 生成运行时配置");
+                logging!(info, Type::Config, "配置验证通过, 生成运行时配置");
                 let run_path = Config::generate_file(ConfigType::Run).await?;
-                logging_error!(Type::Config, true, self.put_configs_force(run_path).await);
+                logging_error!(Type::Config, self.put_configs_force(run_path).await);
                 Ok((true, "something".into()))
             }
             Ok((false, error_msg)) => {
-                logging!(warn, Type::Config, true, "配置验证失败: {}", error_msg);
+                logging!(warn, Type::Config, "配置验证失败: {}", error_msg);
                 Config::runtime().await.discard();
                 Ok((false, error_msg))
             }
             Err(e) => {
-                logging!(warn, Type::Config, true, "验证过程发生错误: {}", e);
+                logging!(warn, Type::Config, "验证过程发生错误: {}", e);
                 Config::runtime().await.discard();
                 Err(e)
             }
@@ -433,7 +421,7 @@ impl CoreManager {
     pub async fn put_configs_force(&self, path_buf: PathBuf) -> Result<(), String> {
         let run_path_str = dirs::path_to_str(&path_buf).map_err(|e| {
             let msg = e.to_string();
-            logging_error!(Type::Core, true, "{}", msg);
+            logging_error!(Type::Core, "{}", msg);
             msg
         });
         match handle::Handle::mihomo()
@@ -443,13 +431,13 @@ impl CoreManager {
         {
             Ok(_) => {
                 Config::runtime().await.apply();
-                logging!(info, Type::Core, true, "Configuration updated successfully");
+                logging!(info, Type::Core, "Configuration updated successfully");
                 Ok(())
             }
             Err(e) => {
                 let msg = e.to_string();
                 Config::runtime().await.discard();
-                logging_error!(Type::Core, true, "Failed to update configuration: {}", msg);
+                logging_error!(Type::Core, "Failed to update configuration: {}", msg);
                 Err(msg)
             }
         }
@@ -459,7 +447,7 @@ impl CoreManager {
 impl CoreManager {
     /// 清理多余的 mihomo 进程
     async fn cleanup_orphaned_mihomo_processes(&self) -> Result<()> {
-        logging!(info, Type::Core, true, "开始清理多余的 mihomo 进程");
+        logging!(info, Type::Core, "开始清理多余的 mihomo 进程");
 
         // 获取当前管理的进程 PID
         let current_pid = {
@@ -495,7 +483,6 @@ impl CoreManager {
                             logging!(
                                 debug,
                                 Type::Core,
-                                true,
                                 "跳过当前管理的进程: {} (PID: {})",
                                 process_name,
                                 pid
@@ -506,13 +493,13 @@ impl CoreManager {
                     }
                 }
                 Err(e) => {
-                    logging!(debug, Type::Core, true, "查找进程时发生错误: {}", e);
+                    logging!(debug, Type::Core, "查找进程时发生错误: {}", e);
                 }
             }
         }
 
         if pids_to_kill.is_empty() {
-            logging!(debug, Type::Core, true, "未发现多余的 mihomo 进程");
+            logging!(debug, Type::Core, "未发现多余的 mihomo 进程");
             return Ok(());
         }
 
@@ -529,7 +516,6 @@ impl CoreManager {
             logging!(
                 info,
                 Type::Core,
-                true,
                 "清理完成，共终止了 {} 个多余的 mihomo 进程",
                 killed_count
             );
@@ -638,7 +624,6 @@ impl CoreManager {
         logging!(
             info,
             Type::Core,
-            true,
             "尝试终止进程: {} (PID: {})",
             process_name,
             pid
@@ -685,7 +670,6 @@ impl CoreManager {
                 logging!(
                     warn,
                     Type::Core,
-                    true,
                     "进程 {} (PID: {}) 终止命令成功但进程仍在运行",
                     process_name,
                     pid
@@ -695,7 +679,6 @@ impl CoreManager {
                 logging!(
                     info,
                     Type::Core,
-                    true,
                     "成功终止进程: {} (PID: {})",
                     process_name,
                     pid
@@ -706,7 +689,6 @@ impl CoreManager {
             logging!(
                 warn,
                 Type::Core,
-                true,
                 "无法终止进程: {} (PID: {})",
                 process_name,
                 pid
@@ -756,7 +738,7 @@ impl CoreManager {
     }
 
     async fn start_core_by_sidecar(&self) -> Result<()> {
-        logging!(info, Type::Core, true, "Running core by sidecar");
+        logging!(info, Type::Core, "Running core by sidecar");
 
         let config_file = &Config::generate_file(ConfigType::Run).await?;
         let app_handle = handle::Handle::app_handle();
@@ -775,13 +757,7 @@ impl CoreManager {
             .spawn()?;
 
         let pid = child.pid();
-        logging!(
-            trace,
-            Type::Core,
-            true,
-            "Started core by sidecar pid: {}",
-            pid
-        );
+        logging!(trace, Type::Core, "Started core by sidecar pid: {}", pid);
         *self.child_sidecar.lock() = Some(CommandChildGuard::new(child));
         self.set_running_mode(RunningMode::Sidecar);
 
@@ -824,18 +800,12 @@ impl CoreManager {
         Ok(())
     }
     fn stop_core_by_sidecar(&self) -> Result<()> {
-        logging!(info, Type::Core, true, "Stopping core by sidecar");
+        logging!(info, Type::Core, "Stopping core by sidecar");
 
         if let Some(child) = self.child_sidecar.lock().take() {
             let pid = child.pid();
             drop(child);
-            logging!(
-                trace,
-                Type::Core,
-                true,
-                "Stopped core by sidecar pid: {:?}",
-                pid
-            );
+            logging!(trace, Type::Core, "Stopped core by sidecar pid: {:?}", pid);
         }
         self.set_running_mode(RunningMode::NotRunning);
         Ok(())
@@ -844,14 +814,14 @@ impl CoreManager {
 
 impl CoreManager {
     async fn start_core_by_service(&self) -> Result<()> {
-        logging!(info, Type::Core, true, "Running core by service");
+        logging!(info, Type::Core, "Running core by service");
         let config_file = &Config::generate_file(ConfigType::Run).await?;
         service::run_core_by_service(config_file).await?;
         self.set_running_mode(RunningMode::Service);
         Ok(())
     }
     async fn stop_core_by_service(&self) -> Result<()> {
-        logging!(info, Type::Core, true, "Stopping core by service");
+        logging!(info, Type::Core, "Stopping core by service");
         service::stop_core_by_service().await?;
         self.set_running_mode(RunningMode::NotRunning);
         Ok(())
@@ -876,17 +846,16 @@ impl CoreManager {
             logging!(
                 warn,
                 Type::Core,
-                true,
                 "应用初始化时清理多余 mihomo 进程失败: {}",
                 e
             );
         }
 
         // 使用简化的启动流程
-        logging!(info, Type::Core, true, "开始核心初始化");
+        logging!(info, Type::Core, "开始核心初始化");
         self.start_core().await?;
 
-        logging!(info, Type::Core, true, "核心初始化完成");
+        logging!(info, Type::Core, "核心初始化完成");
         Ok(())
     }
 
@@ -901,7 +870,7 @@ impl CoreManager {
     }
 
     pub async fn prestart_core(&self) -> Result<()> {
-        logging_error!(Type::Setup, true, SERVICE_MANAGER.lock().await.init().await);
+        logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.init().await);
         SERVICE_MANAGER.lock().await.refresh().await?;
         match SERVICE_MANAGER.lock().await.current() {
             ServiceStatus::Ready => {
@@ -920,10 +889,10 @@ impl CoreManager {
 
         match self.get_running_mode() {
             RunningMode::Service => {
-                logging_error!(Type::Core, true, self.start_core_by_service().await);
+                logging_error!(Type::Core, self.start_core_by_service().await);
             }
             RunningMode::NotRunning | RunningMode::Sidecar => {
-                logging_error!(Type::Core, true, self.start_core_by_sidecar().await);
+                logging_error!(Type::Core, self.start_core_by_sidecar().await);
             }
         };
 
@@ -942,7 +911,7 @@ impl CoreManager {
 
     /// 重启内核
     pub async fn restart_core(&self) -> Result<()> {
-        logging!(info, Type::Core, true, "Restarting core");
+        logging!(info, Type::Core, "Restarting core");
         self.stop_core().await?;
         self.start_core().await?;
         Ok(())
@@ -952,17 +921,17 @@ impl CoreManager {
     pub async fn change_core(&self, clash_core: Option<String>) -> Result<(), String> {
         if clash_core.is_none() {
             let error_message = "Clash core should not be Null";
-            logging!(error, Type::Core, true, "{}", error_message);
+            logging!(error, Type::Core, "{}", error_message);
             return Err(error_message.to_string());
         }
         let core = clash_core.as_ref().ok_or_else(|| {
             let msg = "Clash core should not be None";
-            logging!(error, Type::Core, true, "{}", msg);
+            logging!(error, Type::Core, "{}", msg);
             msg.to_string()
         })?;
         if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
             let error_message = format!("Clash core invalid name: {core}");
-            logging!(error, Type::Core, true, "{}", error_message);
+            logging!(error, Type::Core, "{}", error_message);
             return Err(error_message);
         }
 
@@ -971,11 +940,11 @@ impl CoreManager {
 
         // 分离数据获取和异步调用避免Send问题
         let verge_data = Config::verge().await.latest_ref().clone();
-        logging_error!(Type::Core, true, verge_data.save_file().await);
+        logging_error!(Type::Core, verge_data.save_file().await);
 
         let run_path = Config::generate_file(ConfigType::Run).await.map_err(|e| {
             let msg = e.to_string();
-            logging_error!(Type::Core, true, "{}", msg);
+            logging_error!(Type::Core, "{}", msg);
             msg
         })?;
 

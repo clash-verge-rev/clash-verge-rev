@@ -37,7 +37,7 @@ pub fn build_new_window() -> Result<WebviewWindow, String> {
     .build()
     {
         Ok(window) => {
-            logging_error!(Type::Window, true, window.eval(INITIAL_LOADING_OVERLAY));
+            logging_error!(Type::Window, window.eval(INITIAL_LOADING_OVERLAY));
             Ok(window)
         }
         Err(e) => Err(e.to_string()),

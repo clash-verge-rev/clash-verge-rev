@@ -22,8 +22,8 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
             CoreManager::global().restart_core().await?;
         } else {
             if patch.get("mode").is_some() {
-                logging_error!(Type::Tray, true, tray::Tray::global().update_menu().await);
-                logging_error!(Type::Tray, true, tray::Tray::global().update_icon().await);
+                logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
+                logging_error!(Type::Tray, tray::Tray::global().update_icon().await);
             }
             Config::runtime().await.draft_mut().patch_config(patch);
             CoreManager::global().update_config().await?;
