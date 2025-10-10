@@ -281,7 +281,6 @@ pub fn run() {
                 logging!(
                     info,
                     Type::Setup,
-                    true,
                     "Wayland + {} detected: Re-enabled WebKit DMABUF renderer to avoid Cairo surface failures.",
                     compositor_label
                 );
@@ -289,7 +288,6 @@ pub fn run() {
                 logging!(
                     info,
                     Type::Setup,
-                    true,
                     "Wayland + {} detected: Using native Wayland backend for reliable rendering.",
                     compositor_label
                 );
@@ -310,7 +308,6 @@ pub fn run() {
                 logging!(
                     info,
                     Type::Setup,
-                    true,
                     "Wayland detected: Forcing X11 backend for tray icon compatibility"
                 );
             }
@@ -323,7 +320,6 @@ pub fn run() {
             logging!(
                 info,
                 Type::Setup,
-                true,
                 "KDE detected: Disabled GTK CSD for better titlebar stability."
             );
         }
