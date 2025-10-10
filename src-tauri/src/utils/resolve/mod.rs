@@ -46,7 +46,7 @@ pub fn resolve_setup_async() {
             "Version: {}",
             env!("CARGO_PKG_VERSION")
         );
-        init_service_manager().await;
+        futures::join!(init_service_manager());
 
         futures::join!(
             init_work_config(),
