@@ -255,7 +255,6 @@ impl IVerge {
                 logging!(
                     warn,
                     Type::Config,
-                    true,
                     "启动时发现无效的clash_core配置: '{}', 将自动修正为 'verge-mihomo'",
                     core
                 );
@@ -266,7 +265,6 @@ impl IVerge {
             logging!(
                 info,
                 Type::Config,
-                true,
                 "启动时发现未配置clash_core, 将设置为默认值 'verge-mihomo'"
             );
             config.clash_core = Some("verge-mihomo".to_string());
@@ -275,21 +273,15 @@ impl IVerge {
 
         // 修正后保存配置
         if needs_fix {
-            logging!(info, Type::Config, true, "正在保存修正后的配置文件...");
+            logging!(info, Type::Config, "正在保存修正后的配置文件...");
             help::save_yaml(&config_path, &config, Some("# Clash Verge Config")).await?;
-            logging!(
-                info,
-                Type::Config,
-                true,
-                "配置文件修正完成，需要重新加载配置"
-            );
+            logging!(info, Type::Config, "配置文件修正完成，需要重新加载配置");
 
             Self::reload_config_after_fix(config).await?;
         } else {
             logging!(
                 info,
                 Type::Config,
-                true,
                 "clash_core配置验证通过: {:?}",
                 config.clash_core
             );
@@ -309,7 +301,6 @@ impl IVerge {
         logging!(
             info,
             Type::Config,
-            true,
             "内存配置已强制更新，新的clash_core: {:?}",
             updated_config.clash_core
         );

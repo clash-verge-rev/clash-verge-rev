@@ -139,7 +139,6 @@ pub async fn send_ipc_request(
                 logging!(
                     warn,
                     Type::Service,
-                    true,
                     "IPC请求失败，准备重试: 命令={}, 错误={}",
                     command_type,
                     e
@@ -165,7 +164,6 @@ pub async fn send_ipc_request(
             logging!(
                 error,
                 Type::Service,
-                true,
                 "IPC请求最终失败，重试已耗尽: 命令={}, 错误={}",
                 command_type,
                 e
@@ -204,12 +202,12 @@ async fn send_ipc_request_windows(
     let mut pipe = match ClientOptions::new().open(IPC_SOCKET_NAME) {
         Ok(p) => p,
         Err(e) => {
-            logging!(error, Type::Service, true, "连接到服务命名管道失败: {}", e);
+            logging!(error, Type::Service, "连接到服务命名管道失败: {}", e);
             return Err(anyhow::anyhow!("无法连接到服务命名管道: {}", e));
         }
     };
 
-    logging!(info, Type::Service, true, "服务连接成功 (Windows)");
+    logging!(info, Type::Service, "服务连接成功 (Windows)");
 
     pipe.write_all(&len_bytes).await?;
     pipe.write_all(request_bytes).await?;
@@ -226,7 +224,7 @@ async fn send_ipc_request_windows(
         .map_err(|e| anyhow::anyhow!("解析响应失败: {}", e))?;
 
     if !verify_response_signature(&response)? {
-        logging!(error, Type::Service, true, "服务响应签名验证失败");
+        logging!(error, Type::Service, "服务响应签名验证失败");
         bail!("服务响应签名验证失败");
     }
 
@@ -245,7 +243,7 @@ async fn send_ipc_request_unix(
     let mut stream = match UnixStream::connect(IPC_SOCKET_NAME).await {
         Ok(s) => s,
         Err(e) => {
-            logging!(error, Type::Service, true, "连接到Unix套接字失败: {}", e);
+            logging!(error, Type::Service, "连接到Unix套接字失败: {}", e);
             return Err(anyhow::anyhow!("无法连接到服务Unix套接字: {}", e));
         }
     };
@@ -269,7 +267,7 @@ async fn send_ipc_request_unix(
         .map_err(|e| anyhow::anyhow!("解析响应失败: {}", e))?;
 
     if !verify_response_signature(&response)? {
-        logging!(error, Type::Service, true, "服务响应签名验证失败");
+        logging!(error, Type::Service, "服务响应签名验证失败");
         bail!("服务响应签名验证失败");
     }
 

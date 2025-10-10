@@ -131,43 +131,32 @@ impl WindowManager {
             finish_window_operation();
         });
 
-        logging!(info, Type::Window, true, "开始智能显示主窗口");
-        logging!(
-            debug,
-            Type::Window,
-            true,
-            "{}",
-            Self::get_window_status_info()
-        );
+        logging!(info, Type::Window, "开始智能显示主窗口");
+        logging!(debug, Type::Window, "{}", Self::get_window_status_info());
 
         let current_state = Self::get_main_window_state();
 
         match current_state {
             WindowState::NotExist => {
-                logging!(info, Type::Window, true, "窗口不存在，创建新窗口");
+                logging!(info, Type::Window, "窗口不存在，创建新窗口");
                 if Self::create_window(true).await {
-                    logging!(info, Type::Window, true, "窗口创建成功");
+                    logging!(info, Type::Window, "窗口创建成功");
                     std::thread::sleep(std::time::Duration::from_millis(100));
                     WindowOperationResult::Created
                 } else {
-                    logging!(warn, Type::Window, true, "窗口创建失败");
+                    logging!(warn, Type::Window, "窗口创建失败");
                     WindowOperationResult::Failed
                 }
             }
             WindowState::VisibleFocused => {
-                logging!(info, Type::Window, true, "窗口已经可见且有焦点，无需操作");
+                logging!(info, Type::Window, "窗口已经可见且有焦点，无需操作");
                 WindowOperationResult::NoAction
             }
             WindowState::VisibleUnfocused | WindowState::Minimized | WindowState::Hidden => {
                 if let Some(window) = Self::get_main_window() {
                     let state_after_check = Self::get_main_window_state();
                     if state_after_check == WindowState::VisibleFocused {
-                        logging!(
-                            info,
-                            Type::Window,
-                            true,
-                            "窗口在检查期间已变为可见和有焦点状态"
-                        );
+                        logging!(info, Type::Window, "窗口在检查期间已变为可见和有焦点状态");
                         return WindowOperationResult::NoAction;
                     }
                     Self::activate_window(&window)
@@ -188,13 +177,12 @@ impl WindowManager {
             finish_window_operation();
         });
 
-        logging!(info, Type::Window, true, "开始切换主窗口显示状态");
+        logging!(info, Type::Window, "开始切换主窗口显示状态");
 
         let current_state = Self::get_main_window_state();
         logging!(
             info,
             Type::Window,
-            true,
             "当前窗口状态: {:?} | 详细状态: {}",
             current_state,
             Self::get_window_status_info()
@@ -203,7 +191,7 @@ impl WindowManager {
         match current_state {
             WindowState::NotExist => {
                 // 窗口不存在，创建新窗口
-                logging!(info, Type::Window, true, "窗口不存在，将创建新窗口");
+                logging!(info, Type::Window, "窗口不存在，将创建新窗口");
                 // 由于已经有防抖保护，直接调用内部方法
                 if Self::create_window(true).await {
                     WindowOperationResult::Created
@@ -215,7 +203,6 @@ impl WindowManager {
                 logging!(
                     info,
                     Type::Window,
-                    true,
                     "窗口可见（焦点状态: {}），将隐藏窗口",
                     if current_state == WindowState::VisibleFocused {
                         "有焦点"
@@ -226,30 +213,25 @@ impl WindowManager {
                 if let Some(window) = Self::get_main_window() {
                     match window.hide() {
                         Ok(_) => {
-                            logging!(info, Type::Window, true, "窗口已成功隐藏");
+                            logging!(info, Type::Window, "窗口已成功隐藏");
                             WindowOperationResult::Hidden
                         }
                         Err(e) => {
-                            logging!(warn, Type::Window, true, "隐藏窗口失败: {}", e);
+                            logging!(warn, Type::Window, "隐藏窗口失败: {}", e);
                             WindowOperationResult::Failed
                         }
                     }
                 } else {
-                    logging!(warn, Type::Window, true, "无法获取窗口实例");
+                    logging!(warn, Type::Window, "无法获取窗口实例");
                     WindowOperationResult::Failed
                 }
             }
             WindowState::Minimized | WindowState::Hidden => {
-                logging!(
-                    info,
-                    Type::Window,
-                    true,
-                    "窗口存在但被隐藏或最小化，将激活窗口"
-                );
+                logging!(info, Type::Window, "窗口存在但被隐藏或最小化，将激活窗口");
                 if let Some(window) = Self::get_main_window() {
                     Self::activate_window(&window)
                 } else {
-                    logging!(warn, Type::Window, true, "无法获取窗口实例");
+                    logging!(warn, Type::Window, "无法获取窗口实例");
                     WindowOperationResult::Failed
                 }
             }
@@ -258,35 +240,35 @@ impl WindowManager {
 
     /// 激活窗口（取消最小化、显示、设置焦点）
     fn activate_window(window: &WebviewWindow<Wry>) -> WindowOperationResult {
-        logging!(info, Type::Window, true, "开始激活窗口");
+        logging!(info, Type::Window, "开始激活窗口");
 
         let mut operations_successful = true;
 
         // 1. 如果窗口最小化，先取消最小化
         if window.is_minimized().unwrap_or(false) {
-            logging!(info, Type::Window, true, "窗口已最小化，正在取消最小化");
+            logging!(info, Type::Window, "窗口已最小化，正在取消最小化");
             if let Err(e) = window.unminimize() {
-                logging!(warn, Type::Window, true, "取消最小化失败: {}", e);
+                logging!(warn, Type::Window, "取消最小化失败: {}", e);
                 operations_successful = false;
             }
         }
 
         // 2. 显示窗口
         if let Err(e) = window.show() {
-            logging!(warn, Type::Window, true, "显示窗口失败: {}", e);
+            logging!(warn, Type::Window, "显示窗口失败: {}", e);
             operations_successful = false;
         }
 
         // 3. 设置焦点
         if let Err(e) = window.set_focus() {
-            logging!(warn, Type::Window, true, "设置窗口焦点失败: {}", e);
+            logging!(warn, Type::Window, "设置窗口焦点失败: {}", e);
             operations_successful = false;
         }
 
         // 4. 平台特定的激活策略
         #[cfg(target_os = "macos")]
         {
-            logging!(info, Type::Window, true, "应用 macOS 特定的激活策略");
+            logging!(info, Type::Window, "应用 macOS 特定的激活策略");
             handle::Handle::global().set_activation_policy_regular();
         }
 
@@ -294,31 +276,19 @@ impl WindowManager {
         {
             // Windows 尝试额外的激活方法
             if let Err(e) = window.set_always_on_top(true) {
-                logging!(
-                    debug,
-                    Type::Window,
-                    true,
-                    "设置置顶失败（非关键错误）: {}",
-                    e
-                );
+                logging!(debug, Type::Window, "设置置顶失败（非关键错误）: {}", e);
             }
             // 立即取消置顶
             if let Err(e) = window.set_always_on_top(false) {
-                logging!(
-                    debug,
-                    Type::Window,
-                    true,
-                    "取消置顶失败（非关键错误）: {}",
-                    e
-                );
+                logging!(debug, Type::Window, "取消置顶失败（非关键错误）: {}", e);
             }
         }
 
         if operations_successful {
-            logging!(info, Type::Window, true, "窗口激活成功");
+            logging!(info, Type::Window, "窗口激活成功");
             WindowOperationResult::Shown
         } else {
-            logging!(warn, Type::Window, true, "窗口激活部分失败");
+            logging!(warn, Type::Window, "窗口激活部分失败");
             WindowOperationResult::Failed
         }
     }
@@ -350,7 +320,6 @@ impl WindowManager {
             logging!(
                 info,
                 Type::Window,
-                true,
                 "开始创建/显示主窗口, is_show={}",
                 is_show
             );
@@ -361,10 +330,10 @@ impl WindowManager {
 
             match build_new_window() {
                 Ok(_) => {
-                    logging!(info, Type::Window, true, "新窗口创建成功");
+                    logging!(info, Type::Window, "新窗口创建成功");
                 }
                 Err(e) => {
-                    logging!(error, Type::Window, true, "新窗口创建失败: {}", e);
+                    logging!(error, Type::Window, "新窗口创建失败: {}", e);
                     return false;
                 }
             }
@@ -383,15 +352,15 @@ impl WindowManager {
     pub fn destroy_main_window() -> WindowOperationResult {
         if let Some(window) = Self::get_main_window() {
             let _ = window.destroy();
-            logging!(info, Type::Window, true, "窗口已摧毁");
+            logging!(info, Type::Window, "窗口已摧毁");
             #[cfg(target_os = "macos")]
             {
-                logging!(info, Type::Window, true, "应用 macOS 特定的激活策略");
+                logging!(info, Type::Window, "应用 macOS 特定的激活策略");
                 handle::Handle::global().set_activation_policy_accessory();
             }
             return WindowOperationResult::Destroyed;
         }
-        logging!(warn, Type::Window, true, "窗口摧毁失败");
+        logging!(warn, Type::Window, "窗口摧毁失败");
         WindowOperationResult::Failed
     }
 

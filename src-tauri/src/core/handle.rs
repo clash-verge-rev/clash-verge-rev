@@ -418,7 +418,6 @@ impl Handle {
             logging!(
                 info,
                 Type::Frontend,
-                true,
                 "启动过程中发现错误，加入消息队列: {} - {}",
                 status_str,
                 msg_str
@@ -468,7 +467,6 @@ impl Handle {
         logging!(
             info,
             Type::Frontend,
-            true,
             "发送{}条启动时累积的错误消息: {:?}",
             errors.len(),
             errors
@@ -536,7 +534,6 @@ impl Handle {
             logging!(
                 warn,
                 Type::Setup,
-                true,
                 "Failed to set regular activation policy: {}",
                 e
             );
@@ -548,7 +545,6 @@ impl Handle {
             logging!(
                 warn,
                 Type::Setup,
-                true,
                 "Failed to set accessory activation policy: {}",
                 e
             );
@@ -561,7 +557,6 @@ impl Handle {
             logging!(
                 warn,
                 Type::Setup,
-                true,
                 "Failed to set prohibited activation policy: {}",
                 e
             );

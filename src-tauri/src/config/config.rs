@@ -75,9 +75,9 @@ impl Config {
         }
         // 生成运行时配置
         if let Err(err) = Self::generate().await {
-            logging!(error, Type::Config, true, "生成运行时配置失败: {}", err);
+            logging!(error, Type::Config, "生成运行时配置失败: {}", err);
         } else {
-            logging!(info, Type::Config, true, "生成运行时配置成功");
+            logging!(info, Type::Config, "生成运行时配置成功");
         }
 
         // 生成运行时配置文件并验证
@@ -85,7 +85,7 @@ impl Config {
 
         let validation_result = if config_result.is_ok() {
             // 验证配置文件
-            logging!(info, Type::Config, true, "开始验证配置");
+            logging!(info, Type::Config, "开始验证配置");
 
             match CoreManager::global().validate_config().await {
                 Ok((is_valid, error_msg)) => {
@@ -93,7 +93,6 @@ impl Config {
                         logging!(
                             warn,
                             Type::Config,
-                            true,
                             "[首次启动] 配置验证失败，使用默认最小配置启动: {}",
                             error_msg
                         );
@@ -102,14 +101,14 @@ impl Config {
                             .await?;
                         Some(("config_validate::boot_error", error_msg))
                     } else {
-                        logging!(info, Type::Config, true, "配置验证成功");
+                        logging!(info, Type::Config, "配置验证成功");
                         // 前端没有必要知道验证成功的消息，也没有事件驱动
                         // Some(("config_validate::success", String::new()))
                         None
                     }
                 }
                 Err(err) => {
-                    logging!(warn, Type::Config, true, "验证进程执行失败: {}", err);
+                    logging!(warn, Type::Config, "验证过程执行失败: {}", err);
                     CoreManager::global()
                         .use_default_config("config_validate::process_terminated", "")
                         .await?;
@@ -117,7 +116,7 @@ impl Config {
                 }
             }
         } else {
-            logging!(warn, Type::Config, true, "生成配置文件失败，使用默认配置");
+            logging!(warn, Type::Config, "生成配置文件失败，使用默认配置");
             CoreManager::global()
                 .use_default_config("config_validate::error", "")
                 .await?;
@@ -167,12 +166,7 @@ impl Config {
     }
 
     pub async fn verify_config_initialization() {
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "Verifying config initialization..."
-        );
+        logging!(info, Type::Setup, "Verifying config initialization...");
 
         let backoff_strategy = ExponentialBackoff {
             initial_interval: std::time::Duration::from_millis(100),
@@ -187,7 +181,6 @@ impl Config {
                 logging!(
                     info,
                     Type::Setup,
-                    true,
                     "Config initialization verified successfully"
                 );
                 return Ok::<(), BackoffError<anyhow::Error>>(());
@@ -196,17 +189,16 @@ impl Config {
             logging!(
                 warn,
                 Type::Setup,
-                true,
                 "Runtime config not found, attempting to regenerate..."
             );
 
             match Config::generate().await {
                 Ok(_) => {
-                    logging!(info, Type::Setup, true, "Config successfully regenerated");
+                    logging!(info, Type::Setup, "Config successfully regenerated");
                     Ok(())
                 }
                 Err(e) => {
-                    logging!(warn, Type::Setup, true, "Failed to generate config: {}", e);
+                    logging!(warn, Type::Setup, "Failed to generate config: {}", e);
                     Err(BackoffError::transient(e))
                 }
             }
@@ -217,7 +209,6 @@ impl Config {
                 logging!(
                     info,
                     Type::Setup,
-                    true,
                     "Config initialization verified with backoff retry"
                 );
             }
@@ -225,7 +216,6 @@ impl Config {
                 logging!(
                     error,
                     Type::Setup,
-                    true,
                     "Failed to verify config initialization after retries: {}",
                     e
                 );

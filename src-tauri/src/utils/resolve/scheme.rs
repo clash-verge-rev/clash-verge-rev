@@ -49,7 +49,7 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
                         let uid = match item.uid.clone() {
                             Some(uid) => uid,
                             None => {
-                                logging!(error, Type::Config, true, "Profile item missing UID");
+                                logging!(error, Type::Config, "Profile item missing UID");
                                 handle::Handle::notice_message(
                                     "import_sub_url::error",
                                     "Profile item missing UID".to_string(),

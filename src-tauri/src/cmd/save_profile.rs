@@ -36,7 +36,6 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     logging!(
         info,
         Type::Config,
-        true,
         "[cmd配置save] 开始验证配置文件: {}, 是否为merge文件: {}",
         file_path_str,
         is_merge_file
@@ -47,7 +46,6 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         logging!(
             info,
             Type::Config,
-            true,
             "[cmd配置save] 检测到merge文件，只进行语法验证"
         );
         match CoreManager::global()
@@ -55,12 +53,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
             .await
         {
             Ok((true, _)) => {
-                logging!(
-                    info,
-                    Type::Config,
-                    true,
-                    "[cmd配置save] merge文件语法验证通过"
-                );
+                logging!(info, Type::Config, "[cmd配置save] merge文件语法验证通过");
                 // 成功后尝试更新整体配置
                 match CoreManager::global().update_config().await {
                     Ok(_) => {
@@ -71,7 +64,6 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                         logging!(
                             warn,
                             Type::Config,
-                            true,
                             "[cmd配置save] 更新整体配置时发生错误: {}",
                             e
                         );
@@ -83,7 +75,6 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                 logging!(
                     warn,
                     Type::Config,
-                    true,
                     "[cmd配置save] merge文件语法验证失败: {}",
                     error_msg
                 );
@@ -95,13 +86,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                 return Ok(());
             }
             Err(e) => {
-                logging!(
-                    error,
-                    Type::Config,
-                    true,
-                    "[cmd配置save] 验证过程发生错误: {}",
-                    e
-                );
+                logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
                 // 恢复原始配置文件
                 wrap_err!(fs::write(&file_path, original_content).await)?;
                 return Err(e.to_string());
@@ -115,17 +100,11 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         .await
     {
         Ok((true, _)) => {
-            logging!(info, Type::Config, true, "[cmd配置save] 验证成功");
+            logging!(info, Type::Config, "[cmd配置save] 验证成功");
             Ok(())
         }
         Ok((false, error_msg)) => {
-            logging!(
-                warn,
-                Type::Config,
-                true,
-                "[cmd配置save] 验证失败: {}",
-                error_msg
-            );
+            logging!(warn, Type::Config, "[cmd配置save] 验证失败: {}", error_msg);
             // 恢复原始配置文件
             wrap_err!(fs::write(&file_path, original_content).await)?;
 
@@ -169,13 +148,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
             Ok(())
         }
         Err(e) => {
-            logging!(
-                error,
-                Type::Config,
-                true,
-                "[cmd配置save] 验证过程发生错误: {}",
-                e
-            );
+            logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
             // 恢复原始配置文件
             wrap_err!(fs::write(&file_path, original_content).await)?;
             Err(e.to_string())

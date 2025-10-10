@@ -50,13 +50,13 @@ fn set_state(new: LightweightState) {
     LIGHTWEIGHT_STATE.store(new.as_u8(), Ordering::Release);
     match new {
         LightweightState::Normal => {
-            logging!(info, Type::Lightweight, true, "轻量模式已关闭");
+            logging!(info, Type::Lightweight, "轻量模式已关闭");
         }
         LightweightState::In => {
-            logging!(info, Type::Lightweight, true, "轻量模式已开启");
+            logging!(info, Type::Lightweight, "轻量模式已开启");
         }
         LightweightState::Exiting => {
-            logging!(info, Type::Lightweight, true, "正在退出轻量模式");
+            logging!(info, Type::Lightweight, "正在退出轻量模式");
         }
     }
 }
@@ -100,7 +100,6 @@ pub async fn run_once_auto_lightweight() {
         logging!(
             info,
             Type::Lightweight,
-            true,
             "不满足静默启动且自动进入轻量模式的条件，跳过自动进入轻量模式"
         );
         return;
@@ -125,7 +124,6 @@ pub async fn auto_lightweight_mode_init() -> Result<()> {
         logging!(
             info,
             Type::Lightweight,
-            true,
             "非静默启动直接挂载自动进入轻量模式监听器！"
         );
         set_state(LightweightState::Normal);
@@ -140,13 +138,13 @@ pub async fn enable_auto_light_weight_mode() {
         logging!(error, Type::Lightweight, "Failed to initialize timer: {e}");
         return;
     }
-    logging!(info, Type::Lightweight, true, "开启自动轻量模式");
+    logging!(info, Type::Lightweight, "开启自动轻量模式");
     setup_window_close_listener();
     setup_webview_focus_listener();
 }
 
 pub fn disable_auto_light_weight_mode() {
-    logging!(info, Type::Lightweight, true, "关闭自动轻量模式");
+    logging!(info, Type::Lightweight, "关闭自动轻量模式");
     let _ = cancel_light_weight_timer();
     cancel_window_close_listener();
     cancel_webview_focus_listener();
@@ -163,7 +161,7 @@ pub async fn entry_lightweight_mode() -> bool {
         )
         .is_err()
     {
-        logging!(info, Type::Lightweight, true, "无需进入轻量模式，跳过调用");
+        logging!(info, Type::Lightweight, "无需进入轻量模式，跳过调用");
         return false;
     }
 
@@ -193,7 +191,6 @@ pub async fn exit_lightweight_mode() -> bool {
         logging!(
             info,
             Type::Lightweight,
-            true,
             "轻量模式不在退出条件（可能已退出或正在退出），跳过调用"
         );
         return false;
@@ -207,7 +204,7 @@ pub async fn exit_lightweight_mode() -> bool {
     // 回到 Normal
     set_state(LightweightState::Normal);
 
-    logging!(info, Type::Lightweight, true, "轻量模式退出完成");
+    logging!(info, Type::Lightweight, "轻量模式退出完成");
     true
 }
 
@@ -224,12 +221,7 @@ fn setup_window_close_listener() {
                     log::warn!("Failed to setup light weight timer: {e}");
                 }
             }));
-            logging!(
-                info,
-                Type::Lightweight,
-                true,
-                "监听到关闭请求，开始轻量模式计时"
-            );
+            logging!(info, Type::Lightweight, "监听到关闭请求，开始轻量模式计时");
         });
 
         WINDOW_CLOSE_HANDLER.store(handler, Ordering::Release);
@@ -241,7 +233,7 @@ fn cancel_window_close_listener() {
         let handler = WINDOW_CLOSE_HANDLER.swap(0, Ordering::AcqRel);
         if handler != 0 {
             window.unlisten(handler);
-            logging!(info, Type::Lightweight, true, "取消了窗口关闭监听");
+            logging!(info, Type::Lightweight, "取消了窗口关闭监听");
         }
     }
 }
@@ -266,7 +258,7 @@ fn cancel_webview_focus_listener() {
         let handler = WEBVIEW_FOCUS_HANDLER.swap(0, Ordering::AcqRel);
         if handler != 0 {
             window.unlisten(handler);
-            logging!(info, Type::Lightweight, true, "取消了窗口焦点监听");
+            logging!(info, Type::Lightweight, "取消了窗口焦点监听");
         }
     }
 }
@@ -292,7 +284,7 @@ async fn setup_light_weight_timer() -> Result<()> {
         .set_maximum_parallel_runnable_num(1)
         .set_frequency_once_by_minutes(once_by_minutes)
         .spawn_async_routine(move || async move {
-            logging!(info, Type::Timer, true, "计时器到期，开始进入轻量模式");
+            logging!(info, Type::Timer, "计时器到期，开始进入轻量模式");
             entry_lightweight_mode().await;
         })
         .context("failed to create timer task")?;
@@ -319,7 +311,6 @@ async fn setup_light_weight_timer() -> Result<()> {
     logging!(
         info,
         Type::Timer,
-        true,
         "计时器已设置，{} 分钟后将自动进入轻量模式",
         once_by_minutes
     );
@@ -335,7 +326,7 @@ fn cancel_light_weight_timer() -> Result<()> {
         delay_timer
             .remove_task(task.task_id)
             .context("failed to remove timer task")?;
-        logging!(info, Type::Timer, true, "计时器已取消");
+        logging!(info, Type::Timer, "计时器已取消");
     }
 
     Ok(())
