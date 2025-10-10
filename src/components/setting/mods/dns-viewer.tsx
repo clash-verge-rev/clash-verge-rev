@@ -152,51 +152,128 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   // 用于YAML编辑模式
   const [yamlContent, setYamlContent] = useState("");
 
-  useImperativeHandle(ref, () => ({
-    open: () => {
-      setOpen(true);
-      // 获取DNS配置文件并初始化表单
-      initDnsConfig();
-    },
-    close: () => setOpen(false),
-  }));
+  const parseNameserverPolicy = useCallback(
+    (str: string): Record<string, any> => {
+      const result: Record<string, any> = {};
+      if (!str) return result;
 
-  // 初始化DNS配置
-  const initDnsConfig = async () => {
-    try {
-      // 尝试从dns_config.yaml文件读取配置
-      const dnsConfigExists = await invoke<boolean>(
-        "check_dns_config_exists",
-        {},
-      );
+      const ruleRegex = /\s*([^=]+?)\s*=\s*([^,]+)(?:,|$)/g;
+      let match;
 
-      if (dnsConfigExists) {
-        // 如果存在配置文件，加载其内容
-        const dnsConfig = await invoke<string>("get_dns_config_content", {});
-        const config = yaml.load(dnsConfig) as any;
+      while ((match = ruleRegex.exec(str)) !== null) {
+        const [, domainsPart, serversPart] = match;
+        const domain = domainsPart.trim();
+        if (!domain) continue;
 
-        // 更新表单数据
-        updateValuesFromConfig(config);
-        // 更新YAML编辑器内容
-        setYamlContent(dnsConfig);
-      } else {
-        // 如果不存在配置文件，使用默认值
-        resetToDefaults();
+        const servers = serversPart.split(";").map((s) => s.trim());
+        result[domain] = servers;
       }
-    } catch (err) {
-      console.error("Failed to initialize DNS config", err);
-      resetToDefaults();
-    }
-  };
 
-  // 从配置对象更新表单值
+      return result;
+    },
+    [],
+  );
+
+  const formatNameserverPolicy = useCallback((policy: any): string => {
+    if (!policy || typeof policy !== "object") return "";
+
+    return Object.entries(policy)
+      .map(([domain, servers]) => {
+        const serversStr = Array.isArray(servers) ? servers.join(";") : servers;
+        return `${domain}=${serversStr}`;
+      })
+      .join(", ");
+  }, []);
+
+  const formatHosts = useCallback((hosts: any): string => {
+    if (!hosts || typeof hosts !== "object") return "";
+
+    const result: string[] = [];
+
+    Object.entries(hosts).forEach(([domain, value]) => {
+      if (Array.isArray(value)) {
+        const ipsStr = value.join(";");
+        result.push(`${domain}=${ipsStr}`);
+      } else {
+        result.push(`${domain}=${value}`);
+      }
+    });
+
+    return result.join(", ");
+  }, []);
+
+  const parseHosts = useCallback((str: string): Record<string, any> => {
+    const result: Record<string, any> = {};
+    if (!str) return result;
+
+    str.split(",").forEach((item) => {
+      const parts = item.trim().split("=");
+      if (parts.length < 2) return;
+
+      const domain = parts[0].trim();
+      const valueStr = parts.slice(1).join("=").trim();
+
+      if (valueStr.includes(";")) {
+        result[domain] = valueStr
+          .split(";")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      } else {
+        result[domain] = valueStr;
+      }
+    });
+
+    return result;
+  }, []);
+
+  const parseList = useCallback((str: string): string[] => {
+    if (!str?.trim()) return [];
+    return str
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }, []);
+
+  const generateDnsConfig = useCallback(() => {
+    const dnsConfig: Record<string, any> = {
+      enable: values.enable,
+      listen: values.listen,
+      "enhanced-mode": values.enhancedMode,
+      "fake-ip-range": values.fakeIpRange,
+      "fake-ip-filter-mode": values.fakeIpFilterMode,
+      "prefer-h3": values.preferH3,
+      "respect-rules": values.respectRules,
+      "use-hosts": values.useHosts,
+      "use-system-hosts": values.useSystemHosts,
+      ipv6: values.ipv6,
+      "fake-ip-filter": parseList(values.fakeIpFilter),
+      "default-nameserver": parseList(values.defaultNameserver),
+      nameserver: parseList(values.nameserver),
+      "direct-nameserver-follow-policy": values.directNameserverFollowPolicy,
+      "fallback-filter": {
+        geoip: values.fallbackGeoip,
+        "geoip-code": values.fallbackGeoipCode,
+        ipcidr: parseList(values.fallbackIpcidr),
+        domain: parseList(values.fallbackDomain),
+      },
+      fallback: parseList(values.fallback),
+      "proxy-server-nameserver": parseList(values.proxyServerNameserver),
+      "direct-nameserver": parseList(values.directNameserver),
+    };
+
+    const policy = parseNameserverPolicy(values.nameserverPolicy);
+    if (Object.keys(policy).length > 0) {
+      dnsConfig["nameserver-policy"] = policy;
+    }
+
+    return dnsConfig;
+  }, [parseList, parseNameserverPolicy, values]);
+
   const updateValuesFromConfig = useCallback(
     (config: any) => {
       if (!config) return;
 
-      // 提取dns配置
       const dnsConfig = config.dns || {};
-      // 提取hosts配置（与dns同级）
       const hostsConfig = config.hosts || {};
 
       const enhancedMode =
@@ -270,8 +347,34 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     [formatHosts, formatNameserverPolicy, setValues],
   );
 
-  // 重置为默认值
-  const resetToDefaults = () => {
+  const updateYamlFromValues = useCallback(() => {
+    const config: Record<string, any> = {};
+
+    const dnsConfig = generateDnsConfig();
+    if (Object.keys(dnsConfig).length > 0) {
+      config.dns = dnsConfig;
+    }
+
+    const hosts = parseHosts(values.hosts);
+    if (Object.keys(hosts).length > 0) {
+      config.hosts = hosts;
+    }
+
+    setYamlContent(yaml.dump(config, { forceQuotes: true }));
+  }, [generateDnsConfig, parseHosts, setYamlContent, values.hosts]);
+
+  const updateValuesFromYaml = useCallback(() => {
+    try {
+      const parsedYaml = yaml.load(yamlContent) as any;
+      if (!parsedYaml) return;
+
+      updateValuesFromConfig(parsedYaml);
+    } catch {
+      showNotice("error", t("Invalid YAML format"));
+    }
+  }, [t, updateValuesFromConfig, yamlContent]);
+
+  const resetToDefaults = useCallback(() => {
     setValues({
       enable: DEFAULT_DNS_CONFIG.enable,
       listen: DEFAULT_DNS_CONFIG.listen,
@@ -303,139 +406,47 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       hosts: "",
     });
 
-    // 更新YAML编辑器内容
     updateYamlFromValues();
-  };
+  }, [setValues, updateYamlFromValues]);
 
-  // 从表单值更新YAML内容
-  const updateYamlFromValues = useCallback(() => {
-    const config: Record<string, any> = {};
-
-    const dnsConfig = generateDnsConfig();
-    if (Object.keys(dnsConfig).length > 0) {
-      config.dns = dnsConfig;
-    }
-
-    const hosts = parseHosts(values.hosts);
-    if (Object.keys(hosts).length > 0) {
-      config.hosts = hosts;
-    }
-
-    setYamlContent(yaml.dump(config, { forceQuotes: true }));
-  }, [generateDnsConfig, parseHosts, setYamlContent, values.hosts]);
-
-  // 从YAML更新表单值
-  const updateValuesFromYaml = useCallback(() => {
+  const initDnsConfig = useCallback(async () => {
     try {
-      const parsedYaml = yaml.load(yamlContent) as any;
-      if (!parsedYaml) return;
+      const dnsConfigExists = await invoke<boolean>(
+        "check_dns_config_exists",
+        {},
+      );
 
-      updateValuesFromConfig(parsedYaml);
-    } catch {
-      showNotice("error", t("Invalid YAML format"));
-    }
-  }, [t, updateValuesFromConfig, yamlContent]);
+      if (dnsConfigExists) {
+        const dnsConfig = await invoke<string>("get_dns_config_content", {});
+        const config = yaml.load(dnsConfig) as any;
 
-  // 解析nameserver-policy为对象
-  const parseNameserverPolicy = useCallback(
-    (str: string): Record<string, any> => {
-      const result: Record<string, any> = {};
-      if (!str) return result;
-
-      // 处理geosite:xxx,yyy格式
-      const ruleRegex = /\s*([^=]+?)\s*=\s*([^,]+)(?:,|$)/g;
-      let match;
-
-      while ((match = ruleRegex.exec(str)) !== null) {
-        const [, domainsPart, serversPart] = match;
-
-        // 处理域名部分
-        let domains;
-        if (domainsPart.startsWith("geosite:")) {
-          domains = [domainsPart.trim()];
-        } else {
-          domains = [domainsPart.trim()];
-        }
-
-        // 处理服务器部分
-        const servers = serversPart.split(";").map((s) => s.trim());
-
-        // 为每个域名组分配相同的服务器列表
-        domains.forEach((domain) => {
-          result[domain] = servers;
-        });
+        updateValuesFromConfig(config);
+        setYamlContent(dnsConfig);
+      } else {
+        resetToDefaults();
       }
+    } catch (err) {
+      console.error("Failed to initialize DNS config", err);
+      resetToDefaults();
+    }
+  }, [resetToDefaults, updateValuesFromConfig]);
 
-      return result;
-    },
-    [],
+  useImperativeHandle(
+    ref,
+    () => ({
+      open: () => {
+        setOpen(true);
+        initDnsConfig();
+      },
+      close: () => setOpen(false),
+    }),
+    [initDnsConfig],
   );
 
-  // 格式化nameserver-policy为字符串
-  const formatNameserverPolicy = useCallback((policy: any): string => {
-    if (!policy || typeof policy !== "object") return "";
-
-    // 直接将对象转换为字符串格式
-    return Object.entries(policy)
-      .map(([domain, servers]) => {
-        const serversStr = Array.isArray(servers) ? servers.join(";") : servers;
-        return `${domain}=${serversStr}`;
-      })
-      .join(", ");
-  }, []);
-
-  // 格式化hosts为字符串
-  const formatHosts = useCallback((hosts: any): string => {
-    if (!hosts || typeof hosts !== "object") return "";
-
-    const result: string[] = [];
-
-    Object.entries(hosts).forEach(([domain, value]) => {
-      if (Array.isArray(value)) {
-        // 处理数组格式的IP
-        const ipsStr = value.join(";");
-        result.push(`${domain}=${ipsStr}`);
-      } else {
-        // 处理单个IP或域名
-        result.push(`${domain}=${value}`);
-      }
-    });
-
-    return result.join(", ");
-  }, []);
-
-  // 解析hosts字符串为对象
-  const parseHosts = useCallback((str: string): Record<string, any> => {
-    const result: Record<string, any> = {};
-    if (!str) return result;
-
-    str.split(",").forEach((item) => {
-      const parts = item.trim().split("=");
-      if (parts.length < 2) return;
-
-      const domain = parts[0].trim();
-      const valueStr = parts.slice(1).join("=").trim();
-
-      // 检查是否包含多个分号分隔的IP
-      if (valueStr.includes(";")) {
-        result[domain] = valueStr
-          .split(";")
-          .map((s) => s.trim())
-          .filter(Boolean);
-      } else {
-        result[domain] = valueStr;
-      }
-    });
-
-    return result;
-  }, []);
-
-  // 初始化时设置默认YAML
   useEffect(() => {
     updateYamlFromValues();
   }, [updateYamlFromValues]);
 
-  // 切换编辑模式时的处理
   useEffect(() => {
     if (visualization) {
       updateValuesFromYaml();
@@ -443,52 +454,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       updateYamlFromValues();
     }
   }, [updateValuesFromYaml, updateYamlFromValues, visualization]);
-
-  // 解析列表字符串为数组
-  const parseList = useCallback((str: string): string[] => {
-    if (!str?.trim()) return [];
-    return str
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }, []);
-
-  // 生成DNS配置对象
-  const generateDnsConfig = useCallback(() => {
-    const dnsConfig: any = {
-      enable: values.enable,
-      listen: values.listen,
-      "enhanced-mode": values.enhancedMode,
-      "fake-ip-range": values.fakeIpRange,
-      "fake-ip-filter-mode": values.fakeIpFilterMode,
-      "prefer-h3": values.preferH3,
-      "respect-rules": values.respectRules,
-      "use-hosts": values.useHosts,
-      "use-system-hosts": values.useSystemHosts,
-      ipv6: values.ipv6,
-      "fake-ip-filter": parseList(values.fakeIpFilter),
-      "default-nameserver": parseList(values.defaultNameserver),
-      nameserver: parseList(values.nameserver),
-      "direct-nameserver-follow-policy": values.directNameserverFollowPolicy,
-      "fallback-filter": {
-        geoip: values.fallbackGeoip,
-        "geoip-code": values.fallbackGeoipCode,
-        ipcidr: parseList(values.fallbackIpcidr),
-        domain: parseList(values.fallbackDomain),
-      },
-
-      fallback: parseList(values.fallback),
-      "proxy-server-nameserver": parseList(values.proxyServerNameserver),
-      "direct-nameserver": parseList(values.directNameserver),
-    };
-
-    const policy = parseNameserverPolicy(values.nameserverPolicy);
-    if (Object.keys(policy).length > 0) {
-      dnsConfig["nameserver-policy"] = policy;
-    }
-
-    return dnsConfig;
-  }, [parseList, parseNameserverPolicy, values]);
 
   // 处理保存操作
   const onSave = useLockFn(async () => {

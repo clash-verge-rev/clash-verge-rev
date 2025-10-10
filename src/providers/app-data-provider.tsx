@@ -88,6 +88,40 @@ export const AppDataProvider = ({
     },
   );
 
+  // Provider collections
+  const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
+    "getProxyProviders",
+    calcuProxyProviders,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 3000,
+      suspense: false,
+      errorRetryCount: 3,
+    },
+  );
+
+  const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
+    "getRuleProviders",
+    getRuleProviders,
+    {
+      revalidateOnFocus: false,
+      suspense: false,
+      errorRetryCount: 3,
+    },
+  );
+
+  // Low-frequency updates
+  const { data: rulesData, mutate: refreshRules } = useSWR(
+    "getRules",
+    getRules,
+    {
+      revalidateOnFocus: false,
+      suspense: false,
+      errorRetryCount: 3,
+    },
+  );
+
   // 监听profile和clash配置变更事件
   useEffect(() => {
     let lastProfileId: string | null = null;
@@ -332,41 +366,6 @@ export const AppDataProvider = ({
       errorRetryCount: 3,
     },
   );
-
-  // 提供者数据
-  const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
-    "getProxyProviders",
-    calcuProxyProviders,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 3000,
-      suspense: false,
-      errorRetryCount: 3,
-    },
-  );
-
-  const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
-    "getRuleProviders",
-    getRuleProviders,
-    {
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 3,
-    },
-  );
-
-  // 低频率更新数据
-  const { data: rulesData, mutate: refreshRules } = useSWR(
-    "getRules",
-    getRules,
-    {
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 3,
-    },
-  );
-
   const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
     "getSystemProxy",
     getSystemProxy,

@@ -22,6 +22,7 @@ import { useWindowDecorations } from "@/hooks/use-window";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
+
 import { GuardState } from "./guard-state";
 
 const OS = getSystem();
