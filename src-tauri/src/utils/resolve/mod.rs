@@ -189,8 +189,9 @@ pub(super) async fn init_verge_config() {
 
 pub(super) async fn init_service_manager() {
     logging!(info, Type::Setup, "Initializing service manager...");
-    logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.init().await);
-    logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.refresh().await);
+    if SERVICE_MANAGER.lock().await.init().await.is_ok() {
+        logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.refresh().await);
+    }
 }
 
 pub(super) async fn init_core_manager() {

@@ -416,14 +416,17 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
-    pub async fn init(&self) -> Result<()> {
-        println!("Initialing Service Connect");
+    pub async fn init(&mut self) -> Result<()> {
         let config = clash_verge_service_ipc::IpcConfig {
             default_timeout: Duration::from_millis(200),
             max_retries: 3,
             retry_delay: Duration::from_millis(200),
         };
-        clash_verge_service_ipc::connect(Some(config)).await
+        if let Err(e) = clash_verge_service_ipc::connect(Some(config)).await {
+            self.0 = ServiceStatus::Unavailable("服务连接失败: {e}".to_string());
+            return Err(e);
+        }
+        Ok(())
     }
 
     pub fn current(&self) -> ServiceStatus {
@@ -461,31 +464,26 @@ impl ServiceManager {
         match status {
             ServiceStatus::Ready => {
                 logging!(info, Type::Service, "服务就绪，直接启动");
-                Ok(())
             }
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
                 logging!(info, Type::Service, "服务需要重装，执行重装流程");
                 reinstall_service().await?;
                 self.0 = ServiceStatus::Ready;
-                Ok(())
             }
             ServiceStatus::ForceReinstallRequired => {
                 logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
                 force_reinstall_service().await?;
                 self.0 = ServiceStatus::Ready;
-                Ok(())
             }
             ServiceStatus::InstallRequired => {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 install_service().await?;
                 self.0 = ServiceStatus::Ready;
-                Ok(())
             }
             ServiceStatus::UninstallRequired => {
                 logging!(info, Type::Service, "服务需要卸载，执行卸载流程");
                 uninstall_service().await?;
                 self.0 = ServiceStatus::Unavailable("Service Uninstalled".into());
-                Ok(())
             }
             ServiceStatus::Unavailable(reason) => {
                 logging!(
@@ -495,9 +493,15 @@ impl ServiceManager {
                     reason
                 );
                 self.0 = ServiceStatus::Unavailable(reason.clone());
-                Err(anyhow::anyhow!("服务不可用: {}", reason))
+                return Err(anyhow::anyhow!("服务不可用: {}", reason));
             }
         }
+        // 等待 socket 完全拉取
+        #[cfg(unix)]
+        if self.0 == ServiceStatus::Ready {
+            tokio::time::sleep(Duration::from_millis(200)).await;
+        }
+        Ok(())
     }
 }
 
