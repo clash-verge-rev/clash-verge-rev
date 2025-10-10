@@ -199,13 +199,7 @@ async fn reinstall_service() -> Result<()> {
 
     // 先卸载服务
     if let Err(err) = uninstall_service().await {
-        logging!(
-            warn,
-            Type::Service,
-            true,
-            "failed to uninstall service: {}",
-            err
-        );
+        logging!(warn, Type::Service, "failed to uninstall service: {}", err);
     }
 
     // 再安装服务
