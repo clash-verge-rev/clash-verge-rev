@@ -36,7 +36,7 @@ import {
   cancelIdleCallback,
 } from "foxact/request-idle-callback";
 import yaml from "js-yaml";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
@@ -160,7 +160,7 @@ export const GroupsEditorViewer = (props: Props) => {
       }
     }
   };
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property);
     const obj = yaml.load(data) as ISeqProfileConfig | null;
 
@@ -170,7 +170,7 @@ export const GroupsEditorViewer = (props: Props) => {
 
     setPrevData(data);
     setCurrData(data);
-  };
+  }, [property]);
 
   useEffect(() => {
     if (currData === "") return;
@@ -184,7 +184,7 @@ export const GroupsEditorViewer = (props: Props) => {
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
-  }, [visualization]);
+  }, [visualization, currData]);
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
@@ -208,9 +208,9 @@ export const GroupsEditorViewer = (props: Props) => {
         cancelIdleCallback(handle);
       };
     }
-  }, [prependSeq, appendSeq, deleteSeq]);
+  }, [appendSeq, deleteSeq, prependSeq]);
 
-  const fetchProxyPolicy = async () => {
+  const fetchProxyPolicy = useCallback(async () => {
     const data = await readProfileFile(profileUid);
     const proxiesData = await readProfileFile(proxiesUid);
     const originGroupsObj = yaml.load(data) as {
@@ -246,8 +246,8 @@ export const GroupsEditorViewer = (props: Props) => {
         proxies.map((proxy: any) => proxy.name),
       ),
     );
-  };
-  const fetchProfile = async () => {
+  }, [appendSeq, deleteSeq, prependSeq, profileUid, proxiesUid]);
+  const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid);
     const mergeData = await readProfileFile(mergeUid);
     const globalMergeData = await readProfileFile("Merge");
@@ -257,17 +257,17 @@ export const GroupsEditorViewer = (props: Props) => {
     } | null;
 
     const originProviderObj = yaml.load(data) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, unknown>;
     } | null;
     const originProvider = originProviderObj?.["proxy-providers"] || {};
 
     const moreProviderObj = yaml.load(mergeData) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, unknown>;
     } | null;
     const moreProvider = moreProviderObj?.["proxy-providers"] || {};
 
     const globalProviderObj = yaml.load(globalMergeData) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, unknown>;
     } | null;
     const globalProvider = globalProviderObj?.["proxy-providers"] || {};
 
@@ -280,21 +280,21 @@ export const GroupsEditorViewer = (props: Props) => {
 
     setProxyProviderList(Object.keys(provider));
     setGroupList(originGroupsObj?.["proxy-groups"] || []);
-  };
+  }, [mergeUid, profileUid]);
   const getInterfaceNameList = async () => {
     const list = await getNetworkInterfaces();
     setInterfaceNameList(list);
   };
   useEffect(() => {
     fetchProxyPolicy();
-  }, [prependSeq, appendSeq, deleteSeq]);
+  }, [appendSeq, deleteSeq, fetchProxyPolicy, prependSeq]);
   useEffect(() => {
     if (!open) return;
     fetchContent();
     fetchProxyPolicy();
     fetchProfile();
     getInterfaceNameList();
-  }, [open]);
+  }, [fetchContent, fetchProfile, fetchProxyPolicy, open]);
 
   const validateGroup = () => {
     const group = formIns.getValues();

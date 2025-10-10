@@ -35,15 +35,19 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
   },
 }));
 
-export const BaseSearchBox = (props: SearchProps) => {
+export const BaseSearchBox = ({
+  placeholder,
+  matchCase: initialMatchCase = false,
+  matchWholeWord: initialMatchWholeWord = false,
+  useRegularExpression: initialUseRegularExpression = false,
+  onSearch,
+}: SearchProps) => {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [matchCase, setMatchCase] = useState(props.matchCase ?? false);
-  const [matchWholeWord, setMatchWholeWord] = useState(
-    props.matchWholeWord ?? false,
-  );
+  const [matchCase, setMatchCase] = useState(initialMatchCase);
+  const [matchWholeWord, setMatchWholeWord] = useState(initialMatchWholeWord);
   const [useRegularExpression, setUseRegularExpression] = useState(
-    props.useRegularExpression ?? false,
+    initialUseRegularExpression,
   );
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -105,13 +109,19 @@ export const BaseSearchBox = (props: SearchProps) => {
   useEffect(() => {
     if (!inputRef.current) return;
     const value = inputRef.current.value;
-    props.onSearch(createMatcher(value), {
+    onSearch(createMatcher(value), {
       text: value,
       matchCase,
       matchWholeWord,
       useRegularExpression,
     });
-  }, [matchCase, matchWholeWord, useRegularExpression, createMatcher]);
+  }, [
+    matchCase,
+    matchWholeWord,
+    useRegularExpression,
+    createMatcher,
+    onSearch,
+  ]);
 
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target?.value ?? "";
@@ -125,7 +135,7 @@ export const BaseSearchBox = (props: SearchProps) => {
       }
     }
 
-    props.onSearch(createMatcher(value), {
+    onSearch(createMatcher(value), {
       text: value,
       matchCase,
       matchWholeWord,
@@ -143,7 +153,7 @@ export const BaseSearchBox = (props: SearchProps) => {
         size="small"
         variant="outlined"
         spellCheck="false"
-        placeholder={props.placeholder ?? t("Filter conditions")}
+        placeholder={placeholder ?? t("Filter conditions")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
         error={!!errorMessage}

@@ -31,7 +31,7 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 import { Virtuoso } from "react-virtuoso";
@@ -305,7 +305,7 @@ export const RulesEditorViewer = (props: Props) => {
       }
     }
   };
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property);
     const obj = yaml.load(data) as ISeqProfileConfig | null;
 
@@ -315,7 +315,7 @@ export const RulesEditorViewer = (props: Props) => {
 
     setPrevData(data);
     setCurrData(data);
-  };
+  }, [property]);
 
   useEffect(() => {
     if (currData === "") return;
@@ -325,7 +325,7 @@ export const RulesEditorViewer = (props: Props) => {
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
-  }, [visualization]);
+  }, [currData, visualization]);
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
@@ -350,7 +350,7 @@ export const RulesEditorViewer = (props: Props) => {
     }
   }, [prependSeq, appendSeq, deleteSeq]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid); // 原配置文件
     const groupsData = await readProfileFile(groupsUid); // groups配置文件
     const mergeData = await readProfileFile(mergeUid); // merge配置文件
@@ -376,14 +376,16 @@ export const RulesEditorViewer = (props: Props) => {
       moreAppendGroups,
     );
 
-    const originRuleSetObj = yaml.load(data) as { "rule-providers": {} } | null;
+    const originRuleSetObj = yaml.load(data) as {
+      "rule-providers": Record<string, unknown>;
+    } | null;
     const originRuleSet = originRuleSetObj?.["rule-providers"] || {};
     const moreRuleSetObj = yaml.load(mergeData) as {
-      "rule-providers": {};
+      "rule-providers": Record<string, unknown>;
     } | null;
     const moreRuleSet = moreRuleSetObj?.["rule-providers"] || {};
     const globalRuleSetObj = yaml.load(globalMergeData) as {
-      "rule-providers": {};
+      "rule-providers": Record<string, unknown>;
     } | null;
     const globalRuleSet = globalRuleSetObj?.["rule-providers"] || {};
     const ruleSet = Object.assign(
@@ -393,12 +395,16 @@ export const RulesEditorViewer = (props: Props) => {
       globalRuleSet,
     );
 
-    const originSubRuleObj = yaml.load(data) as { "sub-rules": {} } | null;
+    const originSubRuleObj = yaml.load(data) as {
+      "sub-rules": Record<string, unknown>;
+    } | null;
     const originSubRule = originSubRuleObj?.["sub-rules"] || {};
-    const moreSubRuleObj = yaml.load(mergeData) as { "sub-rules": {} } | null;
+    const moreSubRuleObj = yaml.load(mergeData) as {
+      "sub-rules": Record<string, unknown>;
+    } | null;
     const moreSubRule = moreSubRuleObj?.["sub-rules"] || {};
     const globalSubRuleObj = yaml.load(globalMergeData) as {
-      "sub-rules": {};
+      "sub-rules": Record<string, unknown>;
     } | null;
     const globalSubRule = globalSubRuleObj?.["sub-rules"] || {};
     const subRule = Object.assign(
@@ -413,13 +419,13 @@ export const RulesEditorViewer = (props: Props) => {
     setRuleSetList(Object.keys(ruleSet));
     setSubRuleList(Object.keys(subRule));
     setRuleList(rulesObj?.rules || []);
-  };
+  }, [groupsUid, mergeUid, profileUid]);
 
   useEffect(() => {
     if (!open) return;
     fetchContent();
     fetchProfile();
-  }, [open]);
+  }, [open, fetchContent, fetchProfile]);
 
   const validateRule = () => {
     if ((ruleType.required ?? true) && !ruleContent) {

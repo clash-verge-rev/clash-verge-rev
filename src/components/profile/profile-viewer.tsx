@@ -63,6 +63,8 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     },
   });
 
+  const { setValue: setFormValue } = formIns;
+
   useImperativeHandle(ref, () => ({
     create: () => {
       setOpenType("new");
@@ -83,12 +85,12 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   const withProxy = watch("option.with_proxy");
 
   useEffect(() => {
-    if (selfProxy) formIns.setValue("option.with_proxy", false);
-  }, [selfProxy]);
+    if (selfProxy) setFormValue("option.with_proxy", false);
+  }, [selfProxy, setFormValue]);
 
   useEffect(() => {
-    if (withProxy) formIns.setValue("option.self_proxy", false);
-  }, [withProxy]);
+    if (withProxy) setFormValue("option.self_proxy", false);
+  }, [withProxy, setFormValue]);
 
   const handleOk = useLockFn(
     formIns.handleSubmit(async (form) => {

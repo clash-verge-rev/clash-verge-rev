@@ -50,17 +50,17 @@ export const TestItem = (props: Props) => {
     setDelay(result);
   }, [url]);
 
-  useEffect(() => {
-    initIconCachePath();
-  }, [icon]);
-
-  async function initIconCachePath() {
+  const initIconCachePath = useCallback(async () => {
     if (icon && icon.trim().startsWith("http")) {
       const fileName = uid + "-" + getFileName(icon);
       const iconPath = await downloadIconCache(icon, fileName);
       setIconCachePath(convertFileSrc(iconPath));
     }
-  }
+  }, [icon, uid]);
+
+  useEffect(() => {
+    initIconCachePath();
+  }, [icon, initIconCachePath]);
 
   function getFileName(url: string) {
     return url.substring(url.lastIndexOf("/") + 1);

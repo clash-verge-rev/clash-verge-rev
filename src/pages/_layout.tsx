@@ -301,7 +301,7 @@ const Layout = () => {
           });
       }, 0);
     };
-  }, [handleNotice]);
+  }, [addListener, handleNotice]);
 
   useEffect(() => {
     if (initRef.current) {
@@ -477,7 +477,7 @@ const Layout = () => {
     if (start_page) {
       navigate(start_page, { replace: true });
     }
-  }, [start_page]);
+  }, [navigate, start_page]);
 
   if (!themeReady) {
     return (
@@ -625,7 +625,9 @@ const Layout = () => {
             <div className="layout-content__right">
               <div className="the-bar"></div>
               <div className="the-content">
-                {React.cloneElement(routersEles, { key: location.pathname })}
+                <React.Fragment key={location.pathname}>
+                  {routersEles}
+                </React.Fragment>
               </div>
             </div>
           </div>

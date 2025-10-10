@@ -29,7 +29,7 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 import { Virtuoso } from "react-virtuoso";
@@ -172,7 +172,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     }
     parseBatch();
   };
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid);
 
     const originProxiesObj = yaml.load(data) as {
@@ -180,9 +180,9 @@ export const ProxiesEditorViewer = (props: Props) => {
     } | null;
 
     setProxyList(originProxiesObj?.proxies || []);
-  };
+  }, [profileUid]);
 
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property);
     const obj = yaml.load(data) as ISeqProfileConfig | null;
 
@@ -192,7 +192,7 @@ export const ProxiesEditorViewer = (props: Props) => {
 
     setPrevData(data);
     setCurrData(data);
-  };
+  }, [property]);
 
   useEffect(() => {
     if (currData === "") return;
@@ -206,7 +206,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
     setDeleteSeq(obj?.delete || []);
-  }, [visualization]);
+  }, [currData, visualization]);
 
   useEffect(() => {
     if (prependSeq && appendSeq && deleteSeq) {
@@ -235,7 +235,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     if (!open) return;
     fetchContent();
     fetchProfile();
-  }, [open]);
+  }, [open, fetchContent, fetchProfile]);
 
   const handleSave = useLockFn(async () => {
     try {

@@ -20,7 +20,7 @@ import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import * as monaco from "monaco-editor";
 import { configureMonacoYaml } from "monaco-yaml";
 import { nanoid } from "nanoid";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 import pac from "types-pac/pac.d.ts?raw";
@@ -63,13 +63,13 @@ const monacoInitialization = () => {
       {
         uri: "http://example.com/meta-json-schema.json",
         fileMatch: ["**/*.clash.yaml"],
-        // @ts-ignore
+        // @ts-expect-error -- meta schema typing does not match monaco definition
         schema: metaSchema as JSONSchema7,
       },
       {
         uri: "http://example.com/clash-verge-merge-json-schema.json",
         fileMatch: ["**/*.merge.yaml"],
-        // @ts-ignore
+        // @ts-expect-error -- merge schema typing does not match monaco definition
         schema: mergeSchema as JSONSchema7,
       },
     ],
@@ -133,7 +133,9 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
 
   const handleSave = useLockFn(async () => {
     try {
-      !readOnly && onSave?.(prevData.current, currData.current);
+      if (!readOnly) {
+        onSave?.(prevData.current, currData.current);
+      }
       onClose();
     } catch (err: any) {
       showNotice("error", err.message || err.toString());
@@ -148,10 +150,14 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     }
   });
 
-  const editorResize = debounce(() => {
-    editorRef.current?.layout();
-    setTimeout(() => editorRef.current?.layout(), 500);
-  }, 100);
+  const editorResize = useMemo(
+    () =>
+      debounce(() => {
+        editorRef.current?.layout();
+        setTimeout(() => editorRef.current?.layout(), 500);
+      }, 100),
+    [],
+  );
 
   useEffect(() => {
     const onResized = debounce(() => {
@@ -167,7 +173,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       editorRef.current?.dispose();
       editorRef.current = undefined;
     };
-  }, []);
+  }, [editorResize]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>

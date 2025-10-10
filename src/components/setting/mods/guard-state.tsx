@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, ReactNode, useRef } from "react";
+import { createElement, isValidElement, ReactNode, useRef } from "react";
 
 import noop from "@/utils/noop";
 
@@ -81,5 +81,6 @@ export function GuardState<T>(props: Props<T>) {
     }
     lockRef.current = false;
   };
-  return cloneElement(children, childProps);
+  const childRef = (children as any).ref;
+  return createElement(children.type, { ...childProps, ref: childRef });
 }

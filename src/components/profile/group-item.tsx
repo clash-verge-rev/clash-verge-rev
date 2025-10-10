@@ -10,7 +10,7 @@ import {
   styled,
 } from "@mui/material";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { downloadIconCache } from "@/services/cmds";
 interface Props {
@@ -30,31 +30,22 @@ export const GroupItem = (props: Props) => {
     transform,
     transition,
     isDragging,
-  } = sortable
-    ? useSortable({ id: group.name })
-    : {
-        attributes: {},
-        listeners: {},
-        setNodeRef: null,
-        transform: null,
-        transition: null,
-        isDragging: false,
-      };
+  } = useSortable({ id: group.name, disabled: !sortable });
 
   const [iconCachePath, setIconCachePath] = useState("");
 
-  useEffect(() => {
-    initIconCachePath();
-  }, [group]);
-
-  async function initIconCachePath() {
+  const initIconCachePath = useCallback(async () => {
     if (group.icon && group.icon.trim().startsWith("http")) {
       const fileName =
         group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
       const iconPath = await downloadIconCache(group.icon, fileName);
       setIconCachePath(convertFileSrc(iconPath));
     }
-  }
+  }, [group]);
+
+  useEffect(() => {
+    initIconCachePath();
+  }, [initIconCachePath]);
 
   function getFileName(url: string) {
     return url.substring(url.lastIndexOf("/") + 1);
@@ -108,9 +99,9 @@ export const GroupItem = (props: Props) => {
         />
       )}
       <ListItemText
-        {...attributes}
-        {...listeners}
-        ref={setNodeRef}
+        {...(sortable ? attributes : undefined)}
+        {...(sortable ? listeners : undefined)}
+        ref={sortable ? setNodeRef : undefined}
         sx={{ cursor: sortable ? "move" : "" }}
         primary={
           <StyledPrimary

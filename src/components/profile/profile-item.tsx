@@ -166,7 +166,12 @@ export const ProfileItem = (props: Props) => {
     if (showNextUpdate) {
       fetchNextUpdateTime();
     }
-  }, [showNextUpdate, itemData.option?.update_interval, updated]);
+  }, [
+    showNextUpdate,
+    itemData.option?.update_interval,
+    updated,
+    fetchNextUpdateTime,
+  ]);
 
   // 订阅定时器更新事件
   useEffect(() => {
@@ -196,7 +201,7 @@ export const ProfileItem = (props: Props) => {
         handleTimerUpdate as EventListener,
       );
     };
-  }, [showNextUpdate, itemData.uid]);
+  }, [showNextUpdate, itemData.uid, fetchNextUpdateTime]);
 
   // local file mode
   // remote file mode
@@ -383,7 +388,7 @@ export const ProfileItem = (props: Props) => {
         setAnchorEl(null);
         if (batchMode) {
           // If in batch mode, just toggle selection instead of showing delete confirmation
-          onSelectionChange && onSelectionChange();
+          onSelectionChange?.();
         } else {
           setConfirmOpen(true);
         }
@@ -427,7 +432,7 @@ export const ProfileItem = (props: Props) => {
         setAnchorEl(null);
         if (batchMode) {
           // If in batch mode, just toggle selection instead of showing delete confirmation
-          onSelectionChange && onSelectionChange();
+          onSelectionChange?.();
         } else {
           setConfirmOpen(true);
         }
@@ -482,7 +487,7 @@ export const ProfileItem = (props: Props) => {
         handleUpdateCompleted as EventListener,
       );
     };
-  }, [itemData.uid, showNextUpdate]);
+  }, [itemData.uid, showNextUpdate, fetchNextUpdateTime, setLoadingCache]);
 
   return (
     <Box
@@ -544,7 +549,7 @@ export const ProfileItem = (props: Props) => {
                 sx={{ padding: "2px", marginRight: "4px", marginLeft: "-8px" }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectionChange && onSelectionChange();
+                  onSelectionChange?.();
                 }}
               >
                 {isSelected ? (
@@ -738,7 +743,7 @@ export const ProfileItem = (props: Props) => {
           schema="clash"
           onSave={async (prev, curr) => {
             await saveProfileFile(uid, curr ?? "");
-            onSave && onSave(prev, curr);
+            onSave?.(prev, curr);
           }}
           onClose={() => setFileOpen(false)}
         />
@@ -784,7 +789,7 @@ export const ProfileItem = (props: Props) => {
           schema="clash"
           onSave={async (prev, curr) => {
             await saveProfileFile(option?.merge ?? "", curr ?? "");
-            onSave && onSave(prev, curr);
+            onSave?.(prev, curr);
           }}
           onClose={() => setMergeOpen(false)}
         />
@@ -796,7 +801,7 @@ export const ProfileItem = (props: Props) => {
           language="javascript"
           onSave={async (prev, curr) => {
             await saveProfileFile(option?.script ?? "", curr ?? "");
-            onSave && onSave(prev, curr);
+            onSave?.(prev, curr);
           }}
           onClose={() => setScriptOpen(false)}
         />

@@ -37,6 +37,7 @@ export const useServiceUninstaller = () => {
     );
 
     await executeWithErrorHandling(() => restartCore(), "Restarting Core...");
+    await Promise.all([mutateRunningMode(), mutateServiceOk()]);
   }, [mutateRunningMode, mutateServiceOk]);
 
   return { uninstallServiceAndRestartCore };

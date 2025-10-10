@@ -46,6 +46,8 @@ interface ProxyChainItem {
   delay?: number;
 }
 
+const VirtuosoFooter = () => <div style={{ height: "8px" }} />;
+
 export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation();
   const { mode, isChainMode = false, chainConfigData } = props;
@@ -140,13 +142,15 @@ export const ProxyGroups = (props: Props) => {
   );
 
   // 使用改进的滚动处理
-  const handleScroll = useCallback(
-    throttle((e: any) => {
-      const scrollTop = e.target.scrollTop;
-      setShowScrollTop(scrollTop > 100);
-      // 使用稳定的节流来保存位置，而不是setTimeout
-      saveScrollPosition(scrollTop);
-    }, 500), // 增加到500ms以确保平滑滚动
+  const handleScroll = useMemo(
+    () =>
+      throttle((event: Event) => {
+        const target = event.target as HTMLElement;
+        const scrollTop = target.scrollTop;
+        setShowScrollTop(scrollTop > 100);
+        // 使用稳定的节流来保存位置，而不是setTimeout
+        saveScrollPosition(scrollTop);
+      }, 500), // 增加到500ms以确保平滑滚动
     [saveScrollPosition],
   );
 
@@ -458,9 +462,7 @@ export const ProxyGroups = (props: Props) => {
               scrollerRef={(ref) => {
                 scrollerRef.current = ref as Element;
               }}
-              components={{
-                Footer: () => <div style={{ height: "8px" }} />,
-              }}
+              components={{ Footer: VirtuosoFooter }}
               initialScrollTop={scrollPositionRef.current[mode]}
               computeItemKey={(index) => renderList[index].key}
               itemContent={(index) => (
@@ -577,9 +579,7 @@ export const ProxyGroups = (props: Props) => {
         scrollerRef={(ref) => {
           scrollerRef.current = ref as Element;
         }}
-        components={{
-          Footer: () => <div style={{ height: "8px" }} />,
-        }}
+        components={{ Footer: VirtuosoFooter }}
         // 添加平滑滚动设置
         initialScrollTop={scrollPositionRef.current[mode]}
         computeItemKey={(index) => renderList[index].key}

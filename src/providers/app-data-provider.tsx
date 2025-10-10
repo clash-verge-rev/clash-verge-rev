@@ -320,7 +320,7 @@ export const AppDataProvider = ({
       });
       cleanupFns.splice(0).forEach((fn) => fn());
     };
-  }, [refreshProxy]);
+  }, [refreshProxy, refreshRuleProviders, refreshRules]);
 
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
     "getClashConfig",

@@ -173,7 +173,7 @@ export const ProfileMore = (props: Props) => {
           schema={id === "Merge" ? "clash" : undefined}
           onSave={async (prev, curr) => {
             await saveProfileFile(id, curr ?? "");
-            onSave && onSave(prev, curr);
+            onSave?.(prev, curr);
           }}
           onClose={() => setFileOpen(false)}
         />

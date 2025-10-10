@@ -137,7 +137,7 @@ export const useLogData = () => {
     if (!logLevel) return;
     ws.current?.close();
     setDate(Date.now());
-  }, [logLevel]);
+  }, [logLevel, setDate]);
 
   const refreshGetClashLog = (clear = false) => {
     if (clear) {
