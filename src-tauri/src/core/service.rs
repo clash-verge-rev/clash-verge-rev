@@ -6,10 +6,8 @@ use crate::{
 use anyhow::{Context, Result, bail};
 use clash_verge_service_ipc::CoreConfig;
 use once_cell::sync::Lazy;
-use std::{env::current_exe, path::PathBuf, process::Command as StdCommand};
+use std::{env::current_exe, path::PathBuf, process::Command as StdCommand, time::Duration};
 use tokio::sync::Mutex;
-
-const REQUIRED_SERVICE_VERSION: &str = "1.1.2"; // 定义所需的服务版本号
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -339,7 +337,6 @@ async fn check_service_version() -> Result<String> {
         let response = clash_verge_service_ipc::get_version()
             .await
             .context("无法连接到Clash Verge Service")?;
-
         if response.code > 0 {
             let err_msg = response.message;
             logging!(error, Type::Service, true, "获取服务版本失败: {}", err_msg);
@@ -359,7 +356,7 @@ async fn check_service_version() -> Result<String> {
 /// 检查服务是否需要重装
 pub async fn check_service_needs_reinstall() -> bool {
     match check_service_version().await {
-        Ok(version) => version != REQUIRED_SERVICE_VERSION,
+        Ok(version) => version != clash_verge_service_ipc::VERSION,
         Err(_) => false,
     }
 }
@@ -437,6 +434,16 @@ pub async fn is_service_available() -> Result<()> {
 impl ServiceManager {
     pub fn default() -> Self {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
+    }
+
+    pub async fn init(&self) -> Result<()> {
+        println!("Initialing Service Connect");
+        let config = clash_verge_service_ipc::IpcConfig {
+            default_timeout: Duration::from_millis(200),
+            max_retries: 3,
+            retry_delay: Duration::from_millis(200),
+        };
+        clash_verge_service_ipc::connect(Some(config)).await
     }
 
     pub fn current(&self) -> ServiceStatus {

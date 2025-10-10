@@ -901,6 +901,7 @@ impl CoreManager {
     }
 
     pub async fn prestart_core(&self) -> Result<()> {
+        logging_error!(Type::Setup, true, SERVICE_MANAGER.lock().await.init().await);
         SERVICE_MANAGER.lock().await.refresh().await?;
         match SERVICE_MANAGER.lock().await.current() {
             ServiceStatus::Ready => {
