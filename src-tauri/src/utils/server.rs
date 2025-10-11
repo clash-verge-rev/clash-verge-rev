@@ -55,6 +55,14 @@ pub fn embed_server() {
         .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
+    if !local_port_available(port) {
+        log::warn!(
+            "singleton embedded server port {} is already in use; skipping server startup",
+            port
+        );
+        return;
+    }
+
     AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").and_then(|| async {
             Ok::<_, warp::Rejection>(warp::reply::with_status(

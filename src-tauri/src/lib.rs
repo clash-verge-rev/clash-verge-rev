@@ -33,7 +33,7 @@ mod app_init {
 
     /// Initialize singleton monitoring for other instances
     pub fn init_singleton_check() {
-        AsyncHandler::spawn_blocking(move || async move {
+        AsyncHandler::spawn(|| async {
             logging!(info, Type::Setup, "开始检查单例实例...");
             match timeout(Duration::from_millis(500), server::check_singleton()).await {
                 Ok(result) => {
