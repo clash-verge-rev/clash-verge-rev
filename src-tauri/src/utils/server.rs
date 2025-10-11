@@ -25,26 +25,68 @@ static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell:
 /// check whether there is already exists
 pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
-    if !local_port_available(port) {
+
+    if local_port_available(port) {
+        return Ok(());
+    }
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_millis(500))
+        .build()?;
+
+    let mut attempted = false;
+    let mut handled = false;
+
+    #[cfg(not(target_os = "macos"))]
+    {
         let argvs: Vec<String> = std::env::args().collect();
         if argvs.len() > 1 {
-            #[cfg(not(target_os = "macos"))]
-            {
-                let param = argvs[1].as_str();
-                if param.starts_with("clash:") {
-                    let _ = reqwest::get(format!(
-                        "http://127.0.0.1:{port}/commands/scheme?param={param}"
-                    ))
-                    .await;
-                }
+            let param = argvs[1].as_str();
+            if param.starts_with("clash:") {
+                attempted = true;
+                let url = format!("http://127.0.0.1:{port}/commands/scheme?param={param}");
+                handled = send_singleton_command(&client, &url).await;
             }
-        } else {
-            let _ = reqwest::get(format!("http://127.0.0.1:{port}/commands/visible")).await;
         }
+    }
+
+    if !handled {
+        attempted = true;
+        let url = format!("http://127.0.0.1:{port}/commands/visible");
+        handled = send_singleton_command(&client, &url).await;
+    }
+
+    if handled {
         log::error!("failed to setup singleton listen server");
         bail!("app exists");
     }
+
+    if attempted {
+        log::warn!(
+            "singleton embedded server port {} appears busy but did not respond to singleton handshake; continuing startup",
+            port
+        );
+    }
+
     Ok(())
+}
+
+async fn send_singleton_command(client: &reqwest::Client, url: &str) -> bool {
+    match client.get(url).send().await {
+        Ok(response) if response.status().is_success() => true,
+        Ok(response) => {
+            log::warn!(
+                "singleton handshake endpoint {} responded with status {}",
+                url,
+                response.status()
+            );
+            false
+        }
+        Err(err) => {
+            log::warn!("failed to reach singleton endpoint {}: {}", url, err);
+            false
+        }
+    }
 }
 
 /// The embed server only be used to implement singleton process
