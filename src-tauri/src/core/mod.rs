@@ -7,6 +7,7 @@ pub mod handle;
 pub mod hotkey;
 pub mod logger;
 pub mod service;
+pub mod service_ipc;
 pub mod sysopt;
 pub mod timer;
 pub mod tray;

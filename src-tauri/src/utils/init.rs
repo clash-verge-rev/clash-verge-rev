@@ -93,6 +93,8 @@ pub async fn sidecar_writer() -> Result<FileLogWriter> {
     .try_build()?)
 }
 
+//  TODO 后续迁移新 service  时使用
+#[allow(dead_code)]
 pub async fn service_writer_config() -> Result<WriterConfig> {
     let (log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
