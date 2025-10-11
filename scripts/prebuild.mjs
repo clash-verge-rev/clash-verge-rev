@@ -1,14 +1,14 @@
+import AdmZip from "adm-zip";
+import { execSync } from "child_process";
 import fs from "fs";
 import fsp from "fs/promises";
-import zlib from "zlib";
-import { extract } from "tar";
-import path from "path";
-import AdmZip from "adm-zip";
-import fetch from "node-fetch";
-import { HttpsProxyAgent } from "https-proxy-agent";
-import { execSync } from "child_process";
-import { log_info, log_debug, log_error, log_success } from "./utils.mjs";
 import { glob } from "glob";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import fetch from "node-fetch";
+import path from "path";
+import { extract } from "tar";
+import zlib from "zlib";
+import { log_debug, log_error, log_info, log_success } from "./utils.mjs";
 
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
@@ -383,8 +383,8 @@ const resolvePlugin = async () => {
 const resolveServicePermission = async () => {
   const serviceExecutables = [
     "clash-verge-service*",
-    "install-service*",
-    "uninstall-service*",
+    "clash-verge-service-install*",
+    "clash-verge-service-uninstall*",
   ];
   const resDir = path.join(cwd, "src-tauri/resources");
   for (let f of serviceExecutables) {
@@ -430,7 +430,7 @@ async function resolveLocales() {
 /**
  * main
  */
-const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service/releases/download/${SIDECAR_HOST}`;
+const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service-ipc/releases/download/${SIDECAR_HOST}`;
 
 const resolveService = () => {
   let ext = platform === "win32" ? ".exe" : "";
@@ -445,8 +445,8 @@ const resolveInstall = () => {
   let ext = platform === "win32" ? ".exe" : "";
   let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   resolveResource({
-    file: "install-service" + suffix + ext,
-    downloadURL: `${SERVICE_URL}/install-service${ext}`,
+    file: "clash-verge-service-install" + suffix + ext,
+    downloadURL: `${SERVICE_URL}/clash-verge-service-install${ext}`,
   });
 };
 
@@ -455,8 +455,8 @@ const resolveUninstall = () => {
   let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
 
   resolveResource({
-    file: "uninstall-service" + suffix + ext,
-    downloadURL: `${SERVICE_URL}/uninstall-service${ext}`,
+    file: "clash-verge-service-uninstall" + suffix + ext,
+    downloadURL: `${SERVICE_URL}/clash-verge-service-uninstall${ext}`,
   });
 };
 
