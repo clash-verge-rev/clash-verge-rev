@@ -584,10 +584,20 @@ pub fn run() {
                 }
             }
             tauri::RunEvent::Exit => {
-                logging!(debug, Type::System, "Exit事件触发，执行清理流程");
-                core::handle::Handle::global().set_is_exiting();
-                EventDrivenProxyManager::global().notify_app_stopping();
-                feat::clean();
+                let handle = core::handle::Handle::global();
+
+                if handle.is_exiting() {
+                    logging!(
+                        debug,
+                        Type::System,
+                        "Exit事件触发，但退出流程已执行，跳过重复清理"
+                    );
+                } else {
+                    logging!(debug, Type::System, "Exit事件触发，执行清理流程");
+                    handle.set_is_exiting();
+                    EventDrivenProxyManager::global().notify_app_stopping();
+                    feat::clean();
+                }
             }
             tauri::RunEvent::WindowEvent { label, event, .. } => {
                 if label == "main" {
