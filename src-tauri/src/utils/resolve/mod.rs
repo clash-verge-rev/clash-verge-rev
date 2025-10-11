@@ -5,7 +5,7 @@ use crate::{
     core::{
         CoreManager, Timer, handle,
         hotkey::Hotkey,
-        service::{SERVICE_MANAGER, is_service_ipc_path_exists},
+        service::{SERVICE_MANAGER, ServiceManager, is_service_ipc_path_exists},
         sysopt,
         tray::Tray,
     },
@@ -193,6 +193,7 @@ pub(super) async fn init_verge_config() {
 
 pub(super) async fn init_service_manager() {
     logging!(info, Type::Setup, "Initializing service manager...");
+    clash_verge_service_ipc::set_config(ServiceManager::config()).await;
     if !is_service_ipc_path_exists() {
         logging!(
             warn,

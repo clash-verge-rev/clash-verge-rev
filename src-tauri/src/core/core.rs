@@ -1,6 +1,5 @@
 use crate::AsyncHandler;
 use crate::core::logger::Logger;
-use crate::core::service::is_service_ipc_path_exists;
 use crate::process::CommandChildGuard;
 use crate::utils::init::sidecar_writer;
 use crate::utils::logging::SharedWriter;

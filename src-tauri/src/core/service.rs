@@ -412,7 +412,7 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
 /// 检查服务是否正在运行
 pub async fn is_service_available() -> Result<()> {
-    check_service_version().await?;
+    clash_verge_service_ipc::connect().await?;
     Ok(())
 }
 
@@ -425,13 +425,16 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
-    pub async fn init(&mut self) -> Result<()> {
-        let config = clash_verge_service_ipc::IpcConfig {
+    pub fn config() -> Option<clash_verge_service_ipc::IpcConfig> {
+        Some(clash_verge_service_ipc::IpcConfig {
             default_timeout: Duration::from_millis(30),
-            retry_delay: Duration::from_millis(1500),
+            retry_delay: Duration::from_millis(250),
             max_retries: 6,
-        };
-        if let Err(e) = clash_verge_service_ipc::connect(Some(config)).await {
+        })
+    }
+
+    pub async fn init(&mut self) -> Result<()> {
+        if let Err(e) = clash_verge_service_ipc::connect().await {
             self.0 = ServiceStatus::Unavailable("服务连接失败: {e}".to_string());
             return Err(e);
         }
