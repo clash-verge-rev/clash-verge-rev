@@ -25,8 +25,8 @@
     },
     "externalBin": [
       "./resources/clash-verge-service",
-      "./resources/install-service",
-      "./resources/uninstall-service",
+      "./resources/clash-verge-service-install",
+      "./resources/clash-verge-service-uninstall",
       "./sidecar/verge-mihomo",
       "./sidecar/verge-mihomo-alpha"
     ]
