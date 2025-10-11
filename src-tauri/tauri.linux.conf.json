@@ -5,7 +5,7 @@
     "targets": ["deb", "rpm"],
     "linux": {
       "deb": {
-        "depends": ["openssl", "pkexec"],
+        "depends": ["openssl"],
         "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
@@ -14,7 +14,7 @@
         "preRemoveScript": "./packages/linux/pre-remove.sh"
       },
       "rpm": {
-        "depends": ["openssl", "pkexec"],
+        "depends": ["openssl"],
         "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
@@ -25,8 +25,8 @@
     },
     "externalBin": [
       "./resources/clash-verge-service",
-      "./resources/install-service",
-      "./resources/uninstall-service",
+      "./resources/clash-verge-service-install",
+      "./resources/clash-verge-service-uninstall",
       "./sidecar/verge-mihomo",
       "./sidecar/verge-mihomo-alpha"
     ]

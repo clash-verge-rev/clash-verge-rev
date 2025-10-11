@@ -3,7 +3,11 @@ use anyhow::Result;
 use crate::{
     config::Config,
     core::{
-        CoreManager, Timer, handle, hotkey::Hotkey, service::SERVICE_MANAGER, sysopt, tray::Tray,
+        CoreManager, Timer, handle,
+        hotkey::Hotkey,
+        service::{SERVICE_MANAGER, ServiceManager, is_service_ipc_path_exists},
+        sysopt,
+        tray::Tray,
     },
     logging, logging_error,
     module::lightweight::{auto_lightweight_mode_init, run_once_auto_lightweight},
@@ -33,7 +37,6 @@ pub fn resolve_setup_async() {
     logging!(
         info,
         Type::Setup,
-        true,
         "开始执行异步设置任务... 线程ID: {:?}",
         std::thread::current().id()
     );
@@ -44,11 +47,10 @@ pub fn resolve_setup_async() {
         logging!(
             info,
             Type::ClashVergeRev,
-            true,
             "Version: {}",
             env!("CARGO_PKG_VERSION")
         );
-        init_service_manager().await;
+        futures::join!(init_service_manager());
 
         futures::join!(
             init_work_config(),
@@ -82,38 +84,26 @@ pub fn resolve_setup_async() {
     });
 
     let elapsed = start_time.elapsed();
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "异步设置任务完成，耗时: {:?}",
-        elapsed
-    );
+    logging!(info, Type::Setup, "异步设置任务完成，耗时: {:?}", elapsed);
 
     if elapsed.as_secs() > 10 {
-        logging!(
-            warn,
-            Type::Setup,
-            true,
-            "异步设置任务耗时较长({:?})",
-            elapsed
-        );
+        logging!(warn, Type::Setup, "异步设置任务耗时较长({:?})", elapsed);
     }
 }
 
 // 其它辅助函数不变
 pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
-    logging!(info, Type::Tray, true, "Resetting system proxy");
+    logging!(info, Type::Tray, "Resetting system proxy");
     sysopt::Sysopt::global().reset_sysproxy().await?;
 
-    logging!(info, Type::Core, true, "Stopping core service");
+    logging!(info, Type::Core, "Stopping core service");
     CoreManager::global().stop_core().await?;
 
     #[cfg(target_os = "macos")]
     {
         use dns::restore_public_dns;
 
-        logging!(info, Type::System, true, "Restoring system DNS settings");
+        logging!(info, Type::System, "Restoring system DNS settings");
         restore_public_dns().await;
     }
 
@@ -121,157 +111,127 @@ pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
 }
 
 pub fn init_handle() {
-    logging!(info, Type::Setup, true, "Initializing app handle...");
+    logging!(info, Type::Setup, "Initializing app handle...");
     handle::Handle::global().init();
 }
 
 pub(super) fn init_scheme() {
-    logging!(info, Type::Setup, true, "Initializing custom URL scheme");
-    logging_error!(Type::Setup, true, init::init_scheme());
+    logging!(info, Type::Setup, "Initializing custom URL scheme");
+    logging_error!(Type::Setup, init::init_scheme());
 }
 
 #[cfg(not(feature = "tauri-dev"))]
 pub(super) async fn resolve_setup_logger() {
-    logging!(info, Type::Setup, true, "Initializing global logger...");
-    logging_error!(Type::Setup, true, init::init_logger().await);
+    logging!(info, Type::Setup, "Initializing global logger...");
+    logging_error!(Type::Setup, init::init_logger().await);
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Resolving scheme for param: {}",
-        param
-    );
-    logging_error!(Type::Setup, true, scheme::resolve_scheme(param).await);
+    logging!(info, Type::Setup, "Resolving scheme for param: {}", param);
+    logging_error!(Type::Setup, scheme::resolve_scheme(param).await);
     Ok(())
 }
 
 pub(super) fn init_embed_server() {
-    logging!(info, Type::Setup, true, "Initializing embedded server...");
+    logging!(info, Type::Setup, "Initializing embedded server...");
     server::embed_server();
 }
 pub(super) async fn init_resources() {
-    logging!(info, Type::Setup, true, "Initializing resources...");
-    logging_error!(Type::Setup, true, init::init_resources().await);
+    logging!(info, Type::Setup, "Initializing resources...");
+    logging_error!(Type::Setup, init::init_resources().await);
 }
 
 pub(super) async fn init_startup_script() {
-    logging!(info, Type::Setup, true, "Initializing startup script");
-    logging_error!(Type::Setup, true, init::startup_script().await);
+    logging!(info, Type::Setup, "Initializing startup script");
+    logging_error!(Type::Setup, init::startup_script().await);
 }
 
 pub(super) async fn init_timer() {
-    logging!(info, Type::Setup, true, "Initializing timer...");
-    logging_error!(Type::Setup, true, Timer::global().init().await);
+    logging!(info, Type::Setup, "Initializing timer...");
+    logging_error!(Type::Setup, Timer::global().init().await);
 }
 
 pub(super) async fn init_hotkey() {
-    logging!(info, Type::Setup, true, "Initializing hotkey...");
-    logging_error!(Type::Setup, true, Hotkey::global().init().await);
+    logging!(info, Type::Setup, "Initializing hotkey...");
+    logging_error!(Type::Setup, Hotkey::global().init().await);
 }
 
 pub(super) async fn init_once_auto_lightweight() {
     logging!(
         info,
         Type::Lightweight,
-        true,
         "Running auto lightweight mode check..."
     );
     run_once_auto_lightweight().await;
 }
 
 pub(super) async fn init_auto_lightweight_mode() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Initializing auto lightweight mode..."
-    );
-    logging_error!(Type::Setup, true, auto_lightweight_mode_init().await);
+    logging!(info, Type::Setup, "Initializing auto lightweight mode...");
+    logging_error!(Type::Setup, auto_lightweight_mode_init().await);
 }
 
 pub async fn init_work_config() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Initializing work configuration..."
-    );
-    logging_error!(Type::Setup, true, init::init_config().await);
+    logging!(info, Type::Setup, "Initializing work configuration...");
+    logging_error!(Type::Setup, init::init_config().await);
 }
 
 pub(super) async fn init_tray() {
     // Check if tray should be disabled via environment variable
     if std::env::var("CLASH_VERGE_DISABLE_TRAY").unwrap_or_default() == "1" {
-        logging!(
-            info,
-            Type::Setup,
-            true,
-            "System tray disabled via --no-tray flag"
-        );
+        logging!(info, Type::Setup, "System tray disabled via --no-tray flag");
         return;
     }
 
-    logging!(info, Type::Setup, true, "Initializing system tray...");
-    logging_error!(Type::Setup, true, Tray::global().init().await);
+    logging!(info, Type::Setup, "Initializing system tray...");
+    logging_error!(Type::Setup, Tray::global().init().await);
 }
 
 pub(super) async fn init_verge_config() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Initializing verge configuration..."
-    );
-    logging_error!(Type::Setup, true, Config::init_config().await);
+    logging!(info, Type::Setup, "Initializing verge configuration...");
+    logging_error!(Type::Setup, Config::init_config().await);
 }
 
 pub(super) async fn init_service_manager() {
-    logging!(info, Type::Setup, true, "Initializing service manager...");
-    logging_error!(
-        Type::Setup,
-        true,
-        SERVICE_MANAGER.lock().await.refresh().await
-    );
+    logging!(info, Type::Setup, "Initializing service manager...");
+    clash_verge_service_ipc::set_config(ServiceManager::config()).await;
+    if !is_service_ipc_path_exists() {
+        logging!(
+            warn,
+            Type::Setup,
+            "Service IPC path does not exist, service may be unavailable"
+        );
+        return;
+    }
+    if SERVICE_MANAGER.lock().await.init().await.is_ok() {
+        logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.refresh().await);
+    }
 }
 
 pub(super) async fn init_core_manager() {
-    logging!(info, Type::Setup, true, "Initializing core manager...");
-    logging_error!(Type::Setup, true, CoreManager::global().init().await);
+    logging!(info, Type::Setup, "Initializing core manager...");
+    logging_error!(Type::Setup, CoreManager::global().init().await);
 }
 
 pub(super) async fn init_system_proxy() {
-    logging!(info, Type::Setup, true, "Initializing system proxy...");
+    logging!(info, Type::Setup, "Initializing system proxy...");
     logging_error!(
         Type::Setup,
-        true,
         sysopt::Sysopt::global().update_sysproxy().await
     );
 }
 
 pub(super) fn init_system_proxy_guard() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Initializing system proxy guard..."
-    );
-    logging_error!(
-        Type::Setup,
-        true,
-        sysopt::Sysopt::global().init_guard_sysproxy()
-    );
+    logging!(info, Type::Setup, "Initializing system proxy guard...");
+    logging_error!(Type::Setup, sysopt::Sysopt::global().init_guard_sysproxy());
 }
 
 pub(super) async fn refresh_tray_menu() {
-    logging!(info, Type::Setup, true, "Refreshing tray menu...");
-    logging_error!(Type::Setup, true, Tray::global().update_part().await);
+    logging!(info, Type::Setup, "Refreshing tray menu...");
+    logging_error!(Type::Setup, Tray::global().update_part().await);
 }
 
 pub(super) async fn init_window() {
-    logging!(info, Type::Setup, true, "Initializing main window...");
+    logging!(info, Type::Setup, "Initializing main window...");
     let is_silent_start =
         { Config::verge().await.latest_ref().enable_silent_start }.unwrap_or(false);
     #[cfg(target_os = "macos")]

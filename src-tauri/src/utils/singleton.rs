@@ -50,7 +50,6 @@ macro_rules! singleton_with_logging {
                     $crate::logging!(
                         info,
                         $crate::utils::logging::Type::Setup,
-                        true,
                         concat!($struct_name_str, " initialized")
                     );
                     instance
@@ -88,7 +87,6 @@ macro_rules! singleton_lazy_with_logging {
                     $crate::logging!(
                         info,
                         $crate::utils::logging::Type::Setup,
-                        true,
                         concat!($struct_name_str, " initialized")
                     );
                     instance

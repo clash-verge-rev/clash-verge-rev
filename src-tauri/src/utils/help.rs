@@ -42,7 +42,7 @@ pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
         }
         Err(err) => {
             let error_msg = format!("YAML syntax error in {}: {}", path.display(), err);
-            logging!(error, Type::Config, true, "{}", error_msg);
+            logging!(error, Type::Config, "{}", error_msg);
 
             crate::core::handle::Handle::notice_message(
                 "config_validate::yaml_syntax_error",

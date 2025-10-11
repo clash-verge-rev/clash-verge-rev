@@ -3,9 +3,9 @@ import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { t } from "i18next";
 import { useImperativeHandle, useState, type Ref } from "react";
+import { closeConnections } from "tauri-plugin-mihomo-api";
 
 import parseTraffic from "@/utils/parse-traffic";
-import { closeConnections } from "tauri-plugin-mihomo-api";
 
 export interface ConnectionDetailRef {
   open: (detail: IConnectionsItem) => void;

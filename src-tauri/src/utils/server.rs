@@ -6,13 +6,19 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::{Result, bail};
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use port_scanner::local_port_available;
+use tokio::sync::oneshot;
 use warp::Filter;
 
 #[derive(serde::Deserialize, Debug)]
 struct QueryParam {
     param: String,
 }
+
+// 关闭 embedded server 的信号发送端
+static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
 
 /// check whether there is already exists
 pub async fn check_singleton() -> Result<()> {
@@ -42,6 +48,11 @@ pub async fn check_singleton() -> Result<()> {
 /// The embed server only be used to implement singleton process
 /// maybe it can be used as pac server later
 pub fn embed_server() {
+    let (shutdown_tx, shutdown_rx) = oneshot::channel();
+    #[allow(clippy::expect_used)]
+    SHUTDOWN_SENDER
+        .set(Mutex::new(Some(shutdown_tx)))
+        .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
     AsyncHandler::spawn(move || async move {
@@ -84,12 +95,28 @@ pub fn embed_server() {
                 // Spawn async work in a fire-and-forget manner
                 let param = query.param.clone();
                 tokio::task::spawn_local(async move {
-                    logging_error!(Type::Setup, true, resolve::resolve_scheme(param).await);
+                    logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
                 });
                 warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
             });
 
         let commands = visible.or(scheme).or(pac);
-        warp::serve(commands).run(([127, 0, 0, 1], port)).await;
+        warp::serve(commands)
+            .bind(([127, 0, 0, 1], port))
+            .await
+            .graceful(async {
+                shutdown_rx.await.ok();
+            })
+            .run()
+            .await;
     });
+}
+
+pub fn shutdown_embedded_server() {
+    log::info!("shutting down embedded server");
+    if let Some(sender) = SHUTDOWN_SENDER.get()
+        && let Some(sender) = sender.lock().take()
+    {
+        sender.send(()).ok();
+    }
 }

@@ -13,7 +13,7 @@ pub async fn toggle_proxy_profile(profile_index: String) {
         Ok(_) => {
             let result = tray::Tray::global().update_menu().await;
             if let Err(err) = result {
-                logging!(error, Type::Tray, true, "更新菜单失败: {}", err);
+                logging!(error, Type::Tray, "更新菜单失败: {}", err);
             }
         }
         Err(err) => {
@@ -30,7 +30,7 @@ pub async fn update_profile(
     option: Option<PrfOption>,
     auto_refresh: Option<bool>,
 ) -> Result<()> {
-    logging!(info, Type::Config, true, "[订阅更新] 开始更新订阅 {}", uid);
+    logging!(info, Type::Config, "[订阅更新] 开始更新订阅 {}", uid);
     let auto_refresh = auto_refresh.unwrap_or(true); // 默认为true，保持兼容性
 
     let url_opt = {
@@ -138,10 +138,10 @@ pub async fn update_profile(
     };
 
     if should_update {
-        logging!(info, Type::Config, true, "[订阅更新] 更新内核配置");
+        logging!(info, Type::Config, "[订阅更新] 更新内核配置");
         match CoreManager::global().update_config().await {
             Ok(_) => {
-                logging!(info, Type::Config, true, "[订阅更新] 更新成功");
+                logging!(info, Type::Config, "[订阅更新] 更新成功");
                 handle::Handle::refresh_clash();
                 // if let Err(err) = cmd::proxy::force_refresh_proxies().await {
                 //     logging!(
@@ -154,7 +154,7 @@ pub async fn update_profile(
                 // }
             }
             Err(err) => {
-                logging!(error, Type::Config, true, "[订阅更新] 更新失败: {}", err);
+                logging!(error, Type::Config, "[订阅更新] 更新失败: {}", err);
                 handle::Handle::notice_message("update_failed", format!("{err}"));
                 log::error!(target: "app", "{err}");
             }

@@ -8,11 +8,11 @@ import { DialogRef } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import {
   exitApp,
+  exportDiagnosticInfo,
   openAppDir,
   openCoreDir,
-  openLogsDir,
   openDevTools,
-  exportDiagnosticInfo,
+  openLogsDir,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { version } from "@root/package.json";
@@ -23,7 +23,7 @@ import { HotkeyViewer } from "./mods/hotkey-viewer";
 import { LayoutViewer } from "./mods/layout-viewer";
 import { LiteModeViewer } from "./mods/lite-mode-viewer";
 import { MiscViewer } from "./mods/misc-viewer";
-import { SettingList, SettingItem } from "./mods/setting-comp";
+import { SettingItem, SettingList } from "./mods/setting-comp";
 import { ThemeViewer } from "./mods/theme-viewer";
 import { UpdateViewer } from "./mods/update-viewer";
 

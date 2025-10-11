@@ -3,6 +3,7 @@
   "version": "2.4.3",
   "license": "GPL-3.0-only",
   "scripts": {
+    "prepare": "husky || true",
     "dev": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
     "dev:diff": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
     "dev:trace": "cross-env RUST_BACKTRACE=full RUSTFLAGS=\"--cfg tokio_unstable\" tauri dev -f verge-dev tokio-trace",
@@ -24,15 +25,12 @@
     "release:deploytest": "pnpm release-version deploytest",
     "publish-version": "node scripts/publish-version.mjs",
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
-    "clippy": "cargo clippy  --manifest-path ./src-tauri/Cargo.toml",
+    "clippy": "cargo clippy --all-features --all-targets --manifest-path ./src-tauri/Cargo.toml",
     "lint": "eslint -c eslint.config.ts --cache --cache-location .eslintcache src",
     "lint:fix": "eslint -c eslint.config.ts --cache --cache-location .eslintcache --fix src",
-    "lint:staged": "eslint -c eslint.config.ts --cache --cache-location .eslintcache",
-    "lint:all": "node scripts/lint-all.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "type-check": "tsc --noEmit",
-    "validate": "pnpm format:check && pnpm lint && pnpm type-check"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -44,7 +42,7 @@
     "@mui/icons-material": "^7.3.4",
     "@mui/lab": "7.0.0-beta.17",
     "@mui/material": "^7.3.4",
-    "@mui/x-data-grid": "^8.13.1",
+    "@mui/x-data-grid": "^8.14.0",
     "@tauri-apps/api": "2.8.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
@@ -58,7 +56,7 @@
     "axios": "^1.12.2",
     "dayjs": "1.11.18",
     "foxact": "^0.2.49",
-    "i18next": "^25.5.3",
+    "i18next": "^25.6.0",
     "js-yaml": "^4.1.0",
     "json-schema": "^0.4.0",
     "lodash-es": "^4.17.21",
@@ -68,11 +66,11 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-error-boundary": "6.0.0",
-    "react-hook-form": "^7.64.0",
+    "react-hook-form": "^7.65.0",
     "react-i18next": "16.0.0",
     "react-markdown": "10.1.0",
     "react-monaco-editor": "0.59.0",
-    "react-router-dom": "7.9.3",
+    "react-router-dom": "7.9.4",
     "react-virtuoso": "^4.14.1",
     "swr": "^2.3.6",
     "types-pac": "^1.0.3",
@@ -99,14 +97,15 @@
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-prettier": "^5.5.4",
-    "eslint-plugin-react-hooks": "^6.1.1",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "eslint-plugin-react-refresh": "^0.4.23",
     "eslint-plugin-unused-imports": "^4.2.0",
     "glob": "^11.0.3",
     "globals": "^16.4.0",
     "https-proxy-agent": "^7.0.6",
+    "husky": "^9.1.7",
     "jiti": "^2.6.1",
-    "lint-staged": "^16.2.3",
+    "lint-staged": "^16.2.4",
     "meta-json-schema": "^1.19.14",
     "node-fetch": "^3.3.2",
     "prettier": "^3.6.2",
@@ -118,6 +117,17 @@
     "vite": "^7.1.9",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.5.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ],
+    "*.{css,scss,json,md}": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "type": "module",
   "packageManager": "pnpm@9.13.2"

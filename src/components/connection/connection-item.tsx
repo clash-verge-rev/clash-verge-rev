@@ -9,9 +9,9 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
+import { closeConnections } from "tauri-plugin-mihomo-api";
 
 import parseTraffic from "@/utils/parse-traffic";
-import { closeConnections } from "tauri-plugin-mihomo-api";
 
 const Tag = styled("span")(({ theme }) => ({
   fontSize: "10px",

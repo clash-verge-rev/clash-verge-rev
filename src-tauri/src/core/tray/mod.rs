@@ -188,6 +188,11 @@ singleton_lazy!(Tray, TRAY, Tray::default);
 
 impl Tray {
     pub async fn init(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘初始化");
+            return Ok(());
+        }
+
         let app_handle = handle::Handle::app_handle();
 
         match self.create_tray_from_handle(app_handle).await {
@@ -206,6 +211,11 @@ impl Tray {
 
     /// 更新托盘点击行为
     pub async fn update_click_behavior(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘点击行为更新");
+            return Ok(());
+        }
+
         let app_handle = handle::Handle::app_handle();
         let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
         let tray_event: String = tray_event.unwrap_or("main_window".into());
@@ -221,6 +231,10 @@ impl Tray {
 
     /// 更新托盘菜单
     pub async fn update_menu(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘菜单更新");
+            return Ok(());
+        }
         // 调整最小更新间隔，确保状态及时刷新
         const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
@@ -309,6 +323,11 @@ impl Tray {
     /// 更新托盘图标
     #[cfg(target_os = "macos")]
     pub async fn update_icon(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘图标更新");
+            return Ok(());
+        }
+
         let app_handle = handle::Handle::app_handle();
 
         let tray = match app_handle.tray_by_id("main") {
@@ -340,6 +359,11 @@ impl Tray {
 
     #[cfg(not(target_os = "macos"))]
     pub async fn update_icon(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘图标更新");
+            return Ok(());
+        }
+
         let app_handle = handle::Handle::app_handle();
 
         let tray = match app_handle.tray_by_id("main") {
@@ -367,6 +391,11 @@ impl Tray {
 
     /// 更新托盘显示状态的函数
     pub async fn update_tray_display(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘显示状态更新");
+            return Ok(());
+        }
+
         let app_handle = handle::Handle::app_handle();
         let _tray = app_handle
             .tray_by_id("main")
@@ -380,6 +409,11 @@ impl Tray {
 
     /// 更新托盘提示
     pub async fn update_tooltip(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘提示更新");
+            return Ok(());
+        }
+
         let app_handle = handle::Handle::app_handle();
 
         let verge = Config::verge().await.latest_ref().clone();
@@ -412,17 +446,24 @@ impl Tray {
         let tun_text = t("TUN").await;
         let profile_text = t("Profile").await;
 
-        let version = env!("CARGO_PKG_VERSION");
+        let v = env!("CARGO_PKG_VERSION");
+        let reassembled_version = v.split_once('+').map_or(v.to_string(), |(main, rest)| {
+            format!("{main}+{}", rest.split('.').next().unwrap_or(""))
+        });
+
+        let tooltip = format!(
+            "Clash Verge {}\n{}: {}\n{}: {}\n{}: {}",
+            reassembled_version,
+            sys_proxy_text,
+            switch_map[system_proxy],
+            tun_text,
+            switch_map[tun_mode],
+            profile_text,
+            current_profile_name
+        );
+
         if let Some(tray) = app_handle.tray_by_id("main") {
-            let _ = tray.set_tooltip(Some(&format!(
-                "Clash Verge {version}\n{}: {}\n{}: {}\n{}: {}",
-                sys_proxy_text,
-                switch_map[system_proxy],
-                tun_text,
-                switch_map[tun_mode],
-                profile_text,
-                current_profile_name
-            )));
+            let _ = tray.set_tooltip(Some(&tooltip));
         } else {
             log::warn!(target: "app", "更新托盘提示失败: 托盘不存在");
         }
@@ -431,6 +472,10 @@ impl Tray {
     }
 
     pub async fn update_part(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘局部更新");
+            return Ok(());
+        }
         // self.update_menu().await?;
         // 更新轻量模式显示状态
         self.update_tray_display().await?;
@@ -440,6 +485,11 @@ impl Tray {
     }
 
     pub async fn create_tray_from_handle(&self, app_handle: &AppHandle) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘创建");
+            return Ok(());
+        }
+
         log::info!(target: "app", "正在从AppHandle创建系统托盘");
 
         // 获取图标
@@ -517,6 +567,11 @@ impl Tray {
 
     // 托盘统一的状态更新函数
     pub async fn update_all_states(&self) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过托盘状态更新");
+            return Ok(());
+        }
+
         // 确保所有状态更新完成
         self.update_tray_display().await?;
         // self.update_menu().await?;
@@ -964,13 +1019,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         match event.id.as_ref() {
             mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
                 let mode = &mode[0..mode.len() - 5]; // Removing the "_mode" suffix
-                logging!(
-                    info,
-                    Type::ProxyMode,
-                    true,
-                    "Switch Proxy Mode To: {}",
-                    mode
-                );
+                logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", mode);
                 feat::change_clash_mode(mode.into()).await;
             }
             "open_window" => {

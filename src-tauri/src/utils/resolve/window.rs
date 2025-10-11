@@ -27,7 +27,8 @@ pub fn build_new_window() -> Result<WebviewWindow, String> {
     )
     .title("Clash Verge")
     .center()
-    .decorations(true)
+    // Using WindowManager::prefer_system_titlebar to control if show system built-in titlebar
+    // .decorations(true)
     .fullscreen(false)
     .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
@@ -36,7 +37,7 @@ pub fn build_new_window() -> Result<WebviewWindow, String> {
     .build()
     {
         Ok(window) => {
-            logging_error!(Type::Window, true, window.eval(INITIAL_LOADING_OVERLAY));
+            logging_error!(Type::Window, window.eval(INITIAL_LOADING_OVERLAY));
             Ok(window)
         }
         Err(e) => Err(e.to_string()),
