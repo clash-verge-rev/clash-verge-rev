@@ -12,7 +12,7 @@ mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
 use crate::{
-    core::{handle, hotkey},
+    core::{EventDrivenProxyManager, handle, hotkey},
     process::AsyncHandler,
     utils::{resolve, server},
 };
@@ -566,6 +566,13 @@ pub fn run() {
                         .clear_all_ws_connections()
                         .await;
                 });
+                let already_exiting = core::handle::Handle::global().is_exiting();
+                if code.is_some() && !already_exiting {
+                    logging!(debug, Type::System, "ExitRequested: 标记应用正在退出");
+                    core::handle::Handle::global().set_is_exiting();
+                    EventDrivenProxyManager::global().notify_app_stopping();
+                    feat::clean();
+                }
                 // 如果已经在退出流程中，不要阻止退出
                 if core::handle::Handle::global().is_exiting() {
                     logging!(
@@ -584,11 +591,14 @@ pub fn run() {
                 }
             }
             tauri::RunEvent::Exit => {
-                // Avoid duplicate cleanup
-                if core::handle::Handle::global().is_exiting() {
-                    return;
+                if !core::handle::Handle::global().is_exiting() {
+                    logging!(debug, Type::System, "Exit事件触发，标记并执行清理流程");
+                    core::handle::Handle::global().set_is_exiting();
+                    EventDrivenProxyManager::global().notify_app_stopping();
+                    feat::clean();
+                } else {
+                    logging!(debug, Type::System, "Exit事件触发，但清理流程已执行");
                 }
-                feat::clean();
             }
             tauri::RunEvent::WindowEvent { label, event, .. } => {
                 if label == "main" {
