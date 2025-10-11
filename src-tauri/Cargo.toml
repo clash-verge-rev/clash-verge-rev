@@ -105,9 +105,13 @@ winapi = { version = "0.3.9", features = [
   "winhttp",
   "winreg",
 ] }
+windows-sys = "0.61.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 users = "0.11.0"
+
+[target.'cfg(unix)'.dependencies]
+signal-hook = "0.3.18"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.0"

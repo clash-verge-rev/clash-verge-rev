@@ -46,7 +46,7 @@ pub async fn quit() {
     app_handle.exit(if cleanup_result { 0 } else { 1 });
 }
 
-async fn clean_async() -> bool {
+pub async fn clean_async() -> bool {
     use tokio::time::{Duration, timeout};
 
     logging!(info, Type::System, "开始执行异步清理操作...");

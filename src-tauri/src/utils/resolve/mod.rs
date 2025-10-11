@@ -6,7 +6,10 @@ use crate::{
         CoreManager, Timer, handle, hotkey::Hotkey, service::SERVICE_MANAGER, sysopt, tray::Tray,
     },
     logging, logging_error,
-    module::lightweight::{auto_lightweight_mode_init, run_once_auto_lightweight},
+    module::{
+        lightweight::{auto_lightweight_mode_init, run_once_auto_lightweight},
+        signal,
+    },
     process::AsyncHandler,
     utils::{init, logging::Type, server, window_manager::WindowManager},
 };
@@ -25,6 +28,7 @@ pub fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
         AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(init_embed_server);
+        AsyncHandler::spawn_blocking(init_signal);
     });
 }
 
@@ -164,6 +168,11 @@ pub(super) async fn init_once_auto_lightweight() {
 pub(super) async fn init_auto_lightweight_mode() {
     logging!(info, Type::Setup, "Initializing auto lightweight mode...");
     logging_error!(Type::Setup, auto_lightweight_mode_init().await);
+}
+
+pub(super) fn init_signal() {
+    logging!(info, Type::Setup, "Initializing signal handlers...");
+    signal::register();
 }
 
 pub async fn init_work_config() {
