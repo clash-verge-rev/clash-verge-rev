@@ -24,6 +24,7 @@
 - Linux 现在在新生成的配置中默认将 TUN 栈恢复为 mixed 模式
 - 为代理延迟测试的 URL 设置增加了保护以及添加了安全的备用 URL
 - 更新了 Wayland 合成器检测逻辑，从而在 Hyprland 会话中保留原生 Wayland 后端
+- 改进 Windows 和 Unix 的 服务连接方式以及权限，避免无法连接服务或内核
 
 ### 🐞 修复问题
 
