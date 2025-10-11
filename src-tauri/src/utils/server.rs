@@ -1,5 +1,4 @@
 use super::resolve;
-use std::net::SocketAddr;
 use crate::{
     config::{Config, DEFAULT_PAC, IVerge},
     logging, logging_error,
@@ -11,6 +10,7 @@ use anyhow::{Result, bail};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use port_scanner::local_port_available;
+use std::net::SocketAddr;
 use tokio::{net::TcpListener, sync::oneshot};
 use warp::Filter;
 
@@ -110,7 +110,7 @@ pub fn embed_server() {
                     logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
                 });
                 warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
-        });
+            });
 
         let commands = visible.or(scheme).or(pac);
         let bind_addr = SocketAddr::from(([127, 0, 0, 1], port));
