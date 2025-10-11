@@ -5,7 +5,7 @@ use tokio::time::{Duration, sleep, timeout};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 
 use crate::config::{Config, IVerge};
-use crate::core::async_proxy_query::AsyncProxyQuery;
+use crate::core::{async_proxy_query::AsyncProxyQuery, handle};
 use crate::logging_error;
 use crate::process::AsyncHandler;
 use crate::utils::logging::Type;
@@ -250,6 +250,12 @@ impl EventDrivenProxyManager {
             }
             ProxyEvent::AppStopping => {
                 log::info!(target: "app", "清理代理状态");
+                Self::update_state_timestamp(state, |s| {
+                    s.sys_enabled = false;
+                    s.pac_enabled = false;
+                    s.is_healthy = false;
+                })
+                .await;
             }
         }
     }
@@ -301,6 +307,10 @@ impl EventDrivenProxyManager {
     }
 
     async fn check_and_restore_proxy(state: &Arc<RwLock<ProxyState>>) {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过系统代理守卫检查");
+            return;
+        }
         let (sys_enabled, pac_enabled) = {
             let s = state.read().await;
             (s.sys_enabled, s.pac_enabled)
@@ -320,6 +330,11 @@ impl EventDrivenProxyManager {
     }
 
     async fn check_and_restore_pac_proxy(state: &Arc<RwLock<ProxyState>>) {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过PAC代理恢复检查");
+            return;
+        }
+
         let current = Self::get_auto_proxy_with_timeout().await;
         let expected = Self::get_expected_pac_config().await;
 
@@ -346,6 +361,11 @@ impl EventDrivenProxyManager {
     }
 
     async fn check_and_restore_sys_proxy(state: &Arc<RwLock<ProxyState>>) {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过系统代理恢复检查");
+            return;
+        }
+
         let current = Self::get_sys_proxy_with_timeout().await;
         let expected = Self::get_expected_sys_proxy().await;
 
@@ -374,6 +394,11 @@ impl EventDrivenProxyManager {
     }
 
     async fn enable_system_proxy(state: &Arc<RwLock<ProxyState>>) {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过启用系统代理");
+            return;
+        }
+
         log::info!(target: "app", "启用系统代理");
 
         let pac_enabled = state.read().await.pac_enabled;
@@ -407,6 +432,11 @@ impl EventDrivenProxyManager {
     }
 
     async fn switch_proxy_mode(state: &Arc<RwLock<ProxyState>>, to_pac: bool) {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过代理模式切换");
+            return;
+        }
+
         log::info!(target: "app", "切换到{}模式", if to_pac { "PAC" } else { "HTTP代理" });
 
         if to_pac {
@@ -545,6 +575,10 @@ impl EventDrivenProxyManager {
 
     #[cfg(target_os = "windows")]
     async fn restore_pac_proxy(expected_url: &str) -> Result<(), anyhow::Error> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过PAC代理恢复");
+            return Ok(());
+        }
         Self::execute_sysproxy_command(&["pac", expected_url]).await
     }
 
@@ -565,6 +599,10 @@ impl EventDrivenProxyManager {
 
     #[cfg(target_os = "windows")]
     async fn restore_sys_proxy(expected: &Sysproxy) -> Result<(), anyhow::Error> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(target: "app", "应用正在退出，跳过系统代理恢复");
+            return Ok(());
+        }
         let address = format!("{}:{}", expected.host, expected.port);
         Self::execute_sysproxy_command(&["global", &address, &expected.bypass]).await
     }
@@ -582,6 +620,15 @@ impl EventDrivenProxyManager {
 
     #[cfg(target_os = "windows")]
     async fn execute_sysproxy_command(args: &[&str]) -> Result<(), anyhow::Error> {
+        if handle::Handle::global().is_exiting() {
+            log::debug!(
+                target: "app",
+                "应用正在退出，取消调用 sysproxy.exe，参数: {:?}",
+                args
+            );
+            return Ok(());
+        }
+
         use crate::utils::dirs;
         #[allow(unused_imports)] // creation_flags必须
         use std::os::windows::process::CommandExt;

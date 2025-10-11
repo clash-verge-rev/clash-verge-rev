@@ -1,12 +1,9 @@
+use crate::config::Config;
+use crate::core::event_driven_proxy::EventDrivenProxyManager;
+use crate::core::{CoreManager, handle, sysopt};
 use crate::utils;
 use crate::utils::window_manager::WindowManager;
-use crate::{
-    config::Config,
-    core::{CoreManager, handle, sysopt},
-    logging,
-    module::lightweight,
-    utils::logging::Type,
-};
+use crate::{logging, module::lightweight, utils::logging::Type};
 
 /// Public API: open or close the dashboard
 pub async fn open_or_close_dashboard() {
@@ -27,6 +24,7 @@ pub async fn quit() {
     // 获取应用句柄并设置退出标志
     let app_handle = handle::Handle::app_handle();
     handle::Handle::global().set_is_exiting();
+    EventDrivenProxyManager::global().notify_app_stopping();
 
     // 优先关闭窗口，提供立即反馈
     if let Some(window) = handle::Handle::get_window() {

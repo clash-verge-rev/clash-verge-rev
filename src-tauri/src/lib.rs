@@ -12,7 +12,7 @@ mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
 use crate::{
-    core::{handle, hotkey},
+    core::{EventDrivenProxyManager, handle, hotkey},
     process::AsyncHandler,
     utils::{resolve, server},
 };
@@ -584,11 +584,20 @@ pub fn run() {
                 }
             }
             tauri::RunEvent::Exit => {
-                // Avoid duplicate cleanup
-                if core::handle::Handle::global().is_exiting() {
-                    return;
+                let handle = core::handle::Handle::global();
+
+                if handle.is_exiting() {
+                    logging!(
+                        debug,
+                        Type::System,
+                        "Exit事件触发，但退出流程已执行，跳过重复清理"
+                    );
+                } else {
+                    logging!(debug, Type::System, "Exit事件触发，执行清理流程");
+                    handle.set_is_exiting();
+                    EventDrivenProxyManager::global().notify_app_stopping();
+                    feat::clean();
                 }
-                feat::clean();
             }
             tauri::RunEvent::WindowEvent { label, event, .. } => {
                 if label == "main" {
