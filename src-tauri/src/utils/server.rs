@@ -1,9 +1,10 @@
 use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, IVerge},
-    logging_error,
+    logging, logging_error,
+    module::lightweight,
     process::AsyncHandler,
-    utils::logging::Type,
+    utils::{logging::Type, window_manager::WindowManager},
 };
 use anyhow::{Result, bail};
 use once_cell::sync::OnceCell;
@@ -65,6 +66,16 @@ pub fn embed_server() {
 
     AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").and_then(|| async {
+            logging!(info, Type::Window, "接收到新的启动请求，请求恢复已有窗口");
+            AsyncHandler::spawn(|| async {
+                logging!(info, Type::Window, "正在处理窗口恢复请求");
+                if !lightweight::exit_lightweight_mode().await {
+                    let result = WindowManager::show_main_window().await;
+                    logging!(info, Type::Window, "窗口恢复操作完成，结果: {:?}", result);
+                } else {
+                    logging!(info, Type::Window, "应用从轻量模式退出，已触发窗口显示");
+                }
+            });
             Ok::<_, warp::Rejection>(warp::reply::with_status(
                 "ok".to_string(),
                 warp::http::StatusCode::OK,
