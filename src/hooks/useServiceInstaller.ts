@@ -3,6 +3,7 @@ import { useCallback } from "react";
 
 import { installService, restartCore } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { useSystemState } from "./use-system-state";
 
 const executeWithErrorHandling = async (
   operation: () => Promise<void>,
@@ -23,6 +24,8 @@ const executeWithErrorHandling = async (
 };
 
 export const useServiceInstaller = () => {
+  const { mutateRunningMode, mutateServiceOk } = useSystemState();
+
   const installServiceAndRestartCore = useCallback(async () => {
     await executeWithErrorHandling(
       () => installService(),
@@ -31,6 +34,6 @@ export const useServiceInstaller = () => {
     );
 
     await executeWithErrorHandling(() => restartCore(), "Restarting Core...");
-  }, []);
+  }, [mutateRunningMode, mutateServiceOk]);
   return { installServiceAndRestartCore };
 };
