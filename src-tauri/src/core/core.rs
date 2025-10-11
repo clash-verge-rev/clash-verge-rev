@@ -870,6 +870,7 @@ impl CoreManager {
     }
 
     pub async fn prestart_core(&self) -> Result<()> {
+        SERVICE_MANAGER.lock().await.refresh().await?;
         match SERVICE_MANAGER.lock().await.current() {
             ServiceStatus::Ready => {
                 self.set_running_mode(RunningMode::Service);
@@ -911,9 +912,6 @@ impl CoreManager {
     pub async fn restart_core(&self) -> Result<()> {
         logging!(info, Type::Core, "Restarting core");
         self.stop_core().await?;
-        if SERVICE_MANAGER.lock().await.init().await.is_ok() {
-            logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.refresh().await);
-        }
         self.start_core().await?;
         Ok(())
     }

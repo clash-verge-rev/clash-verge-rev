@@ -144,6 +144,21 @@ pub fn service_path() -> Result<PathBuf> {
     Ok(res_dir.join("clash-verge-service.exe"))
 }
 
+// TODO 迁移 Service日志后删除
+pub fn service_log_file() -> Result<PathBuf> {
+    use chrono::Local;
+
+    let log_dir = app_logs_dir()?.join("service");
+
+    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
+    let log_file = format!("{local_time}.log");
+    let log_file = log_dir.join(log_file);
+
+    let _ = std::fs::create_dir_all(&log_dir);
+
+    Ok(log_file)
+}
+
 pub fn sidecar_log_dir() -> Result<PathBuf> {
     let log_dir = app_logs_dir()?.join("sidecar");
     let _ = std::fs::create_dir_all(&log_dir);
@@ -192,7 +207,7 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
 
 #[cfg(unix)]
 pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
-    ["/tmp"]
+    ["/var/tmp", "/tmp"]
         .iter()
         .map(PathBuf::from)
         .find(|path| path.exists())
