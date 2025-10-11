@@ -36,6 +36,7 @@ percent-encoding = "2.3.2"
 tokio = { version = "1.47.1", features = [
   "rt-multi-thread",
   "macros",
+  "net",
   "time",
   "sync",
 ] }

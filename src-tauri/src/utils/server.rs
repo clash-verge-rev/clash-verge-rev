@@ -1,4 +1,5 @@
 use super::resolve;
+use std::net::SocketAddr;
 use crate::{
     config::{Config, DEFAULT_PAC, IVerge},
     logging, logging_error,
@@ -10,7 +11,7 @@ use anyhow::{Result, bail};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use port_scanner::local_port_available;
-use tokio::sync::oneshot;
+use tokio::{net::TcpListener, sync::oneshot};
 use warp::Filter;
 
 #[derive(serde::Deserialize, Debug)]
@@ -55,14 +56,6 @@ pub fn embed_server() {
         .set(Mutex::new(Some(shutdown_tx)))
         .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
-
-    if !local_port_available(port) {
-        log::warn!(
-            "singleton embedded server port {} is already in use; skipping server startup",
-            port
-        );
-        return;
-    }
 
     AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").and_then(|| async {
@@ -117,13 +110,25 @@ pub fn embed_server() {
                     logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
                 });
                 warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
-            });
+        });
 
         let commands = visible.or(scheme).or(pac);
+        let bind_addr = SocketAddr::from(([127, 0, 0, 1], port));
+        let listener = match TcpListener::bind(bind_addr).await {
+            Ok(listener) => listener,
+            Err(err) => {
+                log::warn!(
+                    "singleton embedded server failed to bind on 127.0.0.1:{}: {}",
+                    port,
+                    err
+                );
+                return;
+            }
+        };
+
         warp::serve(commands)
-            .bind(([127, 0, 0, 1], port))
-            .await
-            .graceful(async {
+            .incoming(listener)
+            .graceful(async move {
                 shutdown_rx.await.ok();
             })
             .run()
