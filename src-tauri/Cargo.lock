@@ -1173,8 +1173,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.0.14"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#0b78603344302de33712d2f7554329bdb0091e1e"
+version = "2.0.15"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#673549856423dacda6c5e1ed74a1bb572c4524ba"
 dependencies = [
  "anyhow",
  "kode-bridge",
