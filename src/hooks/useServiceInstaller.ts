@@ -1,7 +1,12 @@
 import { t } from "i18next";
 import { useCallback } from "react";
 
-import { installService, restartCore } from "@/services/cmds";
+import {
+  getRunningMode,
+  installService,
+  isServiceAvailable,
+  restartCore,
+} from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
 import { useSystemState } from "./use-system-state";
@@ -37,8 +42,25 @@ export const useServiceInstaller = () => {
     await executeWithErrorHandling(() => restartCore(), "Restarting Core...");
 
     // Refresh cached running mode and service availability after a successful restart
+    const nextMode = await getRunningMode().catch(() => undefined);
+    if (nextMode) {
+      await mutateRunningMode(nextMode, { revalidate: false }).catch(
+        () => undefined,
+      );
+    }
     await mutateRunningMode().catch(() => undefined);
-    await mutateServiceOk().catch(() => undefined);
+
+    if (nextMode === "Service") {
+      const available = await isServiceAvailable().catch(() => false);
+      await mutateServiceOk(available, { revalidate: false }).catch(
+        () => undefined,
+      );
+      await mutateServiceOk().catch(() => undefined);
+    } else {
+      await mutateServiceOk(false, { revalidate: false }).catch(
+        () => undefined,
+      );
+    }
   }, [mutateRunningMode, mutateServiceOk]);
   return { installServiceAndRestartCore };
 };
