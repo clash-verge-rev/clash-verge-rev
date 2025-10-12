@@ -45,12 +45,7 @@ mod app_init {
                     logging!(info, Type::Setup, "检测到已有应用实例运行，已请求恢复窗口");
                     true
                 } else {
-                    logging!(
-                        warn,
-                        Type::Setup,
-                        "单例检查失败，将继续启动: {}",
-                        message
-                    );
+                    logging!(warn, Type::Setup, "单例检查失败，将继续启动: {}", message);
                     false
                 }
             }
