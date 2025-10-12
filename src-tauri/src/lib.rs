@@ -339,7 +339,8 @@ pub fn run() {
                         Type::Setup,
                         "嵌入式单例服务已响应该启动请求，跳过后续初始化步骤"
                     );
-                    return Ok(());
+                    app.app_handle().exit(0);
+                    std::process::exit(0);
                 }
                 #[cfg(not(feature = "tauri-dev"))]
                 {

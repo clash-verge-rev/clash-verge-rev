@@ -7,12 +7,18 @@ use crate::{
     utils::{logging::Type, window_manager::WindowManager},
 };
 use anyhow::{Result, bail};
+use hyper_util::{
+    rt::TokioExecutor,
+    server::{conn::auto::Builder as HyperServerBuilder, graceful::GracefulShutdown},
+    service::TowerToHyperService,
+};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use port_scanner::local_port_available;
 use std::net::SocketAddr;
 use tokio::{net::TcpListener, sync::oneshot};
-use warp::Filter;
+use tokio_stream::{StreamExt, wrappers::TcpListenerStream};
+use warp::{Filter, service};
 
 #[derive(serde::Deserialize, Debug)]
 struct QueryParam {
@@ -168,13 +174,47 @@ pub fn embed_server() {
             }
         };
 
-        warp::serve(commands)
-            .incoming(listener)
-            .graceful(async move {
-                shutdown_rx.await.ok();
-            })
-            .run()
-            .await;
+        let mut incoming = TcpListenerStream::new(listener);
+        let service = service(commands);
+        let graceful = GracefulShutdown::new();
+
+        let shutdown_future = async move {
+            let _ = shutdown_rx.await;
+        };
+        tokio::pin!(shutdown_future);
+
+        loop {
+            tokio::select! {
+                _ = &mut shutdown_future => {
+                    log::info!("shutdown signal received, stopping embedded server accept loop");
+                    break;
+                }
+                maybe_conn = incoming.next() => {
+                    match maybe_conn {
+                        Some(Ok(stream)) => {
+                            let svc = service.clone();
+                            let watcher = graceful.watcher();
+                            tokio::spawn(async move {
+                                let io = hyper_util::rt::TokioIo::new(stream);
+                                let svc = TowerToHyperService::new(svc);
+                                let mut builder = HyperServerBuilder::new(TokioExecutor::new());
+                                builder.http1().pipeline_flush(false);
+                                if let Err(err) = watcher.watch(builder.serve_connection_with_upgrades(io, svc)).await {
+                                    log::debug!("embedded server connection error: {:?}", err);
+                                }
+                            });
+                        }
+                        Some(Err(err)) => {
+                            log::debug!("embedded server accept error: {}", err);
+                        }
+                        None => break,
+                    }
+                }
+            }
+        }
+
+        drop(incoming);
+        graceful.shutdown().await;
     });
 }
 

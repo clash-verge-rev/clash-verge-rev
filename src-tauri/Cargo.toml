@@ -74,11 +74,12 @@ hex = "0.4.3"
 scopeguard = "1.2.0"
 dashmap = "6.1.0"
 tauri-plugin-notification = "2.3.1"
-tokio-stream = "0.1.17"
+tokio-stream = { version = "0.1.17", features = ["net"] }
 isahc = { version = "1.7.2", default-features = false, features = [
   "text-decoding",
   "parking_lot",
 ] }
+hyper-util = "0.1.17"
 backoff = { version = "0.4.0", features = ["tokio"] }
 tauri-plugin-http = "2.5.2"
 flexi_logger = "0.31.7"

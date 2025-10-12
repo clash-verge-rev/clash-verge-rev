@@ -1114,6 +1114,7 @@ dependencies = [
  "getrandom 0.3.3",
  "hex",
  "hmac",
+ "hyper-util",
  "isahc",
  "libc",
  "log",
