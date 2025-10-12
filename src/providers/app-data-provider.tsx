@@ -7,9 +7,7 @@ import {
   getRules,
 } from "tauri-plugin-mihomo-api";
 
-// import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-// import { useVisibility } from "@/hooks/use-visibility";
 import {
   calcuProxies,
   calcuProxyProviders,
@@ -26,55 +24,7 @@ export const AppDataProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  // const pageVisible = useVisibility();
-  // const { clashInfo } = useClashInfo();
   const { verge } = useVerge();
-
-  // 存储上一次连接数据用于速度计算
-  // const previousConnectionsRef = useRef<Map<string, ConnectionSpeedData>>(
-  //   new Map(),
-  // );
-
-  // 计算连接速度的函数
-  // const calculateConnectionSpeeds = (
-  //   currentConnections: IConnectionsItem[],
-  // ): ConnectionWithSpeed[] => {
-  //   const now = Date.now();
-  //   const currentMap = new Map<string, ConnectionSpeedData>();
-
-  //   return currentConnections.map((conn) => {
-  //     const connWithSpeed: ConnectionWithSpeed = {
-  //       ...conn,
-  //       curUpload: 0,
-  //       curDownload: 0,
-  //     };
-
-  //     const currentData: ConnectionSpeedData = {
-  //       id: conn.id,
-  //       upload: conn.upload,
-  //       download: conn.download,
-  //       timestamp: now,
-  //     };
-
-  //     currentMap.set(conn.id, currentData);
-
-  //     const previousData = previousConnectionsRef.current.get(conn.id);
-  //     if (previousData) {
-  //       const timeDiff = (now - previousData.timestamp) / 1000; // 转换为秒
-
-  //       if (timeDiff > 0) {
-  //         const uploadDiff = conn.upload - previousData.upload;
-  //         const downloadDiff = conn.download - previousData.download;
-
-  //         // 计算每秒速度 (字节/秒)
-  //         connWithSpeed.curUpload = Math.max(0, uploadDiff / timeDiff);
-  //         connWithSpeed.curDownload = Math.max(0, downloadDiff / timeDiff);
-  //       }
-  //     }
-
-  //     return connWithSpeed;
-  //   });
-  // };
 
   // 基础数据 - 中频率更新 (5秒)
   const { data: proxiesData, mutate: refreshProxy } = useSWR(
@@ -178,20 +128,6 @@ export const AppDataProvider = ({
       refreshRuleProviders().catch((error) =>
         console.warn("[AppDataProvider] 规则提供者刷新失败:", error),
       );
-
-      // scheduleTimeout(() => {
-      //   void forceRefreshProxies()
-      //     .catch((error) => {
-      //       console.warn("[AppDataProvider] forceRefreshProxies 失败:", error);
-      //     })
-      //     .finally(() => {
-      //       scheduleTimeout(() => {
-      //         refreshProxy().catch((error) => {
-      //           console.warn("[AppDataProvider] 普通刷新也失败:", error);
-      //         });
-      //       }, 200);
-      //     });
-      // }, 0);
     };
 
     const handleRefreshClash = () => {
@@ -206,20 +142,12 @@ export const AppDataProvider = ({
 
       scheduleTimeout(async () => {
         try {
-          console.log("[AppDataProvider] Clash刷新 - 强制刷新代理缓存");
-          // await withTimeout(
-          //   forceRefreshProxies(),
-          //   8000,
-          //   "forceRefreshProxies timeout",
-          // );
+          console.log("[AppDataProvider] Clash刷新 - 刷新代理数据");
           await refreshProxy();
         } catch (error) {
           console.error(
-            "[AppDataProvider] Clash刷新时强制刷新代理缓存失败:",
+            "[AppDataProvider] Clash刷新时刷新代理数据失败:",
             error,
-          );
-          refreshProxy().catch((e) =>
-            console.warn("[AppDataProvider] Clash刷新普通刷新也失败:", e),
           );
         }
       }, 0);
@@ -242,28 +170,6 @@ export const AppDataProvider = ({
       }, 100);
     };
 
-    // const handleForceRefreshProxies = () => {
-    //   console.log("[AppDataProvider] 强制代理刷新事件");
-
-    //   void forceRefreshProxies()
-    //     .then(() => {
-    //       console.log("[AppDataProvider] 强制刷新代理缓存完成");
-    //       return refreshProxy();
-    //     })
-    //     .then(() => {
-    //       console.log("[AppDataProvider] 前端代理数据刷新完成");
-    //     })
-    //     .catch((error) => {
-    //       console.warn("[AppDataProvider] 强制代理刷新失败:", error);
-    //       refreshProxy().catch((fallbackError) => {
-    //         console.warn(
-    //           "[AppDataProvider] 普通代理刷新也失败:",
-    //           fallbackError,
-    //         );
-    //       });
-    //     });
-    // };
-
     const initializeListeners = async () => {
       try {
         const unlistenProfile = await listen<string>(
@@ -284,15 +190,10 @@ export const AppDataProvider = ({
           "verge://refresh-proxy-config",
           handleRefreshProxy,
         );
-        // const unlistenForceRefresh = await listen(
-        //   "verge://force-refresh-proxies",
-        //   handleForceRefreshProxies,
-        // );
 
         registerCleanup(() => {
           unlistenClash();
           unlistenProxy();
-          // unlistenForceRefresh();
         });
       } catch (error) {
         console.warn("[AppDataProvider] 设置 Tauri 事件监听器失败:", error);
@@ -300,7 +201,6 @@ export const AppDataProvider = ({
         const fallbackHandlers: Array<[string, EventListener]> = [
           ["verge://refresh-clash-config", handleRefreshClash],
           ["verge://refresh-proxy-config", handleRefreshProxy],
-          // ["verge://force-refresh-proxies", handleForceRefreshProxies],
         ];
 
         fallbackHandlers.forEach(([eventName, handler]) => {
@@ -392,88 +292,6 @@ export const AppDataProvider = ({
     suspense: false,
   });
 
-  // 连接数据 - 使用IPC轮询更新并计算速度
-  // const {
-  //   data: connectionsData = {
-  //     connections: [],
-  //     uploadTotal: 0,
-  //     downloadTotal: 0,
-  //   },
-  // } = useSWR(
-  //   clashInfo && pageVisible ? "getConnections" : null,
-  //   async () => {
-  //     const data = await getConnections();
-  //     const rawConnections =
-  //       data.connections?.map((item) => {
-  //         // TODO: transform bigint to number
-  //         return { ...item, upload: 0, download: 0 } as IConnectionsItem;
-  //       }) || [];
-
-  //     // 计算带速度的连接数据
-  //     const connectionsWithSpeed = calculateConnectionSpeeds(rawConnections);
-
-  //     // 更新上一次数据的引用
-  //     const currentMap = new Map<string, ConnectionSpeedData>();
-  //     const now = Date.now();
-  //     rawConnections.forEach((conn) => {
-  //       currentMap.set(conn.id, {
-  //         id: conn.id,
-  //         upload: conn.upload,
-  //         download: conn.download,
-  //         timestamp: now,
-  //       });
-  //     });
-  //     previousConnectionsRef.current = currentMap;
-
-  //     return {
-  //       connections: connectionsWithSpeed,
-  //       uploadTotal: data.uploadTotal || 0,
-  //       downloadTotal: data.downloadTotal || 0,
-  //     };
-  //   },
-  //   {
-  //     refreshInterval: 1000, // 1秒刷新一次
-  //     fallbackData: { connections: [], uploadTotal: 0, downloadTotal: 0 },
-  //     keepPreviousData: true,
-  //     onError: (error) => {
-  //       console.error("[Connections] IPC 获取数据错误:", error);
-  //     },
-  //   },
-  // );
-
-  // 流量数据 - 使用IPC轮询更新
-  // const trafficData = { up: 0, down: 0 };
-  // const { data: trafficData = { up: 0, down: 0 } } = useSWR(
-  //   clashInfo && pageVisible ? "getTrafficData" : null,
-  //   getTrafficData,
-  //   {
-  //     refreshInterval: 1000, // 1秒刷新一次
-  //     fallbackData: { up: 0, down: 0 },
-  //     keepPreviousData: true,
-  //     onSuccess: () => {
-  //       // console.log("[Traffic][AppDataProvider] IPC 获取到流量数据:", data);
-  //     },
-  //     onError: (error) => {
-  //       console.error("[Traffic][AppDataProvider] IPC 获取数据错误:", error);
-  //     },
-  //   },
-  // );
-
-  // 内存数据 - 使用IPC轮询更新
-  // const memoryData = { inuse: 0 };
-  // const { data: memoryData = { inuse: 0 } } = useSWR(
-  //   clashInfo && pageVisible ? "getMemoryData" : null,
-  //   getMemoryData,
-  //   {
-  //     refreshInterval: 2000, // 2秒刷新一次
-  //     fallbackData: { inuse: 0 },
-  //     keepPreviousData: true,
-  //     onError: (error) => {
-  //       console.error("[Memory] IPC 获取数据错误:", error);
-  //     },
-  //   },
-  // );
-
   // 提供统一的刷新方法
   const refreshAll = useCallback(async () => {
     await Promise.all([
@@ -539,18 +357,6 @@ export const AppDataProvider = ({
       proxyProviders: proxyProviders || {},
       ruleProviders: ruleProviders?.providers || {},
 
-      // 连接数据
-      // connections: {
-      //   data: connectionsData.connections || [],
-      //   count: connectionsData.connections?.length || 0,
-      //   uploadTotal: connectionsData.uploadTotal || 0,
-      //   downloadTotal: connectionsData.downloadTotal || 0,
-      // },
-
-      // 实时流量数据
-      // traffic: trafficData,
-      // memory: memoryData,
-
       systemProxyAddress: calculateSystemProxyAddress(),
 
       // 刷新方法
@@ -569,9 +375,6 @@ export const AppDataProvider = ({
     sysproxy,
     runningMode,
     uptimeData,
-    // connectionsData,
-    // trafficData,
-    // memoryData,
     proxyProviders,
     ruleProviders,
     verge,

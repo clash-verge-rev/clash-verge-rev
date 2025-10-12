@@ -15,14 +15,6 @@ export interface AppDataContextType {
   uptime: number;
   proxyProviders: Record<string, ProxyProvider>;
   ruleProviders: Record<string, RuleProvider>;
-  // connections: {
-  //   data: ConnectionWithSpeed[];
-  //   count: number;
-  //   uploadTotal: number;
-  //   downloadTotal: number;
-  // };
-  // traffic: { up: number; down: number };
-  // memory: { inuse: number };
   systemProxyAddress: string;
 
   refreshProxy: () => Promise<any>;
