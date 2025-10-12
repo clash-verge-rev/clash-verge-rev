@@ -1,5 +1,5 @@
 import { Close, CropSquare, FilterNone, Minimize } from "@mui/icons-material";
-import { IconButton } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import { forwardRef, useImperativeHandle } from "react";
 
 import { useWindowControls } from "@/hooks/use-window";
@@ -40,7 +40,16 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
   // 这可能是上游缺陷，保险起见跨平台以窗口的最大化翻转为准
 
   return (
-    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+    <Box
+      sx={{
+        display: "flex",
+        gap: 1,
+        alignItems: "center",
+        "> button": {
+          cursor: "default",
+        },
+      }}
+    >
       {OS === "macos" && (
         <>
           {/* macOS 风格：关闭 → 最小化 → 全屏 */}
@@ -68,7 +77,7 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
         <>
           {/* Windows 风格：最小化 → 最大化 → 关闭 */}
           <IconButton size="small" sx={{ fontSize: 14 }} onClick={minimize}>
-            <Minimize fontSize="small" color="inherit" />
+            <Minimize fontSize="inherit" color="inherit" />
           </IconButton>
           <IconButton
             size="small"
@@ -76,13 +85,13 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
             onClick={toggleMaximize}
           >
             {maximized ? (
-              <FilterNone fontSize="small" color="inherit" />
+              <FilterNone fontSize="inherit" color="inherit" />
             ) : (
-              <CropSquare fontSize="small" color="inherit" />
+              <CropSquare fontSize="inherit" color="inherit" />
             )}
           </IconButton>
           <IconButton size="small" sx={{ fontSize: 14 }} onClick={close}>
-            <Close fontSize="small" color="inherit" />
+            <Close fontSize="inherit" color="inherit" />
           </IconButton>
         </>
       )}
@@ -91,7 +100,7 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
         <>
           {/* Linux 桌面常见布局（GNOME/KDE 多为：最小化 → 最大化 → 关闭） */}
           <IconButton size="small" sx={{ fontSize: 14 }} onClick={minimize}>
-            <Minimize fontSize="small" color="inherit" />
+            <Minimize fontSize="inherit" color="inherit" />
           </IconButton>
           <IconButton
             size="small"
@@ -99,16 +108,16 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
             onClick={toggleMaximize}
           >
             {maximized ? (
-              <FilterNone fontSize="small" color="inherit" />
+              <FilterNone fontSize="inherit" color="inherit" />
             ) : (
-              <CropSquare fontSize="small" color="inherit" />
+              <CropSquare fontSize="inherit" color="inherit" />
             )}
           </IconButton>
           <IconButton size="small" sx={{ fontSize: 14 }} onClick={close}>
-            <Close fontSize="small" color="inherit" />
+            <Close fontSize="inherit" color="inherit" />
           </IconButton>
         </>
       )}
-    </div>
+    </Box>
   );
 });
