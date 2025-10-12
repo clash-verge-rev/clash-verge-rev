@@ -552,16 +552,15 @@ const Layout = () => {
             borderTopRightRadius: "0px",
           }}
           onContextMenu={(e) => {
-            // TODO: 禁止右键菜单
-            // if (
-            //   OS === "windows" &&
-            //   !["input", "textarea"].includes(
-            //     e.currentTarget.tagName.toLowerCase(),
-            //   ) &&
-            //   !e.currentTarget.isContentEditable
-            // ) {
-            //   e.preventDefault();
-            // }
+            if (
+              OS === "windows" &&
+              !["input", "textarea"].includes(
+                e.currentTarget.tagName.toLowerCase(),
+              ) &&
+              !e.currentTarget.isContentEditable
+            ) {
+              e.preventDefault();
+            }
           }}
           sx={[
             ({ palette }) => ({ bgcolor: palette.background.paper }),
