@@ -66,7 +66,7 @@ impl IClashTemp {
         map.insert("mixed-port".into(), 7897.into());
         map.insert("socks-port".into(), 7898.into());
         map.insert("port".into(), 7899.into());
-        map.insert("log-level".into(), "warning".into());
+        map.insert("log-level".into(), "info".into());
         map.insert("allow-lan".into(), false.into());
         map.insert("ipv6".into(), true.into());
         map.insert("mode".into(), "rule".into());
