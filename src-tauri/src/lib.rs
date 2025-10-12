@@ -32,21 +32,31 @@ mod app_init {
     use super::*;
 
     /// Initialize singleton monitoring for other instances
-    pub async fn init_singleton_check() {
+    pub async fn init_singleton_check() -> bool {
         logging!(info, Type::Setup, "开始检查单例实例...");
         match timeout(Duration::from_millis(500), server::check_singleton()).await {
             Ok(Ok(())) => {
                 logging!(info, Type::Setup, "未检测到其他应用实例");
+                false
             }
-            Ok(Err(_)) => {
-                logging!(info, Type::Setup, "检测到已有应用实例运行，准备退出...");
-                if let Some(app_handle) = APP_HANDLE.get() {
-                    app_handle.exit(1);
+            Ok(Err(err)) => {
+                let message = err.to_string();
+                if message.contains("app exists") {
+                    logging!(info, Type::Setup, "检测到已有应用实例运行，已请求恢复窗口");
+                    true
+                } else {
+                    logging!(
+                        warn,
+                        Type::Setup,
+                        "单例检查失败，将继续启动: {}",
+                        message
+                    );
+                    false
                 }
-                std::process::exit(1);
             }
             Err(_) => {
                 logging!(warn, Type::Setup, "单例检查超时，假定没有其他实例运行");
+                false
             }
         }
     }
@@ -325,25 +335,23 @@ pub fn run() {
                 .expect("failed to set global app handle");
 
             {
-                let rt = match tokio::runtime::Runtime::new() {
-                    Ok(runtime) => runtime,
-                    Err(err) => {
-                        logging!(
-                            error,
-                            Type::Setup,
-                            "Failed to create temporary runtime during setup: {}",
-                            err
-                        );
-                        std::process::exit(1);
-                    }
-                };
-                rt.block_on(async {
-                    app_init::init_singleton_check().await;
+                let should_skip_setup = tauri::async_runtime::block_on(async {
+                    app_init::init_singleton_check().await
                 });
+                if should_skip_setup {
+                    logging!(
+                        info,
+                        Type::Setup,
+                        "嵌入式单例服务已响应该启动请求，跳过后续初始化步骤"
+                    );
+                    return Ok(());
+                }
                 #[cfg(not(feature = "tauri-dev"))]
-                rt.block_on(async {
-                    resolve::resolve_setup_logger().await;
-                });
+                {
+                    tauri::async_runtime::block_on(async {
+                        resolve::resolve_setup_logger().await;
+                    });
+                }
             }
 
             logging!(
