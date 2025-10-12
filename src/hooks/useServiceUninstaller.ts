@@ -37,6 +37,9 @@ export const useServiceUninstaller = () => {
     );
 
     await executeWithErrorHandling(() => restartCore(), "Restarting Core...");
+
+    await mutateRunningMode().catch(() => undefined);
+    await mutateServiceOk().catch(() => undefined);
   }, [mutateRunningMode, mutateServiceOk]);
 
   return { uninstallServiceAndRestartCore };

@@ -3,6 +3,7 @@ import { useCallback } from "react";
 
 import { installService, restartCore } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+
 import { useSystemState } from "./use-system-state";
 
 const executeWithErrorHandling = async (
@@ -34,6 +35,10 @@ export const useServiceInstaller = () => {
     );
 
     await executeWithErrorHandling(() => restartCore(), "Restarting Core...");
+
+    // Refresh cached running mode and service availability after a successful restart
+    await mutateRunningMode().catch(() => undefined);
+    await mutateServiceOk().catch(() => undefined);
   }, [mutateRunningMode, mutateServiceOk]);
   return { installServiceAndRestartCore };
 };
