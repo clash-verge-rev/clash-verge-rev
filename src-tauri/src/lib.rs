@@ -325,7 +325,18 @@ pub fn run() {
                 .expect("failed to set global app handle");
 
             {
-                let rt = tokio::runtime::Runtime::new().unwrap();
+                let rt = match tokio::runtime::Runtime::new() {
+                    Ok(runtime) => runtime,
+                    Err(err) => {
+                        logging!(
+                            error,
+                            Type::Setup,
+                            "Failed to create temporary runtime during setup: {}",
+                            err
+                        );
+                        std::process::exit(1);
+                    }
+                };
                 rt.block_on(async {
                     app_init::init_singleton_check().await;
                 });
