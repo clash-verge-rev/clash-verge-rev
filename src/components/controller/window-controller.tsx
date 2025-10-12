@@ -40,7 +40,7 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
   // 这可能是上游缺陷，保险起见跨平台以窗口的最大化翻转为准
 
   return (
-    <div style={{ display: "flex", gap: 4 }}>
+    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
       {OS === "macos" && (
         <>
           {/* macOS 风格：关闭 → 最小化 → 全屏 */}
