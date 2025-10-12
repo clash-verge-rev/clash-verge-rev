@@ -76,12 +76,12 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
       {OS === "windows" && (
         <>
           {/* Windows 风格：最小化 → 最大化 → 关闭 */}
-          <IconButton size="small" sx={{ fontSize: 14 }} onClick={minimize}>
+          <IconButton size="small" sx={{ fontSize: 16 }} onClick={minimize}>
             <Minimize fontSize="inherit" color="inherit" />
           </IconButton>
           <IconButton
             size="small"
-            sx={{ fontSize: 14 }}
+            sx={{ fontSize: 16 }}
             onClick={toggleMaximize}
           >
             {maximized ? (
@@ -90,7 +90,11 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
               <CropSquare fontSize="inherit" color="inherit" />
             )}
           </IconButton>
-          <IconButton size="small" sx={{ fontSize: 14 }} onClick={close}>
+          <IconButton
+            size="small"
+            sx={{ fontSize: 16, ":hover": { bgcolor: "red", color: "white" } }}
+            onClick={close}
+          >
             <Close fontSize="inherit" color="inherit" />
           </IconButton>
         </>
@@ -99,12 +103,12 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
       {OS === "linux" && (
         <>
           {/* Linux 桌面常见布局（GNOME/KDE 多为：最小化 → 最大化 → 关闭） */}
-          <IconButton size="small" sx={{ fontSize: 14 }} onClick={minimize}>
+          <IconButton size="small" sx={{ fontSize: 16 }} onClick={minimize}>
             <Minimize fontSize="inherit" color="inherit" />
           </IconButton>
           <IconButton
             size="small"
-            sx={{ fontSize: 14 }}
+            sx={{ fontSize: 16 }}
             onClick={toggleMaximize}
           >
             {maximized ? (
@@ -113,7 +117,11 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
               <CropSquare fontSize="inherit" color="inherit" />
             )}
           </IconButton>
-          <IconButton size="small" sx={{ fontSize: 14 }} onClick={close}>
+          <IconButton
+            size="small"
+            sx={{ fontSize: 16, ":hover": { bgcolor: "red", color: "white" } }}
+            onClick={close}
+          >
             <Close fontSize="inherit" color="inherit" />
           </IconButton>
         </>
