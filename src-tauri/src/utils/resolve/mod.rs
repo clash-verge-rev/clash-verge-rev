@@ -42,14 +42,6 @@ pub fn resolve_setup_async() {
     );
 
     AsyncHandler::spawn(|| async {
-        #[cfg(not(feature = "tauri-dev"))]
-        resolve_setup_logger().await;
-        logging!(
-            info,
-            Type::ClashVergeRev,
-            "Version: {}",
-            env!("CARGO_PKG_VERSION")
-        );
         futures::join!(init_service_manager());
 
         futures::join!(
@@ -121,7 +113,7 @@ pub(super) fn init_scheme() {
 }
 
 #[cfg(not(feature = "tauri-dev"))]
-pub(super) async fn resolve_setup_logger() {
+pub async fn resolve_setup_logger() {
     logging!(info, Type::Setup, "Initializing global logger...");
     logging_error!(Type::Setup, init::init_logger().await);
 }

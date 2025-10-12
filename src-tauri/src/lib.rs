@@ -32,27 +32,23 @@ mod app_init {
     use super::*;
 
     /// Initialize singleton monitoring for other instances
-    pub fn init_singleton_check() {
-        AsyncHandler::spawn(|| async {
-            logging!(info, Type::Setup, "开始检查单例实例...");
-            match timeout(Duration::from_millis(500), server::check_singleton()).await {
-                Ok(result) => {
-                    if result.is_err() {
-                        logging!(info, Type::Setup, "检测到已有应用实例运行");
-                        if let Some(app_handle) = APP_HANDLE.get() {
-                            app_handle.exit(0);
-                        } else {
-                            std::process::exit(0);
-                        }
-                    } else {
-                        logging!(info, Type::Setup, "未检测到其他应用实例");
-                    }
-                }
-                Err(_) => {
-                    logging!(warn, Type::Setup, "单例检查超时，假定没有其他实例运行");
-                }
+    pub async fn init_singleton_check() {
+        logging!(info, Type::Setup, "开始检查单例实例...");
+        match timeout(Duration::from_millis(500), server::check_singleton()).await {
+            Ok(Ok(())) => {
+                logging!(info, Type::Setup, "未检测到其他应用实例");
             }
-        });
+            Ok(Err(_)) => {
+                logging!(info, Type::Setup, "检测到已有应用实例运行，准备退出...");
+                if let Some(app_handle) = APP_HANDLE.get() {
+                    app_handle.exit(1);
+                }
+                std::process::exit(1);
+            }
+            Err(_) => {
+                logging!(warn, Type::Setup, "单例检查超时，假定没有其他实例运行");
+            }
+        }
     }
 
     /// Setup plugins for the Tauri builder
@@ -234,11 +230,6 @@ mod app_init {
 }
 
 pub fn run() {
-    // Setup singleton check
-    app_init::init_singleton_check();
-
-    let _ = utils::dirs::init_portable_flag();
-
     // Set Linux environment variable
     #[cfg(target_os = "linux")]
     {
@@ -328,12 +319,30 @@ pub fn run() {
     // Create and configure the Tauri builder
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
-            logging!(info, Type::Setup, "开始应用初始化...");
-
             #[allow(clippy::expect_used)]
             APP_HANDLE
                 .set(app.app_handle().clone())
                 .expect("failed to set global app handle");
+
+            {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async {
+                    app_init::init_singleton_check().await;
+                });
+                #[cfg(not(feature = "tauri-dev"))]
+                rt.block_on(async {
+                    resolve::resolve_setup_logger().await;
+                });
+            }
+
+            logging!(
+                info,
+                Type::ClashVergeRev,
+                "Version: {}",
+                env!("CARGO_PKG_VERSION")
+            );
+            logging!(info, Type::Setup, "开始应用初始化...");
+            let _ = utils::dirs::init_portable_flag();
 
             // Setup autostart plugin
             if let Err(e) = app_init::setup_autostart(app) {
