@@ -22,37 +22,23 @@ use tauri::{AppHandle, Manager};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt;
-use tokio::time::{Duration, timeout};
 use utils::logging::Type;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
 /// Application initialization helper functions
 mod app_init {
+    use anyhow::Result;
+
     use super::*;
 
     /// Initialize singleton monitoring for other instances
-    pub fn init_singleton_check() {
-        AsyncHandler::spawn_blocking(move || async move {
+    pub fn init_singleton_check() -> Result<()> {
+        tauri::async_runtime::block_on(async move {
             logging!(info, Type::Setup, "开始检查单例实例...");
-            match timeout(Duration::from_millis(500), server::check_singleton()).await {
-                Ok(result) => {
-                    if result.is_err() {
-                        logging!(info, Type::Setup, "检测到已有应用实例运行");
-                        if let Some(app_handle) = APP_HANDLE.get() {
-                            app_handle.exit(0);
-                        } else {
-                            std::process::exit(0);
-                        }
-                    } else {
-                        logging!(info, Type::Setup, "未检测到其他应用实例");
-                    }
-                }
-                Err(_) => {
-                    logging!(warn, Type::Setup, "单例检查超时，假定没有其他实例运行");
-                }
-            }
-        });
+            server::check_singleton().await?;
+            Ok(())
+        })
     }
 
     /// Setup plugins for the Tauri builder
@@ -235,7 +221,9 @@ mod app_init {
 
 pub fn run() {
     // Setup singleton check
-    app_init::init_singleton_check();
+    if app_init::init_singleton_check().is_err() {
+        return;
+    }
 
     let _ = utils::dirs::init_portable_flag();
 
