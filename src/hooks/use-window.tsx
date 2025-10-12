@@ -1,4 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { debounce } from "lodash-es";
 import React, {
   createContext,
   useCallback,
@@ -30,6 +31,20 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const close = useCallback(() => currentWindow.close(), [currentWindow]);
   const minimize = useCallback(() => currentWindow.minimize(), [currentWindow]);
+
+  useEffect(() => {
+    const checkMaximized = debounce(async () => {
+      const value = await currentWindow.isMaximized();
+      if (maximized !== value) {
+        setMaximized(value);
+      }
+    }, 100);
+    const unlistenResize = currentWindow.onResized(checkMaximized);
+
+    return () => {
+      unlistenResize.then((fn) => fn());
+    };
+  }, [currentWindow, maximized]);
 
   const toggleMaximize = useCallback(async () => {
     if (await currentWindow.isMaximized()) {
