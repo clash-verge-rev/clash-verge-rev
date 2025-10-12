@@ -1,5 +1,5 @@
 use crate::AsyncHandler;
-use crate::core::logger::Logger;
+use crate::core::logger::ClashLogger;
 use crate::process::CommandChildGuard;
 use crate::utils::init::sidecar_writer;
 use crate::utils::logging::SharedWriter;
@@ -21,6 +21,7 @@ use flexi_logger::DeferredNow;
 use flexi_logger::writers::LogWriter;
 use log::Record;
 use parking_lot::Mutex;
+use std::collections::VecDeque;
 use std::{fmt, path::PathBuf, sync::Arc};
 use tauri_plugin_shell::ShellExt;
 
@@ -772,13 +773,13 @@ impl CoreManager {
                         let mut now = DeferredNow::default();
                         let message = String::from_utf8_lossy(&line).into_owned();
                         let message = write_sidecar_log(&*w, &mut now, log::Level::Error, message);
-                        Logger::global().append_log(message);
+                        ClashLogger::global().append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
                         let message = String::from_utf8_lossy(&line).into_owned();
                         let message = write_sidecar_log(&*w, &mut now, log::Level::Error, message);
-                        Logger::global().append_log(message);
+                        ClashLogger::global().append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let mut now = DeferredNow::default();
@@ -820,6 +821,7 @@ impl CoreManager {
         self.set_running_mode(RunningMode::Service);
         Ok(())
     }
+
     async fn stop_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Stopping core by service");
         service::stop_core_by_service().await?;
@@ -897,9 +899,19 @@ impl CoreManager {
         Ok(())
     }
 
+    pub async fn get_clash_logs(&self) -> Result<VecDeque<String>> {
+        logging!(info, Type::Core, "get clash logs");
+        let logs = match self.get_running_mode() {
+            RunningMode::Service => service::get_clash_logs_by_service().await?,
+            RunningMode::Sidecar => ClashLogger::global().get_logs().clone(),
+            _ => VecDeque::new(),
+        };
+        Ok(logs)
+    }
+
     /// 停止核心运行
     pub async fn stop_core(&self) -> Result<()> {
-        Logger::global().clear_logs();
+        ClashLogger::global().clear_logs();
         match self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar(),

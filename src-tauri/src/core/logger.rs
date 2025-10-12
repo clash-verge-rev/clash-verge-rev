@@ -5,15 +5,15 @@ use parking_lot::{RwLock, RwLockReadGuard};
 
 const LOGS_QUEUE_LEN: usize = 100;
 
-pub struct Logger {
+pub struct ClashLogger {
     logs: Arc<RwLock<VecDeque<String>>>,
 }
 
-impl Logger {
-    pub fn global() -> &'static Logger {
-        static LOGGER: OnceCell<Logger> = OnceCell::new();
+impl ClashLogger {
+    pub fn global() -> &'static ClashLogger {
+        static LOGGER: OnceCell<ClashLogger> = OnceCell::new();
 
-        LOGGER.get_or_init(|| Logger {
+        LOGGER.get_or_init(|| ClashLogger {
             logs: Arc::new(RwLock::new(VecDeque::with_capacity(LOGS_QUEUE_LEN + 10))),
         })
     }
