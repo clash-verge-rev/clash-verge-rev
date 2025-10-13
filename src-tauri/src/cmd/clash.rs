@@ -6,6 +6,7 @@ use crate::{
     core::{CoreManager, handle},
 };
 use crate::{config::*, feat, logging, utils::logging::Type, wrap_err};
+use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 
 /// 复制Clash环境变量
@@ -285,7 +286,7 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
 }
 
 #[tauri::command]
-pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
+pub async fn get_clash_logs() -> CmdResult<VecDeque<CompactString>> {
     let logs = CoreManager::global()
         .get_clash_logs()
         .await

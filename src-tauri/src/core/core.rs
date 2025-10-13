@@ -2,7 +2,7 @@ use crate::AsyncHandler;
 use crate::core::logger::ClashLogger;
 use crate::process::CommandChildGuard;
 use crate::utils::init::sidecar_writer;
-use crate::utils::logging::SharedWriter;
+use crate::utils::logging::{SharedWriter, write_sidecar_log};
 use crate::{
     config::*,
     core::{
@@ -17,9 +17,9 @@ use crate::{
     },
 };
 use anyhow::Result;
+use compact_str::CompactString;
 use flexi_logger::DeferredNow;
-use flexi_logger::writers::LogWriter;
-use log::Record;
+use log::Level;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
 use std::{fmt, path::PathBuf, sync::Arc};
@@ -57,29 +57,6 @@ impl fmt::Display for RunningMode {
 }
 
 use crate::config::IVerge;
-
-fn write_sidecar_log(
-    writer: &dyn LogWriter,
-    now: &mut DeferredNow,
-    level: log::Level,
-    message: String,
-) -> String {
-    let boxed = message.into_boxed_str();
-    let leaked: &'static mut str = Box::leak(boxed);
-    let leaked_ptr = leaked as *mut str;
-    {
-        let _ = writer.write(
-            now,
-            &Record::builder()
-                .args(format_args!("{}", &*leaked))
-                .level(level)
-                .target("sidecar")
-                .build(),
-        );
-    }
-    // SAFETY: `leaked` originated from `Box::leak` above; reboxing frees it immediately after use.
-    unsafe { String::from(Box::from_raw(leaked_ptr)) }
-}
 
 impl CoreManager {
     /// 检查文件是否为脚本文件
@@ -767,30 +744,35 @@ impl CoreManager {
 
         AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
-                let w = shared_writer.lock().await;
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
                         let mut now = DeferredNow::default();
-                        let message = String::from_utf8_lossy(&line).into_owned();
-                        let message = write_sidecar_log(&*w, &mut now, log::Level::Error, message);
+                        let message =
+                            CompactString::from(String::from_utf8_lossy(&line).into_owned());
+                        let w = shared_writer.lock().await;
+                        write_sidecar_log(w, &mut now, Level::Error, &message);
                         ClashLogger::global().append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
-                        let message = String::from_utf8_lossy(&line).into_owned();
-                        let message = write_sidecar_log(&*w, &mut now, log::Level::Error, message);
+                        let message =
+                            CompactString::from(String::from_utf8_lossy(&line).into_owned());
+                        let w = shared_writer.lock().await;
+                        write_sidecar_log(w, &mut now, Level::Error, &message);
                         ClashLogger::global().append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let mut now = DeferredNow::default();
                         let message = if let Some(code) = term.code {
-                            format!("Process terminated with code: {}", code)
+                            CompactString::from(format!("Process terminated with code: {}", code))
                         } else if let Some(signal) = term.signal {
-                            format!("Process terminated by signal: {}", signal)
+                            CompactString::from(format!("Process terminated by signal: {}", signal))
                         } else {
-                            "Process terminated".to_string()
+                            CompactString::from("Process terminated")
                         };
-                        write_sidecar_log(&*w, &mut now, log::Level::Info, message);
+                        let w = shared_writer.lock().await;
+                        write_sidecar_log(w, &mut now, Level::Info, &message);
+                        ClashLogger::global().clear_logs();
                         break;
                     }
                     _ => {}
@@ -899,10 +881,15 @@ impl CoreManager {
         Ok(())
     }
 
-    pub async fn get_clash_logs(&self) -> Result<VecDeque<String>> {
+    pub async fn get_clash_logs(&self) -> Result<VecDeque<CompactString>> {
         logging!(info, Type::Core, "get clash logs");
         let logs = match self.get_running_mode() {
-            RunningMode::Service => service::get_clash_logs_by_service().await?,
+            // TODO 服务端也完成 CompactString 迁移
+            RunningMode::Service => service::get_clash_logs_by_service()
+                .await?
+                .into_iter()
+                .map(CompactString::from)
+                .collect::<VecDeque<CompactString>>(),
             RunningMode::Sidecar => ClashLogger::global().get_logs().clone(),
             _ => VecDeque::new(),
         };
