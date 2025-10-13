@@ -1,6 +1,6 @@
 use crate::{config::Config, utils::dirs};
 use anyhow::Error;
-use compact_str::CompactString;
+use compact_str::CompactString as String;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest_dav::list_cmd::{ListEntity, ListFile};
@@ -26,9 +26,9 @@ const TIMEOUT_DELETE: u64 = 3; // 删除超时 30 秒
 
 #[derive(Clone)]
 struct WebDavConfig {
-    url: CompactString,
-    username: CompactString,
-    password: CompactString,
+    url: String,
+    username: String,
+    password: String,
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
@@ -167,7 +167,7 @@ impl WebDavClient {
 
     pub async fn upload(&self, file_path: PathBuf, file_name: String) -> Result<(), Error> {
         let client = self.get_client(Operation::Upload).await?;
-        let webdav_path: String = format!("{}/{}", dirs::BACKUP_DIR, file_name);
+        let webdav_path: String = format!("{}/{}", dirs::BACKUP_DIR, file_name).into();
 
         // 读取文件并上传，如果失败尝试一次重试
         let file_content = fs::read(&file_path)?;
@@ -291,5 +291,5 @@ pub fn create_backup() -> Result<(String, PathBuf), Error> {
     zip.start_file(dirs::PROFILE_YAML, options)?;
     zip.write_all(fs::read(dirs::profiles_path()?)?.as_slice())?;
     zip.finish()?;
-    Ok((zip_file_name, zip_path))
+    Ok((zip_file_name.into(), zip_path))
 }

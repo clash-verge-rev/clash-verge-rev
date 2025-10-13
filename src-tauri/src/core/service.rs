@@ -5,7 +5,7 @@ use crate::{
 };
 use anyhow::{Context, Result, bail};
 use clash_verge_service_ipc::CoreConfig;
-use compact_str::CompactString;
+use compact_str::CompactString as String;
 use once_cell::sync::Lazy;
 use std::{
     collections::VecDeque,
@@ -231,7 +231,7 @@ async fn uninstall_service() -> Result<()> {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
 
-    let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
+    let uninstall_shell: String = uninstall_path.to_string_lossy().into();
 
     let prompt = t("Service Administrator Prompt").await;
     let command = format!(
@@ -267,7 +267,7 @@ async fn install_service() -> Result<()> {
         bail!(format!("installer not found: {install_path:?}"));
     }
 
-    let install_shell: String = install_path.to_string_lossy().into_owned();
+    let install_shell: String = install_path.to_string_lossy().into();
 
     let prompt = t("Service Administrator Prompt").await;
     let command = format!(
@@ -331,7 +331,7 @@ async fn check_service_version() -> Result<String> {
         }
 
         let version = response.data.unwrap_or("unknown".to_string());
-        Ok(version)
+        Ok(version.into())
     };
 
     match version_arc.as_ref() {
@@ -394,7 +394,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     start_with_existing_service(config_file).await
 }
 
-pub(super) async fn get_clash_logs_by_service() -> Result<VecDeque<CompactString>> {
+pub(super) async fn get_clash_logs_by_service() -> Result<VecDeque<String>> {
     logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
 
     let response = clash_verge_service_ipc::get_clash_logs()
@@ -459,7 +459,7 @@ impl ServiceManager {
 
     pub async fn init(&mut self) -> Result<()> {
         if let Err(e) = clash_verge_service_ipc::connect().await {
-            self.0 = ServiceStatus::Unavailable("服务连接失败: {e}".to_string());
+            self.0 = ServiceStatus::Unavailable("服务连接失败: {e}".into());
             return Err(e);
         }
         Ok(())
@@ -490,7 +490,7 @@ impl ServiceManager {
             }
             Err(err) => {
                 logging!(warn, Type::Service, "服务不可用，检查安装状态");
-                ServiceStatus::Unavailable(err.to_string())
+                ServiceStatus::Unavailable(err.to_string().into())
             }
         }
     }

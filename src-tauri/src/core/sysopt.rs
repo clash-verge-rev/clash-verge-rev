@@ -7,7 +7,7 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::Result;
-use compact_str::CompactString;
+use compact_str::CompactString as String;
 use std::sync::Arc;
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
@@ -27,7 +27,7 @@ static DEFAULT_BYPASS: &str =
 #[cfg(target_os = "macos")]
 static DEFAULT_BYPASS: &str = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
 
-async fn get_bypass() -> CompactString {
+async fn get_bypass() -> String {
     let use_default = Config::verge()
         .await
         .latest_ref()

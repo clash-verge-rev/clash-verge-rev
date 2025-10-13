@@ -5,6 +5,7 @@ use crate::{
     utils::{dirs::app_home_dir, logging::Type},
 };
 use anyhow::Result;
+use compact_str::CompactString as String;
 use reqwest_dav::list_cmd::ListFile;
 use std::fs;
 

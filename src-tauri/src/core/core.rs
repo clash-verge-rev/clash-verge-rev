@@ -17,7 +17,6 @@ use crate::{
     },
 };
 use anyhow::Result;
-use compact_str::CompactString;
 use compact_str::CompactString as String;
 use flexi_logger::DeferredNow;
 use log::Level;
@@ -763,11 +762,11 @@ impl CoreManager {
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let mut now = DeferredNow::default();
                         let message = if let Some(code) = term.code {
-                            CompactString::from(format!("Process terminated with code: {}", code))
+                            String::from(format!("Process terminated with code: {}", code))
                         } else if let Some(signal) = term.signal {
-                            CompactString::from(format!("Process terminated by signal: {}", signal))
+                            String::from(format!("Process terminated by signal: {}", signal))
                         } else {
-                            CompactString::from("Process terminated")
+                            String::from("Process terminated")
                         };
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Info, &message);
@@ -880,7 +879,7 @@ impl CoreManager {
         Ok(())
     }
 
-    pub async fn get_clash_logs(&self) -> Result<VecDeque<CompactString>> {
+    pub async fn get_clash_logs(&self) -> Result<VecDeque<String>> {
         logging!(info, Type::Core, "get clash logs");
         let logs = match self.get_running_mode() {
             RunningMode::Service => service::get_clash_logs_by_service().await?,
@@ -912,10 +911,7 @@ impl CoreManager {
     }
 
     /// 切换核心
-    pub async fn change_core(
-        &self,
-        clash_core: Option<CompactString>,
-    ) -> Result<(), CompactString> {
+    pub async fn change_core(&self, clash_core: Option<String>) -> Result<(), String> {
         if clash_core.is_none() {
             let error_message = "Clash core should not be Null";
             logging!(error, Type::Core, "{}", error_message);

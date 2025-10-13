@@ -1,5 +1,5 @@
 use crate::{config::Config, utils::dirs};
-use compact_str::CompactString;
+use compact_str::CompactString as String;
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::{fs, path::PathBuf, sync::RwLock};
@@ -13,8 +13,8 @@ fn get_locales_dir() -> Option<PathBuf> {
         .ok()
 }
 
-pub fn get_supported_languages() -> Vec<CompactString> {
-    let mut languages: Vec<CompactString> = Vec::new();
+pub fn get_supported_languages() -> Vec<String> {
+    let mut languages: Vec<String> = Vec::new();
 
     if let Some(locales_dir) = get_locales_dir()
         && let Ok(entries) = fs::read_dir(locales_dir)
@@ -34,7 +34,7 @@ pub fn get_supported_languages() -> Vec<CompactString> {
     languages
 }
 
-static TRANSLATIONS: Lazy<RwLock<(CompactString, Value)>> = Lazy::new(|| {
+static TRANSLATIONS: Lazy<RwLock<(String, Value)>> = Lazy::new(|| {
     let lang = get_system_language();
     let json = load_lang_file(&lang).unwrap_or_else(|| Value::Object(Default::default()));
     RwLock::new((lang, json))
@@ -48,7 +48,7 @@ fn load_lang_file(lang: &str) -> Option<Value> {
         .and_then(|content| serde_json::from_str(&content).ok())
 }
 
-fn get_system_language() -> CompactString {
+fn get_system_language() -> String {
     sys_locale::get_locale()
         .map(|locale| locale.to_lowercase())
         .and_then(|locale| locale.split(['_', '-']).next().map(Into::into))
@@ -56,7 +56,7 @@ fn get_system_language() -> CompactString {
         .unwrap_or_else(|| DEFAULT_LANGUAGE.into())
 }
 
-pub async fn t(key: &str) -> CompactString {
+pub async fn t(key: &str) -> String {
     let current_lang = Config::verge()
         .await
         .latest_ref()
