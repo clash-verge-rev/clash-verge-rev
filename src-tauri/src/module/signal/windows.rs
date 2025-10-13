@@ -8,11 +8,7 @@ use windows_sys::Win32::{
     },
 };
 
-use crate::{
-    core::handle,
-    feat, logging,
-    utils::{logging::Type, resolve},
-};
+use crate::{core::handle, feat, logging, utils::logging::Type};
 
 // code refer to:
 //      global-hotkey (https://github.com/tauri-apps/global-hotkey)
@@ -45,7 +41,11 @@ unsafe extern "system" fn shutdown_proc(
     // only perform reset operations in `WM_ENDSESSION`
     match msg {
         WM_QUERYENDSESSION => {
-            tracing::info!("System is shutting down or user is logging off.")
+            logging!(
+                info,
+                Type::System,
+                "System is shutting down or user is logging off."
+            );
         }
         WM_ENDSESSION => {
             tauri::async_runtime::block_on(async move {
