@@ -37,7 +37,7 @@ pub async fn patch_clash_mode(payload: String) -> CmdResult {
 
 /// 切换Clash核心
 #[tauri::command]
-pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {
+pub async fn change_clash_core(clash_core: CompactString) -> CmdResult<Option<String>> {
     logging!(info, Type::Config, "changing core to {clash_core}");
 
     match CoreManager::global()
@@ -53,7 +53,10 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
                         Type::Core,
                         "core changed and restarted to {clash_core}"
                     );
-                    handle::Handle::notice_message("config_core::change_success", &clash_core);
+                    handle::Handle::notice_message(
+                        "config_core::change_success",
+                        clash_core.to_string(),
+                    );
                     handle::Handle::refresh_clash();
                     Ok(None)
                 }

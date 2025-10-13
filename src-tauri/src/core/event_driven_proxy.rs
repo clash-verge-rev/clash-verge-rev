@@ -519,7 +519,7 @@ impl EventDrivenProxyManager {
             verge
                 .proxy_host
                 .clone()
-                .unwrap_or_else(|| "127.0.0.1".to_string())
+                .unwrap_or_else(|| "127.0.0.1".into())
         };
         let pac_port = IVerge::get_singleton_port();
         Autoproxy {
@@ -534,11 +534,11 @@ impl EventDrivenProxyManager {
         let proxy_host = verge_config.latest_ref().proxy_host.clone();
 
         let port = verge_mixed_port.unwrap_or(Config::clash().await.latest_ref().get_mixed_port());
-        let proxy_host = proxy_host.unwrap_or_else(|| "127.0.0.1".to_string());
+        let proxy_host = proxy_host.unwrap_or_else(|| "127.0.0.1".into());
 
         Sysproxy {
             enable: true,
-            host: proxy_host,
+            host: proxy_host.into(),
             port,
             bypass: Self::get_bypass_config().await,
         }
@@ -569,7 +569,7 @@ impl EventDrivenProxyManager {
         } else if use_default {
             format!("{default_bypass},{custom_bypass}")
         } else {
-            custom_bypass
+            custom_bypass.into()
         }
     }
 

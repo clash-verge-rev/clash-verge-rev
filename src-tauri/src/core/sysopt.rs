@@ -7,6 +7,7 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::Result;
+use compact_str::CompactString;
 use std::sync::Arc;
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
@@ -26,7 +27,7 @@ static DEFAULT_BYPASS: &str =
 #[cfg(target_os = "macos")]
 static DEFAULT_BYPASS: &str = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
 
-async fn get_bypass() -> String {
+async fn get_bypass() -> CompactString {
     let use_default = Config::verge()
         .await
         .latest_ref()
@@ -39,13 +40,13 @@ async fn get_bypass() -> String {
     };
     let custom_bypass = match res {
         Some(bypass) => bypass,
-        None => "".to_string(),
+        None => "".into(),
     };
 
     if custom_bypass.is_empty() {
-        DEFAULT_BYPASS.to_string()
+        DEFAULT_BYPASS.into()
     } else if use_default {
-        format!("{DEFAULT_BYPASS},{custom_bypass}")
+        format!("{DEFAULT_BYPASS},{custom_bypass}").into()
     } else {
         custom_bypass
     }
@@ -124,7 +125,7 @@ impl Sysopt {
                 verge
                     .proxy_host
                     .clone()
-                    .unwrap_or_else(|| String::from("127.0.0.1")),
+                    .unwrap_or_else(|| "127.0.0.1".into()),
             )
         };
 
@@ -132,9 +133,9 @@ impl Sysopt {
         {
             let mut sys = Sysproxy {
                 enable: false,
-                host: proxy_host.clone(),
+                host: proxy_host.clone().into(),
                 port,
-                bypass: get_bypass().await,
+                bypass: get_bypass().await.into(),
             };
             let mut auto = Autoproxy {
                 enable: false,

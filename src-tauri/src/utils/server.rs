@@ -88,7 +88,7 @@ pub fn embed_server() {
             .latest_ref()
             .pac_file_content
             .clone()
-            .unwrap_or(DEFAULT_PAC.to_string());
+            .unwrap_or(DEFAULT_PAC.into());
 
         let mixed_port = verge_config
             .latest_ref()

@@ -5,6 +5,7 @@ use crate::{
     module::lightweight::entry_lightweight_mode, singleton_with_logging, utils::logging::Type,
 };
 use anyhow::{Result, bail};
+use compact_str::CompactString;
 use parking_lot::Mutex;
 use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
 use tauri::{AppHandle, Manager};
@@ -93,7 +94,7 @@ impl SystemHotkey {
 }
 
 pub struct Hotkey {
-    current: Arc<Mutex<Vec<String>>>,
+    current: Arc<Mutex<Vec<CompactString>>>,
 }
 
 impl Hotkey {
@@ -388,7 +389,7 @@ impl Hotkey {
         Ok(())
     }
 
-    pub async fn update(&self, new_hotkeys: Vec<String>) -> Result<()> {
+    pub async fn update(&self, new_hotkeys: Vec<CompactString>) -> Result<()> {
         // Extract current hotkeys before async operations
         let current_hotkeys = self.current.lock().clone();
         let old_map = Self::get_map_from_vec(&current_hotkeys);
@@ -409,7 +410,7 @@ impl Hotkey {
         Ok(())
     }
 
-    fn get_map_from_vec(hotkeys: &[String]) -> HashMap<&str, &str> {
+    fn get_map_from_vec(hotkeys: &[CompactString]) -> HashMap<&str, &str> {
         let mut map = HashMap::new();
 
         hotkeys.iter().for_each(|hotkey| {

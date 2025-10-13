@@ -1,10 +1,15 @@
 use super::CmdResult;
 use crate::{config::*, core, feat, wrap_err};
+use compact_str::CompactString;
 use reqwest_dav::list_cmd::ListFile;
 
 /// 保存 WebDAV 配置
 #[tauri::command]
-pub async fn save_webdav_config(url: String, username: String, password: String) -> CmdResult<()> {
+pub async fn save_webdav_config(
+    url: CompactString,
+    username: CompactString,
+    password: CompactString,
+) -> CmdResult<()> {
     let patch = IVerge {
         webdav_url: Some(url),
         webdav_username: Some(username),

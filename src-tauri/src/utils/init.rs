@@ -506,7 +506,7 @@ pub async fn startup_script() -> Result<()> {
     let script_path = {
         let verge = Config::verge().await;
         let verge = verge.latest_ref();
-        verge.startup_script.clone().unwrap_or("".to_string())
+        verge.startup_script.clone().unwrap_or("".into())
     };
 
     if script_path.is_empty() {

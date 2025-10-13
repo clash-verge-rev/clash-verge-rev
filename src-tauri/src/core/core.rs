@@ -913,11 +913,14 @@ impl CoreManager {
     }
 
     /// 切换核心
-    pub async fn change_core(&self, clash_core: Option<String>) -> Result<(), String> {
+    pub async fn change_core(
+        &self,
+        clash_core: Option<CompactString>,
+    ) -> Result<(), CompactString> {
         if clash_core.is_none() {
             let error_message = "Clash core should not be Null";
             logging!(error, Type::Core, "{}", error_message);
-            return Err(error_message.to_string());
+            return Err(error_message.into());
         }
         let core = clash_core.as_ref().ok_or_else(|| {
             let msg = "Clash core should not be None";
@@ -927,7 +930,7 @@ impl CoreManager {
         if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
             let error_message = format!("Clash core invalid name: {core}");
             logging!(error, Type::Core, "{}", error_message);
-            return Err(error_message);
+            return Err(error_message.into());
         }
 
         Config::verge().await.draft_mut().clash_core = clash_core.clone();

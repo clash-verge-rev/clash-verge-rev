@@ -1,4 +1,5 @@
 use crate::{config::Config, utils::dirs};
+use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::{fs, path::PathBuf, sync::RwLock};
@@ -12,8 +13,8 @@ fn get_locales_dir() -> Option<PathBuf> {
         .ok()
 }
 
-pub fn get_supported_languages() -> Vec<String> {
-    let mut languages = Vec::new();
+pub fn get_supported_languages() -> Vec<CompactString> {
+    let mut languages: Vec<CompactString> = Vec::new();
 
     if let Some(locales_dir) = get_locales_dir()
         && let Ok(entries) = fs::read_dir(locales_dir)
@@ -22,18 +23,18 @@ pub fn get_supported_languages() -> Vec<String> {
             if let Some(file_name) = entry.file_name().to_str()
                 && let Some(lang) = file_name.strip_suffix(".json")
             {
-                languages.push(lang.to_string());
+                languages.push(lang.into());
             }
         }
     }
 
     if languages.is_empty() {
-        languages.push(DEFAULT_LANGUAGE.to_string());
+        languages.push(DEFAULT_LANGUAGE.into());
     }
     languages
 }
 
-static TRANSLATIONS: Lazy<RwLock<(String, Value)>> = Lazy::new(|| {
+static TRANSLATIONS: Lazy<RwLock<(CompactString, Value)>> = Lazy::new(|| {
     let lang = get_system_language();
     let json = load_lang_file(&lang).unwrap_or_else(|| Value::Object(Default::default()));
     RwLock::new((lang, json))
@@ -47,21 +48,21 @@ fn load_lang_file(lang: &str) -> Option<Value> {
         .and_then(|content| serde_json::from_str(&content).ok())
 }
 
-fn get_system_language() -> String {
+fn get_system_language() -> CompactString {
     sys_locale::get_locale()
         .map(|locale| locale.to_lowercase())
-        .and_then(|locale| locale.split(['_', '-']).next().map(String::from))
+        .and_then(|locale| locale.split(['_', '-']).next().map(Into::into))
         .filter(|lang| get_supported_languages().contains(lang))
-        .unwrap_or_else(|| DEFAULT_LANGUAGE.to_string())
+        .unwrap_or_else(|| DEFAULT_LANGUAGE.into())
 }
 
-pub async fn t(key: &str) -> String {
+pub async fn t(key: &str) -> CompactString {
     let current_lang = Config::verge()
         .await
         .latest_ref()
         .language
         .as_deref()
-        .map(String::from)
+        .map(Into::into)
         .unwrap_or_else(get_system_language);
 
     {
@@ -69,7 +70,7 @@ pub async fn t(key: &str) -> String {
             && cache.0 == current_lang
             && let Some(text) = cache.1.get(key).and_then(|val| val.as_str())
         {
-            return text.to_string();
+            return text.into();
         }
     }
 
@@ -79,7 +80,7 @@ pub async fn t(key: &str) -> String {
         *cache = (current_lang.clone(), new_json);
 
         if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
-            return text.to_string();
+            return text.into();
         }
     }
 
@@ -87,12 +88,12 @@ pub async fn t(key: &str) -> String {
         && let Some(default_json) = load_lang_file(DEFAULT_LANGUAGE)
         && let Ok(mut cache) = TRANSLATIONS.write()
     {
-        *cache = (DEFAULT_LANGUAGE.to_string(), default_json);
+        *cache = (DEFAULT_LANGUAGE.into(), default_json);
 
         if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
-            return text.to_string();
+            return text.into();
         }
     }
 
-    key.to_string()
+    key.into()
 }

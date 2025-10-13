@@ -3,6 +3,7 @@ use crate::{
     config::PrfItem,
     utils::{dirs, help},
 };
+use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use std::fs;
 
@@ -152,7 +153,7 @@ impl ChainItem {
 }
 
 impl ChainSupport {
-    pub fn is_support(&self, core: Option<&String>) -> bool {
+    pub fn is_support(&self, core: Option<&CompactString>) -> bool {
         match core {
             Some(core) => matches!(
                 (self, core.as_str()),

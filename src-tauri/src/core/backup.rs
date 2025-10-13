@@ -1,5 +1,6 @@
 use crate::{config::Config, utils::dirs};
 use anyhow::Error;
+use compact_str::CompactString;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest_dav::list_cmd::{ListEntity, ListFile};
@@ -25,9 +26,9 @@ const TIMEOUT_DELETE: u64 = 3; // 删除超时 30 秒
 
 #[derive(Clone)]
 struct WebDavConfig {
-    url: String,
-    username: String,
-    password: String,
+    url: CompactString,
+    username: CompactString,
+    password: CompactString,
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
@@ -95,7 +96,7 @@ impl WebDavClient {
                         .webdav_url
                         .unwrap_or_default()
                         .trim_end_matches('/')
-                        .to_string(),
+                        .into(),
                     username: verge.webdav_username.unwrap_or_default(),
                     password: verge.webdav_password.unwrap_or_default(),
                 };
@@ -123,8 +124,11 @@ impl WebDavClient {
                     }))
                     .build()?,
             )
-            .set_host(config.url)
-            .set_auth(reqwest_dav::Auth::Basic(config.username, config.password))
+            .set_host(config.url.into())
+            .set_auth(reqwest_dav::Auth::Basic(
+                config.username.into(),
+                config.password.into(),
+            ))
             .build()?;
 
         // 尝试检查目录是否存在，如果不存在尝试创建
