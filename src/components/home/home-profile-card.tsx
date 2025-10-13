@@ -292,7 +292,6 @@ export const HomeProfileCard = ({
     setUpdating(true);
     try {
       await updateProfile(current.uid, current.option);
-      showNotice("success", t("Update subscription successfully"), 1000);
       onProfileUpdated?.();
 
       // 刷新首页数据

@@ -1,10 +1,13 @@
+use compact_str::CompactString;
+use flexi_logger::DeferredNow;
+#[cfg(not(feature = "tauri-dev"))]
+use flexi_logger::filter::LogLineFilter;
 use flexi_logger::writers::FileLogWriter;
-#[cfg(not(feature = "tauri-dev"))]
-use flexi_logger::{DeferredNow, filter::LogLineFilter};
-#[cfg(not(feature = "tauri-dev"))]
+use flexi_logger::writers::LogWriter;
+use log::Level;
 use log::Record;
 use std::{fmt, sync::Arc};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 
 pub type SharedWriter = Arc<Mutex<FileLogWriter>>;
 
@@ -132,6 +135,23 @@ macro_rules! logging_error {
     ($type:expr, $fmt:literal $(, $arg:expr)*) => {
         log::error!(target: "app", "[{}] {}", $type, format_args!($fmt $(, $arg)*));
     };
+}
+
+pub fn write_sidecar_log(
+    writer: MutexGuard<'_, FileLogWriter>,
+    now: &mut DeferredNow,
+    level: Level,
+    message: &CompactString,
+) {
+    let args = format_args!("{}", message);
+
+    let record = Record::builder()
+        .args(args)
+        .level(level)
+        .target("sidecar")
+        .build();
+
+    let _ = writer.write(now, &record);
 }
 
 #[cfg(not(feature = "tauri-dev"))]

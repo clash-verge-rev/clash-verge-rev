@@ -333,7 +333,6 @@ export const ProfileItem = (props: Props) => {
       await updateProfile(itemData.uid, option);
 
       // 更新成功，刷新列表
-      showNotice("success", t("Update subscription successfully"));
       mutate("getProfiles");
     } catch {
       // 更新完全失败（包括后端的回退尝试）

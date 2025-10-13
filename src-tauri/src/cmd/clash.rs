@@ -3,9 +3,10 @@ use std::collections::VecDeque;
 use super::CmdResult;
 use crate::{
     config::Config,
-    core::{self, CoreManager, RunningMode, handle, logger},
+    core::{CoreManager, handle},
 };
 use crate::{config::*, feat, logging, utils::logging::Type, wrap_err};
+use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 
 /// 复制Clash环境变量
@@ -285,12 +286,10 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
 }
 
 #[tauri::command]
-pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
-    let logs = match core::CoreManager::global().get_running_mode() {
-        // TODO: 服务模式下日志获取接口
-        RunningMode::Service => VecDeque::new(),
-        RunningMode::Sidecar => logger::Logger::global().get_logs().clone(),
-        _ => VecDeque::new(),
-    };
+pub async fn get_clash_logs() -> CmdResult<VecDeque<CompactString>> {
+    let logs = CoreManager::global()
+        .get_clash_logs()
+        .await
+        .unwrap_or_default();
     Ok(logs)
 }

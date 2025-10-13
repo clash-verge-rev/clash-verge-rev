@@ -79,16 +79,17 @@ isahc = { version = "1.7.2", default-features = false, features = [
   "parking_lot",
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
+compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.2"
 flexi_logger = "0.31.7"
 console-subscriber = { version = "0.4.1", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
 clash_verge_logger = { version = "0.1.0", git = "https://github.com/clash-verge-rev/clash-verge-logger" }
-clash_verge_service_ipc = { version = "2.0.13", features = [
+clash_verge_service_ipc = { version = "2.0.16", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
-# clash_verge_service_ipc = { version = "2.0.13", features = [
+# clash_verge_service_ipc = { version = "2.0.16", features = [
 #   "client",
 # ], path = "../../clash-verge-service-ipc" }
 
