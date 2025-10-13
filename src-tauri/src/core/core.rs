@@ -884,12 +884,7 @@ impl CoreManager {
     pub async fn get_clash_logs(&self) -> Result<VecDeque<CompactString>> {
         logging!(info, Type::Core, "get clash logs");
         let logs = match self.get_running_mode() {
-            // TODO 服务端也完成 CompactString 迁移
-            RunningMode::Service => service::get_clash_logs_by_service()
-                .await?
-                .into_iter()
-                .map(CompactString::from)
-                .collect::<VecDeque<CompactString>>(),
+            RunningMode::Service => service::get_clash_logs_by_service().await?,
             RunningMode::Sidecar => ClashLogger::global().get_logs().clone(),
             _ => VecDeque::new(),
         };

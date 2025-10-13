@@ -5,6 +5,7 @@ use crate::{
 };
 use anyhow::{Context, Result, bail};
 use clash_verge_service_ipc::CoreConfig;
+use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use std::{
     collections::VecDeque,
@@ -393,7 +394,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     start_with_existing_service(config_file).await
 }
 
-pub(super) async fn get_clash_logs_by_service() -> Result<VecDeque<String>> {
+pub(super) async fn get_clash_logs_by_service() -> Result<VecDeque<CompactString>> {
     logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
 
     let response = clash_verge_service_ipc::get_clash_logs()
