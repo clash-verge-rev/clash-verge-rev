@@ -19,17 +19,20 @@ impl UnlockItem {
     }
 }
 
-const DEFAULT_UNLOCK_ITEM_NAMES: [&str; 10] = [
+const DEFAULT_UNLOCK_ITEM_NAMES: [&str; 13] = [
     "哔哩哔哩大陆",
     "哔哩哔哩港澳台",
     "ChatGPT iOS",
     "ChatGPT Web",
+    "Claude",
     "Gemini",
     "Youtube Premium",
     "Bahamut Anime",
     "Netflix",
     "Disney+",
     "Prime Video",
+    "Spotify",
+    "TikTok",
 ];
 
 pub fn default_unlock_items() -> Vec<UnlockItem> {
