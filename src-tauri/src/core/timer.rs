@@ -1,5 +1,6 @@
 use crate::{config::Config, feat, logging, logging_error, singleton, utils::logging::Type};
 use anyhow::{Context, Result};
+use compact_str::CompactString as String;
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use parking_lot::RwLock;
 use std::{

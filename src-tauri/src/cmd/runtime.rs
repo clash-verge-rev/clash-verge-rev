@@ -1,6 +1,7 @@
 use super::CmdResult;
 use crate::{config::*, core::CoreManager, log_err, wrap_err};
 use anyhow::Context;
+use compact_str::CompactString as String;
 use serde_yaml_ng::Mapping;
 use std::collections::HashMap;
 
@@ -23,6 +24,7 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
             .and_then(|config| serde_yaml_ng::to_string(config)
                 .context("failed to convert config to yaml"))
     )
+    .map(|s| s.into())
 }
 
 /// 获取运行时存在的键
@@ -78,12 +80,13 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 
         let mut config: HashMap<String, Vec<serde_yaml_ng::Value>> = HashMap::new();
 
-        config.insert("proxies".to_string(), proxies_chain);
+        config.insert("proxies".into(), proxies_chain);
 
         wrap_err!(serde_yaml_ng::to_string(&config).context("YAML generation failed"))
+            .map(|s| s.into())
     } else {
         wrap_err!(Err(anyhow::anyhow!(
-            "failed to get proxies or proxy-groups".to_string()
+            "failed to get proxies or proxy-groups"
         )))
     }
 }

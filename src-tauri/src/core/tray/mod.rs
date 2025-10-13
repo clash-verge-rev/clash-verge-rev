@@ -17,6 +17,7 @@ use crate::{
 
 use super::handle;
 use anyhow::Result;
+use compact_str::CompactString as String;
 use futures::future::join_all;
 use parking_lot::Mutex;
 use std::collections::HashMap;
@@ -617,7 +618,7 @@ async fn create_tray_menu(
                 .filter_map(|item| {
                     let mut parts = item.split(',');
                     match (parts.next(), parts.next()) {
-                        (Some(func), Some(key)) => Some((func.to_string(), key.to_string())),
+                        (Some(func), Some(key)) => Some((func.into(), key.into())),
                         _ => None,
                     }
                 })
@@ -633,13 +634,15 @@ async fn create_tray_menu(
                 let profile_uid = profile_uid.clone();
                 let profile_name = profile_name.clone();
                 async move {
+                    // compute item id first and use a cloned uid when a moved value is required
+                    let item_id = format!("profiles_{}", profile_uid);
                     let is_current_profile = Config::profiles()
                         .await
                         .data_mut()
-                        .is_current_profile_index(profile_uid.to_string());
+                        .is_current_profile_index(profile_uid.clone());
                     CheckMenuItem::with_id(
                         &app_handle,
-                        format!("profiles_{profile_uid}"),
+                        item_id,
                         t(&profile_name).await,
                         true,
                         is_current_profile,
@@ -773,7 +776,7 @@ async fn create_tray_menu(
                             .iter()
                             .filter_map(|group| group.get("name"))
                             .filter_map(|name| name.as_str())
-                            .map(|name| name.to_string())
+                            .map(|name| name.into())
                             .collect::<Vec<String>>()
                     })
                     .unwrap_or_default()
@@ -781,7 +784,7 @@ async fn create_tray_menu(
 
         if let Some(runtime_proxy_groups_config) = runtime_proxy_groups_config {
             for group_name in runtime_proxy_groups_config {
-                if let Some(submenu) = group_name_submenus_hash.get(&group_name) {
+                if let Some(submenu) = group_name_submenus_hash.get(group_name.as_str()) {
                     submenus.push(submenu.clone());
                 }
             }

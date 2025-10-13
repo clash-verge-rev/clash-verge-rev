@@ -185,7 +185,7 @@ impl Sysopt {
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass().await;
-                vec!["global".to_string(), address, bypass]
+                vec!["global".to_string(), address, bypass.to_string()]
             };
 
             execute_sysproxy_command(args).await?;

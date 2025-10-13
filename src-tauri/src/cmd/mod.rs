@@ -1,4 +1,5 @@
 use anyhow::Result;
+use compact_str::CompactString as String;
 
 pub type CmdResult<T = ()> = Result<T, String>;
 

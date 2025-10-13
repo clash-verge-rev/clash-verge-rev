@@ -1,5 +1,6 @@
 use crate::core::handle;
 use anyhow::Result;
+use compact_str::CompactString as String;
 use once_cell::sync::OnceCell;
 use std::{fs, path::PathBuf};
 use tauri::Manager;
@@ -108,7 +109,7 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
         match matching_files.first() {
             Some(first_path) => {
                 let first = path_to_str(first_path)?;
-                Ok(Some(first.to_string()))
+                Ok(Some(first.into()))
             }
             None => Ok(None),
         }

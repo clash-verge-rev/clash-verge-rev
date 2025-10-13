@@ -6,6 +6,7 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::{Result, bail};
+use compact_str::CompactString as String;
 
 /// Toggle proxy profile
 pub async fn toggle_proxy_profile(profile_index: String) {

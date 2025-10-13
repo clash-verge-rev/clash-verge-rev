@@ -91,29 +91,27 @@ macro_rules! trace_err {
 /// transform the error to String
 #[macro_export]
 macro_rules! wrap_err {
-    // Case 1: Future<Result<T, E>>
+    // 异步版本
     ($stat:expr, async) => {{
         match $stat.await {
             Ok(a) => Ok(a),
             Err(err) => {
                 log::error!(target: "app", "{}", err);
-                Err(err.to_string())
+                Err($crate::utils::logging::IntoCompactString::into_compact(err))
             }
         }
     }};
-
-    // Case 2: Result<T, E>
+    // 同步版本
     ($stat:expr) => {{
         match $stat {
             Ok(a) => Ok(a),
             Err(err) => {
                 log::error!(target: "app", "{}", err);
-                Err(err.to_string())
+                Err($crate::utils::logging::IntoCompactString::into_compact(err))
             }
         }
     }};
 }
-
 #[macro_export]
 macro_rules! logging {
     // 不带 print 参数的版本（默认不打印）
@@ -186,5 +184,15 @@ impl<'a> LogLineFilter for NoModuleFilter<'a> {
             return Ok(());
         }
         writer.write(now, record)
+    }
+}
+
+pub trait IntoCompactString {
+    fn into_compact(self) -> CompactString;
+}
+
+impl<T: ToString> IntoCompactString for T {
+    fn into_compact(self) -> CompactString {
+        CompactString::from(self.to_string())
     }
 }

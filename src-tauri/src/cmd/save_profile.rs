@@ -6,6 +6,7 @@ use crate::{
     utils::{dirs, logging::Type},
     wrap_err,
 };
+use compact_str::CompactString as String;
 use tokio::fs;
 
 /// 保存profiles的配置
@@ -89,7 +90,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                 logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
                 // 恢复原始配置文件
                 wrap_err!(fs::write(&file_path, original_content).await)?;
-                return Err(e.to_string());
+                return Err(e.to_string().into());
             }
         }
     }
@@ -142,7 +143,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                     Type::Config,
                     "[cmd配置save] 其他类型验证失败，发送一般通知"
                 );
-                handle::Handle::notice_message("config_validate::error", &error_msg);
+                handle::Handle::notice_message("config_validate::error", error_msg.to_string());
             }
 
             Ok(())
@@ -151,7 +152,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
             logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
             // 恢复原始配置文件
             wrap_err!(fs::write(&file_path, original_content).await)?;
-            Err(e.to_string())
+            Err(e.to_string().into())
         }
     }
 }

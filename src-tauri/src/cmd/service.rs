@@ -12,7 +12,7 @@ async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) ->
         .await
     {
         let emsg = format!("{} Service failed: {}", op_type, e);
-        return Err(t(emsg.as_str()).await.into());
+        return Err(t(emsg.as_str()).await);
     }
     Ok(())
 }
@@ -42,5 +42,5 @@ pub async fn is_service_available() -> CmdResult<bool> {
     service::is_service_available()
         .await
         .map(|_| true)
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string().into())
 }

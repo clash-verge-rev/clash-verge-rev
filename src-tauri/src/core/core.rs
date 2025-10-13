@@ -18,6 +18,7 @@ use crate::{
 };
 use anyhow::Result;
 use compact_str::CompactString;
+use compact_str::CompactString as String;
 use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
@@ -169,14 +170,14 @@ impl CoreManager {
         // 检查程序是否正在退出，如果是则跳过验证
         if handle::Handle::global().is_exiting() {
             logging!(info, Type::Core, "应用正在退出，跳过验证");
-            return Ok((true, String::new()));
+            return Ok((true, String::new("")));
         }
 
         // 检查文件是否存在
         if !std::path::Path::new(config_path).exists() {
             let error_msg = format!("File not found: {config_path}");
             //handle::Handle::notice_message("config_validate::file_not_found", &error_msg);
-            return Ok((false, error_msg));
+            return Ok((false, error_msg.into()));
         }
 
         // 如果是合并文件且不是强制验证，执行语法检查但不进行完整验证
@@ -234,7 +235,7 @@ impl CoreManager {
         // 检查程序是否正在退出，如果是则跳过验证
         if handle::Handle::global().is_exiting() {
             logging!(info, Type::Core, "应用正在退出，跳过验证");
-            return Ok((true, String::new()));
+            return Ok((true, String::new("")));
         }
 
         logging!(info, Type::Config, "开始验证配置文件: {}", config_path);
@@ -282,11 +283,11 @@ impl CoreManager {
             };
 
             logging!(info, Type::Config, "-------- 验证结束 --------");
-            Ok((false, error_msg)) // 返回错误消息给调用者处理
+            Ok((false, error_msg.into())) // 返回错误消息给调用者处理
         } else {
             logging!(info, Type::Config, "验证成功");
             logging!(info, Type::Config, "-------- 验证结束 --------");
-            Ok((true, String::new()))
+            Ok((true, String::new("")))
         }
     }
     /// 只进行文件语法检查，不进行完整验证
@@ -299,7 +300,7 @@ impl CoreManager {
             Err(err) => {
                 let error_msg = format!("Failed to read file: {err}");
                 logging!(error, Type::Config, "无法读取文件: {}", error_msg);
-                return Ok((false, error_msg));
+                return Ok((false, error_msg.into()));
             }
         };
         // 对YAML文件尝试解析，只检查语法正确性
@@ -307,13 +308,13 @@ impl CoreManager {
         match serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&content) {
             Ok(_) => {
                 logging!(info, Type::Config, "YAML语法检查通过");
-                Ok((true, String::new()))
+                Ok((true, String::new("")))
             }
             Err(err) => {
                 // 使用标准化的前缀，以便错误处理函数能正确识别
                 let error_msg = format!("YAML syntax error: {err}");
                 logging!(error, Type::Config, "YAML语法错误: {}", error_msg);
-                Ok((false, error_msg))
+                Ok((false, error_msg.into()))
             }
         }
     }
@@ -326,7 +327,7 @@ impl CoreManager {
                 let error_msg = format!("Failed to read script file: {err}");
                 logging!(warn, Type::Config, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
-                return Ok((false, error_msg));
+                return Ok((false, error_msg.into()));
             }
         };
 
@@ -350,16 +351,16 @@ impl CoreManager {
                     let error_msg = "Script must contain a main function";
                     logging!(warn, Type::Config, "脚本缺少main函数: {}", path);
                     //handle::Handle::notice_message("config_validate::script_missing_main", error_msg);
-                    return Ok((false, error_msg.to_string()));
+                    return Ok((false, error_msg.into()));
                 }
 
-                Ok((true, String::new()))
+                Ok((true, String::new("")))
             }
             Err(err) => {
                 let error_msg = format!("Script syntax error: {err}");
                 logging!(warn, Type::Config, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
-                Ok((false, error_msg))
+                Ok((false, error_msg.into()))
             }
         }
     }
@@ -368,7 +369,7 @@ impl CoreManager {
         // 检查程序是否正在退出，如果是则跳过完整验证流程
         if handle::Handle::global().is_exiting() {
             logging!(info, Type::Config, "应用正在退出，跳过验证");
-            return Ok((true, String::new()));
+            return Ok((true, String::new("")));
         }
 
         // 1. 先生成新的配置内容
@@ -416,7 +417,7 @@ impl CoreManager {
                 let msg = e.to_string();
                 Config::runtime().await.discard();
                 logging_error!(Type::Core, "Failed to update configuration: {}", msg);
-                Err(msg)
+                Err(msg.into())
             }
         }
     }
@@ -443,7 +444,7 @@ impl CoreManager {
             } else {
                 target.to_string()
             };
-            process_futures.push(self.find_processes_by_name(process_name, target));
+            process_futures.push(self.find_processes_by_name(process_name.into(), target));
         }
 
         let process_results = futures::future::join_all(process_futures).await;
@@ -747,16 +748,14 @@ impl CoreManager {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
                         let mut now = DeferredNow::default();
-                        let message =
-                            CompactString::from(String::from_utf8_lossy(&line).into_owned());
+                        let message = String::from_utf8_lossy(&line);
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Error, &message);
                         ClashLogger::global().append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
-                        let message =
-                            CompactString::from(String::from_utf8_lossy(&line).into_owned());
+                        let message = String::from_utf8_lossy(&line);
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Error, &message);
                         ClashLogger::global().append_log(message);

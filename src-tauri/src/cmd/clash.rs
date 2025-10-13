@@ -6,7 +6,7 @@ use crate::{
     core::{CoreManager, handle},
 };
 use crate::{config::*, feat, logging, utils::logging::Type, wrap_err};
-use compact_str::CompactString;
+use compact_str::{CompactString as String, ToCompactString};
 use serde_yaml_ng::Mapping;
 
 /// 复制Clash环境变量
@@ -37,7 +37,7 @@ pub async fn patch_clash_mode(payload: String) -> CmdResult {
 
 /// 切换Clash核心
 #[tauri::command]
-pub async fn change_clash_core(clash_core: CompactString) -> CmdResult<Option<String>> {
+pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {
     logging!(info, Type::Config, "changing core to {clash_core}");
 
     match CoreManager::global()
@@ -61,18 +61,16 @@ pub async fn change_clash_core(clash_core: CompactString) -> CmdResult<Option<St
                     Ok(None)
                 }
                 Err(err) => {
-                    let error_msg = format!("Core changed but failed to restart: {err}");
-                    logging!(error, Type::Core, "{error_msg}");
-                    handle::Handle::notice_message("config_core::change_error", &error_msg);
-                    Ok(Some(error_msg))
+                    logging!(error, Type::Core, "{err}");
+                    handle::Handle::notice_message("config_core::change_error", err.to_string());
+                    Ok(Some(err.to_compact_string()))
                 }
             }
         }
         Err(err) => {
-            let error_msg = err.to_string();
-            logging!(error, Type::Core, "failed to change core: {error_msg}");
-            handle::Handle::notice_message("config_core::change_error", &error_msg);
-            Ok(Some(error_msg))
+            logging!(error, Type::Core, "failed to change core: {err}");
+            handle::Handle::notice_message("config_core::change_error", err.to_string());
+            Ok(Some(err))
         }
     }
 }
@@ -262,6 +260,7 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
 
     let content = fs::read_to_string(&dns_path)
         .await
+        .map(Into::into)
         .map_err(|e| e.to_string())?;
     Ok(content)
 }
@@ -276,7 +275,7 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
     let dns_path_str = dns_path.to_str().unwrap_or_default();
 
     if !dns_path.exists() {
-        return Ok((false, "DNS config file not found".to_string()));
+        return Ok((false, "DNS config file not found".to_string().into()));
     }
 
     match CoreManager::global()
@@ -284,12 +283,12 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
         .await
     {
         Ok(result) => Ok(result),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(e.to_string().into()),
     }
 }
 
 #[tauri::command]
-pub async fn get_clash_logs() -> CmdResult<VecDeque<CompactString>> {
+pub async fn get_clash_logs() -> CmdResult<VecDeque<String>> {
     let logs = CoreManager::global()
         .get_clash_logs()
         .await

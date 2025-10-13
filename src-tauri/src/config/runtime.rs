@@ -1,7 +1,9 @@
 use crate::enhance::field::use_keys;
+use compact_str::CompactString as String;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use std::collections::HashMap;
+
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IRuntime {
     pub config: Option<Mapping>,
@@ -36,9 +38,10 @@ impl IRuntime {
                 let patch_tun = patch_tun.map_or(Mapping::new(), |val| {
                     val.as_mapping().cloned().unwrap_or(Mapping::new())
                 });
-                use_keys(&patch_tun).into_iter().for_each(|key| {
-                    if let Some(value) = patch_tun.get(&key).to_owned() {
-                        tun.insert(key.into(), value.clone());
+                use_keys(&patch_tun).into_iter().for_each(|key: String| {
+                    let key_str = key.as_str();
+                    if let Some(value) = patch_tun.get(key_str).to_owned() {
+                        tun.insert(Value::from(key_str), value.clone());
                     }
                 });
 

@@ -14,6 +14,7 @@ use crate::{
     process::AsyncHandler,
     utils::{init, logging::Type, server, window_manager::WindowManager},
 };
+use compact_str::CompactString as String;
 
 pub mod dns;
 pub mod scheme;

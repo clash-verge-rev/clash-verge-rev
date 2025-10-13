@@ -4,6 +4,7 @@ use crate::utils::{
     tmpl,
 };
 use anyhow::{Context, Result, bail};
+use compact_str::CompactString as String;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use std::{fs, time::Duration};
@@ -214,7 +215,7 @@ impl PrfItem {
             itype: Some("local".into()),
             name: Some(name),
             desc: Some(desc),
-            file: Some(file),
+            file: Some(file.into()),
             url: None,
             selected: None,
             extra: None,
@@ -312,12 +313,12 @@ impl PrfItem {
                     Some(filename) => {
                         let iter = percent_encoding::percent_decode(filename.as_bytes());
                         let filename = iter.decode_utf8().unwrap_or_default();
-                        filename.split("''").last().map(|s| s.to_string())
+                        filename.split("''").last().map(|s| s.into())
                     }
                     None => match help::parse_str::<String>(filename, "filename") {
                         Some(filename) => {
                             let filename = filename.trim_matches('"');
-                            Some(filename.to_string())
+                            Some(filename.into())
                         }
                         None => None,
                     },
@@ -341,7 +342,7 @@ impl PrfItem {
         let home = match header.get("profile-web-page-url") {
             Some(value) => {
                 let str_value = value.to_str().unwrap_or("");
-                Some(str_value.to_string())
+                Some(str_value.into())
             }
             None => None,
         };
@@ -393,7 +394,7 @@ impl PrfItem {
             itype: Some("remote".into()),
             name: Some(name),
             desc,
-            file: Some(file),
+            file: Some(file.into()),
             url: Some(url.into()),
             selected: None,
             extra,
@@ -428,7 +429,7 @@ impl PrfItem {
             itype: Some("merge".into()),
             name: None,
             desc: None,
-            file: Some(file),
+            file: Some(file.into()),
             url: None,
             selected: None,
             extra: None,
@@ -453,7 +454,7 @@ impl PrfItem {
             itype: Some("script".into()),
             name: None,
             desc: None,
-            file: Some(file),
+            file: Some(file.into()),
             url: None,
             home: None,
             selected: None,
@@ -474,7 +475,7 @@ impl PrfItem {
             itype: Some("rules".into()),
             name: None,
             desc: None,
-            file: Some(file),
+            file: Some(file.into()),
             url: None,
             home: None,
             selected: None,
@@ -495,7 +496,7 @@ impl PrfItem {
             itype: Some("proxies".into()),
             name: None,
             desc: None,
-            file: Some(file),
+            file: Some(file.into()),
             url: None,
             home: None,
             selected: None,
@@ -516,7 +517,7 @@ impl PrfItem {
             itype: Some("groups".into()),
             name: None,
             desc: None,
-            file: Some(file),
+            file: Some(file.into()),
             url: None,
             home: None,
             selected: None,
@@ -534,7 +535,9 @@ impl PrfItem {
             .clone()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file);
-        fs::read_to_string(path).context("failed to read the file")
+        fs::read_to_string(path)
+            .map(Into::into)
+            .context("failed to read the file")
     }
 
     /// save the file data

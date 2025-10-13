@@ -1,5 +1,6 @@
 use anyhow::Result;
 use base64::{Engine as _, engine::general_purpose};
+use compact_str::CompactString as String;
 use isahc::prelude::*;
 use isahc::{HttpClient, config::SslOption};
 use isahc::{
@@ -74,7 +75,7 @@ impl NetworkManager {
 
     async fn record_connection_error(&self, error: &str) {
         let mut last_error = self.last_connection_error.lock().await;
-        *last_error = Some((Instant::now(), error.to_string()));
+        *last_error = Some((Instant::now(), error.into()));
 
         let mut count = self.connection_error_count.lock().await;
         *count += 1;
@@ -175,8 +176,9 @@ impl NetworkManager {
         headers.insert(
             USER_AGENT,
             HeaderValue::from_str(
-                &user_agent
-                    .unwrap_or_else(|| format!("clash-verge/v{}", env!("CARGO_PKG_VERSION"))),
+                &user_agent.unwrap_or_else(|| {
+                    format!("clash-verge/v{}", env!("CARGO_PKG_VERSION")).into()
+                }),
             )?,
         );
 
@@ -234,7 +236,7 @@ impl NetworkManager {
             let status = response.status();
             let headers = response.headers().clone();
             let body = response.text().await?;
-            Ok::<_, anyhow::Error>(HttpResponse::new(status, headers, body))
+            Ok::<_, anyhow::Error>(HttpResponse::new(status, headers, body.into()))
         })
         .await
         {

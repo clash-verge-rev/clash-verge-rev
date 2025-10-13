@@ -7,6 +7,7 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
+use compact_str::CompactString as String;
 use std::path::PathBuf;
 use std::time::Duration;
 use tokio::sync::OnceCell;
@@ -58,19 +59,19 @@ impl Config {
         if Self::profiles()
             .await
             .latest_ref()
-            .get_item(&"Merge".to_string())
+            .get_item(&"Merge".into())
             .is_err()
         {
-            let merge_item = PrfItem::from_merge(Some("Merge".to_string()))?;
+            let merge_item = PrfItem::from_merge(Some("Merge".into()))?;
             profiles_append_item_safe(merge_item.clone()).await?;
         }
         if Self::profiles()
             .await
             .latest_ref()
-            .get_item(&"Script".to_string())
+            .get_item(&"Script".into())
             .is_err()
         {
-            let script_item = PrfItem::from_script(Some("Script".to_string()))?;
+            let script_item = PrfItem::from_script(Some("Script".into()))?;
             profiles_append_item_safe(script_item.clone()).await?;
         }
         // 生成运行时配置
@@ -112,7 +113,7 @@ impl Config {
                     CoreManager::global()
                         .use_default_config("config_validate::process_terminated", "")
                         .await?;
-                    Some(("config_validate::process_terminated", String::new()))
+                    Some(("config_validate::process_terminated", String::new("")))
                 }
             }
         } else {
@@ -120,13 +121,13 @@ impl Config {
             CoreManager::global()
                 .use_default_config("config_validate::error", "")
                 .await?;
-            Some(("config_validate::error", String::new()))
+            Some(("config_validate::error", String::new("")))
         };
 
         // 在单独的任务中发送通知
         if let Some((msg_type, msg_content)) = validation_result {
             sleep(Duration::from_secs(2)).await;
-            handle::Handle::notice_message(msg_type, &msg_content);
+            handle::Handle::notice_message(msg_type, msg_content.to_string());
         }
 
         Ok(())
@@ -238,8 +239,8 @@ mod tests {
     #[allow(unused_variables)]
     #[allow(clippy::expect_used)]
     fn test_prfitem_from_merge_size() {
-        let merge_item = PrfItem::from_merge(Some("Merge".to_string()))
-            .expect("Failed to create merge item in test");
+        let merge_item =
+            PrfItem::from_merge(Some("Merge".into())).expect("Failed to create merge item in test");
         let prfitem_size = mem::size_of_val(&merge_item);
         // Boxed version
         let boxed_merge_item = Box::new(merge_item);

@@ -3,7 +3,7 @@ use crate::{
     config::PrfItem,
     utils::{dirs, help},
 };
-use compact_str::CompactString;
+use compact_str::CompactString as String;
 use serde_yaml_ng::Mapping;
 use std::fs;
 
@@ -86,7 +86,7 @@ impl AsyncChainItemFrom for Option<ChainItem> {
         match itype {
             "script" => Some(ChainItem {
                 uid,
-                data: ChainType::Script(fs::read_to_string(path).ok()?),
+                data: ChainType::Script(fs::read_to_string(path).ok()?.into()),
             }),
             "merge" => Some(ChainItem {
                 uid,
@@ -153,7 +153,7 @@ impl ChainItem {
 }
 
 impl ChainSupport {
-    pub fn is_support(&self, core: Option<&CompactString>) -> bool {
+    pub fn is_support(&self, core: Option<&String>) -> bool {
         match core {
             Some(core) => matches!(
                 (self, core.as_str()),

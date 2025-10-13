@@ -1,4 +1,5 @@
 use anyhow::{Result, bail};
+use compact_str::CompactString as String;
 use percent_encoding::percent_decode_str;
 use tauri::Url;
 
@@ -27,7 +28,7 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
         let name = link_parsed
             .query_pairs()
             .find(|(key, _)| key == "name")
-            .map(|(_, value)| value.into_owned());
+            .map(|(_, value)| value.into());
 
         let url_param = if let Some(query) = link_parsed.query() {
             let prefix = "url=";

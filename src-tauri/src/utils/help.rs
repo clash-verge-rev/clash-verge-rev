@@ -1,5 +1,6 @@
 use crate::{enhance::seq::SeqMap, logging, utils::logging::Type};
 use anyhow::{Context, Result, anyhow, bail};
+use compact_str::CompactString as String;
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::Mapping;
@@ -89,7 +90,7 @@ const ALPHABET: [char; 62] = [
 /// generate the uid
 pub fn get_uid(prefix: &str) -> String {
     let id = nanoid!(11, &ALPHABET);
-    format!("{prefix}{id}")
+    format!("{prefix}{id}").into()
 }
 
 /// parse the string
@@ -113,7 +114,7 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
     Some(
         percent_encoding::percent_decode_str(last_segment)
             .decode_utf8_lossy()
-            .to_string(),
+            .into(),
     )
 }
 

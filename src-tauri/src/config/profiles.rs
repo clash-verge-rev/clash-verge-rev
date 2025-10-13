@@ -5,6 +5,7 @@ use crate::{
     utils::{dirs, help, logging::Type},
 };
 use anyhow::{Context, Result, bail};
+use compact_str::CompactString as String;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use std::collections::HashSet;
@@ -151,7 +152,7 @@ impl IProfiles {
         }
 
         if self.current.is_none()
-            && (item.itype == Some("remote".to_string()) || item.itype == Some("local".to_string()))
+            && (item.itype == Some("remote".into()) || item.itype == Some("local".into()))
         {
             self.current = uid;
         }
@@ -240,8 +241,8 @@ impl IProfiles {
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
-                        let file =
-                            file.unwrap_or(item.file.take().unwrap_or(format!("{}.yaml", &uid)));
+                        let file = file
+                            .unwrap_or(item.file.take().unwrap_or(format!("{}.yaml", &uid).into()));
 
                         // the file must exists
                         each.file = Some(file.clone());
@@ -434,9 +435,7 @@ impl IProfiles {
         if current == uid {
             self.current = None;
             for item in items.iter() {
-                if item.itype == Some("remote".to_string())
-                    || item.itype == Some("local".to_string())
-                {
+                if item.itype == Some("remote".into()) || item.itype == Some("local".into()) {
                     self.current = item.uid.clone();
                     break;
                 }
@@ -602,11 +601,11 @@ impl IProfiles {
                 if !active_files.contains(file_name) {
                     match std::fs::remove_file(&path) {
                         Ok(_) => {
-                            deleted_files.push(file_name.to_string());
+                            deleted_files.push(file_name.into());
                             log::info!(target: "app", "已清理冗余文件: {file_name}");
                         }
                         Err(e) => {
-                            failed_deletions.push(format!("{file_name}: {e}"));
+                            failed_deletions.push(format!("{file_name}: {e}").into());
                             log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
                         }
                     }
@@ -635,8 +634,8 @@ impl IProfiles {
     fn get_protected_global_files(&self) -> HashSet<String> {
         let mut protected_files = HashSet::new();
 
-        protected_files.insert("Merge.yaml".to_string());
-        protected_files.insert("Script.js".to_string());
+        protected_files.insert("Merge.yaml".into());
+        protected_files.insert("Script.js".into());
 
         protected_files
     }

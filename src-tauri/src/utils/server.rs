@@ -9,6 +9,7 @@ use crate::{
     utils::{logging::Type, window_manager::WindowManager},
 };
 use anyhow::{Result, bail};
+use compact_str::CompactString as String;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use port_scanner::local_port_available;
@@ -31,7 +32,7 @@ pub async fn check_singleton() -> Result<()> {
         let client = ClientBuilder::new()
             .timeout(Duration::from_millis(1000))
             .build()?;
-        let argvs: Vec<String> = std::env::args().collect();
+        let argvs: Vec<_> = std::env::args().collect();
         if argvs.len() > 1 {
             #[cfg(not(target_os = "macos"))]
             {

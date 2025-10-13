@@ -83,7 +83,7 @@ mod app_init {
             let url = event.urls().first().map(|u| u.to_string());
             if let Some(url) = url {
                 AsyncHandler::spawn(|| async {
-                    if let Err(e) = resolve::resolve_scheme(url).await {
+                    if let Err(e) = resolve::resolve_scheme(url.into()).await {
                         logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
                     }
                 });
