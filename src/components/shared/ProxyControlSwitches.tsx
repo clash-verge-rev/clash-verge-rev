@@ -117,12 +117,8 @@ const ProxyControlSwitches = ({
   const { uninstallServiceAndRestartCore } = useServiceUninstaller();
   const { actualState: systemProxyActualState, toggleSystemProxy } =
     useSystemProxyState();
-  const {
-    isServiceMode,
-    isTunModeAvailable,
-    mutateRunningMode,
-    mutateServiceOk,
-  } = useSystemState();
+  const { isServiceMode, isTunModeAvailable, mutateSystemState } =
+    useSystemState();
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
@@ -147,8 +143,7 @@ const ProxyControlSwitches = ({
   const onInstallService = useLockFn(async () => {
     try {
       await installServiceAndRestartCore();
-      await mutateRunningMode();
-      await mutateServiceOk();
+      await mutateSystemState();
     } catch (err) {
       showNotice("error", (err as Error).message || String(err));
     }
@@ -157,8 +152,7 @@ const ProxyControlSwitches = ({
   const onUninstallService = useLockFn(async () => {
     try {
       await uninstallServiceAndRestartCore();
-      await mutateRunningMode();
-      await mutateServiceOk();
+      await mutateSystemState();
     } catch (err) {
       showNotice("error", (err as Error).message || String(err));
     }

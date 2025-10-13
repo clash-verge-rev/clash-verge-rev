@@ -25,7 +25,7 @@ const executeWithErrorHandling = async (
 };
 
 export const useServiceUninstaller = () => {
-  const { mutateRunningMode, mutateServiceOk } = useSystemState();
+  const { mutateSystemState } = useSystemState();
 
   const uninstallServiceAndRestartCore = useCallback(async () => {
     await executeWithErrorHandling(() => stopCore(), "Stopping Core...");
@@ -35,9 +35,14 @@ export const useServiceUninstaller = () => {
       "Uninstalling Service...",
       "Service Uninstalled Successfully",
     );
+    mutateSystemState();
 
-    await executeWithErrorHandling(() => restartCore(), "Restarting Core...");
-  }, [mutateRunningMode, mutateServiceOk]);
+    await executeWithErrorHandling(
+      () => restartCore(),
+      "Restarting Core...",
+      "Clash Core Restarted",
+    );
+  }, [mutateSystemState]);
 
   return { uninstallServiceAndRestartCore };
 };
