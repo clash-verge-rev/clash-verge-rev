@@ -1175,8 +1175,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.0.13"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#a12bb05bf187f2f9e84aef2e1ed69b2b8935b592"
+version = "2.0.15"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#822d5fe59ca591944f85e9242f7ca5781f3a0e68"
 dependencies = [
  "anyhow",
  "kode-bridge",
@@ -1187,7 +1187,6 @@ dependencies = [
  "strum",
  "strum_macros",
  "tokio",
- "windows-service",
 ]
 
 [[package]]
@@ -7400,7 +7399,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-mihomo"
 version = "0.1.1"
-source = "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#7818a0a8f55c03ee7eba3fd7433faef29adf38ac"
+source = "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#719a31f364e23268c5b8c85169de5168d4843c15"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -9238,17 +9237,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7781fa89eaf60850ac3d2da7af8e5242a5ea78d1a11c49bf2910bb5a73853eb5"
 dependencies = [
  "windows-link 0.2.1",
-]
-
-[[package]]
-name = "windows-service"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "193cae8e647981c35bc947fdd57ba7928b1fa0d4a79305f6dd2dc55221ac35ac"
-dependencies = [
- "bitflags 2.9.4",
- "widestring",
- "windows-sys 0.59.0",
 ]
 
 [[package]]

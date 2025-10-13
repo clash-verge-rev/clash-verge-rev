@@ -121,7 +121,7 @@ export const ProxyGroups = (props: Props) => {
     } catch (e) {
       console.error("Error restoring scroll position:", e);
     }
-  }, [mode, renderList]);
+  }, [mode, renderList.length]);
 
   // 改为使用节流函数保存滚动位置
   const saveScrollPosition = useCallback(
@@ -213,7 +213,6 @@ export const ProxyGroups = (props: Props) => {
   const currentGroup = getCurrentGroup();
   const availableGroups = getAvailableGroups();
 
-  // TODO: 频繁点击切换代理节点，导致应用卡死
   const handleChangeProxy = useCallback(
     (group: IProxyGroupItem, proxy: IProxyItem) => {
       if (isChainMode) {

@@ -1,14 +1,18 @@
+use std::time::Duration;
+
 use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, IVerge},
-    logging_error,
+    logging, logging_error,
+    module::lightweight,
     process::AsyncHandler,
-    utils::logging::Type,
+    utils::{logging::Type, window_manager::WindowManager},
 };
 use anyhow::{Result, bail};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use port_scanner::local_port_available;
+use reqwest::ClientBuilder;
 use tokio::sync::oneshot;
 use warp::Filter;
 
@@ -24,20 +28,28 @@ static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell:
 pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
     if !local_port_available(port) {
+        let client = ClientBuilder::new()
+            .timeout(Duration::from_millis(1000))
+            .build()?;
         let argvs: Vec<String> = std::env::args().collect();
         if argvs.len() > 1 {
             #[cfg(not(target_os = "macos"))]
             {
                 let param = argvs[1].as_str();
                 if param.starts_with("clash:") {
-                    let _ = reqwest::get(format!(
-                        "http://127.0.0.1:{port}/commands/scheme?param={param}"
-                    ))
-                    .await;
+                    client
+                        .get(format!(
+                            "http://127.0.0.1:{port}/commands/scheme?param={param}"
+                        ))
+                        .send()
+                        .await?;
                 }
             }
         } else {
-            let _ = reqwest::get(format!("http://127.0.0.1:{port}/commands/visible")).await;
+            client
+                .get(format!("http://127.0.0.1:{port}/commands/visible"))
+                .send()
+                .await?;
         }
         log::error!("failed to setup singleton listen server");
         bail!("app exists");
@@ -57,6 +69,12 @@ pub fn embed_server() {
 
     AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").and_then(|| async {
+            logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
+            if !lightweight::exit_lightweight_mode().await {
+                WindowManager::show_main_window().await;
+            } else {
+                logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
+            };
             Ok::<_, warp::Rejection>(warp::reply::with_status(
                 "ok".to_string(),
                 warp::http::StatusCode::OK,
