@@ -238,7 +238,7 @@ impl AsyncProxyQuery {
                 if let Ok(pac_output) = pac_output
                     && pac_output.status.success()
                 {
-                    let pac_url = String::from_utf8_lossy(&pac_output.stdout)
+                    let pac_url: Url = String::from_utf8_lossy(&pac_output.stdout)
                         .trim()
                         .trim_matches('\'')
                         .trim_matches('"')
@@ -469,7 +469,7 @@ impl AsyncProxyQuery {
                     && host_output.status.success()
                     && port_output.status.success()
                 {
-                    let host = String::from_utf8_lossy(&host_output.stdout)
+                    let host: String = String::from_utf8_lossy(&host_output.stdout)
                         .trim()
                         .trim_matches('\'')
                         .trim_matches('"')
