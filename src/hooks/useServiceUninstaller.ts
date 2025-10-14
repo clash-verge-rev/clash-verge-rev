@@ -35,13 +35,14 @@ export const useServiceUninstaller = () => {
       "Uninstalling Service...",
       "Service Uninstalled Successfully",
     );
-    mutateSystemState();
 
     await executeWithErrorHandling(
       () => restartCore(),
       "Restarting Core...",
       "Clash Core Restarted",
     );
+
+    await mutateSystemState();
   }, [mutateSystemState]);
 
   return { uninstallServiceAndRestartCore };

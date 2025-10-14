@@ -33,13 +33,14 @@ export const useServiceInstaller = () => {
       "Installing Service...",
       "Service Installed Successfully",
     );
-    mutateSystemState();
 
     await executeWithErrorHandling(
       () => restartCore(),
       "Restarting Core...",
       "Clash Core Restarted",
     );
+
+    await mutateSystemState();
   }, [mutateSystemState]);
   return { installServiceAndRestartCore };
 };
