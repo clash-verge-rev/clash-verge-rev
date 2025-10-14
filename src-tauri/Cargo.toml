@@ -125,6 +125,7 @@ custom-protocol = ["tauri/custom-protocol"]
 verge-dev = ["clash_verge_logger/color"]
 tauri-dev = []
 tokio-trace = ["console-subscriber"]
+clippy = ["tauri/test"]
 
 [profile.release]
 panic = "abort"

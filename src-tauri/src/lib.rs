@@ -510,7 +510,22 @@ pub fn run() {
         }
     }
 
+    // Mock context for Clippy to avoid build errors
+    #[cfg(feature = "clippy")]
+    let context = tauri::test::mock_context(tauri::test::noop_assets());
+    #[cfg(feature = "clippy")]
+    let app = builder.build(context).unwrap_or_else(|e| {
+        logging!(
+            error,
+            Type::Setup,
+            "Failed to build Tauri application: {}",
+            e
+        );
+        std::process::exit(1);
+    });
+
     // Build the application
+    #[cfg(not(feature = "clippy"))]
     let app = builder
         .build(tauri::generate_context!())
         .unwrap_or_else(|e| {
