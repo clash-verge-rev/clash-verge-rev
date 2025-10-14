@@ -1,6 +1,13 @@
 import { Box, SvgIcon, TextField, styled } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
@@ -35,15 +42,20 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
   },
 }));
 
-export const BaseSearchBox = (props: SearchProps) => {
+export const BaseSearchBox = ({
+  placeholder,
+  matchCase: defaultMatchCase = false,
+  matchWholeWord: defaultMatchWholeWord = false,
+  useRegularExpression: defaultUseRegularExpression = false,
+  onSearch,
+}: SearchProps) => {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [matchCase, setMatchCase] = useState(props.matchCase ?? false);
-  const [matchWholeWord, setMatchWholeWord] = useState(
-    props.matchWholeWord ?? false,
-  );
+  const onSearchRef = useRef(onSearch);
+  const [matchCase, setMatchCase] = useState(defaultMatchCase);
+  const [matchWholeWord, setMatchWholeWord] = useState(defaultMatchWholeWord);
   const [useRegularExpression, setUseRegularExpression] = useState(
-    props.useRegularExpression ?? false,
+    defaultUseRegularExpression,
   );
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -56,8 +68,8 @@ export const BaseSearchBox = (props: SearchProps) => {
     inheritViewBox: true,
   };
 
-  // 验证正则表达式的辅助函数
-  const validateRegex = (pattern: string) => {
+  // Helper that verifies whether a pattern is a valid regular expression
+  const validateRegex = useCallback((pattern: string) => {
     if (!pattern) return true;
     try {
       new RegExp(pattern);
@@ -66,46 +78,48 @@ export const BaseSearchBox = (props: SearchProps) => {
       console.warn("[BaseSearchBox] validateRegex error:", e);
       return false;
     }
-  };
+  }, []);
 
   const createMatcher = useMemo(() => {
     return (searchText: string) => {
-      try {
-        // 当启用正则表达式验证是否合规
-        if (useRegularExpression && searchText) {
-          const isValid = validateRegex(searchText);
-          if (!isValid) {
-            throw new Error(t("Invalid regular expression"));
-          }
+      if (useRegularExpression && searchText) {
+        const isValid = validateRegex(searchText);
+        if (!isValid) {
+          // Invalid regex should result in no match
+          return () => false;
+        }
+      }
+
+      return (content: string) => {
+        if (!searchText) {
+          return true;
         }
 
-        return (content: string) => {
-          if (!searchText) return true;
+        const item = !matchCase ? content.toLowerCase() : content;
+        const searchItem = !matchCase ? searchText.toLowerCase() : searchText;
 
-          const item = !matchCase ? content.toLowerCase() : content;
-          const searchItem = !matchCase ? searchText.toLowerCase() : searchText;
+        if (useRegularExpression) {
+          return new RegExp(searchItem).test(item);
+        }
 
-          if (useRegularExpression) {
-            return new RegExp(searchItem).test(item);
-          }
+        if (matchWholeWord) {
+          return new RegExp(`\\b${searchItem}\\b`).test(item);
+        }
 
-          if (matchWholeWord) {
-            return new RegExp(`\\b${searchItem}\\b`).test(item);
-          }
-
-          return item.includes(searchItem);
-        };
-      } catch (err) {
-        setErrorMessage(err instanceof Error ? err.message : `${err}`);
-        return () => false; // 无效正则规则 不匹配值
-      }
+        return item.includes(searchItem);
+      };
     };
-  }, [matchCase, matchWholeWord, useRegularExpression, t]);
+  }, [matchCase, matchWholeWord, useRegularExpression, validateRegex]);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
 
   useEffect(() => {
     if (!inputRef.current) return;
     const value = inputRef.current.value;
-    props.onSearch(createMatcher(value), {
+    const matcher = createMatcher(value);
+    onSearchRef.current(matcher, {
       text: value,
       matchCase,
       matchWholeWord,
@@ -117,7 +131,7 @@ export const BaseSearchBox = (props: SearchProps) => {
     const value = e.target?.value ?? "";
     setErrorMessage("");
 
-    // 验证正则表达式
+    // Validate regex input eagerly
     if (useRegularExpression && value) {
       const isValid = validateRegex(value);
       if (!isValid) {
@@ -125,11 +139,27 @@ export const BaseSearchBox = (props: SearchProps) => {
       }
     }
 
-    props.onSearch(createMatcher(value), {
+    const matcher = createMatcher(value);
+    onSearchRef.current(matcher, {
       text: value,
       matchCase,
       matchWholeWord,
       useRegularExpression,
+    });
+  };
+
+  const handleToggleUseRegularExpression = () => {
+    setUseRegularExpression((prev) => {
+      const next = !prev;
+      if (!next) {
+        setErrorMessage("");
+      } else {
+        const value = inputRef.current?.value ?? "";
+        if (value && !validateRegex(value)) {
+          setErrorMessage(t("Invalid regular expression"));
+        }
+      }
+      return next;
     });
   };
 
@@ -143,7 +173,7 @@ export const BaseSearchBox = (props: SearchProps) => {
         size="small"
         variant="outlined"
         spellCheck="false"
-        placeholder={props.placeholder ?? t("Filter conditions")}
+        placeholder={placeholder ?? t("Filter conditions")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
         error={!!errorMessage}
@@ -158,7 +188,7 @@ export const BaseSearchBox = (props: SearchProps) => {
                       component={matchCaseIcon}
                       {...iconStyle}
                       aria-label={matchCase ? "active" : "inactive"}
-                      onClick={() => setMatchCase(!matchCase)}
+                      onClick={() => setMatchCase((prev) => !prev)}
                     />
                   </div>
                 </Tooltip>
@@ -168,7 +198,7 @@ export const BaseSearchBox = (props: SearchProps) => {
                       component={matchWholeWordIcon}
                       {...iconStyle}
                       aria-label={matchWholeWord ? "active" : "inactive"}
-                      onClick={() => setMatchWholeWord(!matchWholeWord)}
+                      onClick={() => setMatchWholeWord((prev) => !prev)}
                     />
                   </div>
                 </Tooltip>
@@ -178,10 +208,8 @@ export const BaseSearchBox = (props: SearchProps) => {
                       component={useRegularExpressionIcon}
                       aria-label={useRegularExpression ? "active" : "inactive"}
                       {...iconStyle}
-                      onClick={() =>
-                        setUseRegularExpression(!useRegularExpression)
-                      }
-                    />{" "}
+                      onClick={handleToggleUseRegularExpression}
+                    />
                   </div>
                 </Tooltip>
               </Box>
