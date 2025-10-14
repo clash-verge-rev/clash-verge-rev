@@ -512,6 +512,7 @@
   "Direct Mode": "直连模式",
   "Enable Tray Speed": "启用托盘速率",
   "Enable Tray Icon": "启用托盘图标",
+  "Show Proxy Groups Inline": "将代理组显示在托盘一级菜单",
   "LightWeight Mode": "轻量模式",
   "LightWeight Mode Info": "关闭GUI界面，仅保留内核运行",
   "LightWeight Mode Settings": "轻量模式设置",

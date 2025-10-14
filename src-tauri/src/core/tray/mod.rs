@@ -639,11 +639,12 @@ async fn create_tray_menu(
             .collect::<HashMap<String, usize>>()
     });
 
+    let verge_settings = Config::verge().await.latest_ref().clone();
+    let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(false);
+
     let version = env!("CARGO_PKG_VERSION");
 
-    let hotkeys = Config::verge()
-        .await
-        .latest_ref()
+    let hotkeys = verge_settings
         .hotkeys
         .as_ref()
         .map(|h| {
@@ -877,22 +878,34 @@ async fn create_tray_menu(
     )?;
 
     // 创建代理主菜单
-    let proxies_submenu = if !proxy_submenus.is_empty() {
-        let proxy_submenu_refs: Vec<&dyn IsMenuItem<Wry>> = proxy_submenus
-            .iter()
-            .map(|submenu| submenu as &dyn IsMenuItem<Wry>)
-            .collect();
+    let (proxies_submenu, inline_proxy_items): (Option<Submenu<Wry>>, Vec<&dyn IsMenuItem<Wry>>) =
+        if show_proxy_groups_inline {
+            (
+                None,
+                proxy_submenus
+                    .iter()
+                    .map(|submenu| submenu as &dyn IsMenuItem<Wry>)
+                    .collect(),
+            )
+        } else if !proxy_submenus.is_empty() {
+            let proxy_submenu_refs: Vec<&dyn IsMenuItem<Wry>> = proxy_submenus
+                .iter()
+                .map(|submenu| submenu as &dyn IsMenuItem<Wry>)
+                .collect();
 
-        Some(Submenu::with_id_and_items(
-            app_handle,
-            "proxies",
-            proxies_text,
-            true,
-            &proxy_submenu_refs,
-        )?)
-    } else {
-        None
-    };
+            (
+                Some(Submenu::with_id_and_items(
+                    app_handle,
+                    "proxies",
+                    proxies_text,
+                    true,
+                    &proxy_submenu_refs,
+                )?),
+                Vec::new(),
+            )
+        } else {
+            (None, Vec::new())
+        };
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
@@ -1003,7 +1016,11 @@ async fn create_tray_menu(
     ];
 
     // 如果有代理节点，添加代理节点菜单
-    if let Some(ref proxies_menu) = proxies_submenu {
+    if show_proxy_groups_inline {
+        if !inline_proxy_items.is_empty() {
+            menu_items.extend_from_slice(&inline_proxy_items);
+        }
+    } else if let Some(ref proxies_menu) = proxies_submenu {
         menu_items.push(proxies_menu);
     }
 
