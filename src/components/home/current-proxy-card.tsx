@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
@@ -43,6 +43,9 @@ import delayManager from "@/services/delay";
 const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";
 const STORAGE_KEY_PROXY = "clash-verge-selected-proxy";
 const STORAGE_KEY_SORT_TYPE = "clash-verge-proxy-sort-type";
+
+const AUTO_CHECK_INITIAL_DELAY_MS = 1500;
+const AUTO_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 // 代理节点信息接口
 interface ProxyOption {
@@ -145,6 +148,25 @@ export const CurrentProxyCard = () => {
     },
     displayProxy: null,
   });
+
+  const autoCheckInProgressRef = useRef(false);
+  const latestTimeoutRef = useRef<number>(
+    verge?.default_latency_timeout || 10000,
+  );
+  const latestProxyRecordRef = useRef<any | null>(null);
+
+  useEffect(() => {
+    latestTimeoutRef.current = verge?.default_latency_timeout || 10000;
+  }, [verge?.default_latency_timeout]);
+
+  useEffect(() => {
+    if (!state.selection.proxy) {
+      latestProxyRecordRef.current = null;
+      return;
+    }
+    latestProxyRecordRef.current =
+      state.proxyData.records?.[state.selection.proxy] || null;
+  }, [state.selection.proxy, state.proxyData.records]);
 
   // 初始化选择的组
   useEffect(() => {
@@ -381,6 +403,85 @@ export const CurrentProxyCard = () => {
     currentProxy && state.selection.group
       ? getSignalIcon(currentDelay)
       : { icon: <SignalNone />, text: "未初始化", color: "text.secondary" };
+
+  const checkCurrentProxyDelay = useCallback(async () => {
+    if (autoCheckInProgressRef.current) return;
+    if (isDirectMode) return;
+
+    const groupName = state.selection.group;
+    const proxyName = state.selection.proxy;
+
+    if (!groupName || !proxyName) return;
+
+    const proxyRecord = latestProxyRecordRef.current;
+    if (!proxyRecord) {
+      console.log(
+        `[CurrentProxyCard] 自动延迟检测跳过，组: ${groupName}, 节点: ${proxyName} 未找到`,
+      );
+      return;
+    }
+
+    autoCheckInProgressRef.current = true;
+
+    const timeout = latestTimeoutRef.current || 10000;
+
+    try {
+      console.log(
+        `[CurrentProxyCard] 自动检测当前节点延迟，组: ${groupName}, 节点: ${proxyName}`,
+      );
+      if (proxyRecord.provider) {
+        await healthcheckProxyProvider(proxyRecord.provider);
+      } else {
+        await delayManager.checkDelay(proxyName, groupName, timeout);
+      }
+    } catch (error) {
+      console.error(
+        `[CurrentProxyCard] 自动检测当前节点延迟失败，组: ${groupName}, 节点: ${proxyName}`,
+        error,
+      );
+    } finally {
+      autoCheckInProgressRef.current = false;
+      refreshProxy();
+    }
+  }, [
+    isDirectMode,
+    refreshProxy,
+    state.selection.group,
+    state.selection.proxy,
+  ]);
+
+  useEffect(() => {
+    if (isDirectMode) return;
+    if (!state.selection.group || !state.selection.proxy) return;
+
+    let disposed = false;
+    let intervalTimer: ReturnType<typeof setTimeout> | null = null;
+    let initialTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const runAndSchedule = async () => {
+      if (disposed) return;
+      await checkCurrentProxyDelay();
+      if (disposed) return;
+      intervalTimer = setTimeout(runAndSchedule, AUTO_CHECK_INTERVAL_MS);
+    };
+
+    initialTimer = setTimeout(async () => {
+      await checkCurrentProxyDelay();
+      if (disposed) return;
+      intervalTimer = setTimeout(runAndSchedule, AUTO_CHECK_INTERVAL_MS);
+    }, AUTO_CHECK_INITIAL_DELAY_MS);
+
+    return () => {
+      disposed = true;
+      if (initialTimer) clearTimeout(initialTimer);
+      if (intervalTimer) clearTimeout(intervalTimer);
+    };
+  }, [
+    checkCurrentProxyDelay,
+    isDirectMode,
+    state.selection.group,
+    state.selection.proxy,
+  ]);
 
   // 自定义渲染选择框中的值
   const renderProxyValue = useCallback(
