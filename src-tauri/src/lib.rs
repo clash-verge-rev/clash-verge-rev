@@ -204,6 +204,11 @@ mod app_init {
             cmd::script_validate_notice,
             cmd::validate_script_file,
             // Backup and WebDAV
+            cmd::create_local_backup,
+            cmd::list_local_backup,
+            cmd::delete_local_backup,
+            cmd::restore_local_backup,
+            cmd::export_local_backup,
             cmd::create_webdav_backup,
             cmd::save_webdav_config,
             cmd::list_webdav_backup,
