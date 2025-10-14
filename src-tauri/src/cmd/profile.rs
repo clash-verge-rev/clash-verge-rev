@@ -97,80 +97,48 @@ pub async fn enhance_profiles() -> CmdResult {
 pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     logging!(info, Type::Cmd, "[导入订阅] 开始导入: {}", url);
 
-    let import_result = tokio::time::timeout(Duration::from_secs(60), async {
-        let item = PrfItem::from_url(&url, None, None, option).await?;
-        logging!(info, Type::Cmd, "[导入订阅] 下载完成，开始保存配置");
-
-        let profiles = Config::profiles().await;
-        let pre_count = profiles
-            .latest_ref()
-            .items
-            .as_ref()
-            .map_or(0, |items| items.len());
-
-        let result = profiles_append_item_safe(item.clone()).await;
-        result?;
-
-        let post_count = profiles
-            .latest_ref()
-            .items
-            .as_ref()
-            .map_or(0, |items| items.len());
-        if post_count <= pre_count {
-            logging!(error, Type::Cmd, "[导入订阅] 配置未增加，导入可能失败");
-            return Err(anyhow::anyhow!("配置导入后数量未增加"));
+    // 直接依赖 PrfItem::from_url 自身的超时/重试逻辑，不再使用 tokio::time::timeout 包裹
+    let item = match PrfItem::from_url(&url, None, None, option).await {
+        Ok(it) => {
+            logging!(info, Type::Cmd, "[导入订阅] 下载完成，开始保存配置");
+            it
         }
-
-        logging!(
-            info,
-            Type::Cmd,
-            "[导入订阅] 配置保存成功，数量: {} -> {}",
-            pre_count,
-            post_count
-        );
-
-        // 立即发送配置变更通知
-        if let Some(uid) = &item.uid {
-            logging!(info, Type::Cmd, "[导入订阅] 发送配置变更通知: {}", uid);
-            handle::Handle::notify_profile_changed(uid.clone());
+        Err(e) => {
+            logging!(error, Type::Cmd, "[导入订阅] 下载失败: {}", e);
+            return Err(format!("导入订阅失败: {}", e));
         }
+    };
 
-        // 异步保存配置文件并发送全局通知
-        let uid_clone = item.uid.clone();
-        crate::process::AsyncHandler::spawn(move || async move {
-            // 使用Send-safe helper函数
-            if let Err(e) = profiles_save_file_safe().await {
-                logging!(error, Type::Cmd, "[导入订阅] 保存配置文件失败: {}", e);
-            } else {
+    match profiles_append_item_safe(item.clone()).await {
+        Ok(_) => match profiles_save_file_safe().await {
+            Ok(_) => {
                 logging!(info, Type::Cmd, "[导入订阅] 配置文件保存成功");
-
-                // 发送全局配置更新通知
-                if let Some(uid) = uid_clone {
-                    // 延迟发送，确保文件已完全写入
-                    tokio::time::sleep(Duration::from_millis(100)).await;
-                    handle::Handle::notify_profile_changed(uid);
-                }
             }
-        });
-
-        Ok(())
-    })
-    .await;
-
-    match import_result {
-        Ok(Ok(())) => {
-            logging!(info, Type::Cmd, "[导入订阅] 导入完成: {}", url);
-            Ok(())
-        }
-        Ok(Err(e)) => {
-            logging!(error, Type::Cmd, "[导入订阅] 导入失败: {}", e);
-            Err(format!("导入订阅失败: {e}"))
-        }
-        Err(_) => {
-            logging!(error, Type::Cmd, "[导入订阅] 导入超时(60秒): {}", url);
-            Err("导入订阅超时，请检查网络连接".into())
+            Err(e) => {
+                logging!(error, Type::Cmd, "[导入订阅] 保存配置文件失败: {}", e);
+            }
+        },
+        Err(e) => {
+            logging!(error, Type::Cmd, "[导入订阅] 保存配置失败: {}", e);
+            return Err(format!("导入订阅失败: {}", e));
         }
     }
+    // 立即发送配置变更通知
+    if let Some(uid) = &item.uid {
+        logging!(info, Type::Cmd, "[导入订阅] 发送配置变更通知: {}", uid);
+        handle::Handle::notify_profile_changed(uid.clone());
+    }
+
+    // 异步保存配置文件并发送全局通知
+    let uid_clone = item.uid.clone();
+    if let Some(uid) = uid_clone {
+        // 延迟发送，确保文件已完全写入
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        handle::Handle::notify_profile_changed(uid);
+    }
+
+    logging!(info, Type::Cmd, "[导入订阅] 导入完成: {}", url);
+    Ok(())
 }
 
 /// 调整profile的顺序
