@@ -605,6 +605,40 @@ async fn create_tray_menu(
 
     let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await;
 
+    let runtime_proxy_groups_order = cmd::get_runtime_config()
+        .await
+        .map_err(|e| {
+            logging!(
+                error,
+                Type::Cmd,
+                "Failed to fetch runtime proxy groups for tray menu: {e}"
+            );
+        })
+        .ok()
+        .flatten()
+        .map(|config| {
+            config
+                .get("proxy-groups")
+                .and_then(|groups| groups.as_sequence())
+                .map(|groups| {
+                    groups
+                        .iter()
+                        .filter_map(|group| group.get("name"))
+                        .filter_map(|name| name.as_str())
+                        .map(|name| name.to_string())
+                        .collect::<Vec<String>>()
+                })
+                .unwrap_or_default()
+        });
+
+    let proxy_group_order_map = runtime_proxy_groups_order.as_ref().map(|group_names| {
+        group_names
+            .iter()
+            .enumerate()
+            .map(|(index, name)| (name.clone(), index))
+            .collect::<HashMap<String, usize>>()
+    });
+
     let version = env!("CARGO_PKG_VERSION");
 
     let hotkeys = Config::verge()
@@ -653,8 +687,7 @@ async fn create_tray_menu(
 
     // 代理组子菜单
     let proxy_submenus: Vec<Submenu<Wry>> = {
-        let mut submenus = Vec::new();
-        let mut group_name_submenus_hash = HashMap::new();
+        let mut submenus: Vec<(String, usize, Submenu<Wry>)> = Vec::new();
 
         // TODO: 应用启动时，内核还未启动完全，无法获取代理节点信息
         if let Ok(proxy_nodes_data) = proxy_nodes_data {
@@ -745,53 +778,32 @@ async fn create_tray_menu(
                     true,
                     &group_items_refs,
                 ) {
-                    group_name_submenus_hash.insert(group_name.to_string(), submenu);
+                    let insertion_index = submenus.len();
+                    submenus.push((group_name.to_string(), insertion_index, submenu));
                 } else {
                     log::warn!(target: "app", "创建代理组子菜单失败: {}", group_name);
                 }
             }
         }
 
-        // 获取运行时代理组配置
-        let runtime_proxy_groups_config = cmd::get_runtime_config()
-            .await
-            .map_err(|e| {
-                logging!(
-                    error,
-                    Type::Cmd,
-                    "Failed to fetch runtime proxy groups for tray menu: {e}"
-                );
-            })
-            .ok()
-            .flatten()
-            .map(|config| {
-                config
-                    .get("proxy-groups")
-                    .and_then(|groups| groups.as_sequence())
-                    .map(|groups| {
-                        groups
-                            .iter()
-                            .filter_map(|group| group.get("name"))
-                            .filter_map(|name| name.as_str())
-                            .map(|name| name.into())
-                            .collect::<Vec<String>>()
-                    })
-                    .unwrap_or_default()
-            });
-
-        if let Some(runtime_proxy_groups_config) = runtime_proxy_groups_config {
-            for group_name in runtime_proxy_groups_config {
-                if let Some(submenu) = group_name_submenus_hash.get(&group_name) {
-                    submenus.push(submenu.clone());
-                }
-            }
-        } else {
-            for (_, submenu) in group_name_submenus_hash {
-                submenus.push(submenu);
-            }
+        if let Some(order_map) = proxy_group_order_map.as_ref() {
+            submenus.sort_by(
+                |(name_a, original_index_a, _), (name_b, original_index_b, _)| match (
+                    order_map.get(name_a),
+                    order_map.get(name_b),
+                ) {
+                    (Some(index_a), Some(index_b)) => index_a.cmp(index_b),
+                    (Some(_), None) => std::cmp::Ordering::Less,
+                    (None, Some(_)) => std::cmp::Ordering::Greater,
+                    (None, None) => original_index_a.cmp(original_index_b),
+                },
+            );
         }
 
         submenus
+            .into_iter()
+            .map(|(_, _, submenu)| submenu)
+            .collect()
     };
 
     // Pre-fetch all localized strings
