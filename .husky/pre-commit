@@ -15,7 +15,7 @@ if [ -n "$RUST_FILES" ]; then
     cargo fmt
 
     # Lint with clippy, print warnings but don't fail commit
-    cargo clippy || echo "⚠️ clippy found issues, but commit will continue."
+    cargo clippy-all || echo "⚠️ clippy found issues, but commit will continue."
 
     cd ..
 fi
