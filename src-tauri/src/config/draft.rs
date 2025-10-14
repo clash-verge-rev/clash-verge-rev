@@ -85,6 +85,7 @@ impl<T: Clone + ToOwned> Draft<Box<T>> {
     /// 异步修改正式数据，闭包直接获得 Box<T> 所有权
     pub async fn with_data_modify<F, Fut, R, E>(&self, f: F) -> Result<R, E>
     where
+        T: Send + Sync + 'static,
         F: FnOnce(Box<T>) -> Fut + Send,
         Fut: std::future::Future<Output = Result<(Box<T>, R), E>> + Send,
         E: From<anyhow::Error>,

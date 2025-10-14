@@ -67,7 +67,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
             }
         }
         Err(err) => {
-            let error_msg = err.into();
+            let error_msg = err;
             logging!(error, Type::Core, "failed to change core: {error_msg}");
             handle::Handle::notice_message("config_core::change_error", &error_msg);
             Ok(Some(error_msg))
@@ -267,10 +267,10 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
         return Ok((false, "DNS config file not found".into()));
     }
 
-    Ok(CoreManager::global()
+    CoreManager::global()
         .validate_config_file(dns_path_str, None)
         .await
-        .stringify_err()?)
+        .stringify_err()
 }
 
 #[tauri::command]
