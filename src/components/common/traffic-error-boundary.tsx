@@ -313,30 +313,3 @@ export const LightweightTrafficErrorBoundary: React.FC<{
     </TrafficErrorBoundary>
   );
 };
-
-/**
- * HOC：为任何组件添加流量错误边界
- */
-export function withTrafficErrorBoundary<P extends object>(
-  WrappedComponent: React.ComponentType<P>,
-  options?: {
-    lightweight?: boolean;
-    onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  },
-) {
-  const WithErrorBoundaryComponent = (props: P) => {
-    const ErrorBoundaryComponent = options?.lightweight
-      ? LightweightTrafficErrorBoundary
-      : TrafficErrorBoundary;
-
-    return (
-      <ErrorBoundaryComponent onError={options?.onError}>
-        <WrappedComponent {...props} />
-      </ErrorBoundaryComponent>
-    );
-  };
-
-  WithErrorBoundaryComponent.displayName = `withTrafficErrorBoundary(${WrappedComponent.displayName || WrappedComponent.name})`;
-
-  return WithErrorBoundaryComponent;
-}
