@@ -1,8 +1,13 @@
-import { DataGrid, GridColDef, GridColumnResizeParams } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridColumnResizeParams,
+  useGridApiRef,
+} from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
 import { t } from "i18next";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import parseTraffic from "@/utils/parse-traffic";
 import { truncateStr } from "@/utils/truncate-str";
@@ -14,6 +19,125 @@ interface Props {
 
 export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
+  const apiRef = useGridApiRef();
+  useEffect(() => {
+    const PATCH_FLAG_KEY = "__clashPatchedPublishEvent" as const;
+    const ORIGINAL_KEY = "__clashOriginalPublishEvent" as const;
+    let isUnmounted = false;
+    let retryHandle: ReturnType<typeof setTimeout> | null = null;
+    let cleanupOriginal: (() => void) | null = null;
+
+    const scheduleRetry = () => {
+      if (isUnmounted || retryHandle !== null) return;
+      retryHandle = setTimeout(() => {
+        retryHandle = null;
+        ensurePatched();
+      }, 16);
+    };
+
+    // Safari occasionally emits grid events without an event object,
+    // and MUI expects `defaultMuiPrevented` to exist. Normalize here to avoid crashes.
+    const createFallbackEvent = () => {
+      const fallback = {
+        defaultMuiPrevented: false,
+        preventDefault() {
+          fallback.defaultMuiPrevented = true;
+        },
+      };
+      return fallback;
+    };
+
+    const ensureMuiEvent = (
+      value: unknown,
+    ): {
+      defaultMuiPrevented: boolean;
+      preventDefault: () => void;
+      [key: string]: unknown;
+    } => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return createFallbackEvent();
+      }
+
+      const eventObject = value as {
+        defaultMuiPrevented?: unknown;
+        preventDefault?: () => void;
+        [key: string]: unknown;
+      };
+
+      if (typeof eventObject.defaultMuiPrevented !== "boolean") {
+        eventObject.defaultMuiPrevented = false;
+      }
+
+      if (typeof eventObject.preventDefault !== "function") {
+        eventObject.preventDefault = () => {
+          eventObject.defaultMuiPrevented = true;
+        };
+      }
+
+      return eventObject as {
+        defaultMuiPrevented: boolean;
+        preventDefault: () => void;
+        [key: string]: unknown;
+      };
+    };
+
+    const ensurePatched = () => {
+      if (isUnmounted) return;
+      const api = apiRef.current;
+
+      if (!api?.publishEvent) {
+        scheduleRetry();
+        return;
+      }
+
+      const metadataApi = api as unknown as typeof api &
+        Record<string, unknown>;
+      if (metadataApi[PATCH_FLAG_KEY] === true) return;
+
+      const originalPublishEvent = api.publishEvent;
+
+      const patchedPublishEvent = ((...rawArgs: unknown[]) => {
+        rawArgs[2] = ensureMuiEvent(rawArgs[2]);
+
+        return (
+          originalPublishEvent as unknown as (...args: unknown[]) => void
+        ).apply(api, rawArgs);
+      }) as typeof originalPublishEvent;
+
+      api.publishEvent = patchedPublishEvent;
+      metadataApi[PATCH_FLAG_KEY] = true;
+      metadataApi[ORIGINAL_KEY] = originalPublishEvent;
+
+      cleanupOriginal = () => {
+        const storedOriginal = metadataApi[ORIGINAL_KEY] as
+          | typeof originalPublishEvent
+          | undefined;
+
+        api.publishEvent = (
+          typeof storedOriginal === "function"
+            ? storedOriginal
+            : originalPublishEvent
+        ) as typeof originalPublishEvent;
+
+        delete metadataApi[PATCH_FLAG_KEY];
+        delete metadataApi[ORIGINAL_KEY];
+      };
+    };
+
+    ensurePatched();
+
+    return () => {
+      isUnmounted = true;
+      if (retryHandle !== null) {
+        clearTimeout(retryHandle);
+        retryHandle = null;
+      }
+      if (cleanupOriginal) {
+        cleanupOriginal();
+        cleanupOriginal = null;
+      }
+    };
+  }, [apiRef]);
 
   const [columnVisible, setColumnVisible] = useState<
     Partial<Record<keyof IConnectionsItem, boolean>>
@@ -156,6 +280,7 @@ export const ConnectionTable = (props: Props) => {
 
   return (
     <DataGrid
+      apiRef={apiRef}
       hideFooter
       rows={connRows}
       columns={columns}
