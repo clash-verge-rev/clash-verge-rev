@@ -81,6 +81,29 @@ impl<T: Clone + ToOwned> Draft<Box<T>> {
     pub fn discard(&self) -> Option<Box<T>> {
         self.inner.write().1.take()
     }
+
+    /// 异步修改正式数据，闭包直接获得 Box<T> 所有权
+    pub async fn with_data_modify<F, Fut, R, E>(&self, f: F) -> Result<R, E>
+    where
+        F: FnOnce(Box<T>) -> Fut + Send,
+        Fut: std::future::Future<Output = Result<(Box<T>, R), E>> + Send,
+        E: From<anyhow::Error>,
+    {
+        // 克隆正式数据
+        let local = {
+            let guard = self.inner.read();
+            guard.0.clone()
+        };
+
+        // 异步闭包执行，返回修改后的 Box<T> 和业务结果 R
+        let (new_local, res) = f(local).await?;
+
+        // 写回正式数据
+        let mut guard = self.inner.write();
+        guard.0 = new_local;
+
+        Ok(res)
+    }
 }
 
 #[test]
