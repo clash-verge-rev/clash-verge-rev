@@ -3,7 +3,7 @@ use crate::{
     core::backup,
     logging, logging_error,
     utils::{
-        dirs::{app_home_dir, local_backup_dir},
+        dirs::{PathBufExec, app_home_dir, local_backup_dir},
         logging::Type,
     },
 };
@@ -38,7 +38,7 @@ pub async fn create_backup_and_upload_webdav() -> Result<()> {
         return Err(err);
     }
 
-    if let Err(err) = std::fs::remove_file(&temp_file_path) {
+    if let Err(err) = temp_file_path.remove_if_exists().await {
         logging!(warn, Type::Backup, "Failed to remove temp file: {err:#?}");
     }
 
@@ -112,12 +112,12 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         .await
     );
     // 最后删除临时文件
-    fs::remove_file(backup_storage_path)?;
+    backup_storage_path.remove_if_exists().await?;
     Ok(())
 }
 
 /// Create a backup and save to local storage
-pub fn create_local_backup() -> Result<()> {
+pub async fn create_local_backup() -> Result<()> {
     let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
         logging!(
             error,
@@ -137,7 +137,7 @@ pub fn create_local_backup() -> Result<()> {
             "Failed to move local backup file: {err:#?}"
         );
         // 清理临时文件
-        if let Err(clean_err) = std::fs::remove_file(&temp_file_path) {
+        if let Err(clean_err) = temp_file_path.remove_if_exists().await {
             logging!(
                 warn,
                 Type::Backup,
@@ -208,7 +208,7 @@ pub fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
 }
 
 /// Delete local backup
-pub fn delete_local_backup(filename: String) -> Result<()> {
+pub async fn delete_local_backup(filename: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
     let target_path = backup_dir.join(&filename);
     if !target_path.exists() {
@@ -220,7 +220,7 @@ pub fn delete_local_backup(filename: String) -> Result<()> {
         );
         return Ok(());
     }
-    fs::remove_file(target_path)?;
+    target_path.remove_if_exists().await?;
     Ok(())
 }
 

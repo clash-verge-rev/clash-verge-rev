@@ -6,7 +6,7 @@ use crate::{
     logging,
     process::AsyncHandler,
     utils::{
-        dirs::{self, service_log_dir, sidecar_log_dir},
+        dirs::{self, PathBufExec, service_log_dir, sidecar_log_dir},
         help,
         logging::Type,
     },
@@ -167,8 +167,7 @@ pub async fn delete_log() -> Result<()> {
 
             let duration = now.signed_duration_since(file_time);
             if duration.num_days() > day {
-                let file_path = file.path();
-                let _ = fs::remove_file(file_path).await;
+                let _ = file.path().remove_if_exists().await;
                 logging!(info, Type::Setup, "delete log file: {}", file_name);
             }
         }

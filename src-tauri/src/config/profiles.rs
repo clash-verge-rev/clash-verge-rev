@@ -495,7 +495,7 @@ impl IProfiles {
     }
 
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
-    pub fn cleanup_orphaned_files(&self) -> Result<CleanupResult> {
+    pub async fn cleanup_orphaned_files(&self) -> Result<CleanupResult> {
         let profiles_dir = dirs::app_profiles_dir()?;
 
         if !profiles_dir.exists() {
@@ -538,7 +538,7 @@ impl IProfiles {
 
                 // 检查是否为活跃文件
                 if !active_files.contains(file_name) {
-                    match std::fs::remove_file(&path) {
+                    match path.to_path_buf().remove_if_exists().await {
                         Ok(_) => {
                             deleted_files.push(file_name.into());
                             log::info!(target: "app", "已清理冗余文件: {file_name}");

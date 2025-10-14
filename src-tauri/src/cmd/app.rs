@@ -1,10 +1,15 @@
 use super::CmdResult;
 use crate::{
     feat, logging,
-    utils::{dirs, logging::Type},
+    utils::{
+        dirs::{self, PathBufExec},
+        logging::Type,
+    },
     wrap_err,
 };
+use std::path::Path;
 use tauri::{AppHandle, Manager};
+use tokio::fs;
 
 /// 打开应用程序所在目录
 #[tauri::command]
@@ -131,19 +136,19 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
             match std::fs::rename(&temp_path, &icon_path) {
                 Ok(_) => {}
                 Err(_) => {
-                    let _ = std::fs::remove_file(&temp_path);
+                    let _ = temp_path.remove_if_exists().await;
                     if icon_path.exists() {
                         return Ok(icon_path.to_string_lossy().into());
                     }
                 }
             }
         } else {
-            let _ = std::fs::remove_file(&temp_path);
+            let _ = temp_path.remove_if_exists().await;
         }
 
         Ok(icon_path.to_string_lossy().into())
     } else {
-        let _ = std::fs::remove_file(&temp_path);
+        let _ = temp_path.remove_if_exists().await;
         Err(format!("下载的内容不是有效图片: {url}"))
     }
 }
@@ -157,14 +162,12 @@ pub struct IconInfo {
 
 /// 复制图标文件
 #[tauri::command]
-pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
-    use std::{fs, path::Path};
-
+pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
     let file_path = Path::new(&path);
 
     let icon_dir = wrap_err!(dirs::app_home_dir())?.join("icons");
     if !icon_dir.exists() {
-        let _ = fs::create_dir_all(&icon_dir);
+        let _ = fs::create_dir_all(&icon_dir).await;
     }
     let ext: String = match file_path.extension() {
         Some(e) => e.to_string_lossy().into(),
@@ -177,14 +180,16 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
     ));
     if file_path.exists() {
         if icon_info.previous_t.trim() != "" {
-            fs::remove_file(
-                icon_dir.join(format!("{0}-{1}.png", icon_info.name, icon_info.previous_t)),
-            )
-            .unwrap_or_default();
-            fs::remove_file(
-                icon_dir.join(format!("{0}-{1}.ico", icon_info.name, icon_info.previous_t)),
-            )
-            .unwrap_or_default();
+            icon_dir
+                .join(format!("{0}-{1}.png", icon_info.name, icon_info.previous_t))
+                .remove_if_exists()
+                .await
+                .unwrap_or_default();
+            icon_dir
+                .join(format!("{0}-{1}.ico", icon_info.name, icon_info.previous_t))
+                .remove_if_exists()
+                .await
+                .unwrap_or_default();
         }
         logging!(
             info,
@@ -193,7 +198,7 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
             path,
             dest_path
         );
-        match fs::copy(file_path, &dest_path) {
+        match fs::copy(file_path, &dest_path).await {
             Ok(_) => Ok(dest_path.to_string_lossy().into()),
             Err(err) => Err(err.to_string()),
         }
