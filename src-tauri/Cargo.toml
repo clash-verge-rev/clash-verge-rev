@@ -62,7 +62,7 @@ zip = "6.0.0"
 reqwest_dav = "0.2.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
-getrandom = "0.3.3"
+getrandom = "0.3.4"
 futures = "0.3.31"
 sys-locale = "0.3.2"
 libc = "0.2.177"
