@@ -1,5 +1,6 @@
-use crate::core::handle;
+use crate::{core::handle, logging, utils::logging::Type};
 use anyhow::Result;
+use async_trait::async_trait;
 use once_cell::sync::OnceCell;
 use std::{fs, path::PathBuf};
 use tauri::Manager;
@@ -231,4 +232,19 @@ pub fn ipc_path() -> Result<PathBuf> {
 #[cfg(target_os = "windows")]
 pub fn ipc_path() -> Result<PathBuf> {
     Ok(PathBuf::from(r"\\.\pipe\verge-mihomo"))
+}
+#[async_trait]
+pub trait PathBufExec {
+    async fn remove_if_exists(&self) -> Result<()>;
+}
+
+#[async_trait]
+impl PathBufExec for PathBuf {
+    async fn remove_if_exists(&self) -> Result<()> {
+        if self.exists() {
+            tokio::fs::remove_file(self).await?;
+            logging!(info, Type::File, "Removed file: {:?}", self);
+        }
+        Ok(())
+    }
 }

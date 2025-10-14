@@ -1,5 +1,6 @@
 use super::CmdResult;
 use crate::{
+    cmd::StringifyErr,
     config::{
         Config, IProfiles, PrfItem, PrfOption,
         profiles::{
@@ -191,8 +192,10 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 /// 删除配置文件
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
+    println!("delete_profile: {}", index);
     // 使用Send-safe helper函数
     let should_update = wrap_err!(profiles_delete_item_safe(index.clone()).await)?;
+    profiles_save_file_safe().await.stringify_err()?;
 
     if should_update {
         match CoreManager::global().update_config().await {

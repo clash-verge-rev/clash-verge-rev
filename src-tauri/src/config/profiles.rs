@@ -1,7 +1,7 @@
 use super::{PrfOption, prfitem::PrfItem};
-use crate::{
-    logging_error,
-    utils::{dirs, help, logging::Type},
+use crate::utils::{
+    dirs::{self, PathBufExec},
+    help,
 };
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
@@ -290,20 +290,10 @@ impl IProfiles {
         if let Some(index) = index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir().map(async move |path| {
-                let path = path.join(file);
-                if path.exists() {
-                    let result = fs::remove_file(path.clone()).await;
-                    if let Err(err) = result {
-                        logging_error!(
-                            Type::Config,
-                            "[配置文件删除] 删除文件 {} 失败: {}",
-                            path.display(),
-                            err
-                        );
-                    }
-                }
-            });
+            let _ = dirs::app_profiles_dir()?
+                .join(file)
+                .remove_if_exists()
+                .await;
         }
         // get the merge index
         for (i, _) in items.iter().enumerate() {
@@ -315,20 +305,10 @@ impl IProfiles {
         if let Some(index) = merge_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir().map(async move |path| {
-                let path = path.join(file);
-                if path.exists() {
-                    let result = fs::remove_file(path.clone()).await;
-                    if let Err(err) = result {
-                        logging_error!(
-                            Type::Config,
-                            "[配置文件删除] 删除文件 {} 失败: {}",
-                            path.display(),
-                            err
-                        );
-                    }
-                }
-            });
+            let _ = dirs::app_profiles_dir()?
+                .join(file)
+                .remove_if_exists()
+                .await;
         }
         // get the script index
         for (i, _) in items.iter().enumerate() {
@@ -340,20 +320,10 @@ impl IProfiles {
         if let Some(index) = script_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir().map(async move |path| {
-                let path = path.join(file);
-                if path.exists() {
-                    let result = fs::remove_file(path.clone()).await;
-                    if let Err(err) = result {
-                        logging_error!(
-                            Type::Config,
-                            "[配置文件删除] 删除文件 {} 失败: {}",
-                            path.display(),
-                            err
-                        );
-                    }
-                }
-            });
+            let _ = dirs::app_profiles_dir()?
+                .join(file)
+                .remove_if_exists()
+                .await;
         }
         // get the rules index
         for (i, _) in items.iter().enumerate() {
@@ -365,20 +335,10 @@ impl IProfiles {
         if let Some(index) = rules_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir().map(async move |path| {
-                let path = path.join(file);
-                if path.exists() {
-                    let result = fs::remove_file(path.clone()).await;
-                    if let Err(err) = result {
-                        logging_error!(
-                            Type::Config,
-                            "[配置文件删除] 删除文件 {} 失败: {}",
-                            path.display(),
-                            err
-                        );
-                    }
-                }
-            });
+            let _ = dirs::app_profiles_dir()?
+                .join(file)
+                .remove_if_exists()
+                .await;
         }
         // get the proxies index
         for (i, _) in items.iter().enumerate() {
@@ -390,20 +350,10 @@ impl IProfiles {
         if let Some(index) = proxies_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir().map(async move |path| {
-                let path = path.join(file);
-                if path.exists() {
-                    let result = fs::remove_file(path.clone()).await;
-                    if let Err(err) = result {
-                        logging_error!(
-                            Type::Config,
-                            "[配置文件删除] 删除文件 {} 失败: {}",
-                            path.display(),
-                            err
-                        );
-                    }
-                }
-            });
+            let _ = dirs::app_profiles_dir()?
+                .join(file)
+                .remove_if_exists()
+                .await;
         }
         // get the groups index
         for (i, _) in items.iter().enumerate() {
@@ -415,20 +365,10 @@ impl IProfiles {
         if let Some(index) = groups_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir().map(async move |path| {
-                let path = path.join(file);
-                if path.exists() {
-                    let result = fs::remove_file(path.clone()).await;
-                    if let Err(err) = result {
-                        logging_error!(
-                            Type::Config,
-                            "[配置文件删除] 删除文件 {} 失败: {}",
-                            path.display(),
-                            err
-                        );
-                    }
-                }
-            });
+            let _ = dirs::app_profiles_dir()?
+                .join(file)
+                .remove_if_exists()
+                .await;
         }
         // delete the original uid
         if current == uid {

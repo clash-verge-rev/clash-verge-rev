@@ -1104,6 +1104,7 @@ version = "2.4.3"
 dependencies = [
  "aes-gcm",
  "anyhow",
+ "async-trait",
  "backoff",
  "base64 0.22.1",
  "boa_engine",
