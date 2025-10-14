@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use log::info;
 
 #[cfg(target_os = "windows")]
-use std::{fs, os::windows::process::CommandExt, path::Path, path::PathBuf};
+use std::{os::windows::process::CommandExt, path::Path, path::PathBuf};
 
 /// Windows 下的开机启动文件夹路径
 #[cfg(target_os = "windows")]
@@ -45,7 +45,7 @@ pub async fn create_shortcut() -> Result<()> {
     let new_shortcut_path = startup_dir.join("Clash Verge.lnk");
 
     // 移除旧的快捷方式
-    old_shortcut_path
+    let _ = old_shortcut_path
         .remove_if_exists()
         .await
         .inspect(|_| {
@@ -98,7 +98,7 @@ pub async fn remove_shortcut() -> Result<()> {
 
     let mut removed_any = false;
 
-    old_shortcut_path
+    let _ = old_shortcut_path
         .remove_if_exists()
         .await
         .inspect(|_| {
@@ -109,7 +109,7 @@ pub async fn remove_shortcut() -> Result<()> {
             log::error!(target: "app", "删除旧启动快捷方式失败: {err}");
         });
 
-    new_shortcut_path
+    let _ = new_shortcut_path
         .remove_if_exists()
         .await
         .inspect(|_| {
