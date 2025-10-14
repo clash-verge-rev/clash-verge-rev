@@ -227,7 +227,7 @@ impl AsyncProxyQuery {
         if let Ok(output) = output
             && output.status.success()
         {
-            let mode = String::from_utf8_lossy(&output.stdout).trim().into();
+            let mode: String = String::from_utf8_lossy(&output.stdout).trim().into();
             if mode.contains("auto") {
                 // 获取 PAC URL
                 let pac_output = Command::new("gsettings")
@@ -452,7 +452,7 @@ impl AsyncProxyQuery {
         if let Ok(mode_output) = mode_output
             && mode_output.status.success()
         {
-            let mode = String::from_utf8_lossy(&mode_output.stdout).trim().into();
+            let mode: String = String::from_utf8_lossy(&mode_output.stdout).trim().into();
             if mode.contains("manual") {
                 // 获取HTTP代理设置
                 let host_result = Command::new("gsettings")
@@ -511,7 +511,7 @@ impl AsyncProxyQuery {
 
         // 解析主机和端口
         let (host, port) = if let Some(colon_pos) = url.rfind(':') {
-            let host = url[..colon_pos].into();
+            let host: String = url[..colon_pos].into();
             let port = url[colon_pos + 1..].parse::<u16>().unwrap_or(8080);
             (host, port)
         } else {
