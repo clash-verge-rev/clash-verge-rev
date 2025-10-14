@@ -374,6 +374,8 @@
   "Auto Log Clean": "Auto Log Clean",
   "Never Clean": "Never Clean",
   "Retain _n Days": "Retain {{n}} Days",
+  "Auto Delay Detection": "Auto Delay Detection",
+  "Auto Delay Detection Info": "Periodically test the current node latency in the background",
   "Default Latency Test": "Default Latency Test",
   "Default Latency Test Info": "Used for HTTP client request testing only and won't make a difference to the configuration file",
   "Default Latency Timeout": "Default Latency Timeout",

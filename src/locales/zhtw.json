@@ -331,6 +331,8 @@
   "Auto Log Clean": "自動清理日誌",
   "Never Clean": "不清理",
   "Retain _n Days": "保留 {{n}} 天",
+  "Auto Delay Detection": "自動延遲偵測",
+  "Auto Delay Detection Info": "在背景定時檢測當前節點延遲",
   "Default Latency Test": "默認測試鏈接",
   "Default Latency Test Info": "僅用於 HTTP 客戶端請求測試，不會對配置文件產生影響",
   "Default Latency Timeout": "測試超時時間",

@@ -131,6 +131,9 @@ pub struct IVerge {
     /// 默认的延迟测试超时时间
     pub default_latency_timeout: Option<i32>,
 
+    /// 是否自动检测当前节点延迟
+    pub enable_auto_delay_detection: Option<bool>,
+
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
@@ -483,6 +486,7 @@ impl IVerge {
         patch!(auto_check_update);
         patch!(default_latency_test);
         patch!(default_latency_timeout);
+        patch!(enable_auto_delay_detection);
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(test_list);
@@ -568,6 +572,7 @@ pub struct IVergeResponse {
     pub auto_check_update: Option<bool>,
     pub default_latency_test: Option<String>,
     pub default_latency_timeout: Option<i32>,
+    pub enable_auto_delay_detection: Option<bool>,
     pub enable_builtin_enhanced: Option<bool>,
     pub proxy_layout_column: Option<i32>,
     pub test_list: Option<Vec<IVergeTestItem>>,
@@ -642,6 +647,7 @@ impl From<IVerge> for IVergeResponse {
             auto_check_update: verge.auto_check_update,
             default_latency_test: verge.default_latency_test,
             default_latency_timeout: verge.default_latency_timeout,
+            enable_auto_delay_detection: verge.enable_auto_delay_detection,
             enable_builtin_enhanced: verge.enable_builtin_enhanced,
             proxy_layout_column: verge.proxy_layout_column,
             test_list: verge.test_list,

@@ -101,6 +101,7 @@ export const CurrentProxyCard = () => {
   const theme = useTheme();
   const { proxies, clashConfig, refreshProxy } = useAppData();
   const { verge } = useVerge();
+  const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false;
 
   // 统一代理选择器
   const { handleSelectChange } = useProxySelection({
@@ -452,6 +453,7 @@ export const CurrentProxyCard = () => {
 
   useEffect(() => {
     if (isDirectMode) return;
+    if (!autoDelayEnabled) return;
     if (!state.selection.group || !state.selection.proxy) return;
 
     let disposed = false;
@@ -481,6 +483,7 @@ export const CurrentProxyCard = () => {
     isDirectMode,
     state.selection.group,
     state.selection.proxy,
+    autoDelayEnabled,
   ]);
 
   // 自定义渲染选择框中的值

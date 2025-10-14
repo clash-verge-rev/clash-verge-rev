@@ -329,6 +329,8 @@
   "Auto Log Clean": "پاکسازی خودکار لاگ",
   "Never Clean": "هرگز پاک نکن",
   "Retain _n Days": "نگهداری به مدت {{n}} روز",
+  "Auto Delay Detection": "تشخیص تأخیر خودکار",
+  "Auto Delay Detection Info": "به‌صورت دوره‌ای تأخیر گره فعلی را در پس‌زمینه آزمایش می‌کند",
   "Default Latency Test": "آزمون تأخیر پیش‌فرض",
   "Default Latency Test Info": "فقط برای تست درخواست‌های کلاینت HTTP استفاده می‌شود و بر فایل پیکربندی تأثیری نخواهد داشت",
   "Default Latency Timeout": "زمان انتظار تأخیر پیش‌فرض",

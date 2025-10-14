@@ -326,6 +326,8 @@
   "Auto Log Clean": "ログを自動的にクリーンアップ",
   "Never Clean": "クリーンアップしない",
   "Retain _n Days": "{{n}}日間保持",
+  "Auto Delay Detection": "自動遅延検出",
+  "Auto Delay Detection Info": "バックグラウンドで現在のノードのレイテンシーを定期的にテストします",
   "Default Latency Test": "デフォルトの遅延テストURL",
   "Default Latency Test Info": "HTTPクライアントリクエストテストにのみ使用され、設定ファイルには影響しません。",
   "Default Latency Timeout": "テストタイムアウト時間",
