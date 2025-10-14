@@ -241,14 +241,14 @@ impl Sysopt {
         #[cfg(target_os = "windows")]
         {
             if is_enable {
-                if let Err(e) = startup_shortcut::create_shortcut() {
+                if let Err(e) = startup_shortcut::create_shortcut().await {
                     log::error!(target: "app", "创建启动快捷方式失败: {e}");
                     // 如果快捷方式创建失败，回退到原来的方法
                     self.try_original_autostart_method(is_enable);
                 } else {
                     return Ok(());
                 }
-            } else if let Err(e) = startup_shortcut::remove_shortcut() {
+            } else if let Err(e) = startup_shortcut::remove_shortcut().await {
                 log::error!(target: "app", "删除启动快捷方式失败: {e}");
                 self.try_original_autostart_method(is_enable);
             } else {
