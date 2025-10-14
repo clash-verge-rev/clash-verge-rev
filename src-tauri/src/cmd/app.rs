@@ -167,7 +167,7 @@ pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<Stri
 
     let icon_dir = wrap_err!(dirs::app_home_dir())?.join("icons");
     if !icon_dir.exists() {
-        let _ = fs::create_dir_all(&icon_dir);
+        let _ = fs::create_dir_all(&icon_dir).await;
     }
     let ext: String = match file_path.extension() {
         Some(e) => e.to_string_lossy().into(),
