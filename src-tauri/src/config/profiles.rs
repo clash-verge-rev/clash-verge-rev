@@ -1,7 +1,6 @@
 use super::{PrfOption, prfitem::PrfItem};
 use crate::{
     logging_error,
-    process::AsyncHandler,
     utils::{dirs, help, logging::Type},
 };
 use anyhow::{Context, Result, bail};
@@ -164,7 +163,8 @@ impl IProfiles {
             items.push(item)
         }
 
-        self.save_file().await
+        // self.save_file().await
+        Ok(())
     }
 
     /// reorder items
@@ -730,86 +730,66 @@ pub async fn profiles_append_item_with_filedata_safe(
     item: PrfItem,
     file_data: Option<String>,
 ) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let item = PrfItem::from(item, file_data).await?;
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.append_item(item).await
-        })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+    let item = PrfItem::from(item, file_data).await?;
+    profiles_append_item_safe(item).await
 }
 
 pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.append_item(item).await
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.append_item(item).await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
 pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.patch_item(index, item).await
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.patch_item(index, item).await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
 pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.delete_item(index).await
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            let deleted = profiles.delete_item(index).await?;
+            Ok((profiles, deleted))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
 pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.reorder(active_id, over_id).await
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.reorder(active_id, over_id).await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
 pub async fn profiles_save_file_safe() -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let profiles_guard = profiles.data_mut();
-            profiles_guard.save_file().await
+    Config::profiles()
+        .await
+        .with_data_modify(|profiles| async move {
+            profiles.save_file().await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
 pub async fn profiles_draft_update_item_safe(index: String, item: PrfItem) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.draft_mut();
-            profiles_guard.update_item(index, item).await
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.update_item(index, item).await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
