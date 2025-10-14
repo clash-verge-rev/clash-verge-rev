@@ -330,7 +330,7 @@ async fn check_service_version() -> Result<String> {
             return Err(anyhow::anyhow!(err_msg));
         }
 
-        let version = response.data.unwrap_or("unknown".to_string());
+        let version = response.data.unwrap_or("unknown".into());
         Ok(version)
     };
 
@@ -361,9 +361,9 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 
     let payload = clash_verge_service_ipc::ClashConfig {
         core_config: CoreConfig {
-            config_path: dirs::path_to_str(config_file)?.to_string(),
-            core_path: dirs::path_to_str(&bin_path)?.to_string(),
-            config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.to_string(),
+            config_path: dirs::path_to_str(config_file)?.into(),
+            core_path: dirs::path_to_str(&bin_path)?.into(),
+            config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.into(),
         },
         log_config: service_writer_config().await?,
     };

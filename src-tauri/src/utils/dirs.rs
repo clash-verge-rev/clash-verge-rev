@@ -108,7 +108,7 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
         match matching_files.first() {
             Some(first_path) => {
                 let first = path_to_str(first_path)?;
-                Ok(Some(first.to_string()))
+                Ok(Some(first.into()))
             }
             None => Ok(None),
         }

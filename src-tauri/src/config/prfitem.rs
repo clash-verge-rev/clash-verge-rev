@@ -312,12 +312,12 @@ impl PrfItem {
                     Some(filename) => {
                         let iter = percent_encoding::percent_decode(filename.as_bytes());
                         let filename = iter.decode_utf8().unwrap_or_default();
-                        filename.split("''").last().map(|s| s.to_string())
+                        filename.split("''").last().map(|s| s.into())
                     }
                     None => match help::parse_str::<String>(filename, "filename") {
                         Some(filename) => {
                             let filename = filename.trim_matches('"');
-                            Some(filename.to_string())
+                            Some(filename.into())
                         }
                         None => None,
                     },
@@ -341,7 +341,7 @@ impl PrfItem {
         let home = match header.get("profile-web-page-url") {
             Some(value) => {
                 let str_value = value.to_str().unwrap_or("");
-                Some(str_value.to_string())
+                Some(str_value.into())
             }
             None => None,
         };

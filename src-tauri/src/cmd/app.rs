@@ -68,9 +68,7 @@ pub fn get_portable_flag() -> CmdResult<bool> {
 /// 获取应用目录
 #[tauri::command]
 pub fn get_app_dir() -> CmdResult<String> {
-    let app_home_dir = wrap_err!(dirs::app_home_dir())?
-        .to_string_lossy()
-        .to_string();
+    let app_home_dir = wrap_err!(dirs::app_home_dir())?.to_string_lossy().into();
     Ok(app_home_dir)
 }
 
@@ -88,7 +86,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
     let icon_path = icon_cache_dir.join(&name);
 
     if icon_path.exists() {
-        return Ok(icon_path.to_string_lossy().to_string());
+        return Ok(icon_path.to_string_lossy().into());
     }
 
     if !icon_cache_dir.exists() {
@@ -120,7 +118,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
                 Ok(file) => file,
                 Err(_) => {
                     if icon_path.exists() {
-                        return Ok(icon_path.to_string_lossy().to_string());
+                        return Ok(icon_path.to_string_lossy().into());
                     }
                     return Err("Failed to create temporary file".into());
                 }
@@ -135,7 +133,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
                 Err(_) => {
                     let _ = std::fs::remove_file(&temp_path);
                     if icon_path.exists() {
-                        return Ok(icon_path.to_string_lossy().to_string());
+                        return Ok(icon_path.to_string_lossy().into());
                     }
                 }
             }
@@ -143,7 +141,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
             let _ = std::fs::remove_file(&temp_path);
         }
 
-        Ok(icon_path.to_string_lossy().to_string())
+        Ok(icon_path.to_string_lossy().into())
     } else {
         let _ = std::fs::remove_file(&temp_path);
         Err(format!("下载的内容不是有效图片: {url}"))
@@ -168,9 +166,9 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
     if !icon_dir.exists() {
         let _ = fs::create_dir_all(&icon_dir);
     }
-    let ext = match file_path.extension() {
-        Some(e) => e.to_string_lossy().to_string(),
-        None => "ico".to_string(),
+    let ext: String = match file_path.extension() {
+        Some(e) => e.to_string_lossy().into(),
+        None => "ico".into(),
     };
 
     let dest_path = icon_dir.join(format!(
@@ -196,11 +194,11 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
             dest_path
         );
         match fs::copy(file_path, &dest_path) {
-            Ok(_) => Ok(dest_path.to_string_lossy().to_string()),
+            Ok(_) => Ok(dest_path.to_string_lossy().into()),
             Err(err) => Err(err.to_string()),
         }
     } else {
-        Err("file not found".to_string())
+        Err("file not found".into())
     }
 }
 

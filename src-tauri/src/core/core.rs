@@ -272,13 +272,13 @@ impl CoreManager {
         if has_error {
             logging!(info, Type::Config, "发现错误，开始处理错误信息");
             let error_msg = if !stdout.is_empty() {
-                stdout.to_string()
+                stdout.into()
             } else if !stderr.is_empty() {
-                stderr.to_string()
+                stderr.into()
             } else if let Some(code) = output.status.code() {
                 format!("验证进程异常退出，退出码: {code}")
             } else {
-                "验证进程被终止".to_string()
+                "验证进程被终止".into()
             };
 
             logging!(info, Type::Config, "-------- 验证结束 --------");
@@ -350,7 +350,7 @@ impl CoreManager {
                     let error_msg = "Script must contain a main function";
                     logging!(warn, Type::Config, "脚本缺少main函数: {}", path);
                     //handle::Handle::notice_message("config_validate::script_missing_main", error_msg);
-                    return Ok((false, error_msg.to_string()));
+                    return Ok((false, error_msg.into()));
                 }
 
                 Ok((true, String::new()))
@@ -441,7 +441,7 @@ impl CoreManager {
             let process_name = if cfg!(windows) {
                 format!("{target}.exe")
             } else {
-                target.to_string()
+                target.into()
             };
             process_futures.push(self.find_processes_by_name(process_name, target));
         }
@@ -917,7 +917,7 @@ impl CoreManager {
         if clash_core.is_none() {
             let error_message = "Clash core should not be Null";
             logging!(error, Type::Core, "{}", error_message);
-            return Err(error_message.to_string());
+            return Err(error_message.into());
         }
         let core = clash_core.as_ref().ok_or_else(|| {
             let msg = "Clash core should not be None";

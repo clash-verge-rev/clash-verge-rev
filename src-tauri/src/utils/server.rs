@@ -75,8 +75,8 @@ pub fn embed_server() {
             } else {
                 logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
             };
-            Ok::<_, warp::Rejection>(warp::reply::with_status(
-                "ok".to_string(),
+            Ok::<_, warp::Rejection>(warp::reply::with_status::<String>(
+                "ok".into(),
                 warp::http::StatusCode::OK,
             ))
         });
@@ -88,7 +88,7 @@ pub fn embed_server() {
             .latest_ref()
             .pac_file_content
             .clone()
-            .unwrap_or(DEFAULT_PAC.to_string());
+            .unwrap_or(DEFAULT_PAC.into());
 
         let mixed_port = verge_config
             .latest_ref()
@@ -115,7 +115,7 @@ pub fn embed_server() {
                 tokio::task::spawn_local(async move {
                     logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
                 });
-                warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK)
+                warp::reply::with_status::<String>("ok".into(), warp::http::StatusCode::OK)
             });
 
         let commands = visible.or(scheme).or(pac);

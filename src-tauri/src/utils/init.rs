@@ -102,7 +102,7 @@ pub async fn service_writer_config() -> Result<WriterConfig> {
             verge.app_log_max_count.unwrap_or(8),
         )
     };
-    let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.to_string();
+    let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.into();
 
     Ok(WriterConfig {
         directory: service_log_dir,
@@ -437,7 +437,7 @@ pub async fn init_resources() -> Result<()> {
         };
 
         if src_path.exists() && !dest_path.exists() {
-            handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
+            handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
             continue;
         }
 
@@ -447,12 +447,12 @@ pub async fn init_resources() -> Result<()> {
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
-                    handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
+                    handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
                 }
             }
             _ => {
                 logging!(debug, Type::Setup, "failed to get modified '{}'", file);
-                handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
+                handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
             }
         };
     }
@@ -506,7 +506,7 @@ pub async fn startup_script() -> Result<()> {
     let script_path = {
         let verge = Config::verge().await;
         let verge = verge.latest_ref();
-        verge.startup_script.clone().unwrap_or("".to_string())
+        verge.startup_script.clone().unwrap_or("".into())
     };
 
     if script_path.is_empty() {

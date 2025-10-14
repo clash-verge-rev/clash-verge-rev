@@ -258,7 +258,7 @@ impl IVerge {
                     "启动时发现无效的clash_core配置: '{}', 将自动修正为 'verge-mihomo'",
                     core
                 );
-                config.clash_core = Some("verge-mihomo".to_string());
+                config.clash_core = Some("verge-mihomo".into());
                 needs_fix = true;
             }
         } else {
@@ -267,7 +267,7 @@ impl IVerge {
                 Type::Config,
                 "启动时发现未配置clash_core, 将设置为默认值 'verge-mihomo'"
             );
-            config.clash_core = Some("verge-mihomo".to_string());
+            config.clash_core = Some("verge-mihomo".into());
             needs_fix = true;
         }
 
@@ -311,7 +311,7 @@ impl IVerge {
     pub fn get_valid_clash_core(&self) -> String {
         self.clash_core
             .clone()
-            .unwrap_or_else(|| "verge-mihomo".to_string())
+            .unwrap_or_else(|| "verge-mihomo".into())
     }
 
     fn get_system_language() -> String {
@@ -322,8 +322,8 @@ impl IVerge {
         let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
         let supported_languages = i18n::get_supported_languages();
 
-        if supported_languages.contains(&lang_code.to_string()) {
-            lang_code.to_string()
+        if supported_languages.contains(&lang_code.into()) {
+            lang_code.into()
         } else {
             String::from("en")
         }

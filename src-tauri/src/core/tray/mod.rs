@@ -83,7 +83,7 @@ impl TrayState {
         }
         #[cfg(target_os = "macos")]
         {
-            let tray_icon_colorful = verge.tray_icon.unwrap_or("monochrome".to_string());
+            let tray_icon_colorful = verge.tray_icon.unwrap_or("monochrome".into());
             if tray_icon_colorful == "monochrome" {
                 (
                     false,
@@ -117,7 +117,7 @@ impl TrayState {
         }
         #[cfg(target_os = "macos")]
         {
-            let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
+            let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".into());
             if tray_icon_colorful == "monochrome" {
                 (
                     false,
@@ -151,7 +151,7 @@ impl TrayState {
         }
         #[cfg(target_os = "macos")]
         {
-            let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
+            let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".into());
             if tray_icon_colorful == "monochrome" {
                 (
                     false,
@@ -349,7 +349,7 @@ impl Tray {
             (false, false) => TrayState::get_common_tray_icon().await,
         };
 
-        let colorful = verge.tray_icon.clone().unwrap_or("monochrome".to_string());
+        let colorful = verge.tray_icon.clone().unwrap_or("monochrome".into());
         let is_colorful = colorful == "colorful";
 
         let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
@@ -427,7 +427,7 @@ impl Tray {
             map
         };
 
-        let mut current_profile_name = "None".to_string();
+        let mut current_profile_name = "None".into();
         {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
@@ -447,7 +447,7 @@ impl Tray {
         let profile_text = t("Profile").await;
 
         let v = env!("CARGO_PKG_VERSION");
-        let reassembled_version = v.split_once('+').map_or(v.to_string(), |(main, rest)| {
+        let reassembled_version = v.split_once('+').map_or(v.into(), |(main, rest)| {
             format!("{main}+{}", rest.split('.').next().unwrap_or(""))
         });
 
@@ -617,7 +617,7 @@ async fn create_tray_menu(
                 .filter_map(|item| {
                     let mut parts = item.split(',');
                     match (parts.next(), parts.next()) {
-                        (Some(func), Some(key)) => Some((func.to_string(), key.to_string())),
+                        (Some(func), Some(key)) => Some((func.into(), key.into())),
                         _ => None,
                     }
                 })
@@ -690,11 +690,11 @@ async fn create_tray_menu(
                             .get(proxy_str)
                             .and_then(|h| h.history.last())
                             .map(|h| match h.delay {
-                                0 => "-ms".to_string(),
-                                delay if delay >= 10000 => "-ms".to_string(),
+                                0 => "-ms".into(),
+                                delay if delay >= 10000 => "-ms".into(),
                                 _ => format!("{}ms", h.delay),
                             })
-                            .unwrap_or_else(|| "-ms".to_string());
+                            .unwrap_or_else(|| "-ms".into());
 
                         let display_text = format!("{}   | {}", proxy_str, delay_text);
 
@@ -773,7 +773,7 @@ async fn create_tray_menu(
                             .iter()
                             .filter_map(|group| group.get("name"))
                             .filter_map(|name| name.as_str())
-                            .map(|name| name.to_string())
+                            .map(|name| name.into())
                             .collect::<Vec<String>>()
                     })
                     .unwrap_or_default()

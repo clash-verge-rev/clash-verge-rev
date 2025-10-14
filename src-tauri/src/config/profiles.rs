@@ -151,7 +151,7 @@ impl IProfiles {
         }
 
         if self.current.is_none()
-            && (item.itype == Some("remote".to_string()) || item.itype == Some("local".to_string()))
+            && (item.itype == Some("remote".into()) || item.itype == Some("local".into()))
         {
             self.current = uid;
         }
@@ -434,9 +434,7 @@ impl IProfiles {
         if current == uid {
             self.current = None;
             for item in items.iter() {
-                if item.itype == Some("remote".to_string())
-                    || item.itype == Some("local".to_string())
-                {
+                if item.itype == Some("remote".into()) || item.itype == Some("local".into()) {
                     self.current = item.uid.clone();
                     break;
                 }
@@ -602,7 +600,7 @@ impl IProfiles {
                 if !active_files.contains(file_name) {
                     match std::fs::remove_file(&path) {
                         Ok(_) => {
-                            deleted_files.push(file_name.to_string());
+                            deleted_files.push(file_name.into());
                             log::info!(target: "app", "已清理冗余文件: {file_name}");
                         }
                         Err(e) => {
@@ -635,8 +633,8 @@ impl IProfiles {
     fn get_protected_global_files(&self) -> HashSet<String> {
         let mut protected_files = HashSet::new();
 
-        protected_files.insert("Merge.yaml".to_string());
-        protected_files.insert("Script.js".to_string());
+        protected_files.insert("Merge.yaml".into());
+        protected_files.insert("Script.js".into());
 
         protected_files
     }

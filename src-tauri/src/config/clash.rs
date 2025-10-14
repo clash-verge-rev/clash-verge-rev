@@ -35,7 +35,7 @@ impl IClashTemp {
                 if let Some(Value::String(s)) = map.get_mut("secret")
                     && s.is_empty()
                 {
-                    *s = "set-your-secret".to_string();
+                    *s = "set-your-secret".into();
                 }
                 Self(Self::guard(map))
             }
@@ -323,10 +323,10 @@ impl IClashTemp {
         // 总是使用当前的 IPC 路径，确保配置文件与运行时路径一致
         ipc_path()
             .ok()
-            .and_then(|path| path_to_str(&path).ok().map(|s| s.to_string()))
+            .and_then(|path| path_to_str(&path).ok().map(|s| s.into()))
             .unwrap_or_else(|| {
                 log::error!(target: "app", "Failed to get IPC path, using default");
-                "127.0.0.1:9090".to_string()
+                "127.0.0.1:9090".into()
             })
     }
 }

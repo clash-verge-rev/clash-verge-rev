@@ -58,19 +58,19 @@ impl Config {
         if Self::profiles()
             .await
             .latest_ref()
-            .get_item(&"Merge".to_string())
+            .get_item(&"Merge".into())
             .is_err()
         {
-            let merge_item = PrfItem::from_merge(Some("Merge".to_string()))?;
+            let merge_item = PrfItem::from_merge(Some("Merge".into()))?;
             profiles_append_item_safe(merge_item.clone()).await?;
         }
         if Self::profiles()
             .await
             .latest_ref()
-            .get_item(&"Script".to_string())
+            .get_item(&"Script".into())
             .is_err()
         {
-            let script_item = PrfItem::from_script(Some("Script".to_string()))?;
+            let script_item = PrfItem::from_script(Some("Script".into()))?;
             profiles_append_item_safe(script_item.clone()).await?;
         }
         // 生成运行时配置
@@ -238,8 +238,8 @@ mod tests {
     #[allow(unused_variables)]
     #[allow(clippy::expect_used)]
     fn test_prfitem_from_merge_size() {
-        let merge_item = PrfItem::from_merge(Some("Merge".to_string()))
-            .expect("Failed to create merge item in test");
+        let merge_item =
+            PrfItem::from_merge(Some("Merge".into())).expect("Failed to create merge item in test");
         let prfitem_size = mem::size_of_val(&merge_item);
         // Boxed version
         let boxed_merge_item = Box::new(merge_item);
