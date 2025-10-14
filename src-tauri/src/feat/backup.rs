@@ -1,7 +1,7 @@
 use crate::{
     config::{Config, IVerge},
     core::backup,
-    logging_error,
+    logging, logging_error,
     utils::{
         dirs::{app_home_dir, local_backup_dir},
         logging::Type,
@@ -24,7 +24,7 @@ pub struct LocalBackupFile {
 /// Create a backup and upload to WebDAV
 pub async fn create_backup_and_upload_webdav() -> Result<()> {
     let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
-        log::error!(target: "app", "Failed to create backup: {err:#?}");
+        logging!(error, Type::Backup, "Failed to create backup: {err:#?}");
         err
     })?;
 
@@ -32,14 +32,14 @@ pub async fn create_backup_and_upload_webdav() -> Result<()> {
         .upload(temp_file_path.clone(), file_name)
         .await
     {
-        log::error!(target: "app", "Failed to upload to WebDAV: {err:#?}");
+        logging!(error, Type::Backup, "Failed to upload to WebDAV: {err:#?}");
         // 上传失败时重置客户端缓存
         backup::WebDavClient::global().reset();
         return Err(err);
     }
 
     if let Err(err) = std::fs::remove_file(&temp_file_path) {
-        log::warn!(target: "app", "Failed to remove temp file: {err:#?}");
+        logging!(warn, Type::Backup, "Failed to remove temp file: {err:#?}");
     }
 
     Ok(())
@@ -48,7 +48,11 @@ pub async fn create_backup_and_upload_webdav() -> Result<()> {
 /// List WebDAV backups
 pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
     backup::WebDavClient::global().list().await.map_err(|err| {
-        log::error!(target: "app", "Failed to list WebDAV backup files: {err:#?}");
+        logging!(
+            error,
+            Type::Backup,
+            "Failed to list WebDAV backup files: {err:#?}"
+        );
         err
     })
 }
@@ -59,7 +63,11 @@ pub async fn delete_webdav_backup(filename: String) -> Result<()> {
         .delete(filename)
         .await
         .map_err(|err| {
-            log::error!(target: "app", "Failed to delete WebDAV backup file: {err:#?}");
+            logging!(
+                error,
+                Type::Backup,
+                "Failed to delete WebDAV backup file: {err:#?}"
+            );
             err
         })
 }
@@ -79,7 +87,11 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         .download(filename, backup_storage_path.clone())
         .await
         .map_err(|err| {
-            log::error!(target: "app", "Failed to download WebDAV backup file: {err:#?}");
+            logging!(
+                error,
+                Type::Backup,
+                "Failed to download WebDAV backup file: {err:#?}"
+            );
             err
         })?;
 
@@ -107,7 +119,11 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
 /// Create a backup and save to local storage
 pub fn create_local_backup() -> Result<()> {
     let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
-        log::error!(target: "app", "Failed to create local backup: {err:#?}");
+        logging!(
+            error,
+            Type::Backup,
+            "Failed to create local backup: {err:#?}"
+        );
         err
     })?;
 
@@ -115,11 +131,16 @@ pub fn create_local_backup() -> Result<()> {
     let target_path = backup_dir.join(&file_name);
 
     if let Err(err) = move_file(temp_file_path.clone(), target_path.clone()) {
-        log::error!(target: "app", "Failed to move local backup file: {err:#?}");
+        logging!(
+            error,
+            Type::Backup,
+            "Failed to move local backup file: {err:#?}"
+        );
         // 清理临时文件
         if let Err(clean_err) = std::fs::remove_file(&temp_file_path) {
-            log::warn!(
-                target: "app",
+            logging!(
+                warn,
+                Type::Backup,
                 "Failed to remove temp backup file after move error: {clean_err:#?}"
             );
         }
@@ -138,8 +159,9 @@ fn move_file(from: PathBuf, to: PathBuf) -> Result<()> {
         Ok(_) => Ok(()),
         Err(rename_err) => {
             // Attempt copy + remove as fallback, covering cross-device moves
-            log::warn!(
-                target: "app",
+            logging!(
+                warn,
+                Type::Backup,
                 "Failed to rename backup file directly, fallback to copy/remove: {rename_err:#?}"
             );
             fs::copy(&from, &to).map_err(|err| anyhow!("Failed to copy backup file: {err:#?}"))?;
@@ -190,7 +212,12 @@ pub fn delete_local_backup(filename: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
     let target_path = backup_dir.join(&filename);
     if !target_path.exists() {
-        log::warn!(target: "app", "Local backup file not found: {}", filename);
+        logging!(
+            warn,
+            Type::Backup,
+            "Local backup file not found: {}",
+            filename
+        );
         return Ok(());
     }
     fs::remove_file(target_path)?;
