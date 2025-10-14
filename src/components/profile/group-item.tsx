@@ -24,37 +24,50 @@ export const GroupItem = (props: Props) => {
   const sortable = type === "prepend" || type === "append";
 
   const {
-    attributes,
-    listeners,
-    setNodeRef,
+    attributes: sortableAttributes,
+    listeners: sortableListeners,
+    setNodeRef: sortableSetNodeRef,
     transform,
     transition,
     isDragging,
-  } = sortable
-    ? useSortable({ id: group.name })
-    : {
-        attributes: {},
-        listeners: {},
-        setNodeRef: null,
-        transform: null,
-        transition: null,
-        isDragging: false,
-      };
+  } = useSortable({
+    id: group.name,
+    disabled: !sortable,
+  });
+  const dragAttributes = sortable ? sortableAttributes : undefined;
+  const dragListeners = sortable ? sortableListeners : undefined;
+  const dragNodeRef = sortable ? sortableSetNodeRef : undefined;
 
   const [iconCachePath, setIconCachePath] = useState("");
 
   useEffect(() => {
-    initIconCachePath();
-  }, [group]);
+    let cancelled = false;
+    const initIconCachePath = async () => {
+      const icon = group.icon?.trim() ?? "";
+      if (icon.startsWith("http")) {
+        try {
+          const fileName =
+            group.name.replaceAll(" ", "") + "-" + getFileName(icon);
+          const iconPath = await downloadIconCache(icon, fileName);
+          if (!cancelled) {
+            setIconCachePath(convertFileSrc(iconPath));
+          }
+        } catch {
+          if (!cancelled) {
+            setIconCachePath("");
+          }
+        }
+      } else if (!cancelled) {
+        setIconCachePath("");
+      }
+    };
 
-  async function initIconCachePath() {
-    if (group.icon && group.icon.trim().startsWith("http")) {
-      const fileName =
-        group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
-      const iconPath = await downloadIconCache(group.icon, fileName);
-      setIconCachePath(convertFileSrc(iconPath));
-    }
-  }
+    void initIconCachePath();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [group.icon, group.name]);
 
   function getFileName(url: string) {
     return url.substring(url.lastIndexOf("/") + 1);
@@ -108,9 +121,9 @@ export const GroupItem = (props: Props) => {
         />
       )}
       <ListItemText
-        {...attributes}
-        {...listeners}
-        ref={setNodeRef}
+        {...(dragAttributes ?? {})}
+        {...(dragListeners ?? {})}
+        ref={dragNodeRef}
         sx={{ cursor: sortable ? "move" : "" }}
         primary={
           <StyledPrimary
@@ -133,11 +146,13 @@ export const GroupItem = (props: Props) => {
             </Box>
           </ListItemTextChild>
         }
-        secondaryTypographyProps={{
-          sx: {
-            display: "flex",
-            alignItems: "center",
-            color: "#ccc",
+        slotProps={{
+          secondary: {
+            sx: {
+              display: "flex",
+              alignItems: "center",
+              color: "#ccc",
+            },
           },
         }}
       />
