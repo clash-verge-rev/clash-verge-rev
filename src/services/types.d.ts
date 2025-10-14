@@ -870,6 +870,13 @@ interface IWebDavFile {
   tag: string;
 }
 
+interface ILocalBackupFile {
+  filename: string;
+  path: string;
+  last_modified: string;
+  content_length: number;
+}
+
 interface IWebDavConfig {
   url: string;
   username: string;

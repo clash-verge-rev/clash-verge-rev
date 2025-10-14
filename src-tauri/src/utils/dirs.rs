@@ -120,6 +120,13 @@ pub fn app_logs_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
 }
 
+/// local backups dir
+pub fn local_backup_dir() -> Result<PathBuf> {
+    let dir = app_home_dir()?.join(BACKUP_DIR);
+    fs::create_dir_all(&dir)?;
+    Ok(dir)
+}
+
 pub fn clash_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(CLASH_CONFIG))
 }
