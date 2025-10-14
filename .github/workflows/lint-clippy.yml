@@ -64,4 +64,5 @@ jobs:
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Run Clippy
-        run: cargo clippy-all --manifest-path src-tauri/Cargo.toml
+        working-directory: ./src-tauri
+        run: cargo clippy-all
