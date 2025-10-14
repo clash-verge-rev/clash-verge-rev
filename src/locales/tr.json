@@ -350,6 +350,8 @@
   "Auto Log Clean": "Otomatik Günlük Temizleme",
   "Never Clean": "Asla Temizleme",
   "Retain _n Days": "{{n}} Gün Sakla",
+  "Auto Delay Detection": "Otomatik Gecikme Tespiti",
+  "Auto Delay Detection Info": "Arka planda mevcut düğümün gecikmesini periyodik olarak test eder",
   "Default Latency Test": "Varsayılan Gecikme Testi",
   "Default Latency Test Info": "Yalnızca HTTP istemci isteği testi için kullanılır ve yapılandırma dosyasında bir fark yaratmaz",
   "Default Latency Timeout": "Varsayılan Gecikme Zaman Aşımı",

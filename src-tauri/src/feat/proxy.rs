@@ -80,7 +80,7 @@ pub async fn copy_clash_env() {
             .latest_ref()
             .proxy_host
             .clone()
-            .unwrap_or_else(|| "127.0.0.1".to_string()),
+            .unwrap_or_else(|| "127.0.0.1".into()),
     };
 
     let app_handle = handle::Handle::app_handle();
@@ -104,7 +104,7 @@ pub async fn copy_clash_env() {
             #[cfg(target_os = "windows")]
             let default = "powershell";
 
-            default.to_string()
+            default.into()
         }
     };
 

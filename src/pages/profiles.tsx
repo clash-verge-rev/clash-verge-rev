@@ -1068,6 +1068,16 @@ const ProfilePage = () => {
           value={url}
           variant="outlined"
           onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.nativeEvent.isComposing) {
+              return;
+            }
+            if (!url || disabled || loading) {
+              return;
+            }
+            event.preventDefault();
+            void onImport();
+          }}
           placeholder={t("Profile URL")}
           slotProps={{
             input: {

@@ -131,6 +131,9 @@ pub struct IVerge {
     /// 默认的延迟测试超时时间
     pub default_latency_timeout: Option<i32>,
 
+    /// 是否自动检测当前节点延迟
+    pub enable_auto_delay_detection: Option<bool>,
+
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
@@ -198,6 +201,9 @@ pub struct IVerge {
 
     pub enable_tray_icon: Option<bool>,
 
+    /// show proxy groups directly on tray root menu
+    pub tray_inline_proxy_groups: Option<bool>,
+
     /// 自动进入轻量模式
     pub enable_auto_light_weight_mode: Option<bool>,
 
@@ -258,7 +264,7 @@ impl IVerge {
                     "启动时发现无效的clash_core配置: '{}', 将自动修正为 'verge-mihomo'",
                     core
                 );
-                config.clash_core = Some("verge-mihomo".to_string());
+                config.clash_core = Some("verge-mihomo".into());
                 needs_fix = true;
             }
         } else {
@@ -267,7 +273,7 @@ impl IVerge {
                 Type::Config,
                 "启动时发现未配置clash_core, 将设置为默认值 'verge-mihomo'"
             );
-            config.clash_core = Some("verge-mihomo".to_string());
+            config.clash_core = Some("verge-mihomo".into());
             needs_fix = true;
         }
 
@@ -311,7 +317,7 @@ impl IVerge {
     pub fn get_valid_clash_core(&self) -> String {
         self.clash_core
             .clone()
-            .unwrap_or_else(|| "verge-mihomo".to_string())
+            .unwrap_or_else(|| "verge-mihomo".into())
     }
 
     fn get_system_language() -> String {
@@ -322,8 +328,8 @@ impl IVerge {
         let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
         let supported_languages = i18n::get_supported_languages();
 
-        if supported_languages.contains(&lang_code.to_string()) {
-            lang_code.to_string()
+        if supported_languages.contains(&lang_code.into()) {
+            lang_code.into()
         } else {
             String::from("en")
         }
@@ -398,6 +404,7 @@ impl IVerge {
             webdav_password: None,
             enable_tray_speed: Some(false),
             enable_tray_icon: Some(true),
+            tray_inline_proxy_groups: Some(false),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
@@ -479,6 +486,7 @@ impl IVerge {
         patch!(auto_check_update);
         patch!(default_latency_test);
         patch!(default_latency_timeout);
+        patch!(enable_auto_delay_detection);
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(test_list);
@@ -489,6 +497,7 @@ impl IVerge {
         patch!(webdav_password);
         patch!(enable_tray_speed);
         patch!(enable_tray_icon);
+        patch!(tray_inline_proxy_groups);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);
         patch!(enable_dns_settings);
@@ -563,6 +572,7 @@ pub struct IVergeResponse {
     pub auto_check_update: Option<bool>,
     pub default_latency_test: Option<String>,
     pub default_latency_timeout: Option<i32>,
+    pub enable_auto_delay_detection: Option<bool>,
     pub enable_builtin_enhanced: Option<bool>,
     pub proxy_layout_column: Option<i32>,
     pub test_list: Option<Vec<IVergeTestItem>>,
@@ -585,6 +595,7 @@ pub struct IVergeResponse {
     pub webdav_password: Option<String>,
     pub enable_tray_speed: Option<bool>,
     pub enable_tray_icon: Option<bool>,
+    pub tray_inline_proxy_groups: Option<bool>,
     pub enable_auto_light_weight_mode: Option<bool>,
     pub auto_light_weight_minutes: Option<u64>,
     pub enable_dns_settings: Option<bool>,
@@ -636,6 +647,7 @@ impl From<IVerge> for IVergeResponse {
             auto_check_update: verge.auto_check_update,
             default_latency_test: verge.default_latency_test,
             default_latency_timeout: verge.default_latency_timeout,
+            enable_auto_delay_detection: verge.enable_auto_delay_detection,
             enable_builtin_enhanced: verge.enable_builtin_enhanced,
             proxy_layout_column: verge.proxy_layout_column,
             test_list: verge.test_list,
@@ -658,6 +670,7 @@ impl From<IVerge> for IVergeResponse {
             webdav_password: verge.webdav_password,
             enable_tray_speed: verge.enable_tray_speed,
             enable_tray_icon: verge.enable_tray_icon,
+            tray_inline_proxy_groups: verge.tray_inline_proxy_groups,
             enable_auto_light_weight_mode: verge.enable_auto_light_weight_mode,
             auto_light_weight_minutes: verge.auto_light_weight_minutes,
             enable_dns_settings: verge.enable_dns_settings,

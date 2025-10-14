@@ -29,6 +29,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     autoCheckUpdate: true,
     enableBuiltinEnhanced: true,
     proxyLayoutColumn: 6,
+    enableAutoDelayDetection: false,
     defaultLatencyTest: "",
     autoLogClean: 2,
     defaultLatencyTimeout: 10000,
@@ -45,6 +46,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         autoCheckUpdate: verge?.auto_check_update ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
         proxyLayoutColumn: verge?.proxy_layout_column || 6,
+        enableAutoDelayDetection: verge?.enable_auto_delay_detection ?? false,
         defaultLatencyTest: verge?.default_latency_test || "",
         autoLogClean: verge?.auto_log_clean || 0,
         defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
@@ -61,6 +63,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         auto_check_update: values.autoCheckUpdate,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
+        enable_auto_delay_detection: values.enableAutoDelayDetection,
         default_latency_test: values.defaultLatencyTest,
         default_latency_timeout: values.defaultLatencyTimeout,
         auto_log_clean: values.autoLogClean as any,
@@ -263,6 +266,25 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
               </MenuItem>
             ))}
           </Select>
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText
+            primary={t("Auto Delay Detection")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TooltipIcon
+            title={t("Auto Delay Detection Info")}
+            sx={{ opacity: "0.7" }}
+          />
+          <Switch
+            edge="end"
+            checked={values.enableAutoDelayDetection}
+            onChange={(_, c) =>
+              setValues((v) => ({ ...v, enableAutoDelayDetection: c }))
+            }
+            sx={{ marginLeft: "auto" }}
+          />
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>

@@ -204,6 +204,11 @@ mod app_init {
             cmd::script_validate_notice,
             cmd::validate_script_file,
             // Backup and WebDAV
+            cmd::create_local_backup,
+            cmd::list_local_backup,
+            cmd::delete_local_backup,
+            cmd::restore_local_backup,
+            cmd::export_local_backup,
             cmd::create_webdav_backup,
             cmd::save_webdav_config,
             cmd::list_webdav_backup,
@@ -510,7 +515,22 @@ pub fn run() {
         }
     }
 
+    // Mock context for Clippy to avoid build errors
+    #[cfg(feature = "clippy")]
+    let context = tauri::test::mock_context(tauri::test::noop_assets());
+    #[cfg(feature = "clippy")]
+    let app = builder.build(context).unwrap_or_else(|e| {
+        logging!(
+            error,
+            Type::Setup,
+            "Failed to build Tauri application: {}",
+            e
+        );
+        std::process::exit(1);
+    });
+
     // Build the application
+    #[cfg(not(feature = "clippy"))]
     let app = builder
         .build(tauri::generate_context!())
         .unwrap_or_else(|e| {

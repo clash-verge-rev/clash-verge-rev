@@ -567,7 +567,6 @@ const Layout = () => {
             OS === "linux"
               ? {
                   borderRadius: "8px",
-                  border: "1px solid var(--divider-color)",
                   width: "100vw",
                   height: "100vh",
                 }

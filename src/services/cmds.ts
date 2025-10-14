@@ -440,12 +440,28 @@ export async function createWebdavBackup() {
   return invoke<void>("create_webdav_backup");
 }
 
+export async function createLocalBackup() {
+  return invoke<void>("create_local_backup");
+}
+
 export async function deleteWebdavBackup(filename: string) {
   return invoke<void>("delete_webdav_backup", { filename });
 }
 
+export async function deleteLocalBackup(filename: string) {
+  return invoke<void>("delete_local_backup", { filename });
+}
+
 export async function restoreWebDavBackup(filename: string) {
   return invoke<void>("restore_webdav_backup", { filename });
+}
+
+export async function restoreLocalBackup(filename: string) {
+  return invoke<void>("restore_local_backup", { filename });
+}
+
+export async function exportLocalBackup(filename: string, destination: string) {
+  return invoke<void>("export_local_backup", { filename, destination });
 }
 
 export async function saveWebdavConfig(
@@ -466,6 +482,10 @@ export async function listWebDavBackup() {
     item.filename = item.href.split("/").pop() as string;
   });
   return list;
+}
+
+export async function listLocalBackup() {
+  return invoke<ILocalBackupFile[]>("list_local_backup");
 }
 
 export async function scriptValidateNotice(status: string, msg: string) {

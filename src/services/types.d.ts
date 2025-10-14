@@ -802,6 +802,7 @@ interface IVergeConfig {
   tun_tray_icon?: boolean;
   enable_tray_speed?: boolean;
   enable_tray_icon?: boolean;
+  tray_inline_proxy_groups?: boolean;
   enable_tun_mode?: boolean;
   enable_auto_light_weight_mode?: boolean;
   auto_light_weight_minutes?: number;
@@ -849,6 +850,7 @@ interface IVergeConfig {
   auto_check_update?: boolean;
   default_latency_test?: string;
   default_latency_timeout?: number;
+  enable_auto_delay_detection?: boolean;
   enable_builtin_enhanced?: boolean;
   auto_log_clean?: 0 | 1 | 2 | 3 | 4;
   proxy_layout_column?: number;
@@ -868,6 +870,13 @@ interface IWebDavFile {
   content_length: number;
   content_type: string;
   tag: string;
+}
+
+interface ILocalBackupFile {
+  filename: string;
+  path: string;
+  last_modified: string;
+  content_length: number;
 }
 
 interface IWebDavConfig {

@@ -1,8 +1,13 @@
-import { DataGrid, GridColDef, GridColumnResizeParams } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridColumnResizeParams,
+  useGridApiRef,
+} from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
-import { t } from "i18next";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import parseTraffic from "@/utils/parse-traffic";
 import { truncateStr } from "@/utils/truncate-str";
@@ -14,6 +19,126 @@ interface Props {
 
 export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
+  const { t } = useTranslation();
+  const apiRef = useGridApiRef();
+  useEffect(() => {
+    const PATCH_FLAG_KEY = "__clashPatchedPublishEvent" as const;
+    const ORIGINAL_KEY = "__clashOriginalPublishEvent" as const;
+    let isUnmounted = false;
+    let retryHandle: ReturnType<typeof setTimeout> | null = null;
+    let cleanupOriginal: (() => void) | null = null;
+
+    const scheduleRetry = () => {
+      if (isUnmounted || retryHandle !== null) return;
+      retryHandle = setTimeout(() => {
+        retryHandle = null;
+        ensurePatched();
+      }, 16);
+    };
+
+    // Safari occasionally emits grid events without an event object,
+    // and MUI expects `defaultMuiPrevented` to exist. Normalize here to avoid crashes.
+    const createFallbackEvent = () => {
+      const fallback = {
+        defaultMuiPrevented: false,
+        preventDefault() {
+          fallback.defaultMuiPrevented = true;
+        },
+      };
+      return fallback;
+    };
+
+    const ensureMuiEvent = (
+      value: unknown,
+    ): {
+      defaultMuiPrevented: boolean;
+      preventDefault: () => void;
+      [key: string]: unknown;
+    } => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return createFallbackEvent();
+      }
+
+      const eventObject = value as {
+        defaultMuiPrevented?: unknown;
+        preventDefault?: () => void;
+        [key: string]: unknown;
+      };
+
+      if (typeof eventObject.defaultMuiPrevented !== "boolean") {
+        eventObject.defaultMuiPrevented = false;
+      }
+
+      if (typeof eventObject.preventDefault !== "function") {
+        eventObject.preventDefault = () => {
+          eventObject.defaultMuiPrevented = true;
+        };
+      }
+
+      return eventObject as {
+        defaultMuiPrevented: boolean;
+        preventDefault: () => void;
+        [key: string]: unknown;
+      };
+    };
+
+    const ensurePatched = () => {
+      if (isUnmounted) return;
+      const api = apiRef.current;
+
+      if (!api?.publishEvent) {
+        scheduleRetry();
+        return;
+      }
+
+      const metadataApi = api as unknown as typeof api &
+        Record<string, unknown>;
+      if (metadataApi[PATCH_FLAG_KEY] === true) return;
+
+      const originalPublishEvent = api.publishEvent;
+
+      const patchedPublishEvent = ((...rawArgs: unknown[]) => {
+        rawArgs[2] = ensureMuiEvent(rawArgs[2]);
+
+        return (
+          originalPublishEvent as unknown as (...args: unknown[]) => void
+        ).apply(api, rawArgs);
+      }) as typeof originalPublishEvent;
+
+      api.publishEvent = patchedPublishEvent;
+      metadataApi[PATCH_FLAG_KEY] = true;
+      metadataApi[ORIGINAL_KEY] = originalPublishEvent;
+
+      cleanupOriginal = () => {
+        const storedOriginal = metadataApi[ORIGINAL_KEY] as
+          | typeof originalPublishEvent
+          | undefined;
+
+        api.publishEvent = (
+          typeof storedOriginal === "function"
+            ? storedOriginal
+            : originalPublishEvent
+        ) as typeof originalPublishEvent;
+
+        delete metadataApi[PATCH_FLAG_KEY];
+        delete metadataApi[ORIGINAL_KEY];
+      };
+    };
+
+    ensurePatched();
+
+    return () => {
+      isUnmounted = true;
+      if (retryHandle !== null) {
+        clearTimeout(retryHandle);
+        retryHandle = null;
+      }
+      if (cleanupOriginal) {
+        cleanupOriginal();
+        cleanupOriginal = null;
+      }
+    };
+  }, [apiRef]);
 
   const [columnVisible, setColumnVisible] = useState<
     Partial<Record<keyof IConnectionsItem, boolean>>
@@ -28,93 +153,95 @@ export const ConnectionTable = (props: Props) => {
     {},
   );
 
-  const [columns] = useState<GridColDef[]>([
-    {
-      field: "host",
-      headerName: t("Host"),
-      width: columnWidths["host"] || 220,
-      minWidth: 180,
-    },
-    {
-      field: "download",
-      headerName: t("Downloaded"),
-      width: columnWidths["download"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" "),
-    },
-    {
-      field: "upload",
-      headerName: t("Uploaded"),
-      width: columnWidths["upload"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" "),
-    },
-    {
-      field: "dlSpeed",
-      headerName: t("DL Speed"),
-      width: columnWidths["dlSpeed"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
-    },
-    {
-      field: "ulSpeed",
-      headerName: t("UL Speed"),
-      width: columnWidths["ulSpeed"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
-    },
-    {
-      field: "chains",
-      headerName: t("Chains"),
-      width: columnWidths["chains"] || 340,
-      minWidth: 180,
-    },
-    {
-      field: "rule",
-      headerName: t("Rule"),
-      width: columnWidths["rule"] || 280,
-      minWidth: 180,
-    },
-    {
-      field: "process",
-      headerName: t("Process"),
-      width: columnWidths["process"] || 220,
-      minWidth: 180,
-    },
-    {
-      field: "time",
-      headerName: t("Time"),
-      width: columnWidths["time"] || 120,
-      minWidth: 100,
-      align: "right",
-      headerAlign: "right",
-      sortComparator: (v1: string, v2: string) =>
-        new Date(v2).getTime() - new Date(v1).getTime(),
-      valueFormatter: (value: number) => dayjs(value).fromNow(),
-    },
-    {
-      field: "source",
-      headerName: t("Source"),
-      width: columnWidths["source"] || 200,
-      minWidth: 130,
-    },
-    {
-      field: "remoteDestination",
-      headerName: t("Destination"),
-      width: columnWidths["remoteDestination"] || 200,
-      minWidth: 130,
-    },
-    {
-      field: "type",
-      headerName: t("Type"),
-      width: columnWidths["type"] || 160,
-      minWidth: 100,
-    },
-  ]);
+  const columns = useMemo<GridColDef[]>(() => {
+    return [
+      {
+        field: "host",
+        headerName: t("Host"),
+        width: columnWidths["host"] || 220,
+        minWidth: 180,
+      },
+      {
+        field: "download",
+        headerName: t("Downloaded"),
+        width: columnWidths["download"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" "),
+      },
+      {
+        field: "upload",
+        headerName: t("Uploaded"),
+        width: columnWidths["upload"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" "),
+      },
+      {
+        field: "dlSpeed",
+        headerName: t("DL Speed"),
+        width: columnWidths["dlSpeed"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
+      },
+      {
+        field: "ulSpeed",
+        headerName: t("UL Speed"),
+        width: columnWidths["ulSpeed"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
+      },
+      {
+        field: "chains",
+        headerName: t("Chains"),
+        width: columnWidths["chains"] || 340,
+        minWidth: 180,
+      },
+      {
+        field: "rule",
+        headerName: t("Rule"),
+        width: columnWidths["rule"] || 280,
+        minWidth: 180,
+      },
+      {
+        field: "process",
+        headerName: t("Process"),
+        width: columnWidths["process"] || 220,
+        minWidth: 180,
+      },
+      {
+        field: "time",
+        headerName: t("Time"),
+        width: columnWidths["time"] || 120,
+        minWidth: 100,
+        align: "right",
+        headerAlign: "right",
+        sortComparator: (v1: string, v2: string) =>
+          new Date(v2).getTime() - new Date(v1).getTime(),
+        valueFormatter: (value: number) => dayjs(value).fromNow(),
+      },
+      {
+        field: "source",
+        headerName: t("Source"),
+        width: columnWidths["source"] || 200,
+        minWidth: 130,
+      },
+      {
+        field: "remoteDestination",
+        headerName: t("Destination"),
+        width: columnWidths["remoteDestination"] || 200,
+        minWidth: 130,
+      },
+      {
+        field: "type",
+        headerName: t("Type"),
+        width: columnWidths["type"] || 160,
+        minWidth: 100,
+      },
+    ];
+  }, [columnWidths, t]);
 
   const handleColumnResize = (params: GridColumnResizeParams) => {
     const { colDef, width } = params;
@@ -156,6 +283,7 @@ export const ConnectionTable = (props: Props) => {
 
   return (
     <DataGrid
+      apiRef={apiRef}
       hideFooter
       rows={connRows}
       columns={columns}

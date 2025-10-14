@@ -86,7 +86,7 @@ impl WebDavClient {
                     || verge.webdav_username.is_none()
                     || verge.webdav_password.is_none()
                 {
-                    let msg = "Unable to create web dav client, please make sure the webdav config is correct".to_string();
+                    let msg: String = "Unable to create web dav client, please make sure the webdav config is correct".into();
                     return Err(anyhow::Error::msg(msg));
                 }
 
@@ -95,7 +95,7 @@ impl WebDavClient {
                         .webdav_url
                         .unwrap_or_default()
                         .trim_end_matches('/')
-                        .to_string(),
+                        .into(),
                     username: verge.webdav_username.unwrap_or_default(),
                     password: verge.webdav_password.unwrap_or_default(),
                 };

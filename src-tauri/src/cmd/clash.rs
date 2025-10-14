@@ -2,6 +2,7 @@ use std::collections::VecDeque;
 
 use super::CmdResult;
 use crate::{
+    cmd::StringifyErr,
     config::Config,
     core::{CoreManager, handle},
 };
@@ -66,7 +67,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
             }
         }
         Err(err) => {
-            let error_msg = err.to_string();
+            let error_msg = err;
             logging!(error, Type::Core, "failed to change core: {error_msg}");
             handle::Handle::notice_message("config_core::change_error", &error_msg);
             Ok(Some(error_msg))
@@ -126,14 +127,12 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 
     // 获取DNS配置文件路径
     let dns_path = dirs::app_home_dir()
-        .map_err(|e| e.to_string())?
+        .stringify_err()?
         .join("dns_config.yaml");
 
     // 保存DNS配置到文件
-    let yaml_str = serde_yaml_ng::to_string(&dns_config).map_err(|e| e.to_string())?;
-    fs::write(&dns_path, yaml_str)
-        .await
-        .map_err(|e| e.to_string())?;
+    let yaml_str = serde_yaml_ng::to_string(&dns_config).stringify_err()?;
+    fs::write(&dns_path, yaml_str).await.stringify_err()?;
     logging!(info, Type::Config, "DNS config saved to {dns_path:?}");
 
     Ok(())
@@ -151,7 +150,7 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
     if apply {
         // 读取DNS配置文件
         let dns_path = dirs::app_home_dir()
-            .map_err(|e| e.to_string())?
+            .stringify_err()?
             .join("dns_config.yaml");
 
         if !dns_path.exists() {
@@ -159,16 +158,16 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             return Err("DNS config file not found".into());
         }
 
-        let dns_yaml = tokio::fs::read_to_string(&dns_path).await.map_err(|e| {
-            logging!(error, Type::Config, "Failed to read DNS config: {e}");
-            e.to_string()
-        })?;
+        let dns_yaml = tokio::fs::read_to_string(&dns_path)
+            .await
+            .stringify_err_log(|e| {
+                logging!(error, Type::Config, "Failed to read DNS config: {e}");
+            })?;
 
         // 解析DNS配置
-        let patch_config =
-            serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).map_err(|e| {
+        let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+            .stringify_err_log(|e| {
                 logging!(error, Type::Config, "Failed to parse DNS config: {e}");
-                e.to_string()
             })?;
 
         logging!(info, Type::Config, "Applying DNS config from file");
@@ -181,24 +180,19 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         Config::runtime().await.draft_mut().patch_config(patch);
 
         // 重新生成配置
-        Config::generate().await.map_err(|err| {
-            logging!(
-                error,
-                Type::Config,
-                "Failed to regenerate config with DNS: {err}"
-            );
-            "Failed to regenerate config with DNS".to_string()
+        Config::generate().await.stringify_err_log(|err| {
+            let err = format!("Failed to regenerate config with DNS: {err}");
+            logging!(error, Type::Config, "{err}");
         })?;
 
         // 应用新配置
-        CoreManager::global().update_config().await.map_err(|err| {
-            logging!(
-                error,
-                Type::Config,
-                "Failed to apply config with DNS: {err}"
-            );
-            "Failed to apply config with DNS".to_string()
-        })?;
+        CoreManager::global()
+            .update_config()
+            .await
+            .stringify_err_log(|err| {
+                let err = format!("Failed to apply config with DNS: {err}");
+                logging!(error, Type::Config, "{err}");
+            })?;
 
         logging!(info, Type::Config, "DNS config successfully applied");
         handle::Handle::refresh_clash();
@@ -210,19 +204,18 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             "DNS settings disabled, regenerating config"
         );
 
-        Config::generate().await.map_err(|err| {
-            logging!(error, Type::Config, "Failed to regenerate config: {err}");
-            "Failed to regenerate config".to_string()
+        Config::generate().await.stringify_err_log(|err| {
+            let err = format!("Failed to regenerate config: {err}");
+            logging!(error, Type::Config, "{err}");
         })?;
 
-        CoreManager::global().update_config().await.map_err(|err| {
-            logging!(
-                error,
-                Type::Config,
-                "Failed to apply regenerated config: {err}"
-            );
-            "Failed to apply regenerated config".to_string()
-        })?;
+        CoreManager::global()
+            .update_config()
+            .await
+            .stringify_err_log(|err| {
+                let err = format!("Failed to apply regenerated config: {err}");
+                logging!(error, Type::Config, "{err}");
+            })?;
 
         logging!(info, Type::Config, "Config regenerated successfully");
         handle::Handle::refresh_clash();
@@ -237,7 +230,7 @@ pub fn check_dns_config_exists() -> CmdResult<bool> {
     use crate::utils::dirs;
 
     let dns_path = dirs::app_home_dir()
-        .map_err(|e| e.to_string())?
+        .stringify_err()?
         .join("dns_config.yaml");
 
     Ok(dns_path.exists())
@@ -250,16 +243,14 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
     use tokio::fs;
 
     let dns_path = dirs::app_home_dir()
-        .map_err(|e| e.to_string())?
+        .stringify_err()?
         .join("dns_config.yaml");
 
-    if !fs::try_exists(&dns_path).await.map_err(|e| e.to_string())? {
+    if !fs::try_exists(&dns_path).await.stringify_err()? {
         return Err("DNS config file not found".into());
     }
 
-    let content = fs::read_to_string(&dns_path)
-        .await
-        .map_err(|e| e.to_string())?;
+    let content = fs::read_to_string(&dns_path).await.stringify_err()?;
     Ok(content)
 }
 
@@ -268,21 +259,18 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
 pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
     use crate::{core::CoreManager, utils::dirs};
 
-    let app_dir = dirs::app_home_dir().map_err(|e| e.to_string())?;
+    let app_dir = dirs::app_home_dir().stringify_err()?;
     let dns_path = app_dir.join("dns_config.yaml");
     let dns_path_str = dns_path.to_str().unwrap_or_default();
 
     if !dns_path.exists() {
-        return Ok((false, "DNS config file not found".to_string()));
+        return Ok((false, "DNS config file not found".into()));
     }
 
-    match CoreManager::global()
+    CoreManager::global()
         .validate_config_file(dns_path_str, None)
         .await
-    {
-        Ok(result) => Ok(result),
-        Err(e) => Err(e.to_string()),
-    }
+        .stringify_err()
 }
 
 #[tauri::command]

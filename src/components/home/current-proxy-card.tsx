@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
@@ -43,6 +43,9 @@ import delayManager from "@/services/delay";
 const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";
 const STORAGE_KEY_PROXY = "clash-verge-selected-proxy";
 const STORAGE_KEY_SORT_TYPE = "clash-verge-proxy-sort-type";
+
+const AUTO_CHECK_INITIAL_DELAY_MS = 1500;
+const AUTO_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 // 代理节点信息接口
 interface ProxyOption {
@@ -98,6 +101,7 @@ export const CurrentProxyCard = () => {
   const theme = useTheme();
   const { proxies, clashConfig, refreshProxy } = useAppData();
   const { verge } = useVerge();
+  const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false;
 
   // 统一代理选择器
   const { handleSelectChange } = useProxySelection({
@@ -120,6 +124,7 @@ export const CurrentProxyCard = () => {
     const savedSortType = localStorage.getItem(STORAGE_KEY_SORT_TYPE);
     return savedSortType ? (Number(savedSortType) as ProxySortType) : 0;
   });
+  const [delaySortRefresh, setDelaySortRefresh] = useState(0);
 
   // 定义状态类型
   type ProxyState = {
@@ -145,6 +150,25 @@ export const CurrentProxyCard = () => {
     },
     displayProxy: null,
   });
+
+  const autoCheckInProgressRef = useRef(false);
+  const latestTimeoutRef = useRef<number>(
+    verge?.default_latency_timeout || 10000,
+  );
+  const latestProxyRecordRef = useRef<any | null>(null);
+
+  useEffect(() => {
+    latestTimeoutRef.current = verge?.default_latency_timeout || 10000;
+  }, [verge?.default_latency_timeout]);
+
+  useEffect(() => {
+    if (!state.selection.proxy) {
+      latestProxyRecordRef.current = null;
+      return;
+    }
+    latestProxyRecordRef.current =
+      state.proxyData.records?.[state.selection.proxy] || null;
+  }, [state.selection.proxy, state.proxyData.records]);
 
   // 初始化选择的组
   useEffect(() => {
@@ -382,29 +406,112 @@ export const CurrentProxyCard = () => {
       ? getSignalIcon(currentDelay)
       : { icon: <SignalNone />, text: "未初始化", color: "text.secondary" };
 
+  const checkCurrentProxyDelay = useCallback(async () => {
+    if (autoCheckInProgressRef.current) return;
+    if (isDirectMode) return;
+
+    const groupName = state.selection.group;
+    const proxyName = state.selection.proxy;
+
+    if (!groupName || !proxyName) return;
+
+    const proxyRecord = latestProxyRecordRef.current;
+    if (!proxyRecord) {
+      console.log(
+        `[CurrentProxyCard] 自动延迟检测跳过，组: ${groupName}, 节点: ${proxyName} 未找到`,
+      );
+      return;
+    }
+
+    autoCheckInProgressRef.current = true;
+
+    const timeout = latestTimeoutRef.current || 10000;
+
+    try {
+      console.log(
+        `[CurrentProxyCard] 自动检测当前节点延迟，组: ${groupName}, 节点: ${proxyName}`,
+      );
+      if (proxyRecord.provider) {
+        await healthcheckProxyProvider(proxyRecord.provider);
+      } else {
+        await delayManager.checkDelay(proxyName, groupName, timeout);
+      }
+    } catch (error) {
+      console.error(
+        `[CurrentProxyCard] 自动检测当前节点延迟失败，组: ${groupName}, 节点: ${proxyName}`,
+        error,
+      );
+    } finally {
+      autoCheckInProgressRef.current = false;
+      refreshProxy();
+      if (sortType === 1) {
+        setDelaySortRefresh((prev) => prev + 1);
+      }
+    }
+  }, [
+    isDirectMode,
+    refreshProxy,
+    state.selection.group,
+    state.selection.proxy,
+    sortType,
+    setDelaySortRefresh,
+  ]);
+
+  useEffect(() => {
+    if (isDirectMode) return;
+    if (!autoDelayEnabled) return;
+    if (!state.selection.group || !state.selection.proxy) return;
+
+    let disposed = false;
+    let intervalTimer: ReturnType<typeof setTimeout> | null = null;
+    let initialTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const runAndSchedule = async () => {
+      if (disposed) return;
+      await checkCurrentProxyDelay();
+      if (disposed) return;
+      intervalTimer = setTimeout(runAndSchedule, AUTO_CHECK_INTERVAL_MS);
+    };
+
+    initialTimer = setTimeout(async () => {
+      await checkCurrentProxyDelay();
+      if (disposed) return;
+      intervalTimer = setTimeout(runAndSchedule, AUTO_CHECK_INTERVAL_MS);
+    }, AUTO_CHECK_INITIAL_DELAY_MS);
+
+    return () => {
+      disposed = true;
+      if (initialTimer) clearTimeout(initialTimer);
+      if (intervalTimer) clearTimeout(intervalTimer);
+    };
+  }, [
+    checkCurrentProxyDelay,
+    isDirectMode,
+    state.selection.group,
+    state.selection.proxy,
+    autoDelayEnabled,
+  ]);
+
   // 自定义渲染选择框中的值
-  const renderProxyValue = useCallback(
-    (selected: string) => {
-      if (!selected || !state.proxyData.records[selected]) return selected;
+  const renderProxyValue = (selected: string) => {
+    if (!selected || !state.proxyData.records[selected]) return selected;
 
-      const delayValue = delayManager.getDelayFix(
-        state.proxyData.records[selected],
-        state.selection.group,
-      );
+    const delayValue = delayManager.getDelayFix(
+      state.proxyData.records[selected],
+      state.selection.group,
+    );
 
-      return (
-        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography noWrap>{selected}</Typography>
-          <Chip
-            size="small"
-            label={delayManager.formatDelay(delayValue)}
-            color={convertDelayColor(delayValue)}
-          />
-        </Box>
-      );
-    },
-    [state.proxyData.records, state.selection.group],
-  );
+    return (
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Typography noWrap>{selected}</Typography>
+        <Chip
+          size="small"
+          label={delayManager.formatDelay(delayValue)}
+          color={convertDelayColor(delayValue)}
+        />
+      </Box>
+    );
+  };
 
   // 排序类型变更
   const handleSortTypeChange = useCallback(() => {
@@ -490,24 +597,28 @@ export const CurrentProxyCard = () => {
     }
 
     refreshProxy();
+    if (sortType === 1) {
+      setDelaySortRefresh((prev) => prev + 1);
+    }
   });
 
-  // 排序代理函数（增加非空校验）
-  const sortProxies = useCallback(
-    (proxies: ProxyOption[]) => {
-      if (!proxies || sortType === 0) return proxies;
+  // 计算要显示的代理选项（增加非空校验）
+  const proxyOptions = useMemo(() => {
+    const sortWithLatency = (proxiesToSort: ProxyOption[]) => {
+      if (!proxiesToSort || sortType === 0) return proxiesToSort;
 
-      // 确保数据存在
-      if (!state.proxyData.records || !state.selection.group) return proxies;
+      if (!state.proxyData.records || !state.selection.group) {
+        return proxiesToSort;
+      }
 
-      const list = [...proxies];
+      const list = [...proxiesToSort];
 
       if (sortType === 1) {
+        const refreshTick = delaySortRefresh;
         list.sort((a, b) => {
           const recordA = state.proxyData.records[a.name];
           const recordB = state.proxyData.records[b.name];
 
-          // 处理 record 不存在的情况
           if (!recordA) return 1;
           if (!recordB) return -1;
 
@@ -517,19 +628,16 @@ export const CurrentProxyCard = () => {
           if (ad === -1 || ad === -2) return 1;
           if (bd === -1 || bd === -2) return -1;
 
-          return ad - bd;
+          if (ad !== bd) return ad - bd;
+          return refreshTick >= 0 ? a.name.localeCompare(b.name) : 0;
         });
       } else {
         list.sort((a, b) => a.name.localeCompare(b.name));
       }
 
       return list;
-    },
-    [sortType, state.proxyData.records, state.selection.group],
-  );
+    };
 
-  // 计算要显示的代理选项（增加非空校验）
-  const proxyOptions = useMemo(() => {
     if (isDirectMode) {
       return [{ name: "DIRECT" }];
     }
@@ -543,7 +651,7 @@ export const CurrentProxyCard = () => {
           name: typeof p === "string" ? p : p.name,
         }));
 
-      return sortProxies(options);
+      return sortWithLatency(options);
     }
 
     // 规则模式
@@ -553,7 +661,7 @@ export const CurrentProxyCard = () => {
 
     if (group) {
       const options = group.all.map((name) => ({ name }));
-      return sortProxies(options);
+      return sortWithLatency(options);
     }
 
     return [];
@@ -563,7 +671,8 @@ export const CurrentProxyCard = () => {
     proxies,
     state.proxyData,
     state.selection.group,
-    sortProxies,
+    sortType,
+    delaySortRefresh,
   ]);
 
   // 获取排序图标

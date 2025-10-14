@@ -39,11 +39,11 @@ async fn get_bypass() -> String {
     };
     let custom_bypass = match res {
         Some(bypass) => bypass,
-        None => "".to_string(),
+        None => "".into(),
     };
 
     if custom_bypass.is_empty() {
-        DEFAULT_BYPASS.to_string()
+        DEFAULT_BYPASS.into()
     } else if use_default {
         format!("{DEFAULT_BYPASS},{custom_bypass}")
     } else {
@@ -180,11 +180,11 @@ impl Sysopt {
 
             let args = if pac_enable {
                 let address = format!("http://{proxy_host}:{pac_port}/commands/pac");
-                vec!["pac".to_string(), address]
+                vec!["pac".into(), address]
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass().await;
-                vec!["global".to_string(), address, bypass]
+                vec!["global".into(), address, bypass]
             };
 
             execute_sysproxy_command(args).await?;
@@ -208,7 +208,7 @@ impl Sysopt {
                     log::warn!(target: "app", "重置代理时获取自动代理配置失败: {e}, 使用默认配置");
                     Autoproxy {
                         enable: false,
-                        url: "".to_string(),
+                        url: "".into(),
                     }
                 }
             };
@@ -220,7 +220,7 @@ impl Sysopt {
 
         #[cfg(target_os = "windows")]
         {
-            execute_sysproxy_command(vec!["set".to_string(), "1".to_string()]).await?;
+            execute_sysproxy_command(vec!["set".into(), "1".into()]).await?;
         }
 
         Ok(())
@@ -241,14 +241,14 @@ impl Sysopt {
         #[cfg(target_os = "windows")]
         {
             if is_enable {
-                if let Err(e) = startup_shortcut::create_shortcut() {
+                if let Err(e) = startup_shortcut::create_shortcut().await {
                     log::error!(target: "app", "创建启动快捷方式失败: {e}");
                     // 如果快捷方式创建失败，回退到原来的方法
                     self.try_original_autostart_method(is_enable);
                 } else {
                     return Ok(());
                 }
-            } else if let Err(e) = startup_shortcut::remove_shortcut() {
+            } else if let Err(e) = startup_shortcut::remove_shortcut().await {
                 log::error!(target: "app", "删除启动快捷方式失败: {e}");
                 self.try_original_autostart_method(is_enable);
             } else {

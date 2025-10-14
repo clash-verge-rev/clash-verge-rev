@@ -457,9 +457,9 @@ impl Timer {
     fn emit_update_event(_uid: &str, _is_start: bool) {
         {
             if _is_start {
-                super::handle::Handle::notify_profile_update_started(_uid.to_string());
+                super::handle::Handle::notify_profile_update_started(_uid.into());
             } else {
-                super::handle::Handle::notify_profile_update_completed(_uid.to_string());
+                super::handle::Handle::notify_profile_update_completed(_uid.into());
             }
         }
     }

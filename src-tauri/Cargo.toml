@@ -40,8 +40,8 @@ tokio = { version = "1.47.1", features = [
   "sync",
 ] }
 serde = { version = "1.0.228", features = ["derive"] }
-reqwest = { version = "0.12.23", features = ["json", "cookies"] }
-regex = "1.12.1"
+reqwest = { version = "0.12.24", features = ["json", "cookies"] }
+regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
 tauri = { version = "2.8.5", features = [
   "protocol-asset",
@@ -89,6 +89,7 @@ clash_verge_logger = { version = "0.1.0", git = "https://github.com/clash-verge-
 clash_verge_service_ipc = { version = "2.0.16", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+async-trait = "0.1.89"
 # clash_verge_service_ipc = { version = "2.0.16", features = [
 #   "client",
 # ], path = "../../clash-verge-service-ipc" }
@@ -125,6 +126,7 @@ custom-protocol = ["tauri/custom-protocol"]
 verge-dev = ["clash_verge_logger/color"]
 tauri-dev = []
 tokio-trace = ["console-subscriber"]
+clippy = ["tauri/test"]
 
 [profile.release]
 panic = "abort"

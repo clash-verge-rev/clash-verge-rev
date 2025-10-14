@@ -9,10 +9,13 @@ use crate::{logging, utils::logging::Type};
 mod bahamut;
 mod bilibili;
 mod chatgpt;
+mod claude;
 mod disney_plus;
 mod gemini;
 mod netflix;
 mod prime_video;
+mod spotify;
+mod tiktok;
 mod types;
 mod utils;
 mod youtube;
@@ -22,10 +25,13 @@ pub use types::UnlockItem;
 use bahamut::check_bahamut_anime;
 use bilibili::{check_bilibili_china_mainland, check_bilibili_hk_mc_tw};
 use chatgpt::check_chatgpt_combined;
+use claude::check_claude;
 use disney_plus::check_disney_plus;
 use gemini::check_gemini;
 use netflix::check_netflix;
 use prime_video::check_prime_video;
+use spotify::check_spotify;
+use tiktok::check_tiktok;
 use youtube::check_youtube_premium;
 
 #[command]
@@ -83,6 +89,15 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
         let client = Arc::clone(&client_arc);
         let results = Arc::clone(&results);
         tasks.spawn(async move {
+            let result = check_claude(&client).await;
+            results.lock().await.push(result);
+        });
+    }
+
+    {
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
+        tasks.spawn(async move {
             let result = check_gemini(&client).await;
             results.lock().await.push(result);
         });
@@ -120,6 +135,24 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
         let results = Arc::clone(&results);
         tasks.spawn(async move {
             let result = check_disney_plus(&client).await;
+            results.lock().await.push(result);
+        });
+    }
+
+    {
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
+        tasks.spawn(async move {
+            let result = check_spotify(&client).await;
+            results.lock().await.push(result);
+        });
+    }
+
+    {
+        let client = Arc::clone(&client_arc);
+        let results = Arc::clone(&results);
+        tasks.spawn(async move {
+            let result = check_tiktok(&client).await;
             results.lock().await.push(result);
         });
     }

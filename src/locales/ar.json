@@ -327,6 +327,8 @@
   "Auto Log Clean": "تنظيف السجلات تلقائيًا",
   "Never Clean": "عدم التنظيف أبدًا",
   "Retain _n Days": "الاحتفاظ لمدة {{n}} يومًا",
+  "Auto Delay Detection": "اكتشاف التأخير التلقائي",
+  "Auto Delay Detection Info": "يختبر زمن استجابة العقدة الحالية على نحو دوري في الخلفية",
   "Default Latency Test": "اختبار التأخير الافتراضي",
   "Default Latency Test Info": "يُستخدم فقط لاختبار طلب HTTP العميل. لن يؤثر على ملف التكوين",
   "Default Latency Timeout": "مهلة التأخير الافتراضية",

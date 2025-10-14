@@ -55,13 +55,13 @@ impl Default for ProxyState {
             pac_enabled: false,
             auto_proxy: Autoproxy {
                 enable: false,
-                url: "".to_string(),
+                url: "".into(),
             },
             sys_proxy: Sysproxy {
                 enable: false,
-                host: "127.0.0.1".to_string(),
+                host: "127.0.0.1".into(),
                 port: 7897,
-                bypass: "".to_string(),
+                bypass: "".into(),
             },
             last_updated: std::time::Instant::now(),
             is_healthy: true,
@@ -519,7 +519,7 @@ impl EventDrivenProxyManager {
             verge
                 .proxy_host
                 .clone()
-                .unwrap_or_else(|| "127.0.0.1".to_string())
+                .unwrap_or_else(|| "127.0.0.1".into())
         };
         let pac_port = IVerge::get_singleton_port();
         Autoproxy {
@@ -534,7 +534,7 @@ impl EventDrivenProxyManager {
         let proxy_host = verge_config.latest_ref().proxy_host.clone();
 
         let port = verge_mixed_port.unwrap_or(Config::clash().await.latest_ref().get_mixed_port());
-        let proxy_host = proxy_host.unwrap_or_else(|| "127.0.0.1".to_string());
+        let proxy_host = proxy_host.unwrap_or_else(|| "127.0.0.1".into());
 
         Sysproxy {
             enable: true,

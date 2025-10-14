@@ -398,5 +398,7 @@
   "View Profile-Script": "프로필-스크립트 보기",
   "View Profile-Merge": "프로필-병합 보기",
   "Update Successful": "업데이트 성공",
-  "Update Failed": "업데이트 실패"
+  "Update Failed": "업데이트 실패",
+  "Auto Delay Detection": "자동 지연 감지",
+  "Auto Delay Detection Info": "백그라운드에서 현재 노드의 지연을 주기적으로 검사합니다"
 }

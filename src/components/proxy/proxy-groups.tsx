@@ -80,6 +80,16 @@ export const ProxyGroups = (props: Props) => {
     selectedGroup,
   );
 
+  const getGroupHeadState = useCallback(
+    (groupName: string) => {
+      const headItem = renderList.find(
+        (item) => item.type === 1 && item.group?.name === groupName,
+      );
+      return headItem?.headState;
+    },
+    [renderList],
+  );
+
   // 统代理选择
   const { handleProxyGroupChange } = useProxySelection({
     onSuccess: () => {
@@ -297,9 +307,13 @@ export const ProxyGroups = (props: Props) => {
       console.log(`[ProxyGroups] 延迟测试完成，组: ${groupName}`);
     } catch (error) {
       console.error(`[ProxyGroups] 延迟测试出错，组: ${groupName}`, error);
+    } finally {
+      const headState = getGroupHeadState(groupName);
+      if (headState?.sortType === 1) {
+        onHeadState(groupName, { sortType: headState.sortType });
+      }
+      onProxies();
     }
-
-    onProxies();
   });
 
   // 滚到对应的节点
