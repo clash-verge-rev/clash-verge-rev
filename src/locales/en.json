@@ -703,5 +703,6 @@
   "items": "items",
   "Select All": "Select All",
   "Selected": "Selected",
-  "Selected profiles deleted successfully": "Selected profiles deleted successfully"
+  "Selected profiles deleted successfully": "Selected profiles deleted successfully",
+  "Prefer System Titlebar": "Prefer System Titlebar"
 }
