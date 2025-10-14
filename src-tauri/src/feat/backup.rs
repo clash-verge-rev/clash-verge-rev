@@ -105,7 +105,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
 }
 
 /// Create a backup and save to local storage
-pub async fn create_local_backup() -> Result<()> {
+pub fn create_local_backup() -> Result<()> {
     let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
         log::error!(target: "app", "Failed to create local backup: {err:#?}");
         err
@@ -151,7 +151,7 @@ fn move_file(from: PathBuf, to: PathBuf) -> Result<()> {
 }
 
 /// List local backups
-pub async fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
+pub fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
     let backup_dir = local_backup_dir()?;
     if !backup_dir.exists() {
         return Ok(vec![]);
@@ -186,7 +186,7 @@ pub async fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
 }
 
 /// Delete local backup
-pub async fn delete_local_backup(filename: String) -> Result<()> {
+pub fn delete_local_backup(filename: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
     let target_path = backup_dir.join(&filename);
     if !target_path.exists() {
@@ -230,7 +230,7 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
 }
 
 /// Export local backup file to user selected destination
-pub async fn export_local_backup(filename: String, destination: String) -> Result<()> {
+pub fn export_local_backup(filename: String, destination: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
     let source_path = backup_dir.join(&filename);
     if !source_path.exists() {
@@ -239,9 +239,7 @@ pub async fn export_local_backup(filename: String, destination: String) -> Resul
 
     let dest_path = PathBuf::from(destination);
     if let Some(parent) = dest_path.parent() {
-        if !parent.exists() {
-            fs::create_dir_all(parent)?;
-        }
+        fs::create_dir_all(parent)?;
     }
 
     fs::copy(&source_path, &dest_path)
