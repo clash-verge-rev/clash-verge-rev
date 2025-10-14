@@ -6,8 +6,8 @@ import {
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
-import { t } from "i18next";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import parseTraffic from "@/utils/parse-traffic";
 import { truncateStr } from "@/utils/truncate-str";
@@ -19,6 +19,7 @@ interface Props {
 
 export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
+  const { t } = useTranslation();
   const apiRef = useGridApiRef();
   useEffect(() => {
     const PATCH_FLAG_KEY = "__clashPatchedPublishEvent" as const;
@@ -152,93 +153,95 @@ export const ConnectionTable = (props: Props) => {
     {},
   );
 
-  const [columns] = useState<GridColDef[]>([
-    {
-      field: "host",
-      headerName: t("Host"),
-      width: columnWidths["host"] || 220,
-      minWidth: 180,
-    },
-    {
-      field: "download",
-      headerName: t("Downloaded"),
-      width: columnWidths["download"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" "),
-    },
-    {
-      field: "upload",
-      headerName: t("Uploaded"),
-      width: columnWidths["upload"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" "),
-    },
-    {
-      field: "dlSpeed",
-      headerName: t("DL Speed"),
-      width: columnWidths["dlSpeed"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
-    },
-    {
-      field: "ulSpeed",
-      headerName: t("UL Speed"),
-      width: columnWidths["ulSpeed"] || 88,
-      align: "right",
-      headerAlign: "right",
-      valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
-    },
-    {
-      field: "chains",
-      headerName: t("Chains"),
-      width: columnWidths["chains"] || 340,
-      minWidth: 180,
-    },
-    {
-      field: "rule",
-      headerName: t("Rule"),
-      width: columnWidths["rule"] || 280,
-      minWidth: 180,
-    },
-    {
-      field: "process",
-      headerName: t("Process"),
-      width: columnWidths["process"] || 220,
-      minWidth: 180,
-    },
-    {
-      field: "time",
-      headerName: t("Time"),
-      width: columnWidths["time"] || 120,
-      minWidth: 100,
-      align: "right",
-      headerAlign: "right",
-      sortComparator: (v1: string, v2: string) =>
-        new Date(v2).getTime() - new Date(v1).getTime(),
-      valueFormatter: (value: number) => dayjs(value).fromNow(),
-    },
-    {
-      field: "source",
-      headerName: t("Source"),
-      width: columnWidths["source"] || 200,
-      minWidth: 130,
-    },
-    {
-      field: "remoteDestination",
-      headerName: t("Destination"),
-      width: columnWidths["remoteDestination"] || 200,
-      minWidth: 130,
-    },
-    {
-      field: "type",
-      headerName: t("Type"),
-      width: columnWidths["type"] || 160,
-      minWidth: 100,
-    },
-  ]);
+  const columns = useMemo<GridColDef[]>(() => {
+    return [
+      {
+        field: "host",
+        headerName: t("Host"),
+        width: columnWidths["host"] || 220,
+        minWidth: 180,
+      },
+      {
+        field: "download",
+        headerName: t("Downloaded"),
+        width: columnWidths["download"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" "),
+      },
+      {
+        field: "upload",
+        headerName: t("Uploaded"),
+        width: columnWidths["upload"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" "),
+      },
+      {
+        field: "dlSpeed",
+        headerName: t("DL Speed"),
+        width: columnWidths["dlSpeed"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
+      },
+      {
+        field: "ulSpeed",
+        headerName: t("UL Speed"),
+        width: columnWidths["ulSpeed"] || 88,
+        align: "right",
+        headerAlign: "right",
+        valueFormatter: (value: number) => parseTraffic(value).join(" ") + "/s",
+      },
+      {
+        field: "chains",
+        headerName: t("Chains"),
+        width: columnWidths["chains"] || 340,
+        minWidth: 180,
+      },
+      {
+        field: "rule",
+        headerName: t("Rule"),
+        width: columnWidths["rule"] || 280,
+        minWidth: 180,
+      },
+      {
+        field: "process",
+        headerName: t("Process"),
+        width: columnWidths["process"] || 220,
+        minWidth: 180,
+      },
+      {
+        field: "time",
+        headerName: t("Time"),
+        width: columnWidths["time"] || 120,
+        minWidth: 100,
+        align: "right",
+        headerAlign: "right",
+        sortComparator: (v1: string, v2: string) =>
+          new Date(v2).getTime() - new Date(v1).getTime(),
+        valueFormatter: (value: number) => dayjs(value).fromNow(),
+      },
+      {
+        field: "source",
+        headerName: t("Source"),
+        width: columnWidths["source"] || 200,
+        minWidth: 130,
+      },
+      {
+        field: "remoteDestination",
+        headerName: t("Destination"),
+        width: columnWidths["remoteDestination"] || 200,
+        minWidth: 130,
+      },
+      {
+        field: "type",
+        headerName: t("Type"),
+        width: columnWidths["type"] || 160,
+        minWidth: 100,
+      },
+    ];
+  }, [columnWidths, t]);
 
   const handleColumnResize = (params: GridColumnResizeParams) => {
     const { colDef, width } = params;
