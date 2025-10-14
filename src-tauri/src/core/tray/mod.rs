@@ -605,11 +605,46 @@ async fn create_tray_menu(
 
     let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await;
 
+    let runtime_proxy_groups_order = cmd::get_runtime_config()
+        .await
+        .map_err(|e| {
+            logging!(
+                error,
+                Type::Cmd,
+                "Failed to fetch runtime proxy groups for tray menu: {e}"
+            );
+        })
+        .ok()
+        .flatten()
+        .map(|config| {
+            config
+                .get("proxy-groups")
+                .and_then(|groups| groups.as_sequence())
+                .map(|groups| {
+                    groups
+                        .iter()
+                        .filter_map(|group| group.get("name"))
+                        .filter_map(|name| name.as_str())
+                        .map(|name| name.to_string())
+                        .collect::<Vec<String>>()
+                })
+                .unwrap_or_default()
+        });
+
+    let proxy_group_order_map = runtime_proxy_groups_order.as_ref().map(|group_names| {
+        group_names
+            .iter()
+            .enumerate()
+            .map(|(index, name)| (name.clone(), index))
+            .collect::<HashMap<String, usize>>()
+    });
+
+    let verge_settings = Config::verge().await.latest_ref().clone();
+    let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(false);
+
     let version = env!("CARGO_PKG_VERSION");
 
-    let hotkeys = Config::verge()
-        .await
-        .latest_ref()
+    let hotkeys = verge_settings
         .hotkeys
         .as_ref()
         .map(|h| {
@@ -653,8 +688,7 @@ async fn create_tray_menu(
 
     // 代理组子菜单
     let proxy_submenus: Vec<Submenu<Wry>> = {
-        let mut submenus = Vec::new();
-        let mut group_name_submenus_hash = HashMap::new();
+        let mut submenus: Vec<(String, usize, Submenu<Wry>)> = Vec::new();
 
         // TODO: 应用启动时，内核还未启动完全，无法获取代理节点信息
         if let Ok(proxy_nodes_data) = proxy_nodes_data {
@@ -745,53 +779,32 @@ async fn create_tray_menu(
                     true,
                     &group_items_refs,
                 ) {
-                    group_name_submenus_hash.insert(group_name.to_string(), submenu);
+                    let insertion_index = submenus.len();
+                    submenus.push((group_name.to_string(), insertion_index, submenu));
                 } else {
                     log::warn!(target: "app", "创建代理组子菜单失败: {}", group_name);
                 }
             }
         }
 
-        // 获取运行时代理组配置
-        let runtime_proxy_groups_config = cmd::get_runtime_config()
-            .await
-            .map_err(|e| {
-                logging!(
-                    error,
-                    Type::Cmd,
-                    "Failed to fetch runtime proxy groups for tray menu: {e}"
-                );
-            })
-            .ok()
-            .flatten()
-            .map(|config| {
-                config
-                    .get("proxy-groups")
-                    .and_then(|groups| groups.as_sequence())
-                    .map(|groups| {
-                        groups
-                            .iter()
-                            .filter_map(|group| group.get("name"))
-                            .filter_map(|name| name.as_str())
-                            .map(|name| name.into())
-                            .collect::<Vec<String>>()
-                    })
-                    .unwrap_or_default()
-            });
-
-        if let Some(runtime_proxy_groups_config) = runtime_proxy_groups_config {
-            for group_name in runtime_proxy_groups_config {
-                if let Some(submenu) = group_name_submenus_hash.get(&group_name) {
-                    submenus.push(submenu.clone());
-                }
-            }
-        } else {
-            for (_, submenu) in group_name_submenus_hash {
-                submenus.push(submenu);
-            }
+        if let Some(order_map) = proxy_group_order_map.as_ref() {
+            submenus.sort_by(
+                |(name_a, original_index_a, _), (name_b, original_index_b, _)| match (
+                    order_map.get(name_a),
+                    order_map.get(name_b),
+                ) {
+                    (Some(index_a), Some(index_b)) => index_a.cmp(index_b),
+                    (Some(_), None) => std::cmp::Ordering::Less,
+                    (None, Some(_)) => std::cmp::Ordering::Greater,
+                    (None, None) => original_index_a.cmp(original_index_b),
+                },
+            );
         }
 
         submenus
+            .into_iter()
+            .map(|(_, _, submenu)| submenu)
+            .collect()
     };
 
     // Pre-fetch all localized strings
@@ -865,22 +878,34 @@ async fn create_tray_menu(
     )?;
 
     // 创建代理主菜单
-    let proxies_submenu = if !proxy_submenus.is_empty() {
-        let proxy_submenu_refs: Vec<&dyn IsMenuItem<Wry>> = proxy_submenus
-            .iter()
-            .map(|submenu| submenu as &dyn IsMenuItem<Wry>)
-            .collect();
+    let (proxies_submenu, inline_proxy_items): (Option<Submenu<Wry>>, Vec<&dyn IsMenuItem<Wry>>) =
+        if show_proxy_groups_inline {
+            (
+                None,
+                proxy_submenus
+                    .iter()
+                    .map(|submenu| submenu as &dyn IsMenuItem<Wry>)
+                    .collect(),
+            )
+        } else if !proxy_submenus.is_empty() {
+            let proxy_submenu_refs: Vec<&dyn IsMenuItem<Wry>> = proxy_submenus
+                .iter()
+                .map(|submenu| submenu as &dyn IsMenuItem<Wry>)
+                .collect();
 
-        Some(Submenu::with_id_and_items(
-            app_handle,
-            "proxies",
-            proxies_text,
-            true,
-            &proxy_submenu_refs,
-        )?)
-    } else {
-        None
-    };
+            (
+                Some(Submenu::with_id_and_items(
+                    app_handle,
+                    "proxies",
+                    proxies_text,
+                    true,
+                    &proxy_submenu_refs,
+                )?),
+                Vec::new(),
+            )
+        } else {
+            (None, Vec::new())
+        };
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
@@ -991,7 +1016,11 @@ async fn create_tray_menu(
     ];
 
     // 如果有代理节点，添加代理节点菜单
-    if let Some(ref proxies_menu) = proxies_submenu {
+    if show_proxy_groups_inline {
+        if !inline_proxy_items.is_empty() {
+            menu_items.extend_from_slice(&inline_proxy_items);
+        }
+    } else if let Some(ref proxies_menu) = proxies_submenu {
         menu_items.push(proxies_menu);
     }
 

@@ -198,6 +198,9 @@ pub struct IVerge {
 
     pub enable_tray_icon: Option<bool>,
 
+    /// show proxy groups directly on tray root menu
+    pub tray_inline_proxy_groups: Option<bool>,
+
     /// 自动进入轻量模式
     pub enable_auto_light_weight_mode: Option<bool>,
 
@@ -398,6 +401,7 @@ impl IVerge {
             webdav_password: None,
             enable_tray_speed: Some(false),
             enable_tray_icon: Some(true),
+            tray_inline_proxy_groups: Some(false),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
@@ -489,6 +493,7 @@ impl IVerge {
         patch!(webdav_password);
         patch!(enable_tray_speed);
         patch!(enable_tray_icon);
+        patch!(tray_inline_proxy_groups);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);
         patch!(enable_dns_settings);
@@ -585,6 +590,7 @@ pub struct IVergeResponse {
     pub webdav_password: Option<String>,
     pub enable_tray_speed: Option<bool>,
     pub enable_tray_icon: Option<bool>,
+    pub tray_inline_proxy_groups: Option<bool>,
     pub enable_auto_light_weight_mode: Option<bool>,
     pub auto_light_weight_minutes: Option<u64>,
     pub enable_dns_settings: Option<bool>,
@@ -658,6 +664,7 @@ impl From<IVerge> for IVergeResponse {
             webdav_password: verge.webdav_password,
             enable_tray_speed: verge.enable_tray_speed,
             enable_tray_icon: verge.enable_tray_icon,
+            tray_inline_proxy_groups: verge.tray_inline_proxy_groups,
             enable_auto_light_weight_mode: verge.enable_auto_light_weight_mode,
             auto_light_weight_minutes: verge.auto_light_weight_minutes,
             enable_dns_settings: verge.enable_dns_settings,

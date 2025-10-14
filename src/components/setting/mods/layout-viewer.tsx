@@ -22,6 +22,7 @@ import { useWindowDecorations } from "@/hooks/use-window";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
+
 import { GuardState } from "./guard-state";
 
 const OS = getSystem();
@@ -263,6 +264,19 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             </GuardState>
           </Item>
         )}
+        <Item>
+          <ListItemText primary={t("Show Proxy Groups Inline")} />
+          <GuardState
+            value={verge?.tray_inline_proxy_groups ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ tray_inline_proxy_groups: e })}
+            onGuard={(e) => patchVerge({ tray_inline_proxy_groups: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
 
         <Item>
           <ListItemText primary={t("Common Tray Icon")} />
