@@ -1,8 +1,9 @@
 use super::{Draft, IClashTemp, IProfiles, IRuntime, IVerge};
 use crate::{
+    cmd,
     config::{PrfItem, profiles_append_item_safe},
-    core::{CoreManager, handle},
-    enhance, logging,
+    core::{CoreManager, handle, service},
+    enhance, logging, logging_error,
     utils::{dirs, help, logging::Type},
 };
 use anyhow::{Result, anyhow};
@@ -73,6 +74,20 @@ impl Config {
             let script_item = PrfItem::from_script(Some("Script".to_string()))?;
             profiles_append_item_safe(script_item.clone()).await?;
         }
+
+        // init Tun mode
+        if !cmd::system::is_admin().unwrap_or_default()
+            && service::is_service_available().await.is_err()
+        {
+            let verge = Config::verge().await;
+            verge.draft_mut().enable_tun_mode = Some(false);
+            verge.apply();
+
+            // 分离数据获取和异步调用避免Send问题
+            let verge_data = Config::verge().await.latest_ref().clone();
+            logging_error!(Type::Core, verge_data.save_file().await);
+        }
+
         // 生成运行时配置
         if let Err(err) = Self::generate().await {
             logging!(error, Type::Config, "生成运行时配置失败: {}", err);
