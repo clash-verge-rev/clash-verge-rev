@@ -179,7 +179,7 @@ impl Sysopt {
                 vec!["pac".into(), address]
             } else {
                 let address = format!("{proxy_host}:{port}");
-                let bypass = get_bypass().await;
+                let bypass = get_bypass();
                 vec!["global".into(), address, bypass]
             };
 
@@ -237,14 +237,14 @@ impl Sysopt {
         #[cfg(target_os = "windows")]
         {
             if is_enable {
-                if let Err(e) = startup_shortcut::create_shortcut().await {
+                if let Err(e) = startup_shortcut::create_shortcut() {
                     log::error!(target: "app", "创建启动快捷方式失败: {e}");
                     // 如果快捷方式创建失败，回退到原来的方法
                     self.try_original_autostart_method(is_enable);
                 } else {
                     return Ok(());
                 }
-            } else if let Err(e) = startup_shortcut::remove_shortcut().await {
+            } else if let Err(e) = startup_shortcut::remove_shortcut() {
                 log::error!(target: "app", "删除启动快捷方式失败: {e}");
                 self.try_original_autostart_method(is_enable);
             } else {

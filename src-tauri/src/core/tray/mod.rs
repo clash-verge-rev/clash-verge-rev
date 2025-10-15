@@ -320,7 +320,7 @@ impl Tray {
 
     /// 更新托盘图标
     #[cfg(target_os = "macos")]
-    pub async fn update_icon(&self) -> Result<()> {
+    pub fn update_icon(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             log::debug!(target: "app", "应用正在退出，跳过托盘图标更新");
             return Ok(());
@@ -336,15 +336,15 @@ impl Tray {
             }
         };
 
-        let verge = Config::verge().await.latest_ref().clone();
+        let verge = Config::verge().latest().clone();
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
         let (_is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
-            (true, true) => TrayState::get_tun_tray_icon().await,
-            (true, false) => TrayState::get_sysproxy_tray_icon().await,
-            (false, true) => TrayState::get_tun_tray_icon().await,
-            (false, false) => TrayState::get_common_tray_icon().await,
+            (true, true) => TrayState::get_tun_tray_icon(),
+            (true, false) => TrayState::get_sysproxy_tray_icon(),
+            (false, true) => TrayState::get_tun_tray_icon(),
+            (false, false) => TrayState::get_common_tray_icon(),
         };
 
         let colorful = verge.tray_icon.clone().unwrap_or("monochrome".into());
@@ -501,7 +501,7 @@ impl Tray {
 
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         let show_menu_on_left_click = {
-            let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
+            let tray_event = Config::verge().latest().tray_event.clone();
             let tray_event: String = tray_event.unwrap_or("main_window".into());
             tray_event.as_str() == "tray_menu"
         };

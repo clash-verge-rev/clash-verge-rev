@@ -108,20 +108,20 @@ fn bench_discard(c: &mut Criterion) {
 
 /// 基准：异步 with_data_modify
 fn bench_with_data_modify(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
-
-    c.bench_function("draft_with_data_modify", |b| {
-        b.to_async(&rt).iter(|| async {
-            let draft = make_draft();
-            let _res: Result<(), anyhow::Error> = draft
-                .with_data_modify(|mut box_data| async move {
-                    box_data.enable_auto_launch =
-                        Some(!box_data.enable_auto_launch.unwrap_or(false));
-                    Ok((box_data, ()))
-                })
-                .await;
+    if let Ok(rt) = Runtime::new() {
+        c.bench_function("draft_with_data_modify", |b| {
+            b.to_async(&rt).iter(|| async {
+                let draft = make_draft();
+                let _res: Result<(), anyhow::Error> = draft
+                    .with_data_modify(|mut box_data| async move {
+                        box_data.enable_auto_launch =
+                            Some(!box_data.enable_auto_launch.unwrap_or(false));
+                        Ok((box_data, ()))
+                    })
+                    .await;
+            });
         });
-    });
+    }
 }
 
 criterion_group!(

@@ -136,19 +136,19 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
             match std::fs::rename(&temp_path, &icon_path) {
                 Ok(_) => {}
                 Err(_) => {
-                    let _ = temp_path.remove_if_exists().await;
+                    let _ = temp_path.remove_if_exists();
                     if icon_path.exists() {
                         return Ok(icon_path.to_string_lossy().into());
                     }
                 }
             }
         } else {
-            let _ = temp_path.remove_if_exists().await;
+            let _ = temp_path.remove_if_exists();
         }
 
         Ok(icon_path.to_string_lossy().into())
     } else {
-        let _ = temp_path.remove_if_exists().await;
+        let _ = temp_path.remove_if_exists();
         Err(format!("下载的内容不是有效图片: {url}"))
     }
 }
@@ -183,12 +183,10 @@ pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<Stri
             icon_dir
                 .join(format!("{0}-{1}.png", icon_info.name, icon_info.previous_t))
                 .remove_if_exists()
-                .await
                 .unwrap_or_default();
             icon_dir
                 .join(format!("{0}-{1}.ico", icon_info.name, icon_info.previous_t))
                 .remove_if_exists()
-                .await
                 .unwrap_or_default();
         }
         logging!(

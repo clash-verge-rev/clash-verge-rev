@@ -5,7 +5,7 @@ use feat::LocalBackupFile;
 /// Create a local backup
 #[tauri::command]
 pub async fn create_local_backup() -> CmdResult<()> {
-    wrap_err!(feat::create_local_backup().await)
+    wrap_err!(feat::create_local_backup())
 }
 
 /// List local backups
@@ -17,7 +17,7 @@ pub fn list_local_backup() -> CmdResult<Vec<LocalBackupFile>> {
 /// Delete local backup
 #[tauri::command]
 pub async fn delete_local_backup(filename: String) -> CmdResult<()> {
-    wrap_err!(feat::delete_local_backup(filename).await)
+    wrap_err!(feat::delete_local_backup(filename))
 }
 
 /// Restore local backup

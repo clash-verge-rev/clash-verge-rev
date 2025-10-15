@@ -262,7 +262,7 @@ impl IProfiles {
 
     /// delete item
     /// if delete the current then return true
-    pub async fn delete_item(&mut self, uid: String) -> Result<bool> {
+    pub fn delete_item(&mut self, uid: String) -> Result<bool> {
         let current = self.current.as_ref().unwrap_or(&uid);
         let current = current.clone();
         let item = self.get_item(&uid)?;
@@ -289,10 +289,7 @@ impl IProfiles {
         if let Some(index) = index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir()?
-                .join(file)
-                .remove_if_exists()
-                .await;
+            let _ = dirs::app_profiles_dir()?.join(file).remove_if_exists();
         }
         // get the merge index
         for (i, _) in items.iter().enumerate() {
@@ -304,10 +301,7 @@ impl IProfiles {
         if let Some(index) = merge_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir()?
-                .join(file)
-                .remove_if_exists()
-                .await;
+            let _ = dirs::app_profiles_dir()?.join(file).remove_if_exists();
         }
         // get the script index
         for (i, _) in items.iter().enumerate() {
@@ -319,10 +313,7 @@ impl IProfiles {
         if let Some(index) = script_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir()?
-                .join(file)
-                .remove_if_exists()
-                .await;
+            let _ = dirs::app_profiles_dir()?.join(file).remove_if_exists();
         }
         // get the rules index
         for (i, _) in items.iter().enumerate() {
@@ -334,10 +325,7 @@ impl IProfiles {
         if let Some(index) = rules_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir()?
-                .join(file)
-                .remove_if_exists()
-                .await;
+            let _ = dirs::app_profiles_dir()?.join(file).remove_if_exists();
         }
         // get the proxies index
         for (i, _) in items.iter().enumerate() {
@@ -349,10 +337,7 @@ impl IProfiles {
         if let Some(index) = proxies_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir()?
-                .join(file)
-                .remove_if_exists()
-                .await;
+            let _ = dirs::app_profiles_dir()?.join(file).remove_if_exists();
         }
         // get the groups index
         for (i, _) in items.iter().enumerate() {
@@ -364,10 +349,7 @@ impl IProfiles {
         if let Some(index) = groups_index
             && let Some(file) = items.remove(index).file
         {
-            let _ = dirs::app_profiles_dir()?
-                .join(file)
-                .remove_if_exists()
-                .await;
+            let _ = dirs::app_profiles_dir()?.join(file).remove_if_exists();
         }
         // delete the original uid
         if current == uid {
@@ -494,7 +476,7 @@ impl IProfiles {
     }
 
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
-    pub async fn cleanup_orphaned_files(&self) -> Result<CleanupResult> {
+    pub fn cleanup_orphaned_files(&self) -> Result<CleanupResult> {
         let profiles_dir = dirs::app_profiles_dir()?;
 
         if !profiles_dir.exists() {
@@ -537,7 +519,7 @@ impl IProfiles {
 
                 // 检查是否为活跃文件
                 if !active_files.contains(file_name) {
-                    match path.to_path_buf().remove_if_exists().await {
+                    match path.to_path_buf().remove_if_exists() {
                         Ok(_) => {
                             deleted_files.push(file_name.into());
                             log::info!(target: "app", "已清理冗余文件: {file_name}");
@@ -694,7 +676,7 @@ pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()
 pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
     Config::profiles()
         .with_data_modify(|mut profiles| async move {
-            let deleted = profiles.delete_item(index).await?;
+            let deleted = profiles.delete_item(index)?;
             Ok((profiles, deleted))
         })
         .await

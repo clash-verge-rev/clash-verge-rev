@@ -36,7 +36,7 @@ pub fn get_exe_path() -> Result<PathBuf> {
 
 /// 创建快捷方式
 #[cfg(target_os = "windows")]
-pub async fn create_shortcut() -> Result<()> {
+pub fn create_shortcut() -> Result<()> {
     use crate::utils::dirs::PathBufExec;
 
     let exe_path = get_exe_path()?;
@@ -47,7 +47,6 @@ pub async fn create_shortcut() -> Result<()> {
     // 移除旧的快捷方式
     let _ = old_shortcut_path
         .remove_if_exists()
-        .await
         .inspect(|_| {
             info!(target: "app", "成功移除旧启动快捷方式");
         })
@@ -89,7 +88,7 @@ pub async fn create_shortcut() -> Result<()> {
 
 /// 删除快捷方式
 #[cfg(target_os = "windows")]
-pub async fn remove_shortcut() -> Result<()> {
+pub fn remove_shortcut() -> Result<()> {
     use crate::utils::dirs::PathBufExec;
 
     let startup_dir = get_startup_dir()?;
@@ -100,7 +99,6 @@ pub async fn remove_shortcut() -> Result<()> {
 
     let _ = old_shortcut_path
         .remove_if_exists()
-        .await
         .inspect(|_| {
             info!(target: "app", "成功删除旧启动快捷方式");
             removed_any = true;
@@ -111,7 +109,6 @@ pub async fn remove_shortcut() -> Result<()> {
 
     let _ = new_shortcut_path
         .remove_if_exists()
-        .await
         .inspect(|_| {
             info!(target: "app", "成功删除启动快捷方式");
             removed_any = true;

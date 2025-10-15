@@ -205,8 +205,8 @@ pub async fn exit_lightweight_mode() -> bool {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn add_light_weight_timer() {
-    logging_error!(Type::Lightweight, setup_light_weight_timer().await);
+pub fn add_light_weight_timer() {
+    logging_error!(Type::Lightweight, setup_light_weight_timer());
 }
 
 fn setup_window_close_listener() {

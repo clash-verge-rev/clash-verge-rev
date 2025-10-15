@@ -167,7 +167,7 @@ pub async fn delete_log() -> Result<()> {
 
             let duration = now.signed_duration_since(file_time);
             if duration.num_days() > day {
-                let _ = file.path().remove_if_exists().await;
+                let _ = file.path().remove_if_exists();
                 logging!(info, Type::Setup, "delete log file: {}", file_name);
             }
         }

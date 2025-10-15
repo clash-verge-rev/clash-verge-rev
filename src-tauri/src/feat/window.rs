@@ -93,8 +93,7 @@ async fn clean_async() -> bool {
 
             // 检查系统代理是否开启
             let sys_proxy_enabled = Config::verge()
-                .await
-                .latest_ref()
+                .latest()
                 .enable_system_proxy
                 .unwrap_or(false);
 
@@ -297,13 +296,12 @@ pub async fn hide() {
     use crate::module::lightweight::add_light_weight_timer;
 
     let enable_auto_light_weight_mode = Config::verge()
-        .await
         .data_mut()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
 
     if enable_auto_light_weight_mode {
-        add_light_weight_timer().await;
+        add_light_weight_timer();
     }
 
     if let Some(window) = handle::Handle::get_window()
