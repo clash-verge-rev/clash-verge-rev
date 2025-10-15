@@ -33,7 +33,7 @@ port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 parking_lot = "0.12.5"
 percent-encoding = "2.3.2"
-tokio = { version = "1.47.1", features = [
+tokio = { version = "1.48.0", features = [
   "rt-multi-thread",
   "macros",
   "time",
@@ -62,11 +62,11 @@ zip = "6.0.0"
 reqwest_dav = "0.2.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
-getrandom = "0.3.3"
+getrandom = "0.3.4"
 futures = "0.3.31"
 sys-locale = "0.3.2"
 libc = "0.2.177"
-gethostname = "1.0.2"
+gethostname = "1.1.0"
 hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
@@ -128,6 +128,11 @@ tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
 
+[[bench]]
+name = "draft_benchmark"
+path = "benches/draft_benchmark.rs"
+harness = false
+
 [profile.release]
 panic = "abort"
 codegen-units = 16
@@ -162,7 +167,7 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
-criterion = "0.7.0"
+criterion = { version = "0.7.0", features = ["async_tokio"] }
 
 [lints.clippy]
 # Core categories - most important for code safety and correctness

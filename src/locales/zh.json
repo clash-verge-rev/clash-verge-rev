@@ -703,5 +703,6 @@
   "items": "项目",
   "Select All": "全选",
   "Selected": "已选中",
-  "Selected profiles deleted successfully": "选中的订阅已成功删除"
+  "Selected profiles deleted successfully": "选中的订阅已成功删除",
+  "Prefer System Titlebar": "优先使用系统标题栏"
 }

@@ -118,7 +118,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={async (e) => {
+            onChange={async () => {
               await toggleDecorations();
             }}
           >
@@ -198,8 +198,8 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             value={verge?.menu_icon ?? "monochrome"}
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
-            onChange={(e) => onChangeData({ menu_icon: e })}
-            onGuard={(e) => patchVerge({ menu_icon: e })}
+            onChange={(value) => onChangeData({ menu_icon: value })}
+            onGuard={(value) => patchVerge({ menu_icon: value })}
           >
             <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
               <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>

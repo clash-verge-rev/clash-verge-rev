@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
-    "@eslint-react/eslint-plugin": "^2.2.1",
+    "@eslint-react/eslint-plugin": "^2.2.2",
     "@eslint/js": "^9.37.0",
     "@tauri-apps/cli": "2.8.4",
     "@types/js-yaml": "^4.0.9",
@@ -98,7 +98,7 @@
     "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react-hooks": "^7.0.0",
-    "eslint-plugin-react-refresh": "^0.4.23",
+    "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-unused-imports": "^4.2.0",
     "glob": "^11.0.3",
     "globals": "^16.4.0",
@@ -114,7 +114,7 @@
     "terser": "^5.44.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
-    "vite": "^7.1.9",
+    "vite": "^7.1.10",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.5.0"
   },

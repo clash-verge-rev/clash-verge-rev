@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 
 import { useProfiles } from "@/hooks/use-profiles";
 
@@ -25,15 +25,38 @@ export const DEFAULT_STATE: HeadState = {
   testUrl: "",
 };
 
+type HeadStateAction =
+  | { type: "reset" }
+  | { type: "replace"; payload: Record<string, HeadState> }
+  | { type: "update"; groupName: string; patch: Partial<HeadState> };
+
+function headStateReducer(
+  state: Record<string, HeadState>,
+  action: HeadStateAction,
+): Record<string, HeadState> {
+  switch (action.type) {
+    case "reset":
+      return {};
+    case "replace":
+      return action.payload;
+    case "update": {
+      const prev = state[action.groupName] || DEFAULT_STATE;
+      return { ...state, [action.groupName]: { ...prev, ...action.patch } };
+    }
+    default:
+      return state;
+  }
+}
+
 export function useHeadStateNew() {
   const { profiles } = useProfiles();
   const current = profiles?.current || "";
 
-  const [state, setState] = useState<Record<string, HeadState>>({});
+  const [state, dispatch] = useReducer(headStateReducer, {});
 
   useEffect(() => {
     if (!current) {
-      setState({});
+      dispatch({ type: "reset" });
       return;
     }
 
@@ -45,36 +68,39 @@ export function useHeadStateNew() {
       const value = data[current] || {};
 
       if (value && typeof value === "object") {
-        setState(value);
+        dispatch({ type: "replace", payload: value });
       } else {
-        setState({});
+        dispatch({ type: "reset" });
       }
-    } catch {}
+    } catch {
+      dispatch({ type: "reset" });
+    }
   }, [current]);
+
+  useEffect(() => {
+    if (!current) return;
+
+    const timer = setTimeout(() => {
+      try {
+        const item = localStorage.getItem(HEAD_STATE_KEY);
+
+        let data = (item ? JSON.parse(item) : {}) as HeadStateStorage;
+
+        if (!data || typeof data !== "object") data = {};
+
+        data[current] = state;
+
+        localStorage.setItem(HEAD_STATE_KEY, JSON.stringify(data));
+      } catch {}
+    });
+
+    return () => clearTimeout(timer);
+  }, [state, current]);
 
   const setHeadState = useCallback(
     (groupName: string, obj: Partial<HeadState>) => {
-      setState((old) => {
-        const state = old[groupName] || DEFAULT_STATE;
-        const ret = { ...old, [groupName]: { ...state, ...obj } };
-
-        // 保存到存储中
-        setTimeout(() => {
-          try {
-            const item = localStorage.getItem(HEAD_STATE_KEY);
-
-            let data = (item ? JSON.parse(item) : {}) as HeadStateStorage;
-
-            if (!data || typeof data !== "object") data = {};
-
-            data[current] = ret;
-
-            localStorage.setItem(HEAD_STATE_KEY, JSON.stringify(data));
-          } catch {}
-        });
-
-        return ret;
-      });
+      if (!current) return;
+      dispatch({ type: "update", groupName, patch: obj });
     },
     [current],
   );

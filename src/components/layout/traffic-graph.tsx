@@ -173,7 +173,11 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       context.globalAlpha = upLineAlpha;
       context.lineWidth = upLineWidth;
       context.strokeStyle = upLineColor;
-      lineStyle ? drawBezier(listUp, offset) : drawLine(listUp, offset);
+      if (lineStyle) {
+        drawBezier(listUp, offset);
+      } else {
+        drawLine(listUp, offset);
+      }
       context.stroke();
       context.closePath();
 
@@ -181,7 +185,11 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       context.globalAlpha = downLineAlpha;
       context.lineWidth = downLineWidth;
       context.strokeStyle = downLineColor;
-      lineStyle ? drawBezier(listDown, offset) : drawLine(listDown, offset);
+      if (lineStyle) {
+        drawBezier(listDown, offset);
+      } else {
+        drawLine(listDown, offset);
+      }
       context.stroke();
       context.closePath();
 

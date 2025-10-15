@@ -31,7 +31,7 @@ export const ClashModeCard = () => {
       );
     }
     return t("Core communication error");
-  }, [currentMode]);
+  }, [currentMode, t]);
 
   // 模式图标映射
   const modeIcons = useMemo(

@@ -31,8 +31,10 @@ interface Props {
   onHeadState: (val: Partial<HeadState>) => void;
 }
 
+const defaultSx: SxProps = {};
+
 export const ProxyHead = ({
-  sx = {},
+  sx = defaultSx,
   url,
   groupName,
   headState,

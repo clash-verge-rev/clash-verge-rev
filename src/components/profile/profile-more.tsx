@@ -25,12 +25,15 @@ interface Props {
   onSave?: (prev?: string, curr?: string) => void;
 }
 
+const EMPTY_LOG_INFO: [string, string][] = [];
+
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
-  const { id, logInfo = [], onSave } = props;
+  const { id, logInfo, onSave } = props;
 
+  const entries = logInfo ?? EMPTY_LOG_INFO;
   const { t } = useTranslation();
-  const [anchorEl, setAnchorEl] = useState<any>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [fileOpen, setFileOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
@@ -49,7 +52,7 @@ export const ProfileMore = (props: Props) => {
     }
   });
 
-  const hasError = !!logInfo.find((e) => e[0] === "exception");
+  const hasError = entries.some(([level]) => level === "exception");
 
   const itemMenu = [
     { label: "Edit File", handler: onEditFile },
@@ -71,7 +74,7 @@ export const ProfileMore = (props: Props) => {
         onContextMenu={(event) => {
           const { clientX, clientY } = event;
           setPosition({ top: clientY, left: clientX });
-          setAnchorEl(event.currentTarget);
+          setAnchorEl(event.currentTarget as HTMLElement);
           event.preventDefault();
         }}
       >
@@ -173,7 +176,7 @@ export const ProfileMore = (props: Props) => {
           schema={id === "Merge" ? "clash" : undefined}
           onSave={async (prev, curr) => {
             await saveProfileFile(id, curr ?? "");
-            onSave && onSave(prev, curr);
+            onSave?.(prev, curr);
           }}
           onClose={() => setFileOpen(false)}
         />
@@ -181,7 +184,7 @@ export const ProfileMore = (props: Props) => {
       {logOpen && (
         <LogViewer
           open={logOpen}
-          logInfo={logInfo}
+          logInfo={entries}
           onClose={() => setLogOpen(false)}
         />
       )}

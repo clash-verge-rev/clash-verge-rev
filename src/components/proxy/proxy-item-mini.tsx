@@ -1,7 +1,7 @@
 import { CheckCircleOutlineRounded } from "@mui/icons-material";
 import { alpha, Box, ListItemButton, styled, Typography } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseLoading } from "@/components/base";
@@ -26,7 +26,7 @@ export const ProxyItemMini = (props: Props) => {
   const isPreset = presetList.includes(proxy.name);
   // -1/<=0 为 不显示
   // -2 为 loading
-  const [delay, setDelay] = useState(-1);
+  const [delay, setDelay] = useReducer((_: number, value: number) => value, -1);
   const { verge } = useVerge();
   const timeout = verge?.default_latency_timeout || 10000;
 
@@ -39,10 +39,14 @@ export const ProxyItemMini = (props: Props) => {
     };
   }, [isPreset, proxy.name, group.name]);
 
-  useEffect(() => {
+  const updateDelay = useCallback(() => {
     if (!proxy) return;
     setDelay(delayManager.getDelayFix(proxy, group.name));
   }, [proxy, group.name]);
+
+  useEffect(() => {
+    updateDelay();
+  }, [updateDelay]);
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);

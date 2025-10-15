@@ -33,7 +33,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, patchVerge } = useVerge();
 
   const [hotkeyMap, setHotkeyMap] = useState<Record<string, string[]>>({});
-  const [enableGlobalHotkey, setEnableHotkey] = useState(
+  const [enableGlobalHotkey, setEnableGlobalHotkey] = useState(
     verge?.enable_global_hotkey ?? true,
   );
 
@@ -102,7 +102,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
         <Switch
           edge="end"
           checked={enableGlobalHotkey}
-          onChange={(e) => setEnableHotkey(e.target.checked)}
+          onChange={(e) => setEnableGlobalHotkey(e.target.checked)}
         />
       </ItemWrapper>
 

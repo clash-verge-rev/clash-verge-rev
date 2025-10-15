@@ -36,7 +36,13 @@ import {
   cancelIdleCallback,
 } from "foxact/request-idle-callback";
 import yaml from "js-yaml";
-import { useEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
@@ -160,7 +166,7 @@ export const GroupsEditorViewer = (props: Props) => {
       }
     }
   };
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property);
     const obj = yaml.load(data) as ISeqProfileConfig | null;
 
@@ -170,21 +176,20 @@ export const GroupsEditorViewer = (props: Props) => {
 
     setPrevData(data);
     setCurrData(data);
-  };
+  }, [property]);
 
   useEffect(() => {
-    if (currData === "") return;
-    if (visualization !== true) return;
+    if (currData === "" || visualization !== true) {
+      return;
+    }
 
-    const obj = yaml.load(currData) as {
-      prepend: [];
-      append: [];
-      delete: [];
-    } | null;
-    setPrependSeq(obj?.prepend || []);
-    setAppendSeq(obj?.append || []);
-    setDeleteSeq(obj?.delete || []);
-  }, [visualization]);
+    const obj = yaml.load(currData) as ISeqProfileConfig | null;
+    startTransition(() => {
+      setPrependSeq(obj?.prepend ?? []);
+      setAppendSeq(obj?.append ?? []);
+      setDeleteSeq(obj?.delete ?? []);
+    });
+  }, [currData, visualization]);
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
@@ -210,7 +215,7 @@ export const GroupsEditorViewer = (props: Props) => {
     }
   }, [prependSeq, appendSeq, deleteSeq]);
 
-  const fetchProxyPolicy = async () => {
+  const fetchProxyPolicy = useCallback(async () => {
     const data = await readProfileFile(profileUid);
     const proxiesData = await readProfileFile(proxiesUid);
     const originGroupsObj = yaml.load(data) as {
@@ -246,8 +251,8 @@ export const GroupsEditorViewer = (props: Props) => {
         proxies.map((proxy: any) => proxy.name),
       ),
     );
-  };
-  const fetchProfile = async () => {
+  }, [appendSeq, deleteSeq, prependSeq, profileUid, proxiesUid]);
+  const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid);
     const mergeData = await readProfileFile(mergeUid);
     const globalMergeData = await readProfileFile("Merge");
@@ -257,17 +262,17 @@ export const GroupsEditorViewer = (props: Props) => {
     } | null;
 
     const originProviderObj = yaml.load(data) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, unknown>;
     } | null;
     const originProvider = originProviderObj?.["proxy-providers"] || {};
 
     const moreProviderObj = yaml.load(mergeData) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, unknown>;
     } | null;
     const moreProvider = moreProviderObj?.["proxy-providers"] || {};
 
     const globalProviderObj = yaml.load(globalMergeData) as {
-      "proxy-providers": {};
+      "proxy-providers": Record<string, unknown>;
     } | null;
     const globalProvider = globalProviderObj?.["proxy-providers"] || {};
 
@@ -280,21 +285,27 @@ export const GroupsEditorViewer = (props: Props) => {
 
     setProxyProviderList(Object.keys(provider));
     setGroupList(originGroupsObj?.["proxy-groups"] || []);
-  };
-  const getInterfaceNameList = async () => {
+  }, [mergeUid, profileUid]);
+  const getInterfaceNameList = useCallback(async () => {
     const list = await getNetworkInterfaces();
     setInterfaceNameList(list);
-  };
+  }, []);
   useEffect(() => {
     fetchProxyPolicy();
-  }, [prependSeq, appendSeq, deleteSeq]);
+  }, [fetchProxyPolicy]);
   useEffect(() => {
     if (!open) return;
     fetchContent();
     fetchProxyPolicy();
     fetchProfile();
     getInterfaceNameList();
-  }, [open]);
+  }, [
+    fetchContent,
+    fetchProfile,
+    fetchProxyPolicy,
+    getInterfaceNameList,
+    open,
+  ]);
 
   const validateGroup = () => {
     const group = formIns.getValues();
@@ -811,10 +822,10 @@ export const GroupsEditorViewer = (props: Props) => {
                             return x.name;
                           })}
                         >
-                          {filteredPrependSeq.map((item, index) => {
+                          {filteredPrependSeq.map((item) => {
                             return (
                               <GroupItem
-                                key={`${item.name}-${index}`}
+                                key={item.name}
                                 type="prepend"
                                 group={item}
                                 onDelete={() => {
@@ -834,7 +845,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     const newIndex = index - shift;
                     return (
                       <GroupItem
-                        key={`${filteredGroupList[newIndex].name}-${index}`}
+                        key={filteredGroupList[newIndex].name}
                         type={
                           deleteSeq.includes(filteredGroupList[newIndex].name)
                             ? "delete"
@@ -871,10 +882,10 @@ export const GroupsEditorViewer = (props: Props) => {
                             return x.name;
                           })}
                         >
-                          {filteredAppendSeq.map((item, index) => {
+                          {filteredAppendSeq.map((item) => {
                             return (
                               <GroupItem
-                                key={`${item.name}-${index}`}
+                                key={item.name}
                                 type="append"
                                 group={item}
                                 onDelete={() => {
