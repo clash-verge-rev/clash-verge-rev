@@ -102,7 +102,13 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
   );
 }
 
-const AddressDisplay = (props: { label: string; content: string }) => {
+const AddressDisplay = ({
+  label,
+  content,
+}: {
+  label: string;
+  content: string;
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -113,7 +119,7 @@ const AddressDisplay = (props: { label: string; content: string }) => {
         margin: "8px 0",
       }}
     >
-      <Box>{props.label}</Box>
+      <Box>{label}</Box>
       <Box
         sx={({ palette }) => ({
           borderRadius: "8px",
@@ -124,13 +130,11 @@ const AddressDisplay = (props: { label: string; content: string }) => {
               : alpha(palette.grey[400], 0.3),
         })}
       >
-        <Box sx={{ display: "inline", userSelect: "text" }}>
-          {props.content}
-        </Box>
+        <Box sx={{ display: "inline", userSelect: "text" }}>{content}</Box>
         <IconButton
           size="small"
           onClick={async () => {
-            await writeText(props.content);
+            await writeText(content);
             showNotice("success", t("Copy Success"));
           }}
         >

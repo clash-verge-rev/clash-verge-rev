@@ -7,6 +7,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -36,16 +37,20 @@ dayjs.extend(customParseFormat);
 const DATE_FORMAT = "YYYY-MM-DD_HH-mm-ss";
 const FILENAME_PATTERN = /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}/;
 type BackupSource = "local" | "webdav";
+type CloseButtonPosition = { top: number; left: number } | null;
 
 export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const [dialogPaper, setDialogPaper] = useState<HTMLElement | null>(null);
-  const [closeButtonPosition, setCloseButtonPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
+  const [dialogPaper, setDialogPaper] = useReducer(
+    (_: HTMLElement | null, next: HTMLElement | null) => next,
+    null as HTMLElement | null,
+  );
+  const [closeButtonPosition, setCloseButtonPosition] = useReducer(
+    (_: CloseButtonPosition, next: CloseButtonPosition) => next,
+    null as CloseButtonPosition,
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);

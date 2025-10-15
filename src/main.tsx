@@ -10,9 +10,9 @@ import { RouterProvider } from "react-router";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 import { BaseErrorBoundary } from "./components/base";
-import { WindowProvider } from "./hooks/use-window";
 import { router } from "./pages/_routers";
 import { AppDataProvider } from "./providers/app-data-provider";
+import { WindowProvider } from "./providers/window";
 import { initializeLanguage } from "./services/i18n";
 import {
   LoadingCacheProvider,

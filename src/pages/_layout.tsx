@@ -4,7 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate, useRoutes } from "react-router";
 import { SWRConfig, mutate } from "swr";
@@ -36,8 +36,6 @@ import { navItems } from "./_routers";
 
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
-
-// 删除重复导入
 
 const appWindow = getCurrentWebviewWindow();
 export const portableFlag = false;
@@ -170,7 +168,10 @@ const Layout = () => {
   const routersEles = useRoutes(navItems);
   const { addListener } = useListen();
   const initRef = useRef(false);
-  const [themeReady, setThemeReady] = useState(false);
+  const overlayRemovedRef = useRef(false);
+  const lastStartPageRef = useRef<string | null>(null);
+  const startPageAppliedRef = useRef(false);
+  const themeReady = useMemo(() => Boolean(theme), [theme]);
 
   const windowControls = useRef<any>(null);
   const { decorated } = useWindowDecorations();
@@ -195,33 +196,102 @@ const Layout = () => {
   }, [decorated, mode]);
 
   useEffect(() => {
-    setThemeReady(true);
-  }, [theme]);
+    if (!themeReady || overlayRemovedRef.current) {
+      return;
+    }
+
+    let fadeTimer: number | null = null;
+    let retryTimer: number | null = null;
+    let attempts = 0;
+    const maxAttempts = 50;
+    let stopped = false;
+
+    const tryRemoveOverlay = () => {
+      if (stopped || overlayRemovedRef.current) {
+        return;
+      }
+
+      const overlay = document.getElementById("initial-loading-overlay");
+      if (overlay) {
+        overlayRemovedRef.current = true;
+        overlay.style.opacity = "0";
+        overlay.style.pointerEvents = "none";
+
+        fadeTimer = window.setTimeout(() => {
+          try {
+            overlay.remove();
+          } catch (error) {
+            console.warn("[Layout] Failed to remove loading overlay:", error);
+          }
+        }, 300);
+        return;
+      }
+
+      if (attempts < maxAttempts) {
+        attempts += 1;
+        retryTimer = window.setTimeout(tryRemoveOverlay, 100);
+      } else {
+        console.warn("[Layout] Loading overlay not found after retries");
+      }
+    };
+
+    tryRemoveOverlay();
+
+    return () => {
+      stopped = true;
+      if (fadeTimer) {
+        window.clearTimeout(fadeTimer);
+      }
+      if (retryTimer) {
+        window.clearTimeout(retryTimer);
+      }
+    };
+  }, [themeReady]);
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {
       const [status, msg] = payload;
-      setTimeout(() => {
-        try {
-          handleNoticeMessage(status, msg, t, navigate);
-        } catch (error) {
-          console.error("[Layout] 处理通知消息失败:", error);
-        }
-      }, 0);
+      try {
+        handleNoticeMessage(status, msg, t, navigate);
+      } catch (error) {
+        console.error("[Layout] 处理通知消息失败:", error);
+      }
     },
     [t, navigate],
   );
 
-  // 初始化全局日志服务
-  // useEffect(() => {
-  //   if (clashInfo) {
-  //     initGlobalLogService(enableLog, logLevel);
-  //   }
-  // }, [clashInfo, enableLog, logLevel]);
-
-  // 设置监听器
+  // 设置监听
   useEffect(() => {
-    const listeners = [
+    const unlisteners: Array<() => void> = [];
+    let disposed = false;
+
+    const register = (
+      maybeUnlisten: void | (() => void) | Promise<void | (() => void)>,
+    ) => {
+      if (!maybeUnlisten) {
+        return;
+      }
+      if (typeof maybeUnlisten === "function") {
+        unlisteners.push(maybeUnlisten);
+        return;
+      }
+      maybeUnlisten
+        .then((unlisten) => {
+          if (!unlisten) {
+            return;
+          }
+          if (disposed) {
+            unlisten();
+          } else {
+            unlisteners.push(unlisten);
+          }
+        })
+        .catch((error) => {
+          console.error("[Layout] 注册事件监听失败", error);
+        });
+    };
+
+    register(
       addListener("verge://refresh-clash-config", async () => {
         await getAxios(true);
         mutate("getProxies");
@@ -229,67 +299,48 @@ const Layout = () => {
         mutate("getClashConfig");
         mutate("getProxyProviders");
       }),
+    );
 
+    register(
       addListener("verge://refresh-verge-config", () => {
         mutate("getVergeConfig");
         mutate("getSystemProxy");
         mutate("getAutotemProxy");
-        // 运行模式变更时也需要刷新相关状态
         mutate("getRunningMode");
         mutate("isServiceAvailable");
       }),
+    );
 
+    register(
       addListener("verge://notice-message", ({ payload }) =>
         handleNotice(payload as [string, string]),
       ),
-    ];
+    );
 
-    const setupWindowListeners = async () => {
-      const [hideUnlisten, showUnlisten] = await Promise.all([
-        listen("verge://hide-window", () => appWindow.hide()),
-        listen("verge://show-window", () => appWindow.show()),
-      ]);
-
-      return () => {
-        hideUnlisten();
-        showUnlisten();
-      };
-    };
-
-    const cleanupWindow = setupWindowListeners();
+    register(
+      (async () => {
+        const [hideUnlisten, showUnlisten] = await Promise.all([
+          listen("verge://hide-window", () => appWindow.hide()),
+          listen("verge://show-window", () => appWindow.show()),
+        ]);
+        return () => {
+          hideUnlisten();
+          showUnlisten();
+        };
+      })(),
+    );
 
     return () => {
-      setTimeout(() => {
-        listeners.forEach((listener) => {
-          if (typeof listener.then === "function") {
-            listener
-              .then((unlisten) => {
-                try {
-                  unlisten();
-                } catch (error) {
-                  console.error("[Layout] 清理事件监听器失败:", error);
-                }
-              })
-              .catch((error) => {
-                console.error("[Layout] 获取unlisten函数失败:", error);
-              });
-          }
-        });
-
-        cleanupWindow
-          .then((cleanup) => {
-            try {
-              cleanup();
-            } catch (error) {
-              console.error("[Layout] 清理窗口监听器失败:", error);
-            }
-          })
-          .catch((error) => {
-            console.error("[Layout] 获取cleanup函数失败:", error);
-          });
-      }, 0);
+      disposed = true;
+      unlisteners.forEach((unlisten) => {
+        try {
+          unlisten();
+        } catch (error) {
+          console.error("[Layout] 清理事件监听器失败", error);
+        }
+      });
     };
-  }, [handleNotice]);
+  }, [addListener, handleNotice]);
 
   useEffect(() => {
     if (initRef.current) {
@@ -302,6 +353,14 @@ const Layout = () => {
     let isInitialized = false;
     let initializationAttempts = 0;
     const maxAttempts = 3;
+    const timers = new Set<number>();
+
+    const scheduleTimeout = (handler: () => void, delay: number) => {
+      /* eslint-disable-next-line @eslint-react/web-api/no-leaked-timeout -- timeout is registered in the timers set and cleared during cleanup */
+      const id = window.setTimeout(handler, delay);
+      timers.add(id);
+      return id;
+    };
 
     const notifyBackend = async (action: string, stage?: string) => {
       try {
@@ -322,7 +381,7 @@ const Layout = () => {
       if (initialOverlay) {
         console.log("[Layout] 移除加载指示器");
         initialOverlay.style.opacity = "0";
-        setTimeout(() => {
+        scheduleTimeout(() => {
           try {
             initialOverlay.remove();
           } catch {
@@ -353,13 +412,13 @@ const Layout = () => {
               console.log("[Layout] React组件已挂载");
               resolve();
             } else {
-              setTimeout(checkReactMount, 50);
+              scheduleTimeout(checkReactMount, 50);
             }
           };
 
           checkReactMount();
 
-          setTimeout(() => {
+          scheduleTimeout(() => {
             console.log("[Layout] React组件挂载检查超时，继续执行");
             resolve();
           }, 2000);
@@ -387,7 +446,7 @@ const Layout = () => {
           console.log(
             `[Layout] 将在500ms后进行第 ${initializationAttempts + 1} 次重试`,
           );
-          setTimeout(performInitialization, 500);
+          scheduleTimeout(performInitialization, 500);
         } else {
           console.error("[Layout] 所有初始化尝试都失败，执行紧急初始化");
 
@@ -396,7 +455,7 @@ const Layout = () => {
             await notifyBackend("UI就绪");
             isInitialized = true;
           } catch (e) {
-            console.error("[Layout] 紧急初始化也失败:", e);
+            console.error("[Layout] 紧急初始化也失败", e);
           }
         }
       }
@@ -407,11 +466,12 @@ const Layout = () => {
     const setupEventListener = async () => {
       try {
         console.log("[Layout] 开始监听启动完成事件");
+        // TODO: 监听启动完成事件的实现
       } catch (err) {
         console.error("[Layout] 监听启动完成事件失败:", err);
-        return () => {};
       }
     };
+    void setupEventListener();
 
     const checkImmediateInitialization = async () => {
       try {
@@ -428,7 +488,7 @@ const Layout = () => {
       }
     };
 
-    const backupInitialization = setTimeout(() => {
+    const backupInitialization = scheduleTimeout(() => {
       if (!hasEventTriggered && !isInitialized) {
         console.warn("[Layout] 备用初始化触发：1.5秒内未开始初始化");
         hasEventTriggered = true;
@@ -436,20 +496,29 @@ const Layout = () => {
       }
     }, 1500);
 
-    const emergencyInitialization = setTimeout(() => {
+    const emergencyInitialization = scheduleTimeout(() => {
       if (!isInitialized) {
-        console.error("[Layout] 紧急初始化触发：5秒内未完成初始化");
+        console.error("[Layout] 紧急初始化触发，5秒内未完成初始化");
         removeLoadingOverlay();
         notifyBackend("UI就绪").catch(() => {});
         isInitialized = true;
       }
     }, 5000);
 
-    setTimeout(checkImmediateInitialization, 100);
+    const immediateInitTimer = scheduleTimeout(
+      checkImmediateInitialization,
+      100,
+    );
 
     return () => {
-      clearTimeout(backupInitialization);
-      clearTimeout(emergencyInitialization);
+      window.clearTimeout(backupInitialization);
+      window.clearTimeout(emergencyInitialization);
+      window.clearTimeout(immediateInitTimer);
+      timers.delete(backupInitialization);
+      timers.delete(emergencyInitialization);
+      timers.delete(immediateInitTimer);
+      timers.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      timers.clear();
     };
   }, []);
 
