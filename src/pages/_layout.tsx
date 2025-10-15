@@ -165,12 +165,20 @@ const Layout = () => {
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
-  const routersEles = useRoutes(routers);
+  const matchedElement = useRoutes(routers);
+  const routersEles = useMemo(() => {
+    if (!matchedElement) {
+      return null;
+    }
+    return (
+      <React.Fragment key={location.pathname}>{matchedElement}</React.Fragment>
+    );
+  }, [matchedElement, location.pathname]);
   const { addListener } = useListen();
   const initRef = useRef(false);
   const overlayRemovedRef = useRef(false);
-  const startPageNavigatedRef = useRef(false);
   const lastStartPageRef = useRef<string | null>(null);
+  const startPageAppliedRef = useRef(false);
   const themeReady = useMemo(() => Boolean(theme), [theme]);
 
   const windowControls = useRef<any>(null);
@@ -532,20 +540,32 @@ const Layout = () => {
 
   useEffect(() => {
     if (!start_page) {
+      lastStartPageRef.current = null;
+      startPageAppliedRef.current = false;
       return;
     }
 
-    if (
-      startPageNavigatedRef.current &&
-      lastStartPageRef.current === start_page
-    ) {
+    const normalizedStartPage = start_page.startsWith("/")
+      ? start_page
+      : `/${start_page}`;
+
+    if (lastStartPageRef.current !== normalizedStartPage) {
+      lastStartPageRef.current = normalizedStartPage;
+      startPageAppliedRef.current = false;
+    }
+
+    if (startPageAppliedRef.current) {
       return;
     }
 
-    startPageNavigatedRef.current = true;
-    lastStartPageRef.current = start_page;
-    navigate(start_page, { replace: true });
-  }, [start_page, navigate]);
+    startPageAppliedRef.current = true;
+
+    if (location.pathname === normalizedStartPage) {
+      return;
+    }
+
+    navigate(normalizedStartPage, { replace: true });
+  }, [start_page, navigate, location.pathname]);
 
   if (!themeReady) {
     return (
@@ -690,9 +710,7 @@ const Layout = () => {
 
             <div className="layout-content__right">
               <div className="the-bar"></div>
-              <div className="the-content" key={location.pathname}>
-                {routersEles}
-              </div>
+              <div className="the-content">{routersEles}</div>
             </div>
           </div>
         </Paper>

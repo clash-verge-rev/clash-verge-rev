@@ -21,6 +21,7 @@ import {
   useEffect,
   useImperativeHandle,
   useReducer,
+  useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -186,6 +187,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const [open, setOpen] = useState(false);
   const [visualization, setVisualization] = useState(true);
+  const skipYamlSyncRef = useRef(false);
   const [values, setValues] = useState<{
     enable: boolean;
     listen: string;
@@ -419,6 +421,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       const parsedYaml = yaml.load(yamlContent) as any;
       if (!parsedYaml) return;
 
+      skipYamlSyncRef.current = true;
       updateValuesFromConfig(parsedYaml);
     } catch {
       showNotice("error", t("Invalid YAML format"));
@@ -426,16 +429,28 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   }, [yamlContent, t, updateValuesFromConfig]);
 
   useEffect(() => {
+    if (skipYamlSyncRef.current) {
+      skipYamlSyncRef.current = false;
+      return;
+    }
     updateYamlFromValues();
   }, [updateYamlFromValues]);
 
+  const latestUpdateValuesFromYamlRef = useRef(updateValuesFromYaml);
+  const latestUpdateYamlFromValuesRef = useRef(updateYamlFromValues);
+
+  useEffect(() => {
+    latestUpdateValuesFromYamlRef.current = updateValuesFromYaml;
+    latestUpdateYamlFromValuesRef.current = updateYamlFromValues;
+  }, [updateValuesFromYaml, updateYamlFromValues]);
+
   useEffect(() => {
     if (visualization) {
-      updateValuesFromYaml();
+      latestUpdateValuesFromYamlRef.current();
     } else {
-      updateYamlFromValues();
+      latestUpdateYamlFromValuesRef.current();
     }
-  }, [visualization, updateValuesFromYaml, updateYamlFromValues]);
+  }, [visualization]);
 
   const initDnsConfig = useCallback(async () => {
     try {
