@@ -43,7 +43,7 @@ pub fn resolve_setup_async() {
 
     AsyncHandler::spawn(|| async {
         #[cfg(not(feature = "tauri-dev"))]
-        resolve_setup_logger().await;
+        resolve_setup_logger();
         logging!(
             info,
             Type::ClashVergeRev,
@@ -59,7 +59,7 @@ pub fn resolve_setup_async() {
             init_hotkey(),
         );
 
-        init_timer().await;
+        init_timer();
         init_once_auto_lightweight().await;
         init_auto_lightweight_mode().await;
 
@@ -77,7 +77,7 @@ pub fn resolve_setup_async() {
         });
 
         let tray_and_refresh = async {
-            init_tray().await;
+            init_tray();
             refresh_tray_menu().await;
         };
         futures::join!(init_window(), tray_and_refresh,);
@@ -121,9 +121,9 @@ pub(super) fn init_scheme() {
 }
 
 #[cfg(not(feature = "tauri-dev"))]
-pub(super) async fn resolve_setup_logger() {
+pub(super) fn resolve_setup_logger() {
     logging!(info, Type::Setup, "Initializing global logger...");
-    logging_error!(Type::Setup, init::init_logger().await);
+    logging_error!(Type::Setup, init::init_logger());
 }
 
 pub async fn resolve_scheme(param: String) -> Result<()> {
@@ -146,9 +146,9 @@ pub(super) async fn init_startup_script() {
     logging_error!(Type::Setup, init::startup_script().await);
 }
 
-pub(super) async fn init_timer() {
+pub(super) fn init_timer() {
     logging!(info, Type::Setup, "Initializing timer...");
-    logging_error!(Type::Setup, Timer::global().init().await);
+    logging_error!(Type::Setup, Timer::global().init());
 }
 
 pub(super) async fn init_hotkey() {
@@ -175,7 +175,7 @@ pub async fn init_work_config() {
     logging_error!(Type::Setup, init::init_config().await);
 }
 
-pub(super) async fn init_tray() {
+pub(super) fn init_tray() {
     // Check if tray should be disabled via environment variable
     if std::env::var("CLASH_VERGE_DISABLE_TRAY").unwrap_or_default() == "1" {
         logging!(info, Type::Setup, "System tray disabled via --no-tray flag");
@@ -183,7 +183,7 @@ pub(super) async fn init_tray() {
     }
 
     logging!(info, Type::Setup, "Initializing system tray...");
-    logging_error!(Type::Setup, Tray::global().init().await);
+    logging_error!(Type::Setup, Tray::global().init());
 }
 
 pub(super) async fn init_verge_config() {
@@ -232,8 +232,10 @@ pub(super) async fn refresh_tray_menu() {
 
 pub(super) async fn init_window() {
     logging!(info, Type::Setup, "Initializing main window...");
-    let is_silent_start =
-        { Config::verge().await.latest_ref().enable_silent_start }.unwrap_or(false);
+    let is_silent_start = Config::verge()
+        .latest()
+        .enable_silent_start
+        .unwrap_or(false);
     #[cfg(target_os = "macos")]
     {
         if is_silent_start {

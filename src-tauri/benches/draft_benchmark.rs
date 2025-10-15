@@ -21,7 +21,7 @@ fn bench_data_ref(c: &mut Criterion) {
     c.bench_function("draft_data_ref", |b| {
         b.iter(|| {
             let draft = make_draft();
-            let data = draft.data_ref();
+            let data = draft.data();
             black_box(data.enable_auto_launch);
         });
     });
@@ -44,7 +44,7 @@ fn bench_draft_mut_first(c: &mut Criterion) {
     c.bench_function("draft_draft_mut_first", |b| {
         b.iter(|| {
             let draft = make_draft();
-            let mut d = draft.draft_mut();
+            let mut d = draft.draft();
             d.enable_auto_launch = Some(false);
             black_box(d.enable_auto_launch);
         });
@@ -57,10 +57,10 @@ fn bench_draft_mut_existing(c: &mut Criterion) {
         b.iter(|| {
             let draft = make_draft();
             {
-                let mut first = draft.draft_mut();
+                let mut first = draft.draft();
                 first.enable_tun_mode = Some(true);
             }
-            let mut second = draft.draft_mut();
+            let mut second = draft.draft();
             second.enable_tun_mode = Some(false);
             black_box(second.enable_tun_mode);
         });
@@ -72,7 +72,7 @@ fn bench_latest_ref(c: &mut Criterion) {
     c.bench_function("draft_latest_ref", |b| {
         b.iter(|| {
             let draft = make_draft();
-            let latest = draft.latest_ref();
+            let latest = draft.latest();
             black_box(latest.enable_auto_launch);
         });
     });
@@ -84,7 +84,7 @@ fn bench_apply(c: &mut Criterion) {
         b.iter(|| {
             let draft = make_draft();
             {
-                let mut d = draft.draft_mut();
+                let mut d = draft.draft();
                 d.enable_auto_launch = Some(false);
             }
             let _ = draft.apply();
@@ -98,7 +98,7 @@ fn bench_discard(c: &mut Criterion) {
         b.iter(|| {
             let draft = make_draft();
             {
-                let mut d = draft.draft_mut();
+                let mut d = draft.draft();
                 d.enable_auto_launch = Some(false);
             }
             let _ = draft.discard();

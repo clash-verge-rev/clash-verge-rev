@@ -246,9 +246,9 @@ impl IVerge {
     pub const VALID_CLASH_CORES: &'static [&'static str] = &["verge-mihomo", "verge-mihomo-alpha"];
 
     /// 验证并修正配置文件中的clash_core值
-    pub async fn validate_and_fix_config() -> Result<()> {
+    pub fn validate_and_fix_config() -> Result<()> {
         let config_path = dirs::verge_path()?;
-        let mut config = match help::read_yaml::<IVerge>(&config_path).await {
+        let mut config = match help::read_yaml::<IVerge>(&config_path) {
             Ok(config) => config,
             Err(_) => Self::template(),
         };
@@ -280,10 +280,10 @@ impl IVerge {
         // 修正后保存配置
         if needs_fix {
             logging!(info, Type::Config, "正在保存修正后的配置文件...");
-            help::save_yaml(&config_path, &config, Some("# Clash Verge Config")).await?;
+            help::save_yaml(&config_path, &config, Some("# Clash Verge Config"))?;
             logging!(info, Type::Config, "配置文件修正完成，需要重新加载配置");
 
-            Self::reload_config_after_fix(config).await?;
+            Self::reload_config_after_fix(config)?;
         } else {
             logging!(
                 info,
@@ -297,11 +297,11 @@ impl IVerge {
     }
 
     /// 配置修正后重新加载配置
-    async fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
+    fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
         use crate::config::Config;
 
-        let config_draft = Config::verge().await;
-        *config_draft.draft_mut() = Box::new(updated_config.clone());
+        let config_draft = Config::verge();
+        *config_draft.draft() = updated_config.clone();
         config_draft.apply();
 
         logging!(
@@ -335,9 +335,9 @@ impl IVerge {
         }
     }
 
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         match dirs::verge_path() {
-            Ok(path) => match help::read_yaml::<IVerge>(&path).await {
+            Ok(path) => match help::read_yaml::<IVerge>(&path) {
                 Ok(config) => config,
                 Err(err) => {
                     log::error!(target: "app", "{err}");
@@ -416,8 +416,8 @@ impl IVerge {
     }
 
     /// Save IVerge App Config
-    pub async fn save_file(&self) -> Result<()> {
-        help::save_yaml(&dirs::verge_path()?, &self, Some("# Clash Verge Config")).await
+    pub fn save_file(&self) -> Result<()> {
+        help::save_yaml(&dirs::verge_path()?, &self, Some("# Clash Verge Config"))
     }
 
     /// patch verge config

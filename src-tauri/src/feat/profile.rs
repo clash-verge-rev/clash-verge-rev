@@ -34,8 +34,8 @@ pub async fn update_profile(
     let auto_refresh = auto_refresh.unwrap_or(true); // 默认为true，保持兼容性
 
     let url_opt = {
-        let profiles = Config::profiles().await;
-        let profiles = profiles.latest_ref();
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
         let item = profiles.get_item(&uid)?;
         let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
@@ -69,13 +69,13 @@ pub async fn update_profile(
             match PrfItem::from_url(&url, None, None, merged_opt.clone()).await {
                 Ok(item) => {
                     log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
-                    let profiles = Config::profiles().await;
+                    let profiles = Config::profiles();
 
                     // 使用Send-safe helper函数
                     let result = profiles_draft_update_item_safe(uid.clone(), item).await;
                     result?;
 
-                    let is_current = Some(uid.clone()) == profiles.latest_ref().get_current();
+                    let is_current = Some(uid.clone()) == profiles.latest().get_current();
                     log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
                     is_current && auto_refresh
                 }
@@ -107,7 +107,7 @@ pub async fn update_profile(
                             }
 
                             // 更新到配置
-                            let profiles = Config::profiles().await;
+                            let profiles = Config::profiles();
 
                             // 使用 Send-safe 方法进行数据操作
                             profiles_draft_update_item_safe(uid.clone(), item.clone()).await?;
@@ -118,7 +118,7 @@ pub async fn update_profile(
                             // 发送通知告知用户自动更新使用了回退机制
                             handle::Handle::notice_message("update_with_clash_proxy", profile_name);
 
-                            let is_current = Some(uid.clone()) == profiles.data_ref().get_current();
+                            let is_current = Some(uid.clone()) == profiles.data().get_current();
                             log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
                             is_current && auto_refresh
                         }

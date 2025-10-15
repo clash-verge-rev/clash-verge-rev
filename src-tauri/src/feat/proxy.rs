@@ -9,15 +9,15 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 pub async fn toggle_system_proxy() {
     // 获取当前系统代理状态
     let enable = {
-        let verge = Config::verge().await;
+        let verge = Config::verge();
 
-        verge.latest_ref().enable_system_proxy.unwrap_or(false)
+        verge.latest().enable_system_proxy.unwrap_or(false)
     };
     // 获取自动关闭连接设置
     let auto_close_connection = {
-        let verge = Config::verge().await;
+        let verge = Config::verge();
 
-        verge.latest_ref().auto_close_connection.unwrap_or(false)
+        verge.latest().auto_close_connection.unwrap_or(false)
     };
 
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
@@ -45,7 +45,7 @@ pub async fn toggle_system_proxy() {
 
 /// Toggle TUN mode on/off
 pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
-    let enable = Config::verge().await.data_mut().enable_tun_mode;
+    let enable = Config::verge().data_mut().enable_tun_mode;
     let enable = enable.unwrap_or(false);
 
     match super::patch_verge(
@@ -63,31 +63,24 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
 }
 
 /// Copy proxy environment variables to clipboard
-pub async fn copy_clash_env() {
+pub fn copy_clash_env() {
     // 从环境变量获取IP地址，如果没有则从配置中获取 proxy_host，默认为 127.0.0.1
     let clash_verge_rev_ip = match env::var("CLASH_VERGE_REV_IP") {
         Ok(ip) => ip,
         Err(_) => Config::verge()
-            .await
-            .latest_ref()
+            .latest()
             .proxy_host
             .clone()
             .unwrap_or_else(|| "127.0.0.1".into()),
     };
 
     let app_handle = handle::Handle::app_handle();
-    let port = {
-        Config::verge()
-            .await
-            .latest_ref()
-            .verge_mixed_port
-            .unwrap_or(7897)
-    };
+    let port = { Config::verge().latest().verge_mixed_port.unwrap_or(7897) };
     let http_proxy = format!("http://{clash_verge_rev_ip}:{port}");
     let socks5_proxy = format!("socks5://{clash_verge_rev_ip}:{port}");
 
     let cliboard = app_handle.clipboard();
-    let env_type = { Config::verge().await.latest_ref().env_type.clone() };
+    let env_type = { Config::verge().latest().env_type.clone() };
     let env_type = match env_type {
         Some(env_type) => env_type,
         None => {

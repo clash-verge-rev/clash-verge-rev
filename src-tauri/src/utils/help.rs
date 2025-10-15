@@ -6,24 +6,23 @@ use serde_yaml_ng::Mapping;
 use std::{path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
-pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
-    if !tokio::fs::try_exists(path).await.unwrap_or(false) {
+pub fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
+    if !std::fs::exists(path).unwrap_or(false) {
         bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = tokio::fs::read_to_string(path).await?;
+    let yaml_str = std::fs::read_to_string(path)?;
 
     Ok(serde_yaml_ng::from_str::<T>(&yaml_str)?)
 }
 
 /// read mapping from yaml
-pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
-    if !tokio::fs::try_exists(path).await.unwrap_or(false) {
+pub fn read_mapping(path: &PathBuf) -> Result<Mapping> {
+    if !std::fs::exists(path).unwrap_or(false) {
         bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = tokio::fs::read_to_string(path)
-        .await
+    let yaml_str = std::fs::read_to_string(path)
         .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
 
     // YAML语法检查
@@ -55,13 +54,13 @@ pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
 }
 
 /// read mapping from yaml fix #165
-pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
-    read_yaml(path).await
+pub fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
+    read_yaml(path)
 }
 
 /// save the data to the file
 /// can set `prefix` string to add some comments
-pub async fn save_yaml<T: Serialize + Sync>(
+pub fn save_yaml<T: Serialize + Sync>(
     path: &PathBuf,
     data: &T,
     prefix: Option<&str>,
@@ -74,8 +73,7 @@ pub async fn save_yaml<T: Serialize + Sync>(
     };
 
     let path_str = path.as_os_str().to_string_lossy().to_string();
-    tokio::fs::write(path, yaml_str.as_bytes())
-        .await
+    std::fs::write(path, yaml_str.as_bytes())
         .with_context(|| format!("failed to save file \"{path_str}\""))
 }
 

@@ -25,11 +25,11 @@ use tokio::fs::DirEntry;
 
 /// initialize this instance's log file
 #[cfg(not(feature = "tauri-dev"))]
-pub async fn init_logger() -> Result<()> {
+pub fn init_logger() -> Result<()> {
     // TODO 提供 runtime 级别实时修改
     let (log_level, log_max_size, log_max_count) = {
-        let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge_guard = Config::verge();
+        let verge = verge_guard.latest();
         (
             verge.get_log_level(),
             verge.app_log_max_size.unwrap_or(128),
@@ -67,8 +67,8 @@ pub async fn init_logger() -> Result<()> {
 
 pub async fn sidecar_writer() -> Result<FileLogWriter> {
     let (log_max_size, log_max_count) = {
-        let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge_guard = Config::verge();
+        let verge = verge_guard.latest();
         (
             verge.app_log_max_size.unwrap_or(128),
             verge.app_log_max_count.unwrap_or(8),
@@ -95,8 +95,8 @@ pub async fn sidecar_writer() -> Result<FileLogWriter> {
 
 pub async fn service_writer_config() -> Result<WriterConfig> {
     let (log_max_size, log_max_count) = {
-        let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge_guard = Config::verge();
+        let verge = verge_guard.latest();
         (
             verge.app_log_max_size.unwrap_or(128),
             verge.app_log_max_count.unwrap_or(8),
@@ -120,8 +120,8 @@ pub async fn delete_log() -> Result<()> {
     }
 
     let auto_log_clean = {
-        let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = Config::verge();
+        let verge = verge.latest();
         verge.auto_log_clean.unwrap_or(0)
     };
 
@@ -189,7 +189,7 @@ pub async fn delete_log() -> Result<()> {
 }
 
 /// 初始化DNS配置文件
-async fn init_dns_config() -> Result<()> {
+fn init_dns_config() -> Result<()> {
     use serde_yaml_ng::Value;
 
     // 创建DNS子配置
@@ -300,8 +300,7 @@ async fn init_dns_config() -> Result<()> {
             &dns_path,
             &default_dns_config,
             Some("# Clash Verge DNS Config"),
-        )
-        .await?;
+        )?;
     }
 
     Ok(())
@@ -328,13 +327,12 @@ async fn ensure_directories() -> Result<()> {
 }
 
 /// 初始化配置文件
-async fn initialize_config_files() -> Result<()> {
+fn initialize_config_files() -> Result<()> {
     if let Ok(path) = dirs::clash_path()
         && !path.exists()
     {
         let template = IClashTemp::template().0;
         help::save_yaml(&path, &template, Some("# Clash Verge"))
-            .await
             .map_err(|e| anyhow::anyhow!("Failed to create clash config: {}", e))?;
         logging!(info, Type::Setup, "Created clash config at {:?}", path);
     }
@@ -344,7 +342,6 @@ async fn initialize_config_files() -> Result<()> {
     {
         let template = IVerge::template();
         help::save_yaml(&path, &template, Some("# Clash Verge"))
-            .await
             .map_err(|e| anyhow::anyhow!("Failed to create verge config: {}", e))?;
         logging!(info, Type::Setup, "Created verge config at {:?}", path);
     }
@@ -354,14 +351,12 @@ async fn initialize_config_files() -> Result<()> {
     {
         let template = IProfiles::template();
         help::save_yaml(&path, &template, Some("# Clash Verge"))
-            .await
             .map_err(|e| anyhow::anyhow!("Failed to create profiles config: {}", e))?;
         logging!(info, Type::Setup, "Created profiles config at {:?}", path);
     }
 
     // 验证并修正verge配置
     IVerge::validate_and_fix_config()
-        .await
         .map_err(|e| anyhow::anyhow!("Failed to validate verge config: {}", e))?;
 
     Ok(())
@@ -380,7 +375,7 @@ pub async fn init_config() -> Result<()> {
 
     ensure_directories().await?;
 
-    initialize_config_files().await?;
+    initialize_config_files()?;
 
     AsyncHandler::spawn(|| async {
         if let Err(e) = delete_log().await {
@@ -389,7 +384,7 @@ pub async fn init_config() -> Result<()> {
         logging!(info, Type::Setup, "后台日志清理任务完成");
     });
 
-    if let Err(e) = init_dns_config().await {
+    if let Err(e) = init_dns_config() {
         logging!(warn, Type::Setup, "DNS config initialization failed: {}", e);
     }
 
@@ -503,8 +498,8 @@ pub fn init_scheme() -> Result<()> {
 pub async fn startup_script() -> Result<()> {
     let app_handle = handle::Handle::app_handle();
     let script_path = {
-        let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = Config::verge();
+        let verge = verge.latest();
         verge.startup_script.clone().unwrap_or("".into())
     };
 

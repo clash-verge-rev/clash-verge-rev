@@ -7,66 +7,56 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
-use std::path::PathBuf;
+use once_cell::sync::OnceCell;
 use std::time::Duration;
-use tokio::sync::OnceCell;
+use std::{path::PathBuf, sync::Arc};
 use tokio::time::sleep;
 
 pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
 pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
 
 pub struct Config {
-    clash_config: Draft<Box<IClashTemp>>,
-    verge_config: Draft<Box<IVerge>>,
-    profiles_config: Draft<Box<IProfiles>>,
-    runtime_config: Draft<Box<IRuntime>>,
+    clash_config: Arc<Draft<IClashTemp>>,
+    verge_config: Arc<Draft<IVerge>>,
+    profiles_config: Arc<Draft<IProfiles>>,
+    runtime_config: Arc<Draft<IRuntime>>,
 }
 
 impl Config {
-    pub async fn global() -> &'static Config {
-        static CONFIG: OnceCell<Config> = OnceCell::const_new();
-        CONFIG
-            .get_or_init(|| async {
-                Config {
-                    clash_config: Draft::from(Box::new(IClashTemp::new().await)),
-                    verge_config: Draft::from(Box::new(IVerge::new().await)),
-                    profiles_config: Draft::from(Box::new(IProfiles::new().await)),
-                    runtime_config: Draft::from(Box::new(IRuntime::new())),
-                }
-            })
-            .await
+    pub fn global() -> &'static Config {
+        static CONFIG: OnceCell<Config> = OnceCell::new();
+        CONFIG.get_or_init(|| Config {
+            clash_config: Arc::new(Draft::from(IClashTemp::new())),
+            verge_config: Arc::new(Draft::from(IVerge::new())),
+            profiles_config: Arc::new(Draft::from(IProfiles::new())),
+            runtime_config: Arc::new(Draft::from(IRuntime::new())),
+        })
     }
 
-    pub async fn clash() -> Draft<Box<IClashTemp>> {
-        Self::global().await.clash_config.clone()
+    pub fn clash() -> Arc<Draft<IClashTemp>> {
+        Arc::clone(&Self::global().clash_config)
     }
 
-    pub async fn verge() -> Draft<Box<IVerge>> {
-        Self::global().await.verge_config.clone()
+    pub fn verge() -> Arc<Draft<IVerge>> {
+        Arc::clone(&Self::global().verge_config)
     }
 
-    pub async fn profiles() -> Draft<Box<IProfiles>> {
-        Self::global().await.profiles_config.clone()
+    pub fn profiles() -> Arc<Draft<IProfiles>> {
+        Arc::clone(&Self::global().profiles_config)
     }
 
-    pub async fn runtime() -> Draft<Box<IRuntime>> {
-        Self::global().await.runtime_config.clone()
+    pub fn runtime() -> Arc<Draft<IRuntime>> {
+        Arc::clone(&Self::global().runtime_config)
     }
 
     /// 初始化订阅
     pub async fn init_config() -> Result<()> {
-        if Self::profiles()
-            .await
-            .latest_ref()
-            .get_item(&"Merge".into())
-            .is_err()
-        {
+        if Self::profiles().latest().get_item(&"Merge".into()).is_err() {
             let merge_item = PrfItem::from_merge(Some("Merge".into()))?;
             profiles_append_item_safe(merge_item.clone()).await?;
         }
         if Self::profiles()
-            .await
-            .latest_ref()
+            .latest()
             .get_item(&"Script".into())
             .is_err()
         {
@@ -81,7 +71,7 @@ impl Config {
         }
 
         // 生成运行时配置文件并验证
-        let config_result = Self::generate_file(ConfigType::Run).await;
+        let config_result = Self::generate_file(ConfigType::Run);
 
         let validation_result = if config_result.is_ok() {
             // 验证配置文件
@@ -97,8 +87,7 @@ impl Config {
                             error_msg
                         );
                         CoreManager::global()
-                            .use_default_config("config_validate::boot_error", &error_msg)
-                            .await?;
+                            .use_default_config("config_validate::boot_error", &error_msg)?;
                         Some(("config_validate::boot_error", error_msg))
                     } else {
                         logging!(info, Type::Config, "配置验证成功");
@@ -110,16 +99,13 @@ impl Config {
                 Err(err) => {
                     logging!(warn, Type::Config, "验证过程执行失败: {}", err);
                     CoreManager::global()
-                        .use_default_config("config_validate::process_terminated", "")
-                        .await?;
+                        .use_default_config("config_validate::process_terminated", "")?;
                     Some(("config_validate::process_terminated", String::new()))
                 }
             }
         } else {
             logging!(warn, Type::Config, "生成配置文件失败，使用默认配置");
-            CoreManager::global()
-                .use_default_config("config_validate::error", "")
-                .await?;
+            CoreManager::global().use_default_config("config_validate::error", "")?;
             Some(("config_validate::error", String::new()))
         };
 
@@ -133,22 +119,22 @@ impl Config {
     }
 
     /// 将订阅丢到对应的文件中
-    pub async fn generate_file(typ: ConfigType) -> Result<PathBuf> {
+    pub fn generate_file(typ: ConfigType) -> Result<PathBuf> {
         let path = match typ {
             ConfigType::Run => dirs::app_home_dir()?.join(RUNTIME_CONFIG),
             ConfigType::Check => dirs::app_home_dir()?.join(CHECK_CONFIG),
         };
 
-        let runtime = Config::runtime().await;
+        let runtime = Config::runtime();
         let config = runtime
-            .latest_ref()
+            .latest()
             .config
             .as_ref()
             .ok_or(anyhow!("failed to get runtime config"))?
             .clone();
         drop(runtime); // 显式释放锁
 
-        help::save_yaml(&path, &config, Some("# Generated by Clash Verge")).await?;
+        help::save_yaml(&path, &config, Some("# Generated by Clash Verge"))?;
         Ok(path)
     }
 
@@ -156,11 +142,11 @@ impl Config {
     pub async fn generate() -> Result<()> {
         let (config, exists_keys, logs) = enhance::enhance().await;
 
-        *Config::runtime().await.draft_mut() = Box::new(IRuntime {
+        *Config::runtime().draft() = IRuntime {
             config: Some(config),
             exists_keys,
             chain_logs: logs,
-        });
+        };
 
         Ok(())
     }
@@ -177,7 +163,7 @@ impl Config {
         };
 
         let operation = || async {
-            if Config::runtime().await.latest_ref().config.is_some() {
+            if Config::runtime().latest().config.is_some() {
                 logging!(
                     info,
                     Type::Setup,

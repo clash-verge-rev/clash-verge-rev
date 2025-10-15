@@ -186,7 +186,7 @@ impl EventDrivenProxyManager {
         let mut query_stream = UnboundedReceiverStream::new(query_rx);
 
         // 初始化定时器，用于周期性检查代理设置
-        let config = Self::get_proxy_config().await;
+        let config = Self::get_proxy_config();
         let mut guard_interval = tokio::time::interval(Duration::from_secs(config.guard_duration));
         // 防止首次立即触发
         guard_interval.tick().await;
@@ -200,7 +200,7 @@ impl EventDrivenProxyManager {
 
                     // 检查是否是配置变更事件，如果是，则可能需要更新定时器
                     if matches!(event_clone, ProxyEvent::ConfigChanged | ProxyEvent::AppStarted) {
-                        let new_config = Self::get_proxy_config().await;
+                        let new_config = Self::get_proxy_config();
                         // 重新设置定时器间隔
                         guard_interval = tokio::time::interval(Duration::from_secs(new_config.guard_duration));
                         // 防止首次立即触发
@@ -213,7 +213,7 @@ impl EventDrivenProxyManager {
                 }
                 _ = guard_interval.tick() => {
                     // 定时检查代理设置
-                    let config = Self::get_proxy_config().await;
+                    let config = Self::get_proxy_config();
                     if config.guard_enabled && config.sys_enabled {
                         log::debug!(target: "app", "定时检查代理设置");
                         Self::check_and_restore_proxy(&state).await;
@@ -274,7 +274,7 @@ impl EventDrivenProxyManager {
     async fn initialize_proxy_state(state: &Arc<RwLock<ProxyState>>) {
         log::info!(target: "app", "初始化代理状态");
 
-        let config = Self::get_proxy_config().await;
+        let config = Self::get_proxy_config();
         let auto_proxy = Self::get_auto_proxy_with_timeout().await;
         let sys_proxy = Self::get_sys_proxy_with_timeout().await;
 
@@ -293,7 +293,7 @@ impl EventDrivenProxyManager {
     async fn update_proxy_config(state: &Arc<RwLock<ProxyState>>) {
         log::debug!(target: "app", "更新代理配置");
 
-        let config = Self::get_proxy_config().await;
+        let config = Self::get_proxy_config();
 
         Self::update_state_timestamp(state, |s| {
             s.sys_enabled = config.sys_enabled;
@@ -336,7 +336,7 @@ impl EventDrivenProxyManager {
         }
 
         let current = Self::get_auto_proxy_with_timeout().await;
-        let expected = Self::get_expected_pac_config().await;
+        let expected = Self::get_expected_pac_config();
 
         Self::update_state_timestamp(state, |s| {
             s.auto_proxy = current.clone();
@@ -367,7 +367,7 @@ impl EventDrivenProxyManager {
         }
 
         let current = Self::get_sys_proxy_with_timeout().await;
-        let expected = Self::get_expected_sys_proxy().await;
+        let expected = Self::get_expected_sys_proxy();
 
         Self::update_state_timestamp(state, |s| {
             s.sys_proxy = current.clone();
@@ -404,12 +404,12 @@ impl EventDrivenProxyManager {
         let pac_enabled = state.read().await.pac_enabled;
 
         if pac_enabled {
-            let expected = Self::get_expected_pac_config().await;
+            let expected = Self::get_expected_pac_config();
             if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
                 log::error!(target: "app", "启用PAC代理失败: {}", e);
             }
         } else {
-            let expected = Self::get_expected_sys_proxy().await;
+            let expected = Self::get_expected_sys_proxy();
             if let Err(e) = Self::restore_sys_proxy(&expected).await {
                 log::error!(target: "app", "启用系统代理失败: {}", e);
             }
@@ -443,7 +443,7 @@ impl EventDrivenProxyManager {
             let disabled_sys = Sysproxy::default();
             logging_error!(Type::System, disabled_sys.set_system_proxy());
 
-            let expected = Self::get_expected_pac_config().await;
+            let expected = Self::get_expected_pac_config();
             if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
                 log::error!(target: "app", "切换到PAC模式失败: {}", e);
             }
@@ -451,7 +451,7 @@ impl EventDrivenProxyManager {
             let disabled_auto = Autoproxy::default();
             logging_error!(Type::System, disabled_auto.set_auto_proxy());
 
-            let expected = Self::get_expected_sys_proxy().await;
+            let expected = Self::get_expected_sys_proxy();
             if let Err(e) = Self::restore_sys_proxy(&expected).await {
                 log::error!(target: "app", "切换到HTTP代理模式失败: {}", e);
             }
@@ -493,10 +493,10 @@ impl EventDrivenProxyManager {
         state_guard.last_updated = std::time::Instant::now();
     }
 
-    async fn get_proxy_config() -> ProxyConfig {
+    fn get_proxy_config() -> ProxyConfig {
         let (sys_enabled, pac_enabled, guard_enabled, guard_duration) = {
-            let verge_config = Config::verge().await;
-            let verge = verge_config.latest_ref();
+            let verge_config = Config::verge();
+            let verge = verge_config.latest();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
@@ -512,10 +512,10 @@ impl EventDrivenProxyManager {
         }
     }
 
-    async fn get_expected_pac_config() -> Autoproxy {
+    fn get_expected_pac_config() -> Autoproxy {
         let proxy_host = {
-            let verge_config = Config::verge().await;
-            let verge = verge_config.latest_ref();
+            let verge_config = Config::verge();
+            let verge = verge_config.latest();
             verge
                 .proxy_host
                 .clone()
@@ -528,26 +528,26 @@ impl EventDrivenProxyManager {
         }
     }
 
-    async fn get_expected_sys_proxy() -> Sysproxy {
-        let verge_config = Config::verge().await;
-        let verge_mixed_port = verge_config.latest_ref().verge_mixed_port;
-        let proxy_host = verge_config.latest_ref().proxy_host.clone();
+    fn get_expected_sys_proxy() -> Sysproxy {
+        let verge_config = Config::verge();
+        let verge_mixed_port = verge_config.latest().verge_mixed_port;
+        let proxy_host = verge_config.latest().proxy_host.clone();
 
-        let port = verge_mixed_port.unwrap_or(Config::clash().await.latest_ref().get_mixed_port());
+        let port = verge_mixed_port.unwrap_or(Config::clash().latest().get_mixed_port());
         let proxy_host = proxy_host.unwrap_or_else(|| "127.0.0.1".into());
 
         Sysproxy {
             enable: true,
             host: proxy_host,
             port,
-            bypass: Self::get_bypass_config().await,
+            bypass: Self::get_bypass_config(),
         }
     }
 
-    async fn get_bypass_config() -> String {
+    fn get_bypass_config() -> String {
         let (use_default, custom_bypass) = {
-            let verge_config = Config::verge().await;
-            let verge = verge_config.latest_ref();
+            let verge_config = Config::verge();
+            let verge = verge_config.latest();
             (
                 verge.use_default_bypass.unwrap_or(true),
                 verge.system_proxy_bypass.clone().unwrap_or_default(),

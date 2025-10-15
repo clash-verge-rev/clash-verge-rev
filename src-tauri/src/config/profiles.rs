@@ -36,9 +36,9 @@ macro_rules! patch {
 }
 
 impl IProfiles {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         match dirs::profiles_path() {
-            Ok(path) => match help::read_yaml::<Self>(&path).await {
+            Ok(path) => match help::read_yaml::<Self>(&path) {
                 Ok(mut profiles) => {
                     if profiles.items.is_none() {
                         profiles.items = Some(vec![]);
@@ -72,13 +72,12 @@ impl IProfiles {
         }
     }
 
-    pub async fn save_file(&self) -> Result<()> {
+    pub fn save_file(&self) -> Result<()> {
         help::save_yaml(
             &dirs::profiles_path()?,
             self,
             Some("# Profiles Config for Clash Verge"),
         )
-        .await
     }
 
     /// 只修改current，valid和chain
@@ -168,7 +167,7 @@ impl IProfiles {
     }
 
     /// reorder items
-    pub async fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
+    pub fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
         let mut new_index = None;
@@ -189,11 +188,11 @@ impl IProfiles {
         let item = items.remove(old_idx);
         items.insert(new_idx, item);
         self.items = Some(items);
-        self.save_file().await
+        self.save_file()
     }
 
     /// update the item value
-    pub async fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
+    pub fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
@@ -209,7 +208,7 @@ impl IProfiles {
                 patch!(each, item, option);
 
                 self.items = Some(items);
-                return self.save_file().await;
+                return self.save_file();
             }
         }
 
@@ -258,7 +257,7 @@ impl IProfiles {
             }
         }
 
-        self.save_file().await
+        self.save_file()
     }
 
     /// delete item
@@ -382,12 +381,12 @@ impl IProfiles {
         }
 
         self.items = Some(items);
-        self.save_file().await?;
+        self.save_file()?;
         Ok(current == uid)
     }
 
     /// 获取current指向的订阅内容
-    pub async fn current_mapping(&self) -> Result<Mapping> {
+    pub fn current_mapping(&self) -> Result<Mapping> {
         match (self.current.as_ref(), self.items.as_ref()) {
             (Some(current), Some(items)) => {
                 if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
@@ -395,7 +394,7 @@ impl IProfiles {
                         Some(file) => dirs::app_profiles_dir()?.join(file),
                         None => bail!("failed to get the file field"),
                     };
-                    return help::read_mapping(&file_path).await;
+                    return help::read_mapping(&file_path);
                 }
                 bail!("failed to find the current profile \"uid:{current}\"");
             }
@@ -676,7 +675,6 @@ pub async fn profiles_append_item_with_filedata_safe(
 
 pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
     Config::profiles()
-        .await
         .with_data_modify(|mut profiles| async move {
             profiles.append_item(item).await?;
             Ok((profiles, ()))
@@ -686,9 +684,8 @@ pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
 
 pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()> {
     Config::profiles()
-        .await
         .with_data_modify(|mut profiles| async move {
-            profiles.patch_item(index, item).await?;
+            profiles.patch_item(index, item)?;
             Ok((profiles, ()))
         })
         .await
@@ -696,7 +693,6 @@ pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()
 
 pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
     Config::profiles()
-        .await
         .with_data_modify(|mut profiles| async move {
             let deleted = profiles.delete_item(index).await?;
             Ok((profiles, deleted))
@@ -706,9 +702,8 @@ pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
 
 pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result<()> {
     Config::profiles()
-        .await
         .with_data_modify(|mut profiles| async move {
-            profiles.reorder(active_id, over_id).await?;
+            profiles.reorder(active_id, over_id)?;
             Ok((profiles, ()))
         })
         .await
@@ -716,9 +711,8 @@ pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result
 
 pub async fn profiles_save_file_safe() -> Result<()> {
     Config::profiles()
-        .await
         .with_data_modify(|profiles| async move {
-            profiles.save_file().await?;
+            profiles.save_file()?;
             Ok((profiles, ()))
         })
         .await
@@ -726,7 +720,6 @@ pub async fn profiles_save_file_safe() -> Result<()> {
 
 pub async fn profiles_draft_update_item_safe(index: String, item: PrfItem) -> Result<()> {
     Config::profiles()
-        .await
         .with_data_modify(|mut profiles| async move {
             profiles.update_item(index, item).await?;
             Ok((profiles, ()))

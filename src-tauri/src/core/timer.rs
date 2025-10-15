@@ -49,7 +49,7 @@ impl Timer {
     }
 
     /// Initialize timer with better error handling and atomic operations
-    pub async fn init(&self) -> Result<()> {
+    pub fn init(&self) -> Result<()> {
         // Use compare_exchange for thread-safe initialization check
         if self
             .initialized
@@ -61,7 +61,7 @@ impl Timer {
         }
 
         // Initialize timer tasks
-        if let Err(e) = self.refresh().await {
+        if let Err(e) = self.refresh() {
             // Reset initialization flag on error
             self.initialized.store(false, Ordering::SeqCst);
             logging_error!(Type::Timer, "Failed to initialize timer: {}", e);
@@ -93,26 +93,25 @@ impl Timer {
         let cur_timestamp = chrono::Local::now().timestamp();
 
         // Collect profiles that need immediate update
-        let profiles_to_update =
-            if let Some(items) = Config::profiles().await.latest_ref().get_items() {
-                items
-                    .iter()
-                    .filter_map(|item| {
-                        let interval = item.option.as_ref()?.update_interval? as i64;
-                        let updated = item.updated? as i64;
-                        let uid = item.uid.as_ref()?;
+        let profiles_to_update = if let Some(items) = Config::profiles().latest().get_items() {
+            items
+                .iter()
+                .filter_map(|item| {
+                    let interval = item.option.as_ref()?.update_interval? as i64;
+                    let updated = item.updated? as i64;
+                    let uid = item.uid.as_ref()?;
 
-                        if interval > 0 && cur_timestamp - updated >= interval * 60 {
-                            logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
-                            Some(uid.clone())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<String>>()
-            } else {
-                Vec::new()
-            };
+                    if interval > 0 && cur_timestamp - updated >= interval * 60 {
+                        logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
+                        Some(uid.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<String>>()
+        } else {
+            Vec::new()
+        };
 
         // Advance tasks outside of locks to minimize lock contention
         if !profiles_to_update.is_empty() {
@@ -161,9 +160,9 @@ impl Timer {
     }
 
     /// Refresh timer tasks with better error handling
-    pub async fn refresh(&self) -> Result<()> {
+    pub fn refresh(&self) -> Result<()> {
         // Generate diff outside of lock to minimize lock contention
-        let diff_map = self.gen_diff().await;
+        let diff_map = self.gen_diff();
 
         if diff_map.is_empty() {
             logging!(debug, Type::Timer, "No timer changes needed");
@@ -258,10 +257,10 @@ impl Timer {
     }
 
     /// Generate map of profile UIDs to update intervals
-    async fn gen_map(&self) -> HashMap<String, u64> {
+    fn gen_map(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
-        if let Some(items) = Config::profiles().await.latest_ref().get_items() {
+        if let Some(items) = Config::profiles().latest().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref()
                     && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
@@ -289,9 +288,9 @@ impl Timer {
     }
 
     /// Generate differences between current and new timer configuration
-    async fn gen_diff(&self) -> HashMap<String, DiffFlag> {
+    fn gen_diff(&self) -> HashMap<String, DiffFlag> {
         let mut diff_map = HashMap::new();
-        let new_map = self.gen_map().await;
+        let new_map = self.gen_map();
 
         // Read lock for comparing current state
         let timer_map = self.timer_map.read();
@@ -394,7 +393,7 @@ impl Timer {
     }
 
     /// Get next update time for a profile
-    pub async fn get_next_update_time(&self, uid: &str) -> Option<i64> {
+    pub fn get_next_update_time(&self, uid: &str) -> Option<i64> {
         logging!(info, Type::Timer, "获取下次更新时间，uid={}", uid);
 
         // First extract timer task data without holding the lock across await
@@ -410,8 +409,8 @@ impl Timer {
         };
 
         // Get the profile updated timestamp - now safe to await
-        let config_profiles = Config::profiles().await;
-        let profiles = config_profiles.data_ref().clone();
+        let config_profiles = Config::profiles();
+        let profiles = config_profiles.data().clone();
         let items = match profiles.get_items() {
             Some(i) => i,
             None => {
@@ -472,7 +471,7 @@ impl Timer {
         match tokio::time::timeout(std::time::Duration::from_secs(40), async {
             Self::emit_update_event(&uid, true);
 
-            let is_current = Config::profiles().await.latest_ref().current.as_ref() == Some(&uid);
+            let is_current = Config::profiles().latest().current.as_ref() == Some(&uid);
             logging!(
                 info,
                 Type::Timer,

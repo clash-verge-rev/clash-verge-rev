@@ -50,12 +50,7 @@ async fn clean_async() -> bool {
     logging!(info, Type::System, "开始执行异步清理操作...");
 
     // 1. 处理TUN模式
-    let tun_success = if Config::verge()
-        .await
-        .data_mut()
-        .enable_tun_mode
-        .unwrap_or(false)
-    {
+    let tun_success = if Config::verge().data_mut().enable_tun_mode.unwrap_or(false) {
         let disable_tun = serde_json::json!({"tun": {"enable": false}});
         #[cfg(target_os = "windows")]
         let tun_timeout = Duration::from_secs(2);
@@ -166,8 +161,7 @@ async fn clean_async() -> bool {
         #[cfg(not(target_os = "windows"))]
         {
             let sys_proxy_enabled = Config::verge()
-                .await
-                .latest_ref()
+                .latest()
                 .enable_system_proxy
                 .unwrap_or(false);
 

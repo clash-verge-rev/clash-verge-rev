@@ -10,10 +10,7 @@ use serde_yaml_ng::Mapping;
 
 /// Patch Clash configuration
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
-    Config::clash()
-        .await
-        .draft_mut()
-        .patch_config(patch.clone());
+    Config::clash().draft().patch_config(patch.clone());
 
     let res = {
         // 激活订阅
@@ -23,9 +20,9 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         } else {
             if patch.get("mode").is_some() {
                 logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
-                logging_error!(Type::Tray, tray::Tray::global().update_icon().await);
+                logging_error!(Type::Tray, tray::Tray::global().update_icon());
             }
-            Config::runtime().await.draft_mut().patch_config(patch);
+            Config::runtime().draft().patch_config(patch);
             CoreManager::global().update_config().await?;
         }
         handle::Handle::refresh_clash();
@@ -33,14 +30,12 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
     };
     match res {
         Ok(()) => {
-            Config::clash().await.apply();
-            // 分离数据获取和异步调用
-            let clash_data = Config::clash().await.data_mut().clone();
-            clash_data.save_config().await?;
+            Config::clash().apply();
+            Config::clash().latest().save_config()?;
             Ok(())
         }
         Err(err) => {
-            Config::clash().await.discard();
+            Config::clash().discard();
             Err(err)
         }
     }
@@ -65,10 +60,7 @@ enum UpdateFlags {
 
 /// Patch Verge configuration
 pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
-    Config::verge()
-        .await
-        .draft_mut()
-        .patch_config(patch.clone());
+    Config::verge().draft().patch_config(patch.clone());
 
     let tun_mode = patch.enable_tun_mode;
     let auto_launch = patch.enable_auto_launch;
@@ -189,11 +181,11 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             handle::Handle::refresh_clash();
         }
         if (update_flags & (UpdateFlags::VergeConfig as i32)) != 0 {
-            Config::verge().await.draft_mut().enable_global_hotkey = enable_global_hotkey;
+            Config::verge().draft().enable_global_hotkey = enable_global_hotkey;
             handle::Handle::refresh_verge();
         }
         if (update_flags & (UpdateFlags::Launch as i32)) != 0 {
-            sysopt::Sysopt::global().update_launch().await?;
+            sysopt::Sysopt::global().update_launch()?;
         }
         if (update_flags & (UpdateFlags::SysProxy as i32)) != 0 {
             sysopt::Sysopt::global().update_sysproxy().await?;
@@ -207,17 +199,17 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
             tray::Tray::global().update_menu().await?;
         }
         if (update_flags & (UpdateFlags::SystrayIcon as i32)) != 0 {
-            tray::Tray::global().update_icon().await?;
+            tray::Tray::global().update_icon()?;
         }
         if (update_flags & (UpdateFlags::SystrayTooltip as i32)) != 0 {
             tray::Tray::global().update_tooltip().await?;
         }
         if (update_flags & (UpdateFlags::SystrayClickBehavior as i32)) != 0 {
-            tray::Tray::global().update_click_behavior().await?;
+            tray::Tray::global().update_click_behavior()?;
         }
         if (update_flags & (UpdateFlags::LighteWeight as i32)) != 0 {
             if enable_auto_light_weight.unwrap_or(false) {
-                lightweight::enable_auto_light_weight_mode().await;
+                lightweight::enable_auto_light_weight_mode();
             } else {
                 lightweight::disable_auto_light_weight_mode();
             }
@@ -227,17 +219,17 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
     };
     match res {
         Ok(()) => {
-            Config::verge().await.apply();
+            Config::verge().apply();
             if !not_save_file {
                 // 分离数据获取和异步调用
-                let verge_data = Config::verge().await.data_mut().clone();
-                verge_data.save_file().await?;
+                let verge_data = Config::verge().data_mut().clone();
+                verge_data.save_file()?;
             }
 
             Ok(())
         }
         Err(err) => {
-            Config::verge().await.discard();
+            Config::verge().discard();
             Err(err)
         }
     }

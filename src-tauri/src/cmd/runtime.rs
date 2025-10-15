@@ -7,14 +7,14 @@ use std::collections::HashMap;
 /// 获取运行时配置
 #[tauri::command]
 pub async fn get_runtime_config() -> CmdResult<Option<Mapping>> {
-    Ok(Config::runtime().await.latest_ref().config.clone())
+    Ok(Config::runtime().latest().config.clone())
 }
 
 /// 获取运行时YAML配置
 #[tauri::command]
 pub async fn get_runtime_yaml() -> CmdResult<String> {
-    let runtime = Config::runtime().await;
-    let runtime = runtime.latest_ref();
+    let runtime = Config::runtime();
+    let runtime = runtime.latest();
 
     let config = runtime.config.as_ref();
     wrap_err!(
@@ -28,19 +28,19 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
 /// 获取运行时存在的键
 #[tauri::command]
 pub async fn get_runtime_exists() -> CmdResult<Vec<String>> {
-    Ok(Config::runtime().await.latest_ref().exists_keys.clone())
+    Ok(Config::runtime().latest().exists_keys.clone())
 }
 
 /// 获取运行时日志
 #[tauri::command]
 pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String)>>> {
-    Ok(Config::runtime().await.latest_ref().chain_logs.clone())
+    Ok(Config::runtime().latest().chain_logs.clone())
 }
 
 #[tauri::command]
 pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> CmdResult<String> {
-    let runtime = Config::runtime().await;
-    let runtime = runtime.latest_ref();
+    let runtime = Config::runtime();
+    let runtime = runtime.latest();
 
     let config = wrap_err!(
         runtime
@@ -94,15 +94,15 @@ pub async fn update_proxy_chain_config_in_runtime(
     proxy_chain_config: Option<serde_yaml_ng::Value>,
 ) -> CmdResult<()> {
     {
-        let runtime = Config::runtime().await;
-        let mut draft = runtime.draft_mut();
+        let runtime = Config::runtime();
+        let mut draft = runtime.draft();
         draft.update_proxy_chain_config(proxy_chain_config);
         drop(draft);
         runtime.apply();
     }
 
     // 生成新的运行配置文件并通知 Clash 核心重新加载
-    let run_path = wrap_err!(Config::generate_file(ConfigType::Run).await)?;
+    let run_path = wrap_err!(Config::generate_file(ConfigType::Run))?;
     log_err!(CoreManager::global().put_configs_force(run_path).await);
 
     Ok(())

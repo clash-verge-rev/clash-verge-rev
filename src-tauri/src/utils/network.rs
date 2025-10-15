@@ -147,7 +147,7 @@ impl NetworkManager {
         }
     }
 
-    pub async fn create_request(
+    pub fn create_request(
         &self,
         proxy_type: ProxyType,
         timeout_secs: Option<u64>,
@@ -158,10 +158,10 @@ impl NetworkManager {
             ProxyType::None => None,
             ProxyType::Localhost => {
                 let port = {
-                    let verge_port = Config::verge().await.latest_ref().verge_mixed_port;
+                    let verge_port = Config::verge().latest().verge_mixed_port;
                     match verge_port {
                         Some(port) => port,
-                        None => Config::clash().await.latest_ref().get_mixed_port(),
+                        None => Config::clash().latest().get_mixed_port(),
                     }
                 };
                 let proxy_scheme = format!("http://127.0.0.1:{port}");
@@ -224,9 +224,8 @@ impl NetworkManager {
             no_auth.to_string()
         };
 
-        let client = self
-            .create_request(proxy_type, timeout_secs, user_agent, accept_invalid_certs)
-            .await?;
+        let client =
+            self.create_request(proxy_type, timeout_secs, user_agent, accept_invalid_certs)?;
 
         let timeout_duration = Duration::from_secs(timeout_secs.unwrap_or(20));
         let response = match timeout(timeout_duration, async {

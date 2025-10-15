@@ -86,15 +86,12 @@ async fn set_lightweight_mode(value: bool) {
 }
 
 pub async fn run_once_auto_lightweight() {
-    let verge_config = Config::verge().await;
+    let verge_config = Config::verge();
     let enable_auto = verge_config
         .data_mut()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
-    let is_silent_start = verge_config
-        .latest_ref()
-        .enable_silent_start
-        .unwrap_or(false);
+    let is_silent_start = verge_config.latest().enable_silent_start.unwrap_or(false);
 
     if !(enable_auto && is_silent_start) {
         logging!(
@@ -106,19 +103,18 @@ pub async fn run_once_auto_lightweight() {
     }
 
     set_lightweight_mode(true).await;
-    enable_auto_light_weight_mode().await;
+    enable_auto_light_weight_mode();
 }
 
 pub async fn auto_lightweight_mode_init() -> Result<()> {
-    let is_silent_start =
-        { Config::verge().await.latest_ref().enable_silent_start }.unwrap_or(false);
-    let enable_auto = {
-        Config::verge()
-            .await
-            .latest_ref()
-            .enable_auto_light_weight_mode
-    }
-    .unwrap_or(false);
+    let is_silent_start = Config::verge()
+        .latest()
+        .enable_silent_start
+        .unwrap_or(false);
+    let enable_auto = Config::verge()
+        .latest()
+        .enable_auto_light_weight_mode
+        .unwrap_or(false);
 
     if enable_auto && !is_silent_start {
         logging!(
@@ -127,14 +123,14 @@ pub async fn auto_lightweight_mode_init() -> Result<()> {
             "非静默启动直接挂载自动进入轻量模式监听器！"
         );
         set_state(LightweightState::Normal);
-        enable_auto_light_weight_mode().await;
+        enable_auto_light_weight_mode();
     }
 
     Ok(())
 }
 
-pub async fn enable_auto_light_weight_mode() {
-    if let Err(e) = Timer::global().init().await {
+pub fn enable_auto_light_weight_mode() {
+    if let Err(e) = Timer::global().init() {
         logging!(error, Type::Lightweight, "Failed to initialize timer: {e}");
         return;
     }
@@ -217,7 +213,7 @@ fn setup_window_close_listener() {
     if let Some(window) = handle::Handle::get_window() {
         let handler = window.listen("tauri://close-requested", move |_event| {
             std::mem::drop(AsyncHandler::spawn(|| async {
-                if let Err(e) = setup_light_weight_timer().await {
+                if let Err(e) = setup_light_weight_timer() {
                     log::warn!("Failed to setup light weight timer: {e}");
                 }
             }));
@@ -263,11 +259,10 @@ fn cancel_webview_focus_listener() {
     }
 }
 
-async fn setup_light_weight_timer() -> Result<()> {
-    Timer::global().init().await?;
+fn setup_light_weight_timer() -> Result<()> {
+    Timer::global().init()?;
     let once_by_minutes = Config::verge()
-        .await
-        .latest_ref()
+        .latest()
         .auto_light_weight_minutes
         .unwrap_or(10);
 

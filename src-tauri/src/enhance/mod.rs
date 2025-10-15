@@ -16,11 +16,11 @@ type ResultLog = Vec<(String, String)>;
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
 pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // config.yaml 的订阅
-    let clash_config = { Config::clash().await.latest_ref().0.clone() };
+    let clash_config = Config::clash().latest().0.clone();
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = {
-        let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = Config::verge();
+        let verge = verge.latest();
         (
             Some(verge.get_valid_clash_core()),
             verge.enable_tun_mode.unwrap_or(false),
@@ -32,14 +32,14 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     };
     #[cfg(not(target_os = "windows"))]
     let redir_enabled = {
-        let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = Config::verge();
+        let verge = verge.latest();
         verge.verge_redir_enabled.unwrap_or(false)
     };
     #[cfg(target_os = "linux")]
     let tproxy_enabled = {
-        let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = Config::verge();
+        let verge = verge.latest();
         verge.verge_tproxy_enabled.unwrap_or(false)
     };
 
@@ -68,14 +68,14 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         ) = {
             // 分离async调用和数据获取，避免借用检查问题
             let current = {
-                let profiles = Config::profiles().await;
-                let profiles_clone = profiles.latest_ref().clone();
-                profiles_clone.current_mapping().await.unwrap_or_default()
+                let profiles = Config::profiles();
+                let profiles_clone = profiles.latest().clone();
+                profiles_clone.current_mapping().unwrap_or_default()
             };
 
             // 重新获取锁进行其他操作
-            let profiles = Config::profiles().await;
-            let profiles_ref = profiles.latest_ref();
+            let profiles = Config::profiles();
+            let profiles_ref = profiles.latest();
 
             let merge_uid = profiles_ref.current_merge().unwrap_or_default();
             let script_uid = profiles_ref.current_script().unwrap_or_default();
@@ -105,8 +105,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         // 现在获取具体的items，此时profiles锁已经释放
         let merge = {
             let item = {
-                let profiles = Config::profiles().await;
-                let profiles = profiles.latest_ref();
+                let profiles = Config::profiles();
+                let profiles = profiles.latest();
                 profiles.get_item(&merge_uid).ok().cloned()
             };
             if let Some(item) = item {
@@ -122,8 +122,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
         let script = {
             let item = {
-                let profiles = Config::profiles().await;
-                let profiles = profiles.latest_ref();
+                let profiles = Config::profiles();
+                let profiles = profiles.latest();
                 profiles.get_item(&script_uid).ok().cloned()
             };
             if let Some(item) = item {
@@ -139,8 +139,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
         let rules = {
             let item = {
-                let profiles = Config::profiles().await;
-                let profiles = profiles.latest_ref();
+                let profiles = Config::profiles();
+                let profiles = profiles.latest();
                 profiles.get_item(&rules_uid).ok().cloned()
             };
             if let Some(item) = item {
@@ -156,8 +156,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
         let proxies = {
             let item = {
-                let profiles = Config::profiles().await;
-                let profiles = profiles.latest_ref();
+                let profiles = Config::profiles();
+                let profiles = profiles.latest();
                 profiles.get_item(&proxies_uid).ok().cloned()
             };
             if let Some(item) = item {
@@ -173,8 +173,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
         let groups = {
             let item = {
-                let profiles = Config::profiles().await;
-                let profiles = profiles.latest_ref();
+                let profiles = Config::profiles();
+                let profiles = profiles.latest();
                 profiles.get_item(&groups_uid).ok().cloned()
             };
             if let Some(item) = item {
@@ -190,8 +190,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
         let global_merge = {
             let item = {
-                let profiles = Config::profiles().await;
-                let profiles = profiles.latest_ref();
+                let profiles = Config::profiles();
+                let profiles = profiles.latest();
                 profiles.get_item(&"Merge".to_string()).ok().cloned()
             };
             if let Some(item) = item {
@@ -207,8 +207,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
         let global_script = {
             let item = {
-                let profiles = Config::profiles().await;
-                let profiles = profiles.latest_ref();
+                let profiles = Config::profiles();
+                let profiles = profiles.latest();
                 profiles.get_item(&"Script".to_string()).ok().cloned()
             };
             if let Some(item) = item {
@@ -335,8 +335,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             // 处理 external-controller 键的开关逻辑
             if key.as_str() == Some("external-controller") {
                 let enable_external_controller = Config::verge()
-                    .await
-                    .latest_ref()
+                    .latest()
                     .enable_external_controller
                     .unwrap_or(false);
 

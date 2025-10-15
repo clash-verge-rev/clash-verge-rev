@@ -28,8 +28,8 @@ static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 pub async fn get_profiles() -> CmdResult<IProfiles> {
     // 策略1: 尝试快速获取latest数据
     let latest_result = tokio::time::timeout(Duration::from_millis(500), async {
-        let profiles = Config::profiles().await;
-        let latest = profiles.latest_ref();
+        let profiles = Config::profiles();
+        let latest = profiles.latest();
         IProfiles {
             current: latest.current.clone(),
             items: latest.items.clone(),
@@ -49,8 +49,8 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
 
     // 策略2: 如果快速获取失败，尝试获取data()
     let data_result = tokio::time::timeout(Duration::from_secs(2), async {
-        let profiles = Config::profiles().await;
-        let data = profiles.latest_ref();
+        let profiles = Config::profiles();
+        let data = profiles.latest();
         IProfiles {
             current: data.current.clone(),
             items: data.items.clone(),
@@ -76,7 +76,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
     // 策略3: fallback，尝试重新创建配置
     logging!(warn, Type::Cmd, "所有获取配置策略都失败，尝试fallback");
 
-    Ok(IProfiles::new().await)
+    Ok(IProfiles::new())
 }
 
 /// 增强配置文件
@@ -248,7 +248,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     }
 
     // 保存当前配置，以便在验证失败时恢复
-    let current_profile = Config::profiles().await.latest_ref().current.clone();
+    let current_profile = Config::profiles().latest().current.clone();
     logging!(info, Type::Cmd, "当前配置: {:?}", current_profile);
 
     // 如果要切换配置，先检查目标配置文件是否有语法错误
@@ -259,8 +259,8 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
         // 获取目标配置文件路径
         let config_file_result = {
-            let profiles_config = Config::profiles().await;
-            let profiles_data = profiles_config.latest_ref();
+            let profiles_config = Config::profiles();
+            let profiles_data = profiles_config.latest();
             match profiles_data.get_item(new_profile) {
                 Ok(item) => {
                     if let Some(file) = &item.file {
@@ -378,7 +378,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     let current_value = profiles.current.clone();
 
-    let _ = Config::profiles().await.draft_mut().patch_config(profiles);
+    let _ = Config::profiles().draft().patch_config(profiles);
 
     // 在调用内核前再次验证请求有效性
     let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
@@ -390,7 +390,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
             current_sequence,
             latest_sequence
         );
-        Config::profiles().await.discard();
+        Config::profiles().discard();
         return Ok(false);
     }
 
@@ -420,7 +420,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                     current_sequence,
                     latest_sequence
                 );
-                Config::profiles().await.discard();
+                Config::profiles().discard();
                 return Ok(false);
             }
 
@@ -430,7 +430,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 "配置更新成功，序列号: {}",
                 current_sequence
             );
-            Config::profiles().await.apply();
+            Config::profiles().apply();
             handle::Handle::refresh_clash();
 
             // 强制刷新代理缓存，确保profile切换后立即获取最新节点数据
@@ -470,7 +470,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         }
         Ok(Ok((false, error_msg))) => {
             logging!(warn, Type::Cmd, "配置验证失败: {}", error_msg);
-            Config::profiles().await.discard();
+            Config::profiles().discard();
             // 如果验证失败，恢复到之前的配置
             if let Some(prev_profile) = current_profile {
                 logging!(info, Type::Cmd, "尝试恢复到之前的配置: {}", prev_profile);
@@ -479,13 +479,8 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                     items: None,
                 };
                 // 静默恢复，不触发验证
-                wrap_err!({
-                    Config::profiles()
-                        .await
-                        .draft_mut()
-                        .patch_config(restore_profiles)
-                })?;
-                Config::profiles().await.apply();
+                wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
+                Config::profiles().apply();
 
                 crate::process::AsyncHandler::spawn(|| async move {
                     if let Err(e) = profiles_save_file_safe().await {
@@ -509,7 +504,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 e,
                 current_sequence
             );
-            Config::profiles().await.discard();
+            Config::profiles().discard();
             handle::Handle::notice_message("config_validate::boot_error", e.to_string());
 
             CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
@@ -525,7 +520,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                 timeout_msg,
                 current_sequence
             );
-            Config::profiles().await.discard();
+            Config::profiles().discard();
 
             if let Some(prev_profile) = current_profile {
                 logging!(
@@ -539,13 +534,8 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
                     current: Some(prev_profile),
                     items: None,
                 };
-                wrap_err!({
-                    Config::profiles()
-                        .await
-                        .draft_mut()
-                        .patch_config(restore_profiles)
-                })?;
-                Config::profiles().await.apply();
+                wrap_err!({ Config::profiles().draft().patch_config(restore_profiles) })?;
+                Config::profiles().apply();
             }
 
             handle::Handle::notice_message("config_validate::timeout", timeout_msg);
@@ -571,8 +561,8 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 #[tauri::command]
 pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 保存修改前检查是否有更新 update_interval
-    let profiles = Config::profiles().await;
-    let update_interval_changed = if let Ok(old_profile) = profiles.latest_ref().get_item(&index) {
+    let profiles = Config::profiles();
+    let update_interval_changed = if let Ok(old_profile) = profiles.latest().get_item(&index) {
         let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
         let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
         old_interval != new_interval
@@ -588,7 +578,7 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         let index_clone = index.clone();
         crate::process::AsyncHandler::spawn(move || async move {
             logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");
-            if let Err(e) = crate::core::Timer::global().refresh().await {
+            if let Err(e) = crate::core::Timer::global().refresh() {
                 logging!(error, Type::Timer, "刷新定时器失败: {}", e);
             } else {
                 // 刷新成功后发送自定义事件，不触发配置重载
@@ -603,8 +593,8 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 /// 查看配置文件
 #[tauri::command]
 pub async fn view_profile(index: String) -> CmdResult {
-    let profiles = Config::profiles().await;
-    let profiles_ref = profiles.latest_ref();
+    let profiles = Config::profiles();
+    let profiles_ref = profiles.latest();
     let file = {
         wrap_err!(profiles_ref.get_item(&index))?
             .file
@@ -623,8 +613,8 @@ pub async fn view_profile(index: String) -> CmdResult {
 /// 读取配置文件内容
 #[tauri::command]
 pub async fn read_profile_file(index: String) -> CmdResult<String> {
-    let profiles = Config::profiles().await;
-    let profiles_ref = profiles.latest_ref();
+    let profiles = Config::profiles();
+    let profiles_ref = profiles.latest();
     let item = wrap_err!(profiles_ref.get_item(&index))?;
     let data = wrap_err!(item.read_file())?;
     Ok(data)
@@ -634,6 +624,6 @@ pub async fn read_profile_file(index: String) -> CmdResult<String> {
 #[tauri::command]
 pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
     let timer = Timer::global();
-    let next_time = timer.get_next_update_time(&uid).await;
+    let next_time = timer.get_next_update_time(&uid);
     Ok(next_time)
 }

@@ -26,15 +26,11 @@ static DEFAULT_BYPASS: &str =
 #[cfg(target_os = "macos")]
 static DEFAULT_BYPASS: &str = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
 
-async fn get_bypass() -> String {
-    let use_default = Config::verge()
-        .await
-        .latest_ref()
-        .use_default_bypass
-        .unwrap_or(true);
+fn get_bypass() -> String {
+    let use_default = Config::verge().latest().use_default_bypass.unwrap_or(true);
     let res = {
-        let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = Config::verge();
+        let verge = verge.latest();
         verge.system_proxy_bypass.clone()
     };
     let custom_bypass = match res {
@@ -107,17 +103,17 @@ impl Sysopt {
         let _lock = self.update_sysproxy.lock().await;
 
         let port = {
-            let verge_port = Config::verge().await.latest_ref().verge_mixed_port;
+            let verge_port = Config::verge().latest().verge_mixed_port;
             match verge_port {
                 Some(port) => port,
-                None => Config::clash().await.latest_ref().get_mixed_port(),
+                None => Config::clash().latest().get_mixed_port(),
             }
         };
         let pac_port = IVerge::get_singleton_port();
 
         let (sys_enable, pac_enable, proxy_host) = {
-            let verge = Config::verge().await;
-            let verge = verge.latest_ref();
+            let verge = Config::verge();
+            let verge = verge.latest();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
@@ -134,7 +130,7 @@ impl Sysopt {
                 enable: false,
                 host: proxy_host.clone(),
                 port,
-                bypass: get_bypass().await,
+                bypass: get_bypass(),
             };
             let mut auto = Autoproxy {
                 enable: false,
@@ -227,8 +223,8 @@ impl Sysopt {
     }
 
     /// update the startup
-    pub async fn update_launch(&self) -> Result<()> {
-        let enable_auto_launch = { Config::verge().await.latest_ref().enable_auto_launch };
+    pub fn update_launch(&self) -> Result<()> {
+        let enable_auto_launch = { Config::verge().latest().enable_auto_launch };
         let is_enable = enable_auto_launch.unwrap_or(false);
         logging!(
             info,

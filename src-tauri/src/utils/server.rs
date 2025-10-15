@@ -81,19 +81,19 @@ pub fn embed_server() {
             ))
         });
 
-        let verge_config = Config::verge().await;
-        let clash_config = Config::clash().await;
+        let verge_config = Config::verge();
+        let clash_config = Config::clash();
 
         let content = verge_config
-            .latest_ref()
+            .latest()
             .pac_file_content
             .clone()
             .unwrap_or(DEFAULT_PAC.into());
 
         let mixed_port = verge_config
-            .latest_ref()
+            .latest()
             .verge_mixed_port
-            .unwrap_or(clash_config.latest_ref().get_mixed_port());
+            .unwrap_or(clash_config.latest().get_mixed_port());
 
         // Clone the content and port for the closure to avoid borrowing issues
         let pac_content = content.clone();

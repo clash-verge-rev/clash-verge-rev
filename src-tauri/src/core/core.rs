@@ -138,25 +138,25 @@ impl CoreManager {
         Ok(false)
     }
     /// 使用默认配置
-    pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
+    pub fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
 
         // Extract clash config before async operations
-        let clash_config = Config::clash().await.latest_ref().0.clone();
+        let clash_config = Config::clash().latest().0.clone();
 
-        *Config::runtime().await.draft_mut() = Box::new(IRuntime {
+        *Config::runtime().draft() = IRuntime {
             config: Some(clash_config.clone()),
             exists_keys: vec![],
             chain_logs: Default::default(),
-        });
-        help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime")).await?;
+        };
+        help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime"))?;
         handle::Handle::notice_message(msg_type, msg_content);
         Ok(())
     }
     /// 验证运行时配置
     pub async fn validate_config(&self) -> Result<(bool, String)> {
         logging!(info, Type::Config, "生成临时配置文件用于验证");
-        let config_path = Config::generate_file(ConfigType::Check).await?;
+        let config_path = Config::generate_file(ConfigType::Check)?;
         let config_path = dirs::path_to_str(&config_path)?;
         self.validate_config_internal(config_path).await
     }
@@ -239,7 +239,7 @@ impl CoreManager {
 
         logging!(info, Type::Config, "开始验证配置文件: {}", config_path);
 
-        let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
+        let clash_core = Config::verge().latest().get_valid_clash_core();
         logging!(info, Type::Config, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::app_handle();
@@ -380,18 +380,18 @@ impl CoreManager {
             Ok((true, _)) => {
                 // 4. 验证通过后，生成正式的运行时配置
                 logging!(info, Type::Config, "配置验证通过, 生成运行时配置");
-                let run_path = Config::generate_file(ConfigType::Run).await?;
+                let run_path = Config::generate_file(ConfigType::Run)?;
                 logging_error!(Type::Config, self.put_configs_force(run_path).await);
                 Ok((true, "something".into()))
             }
             Ok((false, error_msg)) => {
                 logging!(warn, Type::Config, "配置验证失败: {}", error_msg);
-                Config::runtime().await.discard();
+                Config::runtime().discard();
                 Ok((false, error_msg))
             }
             Err(e) => {
                 logging!(warn, Type::Config, "验证过程发生错误: {}", e);
-                Config::runtime().await.discard();
+                Config::runtime().discard();
                 Err(e)
             }
         }
@@ -408,13 +408,13 @@ impl CoreManager {
             .await
         {
             Ok(_) => {
-                Config::runtime().await.apply();
+                Config::runtime().apply();
                 logging!(info, Type::Core, "Configuration updated successfully");
                 Ok(())
             }
             Err(e) => {
                 let msg = e.to_string();
-                Config::runtime().await.discard();
+                Config::runtime().discard();
                 logging_error!(Type::Core, "Failed to update configuration: {}", msg);
                 Err(msg)
             }
@@ -718,9 +718,9 @@ impl CoreManager {
     async fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(info, Type::Core, "Running core by sidecar");
 
-        let config_file = &Config::generate_file(ConfigType::Run).await?;
+        let config_file = &Config::generate_file(ConfigType::Run)?;
         let app_handle = handle::Handle::app_handle();
-        let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
+        let clash_core = Config::verge().latest().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         let (mut rx, child) = app_handle
@@ -798,7 +798,7 @@ impl CoreManager {
 impl CoreManager {
     async fn start_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Running core by service");
-        let config_file = &Config::generate_file(ConfigType::Run).await?;
+        let config_file = &Config::generate_file(ConfigType::Run)?;
         service::run_core_by_service(config_file).await?;
         self.set_running_mode(RunningMode::Service);
         Ok(())
@@ -930,14 +930,14 @@ impl CoreManager {
             return Err(error_message);
         }
 
-        Config::verge().await.draft_mut().clash_core = clash_core.clone();
-        Config::verge().await.apply();
+        Config::verge().draft().clash_core = clash_core.clone();
+        Config::verge().apply();
 
         // 分离数据获取和异步调用避免Send问题
-        let verge_data = Config::verge().await.latest_ref().clone();
-        logging_error!(Type::Core, verge_data.save_file().await);
+        let verge_data = Config::verge().latest().clone();
+        logging_error!(Type::Core, verge_data.save_file());
 
-        let run_path = Config::generate_file(ConfigType::Run).await.map_err(|e| {
+        let run_path = Config::generate_file(ConfigType::Run).map_err(|e| {
             let msg = e.to_string();
             logging_error!(Type::Core, "{}", msg);
             msg
