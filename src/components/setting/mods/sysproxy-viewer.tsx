@@ -13,7 +13,6 @@ import {
 import { useLockFn } from "ahooks";
 import {
   forwardRef,
-  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -39,6 +38,11 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
@@ -134,39 +138,35 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const prevMixedPortRef = useRef(clashConfig?.mixedPort);
 
-  const resetSystemProxy = useCallback(async () => {
-    try {
-      const currentSysProxy = await getSystemProxy();
-      const currentAutoProxy = await getAutotemProxy();
-
-      if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
-        // 临时关闭系统代理
-        await patchVergeConfig({ enable_system_proxy: false });
-
-        // 减少等待时间
-        await new Promise((resolve) => setTimeout(resolve, 200));
-
-        // 重新开启系统代理
-        await patchVergeConfig({ enable_system_proxy: true });
-
-        // 更新UI状态
-        await Promise.all([
-          mutate("getSystemProxy"),
-          mutate("getAutotemProxy"),
-        ]);
-      }
-    } catch (err: any) {
-      showNotice("error", err.toString());
-    }
-  }, [value.pac]);
-
   useEffect(() => {
     const mixedPort = clashConfig?.mixedPort;
-    if (mixedPort && mixedPort !== prevMixedPortRef.current) {
-      prevMixedPortRef.current = mixedPort;
-      void resetSystemProxy();
+    if (!mixedPort || mixedPort === prevMixedPortRef.current) {
+      return;
     }
-  }, [clashConfig?.mixedPort, resetSystemProxy]);
+
+    prevMixedPortRef.current = mixedPort;
+
+    const updateProxy = async () => {
+      try {
+        const currentSysProxy = await getSystemProxy();
+        const currentAutoProxy = await getAutotemProxy();
+
+        if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
+          await patchVergeConfig({ enable_system_proxy: false });
+          await sleep(200);
+          await patchVergeConfig({ enable_system_proxy: true });
+          await Promise.all([
+            mutate("getSystemProxy"),
+            mutate("getAutotemProxy"),
+          ]);
+        }
+      } catch (err: any) {
+        showNotice("error", err.toString());
+      }
+    };
+
+    updateProxy();
+  }, [clashConfig?.mixedPort, value.pac]);
 
   const { systemProxyAddress } = useAppData();
 
