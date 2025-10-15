@@ -6,7 +6,7 @@ import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
 import HomeSvg from "@/assets/image/itemicon/home.svg?react";
@@ -30,7 +30,7 @@ import UnlockPage from "./unlock";
 export const navItems = [
   {
     label: "Label-Home",
-    path: "/",
+    path: "/home",
     icon: [<HomeRoundedIcon key="mui" />, <HomeSvg key="svg" />],
   },
   {
@@ -75,7 +75,8 @@ export const router = createBrowserRouter([
     path: "/",
     Component: Layout,
     children: [
-      { index: true, Component: HomePage },
+      { index: true, element: <Navigate to="/home" /> },
+      { path: "home", Component: HomePage },
       { path: "proxies", Component: ProxiesPage },
       { path: "profile", Component: ProfilesPage },
       { path: "connections", Component: ConnectionsPage },

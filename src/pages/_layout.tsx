@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useNavigate, useRoutes } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 import { SWRConfig, mutate } from "swr";
 
 import iconDark from "@/assets/image/icon_dark.svg?react";
@@ -165,12 +165,9 @@ const Layout = () => {
   const { language } = verge ?? {};
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
-  const routersEles = useRoutes(navItems);
   const { addListener } = useListen();
   const initRef = useRef(false);
   const overlayRemovedRef = useRef(false);
-  const lastStartPageRef = useRef<string | null>(null);
-  const startPageAppliedRef = useRef(false);
   const themeReady = useMemo(() => Boolean(theme), [theme]);
 
   const windowControls = useRef<any>(null);
@@ -538,22 +535,6 @@ const Layout = () => {
           height: "100vh",
           background: mode === "light" ? "#fff" : "#181a1b",
           transition: "background 0.2s",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: mode === "light" ? "#333" : "#fff",
-        }}
-      ></div>
-    );
-  }
-
-  if (!routersEles) {
-    return (
-      <div
-        style={{
-          width: "100vw",
-          height: "100vh",
-          background: mode === "light" ? "#fff" : "#181a1b",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
