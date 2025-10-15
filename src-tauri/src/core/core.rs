@@ -932,10 +932,7 @@ impl CoreManager {
 
         Config::verge().draft().clash_core = clash_core.clone();
         Config::verge().apply();
-
-        // 分离数据获取和异步调用避免Send问题
-        let verge_data = Config::verge().latest().clone();
-        logging_error!(Type::Core, verge_data.save_file());
+        logging_error!(Type::Core, Config::verge().latest().save_file());
 
         let run_path = Config::generate_file(ConfigType::Run).map_err(|e| {
             let msg = e.to_string();

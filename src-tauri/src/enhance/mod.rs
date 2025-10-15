@@ -66,17 +66,10 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             _current_profile_uid,
             name,
         ) = {
-            // 分离async调用和数据获取，避免借用检查问题
-            let current = {
-                let profiles = Config::profiles();
-                let profiles_clone = profiles.latest().clone();
-                profiles_clone.current_mapping().unwrap_or_default()
-            };
-
-            // 重新获取锁进行其他操作
             let profiles = Config::profiles();
             let profiles_ref = profiles.latest();
 
+            let current = profiles_ref.current_mapping().unwrap_or_default();
             let merge_uid = profiles_ref.current_merge().unwrap_or_default();
             let script_uid = profiles_ref.current_script().unwrap_or_default();
             let rules_uid = profiles_ref.current_rules().unwrap_or_default();
