@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useVerge } from "@/hooks/use-verge";
@@ -49,7 +49,7 @@ export const ProxyRender = (props: RenderProps) => {
     onCheckAll,
     onHeadState,
     onChangeProxy,
-    isChainMode = false,
+    isChainMode: _ = false,
   } = props;
   const { type, group, headState, proxy, proxyCol } = item;
   const { verge } = useVerge();
@@ -59,22 +59,41 @@ export const ProxyRender = (props: RenderProps) => {
   const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
   const [iconCachePath, setIconCachePath] = useState("");
 
-  useEffect(() => {
-    initIconCachePath();
-  }, [group]);
-
-  async function initIconCachePath() {
+  const initIconCachePath = useCallback(async () => {
     if (group.icon && group.icon.trim().startsWith("http")) {
       const fileName =
         group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
       const iconPath = await downloadIconCache(group.icon, fileName);
       setIconCachePath(convertFileSrc(iconPath));
+    } else {
+      setIconCachePath("");
     }
-  }
+  }, [group.icon, group.name]);
+
+  useEffect(() => {
+    initIconCachePath();
+  }, [initIconCachePath]);
 
   function getFileName(url: string) {
     return url.substring(url.lastIndexOf("/") + 1);
   }
+
+  const proxyColItemsMemo = useMemo(() => {
+    if (type !== 4 || !proxyCol) {
+      return null;
+    }
+
+    return proxyCol.map((proxyItem) => (
+      <ProxyItemMini
+        key={`${item.key}-${proxyItem?.name ?? "unknown"}`}
+        group={group}
+        proxy={proxyItem!}
+        selected={group.now === proxyItem?.name}
+        showType={headState?.showType}
+        onClick={() => onChangeProxy(group, proxyItem!)}
+      />
+    ));
+  }, [type, proxyCol, item.key, group, headState, onChangeProxy]);
 
   if (type === 0) {
     return (
@@ -205,18 +224,6 @@ export const ProxyRender = (props: RenderProps) => {
   }
 
   if (type === 4) {
-    const proxyColItemsMemo = useMemo(() => {
-      return proxyCol?.map((proxy) => (
-        <ProxyItemMini
-          key={item.key + proxy.name}
-          group={group}
-          proxy={proxy!}
-          selected={group.now === proxy.name}
-          showType={headState?.showType}
-          onClick={() => onChangeProxy(group, proxy!)}
-        />
-      ));
-    }, [proxyCol, group, headState]);
     return (
       <Box
         sx={{

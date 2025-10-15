@@ -11,7 +11,7 @@ import {
   Theme,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 
 import { BaseLoading } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
@@ -51,7 +51,7 @@ export const ProxyItem = (props: Props) => {
   const isPreset = presetList.includes(proxy.name);
   // -1/<=0 为 不显示
   // -2 为 loading
-  const [delay, setDelay] = useState(-1);
+  const [delay, setDelay] = useReducer((_: number, value: number) => value, -1);
   const { verge } = useVerge();
   const timeout = verge?.default_latency_timeout || 10000;
   useEffect(() => {
@@ -63,10 +63,14 @@ export const ProxyItem = (props: Props) => {
     };
   }, [proxy.name, group.name, isPreset]);
 
-  useEffect(() => {
+  const updateDelay = useCallback(() => {
     if (!proxy) return;
     setDelay(delayManager.getDelayFix(proxy, group.name));
-  }, [group.name, proxy]);
+  }, [proxy, group.name]);
+
+  useEffect(() => {
+    updateDelay();
+  }, [updateDelay]);
 
   const onDelay = useLockFn(async () => {
     setDelay(-2);
