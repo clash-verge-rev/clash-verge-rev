@@ -1,4 +1,4 @@
-import { delayProxyByName } from "tauri-plugin-mihomo-api";
+import { delayProxyByName, ProxyDelay } from "tauri-plugin-mihomo-api";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
@@ -99,9 +99,9 @@ class DelayManager {
       // 记录开始时间，用于计算实际延迟
       const startTime = Date.now();
 
-      // 设置超时处理
-      const timeoutPromise = new Promise<{ delay: number }>((_, reject) => {
-        setTimeout(() => reject(new Error("Timeout")), timeout);
+      // 设置超时处理, delay = 0 为超时
+      const timeoutPromise = new Promise<ProxyDelay>((resolve, _) => {
+        setTimeout(() => resolve({ delay: 0 }), timeout);
       });
 
       // 使用Promise.race来实现超时控制
@@ -116,27 +116,14 @@ class DelayManager {
         await new Promise((resolve) => setTimeout(resolve, 500 - elapsedTime));
       }
 
-      // 检查延迟结果是否为undefined
-      if (result && typeof result.delay === "number") {
-        delay = result.delay;
-        console.log(
-          `[DelayManager] 延迟测试完成，代理: ${name}, 结果: ${delay}ms`,
-        );
-      } else {
-        console.error(
-          `[DelayManager] 延迟测试返回无效结果，代理: ${name}, 结果:`,
-          result,
-        );
-        delay = 1e6; // 错误情况
-      }
+      delay = result.delay;
+      console.log(
+        `[DelayManager] 延迟测试完成，代理: ${name}, 结果: ${delay}ms`,
+      );
     } catch (error) {
       // 确保至少显示500ms的加载动画
       await new Promise((resolve) => setTimeout(resolve, 500));
-
       console.error(`[DelayManager] 延迟测试出错，代理: ${name}`, error);
-      if (error instanceof Error && error.message === "Timeout") {
-        console.log(`[DelayManager] 延迟测试超时，代理: ${name}`);
-      }
       delay = 1e6; // error
     }
 
