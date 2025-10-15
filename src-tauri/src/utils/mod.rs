@@ -1,5 +1,6 @@
 pub mod autostart;
 pub mod dirs;
+pub mod draft;
 pub mod format;
 pub mod help;
 pub mod i18n;
@@ -12,3 +13,5 @@ pub mod server;
 pub mod singleton;
 pub mod tmpl;
 pub mod window_manager;
+
+pub use draft::Draft;

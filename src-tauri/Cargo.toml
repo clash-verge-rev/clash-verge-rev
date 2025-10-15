@@ -128,6 +128,11 @@ tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
 
+[[bench]]
+name = "draft_benchmark"
+path = "benches/draft_benchmark.rs"
+harness = false
+
 [profile.release]
 panic = "abort"
 codegen-units = 16
@@ -162,7 +167,7 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
-criterion = "0.7.0"
+criterion = { version = "0.7.0", features = ["async_tokio"] }
 
 [lints.clippy]
 # Core categories - most important for code safety and correctness

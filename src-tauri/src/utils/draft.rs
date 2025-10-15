@@ -109,7 +109,7 @@ impl<T: Clone + ToOwned> Draft<Box<T>> {
 
 #[test]
 fn test_draft_box() {
-    use super::IVerge;
+    use crate::config::IVerge;
 
     // 1. 创建 Draft<Box<IVerge>>
     let verge = Box::new(IVerge {

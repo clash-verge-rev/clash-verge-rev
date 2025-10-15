@@ -8,7 +8,7 @@ mod enhance;
 mod feat;
 mod module;
 mod process;
-mod utils;
+pub mod utils;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
 use crate::{
