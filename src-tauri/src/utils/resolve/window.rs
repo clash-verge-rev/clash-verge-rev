@@ -1,10 +1,8 @@
 use tauri::WebviewWindow;
 
 use crate::{
-    config::Config,
     core::handle,
     logging_error,
-    process::AsyncHandler,
     utils::{
         logging::Type,
         resolve::window_script::{INITIAL_LOADING_OVERLAY, WINDOW_INITIAL_SCRIPT},
