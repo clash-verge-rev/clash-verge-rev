@@ -37,7 +37,7 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
   );
 
   // 通过前端对 tauri 窗口进行翻转全屏时会短暂地与系统图标重叠渲染。
-  // 这可能是上游缺陷，保险起见跨平台以窗口的最大化翻转为准
+  // 这可能是上游缺陷，保险起见跨平台以窗口的最大化翻转为准。
 
   return (
     <Box

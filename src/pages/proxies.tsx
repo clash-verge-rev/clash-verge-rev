@@ -1,6 +1,6 @@
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
@@ -28,7 +28,14 @@ const ProxyPage = () => {
     }
   });
 
-  const [chainConfigData, setChainConfigData] = useState<string | null>(null);
+  const [chainConfigData, dispatchChainConfigData] = useReducer(
+    (_: string | null, action: string | null) => action,
+    null as string | null,
+  );
+
+  const updateChainConfigData = useCallback((value: string | null) => {
+    dispatchChainConfigData(value);
+  }, []);
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
@@ -78,30 +85,43 @@ const ProxyPage = () => {
 
   // 当开启链式代理模式时，获取配置数据
   useEffect(() => {
-    if (isChainMode) {
-      const fetchChainConfig = async () => {
-        try {
-          const exitNode = localStorage.getItem("proxy-chain-exit-node");
-
-          if (!exitNode) {
-            console.error("No proxy chain exit node found in localStorage");
-            setChainConfigData("");
-            return;
-          }
-
-          const configData = await getRuntimeProxyChainConfig(exitNode);
-          setChainConfigData(configData || "");
-        } catch (error) {
-          console.error("Failed to get runtime proxy chain config:", error);
-          setChainConfigData("");
-        }
-      };
-
-      fetchChainConfig();
-    } else {
-      setChainConfigData(null);
+    if (!isChainMode) {
+      updateChainConfigData(null);
+      return;
     }
-  }, [isChainMode]);
+
+    let cancelled = false;
+
+    const fetchChainConfig = async () => {
+      try {
+        const exitNode = localStorage.getItem("proxy-chain-exit-node");
+
+        if (!exitNode) {
+          console.error("No proxy chain exit node found in localStorage");
+          if (!cancelled) {
+            updateChainConfigData("");
+          }
+          return;
+        }
+
+        const configData = await getRuntimeProxyChainConfig(exitNode);
+        if (!cancelled) {
+          updateChainConfigData(configData || "");
+        }
+      } catch (error) {
+        console.error("Failed to get runtime proxy chain config:", error);
+        if (!cancelled) {
+          updateChainConfigData("");
+        }
+      }
+    };
+
+    fetchChainConfig();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isChainMode, updateChainConfigData]);
 
   useEffect(() => {
     if (curMode && !modeList.includes(curMode)) {

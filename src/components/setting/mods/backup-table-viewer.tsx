@@ -103,94 +103,97 @@ export const BackupTableViewer = memo(
           </TableHead>
           <TableBody>
             {datasource.length > 0 ? (
-              datasource?.map((file, index) => (
-                <TableRow key={index}>
-                  <TableCell component="th" scope="row">
-                    {file.platform === "windows" ? (
-                      <WindowsIcon className="h-full w-full" />
-                    ) : file.platform === "linux" ? (
-                      <LinuxIcon className="h-full w-full" />
-                    ) : (
-                      <MacIcon className="h-full w-full" />
-                    )}
-                    {file.filename}
-                  </TableCell>
-                  <TableCell align="center">
-                    {file.backup_time.fromNow()}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      {onExport && (
-                        <>
-                          <IconButton
-                            color="primary"
-                            aria-label={t("Export")}
-                            size="small"
-                            title={t("Export Backup")}
-                            onClick={async (e: React.MouseEvent) => {
-                              e.preventDefault();
-                              await handleExport(file.filename);
-                            }}
-                          >
-                            <DownloadIcon />
-                          </IconButton>
-                          <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={{ mx: 1, height: 24 }}
-                          />
-                        </>
+              datasource.map((file) => {
+                const rowKey = `${file.platform}-${file.filename}-${file.backup_time.valueOf()}`;
+                return (
+                  <TableRow key={rowKey}>
+                    <TableCell component="th" scope="row">
+                      {file.platform === "windows" ? (
+                        <WindowsIcon className="h-full w-full" />
+                      ) : file.platform === "linux" ? (
+                        <LinuxIcon className="h-full w-full" />
+                      ) : (
+                        <MacIcon className="h-full w-full" />
                       )}
-                      <IconButton
-                        color="secondary"
-                        aria-label={t("Delete")}
-                        size="small"
-                        title={t("Delete Backup")}
-                        onClick={async (e: React.MouseEvent) => {
-                          e.preventDefault();
-                          const confirmed = await window.confirm(
-                            t("Confirm to delete this backup file?"),
-                          );
-                          if (confirmed) {
-                            await handleDelete(file.filename);
-                          }
+                      {file.filename}
+                    </TableCell>
+                    <TableCell align="center">
+                      {file.backup_time.fromNow()}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "flex-end",
                         }}
                       >
-                        <DeleteIcon />
-                      </IconButton>
-                      <Divider
-                        orientation="vertical"
-                        flexItem
-                        sx={{ mx: 1, height: 24 }}
-                      />
-                      <IconButton
-                        color="primary"
-                        aria-label={t("Restore")}
-                        size="small"
-                        title={t("Restore Backup")}
-                        disabled={!file.allow_apply}
-                        onClick={async (e: React.MouseEvent) => {
-                          e.preventDefault();
-                          const confirmed = await window.confirm(
-                            t("Confirm to restore this backup file?"),
-                          );
-                          if (confirmed) {
-                            await handleRestore(file.filename);
-                          }
-                        }}
-                      >
-                        <RestoreIcon />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
+                        {onExport && (
+                          <>
+                            <IconButton
+                              color="primary"
+                              aria-label={t("Export")}
+                              size="small"
+                              title={t("Export Backup")}
+                              onClick={async (e: React.MouseEvent) => {
+                                e.preventDefault();
+                                await handleExport(file.filename);
+                              }}
+                            >
+                              <DownloadIcon />
+                            </IconButton>
+                            <Divider
+                              orientation="vertical"
+                              flexItem
+                              sx={{ mx: 1, height: 24 }}
+                            />
+                          </>
+                        )}
+                        <IconButton
+                          color="secondary"
+                          aria-label={t("Delete")}
+                          size="small"
+                          title={t("Delete Backup")}
+                          onClick={(e: React.MouseEvent) => {
+                            e.preventDefault();
+                            const confirmed = window.confirm(
+                              t("Confirm to delete this backup file?"),
+                            );
+                            if (confirmed) {
+                              void handleDelete(file.filename);
+                            }
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                        <Divider
+                          orientation="vertical"
+                          flexItem
+                          sx={{ mx: 1, height: 24 }}
+                        />
+                        <IconButton
+                          color="primary"
+                          aria-label={t("Restore")}
+                          size="small"
+                          title={t("Restore Backup")}
+                          disabled={!file.allow_apply}
+                          onClick={(e: React.MouseEvent) => {
+                            e.preventDefault();
+                            const confirmed = window.confirm(
+                              t("Confirm to restore this backup file?"),
+                            );
+                            if (confirmed) {
+                              void handleRestore(file.filename);
+                            }
+                          }}
+                        >
+                          <RestoreIcon />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={3} align="center">
