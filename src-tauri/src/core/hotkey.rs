@@ -170,7 +170,7 @@ impl Hotkey {
             #[cfg(target_os = "macos")]
             HotkeyFunction::Hide => {
                 AsyncHandler::spawn(async move || {
-                    feat::hide().await;
+                    feat::hide();
                     notify_event(app_handle, NotificationEvent::AppHidden).await;
                 });
             }

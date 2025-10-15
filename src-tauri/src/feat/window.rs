@@ -292,7 +292,7 @@ pub fn clean() -> bool {
 }
 
 #[cfg(target_os = "macos")]
-pub async fn hide() {
+pub fn hide() {
     use crate::module::lightweight::add_light_weight_timer;
 
     let enable_auto_light_weight_mode = Config::verge()
