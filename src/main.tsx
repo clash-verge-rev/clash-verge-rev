@@ -6,12 +6,12 @@ import { ResizeObserver } from "@juggle/resize-observer";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { RouterProvider } from "react-router";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
 import { BaseErrorBoundary } from "./components/base";
 import { WindowProvider } from "./hooks/use-window";
-import Layout from "./pages/_layout";
+import { router } from "./pages/_routers";
 import { AppDataProvider } from "./providers/app-data-provider";
 import { initializeLanguage } from "./services/i18n";
 import {
@@ -64,9 +64,7 @@ const initializeApp = async () => {
           <BaseErrorBoundary>
             <WindowProvider>
               <AppDataProvider>
-                <BrowserRouter>
-                  <Layout />
-                </BrowserRouter>
+                <RouterProvider router={router} />
               </AppDataProvider>
             </WindowProvider>
           </BaseErrorBoundary>

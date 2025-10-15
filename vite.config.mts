@@ -79,7 +79,7 @@ export default defineConfig({
             if (
               id.includes("react") ||
               id.includes("react-dom") ||
-              id.includes("react-router-dom")
+              id.includes("react-router")
             ) {
               return "react-core";
             }

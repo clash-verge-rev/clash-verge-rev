@@ -1,8 +1,10 @@
 use tauri::WebviewWindow;
 
 use crate::{
+    config::Config,
     core::handle,
     logging_error,
+    process::AsyncHandler,
     utils::{
         logging::Type,
         resolve::window_script::{INITIAL_LOADING_OVERLAY, WINDOW_INITIAL_SCRIPT},
@@ -20,10 +22,20 @@ const MINIMAL_HEIGHT: f64 = 520.0;
 pub fn build_new_window() -> Result<WebviewWindow, String> {
     let app_handle = handle::Handle::app_handle();
 
+    // TODO: tokio runtime panic
+    // let start_page = AsyncHandler::block_on(async {
+    //     Config::verge()
+    //         .await
+    //         .latest_ref()
+    //         .start_page
+    //         .clone()
+    //         .unwrap_or("/".to_string())
+    // });
+    let start_page = String::from("/");
     match tauri::WebviewWindowBuilder::new(
         app_handle,
         "main", /* the unique window label */
-        tauri::WebviewUrl::App("index.html".into()),
+        tauri::WebviewUrl::App(start_page.into()),
     )
     .title("Clash Verge")
     .center()

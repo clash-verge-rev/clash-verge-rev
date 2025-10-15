@@ -4,26 +4,21 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate, useRoutes } from "react-router-dom";
+import { Outlet, useNavigate, useRoutes } from "react-router";
 import { SWRConfig, mutate } from "swr";
 
 import iconDark from "@/assets/image/icon_dark.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import LogoSvg from "@/assets/image/logo.svg?react";
+import { BaseErrorBoundary } from "@/components/base";
 import { NoticeManager } from "@/components/base/NoticeManager";
+import { WindowControls } from "@/components/controller/window-controller";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { useClashInfo } from "@/hooks/use-clash";
 import { useConnectionData } from "@/hooks/use-connection-data";
 import { useI18n } from "@/hooks/use-i18n";
 import { useListen } from "@/hooks/use-listen";
@@ -34,15 +29,14 @@ import { useVerge } from "@/hooks/use-verge";
 import { useWindowDecorations } from "@/hooks/use-window";
 import { getAxios } from "@/services/api";
 import { showNotice } from "@/services/noticeService";
-import { useClashLog, useThemeMode } from "@/services/states";
+import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
-import { routers } from "./_routers";
+import { navItems } from "./_routers";
 
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
 
-import { WindowControls } from "@/components/controller/window-controller";
 // 删除重复导入
 
 const appWindow = getCurrentWebviewWindow();
@@ -170,16 +164,10 @@ const Layout = () => {
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
   const { verge } = useVerge();
-  const { clashInfo } = useClashInfo();
-  const [clashLog] = useClashLog();
-  const enableLog = clashLog.enable;
-  const logLevel = clashLog.logLevel;
-  // const [logLevel] = useLocalStorage<LogLevel>("log:log-level", "info");
-  const { language, start_page } = verge ?? {};
+  const { language } = verge ?? {};
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
-  const location = useLocation();
-  const routersEles = useRoutes(routers);
+  const routersEles = useRoutes(navItems);
   const { addListener } = useListen();
   const initRef = useRef(false);
   const [themeReady, setThemeReady] = useState(false);
@@ -473,12 +461,6 @@ const Layout = () => {
     }
   }, [language, switchLanguage]);
 
-  useEffect(() => {
-    if (start_page) {
-      navigate(start_page, { replace: true });
-    }
-  }, [start_page]);
-
   if (!themeReady) {
     return (
       <div
@@ -604,7 +586,7 @@ const Layout = () => {
               </div>
 
               <List className="the-menu">
-                {routers.map((router) => (
+                {navItems.map((router) => (
                   <LayoutItem
                     key={router.label}
                     to={router.path}
@@ -623,7 +605,9 @@ const Layout = () => {
             <div className="layout-content__right">
               <div className="the-bar"></div>
               <div className="the-content">
-                {React.cloneElement(routersEles, { key: location.pathname })}
+                <BaseErrorBoundary>
+                  <Outlet />
+                </BaseErrorBoundary>
               </div>
             </div>
           </div>
