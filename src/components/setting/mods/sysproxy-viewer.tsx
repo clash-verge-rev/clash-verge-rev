@@ -13,9 +13,11 @@ import {
 import { useLockFn } from "ahooks";
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -130,16 +132,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     errorRetryInterval: 5000,
   });
 
-  const [prevMixedPort, setPrevMixedPort] = useState(clashConfig?.mixedPort);
+  const prevMixedPortRef = useRef(clashConfig?.mixedPort);
 
-  useEffect(() => {
-    if (clashConfig?.mixedPort && clashConfig.mixedPort !== prevMixedPort) {
-      setPrevMixedPort(clashConfig.mixedPort);
-      resetSystemProxy();
-    }
-  }, [clashConfig?.mixedPort]);
-
-  const resetSystemProxy = async () => {
+  const resetSystemProxy = useCallback(async () => {
     try {
       const currentSysProxy = await getSystemProxy();
       const currentAutoProxy = await getAutotemProxy();
@@ -163,7 +158,15 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     } catch (err: any) {
       showNotice("error", err.toString());
     }
-  };
+  }, [value.pac]);
+
+  useEffect(() => {
+    const mixedPort = clashConfig?.mixedPort;
+    if (mixedPort && mixedPort !== prevMixedPortRef.current) {
+      prevMixedPortRef.current = mixedPort;
+      void resetSystemProxy();
+    }
+  }, [clashConfig?.mixedPort, resetSystemProxy]);
 
   const { systemProxyAddress } = useAppData();
 
