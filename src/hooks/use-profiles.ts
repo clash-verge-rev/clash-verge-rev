@@ -108,26 +108,64 @@ export const useProfiles = () => {
       let hasChange = false;
       const newSelected: typeof selected = [];
       const { global, groups } = proxiesData;
+      const selectableTypes = new Set([
+        "Selector",
+        "URLTest",
+        "Fallback",
+        "LoadBalance",
+      ]);
 
       // 处理所有代理组
-      [global, ...groups].forEach(({ type, name, now }) => {
-        if (!now || type !== "Selector") {
-          if (selectedMap[name] != null) {
-            newSelected.push({ name, now: now || selectedMap[name] });
+      [global, ...groups].forEach((group) => {
+        if (!group) {
+          return;
+        }
+
+        const { type, name, now } = group;
+        const savedProxy = selectedMap[name];
+        const availableProxies = Array.isArray(group.all) ? group.all : [];
+
+        if (!selectableTypes.has(type)) {
+          if (savedProxy != null || now != null) {
+            const preferredProxy = now ? now : savedProxy;
+            newSelected.push({ name, now: preferredProxy });
           }
           return;
         }
 
-        const targetProxy = selectedMap[name];
-        if (targetProxy != null && targetProxy !== now) {
-          console.log(
-            `[ActivateSelected] 需要切换代理组 ${name}: ${now} -> ${targetProxy}`,
-          );
-          hasChange = true;
-          selectNodeForGroup(name, targetProxy);
+        if (savedProxy == null) {
+          if (now != null) {
+            newSelected.push({ name, now });
+          }
+          return;
         }
 
-        newSelected.push({ name, now: targetProxy || now });
+        const existsInGroup = availableProxies.some((proxy) => {
+          if (typeof proxy === "string") {
+            return proxy === savedProxy;
+          }
+
+          return proxy?.name === savedProxy;
+        });
+
+        if (!existsInGroup) {
+          console.warn(
+            `[ActivateSelected] 保存的代理 ${savedProxy} 不存在于代理组 ${name}`,
+          );
+          hasChange = true;
+          newSelected.push({ name, now: now ?? savedProxy });
+          return;
+        }
+
+        if (savedProxy !== now) {
+          console.log(
+            `[ActivateSelected] 需要切换代理组 ${name}: ${now} -> ${savedProxy}`,
+          );
+          hasChange = true;
+          selectNodeForGroup(name, savedProxy);
+        }
+
+        newSelected.push({ name, now: savedProxy });
       });
 
       if (!hasChange) {
