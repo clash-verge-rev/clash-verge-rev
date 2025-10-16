@@ -1,5 +1,6 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
+use std::process;
 use tokio::runtime::Runtime;
 
 // 引入业务模型 & Draft 实现
@@ -108,7 +109,10 @@ fn bench_discard(c: &mut Criterion) {
 
 /// 基准：异步 with_data_modify
 fn bench_with_data_modify(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().unwrap_or_else(|error| {
+        eprintln!("draft benchmarks require a Tokio runtime: {error}");
+        process::exit(1);
+    });
 
     c.bench_function("draft_with_data_modify", |b| {
         b.to_async(&rt).iter(|| async {
