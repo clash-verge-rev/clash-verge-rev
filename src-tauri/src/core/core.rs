@@ -16,14 +16,16 @@ use crate::{
         logging::Type,
     },
 };
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
-use std::{fmt, path::PathBuf, sync::Arc};
+use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
+use tauri_plugin_mihomo::Error as MihomoError;
 use tauri_plugin_shell::ShellExt;
+use tokio::time::sleep;
 
 // TODO:
 // - 重构，提升模式切换速度
@@ -381,8 +383,8 @@ impl CoreManager {
                 // 4. 验证通过后，生成正式的运行时配置
                 logging!(info, Type::Config, "配置验证通过, 生成运行时配置");
                 let run_path = Config::generate_file(ConfigType::Run).await?;
-                logging_error!(Type::Config, self.put_configs_force(run_path).await);
-                Ok((true, "something".into()))
+                self.put_configs_force(run_path).await?;
+                Ok((true, String::new()))
             }
             Ok((false, error_msg)) => {
                 logging!(warn, Type::Config, "配置验证失败: {}", error_msg);
@@ -396,28 +398,117 @@ impl CoreManager {
             }
         }
     }
-    pub async fn put_configs_force(&self, path_buf: PathBuf) -> Result<(), String> {
+    pub async fn put_configs_force(&self, path_buf: PathBuf) -> Result<()> {
         let run_path_str = dirs::path_to_str(&path_buf).map_err(|e| {
             let msg = e.to_string();
             logging_error!(Type::Core, "{}", msg);
-            msg
-        });
-        match handle::Handle::mihomo()
-            .await
-            .reload_config(true, run_path_str?)
-            .await
-        {
+            anyhow!(msg)
+        })?;
+
+        match self.reload_config_once(run_path_str).await {
             Ok(_) => {
                 Config::runtime().await.apply();
                 logging!(info, Type::Core, "Configuration updated successfully");
                 Ok(())
             }
-            Err(e) => {
-                let msg = e.to_string();
+            Err(err) => {
+                let should_retry = Self::should_restart_on_reload_error(&err);
+                let err_msg = err.to_string();
+
+                if should_retry && !handle::Handle::global().is_exiting() {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "Reload config failed ({}), restarting core and retrying",
+                        err_msg
+                    );
+                    if let Err(restart_err) = self.restart_core().await {
+                        Config::runtime().await.discard();
+                        logging_error!(
+                            Type::Core,
+                            "Failed to restart core after reload error: {}",
+                            restart_err
+                        );
+                        return Err(restart_err);
+                    }
+                    sleep(Duration::from_millis(300)).await;
+
+                    match self.reload_config_once(run_path_str).await {
+                        Ok(_) => {
+                            Config::runtime().await.apply();
+                            logging!(
+                                info,
+                                Type::Core,
+                                "Configuration updated successfully after restarting core"
+                            );
+                            return Ok(());
+                        }
+                        Err(retry_err) => {
+                            let retry_msg = retry_err.to_string();
+                            Config::runtime().await.discard();
+                            logging_error!(
+                                Type::Core,
+                                "Failed to update configuration after restart: {}",
+                                retry_msg
+                            );
+                            return Err(anyhow!(retry_msg));
+                        }
+                    }
+                }
+
                 Config::runtime().await.discard();
-                logging_error!(Type::Core, "Failed to update configuration: {}", msg);
-                Err(msg)
+                logging_error!(Type::Core, "Failed to update configuration: {}", err_msg);
+                Err(anyhow!(err_msg))
             }
+        }
+    }
+
+    async fn reload_config_once(&self, config_path: &str) -> std::result::Result<(), MihomoError> {
+        handle::Handle::mihomo()
+            .await
+            .reload_config(true, config_path)
+            .await
+    }
+
+    fn should_restart_on_reload_error(err: &MihomoError) -> bool {
+        match err {
+            MihomoError::ConnectionFailed | MihomoError::ConnectionLost => true,
+            MihomoError::Io(io_err) => matches!(
+                io_err.kind(),
+                std::io::ErrorKind::ConnectionAborted
+                    | std::io::ErrorKind::ConnectionRefused
+                    | std::io::ErrorKind::ConnectionReset
+                    | std::io::ErrorKind::NotFound
+            ),
+            MihomoError::Reqwest(req_err) => {
+                if req_err.is_connect() || req_err.is_timeout() {
+                    return true;
+                }
+                let err_text = req_err.to_string();
+                if let Some(source) = req_err.source() {
+                    if let Some(io_err) = source.downcast_ref::<std::io::Error>() {
+                        if matches!(
+                            io_err.kind(),
+                            std::io::ErrorKind::ConnectionAborted
+                                | std::io::ErrorKind::ConnectionRefused
+                                | std::io::ErrorKind::ConnectionReset
+                                | std::io::ErrorKind::NotFound
+                        ) {
+                            return true;
+                        }
+                    } else if source.to_string().contains("Failed to create connection") {
+                        return true;
+                    }
+                }
+                err_text.contains("Failed to create connection")
+                    || err_text.contains("The system cannot find the file specified")
+                    || err_text.contains("operation timed out")
+                    || err_text.contains("connection refused")
+            }
+            MihomoError::FailedResponse(msg) => {
+                msg.contains("Failed to create connection") || msg.contains("connection refused")
+            }
+            _ => false,
         }
     }
 }
@@ -943,7 +1034,9 @@ impl CoreManager {
             msg
         })?;
 
-        self.put_configs_force(run_path).await?;
+        self.put_configs_force(run_path)
+            .await
+            .map_err(|e| e.to_string())?;
 
         Ok(())
     }
