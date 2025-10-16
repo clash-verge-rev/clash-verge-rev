@@ -1020,6 +1020,8 @@ impl CoreManager {
         }
     }
 
+    // TODO: 是否需要在非windows平台上进行检测
+    #[allow(clippy::unused_async)]
     #[cfg(not(target_os = "windows"))]
     async fn wait_for_service_ready_if_tun_enabled(&self) {}
 
