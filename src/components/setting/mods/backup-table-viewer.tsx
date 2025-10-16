@@ -33,6 +33,14 @@ export type BackupFile = {
 
 export const DEFAULT_ROWS_PER_PAGE = 5;
 
+type ConfirmFn = (message?: string) => boolean | Promise<boolean>;
+
+// Normalizes synchronous and async confirm implementations.
+const confirmAsync = async (message: string): Promise<boolean> => {
+  const confirmFn = window.confirm as unknown as ConfirmFn;
+  return await confirmFn.call(window, message);
+};
+
 interface BackupTableViewerProps {
   datasource: BackupFile[];
   page: number;
@@ -154,13 +162,13 @@ export const BackupTableViewer = memo(
                           aria-label={t("Delete")}
                           size="small"
                           title={t("Delete Backup")}
-                          onClick={(e: React.MouseEvent) => {
+                          onClick={async (e: React.MouseEvent) => {
                             e.preventDefault();
-                            const confirmed = window.confirm(
+                            const confirmed = await confirmAsync(
                               t("Confirm to delete this backup file?"),
                             );
                             if (confirmed) {
-                              void handleDelete(file.filename);
+                              await handleDelete(file.filename);
                             }
                           }}
                         >
@@ -177,13 +185,13 @@ export const BackupTableViewer = memo(
                           size="small"
                           title={t("Restore Backup")}
                           disabled={!file.allow_apply}
-                          onClick={(e: React.MouseEvent) => {
+                          onClick={async (e: React.MouseEvent) => {
                             e.preventDefault();
-                            const confirmed = window.confirm(
+                            const confirmed = await confirmAsync(
                               t("Confirm to restore this backup file?"),
                             );
                             if (confirmed) {
-                              void handleRestore(file.filename);
+                              await handleRestore(file.filename);
                             }
                           }}
                         >
