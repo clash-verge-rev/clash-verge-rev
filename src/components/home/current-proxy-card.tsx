@@ -34,6 +34,7 @@ import { useNavigate } from "react-router";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { EnhancedCard } from "@/components/home/enhanced-card";
+import { useProfiles } from "@/hooks/use-profiles";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-context";
@@ -101,7 +102,50 @@ export const CurrentProxyCard = () => {
   const theme = useTheme();
   const { proxies, clashConfig, refreshProxy } = useAppData();
   const { verge } = useVerge();
+  const { current: currentProfile } = useProfiles();
   const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false;
+  const currentProfileId = currentProfile?.uid || null;
+
+  const getProfileStorageKey = useCallback(
+    (baseKey: string) =>
+      currentProfileId ? `${baseKey}:${currentProfileId}` : baseKey,
+    [currentProfileId],
+  );
+
+  const readProfileScopedItem = useCallback(
+    (baseKey: string) => {
+      if (typeof window === "undefined") return null;
+      const profileKey = getProfileStorageKey(baseKey);
+      const profileValue = localStorage.getItem(profileKey);
+      if (profileValue != null) {
+        return profileValue;
+      }
+
+      if (profileKey !== baseKey) {
+        const legacyValue = localStorage.getItem(baseKey);
+        if (legacyValue != null) {
+          localStorage.removeItem(baseKey);
+          localStorage.setItem(profileKey, legacyValue);
+          return legacyValue;
+        }
+      }
+
+      return null;
+    },
+    [getProfileStorageKey],
+  );
+
+  const writeProfileScopedItem = useCallback(
+    (baseKey: string, value: string) => {
+      if (typeof window === "undefined") return;
+      const profileKey = getProfileStorageKey(baseKey);
+      localStorage.setItem(profileKey, value);
+      if (profileKey !== baseKey) {
+        localStorage.removeItem(baseKey);
+      }
+    },
+    [getProfileStorageKey],
+  );
 
   // 统一代理选择器
   const { handleSelectChange } = useProxySelection({
@@ -217,7 +261,7 @@ export const CurrentProxyCard = () => {
         },
       }));
     } else {
-      const savedGroup = localStorage.getItem(STORAGE_KEY_GROUP);
+      const savedGroup = readProfileScopedItem(STORAGE_KEY_GROUP);
       // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
       setState((prev) => ({
         ...prev,
@@ -227,7 +271,7 @@ export const CurrentProxyCard = () => {
         },
       }));
     }
-  }, [isGlobalMode, isDirectMode, proxies]);
+  }, [isGlobalMode, isDirectMode, proxies, readProfileScopedItem]);
 
   // 监听代理数据变化，更新状态
   useEffect(() => {
@@ -273,9 +317,9 @@ export const CurrentProxyCard = () => {
             newDisplayProxy = proxies.records?.[newProxy] || null;
 
             if (!isGlobalMode && !isDirectMode) {
-              localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+              writeProfileScopedItem(STORAGE_KEY_GROUP, newGroup);
               if (newProxy) {
-                localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
+                writeProfileScopedItem(STORAGE_KEY_PROXY, newProxy);
               }
             }
           }
@@ -298,7 +342,7 @@ export const CurrentProxyCard = () => {
         displayProxy: newDisplayProxy,
       };
     });
-  }, [proxies, isGlobalMode, isDirectMode]);
+  }, [proxies, isGlobalMode, isDirectMode, writeProfileScopedItem]);
 
   // 使用防抖包装状态更新
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -322,7 +366,7 @@ export const CurrentProxyCard = () => {
 
       const newGroup = event.target.value;
 
-      localStorage.setItem(STORAGE_KEY_GROUP, newGroup);
+      writeProfileScopedItem(STORAGE_KEY_GROUP, newGroup);
 
       setState((prev) => {
         const group = prev.proxyData.groups.find(
@@ -347,7 +391,7 @@ export const CurrentProxyCard = () => {
         };
       });
     },
-    [isGlobalMode, isDirectMode],
+    [isGlobalMode, isDirectMode, writeProfileScopedItem],
   );
 
   // 处理代理节点变更
@@ -369,7 +413,7 @@ export const CurrentProxyCard = () => {
       }));
 
       if (!isGlobalMode && !isDirectMode) {
-        localStorage.setItem(STORAGE_KEY_PROXY, newProxy);
+        writeProfileScopedItem(STORAGE_KEY_PROXY, newProxy);
       }
 
       const skipConfigSave = isGlobalMode || isDirectMode;
@@ -381,6 +425,7 @@ export const CurrentProxyCard = () => {
       state.selection,
       debouncedSetState,
       handleSelectChange,
+      writeProfileScopedItem,
     ],
   );
 
