@@ -944,7 +944,92 @@ impl CoreManager {
         (*guard).clone()
     }
 
+    #[cfg(target_os = "windows")]
+    async fn wait_for_service_ready_if_tun_enabled(&self) {
+        let require_service = Config::verge()
+            .await
+            .latest_ref()
+            .enable_tun_mode
+            .unwrap_or(false);
+
+        if !require_service {
+            return;
+        }
+
+        const MAX_ATTEMPTS: usize = 15;
+        const WAIT_INTERVAL_MS: u64 = 200;
+
+        for attempt in 0..MAX_ATTEMPTS {
+            let mut manager = SERVICE_MANAGER.lock().await;
+
+            if matches!(manager.current(), ServiceStatus::Ready) {
+                if attempt > 0 {
+                    logging!(
+                        info,
+                        Type::Core,
+                        "Service became ready for TUN after {} attempt(s)",
+                        attempt
+                    );
+                }
+                return;
+            }
+
+            if attempt == 0 {
+                logging!(
+                    info,
+                    Type::Core,
+                    "TUN mode enabled but service not ready; waiting for service availability"
+                );
+            }
+
+            match manager.init().await {
+                Ok(_) => {
+                    logging_error!(Type::Core, manager.refresh().await);
+                }
+                Err(err) => {
+                    logging!(
+                        debug,
+                        Type::Core,
+                        "Service connection attempt {} failed while waiting for TUN: {}",
+                        attempt + 1,
+                        err
+                    );
+                }
+            }
+
+            if matches!(manager.current(), ServiceStatus::Ready) {
+                logging!(
+                    info,
+                    Type::Core,
+                    "Service became ready for TUN after {} attempt(s)",
+                    attempt + 1
+                );
+                return;
+            }
+
+            drop(manager);
+
+            if attempt + 1 == MAX_ATTEMPTS {
+                let total_wait_ms = (MAX_ATTEMPTS as u64) * WAIT_INTERVAL_MS;
+                logging!(
+                    warn,
+                    Type::Core,
+                    "Service still not ready after waiting approximately {} ms; falling back to sidecar mode",
+                    total_wait_ms
+                );
+                break;
+            }
+
+            sleep(Duration::from_millis(WAIT_INTERVAL_MS)).await;
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    async fn wait_for_service_ready_if_tun_enabled(&self) {}
+
     pub async fn prestart_core(&self) -> Result<()> {
+        self.wait_for_service_ready_if_tun_enabled().await;
+
         match SERVICE_MANAGER.lock().await.current() {
             ServiceStatus::Ready => {
                 self.set_running_mode(RunningMode::Service);
