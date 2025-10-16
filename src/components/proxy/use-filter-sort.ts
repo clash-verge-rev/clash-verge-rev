@@ -109,12 +109,14 @@ function sortProxies(
   const list = proxies.slice();
 
   if (sortType === 1) {
-    list.sort((a, b) => {
-      const ad = delayManager.getDelayFix(a, groupName);
-      const bd = delayManager.getDelayFix(b, groupName);
+    const toSortableValue = (delay: number) => {
+      if (!Number.isFinite(delay) || delay <= 0) return Number.MAX_SAFE_INTEGER;
+      return delay;
+    };
 
-      if (ad === -1 || ad === -2) return 1;
-      if (bd === -1 || bd === -2) return -1;
+    list.sort((a, b) => {
+      const ad = toSortableValue(delayManager.getDelayFix(a, groupName));
+      const bd = toSortableValue(delayManager.getDelayFix(b, groupName));
 
       return ad - bd;
     });
