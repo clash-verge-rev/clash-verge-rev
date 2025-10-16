@@ -1,5 +1,6 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
+use std::process;
 use tokio::runtime::Runtime;
 
 // 引入业务模型 & Draft 实现
@@ -108,20 +109,23 @@ fn bench_discard(c: &mut Criterion) {
 
 /// 基准：异步 with_data_modify
 fn bench_with_data_modify(c: &mut Criterion) {
-    if let Ok(rt) = Runtime::new() {
-        c.bench_function("draft_with_data_modify", |b| {
-            b.to_async(&rt).iter(|| async {
-                let draft = make_draft();
-                let _res: Result<(), anyhow::Error> = draft
-                    .with_data_modify(|mut box_data| async move {
-                        box_data.enable_auto_launch =
-                            Some(!box_data.enable_auto_launch.unwrap_or(false));
-                        Ok((box_data, ()))
-                    })
-                    .await;
-            });
+    let rt = Runtime::new().unwrap_or_else(|error| {
+        eprintln!("draft benchmarks require a Tokio runtime: {error}");
+        process::exit(1);
+    });
+
+    c.bench_function("draft_with_data_modify", |b| {
+        b.to_async(&rt).iter(|| async {
+            let draft = make_draft();
+            let _res: Result<(), anyhow::Error> = draft
+                .with_data_modify(|mut box_data| async move {
+                    box_data.enable_auto_launch =
+                        Some(!box_data.enable_auto_launch.unwrap_or(false));
+                    Ok((box_data, ()))
+                })
+                .await;
         });
-    }
+    });
 }
 
 criterion_group!(
