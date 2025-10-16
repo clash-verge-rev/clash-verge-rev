@@ -6,7 +6,7 @@ import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter, RouteObject } from "react-router";
 
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
 import HomeSvg from "@/assets/image/itemicon/home.svg?react";
@@ -30,43 +30,51 @@ import UnlockPage from "./unlock";
 export const navItems = [
   {
     label: "Label-Home",
-    path: "/home",
+    path: "/",
     icon: [<HomeRoundedIcon key="mui" />, <HomeSvg key="svg" />],
+    Component: HomePage,
   },
   {
     label: "Label-Proxies",
     path: "/proxies",
     icon: [<WifiRoundedIcon key="mui" />, <ProxiesSvg key="svg" />],
+    Component: ProxiesPage,
   },
   {
     label: "Label-Profiles",
     path: "/profile",
     icon: [<DnsRoundedIcon key="mui" />, <ProfilesSvg key="svg" />],
+    Component: ProfilesPage,
   },
   {
     label: "Label-Connections",
     path: "/connections",
     icon: [<LanguageRoundedIcon key="mui" />, <ConnectionsSvg key="svg" />],
+    Component: ConnectionsPage,
   },
   {
     label: "Label-Rules",
     path: "/rules",
     icon: [<ForkRightRoundedIcon key="mui" />, <RulesSvg key="svg" />],
+    Component: RulesPage,
   },
   {
     label: "Label-Logs",
     path: "/logs",
     icon: [<SubjectRoundedIcon key="mui" />, <LogsSvg key="svg" />],
+    Component: LogsPage,
   },
   {
     label: "Label-Unlock",
     path: "/unlock",
     icon: [<LockOpenRoundedIcon key="mui" />, <UnlockSvg key="svg" />],
+    Component: UnlockPage,
   },
   {
     label: "Label-Settings",
     path: "/settings",
     icon: [<SettingsRoundedIcon key="mui" />, <SettingsSvg key="svg" />],
+    Component: SettingsPage,
   },
 ];
 
@@ -74,16 +82,18 @@ export const router = createBrowserRouter([
   {
     path: "/",
     Component: Layout,
-    children: [
-      { index: true, element: <Navigate to="/home" /> },
-      { path: "home", Component: HomePage },
-      { path: "proxies", Component: ProxiesPage },
-      { path: "profile", Component: ProfilesPage },
-      { path: "connections", Component: ConnectionsPage },
-      { path: "rules", Component: RulesPage },
-      { path: "logs", Component: LogsPage },
-      { path: "unlock", Component: UnlockPage },
-      { path: "settings", Component: SettingsPage },
-    ],
+    children: navItems.map((item) => {
+      if (item.path === "/") {
+        return {
+          index: true,
+          Component: item.Component,
+        } as RouteObject;
+      } else {
+        return {
+          path: item.path,
+          Component: item.Component,
+        } as RouteObject;
+      }
+    }),
   },
 ]);
