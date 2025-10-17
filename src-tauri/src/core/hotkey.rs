@@ -359,7 +359,8 @@ impl Hotkey {
                     }
                 }
             }
-            self.current.lock().clone_from(&hotkeys);
+            let string_hotkeys: Vec<String> = hotkeys.iter().map(|s| s.to_string()).collect();
+            self.current.lock().clone_from(&string_hotkeys);
         } else {
             logging!(debug, Type::Hotkey, "No hotkeys configured");
         }

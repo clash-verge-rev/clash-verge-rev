@@ -6,9 +6,9 @@ use reqwest_dav::list_cmd::ListFile;
 #[tauri::command]
 pub async fn save_webdav_config(url: String, username: String, password: String) -> CmdResult<()> {
     let patch = IVerge {
-        webdav_url: Some(url),
-        webdav_username: Some(username),
-        webdav_password: Some(password),
+        webdav_url: Some(url.into()),
+        webdav_username: Some(username.into()),
+        webdav_password: Some(password.into()),
         ..IVerge::default()
     };
     Config::verge()

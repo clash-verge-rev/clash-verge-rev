@@ -1108,7 +1108,7 @@ impl CoreManager {
             return Err(error_message);
         }
 
-        Config::verge().await.draft_mut().clash_core = clash_core.clone();
+        Config::verge().await.draft_mut().clash_core = clash_core.clone().map(|s| s.into());
         Config::verge().await.apply();
 
         // 分离数据获取和异步调用避免Send问题

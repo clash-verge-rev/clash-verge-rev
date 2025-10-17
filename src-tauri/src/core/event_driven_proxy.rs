@@ -538,7 +538,7 @@ impl EventDrivenProxyManager {
 
         Sysproxy {
             enable: true,
-            host: proxy_host,
+            host: proxy_host.into(),
             port,
             bypass: Self::get_bypass_config().await,
         }
@@ -569,7 +569,7 @@ impl EventDrivenProxyManager {
         } else if use_default {
             format!("{default_bypass},{custom_bypass}")
         } else {
-            custom_bypass
+            custom_bypass.into()
         }
     }
 

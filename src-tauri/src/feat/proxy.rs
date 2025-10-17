@@ -72,7 +72,8 @@ pub async fn copy_clash_env() {
             .latest_ref()
             .proxy_host
             .clone()
-            .unwrap_or_else(|| "127.0.0.1".into()),
+            .unwrap_or_else(|| "127.0.0.1".into())
+            .into(),
     };
 
     let app_handle = handle::Handle::app_handle();

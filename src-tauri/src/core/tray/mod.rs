@@ -218,7 +218,7 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
         let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
-        let tray_event: String = tray_event.unwrap_or("main_window".into());
+        let tray_event: String = tray_event.unwrap_or("main_window".into()).into();
         let tray = app_handle
             .tray_by_id("main")
             .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
@@ -504,7 +504,7 @@ impl Tray {
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         let show_menu_on_left_click = {
             let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
-            let tray_event: String = tray_event.unwrap_or("main_window".into());
+            let tray_event: String = tray_event.unwrap_or("main_window".into()).into();
             tray_event.as_str() == "tray_menu"
         };
 
@@ -525,7 +525,7 @@ impl Tray {
         tray.on_tray_icon_event(|_app_handle, event| {
             AsyncHandler::spawn(|| async move {
                 let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
-                let tray_event: String = tray_event.unwrap_or("main_window".into());
+                let tray_event: String = tray_event.unwrap_or("main_window".into()).into();
                 log::debug!(target: "app", "tray event: {tray_event:?}");
 
                 if let TrayIconEvent::Click {

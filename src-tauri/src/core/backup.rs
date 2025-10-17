@@ -96,8 +96,8 @@ impl WebDavClient {
                         .unwrap_or_default()
                         .trim_end_matches('/')
                         .into(),
-                    username: verge.webdav_username.unwrap_or_default(),
-                    password: verge.webdav_password.unwrap_or_default(),
+                    username: verge.webdav_username.unwrap_or_default().into(),
+                    password: verge.webdav_password.unwrap_or_default().into(),
                 };
 
                 // 重新获取锁并存储配置

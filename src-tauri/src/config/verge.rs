@@ -4,6 +4,8 @@ use crate::{
     utils::{dirs, help, i18n, logging::Type},
 };
 use anyhow::Result;
+use compact_str::CompactString;
+
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 
@@ -12,7 +14,7 @@ use serde::{Deserialize, Serialize};
 pub struct IVerge {
     /// app log level
     /// silent | error | warn | info | debug | trace
-    pub app_log_level: Option<String>,
+    pub app_log_level: Option<CompactString>,
 
     /// app log max size in KB
     pub app_log_max_size: Option<u64>,
@@ -21,21 +23,21 @@ pub struct IVerge {
     pub app_log_max_count: Option<usize>,
 
     // i18n
-    pub language: Option<String>,
+    pub language: Option<CompactString>,
 
     /// `light` or `dark` or `system`
-    pub theme_mode: Option<String>,
+    pub theme_mode: Option<CompactString>,
 
     /// tray click event
-    pub tray_event: Option<String>,
+    pub tray_event: Option<CompactString>,
 
     /// copy env type
-    pub env_type: Option<String>,
+    pub env_type: Option<CompactString>,
 
     /// start page
-    pub start_page: Option<String>,
+    pub start_page: Option<CompactString>,
     /// startup script path
-    pub startup_script: Option<String>,
+    pub startup_script: Option<CompactString>,
 
     /// enable traffic graph default is true
     pub traffic_graph: Option<bool>,
@@ -51,10 +53,10 @@ pub struct IVerge {
 
     /// tray icon
     #[cfg(target_os = "macos")]
-    pub tray_icon: Option<String>,
+    pub tray_icon: Option<CompactString>,
 
     /// menu icon
-    pub menu_icon: Option<String>,
+    pub menu_icon: Option<CompactString>,
 
     /// sysproxy tray icon
     pub sysproxy_tray_icon: Option<bool>,
@@ -84,7 +86,7 @@ pub struct IVerge {
     pub use_default_bypass: Option<bool>,
 
     /// set system proxy bypass
-    pub system_proxy_bypass: Option<String>,
+    pub system_proxy_bypass: Option<CompactString>,
 
     /// proxy guard duration
     pub proxy_guard_duration: Option<u64>,
@@ -93,24 +95,24 @@ pub struct IVerge {
     pub proxy_auto_config: Option<bool>,
 
     /// pac script content
-    pub pac_file_content: Option<String>,
+    pub pac_file_content: Option<CompactString>,
 
     /// proxy host address
-    pub proxy_host: Option<String>,
+    pub proxy_host: Option<CompactString>,
 
     /// theme setting
     pub theme_setting: Option<IVergeTheme>,
 
     /// web ui list
-    pub web_ui_list: Option<Vec<String>>,
+    pub web_ui_list: Option<Vec<CompactString>>,
 
     /// clash core path
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub clash_core: Option<String>,
+    pub clash_core: Option<CompactString>,
 
     /// hotkey map
     /// format: {func},{key}
-    pub hotkeys: Option<Vec<String>>,
+    pub hotkeys: Option<Vec<CompactString>>,
 
     /// enable global hotkey
     pub enable_global_hotkey: Option<bool>,
@@ -126,7 +128,7 @@ pub struct IVerge {
     pub auto_check_update: Option<bool>,
 
     /// 默认的延迟测试连接
-    pub default_latency_test: Option<String>,
+    pub default_latency_test: Option<CompactString>,
 
     /// 默认的延迟测试超时时间
     pub default_latency_timeout: Option<i32>,
@@ -177,7 +179,7 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
-    pub webdav_url: Option<String>,
+    pub webdav_url: Option<CompactString>,
 
     /// WebDAV 用户名 (加密存储)
     #[serde(
@@ -186,7 +188,7 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
-    pub webdav_username: Option<String>,
+    pub webdav_username: Option<CompactString>,
 
     /// WebDAV 密码 (加密存储)
     #[serde(
@@ -195,7 +197,7 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
-    pub webdav_password: Option<String>,
+    pub webdav_password: Option<CompactString>,
 
     pub enable_tray_speed: Option<bool>,
 
@@ -219,26 +221,26 @@ pub struct IVerge {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVergeTestItem {
-    pub uid: Option<String>,
-    pub name: Option<String>,
-    pub icon: Option<String>,
-    pub url: Option<String>,
+    pub uid: Option<CompactString>,
+    pub name: Option<CompactString>,
+    pub icon: Option<CompactString>,
+    pub url: Option<CompactString>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVergeTheme {
-    pub primary_color: Option<String>,
-    pub secondary_color: Option<String>,
-    pub primary_text: Option<String>,
-    pub secondary_text: Option<String>,
+    pub primary_color: Option<CompactString>,
+    pub secondary_color: Option<CompactString>,
+    pub primary_text: Option<CompactString>,
+    pub secondary_text: Option<CompactString>,
 
-    pub info_color: Option<String>,
-    pub error_color: Option<String>,
-    pub warning_color: Option<String>,
-    pub success_color: Option<String>,
+    pub info_color: Option<CompactString>,
+    pub error_color: Option<CompactString>,
+    pub warning_color: Option<CompactString>,
+    pub success_color: Option<CompactString>,
 
-    pub font_family: Option<String>,
-    pub css_injection: Option<String>,
+    pub font_family: Option<CompactString>,
+    pub css_injection: Option<CompactString>,
 }
 
 impl IVerge {
@@ -314,15 +316,15 @@ impl IVerge {
         Ok(())
     }
 
-    pub fn get_valid_clash_core(&self) -> String {
+    pub fn get_valid_clash_core(&self) -> CompactString {
         self.clash_core
             .clone()
             .unwrap_or_else(|| "verge-mihomo".into())
     }
 
-    fn get_system_language() -> String {
+    fn get_system_language() -> CompactString {
         let sys_lang = sys_locale::get_locale()
-            .unwrap_or_else(|| String::from("en"))
+            .unwrap_or_else(|| "en".into())
             .to_lowercase();
 
         let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
@@ -331,7 +333,7 @@ impl IVerge {
         if supported_languages.contains(&lang_code.into()) {
             lang_code.into()
         } else {
-            String::from("en")
+            "en".into()
         }
     }
 
@@ -534,22 +536,22 @@ impl IVerge {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct IVergeResponse {
-    pub app_log_level: Option<String>,
+    pub app_log_level: Option<CompactString>,
     pub app_log_max_size: Option<u64>,
     pub app_log_max_count: Option<usize>,
-    pub language: Option<String>,
-    pub theme_mode: Option<String>,
-    pub tray_event: Option<String>,
-    pub env_type: Option<String>,
-    pub start_page: Option<String>,
-    pub startup_script: Option<String>,
+    pub language: Option<CompactString>,
+    pub theme_mode: Option<CompactString>,
+    pub tray_event: Option<CompactString>,
+    pub env_type: Option<CompactString>,
+    pub start_page: Option<CompactString>,
+    pub startup_script: Option<CompactString>,
     pub traffic_graph: Option<bool>,
     pub enable_memory_usage: Option<bool>,
     pub enable_group_icon: Option<bool>,
     pub common_tray_icon: Option<bool>,
     #[cfg(target_os = "macos")]
-    pub tray_icon: Option<String>,
-    pub menu_icon: Option<String>,
+    pub tray_icon: Option<CompactString>,
+    pub menu_icon: Option<CompactString>,
     pub sysproxy_tray_icon: Option<bool>,
     pub tun_tray_icon: Option<bool>,
     pub enable_tun_mode: Option<bool>,
@@ -559,18 +561,18 @@ pub struct IVergeResponse {
     pub enable_proxy_guard: Option<bool>,
     pub enable_global_hotkey: Option<bool>,
     pub use_default_bypass: Option<bool>,
-    pub system_proxy_bypass: Option<String>,
+    pub system_proxy_bypass: Option<CompactString>,
     pub proxy_guard_duration: Option<u64>,
     pub proxy_auto_config: Option<bool>,
-    pub pac_file_content: Option<String>,
-    pub proxy_host: Option<String>,
+    pub pac_file_content: Option<CompactString>,
+    pub proxy_host: Option<CompactString>,
     pub theme_setting: Option<IVergeTheme>,
-    pub web_ui_list: Option<Vec<String>>,
-    pub clash_core: Option<String>,
-    pub hotkeys: Option<Vec<String>>,
+    pub web_ui_list: Option<Vec<CompactString>>,
+    pub clash_core: Option<CompactString>,
+    pub hotkeys: Option<Vec<CompactString>>,
     pub auto_close_connection: Option<bool>,
     pub auto_check_update: Option<bool>,
-    pub default_latency_test: Option<String>,
+    pub default_latency_test: Option<CompactString>,
     pub default_latency_timeout: Option<i32>,
     pub enable_auto_delay_detection: Option<bool>,
     pub enable_builtin_enhanced: Option<bool>,
@@ -590,9 +592,9 @@ pub struct IVergeResponse {
     pub verge_socks_enabled: Option<bool>,
     pub verge_port: Option<u16>,
     pub verge_http_enabled: Option<bool>,
-    pub webdav_url: Option<String>,
-    pub webdav_username: Option<String>,
-    pub webdav_password: Option<String>,
+    pub webdav_url: Option<CompactString>,
+    pub webdav_username: Option<CompactString>,
+    pub webdav_password: Option<CompactString>,
     pub enable_tray_speed: Option<bool>,
     pub enable_tray_icon: Option<bool>,
     pub tray_inline_proxy_groups: Option<bool>,

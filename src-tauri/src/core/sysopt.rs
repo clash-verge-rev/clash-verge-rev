@@ -47,7 +47,7 @@ async fn get_bypass() -> String {
     } else if use_default {
         format!("{DEFAULT_BYPASS},{custom_bypass}")
     } else {
-        custom_bypass
+        custom_bypass.into()
     }
 }
 
@@ -124,7 +124,7 @@ impl Sysopt {
                 verge
                     .proxy_host
                     .clone()
-                    .unwrap_or_else(|| String::from("127.0.0.1")),
+                    .unwrap_or_else(|| "127.0.0.1".into()),
             )
         };
 
@@ -132,7 +132,7 @@ impl Sysopt {
         {
             let mut sys = Sysproxy {
                 enable: false,
-                host: proxy_host.clone(),
+                host: proxy_host.clone().into(),
                 port,
                 bypass: get_bypass().await,
             };

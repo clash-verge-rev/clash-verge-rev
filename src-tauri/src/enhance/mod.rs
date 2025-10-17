@@ -22,7 +22,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         let verge = Config::verge().await;
         let verge = verge.latest_ref();
         (
-            Some(verge.get_valid_clash_core()),
+            Some(verge.get_valid_clash_core().into()),
             verge.enable_tun_mode.unwrap_or(false),
             verge.enable_builtin_enhanced.unwrap_or(true),
             verge.verge_socks_enabled.unwrap_or(false),
