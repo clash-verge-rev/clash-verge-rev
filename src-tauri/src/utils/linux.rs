@@ -100,8 +100,16 @@ impl DmabufOverrides {
         self.dmabuf_override.is_some()
     }
 
-    fn should_override_env(&self) -> bool {
-        self.user_preference.is_some() || !self.has_env_override()
+    fn should_override_env(&self, decision: &DmabufDecision) -> bool {
+        if self.user_preference.is_some() {
+            return true;
+        }
+
+        if decision.enable_dmabuf {
+            return true;
+        }
+
+        !self.has_env_override()
     }
 }
 
@@ -255,7 +263,7 @@ pub fn configure_environment() {
     let intel_gpu = detect_intel_gpu();
     let decision = DmabufDecision::resolve(&session, &overrides, intel_gpu);
 
-    if overrides.should_override_env() {
+    if overrides.should_override_env(&decision) {
         unsafe {
             if decision.enable_dmabuf {
                 env::remove_var("WEBKIT_DISABLE_DMABUF_RENDERER");
