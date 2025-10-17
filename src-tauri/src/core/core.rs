@@ -26,15 +26,12 @@ use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
-use std::error::Error;
-use std::fmt;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
 #[cfg(target_os = "windows")]
-use std::sync::atomic::{AtomicUsize, Ordering};
-#[cfg(target_os = "windows")]
-use std::time::Instant;
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Instant,
+};
 use tauri_plugin_mihomo::Error as MihomoError;
 use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
