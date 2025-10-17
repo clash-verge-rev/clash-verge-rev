@@ -17,12 +17,21 @@ use crate::{
     },
 };
 use anyhow::{Result, anyhow};
+#[cfg(target_os = "windows")]
+use backoff::backoff::Backoff;
+#[cfg(target_os = "windows")]
+use backoff::{Error as BackoffError, ExponentialBackoff};
 use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
 use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
+#[cfg(target_os = "windows")]
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Instant,
+};
 use tauri_plugin_mihomo::Error as MihomoError;
 use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
@@ -952,71 +961,97 @@ impl CoreManager {
             return;
         }
 
-        const MAX_ATTEMPTS: usize = 15;
-        const WAIT_INTERVAL_MS: u64 = 200;
+        let max_wait = Duration::from_millis(3000);
+        let mut backoff_strategy = ExponentialBackoff {
+            initial_interval: Duration::from_millis(200),
+            max_interval: Duration::from_millis(200),
+            max_elapsed_time: Some(max_wait),
+            multiplier: 1.0,
+            randomization_factor: 0.0,
+            ..Default::default()
+        };
+        backoff_strategy.reset();
 
-        for attempt in 0..MAX_ATTEMPTS {
-            let mut manager = SERVICE_MANAGER.lock().await;
+        let attempts = Arc::new(AtomicUsize::new(0));
+        let attempts_for_retry = Arc::clone(&attempts);
 
-            if matches!(manager.current(), ServiceStatus::Ready) {
-                if attempt > 0 {
+        let operation = || {
+            let attempts = Arc::clone(&attempts_for_retry);
+
+            async move {
+                let attempt = attempts.fetch_add(1, Ordering::Relaxed);
+                let mut manager = SERVICE_MANAGER.lock().await;
+
+                if matches!(manager.current(), ServiceStatus::Ready) {
+                    if attempt > 0 {
+                        logging!(
+                            info,
+                            Type::Core,
+                            "Service became ready for TUN after {} attempt(s)",
+                            attempt + 1
+                        );
+                    }
+                    return Ok(());
+                }
+
+                if attempt == 0 {
+                    logging!(
+                        info,
+                        Type::Core,
+                        "TUN mode enabled but service not ready; waiting for service availability"
+                    );
+                }
+
+                match manager.init().await {
+                    Ok(_) => {
+                        logging_error!(Type::Core, manager.refresh().await);
+                    }
+                    Err(err) => {
+                        logging!(
+                            debug,
+                            Type::Core,
+                            "Service connection attempt {} failed while waiting for TUN: {}",
+                            attempt + 1,
+                            err
+                        );
+                        return Err(BackoffError::transient(err));
+                    }
+                }
+
+                if matches!(manager.current(), ServiceStatus::Ready) {
                     logging!(
                         info,
                         Type::Core,
                         "Service became ready for TUN after {} attempt(s)",
-                        attempt
+                        attempt + 1
                     );
+                    return Ok(());
                 }
-                return;
-            }
 
-            if attempt == 0 {
                 logging!(
-                    info,
+                    debug,
                     Type::Core,
-                    "TUN mode enabled but service not ready; waiting for service availability"
-                );
-            }
-
-            match manager.init().await {
-                Ok(_) => {
-                    logging_error!(Type::Core, manager.refresh().await);
-                }
-                Err(err) => {
-                    logging!(
-                        debug,
-                        Type::Core,
-                        "Service connection attempt {} failed while waiting for TUN: {}",
-                        attempt + 1,
-                        err
-                    );
-                }
-            }
-
-            if matches!(manager.current(), ServiceStatus::Ready) {
-                logging!(
-                    info,
-                    Type::Core,
-                    "Service became ready for TUN after {} attempt(s)",
+                    "Service not ready after attempt {}; retrying with backoff",
                     attempt + 1
                 );
-                return;
+
+                Err(BackoffError::transient(anyhow!("Service not ready yet")))
             }
+        };
 
-            drop(manager);
+        let wait_started = Instant::now();
 
-            if attempt + 1 == MAX_ATTEMPTS {
-                let total_wait_ms = (MAX_ATTEMPTS as u64) * WAIT_INTERVAL_MS;
-                logging!(
-                    warn,
-                    Type::Core,
-                    "Service still not ready after waiting approximately {} ms; falling back to sidecar mode",
-                    total_wait_ms
-                );
-                break;
-            }
-
-            sleep(Duration::from_millis(WAIT_INTERVAL_MS)).await;
+        if let Err(err) = backoff::future::retry(backoff_strategy, operation).await {
+            let total_attempts = attempts.load(Ordering::Relaxed);
+            let waited_ms = wait_started.elapsed().as_millis();
+            logging!(
+                warn,
+                Type::Core,
+                "Service still not ready after waiting approximately {} ms ({} attempt(s)); falling back to sidecar mode: {}",
+                waited_ms,
+                total_attempts,
+                err
+            );
         }
     }
 

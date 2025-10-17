@@ -22,12 +22,9 @@ pub enum ChainType {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub enum ChainSupport {
-    Clash,
     ClashMeta,
     ClashMetaAlpha,
-    All,
 }
 
 // impl From<&PrfItem> for Option<ChainItem> {
@@ -156,9 +153,7 @@ impl ChainSupport {
         match core {
             Some(core) => matches!(
                 (self, core.as_str()),
-                (ChainSupport::All, _)
-                    | (ChainSupport::Clash, "clash")
-                    | (ChainSupport::ClashMeta, "verge-mihomo")
+                (ChainSupport::ClashMeta, "verge-mihomo")
                     | (ChainSupport::ClashMetaAlpha, "verge-mihomo-alpha")
             ),
             None => true,
