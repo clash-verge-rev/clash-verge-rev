@@ -1,4 +1,4 @@
-import { createElement, isValidElement, ReactNode, useRef } from "react";
+import { cloneElement, isValidElement, ReactNode, useRef } from "react";
 
 import noop from "@/utils/noop";
 
@@ -24,7 +24,7 @@ export function GuardState<T>(props: Props<T>) {
     onGuard = noop,
     onCatch = noop,
     onChange = noop,
-    onFormat,
+    onFormat = (v: T) => v,
   } = props;
 
   const lockRef = useRef(false);
@@ -45,7 +45,7 @@ export function GuardState<T>(props: Props<T>) {
     lockRef.current = true;
 
     try {
-      const newValue = onFormat ? (onFormat as any)(...args) : (args[0] as T);
+      const newValue = (onFormat as any)(...args);
       // 先在ui上响应操作
       onChange(newValue);
 
@@ -81,7 +81,5 @@ export function GuardState<T>(props: Props<T>) {
     }
     lockRef.current = false;
   };
-  const { children: nestedChildren, ...restProps } = childProps;
-
-  return createElement(children.type, restProps, nestedChildren);
+  return cloneElement(children, childProps);
 }

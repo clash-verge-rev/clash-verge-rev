@@ -20,13 +20,8 @@ interface ItemProps {
   onClick?: () => void | Promise<any>;
 }
 
-export const SettingItem: React.FC<ItemProps> = ({
-  label,
-  extra,
-  children,
-  secondary,
-  onClick,
-}) => {
+export const SettingItem: React.FC<ItemProps> = (props) => {
+  const { label, extra, children, secondary, onClick } = props;
   const clickable = !!onClick;
 
   const primary = (
@@ -70,7 +65,7 @@ export const SettingItem: React.FC<ItemProps> = ({
 export const SettingList: React.FC<{
   title: string;
   children: ReactNode;
-}> = ({ title, children }) => (
+}> = (props) => (
   <List>
     <ListSubheader
       sx={[
@@ -83,9 +78,9 @@ export const SettingList: React.FC<{
       ]}
       disableSticky
     >
-      {title}
+      {props.title}
     </ListSubheader>
 
-    {children}
+    {props.children}
   </List>
 );

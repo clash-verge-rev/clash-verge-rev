@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useReducer } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 // import { useClashInfo } from "@/hooks/use-clash";
 // import { useVisibility } from "@/hooks/use-visibility";
@@ -196,11 +196,12 @@ export const useTrafficMonitorEnhanced = () => {
     });
   }
 
-  const [, forceRender] = useReducer((version: number) => version + 1, 0);
+  const [, forceUpdate] = useState({});
   const cleanupRef = useRef<(() => void) | null>(null);
 
-  const bumpRenderVersion = useCallback(() => {
-    forceRender();
+  // 强制组件更新
+  const triggerUpdate = useCallback(() => {
+    forceUpdate({});
   }, []);
 
   // 注册引用计数
@@ -249,8 +250,9 @@ export const useTrafficMonitorEnhanced = () => {
         }),
       };
       globalSampler.addDataPoint(dataPoint);
+      triggerUpdate();
     }
-  }, [traffic]);
+  }, [traffic, triggerUpdate]);
 
   // const { data: monitorData, error } = useSWR<ISystemMonitorOverview>(
   //   shouldFetch ? "getSystemMonitorOverviewSafe" : null,
@@ -326,9 +328,9 @@ export const useTrafficMonitorEnhanced = () => {
   const clearData = useCallback(() => {
     if (globalSampler) {
       globalSampler.clear();
-      bumpRenderVersion();
+      triggerUpdate();
     }
-  }, [bumpRenderVersion]);
+  }, [triggerUpdate]);
 
   // 获取采样器统计信息
   const getSamplerStats = useCallback(() => {

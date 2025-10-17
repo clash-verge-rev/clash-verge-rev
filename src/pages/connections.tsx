@@ -36,10 +36,8 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ConnectionsPage = () => {
   const { t } = useTranslation();
   const pageVisible = useVisibility();
-  const [match, setMatch] = useState<(input: string) => boolean>(
-    () => () => true,
-  );
-  const [curOrderOpt, setCurOrderOpt] = useState("Default");
+  const [match, setMatch] = useState(() => (_: string) => true);
+  const [curOrderOpt, setOrderOpt] = useState("Default");
 
   const {
     response: { data: connections },
@@ -197,7 +195,7 @@ const ConnectionsPage = () => {
         {!isTableLayout && (
           <BaseStyledSelect
             value={curOrderOpt}
-            onChange={(e) => setCurOrderOpt(e.target.value)}
+            onChange={(e) => setOrderOpt(e.target.value)}
           >
             {Object.keys(orderOpts).map((opt) => (
               <MenuItem key={opt} value={opt}>

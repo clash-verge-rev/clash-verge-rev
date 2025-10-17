@@ -1,6 +1,13 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { createContext, useCallback, use, useState } from "react";
 
-import { ChainProxyContext } from "./chain-proxy-context";
+interface ChainProxyContextType {
+  isChainMode: boolean;
+  setChainMode: (isChain: boolean) => void;
+  chainConfigData: string | null;
+  setChainConfigData: (data: string | null) => void;
+}
+
+const ChainProxyContext = createContext<ChainProxyContextType | null>(null);
 
 export const ChainProxyProvider = ({
   children,
@@ -18,15 +25,24 @@ export const ChainProxyProvider = ({
     setChainConfigData(data);
   }, []);
 
-  const contextValue = useMemo(
-    () => ({
-      isChainMode,
-      setChainMode,
-      chainConfigData,
-      setChainConfigData: setChainConfigDataCallback,
-    }),
-    [isChainMode, setChainMode, chainConfigData, setChainConfigDataCallback],
+  return (
+    <ChainProxyContext
+      value={{
+        isChainMode,
+        setChainMode,
+        chainConfigData,
+        setChainConfigData: setChainConfigDataCallback,
+      }}
+    >
+      {children}
+    </ChainProxyContext>
   );
+};
 
-  return <ChainProxyContext value={contextValue}>{children}</ChainProxyContext>;
+export const useChainProxy = () => {
+  const context = use(ChainProxyContext);
+  if (!context) {
+    throw new Error("useChainProxy must be used within a ChainProxyProvider");
+  }
+  return context;
 };

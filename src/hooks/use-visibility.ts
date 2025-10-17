@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 
 export const useVisibility = () => {
-  const [visible, setVisible] = useState(() =>
-    typeof document === "undefined"
-      ? true
-      : document.visibilityState === "visible",
-  );
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -13,15 +9,16 @@ export const useVisibility = () => {
     };
 
     const handleFocus = () => setVisible(true);
-    const handlePointerDown = () => setVisible(true);
+    const handleClick = () => setVisible(true);
 
+    handleVisibilityChange();
     document.addEventListener("focus", handleFocus);
-    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("pointerdown", handleClick);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       document.removeEventListener("focus", handleFocus);
-      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("pointerdown", handleClick);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);

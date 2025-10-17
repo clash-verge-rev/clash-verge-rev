@@ -71,11 +71,10 @@ export const BackupConfigViewer = memo(
     };
 
     useEffect(() => {
-      if (!webdav_url || !webdav_username || !webdav_password) {
-        return;
+      if (webdav_url && webdav_username && webdav_password) {
+        onInit();
       }
-      void onInit();
-    }, [webdav_url, webdav_username, webdav_password, onInit]);
+    }, []);
 
     const checkForm = () => {
       const username = usernameRef.current?.value;

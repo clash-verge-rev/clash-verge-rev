@@ -14,7 +14,8 @@ interface ILogItem {
 // Start logs monitoring with specified level
 export const startLogsStreaming = async (logLevel: LogLevel = "info") => {
   try {
-    // await startLogsMonitoring(logLevel === "all" ? undefined : logLevel);
+    const level = logLevel === "all" ? undefined : logLevel;
+    // await startLogsMonitoring(level);
     console.log(
       `[IPC-LogService] Started logs monitoring with level: ${logLevel}`,
     );

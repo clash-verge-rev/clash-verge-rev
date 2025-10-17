@@ -133,22 +133,11 @@ export const useLogData = () => {
     mutate(`$sub$${subscriptKey}`);
   }, [date, subscriptKey]);
 
-  const previousLogLevel = useRef<string | undefined>(undefined);
-
   useEffect(() => {
-    if (!logLevel) {
-      previousLogLevel.current = logLevel ?? undefined;
-      return;
-    }
-
-    if (previousLogLevel.current === logLevel) {
-      return;
-    }
-
-    previousLogLevel.current = logLevel;
+    if (!logLevel) return;
     ws.current?.close();
     setDate(Date.now());
-  }, [logLevel, setDate]);
+  }, [logLevel]);
 
   const refreshGetClashLog = (clear = false) => {
     if (clear) {

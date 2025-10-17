@@ -26,7 +26,12 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
   const [loading, setLoading] = useState(false);
   const { verge, patchVerge } = useVerge();
   const testList = verge?.test_list ?? [];
-  const { control, ...formIns } = useForm<IVergeTestItem>({
+  const {
+    control,
+    watch: _watch,
+    register: _register,
+    ...formIns
+  } = useForm<IVergeTestItem>({
     defaultValues: {
       name: "",
       icon: "",

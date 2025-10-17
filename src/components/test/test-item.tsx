@@ -23,12 +23,8 @@ interface Props {
   onDelete: (uid: string) => void;
 }
 
-export const TestItem = ({
-  id,
-  itemData,
-  onEdit,
-  onDelete: removeTest,
-}: Props) => {
+export const TestItem = (props: Props) => {
+  const { itemData, onEdit, onDelete: onDeleteItem } = props;
   const {
     attributes,
     listeners,
@@ -37,7 +33,7 @@ export const TestItem = ({
     transition,
     isDragging,
   } = useSortable({
-    id,
+    id: props.id,
   });
 
   const { t } = useTranslation();
@@ -54,19 +50,17 @@ export const TestItem = ({
     setDelay(result);
   }, [url]);
 
-  const initIconCachePath = useCallback(async () => {
+  useEffect(() => {
+    initIconCachePath();
+  }, [icon]);
+
+  async function initIconCachePath() {
     if (icon && icon.trim().startsWith("http")) {
       const fileName = uid + "-" + getFileName(icon);
       const iconPath = await downloadIconCache(icon, fileName);
       setIconCachePath(convertFileSrc(iconPath));
-    } else {
-      setIconCachePath("");
     }
-  }, [icon, uid]);
-
-  useEffect(() => {
-    void initIconCachePath();
-  }, [initIconCachePath]);
+  }
 
   function getFileName(url: string) {
     return url.substring(url.lastIndexOf("/") + 1);
@@ -80,7 +74,7 @@ export const TestItem = ({
   const onDelete = useLockFn(async () => {
     setAnchorEl(null);
     try {
-      removeTest(uid);
+      onDeleteItem(uid);
     } catch (err: any) {
       showNotice("error", err.message || err.toString());
     }
@@ -108,12 +102,12 @@ export const TestItem = ({
     return () => {
       if (unlistenFn) {
         console.log(
-          `TestItem for ${id} unmounting or url changed, cleaning up test-all listener.`,
+          `TestItem for ${props.id} unmounting or url changed, cleaning up test-all listener.`,
         );
         unlistenFn();
       }
     };
-  }, [url, addListener, onDelay, id]);
+  }, [url, addListener, onDelay, props.id]);
 
   return (
     <Box

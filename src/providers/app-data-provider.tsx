@@ -38,51 +38,6 @@ export const AppDataProvider = ({
     },
   );
 
-  const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
-    "getClashConfig",
-    getBaseConfig,
-    {
-      refreshInterval: 60000, // 60秒刷新间隔，减少频繁请求
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 3,
-    },
-  );
-
-  // 提供者数据
-  const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
-    "getProxyProviders",
-    calcuProxyProviders,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 3000,
-      suspense: false,
-      errorRetryCount: 3,
-    },
-  );
-
-  const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
-    "getRuleProviders",
-    getRuleProviders,
-    {
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 3,
-    },
-  );
-
-  // 低频率更新数据
-  const { data: rulesData, mutate: refreshRules } = useSWR(
-    "getRules",
-    getRules,
-    {
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 3,
-    },
-  );
-
   // 监听profile和clash配置变更事件
   useEffect(() => {
     let lastProfileId: string | null = null;
@@ -92,6 +47,7 @@ export const AppDataProvider = ({
     let isUnmounted = false;
     const scheduledTimeouts = new Set<ReturnType<typeof setTimeout>>();
     const cleanupFns: Array<() => void> = [];
+    const fallbackWindowListeners: Array<[string, EventListener]> = [];
 
     const registerCleanup = (fn: () => void) => {
       if (isUnmounted) {
@@ -99,12 +55,6 @@ export const AppDataProvider = ({
       } else {
         cleanupFns.push(fn);
       }
-    };
-
-    const addWindowListener = (eventName: string, handler: EventListener) => {
-      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener -- cleanup is returned by this helper
-      window.addEventListener(eventName, handler);
-      return () => window.removeEventListener(eventName, handler);
     };
 
     const scheduleTimeout = (
@@ -120,9 +70,38 @@ export const AppDataProvider = ({
       return timeoutId;
     };
 
+    const clearScheduledTimeout = (
+      timeoutId: ReturnType<typeof setTimeout>,
+    ) => {
+      if (scheduledTimeouts.has(timeoutId)) {
+        clearTimeout(timeoutId);
+        scheduledTimeouts.delete(timeoutId);
+      }
+    };
+
     const clearAllTimeouts = () => {
       scheduledTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
       scheduledTimeouts.clear();
+    };
+
+    const withTimeout = async <T,>(
+      promise: Promise<T>,
+      timeoutMs: number,
+      label: string,
+    ): Promise<T> => {
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = scheduleTimeout(() => reject(new Error(label)), timeoutMs);
+      });
+
+      try {
+        return await Promise.race([promise, timeoutPromise]);
+      } finally {
+        if (timeoutId !== null) {
+          clearScheduledTimeout(timeoutId);
+        }
+      }
     };
 
     const handleProfileChanged = (event: { payload: string }) => {
@@ -225,7 +204,8 @@ export const AppDataProvider = ({
         ];
 
         fallbackHandlers.forEach(([eventName, handler]) => {
-          registerCleanup(addWindowListener(eventName, handler));
+          window.addEventListener(eventName, handler);
+          fallbackWindowListeners.push([eventName, handler]);
         });
       }
     };
@@ -235,9 +215,57 @@ export const AppDataProvider = ({
     return () => {
       isUnmounted = true;
       clearAllTimeouts();
+      fallbackWindowListeners.splice(0).forEach(([eventName, handler]) => {
+        window.removeEventListener(eventName, handler);
+      });
       cleanupFns.splice(0).forEach((fn) => fn());
     };
-  }, [refreshProxy, refreshRules, refreshRuleProviders]);
+  }, [refreshProxy]);
+
+  const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
+    "getClashConfig",
+    getBaseConfig,
+    {
+      refreshInterval: 60000, // 60秒刷新间隔，减少频繁请求
+      revalidateOnFocus: false,
+      suspense: false,
+      errorRetryCount: 3,
+    },
+  );
+
+  // 提供者数据
+  const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
+    "getProxyProviders",
+    calcuProxyProviders,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 3000,
+      suspense: false,
+      errorRetryCount: 3,
+    },
+  );
+
+  const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
+    "getRuleProviders",
+    getRuleProviders,
+    {
+      revalidateOnFocus: false,
+      suspense: false,
+      errorRetryCount: 3,
+    },
+  );
+
+  // 低频率更新数据
+  const { data: rulesData, mutate: refreshRules } = useSWR(
+    "getRules",
+    getRules,
+    {
+      revalidateOnFocus: false,
+      suspense: false,
+      errorRetryCount: 3,
+    },
+  );
 
   const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
     "getSystemProxy",

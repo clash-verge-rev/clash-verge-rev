@@ -217,7 +217,7 @@ const ProfilePage = () => {
   // Batch selection states
   const [batchMode, setBatchMode] = useState(false);
   const [selectedProfiles, setSelectedProfiles] = useState<Set<string>>(
-    () => new Set(),
+    new Set(),
   );
 
   // 防止重复切换
@@ -899,8 +899,6 @@ const ProfilePage = () => {
     let lastUpdateTime = 0;
     const debounceDelay = 200;
 
-    let refreshTimer: number | null = null;
-
     const setupListener = async () => {
       unlistenPromise = listen<string>("profile-changed", (event) => {
         const newProfileId = event.payload;
@@ -921,16 +919,11 @@ const ProfilePage = () => {
 
         console.log(`[Profile] 执行配置数据刷新`);
 
-        if (refreshTimer !== null) {
-          window.clearTimeout(refreshTimer);
-        }
-
         // 使用异步调度避免阻塞事件处理
-        refreshTimer = window.setTimeout(() => {
+        setTimeout(() => {
           mutateProfiles().catch((error) => {
             console.error("[Profile] 配置数据刷新失败:", error);
           });
-          refreshTimer = null;
         }, 0);
       });
     };
@@ -938,9 +931,6 @@ const ProfilePage = () => {
     setupListener();
 
     return () => {
-      if (refreshTimer !== null) {
-        window.clearTimeout(refreshTimer);
-      }
       unlistenPromise?.then((unlisten) => unlisten()).catch(console.error);
     };
   }, [mutateProfiles]);

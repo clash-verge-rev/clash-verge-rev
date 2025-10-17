@@ -1,6 +1,6 @@
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
@@ -28,14 +28,7 @@ const ProxyPage = () => {
     }
   });
 
-  const [chainConfigData, dispatchChainConfigData] = useReducer(
-    (_: string | null, action: string | null) => action,
-    null as string | null,
-  );
-
-  const updateChainConfigData = useCallback((value: string | null) => {
-    dispatchChainConfigData(value);
-  }, []);
+  const [chainConfigData, setChainConfigData] = useState<string | null>(null);
 
   const { data: clashConfig, mutate: mutateClash } = useSWR(
     "getClashConfig",
@@ -85,43 +78,30 @@ const ProxyPage = () => {
 
   // 当开启链式代理模式时，获取配置数据
   useEffect(() => {
-    if (!isChainMode) {
-      updateChainConfigData(null);
-      return;
-    }
+    if (isChainMode) {
+      const fetchChainConfig = async () => {
+        try {
+          const exitNode = localStorage.getItem("proxy-chain-exit-node");
 
-    let cancelled = false;
-
-    const fetchChainConfig = async () => {
-      try {
-        const exitNode = localStorage.getItem("proxy-chain-exit-node");
-
-        if (!exitNode) {
-          console.error("No proxy chain exit node found in localStorage");
-          if (!cancelled) {
-            updateChainConfigData("");
+          if (!exitNode) {
+            console.error("No proxy chain exit node found in localStorage");
+            setChainConfigData("");
+            return;
           }
-          return;
-        }
 
-        const configData = await getRuntimeProxyChainConfig(exitNode);
-        if (!cancelled) {
-          updateChainConfigData(configData || "");
+          const configData = await getRuntimeProxyChainConfig(exitNode);
+          setChainConfigData(configData || "");
+        } catch (error) {
+          console.error("Failed to get runtime proxy chain config:", error);
+          setChainConfigData("");
         }
-      } catch (error) {
-        console.error("Failed to get runtime proxy chain config:", error);
-        if (!cancelled) {
-          updateChainConfigData("");
-        }
-      }
-    };
+      };
 
-    fetchChainConfig();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isChainMode, updateChainConfigData]);
+      fetchChainConfig();
+    } else {
+      setChainConfigData(null);
+    }
+  }, [isChainMode]);
 
   useEffect(() => {
     if (curMode && !modeList.includes(curMode)) {
