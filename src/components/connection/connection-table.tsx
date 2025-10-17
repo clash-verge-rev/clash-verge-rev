@@ -97,12 +97,17 @@ export const ConnectionTable = (props: Props) => {
 
       const originalPublishEvent = api.publishEvent;
 
-      const patchedPublishEvent = ((...rawArgs: unknown[]) => {
-        rawArgs[2] = ensureMuiEvent(rawArgs[2]);
+      // Use Proxy to create a more resilient wrapper that always normalizes events
+      const patchedPublishEvent = new Proxy(originalPublishEvent, {
+        apply(target, thisArg, rawArgs: unknown[]) {
+          rawArgs[2] = ensureMuiEvent(rawArgs[2]);
 
-        return (
-          originalPublishEvent as unknown as (...args: unknown[]) => void
-        ).apply(api, rawArgs);
+          return Reflect.apply(
+            target as (...args: unknown[]) => unknown,
+            thisArg,
+            rawArgs,
+          );
+        },
       }) as typeof originalPublishEvent;
 
       api.publishEvent = patchedPublishEvent;
