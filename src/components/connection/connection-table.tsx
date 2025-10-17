@@ -6,7 +6,7 @@ import {
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
-import { useEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import parseTraffic from "@/utils/parse-traffic";
@@ -21,7 +21,7 @@ export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
   const { t } = useTranslation();
   const apiRef = useGridApiRef();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const PATCH_FLAG_KEY = "__clashPatchedPublishEvent" as const;
     const ORIGINAL_KEY = "__clashOriginalPublishEvent" as const;
     let isUnmounted = false;
