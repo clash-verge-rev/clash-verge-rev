@@ -131,9 +131,12 @@ function sortProxies(
     const categorizeDelay = (delay: number): [number, number] => {
       if (!Number.isFinite(delay)) return [3, Number.MAX_SAFE_INTEGER];
       if (delay > 1e5) return [4, delay];
-      if (delay < 0) return [2, Math.abs(delay)];
       if (delay === 0 || (delay >= effectiveTimeout && delay <= 1e5)) {
         return [3, delay || effectiveTimeout];
+      }
+      if (delay < 0) {
+        // sentinel delays (-1, -2, etc.) should always sort after real measurements
+        return [5, Number.MAX_SAFE_INTEGER];
       }
       return [0, delay];
     };
