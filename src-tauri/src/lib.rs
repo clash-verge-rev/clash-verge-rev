@@ -26,6 +26,84 @@ use utils::logging::Type;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
+#[cfg(target_os = "linux")]
+#[derive(Debug, Default, Clone, Copy)]
+struct IntelGpuDetection {
+    has_intel: bool,
+    intel_is_primary: bool,
+    inconclusive: bool,
+}
+
+#[cfg(target_os = "linux")]
+impl IntelGpuDetection {
+    fn should_disable_dmabuf(&self) -> bool {
+        self.intel_is_primary || self.inconclusive
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn detect_intel_gpu() -> IntelGpuDetection {
+    use std::collections::HashSet;
+    use std::fs;
+    use std::path::PathBuf;
+
+    const DRM_PATH: &str = "/sys/class/drm";
+    const INTEL_VENDOR_ID: &str = "0x8086";
+
+    let Ok(entries) = fs::read_dir(DRM_PATH) else {
+        return IntelGpuDetection::default();
+    };
+
+    let mut detection = IntelGpuDetection::default();
+    let mut seen_devices: HashSet<PathBuf> = HashSet::new();
+    let mut missing_boot_vga = false;
+
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+
+        if !(name.starts_with("renderD") || name.starts_with("card")) {
+            continue;
+        }
+
+        let device_path = entry.path().join("device");
+        let device_key = fs::canonicalize(&device_path).unwrap_or(device_path);
+
+        if !seen_devices.insert(device_key.clone()) {
+            continue;
+        }
+
+        let vendor_path = device_key.join("vendor");
+        let Ok(vendor) = fs::read_to_string(&vendor_path) else {
+            continue;
+        };
+
+        if !vendor.trim().eq_ignore_ascii_case(INTEL_VENDOR_ID) {
+            continue;
+        }
+
+        detection.has_intel = true;
+
+        let boot_vga_path = device_key.join("boot_vga");
+        match fs::read_to_string(&boot_vga_path) {
+            Ok(flag) => {
+                if flag.trim() == "1" {
+                    detection.intel_is_primary = true;
+                }
+            }
+            Err(_) => {
+                missing_boot_vga = true;
+            }
+        }
+    }
+
+    if detection.has_intel && !detection.intel_is_primary && missing_boot_vga {
+        detection.inconclusive = true;
+    }
+
+    detection
+}
+
 /// Application initialization helper functions
 mod app_init {
     use anyhow::Result;
@@ -244,8 +322,12 @@ pub fn run() {
         let desktop_session = std::env::var("DESKTOP_SESSION")
             .unwrap_or_default()
             .to_uppercase();
-        let is_kde_desktop = desktop_env.contains("KDE");
-        let is_plasma_desktop = desktop_env.contains("PLASMA");
+        let is_kde_plasma_desktop = desktop_env.contains("KDE")
+            || session_desktop.contains("KDE")
+            || desktop_session.contains("KDE")
+            || desktop_env.contains("PLASMA")
+            || session_desktop.contains("PLASMA")
+            || desktop_session.contains("PLASMA");
         let is_hyprland_desktop = desktop_env.contains("HYPR")
             || session_desktop.contains("HYPR")
             || desktop_session.contains("HYPR");
@@ -255,65 +337,136 @@ pub fn run() {
             .unwrap_or(false)
             || std::env::var("WAYLAND_DISPLAY").is_ok();
         let prefer_native_wayland =
-            is_wayland_session && (is_kde_desktop || is_plasma_desktop || is_hyprland_desktop);
+            is_wayland_session && (is_kde_plasma_desktop || is_hyprland_desktop);
         let dmabuf_override = std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER");
-
-        if prefer_native_wayland {
-            let compositor_label = if is_hyprland_desktop {
-                "Hyprland"
-            } else if is_plasma_desktop {
-                "KDE Plasma"
-            } else {
-                "KDE"
-            };
-
-            if matches!(dmabuf_override.as_deref(), Ok("1")) {
-                unsafe {
-                    std::env::remove_var("WEBKIT_DISABLE_DMABUF_RENDERER");
+        let has_env_override = dmabuf_override.is_ok();
+        let user_dmabuf_pref =
+            std::env::var("CLASH_VERGE_DMABUF").ok().and_then(|value| {
+                match value.trim().to_ascii_lowercase().as_str() {
+                    "1" | "true" | "enable" | "on" => Some(true),
+                    "0" | "false" | "disable" | "off" => Some(false),
+                    _ => None,
                 }
-                logging!(
-                    info,
-                    Type::Setup,
-                    "Wayland + {} detected: Re-enabled WebKit DMABUF renderer to avoid Cairo surface failures.",
-                    compositor_label
-                );
-            } else {
-                logging!(
-                    info,
-                    Type::Setup,
-                    "Wayland + {} detected: Using native Wayland backend for reliable rendering.",
-                    compositor_label
-                );
-            }
+            });
+        let intel_gpu = detect_intel_gpu();
+
+        let mut dmabuf_enabled = true;
+        let mut dmabuf_log_warn = false;
+        let mut dmabuf_log_msg: Option<String> = None;
+        let mut force_x11_backend = false;
+
+        let compositor_label = if is_hyprland_desktop {
+            String::from("Hyprland")
+        } else if is_kde_plasma_desktop {
+            String::from("KDE Plasma")
         } else {
-            if dmabuf_override.is_err() {
-                unsafe {
-                    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+            String::from("Wayland compositor")
+        };
+
+        match user_dmabuf_pref {
+            Some(true) => {
+                dmabuf_enabled = true;
+                dmabuf_log_msg = Some("CLASH_VERGE_DMABUF=1: 强制启用 WebKit DMABUF 渲染。".into());
+            }
+            Some(false) => {
+                dmabuf_enabled = false;
+                dmabuf_log_msg = Some("CLASH_VERGE_DMABUF=0: 强制禁用 WebKit DMABUF 渲染。".into());
+                if is_wayland_session && !prefer_native_wayland {
+                    force_x11_backend = true;
                 }
             }
+            None => {
+                if has_env_override {
+                    if matches!(dmabuf_override.as_deref(), Ok("1")) {
+                        dmabuf_enabled = false;
+                        dmabuf_log_msg = Some(
+                            "检测到 WEBKIT_DISABLE_DMABUF_RENDERER=1，沿用用户的软件渲染配置。"
+                                .into(),
+                        );
+                        if is_wayland_session && !prefer_native_wayland {
+                            force_x11_backend = true;
+                        }
+                    } else {
+                        dmabuf_enabled = true;
+                        dmabuf_log_msg = Some(format!(
+                            "检测到 WEBKIT_DISABLE_DMABUF_RENDERER={}，沿用用户配置。",
+                            dmabuf_override.unwrap_or_default()
+                        ));
+                    }
+                } else if prefer_native_wayland && !intel_gpu.should_disable_dmabuf() {
+                    dmabuf_enabled = true;
+                    dmabuf_log_msg = Some(format!(
+                        "Wayland + {} detected: 使用原生 DMABUF 渲染。",
+                        compositor_label
+                    ));
+                } else {
+                    dmabuf_enabled = false;
+                    if is_wayland_session && !prefer_native_wayland {
+                        force_x11_backend = true;
+                    }
 
-            // Force X11 backend for tray icon compatibility on Wayland
-            if is_wayland_session {
-                unsafe {
-                    std::env::set_var("GDK_BACKEND", "x11");
-                    std::env::remove_var("WAYLAND_DISPLAY");
+                    if intel_gpu.should_disable_dmabuf() && is_wayland_session {
+                        dmabuf_log_warn = true;
+                        if intel_gpu.inconclusive {
+                            dmabuf_log_msg = Some(
+                                "Wayland 上检测到 Intel GPU，但缺少 boot_vga 信息：预防性禁用 WebKit DMABUF，若确认非主 GPU 可通过 CLASH_VERGE_DMABUF=1 覆盖。"
+                                    .into(),
+                            );
+                        } else {
+                            dmabuf_log_msg = Some(
+                                "Wayland 上检测到 Intel 主 GPU (0x8086)：禁用 WebKit DMABUF 以避免帧缓冲失败。"
+                                    .into(),
+                            );
+                        }
+                    } else if is_wayland_session {
+                        dmabuf_log_msg = Some(
+                            "Wayland 会话未匹配受支持的合成器：禁用 WebKit DMABUF 渲染。".into(),
+                        );
+                    } else {
+                        dmabuf_log_msg = Some("禁用 WebKit DMABUF 渲染以获得更稳定的输出。".into());
+                    }
                 }
-                logging!(
-                    info,
-                    Type::Setup,
-                    "Wayland detected: Forcing X11 backend for tray icon compatibility"
-                );
             }
         }
 
-        if is_kde_desktop || is_plasma_desktop {
+        if user_dmabuf_pref.is_some() || !has_env_override {
+            unsafe {
+                if dmabuf_enabled {
+                    std::env::remove_var("WEBKIT_DISABLE_DMABUF_RENDERER");
+                } else {
+                    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+                }
+            }
+        }
+
+        if let Some(message) = dmabuf_log_msg {
+            if dmabuf_log_warn {
+                logging!(warn, Type::Setup, "{}", message);
+            } else {
+                logging!(info, Type::Setup, "{}", message);
+            }
+        }
+
+        if force_x11_backend {
+            unsafe {
+                std::env::set_var("GDK_BACKEND", "x11");
+                std::env::remove_var("WAYLAND_DISPLAY");
+            }
+            logging!(
+                info,
+                Type::Setup,
+                "Wayland detected: Forcing X11 backend for WebKit stability."
+            );
+        }
+
+        if is_kde_plasma_desktop {
             unsafe {
                 std::env::set_var("GTK_CSD", "0");
             }
             logging!(
                 info,
                 Type::Setup,
-                "KDE detected: Disabled GTK CSD for better titlebar stability."
+                "KDE/Plasma detected: Disabled GTK CSD for better titlebar stability."
             );
         }
     }
