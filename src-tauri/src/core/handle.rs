@@ -551,15 +551,14 @@ impl Handle {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn set_activation_policy_prohibited(&self) {
-        if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Prohibited) {
-            logging!(
-                warn,
-                Type::Setup,
-                "Failed to set prohibited activation policy: {}",
-                e
-            );
-        }
-    }
+    // pub fn set_activation_policy_prohibited(&self) {
+    //     if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Prohibited) {
+    //         logging!(
+    //             warn,
+    //             Type::Setup,
+    //             "Failed to set prohibited activation policy: {}",
+    //             e
+    //         );
+    //     }
+    // }
 }
