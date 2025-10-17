@@ -82,18 +82,12 @@ export const router = createBrowserRouter([
   {
     path: "/",
     Component: Layout,
-    children: navItems.map((item) => {
-      if (item.path === "/") {
-        return {
-          index: true,
-          Component: item.Component,
-        } as RouteObject;
-      } else {
-        return {
+    children: navItems.map(
+      (item) =>
+        ({
           path: item.path,
           Component: item.Component,
-        } as RouteObject;
-      }
-    }),
+        }) as RouteObject,
+    ),
   },
 ]);
