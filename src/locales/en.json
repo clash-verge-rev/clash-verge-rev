@@ -704,5 +704,7 @@
   "Select All": "Select All",
   "Selected": "Selected",
   "Selected profiles deleted successfully": "Selected profiles deleted successfully",
-  "Prefer System Titlebar": "Prefer System Titlebar"
+  "Prefer System Titlebar": "Prefer System Titlebar",
+  "App Log Max Size": "App Log Max Size",
+  "App Log Max Count": "App Log Max Count"
 }
