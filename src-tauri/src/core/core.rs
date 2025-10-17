@@ -17,23 +17,24 @@ use crate::{
     },
 };
 use anyhow::{Result, anyhow};
+#[cfg(target_os = "windows")]
 use backoff::backoff::Backoff;
+#[cfg(target_os = "windows")]
 use backoff::{Error as BackoffError, ExponentialBackoff};
 use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
-use std::{
-    error::Error,
-    fmt,
-    path::PathBuf,
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
-    time::{Duration, Instant},
-};
+use std::error::Error;
+use std::fmt;
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::time::Duration;
+#[cfg(target_os = "windows")]
+use std::sync::atomic::{AtomicUsize, Ordering};
+#[cfg(target_os = "windows")]
+use std::time::Instant;
 use tauri_plugin_mihomo::Error as MihomoError;
 use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
