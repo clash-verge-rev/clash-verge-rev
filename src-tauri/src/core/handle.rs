@@ -551,14 +551,5 @@ impl Handle {
         }
     }
 
-    // pub fn set_activation_policy_prohibited(&self) {
-    //     if let Err(e) = self.set_activation_policy(tauri::ActivationPolicy::Prohibited) {
-    //         logging!(
-    //             warn,
-    //             Type::Setup,
-    //             "Failed to set prohibited activation policy: {}",
-    //             e
-    //         );
-    //     }
-    // }
+    // Remove dead code policy prohibited function since https://github.com/clash-verge-rev/clash-verge-rev/pull/5103
 }
