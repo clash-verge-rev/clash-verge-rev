@@ -1,3 +1,6 @@
+#[cfg(not(target_os = "macos"))]
+use reqwest::dns;
+
 use crate::config::Config;
 use crate::core::event_driven_proxy::EventDrivenProxyManager;
 use crate::core::{CoreManager, handle, sysopt};
@@ -44,17 +47,23 @@ async fn clean_async() -> bool {
     logging!(info, Type::System, "开始执行异步清理操作...");
 
     // 1. 处理TUN模式
-    let tun_success = if Config::verge()
-        .await
-        .data_mut()
-        .enable_tun_mode
-        .unwrap_or(false)
-    {
-        let disable_tun = serde_json::json!({"tun": {"enable": false}});
+    let tun_task = async {
+        let tun_enabled = Config::verge()
+            .await
+            .data_ref()
+            .enable_tun_mode
+            .unwrap_or(false);
+
+        if !tun_enabled {
+            return true;
+        }
+
+        let disable_tun = serde_json::json!({ "tun": { "enable": false } });
+
         #[cfg(target_os = "windows")]
-        let tun_timeout = Duration::from_secs(2);
+        let tun_timeout = Duration::from_millis(100);
         #[cfg(not(target_os = "windows"))]
-        let tun_timeout = Duration::from_secs(2);
+        let tun_timeout = Duration::from_millis(100);
 
         match timeout(
             tun_timeout,
@@ -66,7 +75,6 @@ async fn clean_async() -> bool {
         {
             Ok(Ok(_)) => {
                 log::info!(target: "app", "TUN模式已禁用");
-                tokio::time::sleep(Duration::from_millis(300)).await;
                 true
             }
             Ok(Err(e)) => {
@@ -79,8 +87,6 @@ async fn clean_async() -> bool {
                 true
             }
         }
-    } else {
-        true
     };
 
     // 2. 系统代理重置
@@ -233,13 +239,12 @@ async fn clean_async() -> bool {
         }
     };
 
-    // 并行执行剩余清理任务
-    let (proxy_success, core_success) = tokio::join!(proxy_task, core_task);
-
-    #[cfg(target_os = "macos")]
-    let dns_success = dns_task.await;
     #[cfg(not(target_os = "macos"))]
-    let dns_success = true;
+    let dns_task = async { true };
+
+    let tun_success = tun_task.await;
+    // 并行执行清理任务
+    let (proxy_success, core_success, dns_success) = tokio::join!(proxy_task, core_task, dns_task);
 
     let all_success = tun_success && proxy_success && core_success && dns_success;
 
