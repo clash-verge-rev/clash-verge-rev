@@ -1,6 +1,3 @@
-#[cfg(not(target_os = "macos"))]
-use reqwest::dns;
-
 use crate::config::Config;
 use crate::core::event_driven_proxy::EventDrivenProxyManager;
 use crate::core::{CoreManager, handle, sysopt};
