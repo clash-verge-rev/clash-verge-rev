@@ -1,3 +1,4 @@
+#[cfg(not(feature = "tracing"))]
 #[cfg(not(feature = "tauri-dev"))]
 use crate::utils::logging::NoModuleFilter;
 use crate::{
@@ -38,7 +39,13 @@ pub async fn init_logger() -> Result<()> {
     };
 
     let log_dir = dirs::app_logs_dir()?;
-    let spec = LogSpecBuilder::new().default(log_level).build();
+    let mut spec = LogSpecBuilder::new();
+    spec.default(log_level);
+    #[cfg(feature = "tracing")]
+    spec.module("tauri", log::LevelFilter::Debug);
+    #[cfg(feature = "tracing")]
+    spec.module("wry", log::LevelFilter::Debug);
+    let spec = spec.build();
 
     let logger = Logger::with(spec)
         .log_to_file(FileSpec::default().directory(log_dir).basename(""))
@@ -52,8 +59,9 @@ pub async fn init_logger() -> Result<()> {
                 format: "%Y-%m-%d_%H-%M-%S",
             },
             Cleanup::KeepLogFiles(log_max_count),
-        )
-        .filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
+        );
+    #[cfg(not(feature = "tracing"))]
+    let logger = logger.filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
 
     let _handle = logger.start()?;
 
