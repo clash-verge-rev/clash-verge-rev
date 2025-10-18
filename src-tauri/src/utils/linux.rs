@@ -7,6 +7,8 @@ use std::path::PathBuf;
 
 const DRM_PATH: &str = "/sys/class/drm";
 const INTEL_VENDOR_ID: &str = "0x8086";
+const NVIDIA_VENDOR_ID: &str = "0x10de";
+const NVIDIA_VERSION_PATH: &str = "/proc/driver/nvidia/version";
 
 #[derive(Debug, Default, Clone, Copy)]
 struct IntelGpuDetection {
@@ -18,6 +20,56 @@ struct IntelGpuDetection {
 impl IntelGpuDetection {
     fn should_disable_dmabuf(&self) -> bool {
         self.intel_is_primary || self.inconclusive
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+struct NvidiaGpuDetection {
+    has_nvidia: bool,
+    nvidia_is_primary: bool,
+    missing_boot_vga: bool,
+    open_kernel_module: bool,
+    driver_summary: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum NvidiaDmabufDisableReason {
+    PrimaryOpenKernelModule,
+    MissingBootVga,
+    PreferNativeWayland,
+}
+
+impl NvidiaGpuDetection {
+    fn disable_reason(&self, session: &SessionEnv) -> Option<NvidiaDmabufDisableReason> {
+        if !session.is_wayland {
+            return None;
+        }
+
+        if !self.has_nvidia {
+            return None;
+        }
+
+        if !self.open_kernel_module {
+            return None;
+        }
+
+        if self.nvidia_is_primary {
+            return Some(NvidiaDmabufDisableReason::PrimaryOpenKernelModule);
+        }
+
+        if self.missing_boot_vga {
+            return Some(NvidiaDmabufDisableReason::MissingBootVga);
+        }
+
+        if session.prefer_native_wayland {
+            return Some(NvidiaDmabufDisableReason::PreferNativeWayland);
+        }
+
+        None
+    }
+
+    fn should_disable_dmabuf(&self, session: &SessionEnv) -> bool {
+        self.disable_reason(session).is_some()
     }
 }
 
@@ -125,6 +177,7 @@ impl DmabufDecision {
         session: &SessionEnv,
         overrides: &DmabufOverrides,
         intel_gpu: IntelGpuDetection,
+        nvidia_gpu: &NvidiaGpuDetection,
     ) -> Self {
         let mut decision = Self {
             enable_dmabuf: true,
@@ -166,6 +219,35 @@ impl DmabufDecision {
                             value
                         ));
                     }
+                } else if let Some(reason) = nvidia_gpu.disable_reason(session) {
+                    decision.enable_dmabuf = false;
+                    decision.warn = true;
+                    if session.is_wayland && !session.prefer_native_wayland {
+                        decision.force_x11_backend = true;
+                    }
+                    let summary = nvidia_gpu
+                        .driver_summary
+                        .as_deref()
+                        .and_then(|line| {
+                            extract_nvidia_driver_version(line)
+                                .map(|version| format!("NVIDIA Open Kernel Module {}", version))
+                        })
+                        .unwrap_or_else(|| String::from("NVIDIA Open Kernel Module"));
+                    let message = match reason {
+                        NvidiaDmabufDisableReason::PrimaryOpenKernelModule => format!(
+                            "Wayland 会话检测到 {}：禁用 WebKit DMABUF 渲染以规避协议错误。",
+                            summary
+                        ),
+                        NvidiaDmabufDisableReason::MissingBootVga => format!(
+                            "Wayland 会话检测到 {}，但缺少 boot_vga 信息：预防性禁用 WebKit DMABUF。",
+                            summary
+                        ),
+                        NvidiaDmabufDisableReason::PreferNativeWayland => format!(
+                            "Wayland ({}) + {}：检测到 NVIDIA Open Kernel Module 在辅 GPU 上运行，预防性禁用 WebKit DMABUF。",
+                            session.compositor_label, summary
+                        ),
+                    };
+                    decision.message = Some(message);
                 } else if session.prefer_native_wayland && !intel_gpu.should_disable_dmabuf() {
                     decision.enable_dmabuf = true;
                     decision.message = Some(format!(
@@ -256,11 +338,150 @@ fn detect_intel_gpu() -> IntelGpuDetection {
     detection
 }
 
+fn detect_nvidia_gpu() -> NvidiaGpuDetection {
+    let mut detection = NvidiaGpuDetection::default();
+    let entries = match fs::read_dir(DRM_PATH) {
+        Ok(entries) => entries,
+        Err(err) => {
+            logging!(
+                info,
+                Type::Setup,
+                "无法读取 DRM 设备目录 {}（{}），尝试通过 NVIDIA 驱动摘要进行降级检测。",
+                DRM_PATH,
+                err
+            );
+            detection.driver_summary = read_nvidia_driver_summary();
+            if let Some(summary) = detection.driver_summary.as_ref() {
+                detection.open_kernel_module = summary_indicates_open_kernel_module(summary);
+                detection.has_nvidia = true;
+                detection.missing_boot_vga = true;
+            } else {
+                logging!(
+                    info,
+                    Type::Setup,
+                    "降级检测失败：未能读取 NVIDIA 驱动摘要，保留 WebKit DMABUF。"
+                );
+            }
+            return detection;
+        }
+    };
+
+    let mut seen_devices: HashSet<PathBuf> = HashSet::new();
+
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+
+        if !(name.starts_with("renderD") || name.starts_with("card")) {
+            continue;
+        }
+
+        let device_path = entry.path().join("device");
+        let device_key = fs::canonicalize(&device_path).unwrap_or(device_path);
+
+        if !seen_devices.insert(device_key.clone()) {
+            continue;
+        }
+
+        let vendor_path = device_key.join("vendor");
+        let Ok(vendor) = fs::read_to_string(&vendor_path) else {
+            continue;
+        };
+
+        if !vendor.trim().eq_ignore_ascii_case(NVIDIA_VENDOR_ID) {
+            continue;
+        }
+
+        detection.has_nvidia = true;
+
+        let boot_vga_path = device_key.join("boot_vga");
+        match fs::read_to_string(&boot_vga_path) {
+            Ok(flag) => {
+                if flag.trim() == "1" {
+                    detection.nvidia_is_primary = true;
+                }
+            }
+            Err(_) => {
+                detection.missing_boot_vga = true;
+            }
+        }
+    }
+
+    if detection.has_nvidia {
+        detection.driver_summary = read_nvidia_driver_summary();
+        match detection.driver_summary.as_ref() {
+            Some(summary) => {
+                detection.open_kernel_module = summary_indicates_open_kernel_module(summary);
+            }
+            None => {
+                logging!(
+                    info,
+                    Type::Setup,
+                    "检测到 NVIDIA 设备，但无法读取 {}，默认视为未启用开源内核模块。",
+                    NVIDIA_VERSION_PATH
+                );
+            }
+        }
+    }
+
+    detection
+}
+
+fn read_nvidia_driver_summary() -> Option<String> {
+    match fs::read_to_string(NVIDIA_VERSION_PATH) {
+        Ok(content) => content
+            .lines()
+            .next()
+            .map(|line| line.trim().to_string())
+            .filter(|line| !line.is_empty()),
+        Err(err) => {
+            logging!(
+                info,
+                Type::Setup,
+                "读取 {} 失败：{}",
+                NVIDIA_VERSION_PATH,
+                err
+            );
+            None
+        }
+    }
+}
+
+fn summary_indicates_open_kernel_module(summary: &str) -> bool {
+    let normalized = summary.to_ascii_lowercase();
+    const PATTERNS: [&str; 4] = [
+        "open kernel module",
+        "open kernel modules",
+        "open gpu kernel module",
+        "open gpu kernel modules",
+    ];
+
+    let is_open = PATTERNS.iter().any(|pattern| normalized.contains(pattern));
+
+    if !is_open && normalized.contains("open") {
+        logging!(
+            info,
+            Type::Setup,
+            "检测到 NVIDIA 驱动摘要包含 open 关键字但未匹配已知开源模块格式：{}",
+            summary
+        );
+    }
+
+    is_open
+}
+
+fn extract_nvidia_driver_version(summary: &str) -> Option<&str> {
+    summary
+        .split_whitespace()
+        .find(|token| token.chars().all(|c| c.is_ascii_digit() || c == '.'))
+}
+
 pub fn configure_environment() {
     let session = SessionEnv::gather();
     let overrides = DmabufOverrides::gather();
     let intel_gpu = detect_intel_gpu();
-    let decision = DmabufDecision::resolve(&session, &overrides, intel_gpu);
+    let nvidia_gpu = detect_nvidia_gpu();
+    let decision = DmabufDecision::resolve(&session, &overrides, intel_gpu, &nvidia_gpu);
 
     if overrides.should_override_env(&decision) {
         unsafe {
