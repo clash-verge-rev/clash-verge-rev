@@ -1,7 +1,7 @@
 use super::CmdResult;
 use crate::{
     config::*,
-    core::*,
+    core::{validate::CoreConfigValidator, *},
     logging,
     utils::{dirs, logging::Type},
     wrap_err,
@@ -48,10 +48,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
             Type::Config,
             "[cmd配置save] 检测到merge文件，只进行语法验证"
         );
-        match CoreManager::global()
-            .validate_config_file(&file_path_str, Some(true))
-            .await
-        {
+        match CoreConfigValidator::validate_config_file(&file_path_str, Some(true)).await {
             Ok((true, _)) => {
                 logging!(info, Type::Config, "[cmd配置save] merge文件语法验证通过");
                 // 成功后尝试更新整体配置
@@ -95,10 +92,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     }
 
     // 非merge文件使用完整验证流程
-    match CoreManager::global()
-        .validate_config_file(&file_path_str, None)
-        .await
-    {
+    match CoreConfigValidator::validate_config_file(&file_path_str, None).await {
         Ok((true, _)) => {
             logging!(info, Type::Config, "[cmd配置save] 验证成功");
             Ok(())
