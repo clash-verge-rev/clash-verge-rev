@@ -30,7 +30,8 @@
     "lint:fix": "eslint -c eslint.config.ts --cache --cache-location .eslintcache --fix src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -115,6 +116,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
     "vite": "^7.1.10",
+    "vitest": "^3.2.4",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.5.0"
   },
