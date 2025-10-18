@@ -1,6 +1,8 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
+import debounce from "@/utils/debounce";
+
 import { WindowContext } from "./WindowContext";
 
 export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -14,19 +16,14 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
   const minimize = useCallback(() => currentWindow.minimize(), [currentWindow]);
 
   useEffect(() => {
-    let active = true;
-
-    const updateMaximized = async () => {
+    const checkMaximized = debounce(async () => {
       const value = await currentWindow.isMaximized();
-      if (!active) return;
-      setMaximized((prev) => (prev === value ? prev : value));
-    };
+      setMaximized(value);
+    }, 300);
 
-    updateMaximized();
-    const unlistenPromise = currentWindow.onResized(updateMaximized);
+    const unlistenPromise = currentWindow.onResized(checkMaximized);
 
     return () => {
-      active = false;
       unlistenPromise.then((unlisten) => unlisten());
     };
   }, [currentWindow]);
@@ -47,7 +44,7 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const refreshDecorated = useCallback(async () => {
     const val = await currentWindow.isDecorated();
-    setDecorated((prev) => (prev === val ? prev : val));
+    setDecorated(val);
     return val;
   }, [currentWindow]);
 
