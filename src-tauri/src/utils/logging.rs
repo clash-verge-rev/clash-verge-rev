@@ -30,6 +30,7 @@ pub enum Type {
     Network,
     ProxyMode,
     // Cache,
+    Validate,
     ClashVergeRev,
 }
 
@@ -53,6 +54,7 @@ impl fmt::Display for Type {
             Type::Network => write!(f, "[Network]"),
             Type::ProxyMode => write!(f, "[ProxMode]"),
             // Type::Cache => write!(f, "[Cache]"),
+            Type::Validate => write!(f, "[Validate]"),
             Type::ClashVergeRev => write!(f, "[ClashVergeRev]"),
         }
     }
