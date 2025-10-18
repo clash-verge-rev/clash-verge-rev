@@ -74,9 +74,9 @@
     "react-router-dom": "7.9.4",
     "react-virtuoso": "^4.14.1",
     "swr": "^2.3.6",
+    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo",
     "types-pac": "^1.0.3",
-    "zustand": "^5.0.8",
-    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
@@ -85,6 +85,7 @@
     "@tauri-apps/cli": "2.8.4",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
+    "@types/node": "^24.8.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-legacy": "^7.2.1",
@@ -116,9 +117,9 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
     "vite": "^7.1.10",
-    "vitest": "^3.2.4",
     "vite-plugin-monaco-editor": "^1.1.0",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^4.5.0",
+    "vitest": "^3.2.4"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

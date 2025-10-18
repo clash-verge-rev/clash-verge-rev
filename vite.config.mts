@@ -1,11 +1,12 @@
-import { defineConfig } from "vite";
-import path from "path";
-import svgr from "vite-plugin-svgr";
-import react from "@vitejs/plugin-react";
+import path from "node:path";
+
 import legacy from "@vitejs/plugin-legacy";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
 import monacoEditorPlugin, {
   type IMonacoEditorOpts,
 } from "vite-plugin-monaco-editor";
+import svgr from "vite-plugin-svgr";
 const monacoEditorPluginDefault = (monacoEditorPlugin as any).default as (
   options: IMonacoEditorOpts,
 ) => any;
@@ -158,6 +159,10 @@ export default defineConfig({
       "@": path.resolve("./src"),
       "@root": path.resolve("."),
     },
+  },
+  test: {
+    environment: "node",
+    include: ["**/*.{test,spec}.{ts,tsx}"],
   },
 
   define: {
