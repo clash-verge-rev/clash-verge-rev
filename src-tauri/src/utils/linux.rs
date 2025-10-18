@@ -24,7 +24,6 @@ impl IntelGpuDetection {
 #[derive(Debug)]
 struct SessionEnv {
     is_kde_plasma: bool,
-    is_hyprland: bool,
     is_wayland: bool,
     prefer_native_wayland: bool,
     compositor_label: String,
@@ -66,7 +65,6 @@ impl SessionEnv {
 
         Self {
             is_kde_plasma,
-            is_hyprland,
             is_wayland,
             prefer_native_wayland,
             compositor_label,
