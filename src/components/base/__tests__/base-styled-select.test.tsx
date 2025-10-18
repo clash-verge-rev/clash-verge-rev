@@ -1,5 +1,5 @@
 import { MenuItem, ThemeProvider, createTheme } from "@mui/material";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -33,8 +33,9 @@ describe("BaseStyledSelect", () => {
     expect(root).toHaveStyle({ width: "120px" });
 
     await user.click(select);
-    await user.click(screen.getByRole("option", { name: "Two", hidden: true }));
+    const option = await screen.findByText("Two");
+    await user.click(option);
 
-    expect(handleChange).toHaveBeenCalled();
+    await waitFor(() => expect(handleChange).toHaveBeenCalled());
   });
 });

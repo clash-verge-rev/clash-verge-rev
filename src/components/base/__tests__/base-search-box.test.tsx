@@ -44,7 +44,9 @@ describe("BaseSearchBox", () => {
     render(<BaseSearchBox onSearch={onSearch} placeholder="find" />);
 
     await waitFor(() => expect(onSearch).toHaveBeenCalledTimes(1));
-    const [, initialState] = onSearch.mock.calls.at(-1) ?? [];
+    const initialCall = onSearch.mock.calls.at(-1);
+    expect(initialCall).toBeDefined();
+    const [, initialState] = initialCall!;
     expect(initialState).toMatchObject({
       text: "",
       matchCase: false,
@@ -55,7 +57,9 @@ describe("BaseSearchBox", () => {
     const input = screen.getByRole("textbox");
     fireEvent.change(input, { target: { value: "Foo" } });
 
-    const [matcher, state] = onSearch.mock.calls.at(-1);
+    const lastCall = onSearch.mock.calls.at(-1);
+    expect(lastCall).toBeDefined();
+    const [matcher, state] = lastCall!;
     expect(state).toMatchObject({
       text: "Foo",
       matchCase: false,
@@ -78,7 +82,9 @@ describe("BaseSearchBox", () => {
 
     fireEvent.click(matchCase);
     await waitFor(() => expect(onSearch).toHaveBeenCalledTimes(1));
-    let [, state] = onSearch.mock.calls.at(-1);
+    let lastCall = onSearch.mock.calls.at(-1);
+    expect(lastCall).toBeDefined();
+    let [, state] = lastCall!;
     expect(state.matchCase).toBe(true);
     expect(state.matchWholeWord).toBe(false);
     expect(state.useRegularExpression).toBe(false);
@@ -86,7 +92,9 @@ describe("BaseSearchBox", () => {
     onSearch.mockClear();
     fireEvent.click(matchWhole);
     await waitFor(() => expect(onSearch).toHaveBeenCalledTimes(1));
-    [, state] = onSearch.mock.calls.at(-1);
+    lastCall = onSearch.mock.calls.at(-1);
+    expect(lastCall).toBeDefined();
+    [, state] = lastCall!;
     expect(state.matchCase).toBe(true);
     expect(state.matchWholeWord).toBe(true);
     expect(state.useRegularExpression).toBe(false);
@@ -94,7 +102,9 @@ describe("BaseSearchBox", () => {
     onSearch.mockClear();
     fireEvent.click(regex);
     await waitFor(() => expect(onSearch).toHaveBeenCalledTimes(1));
-    [, state] = onSearch.mock.calls.at(-1);
+    lastCall = onSearch.mock.calls.at(-1);
+    expect(lastCall).toBeDefined();
+    [, state] = lastCall!;
     expect(state.useRegularExpression).toBe(true);
   });
 
@@ -111,7 +121,9 @@ describe("BaseSearchBox", () => {
     fireEvent.click(regex);
 
     await waitFor(() => expect(onSearch).toHaveBeenCalledTimes(1));
-    const [, state] = onSearch.mock.calls.at(-1);
+    const finalCall = onSearch.mock.calls.at(-1);
+    expect(finalCall).toBeDefined();
+    const [, state] = finalCall!;
     expect(state.useRegularExpression).toBe(true);
 
     expect(screen.getByRole("textbox")).toHaveAttribute("aria-invalid", "true");

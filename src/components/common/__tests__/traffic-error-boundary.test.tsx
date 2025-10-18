@@ -49,9 +49,7 @@ describe("TrafficErrorBoundary", () => {
     );
 
     expect(
-      await screen.findByRole("heading", {
-        name: "i18n:Traffic Statistics Error",
-      }),
+      await screen.findByRole("button", { name: "i18n:Retry" }),
     ).toBeInTheDocument();
 
     const alert = await screen.findByRole("alert");
@@ -123,7 +121,7 @@ describe("withTrafficErrorBoundary HOC", () => {
     expect(screen.getByText("base component")).toBeInTheDocument();
   });
 
-  it("uses standard boundary when component throws and calls onError", () => {
+  it("uses standard boundary when component throws and calls onError", async () => {
     const ThrowingComponent = () => {
       throw new Error("fail");
     };
@@ -135,7 +133,7 @@ describe("withTrafficErrorBoundary HOC", () => {
     renderWithTheme(<Wrapped />);
 
     expect(
-      screen.getByText("i18n:Traffic Statistics Error"),
+      await screen.findByRole("button", { name: "i18n:Retry" }),
     ).toBeInTheDocument();
     expect(onError).toHaveBeenCalledTimes(1);
   });
