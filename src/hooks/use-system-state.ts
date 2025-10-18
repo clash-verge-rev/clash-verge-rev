@@ -48,7 +48,15 @@ export function useSystemState() {
   const isLoading =
     runningModeLoading || isAdminLoading || (isServiceMode && isServiceLoading);
 
-  const isTunModeAvailable = isAdminMode || isServiceOk;
+  const { data: isTunModeAvailable = false, mutate: mutateTunModeAvailable } =
+    useSWR(
+      ["isTunModeAvailable", isAdminMode, isServiceOk],
+      () => isAdminMode || isServiceOk,
+      {
+        suspense: false,
+        revalidateOnFocus: false,
+      },
+    );
 
   return {
     runningMode,
@@ -56,9 +64,10 @@ export function useSystemState() {
     isSidecarMode,
     isServiceMode,
     isServiceOk,
-    isTunModeAvailable: isTunModeAvailable,
+    isTunModeAvailable,
     mutateRunningMode,
     mutateServiceOk,
+    mutateTunModeAvailable,
     isLoading,
   };
 }

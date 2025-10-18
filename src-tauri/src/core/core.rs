@@ -26,12 +26,9 @@ use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
-use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
 #[cfg(target_os = "windows")]
-use std::{
-    sync::atomic::{AtomicUsize, Ordering},
-    time::Instant,
-};
+use std::time::Instant;
+use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
 use tauri_plugin_mihomo::Error as MihomoError;
 use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
@@ -976,29 +973,28 @@ impl CoreManager {
         };
         backoff_strategy.reset();
 
-        let attempts = Arc::new(AtomicUsize::new(0));
-        let attempts_for_retry = Arc::clone(&attempts);
+        let mut attempts = 0usize;
 
         let operation = || {
-            let attempts = Arc::clone(&attempts_for_retry);
+            attempts += 1;
+            let attempt = attempts;
 
             async move {
-                let attempt = attempts.fetch_add(1, Ordering::Relaxed);
                 let mut manager = SERVICE_MANAGER.lock().await;
 
                 if matches!(manager.current(), ServiceStatus::Ready) {
-                    if attempt > 0 {
+                    if attempt > 1 {
                         logging!(
                             info,
                             Type::Core,
                             "Service became ready for TUN after {} attempt(s)",
-                            attempt + 1
+                            attempt
                         );
                     }
                     return Ok(());
                 }
 
-                if attempt == 0 {
+                if attempt == 1 {
                     logging!(
                         info,
                         Type::Core,
@@ -1015,7 +1011,7 @@ impl CoreManager {
                             debug,
                             Type::Core,
                             "Service connection attempt {} failed while waiting for TUN: {}",
-                            attempt + 1,
+                            attempt,
                             err
                         );
                         return Err(BackoffError::transient(err));
@@ -1027,7 +1023,7 @@ impl CoreManager {
                         info,
                         Type::Core,
                         "Service became ready for TUN after {} attempt(s)",
-                        attempt + 1
+                        attempt
                     );
                     return Ok(());
                 }
@@ -1036,7 +1032,7 @@ impl CoreManager {
                     debug,
                     Type::Core,
                     "Service not ready after attempt {}; retrying with backoff",
-                    attempt + 1
+                    attempt
                 );
 
                 Err(BackoffError::transient(anyhow!("Service not ready yet")))
@@ -1046,14 +1042,13 @@ impl CoreManager {
         let wait_started = Instant::now();
 
         if let Err(err) = backoff::future::retry(backoff_strategy, operation).await {
-            let total_attempts = attempts.load(Ordering::Relaxed);
             let waited_ms = wait_started.elapsed().as_millis();
             logging!(
                 warn,
                 Type::Core,
                 "Service still not ready after waiting approximately {} ms ({} attempt(s)); falling back to sidecar mode: {}",
                 waited_ms,
-                total_attempts,
+                attempts,
                 err
             );
         }
