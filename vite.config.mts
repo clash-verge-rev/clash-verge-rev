@@ -161,8 +161,9 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "node",
-    include: ["**/*.{test,spec}.{ts,tsx}"],
+    environment: "jsdom",
+    setupFiles: ["./test/setup.ts"],
+    include: ["**/__tests__/**/*.{test,spec}.{ts,tsx}"],
   },
 
   define: {

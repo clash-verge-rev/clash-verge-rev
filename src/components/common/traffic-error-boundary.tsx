@@ -44,7 +44,9 @@ export class TrafficErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("[TrafficErrorBoundary] 捕获到组件错误:", error, errorInfo);
+    if (process.env.NODE_ENV !== "test") {
+      console.error("[TrafficErrorBoundary] 捕获到组件错误:", error, errorInfo);
+    }
 
     this.setState({
       error,
@@ -71,7 +73,9 @@ export class TrafficErrorBoundary extends Component<Props, State> {
       url: window.location.href,
     };
 
-    console.log("[TrafficErrorBoundary] 错误报告:", errorReport);
+    if (process.env.NODE_ENV !== "test") {
+      console.log("[TrafficErrorBoundary] 错误报告:", errorReport);
+    }
 
     // TODO: 发送到错误监控服务
     // sendErrorReport(errorReport);
@@ -80,9 +84,11 @@ export class TrafficErrorBoundary extends Component<Props, State> {
   private handleRetry = () => {
     if (this.retryCount < this.maxRetries) {
       this.retryCount++;
-      console.log(
-        `[TrafficErrorBoundary] 尝试重试 (${this.retryCount}/${this.maxRetries})`,
-      );
+      if (process.env.NODE_ENV !== "test") {
+        console.log(
+          `[TrafficErrorBoundary] 尝试重试 (${this.retryCount}/${this.maxRetries})`,
+        );
+      }
 
       this.setState({
         hasError: false,
@@ -91,7 +97,9 @@ export class TrafficErrorBoundary extends Component<Props, State> {
         showDetails: false,
       });
     } else {
-      console.warn("[TrafficErrorBoundary] 已达到最大重试次数");
+      if (process.env.NODE_ENV !== "test") {
+        console.warn("[TrafficErrorBoundary] 已达到最大重试次数");
+      }
     }
   };
 
