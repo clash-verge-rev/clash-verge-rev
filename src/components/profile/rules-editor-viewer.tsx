@@ -355,7 +355,7 @@ export const RulesEditorViewer = (props: Props) => {
       }
     };
     let idleId: number | undefined;
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let timeoutId: number | undefined;
     if (window.requestIdleCallback) {
       idleId = window.requestIdleCallback(serialize);
     } else {
@@ -365,7 +365,7 @@ export const RulesEditorViewer = (props: Props) => {
       if (idleId !== undefined && window.cancelIdleCallback) {
         window.cancelIdleCallback(idleId);
       }
-      if (timeoutId) {
+      if (timeoutId !== undefined) {
         clearTimeout(timeoutId);
       }
     };

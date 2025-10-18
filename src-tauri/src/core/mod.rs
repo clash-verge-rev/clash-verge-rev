@@ -10,6 +10,7 @@ pub mod service;
 pub mod sysopt;
 pub mod timer;
 pub mod tray;
+pub mod validate;
 pub mod win_uwp;
 
 pub use self::{core::*, event_driven_proxy::EventDrivenProxyManager, timer::Timer};

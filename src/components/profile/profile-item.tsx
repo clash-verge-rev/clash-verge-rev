@@ -176,7 +176,7 @@ export const ProfileItem = (props: Props) => {
 
   // 订阅定时器更新事件
   useEffect(() => {
-    let refreshTimeout: ReturnType<typeof setTimeout> | undefined;
+    let refreshTimeout: number | undefined;
     // 处理定时器更新事件 - 这个事件专门用于通知定时器变更
     const handleTimerUpdate = (event: Event) => {
       const source = event as CustomEvent<string> & { payload?: string };
@@ -185,7 +185,7 @@ export const ProfileItem = (props: Props) => {
       // 只有当更新的是当前配置时才刷新显示
       if (updatedUid === itemData.uid && showNextUpdate) {
         console.log(`收到定时器更新事件: uid=${updatedUid}`);
-        if (refreshTimeout) {
+        if (refreshTimeout !== undefined) {
           clearTimeout(refreshTimeout);
         }
         refreshTimeout = window.setTimeout(() => {
@@ -198,7 +198,7 @@ export const ProfileItem = (props: Props) => {
     window.addEventListener("verge://timer-updated", handleTimerUpdate);
 
     return () => {
-      if (refreshTimeout) {
+      if (refreshTimeout !== undefined) {
         clearTimeout(refreshTimeout);
       }
       // 清理事件监听

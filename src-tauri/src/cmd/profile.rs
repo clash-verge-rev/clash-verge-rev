@@ -572,19 +572,23 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 保存修改前检查是否有更新 update_interval
     let profiles = Config::profiles().await;
-    let update_interval_changed = if let Ok(old_profile) = profiles.latest_ref().get_item(&index) {
+    let should_refresh_timer = if let Ok(old_profile) = profiles.latest_ref().get_item(&index) {
         let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
         let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
-        old_interval != new_interval
+        let old_allow_auto_update = old_profile
+            .option
+            .as_ref()
+            .and_then(|o| o.allow_auto_update);
+        let new_allow_auto_update = profile.option.as_ref().and_then(|o| o.allow_auto_update);
+        (old_interval != new_interval) || (old_allow_auto_update != new_allow_auto_update)
     } else {
         false
     };
 
-    // 保存修改
     wrap_err!(profiles_patch_item_safe(index.clone(), profile).await)?;
 
-    // 如果更新间隔变更，异步刷新定时器
-    if update_interval_changed {
+    // 如果更新间隔或允许自动更新变更，异步刷新定时器
+    if should_refresh_timer {
         let index_clone = index.clone();
         crate::process::AsyncHandler::spawn(move || async move {
             logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");

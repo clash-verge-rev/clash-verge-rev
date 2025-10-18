@@ -706,5 +706,6 @@
   "Selected profiles deleted successfully": "选中的订阅已成功删除",
   "Prefer System Titlebar": "优先使用系统标题栏",
   "App Log Max Size": "应用日志最大大小",
-  "App Log Max Count": "应用日志最大数量"
+  "App Log Max Count": "应用日志最大数量",
+  "Allow Auto Update": "允许自动更新"
 }

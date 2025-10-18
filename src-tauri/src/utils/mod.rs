@@ -5,6 +5,8 @@ pub mod format;
 pub mod help;
 pub mod i18n;
 pub mod init;
+#[cfg(target_os = "linux")]
+pub mod linux;
 pub mod logging;
 pub mod network;
 pub mod notification;

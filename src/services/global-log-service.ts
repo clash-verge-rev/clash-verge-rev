@@ -63,7 +63,7 @@ export const fetchLogsViaIPCPeriodically = async () => {
 };
 
 // 初始化全局日志服务 (仅IPC模式)
-let ipcPollingInterval: number | null = null;
+let ipcPollingInterval: ReturnType<typeof setInterval> | null = null;
 let isInitializing = false; // 添加初始化标志
 
 export const initGlobalLogService = (

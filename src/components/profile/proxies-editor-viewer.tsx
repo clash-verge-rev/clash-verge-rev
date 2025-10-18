@@ -151,7 +151,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     const lines = uris.trim().split("\n");
     let idx = 0;
     const batchSize = 50;
-    let parseTimer: ReturnType<typeof setTimeout> | undefined;
+    let parseTimer: number | undefined;
 
     const parseBatch = () => {
       const end = Math.min(idx + batchSize, lines.length);
@@ -175,7 +175,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       if (idx < lines.length) {
         parseTimer = window.setTimeout(parseBatch, 0);
       } else {
-        if (parseTimer) {
+        if (parseTimer !== undefined) {
           clearTimeout(parseTimer);
           parseTimer = undefined;
         }
@@ -238,7 +238,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       }
     };
     let idleId: number | undefined;
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let timeoutId: number | undefined;
     if (window.requestIdleCallback) {
       idleId = window.requestIdleCallback(serialize);
     } else {
@@ -248,7 +248,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       if (idleId !== undefined && window.cancelIdleCallback) {
         window.cancelIdleCallback(idleId);
       }
-      if (timeoutId) {
+      if (timeoutId !== undefined) {
         clearTimeout(timeoutId);
       }
     };

@@ -90,7 +90,7 @@ export const AppDataProvider = ({
     const refreshThrottle = 500;
 
     let isUnmounted = false;
-    const scheduledTimeouts = new Set<ReturnType<typeof setTimeout>>();
+    const scheduledTimeouts = new Set<number>();
     const cleanupFns: Array<() => void> = [];
 
     const registerCleanup = (fn: () => void) => {

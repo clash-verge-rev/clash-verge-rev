@@ -45,6 +45,14 @@ pub async fn update_profile(
         } else if item.url.is_none() {
             log::warn!(target: "app", "[订阅更新] {uid} 缺少URL，无法更新");
             bail!("failed to get the profile item url");
+        } else if !item
+            .option
+            .as_ref()
+            .and_then(|o| o.allow_auto_update)
+            .unwrap_or(true)
+        {
+            log::info!(target: "app", "[订阅更新] {} 禁止自动更新，跳过更新", uid);
+            None
         } else {
             log::info!(target: "app",
                 "[订阅更新] {} 是远程订阅，URL: {}",
