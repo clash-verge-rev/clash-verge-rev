@@ -67,10 +67,6 @@ impl NvidiaGpuDetection {
 
         None
     }
-
-    fn should_disable_dmabuf(&self, session: &SessionEnv) -> bool {
-        self.disable_reason(session).is_some()
-    }
 }
 
 #[derive(Debug)]
