@@ -2,11 +2,11 @@ import path from "node:path";
 
 import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
 import monacoEditorPlugin, {
   type IMonacoEditorOpts,
 } from "vite-plugin-monaco-editor";
 import svgr from "vite-plugin-svgr";
+import { defineConfig } from "vitest/config";
 const monacoEditorPluginDefault = (monacoEditorPlugin as any).default as (
   options: IMonacoEditorOpts,
 ) => any;
