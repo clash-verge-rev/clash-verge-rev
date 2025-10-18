@@ -26,12 +26,6 @@ pub async fn quit() {
     handle::Handle::global().set_is_exiting();
     EventDrivenProxyManager::global().notify_app_stopping();
 
-    // 优先关闭窗口，提供立即反馈
-    if let Some(window) = handle::Handle::get_window() {
-        let _ = window.hide();
-        log::info!(target: "app", "窗口已隐藏");
-    }
-
     logging!(info, Type::System, "开始异步清理资源");
     let cleanup_result = clean_async().await;
 
