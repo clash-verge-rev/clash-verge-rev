@@ -101,6 +101,10 @@ pub struct PrfOption {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub danger_accept_invalid_certs: Option<bool>,
 
+    #[serde(default = "default_allow_auto_update")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_auto_update: Option<bool>,
+
     pub merge: Option<String>,
 
     pub script: Option<String>,
@@ -122,6 +126,7 @@ impl PrfOption {
                 a.danger_accept_invalid_certs = b
                     .danger_accept_invalid_certs
                     .or(a.danger_accept_invalid_certs);
+                a.allow_auto_update = b.allow_auto_update.or(a.allow_auto_update);
                 a.update_interval = b.update_interval.or(a.update_interval);
                 a.merge = b.merge.or(a.merge);
                 a.script = b.script.or(a.script);
@@ -246,6 +251,7 @@ impl PrfItem {
         let self_proxy = opt_ref.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs =
             opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
+        let allow_auto_update = opt_ref.map(|o| o.allow_auto_update.unwrap_or(true));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
         let timeout = opt_ref.and_then(|o| o.timeout_seconds).unwrap_or(20);
@@ -404,6 +410,7 @@ impl PrfItem {
                 rules,
                 proxies,
                 groups,
+                allow_auto_update,
                 ..PrfOption::default()
             }),
             home,
@@ -546,4 +553,9 @@ impl PrfItem {
         let path = dirs::app_profiles_dir()?.join(file);
         fs::write(path, data.as_bytes()).context("failed to save the file")
     }
+}
+
+// 向前兼容，默认为订阅启用自动更新
+fn default_allow_auto_update() -> Option<bool> {
+    Some(true)
 }
