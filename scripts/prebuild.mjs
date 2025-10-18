@@ -1,5 +1,6 @@
 import AdmZip from "adm-zip";
 import { execSync } from "child_process";
+import { createHash } from "crypto";
 import fs from "fs";
 import fsp from "fs/promises";
 import { glob } from "glob";
@@ -10,9 +11,21 @@ import { extract } from "tar";
 import zlib from "zlib";
 import { log_debug, log_error, log_info, log_success } from "./utils.mjs";
 
+/**
+ * Prebuild script with optimization features:
+ * 1. Skip downloading mihomo core if it already exists (unless --force is used)
+ * 2. Cache version information for 1 hour to avoid repeated version checks
+ * 3. Use file hash to detect changes and skip unnecessary chmod/copy operations
+ * 4. Use --force or -f flag to force re-download and update all resources
+ *
+ * This optimization significantly reduces build time for local development
+ */
+
 const cwd = process.cwd();
 const TEMP_DIR = path.join(cwd, "node_modules/.verge");
 const FORCE = process.argv.includes("--force") || process.argv.includes("-f");
+const VERSION_CACHE_FILE = path.join(TEMP_DIR, ".version_cache.json");
+const HASH_CACHE_FILE = path.join(TEMP_DIR, ".hash_cache.json");
 
 const PLATFORM_MAP = {
   "x86_64-pc-windows-msvc": "win32",
@@ -55,6 +68,113 @@ const SIDECAR_HOST = target
       .toString()
       .match(/(?<=host: ).+(?=\s*)/g)[0];
 
+/* ======= Version Cache Functions ======= */
+async function loadVersionCache() {
+  try {
+    if (fs.existsSync(VERSION_CACHE_FILE)) {
+      const data = await fsp.readFile(VERSION_CACHE_FILE, "utf-8");
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    log_debug("Failed to load version cache:", err.message);
+  }
+  return {};
+}
+
+async function saveVersionCache(cache) {
+  try {
+    await fsp.mkdir(TEMP_DIR, { recursive: true });
+    await fsp.writeFile(VERSION_CACHE_FILE, JSON.stringify(cache, null, 2));
+    log_debug("Version cache saved");
+  } catch (err) {
+    log_debug("Failed to save version cache:", err.message);
+  }
+}
+
+async function getCachedVersion(key) {
+  const cache = await loadVersionCache();
+  const cached = cache[key];
+  if (cached && Date.now() - cached.timestamp < 3600000) {
+    // 1小时内有效
+    log_info(`Using cached version for ${key}: ${cached.version}`);
+    return cached.version;
+  }
+  return null;
+}
+
+async function setCachedVersion(key, version) {
+  const cache = await loadVersionCache();
+  cache[key] = {
+    version,
+    timestamp: Date.now(),
+  };
+  await saveVersionCache(cache);
+}
+
+/* ======= File Hash Functions ======= */
+async function calculateFileHash(filePath) {
+  try {
+    const fileBuffer = await fsp.readFile(filePath);
+    const hashSum = createHash("sha256");
+    hashSum.update(fileBuffer);
+    return hashSum.digest("hex");
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadHashCache() {
+  try {
+    if (fs.existsSync(HASH_CACHE_FILE)) {
+      const data = await fsp.readFile(HASH_CACHE_FILE, "utf-8");
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    log_debug("Failed to load hash cache:", err.message);
+  }
+  return {};
+}
+
+async function saveHashCache(cache) {
+  try {
+    await fsp.mkdir(TEMP_DIR, { recursive: true });
+    await fsp.writeFile(HASH_CACHE_FILE, JSON.stringify(cache, null, 2));
+    log_debug("Hash cache saved");
+  } catch (err) {
+    log_debug("Failed to save hash cache:", err.message);
+  }
+}
+
+async function hasFileChanged(filePath, targetPath) {
+  if (FORCE) return true;
+  if (!fs.existsSync(targetPath)) return true;
+
+  const hashCache = await loadHashCache();
+  const sourceHash = await calculateFileHash(filePath);
+  const targetHash = await calculateFileHash(targetPath);
+
+  if (!sourceHash || !targetHash) return true;
+
+  const cacheKey = targetPath;
+  const cachedHash = hashCache[cacheKey];
+
+  if (cachedHash === sourceHash && sourceHash === targetHash) {
+    // 文件未变化，不输出日志
+    return false;
+  }
+
+  return true;
+}
+
+async function updateHashCache(targetPath) {
+  const hashCache = await loadHashCache();
+  const hash = await calculateFileHash(targetPath);
+  if (hash) {
+    hashCache[targetPath] = hash;
+    await saveHashCache(hashCache);
+  }
+}
+
 /* ======= clash meta alpha======= */
 const META_ALPHA_VERSION_URL =
   "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt";
@@ -77,6 +197,15 @@ const META_ALPHA_MAP = {
 
 // Fetch the latest alpha release version from the version.txt file
 async function getLatestAlphaVersion() {
+  // 如果不强制更新，先尝试从缓存获取
+  if (!FORCE) {
+    const cached = await getCachedVersion("META_ALPHA_VERSION");
+    if (cached) {
+      META_ALPHA_VERSION = cached;
+      return;
+    }
+  }
+
   const options = {};
 
   const httpProxy =
@@ -96,6 +225,9 @@ async function getLatestAlphaVersion() {
     let v = await response.text();
     META_ALPHA_VERSION = v.trim(); // Trim to remove extra whitespaces
     log_info(`Latest alpha version: ${META_ALPHA_VERSION}`);
+
+    // 保存到缓存
+    await setCachedVersion("META_ALPHA_VERSION", META_ALPHA_VERSION);
   } catch (error) {
     log_error("Error fetching latest alpha version:", error.message);
     process.exit(1);
@@ -124,6 +256,15 @@ const META_MAP = {
 
 // Fetch the latest release version from the version.txt file
 async function getLatestReleaseVersion() {
+  // 如果不强制更新，先尝试从缓存获取
+  if (!FORCE) {
+    const cached = await getCachedVersion("META_VERSION");
+    if (cached) {
+      META_VERSION = cached;
+      return;
+    }
+  }
+
   const options = {};
 
   const httpProxy =
@@ -143,6 +284,9 @@ async function getLatestReleaseVersion() {
     let v = await response.text();
     META_VERSION = v.trim(); // Trim to remove extra whitespaces
     log_info(`Latest release version: ${META_VERSION}`);
+
+    // 保存到缓存
+    await setCachedVersion("META_VERSION", META_VERSION);
   } catch (error) {
     log_error("Error fetching latest release version:", error.message);
     process.exit(1);
@@ -210,7 +354,12 @@ async function resolveSidecar(binInfo) {
   const sidecarPath = path.join(sidecarDir, targetFile);
 
   await fsp.mkdir(sidecarDir, { recursive: true });
-  if (!FORCE && fs.existsSync(sidecarPath)) return;
+
+  // 检查文件是否已存在，如果存在则跳过重复下载
+  if (!FORCE && fs.existsSync(sidecarPath)) {
+    log_success(`"${name}" already exists, skipping download to save time`);
+    return;
+  }
 
   const tempDir = path.join(TEMP_DIR, name);
   const tempZip = path.join(tempDir, zipFile);
@@ -300,22 +449,32 @@ async function resolveResource(binInfo) {
   const resDir = path.join(cwd, "src-tauri/resources");
   const targetPath = path.join(resDir, file);
 
-  if (!FORCE && fs.existsSync(targetPath)) return;
+  if (!FORCE && fs.existsSync(targetPath) && !downloadURL && !localPath) {
+    log_success(`"${file}" already exists, skipping`);
+    return;
+  }
 
   if (downloadURL) {
+    if (!FORCE && fs.existsSync(targetPath)) {
+      log_success(`"${file}" already exists, skipping download`);
+      return;
+    }
     await fsp.mkdir(resDir, { recursive: true });
     await downloadFile(downloadURL, targetPath);
+    await updateHashCache(targetPath);
   }
 
   if (localPath) {
-    await fs.copyFile(localPath, targetPath, (err) => {
-      if (err) {
-        console.error("Error copying file:", err);
-      } else {
-        console.log("File was copied successfully");
-      }
-    });
-    log_debug(`copy file finished: "${localPath}"`);
+    // 检查文件哈希是否变化
+    if (!(await hasFileChanged(localPath, targetPath))) {
+      // 文件未变化，静默跳过
+      return;
+    }
+
+    await fsp.mkdir(resDir, { recursive: true });
+    await fsp.copyFile(localPath, targetPath);
+    await updateHashCache(targetPath);
+    log_success(`Copied file: ${file}`);
   }
 
   log_success(`${file} finished`);
@@ -387,15 +546,35 @@ const resolveServicePermission = async () => {
     "clash-verge-service-uninstall*",
   ];
   const resDir = path.join(cwd, "src-tauri/resources");
+  const hashCache = await loadHashCache();
+  let hasChanges = false;
+
   for (let f of serviceExecutables) {
     // 使用glob模块来处理通配符
     const files = glob.sync(path.join(resDir, f));
     for (let filePath of files) {
       if (fs.existsSync(filePath)) {
+        const currentHash = await calculateFileHash(filePath);
+        const cacheKey = `${filePath}_chmod`;
+
+        // 检查文件哈希是否变化
+        if (!FORCE && hashCache[cacheKey] === currentHash) {
+          // 权限未变化，静默跳过
+          continue;
+        }
+
         execSync(`chmod 755 ${filePath}`);
         log_success(`chmod finished: "${filePath}"`);
+
+        // 更新哈希缓存
+        hashCache[cacheKey] = currentHash;
+        hasChanges = true;
       }
     }
+  }
+
+  if (hasChanges) {
+    await saveHashCache(hashCache);
   }
 };
 
@@ -411,16 +590,23 @@ async function resolveLocales() {
     // 读取所有语言文件
     const files = await fsp.readdir(srcLocalesDir);
 
-    // 复制每个文件
+    // 复制每个文件，只有当哈希变化时才复制
     for (const file of files) {
       const srcPath = path.join(srcLocalesDir, file);
       const targetPath = path.join(targetLocalesDir, file);
 
+      // 检查文件是否需要更新
+      if (!(await hasFileChanged(srcPath, targetPath))) {
+        // 文件未变化，静默跳过
+        continue;
+      }
+
       await fsp.copyFile(srcPath, targetPath);
+      await updateHashCache(targetPath);
       log_success(`Copied locale file: ${file}`);
     }
 
-    log_success("All locale files copied successfully");
+    log_success("All locale files processed successfully");
   } catch (err) {
     log_error("Error copying locale files:", err.message);
     throw err;

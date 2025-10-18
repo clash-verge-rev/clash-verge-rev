@@ -4,14 +4,15 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate, useRoutes } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router";
 import { SWRConfig, mutate } from "swr";
 
 import iconDark from "@/assets/image/icon_dark.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import LogoSvg from "@/assets/image/logo.svg?react";
+import { BaseErrorBoundary } from "@/components/base";
 import { NoticeManager } from "@/components/base/NoticeManager";
 import { WindowControls } from "@/components/controller/window-controller";
 import { LayoutItem } from "@/components/layout/layout-item";
@@ -31,7 +32,7 @@ import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
-import { routers } from "./_routers";
+import { navItems } from "./_routers";
 
 import "dayjs/locale/ru";
 import "dayjs/locale/zh-cn";
@@ -161,24 +162,12 @@ const Layout = () => {
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
   const { verge } = useVerge();
-  const { language, start_page } = verge ?? {};
+  const { language } = verge ?? {};
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
-  const location = useLocation();
-  const matchedElement = useRoutes(routers);
-  const routersEles = useMemo(() => {
-    if (!matchedElement) {
-      return null;
-    }
-    return (
-      <React.Fragment key={location.pathname}>{matchedElement}</React.Fragment>
-    );
-  }, [matchedElement, location.pathname]);
   const { addListener } = useListen();
   const initRef = useRef(false);
   const overlayRemovedRef = useRef(false);
-  const lastStartPageRef = useRef<string | null>(null);
-  const startPageAppliedRef = useRef(false);
   const themeReady = useMemo(() => Boolean(theme), [theme]);
 
   const windowControls = useRef<any>(null);
@@ -538,35 +527,6 @@ const Layout = () => {
     }
   }, [language, switchLanguage]);
 
-  useEffect(() => {
-    if (!start_page) {
-      lastStartPageRef.current = null;
-      startPageAppliedRef.current = false;
-      return;
-    }
-
-    const normalizedStartPage = start_page.startsWith("/")
-      ? start_page
-      : `/${start_page}`;
-
-    if (lastStartPageRef.current !== normalizedStartPage) {
-      lastStartPageRef.current = normalizedStartPage;
-      startPageAppliedRef.current = false;
-    }
-
-    if (startPageAppliedRef.current) {
-      return;
-    }
-
-    startPageAppliedRef.current = true;
-
-    if (location.pathname === normalizedStartPage) {
-      return;
-    }
-
-    navigate(normalizedStartPage, { replace: true });
-  }, [start_page, navigate, location.pathname]);
-
   if (!themeReady) {
     return (
       <div
@@ -575,22 +535,6 @@ const Layout = () => {
           height: "100vh",
           background: mode === "light" ? "#fff" : "#181a1b",
           transition: "background 0.2s",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: mode === "light" ? "#333" : "#fff",
-        }}
-      ></div>
-    );
-  }
-
-  if (!routersEles) {
-    return (
-      <div
-        style={{
-          width: "100vw",
-          height: "100vh",
-          background: mode === "light" ? "#fff" : "#181a1b",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -692,7 +636,7 @@ const Layout = () => {
               </div>
 
               <List className="the-menu">
-                {routers.map((router) => (
+                {navItems.map((router) => (
                   <LayoutItem
                     key={router.label}
                     to={router.path}
@@ -710,7 +654,11 @@ const Layout = () => {
 
             <div className="layout-content__right">
               <div className="the-bar"></div>
-              <div className="the-content">{routersEles}</div>
+              <div className="the-content">
+                <BaseErrorBoundary>
+                  <Outlet />
+                </BaseErrorBoundary>
+              </div>
             </div>
           </div>
         </Paper>
