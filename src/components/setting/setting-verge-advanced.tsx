@@ -1,6 +1,5 @@
 import { ContentCopyRounded } from "@mui/icons-material";
 import { Typography } from "@mui/material";
-import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -15,6 +14,7 @@ import {
   openLogsDir,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { checkUpdateSafe as checkUpdate } from "@/services/update";
 import { version } from "@root/package.json";
 
 import { BackupViewer } from "./mods/backup-viewer";
