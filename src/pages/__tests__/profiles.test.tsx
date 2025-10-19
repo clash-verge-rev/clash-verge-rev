@@ -262,7 +262,7 @@ vi.mock("@/components/base/base-styled-text-field", () => ({
   ),
 }));
 
-vi.mock("react-router-dom", () => ({
+vi.mock("react-router", () => ({
   useLocation: () => useLocationValue,
 }));
 

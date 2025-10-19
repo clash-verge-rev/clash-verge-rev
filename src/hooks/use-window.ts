@@ -10,7 +10,17 @@ export const useWindow = () => {
   return context;
 };
 
-export const useWindowControls = () => {
+export type WindowControlsHandle = Pick<
+  WindowContextType,
+  | "maximized"
+  | "minimize"
+  | "toggleMaximize"
+  | "close"
+  | "toggleFullscreen"
+  | "currentWindow"
+>;
+
+export const useWindowControls = (): WindowControlsHandle => {
   const {
     maximized,
     minimize,
@@ -26,21 +36,15 @@ export const useWindowControls = () => {
     close,
     toggleFullscreen,
     currentWindow,
-  } satisfies Pick<
-    WindowContextType,
-    | "maximized"
-    | "minimize"
-    | "toggleMaximize"
-    | "close"
-    | "toggleFullscreen"
-    | "currentWindow"
-  >;
+  };
 };
 
-export const useWindowDecorations = () => {
+export type WindowDecorationsHandle = Pick<
+  WindowContextType,
+  "decorated" | "toggleDecorations" | "refreshDecorated"
+>;
+
+export const useWindowDecorations = (): WindowDecorationsHandle => {
   const { decorated, toggleDecorations, refreshDecorated } = useWindow();
-  return { decorated, toggleDecorations, refreshDecorated } satisfies Pick<
-    WindowContextType,
-    "decorated" | "toggleDecorations" | "refreshDecorated"
-  >;
+  return { decorated, toggleDecorations, refreshDecorated };
 };

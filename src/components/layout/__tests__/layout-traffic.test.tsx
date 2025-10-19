@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mockAppendData = vi.fn();
@@ -137,5 +137,18 @@ describe("LayoutTraffic", () => {
     arrange({ enable_memory_usage: false });
 
     expect(screen.queryByText("Memory Usage")).not.toBeInTheDocument();
+  });
+
+  it("toggles graph style when container is clicked", () => {
+    const { rerender } = arrange();
+
+    rerender(<LayoutTraffic />);
+
+    const graphContainer = screen.getByTestId("traffic-graph").parentElement;
+    expect(graphContainer).not.toBeNull();
+
+    fireEvent.click(graphContainer!);
+
+    expect(mockToggleStyle).toHaveBeenCalledTimes(1);
   });
 });
