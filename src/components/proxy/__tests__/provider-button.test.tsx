@@ -1,166 +1,211 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProviderButton } from "@/components/proxy/provider-button";
 
-dayjs.extend(relativeTime);
+const mocks = vi.hoisted(() => {
+  const useAppDataMock = vi.fn();
+  const updateProxyProviderMock = vi.fn();
+  const refreshProxyMock = vi.fn();
+  const refreshProxyProvidersMock = vi.fn();
+  const showNoticeMock = vi.fn();
+  const parseTrafficMock = vi.fn((value: number) => `${value}B`);
 
-const {
-  useAppDataMock,
-  showNoticeMock,
-  updateProxyProviderMock,
-  parseTrafficMock,
-} = vi.hoisted(() => ({
-  useAppDataMock: vi.fn(),
-  showNoticeMock: vi.fn(),
-  updateProxyProviderMock: vi.fn(),
-  parseTrafficMock: vi.fn((value: number) => `${value}B`),
-}));
+  const dayjsMock = vi.fn((_: unknown) => ({
+    fromNow: () => "just now",
+    format: () => "2025-01-01",
+  }));
+
+  return {
+    useAppDataMock,
+    updateProxyProviderMock,
+    refreshProxyMock,
+    refreshProxyProvidersMock,
+    showNoticeMock,
+    parseTrafficMock,
+    dayjsMock,
+  };
+});
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string) => key,
+  }),
 }));
 
 vi.mock("ahooks", () => ({
-  useLockFn: (fn: (...args: unknown[]) => Promise<unknown> | unknown) => fn,
-}));
-
-vi.mock("tauri-plugin-mihomo-api", () => ({
-  updateProxyProvider: updateProxyProviderMock,
+  useLockFn: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
 }));
 
 vi.mock("@/providers/app-data-context", () => ({
-  useAppData: () => useAppDataMock(),
+  useAppData: () => mocks.useAppDataMock(),
+}));
+
+vi.mock("tauri-plugin-mihomo-api", () => ({
+  updateProxyProvider: (name: string) => mocks.updateProxyProviderMock(name),
 }));
 
 vi.mock("@/services/noticeService", () => ({
-  showNotice: (...args: unknown[]) => showNoticeMock(...args),
+  showNotice: (type: unknown, message: unknown) =>
+    mocks.showNoticeMock(type, message),
 }));
 
 vi.mock("@/utils/parse-traffic", () => ({
   __esModule: true,
-  default: (value: number) => parseTrafficMock(value),
+  default: (value: number) => mocks.parseTrafficMock(value),
 }));
 
-interface MockProviderInfo {
-  proxies: Array<{ name: string }>;
-  vehicleType: string;
-  updatedAt: number;
-  subscriptionInfo?: {
-    Upload?: number;
-    Download?: number;
-    Total?: number;
-    Expire?: number;
-  };
-}
+vi.mock("dayjs", () => ({
+  __esModule: true,
+  default: (input?: unknown) => mocks.dayjsMock(input),
+}));
 
-const createProviders = (): Record<string, MockProviderInfo> => ({
-  AlphaProvider: {
-    proxies: [{ name: "a" }, { name: "b" }],
-    vehicleType: "http",
-    updatedAt: Date.now() - 60_000,
-    subscriptionInfo: {
-      Upload: 10,
-      Download: 20,
-      Total: 100,
-      Expire: Math.floor(Date.now() / 1000) + 3600,
-    },
-  },
-  BetaProvider: {
-    proxies: [{ name: "c" }],
-    vehicleType: "https",
-    updatedAt: Date.now() - 120_000,
-  },
-});
-
-const createAppDataValue = (
-  overrides: Partial<{
-    proxyProviders: Record<string, MockProviderInfo>;
-    refreshProxy: ReturnType<typeof vi.fn>;
-    refreshProxyProviders: ReturnType<typeof vi.fn>;
-  }> = {},
-) => {
-  const refreshProxy = vi.fn().mockResolvedValue(undefined);
-  const refreshProxyProviders = vi.fn().mockResolvedValue(undefined);
-  return {
-    proxyProviders: {},
-    refreshProxy,
-    refreshProxyProviders,
-    ...overrides,
-  };
-};
-
-type AppDataMockValue = ReturnType<typeof createAppDataValue>;
-
-const renderWithAppData = (overrides: Partial<AppDataMockValue> = {}) => {
-  const value = createAppDataValue(overrides);
-  useAppDataMock.mockReturnValue(value);
-  return { value, ...render(<ProviderButton />) };
-};
+const renderButton = () => render(<ProviderButton />);
 
 describe("ProviderButton", () => {
+  const {
+    useAppDataMock,
+    updateProxyProviderMock,
+    refreshProxyMock,
+    refreshProxyProvidersMock,
+    showNoticeMock,
+    parseTrafficMock,
+    dayjsMock,
+  } = mocks;
+
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("returns null when there are no providers", () => {
-    renderWithAppData();
-
-    const button = screen.queryByText("Proxy Provider");
-    expect(button).toBeNull();
-  });
-
-  it("renders provider dialog with provider details", () => {
-    renderWithAppData({ proxyProviders: createProviders() });
-
-    fireEvent.click(screen.getByText("Proxy Provider"));
-
-    expect(screen.getByText("Update All")).toBeInTheDocument();
-    expect(screen.getByText("AlphaProvider")).toBeInTheDocument();
-    expect(screen.getByText("BetaProvider")).toBeInTheDocument();
-    expect(parseTrafficMock).toHaveBeenCalledWith(30);
-    expect(parseTrafficMock).toHaveBeenCalledWith(100);
-  });
-
-  it("updates all providers when update all button is clicked", async () => {
-    const { value } = renderWithAppData({ proxyProviders: createProviders() });
-
+    useAppDataMock.mockReturnValue({
+      proxyProviders: {},
+      refreshProxy: refreshProxyMock,
+      refreshProxyProviders: refreshProxyProvidersMock,
+    });
     updateProxyProviderMock.mockResolvedValue(undefined);
+    refreshProxyMock.mockResolvedValue(undefined);
+    refreshProxyProvidersMock.mockResolvedValue(undefined);
+    showNoticeMock.mockReturnValue(undefined);
+    parseTrafficMock.mockImplementation((value: number) => `${value}B`);
+    dayjsMock.mockImplementation(() => ({
+      fromNow: () => "just now",
+      format: () => "2025-01-01",
+    }));
+  });
 
-    fireEvent.click(screen.getByText("Proxy Provider"));
-    fireEvent.click(screen.getByText("Update All"));
+  it("does not render when there are no proxy providers", () => {
+    renderButton();
+    expect(
+      screen.queryByRole("button", { name: "Proxy Provider" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens dialog and displays provider details", async () => {
+    useAppDataMock.mockReturnValue({
+      proxyProviders: {
+        "Provider-A": {
+          proxies: ["a", "b"],
+          vehicleType: "http",
+          updatedAt: 1737050000,
+          subscriptionInfo: {
+            Upload: 10,
+            Download: 20,
+            Total: 100,
+            Expire: 1737100000,
+          },
+        },
+      },
+      refreshProxy: refreshProxyMock,
+      refreshProxyProviders: refreshProxyProvidersMock,
+    });
+
+    renderButton();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Proxy Provider" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByText("Provider-A")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("http")).toBeInTheDocument();
+    expect(screen.getByText("just now")).toBeInTheDocument();
+    expect(screen.getByTitle("Used / Total")).toHaveTextContent("30B / 100B");
+    expect(screen.getByTitle("Expire Time")).toHaveTextContent("2025-01-01");
+  });
+
+  it("updates a single provider and shows success message", async () => {
+    useAppDataMock.mockReturnValue({
+      proxyProviders: {
+        "Provider-A": {
+          proxies: [],
+          vehicleType: "http",
+          updatedAt: 0,
+          subscriptionInfo: null,
+        },
+      },
+      refreshProxy: refreshProxyMock,
+      refreshProxyProviders: refreshProxyProvidersMock,
+    });
+
+    renderButton();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Proxy Provider" }));
+
+    const updateButton = await screen.findByTitle("Update Provider");
+    await user.click(updateButton);
+
+    await waitFor(() => {
+      expect(updateProxyProviderMock).toHaveBeenCalledWith("Provider-A");
+      expect(refreshProxyMock).toHaveBeenCalledTimes(1);
+      expect(refreshProxyProvidersMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(showNoticeMock).toHaveBeenCalledWith(
+      "success",
+      "Provider-A 更新成功",
+    );
+  });
+
+  it("updates all providers and shows completion notice", async () => {
+    useAppDataMock.mockReturnValue({
+      proxyProviders: {
+        "Provider-A": {
+          proxies: [],
+          vehicleType: "http",
+          updatedAt: 0,
+        },
+        "Provider-B": {
+          proxies: [],
+          vehicleType: "https",
+          updatedAt: 0,
+        },
+      },
+      refreshProxy: refreshProxyMock,
+      refreshProxyProviders: refreshProxyProvidersMock,
+    });
+
+    renderButton();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Proxy Provider" }));
+
+    const updateAllButton = await screen.findByRole("button", {
+      name: "Update All",
+    });
+    await user.click(updateAllButton);
 
     await waitFor(() => {
       expect(updateProxyProviderMock).toHaveBeenCalledTimes(2);
+      expect(updateProxyProviderMock).toHaveBeenNthCalledWith(1, "Provider-A");
+      expect(updateProxyProviderMock).toHaveBeenNthCalledWith(2, "Provider-B");
+      expect(refreshProxyMock).toHaveBeenCalledTimes(1);
+      expect(refreshProxyProvidersMock).toHaveBeenCalledTimes(1);
     });
 
-    expect(updateProxyProviderMock).toHaveBeenNthCalledWith(1, "AlphaProvider");
-    expect(updateProxyProviderMock).toHaveBeenNthCalledWith(2, "BetaProvider");
-    expect(value.refreshProxy).toHaveBeenCalledTimes(1);
-    expect(value.refreshProxyProviders).toHaveBeenCalledTimes(1);
-    expect(showNoticeMock).toHaveBeenCalledWith("success", expect.any(String));
-  });
-
-  it("updates a single provider from the list", async () => {
-    const { value } = renderWithAppData({ proxyProviders: createProviders() });
-
-    updateProxyProviderMock.mockResolvedValue(undefined);
-
-    fireEvent.click(screen.getByText("Proxy Provider"));
-    const updateButtons = screen.getAllByTitle("Update Provider");
-    fireEvent.click(updateButtons[0]);
-
-    await waitFor(() => {
-      expect(updateProxyProviderMock).toHaveBeenCalledWith("AlphaProvider");
-    });
-
-    expect(value.refreshProxy).toHaveBeenCalledTimes(1);
-    expect(value.refreshProxyProviders).toHaveBeenCalledTimes(1);
     expect(showNoticeMock).toHaveBeenCalledWith(
       "success",
-      expect.stringContaining("AlphaProvider"),
+      "全部代理提供者更新成功",
     );
   });
 });
