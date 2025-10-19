@@ -263,7 +263,9 @@ impl Timer {
         if let Some(items) = Config::profiles().latest().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref()
+                    && let Some(allow_auto_update) = option.allow_auto_update
                     && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
+                    && allow_auto_update
                     && interval > 0
                 {
                     logging!(

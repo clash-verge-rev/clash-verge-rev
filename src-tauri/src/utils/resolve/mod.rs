@@ -50,18 +50,8 @@ pub fn resolve_setup_async() {
             "Version: {}",
             env!("CARGO_PKG_VERSION")
         );
-        futures::join!(init_service_manager());
 
-        futures::join!(
-            init_work_config(),
-            init_resources(),
-            init_startup_script(),
-            init_hotkey(),
-        );
-
-        init_timer();
-        init_once_auto_lightweight().await;
-        init_auto_lightweight_mode().await;
+        futures::join!(init_work_config(), init_resources(), init_startup_script(),);
 
         // 确保配置完全初始化后再启动核心管理器
         init_verge_config().await;
@@ -69,6 +59,7 @@ pub fn resolve_setup_async() {
         // 添加配置验证，确保运行时配置已正确生成
         Config::verify_config_initialization().await;
 
+        init_service_manager().await;
         init_core_manager().await;
 
         init_system_proxy().await;
@@ -80,7 +71,16 @@ pub fn resolve_setup_async() {
             init_tray();
             refresh_tray_menu().await;
         };
-        futures::join!(init_window(), tray_and_refresh,);
+
+        init_timer();
+
+        futures::join!(
+            init_window(),
+            tray_and_refresh,
+            init_hotkey(),
+            init_auto_lightweight_mode(),
+            init_once_auto_lightweight(),
+        );
     });
 
     let elapsed = start_time.elapsed();

@@ -338,7 +338,15 @@ impl IVerge {
     pub fn new() -> Self {
         match dirs::verge_path() {
             Ok(path) => match help::read_yaml::<IVerge>(&path) {
-                Ok(config) => config,
+                Ok(mut config) => {
+                    // compatibility
+                    if let Some(start_page) = config.start_page.clone()
+                        && start_page == "/home"
+                    {
+                        config.start_page = Some(String::from("/"));
+                    }
+                    config
+                }
                 Err(err) => {
                     log::error!(target: "app", "{err}");
                     Self::template()
@@ -362,7 +370,7 @@ impl IVerge {
             env_type: Some("bash".into()),
             #[cfg(target_os = "windows")]
             env_type: Some("powershell".into()),
-            start_page: Some("/home".into()),
+            start_page: Some("/".into()),
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_group_icon: Some(true),

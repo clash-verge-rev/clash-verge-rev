@@ -4,7 +4,7 @@ use super::CmdResult;
 use crate::{
     cmd::StringifyErr,
     config::Config,
-    core::{CoreManager, handle},
+    core::{CoreManager, handle, validate::CoreConfigValidator},
 };
 use crate::{config::*, feat, logging, utils::logging::Type, wrap_err};
 use compact_str::CompactString;
@@ -257,7 +257,7 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
 /// 验证DNS配置文件
 #[tauri::command]
 pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
-    use crate::{core::CoreManager, utils::dirs};
+    use crate::utils::dirs;
 
     let app_dir = dirs::app_home_dir().stringify_err()?;
     let dns_path = app_dir.join("dns_config.yaml");
@@ -267,8 +267,7 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
         return Ok((false, "DNS config file not found".into()));
     }
 
-    CoreManager::global()
-        .validate_config_file(dns_path_str, None)
+    CoreConfigValidator::validate_config_file(dns_path_str, None)
         .await
         .stringify_err()
 }

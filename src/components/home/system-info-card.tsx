@@ -14,11 +14,10 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import useSWR from "swr";
 
 import { useSystemState } from "@/hooks/use-system-state";
@@ -26,6 +25,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 import { getSystemInfo } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { checkUpdateSafe as checkUpdate } from "@/services/update";
 import { version as appVersion } from "@root/package.json";
 
 import { EnhancedCard } from "./enhanced-card";

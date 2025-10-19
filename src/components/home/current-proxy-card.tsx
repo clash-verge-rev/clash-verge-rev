@@ -30,7 +30,7 @@ import { useLockFn } from "ahooks";
 import React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { EnhancedCard } from "@/components/home/enhanced-card";

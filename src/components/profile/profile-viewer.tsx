@@ -377,6 +377,17 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               </StyledBox>
             )}
           />
+
+          <Controller
+            name="option.allow_auto_update"
+            control={control}
+            render={({ field }) => (
+              <StyledBox>
+                <InputLabel>{t("Allow Auto Update")}</InputLabel>
+                <Switch checked={field.value} {...field} color="primary" />
+              </StyledBox>
+            )}
+          />
         </>
       )}
     </BaseDialog>
