@@ -22,7 +22,7 @@ import { useCustomTheme } from "@/components/layout/use-custom-theme";
 import { useConnectionData } from "@/hooks/use-connection-data";
 import { useI18n } from "@/hooks/use-i18n";
 import { useListen } from "@/hooks/use-listen";
-import { useLogData } from "@/hooks/use-log-data-new";
+import { useLogData } from "@/hooks/use-log-data";
 import { useMemoryData } from "@/hooks/use-memory-data";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 import { useVerge } from "@/hooks/use-verge";
