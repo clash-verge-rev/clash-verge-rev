@@ -2,7 +2,7 @@ use super::{IClashTemp, IProfiles, IRuntime, IVerge};
 use crate::{
     cmd,
     config::{PrfItem, profiles_append_item_safe},
-    core::{CoreManager, handle, service},
+    core::{CoreManager, handle, service, validate::CoreConfigValidator},
     enhance, logging, logging_error,
     utils::{Draft, dirs, help, logging::Type},
 };
@@ -102,7 +102,7 @@ impl Config {
             // 验证配置文件
             logging!(info, Type::Config, "开始验证配置");
 
-            match CoreManager::global().validate_config().await {
+            match CoreConfigValidator::global().validate_config().await {
                 Ok((is_valid, error_msg)) => {
                     if !is_valid {
                         logging!(

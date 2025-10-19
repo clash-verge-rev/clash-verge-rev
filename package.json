@@ -30,7 +30,8 @@
     "lint:fix": "eslint -c eslint.config.ts --cache --cache-location .eslintcache --fix src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -42,7 +43,7 @@
     "@mui/icons-material": "^7.3.4",
     "@mui/lab": "7.0.0-beta.17",
     "@mui/material": "^7.3.4",
-    "@mui/x-data-grid": "^8.14.0",
+    "@mui/x-data-grid": "^8.14.1",
     "@tauri-apps/api": "2.8.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
@@ -67,23 +68,24 @@
     "react-dom": "19.2.0",
     "react-error-boundary": "6.0.0",
     "react-hook-form": "^7.65.0",
-    "react-i18next": "16.0.1",
+    "react-i18next": "16.1.0",
     "react-markdown": "10.1.0",
     "react-monaco-editor": "0.59.0",
-    "react-router-dom": "7.9.4",
+    "react-router": "^7.9.4",
     "react-virtuoso": "^4.14.1",
     "swr": "^2.3.6",
+    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo",
     "types-pac": "^1.0.3",
-    "zustand": "^5.0.8",
-    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
     "@eslint-react/eslint-plugin": "^2.2.2",
-    "@eslint/js": "^9.37.0",
+    "@eslint/js": "^9.38.0",
     "@tauri-apps/cli": "2.8.4",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
+    "@types/node": "^24.8.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-legacy": "^7.2.1",
@@ -92,7 +94,7 @@
     "cli-color": "^2.0.4",
     "commander": "^14.0.1",
     "cross-env": "^10.1.0",
-    "eslint": "^9.37.0",
+    "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.1",
@@ -116,7 +118,8 @@
     "typescript-eslint": "^8.46.1",
     "vite": "^7.1.10",
     "vite-plugin-monaco-editor": "^1.1.0",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^4.5.0",
+    "vitest": "^3.2.4"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

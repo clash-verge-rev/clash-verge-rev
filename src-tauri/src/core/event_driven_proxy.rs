@@ -6,9 +6,7 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 
 use crate::config::{Config, IVerge};
 use crate::core::{async_proxy_query::AsyncProxyQuery, handle};
-use crate::logging_error;
 use crate::process::AsyncHandler;
-use crate::utils::logging::Type;
 use once_cell::sync::Lazy;
 use sysproxy::{Autoproxy, Sysproxy};
 
@@ -16,25 +14,9 @@ use sysproxy::{Autoproxy, Sysproxy};
 pub enum ProxyEvent {
     /// 配置变更事件
     ConfigChanged,
-    /// 强制检查代理状态
-    #[allow(dead_code)]
-    ForceCheck,
-    /// 启用系统代理
-    #[allow(dead_code)]
-    EnableProxy,
-    /// 禁用系统代理
-    #[allow(dead_code)]
-    DisableProxy,
-    /// 切换到PAC模式
-    #[allow(dead_code)]
-    SwitchToPac,
-    /// 切换到HTTP代理模式
-    #[allow(dead_code)]
-    SwitchToHttp,
     /// 应用启动事件
     AppStarted,
     /// 应用关闭事件
-    #[allow(dead_code)]
     AppStopping,
 }
 
@@ -145,27 +127,8 @@ impl EventDrivenProxyManager {
     }
 
     /// 通知应用即将关闭
-    #[allow(dead_code)]
     pub fn notify_app_stopping(&self) {
         self.send_event(ProxyEvent::AppStopping);
-    }
-
-    /// 启用系统代理
-    #[allow(dead_code)]
-    pub fn enable_proxy(&self) {
-        self.send_event(ProxyEvent::EnableProxy);
-    }
-
-    /// 禁用系统代理
-    #[allow(dead_code)]
-    pub fn disable_proxy(&self) {
-        self.send_event(ProxyEvent::DisableProxy);
-    }
-
-    /// 强制检查代理状态
-    #[allow(dead_code)]
-    pub fn force_check(&self) {
-        self.send_event(ProxyEvent::ForceCheck);
     }
 
     fn send_event(&self, event: ProxyEvent) {
@@ -230,20 +193,8 @@ impl EventDrivenProxyManager {
 
     async fn handle_event(state: &Arc<RwLock<ProxyState>>, event: ProxyEvent) {
         match event {
-            ProxyEvent::ConfigChanged | ProxyEvent::ForceCheck => {
+            ProxyEvent::ConfigChanged => {
                 Self::update_proxy_config(state).await;
-            }
-            ProxyEvent::EnableProxy => {
-                Self::enable_system_proxy(state).await;
-            }
-            ProxyEvent::DisableProxy => {
-                Self::disable_system_proxy(state);
-            }
-            ProxyEvent::SwitchToPac => {
-                Self::switch_proxy_mode(state, true).await;
-            }
-            ProxyEvent::SwitchToHttp => {
-                Self::switch_proxy_mode(state, false).await;
             }
             ProxyEvent::AppStarted => {
                 Self::initialize_proxy_state(state).await;
@@ -391,74 +342,6 @@ impl EventDrivenProxyManager {
             })
             .await;
         }
-    }
-
-    async fn enable_system_proxy(state: &Arc<RwLock<ProxyState>>) {
-        if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过启用系统代理");
-            return;
-        }
-
-        log::info!(target: "app", "启用系统代理");
-
-        let pac_enabled = state.read().await.pac_enabled;
-
-        if pac_enabled {
-            let expected = Self::get_expected_pac_config().await;
-            if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
-                log::error!(target: "app", "启用PAC代理失败: {}", e);
-            }
-        } else {
-            let expected = Self::get_expected_sys_proxy().await;
-            if let Err(e) = Self::restore_sys_proxy(&expected).await {
-                log::error!(target: "app", "启用系统代理失败: {}", e);
-            }
-        }
-
-        Self::check_and_restore_proxy(state).await;
-    }
-
-    fn disable_system_proxy(_state: &Arc<RwLock<ProxyState>>) {
-        log::info!(target: "app", "禁用系统代理");
-
-        #[cfg(not(target_os = "windows"))]
-        {
-            let disabled_sys = Sysproxy::default();
-            let disabled_auto = Autoproxy::default();
-
-            logging_error!(Type::System, disabled_auto.set_auto_proxy());
-            logging_error!(Type::System, disabled_sys.set_system_proxy());
-        }
-    }
-
-    async fn switch_proxy_mode(state: &Arc<RwLock<ProxyState>>, to_pac: bool) {
-        if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过代理模式切换");
-            return;
-        }
-
-        log::info!(target: "app", "切换到{}模式", if to_pac { "PAC" } else { "HTTP代理" });
-
-        if to_pac {
-            let disabled_sys = Sysproxy::default();
-            logging_error!(Type::System, disabled_sys.set_system_proxy());
-
-            let expected = Self::get_expected_pac_config().await;
-            if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
-                log::error!(target: "app", "切换到PAC模式失败: {}", e);
-            }
-        } else {
-            let disabled_auto = Autoproxy::default();
-            logging_error!(Type::System, disabled_auto.set_auto_proxy());
-
-            let expected = Self::get_expected_sys_proxy().await;
-            if let Err(e) = Self::restore_sys_proxy(&expected).await {
-                log::error!(target: "app", "切换到HTTP代理模式失败: {}", e);
-            }
-        }
-
-        Self::update_state_timestamp(state, |s| s.pac_enabled = to_pac).await;
-        Self::check_and_restore_proxy(state).await;
     }
 
     async fn get_auto_proxy_with_timeout() -> Autoproxy {

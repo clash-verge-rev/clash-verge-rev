@@ -328,7 +328,7 @@ impl WindowManager {
                 return false;
             }
 
-            match build_new_window() {
+            match build_new_window().await {
                 Ok(_) => {
                     logging!(info, Type::Window, "新窗口创建成功");
                 }

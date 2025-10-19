@@ -1,5 +1,6 @@
-import eslintReact from "@eslint-react/eslint-plugin";
 import eslintJS from "@eslint/js";
+import eslintReact from "@eslint-react/eslint-plugin";
+import { defineConfig } from "eslint/config";
 import configPrettier from "eslint-config-prettier";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import pluginImportX from "eslint-plugin-import-x";
@@ -7,7 +8,6 @@ import pluginPrettier from "eslint-plugin-prettier";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginReactRefresh from "eslint-plugin-react-refresh";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
-import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 

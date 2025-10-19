@@ -1,9 +1,9 @@
 import { Button } from "@mui/material";
-import { check } from "@tauri-apps/plugin-updater";
 import { useRef } from "react";
 import useSWR from "swr";
 
 import { useVerge } from "@/hooks/use-verge";
+import { checkUpdateSafe } from "@/services/update";
 
 import { DialogRef } from "../base";
 import { UpdateViewer } from "../setting/mods/update-viewer";
@@ -21,7 +21,7 @@ export const UpdateButton = (props: Props) => {
 
   const { data: updateInfo } = useSWR(
     auto_check_update || auto_check_update === null ? "checkUpdate" : null,
-    check,
+    checkUpdateSafe,
     {
       errorRetryCount: 2,
       revalidateIfStale: false,

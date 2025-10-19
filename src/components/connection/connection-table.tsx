@@ -6,7 +6,7 @@ import {
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
-import { useEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import parseTraffic from "@/utils/parse-traffic";
@@ -21,7 +21,7 @@ export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
   const { t } = useTranslation();
   const apiRef = useGridApiRef();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const PATCH_FLAG_KEY = "__clashPatchedPublishEvent" as const;
     const ORIGINAL_KEY = "__clashOriginalPublishEvent" as const;
     let isUnmounted = false;
@@ -97,12 +97,17 @@ export const ConnectionTable = (props: Props) => {
 
       const originalPublishEvent = api.publishEvent;
 
-      const patchedPublishEvent = ((...rawArgs: unknown[]) => {
-        rawArgs[2] = ensureMuiEvent(rawArgs[2]);
+      // Use Proxy to create a more resilient wrapper that always normalizes events
+      const patchedPublishEvent = new Proxy(originalPublishEvent, {
+        apply(target, thisArg, rawArgs: unknown[]) {
+          rawArgs[2] = ensureMuiEvent(rawArgs[2]);
 
-        return (
-          originalPublishEvent as unknown as (...args: unknown[]) => void
-        ).apply(api, rawArgs);
+          return Reflect.apply(
+            target as (...args: unknown[]) => unknown,
+            thisArg,
+            rawArgs,
+          );
+        },
       }) as typeof originalPublishEvent;
 
       api.publishEvent = patchedPublishEvent;

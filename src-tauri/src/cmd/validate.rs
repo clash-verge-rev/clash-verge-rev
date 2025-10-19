@@ -1,5 +1,9 @@
 use super::CmdResult;
-use crate::{core::*, logging, utils::logging::Type};
+use crate::{
+    core::{validate::CoreConfigValidator, *},
+    logging,
+    utils::logging::Type,
+};
 
 /// 发送脚本验证通知消息
 #[tauri::command]
@@ -38,10 +42,7 @@ pub fn handle_script_validation_notice(result: &(bool, String), file_type: &str)
 pub async fn validate_script_file(file_path: String) -> CmdResult<bool> {
     logging!(info, Type::Config, "验证脚本文件: {}", file_path);
 
-    match CoreManager::global()
-        .validate_config_file(&file_path, None)
-        .await
-    {
+    match CoreConfigValidator::validate_config_file(&file_path, None).await {
         Ok(result) => {
             handle_script_validation_notice(&result, "脚本文件");
             Ok(result.0) // 返回验证结果布尔值
