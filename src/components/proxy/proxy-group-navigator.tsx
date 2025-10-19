@@ -1,5 +1,5 @@
 import { Box, Button, Tooltip } from "@mui/material";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 interface ProxyGroupNavigatorProps {
   proxyGroupNames: string[];
@@ -19,12 +19,27 @@ export const ProxyGroupNavigator = ({
   proxyGroupNames,
   onGroupLocation,
 }: ProxyGroupNavigatorProps) => {
+  const lastHoveredRef = useRef<string | null>(null);
+
   const handleGroupClick = useCallback(
     (groupName: string) => {
       onGroupLocation(groupName);
     },
     [onGroupLocation],
   );
+
+  const handleGroupHover = useCallback(
+    (groupName: string) => {
+      if (lastHoveredRef.current === groupName) return;
+      lastHoveredRef.current = groupName;
+      onGroupLocation(groupName);
+    },
+    [onGroupLocation],
+  );
+
+  const handleButtonLeave = useCallback(() => {
+    lastHoveredRef.current = null;
+  }, []);
 
   // 处理代理组数据，去重和排序
   const processedGroups = useMemo(() => {
@@ -66,6 +81,9 @@ export const ProxyGroupNavigator = ({
             size="small"
             variant="text"
             onClick={() => handleGroupClick(name)}
+            onMouseEnter={() => handleGroupHover(name)}
+            onFocus={() => handleGroupHover(name)}
+            onMouseLeave={handleButtonLeave}
             sx={{
               minWidth: 28,
               minHeight: 28,
