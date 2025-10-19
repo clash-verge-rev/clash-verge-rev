@@ -22,13 +22,13 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-const MockDndContext = ({ children }: { children: ReactNode }) => (
-  <div data-testid="dnd-context">{children}</div>
-);
+function MockDndContext({ children }: { children: ReactNode }) {
+  return <div data-testid="dnd-context">{children}</div>;
+}
 
-const MockSortableContext = ({ children }: { children: ReactNode }) => (
-  <>{children}</>
-);
+function MockSortableContext({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
 
 vi.mock("@dnd-kit/core", () => ({
   closestCenter: vi.fn(),

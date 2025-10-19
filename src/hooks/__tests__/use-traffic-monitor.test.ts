@@ -1,29 +1,14 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
-import type { MockedFunction } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import type { Traffic } from "tauri-plugin-mihomo-api";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const setupTrafficMock = async (
-  sequence: Array<{ response: { data: { up: number; down: number } } }>,
+const appendTraffic = (
+  appendData: (traffic: Traffic) => void,
+  data: Traffic,
 ) => {
-  const trafficModule = await import("@/hooks/use-traffic-data");
-  const useTrafficDataMock = vi.spyOn(
-    trafficModule,
-    "useTrafficData",
-  ) as MockedFunction<typeof trafficModule.useTrafficData>;
-
-  let callCount = 0;
-  useTrafficDataMock.mockImplementation(() => {
-    const index = Math.min(callCount, sequence.length - 1);
-    callCount += 1;
-    return sequence[index] as any;
+  act(() => {
+    appendData(data);
   });
-
-  const monitorModule = await import("@/hooks/use-traffic-monitor");
-
-  return {
-    useTrafficDataMock,
-    ...monitorModule,
-  };
 };
 
 describe("useTrafficGraphDataEnhanced", () => {
@@ -43,30 +28,23 @@ describe("useTrafficGraphDataEnhanced", () => {
     );
     vi.spyOn(console, "log").mockImplementation(() => {});
 
-    const { useTrafficGraphDataEnhanced } = await setupTrafficMock([
-      { response: { data: { up: 10, down: 5 } } },
-      { response: { data: { up: 7, down: 3 } } },
-    ]);
-
-    const { result, rerender } = renderHook(() =>
-      useTrafficGraphDataEnhanced(),
+    const { useTrafficGraphDataEnhanced } = await import(
+      "@/hooks/use-traffic-monitor"
     );
 
-    await waitFor(() =>
-      expect(result.current.getDataForTimeRange(60)).toHaveLength(1),
-    );
+    const { result } = renderHook(() => useTrafficGraphDataEnhanced());
+
+    appendTraffic(result.current.appendData, { up: 10, down: 5 } as Traffic);
+
+    expect(result.current.getDataForTimeRange(60)).toHaveLength(1);
     expect(result.current.getDataForTimeRange(60)[0]).toMatchObject({
       up: 10,
       down: 5,
     });
 
-    await act(async () => {
-      rerender();
-    });
+    appendTraffic(result.current.appendData, { up: 7, down: 3 } as Traffic);
 
-    await waitFor(() =>
-      expect(result.current.getDataForTimeRange(60)).toHaveLength(2),
-    );
+    expect(result.current.getDataForTimeRange(60)).toHaveLength(2);
     const points = result.current.getDataForTimeRange(60);
     expect(points[1]).toMatchObject({ up: 7, down: 3 });
     expect(points[0].timestamp).toBeLessThan(points[1].timestamp);
@@ -83,33 +61,24 @@ describe("useTrafficGraphDataEnhanced", () => {
     );
     vi.spyOn(console, "log").mockImplementation(() => {});
 
-    const { useTrafficGraphDataEnhanced } = await setupTrafficMock([
-      { response: { data: { up: 4, down: 2 } } },
-      { response: { data: { up: 6, down: 1 } } },
-    ]);
-
-    const { result, rerender } = renderHook(() =>
-      useTrafficGraphDataEnhanced(),
+    const { useTrafficGraphDataEnhanced } = await import(
+      "@/hooks/use-traffic-monitor"
     );
 
-    await waitFor(() =>
-      expect(result.current.getDataForTimeRange(60)).toHaveLength(1),
-    );
+    const { result } = renderHook(() => useTrafficGraphDataEnhanced());
 
-    await act(async () => {
-      rerender();
-    });
+    appendTraffic(result.current.appendData, { up: 4, down: 2 } as Traffic);
 
-    await waitFor(() =>
-      expect(result.current.getDataForTimeRange(60)).toHaveLength(2),
-    );
+    expect(result.current.getDataForTimeRange(60)).toHaveLength(1);
 
-    await act(async () => {
+    appendTraffic(result.current.appendData, { up: 6, down: 1 } as Traffic);
+
+    expect(result.current.getDataForTimeRange(60)).toHaveLength(2);
+
+    act(() => {
       result.current.clearData();
     });
 
-    await waitFor(() =>
-      expect(result.current.getDataForTimeRange(60)).toHaveLength(0),
-    );
+    expect(result.current.getDataForTimeRange(60)).toHaveLength(0);
   });
 });

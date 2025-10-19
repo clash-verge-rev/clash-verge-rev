@@ -94,24 +94,25 @@ describe("WindowControls", () => {
     mockGetSystem.mockReturnValue("windows");
     mockUseWindowControls.mockReturnValue(controls);
 
-    let refValue!: WindowControlsHandle;
+    let refValue: WindowControlsHandle | null = null;
 
     render(
       <WindowControls
         ref={(value) => {
-          if (!value) {
-            throw new Error("Expected refValue to be assigned");
+          if (value) {
+            refValue = value;
           }
-          refValue = value;
         }}
       />,
     );
 
-    expect(refValue.maximized).toBe(true);
-    expect(refValue.currentWindow).toBe(controls.currentWindow);
-    expect(refValue.minimize).toBe(controls.minimize);
-    expect(refValue.close).toBe(controls.close);
-    expect(refValue.toggleMaximize).toBe(controls.toggleMaximize);
-    expect(refValue.toggleFullscreen).toBe(controls.toggleFullscreen);
+    expect(refValue).not.toBeNull();
+    const value = refValue!;
+    expect(value.maximized).toBe(true);
+    expect(value.currentWindow).toBe(controls.currentWindow);
+    expect(value.minimize).toBe(controls.minimize);
+    expect(value.close).toBe(controls.close);
+    expect(value.toggleMaximize).toBe(controls.toggleMaximize);
+    expect(value.toggleFullscreen).toBe(controls.toggleFullscreen);
   });
 });

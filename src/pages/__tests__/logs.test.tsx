@@ -9,7 +9,6 @@ import {
   baseStyledSelectController,
 } from "@/test/utils/base-controls-test-utils";
 
-const toggleLogEnabledMock = vi.fn();
 const refreshGetClashLogMock = vi.fn();
 
 let mockClashLogState: { enable: boolean; logFilter: string };
@@ -47,7 +46,7 @@ vi.mock("react-virtuoso", () => ({
   ),
 }));
 
-vi.mock("@/hooks/use-log-data-new", () => ({
+vi.mock("@/hooks/use-log-data", () => ({
   useLogData: () => ({
     response: { data: mockLogData },
     refreshGetClashLog: refreshGetClashLogMock,
@@ -58,17 +57,11 @@ vi.mock("@/services/states", () => ({
   useClashLog: () => [mockClashLogState, setClashLogMock] as const,
 }));
 
-vi.mock("@/services/global-log-service", () => ({
-  toggleLogEnabled: (...args: Parameters<typeof toggleLogEnabledMock>) =>
-    toggleLogEnabledMock(...args),
-}));
-
 const LogPageModule = await import("@/pages/logs");
 const LogPage = LogPageModule.default;
 
 describe("LogPage", () => {
   beforeEach(() => {
-    toggleLogEnabledMock.mockReset();
     refreshGetClashLogMock.mockReset();
     setClashLogMock = vi.fn((updater: any) => {
       mockClashLogState =
@@ -131,14 +124,12 @@ describe("LogPage", () => {
   });
 
   it("toggles log streaming and flips enable flag", async () => {
-    toggleLogEnabledMock.mockResolvedValue(undefined);
     const user = userEvent.setup();
     render(<LogPage />);
 
     const toggleButton = screen.getByTitle("Pause");
     await user.click(toggleButton);
 
-    expect(toggleLogEnabledMock).toHaveBeenCalledTimes(1);
     expect(mockClashLogState.enable).toBe(false);
   });
 
