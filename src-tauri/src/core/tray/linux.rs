@@ -98,9 +98,11 @@ impl<const MENU_ON_ACTIVATE: bool> KsniTray<MENU_ON_ACTIVATE> {
     fn convert_node(&self, node: &TrayMenuNode) -> MenuItem<Self> {
         match node {
             TrayMenuNode::Standard(item) => {
-                let mut standard = StandardItem::default();
-                standard.label = item.label.clone();
-                standard.enabled = item.enabled;
+                let mut standard = StandardItem {
+                    label: item.label.clone(),
+                    enabled: item.enabled,
+                    ..StandardItem::default()
+                };
                 if let Some(shortcut) = item.shortcut.as_ref() {
                     standard.shortcut = shortcut.to_ksni_shortcut();
                 }
@@ -111,10 +113,12 @@ impl<const MENU_ON_ACTIVATE: bool> KsniTray<MENU_ON_ACTIVATE> {
                 standard.into()
             }
             TrayMenuNode::Check(item) => {
-                let mut check = CheckmarkItem::default();
-                check.label = item.label.clone();
-                check.enabled = item.enabled;
-                check.checked = item.checked;
+                let mut check = CheckmarkItem {
+                    label: item.label.clone(),
+                    enabled: item.enabled,
+                    checked: item.checked,
+                    ..CheckmarkItem::default()
+                };
                 if let Some(shortcut) = item.shortcut.as_ref() {
                     check.shortcut = shortcut.to_ksni_shortcut();
                 }
@@ -126,11 +130,13 @@ impl<const MENU_ON_ACTIVATE: bool> KsniTray<MENU_ON_ACTIVATE> {
             }
             TrayMenuNode::Separator => MenuItem::Separator,
             TrayMenuNode::Submenu(submenu) => {
-                let mut ksni_submenu = SubMenu::default();
-                ksni_submenu.label = submenu.label.clone();
-                ksni_submenu.enabled = submenu.enabled;
-                ksni_submenu.submenu = self.build_menu_items(&submenu.items);
-                ksni_submenu.into()
+                SubMenu {
+                    label: submenu.label.clone(),
+                    enabled: submenu.enabled,
+                    submenu: self.build_menu_items(&submenu.items),
+                    ..SubMenu::default()
+                }
+                .into()
             }
         }
     }
@@ -393,25 +399,22 @@ impl Tray {
     async fn ensure_handle(&self, action: TrayClickAction) -> Result<LinuxTrayHandle> {
         let desired_variant = BackendVariant::from(action);
         let mut guard = self.handle.lock().await;
-        let mut recreate = match guard.as_ref() {
-            Some(handle) => handle.variant() != desired_variant || handle.is_closed(),
-            None => true,
-        };
+        let needs_new_handle = guard
+            .as_ref()
+            .map_or(true, |handle| handle.variant() != desired_variant || handle.is_closed());
 
-        if recreate {
+        if needs_new_handle {
             if let Some(existing) = guard.take() {
                 existing.shutdown().await;
             }
             let handle = LinuxTrayHandle::spawn(desired_variant, action).await?;
             *guard = Some(handle);
-            recreate = false;
         }
 
-        if recreate {
-            return Err(anyhow!("failed to recreate ksni tray handle"));
-        }
-
-        Ok(guard.as_ref().unwrap().clone())
+        guard
+            .as_ref()
+            .cloned()
+            .ok_or_else(|| anyhow!("failed to obtain ksni tray handle"))
     }
 
     pub async fn update_click_behavior(&self) -> Result<()> {
@@ -536,17 +539,6 @@ impl Tray {
         self.update_icon().await?;
         self.update_tooltip().await?;
         self.update_click_behavior().await?;
-        Ok(())
-    }
-
-    pub async fn create_tray_from_handle(&self, _app_handle: &AppHandle) -> Result<()> {
-        if handle::Handle::global().is_exiting() {
-            return Ok(());
-        }
-        self.ensure_handle(resolve_tray_click_action().await)
-            .await?;
-        self.update_all_states().await?;
-        info!(target: "app", "KSNI tray initialized");
         Ok(())
     }
 }

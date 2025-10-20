@@ -139,7 +139,8 @@ impl Timer {
         Ok(())
     }
 
-    /// 每 3 秒更新系统托盘菜单，总共执行 3 次
+    /// Schedule a tray menu refresh every three seconds.
+    #[cfg(not(target_os = "linux"))]
     pub fn add_update_tray_menu_task(&self) -> Result<()> {
         let tid = self.timer_count.fetch_add(1, Ordering::SeqCst);
         let delay_timer = self.delay_timer.write();

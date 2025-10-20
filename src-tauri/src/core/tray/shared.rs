@@ -215,6 +215,7 @@ impl MenuShortcut {
         Self(raw)
     }
 
+    #[cfg(not(target_os = "linux"))]
     pub fn raw(&self) -> &str {
         &self.0
     }
@@ -297,6 +298,7 @@ pub(crate) struct TrayCheckItem {
 
 #[derive(Clone, Debug)]
 pub(crate) struct TraySubmenu {
+    #[cfg_attr(target_os = "linux", allow(dead_code))]
     pub id: String,
     pub label: String,
     pub enabled: bool,
