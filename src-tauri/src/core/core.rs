@@ -31,8 +31,8 @@ use std::time::Instant;
 use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
 use tauri_plugin_mihomo::Error as MihomoError;
 use tauri_plugin_shell::ShellExt;
-use tokio::time::sleep;
 use tokio::sync::Semaphore;
+use tokio::time::sleep;
 
 // TODO:
 // - 重构，提升模式切换速度
@@ -136,7 +136,8 @@ impl CoreManager {
                     Err(e)
                 }
             }
-        }.await;
+        }
+        .await;
 
         drop(permit);
         result

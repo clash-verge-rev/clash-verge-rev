@@ -86,7 +86,12 @@ pub fn resolve_setup_async() {
     });
 
     let elapsed = start_time.elapsed();
-    logging!(info, Type::Setup, "异步设置任务启动完成，耗时: {:?}", elapsed);
+    logging!(
+        info,
+        Type::Setup,
+        "异步设置任务启动完成，耗时: {:?}",
+        elapsed
+    );
 
     if elapsed.as_secs() > 10 {
         logging!(warn, Type::Setup, "异步设置任务耗时较长({:?})", elapsed);
