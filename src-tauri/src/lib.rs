@@ -84,7 +84,7 @@ mod app_init {
         app.deep_link().on_open_url(|event| {
             let url = event.urls().first().map(|u| u.to_string());
             if let Some(url) = url {
-                AsyncHandler::spawn(|| async {
+                let _ = AsyncHandler::spawn(|| async {
                     if let Err(e) = resolve::resolve_scheme(url).await {
                         logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
                     }
@@ -123,11 +123,9 @@ mod app_init {
         Ok(())
     }
 
-    /// Generate all command handlers for the application
     pub fn generate_handlers()
     -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
         tauri::generate_handler![
-            // Common commands
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
             cmd::open_app_dir,
@@ -138,27 +136,22 @@ mod app_init {
             cmd::get_network_interfaces,
             cmd::get_system_hostname,
             cmd::restart_app,
-            // Core management
             cmd::start_core,
             cmd::stop_core,
             cmd::restart_core,
-            // Application lifecycle
             cmd::notify_ui_ready,
             cmd::update_ui_stage,
             cmd::get_running_mode,
             cmd::get_app_uptime,
             cmd::get_auto_launch_status,
             cmd::is_admin,
-            // Lightweight mode
             cmd::entry_lightweight_mode,
             cmd::exit_lightweight_mode,
-            // Service management
             cmd::install_service,
             cmd::uninstall_service,
             cmd::reinstall_service,
             cmd::repair_service,
             cmd::is_service_available,
-            // Clash core commands
             cmd::get_clash_info,
             cmd::patch_clash_config,
             cmd::patch_clash_mode,
@@ -178,7 +171,6 @@ mod app_init {
             cmd::get_dns_config_content,
             cmd::validate_dns_config,
             cmd::get_clash_logs,
-            // Verge configuration
             cmd::get_verge_config,
             cmd::patch_verge_config,
             cmd::test_delay,
@@ -188,7 +180,6 @@ mod app_init {
             cmd::open_devtools,
             cmd::exit_app,
             cmd::get_network_interfaces_info,
-            // Profile management
             cmd::get_profiles,
             cmd::enhance_profiles,
             cmd::patch_profiles_config,
@@ -202,10 +193,8 @@ mod app_init {
             cmd::read_profile_file,
             cmd::save_profile_file,
             cmd::get_next_update_time,
-            // Script validation
             cmd::script_validate_notice,
             cmd::validate_script_file,
-            // Backup and WebDAV
             cmd::create_local_backup,
             cmd::list_local_backup,
             cmd::delete_local_backup,
@@ -216,10 +205,8 @@ mod app_init {
             cmd::list_webdav_backup,
             cmd::delete_webdav_backup,
             cmd::restore_webdav_backup,
-            // Diagnostics and system info
             cmd::export_diagnostic_info,
             cmd::get_system_info,
-            // Media unlock checker
             cmd::get_unlock_items,
             cmd::check_media_unlock,
         ]
@@ -227,18 +214,15 @@ mod app_init {
 }
 
 pub fn run() {
-    // Setup singleton check
     if app_init::init_singleton_check().is_err() {
         return;
     }
 
     let _ = utils::dirs::init_portable_flag();
 
-    // Set Linux environment variable
     #[cfg(target_os = "linux")]
     linux::configure_environment();
 
-    // Create and configure the Tauri builder
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
             logging!(info, Type::Setup, "开始应用初始化...");
@@ -248,89 +232,56 @@ pub fn run() {
                 .set(app.app_handle().clone())
                 .expect("failed to set global app handle");
 
-            // Setup autostart plugin
             if let Err(e) = app_init::setup_autostart(app) {
                 logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
             }
 
-            // Setup deep links
             if let Err(e) = app_init::setup_deep_links(app) {
                 logging!(error, Type::Setup, "Failed to setup deep links: {}", e);
             }
 
-            // Setup window state management
             if let Err(e) = app_init::setup_window_state(app) {
                 logging!(error, Type::Setup, "Failed to setup window state: {}", e);
             }
 
-            logging!(info, Type::Setup, "执行主要设置操作...");
-
             resolve::resolve_setup_handle();
-            // 异步任务启动，不等待完成
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
 
-            logging!(info, Type::Setup, "初始化已启动，继续执行");
+            logging!(info, Type::Setup, "初始化已启动");
             Ok(())
         })
         .invoke_handler(app_init::generate_handlers());
 
-    /// Event handling helper functions
     mod event_handlers {
+        use super::*;
         use crate::core::handle;
 
-        use super::*;
-
-        /// Handle application ready/resumed events
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
-            // 双重检查：确保不在退出状态
             if handle::Handle::global().is_exiting() {
-                logging!(
-                    debug,
-                    Type::System,
-                    "handle_ready_resumed: 应用正在退出，跳过处理"
-                );
+                logging!(debug, Type::System, "应用正在退出，跳过处理");
                 return;
             }
 
-            logging!(info, Type::System, "应用就绪或恢复");
+            logging!(info, Type::System, "应用就绪");
             handle::Handle::global().init();
 
             #[cfg(target_os = "macos")]
-            {
-                if let Some(window) = _app_handle.get_webview_window("main") {
-                    logging!(info, Type::Window, "设置macOS窗口标题");
-                    let _ = window.set_title("Clash Verge");
-                }
+            if let Some(window) = _app_handle.get_webview_window("main") {
+                let _ = window.set_title("Clash Verge");
             }
         }
 
-        /// Handle application reopen events (macOS)
         #[cfg(target_os = "macos")]
         pub async fn handle_reopen(has_visible_windows: bool) {
-            logging!(
-                info,
-                Type::System,
-                "处理 macOS 应用重新打开事件: has_visible_windows={}",
-                has_visible_windows
-            );
-
             handle::Handle::global().init();
 
             if !has_visible_windows {
-                // 当没有可见窗口时，设置为 regular 模式并显示主窗口
                 handle::Handle::global().set_activation_policy_regular();
-
-                logging!(info, Type::System, "没有可见窗口，尝试显示主窗口");
-
-                let result = WindowManager::show_main_window().await;
-                logging!(info, Type::System, "窗口显示操作完成，结果: {:?}", result);
-            } else {
-                logging!(info, Type::System, "已有可见窗口，无需额外操作");
+                let _ = WindowManager::show_main_window().await;
             }
         }
 
-        /// Handle window close requests
         pub fn handle_window_close(api: &tauri::WindowEvent) {
             #[cfg(target_os = "macos")]
             handle::Handle::global().set_activation_policy_accessory();
@@ -339,20 +290,16 @@ pub fn run() {
                 return;
             }
 
-            log::info!(target: "app", "closing window...");
             if let tauri::WindowEvent::CloseRequested { api, .. } = api {
                 api.prevent_close();
                 if let Some(window) = core::handle::Handle::get_window() {
                     let _ = window.hide();
-                } else {
-                    logging!(warn, Type::Window, "尝试隐藏窗口但窗口不存在");
                 }
             }
         }
 
-        /// Handle window focus events
         pub fn handle_window_focus(focused: bool) {
-            AsyncHandler::spawn(move || async move {
+            let _ = AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge()
                     .await
                     .latest_ref()
@@ -363,92 +310,50 @@ pub fn run() {
                     #[cfg(target_os = "macos")]
                     {
                         use crate::core::hotkey::SystemHotkey;
-                        if let Err(e) = hotkey::Hotkey::global()
+                        let _ = hotkey::Hotkey::global()
                             .register_system_hotkey(SystemHotkey::CmdQ)
-                            .await
-                        {
-                            logging!(error, Type::Hotkey, "Failed to register CMD+Q: {}", e);
-                        }
-                        if let Err(e) = hotkey::Hotkey::global()
+                            .await;
+                        let _ = hotkey::Hotkey::global()
                             .register_system_hotkey(SystemHotkey::CmdW)
-                            .await
-                        {
-                            logging!(error, Type::Hotkey, "Failed to register CMD+W: {}", e);
-                        }
+                            .await;
                     }
 
-                    if !is_enable_global_hotkey
-                        && let Err(e) = hotkey::Hotkey::global().init().await
-                    {
-                        logging!(error, Type::Hotkey, "Failed to init hotkeys: {}", e);
+                    if !is_enable_global_hotkey {
+                        let _ = hotkey::Hotkey::global().init().await;
                     }
                     return;
                 }
 
-                // Handle unfocused state
                 #[cfg(target_os = "macos")]
                 {
                     use crate::core::hotkey::SystemHotkey;
-                    if let Err(e) =
-                        hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ)
-                    {
-                        logging!(error, Type::Hotkey, "Failed to unregister CMD+Q: {}", e);
-                    }
-                    if let Err(e) =
-                        hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW)
-                    {
-                        logging!(error, Type::Hotkey, "Failed to unregister CMD+W: {}", e);
-                    }
+                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 }
 
-                if !is_enable_global_hotkey && let Err(e) = hotkey::Hotkey::global().reset() {
-                    logging!(error, Type::Hotkey, "Failed to reset hotkeys: {}", e);
+                if !is_enable_global_hotkey {
+                    let _ = hotkey::Hotkey::global().reset();
                 }
             });
         }
 
-        /// Handle window destroyed events
         pub fn handle_window_destroyed() {
-            AsyncHandler::spawn(|| async {
-                if let Err(e) = handle::Handle::mihomo()
+            let _ = AsyncHandler::spawn(|| async {
+                let _ = handle::Handle::mihomo()
                     .await
                     .clear_all_ws_connections()
-                    .await
-                {
-                    logging!(warn, Type::Window, "清理 WebSocket 连接失败: {}", e);
-                } else {
-                    logging!(info, Type::Window, "WebSocket 连接已清理");
-                }
+                    .await;
             });
 
             #[cfg(target_os = "macos")]
             {
                 use crate::core::hotkey::SystemHotkey;
-                if let Err(e) =
-                    hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ)
-                {
-                    logging!(
-                        error,
-                        Type::Hotkey,
-                        "Failed to unregister CMD+Q on destroy: {}",
-                        e
-                    );
-                }
-                if let Err(e) =
-                    hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW)
-                {
-                    logging!(
-                        error,
-                        Type::Hotkey,
-                        "Failed to unregister CMD+W on destroy: {}",
-                        e
-                    );
-                }
+                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
             }
         }
     }
 
-    // Mock context for Clippy to avoid build errors
     #[cfg(feature = "clippy")]
     let context = tauri::test::mock_context(tauri::test::noop_assets());
     #[cfg(feature = "clippy")]
@@ -462,7 +367,6 @@ pub fn run() {
         std::process::exit(1);
     });
 
-    // Build the application
     #[cfg(not(feature = "clippy"))]
     let app = builder
         .build(tauri::generate_context!())
@@ -476,87 +380,61 @@ pub fn run() {
             std::process::exit(1);
         });
 
-    app.run(|app_handle, e| {
-        match e {
-            tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
-                // 如果正在退出，忽略 Ready/Resumed 事件
-                if core::handle::Handle::global().is_exiting() {
-                    logging!(debug, Type::System, "忽略 Ready/Resumed 事件，应用正在退出");
-                    return;
-                }
-                event_handlers::handle_ready_resumed(app_handle);
+    app.run(|app_handle, e| match e {
+        tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+            if core::handle::Handle::global().is_exiting() {
+                return;
             }
-            #[cfg(target_os = "macos")]
-            tauri::RunEvent::Reopen {
-                has_visible_windows,
-                ..
-            } => {
-                // 如果正在退出，忽略 Reopen 事件
-                if core::handle::Handle::global().is_exiting() {
-                    logging!(debug, Type::System, "忽略 Reopen 事件，应用正在退出");
-                    return;
-                }
-                AsyncHandler::spawn(move || async move {
-                    event_handlers::handle_reopen(has_visible_windows).await;
-                });
+            event_handlers::handle_ready_resumed(app_handle);
+        }
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Reopen {
+            has_visible_windows,
+            ..
+        } => {
+            if core::handle::Handle::global().is_exiting() {
+                return;
             }
-            tauri::RunEvent::ExitRequested { api, code, .. } => {
-                tauri::async_runtime::block_on(async {
-                    let _ = handle::Handle::mihomo()
-                        .await
-                        .clear_all_ws_connections()
-                        .await;
-                });
-                // 如果已经在退出流程中，不要阻止退出
-                if core::handle::Handle::global().is_exiting() {
-                    logging!(
-                        info,
-                        Type::System,
-                        "应用正在退出，允许 ExitRequested (code: {:?})",
-                        code
-                    );
-                    return;
-                }
+            let _ = AsyncHandler::spawn(move || async move {
+                event_handlers::handle_reopen(has_visible_windows).await;
+            });
+        }
+        tauri::RunEvent::ExitRequested { api, code, .. } => {
+            tauri::async_runtime::block_on(async {
+                let _ = handle::Handle::mihomo()
+                    .await
+                    .clear_all_ws_connections()
+                    .await;
+            });
 
-                // 只阻止外部的无退出码请求（如用户取消系统关机）
-                if code.is_none() {
-                    logging!(debug, Type::System, "阻止外部退出请求");
-                    api.prevent_exit();
-                }
+            if core::handle::Handle::global().is_exiting() {
+                return;
             }
-            tauri::RunEvent::Exit => {
-                let handle = core::handle::Handle::global();
 
-                if handle.is_exiting() {
-                    logging!(
-                        debug,
-                        Type::System,
-                        "Exit事件触发，但退出流程已执行，跳过重复清理"
-                    );
-                } else {
-                    logging!(debug, Type::System, "Exit事件触发，执行清理流程");
-                    handle.set_is_exiting();
-                    EventDrivenProxyManager::global().notify_app_stopping();
-                    feat::clean();
-                }
+            if code.is_none() {
+                api.prevent_exit();
             }
-            tauri::RunEvent::WindowEvent { label, event, .. } => {
-                if label == "main" {
-                    match event {
-                        tauri::WindowEvent::CloseRequested { .. } => {
-                            event_handlers::handle_window_close(&event);
-                        }
-                        tauri::WindowEvent::Focused(focused) => {
-                            event_handlers::handle_window_focus(focused);
-                        }
-                        tauri::WindowEvent::Destroyed => {
-                            event_handlers::handle_window_destroyed();
-                        }
-                        _ => {}
-                    }
-                }
+        }
+        tauri::RunEvent::Exit => {
+            let handle = core::handle::Handle::global();
+            if !handle.is_exiting() {
+                handle.set_is_exiting();
+                EventDrivenProxyManager::global().notify_app_stopping();
+                feat::clean();
+            }
+        }
+        tauri::RunEvent::WindowEvent { label, event, .. } if label == "main" => match event {
+            tauri::WindowEvent::CloseRequested { .. } => {
+                event_handlers::handle_window_close(&event);
+            }
+            tauri::WindowEvent::Focused(focused) => {
+                event_handlers::handle_window_focus(focused);
+            }
+            tauri::WindowEvent::Destroyed => {
+                event_handlers::handle_window_destroyed();
             }
             _ => {}
-        }
+        },
+        _ => {}
     });
 }
