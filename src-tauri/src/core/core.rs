@@ -27,9 +27,13 @@ use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
-#[cfg(target_os = "windows")]
-use std::time::Instant;
-use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
+use std::{
+    error::Error,
+    fmt,
+    path::PathBuf,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use tauri_plugin_mihomo::Error as MihomoError;
 use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
@@ -42,6 +46,7 @@ use tokio::time::sleep;
 pub struct CoreManager {
     running: Arc<Mutex<RunningMode>>,
     child_sidecar: Arc<Mutex<Option<CommandChildGuard>>>,
+    last_config_update: Arc<Mutex<Option<Instant>>>,
 }
 
 /// 内核运行模式
@@ -91,6 +96,18 @@ impl CoreManager {
         if handle::Handle::global().is_exiting() {
             logging!(info, Type::Config, "应用正在退出，跳过验证");
             return Ok((true, String::new()));
+        }
+
+        let now = Instant::now();
+        {
+            let mut last = self.last_config_update.lock();
+            if let Some(last_time) = *last
+                && now.duration_since(last_time) < Duration::from_millis(500)
+            {
+                logging!(debug, Type::Config, "防抖：跳过重复的配置更新请求");
+                return Ok((true, String::new()));
+            }
+            *last = Some(now);
         }
 
         // 1. 先生成新的配置内容
@@ -628,6 +645,7 @@ impl Default for CoreManager {
         CoreManager {
             running: Arc::new(Mutex::new(RunningMode::NotRunning)),
             child_sidecar: Arc::new(Mutex::new(None)),
+            last_config_update: Arc::new(Mutex::new(None)),
         }
     }
 }

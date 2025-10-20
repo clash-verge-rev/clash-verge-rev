@@ -10,9 +10,8 @@ use ksni::{
     Icon, ToolTip, TrayMethods,
     menu::{CheckmarkItem, MenuItem, StandardItem, SubMenu},
 };
-use log::{info, warn};
+use log::warn;
 use parking_lot::Mutex;
-use tauri::AppHandle;
 use tokio::sync::Mutex as AsyncMutex;
 
 use crate::{core::handle, process::AsyncHandler, singleton_lazy};
@@ -129,15 +128,13 @@ impl<const MENU_ON_ACTIVATE: bool> KsniTray<MENU_ON_ACTIVATE> {
                 check.into()
             }
             TrayMenuNode::Separator => MenuItem::Separator,
-            TrayMenuNode::Submenu(submenu) => {
-                SubMenu {
-                    label: submenu.label.clone(),
-                    enabled: submenu.enabled,
-                    submenu: self.build_menu_items(&submenu.items),
-                    ..SubMenu::default()
-                }
-                .into()
+            TrayMenuNode::Submenu(submenu) => SubMenu {
+                label: submenu.label.clone(),
+                enabled: submenu.enabled,
+                submenu: self.build_menu_items(&submenu.items),
+                ..SubMenu::default()
             }
+            .into(),
         }
     }
 
@@ -401,7 +398,7 @@ impl Tray {
         let mut guard = self.handle.lock().await;
         let needs_new_handle = guard
             .as_ref()
-            .map_or(true, |handle| handle.variant() != desired_variant || handle.is_closed());
+            .is_none_or(|handle| handle.variant() != desired_variant || handle.is_closed());
 
         if needs_new_handle {
             if let Some(existing) = guard.take() {
