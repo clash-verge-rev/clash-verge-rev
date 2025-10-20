@@ -257,7 +257,11 @@ impl CoreManager {
     async fn cleanup_orphaned_mihomo_processes(&self) -> Result<()> {
         logging!(info, Type::Core, "开始清理多余的 mihomo 进程");
 
-        let current_pid = self.child_sidecar.lock().as_ref().and_then(|child| child.pid());
+        let current_pid = self
+            .child_sidecar
+            .lock()
+            .as_ref()
+            .and_then(|child| child.pid());
         let target_processes = ["verge-mihomo", "verge-mihomo-alpha"];
 
         let process_futures = target_processes.iter().map(|&target| {
@@ -286,7 +290,8 @@ impl CoreManager {
             return Ok(());
         }
 
-        let kill_futures = pids_to_kill.iter()
+        let kill_futures = pids_to_kill
+            .iter()
             .map(|(pid, name)| self.kill_process_with_verification(*pid, name.clone()));
 
         let killed_count = futures::future::join_all(kill_futures)
@@ -338,16 +343,19 @@ impl CoreManager {
 
                     if Process32FirstW(snapshot, &mut pe32) != 0 {
                         loop {
-                            let end_pos = pe32.szExeFile.iter().position(|&x| x == 0)
+                            let end_pos = pe32
+                                .szExeFile
+                                .iter()
+                                .position(|&x| x == 0)
                                 .unwrap_or(pe32.szExeFile.len());
-                            
+
                             if end_pos > 0 {
                                 let exe_file = String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
                                 if exe_file.eq_ignore_ascii_case(&process_name_clone) {
                                     pids.push(pe32.th32ProcessID);
                                 }
                             }
-                            
+
                             if Process32NextW(snapshot, &mut pe32) == 0 {
                                 break;
                             }
@@ -393,7 +401,13 @@ impl CoreManager {
     }
 
     async fn kill_process_with_verification(&self, pid: u32, process_name: String) -> bool {
-        logging!(info, Type::Core, "尝试终止进程: {} (PID: {})", process_name, pid);
+        logging!(
+            info,
+            Type::Core,
+            "尝试终止进程: {} (PID: {})",
+            process_name,
+            pid
+        );
 
         #[cfg(windows)]
         let success = {
@@ -423,17 +437,35 @@ impl CoreManager {
             .unwrap_or(false);
 
         if !success {
-            logging!(warn, Type::Core, "无法终止进程: {} (PID: {})", process_name, pid);
+            logging!(
+                warn,
+                Type::Core,
+                "无法终止进程: {} (PID: {})",
+                process_name,
+                pid
+            );
             return false;
         }
 
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
         if self.is_process_running(pid).await.unwrap_or(false) {
-            logging!(warn, Type::Core, "进程 {} (PID: {}) 终止命令成功但进程仍在运行", process_name, pid);
+            logging!(
+                warn,
+                Type::Core,
+                "进程 {} (PID: {}) 终止命令成功但进程仍在运行",
+                process_name,
+                pid
+            );
             false
         } else {
-            logging!(info, Type::Core, "成功终止进程: {} (PID: {})", process_name, pid);
+            logging!(
+                info,
+                Type::Core,
+                "成功终止进程: {} (PID: {})",
+                process_name,
+                pid
+            );
             true
         }
     }
@@ -500,7 +532,7 @@ impl CoreManager {
         AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
                 match event {
-                    tauri_plugin_shell::process::CommandEvent::Stdout(line) 
+                    tauri_plugin_shell::process::CommandEvent::Stdout(line)
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
                         let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());

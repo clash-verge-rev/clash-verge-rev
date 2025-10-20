@@ -254,8 +254,8 @@ pub fn run() {
         .invoke_handler(app_init::generate_handlers());
 
     mod event_handlers {
-        use crate::core::handle;
         use super::*;
+        use crate::core::handle;
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
@@ -310,8 +310,12 @@ pub fn run() {
                     #[cfg(target_os = "macos")]
                     {
                         use crate::core::hotkey::SystemHotkey;
-                        let _ = hotkey::Hotkey::global().register_system_hotkey(SystemHotkey::CmdQ).await;
-                        let _ = hotkey::Hotkey::global().register_system_hotkey(SystemHotkey::CmdW).await;
+                        let _ = hotkey::Hotkey::global()
+                            .register_system_hotkey(SystemHotkey::CmdQ)
+                            .await;
+                        let _ = hotkey::Hotkey::global()
+                            .register_system_hotkey(SystemHotkey::CmdW)
+                            .await;
                     }
 
                     if !is_enable_global_hotkey {
@@ -354,69 +358,83 @@ pub fn run() {
     let context = tauri::test::mock_context(tauri::test::noop_assets());
     #[cfg(feature = "clippy")]
     let app = builder.build(context).unwrap_or_else(|e| {
-        logging!(error, Type::Setup, "Failed to build Tauri application: {}", e);
+        logging!(
+            error,
+            Type::Setup,
+            "Failed to build Tauri application: {}",
+            e
+        );
         std::process::exit(1);
     });
 
     #[cfg(not(feature = "clippy"))]
-    let app = builder.build(tauri::generate_context!()).unwrap_or_else(|e| {
-        logging!(error, Type::Setup, "Failed to build Tauri application: {}", e);
-        std::process::exit(1);
-    });
+    let app = builder
+        .build(tauri::generate_context!())
+        .unwrap_or_else(|e| {
+            logging!(
+                error,
+                Type::Setup,
+                "Failed to build Tauri application: {}",
+                e
+            );
+            std::process::exit(1);
+        });
 
-    app.run(|app_handle, e| {
-        match e {
-            tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
-                if core::handle::Handle::global().is_exiting() {
-                    return;
-                }
-                event_handlers::handle_ready_resumed(app_handle);
+    app.run(|app_handle, e| match e {
+        tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+            if core::handle::Handle::global().is_exiting() {
+                return;
             }
-            #[cfg(target_os = "macos")]
-            tauri::RunEvent::Reopen { has_visible_windows, .. } => {
-                if core::handle::Handle::global().is_exiting() {
-                    return;
-                }
-                let _ = AsyncHandler::spawn(move || async move {
-                    event_handlers::handle_reopen(has_visible_windows).await;
-                });
+            event_handlers::handle_ready_resumed(app_handle);
+        }
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Reopen {
+            has_visible_windows,
+            ..
+        } => {
+            if core::handle::Handle::global().is_exiting() {
+                return;
             }
-            tauri::RunEvent::ExitRequested { api, code, .. } => {
-                tauri::async_runtime::block_on(async {
-                    let _ = handle::Handle::mihomo().await.clear_all_ws_connections().await;
-                });
+            let _ = AsyncHandler::spawn(move || async move {
+                event_handlers::handle_reopen(has_visible_windows).await;
+            });
+        }
+        tauri::RunEvent::ExitRequested { api, code, .. } => {
+            tauri::async_runtime::block_on(async {
+                let _ = handle::Handle::mihomo()
+                    .await
+                    .clear_all_ws_connections()
+                    .await;
+            });
 
-                if core::handle::Handle::global().is_exiting() {
-                    return;
-                }
+            if core::handle::Handle::global().is_exiting() {
+                return;
+            }
 
-                if code.is_none() {
-                    api.prevent_exit();
-                }
+            if code.is_none() {
+                api.prevent_exit();
             }
-            tauri::RunEvent::Exit => {
-                let handle = core::handle::Handle::global();
-                if !handle.is_exiting() {
-                    handle.set_is_exiting();
-                    EventDrivenProxyManager::global().notify_app_stopping();
-                    feat::clean();
-                }
+        }
+        tauri::RunEvent::Exit => {
+            let handle = core::handle::Handle::global();
+            if !handle.is_exiting() {
+                handle.set_is_exiting();
+                EventDrivenProxyManager::global().notify_app_stopping();
+                feat::clean();
             }
-            tauri::RunEvent::WindowEvent { label, event, .. } if label == "main" => {
-                match event {
-                    tauri::WindowEvent::CloseRequested { .. } => {
-                        event_handlers::handle_window_close(&event);
-                    }
-                    tauri::WindowEvent::Focused(focused) => {
-                        event_handlers::handle_window_focus(focused);
-                    }
-                    tauri::WindowEvent::Destroyed => {
-                        event_handlers::handle_window_destroyed();
-                    }
-                    _ => {}
-                }
+        }
+        tauri::RunEvent::WindowEvent { label, event, .. } if label == "main" => match event {
+            tauri::WindowEvent::CloseRequested { .. } => {
+                event_handlers::handle_window_close(&event);
+            }
+            tauri::WindowEvent::Focused(focused) => {
+                event_handlers::handle_window_focus(focused);
+            }
+            tauri::WindowEvent::Destroyed => {
+                event_handlers::handle_window_destroyed();
             }
             _ => {}
-        }
+        },
+        _ => {}
     });
 }
