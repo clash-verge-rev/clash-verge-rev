@@ -10,7 +10,7 @@ use ksni::{
     Icon, ToolTip, TrayMethods,
     menu::{CheckmarkItem, MenuItem, StandardItem, SubMenu},
 };
-use log::warn;
+use log::{debug, warn};
 use parking_lot::Mutex;
 use tokio::sync::Mutex as AsyncMutex;
 
@@ -140,6 +140,7 @@ impl<const MENU_ON_ACTIVATE: bool> KsniTray<MENU_ON_ACTIVATE> {
 
     fn schedule_menu_action(id: String) {
         AsyncHandler::spawn(move || async move {
+            debug!(target: "app", "ksni: scheduling menu action for id={id}");
             handle_menu_command(&id).await;
             if let Err(e) = crate::core::tray::Tray::global().update_all_states().await {
                 warn!(target: "app", "更新托盘状态失败: {e}");
@@ -387,6 +388,7 @@ impl Tray {
         if handle::Handle::global().is_exiting() {
             return Ok(());
         }
+        debug!(target: "app", "ksni: initializing tray");
         self.ensure_handle(resolve_tray_click_action().await)
             .await?;
         self.update_all_states().await?;
@@ -401,11 +403,19 @@ impl Tray {
             .is_none_or(|handle| handle.variant() != desired_variant || handle.is_closed());
 
         if needs_new_handle {
+            debug!(
+                target: "app",
+                "ksni: spawning new tray handle for variant={:?}",
+                desired_variant
+            );
             if let Some(existing) = guard.take() {
+                debug!(target: "app", "ksni: shutting down existing tray handle");
                 existing.shutdown().await;
             }
             let handle = LinuxTrayHandle::spawn(desired_variant, action).await?;
             *guard = Some(handle);
+        } else {
+            debug!(target: "app", "ksni: reusing existing tray handle for variant={:?}", desired_variant);
         }
 
         guard
@@ -420,6 +430,7 @@ impl Tray {
         }
 
         let action = resolve_tray_click_action().await;
+        debug!(target: "app", "ksni: updating click behavior to action={:?}", action);
         let handle = self.ensure_handle(action).await?;
         handle.update_click_action(action).await?;
         Ok(())
@@ -431,6 +442,7 @@ impl Tray {
         }
 
         if self.menu_updating.load(Ordering::Acquire) {
+            debug!(target: "app", "ksni: menu update already in progress, skipping");
             return Ok(());
         }
 
@@ -447,6 +459,7 @@ impl Tray {
         };
 
         if !should_force_update {
+            debug!(target: "app", "ksni: menu update throttled by debounce");
             return Ok(());
         }
 
@@ -459,6 +472,11 @@ impl Tray {
 
     async fn update_menu_internal(&self) -> Result<()> {
         let (menu_model, _) = generate_tray_menu_model().await?;
+        debug!(
+            target: "app",
+            "ksni: rebuilding tray menu with {} items",
+            menu_model.items.len()
+        );
 
         let action = resolve_tray_click_action().await;
         let handle = self.ensure_handle(action).await?;
@@ -481,6 +499,12 @@ impl Tray {
         };
 
         let icons = convert_image_to_ksni_icons(&icon_bytes.bytes)?;
+        debug!(
+            target: "app",
+            "ksni: updating icon with {} variants (override={})",
+            icons.len(),
+            icon_bytes.is_override
+        );
         let icon_name = if icon_bytes.is_override {
             "user-tray-icon".to_string()
         } else {
@@ -510,6 +534,7 @@ impl Tray {
         } else {
             tooltip.title = tooltip_text;
         }
+        debug!(target: "app", "ksni: updating tooltip title='{}'", tooltip.title);
 
         let action = resolve_tray_click_action().await;
         let handle = self.ensure_handle(action).await?;
@@ -548,6 +573,14 @@ fn convert_image_to_ksni_icons(bytes: &[u8]) -> Result<Vec<Icon>> {
         .context("failed to decode tray icon image")?;
     let rgba = img.to_rgba8();
     let (width, height) = rgba.dimensions();
+
+    debug!(
+        target: "app",
+        "ksni: source tray icon dimensions {}x{} (format={:?})",
+        width,
+        height,
+        format
+    );
 
     let mut icons = Vec::new();
     let mut target_sizes = vec![16_u32, 22, 24, 32, 48, 64];
