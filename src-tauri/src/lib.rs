@@ -408,6 +408,18 @@ pub fn run() {
 
         /// Handle window destroyed events
         pub fn handle_window_destroyed() {
+            AsyncHandler::spawn(|| async {
+                if let Err(e) = handle::Handle::mihomo()
+                    .await
+                    .clear_all_ws_connections()
+                    .await
+                {
+                    logging!(warn, Type::Window, "清理 WebSocket 连接失败: {}", e);
+                } else {
+                    logging!(info, Type::Window, "WebSocket 连接已清理");
+                }
+            });
+
             #[cfg(target_os = "macos")]
             {
                 use crate::core::hotkey::SystemHotkey;
