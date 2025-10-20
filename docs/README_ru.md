@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="./src-tauri/icons/icon.png" alt="Clash" width="128" />
+  <img src="../src-tauri/icons/icon.png" alt="Clash" width="128" />
   <br>
   Continuation of <a href="https://github.com/zzzgydi/clash-verge">Clash Verge</a>
   <br>
@@ -9,13 +9,19 @@
 Clash Meta GUI базируется на <a href="https://github.com/tauri-apps/tauri">Tauri</a>.
 </h3>
 
-[![中文](https://img.shields.io/badge/lang-中文-red.svg)](README.md)
-[![Russian](https://img.shields.io/badge/lang-Rus-blue.svg)](README_ru.md)
+<p align="center">
+  Языки:
+  <a href="../README.md">简体中文</a> ·
+  <a href="./README_en.md">English</a> ·
+  <a href="./README_es.md">Español</a> ·
+  <a href="./README_ru.md">Русский</a> ·
+  <a href="./README_ja.md">日本語</a>
+</p>
 ## Предпросмотр
 
-| Тёмная тема                             | Светлая тема                             |
-| -------------------------------- | --------------------------------- |
-| ![Тёмная тема](./docs/preview_dark.png) | ![Светлая тема](./docs/preview_light.png) |
+| Тёмная тема                        | Светлая тема                         |
+| ---------------------------------- | ------------------------------------ |
+| ![Тёмная тема](./preview_dark.png) | ![Светлая тема](./preview_light.png) |
 
 ## Установка
 
@@ -25,11 +31,11 @@ Clash Meta GUI базируется на <a href="https://github.com/tauri-apps/
 
 #### Как выбрать дистрибутив?
 
-| Версия        | Характеристики                                     | Ссылка                                                                                   |
-| :---------- | :--------------------------------------- | :------------------------------------------------------------------------------------- |
-| Stable      | Официальный релиз, высокая надежность, подходит для повседневного использования.         | [Release](https://github.com/clash-verge-rev/clash-verge-rev/releases)                 |
-| Alpha(неиспользуемый) | Тестирование процесса публикации.                           | [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha)         |
-| AutoBuild   | Версия с постоянным обновлением, подходящая для тестирования и обратной связи. Может содержать дефекты. | [AutoBuild](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/autobuild) |
+| Версия                | Характеристики                                                                                          | Ссылка                                                                                 |
+| :-------------------- | :------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------- |
+| Stable                | Официальный релиз, высокая надежность, подходит для повседневного использования.                        | [Release](https://github.com/clash-verge-rev/clash-verge-rev/releases)                 |
+| Alpha(неиспользуемый) | Тестирование процесса публикации.                                                                       | [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha)         |
+| AutoBuild             | Версия с постоянным обновлением, подходящая для тестирования и обратной связи. Может содержать дефекты. | [AutoBuild](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/autobuild) |
 
 #### Инструкции по установке и ответы на часто задаваемые вопросы можно найти на [странице документации](https://clash-verge-rev.github.io/)
 
@@ -84,7 +90,7 @@ Clash Meta GUI базируется на <a href="https://github.com/tauri-apps/
 
 ## Разработка
 
-Дополнительные сведения смотреть в файле [CONTRIBUTING.md](./CONTRIBUTING.md).
+Дополнительные сведения смотреть в файле [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 Для запуска сервера разработки выполните следующие команды после установки всех необходимых компонентов для **Tauri**:
 
@@ -107,8 +113,8 @@ Clash Verge rev был основан на этих проектах или вд
 - [Dreamacro/clash](https://github.com/Dreamacro/clash): Правило-ориентированный туннель на Go.
 - [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo): Правило-ориентированный туннель на Go.
 - [Fndroid/clash_for_windows_pkg](https://github.com/Fndroid/clash_for_windows_pkg): Графический интерфейс пользователя для Windows/macOS на основе Clash.
-- [vitejs/vite](https://github.com/vitejs/vite):  Инструменты нового поколения для фронтенда. Они быстрые!
+- [vitejs/vite](https://github.com/vitejs/vite): Инструменты нового поколения для фронтенда. Они быстрые!
 
 ## Лицензия
 
-GPL-3.0 License. Подробности смотрите в [Лицензии](./LICENSE).
+GPL-3.0 License. Подробности смотрите в [Лицензии](../LICENSE).
