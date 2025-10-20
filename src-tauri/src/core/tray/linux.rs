@@ -4,8 +4,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{Context, Result, anyhow};
-use image::ImageFormat;
+use anyhow::{anyhow, Context, Result};
+use image::{ImageFormat, ImageReader};
 use ksni::{
     Icon, ToolTip, TrayMethods,
     menu::{CheckmarkItem, MenuItem, StandardItem, SubMenu},
@@ -15,18 +15,13 @@ use parking_lot::Mutex;
 use tauri::AppHandle;
 use tokio::sync::Mutex as AsyncMutex;
 
-use crate::singleton_lazy;
+use crate::{core::handle, process::AsyncHandler, singleton_lazy};
 
-use crate::process::AsyncHandler;
-
-use super::{
-    handle,
-    shared::{
-        MenuShortcut, TrayClickAction, TrayIconBytes, TrayMenuModel, TrayMenuNode, TraySubmenu,
-        build_tooltip_text, generate_tray_menu_model, get_common_tray_icon, get_sysproxy_tray_icon,
-        get_tun_tray_icon, handle_menu_command, load_tray_toggle_state, perform_tray_click_action,
-        resolve_tray_click_action, should_handle_tray_click,
-    },
+use super::shared::{
+    TrayClickAction, TrayMenuModel, TrayMenuNode, build_tooltip_text, generate_tray_menu_model,
+    get_common_tray_icon, get_sysproxy_tray_icon, get_tun_tray_icon, handle_menu_command,
+    load_tray_toggle_state, perform_tray_click_action, resolve_tray_click_action,
+    should_handle_tray_click,
 };
 
 const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
@@ -558,7 +553,7 @@ impl Tray {
 
 fn convert_image_to_ksni_icons(bytes: &[u8]) -> Result<Vec<Icon>> {
     let format = image::guess_format(bytes).unwrap_or(ImageFormat::Ico);
-    let reader = image::io::Reader::with_format(Cursor::new(bytes), format);
+    let reader = ImageReader::with_format(Cursor::new(bytes), format);
     let img = reader
         .decode()
         .context("failed to decode tray icon image")?;
