@@ -67,7 +67,7 @@ pub fn embed_server() {
         .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
-    AsyncHandler::spawn(move || async move {
+    let _ = AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").and_then(|| async {
             logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
             if !lightweight::exit_lightweight_mode().await {
@@ -84,20 +84,17 @@ pub fn embed_server() {
         let verge_config = Config::verge().await;
         let clash_config = Config::clash().await;
 
-        let content = verge_config
+        let pac_content = verge_config
             .latest_ref()
             .pac_file_content
             .clone()
             .unwrap_or(DEFAULT_PAC.into());
 
-        let mixed_port = verge_config
+        let pac_port = verge_config
             .latest_ref()
             .verge_mixed_port
             .unwrap_or(clash_config.latest_ref().get_mixed_port());
 
-        // Clone the content and port for the closure to avoid borrowing issues
-        let pac_content = content.clone();
-        let pac_port = mixed_port;
         let pac = warp::path!("commands" / "pac").map(move || {
             let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
             warp::http::Response::builder()
@@ -110,9 +107,8 @@ pub fn embed_server() {
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
             .map(|query: QueryParam| {
-                // Spawn async work in a fire-and-forget manner
                 let param = query.param.clone();
-                tokio::task::spawn_local(async move {
+                let _ = tokio::task::spawn_local(async move {
                     logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
                 });
                 warp::reply::with_status::<String>("ok".into(), warp::http::StatusCode::OK)

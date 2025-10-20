@@ -46,14 +46,10 @@ pub struct CoreManager {
     last_update: Arc<Mutex<Option<Instant>>>,
 }
 
-/// 内核运行模式
-#[derive(Debug, Clone, serde::Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, serde::Serialize, PartialEq, Eq)]
 pub enum RunningMode {
-    /// 服务模式运行
     Service,
-    /// Sidecar 模式运行
     Sidecar,
-    /// 未运行
     NotRunning,
 }
 
@@ -69,12 +65,16 @@ impl fmt::Display for RunningMode {
 
 use crate::config::IVerge;
 
+const CONNECTION_ERROR_PATTERNS: &[&str] = &[
+    "Failed to create connection",
+    "The system cannot find the file specified",
+    "operation timed out",
+    "connection refused",
+];
+
 impl CoreManager {
-    /// 使用默认配置
     pub async fn use_default_config(&self, msg_type: &str, msg_content: &str) -> Result<()> {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
-
-        // Extract clash config before async operations
         let clash_config = Config::clash().await.latest_ref().0.clone();
 
         *Config::runtime().await.draft_mut() = Box::new(IRuntime {
@@ -215,115 +215,85 @@ impl CoreManager {
     }
 
     fn should_restart_on_reload_error(err: &MihomoError) -> bool {
-        match err {
-            MihomoError::ConnectionFailed | MihomoError::ConnectionLost => true,
-            MihomoError::Io(io_err) => matches!(
-                io_err.kind(),
+        fn is_connection_io_error(kind: std::io::ErrorKind) -> bool {
+            matches!(
+                kind,
                 std::io::ErrorKind::ConnectionAborted
                     | std::io::ErrorKind::ConnectionRefused
                     | std::io::ErrorKind::ConnectionReset
                     | std::io::ErrorKind::NotFound
-            ),
+            )
+        }
+
+        fn contains_error_pattern(text: &str) -> bool {
+            CONNECTION_ERROR_PATTERNS.iter().any(|p| text.contains(p))
+        }
+
+        match err {
+            MihomoError::ConnectionFailed | MihomoError::ConnectionLost => true,
+            MihomoError::Io(io_err) => is_connection_io_error(io_err.kind()),
             MihomoError::Reqwest(req_err) => {
                 if req_err.is_connect() || req_err.is_timeout() {
                     return true;
                 }
-                let err_text = req_err.to_string();
                 if let Some(source) = req_err.source() {
                     if let Some(io_err) = source.downcast_ref::<std::io::Error>() {
-                        if matches!(
-                            io_err.kind(),
-                            std::io::ErrorKind::ConnectionAborted
-                                | std::io::ErrorKind::ConnectionRefused
-                                | std::io::ErrorKind::ConnectionReset
-                                | std::io::ErrorKind::NotFound
-                        ) {
+                        if is_connection_io_error(io_err.kind()) {
                             return true;
                         }
-                    } else if source.to_string().contains("Failed to create connection") {
+                    } else if contains_error_pattern(&source.to_string()) {
                         return true;
                     }
                 }
-                err_text.contains("Failed to create connection")
-                    || err_text.contains("The system cannot find the file specified")
-                    || err_text.contains("operation timed out")
-                    || err_text.contains("connection refused")
+                contains_error_pattern(&req_err.to_string())
             }
-            MihomoError::FailedResponse(msg) => {
-                msg.contains("Failed to create connection") || msg.contains("connection refused")
-            }
+            MihomoError::FailedResponse(msg) => contains_error_pattern(msg),
             _ => false,
         }
     }
 }
 
 impl CoreManager {
-    /// 清理多余的 mihomo 进程
     async fn cleanup_orphaned_mihomo_processes(&self) -> Result<()> {
         logging!(info, Type::Core, "开始清理多余的 mihomo 进程");
 
-        // 获取当前管理的进程 PID
-        let current_pid = {
-            let child_guard = self.child_sidecar.lock();
-            child_guard.as_ref().map(|child| child.pid())
-        };
-
+        let current_pid = self.child_sidecar.lock().as_ref().and_then(|child| child.pid());
         let target_processes = ["verge-mihomo", "verge-mihomo-alpha"];
 
-        // 并行查找所有目标进程
-        let mut process_futures = Vec::new();
-        for &target in &target_processes {
+        let process_futures = target_processes.iter().map(|&target| {
             let process_name = if cfg!(windows) {
                 format!("{target}.exe")
             } else {
-                target.into()
+                target.to_string()
             };
-            process_futures.push(self.find_processes_by_name(process_name, target));
-        }
+            self.find_processes_by_name(process_name, target)
+        });
 
         let process_results = futures::future::join_all(process_futures).await;
 
-        // 收集所有需要终止的进程PID
-        let mut pids_to_kill = Vec::new();
-        for result in process_results {
-            match result {
-                Ok((pids, process_name)) => {
-                    for pid in pids {
-                        // 跳过当前管理的进程
-                        if let Some(current) = current_pid
-                            && Some(pid) == current
-                        {
-                            logging!(
-                                debug,
-                                Type::Core,
-                                "跳过当前管理的进程: {} (PID: {})",
-                                process_name,
-                                pid
-                            );
-                            continue;
-                        }
-                        pids_to_kill.push((pid, process_name.clone()));
-                    }
-                }
-                Err(e) => {
-                    logging!(debug, Type::Core, "查找进程时发生错误: {}", e);
-                }
-            }
-        }
+        let pids_to_kill: Vec<_> = process_results
+            .into_iter()
+            .filter_map(|result| result.ok())
+            .flat_map(|(pids, process_name)| {
+                pids.into_iter()
+                    .filter(|&pid| Some(pid) != current_pid)
+                    .map(move |pid| (pid, process_name.clone()))
+            })
+            .collect();
 
         if pids_to_kill.is_empty() {
             logging!(debug, Type::Core, "未发现多余的 mihomo 进程");
             return Ok(());
         }
 
-        let mut kill_futures = Vec::new();
-        for (pid, process_name) in &pids_to_kill {
-            kill_futures.push(self.kill_process_with_verification(*pid, process_name.clone()));
-        }
+        let kill_futures = pids_to_kill.iter()
+            .map(|(pid, name)| self.kill_process_with_verification(*pid, name.clone()));
 
-        let kill_results = futures::future::join_all(kill_futures).await;
-
-        let killed_count = kill_results.into_iter().filter(|&success| success).count();
+        let killed_count = futures::future::join_all(kill_futures)
+            .await
+            .into_iter()
+            .filter(|&success| success)
+            .count();
 
         if killed_count > 0 {
             logging!(
@@ -355,10 +325,9 @@ impl CoreManager {
 
             let process_name_clone = process_name.clone();
             let pids = AsyncHandler::spawn_blocking(move || -> Result<Vec<u32>> {
-                let mut pids = Vec::new();
+                let mut pids = Vec::with_capacity(8);
 
                 unsafe {
-                    // 创建进程快照
                     let snapshot: HANDLE = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
                     if snapshot == winapi::um::handleapi::INVALID_HANDLE_VALUE {
                         return Err(anyhow::anyhow!("Failed to create process snapshot"));
@@ -367,28 +336,24 @@ impl CoreManager {
                     let mut pe32: PROCESSENTRY32W = mem::zeroed();
                     pe32.dwSize = mem::size_of::<PROCESSENTRY32W>() as u32;
 
-                    // 获取第一个进程
                     if Process32FirstW(snapshot, &mut pe32) != 0 {
                         loop {
-                            // 将宽字符转换为String
-                            let end_pos = pe32
-                                .szExeFile
-                                .iter()
-                                .position(|&x| x == 0)
+                            let end_pos = pe32.szExeFile.iter().position(|&x| x == 0)
                                 .unwrap_or(pe32.szExeFile.len());
-                            let exe_file = String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
-
-                            // 检查进程名是否匹配
-                            if exe_file.eq_ignore_ascii_case(&process_name_clone) {
-                                pids.push(pe32.th32ProcessID);
+                            
+                            if end_pos > 0 {
+                                let exe_file = String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
+                                if exe_file.eq_ignore_ascii_case(&process_name_clone) {
+                                    pids.push(pe32.th32ProcessID);
+                                }
                             }
+                            
                             if Process32NextW(snapshot, &mut pe32) == 0 {
                                 break;
                             }
                         }
                     }
 
-                    // 关闭句柄
                     CloseHandle(snapshot);
                 }
 
@@ -407,7 +372,6 @@ impl CoreManager {
                     .output()
                     .await?
             } else {
-                // Linux
                 tokio::process::Command::new("pidof")
                     .arg(&process_name)
                     .output()
@@ -419,28 +383,17 @@ impl CoreManager {
             }
 
             let stdout = String::from_utf8_lossy(&output.stdout);
-            let mut pids = Vec::new();
-
-            // Unix系统直接解析PID列表
-            for pid_str in stdout.split_whitespace() {
-                if let Ok(pid) = pid_str.parse::<u32>() {
-                    pids.push(pid);
-                }
-            }
+            let pids: Vec<u32> = stdout
+                .split_whitespace()
+                .filter_map(|s| s.parse().ok())
+                .collect();
 
             Ok((pids, process_name))
         }
     }
 
-    /// 终止进程并验证结果 - 使用Windows API直接终止，更优雅高效
     async fn kill_process_with_verification(&self, pid: u32, process_name: String) -> bool {
-        logging!(
-            info,
-            Type::Core,
-            "尝试终止进程: {} (PID: {})",
-            process_name,
-            pid
-        );
+        logging!(info, Type::Core, "尝试终止进程: {} (PID: {})", process_name, pid);
 
         #[cfg(windows)]
         let success = {
@@ -448,93 +401,60 @@ impl CoreManager {
             use winapi::um::processthreadsapi::{OpenProcess, TerminateProcess};
             use winapi::um::winnt::{HANDLE, PROCESS_TERMINATE};
 
-            AsyncHandler::spawn_blocking(move || -> bool {
-                unsafe {
-                    let process_handle: HANDLE = OpenProcess(PROCESS_TERMINATE, 0, pid);
-                    if process_handle.is_null() {
-                        return false;
-                    }
-                    let result = TerminateProcess(process_handle, 1);
-                    CloseHandle(process_handle);
-
-                    result != 0
+            AsyncHandler::spawn_blocking(move || unsafe {
+                let handle: HANDLE = OpenProcess(PROCESS_TERMINATE, 0, pid);
+                if handle.is_null() {
+                    return false;
                 }
+                let result = TerminateProcess(handle, 1) != 0;
+                CloseHandle(handle);
+                result
             })
             .await
             .unwrap_or(false)
         };
 
         #[cfg(not(windows))]
-        let success = {
-            tokio::process::Command::new("kill")
-                .args(["-9", &pid.to_string()])
-                .output()
-                .await
-                .map(|output| output.status.success())
-                .unwrap_or(false)
-        };
+        let success = tokio::process::Command::new("kill")
+            .args(["-9", &pid.to_string()])
+            .output()
+            .await
+            .map(|output| output.status.success())
+            .unwrap_or(false);
 
-        if success {
-            // 短暂等待并验证进程是否真正终止
-            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        if !success {
+            logging!(warn, Type::Core, "无法终止进程: {} (PID: {})", process_name, pid);
+            return false;
+        }
 
-            let still_running = self.is_process_running(pid).await.unwrap_or(false);
-            if still_running {
-                logging!(
-                    warn,
-                    Type::Core,
-                    "进程 {} (PID: {}) 终止命令成功但进程仍在运行",
-                    process_name,
-                    pid
-                );
-                false
-            } else {
-                logging!(
-                    info,
-                    Type::Core,
-                    "成功终止进程: {} (PID: {})",
-                    process_name,
-                    pid
-                );
-                true
-            }
-        } else {
-            logging!(
-                warn,
-                Type::Core,
-                "无法终止进程: {} (PID: {})",
-                process_name,
-                pid
-            );
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+        if self.is_process_running(pid).await.unwrap_or(false) {
+            logging!(warn, Type::Core, "进程 {} (PID: {}) 终止命令成功但进程仍在运行", process_name, pid);
             false
+        } else {
+            logging!(info, Type::Core, "成功终止进程: {} (PID: {})", process_name, pid);
+            true
         }
     }
 
-    /// Windows API检查进程
     async fn is_process_running(&self, pid: u32) -> Result<bool> {
         #[cfg(windows)]
         {
             use winapi::shared::minwindef::DWORD;
             use winapi::um::handleapi::CloseHandle;
-            use winapi::um::processthreadsapi::GetExitCodeProcess;
-            use winapi::um::processthreadsapi::OpenProcess;
+            use winapi::um::processthreadsapi::{GetExitCodeProcess, OpenProcess};
             use winapi::um::winnt::{HANDLE, PROCESS_QUERY_INFORMATION};
 
-            AsyncHandler::spawn_blocking(move || -> Result<bool> {
-                unsafe {
-                    let process_handle: HANDLE = OpenProcess(PROCESS_QUERY_INFORMATION, 0, pid);
-                    if process_handle.is_null() {
-                        return Ok(false);
-                    }
-                    let mut exit_code: DWORD = 0;
-                    let result = GetExitCodeProcess(process_handle, &mut exit_code);
-                    CloseHandle(process_handle);
-
-                    if result == 0 {
-                        return Ok(false);
-                    }
-                    Ok(exit_code == 259)
+            AsyncHandler::spawn_blocking(move || unsafe {
+                let handle: HANDLE = OpenProcess(PROCESS_QUERY_INFORMATION, 0, pid);
+                if handle.is_null() {
+                    return Ok(false);
                 }
+                let mut exit_code: DWORD = 0;
+                let result = GetExitCodeProcess(handle, &mut exit_code);
+                CloseHandle(handle);
+                Ok(result != 0 && exit_code == 259)
             })
             .await?
         }
@@ -580,18 +500,10 @@ impl CoreManager {
         AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
                 match event {
-                    tauri_plugin_shell::process::CommandEvent::Stdout(line) => {
+                    tauri_plugin_shell::process::CommandEvent::Stdout(line) 
+                    | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
-                        let message =
-                            CompactString::from(String::from_utf8_lossy(&line).into_owned());
-                        let w = shared_writer.lock().await;
-                        write_sidecar_log(w, &mut now, Level::Error, &message);
-                        ClashLogger::global().append_log(message);
-                    }
-                    tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let mut now = DeferredNow::default();
-                        let message =
-                            CompactString::from(String::from_utf8_lossy(&line).into_owned());
+                        let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Error, &message);
                         ClashLogger::global().append_log(message);
@@ -660,22 +572,13 @@ impl Default for CoreManager {
 
 impl CoreManager {
     pub async fn init(&self) -> Result<()> {
-        logging!(info, Type::Core, "Initializing core");
+        logging!(info, Type::Core, "开始核心初始化");
 
-        // 应用启动时先清理任何遗留的 mihomo 进程
         if let Err(e) = self.cleanup_orphaned_mihomo_processes().await {
-            logging!(
-                warn,
-                Type::Core,
-                "应用初始化时清理多余 mihomo 进程失败: {}",
-                e
-            );
+            logging!(warn, Type::Core, "清理遗留 mihomo 进程失败: {}", e);
         }
 
-        // 使用简化的启动流程
-        logging!(info, Type::Core, "开始核心初始化");
         self.start_core().await?;
-
         logging!(info, Type::Core, "核心初始化完成");
         Ok(())
     }
@@ -686,8 +589,7 @@ impl CoreManager {
     }
 
     pub fn get_running_mode(&self) -> RunningMode {
-        let guard = self.running.lock();
-        (*guard).clone()
+        *self.running.lock()
     }
 
     #[cfg(target_os = "windows")]
