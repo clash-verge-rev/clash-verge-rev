@@ -508,7 +508,10 @@ impl Tray {
         let icon_name = if icon_bytes.is_override {
             "user-tray-icon".to_string()
         } else {
-            "clash-verge-rev".to_string()
+            // Some AppIndicator hosts (GNOME) try to resolve theme icons first
+            // and ignore provided pixmaps if the name is missing in the theme.
+            // Leave the name empty to force them to use our ARGB data directly.
+            String::new()
         };
 
         let action = resolve_tray_click_action().await;

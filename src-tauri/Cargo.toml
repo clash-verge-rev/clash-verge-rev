@@ -114,7 +114,7 @@ winapi = { version = "0.3.9", features = [
 
 [target.'cfg(target_os = "linux")'.dependencies]
 users = "0.11.0"
-ksni = { version = "0.3.1", features = ["tokio"] }
+ksni = { git = "https://github.com/clash-verge-rev/ksni", features = ["tokio"] }
 image = { version = "0.25.2", default-features = false, features = ["png", "ico"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
