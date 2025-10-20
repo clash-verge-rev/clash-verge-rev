@@ -136,9 +136,9 @@ harness = false
 
 [profile.release]
 panic = "abort"
-codegen-units = 16
+codegen-units = 1
 lto = "thin"
-opt-level = 2
+opt-level = 3
 debug = false
 strip = true
 overflow-checks = false
@@ -156,8 +156,8 @@ rpath = false
 
 [profile.fast-release]
 inherits = "release"
-incremental = true
 codegen-units = 64
+incremental = true
 lto = false
 opt-level = 0
 debug = true
