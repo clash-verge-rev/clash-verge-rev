@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, anyhow};
-use image::{ImageFormat, ImageReader};
+use image::{ImageFormat, ImageReader, imageops::FilterType};
 use ksni::{
     Icon, ToolTip, TrayMethods,
     menu::{CheckmarkItem, MenuItem, StandardItem, SubMenu},
@@ -548,13 +548,49 @@ fn convert_image_to_ksni_icons(bytes: &[u8]) -> Result<Vec<Icon>> {
         .context("failed to decode tray icon image")?;
     let rgba = img.to_rgba8();
     let (width, height) = rgba.dimensions();
-    let mut data = rgba.into_vec();
-    for pixel in data.chunks_exact_mut(4) {
-        pixel.rotate_right(1); // RGBA -> ARGB
+
+    let mut icons = Vec::new();
+    let mut target_sizes = vec![16_u32, 22, 24, 32, 48, 64];
+    let square_size = width.min(height);
+    if square_size > 0 {
+        target_sizes.push(square_size);
     }
-    Ok(vec![Icon {
-        width: width as i32,
-        height: height as i32,
-        data,
-    }])
+    target_sizes.sort_unstable();
+    target_sizes.dedup();
+
+    let max_dimension = width.max(height);
+
+    for size in target_sizes {
+        if size == 0 || size > max_dimension {
+            continue;
+        }
+        let resized = if width == size && height == size {
+            rgba.clone()
+        } else {
+            image::imageops::resize(&rgba, size, size, FilterType::Lanczos3)
+        };
+        let mut data = resized.into_vec();
+        for pixel in data.chunks_exact_mut(4) {
+            pixel.rotate_right(1); // RGBA -> ARGB
+        }
+        icons.push(Icon {
+            width: size as i32,
+            height: size as i32,
+            data,
+        });
+    }
+
+    if icons.is_empty() {
+        let mut data = rgba.into_vec();
+        for pixel in data.chunks_exact_mut(4) {
+            pixel.rotate_right(1);
+        }
+        icons.push(Icon {
+            width: width as i32,
+            height: height as i32,
+            data,
+        });
+    }
+
+    Ok(icons)
 }
