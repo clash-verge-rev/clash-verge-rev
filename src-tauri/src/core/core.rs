@@ -27,12 +27,12 @@ use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
 use std::collections::VecDeque;
-#[cfg(target_os = "windows")]
 use std::time::Instant;
 use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
 use tauri_plugin_mihomo::Error as MihomoError;
 use tauri_plugin_shell::ShellExt;
 use tokio::time::sleep;
+use tokio::sync::Semaphore;
 
 // TODO:
 // - 重构，提升模式切换速度
@@ -42,6 +42,8 @@ use tokio::time::sleep;
 pub struct CoreManager {
     running: Arc<Mutex<RunningMode>>,
     child_sidecar: Arc<Mutex<Option<CommandChildGuard>>>,
+    update_semaphore: Arc<Semaphore>,
+    last_update: Arc<Mutex<Option<Instant>>>,
 }
 
 /// 内核运行模式
@@ -87,36 +89,57 @@ impl CoreManager {
 
     /// 更新proxies等配置
     pub async fn update_config(&self) -> Result<(bool, String)> {
-        // 检查程序是否正在退出，如果是则跳过完整验证流程
         if handle::Handle::global().is_exiting() {
             logging!(info, Type::Config, "应用正在退出，跳过验证");
             return Ok((true, String::new()));
         }
 
-        // 1. 先生成新的配置内容
-        logging!(info, Type::Config, "生成新的配置内容");
-        Config::generate().await?;
-
-        // 2. 验证配置
-        match CoreConfigValidator::global().validate_config().await {
-            Ok((true, _)) => {
-                // 4. 验证通过后，生成正式的运行时配置
-                logging!(info, Type::Config, "配置验证通过, 生成运行时配置");
-                let run_path = Config::generate_file(ConfigType::Run).await?;
-                self.put_configs_force(run_path).await?;
-                Ok((true, String::new()))
+        let now = Instant::now();
+        {
+            let mut last = self.last_update.lock();
+            if let Some(last_time) = *last {
+                if now.duration_since(last_time) < Duration::from_millis(500) {
+                    logging!(debug, Type::Config, "防抖：跳过重复的配置更新请求");
+                    return Ok((true, String::new()));
+                }
             }
-            Ok((false, error_msg)) => {
-                logging!(warn, Type::Config, "配置验证失败: {}", error_msg);
-                Config::runtime().await.discard();
-                Ok((false, error_msg))
-            }
-            Err(e) => {
-                logging!(warn, Type::Config, "验证过程发生错误: {}", e);
-                Config::runtime().await.discard();
-                Err(e)
-            }
+            *last = Some(now);
         }
+
+        let permit = match self.update_semaphore.try_acquire() {
+            Ok(p) => p,
+            Err(_) => {
+                logging!(debug, Type::Config, "配置更新已在进行中，跳过");
+                return Ok((true, String::new()));
+            }
+        };
+
+        let result = async {
+            logging!(info, Type::Config, "生成新的配置内容");
+            Config::generate().await?;
+
+            match CoreConfigValidator::global().validate_config().await {
+                Ok((true, _)) => {
+                    logging!(info, Type::Config, "配置验证通过, 生成运行时配置");
+                    let run_path = Config::generate_file(ConfigType::Run).await?;
+                    self.put_configs_force(run_path).await?;
+                    Ok((true, String::new()))
+                }
+                Ok((false, error_msg)) => {
+                    logging!(warn, Type::Config, "配置验证失败: {}", error_msg);
+                    Config::runtime().await.discard();
+                    Ok((false, error_msg))
+                }
+                Err(e) => {
+                    logging!(warn, Type::Config, "验证过程发生错误: {}", e);
+                    Config::runtime().await.discard();
+                    Err(e)
+                }
+            }
+        }.await;
+
+        drop(permit);
+        result
     }
     pub async fn put_configs_force(&self, path_buf: PathBuf) -> Result<()> {
         let run_path_str = dirs::path_to_str(&path_buf).map_err(|e| {
@@ -628,6 +651,8 @@ impl Default for CoreManager {
         CoreManager {
             running: Arc::new(Mutex::new(RunningMode::NotRunning)),
             child_sidecar: Arc::new(Mutex::new(None)),
+            update_semaphore: Arc::new(Semaphore::new(1)),
+            last_update: Arc::new(Mutex::new(None)),
         }
     }
 }

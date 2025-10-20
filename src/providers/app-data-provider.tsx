@@ -35,6 +35,9 @@ export const AppDataProvider = ({
       suspense: false,
       errorRetryCount: 2,
       dedupingInterval: 3000,
+      onError: (err) => {
+        console.warn("[DataProvider] 代理数据获取失败:", err);
+      },
     },
   );
 

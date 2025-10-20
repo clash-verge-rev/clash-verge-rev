@@ -53,18 +53,21 @@ pub fn resolve_setup_async() {
 
         futures::join!(init_work_config(), init_resources(), init_startup_script(),);
 
-        // 确保配置完全初始化后再启动核心管理器
         init_verge_config().await;
 
-        // 添加配置验证，确保运行时配置已正确生成
         Config::verify_config_initialization().await;
 
-        init_service_manager().await;
-        init_core_manager().await;
+        // 优先创建窗口，提升启动体验
+        init_window().await;
 
-        init_system_proxy().await;
-        AsyncHandler::spawn_blocking(|| {
-            init_system_proxy_guard();
+        // 后台异步初始化核心，不阻塞窗口显示
+        let core_init = AsyncHandler::spawn(|| async {
+            init_service_manager().await;
+            init_core_manager().await;
+            init_system_proxy().await;
+            AsyncHandler::spawn_blocking(|| {
+                init_system_proxy_guard();
+            });
         });
 
         let tray_and_refresh = async {
@@ -73,7 +76,7 @@ pub fn resolve_setup_async() {
         };
 
         futures::join!(
-            init_window(),
+            core_init,
             tray_and_refresh,
             init_timer(),
             init_hotkey(),
@@ -83,7 +86,7 @@ pub fn resolve_setup_async() {
     });
 
     let elapsed = start_time.elapsed();
-    logging!(info, Type::Setup, "异步设置任务完成，耗时: {:?}", elapsed);
+    logging!(info, Type::Setup, "异步设置任务启动完成，耗时: {:?}", elapsed);
 
     if elapsed.as_secs() > 10 {
         logging!(warn, Type::Setup, "异步设置任务耗时较长({:?})", elapsed);

@@ -266,10 +266,11 @@ pub fn run() {
             logging!(info, Type::Setup, "执行主要设置操作...");
 
             resolve::resolve_setup_handle();
+            // 异步任务启动，不等待完成
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
 
-            logging!(info, Type::Setup, "初始化完成，继续执行");
+            logging!(info, Type::Setup, "初始化已启动，继续执行");
             Ok(())
         })
         .invoke_handler(app_init::generate_handlers());

@@ -29,7 +29,7 @@ pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
     if !local_port_available(port) {
         let client = ClientBuilder::new()
-            .timeout(Duration::from_millis(1000))
+            .timeout(Duration::from_millis(500))
             .build()?;
         let argvs: Vec<String> = std::env::args().collect();
         if argvs.len() > 1 {
