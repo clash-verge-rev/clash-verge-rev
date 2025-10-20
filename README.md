@@ -9,7 +9,8 @@
 A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a>.
 </h3>
 
-**Language: [中文](README.md) | [Русский](README_ru.md)**
+[![中文](https://img.shields.io/badge/lang-中文-red.svg)](README.md)
+[![中文](https://img.shields.io/badge/lang-Rus-blue.svg)](README_ru.md)
 ## Preview
 
 | Dark                             | Light                             |
