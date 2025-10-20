@@ -10,7 +10,7 @@ Clash Meta GUI базируется на <a href="https://github.com/tauri-apps/
 </h3>
 
 [![中文](https://img.shields.io/badge/lang-中文-red.svg)](README.md)
-[![中文](https://img.shields.io/badge/lang-Rus-blue.svg)](README_ru.md)
+[![Russian](https://img.shields.io/badge/lang-Rus-blue.svg)](README_ru.md)
 ## Предпросмотр
 
 | Тёмная тема                             | Светлая тема                             |
