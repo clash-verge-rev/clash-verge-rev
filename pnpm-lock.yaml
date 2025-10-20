@@ -39,8 +39,8 @@ importers:
         specifier: ^8.14.1
         version: 8.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.4(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.3(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@tauri-apps/api':
-        specifier: 2.8.0
-        version: 2.8.0
+        specifier: 2.9.0
+        version: 2.9.0
       '@tauri-apps/plugin-clipboard-manager':
         specifier: ^2.3.0
         version: 2.3.0
@@ -1618,8 +1618,8 @@ packages:
     peerDependencies:
       '@svgr/core': '*'
 
-  '@tauri-apps/api@2.8.0':
-    resolution: {integrity: sha512-ga7zdhbS2GXOMTIZRT0mYjKJtR9fivsXzsyq5U3vjDL0s6DTMwYRm0UHNjzTY5dh4+LSC68Sm/7WEiimbQNYlw==}
+  '@tauri-apps/api@2.9.0':
+    resolution: {integrity: sha512-qD5tMjh7utwBk9/5PrTA/aGr3i5QaJ/Mlt7p8NilQ45WgbifUNPyKWsA63iQ8YfQq6R8ajMapU+/Q8nMcPRLNw==}
 
   '@tauri-apps/cli-darwin-arm64@2.8.4':
     resolution: {integrity: sha512-BKu8HRkYV01SMTa7r4fLx+wjgtRK8Vep7lmBdHDioP6b8XH3q2KgsAyPWfEZaZIkZ2LY4SqqGARaE9oilNe0oA==}
@@ -5822,7 +5822,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tauri-apps/api@2.8.0': {}
+  '@tauri-apps/api@2.9.0': {}
 
   '@tauri-apps/cli-darwin-arm64@2.8.4':
     optional: true
@@ -5873,31 +5873,31 @@ snapshots:
 
   '@tauri-apps/plugin-clipboard-manager@2.3.0':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.9.0
 
   '@tauri-apps/plugin-dialog@2.4.0':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.9.0
 
   '@tauri-apps/plugin-fs@2.4.2':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.9.0
 
   '@tauri-apps/plugin-http@2.5.2':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.9.0
 
   '@tauri-apps/plugin-process@2.3.0':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.9.0
 
   '@tauri-apps/plugin-shell@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.9.0
 
   '@tauri-apps/plugin-updater@2.9.0':
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.9.0
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -8634,7 +8634,7 @@ snapshots:
 
   tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/719a31f364e23268c5b8c85169de5168d4843c15:
     dependencies:
-      '@tauri-apps/api': 2.8.0
+      '@tauri-apps/api': 2.9.0
 
   terser@5.44.0:
     dependencies:
