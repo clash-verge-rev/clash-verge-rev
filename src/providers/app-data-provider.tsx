@@ -15,6 +15,7 @@ import {
   getRunningMode,
   getSystemProxy,
 } from "@/services/cmds";
+import { SWR_DEFAULTS, SWR_REALTIME, SWR_SLOW_POLL } from "@/services/config";
 
 import { AppDataContext, AppDataContextType } from "./app-data-context";
 
@@ -30,61 +31,33 @@ export const AppDataProvider = ({
     "getProxies",
     calcuProxies,
     {
-      refreshInterval: 8000,
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 2,
-      dedupingInterval: 3000,
-      onError: (err) => {
-        console.warn("[DataProvider] 代理数据获取失败:", err);
-      },
+      ...SWR_REALTIME,
+      onError: (err) => console.warn("[DataProvider] Proxy fetch failed:", err),
     },
   );
 
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
     "getClashConfig",
     getBaseConfig,
-    {
-      refreshInterval: 60000,
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 2,
-      dedupingInterval: 5000,
-    },
+    SWR_SLOW_POLL,
   );
 
   const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
     "getProxyProviders",
     calcuProxyProviders,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 5000,
-      suspense: false,
-      errorRetryCount: 2,
-    },
+    SWR_DEFAULTS,
   );
 
   const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
     "getRuleProviders",
     getRuleProviders,
-    {
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 2,
-      dedupingInterval: 5000,
-    },
+    SWR_DEFAULTS,
   );
 
   const { data: rulesData, mutate: refreshRules } = useSWR(
     "getRules",
     getRules,
-    {
-      revalidateOnFocus: false,
-      suspense: false,
-      errorRetryCount: 2,
-      dedupingInterval: 5000,
-    },
+    SWR_DEFAULTS,
   );
 
   useEffect(() => {
@@ -101,7 +74,7 @@ export const AppDataProvider = ({
         try {
           fn();
         } catch (error) {
-          console.error("[数据提供者] 立即清理失败:", error);
+          console.error("[DataProvider] Immediate cleanup failed:", error);
         }
       } else {
         cleanupFns.push(fn);
@@ -151,10 +124,10 @@ export const AppDataProvider = ({
 
       scheduleTimeout(() => {
         refreshRules().catch((error) =>
-          console.warn("[数据提供者] 规则刷新失败:", error),
+          console.warn("[DataProvider] Rules refresh failed:", error),
         );
         refreshRuleProviders().catch((error) =>
-          console.warn("[数据提供者] 规则提供者刷新失败:", error),
+          console.warn("[DataProvider] Rule providers refresh failed:", error),
         );
       }, 200);
     };
@@ -166,7 +139,7 @@ export const AppDataProvider = ({
       lastUpdateTime = now;
       scheduleTimeout(() => {
         refreshProxy().catch((error) =>
-          console.error("[数据提供者] 代理刷新失败:", error),
+          console.error("[DataProvider] Proxy refresh failed:", error),
         );
       }, 200);
     };
@@ -178,7 +151,7 @@ export const AppDataProvider = ({
       lastUpdateTime = now;
       scheduleTimeout(() => {
         refreshProxy().catch((error) =>
-          console.warn("[数据提供者] 代理刷新失败:", error),
+          console.warn("[DataProvider] Proxy refresh failed:", error),
         );
       }, 200);
     };
@@ -241,7 +214,7 @@ export const AppDataProvider = ({
 
       if (errors.length > 0) {
         console.error(
-          `[数据提供者] 清理过程中发生 ${errors.length} 个错误:`,
+          `[DataProvider] ${errors.length} errors during cleanup:`,
           errors,
         );
       }
@@ -251,26 +224,18 @@ export const AppDataProvider = ({
   const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
     "getSystemProxy",
     getSystemProxy,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      suspense: false,
-      errorRetryCount: 2,
-      dedupingInterval: 5000,
-    },
+    SWR_DEFAULTS,
   );
 
-  const { data: runningMode } = useSWR("getRunningMode", getRunningMode, {
-    revalidateOnFocus: false,
-    suspense: false,
-    errorRetryCount: 2,
-    dedupingInterval: 5000,
-  });
+  const { data: runningMode } = useSWR(
+    "getRunningMode",
+    getRunningMode,
+    SWR_DEFAULTS,
+  );
 
   const { data: uptimeData } = useSWR("appUptime", getAppUptime, {
+    ...SWR_DEFAULTS,
     refreshInterval: 3000,
-    revalidateOnFocus: false,
-    suspense: false,
     errorRetryCount: 1,
   });
 

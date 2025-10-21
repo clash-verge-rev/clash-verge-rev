@@ -490,23 +490,33 @@ pub fn init_scheme() -> Result<()> {
 }
 #[cfg(target_os = "linux")]
 pub fn init_scheme() -> Result<()> {
-    let output = std::process::Command::new("xdg-mime")
-        .arg("default")
-        .arg("clash-verge.desktop")
-        .arg("x-scheme-handler/clash")
-        .output()?;
-    if !output.status.success() {
-        return Err(anyhow::anyhow!(
-            "failed to set clash scheme, {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
+    const DESKTOP_FILE: &str = "clash-verge.desktop";
+
+    for scheme in DEEP_LINK_SCHEMES {
+        let handler = format!("x-scheme-handler/{scheme}");
+        let output = std::process::Command::new("xdg-mime")
+            .arg("default")
+            .arg(DESKTOP_FILE)
+            .arg(&handler)
+            .output()?;
+        if !output.status.success() {
+            return Err(anyhow::anyhow!(
+                "failed to set {handler}, {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
     }
+
+    crate::utils::linux::ensure_mimeapps_entries(DESKTOP_FILE, DEEP_LINK_SCHEMES)?;
     Ok(())
 }
 #[cfg(target_os = "macos")]
 pub fn init_scheme() -> Result<()> {
     Ok(())
 }
+
+#[cfg(target_os = "linux")]
+const DEEP_LINK_SCHEMES: &[&str] = &["clash", "clash-verge"];
 
 pub async fn startup_script() -> Result<()> {
     let app_handle = handle::Handle::app_handle();

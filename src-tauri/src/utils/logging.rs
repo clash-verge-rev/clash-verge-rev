@@ -111,7 +111,7 @@ macro_rules! wrap_err {
 macro_rules! logging {
     // 不带 print 参数的版本（默认不打印）
     ($level:ident, $type:expr, $($arg:tt)*) => {
-        log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*));
+        log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*))
     };
 }
 
