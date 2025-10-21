@@ -85,7 +85,7 @@ mod app_init {
         app.deep_link().on_open_url(|event| {
             let url = event.urls().first().map(|u| u.to_string());
             if let Some(url) = url {
-                let _ = AsyncHandler::spawn(|| async {
+                AsyncHandler::spawn(|| async {
                     if let Err(e) = resolve::resolve_scheme(url).await {
                         logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
                     }
@@ -300,7 +300,7 @@ pub fn run() {
         }
 
         pub fn handle_window_focus(focused: bool) {
-            let _ = AsyncHandler::spawn(move || async move {
+            AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge()
                     .await
                     .latest_ref()
@@ -339,7 +339,7 @@ pub fn run() {
         }
 
         pub fn handle_window_destroyed() {
-            let _ = AsyncHandler::spawn(|| async {
+            AsyncHandler::spawn(|| async {
                 let _ = handle::Handle::mihomo()
                     .await
                     .clear_all_ws_connections()
@@ -396,7 +396,7 @@ pub fn run() {
             if core::handle::Handle::global().is_exiting() {
                 return;
             }
-            let _ = AsyncHandler::spawn(move || async move {
+            AsyncHandler::spawn(move || async move {
                 event_handlers::handle_reopen(has_visible_windows).await;
             });
         }

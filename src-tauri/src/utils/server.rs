@@ -67,7 +67,7 @@ pub fn embed_server() {
         .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
-    let _ = AsyncHandler::spawn(move || async move {
+    AsyncHandler::spawn(move || async move {
         let visible = warp::path!("commands" / "visible").and_then(|| async {
             logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
             if !lightweight::exit_lightweight_mode().await {
@@ -108,7 +108,7 @@ pub fn embed_server() {
             .and(warp::query::<QueryParam>())
             .map(|query: QueryParam| {
                 let param = query.param.clone();
-                let _ = tokio::task::spawn_local(async move {
+                tokio::task::spawn_local(async move {
                     logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
                 });
                 warp::reply::with_status::<String>("ok".into(), warp::http::StatusCode::OK)

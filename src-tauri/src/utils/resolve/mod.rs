@@ -26,14 +26,14 @@ pub fn resolve_setup_handle() {
 }
 
 pub fn resolve_setup_sync() {
-    let _ = AsyncHandler::spawn(|| async {
-        let _ = AsyncHandler::spawn_blocking(init_scheme);
-        let _ = AsyncHandler::spawn_blocking(init_embed_server);
+    AsyncHandler::spawn(|| async {
+        AsyncHandler::spawn_blocking(init_scheme);
+        AsyncHandler::spawn_blocking(init_embed_server);
     });
 }
 
 pub fn resolve_setup_async() {
-    let _ = AsyncHandler::spawn(|| async {
+    AsyncHandler::spawn(|| async {
         #[cfg(not(feature = "tauri-dev"))]
         resolve_setup_logger().await;
         logging!(
@@ -53,7 +53,7 @@ pub fn resolve_setup_async() {
             init_service_manager().await;
             init_core_manager().await;
             init_system_proxy().await;
-            let _ = AsyncHandler::spawn_blocking(init_system_proxy_guard);
+            AsyncHandler::spawn_blocking(init_system_proxy_guard);
         });
 
         let tray_init = async {

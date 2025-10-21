@@ -50,10 +50,10 @@ impl CoreManager {
         let now = Instant::now();
         let mut last = self.last_update.lock();
 
-        if let Some(last_time) = *last {
-            if now.duration_since(last_time) < timing::CONFIG_UPDATE_DEBOUNCE {
-                return Ok(false);
-            }
+        if let Some(last_time) = *last
+            && now.duration_since(last_time) < timing::CONFIG_UPDATE_DEBOUNCE
+        {
+            return Ok(false);
         }
 
         *last = Some(now);
