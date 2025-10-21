@@ -531,7 +531,7 @@ pub async fn startup_script() -> Result<()> {
         ));
     };
 
-    let script_dir = PathBuf::from(&script_path);
+    let script_dir = PathBuf::from(script_path.as_str());
     if !script_dir.exists() {
         return Err(anyhow::anyhow!("script not found: {}", script_path));
     }
@@ -543,7 +543,7 @@ pub async fn startup_script() -> Result<()> {
         .shell()
         .command(shell_type)
         .current_dir(working_dir)
-        .args(&[script_path])
+        .args([script_path.as_str()])
         .output()
         .await?;
 

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use smartstring::alias::String;
 
 pub type CmdResult<T = ()> = Result<T, String>;
 
@@ -47,7 +48,7 @@ pub trait StringifyErr<T> {
 
 impl<T, E: std::fmt::Display> StringifyErr<T> for Result<T, E> {
     fn stringify_err(self) -> CmdResult<T> {
-        self.map_err(|e| e.to_string())
+        self.map_err(|e| e.to_string().into())
     }
 
     fn stringify_err_log<F>(self, log_fn: F) -> CmdResult<T>
@@ -55,7 +56,7 @@ impl<T, E: std::fmt::Display> StringifyErr<T> for Result<T, E> {
         F: Fn(&str),
     {
         self.map_err(|e| {
-            let msg = e.to_string();
+            let msg = String::from(e.to_string());
             log_fn(&msg);
             msg
         })

@@ -6,6 +6,7 @@ use crate::{
     utils::{self, logging::Type, resolve},
 };
 use serde_yaml_ng::{Mapping, Value};
+use smartstring::alias::String;
 
 /// Restart the Clash core
 pub async fn restart_clash_core() {
@@ -58,7 +59,7 @@ fn after_change_clash_mode() {
 /// Change Clash mode (rule/global/direct/script)
 pub async fn change_clash_mode(mode: String) {
     let mut mapping = Mapping::new();
-    mapping.insert(Value::from("mode"), mode.clone().into());
+    mapping.insert(Value::from("mode"), Value::from(mode.as_str()));
     // Convert YAML mapping to JSON Value
     let json_value = serde_json::json!({
         "mode": mode
@@ -112,7 +113,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
         ProxyType::None
     };
 
-    let user_agent = Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0".to_string());
+    let user_agent = Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0".into());
 
     let start = Instant::now();
 

@@ -7,6 +7,7 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
+use smartstring::alias::String;
 use std::path::PathBuf;
 use std::time::Duration;
 use tokio::sync::OnceCell;
@@ -126,7 +127,7 @@ impl Config {
         // 在单独的任务中发送通知
         if let Some((msg_type, msg_content)) = validation_result {
             sleep(Duration::from_secs(2)).await;
-            handle::Handle::notice_message(msg_type, &msg_content);
+            handle::Handle::notice_message(msg_type, msg_content);
         }
 
         Ok(())

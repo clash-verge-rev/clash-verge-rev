@@ -8,6 +8,7 @@ use crate::config::{Config, IVerge};
 use crate::core::{async_proxy_query::AsyncProxyQuery, handle};
 use crate::process::AsyncHandler;
 use once_cell::sync::Lazy;
+use smartstring::alias::String;
 use sysproxy::{Autoproxy, Sysproxy};
 
 #[derive(Debug, Clone)]
@@ -421,9 +422,9 @@ impl EventDrivenProxyManager {
 
         Sysproxy {
             enable: true,
-            host: proxy_host,
+            host: proxy_host.into(),
             port,
-            bypass: Self::get_bypass_config().await,
+            bypass: Self::get_bypass_config().await.into(),
         }
     }
 
@@ -448,9 +449,9 @@ impl EventDrivenProxyManager {
         let default_bypass = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
 
         if custom_bypass.is_empty() {
-            default_bypass.to_string()
+            default_bypass.into()
         } else if use_default {
-            format!("{default_bypass},{custom_bypass}")
+            format!("{default_bypass},{custom_bypass}").into()
         } else {
             custom_bypass
         }

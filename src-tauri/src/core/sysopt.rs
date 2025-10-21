@@ -7,6 +7,7 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::Result;
+use smartstring::alias::String;
 use std::sync::Arc;
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
@@ -45,7 +46,7 @@ async fn get_bypass() -> String {
     if custom_bypass.is_empty() {
         DEFAULT_BYPASS.into()
     } else if use_default {
-        format!("{DEFAULT_BYPASS},{custom_bypass}")
+        format!("{DEFAULT_BYPASS},{custom_bypass}").into()
     } else {
         custom_bypass
     }
@@ -132,9 +133,9 @@ impl Sysopt {
         {
             let mut sys = Sysproxy {
                 enable: false,
-                host: proxy_host.clone(),
+                host: proxy_host.clone().into(),
                 port,
-                bypass: get_bypass().await,
+                bypass: get_bypass().await.into(),
             };
             let mut auto = Autoproxy {
                 enable: false,

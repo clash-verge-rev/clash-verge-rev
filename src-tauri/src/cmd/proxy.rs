@@ -14,7 +14,7 @@ pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
         }
         Err(e) => {
             logging!(error, Type::Cmd, "Failed to sync tray proxy selection: {e}");
-            Err(e.to_string())
+            Err(e.to_string().into())
         }
     }
 }

@@ -26,6 +26,7 @@ use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;
 use parking_lot::Mutex;
+use smartstring::alias::String;
 use std::collections::VecDeque;
 use std::time::Instant;
 use std::{error::Error, fmt, path::PathBuf, sync::Arc, time::Duration};
@@ -266,9 +267,9 @@ impl CoreManager {
 
         let process_futures = target_processes.iter().map(|&target| {
             let process_name = if cfg!(windows) {
-                format!("{target}.exe")
+                format!("{target}.exe").into()
             } else {
-                target.to_string()
+                target.into()
             };
             self.find_processes_by_name(process_name, target)
         });
@@ -376,12 +377,12 @@ impl CoreManager {
         {
             let output = if cfg!(target_os = "macos") {
                 tokio::process::Command::new("pgrep")
-                    .arg(&process_name)
+                    .arg(process_name.as_str())
                     .output()
                     .await?
             } else {
                 tokio::process::Command::new("pidof")
-                    .arg(&process_name)
+                    .arg(process_name.as_str())
                     .output()
                     .await?
             };
@@ -390,7 +391,7 @@ impl CoreManager {
                 return Ok((Vec::new(), process_name));
             }
 
-            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stdout = std::string::String::from_utf8_lossy(&output.stdout);
             let pids: Vec<u32> = stdout
                 .split_whitespace()
                 .filter_map(|s| s.parse().ok())
@@ -512,7 +513,7 @@ impl CoreManager {
 
         let (mut rx, child) = app_handle
             .shell()
-            .sidecar(&clash_core)?
+            .sidecar(clash_core.as_str())?
             .args([
                 "-d",
                 dirs::path_to_str(&config_dir)?,
@@ -535,7 +536,9 @@ impl CoreManager {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
-                        let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());
+                        let message = CompactString::from(
+                            std::string::String::from_utf8_lossy(&line).as_ref(),
+                        );
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Error, &message);
                         ClashLogger::global().append_log(message);
@@ -807,7 +810,7 @@ impl CoreManager {
             msg.to_string()
         })?;
         if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
-            let error_message = format!("Clash core invalid name: {core}");
+            let error_message = format!("Clash core invalid name: {core}").into();
             logging!(error, Type::Core, "{}", error_message);
             return Err(error_message);
         }

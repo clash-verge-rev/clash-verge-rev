@@ -109,7 +109,7 @@ pub fn embed_server() {
             .map(|query: QueryParam| {
                 let param = query.param.clone();
                 let _ = tokio::task::spawn_local(async move {
-                    logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
+                    logging_error!(Type::Setup, resolve::resolve_scheme(param.into()).await);
                 });
                 warp::reply::with_status::<String>("ok".into(), warp::http::StatusCode::OK)
             });

@@ -66,7 +66,7 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
 pub async fn copy_clash_env() {
     // 从环境变量获取IP地址，如果没有则从配置中获取 proxy_host，默认为 127.0.0.1
     let clash_verge_rev_ip = match env::var("CLASH_VERGE_REV_IP") {
-        Ok(ip) => ip,
+        Ok(ip) => ip.into(),
         Err(_) => Config::verge()
             .await
             .latest_ref()

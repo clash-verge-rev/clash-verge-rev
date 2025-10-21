@@ -6,6 +6,7 @@ use crate::{
 };
 use anyhow::{Result, bail};
 use parking_lot::Mutex;
+use smartstring::alias::String;
 use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};

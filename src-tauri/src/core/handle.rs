@@ -1,5 +1,6 @@
 use crate::{APP_HANDLE, singleton};
 use parking_lot::RwLock;
+use smartstring::alias::String;
 use std::{
     sync::{
         Arc,
@@ -526,7 +527,7 @@ impl Handle {
         let app_handle = Self::app_handle();
         app_handle
             .set_activation_policy(policy)
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.to_string().into())
     }
 
     pub fn set_activation_policy_regular(&self) {
