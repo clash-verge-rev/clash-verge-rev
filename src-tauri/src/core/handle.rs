@@ -39,14 +39,15 @@ impl Handle {
         }
 
         let mut system_opt = self.notification_system.write();
-        if let Some(system) = system_opt.as_mut() {
-            if !system.is_running {
-                system.start();
-            }
+        if let Some(system) = system_opt.as_mut()
+            && !system.is_running
+        {
+            system.start();
         }
     }
 
     pub fn app_handle() -> &'static AppHandle {
+        #[allow(clippy::expect_used)]
         APP_HANDLE.get().expect("App handle not initialized")
     }
 

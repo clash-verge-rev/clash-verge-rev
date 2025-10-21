@@ -1,11 +1,14 @@
 use super::CoreManager;
+#[cfg(windows)]
+use crate::process::AsyncHandler;
 use crate::{
-    AsyncHandler,
     constants::{process, timing},
     logging,
     utils::logging::Type,
 };
-use anyhow::{Result, anyhow};
+use anyhow::Result;
+#[cfg(windows)]
+use anyhow::anyhow;
 
 impl CoreManager {
     pub async fn cleanup_orphaned_processes(&self) -> Result<()> {

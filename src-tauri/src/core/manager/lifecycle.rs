@@ -65,6 +65,7 @@ impl CoreManager {
     }
 
     async fn prepare_startup(&self) -> Result<()> {
+        #[cfg(target_os = "windows")]
         self.wait_for_service_if_needed().await;
 
         let mode = match SERVICE_MANAGER.lock().await.current() {
@@ -121,7 +122,4 @@ impl CoreManager {
 
         let _ = backoff::future::retry(backoff, operation).await;
     }
-
-    #[cfg(not(target_os = "windows"))]
-    async fn wait_for_service_if_needed(&self) {}
 }
