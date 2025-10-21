@@ -1,4 +1,4 @@
-use super::CmdResult;
+use crate::cmd::CmdResult;
 
 /// Platform-specific implementation for UWP functionality
 #[cfg(windows)]
