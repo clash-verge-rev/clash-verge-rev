@@ -118,25 +118,23 @@ const SettingVergeBasic = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      {OS !== "linux" && (
-        <SettingItem label={t("Tray Click Event")}>
-          <GuardState
-            value={tray_event ?? "main_window"}
-            onCatch={onError}
-            onFormat={(e: any) => e.target.value}
-            onChange={(e) => onChangeData({ tray_event: e })}
-            onGuard={(e) => patchVerge({ tray_event: e })}
-          >
-            <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
-              <MenuItem value="main_window">{t("Show Main Window")}</MenuItem>
-              <MenuItem value="tray_menu">{t("Show Tray Menu")}</MenuItem>
-              <MenuItem value="system_proxy">{t("System Proxy")}</MenuItem>
-              <MenuItem value="tun_mode">{t("Tun Mode")}</MenuItem>
-              <MenuItem value="disable">{t("Disable")}</MenuItem>
-            </Select>
-          </GuardState>
-        </SettingItem>
-      )}
+      <SettingItem label={t("Tray Click Event")}>
+        <GuardState
+          value={tray_event ?? "main_window"}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ tray_event: e })}
+          onGuard={(e) => patchVerge({ tray_event: e })}
+        >
+          <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
+            <MenuItem value="main_window">{t("Show Main Window")}</MenuItem>
+            <MenuItem value="tray_menu">{t("Show Tray Menu")}</MenuItem>
+            <MenuItem value="system_proxy">{t("System Proxy")}</MenuItem>
+            <MenuItem value="tun_mode">{t("Tun Mode")}</MenuItem>
+            <MenuItem value="disable">{t("Disable")}</MenuItem>
+          </Select>
+        </GuardState>
+      </SettingItem>
 
       <SettingItem
         label={t("Copy Env Type")}

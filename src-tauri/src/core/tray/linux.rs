@@ -7,7 +7,7 @@ use std::{
 use anyhow::{Context, Result, anyhow};
 use image::{ImageFormat, ImageReader, imageops::FilterType};
 use ksni::{
-    Icon, ToolTip, TrayMethods,
+    ContextMenuResponse, Icon, ToolTip, TrayMethods,
     menu::{CheckmarkItem, MenuItem, StandardItem, SubMenu},
 };
 use log::{debug, warn};
@@ -143,7 +143,16 @@ impl<const MENU_ON_ACTIVATE: bool> KsniTray<MENU_ON_ACTIVATE> {
             debug!(target: "app", "ksni: scheduling menu action for id={id}");
             handle_menu_command(&id).await;
             if let Err(e) = crate::core::tray::Tray::global().update_all_states().await {
-                warn!(target: "app", "更新托盘状态失败: {e}");
+                warn!(target: "app", "ksni: failed to refresh tray state: {e}");
+            }
+        });
+    }
+
+    fn trigger_click_action(action: TrayClickAction) {
+        AsyncHandler::spawn(move || async move {
+            perform_tray_click_action(action).await;
+            if let Err(e) = crate::core::tray::Tray::global().update_all_states().await {
+                warn!(target: "app", "ksni: failed to refresh tray state: {e}");
             }
         });
     }
@@ -191,17 +200,30 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
         }
 
         let action = self.state.lock().click_action;
-        if action == TrayClickAction::ShowMenu {
+        if matches!(action, TrayClickAction::ShowMenu | TrayClickAction::None) {
             // Fallback: nothing to do, the environment will open menu via secondary click.
             return;
         }
 
-        AsyncHandler::spawn(move || async move {
-            perform_tray_click_action(action).await;
-            if let Err(e) = crate::core::tray::Tray::global().update_all_states().await {
-                warn!(target: "app", "更新托盘状态失败: {e}");
-            }
-        });
+        Self::trigger_click_action(action);
+    }
+
+    fn context_menu(&mut self, _x: i32, _y: i32) -> ContextMenuResponse {
+        if MENU_ON_ACTIVATE {
+            return ContextMenuResponse::ShowMenu;
+        }
+
+        if !should_handle_tray_click() {
+            return ContextMenuResponse::Suppress;
+        }
+
+        let action = self.state.lock().click_action;
+        if matches!(action, TrayClickAction::ShowMenu | TrayClickAction::None) {
+            return ContextMenuResponse::ShowMenu;
+        }
+
+        Self::trigger_click_action(action);
+        ContextMenuResponse::Suppress
     }
 }
 
