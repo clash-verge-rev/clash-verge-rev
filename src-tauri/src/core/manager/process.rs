@@ -70,6 +70,7 @@ impl CoreManager {
     ) -> Result<(Vec<u32>, String)> {
         #[cfg(windows)]
         {
+            use crate::process::AsyncHandler;
             use std::mem;
             use winapi::um::{
                 handleapi::CloseHandle,
