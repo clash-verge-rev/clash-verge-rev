@@ -1,10 +1,10 @@
 use crate::{APP_HANDLE, constants::timing, singleton};
 use parking_lot::RwLock;
+use smartstring::alias::String;
 use std::{sync::Arc, thread};
 use tauri::{AppHandle, Manager, WebviewWindow};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt};
 use tokio::sync::RwLockReadGuard;
-use smartstring::alias::String;
 
 use super::notification::{ErrorMessage, FrontendEvent, NotificationSystem};
 

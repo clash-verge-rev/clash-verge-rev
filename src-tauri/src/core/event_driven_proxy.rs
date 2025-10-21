@@ -420,14 +420,16 @@ impl EventDrivenProxyManager {
             let verge_ref = verge_config.latest_ref();
             (verge_ref.verge_mixed_port, verge_ref.proxy_host.clone())
         };
-        
+
         let default_port = {
             let clash_config = Config::clash().await;
             clash_config.latest_ref().get_mixed_port()
         };
 
         let port = verge_mixed_port.unwrap_or(default_port);
-        let host = proxy_host.unwrap_or_else(|| network::DEFAULT_PROXY_HOST.into()).into();
+        let host = proxy_host
+            .unwrap_or_else(|| network::DEFAULT_PROXY_HOST.into())
+            .into();
 
         Sysproxy {
             enable: true,

@@ -7,8 +7,8 @@ use crate::{
     logging,
     utils::logging::Type,
 };
-use smartstring::alias::String;
 use anyhow::Result;
+use smartstring::alias::String;
 
 impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
@@ -62,7 +62,9 @@ impl CoreManager {
             .await
             .map_err(|e| e.to_string())?;
 
-        self.apply_config(run_path).await.map_err(|e| e.to_string().into())
+        self.apply_config(run_path)
+            .await
+            .map_err(|e| e.to_string().into())
     }
 
     async fn prepare_startup(&self) -> Result<()> {

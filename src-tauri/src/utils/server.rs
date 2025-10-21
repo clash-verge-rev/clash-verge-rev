@@ -111,7 +111,10 @@ pub fn embed_server() {
                 tokio::task::spawn_local(async move {
                     logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
                 });
-                warp::reply::with_status::<std::string::String>("ok".to_string(), warp::http::StatusCode::OK)
+                warp::reply::with_status::<std::string::String>(
+                    "ok".to_string(),
+                    warp::http::StatusCode::OK,
+                )
             });
 
         let commands = visible.or(scheme).or(pac);

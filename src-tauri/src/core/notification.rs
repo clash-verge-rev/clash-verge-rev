@@ -4,6 +4,7 @@ use crate::{
     utils::logging::Type,
 };
 use parking_lot::RwLock;
+use smartstring::alias::String;
 use std::{
     sync::{
         atomic::{AtomicU64, Ordering},
@@ -13,7 +14,6 @@ use std::{
     time::Instant,
 };
 use tauri::{Emitter, WebviewWindow};
-use smartstring::alias::String;
 
 #[derive(Debug, Clone)]
 pub enum FrontendEvent {
