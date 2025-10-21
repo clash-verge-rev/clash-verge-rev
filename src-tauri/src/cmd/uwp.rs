@@ -3,6 +3,7 @@ use crate::cmd::CmdResult;
 /// Platform-specific implementation for UWP functionality
 #[cfg(windows)]
 mod platform {
+    use crate::cmd::CmdResult;
     use crate::cmd::StringifyErr;
     use crate::core::win_uwp;
 
