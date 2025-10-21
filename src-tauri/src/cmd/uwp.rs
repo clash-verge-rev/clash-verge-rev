@@ -3,7 +3,7 @@ use super::CmdResult;
 /// Platform-specific implementation for UWP functionality
 #[cfg(windows)]
 mod platform {
-    use super::{CmdResult, StringifyErr};
+    use crate::cmd::StringifyErr;
     use crate::core::win_uwp;
 
     pub fn invoke_uwp_tool() -> CmdResult {

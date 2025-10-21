@@ -69,7 +69,7 @@ async fn execute_sysproxy_command(args: Vec<String>) -> Result<()> {
     }
 
     let output = Command::new(sysproxy_exe)
-        .args(&args)
+        .args(args)
         .creation_flags(0x08000000) // CREATE_NO_WINDOW - 隐藏窗口
         .output()
         .await?;
@@ -185,7 +185,7 @@ impl Sysopt {
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass().await;
-                vec!["global".into(), address, bypass]
+                vec!["global".into(), address, bypass.to_string()]
             };
 
             execute_sysproxy_command(args).await?;

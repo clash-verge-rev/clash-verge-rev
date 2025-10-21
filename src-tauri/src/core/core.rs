@@ -351,7 +351,9 @@ impl CoreManager {
                                 .unwrap_or(pe32.szExeFile.len());
 
                             if end_pos > 0 {
-                                let exe_file = String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
+                                let exe_file = std::string::String::from_utf16_lossy(
+                                    &pe32.szExeFile[..end_pos],
+                                );
                                 if exe_file.eq_ignore_ascii_case(&process_name_clone) {
                                     pids.push(pe32.th32ProcessID);
                                 }
