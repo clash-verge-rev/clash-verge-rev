@@ -54,7 +54,7 @@ async fn get_bypass() -> String {
 
 // Uses tokio Command with CREATE_NO_WINDOW flag to avoid DLL initialization issues during shutdown
 #[cfg(target_os = "windows")]
-async fn execute_sysproxy_command(args: Vec<String>) -> Result<()> {
+async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> {
     use crate::utils::dirs;
     use anyhow::bail;
     #[allow(unused_imports)] // Required for .creation_flags() method
@@ -179,13 +179,13 @@ impl Sysopt {
                 return result;
             }
 
-            let args = if pac_enable {
+            let args: Vec<std::string::String> = if pac_enable {
                 let address = format!("http://{proxy_host}:{pac_port}/commands/pac");
                 vec!["pac".into(), address]
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass().await;
-                vec!["global".into(), address, bypass.to_string()]
+                vec!["global".into(), address, bypass.into()]
             };
 
             execute_sysproxy_command(args).await?;
