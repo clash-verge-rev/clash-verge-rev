@@ -388,15 +388,9 @@ fn test_clash_info() {
         get_result(ports::DEFAULT_MIXED, DEFAULT_EXTERNAL_CONTROLLER)
     );
 
-    assert_eq!(
-        get_case("", ""),
-        get_result(ports::DEFAULT_MIXED, DEFAULT_EXTERNAL_CONTROLLER)
-    );
+    assert_eq!(get_case("", ""), get_result(ports::DEFAULT_MIXED, DEFAULT_EXTERNAL_CONTROLLER));
 
-    assert_eq!(
-        get_case(65537, ""),
-        get_result(1, DEFAULT_EXTERNAL_CONTROLLER)
-    );
+    assert_eq!(get_case(65537, ""), get_result(1, DEFAULT_EXTERNAL_CONTROLLER));
 
     assert_eq!(
         get_case(8888, "127.0.0.1:8888"),
