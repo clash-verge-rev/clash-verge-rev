@@ -1,7 +1,7 @@
 use crate::logging;
 use crate::utils::logging::Type;
 use anyhow::Result;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -559,6 +559,25 @@ pub fn ensure_mimeapps_entries(desktop_file: &str, schemes: &[&str]) -> Result<(
 }
 
 fn mimeapps_list_path() -> Option<PathBuf> {
+    let config_path = env::var_os("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .or_else(|| {
+            env::var_os("HOME").map(PathBuf::from).map(|mut home| {
+                home.push(".config");
+                home
+            })
+        })
+        .map(|mut dir| {
+            dir.push("mimeapps.list");
+            dir
+        });
+
+    if let Some(ref path) = config_path {
+        if path.exists() {
+            return Some(path.clone());
+        }
+    }
+
     let data_path = env::var_os("XDG_DATA_HOME")
         .map(PathBuf::from)
         .or_else(|| {
@@ -575,25 +594,6 @@ fn mimeapps_list_path() -> Option<PathBuf> {
         });
 
     if let Some(ref path) = data_path {
-        if path.exists() {
-            return Some(path.clone());
-        }
-    }
-
-    let config_path = env::var_os("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .or_else(|| {
-            env::var_os("HOME").map(PathBuf::from).map(|mut home| {
-                home.push(".config");
-                home
-            })
-        })
-        .map(|mut dir| {
-            dir.push("mimeapps.list");
-            dir
-        });
-
-    if let Some(ref path) = config_path {
         if path.exists() {
             return Some(path.clone());
         }
@@ -616,7 +616,7 @@ fn flush_section(
     kind: SectionKind,
     changed: &mut bool,
 ) {
-    let mut seen: HashSet<&str> = HashSet::new();
+    let mut seen: HashMap<&str, usize> = HashMap::new();
     let mut processed: Vec<String> = Vec::with_capacity(section.len());
 
     for line in section.drain(..) {
@@ -632,15 +632,6 @@ fn flush_section(
         };
 
         if let Some(scheme) = match_scheme(raw_key.trim(), schemes) {
-            if !seen.insert(scheme) {
-                *changed = true;
-                continue;
-            }
-
-            let prefix = line
-                .chars()
-                .take_while(|c| c.is_whitespace())
-                .collect::<String>();
             let mut values: Vec<String> = raw_value
                 .split(';')
                 .filter_map(|value| {
@@ -648,6 +639,53 @@ fn flush_section(
                     (!trimmed.is_empty()).then(|| trimmed.to_string())
                 })
                 .collect();
+
+            if let Some(&index) = seen.get(scheme) {
+                let existing_line = &mut processed[index];
+                let existing_prefix: String = existing_line
+                    .chars()
+                    .take_while(|c| c.is_whitespace())
+                    .collect();
+                let Some((_, existing_raw_value)) = existing_line.trim().split_once('=') else {
+                    processed.push(line);
+                    continue;
+                };
+
+                let mut merged_values: Vec<String> = existing_raw_value
+                    .split(';')
+                    .filter_map(|value| {
+                        let trimmed = value.trim();
+                        (!trimmed.is_empty()).then(|| trimmed.to_string())
+                    })
+                    .collect();
+
+                for value in values {
+                    if !merged_values.iter().any(|existing| existing == &value) {
+                        merged_values.push(value);
+                    }
+                }
+
+                if let Some(pos) = merged_values.iter().position(|value| value == desktop_file) {
+                    if pos != 0 {
+                        let moved = merged_values.remove(pos);
+                        merged_values.insert(0, moved);
+                    }
+                } else {
+                    merged_values.insert(0, desktop_file.to_string());
+                }
+
+                let mut merged_line = format!("{existing_prefix}x-scheme-handler/{scheme}=");
+                merged_line.push_str(&merged_values.join(";"));
+                merged_line.push(';');
+
+                if *existing_line != merged_line {
+                    *existing_line = merged_line;
+                }
+
+                // Dropping the duplicate entry alters the section even if nothing new was added.
+                *changed = true;
+                continue;
+            }
 
             if let Some(pos) = values.iter().position(|value| value == desktop_file) {
                 if pos != 0 {
@@ -660,6 +698,10 @@ fn flush_section(
                 *changed = true;
             }
 
+            let prefix = line
+                .chars()
+                .take_while(|c| c.is_whitespace())
+                .collect::<String>();
             let mut new_line = format!("{prefix}x-scheme-handler/{scheme}=");
             new_line.push_str(&values.join(";"));
             new_line.push(';');
@@ -668,7 +710,9 @@ fn flush_section(
                 *changed = true;
             }
 
+            let index = processed.len();
             processed.push(new_line);
+            seen.insert(scheme, index);
             continue;
         }
 
@@ -682,7 +726,7 @@ fn flush_section(
 
     if ensure_all {
         for &scheme in schemes {
-            if !seen.contains(scheme) {
+            if !seen.contains_key(scheme) {
                 processed.push(format!("x-scheme-handler/{scheme}={desktop_file};"));
                 *changed = true;
             }
