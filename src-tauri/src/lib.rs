@@ -339,13 +339,6 @@ pub fn run() {
         }
 
         pub fn handle_window_destroyed() {
-            AsyncHandler::spawn(|| async {
-                let _ = handle::Handle::mihomo()
-                    .await
-                    .clear_all_ws_connections()
-                    .await;
-            });
-
             #[cfg(target_os = "macos")]
             {
                 use crate::core::hotkey::SystemHotkey;

@@ -83,7 +83,7 @@ impl CoreManager {
 
             let process_name_clone = process_name.clone();
             let pids = AsyncHandler::spawn_blocking(move || -> Result<Vec<u32>> {
-                let mut pids = Vec::with_capacity(8);
+                let mut pids = Vec::new();
 
                 unsafe {
                     let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -102,11 +102,9 @@ impl CoreManager {
                                 .position(|&x| x == 0)
                                 .unwrap_or(pe32.szExeFile.len());
 
-                            if end_pos > 0 {
-                                let exe_file = String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
-                                if exe_file.eq_ignore_ascii_case(&process_name_clone) {
-                                    pids.push(pe32.th32ProcessID);
-                                }
+                            let exe_file = String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
+                            if exe_file.eq_ignore_ascii_case(&process_name_clone) {
+                                pids.push(pe32.th32ProcessID);
                             }
 
                             if Process32NextW(snapshot, &mut pe32) == 0 {
