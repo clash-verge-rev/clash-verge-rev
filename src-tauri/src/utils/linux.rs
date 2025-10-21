@@ -559,7 +559,7 @@ pub fn ensure_mimeapps_entries(desktop_file: &str, schemes: &[&str]) -> Result<(
 }
 
 fn mimeapps_list_path() -> Option<PathBuf> {
-    env::var_os("XDG_DATA_HOME")
+    let data_path = env::var_os("XDG_DATA_HOME")
         .map(PathBuf::from)
         .or_else(|| {
             env::var_os("HOME").map(PathBuf::from).map(|mut home| {
@@ -572,21 +572,34 @@ fn mimeapps_list_path() -> Option<PathBuf> {
             dir.push("applications");
             dir.push("mimeapps.list");
             dir
-        })
+        });
+
+    if let Some(ref path) = data_path {
+        if path.exists() {
+            return Some(path.clone());
+        }
+    }
+
+    let config_path = env::var_os("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
         .or_else(|| {
-            env::var_os("XDG_CONFIG_HOME")
-                .map(PathBuf::from)
-                .or_else(|| {
-                    env::var_os("HOME").map(PathBuf::from).map(|mut home| {
-                        home.push(".config");
-                        home
-                    })
-                })
-                .map(|mut dir| {
-                    dir.push("mimeapps.list");
-                    dir
-                })
+            env::var_os("HOME").map(PathBuf::from).map(|mut home| {
+                home.push(".config");
+                home
+            })
         })
+        .map(|mut dir| {
+            dir.push("mimeapps.list");
+            dir
+        });
+
+    if let Some(ref path) = config_path {
+        if path.exists() {
+            return Some(path.clone());
+        }
+    }
+
+    config_path
 }
 
 #[derive(Clone, Copy)]
