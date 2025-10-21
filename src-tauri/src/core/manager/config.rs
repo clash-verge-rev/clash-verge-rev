@@ -6,7 +6,7 @@ use crate::{
     logging,
     utils::{dirs, help, logging::Type},
 };
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use std::{path::PathBuf, time::Instant};
 use tauri_plugin_mihomo::Error as MihomoError;
 use tokio::time::sleep;
