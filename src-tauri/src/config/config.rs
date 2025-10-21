@@ -6,7 +6,7 @@ use crate::{
     enhance, logging,
     utils::{Draft, dirs, help, logging::Type},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
 use std::path::PathBuf;
 use tokio::sync::OnceCell;
@@ -71,7 +71,12 @@ impl Config {
         }
 
         if let Err(err) = Self::generate().await {
-            logging!(error, Type::Config, "Failed to generate runtime config: {}", err);
+            logging!(
+                error,
+                Type::Config,
+                "Failed to generate runtime config: {}",
+                err
+            );
         } else {
             logging!(info, Type::Config, "Runtime config generated successfully");
         }
@@ -108,7 +113,11 @@ impl Config {
                 }
             }
         } else {
-            logging!(warn, Type::Config, "Failed to generate config file, using default");
+            logging!(
+                warn,
+                Type::Config,
+                "Failed to generate config file, using default"
+            );
             CoreManager::global()
                 .use_default_config("config_validate::error", "")
                 .await?;

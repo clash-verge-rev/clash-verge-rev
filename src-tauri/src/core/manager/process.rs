@@ -5,7 +5,7 @@ use crate::{
     logging,
     utils::logging::Type,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 
 impl CoreManager {
     pub async fn cleanup_orphaned_processes(&self) -> Result<()> {
@@ -95,7 +95,8 @@ impl CoreManager {
                         loop {
                             if let Some(end_pos) = pe32.szExeFile.iter().position(|&x| x == 0) {
                                 if end_pos > 0 {
-                                    let exe_file = String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
+                                    let exe_file =
+                                        String::from_utf16_lossy(&pe32.szExeFile[..end_pos]);
                                     if exe_file.eq_ignore_ascii_case(&process_name_clone) {
                                         pids.push(pe32.th32ProcessID);
                                     }

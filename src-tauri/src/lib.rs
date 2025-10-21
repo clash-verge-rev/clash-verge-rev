@@ -121,7 +121,8 @@ mod app_init {
         Ok(())
     }
 
-    pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+    pub fn generate_handlers()
+    -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
         tauri::generate_handler![
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
