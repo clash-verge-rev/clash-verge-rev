@@ -11,7 +11,12 @@ impl CoreManager {
     pub async fn cleanup_orphaned_processes(&self) -> Result<()> {
         logging!(info, Type::Core, "Cleaning orphaned mihomo processes");
 
-        let current_pid = self.state.lock().child_sidecar.as_ref().and_then(|c| c.pid());
+        let current_pid = self
+            .state
+            .lock()
+            .child_sidecar
+            .as_ref()
+            .and_then(|c| c.pid());
         let target_processes = process::process_names();
 
         let process_futures = target_processes.iter().map(|&name| {
@@ -46,19 +51,31 @@ impl CoreManager {
             .count();
 
         if killed_count > 0 {
-            logging!(info, Type::Core, "Cleaned {} orphaned processes", killed_count);
+            logging!(
+                info,
+                Type::Core,
+                "Cleaned {} orphaned processes",
+                killed_count
+            );
         }
 
         Ok(())
     }
 
-    async fn find_processes_by_name(&self, process_name: String, _target: &str) -> Result<(Vec<u32>, String)> {
+    async fn find_processes_by_name(
+        &self,
+        process_name: String,
+        _target: &str,
+    ) -> Result<(Vec<u32>, String)> {
         #[cfg(windows)]
         {
             use std::mem;
             use winapi::um::{
                 handleapi::CloseHandle,
-                tlhelp32::{CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW, TH32CS_SNAPPROCESS},
+                tlhelp32::{
+                    CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
+                    TH32CS_SNAPPROCESS,
+                },
             };
 
             let process_name_clone = process_name.clone();
@@ -76,7 +93,10 @@ impl CoreManager {
 
                     if Process32FirstW(snapshot, &mut pe32) != 0 {
                         loop {
-                            let end_pos = pe32.szExeFile.iter().position(|&x| x == 0)
+                            let end_pos = pe32
+                                .szExeFile
+                                .iter()
+                                .position(|&x| x == 0)
                                 .unwrap_or(pe32.szExeFile.len());
 
                             if end_pos > 0 {
@@ -96,14 +116,19 @@ impl CoreManager {
                 }
 
                 Ok(pids)
-            }).await??;
+            })
+            .await??;
 
             Ok((pids, process_name))
         }
 
         #[cfg(not(windows))]
         {
-            let cmd = if cfg!(target_os = "macos") { "pgrep" } else { "pidof" };
+            let cmd = if cfg!(target_os = "macos") {
+                "pgrep"
+            } else {
+                "pidof"
+            };
             let output = tokio::process::Command::new(cmd)
                 .arg(&process_name)
                 .output()
@@ -140,7 +165,9 @@ impl CoreManager {
                 let result = TerminateProcess(handle, 1) != 0;
                 CloseHandle(handle);
                 result
-            }).await.unwrap_or(false)
+            })
+            .await
+            .unwrap_or(false)
         };
 
         #[cfg(not(windows))]
@@ -158,10 +185,22 @@ impl CoreManager {
         tokio::time::sleep(timing::PROCESS_VERIFY_DELAY).await;
 
         if self.is_process_running(pid).await.unwrap_or(false) {
-            logging!(warn, Type::Core, "Process {} (PID: {}) still running after termination", process_name, pid);
+            logging!(
+                warn,
+                Type::Core,
+                "Process {} (PID: {}) still running after termination",
+                process_name,
+                pid
+            );
             false
         } else {
-            logging!(info, Type::Core, "Terminated process {} (PID: {})", process_name, pid);
+            logging!(
+                info,
+                Type::Core,
+                "Terminated process {} (PID: {})",
+                process_name,
+                pid
+            );
             true
         }
     }
@@ -187,7 +226,8 @@ impl CoreManager {
                 let result = GetExitCodeProcess(handle, &mut exit_code);
                 CloseHandle(handle);
                 Ok(result != 0 && exit_code == 259)
-            }).await?
+            })
+            .await?
         }
 
         #[cfg(not(windows))]
@@ -201,4 +241,3 @@ impl CoreManager {
         }
     }
 }
-

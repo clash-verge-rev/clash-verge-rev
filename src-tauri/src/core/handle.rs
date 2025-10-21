@@ -1,4 +1,4 @@
-use crate::{APP_HANDLE, singleton, constants::timing};
+use crate::{APP_HANDLE, constants::timing, singleton};
 use parking_lot::RwLock;
 use std::{sync::Arc, thread};
 use tauri::{AppHandle, Manager, WebviewWindow};
@@ -209,4 +209,3 @@ impl Handle {
         let _ = self.set_activation_policy(tauri::ActivationPolicy::Accessory);
     }
 }
-

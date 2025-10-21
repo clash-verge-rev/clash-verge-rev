@@ -173,8 +173,7 @@ impl Config {
                 return Ok::<(), BackoffError<anyhow::Error>>(());
             }
 
-            Config::generate().await
-                .map_err(BackoffError::transient)
+            Config::generate().await.map_err(BackoffError::transient)
         };
 
         if let Err(e) = backoff::future::retry(backoff_strategy, operation).await {

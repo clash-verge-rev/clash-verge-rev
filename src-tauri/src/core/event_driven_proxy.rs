@@ -413,18 +413,18 @@ impl EventDrivenProxyManager {
 
     async fn get_expected_sys_proxy() -> Sysproxy {
         use crate::constants::network;
-        
+
         let (verge_mixed_port, proxy_host) = {
             let verge_config = Config::verge().await;
             let verge_ref = verge_config.latest_ref();
             (verge_ref.verge_mixed_port, verge_ref.proxy_host.clone())
         };
-        
+
         let default_port = {
             let clash_config = Config::clash().await;
             clash_config.latest_ref().get_mixed_port()
         };
-        
+
         let port = verge_mixed_port.unwrap_or(default_port);
         let host = proxy_host.unwrap_or_else(|| network::DEFAULT_PROXY_HOST.into());
 
@@ -438,7 +438,7 @@ impl EventDrivenProxyManager {
 
     async fn get_bypass_config() -> String {
         use crate::constants::bypass;
-        
+
         let verge_config = Config::verge().await;
         let verge = verge_config.latest_ref();
         let use_default = verge.use_default_bypass.unwrap_or(true);

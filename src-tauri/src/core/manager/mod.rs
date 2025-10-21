@@ -68,7 +68,7 @@ impl CoreManager {
     pub fn set_running_mode(&self, mode: RunningMode) {
         self.state.lock().running_mode = mode;
     }
-    
+
     pub async fn init(&self) -> Result<()> {
         self.cleanup_orphaned_processes().await?;
         self.start_core().await?;
@@ -77,4 +77,3 @@ impl CoreManager {
 }
 
 singleton_lazy!(CoreManager, CORE_MANAGER, CoreManager::default);
-

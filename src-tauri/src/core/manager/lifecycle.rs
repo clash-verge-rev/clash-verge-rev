@@ -1,6 +1,9 @@
 use super::{CoreManager, RunningMode};
 use crate::{
-    core::{logger::ClashLogger, service::{ServiceStatus, SERVICE_MANAGER}},
+    core::{
+        logger::ClashLogger,
+        service::{SERVICE_MANAGER, ServiceStatus},
+    },
     logging,
     utils::logging::Type,
 };
@@ -18,7 +21,7 @@ impl CoreManager {
 
     pub async fn stop_core(&self) -> Result<()> {
         ClashLogger::global().clear_logs();
-        
+
         match self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar(),
@@ -29,18 +32,19 @@ impl CoreManager {
     pub async fn restart_core(&self) -> Result<()> {
         logging!(info, Type::Core, "Restarting core");
         self.stop_core().await?;
-        
+
         if SERVICE_MANAGER.lock().await.init().await.is_ok() {
             let _ = SERVICE_MANAGER.lock().await.refresh().await;
         }
-        
+
         self.start_core().await
     }
 
     pub async fn change_core(&self, clash_core: Option<String>) -> Result<(), String> {
         use crate::config::{Config, ConfigType, IVerge};
-        
-        let core = clash_core.as_ref()
+
+        let core = clash_core
+            .as_ref()
             .ok_or_else(|| "Clash core cannot be None".to_string())?;
 
         if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
@@ -53,7 +57,8 @@ impl CoreManager {
         let verge_data = Config::verge().await.latest_ref().clone();
         verge_data.save_file().await.map_err(|e| e.to_string())?;
 
-        let run_path = Config::generate_file(ConfigType::Run).await
+        let run_path = Config::generate_file(ConfigType::Run)
+            .await
             .map_err(|e| e.to_string())?;
 
         self.apply_config(run_path).await.map_err(|e| e.to_string())
@@ -66,7 +71,7 @@ impl CoreManager {
             ServiceStatus::Ready => RunningMode::Service,
             _ => RunningMode::Sidecar,
         };
-        
+
         self.set_running_mode(mode);
         Ok(())
     }
@@ -76,7 +81,8 @@ impl CoreManager {
         use crate::{config::Config, constants::timing};
         use backoff::{Error as BackoffError, ExponentialBackoff};
 
-        let needs_service = Config::verge().await
+        let needs_service = Config::verge()
+            .await
             .latest_ref()
             .enable_tun_mode
             .unwrap_or(false);
@@ -107,7 +113,9 @@ impl CoreManager {
             if matches!(manager.current(), ServiceStatus::Ready) {
                 Ok(())
             } else {
-                Err(BackoffError::transient(anyhow::anyhow!("Service not ready")))
+                Err(BackoffError::transient(anyhow::anyhow!(
+                    "Service not ready"
+                )))
             }
         };
 
@@ -117,4 +125,3 @@ impl CoreManager {
     #[cfg(not(target_os = "windows"))]
     async fn wait_for_service_if_needed(&self) {}
 }
-

@@ -48,23 +48,23 @@ impl IClashTemp {
 
     pub fn template() -> Self {
         use crate::constants::{network, tun as tun_const};
-        
+
         let mut map = Mapping::new();
         let mut tun_config = Mapping::new();
         let mut cors_map = Mapping::new();
-        
+
         tun_config.insert("enable".into(), false.into());
         tun_config.insert("stack".into(), tun_const::DEFAULT_STACK.into());
         tun_config.insert("auto-route".into(), true.into());
         tun_config.insert("strict-route".into(), false.into());
         tun_config.insert("auto-detect-interface".into(), true.into());
         tun_config.insert("dns-hijack".into(), tun_const::DNS_HIJACK.into());
-        
+
         #[cfg(not(target_os = "windows"))]
         map.insert("redir-port".into(), network::ports::DEFAULT_REDIR.into());
         #[cfg(target_os = "linux")]
         map.insert("tproxy-port".into(), network::ports::DEFAULT_TPROXY.into());
-        
+
         map.insert("mixed-port".into(), network::ports::DEFAULT_MIXED.into());
         map.insert("socks-port".into(), network::ports::DEFAULT_SOCKS.into());
         map.insert("port".into(), network::ports::DEFAULT_HTTP.into());
@@ -72,7 +72,10 @@ impl IClashTemp {
         map.insert("allow-lan".into(), false.into());
         map.insert("ipv6".into(), true.into());
         map.insert("mode".into(), "rule".into());
-        map.insert("external-controller".into(), network::DEFAULT_EXTERNAL_CONTROLLER.into());
+        map.insert(
+            "external-controller".into(),
+            network::DEFAULT_EXTERNAL_CONTROLLER.into(),
+        );
         #[cfg(unix)]
         map.insert(
             "external-controller-unix".into(),
@@ -85,7 +88,8 @@ impl IClashTemp {
         );
         map.insert("tun".into(), tun_config.into());
         cors_map.insert("allow-private-network".into(), true.into());
-        cors_map.insert("allow-origins".into(),
+        cors_map.insert(
+            "allow-origins".into(),
             vec![
                 "tauri://localhost",
                 "http://tauri.localhost",

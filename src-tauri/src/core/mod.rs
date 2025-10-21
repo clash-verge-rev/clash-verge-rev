@@ -13,8 +13,4 @@ pub mod tray;
 pub mod validate;
 pub mod win_uwp;
 
-pub use self::{
-    event_driven_proxy::EventDrivenProxyManager,
-    manager::CoreManager,
-    timer::Timer,
-};
+pub use self::{event_driven_proxy::EventDrivenProxyManager, manager::CoreManager, timer::Timer};

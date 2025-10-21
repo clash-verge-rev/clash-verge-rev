@@ -80,15 +80,20 @@ impl NotificationSystem {
 
         match result {
             Ok(handle) => self.worker_handle = Some(handle),
-            Err(e) => logging!(error, Type::System, "Failed to start notification worker: {}", e),
+            Err(e) => logging!(
+                error,
+                Type::System,
+                "Failed to start notification worker: {}",
+                e
+            ),
         }
     }
 
     fn worker_loop(rx: mpsc::Receiver<FrontendEvent>) {
         use super::handle::Handle;
-        
+
         let handle = Handle::global();
-        
+
         while !handle.is_exiting() {
             match rx.recv_timeout(std::time::Duration::from_millis(100)) {
                 Ok(event) => Self::process_event(&handle, event),
@@ -124,7 +129,7 @@ impl NotificationSystem {
 
     fn emit_to_window(&self, window: &WebviewWindow, event: FrontendEvent) {
         let (event_name, payload) = self.serialize_event(event);
-        
+
         let Ok(payload) = payload else {
             self.stats.total_errors.fetch_add(1, Ordering::Relaxed);
             return;
@@ -141,15 +146,19 @@ impl NotificationSystem {
         }
     }
 
-    fn serialize_event(&self, event: FrontendEvent) -> (&'static str, Result<serde_json::Value, serde_json::Error>) {
+    fn serialize_event(
+        &self,
+        event: FrontendEvent,
+    ) -> (&'static str, Result<serde_json::Value, serde_json::Error>) {
         use serde_json::json;
-        
+
         match event {
             FrontendEvent::RefreshClash => ("verge://refresh-clash-config", Ok(json!("yes"))),
             FrontendEvent::RefreshVerge => ("verge://refresh-verge-config", Ok(json!("yes"))),
-            FrontendEvent::NoticeMessage { status, message } => {
-                ("verge://notice-message", serde_json::to_value((status, message)))
-            }
+            FrontendEvent::NoticeMessage { status, message } => (
+                "verge://notice-message",
+                serde_json::to_value((status, message)),
+            ),
             FrontendEvent::ProfileChanged { current_profile_id } => {
                 ("profile-changed", Ok(json!(current_profile_id)))
             }
@@ -171,7 +180,12 @@ impl NotificationSystem {
 
         let errors = self.stats.total_errors.load(Ordering::Relaxed);
         if errors > retry::EVENT_EMIT_THRESHOLD && !*self.emergency_mode.read() {
-            logging!(warn, Type::Frontend, "Entering emergency mode after {} errors", errors);
+            logging!(
+                warn,
+                Type::Frontend,
+                "Entering emergency mode after {} errors",
+                errors
+            );
             *self.emergency_mode.write() = true;
         }
     }
@@ -190,7 +204,7 @@ impl NotificationSystem {
 
     pub fn shutdown(&mut self) {
         self.is_running = false;
-        
+
         if let Some(sender) = self.sender.take() {
             drop(sender);
         }
@@ -200,4 +214,3 @@ impl NotificationSystem {
         }
     }
 }
-

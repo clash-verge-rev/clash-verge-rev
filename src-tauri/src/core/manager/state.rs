@@ -2,11 +2,7 @@ use super::{CoreManager, RunningMode};
 use crate::{
     AsyncHandler,
     config::Config,
-    core::{
-        handle,
-        logger::ClashLogger,
-        service,
-    },
+    core::{handle, logger::ClashLogger, service},
     logging,
     process::CommandChildGuard,
     utils::{
@@ -59,7 +55,8 @@ impl CoreManager {
             state.running_mode = RunningMode::Sidecar;
         }
 
-        let shared_writer: SharedWriter = std::sync::Arc::new(tokio::sync::Mutex::new(sidecar_writer().await?));
+        let shared_writer: SharedWriter =
+            std::sync::Arc::new(tokio::sync::Mutex::new(sidecar_writer().await?));
 
         AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
@@ -122,4 +119,3 @@ impl CoreManager {
         Ok(())
     }
 }
-

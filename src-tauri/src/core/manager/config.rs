@@ -14,7 +14,7 @@ use tokio::time::sleep;
 impl CoreManager {
     pub async fn use_default_config(&self, error_key: &str, error_msg: &str) -> Result<()> {
         use crate::constants::files::RUNTIME_CONFIG;
-        
+
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
         let clash_config = Config::clash().await.latest_ref().0.clone();
 
@@ -23,7 +23,7 @@ impl CoreManager {
             exists_keys: vec![],
             chain_logs: Default::default(),
         });
-        
+
         help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime")).await?;
         handle::Handle::notice_message(error_key, error_msg);
         Ok(())
@@ -38,7 +38,9 @@ impl CoreManager {
             return Ok((true, String::new()));
         }
 
-        let _permit = self.update_semaphore.try_acquire()
+        let _permit = self
+            .update_semaphore
+            .try_acquire()
             .map_err(|_| anyhow!("Config update already in progress"))?;
 
         self.perform_config_update().await
@@ -47,13 +49,13 @@ impl CoreManager {
     fn should_update_config(&self) -> Result<bool> {
         let now = Instant::now();
         let mut last = self.last_update.lock();
-        
+
         if let Some(last_time) = *last {
             if now.duration_since(last_time) < timing::CONFIG_UPDATE_DEBOUNCE {
                 return Ok(false);
             }
         }
-        
+
         *last = Some(now);
         Ok(true)
     }
@@ -84,7 +86,7 @@ impl CoreManager {
 
     pub(super) async fn apply_config(&self, path: PathBuf) -> Result<()> {
         let path_str = dirs::path_to_str(&path)?;
-        
+
         match self.reload_config(path_str).await {
             Ok(_) => {
                 Config::runtime().await.apply();
@@ -117,7 +119,10 @@ impl CoreManager {
     }
 
     async fn reload_config(&self, path: &str) -> Result<(), MihomoError> {
-        handle::Handle::mihomo().await.reload_config(true, path).await
+        handle::Handle::mihomo()
+            .await
+            .reload_config(true, path)
+            .await
     }
 
     fn should_restart_on_error(err: &MihomoError) -> bool {
@@ -125,7 +130,7 @@ impl CoreManager {
             MihomoError::ConnectionFailed | MihomoError::ConnectionLost => true,
             MihomoError::Io(io_err) => Self::is_connection_io_error(io_err.kind()),
             MihomoError::Reqwest(req_err) => {
-                req_err.is_connect() 
+                req_err.is_connect()
                     || req_err.is_timeout()
                     || Self::contains_error_pattern(&req_err.to_string())
             }
@@ -149,4 +154,3 @@ impl CoreManager {
         CONNECTION_ERRORS.iter().any(|p| text.contains(p))
     }
 }
-
