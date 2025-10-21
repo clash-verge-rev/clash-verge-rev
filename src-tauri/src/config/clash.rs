@@ -31,6 +31,7 @@ impl IClashTemp {
                         map.insert(key.clone(), value.clone());
                     }
                 });
+                // 确保 secret 字段存在且不为空
                 if let Some(Value::String(s)) = map.get_mut("secret")
                     && s.is_empty()
                 {
@@ -190,8 +191,6 @@ impl IClashTemp {
     }
     #[cfg(not(target_os = "windows"))]
     pub fn guard_redir_port(config: &Mapping) -> u16 {
-        use crate::constants::network::ports::DEFAULT_REDIR;
-
         let mut port = config
             .get("redir-port")
             .and_then(|value| match value {
@@ -199,17 +198,15 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(DEFAULT_REDIR);
+            .unwrap_or(7895);
         if port == 0 {
-            port = DEFAULT_REDIR;
+            port = 7895;
         }
         port
     }
 
     #[cfg(target_os = "linux")]
     pub fn guard_tproxy_port(config: &Mapping) -> u16 {
-        use crate::constants::network::ports::DEFAULT_TPROXY;
-
         let mut port = config
             .get("tproxy-port")
             .and_then(|value| match value {
@@ -217,16 +214,14 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(DEFAULT_TPROXY);
+            .unwrap_or(7896);
         if port == 0 {
-            port = DEFAULT_TPROXY;
+            port = 7896;
         }
         port
     }
 
     pub fn guard_mixed_port(config: &Mapping) -> u16 {
-        use crate::constants::network::ports::DEFAULT_MIXED;
-
         let raw_value = config.get("mixed-port");
 
         let mut port = raw_value
@@ -235,18 +230,16 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(DEFAULT_MIXED);
+            .unwrap_or(7897);
 
         if port == 0 {
-            port = DEFAULT_MIXED;
+            port = 7897;
         }
 
         port
     }
 
     pub fn guard_socks_port(config: &Mapping) -> u16 {
-        use crate::constants::network::ports::DEFAULT_SOCKS;
-
         let mut port = config
             .get("socks-port")
             .and_then(|value| match value {
@@ -254,16 +247,14 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(DEFAULT_SOCKS);
+            .unwrap_or(7898);
         if port == 0 {
-            port = DEFAULT_SOCKS;
+            port = 7898;
         }
         port
     }
 
     pub fn guard_port(config: &Mapping) -> u16 {
-        use crate::constants::network::ports::DEFAULT_HTTP;
-
         let mut port = config
             .get("port")
             .and_then(|value| match value {
@@ -271,16 +262,14 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(DEFAULT_HTTP);
+            .unwrap_or(7899);
         if port == 0 {
-            port = DEFAULT_HTTP;
+            port = 7899;
         }
         port
     }
 
     pub fn guard_server_ctrl(config: &Mapping) -> String {
-        use crate::constants::network::DEFAULT_EXTERNAL_CONTROLLER;
-
         config
             .get("external-controller")
             .and_then(|value| match value.as_str() {
@@ -298,14 +287,17 @@ impl IClashTemp {
                 }
                 None => None,
             })
-            .unwrap_or_else(|| DEFAULT_EXTERNAL_CONTROLLER.into())
+            .unwrap_or("127.0.0.1:9097".into())
     }
 
     pub fn guard_external_controller(config: &Mapping) -> String {
+        // 在初始化阶段，直接返回配置中的值，不进行额外检查
+        // 这样可以避免在配置加载期间的循环依赖
         Self::guard_server_ctrl(config)
     }
 
     pub async fn guard_external_controller_with_setting(config: &Mapping) -> String {
+        // 检查 enable_external_controller 设置，用于运行时配置生成
         let enable_external_controller = Config::verge()
             .await
             .latest_ref()
@@ -315,13 +307,11 @@ impl IClashTemp {
         if enable_external_controller {
             Self::guard_server_ctrl(config)
         } else {
-            String::new()
+            "".into()
         }
     }
 
     pub fn guard_client_ctrl(config: &Mapping) -> String {
-        use crate::constants::network::DEFAULT_EXTERNAL_CONTROLLER;
-
         let value = Self::guard_server_ctrl(config);
         match SocketAddr::from_str(value.as_str()) {
             Ok(mut socket) => {
@@ -330,19 +320,18 @@ impl IClashTemp {
                 }
                 socket.to_string()
             }
-            Err(_) => DEFAULT_EXTERNAL_CONTROLLER.into(),
+            Err(_) => "127.0.0.1:9097".into(),
         }
     }
 
     pub fn guard_external_controller_ipc() -> String {
-        use crate::constants::network::DEFAULT_EXTERNAL_CONTROLLER;
-
+        // 总是使用当前的 IPC 路径，确保配置文件与运行时路径一致
         ipc_path()
             .ok()
             .and_then(|path| path_to_str(&path).ok().map(|s| s.into()))
             .unwrap_or_else(|| {
                 log::error!(target: "app", "Failed to get IPC path");
-                DEFAULT_EXTERNAL_CONTROLLER.into()
+                crate::constants::network::DEFAULT_EXTERNAL_CONTROLLER.into()
             })
     }
 }
@@ -370,27 +359,23 @@ fn test_clash_info() {
     }
 
     fn get_result<S: Into<String>>(port: u16, server: S) -> ClashInfo {
-        use crate::constants::network::ports;
-
         ClashInfo {
             mixed_port: port,
-            socks_port: ports::DEFAULT_SOCKS,
-            port: ports::DEFAULT_HTTP,
+            socks_port: 7898,
+            port: 7899,
             server: server.into(),
             secret: None,
         }
     }
 
-    use crate::constants::network::{DEFAULT_EXTERNAL_CONTROLLER, ports};
-
     assert_eq!(
         IClashTemp(IClashTemp::guard(Mapping::new())).get_client_info(),
-        get_result(ports::DEFAULT_MIXED, DEFAULT_EXTERNAL_CONTROLLER)
+        get_result(7897, "127.0.0.1:9097")
     );
 
-    assert_eq!(get_case("", ""), get_result(ports::DEFAULT_MIXED, DEFAULT_EXTERNAL_CONTROLLER));
+    assert_eq!(get_case("", ""), get_result(7897, "127.0.0.1:9097"));
 
-    assert_eq!(get_case(65537, ""), get_result(1, DEFAULT_EXTERNAL_CONTROLLER));
+    assert_eq!(get_case(65537, ""), get_result(1, "127.0.0.1:9097"));
 
     assert_eq!(
         get_case(8888, "127.0.0.1:8888"),
@@ -399,7 +384,7 @@ fn test_clash_info() {
 
     assert_eq!(
         get_case(8888, "   :98888 "),
-        get_result(8888, DEFAULT_EXTERNAL_CONTROLLER)
+        get_result(8888, "127.0.0.1:9097")
     );
 
     assert_eq!(
@@ -424,7 +409,7 @@ fn test_clash_info() {
 
     assert_eq!(
         get_case(8888, "192.168.1.1:80800"),
-        get_result(8888, DEFAULT_EXTERNAL_CONTROLLER)
+        get_result(8888, "127.0.0.1:9097")
     );
 }
 

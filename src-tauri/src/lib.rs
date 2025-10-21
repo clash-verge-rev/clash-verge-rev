@@ -35,9 +35,10 @@ mod app_init {
 
     use super::*;
 
+    /// Initialize singleton monitoring for other instances
     pub fn init_singleton_check() -> Result<()> {
         tauri::async_runtime::block_on(async move {
-            logging!(info, Type::Setup, "Checking for existing instances");
+            logging!(info, Type::Setup, "开始检查单例实例...");
             server::check_singleton().await?;
             Ok(())
         })
@@ -73,10 +74,11 @@ mod app_init {
         builder
     }
 
+    /// Setup deep link handling
     pub fn setup_deep_links(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
         {
-            logging!(info, Type::Setup, "Registering deep link handlers");
+            logging!(info, Type::Setup, "注册深层链接...");
             app.deep_link().register_all()?;
         }
 
@@ -111,8 +113,9 @@ mod app_init {
         Ok(())
     }
 
+    /// Setup window state management
     pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-        logging!(info, Type::Setup, "Initializing window state management");
+        logging!(info, Type::Setup, "初始化窗口状态管理...");
         let window_state_plugin = tauri_plugin_window_state::Builder::new()
             .with_filename("window_state.json")
             .with_state_flags(tauri_plugin_window_state::StateFlags::default())
@@ -121,7 +124,8 @@ mod app_init {
         Ok(())
     }
 
-    pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+    pub fn generate_handlers()
+    -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
         tauri::generate_handler![
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
@@ -222,12 +226,12 @@ pub fn run() {
 
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
-            logging!(info, Type::Setup, "Starting application initialization");
+            logging!(info, Type::Setup, "开始应用初始化...");
 
             #[allow(clippy::expect_used)]
             APP_HANDLE
                 .set(app.app_handle().clone())
-                .expect("Failed to set global app handle");
+                .expect("failed to set global app handle");
 
             if let Err(e) = app_init::setup_autostart(app) {
                 logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
@@ -245,7 +249,7 @@ pub fn run() {
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
 
-            logging!(info, Type::Setup, "Initialization started");
+            logging!(info, Type::Setup, "初始化已启动");
             Ok(())
         })
         .invoke_handler(app_init::generate_handlers());
@@ -256,11 +260,11 @@ pub fn run() {
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
-                logging!(debug, Type::System, "Application exiting, skipping event");
+                logging!(debug, Type::System, "应用正在退出，跳过处理");
                 return;
             }
 
-            logging!(info, Type::System, "Application ready");
+            logging!(info, Type::System, "应用就绪");
             handle::Handle::global().init();
 
             #[cfg(target_os = "macos")]

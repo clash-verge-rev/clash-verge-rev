@@ -77,5 +77,3 @@ impl CoreManager {
 }
 
 singleton_lazy!(CoreManager, CORE_MANAGER, CoreManager::default);
-
-
