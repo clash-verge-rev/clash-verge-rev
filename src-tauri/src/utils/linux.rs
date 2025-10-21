@@ -536,7 +536,7 @@ pub fn ensure_mimeapps_entries(desktop_file: &str, schemes: &[&str]) -> Result<(
 
     if !default_present {
         changed = true;
-        if !output_lines.is_empty() && !output_lines.last().unwrap().is_empty() {
+        if output_lines.last().is_some_and(|line| !line.is_empty()) {
             output_lines.push(String::new());
         }
         output_lines.push("[Default Applications]".to_string());
@@ -572,10 +572,8 @@ fn mimeapps_list_path() -> Option<PathBuf> {
             dir
         });
 
-    if let Some(ref path) = config_path {
-        if path.exists() {
-            return Some(path.clone());
-        }
+    if config_path.as_ref().is_some_and(|path| path.exists()) {
+        return config_path;
     }
 
     let data_path = env::var_os("XDG_DATA_HOME")
@@ -593,10 +591,8 @@ fn mimeapps_list_path() -> Option<PathBuf> {
             dir
         });
 
-    if let Some(ref path) = data_path {
-        if path.exists() {
-            return Some(path.clone());
-        }
+    if data_path.as_ref().is_some_and(|path| path.exists()) {
+        return data_path;
     }
 
     config_path
