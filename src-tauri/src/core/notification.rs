@@ -13,6 +13,7 @@ use std::{
     time::Instant,
 };
 use tauri::{Emitter, WebviewWindow};
+use smartstring::alias::String;
 
 #[derive(Debug, Clone)]
 pub enum FrontendEvent {

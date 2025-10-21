@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, IVerge},
@@ -13,6 +11,8 @@ use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use port_scanner::local_port_available;
 use reqwest::ClientBuilder;
+use smartstring::alias::String;
+use std::time::Duration;
 use tokio::sync::oneshot;
 use warp::Filter;
 
@@ -31,7 +31,7 @@ pub async fn check_singleton() -> Result<()> {
         let client = ClientBuilder::new()
             .timeout(Duration::from_millis(500))
             .build()?;
-        let argvs: Vec<String> = std::env::args().collect();
+        let argvs: Vec<std::string::String> = std::env::args().collect();
         if argvs.len() > 1 {
             #[cfg(not(target_os = "macos"))]
             {
@@ -75,8 +75,8 @@ pub fn embed_server() {
             } else {
                 logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
             };
-            Ok::<_, warp::Rejection>(warp::reply::with_status::<String>(
-                "ok".into(),
+            Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
+                "ok".to_string(),
                 warp::http::StatusCode::OK,
             ))
         });
@@ -111,7 +111,7 @@ pub fn embed_server() {
                 tokio::task::spawn_local(async move {
                     logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
                 });
-                warp::reply::with_status::<String>("ok".into(), warp::http::StatusCode::OK)
+                warp::reply::with_status::<std::string::String>("ok".to_string(), warp::http::StatusCode::OK)
             });
 
         let commands = visible.or(scheme).or(pac);

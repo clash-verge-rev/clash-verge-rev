@@ -10,6 +10,7 @@ use anyhow::{Result, anyhow};
 use std::{path::PathBuf, time::Instant};
 use tauri_plugin_mihomo::Error as MihomoError;
 use tokio::time::sleep;
+use smartstring::alias::String;
 
 impl CoreManager {
     pub async fn use_default_config(&self, error_key: &str, error_msg: &str) -> Result<()> {

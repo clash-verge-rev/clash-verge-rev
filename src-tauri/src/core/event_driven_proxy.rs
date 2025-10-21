@@ -420,18 +420,18 @@ impl EventDrivenProxyManager {
             let verge_ref = verge_config.latest_ref();
             (verge_ref.verge_mixed_port, verge_ref.proxy_host.clone())
         };
-
+        
         let default_port = {
             let clash_config = Config::clash().await;
             clash_config.latest_ref().get_mixed_port()
         };
 
         let port = verge_mixed_port.unwrap_or(default_port);
-        let host = proxy_host.unwrap_or_else(|| network::DEFAULT_PROXY_HOST.into());
+        let host = proxy_host.unwrap_or_else(|| network::DEFAULT_PROXY_HOST.into()).into();
 
         Sysproxy {
             enable: true,
-            host: proxy_host.into(),
+            host,
             port,
             bypass: Self::get_bypass_config().await.into(),
         }
@@ -445,19 +445,10 @@ impl EventDrivenProxyManager {
         let use_default = verge.use_default_bypass.unwrap_or(true);
         let custom = verge.system_proxy_bypass.as_deref().unwrap_or("");
 
-        #[cfg(target_os = "linux")]
-        let default_bypass =
-            "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1";
-
-        #[cfg(target_os = "macos")]
-        let default_bypass = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
-
-        if custom_bypass.is_empty() {
-            default_bypass.into()
-        } else if use_default {
-            format!("{default_bypass},{custom_bypass}").into()
-        } else {
-            custom_bypass
+        match (use_default, custom.is_empty()) {
+            (_, true) => bypass::DEFAULT.into(),
+            (true, false) => format!("{},{}", bypass::DEFAULT, custom).into(),
+            (false, false) => custom.into(),
         }
     }
 

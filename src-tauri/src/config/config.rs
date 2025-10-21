@@ -123,7 +123,7 @@ impl Config {
 
         if let Some((msg_type, msg_content)) = validation_result {
             sleep(timing::STARTUP_ERROR_DELAY).await;
-            handle::Handle::notice_message(msg_type, &msg_content);
+            handle::Handle::notice_message(msg_type, msg_content);
         }
 
         Ok(())
