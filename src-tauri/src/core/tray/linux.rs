@@ -1,6 +1,9 @@
 use std::{
     io::Cursor,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{
+        OnceLock,
+        atomic::{AtomicBool, Ordering},
+    },
     time::{Duration, Instant},
 };
 
@@ -24,6 +27,24 @@ use super::shared::{
 };
 
 const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
+
+fn is_running_on_gnome() -> bool {
+    static IS_GNOME: OnceLock<bool> = OnceLock::new();
+    *IS_GNOME.get_or_init(|| {
+        for key in [
+            "XDG_CURRENT_DESKTOP",
+            "DESKTOP_SESSION",
+            "GNOME_SHELL_SESSION_MODE",
+        ] {
+            if let Ok(value) = std::env::var(key) {
+                if value.to_ascii_lowercase().contains("gnome") {
+                    return true;
+                }
+            }
+        }
+        false
+    })
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum BackendVariant {
@@ -213,17 +234,21 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
             return ContextMenuResponse::ShowMenu;
         }
 
-        if !should_handle_tray_click() {
-            return ContextMenuResponse::Suppress;
-        }
-
-        let action = self.state.lock().click_action;
+        let action = { self.state.lock().click_action };
         if matches!(action, TrayClickAction::ShowMenu | TrayClickAction::None) {
             return ContextMenuResponse::ShowMenu;
         }
 
-        Self::trigger_click_action(action);
-        ContextMenuResponse::Suppress
+        if should_handle_tray_click() {
+            Self::trigger_click_action(action);
+            ContextMenuResponse::Suppress
+        } else {
+            debug!(
+                target: "app",
+                "ksni: context menu request fell back to host menu due to debounce"
+            );
+            ContextMenuResponse::ShowMenu
+        }
     }
 }
 
@@ -548,6 +573,11 @@ impl Tray {
 
     pub async fn update_tooltip(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
+            return Ok(());
+        }
+
+        if is_running_on_gnome() {
+            debug!(target: "app", "ksni: skipping tooltip update on GNOME.");
             return Ok(());
         }
 
