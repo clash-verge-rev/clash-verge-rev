@@ -6,6 +6,7 @@ use crate::utils::{
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 use std::collections::HashSet;
 use tokio::fs;
 
@@ -47,7 +48,7 @@ impl IProfiles {
                     if let Some(items) = profiles.items.as_mut() {
                         for item in items.iter_mut() {
                             if item.uid.is_none() {
-                                item.uid = Some(help::get_uid("d"));
+                                item.uid = Some(help::get_uid("d").into());
                             }
                         }
                     }
@@ -142,7 +143,7 @@ impl IProfiles {
             let file = item.file.clone().ok_or_else(|| {
                 anyhow::anyhow!("file field is required when file_data is provided")
             })?;
-            let path = dirs::app_profiles_dir()?.join(&file);
+            let path = dirs::app_profiles_dir()?.join(file.as_str());
 
             fs::write(&path, file_data.as_bytes())
                 .await
@@ -240,13 +241,16 @@ impl IProfiles {
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
-                        let file =
-                            file.unwrap_or(item.file.take().unwrap_or(format!("{}.yaml", &uid)));
+                        let file = file.unwrap_or_else(|| {
+                            item.file
+                                .take()
+                                .unwrap_or_else(|| format!("{}.yaml", &uid).into())
+                        });
 
                         // the file must exists
                         each.file = Some(file.clone());
 
-                        let path = dirs::app_profiles_dir()?.join(&file);
+                        let path = dirs::app_profiles_dir()?.join(file.as_str());
 
                         fs::write(&path, file_data.as_bytes())
                             .await
@@ -291,7 +295,7 @@ impl IProfiles {
             && let Some(file) = items.remove(index).file
         {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
@@ -306,7 +310,7 @@ impl IProfiles {
             && let Some(file) = items.remove(index).file
         {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
@@ -321,7 +325,7 @@ impl IProfiles {
             && let Some(file) = items.remove(index).file
         {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
@@ -336,7 +340,7 @@ impl IProfiles {
             && let Some(file) = items.remove(index).file
         {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
@@ -351,7 +355,7 @@ impl IProfiles {
             && let Some(file) = items.remove(index).file
         {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
@@ -366,7 +370,7 @@ impl IProfiles {
             && let Some(file) = items.remove(index).file
         {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
@@ -392,7 +396,7 @@ impl IProfiles {
             (Some(current), Some(items)) => {
                 if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
                     let file_path = match item.file.as_ref() {
-                        Some(file) => dirs::app_profiles_dir()?.join(file),
+                        Some(file) => dirs::app_profiles_dir()?.join(file.as_str()),
                         None => bail!("failed to get the file field"),
                     };
                     return help::read_mapping(&file_path).await;
@@ -544,7 +548,7 @@ impl IProfiles {
                             log::info!(target: "app", "已清理冗余文件: {file_name}");
                         }
                         Err(e) => {
-                            failed_deletions.push(format!("{file_name}: {e}"));
+                            failed_deletions.push(format!("{file_name}: {e}").into());
                             log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
                         }
                     }

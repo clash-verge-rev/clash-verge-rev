@@ -8,6 +8,7 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::Result;
+use smartstring::alias::String;
 
 impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
@@ -48,7 +49,7 @@ impl CoreManager {
             .ok_or_else(|| "Clash core cannot be None".to_string())?;
 
         if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
-            return Err(format!("Invalid clash core: {}", core));
+            return Err(format!("Invalid clash core: {}", core).into());
         }
 
         Config::verge().await.draft_mut().clash_core = clash_core;
@@ -61,7 +62,9 @@ impl CoreManager {
             .await
             .map_err(|e| e.to_string())?;
 
-        self.apply_config(run_path).await.map_err(|e| e.to_string())
+        self.apply_config(run_path)
+            .await
+            .map_err(|e| e.to_string().into())
     }
 
     async fn prepare_startup(&self) -> Result<()> {

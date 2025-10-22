@@ -26,11 +26,11 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
         .latest_ref()
         .start_page
         .clone()
-        .unwrap_or("/".to_string());
+        .unwrap_or_else(|| "/".into());
     match tauri::WebviewWindowBuilder::new(
         app_handle,
         "main", /* the unique window label */
-        tauri::WebviewUrl::App(start_page.into()),
+        tauri::WebviewUrl::App(start_page.as_str().into()),
     )
     .title("Clash Verge")
     .center()

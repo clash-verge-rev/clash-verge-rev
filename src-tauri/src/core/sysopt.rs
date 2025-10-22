@@ -7,6 +7,7 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::Result;
+use smartstring::alias::String;
 use std::sync::Arc;
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
@@ -45,7 +46,7 @@ async fn get_bypass() -> String {
     if custom_bypass.is_empty() {
         DEFAULT_BYPASS.into()
     } else if use_default {
-        format!("{DEFAULT_BYPASS},{custom_bypass}")
+        format!("{DEFAULT_BYPASS},{custom_bypass}").into()
     } else {
         custom_bypass
     }
@@ -53,7 +54,7 @@ async fn get_bypass() -> String {
 
 // Uses tokio Command with CREATE_NO_WINDOW flag to avoid DLL initialization issues during shutdown
 #[cfg(target_os = "windows")]
-async fn execute_sysproxy_command(args: Vec<String>) -> Result<()> {
+async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> {
     use crate::utils::dirs;
     use anyhow::bail;
     #[allow(unused_imports)] // Required for .creation_flags() method
@@ -68,7 +69,7 @@ async fn execute_sysproxy_command(args: Vec<String>) -> Result<()> {
     }
 
     let output = Command::new(sysproxy_exe)
-        .args(&args)
+        .args(args)
         .creation_flags(0x08000000) // CREATE_NO_WINDOW - 隐藏窗口
         .output()
         .await?;
@@ -132,9 +133,9 @@ impl Sysopt {
         {
             let mut sys = Sysproxy {
                 enable: false,
-                host: proxy_host.clone(),
+                host: proxy_host.clone().into(),
                 port,
-                bypass: get_bypass().await,
+                bypass: get_bypass().await.into(),
             };
             let mut auto = Autoproxy {
                 enable: false,
@@ -178,13 +179,13 @@ impl Sysopt {
                 return result;
             }
 
-            let args = if pac_enable {
+            let args: Vec<std::string::String> = if pac_enable {
                 let address = format!("http://{proxy_host}:{pac_port}/commands/pac");
                 vec!["pac".into(), address]
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass().await;
-                vec!["global".into(), address, bypass]
+                vec!["global".into(), address, bypass.into()]
             };
 
             execute_sysproxy_command(args).await?;

@@ -1,4 +1,4 @@
-use super::CmdResult;
+use super::{CmdResult, StringifyErr};
 use crate::{
     core::service::{self, SERVICE_MANAGER, ServiceStatus},
     utils::i18n::t,
@@ -12,7 +12,7 @@ async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) ->
         .await
     {
         let emsg = format!("{} Service failed: {}", op_type, e);
-        return Err(t(emsg.as_str()).await);
+        return Err(t(emsg.as_str()).await.into());
     }
     Ok(())
 }
@@ -39,8 +39,6 @@ pub async fn repair_service() -> CmdResult {
 
 #[tauri::command]
 pub async fn is_service_available() -> CmdResult<bool> {
-    service::is_service_available()
-        .await
-        .map(|_| true)
-        .map_err(|e| e.to_string())
+    service::is_service_available().await.stringify_err()?;
+    Ok(true)
 }

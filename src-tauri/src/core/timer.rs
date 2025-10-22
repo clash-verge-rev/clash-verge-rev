@@ -2,6 +2,7 @@ use crate::{config::Config, feat, logging, logging_error, singleton, utils::logg
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use parking_lot::RwLock;
+use smartstring::alias::String;
 use std::{
     collections::HashMap,
     pin::Pin,

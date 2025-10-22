@@ -155,9 +155,9 @@ pub async fn delete_log() -> Result<()> {
         let month = u32::from_str(sa[1])?;
         let day = u32::from_str(sa[2])?;
         let time = chrono::NaiveDate::from_ymd_opt(year, month, day)
-            .ok_or(anyhow::anyhow!("invalid time str"))?
+            .ok_or_else(|| anyhow::anyhow!("invalid time str"))?
             .and_hms_opt(0, 0, 0)
-            .ok_or(anyhow::anyhow!("invalid time str"))?;
+            .ok_or_else(|| anyhow::anyhow!("invalid time str"))?;
         Ok(time)
     };
 
@@ -171,7 +171,7 @@ pub async fn delete_log() -> Result<()> {
             let file_time = Local
                 .from_local_datetime(&created_time)
                 .single()
-                .ok_or(anyhow::anyhow!("invalid local datetime"))?;
+                .ok_or_else(|| anyhow::anyhow!("invalid local datetime"))?;
 
             let duration = now.signed_duration_since(file_time);
             if duration.num_days() > day {
@@ -523,7 +523,7 @@ pub async fn startup_script() -> Result<()> {
     let script_path = {
         let verge = Config::verge().await;
         let verge = verge.latest_ref();
-        verge.startup_script.clone().unwrap_or("".into())
+        verge.startup_script.clone().unwrap_or_else(|| "".into())
     };
 
     if script_path.is_empty() {
@@ -541,19 +541,19 @@ pub async fn startup_script() -> Result<()> {
         ));
     };
 
-    let script_dir = PathBuf::from(&script_path);
+    let script_dir = PathBuf::from(script_path.as_str());
     if !script_dir.exists() {
         return Err(anyhow::anyhow!("script not found: {}", script_path));
     }
 
     let parent_dir = script_dir.parent();
-    let working_dir = parent_dir.unwrap_or(script_dir.as_ref());
+    let working_dir = parent_dir.unwrap_or_else(|| script_dir.as_ref());
 
     app_handle
         .shell()
         .command(shell_type)
         .current_dir(working_dir)
-        .args(&[script_path])
+        .args([script_path.as_str()])
         .output()
         .await?;
 

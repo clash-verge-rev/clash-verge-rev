@@ -47,7 +47,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
         let app_exe = dunce::canonicalize(app_exe)?;
         let app_dir = app_exe
             .parent()
-            .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
+            .ok_or_else(|| anyhow::anyhow!("failed to get the portable app dir"))?;
         return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
     }
 
@@ -170,7 +170,7 @@ pub fn path_to_str(path: &PathBuf) -> Result<&str> {
     let path_str = path
         .as_os_str()
         .to_str()
-        .ok_or(anyhow::anyhow!("failed to get path from {:?}", path))?;
+        .ok_or_else(|| anyhow::anyhow!("failed to get path from {:?}", path))?;
     Ok(path_str)
 }
 

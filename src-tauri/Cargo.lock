@@ -1133,6 +1133,7 @@ dependencies = [
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.10.9",
+ "smartstring",
  "sys-locale",
  "sysinfo",
  "sysproxy",
@@ -3533,7 +3534,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
 dependencies = [
  "equivalent",
- "hashbrown 0.15.5",
+ "hashbrown 0.16.0",
  "serde",
  "serde_core",
 ]
@@ -6795,6 +6796,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
+name = "smartstring"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fb72c633efbaa2dd666986505016c32c3044395ceaf881518399d2f4127ee29"
+dependencies = [
+ "autocfg",
+ "serde",
+ "static_assertions",
+ "version_check",
+]
+
+[[package]]
 name = "smol"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7175,9 +7188,9 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tauri"
-version = "2.9.0"
+version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f07c6590706b2fc0ab287b041cf5ce9c435b3850bdae5571e19d9d27584e89d"
+checksum = "c9871670c6711f50fddd4e20350be6b9dd6e6c2b5d77d8ee8900eb0d58cd837a"
 dependencies = [
  "anyhow",
  "bytes",
@@ -7221,7 +7234,6 @@ dependencies = [
  "tracing",
  "tray-icon",
  "url",
- "urlpattern",
  "webkit2gtk",
  "webview2-com",
  "window-vibrancy",
@@ -7230,9 +7242,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-build"
-version = "2.5.0"
+version = "2.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f71be1f494b683ac439e6d61c16ab5c472c6f9c6ee78995b29556d9067c021a1"
+checksum = "a924b6c50fe83193f0f8b14072afa7c25b7a72752a2a73d9549b463f5fe91a38"
 dependencies = [
  "anyhow",
  "cargo_toml",
@@ -7588,9 +7600,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime"
-version = "2.9.0"
+version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3367f0b47df90e9195cd9f04a56b0055a2cba45aa11923c6c253d748778176fc"
+checksum = "9368f09358496f2229313fccb37682ad116b7f46fa76981efe116994a0628926"
 dependencies = [
  "cookie",
  "dpi",
@@ -7613,9 +7625,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime-wry"
-version = "2.9.0"
+version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80d91d29ca680c545364cf75ba2f2e3c7ea2ab6376bfa3be26b56fa2463a5b5e"
+checksum = "929f5df216f5c02a9e894554401bcdab6eec3e39ec6a4a7731c7067fc8688a93"
 dependencies = [
  "gtk",
  "http 1.3.1",

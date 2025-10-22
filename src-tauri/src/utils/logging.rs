@@ -98,21 +98,10 @@ macro_rules! wrap_err {
     // Case 1: Future<Result<T, E>>
     ($stat:expr, async) => {{
         match $stat.await {
-            Ok(a) => Ok(a),
+            Ok(a) => Ok::<_, ::anyhow::Error>(a),
             Err(err) => {
                 log::error!(target: "app", "{}", err);
-                Err(err.to_string())
-            }
-        }
-    }};
-
-    // Case 2: Result<T, E>
-    ($stat:expr) => {{
-        match $stat {
-            Ok(a) => Ok(a),
-            Err(err) => {
-                log::error!(target: "app", "{}", err);
-                Err(err.to_string())
+                Err(::anyhow::Error::msg(err.to_string()))
             }
         }
     }};

@@ -83,7 +83,10 @@ pub(crate) async fn load_tray_menu_inputs() -> Result<TrayMenuInputs> {
         .await
         .data_mut()
         .all_profile_uid_and_name()
-        .unwrap_or_default();
+        .unwrap_or_default()
+        .into_iter()
+        .map(|(uid, name)| (uid.to_string(), name.to_string()))
+        .collect::<Vec<_>>();
     let is_lightweight_mode = is_in_lightweight_mode();
 
     Ok(TrayMenuInputs {
@@ -385,7 +388,7 @@ pub(crate) async fn build_tray_menu_model(
         let is_current_profile = Config::profiles()
             .await
             .data_mut()
-            .is_current_profile_index(profile_uid.to_string());
+            .is_current_profile_index(profile_uid.clone().into());
         profile_items.push(TrayMenuNode::Check(TrayCheckItem {
             id: format!("profiles_{profile_uid}"),
             label: t(profile_name).await,
@@ -709,7 +712,7 @@ pub(crate) async fn build_tooltip_text() -> Result<String> {
             && let Ok(profile) = profiles.get_item(&current_profile_uid)
             && let Some(profile_name) = &profile.name
         {
-            current_profile_name = profile_name.clone();
+            current_profile_name = profile_name.to_string();
         }
     }
 
@@ -718,11 +721,10 @@ pub(crate) async fn build_tooltip_text() -> Result<String> {
     let profile_text = t("Profile").await;
 
     let version = env!("CARGO_PKG_VERSION");
-    let reassembled_version = version
-        .split_once('+')
-        .map_or(version.into(), |(main, rest)| {
-            format!("{main}+{}", rest.split('.').next().unwrap_or(""))
-        });
+    let reassembled_version = version.split_once('+').map_or_else(
+        || version.into(),
+        |(main, rest)| format!("{main}+{}", rest.split('.').next().unwrap_or("")),
+    );
 
     Ok(format!(
         "Clash Verge {}\n{}: {}\n{}: {}\n{}: {}",

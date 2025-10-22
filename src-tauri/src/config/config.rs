@@ -8,6 +8,7 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
+use smartstring::alias::String;
 use std::path::PathBuf;
 use tokio::sync::OnceCell;
 use tokio::time::sleep;
@@ -122,7 +123,7 @@ impl Config {
 
         if let Some((msg_type, msg_content)) = validation_result {
             sleep(timing::STARTUP_ERROR_DELAY).await;
-            handle::Handle::notice_message(msg_type, &msg_content);
+            handle::Handle::notice_message(msg_type, msg_content);
         }
 
         Ok(())
@@ -139,7 +140,7 @@ impl Config {
             .latest_ref()
             .config
             .as_ref()
-            .ok_or(anyhow!("failed to get runtime config"))?
+            .ok_or_else(|| anyhow!("failed to get runtime config"))?
             .clone();
         drop(runtime); // 显式释放锁
 

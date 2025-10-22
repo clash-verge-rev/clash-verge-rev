@@ -4,6 +4,7 @@ use crate::{
     utils::{dirs, help},
 };
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 use std::fs;
 
 #[derive(Debug, Clone)]
@@ -72,8 +73,8 @@ impl AsyncChainItemFrom for Option<ChainItem> {
     async fn from_async(item: &PrfItem) -> Option<ChainItem> {
         let itype = item.itype.as_ref()?.as_str();
         let file = item.file.clone()?;
-        let uid = item.uid.clone().unwrap_or("".into());
-        let path = dirs::app_profiles_dir().ok()?.join(file);
+        let uid = item.uid.clone().unwrap_or_else(|| "".into());
+        let path = dirs::app_profiles_dir().ok()?.join(file.as_str());
 
         if !path.exists() {
             return None;
@@ -82,7 +83,7 @@ impl AsyncChainItemFrom for Option<ChainItem> {
         match itype {
             "script" => Some(ChainItem {
                 uid,
-                data: ChainType::Script(fs::read_to_string(path).ok()?),
+                data: ChainType::Script(fs::read_to_string(path).ok()?.into()),
             }),
             "merge" => Some(ChainItem {
                 uid,
