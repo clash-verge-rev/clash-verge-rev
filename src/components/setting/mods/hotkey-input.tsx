@@ -76,11 +76,10 @@ export const HotkeyInput = (props: Props) => {
             }
           }}
           onKeyDown={(e) => {
-            const evt = e.nativeEvent;
             e.preventDefault();
             e.stopPropagation();
 
-            const key = parseHotkey(evt.shiftKey, evt.key);
+            const key = parseHotkey(e);
             if (key === "UNIDENTIFIED") return;
 
             changeRef.current = [...new Set([...changeRef.current, key])];
