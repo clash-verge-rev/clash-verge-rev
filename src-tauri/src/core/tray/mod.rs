@@ -840,6 +840,7 @@ async fn create_tray_menu(
     let proxies_text = t("Proxies").await;
     let system_proxy_text = t("System Proxy").await;
     let tun_mode_text = t("TUN Mode").await;
+    let close_all_connections_text = t("Close All Connections").await;
     let lightweight_mode_text = t("LightWeight Mode").await;
     let copy_env_text = t("Copy Env").await;
     let conf_dir_text = t("Conf Dir").await;
@@ -949,6 +950,14 @@ async fn create_tray_menu(
         hotkeys.get("toggle_tun_mode").map(|s| s.as_str()),
     )?;
 
+    let close_all_connections = &MenuItem::with_id(
+        app_handle,
+        "close_all_connections",
+        close_all_connections_text,
+        true,
+        None::<&str>,
+    )?;
+
     let lighteweight_mode = &CheckMenuItem::with_id(
         app_handle,
         "entry_lightweight_mode",
@@ -1021,7 +1030,12 @@ async fn create_tray_menu(
         "more",
         more_text,
         true,
-        &[restart_clash, restart_app, app_version],
+        &[
+            close_all_connections,
+            restart_clash,
+            restart_app,
+            app_version,
+        ],
     )?;
 
     let quit = &MenuItem::with_id(app_handle, "quit", exit_text, true, Some("CmdOrControl+Q"))?;
@@ -1090,6 +1104,11 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             "tun_mode" => {
                 feat::toggle_tun_mode(None).await;
+            }
+            "close_all_connections" => {
+                if let Err(err) = handle::Handle::mihomo().await.close_all_connections().await {
+                    log::error!(target: "app", "Failed to close all connections from tray: {err}");
+                }
             }
             "copy_env" => feat::copy_clash_env().await,
             "open_app_dir" => {
