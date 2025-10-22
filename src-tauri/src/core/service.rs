@@ -330,7 +330,7 @@ async fn check_service_version() -> Result<String> {
             return Err(anyhow::anyhow!(err_msg));
         }
 
-        let version = response.data.unwrap_or("unknown".into());
+        let version = response.data.unwrap_or_else(|| "unknown".into());
         Ok(version)
     };
 

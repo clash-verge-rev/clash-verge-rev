@@ -33,9 +33,9 @@ impl Debug for PlatformSpecification {
 
 impl PlatformSpecification {
     pub fn new() -> Self {
-        let system_name = System::name().unwrap_or("Null".into());
-        let system_version = System::long_os_version().unwrap_or("Null".into());
-        let system_kernel_version = System::kernel_version().unwrap_or("Null".into());
+        let system_name = System::name().unwrap_or_else(|| "Null".into());
+        let system_version = System::long_os_version().unwrap_or_else(|| "Null".into());
+        let system_kernel_version = System::kernel_version().unwrap_or_else(|| "Null".into());
         let system_arch = System::cpu_arch();
 
         let handler = handle::Handle::app_handle();

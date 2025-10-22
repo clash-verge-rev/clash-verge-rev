@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::{cmd::StringifyErr, config::*, core::CoreManager, log_err};
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::HashMap;
@@ -19,7 +19,7 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
 
     let config = runtime.config.as_ref();
     config
-        .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
+        .ok_or_else(|| anyhow!("failed to parse config to yaml file"))
         .and_then(|config| {
             serde_yaml_ng::to_string(config)
                 .context("failed to convert config to yaml")
@@ -48,7 +48,7 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
     let config = runtime
         .config
         .as_ref()
-        .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
+        .ok_or_else(|| anyhow!("failed to parse config to yaml file"))
         .stringify_err()?;
 
     if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get("proxies") {

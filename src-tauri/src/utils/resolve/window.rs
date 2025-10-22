@@ -26,7 +26,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
         .latest_ref()
         .start_page
         .clone()
-        .unwrap_or("/".into());
+        .unwrap_or_else(|| "/".into());
     match tauri::WebviewWindowBuilder::new(
         app_handle,
         "main", /* the unique window label */

@@ -296,10 +296,10 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // 合并默认的config
     for (key, value) in clash_config.into_iter() {
         if key.as_str() == Some("tun") {
-            let mut tun = config.get_mut("tun").map_or(Mapping::new(), |val| {
-                val.as_mapping().cloned().unwrap_or(Mapping::new())
+            let mut tun = config.get_mut("tun").map_or_else(Mapping::new, |val| {
+                val.as_mapping().cloned().unwrap_or_else(Mapping::new)
             });
-            let patch_tun = value.as_mapping().cloned().unwrap_or(Mapping::new());
+            let patch_tun = value.as_mapping().cloned().unwrap_or_else(Mapping::new);
             for (key, value) in patch_tun.into_iter() {
                 tun.insert(key, value);
             }

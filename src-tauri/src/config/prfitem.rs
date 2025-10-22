@@ -164,8 +164,8 @@ impl PrfItem {
                 PrfItem::from_url(url, name, desc, item.option).await
             }
             "local" => {
-                let name = item.name.unwrap_or("Local File".into());
-                let desc = item.desc.unwrap_or("".into());
+                let name = item.name.unwrap_or_else(|| "Local File".into());
+                let desc = item.desc.unwrap_or_else(|| "".into());
                 PrfItem::from_local(name, desc, file_data, item.option).await
             }
             typ => bail!("invalid profile item type \"{typ}\""),
@@ -235,7 +235,7 @@ impl PrfItem {
             }),
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
-            file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
+            file_data: Some(file_data.unwrap_or_else(|| tmpl::ITEM_LOCAL.into())),
         })
     }
 
@@ -331,7 +331,8 @@ impl PrfItem {
                 }
             }
             None => Some(
-                crate::utils::help::get_last_part_and_decode(url).unwrap_or("Remote File".into()),
+                crate::utils::help::get_last_part_and_decode(url)
+                    .unwrap_or_else(|| "Remote File".into()),
             ),
         };
         let update_interval = match update_interval {
@@ -355,7 +356,7 @@ impl PrfItem {
 
         let uid = help::get_uid("R").into();
         let file = format!("{uid}.yaml").into();
-        let name = name.unwrap_or(filename.unwrap_or("Remote File".into()).into());
+        let name = name.unwrap_or_else(|| filename.unwrap_or_else(|| "Remote File".into()).into());
         let data = resp.text_with_charset()?;
 
         // process the charset "UTF-8 with BOM"
