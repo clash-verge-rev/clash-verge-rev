@@ -238,6 +238,10 @@ impl MenuShortcut {
         }
         result
     }
+
+    pub fn display(&self) -> &str {
+        &self.0
+    }
 }
 
 fn translate_modifier(segment: &str) -> String {

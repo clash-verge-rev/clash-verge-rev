@@ -1,0 +1,129 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  background: rgba(28, 30, 34, 0.95);
+  color: #e7eaee;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tray-menu {
+  min-width: 240px;
+  max-width: 320px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 1;
+  transition: opacity 150ms ease;
+}
+
+.tray-menu--hidden {
+  opacity: 0;
+}
+
+.tray-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tray-menu__item {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.tray-menu__item:hover,
+.tray-menu__item:focus-visible {
+  background: rgba(88, 148, 255, 0.22);
+  outline: none;
+}
+
+.tray-menu__item--checked .tray-menu__item-prefix {
+  color: #58a6ff;
+}
+
+.tray-menu__item--disabled {
+  color: rgba(231, 234, 238, 0.35);
+  cursor: default;
+}
+
+.tray-menu__item--disabled:hover {
+  background: transparent;
+}
+
+.tray-menu__item-prefix {
+  font-weight: 600;
+  font-size: 14px;
+  width: 18px;
+  display: inline-flex;
+  justify-content: flex-start;
+}
+
+.tray-menu__item-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tray-menu__item-shortcut {
+  font-size: 12px;
+  color: rgba(231, 234, 238, 0.6);
+}
+
+.tray-menu__separator {
+  height: 1px;
+  background: rgba(231, 234, 238, 0.12);
+  margin: 6px 2px;
+}
+
+.tray-menu__separator--nested {
+  margin-left: 18px;
+}
+
+.tray-menu__submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tray-menu__submenu--nested {
+  padding-left: 18px;
+}
+
+.tray-menu__submenu-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(231, 234, 238, 0.7);
+  padding: 6px 10px 4px;
+}
+
+.tray-menu__submenu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 6px;
+}
