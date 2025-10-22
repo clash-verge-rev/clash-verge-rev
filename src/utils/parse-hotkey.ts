@@ -66,53 +66,55 @@ const mapKeyCombination = (key: string): string => {
   const mappedKey = KEY_MAP[key] || key;
   return `${mappedKey}`;
 };
-export const parseHotkey = (key: string) => {
+export const parseHotkey = (shiftKey: boolean, key: string) => {
   let temp = key.toUpperCase();
 
-  // 处理特殊符号到键位的映射
-  switch (temp) {
-    // 数字键符号
-    case "!":
-      return "DIGIT1"; // shift + 1
-    case "@":
-      return "DIGIT2"; // shift + 2
-    case "#":
-      return "DIGIT3"; // shift + 3
-    case "$":
-      return "DIGIT4"; // shift + 4
-    case "%":
-      return "DIGIT5"; // shift + 5
-    case "^":
-      return "DIGIT6"; // shift + 6
-    case "&":
-      return "DIGIT7"; // shift + 7
-    case "*":
-      return "DIGIT8"; // shift + 8
-    case "(":
-      return "DIGIT9"; // shift + 9
-    case ")":
-      return "DIGIT0"; // shift + 0
-    // 其他特殊符号
-    case "?":
-      return "SLASH"; // shift + /
-    case ":":
-      return "SEMICOLON"; // shift + ;
-    case "+":
-      return "EQUAL"; // shift + =
-    case "_":
-      return "MINUS"; // shift + -
-    case '"':
-      return "QUOTE"; // shift + '
-    case "<":
-      return "COMMA"; // shift + ,
-    case ">":
-      return "PERIOD"; // shift + .
-    case "{":
-      return "BRACKETLEFT"; // shift + [
-    case "}":
-      return "BRACKETRIGHT"; // shift + ]
-    case "|":
-      return "BACKSLASH"; // shift + \
+  if (shiftKey) {
+    // 处理特殊符号到键位的映射
+    switch (temp) {
+      // 数字键符号
+      case "!":
+        return "DIGIT1"; // shift + 1
+      case "@":
+        return "DIGIT2"; // shift + 2
+      case "#":
+        return "DIGIT3"; // shift + 3
+      case "$":
+        return "DIGIT4"; // shift + 4
+      case "%":
+        return "DIGIT5"; // shift + 5
+      case "^":
+        return "DIGIT6"; // shift + 6
+      case "&":
+        return "DIGIT7"; // shift + 7
+      case "*":
+        return "DIGIT8"; // shift + 8
+      case "(":
+        return "DIGIT9"; // shift + 9
+      case ")":
+        return "DIGIT0"; // shift + 0
+      // 其他特殊符号
+      case "?":
+        return "SLASH"; // shift + /
+      case ":":
+        return "SEMICOLON"; // shift + ;
+      case "+":
+        return "EQUAL"; // shift + =
+      case "_":
+        return "MINUS"; // shift + -
+      case '"':
+        return "QUOTE"; // shift + '
+      case "<":
+        return "COMMA"; // shift + ,
+      case ">":
+        return "PERIOD"; // shift + .
+      case "{":
+        return "BRACKETLEFT"; // shift + [
+      case "}":
+        return "BRACKETRIGHT"; // shift + ]
+      case "|":
+        return "BACKSLASH"; // shift + \
+    }
   }
 
   if (temp.startsWith("ARROW")) {

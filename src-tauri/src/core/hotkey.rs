@@ -1,8 +1,8 @@
 use crate::process::AsyncHandler;
 use crate::utils::notification::{NotificationEvent, notify_event};
 use crate::{
-    config::Config, core::handle, feat, logging, logging_error,
-    module::lightweight::entry_lightweight_mode, singleton_with_logging, utils::logging::Type,
+    config::Config, core::handle, feat, logging, module::lightweight::entry_lightweight_mode,
+    singleton_with_logging, utils::logging::Type,
 };
 use anyhow::{Result, bail};
 use parking_lot::Mutex;
@@ -224,7 +224,7 @@ impl Hotkey {
 
         let is_quit = matches!(function, HotkeyFunction::Quit);
 
-        let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey_event, event| {
+        manager.on_shortcut(hotkey, move |app_handle, hotkey_event, event| {
             let hotkey_event_owned = *hotkey_event;
             let event_owned = event;
             let function_owned = function;
@@ -271,7 +271,7 @@ impl Hotkey {
                     }
                 }
             });
-        });
+        })?;
 
         logging!(
             debug,
@@ -402,7 +402,7 @@ impl Hotkey {
         });
 
         for (key, func) in add.iter() {
-            logging_error!(Type::Hotkey, self.register(key, func).await);
+            self.register(key, func).await?;
         }
 
         // Update the current hotkeys after all async operations

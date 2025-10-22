@@ -80,7 +80,7 @@ export const HotkeyInput = (props: Props) => {
             e.preventDefault();
             e.stopPropagation();
 
-            const key = parseHotkey(evt.key);
+            const key = parseHotkey(evt.shiftKey, evt.key);
             if (key === "UNIDENTIFIED") return;
 
             changeRef.current = [...new Set([...changeRef.current, key])];
