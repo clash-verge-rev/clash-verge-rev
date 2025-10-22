@@ -17,9 +17,9 @@ use log::{debug, warn};
 use parking_lot::Mutex;
 use serde::Serialize;
 use serde_json::json;
-use tauri::Emitter;
-use tauri::dpi::{LogicalPosition, Position};
-use tauri::{Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{
+    Emitter, LogicalPosition, Manager, Position, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+};
 use tokio::sync::Mutex as AsyncMutex;
 
 use crate::{core::handle, process::AsyncHandler, singleton_lazy};
@@ -53,7 +53,7 @@ fn is_running_on_gnome() -> bool {
 
 const GNOME_TRAY_WINDOW_LABEL: &str = "gnome-tray-menu";
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 enum FrontendTrayNode {
     Standard {
@@ -85,14 +85,14 @@ enum FrontendTrayNode {
     },
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 struct TrayMenuPayload {
     items: Vec<FrontendTrayNode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     position: Option<TrayMenuPosition>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 struct TrayMenuPosition {
     x: i32,
     y: i32,
