@@ -234,6 +234,11 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
             return ContextMenuResponse::ShowMenu;
         }
 
+        if is_running_on_gnome() {
+            debug!(target: "app", "ksni: delegating context menu to host on GNOME");
+            return ContextMenuResponse::ShowMenu;
+        }
+
         let action = { self.state.lock().click_action };
         if matches!(action, TrayClickAction::ShowMenu | TrayClickAction::None) {
             return ContextMenuResponse::ShowMenu;
