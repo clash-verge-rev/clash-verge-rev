@@ -537,6 +537,16 @@ impl Tray {
         let tray = builder.build(app_handle)?;
 
         tray.on_tray_icon_event(|_app_handle, event| {
+            // 忽略移动、进入和离开等无需处理的事件，避免不必要的刷新
+            match event {
+                TrayIconEvent::Move { .. }
+                | TrayIconEvent::Enter { .. }
+                | TrayIconEvent::Leave { .. } => {
+                    return;
+                }
+                _ => {}
+            }
+
             AsyncHandler::spawn(|| async move {
                 let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
                 let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
