@@ -1,7 +1,24 @@
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { List, Paper, SvgIcon, ThemeProvider } from "@mui/material";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router";
 import { SWRConfig } from "swr";
@@ -16,11 +33,7 @@ import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
-import { useConnectionData } from "@/hooks/use-connection-data";
 import { useI18n } from "@/hooks/use-i18n";
-import { useLogData } from "@/hooks/use-log-data";
-import { useMemoryData } from "@/hooks/use-memory-data";
-import { useTrafficData } from "@/hooks/use-traffic-data";
 import { useVerge } from "@/hooks/use-verge";
 import { useWindowDecorations } from "@/hooks/use-window";
 import { useThemeMode } from "@/services/states";
@@ -37,21 +50,107 @@ import "dayjs/locale/zh-cn";
 
 export const portableFlag = false;
 
+type NavItem = (typeof navItems)[number];
+
+const createNavLookup = (items: NavItem[]) => {
+  const map = new Map(items.map((item) => [item.path, item]));
+  const defaultOrder = items.map((item) => item.path);
+  return { map, defaultOrder };
+};
+
+const resolveMenuOrder = (
+  order: string[] | null | undefined,
+  defaultOrder: string[],
+  map: Map<string, NavItem>,
+) => {
+  const seen = new Set<string>();
+  const resolved: string[] = [];
+
+  if (Array.isArray(order)) {
+    for (const path of order) {
+      if (map.has(path) && !seen.has(path)) {
+        resolved.push(path);
+        seen.add(path);
+      }
+    }
+  }
+
+  for (const path of defaultOrder) {
+    if (!seen.has(path)) {
+      resolved.push(path);
+      seen.add(path);
+    }
+  }
+
+  return resolved;
+};
+
+const areOrdersEqual = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((value, index) => value === b[index]);
+
+type MenuOrderAction = { type: "sync"; payload: string[] };
+
+const menuOrderReducer = (state: string[], action: MenuOrderAction) => {
+  const next = action.payload;
+  if (areOrdersEqual(state, next)) {
+    return state;
+  }
+  return next;
+};
+
+interface SortableNavMenuItemProps {
+  item: NavItem;
+  label: string;
+}
+
+const SortableNavMenuItem = ({ item, label }: SortableNavMenuItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: item.path,
+  });
+
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  if (isDragging) {
+    style.zIndex = 100;
+  }
+
+  return (
+    <LayoutItem
+      to={item.path}
+      icon={item.icon}
+      sortable={{
+        setNodeRef,
+        attributes,
+        listeners,
+        style,
+        isDragging,
+      }}
+    >
+      {label}
+    </LayoutItem>
+  );
+};
+
 dayjs.extend(relativeTime);
 
 const OS = getSystem();
 
 const Layout = () => {
-  const trafficData = useTrafficData();
-  const memoryData = useMemoryData();
-  const connectionData = useConnectionData();
-  const logData = useLogData();
-
   const mode = useThemeMode();
   const isDark = mode !== "light";
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
-  const { verge } = useVerge();
+  const { verge, mutateVerge, patchVerge } = useVerge();
   const { language } = verge ?? {};
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
@@ -59,6 +158,76 @@ const Layout = () => {
 
   const windowControls = useRef<any>(null);
   const { decorated } = useWindowDecorations();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const { map: navItemMap, defaultOrder: defaultMenuOrder } = useMemo(
+    () => createNavLookup(navItems),
+    [],
+  );
+
+  const configMenuOrder = useMemo(
+    () => resolveMenuOrder(verge?.menu_order, defaultMenuOrder, navItemMap),
+    [verge?.menu_order, defaultMenuOrder, navItemMap],
+  );
+
+  const [menuOrder, dispatchMenuOrder] = useReducer(
+    menuOrderReducer,
+    configMenuOrder,
+  );
+
+  useEffect(() => {
+    dispatchMenuOrder({ type: "sync", payload: configMenuOrder });
+  }, [configMenuOrder]);
+
+  const handleMenuDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) {
+        return;
+      }
+
+      const activeId = String(active.id);
+      const overId = String(over.id);
+
+      const oldIndex = menuOrder.indexOf(activeId);
+      const newIndex = menuOrder.indexOf(overId);
+
+      if (oldIndex === -1 || newIndex === -1) {
+        return;
+      }
+
+      const previousOrder = menuOrder;
+      const nextOrder = arrayMove(menuOrder, oldIndex, newIndex);
+
+      dispatchMenuOrder({ type: "sync", payload: nextOrder });
+      mutateVerge(
+        (prev) => (prev ? { ...prev, menu_order: nextOrder } : prev),
+        false,
+      );
+
+      try {
+        await patchVerge({ menu_order: nextOrder });
+      } catch (error) {
+        console.error("Failed to update menu order:", error);
+        dispatchMenuOrder({ type: "sync", payload: previousOrder });
+        mutateVerge(
+          (prev) => (prev ? { ...prev, menu_order: previousOrder } : prev),
+          false,
+        );
+      }
+    },
+    [menuOrder, mutateVerge, patchVerge],
+  );
 
   const customTitlebar = useMemo(
     () =>
@@ -202,17 +371,29 @@ const Layout = () => {
                 <UpdateButton className="the-newbtn" />
               </div>
 
-              <List className="the-menu">
-                {navItems.map((router) => (
-                  <LayoutItem
-                    key={router.label}
-                    to={router.path}
-                    icon={router.icon}
-                  >
-                    {t(router.label)}
-                  </LayoutItem>
-                ))}
-              </List>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleMenuDragEnd}
+              >
+                <SortableContext items={menuOrder}>
+                  <List className="the-menu">
+                    {menuOrder.map((path) => {
+                      const item = navItemMap.get(path);
+                      if (!item) {
+                        return null;
+                      }
+                      return (
+                        <SortableNavMenuItem
+                          key={item.path}
+                          item={item}
+                          label={t(item.label)}
+                        />
+                      );
+                    })}
+                  </List>
+                </SortableContext>
+              </DndContext>
 
               <div className="the-traffic">
                 <LayoutTraffic />
