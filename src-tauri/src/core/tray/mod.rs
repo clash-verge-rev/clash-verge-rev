@@ -17,7 +17,6 @@ use crate::{
 
 use super::handle;
 use anyhow::Result;
-use futures::future::join_all;
 use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::collections::HashMap;
@@ -63,12 +62,31 @@ fn should_handle_tray_click() -> bool {
 pub struct Tray {
     last_menu_update: Mutex<Option<Instant>>,
     menu_updating: AtomicBool,
+    // 缓存已创建的关键菜单项句柄
+    menu_handles: Mutex<Option<MenuHandles>>,
+    // 记录是否已成功构建过菜单
+    menu_built: AtomicBool,
 }
 
 #[cfg(not(target_os = "macos"))]
 pub struct Tray {
     last_menu_update: Mutex<Option<Instant>>,
     menu_updating: AtomicBool,
+    // 缓存已创建的关键菜单项句柄
+    menu_handles: Mutex<Option<MenuHandles>>,
+    // 记录是否已成功构建过菜单
+    menu_built: AtomicBool,
+}
+
+#[derive(Clone)]
+struct MenuHandles {
+    rule_mode: Option<CheckMenuItem<Wry>>,
+    global_mode: Option<CheckMenuItem<Wry>>,
+    direct_mode: Option<CheckMenuItem<Wry>>,
+    system_proxy: Option<CheckMenuItem<Wry>>,
+    tun_mode: Option<CheckMenuItem<Wry>>,
+    lightweight_mode: Option<CheckMenuItem<Wry>>,
+    profile_items: std::collections::HashMap<String, CheckMenuItem<Wry>>, // uid -> item
 }
 
 impl TrayState {
@@ -188,6 +206,8 @@ impl Default for Tray {
         Tray {
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
+            menu_handles: Mutex::new(None),
+            menu_built: AtomicBool::new(false),
         }
     }
 }
@@ -245,7 +265,7 @@ impl Tray {
             return Ok(());
         }
         // 调整最小更新间隔，确保状态及时刷新
-        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
+        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(350);
 
         // 检查是否正在更新
         if self.menu_updating.load(Ordering::Acquire) {
@@ -274,7 +294,19 @@ impl Tray {
         // 设置更新状态
         self.menu_updating.store(true, Ordering::Release);
 
-        let result = self.update_menu_internal(app_handle).await;
+        // 尝试增量更新，失败再完整重建
+        let result = if self.menu_built.load(Ordering::Acquire) {
+            match self.update_checks_only().await {
+                Ok(true) => Ok(()),
+                Ok(false) => self.update_menu_internal(app_handle).await,
+                Err(e) => {
+                    log::warn!(target: "app", "增量更新托盘菜单失败，回退到重建: {e}");
+                    self.update_menu_internal(app_handle).await
+                }
+            }
+        } else {
+            self.update_menu_internal(app_handle).await
+        };
 
         {
             let mut last_update = self.last_menu_update.lock();
@@ -308,17 +340,25 @@ impl Tray {
 
         match app_handle.tray_by_id("main") {
             Some(tray) => {
-                let _ = tray.set_menu(Some(
-                    create_tray_menu(
-                        app_handle,
-                        Some(mode.as_str()),
-                        *system_proxy,
-                        *tun_mode,
-                        profile_uid_and_name,
-                        is_lightweight_mode,
-                    )
-                    .await?,
-                ));
+                let (menu, handles) = create_tray_menu(
+                    app_handle,
+                    Some(mode.as_str()),
+                    *system_proxy,
+                    *tun_mode,
+                    profile_uid_and_name,
+                    is_lightweight_mode,
+                )
+                .await?;
+
+                let _ = tray.set_menu(Some(menu));
+
+                // 缓存句柄
+                {
+                    let mut guard = self.menu_handles.lock();
+                    *guard = Some(handles);
+                }
+                self.menu_built.store(true, Ordering::Release);
+
                 log::debug!(target: "app", "托盘菜单更新成功");
                 Ok(())
             }
@@ -327,6 +367,69 @@ impl Tray {
                 Ok(())
             }
         }
+    }
+
+    /// 通过已缓存句柄执行增量更新；返回 true 表示已完成并跳过重建
+    async fn update_checks_only(&self) -> Result<bool> {
+        if handle::Handle::global().is_exiting() {
+            return Ok(true);
+        }
+
+        let handles_opt = { self.menu_handles.lock().clone() };
+        let Some(handles) = handles_opt else {
+            return Ok(false);
+        };
+
+        // 读取最新状态
+        let verge = Config::verge().await.latest_ref().clone();
+        let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
+        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        let mode = {
+            Config::clash()
+                .await
+                .latest_ref()
+                .0
+                .get("mode")
+                .map(|val| val.as_str().unwrap_or("rule"))
+                .unwrap_or("rule")
+                .to_owned()
+        };
+
+        // 更新模式选中态
+        if let Some(item) = handles.rule_mode.as_ref() {
+            let _ = item.set_checked(mode == "rule");
+        }
+        if let Some(item) = handles.global_mode.as_ref() {
+            let _ = item.set_checked(mode == "global");
+        }
+        if let Some(item) = handles.direct_mode.as_ref() {
+            let _ = item.set_checked(mode == "direct");
+        }
+
+        // 更新开关类选中态
+        if let Some(item) = handles.system_proxy.as_ref() {
+            let _ = item.set_checked(*system_proxy);
+        }
+        if let Some(item) = handles.tun_mode.as_ref() {
+            let _ = item.set_checked(*tun_mode);
+        }
+
+        // 轻量模式
+        if let Some(item) = handles.lightweight_mode.as_ref() {
+            let is_lightweight_mode = is_in_lightweight_mode();
+            let _ = item.set_checked(is_lightweight_mode);
+        }
+
+        // 更新当前 profile 勾选
+        if !handles.profile_items.is_empty()
+            && let Some(current_uid) = Config::profiles().await.latest_ref().get_current()
+        {
+            for (uid, item) in handles.profile_items.iter() {
+                let _ = item.set_checked(uid == &current_uid);
+            }
+        }
+
+        Ok(true)
     }
 
     /// 更新托盘图标
@@ -612,7 +715,7 @@ async fn create_tray_menu(
     tun_mode_enabled: bool,
     profile_uid_and_name: Vec<(String, String)>,
     is_lightweight_mode: bool,
-) -> Result<tauri::menu::Menu<Wry>> {
+) -> Result<(tauri::menu::Menu<Wry>, MenuHandles)> {
     let mode = mode.unwrap_or("");
 
     // 获取当前配置文件的选中代理组信息
@@ -626,7 +729,12 @@ async fn create_tray_menu(
             .unwrap_or_default()
     };
 
-    let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await;
+    // 避免菜单构建阻塞
+    let proxy_nodes_data = tokio::time::timeout(
+        Duration::from_millis(1500),
+        handle::Handle::mihomo().await.get_proxies(),
+    )
+    .await;
 
     let runtime_proxy_groups_order = cmd::get_runtime_config()
         .await
@@ -694,7 +802,7 @@ async fn create_tray_menu(
                 let title = t(profile_name).await;
                 (profile_uid.clone(), title, is_current)
             });
-        let prepared = join_all(futs).await;
+        let prepared = futures::future::join_all(futs).await;
 
         let mut items = Vec::with_capacity(prepared.len());
         for (uid, title, is_current) in prepared {
@@ -717,7 +825,7 @@ async fn create_tray_menu(
         let mut submenus: Vec<(String, usize, Submenu<Wry>)> = Vec::new();
 
         // TODO: 应用启动时，内核还未启动完全，无法获取代理节点信息
-        if let Ok(proxy_nodes_data) = proxy_nodes_data {
+        if let Ok(Ok(proxy_nodes_data)) = proxy_nodes_data {
             for (group_name, group_data) in proxy_nodes_data.proxies.iter() {
                 // Filter groups based on mode
                 let should_show = match mode {
@@ -1083,7 +1191,22 @@ async fn create_tray_menu(
     let menu = tauri::menu::MenuBuilder::new(app_handle)
         .items(&menu_items)
         .build()?;
-    Ok(menu)
+
+    let handles = MenuHandles {
+        rule_mode: Some(rule_mode.clone()),
+        global_mode: Some(global_mode.clone()),
+        direct_mode: Some(direct_mode.clone()),
+        system_proxy: Some(system_proxy.clone()),
+        tun_mode: Some(tun_mode.clone()),
+        lightweight_mode: Some(lighteweight_mode.clone()),
+        profile_items: profile_uid_and_name
+            .iter()
+            .zip(profile_menu_items.iter())
+            .map(|(pair, item)| (pair.0.clone(), item.clone()))
+            .collect(),
+    };
+
+    Ok((menu, handles))
 }
 
 fn on_menu_event(_: &AppHandle, event: MenuEvent) {
