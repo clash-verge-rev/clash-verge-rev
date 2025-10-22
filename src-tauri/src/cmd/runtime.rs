@@ -48,7 +48,7 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
     let config = runtime
         .config
         .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("failed to parse config to yaml file"))
+        .ok_or_else(|| anyhow!("failed to parse config to yaml file"))
         .stringify_err()?;
 
     if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get("proxies") {
