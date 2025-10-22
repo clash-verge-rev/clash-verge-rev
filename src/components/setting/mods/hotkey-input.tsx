@@ -41,7 +41,6 @@ const KeyWrapper = styled("div")(({ theme }) => ({
   ".item": {
     fontSize: "14px",
     color: theme.palette.text.primary,
-    backgroundColor: alpha(theme.palette.primary.main, 0.2),
     border: "1px solid",
     borderColor: alpha(theme.palette.text.secondary, 0.2),
     borderRadius: "2px",
