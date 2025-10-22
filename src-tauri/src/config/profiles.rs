@@ -521,11 +521,15 @@ impl IProfiles {
         let mut deleted_files = vec![];
         let mut failed_deletions = vec![];
 
-        for entry in std::fs::read_dir(&profiles_dir)? {
-            let entry = entry?;
+        let mut rd = tokio::fs::read_dir(&profiles_dir).await?;
+        while let Some(entry) = rd.next_entry().await? {
             let path = entry.path();
 
-            if !path.is_file() {
+            if !tokio::fs::metadata(&path)
+                .await
+                .map(|m| m.is_file())
+                .unwrap_or(false)
+            {
                 continue;
             }
 

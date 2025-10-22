@@ -394,11 +394,16 @@ pub fn run() {
             });
         }
         tauri::RunEvent::ExitRequested { api, code, .. } => {
-            tauri::async_runtime::block_on(async {
-                let _ = handle::Handle::mihomo()
-                    .await
-                    .clear_all_ws_connections()
-                    .await;
+            // 避免阻塞
+            tauri::async_runtime::spawn(async move {
+                use tokio::time::{Duration, timeout};
+                let _ = timeout(Duration::from_secs(2), async {
+                    let _ = handle::Handle::mihomo()
+                        .await
+                        .clear_all_ws_connections()
+                        .await;
+                })
+                .await;
             });
 
             if core::handle::Handle::global().is_exiting() {

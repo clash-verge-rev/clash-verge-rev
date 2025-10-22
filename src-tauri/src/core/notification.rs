@@ -99,7 +99,7 @@ impl NotificationSystem {
             match rx.recv_timeout(std::time::Duration::from_millis(100)) {
                 Ok(event) => Self::process_event(handle, event),
                 Err(mpsc::RecvTimeoutError::Disconnected) => break,
-                Err(mpsc::RecvTimeoutError::Timeout) => break,
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
             }
         }
     }
