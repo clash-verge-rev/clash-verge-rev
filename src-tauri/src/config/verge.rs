@@ -6,6 +6,7 @@ use crate::{
 use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
+use smartstring::alias::String;
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -322,7 +323,7 @@ impl IVerge {
 
     fn get_system_language() -> String {
         let sys_lang = sys_locale::get_locale()
-            .unwrap_or_else(|| String::from("en"))
+            .unwrap_or_else(|| "en".into())
             .to_lowercase();
 
         let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");

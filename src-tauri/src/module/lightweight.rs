@@ -305,7 +305,7 @@ async fn setup_light_weight_timer() -> Result<()> {
             interval_minutes: once_by_minutes,
             last_run: chrono::Local::now().timestamp(),
         };
-        timer_map.insert(LIGHT_WEIGHT_TASK_UID.to_string(), timer_task);
+        timer_map.insert(LIGHT_WEIGHT_TASK_UID.into(), timer_task);
     }
 
     logging!(

@@ -1,7 +1,7 @@
 use super::CmdResult;
+use crate::cmd::StringifyErr;
 use crate::core::{EventDrivenProxyManager, async_proxy_query::AsyncProxyQuery};
 use crate::process::AsyncHandler;
-use crate::wrap_err;
 use network_interface::NetworkInterface;
 use serde_yaml_ng::Mapping;
 
@@ -82,7 +82,7 @@ pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
     use network_interface::{NetworkInterface, NetworkInterfaceConfig};
 
     let names = get_network_interfaces();
-    let interfaces = wrap_err!(NetworkInterface::show())?;
+    let interfaces = NetworkInterface::show().stringify_err()?;
 
     let mut result = Vec::new();
 

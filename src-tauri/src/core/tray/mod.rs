@@ -19,6 +19,7 @@ use super::handle;
 use anyhow::Result;
 use futures::future::join_all;
 use parking_lot::Mutex;
+use smartstring::alias::String;
 use std::collections::HashMap;
 use std::{
     fs,
@@ -218,7 +219,7 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
         let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
-        let tray_event: String = tray_event.unwrap_or("main_window".into());
+        let tray_event = tray_event.unwrap_or("main_window".into());
         let tray = app_handle
             .tray_by_id("main")
             .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
@@ -625,7 +626,7 @@ async fn create_tray_menu(
                         .iter()
                         .filter_map(|group| group.get("name"))
                         .filter_map(|name| name.as_str())
-                        .map(|name| name.to_string())
+                        .map(|name| name.into())
                         .collect::<Vec<String>>()
                 })
                 .unwrap_or_default()
@@ -671,7 +672,7 @@ async fn create_tray_menu(
                     let is_current_profile = Config::profiles()
                         .await
                         .data_mut()
-                        .is_current_profile_index(profile_uid.to_string());
+                        .is_current_profile_index(profile_uid.clone());
                     CheckMenuItem::with_id(
                         &app_handle,
                         format!("profiles_{profile_uid}"),
@@ -780,7 +781,7 @@ async fn create_tray_menu(
                     &group_items_refs,
                 ) {
                     let insertion_index = submenus.len();
-                    submenus.push((group_name.to_string(), insertion_index, submenu));
+                    submenus.push((group_name.into(), insertion_index, submenu));
                 } else {
                     log::warn!(target: "app", "创建代理组子菜单失败: {}", group_name);
                 }

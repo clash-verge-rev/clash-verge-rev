@@ -1,5 +1,6 @@
 use crate::{APP_HANDLE, constants::timing, singleton};
 use parking_lot::RwLock;
+use smartstring::alias::String;
 use std::{sync::Arc, thread};
 use tauri::{AppHandle, Manager, WebviewWindow};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt};
@@ -199,7 +200,7 @@ impl Handle {
     pub fn set_activation_policy(&self, policy: tauri::ActivationPolicy) -> Result<(), String> {
         Self::app_handle()
             .set_activation_policy(policy)
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.to_string().into())
     }
 
     pub fn set_activation_policy_regular(&self) {

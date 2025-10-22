@@ -3,6 +3,7 @@ use anyhow::Error;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest_dav::list_cmd::{ListEntity, ListFile};
+use smartstring::alias::String;
 use std::{
     collections::HashMap,
     env::{consts::OS, temp_dir},
@@ -123,8 +124,11 @@ impl WebDavClient {
                     }))
                     .build()?,
             )
-            .set_host(config.url)
-            .set_auth(reqwest_dav::Auth::Basic(config.username, config.password))
+            .set_host(config.url.into())
+            .set_auth(reqwest_dav::Auth::Basic(
+                config.username.into(),
+                config.password.into(),
+            ))
             .build()?;
 
         // 尝试检查目录是否存在，如果不存在尝试创建
@@ -163,7 +167,7 @@ impl WebDavClient {
 
     pub async fn upload(&self, file_path: PathBuf, file_name: String) -> Result<(), Error> {
         let client = self.get_client(Operation::Upload).await?;
-        let webdav_path: String = format!("{}/{}", dirs::BACKUP_DIR, file_name);
+        let webdav_path: String = format!("{}/{}", dirs::BACKUP_DIR, file_name).into();
 
         // 读取文件并上传，如果失败尝试一次重试
         let file_content = fs::read(&file_path)?;
@@ -248,8 +252,8 @@ impl WebDavClient {
 
 pub fn create_backup() -> Result<(String, PathBuf), Error> {
     let now = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
-    let zip_file_name = format!("{OS}-backup-{now}.zip");
-    let zip_path = temp_dir().join(&zip_file_name);
+    let zip_file_name: String = format!("{OS}-backup-{now}.zip").into();
+    let zip_path = temp_dir().join(zip_file_name.as_str());
 
     let file = fs::File::create(&zip_path)?;
     let mut zip = zip::ZipWriter::new(file);

@@ -8,6 +8,7 @@ mod tun;
 use self::{chain::*, field::*, merge::*, script::*, seq::*, tun::*};
 use crate::{config::Config, utils::tmpl};
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
 
 type ResultLog = Vec<(String, String)>;
@@ -192,7 +193,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             let item = {
                 let profiles = Config::profiles().await;
                 let profiles = profiles.latest_ref();
-                profiles.get_item(&"Merge".to_string()).ok().cloned()
+                profiles.get_item(&"Merge".into()).ok().cloned()
             };
             if let Some(item) = item {
                 <Option<ChainItem>>::from_async(&item).await
@@ -209,7 +210,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             let item = {
                 let profiles = Config::profiles().await;
                 let profiles = profiles.latest_ref();
-                profiles.get_item(&"Script".to_string()).ok().cloned()
+                profiles.get_item(&"Script".into()).ok().cloned()
             };
             if let Some(item) = item {
                 <Option<ChainItem>>::from_async(&item).await
@@ -253,7 +254,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
                 config = res_config;
                 logs.extend(res_logs);
             }
-            Err(err) => logs.push(("exception".into(), err.to_string())),
+            Err(err) => logs.push(("exception".into(), err.to_string().into())),
         }
 
         result_map.insert(global_script.uid, logs);
@@ -280,13 +281,13 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Script(script) = script_item.data {
         let mut logs = vec![];
 
-        match use_script(script, config.to_owned(), profile_name.to_owned()) {
+        match use_script(script, config.to_owned(), profile_name) {
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
                 logs.extend(res_logs);
             }
-            Err(err) => logs.push(("exception".into(), err.to_string())),
+            Err(err) => logs.push(("exception".into(), err.to_string().into())),
         }
 
         result_map.insert(script_item.uid, logs);
@@ -361,7 +362,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
             .for_each(|item| {
                 log::debug!(target: "app", "run builtin script {}", item.uid);
                 if let ChainType::Script(script) = item.data {
-                    match use_script(script, config.to_owned(), "".to_string()) {
+                    match use_script(script, config.to_owned(), "".into()) {
                         Ok((res_config, _)) => {
                             config = res_config;
                         }

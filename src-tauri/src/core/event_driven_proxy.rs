@@ -8,6 +8,7 @@ use crate::config::{Config, IVerge};
 use crate::core::{async_proxy_query::AsyncProxyQuery, handle};
 use crate::process::AsyncHandler;
 use once_cell::sync::Lazy;
+use smartstring::alias::String;
 use sysproxy::{Autoproxy, Sysproxy};
 
 #[derive(Debug, Clone)]
@@ -426,13 +427,15 @@ impl EventDrivenProxyManager {
         };
 
         let port = verge_mixed_port.unwrap_or(default_port);
-        let host = proxy_host.unwrap_or_else(|| network::DEFAULT_PROXY_HOST.into());
+        let host = proxy_host
+            .unwrap_or_else(|| network::DEFAULT_PROXY_HOST.into())
+            .into();
 
         Sysproxy {
             enable: true,
             host,
             port,
-            bypass: Self::get_bypass_config().await,
+            bypass: Self::get_bypass_config().await.into(),
         }
     }
 
@@ -445,9 +448,9 @@ impl EventDrivenProxyManager {
         let custom = verge.system_proxy_bypass.as_deref().unwrap_or("");
 
         match (use_default, custom.is_empty()) {
-            (_, true) => bypass::DEFAULT.to_string(),
-            (true, false) => format!("{},{}", bypass::DEFAULT, custom),
-            (false, false) => custom.to_string(),
+            (_, true) => bypass::DEFAULT.into(),
+            (true, false) => format!("{},{}", bypass::DEFAULT, custom).into(),
+            (false, false) => custom.into(),
         }
     }
 
