@@ -288,6 +288,12 @@ pub fn create_backup() -> Result<(String, PathBuf), Error> {
     zip.start_file(dirs::VERGE_CONFIG, options)?;
     zip.write_all(serde_yaml_ng::to_string(&verge_config)?.as_bytes())?;
 
+    let dns_config_path = dirs::app_home_dir()?.join(dirs::DNS_CONFIG);
+    if dns_config_path.exists() {
+        zip.start_file(dirs::DNS_CONFIG, options)?;
+        zip.write_all(fs::read(&dns_config_path)?.as_slice())?;
+    }
+
     zip.start_file(dirs::PROFILE_YAML, options)?;
     zip.write_all(fs::read(dirs::profiles_path()?)?.as_slice())?;
     zip.finish()?;
