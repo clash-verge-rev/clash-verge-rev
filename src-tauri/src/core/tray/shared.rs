@@ -122,17 +122,18 @@ pub(crate) async fn get_common_tray_icon() -> TrayIconBytes {
     }
     #[cfg(target_os = "macos")]
     {
-        let tray_icon_colorful = verge.tray_icon.unwrap_or("monochrome".into());
+        let tray_icon_colorful = verge.tray_icon.unwrap_or_else(|| "monochrome".into());
         if tray_icon_colorful == "monochrome" {
-            return TrayIconBytes::new(
+            TrayIconBytes::new(
                 false,
                 include_bytes!("../../../icons/tray-icon-mono.ico").to_vec(),
-            );
+            )
+        } else {
+            TrayIconBytes::new(
+                false,
+                include_bytes!("../../../icons/tray-icon.ico").to_vec(),
+            )
         }
-        return TrayIconBytes::new(
-            false,
-            include_bytes!("../../../icons/tray-icon.ico").to_vec(),
-        );
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -155,17 +156,21 @@ pub(crate) async fn get_sysproxy_tray_icon() -> TrayIconBytes {
     }
     #[cfg(target_os = "macos")]
     {
-        let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".into());
+        let tray_icon_colorful = verge
+            .tray_icon
+            .clone()
+            .unwrap_or_else(|| "monochrome".into());
         if tray_icon_colorful == "monochrome" {
-            return TrayIconBytes::new(
+            TrayIconBytes::new(
                 false,
                 include_bytes!("../../../icons/tray-icon-sys-mono-new.ico").to_vec(),
-            );
+            )
+        } else {
+            TrayIconBytes::new(
+                false,
+                include_bytes!("../../../icons/tray-icon-sys.ico").to_vec(),
+            )
         }
-        return TrayIconBytes::new(
-            false,
-            include_bytes!("../../../icons/tray-icon-sys.ico").to_vec(),
-        );
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -188,17 +193,18 @@ pub(crate) async fn get_tun_tray_icon() -> TrayIconBytes {
     }
     #[cfg(target_os = "macos")]
     {
-        let tray_icon_colorful = verge.tray_icon.unwrap_or("monochrome".into());
+        let tray_icon_colorful = verge.tray_icon.unwrap_or_else(|| "monochrome".into());
         if tray_icon_colorful == "monochrome" {
-            return TrayIconBytes::new(
+            TrayIconBytes::new(
                 false,
                 include_bytes!("../../../icons/tray-icon-tun-mono-new.ico").to_vec(),
-            );
+            )
+        } else {
+            TrayIconBytes::new(
+                false,
+                include_bytes!("../../../icons/tray-icon-tun.ico").to_vec(),
+            )
         }
-        return TrayIconBytes::new(
-            false,
-            include_bytes!("../../../icons/tray-icon-tun.ico").to_vec(),
-        );
     }
     #[cfg(not(target_os = "macos"))]
     {
