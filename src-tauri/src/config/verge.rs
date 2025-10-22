@@ -219,6 +219,9 @@ pub struct IVerge {
 
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
+
+    /// 网络请求在代理失败后是否允许回退直连（默认否）
+    pub enable_network_direct_fallback: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -423,6 +426,7 @@ impl IVerge {
             enable_dns_settings: Some(false),
             home_cards: None,
             enable_external_controller: Some(false),
+            enable_network_direct_fallback: Some(true),
             ..Self::default()
         }
     }
@@ -516,6 +520,7 @@ impl IVerge {
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(enable_external_controller);
+        patch!(enable_network_direct_fallback);
     }
 
     pub fn get_singleton_port() -> u16 {
@@ -611,6 +616,7 @@ pub struct IVergeResponse {
     pub home_cards: Option<serde_json::Value>,
     pub enable_hover_jump_navigator: Option<bool>,
     pub enable_external_controller: Option<bool>,
+    pub enable_network_direct_fallback: Option<bool>,
 }
 
 impl From<IVerge> for IVergeResponse {
@@ -687,6 +693,7 @@ impl From<IVerge> for IVergeResponse {
             home_cards: verge.home_cards,
             enable_hover_jump_navigator: verge.enable_hover_jump_navigator,
             enable_external_controller: verge.enable_external_controller,
+            enable_network_direct_fallback: verge.enable_network_direct_fallback,
         }
     }
 }

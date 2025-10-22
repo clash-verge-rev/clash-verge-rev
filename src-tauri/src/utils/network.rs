@@ -187,8 +187,22 @@ impl NetworkManager {
             )?,
         );
 
-        let client = self.build_client(proxy_uri, headers, accept_invalid_certs, timeout_secs)?;
+        // 复用 client
+        let target_cache = match proxy_type {
+            ProxyType::None => &self.no_proxy_client,
+            ProxyType::Localhost => &self.self_proxy_client,
+            ProxyType::System => &self.system_proxy_client,
+        };
 
+        {
+            let guard = target_cache.lock().await;
+            if let Some(existing) = guard.as_ref() {
+                return Ok(existing.clone());
+            }
+        }
+
+        let client = self.build_client(proxy_uri, headers, accept_invalid_certs, timeout_secs)?;
+        *target_cache.lock().await = Some(client.clone());
         Ok(client)
     }
 
@@ -226,10 +240,15 @@ impl NetworkManager {
         };
 
         let client = self
-            .create_request(proxy_type, timeout_secs, user_agent, accept_invalid_certs)
+            .create_request(
+                proxy_type,
+                timeout_secs,
+                user_agent.clone(),
+                accept_invalid_certs,
+            )
             .await?;
 
-        let timeout_duration = Duration::from_secs(timeout_secs.unwrap_or(20));
+        let timeout_duration = Duration::from_secs(timeout_secs.unwrap_or(12));
         let response = match timeout(timeout_duration, async {
             let mut req = isahc::Request::get(&clean_url);
 
@@ -249,6 +268,54 @@ impl NetworkManager {
             Err(_) => {
                 self.record_connection_error(&format!("Request interrupted: {}", url))
                     .await;
+                // 可选回退策略：本机代理失败→系统代理→（默认直连可以开关）
+                if let ProxyType::Localhost = proxy_type
+                    && let Ok(fallback_client) = self
+                        .create_request(
+                            ProxyType::System,
+                            timeout_secs,
+                            user_agent.clone(),
+                            accept_invalid_certs,
+                        )
+                        .await
+                {
+                    let mut req = isahc::Request::get(&clean_url);
+                    for (k, v) in extra_headers.iter() {
+                        req = req.header(k, v);
+                    }
+                    let mut response = fallback_client.send_async(req.body(())?).await?;
+                    let status = response.status();
+                    let headers = response.headers().clone();
+                    let body = response.text().await?;
+                    return Ok(HttpResponse::new(status, headers, body.into()));
+                } else if let ProxyType::Localhost = proxy_type {
+                    // 是否允许回退到直连
+                    let enable_direct = Config::verge()
+                        .await
+                        .latest_ref()
+                        .enable_network_direct_fallback
+                        .unwrap_or(false);
+                    if enable_direct
+                        && let Ok(none_client) = self
+                            .create_request(
+                                ProxyType::None,
+                                timeout_secs,
+                                user_agent.clone(),
+                                accept_invalid_certs,
+                            )
+                            .await
+                    {
+                        let mut req = isahc::Request::get(&clean_url);
+                        for (k, v) in extra_headers.iter() {
+                            req = req.header(k, v);
+                        }
+                        let mut response = none_client.send_async(req.body(())?).await?;
+                        let status = response.status();
+                        let headers = response.headers().clone();
+                        let body = response.text().await?;
+                        return Ok(HttpResponse::new(status, headers, body.into()));
+                    }
+                }
                 return Err(anyhow::anyhow!(
                     "Request interrupted after {}s",
                     timeout_duration.as_secs()

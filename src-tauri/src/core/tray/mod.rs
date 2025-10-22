@@ -22,7 +22,6 @@ use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::collections::HashMap;
 use std::{
-    fs,
     sync::atomic::{AtomicBool, Ordering},
     time::{Duration, Instant},
 };
@@ -78,7 +77,7 @@ impl TrayState {
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
         if is_common_tray_icon
             && let Ok(Some(common_icon_path)) = find_target_icons("common")
-            && let Ok(icon_data) = fs::read(common_icon_path)
+            && let Ok(icon_data) = tokio::fs::read(common_icon_path).await
         {
             return (true, icon_data);
         }
@@ -115,7 +114,7 @@ impl TrayState {
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
         if is_sysproxy_tray_icon
             && let Ok(Some(sysproxy_icon_path)) = find_target_icons("sysproxy")
-            && let Ok(icon_data) = fs::read(sysproxy_icon_path)
+            && let Ok(icon_data) = tokio::fs::read(sysproxy_icon_path).await
         {
             return (true, icon_data);
         }
@@ -152,7 +151,7 @@ impl TrayState {
         let is_tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
         if is_tun_tray_icon
             && let Ok(Some(tun_icon_path)) = find_target_icons("tun")
-            && let Ok(icon_data) = fs::read(tun_icon_path)
+            && let Ok(icon_data) = tokio::fs::read(tun_icon_path).await
         {
             return (true, icon_data);
         }
@@ -685,29 +684,32 @@ async fn create_tray_menu(
         .unwrap_or_default();
 
     let profile_menu_items: Vec<CheckMenuItem<Wry>> = {
-        let futures = profile_uid_and_name
+        let futs = profile_uid_and_name
             .iter()
-            .map(|(profile_uid, profile_name)| {
-                let app_handle = app_handle.clone();
-                let profile_uid = profile_uid.clone();
-                let profile_name = profile_name.clone();
-                async move {
-                    let is_current_profile = Config::profiles()
-                        .await
-                        .data_mut()
-                        .is_current_profile_index(profile_uid.clone());
-                    CheckMenuItem::with_id(
-                        &app_handle,
-                        format!("profiles_{profile_uid}"),
-                        t(&profile_name).await,
-                        true,
-                        is_current_profile,
-                        None::<&str>,
-                    )
-                }
+            .map(|(profile_uid, profile_name)| async move {
+                let is_current = Config::profiles()
+                    .await
+                    .data_mut()
+                    .is_current_profile_index(profile_uid.clone());
+                let title = t(profile_name).await;
+                (profile_uid.clone(), title, is_current)
             });
-        let results = join_all(futures).await;
-        results.into_iter().collect::<Result<Vec<_>, _>>()?
+        let prepared = join_all(futs).await;
+
+        let mut items = Vec::with_capacity(prepared.len());
+        for (uid, title, is_current) in prepared {
+            if let Ok(item) = CheckMenuItem::with_id(
+                app_handle,
+                format!("profiles_{uid}"),
+                title,
+                true,
+                is_current,
+                None::<&str>,
+            ) {
+                items.push(item);
+            }
+        }
+        items
     };
 
     // 代理组子菜单
@@ -736,8 +738,11 @@ async fn create_tray_menu(
                 let now_proxy = group_data.now.as_deref().unwrap_or_default();
 
                 // Create proxy items
+                // 给出渲染上限，防止多的时候卡顿
+                let render_limit = 200usize;
                 let group_items: Vec<CheckMenuItem<Wry>> = all_proxies
                     .iter()
+                    .take(render_limit)
                     .filter_map(|proxy_str| {
                         let is_selected = *proxy_str == now_proxy;
                         let item_id = format!("proxy_{}_{}", group_name, proxy_str);

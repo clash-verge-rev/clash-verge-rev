@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::sync::{mpsc, oneshot};
-use tokio::time::{Duration, sleep, timeout};
+use tokio::time::{Duration, MissedTickBehavior, sleep, timeout};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 
 use crate::config::{Config, IVerge};
@@ -152,8 +152,14 @@ impl EventDrivenProxyManager {
         // 初始化定时器，用于周期性检查代理设置
         let config = Self::get_proxy_config().await;
         let mut guard_interval = tokio::time::interval(Duration::from_secs(config.guard_duration));
+        // 防抖
+        guard_interval.set_missed_tick_behavior(MissedTickBehavior::Delay);
         // 防止首次立即触发
         guard_interval.tick().await;
+
+        // 限制频繁重建 interval 的去抖时间
+        const INTERVAL_RESET_DEBOUNCE_MS: u64 = 300;
+        let mut last_interval_reset = std::time::Instant::now();
 
         loop {
             tokio::select! {
@@ -164,11 +170,16 @@ impl EventDrivenProxyManager {
 
                     // 检查是否是配置变更事件，如果是，则可能需要更新定时器
                     if matches!(event_clone, ProxyEvent::ConfigChanged | ProxyEvent::AppStarted) {
-                        let new_config = Self::get_proxy_config().await;
-                        // 重新设置定时器间隔
-                        guard_interval = tokio::time::interval(Duration::from_secs(new_config.guard_duration));
-                        // 防止首次立即触发
-                        guard_interval.tick().await;
+                        let now = std::time::Instant::now();
+                        if now.duration_since(last_interval_reset) >= Duration::from_millis(INTERVAL_RESET_DEBOUNCE_MS) {
+                            let new_config = Self::get_proxy_config().await;
+                            let secs = new_config.guard_duration.max(5);
+                            guard_interval = tokio::time::interval(Duration::from_secs(secs));
+                            guard_interval.set_missed_tick_behavior(MissedTickBehavior::Delay);
+                            // 防止首次立即触发
+                            guard_interval.tick().await;
+                            last_interval_reset = now;
+                        }
                     }
                 }
                 Some(query) = query_stream.next() => {
