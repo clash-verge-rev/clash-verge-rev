@@ -69,7 +69,7 @@ const mapKeyCombination = (key: string): string => {
   return `${mappedKey}`;
 };
 export const parseHotkey = (keyEvent: KeyboardEvent) => {
-  const key = keyEvent.key;
+  const key = keyEvent.code;
   let temp = key.toUpperCase();
 
   if (temp.startsWith("ARROW")) {
@@ -93,6 +93,6 @@ export const parseHotkey = (keyEvent: KeyboardEvent) => {
     case " ":
       return "SPACE";
     default:
-      return KEY_MAP[temp] || keyEvent.code;
+      return KEY_MAP[temp] || temp;
   }
 };
