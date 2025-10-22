@@ -57,6 +57,9 @@ pub struct IVerge {
     /// menu icon
     pub menu_icon: Option<String>,
 
+    /// menu order
+    pub menu_order: Option<Vec<String>>,
+
     /// sysproxy tray icon
     pub sysproxy_tray_icon: Option<bool>,
 
@@ -456,6 +459,7 @@ impl IVerge {
         #[cfg(target_os = "macos")]
         patch!(tray_icon);
         patch!(menu_icon);
+        patch!(menu_order);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);
@@ -554,6 +558,7 @@ pub struct IVergeResponse {
     #[cfg(target_os = "macos")]
     pub tray_icon: Option<String>,
     pub menu_icon: Option<String>,
+    pub menu_order: Option<Vec<String>>,
     pub sysproxy_tray_icon: Option<bool>,
     pub tun_tray_icon: Option<bool>,
     pub enable_tun_mode: Option<bool>,
@@ -629,6 +634,7 @@ impl From<IVerge> for IVergeResponse {
             #[cfg(target_os = "macos")]
             tray_icon: verge.tray_icon,
             menu_icon: verge.menu_icon,
+            menu_order: verge.menu_order,
             sysproxy_tray_icon: verge.sysproxy_tray_icon,
             tun_tray_icon: verge.tun_tray_icon,
             enable_tun_mode: verge.enable_tun_mode,

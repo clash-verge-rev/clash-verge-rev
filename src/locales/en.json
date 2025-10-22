@@ -182,6 +182,7 @@
   "Table View": "Table View",
   "List View": "List View",
   "Close All": "Close All",
+  "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
   "Download Speed": "Download Speed",
@@ -707,5 +708,8 @@
   "Prefer System Titlebar": "Prefer System Titlebar",
   "App Log Max Size": "App Log Max Size",
   "App Log Max Count": "App Log Max Count",
-  "Allow Auto Update": "Allow Auto Update"
+  "Allow Auto Update": "Allow Auto Update",
+  "Menu reorder mode": "Menu reorder mode",
+  "Unlock menu order": "Unlock menu order",
+  "Lock menu order": "Lock menu order"
 }
