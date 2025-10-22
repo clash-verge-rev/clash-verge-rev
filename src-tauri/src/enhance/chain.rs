@@ -73,7 +73,7 @@ impl AsyncChainItemFrom for Option<ChainItem> {
     async fn from_async(item: &PrfItem) -> Option<ChainItem> {
         let itype = item.itype.as_ref()?.as_str();
         let file = item.file.clone()?;
-        let uid = item.uid.clone().unwrap_or("".into());
+        let uid = item.uid.clone().unwrap_or_else(|| "".into());
         let path = dirs::app_profiles_dir().ok()?.join(file.as_str());
 
         if !path.exists() {

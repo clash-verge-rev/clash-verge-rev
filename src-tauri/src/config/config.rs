@@ -140,7 +140,7 @@ impl Config {
             .latest_ref()
             .config
             .as_ref()
-            .ok_or(anyhow!("failed to get runtime config"))?
+            .ok_or_else(|| anyhow!("failed to get runtime config"))?
             .clone();
         drop(runtime); // 显式释放锁
 

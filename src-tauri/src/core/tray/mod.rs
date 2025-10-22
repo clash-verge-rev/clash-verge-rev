@@ -84,7 +84,10 @@ impl TrayState {
         }
         #[cfg(target_os = "macos")]
         {
-            let tray_icon_colorful = verge.tray_icon.unwrap_or("monochrome".into());
+            let tray_icon_colorful = verge
+                .tray_icon
+                .clone()
+                .unwrap_or_else(|| "monochrome".into());
             if tray_icon_colorful == "monochrome" {
                 (
                     false,
@@ -118,7 +121,10 @@ impl TrayState {
         }
         #[cfg(target_os = "macos")]
         {
-            let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".into());
+            let tray_icon_colorful = verge
+                .tray_icon
+                .clone()
+                .unwrap_or_else(|| "monochrome".into());
             if tray_icon_colorful == "monochrome" {
                 (
                     false,
@@ -152,7 +158,10 @@ impl TrayState {
         }
         #[cfg(target_os = "macos")]
         {
-            let tray_icon_colorful = verge.tray_icon.clone().unwrap_or("monochrome".into());
+            let tray_icon_colorful = verge
+                .tray_icon
+                .clone()
+                .unwrap_or_else(|| "monochrome".into());
             if tray_icon_colorful == "monochrome" {
                 (
                     false,
@@ -219,7 +228,7 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
         let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
-        let tray_event = tray_event.unwrap_or("main_window".into());
+        let tray_event = tray_event.unwrap_or_else(|| "main_window".into());
         let tray = app_handle
             .tray_by_id("main")
             .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
@@ -350,7 +359,10 @@ impl Tray {
             (false, false) => TrayState::get_common_tray_icon().await,
         };
 
-        let colorful = verge.tray_icon.clone().unwrap_or("monochrome".into());
+        let colorful = verge
+            .tray_icon
+            .clone()
+            .unwrap_or_else(|| "monochrome".into());
         let is_colorful = colorful == "colorful";
 
         let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
@@ -448,9 +460,10 @@ impl Tray {
         let profile_text = t("Profile").await;
 
         let v = env!("CARGO_PKG_VERSION");
-        let reassembled_version = v.split_once('+').map_or(v.into(), |(main, rest)| {
-            format!("{main}+{}", rest.split('.').next().unwrap_or(""))
-        });
+        let reassembled_version = v.split_once('+').map_or_else(
+            || v.into(),
+            |(main, rest)| format!("{main}+{}", rest.split('.').next().unwrap_or("")),
+        );
 
         let tooltip = format!(
             "Clash Verge {}\n{}: {}\n{}: {}\n{}: {}",
@@ -505,7 +518,7 @@ impl Tray {
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         let show_menu_on_left_click = {
             let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
-            let tray_event: String = tray_event.unwrap_or("main_window".into());
+            let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
             tray_event.as_str() == "tray_menu"
         };
 
@@ -526,7 +539,7 @@ impl Tray {
         tray.on_tray_icon_event(|_app_handle, event| {
             AsyncHandler::spawn(|| async move {
                 let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
-                let tray_event: String = tray_event.unwrap_or("main_window".into());
+                let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
                 log::debug!(target: "app", "tray event: {tray_event:?}");
 
                 if let TrayIconEvent::Click {

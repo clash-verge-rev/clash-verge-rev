@@ -32,11 +32,11 @@ impl IRuntime {
             let patch_tun = patch.get("tun");
             if patch_tun.is_some() {
                 let tun = config.get("tun");
-                let mut tun: Mapping = tun.map_or(Mapping::new(), |val| {
-                    val.as_mapping().cloned().unwrap_or(Mapping::new())
+                let mut tun: Mapping = tun.map_or_else(Mapping::new, |val| {
+                    val.as_mapping().cloned().unwrap_or_else(Mapping::new)
                 });
-                let patch_tun = patch_tun.map_or(Mapping::new(), |val| {
-                    val.as_mapping().cloned().unwrap_or(Mapping::new())
+                let patch_tun = patch_tun.map_or_else(Mapping::new, |val| {
+                    val.as_mapping().cloned().unwrap_or_else(Mapping::new)
                 });
                 use_keys(&patch_tun).into_iter().for_each(|key| {
                     if let Some(value) = patch_tun.get(key.as_str()) {

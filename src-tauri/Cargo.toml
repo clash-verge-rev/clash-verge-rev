@@ -221,3 +221,5 @@ needless_raw_string_hashes = "deny" # Too many in existing code
 #pedantic = { level = "allow", priority = -1 }
 #nursery = { level = "allow", priority = -1 }
 #restriction = { level = "allow", priority = -1 }
+
+or_fun_call = "deny"

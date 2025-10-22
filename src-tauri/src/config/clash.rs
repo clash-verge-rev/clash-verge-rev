@@ -287,7 +287,7 @@ impl IClashTemp {
                 }
                 None => None,
             })
-            .unwrap_or("127.0.0.1:9097".into())
+            .unwrap_or_else(|| "127.0.0.1:9097".into())
     }
 
     pub fn guard_external_controller(config: &Mapping) -> String {
