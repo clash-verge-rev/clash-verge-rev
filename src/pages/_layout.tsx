@@ -14,10 +14,25 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { List, Paper, SvgIcon, ThemeProvider } from "@mui/material";
+import {
+  Box,
+  List,
+  Menu,
+  MenuItem,
+  Paper,
+  SvgIcon,
+  ThemeProvider,
+} from "@mui/material";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router";
@@ -88,6 +103,7 @@ const resolveMenuOrder = (
 const areOrdersEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((value, index) => value === b[index]);
 
+type MenuContextPosition = { top: number; left: number };
 type MenuOrderAction = { type: "sync"; payload: string[] };
 
 const menuOrderReducer = (state: string[], action: MenuOrderAction) => {
@@ -95,7 +111,7 @@ const menuOrderReducer = (state: string[], action: MenuOrderAction) => {
   if (areOrdersEqual(state, next)) {
     return state;
   }
-  return next;
+  return [...next];
 };
 
 interface SortableNavMenuItemProps {
@@ -156,6 +172,10 @@ const Layout = () => {
   const navigate = useNavigate();
   const themeReady = useMemo(() => Boolean(theme), [theme]);
 
+  const [menuUnlocked, setMenuUnlocked] = useState(false);
+  const [menuContextPosition, setMenuContextPosition] =
+    useState<MenuContextPosition | null>(null);
+
   const windowControls = useRef<any>(null);
   const { decorated } = useWindowDecorations();
 
@@ -191,6 +211,10 @@ const Layout = () => {
 
   const handleMenuDragEnd = useCallback(
     async (event: DragEndEvent) => {
+      if (!menuUnlocked) {
+        return;
+      }
+
       const { active, over } = event;
       if (!over || active.id === over.id) {
         return;
@@ -206,7 +230,7 @@ const Layout = () => {
         return;
       }
 
-      const previousOrder = menuOrder;
+      const previousOrder = [...menuOrder];
       const nextOrder = arrayMove(menuOrder, oldIndex, newIndex);
 
       dispatchMenuOrder({ type: "sync", payload: nextOrder });
@@ -226,8 +250,31 @@ const Layout = () => {
         );
       }
     },
-    [menuOrder, mutateVerge, patchVerge],
+    [menuUnlocked, menuOrder, mutateVerge, patchVerge],
   );
+
+  const handleMenuContextMenu = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setMenuContextPosition({ top: event.clientY, left: event.clientX });
+    },
+    [],
+  );
+
+  const handleMenuContextClose = useCallback(() => {
+    setMenuContextPosition(null);
+  }, []);
+
+  const handleUnlockMenu = useCallback(() => {
+    setMenuUnlocked(true);
+    setMenuContextPosition(null);
+  }, []);
+
+  const handleLockMenu = useCallback(() => {
+    setMenuUnlocked(false);
+    setMenuContextPosition(null);
+  }, []);
 
   const customTitlebar = useMemo(
     () =>
@@ -371,29 +418,105 @@ const Layout = () => {
                 <UpdateButton className="the-newbtn" />
               </div>
 
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleMenuDragEnd}
-              >
-                <SortableContext items={menuOrder}>
-                  <List className="the-menu">
-                    {menuOrder.map((path) => {
-                      const item = navItemMap.get(path);
-                      if (!item) {
-                        return null;
+              {menuUnlocked && (
+                <Box
+                  sx={(theme) => ({
+                    px: 1.5,
+                    py: 0.75,
+                    mx: "auto",
+                    mb: 1,
+                    maxWidth: 250,
+                    borderRadius: 1.5,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    textAlign: "center",
+                    color: theme.palette.warning.contrastText,
+                    bgcolor:
+                      theme.palette.mode === "light"
+                        ? theme.palette.warning.main
+                        : theme.palette.warning.dark,
+                  })}
+                >
+                  {t("Menu reorder mode")}
+                </Box>
+              )}
+
+              {menuUnlocked ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleMenuDragEnd}
+                >
+                  <SortableContext items={menuOrder}>
+                    <List
+                      className="the-menu"
+                      onContextMenu={handleMenuContextMenu}
+                    >
+                      {menuOrder.map((path) => {
+                        const item = navItemMap.get(path);
+                        if (!item) {
+                          return null;
+                        }
+                        return (
+                          <SortableNavMenuItem
+                            key={item.path}
+                            item={item}
+                            label={t(item.label)}
+                          />
+                        );
+                      })}
+                    </List>
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <List
+                  className="the-menu"
+                  onContextMenu={handleMenuContextMenu}
+                >
+                  {menuOrder.map((path) => {
+                    const item = navItemMap.get(path);
+                    if (!item) {
+                      return null;
+                    }
+                    return (
+                      <LayoutItem
+                        key={item.path}
+                        to={item.path}
+                        icon={item.icon}
+                      >
+                        {t(item.label)}
+                      </LayoutItem>
+                    );
+                  })}
+                </List>
+              )}
+
+              <Menu
+                open={Boolean(menuContextPosition)}
+                onClose={handleMenuContextClose}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                  menuContextPosition
+                    ? {
+                        top: menuContextPosition.top,
+                        left: menuContextPosition.left,
                       }
-                      return (
-                        <SortableNavMenuItem
-                          key={item.path}
-                          item={item}
-                          label={t(item.label)}
-                        />
-                      );
-                    })}
-                  </List>
-                </SortableContext>
-              </DndContext>
+                    : undefined
+                }
+                transitionDuration={200}
+                slotProps={{
+                  list: {
+                    sx: { py: 0.5 },
+                  },
+                }}
+              >
+                <MenuItem
+                  onClick={menuUnlocked ? handleLockMenu : handleUnlockMenu}
+                  dense
+                >
+                  {menuUnlocked ? t("Lock menu order") : t("Unlock menu order")}
+                </MenuItem>
+              </Menu>
 
               <div className="the-traffic">
                 <LayoutTraffic />

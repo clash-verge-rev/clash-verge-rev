@@ -708,5 +708,8 @@
   "Prefer System Titlebar": "优先使用系统标题栏",
   "App Log Max Size": "应用日志最大大小",
   "App Log Max Count": "应用日志最大数量",
-  "Allow Auto Update": "允许自动更新"
+  "Allow Auto Update": "允许自动更新",
+  "Menu reorder mode": "菜单排序模式",
+  "Unlock menu order": "解锁菜单排序",
+  "Lock menu order": "锁定菜单排序"
 }
