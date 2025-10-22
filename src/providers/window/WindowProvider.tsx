@@ -16,15 +16,22 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
   const minimize = useCallback(() => currentWindow.minimize(), [currentWindow]);
 
   useEffect(() => {
+    let isUnmounted = false;
+
     const checkMaximized = debounce(async () => {
-      const value = await currentWindow.isMaximized();
-      setMaximized(value);
+      if (!isUnmounted) {
+        const value = await currentWindow.isMaximized();
+        setMaximized(value);
+      }
     }, 300);
 
     const unlistenPromise = currentWindow.onResized(checkMaximized);
 
     return () => {
-      unlistenPromise.then((unlisten) => unlisten());
+      isUnmounted = true;
+      unlistenPromise
+        .then((unlisten) => unlisten())
+        .catch((err) => console.warn("[WindowProvider] 清理监听器失败:", err));
     };
   }, [currentWindow]);
 

@@ -100,7 +100,7 @@ export const CurrentProxyCard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
-  const { proxies, clashConfig, refreshProxy } = useAppData();
+  const { proxies, clashConfig, refreshProxy, rules } = useAppData();
   const { verge } = useVerge();
   const { current: currentProfile } = useProfiles();
   const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false;
@@ -163,17 +163,47 @@ export const CurrentProxyCard = () => {
   const isGlobalMode = mode === "global";
   const isDirectMode = mode === "direct";
 
-  // 添加排序类型状态
+  // Sorting type state
   const [sortType, setSortType] = useState<ProxySortType>(() => {
     const savedSortType = localStorage.getItem(STORAGE_KEY_SORT_TYPE);
     return savedSortType ? (Number(savedSortType) as ProxySortType) : 0;
   });
   const [delaySortRefresh, setDelaySortRefresh] = useState(0);
 
-  // 定义状态类型
+  const normalizePolicyName = useCallback(
+    (value?: string | null) => (typeof value === "string" ? value.trim() : ""),
+    [],
+  );
+
+  const matchPolicyName = useMemo(() => {
+    if (!Array.isArray(rules)) return "";
+    for (let index = rules.length - 1; index >= 0; index -= 1) {
+      const rule = rules[index];
+      if (!rule) continue;
+
+      if (
+        typeof rule?.type === "string" &&
+        rule.type.toUpperCase() === "MATCH"
+      ) {
+        const policy = normalizePolicyName(rule.proxy);
+        if (policy) {
+          return policy;
+        }
+      }
+    }
+    return "";
+  }, [rules, normalizePolicyName]);
+
+  type ProxyGroupOption = {
+    name: string;
+    now: string;
+    all: string[];
+    type?: string;
+  };
+
   type ProxyState = {
     proxyData: {
-      groups: { name: string; now: string; all: string[] }[];
+      groups: ProxyGroupOption[];
       records: Record<string, any>;
     };
     selection: {
@@ -279,26 +309,66 @@ export const CurrentProxyCard = () => {
 
     // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
     setState((prev) => {
-      // 只保留 Selector 类型的组用于选择
-      const filteredGroups = proxies.groups
-        .filter((g: { name: string; type?: string }) => g.type === "Selector")
-        .map(
-          (g: { name: string; now: string; all: Array<{ name: string }> }) => ({
-            name: g.name,
-            now: g.now || "",
-            all: g.all.map((p: { name: string }) => p.name),
-          }),
-        );
+      const groupsMap = new Map<string, ProxyGroupOption>();
+
+      const registerGroup = (group: any, fallbackName?: string) => {
+        if (!group && !fallbackName) return;
+
+        const rawName =
+          typeof group?.name === "string" && group.name.length > 0
+            ? group.name
+            : fallbackName;
+        const name = normalizePolicyName(rawName);
+        if (!name || groupsMap.has(name)) return;
+
+        const rawAll = (
+          Array.isArray(group?.all)
+            ? (group.all as Array<string | { name?: string }>)
+            : []
+        ) as Array<string | { name?: string }>;
+        const allNames = rawAll
+          .map((item) =>
+            typeof item === "string"
+              ? normalizePolicyName(item)
+              : normalizePolicyName(item?.name),
+          )
+          .filter((value): value is string => value.length > 0);
+
+        const uniqueAll = Array.from(new Set(allNames));
+        if (uniqueAll.length === 0) return;
+
+        groupsMap.set(name, {
+          name,
+          now: normalizePolicyName(group?.now),
+          all: uniqueAll,
+          type: group?.type,
+        });
+      };
+
+      if (matchPolicyName) {
+        const matchGroup =
+          proxies.groups?.find(
+            (g: { name: string }) => g.name === matchPolicyName,
+          ) ||
+          (proxies.global?.name === matchPolicyName ? proxies.global : null) ||
+          proxies.records?.[matchPolicyName];
+        registerGroup(matchGroup, matchPolicyName);
+      }
+
+      (proxies.groups || [])
+        .filter((g: { type?: string }) => g?.type === "Selector")
+        .forEach((selectorGroup: any) => registerGroup(selectorGroup));
+
+      const filteredGroups = Array.from(groupsMap.values());
 
       let newProxy = "";
       let newDisplayProxy = null;
       let newGroup = prev.selection.group;
 
-      // 根据模式确定新代理
       if (isDirectMode) {
         newGroup = "DIRECT";
         newProxy = "DIRECT";
-        newDisplayProxy = proxies.records?.DIRECT || { name: "DIRECT" }; // 确保非空
+        newDisplayProxy = proxies.records?.DIRECT || { name: "DIRECT" };
       } else if (isGlobalMode && proxies.global) {
         newGroup = "GLOBAL";
         newProxy = proxies.global.now || "";
@@ -308,12 +378,11 @@ export const CurrentProxyCard = () => {
           (g: { name: string }) => g.name === prev.selection.group,
         );
 
-        // 如果当前组不存在或为空，自动选择第一个 selector 类型的组
         if (!currentGroup && filteredGroups.length > 0) {
-          const selectorGroup = filteredGroups[0];
-          if (selectorGroup) {
-            newGroup = selectorGroup.name;
-            newProxy = selectorGroup.now || selectorGroup.all[0] || "";
+          const firstGroup = filteredGroups[0];
+          if (firstGroup) {
+            newGroup = firstGroup.name;
+            newProxy = firstGroup.now || firstGroup.all[0] || "";
             newDisplayProxy = proxies.records?.[newProxy] || null;
 
             if (!isGlobalMode && !isDirectMode) {
@@ -329,7 +398,6 @@ export const CurrentProxyCard = () => {
         }
       }
 
-      // 返回新状态
       return {
         proxyData: {
           groups: filteredGroups,
@@ -342,7 +410,14 @@ export const CurrentProxyCard = () => {
         displayProxy: newDisplayProxy,
       };
     });
-  }, [proxies, isGlobalMode, isDirectMode, writeProfileScopedItem]);
+  }, [
+    proxies,
+    isGlobalMode,
+    isDirectMode,
+    writeProfileScopedItem,
+    normalizePolicyName,
+    matchPolicyName,
+  ]);
 
   // 使用防抖包装状态更新
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);

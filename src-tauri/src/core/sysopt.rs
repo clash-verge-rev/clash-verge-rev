@@ -201,15 +201,18 @@ impl Sysopt {
         //直接关闭所有代理
         #[cfg(not(target_os = "windows"))]
         {
-            let mut sysproxy: Sysproxy = Sysproxy::get_system_proxy()?;
+            let mut sysproxy: Sysproxy = match Sysproxy::get_system_proxy() {
+                Ok(sp) => sp,
+                Err(e) => {
+                    log::warn!(target: "app", "重置代理时获取系统代理配置失败: {e}, 使用默认配置");
+                    Sysproxy::default()
+                }
+            };
             let mut autoproxy = match Autoproxy::get_auto_proxy() {
                 Ok(ap) => ap,
                 Err(e) => {
                     log::warn!(target: "app", "重置代理时获取自动代理配置失败: {e}, 使用默认配置");
-                    Autoproxy {
-                        enable: false,
-                        url: "".into(),
-                    }
+                    Autoproxy::default()
                 }
             };
             sysproxy.enable = false;

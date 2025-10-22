@@ -120,7 +120,12 @@ export const useLogData = () => {
       }
 
       return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
         ws.current?.close();
+        ws.current = null;
       };
     },
     {

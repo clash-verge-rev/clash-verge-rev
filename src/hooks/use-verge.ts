@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
@@ -8,7 +8,8 @@ import { showNotice } from "@/services/noticeService";
 
 export const useVerge = () => {
   const { t } = useTranslation();
-  const { isTunModeAvailable, isLoading } = useSystemState();
+  const { isTunModeAvailable, isServiceMode, isLoading } = useSystemState();
+  const disablingRef = useRef(false);
 
   const { data: verge, mutate: mutateVerge } = useSWR(
     "getVergeConfig",
@@ -25,25 +26,50 @@ export const useVerge = () => {
 
   const { enable_tun_mode } = verge ?? {};
 
-  // 当服务不可用且TUN模式开启时自动关闭TUN
-  useEffect(() => {
-    if (enable_tun_mode && !isTunModeAvailable && !isLoading) {
-      console.log("[useVerge] 检测到服务不可用，自动关闭TUN模式");
+  const mutateVergeRef = useRef(mutateVerge);
+  const tRef = useRef(t);
+  const enableTunRef = useRef(enable_tun_mode);
+  const isLoadingRef = useRef(isLoading);
+  const isServiceModeRef = useRef(isServiceMode);
 
-      patchVergeConfig({ enable_tun_mode: false })
-        .then(() => {
-          mutateVerge();
-          showNotice(
-            "info",
-            t("TUN Mode automatically disabled due to service unavailable"),
-          );
-        })
-        .catch((err) => {
-          console.error("[useVerge] 自动关闭TUN模式失败:", err);
-          showNotice("error", t("Failed to disable TUN Mode automatically"));
-        });
+  mutateVergeRef.current = mutateVerge;
+  tRef.current = t;
+  enableTunRef.current = enable_tun_mode;
+  isLoadingRef.current = isLoading;
+  isServiceModeRef.current = isServiceMode;
+
+  const doDisable = useCallback(async () => {
+    try {
+      if (isServiceModeRef.current === true) return;
+      await patchVergeConfig({ enable_tun_mode: false });
+      await mutateVergeRef.current?.();
+      showNotice(
+        "info",
+        tRef.current(
+          "TUN Mode automatically disabled due to service unavailable",
+        ),
+      );
+    } catch (err) {
+      console.error("[useVerge] 自动关闭TUN模式失败:", err);
+      showNotice(
+        "error",
+        tRef.current("Failed to disable TUN Mode automatically"),
+      );
+    } finally {
+      disablingRef.current = false;
     }
-  }, [isTunModeAvailable, isLoading, enable_tun_mode, mutateVerge, t]);
+  }, []);
+
+  useEffect(() => {
+    if (isTunModeAvailable === true) return;
+    if (isLoadingRef.current === true) return;
+    if (enableTunRef.current !== true) return;
+    if (isServiceModeRef.current === true) return;
+    if (disablingRef.current) return;
+
+    disablingRef.current = true;
+    void doDisable();
+  }, [isTunModeAvailable, doDisable]);
 
   return {
     verge,

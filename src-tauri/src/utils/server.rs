@@ -29,7 +29,7 @@ pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
     if !local_port_available(port) {
         let client = ClientBuilder::new()
-            .timeout(Duration::from_millis(1000))
+            .timeout(Duration::from_millis(500))
             .build()?;
         let argvs: Vec<String> = std::env::args().collect();
         if argvs.len() > 1 {
@@ -84,20 +84,17 @@ pub fn embed_server() {
         let verge_config = Config::verge().await;
         let clash_config = Config::clash().await;
 
-        let content = verge_config
+        let pac_content = verge_config
             .latest_ref()
             .pac_file_content
             .clone()
             .unwrap_or(DEFAULT_PAC.into());
 
-        let mixed_port = verge_config
+        let pac_port = verge_config
             .latest_ref()
             .verge_mixed_port
             .unwrap_or(clash_config.latest_ref().get_mixed_port());
 
-        // Clone the content and port for the closure to avoid borrowing issues
-        let pac_content = content.clone();
-        let pac_port = mixed_port;
         let pac = warp::path!("commands" / "pac").map(move || {
             let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
             warp::http::Response::builder()
@@ -110,7 +107,6 @@ pub fn embed_server() {
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
             .map(|query: QueryParam| {
-                // Spawn async work in a fire-and-forget manner
                 let param = query.param.clone();
                 tokio::task::spawn_local(async move {
                     logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
