@@ -7,7 +7,7 @@ import { parseHotkey } from "@/utils/parse-hotkey";
 
 const KeyWrapper = styled("div")(({ theme }) => ({
   position: "relative",
-  width: 165,
+  width: 230,
   minHeight: 36,
 
   "> input": {
@@ -39,7 +39,9 @@ const KeyWrapper = styled("div")(({ theme }) => ({
     },
   },
   ".item": {
+    fontSize: "14px",
     color: theme.palette.text.primary,
+    backgroundColor: alpha(theme.palette.primary.main, 0.2),
     border: "1px solid",
     borderColor: alpha(theme.palette.text.secondary, 0.2),
     borderRadius: "2px",

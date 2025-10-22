@@ -1,28 +1,6 @@
 import { KeyboardEvent } from "react";
 
 const KEY_MAP: Record<string, string> = {
-  // // 特殊字符映射
-  // "-": "Minus",
-  // "=": "Equal",
-  // "[": "BracketLeft",
-  // "]": "BracketRight",
-  // "\\": "Backslash",
-  // ";": "Semicolon",
-  // "'": "Quote",
-  // ",": "Comma",
-  // ".": "Period",
-  // "/": "Slash",
-  // // 数字键映射
-  // "1": "Digit1",
-  // "2": "Digit2",
-  // "3": "Digit3",
-  // "4": "Digit4",
-  // "5": "Digit5",
-  // "6": "Digit6",
-  // "7": "Digit7",
-  // "8": "Digit8",
-  // "9": "Digit9",
-  // "0": "Digit0",
   // Option + 特殊字符映射
   "–": "Minus", // Option + -
   "≠": "Equal", // Option + =
@@ -69,7 +47,8 @@ const mapKeyCombination = (key: string): string => {
   return `${mappedKey}`;
 };
 export const parseHotkey = (keyEvent: KeyboardEvent) => {
-  const key = keyEvent.code;
+  const nativeEvent = keyEvent.nativeEvent;
+  const key = nativeEvent.code;
   let temp = key.toUpperCase();
 
   if (temp.startsWith("ARROW")) {
