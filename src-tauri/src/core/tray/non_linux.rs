@@ -20,10 +20,6 @@ use super::shared::{
     get_tun_tray_icon, handle_menu_command, load_tray_toggle_state, perform_tray_click_action,
     resolve_tray_click_action, should_handle_tray_click,
 };
-
-#[cfg(target_os = "macos")]
-pub mod speed_rate;
-
 const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
 pub struct Tray {

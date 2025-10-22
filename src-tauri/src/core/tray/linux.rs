@@ -17,10 +17,9 @@ use log::{debug, warn};
 use parking_lot::Mutex;
 use serde::Serialize;
 use serde_json::json;
-use tauri::{
-    Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder, dpi::LogicalPosition,
-    window::Position,
-};
+use tauri::Emitter;
+use tauri::dpi::{LogicalPosition, Position};
+use tauri::{Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tokio::sync::Mutex as AsyncMutex;
 
 use crate::{core::handle, process::AsyncHandler, singleton_lazy};
@@ -42,10 +41,10 @@ fn is_running_on_gnome() -> bool {
             "DESKTOP_SESSION",
             "GNOME_SHELL_SESSION_MODE",
         ] {
-            if let Ok(value) = std::env::var(key) {
-                if value.to_ascii_lowercase().contains("gnome") {
-                    return true;
-                }
+            if let Ok(value) = std::env::var(key)
+                && value.to_ascii_lowercase().contains("gnome")
+            {
+                return true;
             }
         }
         false
