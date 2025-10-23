@@ -515,10 +515,12 @@ export const ProxyGroups = (props: Props) => {
           anchorEl={ruleMenuAnchor}
           open={Boolean(ruleMenuAnchor)}
           onClose={handleGroupMenuClose}
-          PaperProps={{
-            sx: {
-              maxHeight: 300,
-              minWidth: 200,
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: 300,
+                minWidth: 200,
+              },
             },
           }}
         >
@@ -569,6 +571,7 @@ export const ProxyGroups = (props: Props) => {
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}
           onGroupLocation={handleGroupLocationByName}
+          enableHoverJump={verge?.enable_hover_jump_navigator ?? true}
         />
       )}
 
