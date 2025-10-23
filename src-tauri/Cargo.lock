@@ -1163,7 +1163,7 @@ dependencies = [
 [[package]]
 name = "clash_verge_logger"
 version = "0.1.0"
-source = "git+https://github.com/clash-verge-rev/clash-verge-logger#d3033b152cbf45fd04d9dee48d7aa9371dbfe99c"
+source = "git+https://github.com/clash-verge-rev/clash-verge-logger#256dc7441f3d0a0c1faa89e345379b32308bc815"
 dependencies = [
  "flexi_logger",
  "log",
