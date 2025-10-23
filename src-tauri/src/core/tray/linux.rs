@@ -24,6 +24,10 @@ use tokio::sync::Mutex as AsyncMutex;
 
 use crate::{core::handle, process::AsyncHandler, singleton_lazy};
 
+mod gnome;
+
+use gnome::AppIndicatorHandle;
+
 use super::shared::{
     TrayClickAction, TrayMenuModel, TrayMenuNode, build_tooltip_text, generate_tray_menu_model,
     get_common_tray_icon, get_sysproxy_tray_icon, get_tun_tray_icon, handle_menu_command,
@@ -255,13 +259,18 @@ fn dispatch_gnome_tray_menu(x: i32, y: i32) {
 enum BackendVariant {
     Menu,
     Action,
+    Gnome,
 }
 
-impl From<TrayClickAction> for BackendVariant {
-    fn from(action: TrayClickAction) -> Self {
-        match action {
-            TrayClickAction::ShowMenu => BackendVariant::Menu,
-            _ => BackendVariant::Action,
+impl BackendVariant {
+    fn for_action(action: TrayClickAction) -> Self {
+        if is_running_on_gnome() {
+            BackendVariant::Gnome
+        } else {
+            match action {
+                TrayClickAction::ShowMenu => BackendVariant::Menu,
+                _ => BackendVariant::Action,
+            }
         }
     }
 }
@@ -467,6 +476,7 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
 enum LinuxTrayHandle {
     Menu(ksni::Handle<KsniTray<true>>),
     Action(ksni::Handle<KsniTray<false>>),
+    Gnome(AppIndicatorHandle),
 }
 
 impl LinuxTrayHandle {
@@ -474,6 +484,7 @@ impl LinuxTrayHandle {
         match self {
             LinuxTrayHandle::Menu(_) => BackendVariant::Menu,
             LinuxTrayHandle::Action(_) => BackendVariant::Action,
+            LinuxTrayHandle::Gnome(_) => BackendVariant::Gnome,
         }
     }
 
@@ -481,6 +492,7 @@ impl LinuxTrayHandle {
         match self {
             LinuxTrayHandle::Menu(handle) => handle.is_closed(),
             LinuxTrayHandle::Action(handle) => handle.is_closed(),
+            LinuxTrayHandle::Gnome(handle) => handle.is_closed(),
         }
     }
 
@@ -488,6 +500,7 @@ impl LinuxTrayHandle {
         match self {
             LinuxTrayHandle::Menu(handle) => LinuxTrayHandle::Menu(handle.clone()),
             LinuxTrayHandle::Action(handle) => LinuxTrayHandle::Action(handle.clone()),
+            LinuxTrayHandle::Gnome(handle) => LinuxTrayHandle::Gnome(handle.clone()),
         }
     }
 
@@ -498,6 +511,9 @@ impl LinuxTrayHandle {
             }
             LinuxTrayHandle::Action(handle) => {
                 let _ = handle.shutdown().await;
+            }
+            LinuxTrayHandle::Gnome(handle) => {
+                handle.shutdown().await;
             }
         }
     }
@@ -534,6 +550,11 @@ impl LinuxTrayHandle {
                 }
                 Ok(LinuxTrayHandle::Action(handle))
             }
+            BackendVariant::Gnome => {
+                let handle = AppIndicatorHandle::spawn(action)
+                    .context("failed to spawn GNOME appindicator tray")?;
+                Ok(LinuxTrayHandle::Gnome(handle))
+            }
         }
     }
 
@@ -548,6 +569,10 @@ impl LinuxTrayHandle {
                 handle
                     .update(|tray| tray.set_menu_model(model.clone()))
                     .await
+            }
+            LinuxTrayHandle::Gnome(handle) => {
+                handle.update_menu(model)?;
+                return Ok(());
             }
         };
         if result.is_none() {
@@ -566,6 +591,10 @@ impl LinuxTrayHandle {
             }
             LinuxTrayHandle::Action(handle) => {
                 handle.update(|tray| tray.set_click_action(action)).await
+            }
+            LinuxTrayHandle::Gnome(handle) => {
+                handle.update_click_action(action)?;
+                return Ok(());
             }
         };
         if result.is_none() {
@@ -589,6 +618,7 @@ impl LinuxTrayHandle {
                     .update(|tray| tray.set_icon(icons.clone(), icon_name.clone()))
                     .await
             }
+            LinuxTrayHandle::Gnome(_) => return Ok(()),
         };
         if result.is_none() {
             Err(anyhow!("ksni tray handle closed while updating icon"))
@@ -609,6 +639,7 @@ impl LinuxTrayHandle {
                     .update(|tray| tray.set_tooltip(tooltip.clone()))
                     .await
             }
+            LinuxTrayHandle::Gnome(_) => return Ok(()),
         };
         if result.is_none() {
             Err(anyhow!("ksni tray handle closed while updating tooltip"))
@@ -655,7 +686,7 @@ impl Tray {
     }
 
     async fn ensure_handle(&self, action: TrayClickAction) -> Result<LinuxTrayHandle> {
-        let desired_variant = BackendVariant::from(action);
+        let desired_variant = BackendVariant::for_action(action);
         let mut guard = self.handle.lock().await;
         let needs_new_handle = guard
             .as_ref()
@@ -757,6 +788,14 @@ impl Tray {
             (false, false) => get_common_tray_icon().await,
         };
 
+        let action = resolve_tray_click_action().await;
+        let handle = self.ensure_handle(action).await?;
+
+        if let LinuxTrayHandle::Gnome(app_handle) = &handle {
+            app_handle.update_icon(icon_bytes)?;
+            return Ok(());
+        }
+
         let icons = convert_image_to_ksni_icons(&icon_bytes.bytes)?;
         debug!(
             target: "app",
@@ -773,8 +812,6 @@ impl Tray {
             String::new()
         };
 
-        let action = resolve_tray_click_action().await;
-        let handle = self.ensure_handle(action).await?;
         handle.update_icon(icons, icon_name).await?;
         Ok(())
     }
@@ -802,11 +839,6 @@ impl Tray {
             return Ok(());
         }
 
-        if is_running_on_gnome() {
-            debug!(target: "app", "ksni: skipping tooltip update on GNOME.");
-            return Ok(());
-        }
-
         let tooltip_text = build_tooltip_text().await?;
         let mut tooltip = ToolTip::default();
         if let Some((title, description)) = tooltip_text.split_once('\n') {
@@ -819,6 +851,10 @@ impl Tray {
 
         let action = resolve_tray_click_action().await;
         let handle = self.ensure_handle(action).await?;
+        if let LinuxTrayHandle::Gnome(app_handle) = &handle {
+            app_handle.update_tooltip(Some(tooltip_text))?;
+            return Ok(());
+        }
         handle.update_tooltip(tooltip).await?;
         Ok(())
     }
