@@ -82,7 +82,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
       });
       setOpen(false);
     } catch (err: any) {
-      showNotice("error", err.toString());
+      showNotice("error", err.message || err.toString());
     }
   });
 
