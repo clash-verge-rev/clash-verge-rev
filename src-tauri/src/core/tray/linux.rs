@@ -19,6 +19,10 @@ use tokio::sync::Mutex as AsyncMutex;
 
 use crate::{core::handle, process::AsyncHandler, singleton_lazy};
 
+mod gnome;
+
+use gnome::GnomeTrayHandle;
+
 use super::shared::{
     TrayClickAction, TrayMenuModel, TrayMenuNode, build_tooltip_text, generate_tray_menu_model,
     get_common_tray_icon, get_sysproxy_tray_icon, get_tun_tray_icon, handle_menu_command,
@@ -27,6 +31,24 @@ use super::shared::{
 };
 
 const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
+
+fn is_running_on_gnome() -> bool {
+    static IS_GNOME: OnceLock<bool> = OnceLock::new();
+    *IS_GNOME.get_or_init(|| {
+        for key in [
+            "XDG_CURRENT_DESKTOP",
+            "DESKTOP_SESSION",
+            "GNOME_SHELL_SESSION_MODE",
+        ] {
+            if let Ok(value) = std::env::var(key)
+                && value.to_ascii_lowercase().contains("gnome")
+            {
+                return true;
+            }
+        }
+        false
+    })
+}
 
 pub(crate) fn schedule_tray_action(id: String) {
     AsyncHandler::spawn(move || async move {
@@ -42,13 +64,18 @@ pub(crate) fn schedule_tray_action(id: String) {
 enum BackendVariant {
     Menu,
     Action,
+    Gnome,
 }
 
 impl BackendVariant {
     fn for_action(action: TrayClickAction) -> Self {
-        match action {
-            TrayClickAction::ShowMenu => BackendVariant::Menu,
-            _ => BackendVariant::Action,
+        if is_running_on_gnome() {
+            BackendVariant::Gnome
+        } else {
+            match action {
+                TrayClickAction::ShowMenu => BackendVariant::Menu,
+                _ => BackendVariant::Action,
+            }
         }
     }
 }
@@ -242,6 +269,7 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
 enum LinuxTrayHandle {
     Menu(ksni::Handle<KsniTray<true>>),
     Action(ksni::Handle<KsniTray<false>>),
+    Gnome(GnomeTrayHandle),
 }
 
 impl LinuxTrayHandle {
@@ -249,6 +277,7 @@ impl LinuxTrayHandle {
         match self {
             LinuxTrayHandle::Menu(_) => BackendVariant::Menu,
             LinuxTrayHandle::Action(_) => BackendVariant::Action,
+            LinuxTrayHandle::Gnome(_) => BackendVariant::Gnome,
         }
     }
 
@@ -256,6 +285,7 @@ impl LinuxTrayHandle {
         match self {
             LinuxTrayHandle::Menu(handle) => handle.is_closed(),
             LinuxTrayHandle::Action(handle) => handle.is_closed(),
+            LinuxTrayHandle::Gnome(handle) => handle.is_closed(),
         }
     }
 
@@ -263,6 +293,7 @@ impl LinuxTrayHandle {
         match self {
             LinuxTrayHandle::Menu(handle) => LinuxTrayHandle::Menu(handle.clone()),
             LinuxTrayHandle::Action(handle) => LinuxTrayHandle::Action(handle.clone()),
+            LinuxTrayHandle::Gnome(handle) => LinuxTrayHandle::Gnome(*handle),
         }
     }
 
@@ -273,6 +304,9 @@ impl LinuxTrayHandle {
             }
             LinuxTrayHandle::Action(handle) => {
                 let _ = handle.shutdown().await;
+            }
+            LinuxTrayHandle::Gnome(handle) => {
+                handle.shutdown().await;
             }
         }
     }
@@ -309,10 +343,14 @@ impl LinuxTrayHandle {
                 }
                 Ok(LinuxTrayHandle::Action(handle))
             }
+            BackendVariant::Gnome => {
+                let handle = GnomeTrayHandle::spawn(action)?;
+                Ok(LinuxTrayHandle::Gnome(handle))
+            }
         }
     }
 
-    async fn update_menu(&self, model: TrayMenuModel) -> Result<()> {
+    async fn update_menu(&self, model: &TrayMenuModel) -> Result<()> {
         let result = match self {
             LinuxTrayHandle::Menu(handle) => {
                 handle
@@ -323,6 +361,10 @@ impl LinuxTrayHandle {
                 handle
                     .update(|tray| tray.set_menu_model(model.clone()))
                     .await
+            }
+            LinuxTrayHandle::Gnome(handle) => {
+                handle.update_menu(model)?;
+                return Ok(());
             }
         };
         if result.is_none() {
@@ -342,6 +384,10 @@ impl LinuxTrayHandle {
             LinuxTrayHandle::Action(handle) => {
                 handle.update(|tray| tray.set_click_action(action)).await
             }
+            LinuxTrayHandle::Gnome(handle) => {
+                handle.update_click_action(action)?;
+                return Ok(());
+            }
         };
         if result.is_none() {
             Err(anyhow!(
@@ -352,17 +398,26 @@ impl LinuxTrayHandle {
         }
     }
 
-    async fn update_icon(&self, icons: Vec<Icon>, icon_name: String) -> Result<()> {
+    async fn update_icon(
+        &self,
+        icons: &[Icon],
+        icon_name: &str,
+        raw: &TrayIconBytes,
+    ) -> Result<()> {
         let result = match self {
             LinuxTrayHandle::Menu(handle) => {
                 handle
-                    .update(|tray| tray.set_icon(icons.clone(), icon_name.clone()))
+                    .update(|tray| tray.set_icon(icons.to_vec(), icon_name.to_string()))
                     .await
             }
             LinuxTrayHandle::Action(handle) => {
                 handle
-                    .update(|tray| tray.set_icon(icons.clone(), icon_name.clone()))
+                    .update(|tray| tray.set_icon(icons.to_vec(), icon_name.to_string()))
                     .await
+            }
+            LinuxTrayHandle::Gnome(handle) => {
+                handle.update_icon(raw)?;
+                return Ok(());
             }
         };
         if result.is_none() {
@@ -372,7 +427,7 @@ impl LinuxTrayHandle {
         }
     }
 
-    async fn update_tooltip(&self, tooltip: ToolTip) -> Result<()> {
+    async fn update_tooltip(&self, tooltip: &ToolTip, tooltip_text: &str) -> Result<()> {
         let result = match self {
             LinuxTrayHandle::Menu(handle) => {
                 handle
@@ -383,6 +438,10 @@ impl LinuxTrayHandle {
                 handle
                     .update(|tray| tray.set_tooltip(tooltip.clone()))
                     .await
+            }
+            LinuxTrayHandle::Gnome(handle) => {
+                handle.update_tooltip(tooltip_text)?;
+                return Ok(());
             }
         };
         if result.is_none() {
@@ -514,7 +573,7 @@ impl Tray {
 
         let action = resolve_tray_click_action().await;
         let handle = self.ensure_handle(action).await?;
-        handle.update_menu(menu_model).await?;
+        handle.update_menu(&menu_model).await?;
         Ok(())
     }
 
@@ -535,6 +594,11 @@ impl Tray {
         let action = resolve_tray_click_action().await;
         let handle = self.ensure_handle(action).await?;
 
+        if let LinuxTrayHandle::Gnome(app_handle) = &handle {
+            app_handle.update_icon(&icon_bytes)?;
+            return Ok(());
+        }
+
         let icons = convert_image_to_ksni_icons(&icon_bytes.bytes)?;
         debug!(
             target: "app",
@@ -551,7 +615,7 @@ impl Tray {
             String::new()
         };
 
-        handle.update_icon(icons, icon_name).await?;
+        handle.update_icon(&icons, &icon_name, &icon_bytes).await?;
         Ok(())
     }
 
@@ -576,7 +640,13 @@ impl Tray {
 
         let action = resolve_tray_click_action().await;
         let handle = self.ensure_handle(action).await?;
-        handle.update_tooltip(tooltip).await?;
+
+        if let LinuxTrayHandle::Gnome(app_handle) = &handle {
+            app_handle.update_tooltip(&tooltip_text)?;
+            return Ok(());
+        }
+
+        handle.update_tooltip(&tooltip, &tooltip_text).await?;
         Ok(())
     }
 
