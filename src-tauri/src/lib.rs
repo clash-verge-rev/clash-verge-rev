@@ -62,6 +62,14 @@ mod app_init {
                 tauri_plugin_mihomo::Builder::new()
                     .protocol(tauri_plugin_mihomo::models::Protocol::LocalSocket)
                     .socket_path(crate::config::IClashTemp::guard_external_controller_ipc())
+                    .pool_config(
+                        tauri_plugin_mihomo::IpcPoolConfigBuilder::new()
+                            .min_connections(0)
+                            .max_connections(20)
+                            .idle_timeout(std::time::Duration::from_millis(500))
+                            .health_check_interval(std::time::Duration::from_secs(10))
+                            .build(),
+                    )
                     .build(),
             );
 
