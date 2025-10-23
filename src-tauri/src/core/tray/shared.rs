@@ -98,7 +98,7 @@ pub(crate) async fn load_tray_menu_inputs() -> Result<TrayMenuInputs> {
 }
 
 /// Tray icon bytes loaded from disk or bundled assets.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct TrayIconBytes {
     pub is_override: bool,
     pub bytes: Vec<u8>,

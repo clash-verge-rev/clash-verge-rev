@@ -1,19 +1,22 @@
 use std::{
+    cell::RefCell,
     collections::HashMap,
     convert::TryInto,
     fs::{self, File},
     io::Cursor,
     path::{Path, PathBuf},
+    rc::Rc,
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
+        mpsc::{self, Sender},
     },
     thread,
 };
 
 use anyhow::{Context, Result, anyhow};
 use appindicator3::{Indicator, IndicatorCategory, IndicatorStatus, prelude::*};
-use glib::{self, ControlFlow, Priority, Sender};
+use glib::{self, ControlFlow};
 use gtk::prelude::*;
 use gtk::{CheckMenuItem, Menu, MenuItem, SeparatorMenuItem};
 use image::{ImageFormat, ImageReader};
@@ -37,7 +40,7 @@ enum AppIndicatorCommand {
 
 struct AppIndicatorInner {
     sender: Sender<AppIndicatorCommand>,
-    closed: AtomicBool,
+    closed: Arc<AtomicBool>,
     thread: Mutex<Option<thread::JoinHandle<()>>>,
 }
 
@@ -57,13 +60,13 @@ pub(crate) struct AppIndicatorHandle {
 impl AppIndicatorHandle {
     pub(crate) fn spawn(initial_action: TrayClickAction) -> Result<Self> {
         let icon_dir = resolve_icon_cache_dir()?;
-        let (sender, receiver) =
-            glib::MainContext::channel::<AppIndicatorCommand>(Priority::DEFAULT);
+        let (sender, receiver) = mpsc::channel::<AppIndicatorCommand>();
 
         let closed = Arc::new(AtomicBool::new(false));
         let closed_thread = closed.clone();
         let icon_dir_clone = icon_dir.clone();
 
+        let worker_closed = closed.clone();
         let worker = thread::Builder::new()
             .name("gnome-tray".into())
             .spawn(move || {
@@ -83,10 +86,36 @@ impl AppIndicatorHandle {
                     .build();
                 indicator.set_status(IndicatorStatus::Active);
 
-                let mut runtime =
-                    AppIndicatorRuntime::new(indicator, icon_dir_clone, initial_action);
+                let runtime = Rc::new(RefCell::new(AppIndicatorRuntime::new(
+                    indicator,
+                    icon_dir_clone,
+                    initial_action,
+                )));
+                let runtime_clone = runtime.clone();
+                let closed_idle = worker_closed.clone();
+                let mut receiver = receiver;
 
-                receiver.attach(None, move |command| runtime.handle_command(command));
+                glib::idle_add_local(move || {
+                    let mut runtime = runtime_clone.borrow_mut();
+                    loop {
+                        match receiver.try_recv() {
+                            Ok(command) => {
+                                if matches!(runtime.handle_command(command), ControlFlow::Break) {
+                                    closed_idle.store(true, Ordering::Release);
+                                    return ControlFlow::Break;
+                                }
+                            }
+                            Err(mpsc::TryRecvError::Empty) => {
+                                return ControlFlow::Continue;
+                            }
+                            Err(mpsc::TryRecvError::Disconnected) => {
+                                gtk::main_quit();
+                                closed_idle.store(true, Ordering::Release);
+                                return ControlFlow::Break;
+                            }
+                        }
+                    }
+                });
 
                 gtk::main();
                 closed_thread.store(true, Ordering::Release);

@@ -224,7 +224,7 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
         ksni::Status::Active
     }
 
-    fn activate(&mut self, x: i32, y: i32) {
+    fn activate(&mut self, _x: i32, _y: i32) {
         let action = { self.state.lock().click_action };
 
         if is_running_on_gnome() {
@@ -247,7 +247,7 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
         Self::trigger_click_action(action);
     }
 
-    fn context_menu(&mut self, x: i32, y: i32) -> ContextMenuResponse {
+    fn context_menu(&mut self, _x: i32, _y: i32) -> ContextMenuResponse {
         if is_running_on_gnome() {
             return ContextMenuResponse::ShowMenu;
         }
