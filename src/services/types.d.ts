@@ -797,6 +797,7 @@ interface IVergeConfig {
   enable_memory_usage?: boolean;
   enable_group_icon?: boolean;
   menu_icon?: "monochrome" | "colorful" | "disable";
+  menu_order?: string[];
   tray_icon?: "monochrome" | "colorful";
   common_tray_icon?: boolean;
   sysproxy_tray_icon?: boolean;
@@ -861,6 +862,7 @@ interface IVergeConfig {
   webdav_password?: string;
   home_cards?: Record<string, boolean>;
   enable_hover_jump_navigator?: boolean;
+  hover_jump_navigator_delay?: number;
   enable_external_controller?: boolean;
 }
 

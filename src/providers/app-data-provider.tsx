@@ -82,6 +82,7 @@ export const AppDataProvider = ({
     };
 
     const addWindowListener = (eventName: string, handler: EventListener) => {
+      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
       window.addEventListener(eventName, handler);
       return () => window.removeEventListener(eventName, handler);
     };

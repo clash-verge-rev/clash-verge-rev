@@ -57,6 +57,9 @@ pub struct IVerge {
     /// menu icon
     pub menu_icon: Option<String>,
 
+    /// menu order
+    pub menu_order: Option<Vec<String>>,
+
     /// sysproxy tray icon
     pub sysproxy_tray_icon: Option<bool>,
 
@@ -213,6 +216,9 @@ pub struct IVerge {
 
     /// 启用代理页面自动滚动
     pub enable_hover_jump_navigator: Option<bool>,
+
+    /// 代理页面自动滚动延迟（毫秒）
+    pub hover_jump_navigator_delay: Option<u64>,
 
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
@@ -384,6 +390,7 @@ impl IVerge {
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_hover_jump_navigator: Some(true),
+            hover_jump_navigator_delay: Some(280),
             enable_system_proxy: Some(false),
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
@@ -456,6 +463,7 @@ impl IVerge {
         #[cfg(target_os = "macos")]
         patch!(tray_icon);
         patch!(menu_icon);
+        patch!(menu_order);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);
@@ -464,6 +472,7 @@ impl IVerge {
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_hover_jump_navigator);
+        patch!(hover_jump_navigator_delay);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);
         #[cfg(not(target_os = "windows"))]
@@ -554,6 +563,7 @@ pub struct IVergeResponse {
     #[cfg(target_os = "macos")]
     pub tray_icon: Option<String>,
     pub menu_icon: Option<String>,
+    pub menu_order: Option<Vec<String>>,
     pub sysproxy_tray_icon: Option<bool>,
     pub tun_tray_icon: Option<bool>,
     pub enable_tun_mode: Option<bool>,
@@ -605,6 +615,7 @@ pub struct IVergeResponse {
     pub enable_dns_settings: Option<bool>,
     pub home_cards: Option<serde_json::Value>,
     pub enable_hover_jump_navigator: Option<bool>,
+    pub hover_jump_navigator_delay: Option<u64>,
     pub enable_external_controller: Option<bool>,
 }
 
@@ -629,6 +640,7 @@ impl From<IVerge> for IVergeResponse {
             #[cfg(target_os = "macos")]
             tray_icon: verge.tray_icon,
             menu_icon: verge.menu_icon,
+            menu_order: verge.menu_order,
             sysproxy_tray_icon: verge.sysproxy_tray_icon,
             tun_tray_icon: verge.tun_tray_icon,
             enable_tun_mode: verge.enable_tun_mode,
@@ -680,6 +692,7 @@ impl From<IVerge> for IVergeResponse {
             enable_dns_settings: verge.enable_dns_settings,
             home_cards: verge.home_cards,
             enable_hover_jump_navigator: verge.enable_hover_jump_navigator,
+            hover_jump_navigator_delay: verge.hover_jump_navigator_delay,
             enable_external_controller: verge.enable_external_controller,
         }
     }
