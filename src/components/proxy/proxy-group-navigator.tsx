@@ -5,9 +5,10 @@ interface ProxyGroupNavigatorProps {
   proxyGroupNames: string[];
   onGroupLocation: (groupName: string) => void;
   enableHoverJump?: boolean;
+  hoverDelay?: number;
 }
 
-const HOVER_DELAY = 280;
+export const DEFAULT_HOVER_DELAY = 280;
 
 // 提取代理组名的第一个字符
 const getGroupDisplayChar = (groupName: string): string => {
@@ -22,9 +23,12 @@ export const ProxyGroupNavigator = ({
   proxyGroupNames,
   onGroupLocation,
   enableHoverJump = true,
+  hoverDelay = DEFAULT_HOVER_DELAY,
 }: ProxyGroupNavigatorProps) => {
   const lastHoveredRef = useRef<string | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const hoverDelayMs = hoverDelay >= 0 ? hoverDelay : 0;
 
   const clearHoverTimer = useCallback(() => {
     if (hoverTimerRef.current) {
@@ -61,9 +65,9 @@ export const ProxyGroupNavigator = ({
         hoverTimerRef.current = null;
         lastHoveredRef.current = groupName;
         onGroupLocation(groupName);
-      }, HOVER_DELAY);
+      }, hoverDelayMs);
     },
-    [clearHoverTimer, enableHoverJump, onGroupLocation],
+    [clearHoverTimer, enableHoverJump, hoverDelayMs, onGroupLocation],
   );
 
   const handleButtonLeave = useCallback(() => {
