@@ -7,16 +7,16 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::Result;
+use scopeguard::defer;
 use smartstring::alias::String;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri::async_runtime::Mutex as TokioMutex;
 use tauri_plugin_autostart::ManagerExt;
 
 pub struct Sysopt {
-    update_sysproxy: Arc<TokioMutex<bool>>,
-    reset_sysproxy: Arc<TokioMutex<bool>>,
+    update_sysproxy: AtomicBool,
+    reset_sysproxy: AtomicBool,
 }
 
 #[cfg(target_os = "windows")]
@@ -84,8 +84,8 @@ async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> 
 impl Default for Sysopt {
     fn default() -> Self {
         Sysopt {
-            update_sysproxy: Arc::new(TokioMutex::new(false)),
-            reset_sysproxy: Arc::new(TokioMutex::new(false)),
+            update_sysproxy: AtomicBool::new(false),
+            reset_sysproxy: AtomicBool::new(false),
         }
     }
 }
@@ -105,7 +105,16 @@ impl Sysopt {
 
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
-        let _lock = self.update_sysproxy.lock().await;
+        if self
+            .update_sysproxy
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
+            return Ok(());
+        }
+        defer! {
+            self.update_sysproxy.store(false, Ordering::SeqCst);
+        }
 
         let port = {
             let verge_port = Config::verge().await.latest_ref().verge_mixed_port;
@@ -192,13 +201,23 @@ impl Sysopt {
         }
         let proxy_manager = EventDrivenProxyManager::global();
         proxy_manager.notify_config_changed();
-
         Ok(())
     }
 
     /// reset the sysproxy
+    #[allow(clippy::unused_async)]
     pub async fn reset_sysproxy(&self) -> Result<()> {
-        let _lock = self.reset_sysproxy.lock().await;
+        if self
+            .reset_sysproxy
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
+            return Ok(());
+        }
+        defer! {
+            self.reset_sysproxy.store(false, Ordering::SeqCst);
+        }
+
         //直接关闭所有代理
         #[cfg(not(target_os = "windows"))]
         {
