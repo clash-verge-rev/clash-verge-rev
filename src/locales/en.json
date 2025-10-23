@@ -284,6 +284,8 @@
   "Silent Start Info": "Start the program in background mode without displaying the panel",
   "Hover Jump Navigator": "Hover Jump Navigator",
   "Hover Jump Navigator Info": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+  "Hover Jump Navigator Delay": "Hover Jump Navigator Delay",
+  "Hover Jump Navigator Delay Info": "Delay before auto scrolling when hovering, in milliseconds",
   "TG Channel": "Telegram Channel",
   "Manual": "Manual",
   "Github Repo": "Github Repo",
