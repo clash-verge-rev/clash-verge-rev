@@ -13,7 +13,7 @@ use std::{
 
 use anyhow::{Context, Result, anyhow};
 use appindicator3::{Indicator, IndicatorCategory, IndicatorStatus, prelude::*};
-use glib::{self, Continue, Sender};
+use glib::{self, ControlFlow, Priority, Sender};
 use gtk::prelude::*;
 use gtk::{CheckMenuItem, Menu, MenuItem, SeparatorMenuItem};
 use image::{ImageFormat, ImageReader};
@@ -23,7 +23,8 @@ use tokio::task;
 
 use crate::utils::dirs;
 
-use super::{TrayClickAction, TrayIconBytes, TrayMenuModel, TrayMenuNode, schedule_tray_action};
+use super::schedule_tray_action;
+use crate::core::tray::shared::{TrayClickAction, TrayIconBytes, TrayMenuModel, TrayMenuNode};
 
 #[derive(Debug)]
 enum AppIndicatorCommand {
@@ -57,7 +58,7 @@ impl AppIndicatorHandle {
     pub(crate) fn spawn(initial_action: TrayClickAction) -> Result<Self> {
         let icon_dir = resolve_icon_cache_dir()?;
         let (sender, receiver) =
-            glib::MainContext::channel::<AppIndicatorCommand>(glib::PRIORITY_DEFAULT);
+            glib::MainContext::channel::<AppIndicatorCommand>(Priority::DEFAULT);
 
         let closed = Arc::new(AtomicBool::new(false));
         let closed_thread = closed.clone();
@@ -124,7 +125,12 @@ impl AppIndicatorHandle {
 
     pub(crate) async fn shutdown(self) {
         let _ = self.inner.send(AppIndicatorCommand::Quit);
-        if let Some(handle) = self.inner.thread.lock().expect("tray lock poisoned").take() {
+        let handle = {
+            let mut guard = self.inner.thread.lock().expect("tray lock poisoned");
+            guard.take()
+        };
+
+        if let Some(handle) = handle {
             let _ = task::spawn_blocking(move || {
                 let _ = handle.join();
             })
@@ -154,7 +160,7 @@ impl AppIndicatorRuntime {
         }
     }
 
-    fn handle_command(&mut self, command: AppIndicatorCommand) -> Continue {
+    fn handle_command(&mut self, command: AppIndicatorCommand) -> ControlFlow {
         match command {
             AppIndicatorCommand::UpdateMenu(model) => {
                 if let Err(err) = self.set_menu(model) {
@@ -170,11 +176,11 @@ impl AppIndicatorRuntime {
             AppIndicatorCommand::UpdateClickAction(action) => self.update_click_action(action),
             AppIndicatorCommand::Quit => {
                 gtk::main_quit();
-                return Continue(false);
+                return ControlFlow::Break;
             }
         }
 
-        Continue(true)
+        ControlFlow::Continue
     }
 
     fn set_menu(&mut self, model: TrayMenuModel) -> Result<()> {

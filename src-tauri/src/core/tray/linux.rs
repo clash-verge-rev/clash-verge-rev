@@ -632,7 +632,7 @@ impl Tray {
             tooltip.title = title.to_string();
             tooltip.description = description.to_string();
         } else {
-            tooltip.title = tooltip_text;
+            tooltip.title = tooltip_text.clone();
         }
         debug!(target: "app", "ksni: updating tooltip title='{}'", tooltip.title);
 
