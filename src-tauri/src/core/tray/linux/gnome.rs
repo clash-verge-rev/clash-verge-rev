@@ -63,10 +63,10 @@ impl AppIndicatorHandle {
         let (sender, receiver) = mpsc::channel::<AppIndicatorCommand>();
 
         let closed = Arc::new(AtomicBool::new(false));
-        let closed_thread = closed.clone();
+        let closed_thread = Arc::clone(&closed);
         let icon_dir_clone = icon_dir.clone();
 
-        let worker_closed = closed.clone();
+        let worker_closed = Arc::clone(&closed);
         let worker = thread::Builder::new()
             .name("gnome-tray".into())
             .spawn(move || {
@@ -91,9 +91,9 @@ impl AppIndicatorHandle {
                     icon_dir_clone,
                     initial_action,
                 )));
-                let runtime_clone = runtime.clone();
-                let closed_idle = worker_closed.clone();
-                let mut receiver = receiver;
+                let runtime_clone = Rc::clone(&runtime);
+                let closed_idle = Arc::clone(&worker_closed);
+                let receiver = receiver;
 
                 glib::idle_add_local(move || {
                     let mut runtime = runtime_clone.borrow_mut();
@@ -155,8 +155,13 @@ impl AppIndicatorHandle {
     pub(crate) async fn shutdown(self) {
         let _ = self.inner.send(AppIndicatorCommand::Quit);
         let handle = {
-            let mut guard = self.inner.thread.lock().expect("tray lock poisoned");
-            guard.take()
+            match self.inner.thread.lock() {
+                Ok(mut guard) => guard.take(),
+                Err(poisoned) => {
+                    let mut guard = poisoned.into_inner();
+                    guard.take()
+                }
+            }
         };
 
         if let Some(handle) = handle {
@@ -234,14 +239,14 @@ impl AppIndicatorRuntime {
         self.indicator.set_icon_theme_path(icon_dir);
         self.indicator.set_icon(&icon_name);
 
-        if let Some(previous) = self.current_icon_file.replace(icon_path.clone()) {
-            if previous != icon_path {
-                if let Err(err) = fs::remove_file(previous) {
-                    debug!(
-                        target: "app",
-                        "GNOME tray: failed to remove previous icon file: {err}"
-                    );
-                }
+        if let Some(previous) = self.current_icon_file.replace(icon_path.clone())
+            && previous != icon_path
+        {
+            if let Err(err) = fs::remove_file(&previous) {
+                debug!(
+                    target: "app",
+                    "GNOME tray: failed to remove previous icon file: {err}"
+                );
             }
         }
 
@@ -258,11 +263,11 @@ impl AppIndicatorRuntime {
     }
 
     fn apply_click_action(&self) {
-        if let Some(target_id) = map_click_action(self.current_click_action) {
-            if let Some(item) = self.menu_items.get(target_id) {
-                self.indicator.set_secondary_activate_target(Some(item));
-                return;
-            }
+        if let Some(target_id) = map_click_action(self.current_click_action)
+            && let Some(item) = self.menu_items.get(target_id)
+        {
+            self.indicator.set_secondary_activate_target(Some(item));
+            return;
         }
         self.indicator
             .set_secondary_activate_target(Option::<&MenuItem>::None);
