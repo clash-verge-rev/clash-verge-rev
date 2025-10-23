@@ -40,7 +40,11 @@ pub async fn init_logger() -> Result<()> {
 
     let log_dir = dirs::app_logs_dir()?;
     let mut spec = LogSpecBuilder::new();
-    spec.default(log_level);
+    let level = std::env::var("RUST_LOG")
+        .ok()
+        .and_then(|v| log::LevelFilter::from_str(&v).ok())
+        .unwrap_or(log_level);
+    spec.default(level);
     #[cfg(feature = "tracing")]
     spec.module("tauri", log::LevelFilter::Debug);
     #[cfg(feature = "tracing")]
