@@ -166,8 +166,6 @@ mod app_init {
             cmd::invoke_uwp_tool,
             cmd::copy_clash_env,
             cmd::sync_tray_proxy_selection,
-            cmd::trigger_tray_menu_action,
-            cmd::hide_tray_menu,
             cmd::save_dns_config,
             cmd::apply_dns_config,
             cmd::check_dns_config_exists,

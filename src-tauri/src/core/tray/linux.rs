@@ -15,11 +15,6 @@ use ksni::{
 };
 use log::{debug, warn};
 use parking_lot::Mutex;
-use serde::Serialize;
-use serde_json::json;
-use tauri::{
-    Emitter, LogicalPosition, Manager, Position, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
-};
 use tokio::sync::Mutex as AsyncMutex;
 
 use crate::{core::handle, process::AsyncHandler, singleton_lazy};
@@ -55,202 +50,12 @@ fn is_running_on_gnome() -> bool {
     })
 }
 
-const GNOME_TRAY_WINDOW_LABEL: &str = "gnome-tray-menu";
-
-#[derive(Debug, Serialize, Clone)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-enum FrontendTrayNode {
-    Standard {
-        uid: String,
-        id: String,
-        label: String,
-        enabled: bool,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        shortcut: Option<String>,
-    },
-    Check {
-        uid: String,
-        id: String,
-        label: String,
-        enabled: bool,
-        checked: bool,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        shortcut: Option<String>,
-    },
-    Separator {
-        uid: String,
-    },
-    Submenu {
-        uid: String,
-        id: String,
-        label: String,
-        enabled: bool,
-        items: Vec<FrontendTrayNode>,
-    },
-}
-
-#[derive(Debug, Serialize, Clone)]
-struct TrayMenuPayload {
-    items: Vec<FrontendTrayNode>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    position: Option<TrayMenuPosition>,
-}
-
-#[derive(Debug, Serialize, Clone)]
-struct TrayMenuPosition {
-    x: i32,
-    y: i32,
-}
-
-fn convert_menu_nodes_to_frontend(nodes: &[TrayMenuNode], path: &str) -> Vec<FrontendTrayNode> {
-    nodes
-        .iter()
-        .enumerate()
-        .map(|(index, node)| {
-            let base_path = if path.is_empty() {
-                index.to_string()
-            } else {
-                format!("{path}/{index}")
-            };
-
-            match node {
-                TrayMenuNode::Standard(item) => FrontendTrayNode::Standard {
-                    uid: format!("{base_path}:{}", item.id),
-                    id: item.id.clone(),
-                    label: item.label.clone(),
-                    enabled: item.enabled,
-                    shortcut: item
-                        .shortcut
-                        .as_ref()
-                        .map(|shortcut| shortcut.display().to_string()),
-                },
-                TrayMenuNode::Check(item) => FrontendTrayNode::Check {
-                    uid: format!("{base_path}:{}", item.id),
-                    id: item.id.clone(),
-                    label: item.label.clone(),
-                    enabled: item.enabled,
-                    checked: item.checked,
-                    shortcut: item
-                        .shortcut
-                        .as_ref()
-                        .map(|shortcut| shortcut.display().to_string()),
-                },
-                TrayMenuNode::Separator => FrontendTrayNode::Separator {
-                    uid: format!("{base_path}:separator"),
-                },
-                TrayMenuNode::Submenu(submenu) => {
-                    let submenu_path = format!("{base_path}:{}", submenu.id);
-                    FrontendTrayNode::Submenu {
-                        uid: submenu_path.clone(),
-                        id: submenu.id.clone(),
-                        label: submenu.label.clone(),
-                        enabled: submenu.enabled,
-                        items: convert_menu_nodes_to_frontend(&submenu.items, &submenu_path),
-                    }
-                }
-            }
-        })
-        .collect()
-}
-
-fn ensure_gnome_tray_window() -> Result<WebviewWindow> {
-    let app_handle = handle::Handle::app_handle();
-
-    if let Some(window) = app_handle.get_webview_window(GNOME_TRAY_WINDOW_LABEL) {
-        return Ok(window);
-    }
-
-    let window = WebviewWindowBuilder::new(
-        app_handle,
-        GNOME_TRAY_WINDOW_LABEL,
-        WebviewUrl::App("entries/tray-menu/index.html".into()),
-    )
-    .title("Clash Verge Tray")
-    .visible(false)
-    .resizable(false)
-    .decorations(false)
-    .transparent(true)
-    .always_on_top(true)
-    .skip_taskbar(true)
-    .inner_size(360.0, 480.0)
-    .build()
-    .context("failed to build GNOME tray menu window")?;
-
-    Ok(window)
-}
-
-fn compute_window_position(
-    window: &WebviewWindow,
-    pointer: Option<(i32, i32)>,
-) -> LogicalPosition<f64> {
-    let mut x = 40.0;
-    let mut y = 40.0;
-
-    if let Some((px, py)) = pointer {
-        x = (px - 12).max(0) as f64;
-        y = (py - 12).max(0) as f64;
-    }
-
-    if let Ok(Some(monitor)) = window.current_monitor() {
-        let monitor_size = monitor.size();
-        if let Ok(window_size) = window.inner_size() {
-            let width = window_size.width as f64;
-            let height = window_size.height as f64;
-            let max_x = (monitor_size.width as f64 - width).max(0.0);
-            let max_y = (monitor_size.height as f64 - height).max(0.0);
-            x = x.clamp(0.0, max_x);
-            y = y.clamp(0.0, max_y);
-        }
-    }
-
-    LogicalPosition::new(x, y)
-}
-
-fn show_gnome_tray_window(menu: &TrayMenuModel, pointer: Option<(i32, i32)>) -> Result<()> {
-    let window = ensure_gnome_tray_window()?;
-
-    let payload = TrayMenuPayload {
-        items: convert_menu_nodes_to_frontend(&menu.items, ""),
-        position: pointer.map(|(x, y)| TrayMenuPosition { x, y }),
-    };
-
-    let position = compute_window_position(&window, pointer);
-
-    window
-        .emit("tray-menu://update", payload)
-        .context("failed to emit GNOME tray menu payload")?;
-    window
-        .set_position(Position::Logical(position))
-        .context("failed to position GNOME tray window")?;
-    window.show().context("failed to show GNOME tray window")?;
-    let _ = window.set_focus();
-    Ok(())
-}
-
-pub(crate) fn hide_gnome_tray_window() {
-    if let Some(window) = handle::Handle::app_handle().get_webview_window(GNOME_TRAY_WINDOW_LABEL) {
-        let _ = window.emit("tray-menu://hide", json!({}));
-        let _ = window.hide();
-    }
-}
-
 pub(crate) fn schedule_tray_action(id: String) {
     AsyncHandler::spawn(move || async move {
         debug!(target: "app", "ksni: scheduling menu action for id={id}");
         handle_menu_command(&id).await;
         if let Err(e) = crate::core::tray::Tray::global().update_all_states().await {
             warn!(target: "app", "ksni: failed to refresh tray state: {e}");
-        }
-    });
-}
-
-fn dispatch_gnome_tray_menu(x: i32, y: i32) {
-    AsyncHandler::spawn(move || async move {
-        if let Err(e) = crate::core::tray::Tray::global()
-            .show_gnome_tray_menu(x, y)
-            .await
-        {
-            warn!(target: "app", "ksni: failed to show GNOME tray menu: {e}");
         }
     });
 }
@@ -422,10 +227,7 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
     fn activate(&mut self, x: i32, y: i32) {
         let action = { self.state.lock().click_action };
 
-        if is_running_on_gnome()
-            && matches!(action, TrayClickAction::ShowMenu | TrayClickAction::None)
-        {
-            dispatch_gnome_tray_menu(x, y);
+        if is_running_on_gnome() {
             return;
         }
 
@@ -447,8 +249,7 @@ impl<const MENU_ON_ACTIVATE: bool> ksni::Tray for KsniTray<MENU_ON_ACTIVATE> {
 
     fn context_menu(&mut self, x: i32, y: i32) -> ContextMenuResponse {
         if is_running_on_gnome() {
-            dispatch_gnome_tray_menu(x, y);
-            return ContextMenuResponse::Suppress;
+            return ContextMenuResponse::ShowMenu;
         }
 
         if MENU_ON_ACTIVATE {
@@ -818,20 +619,6 @@ impl Tray {
 
     pub async fn update_tray_display(&self) -> Result<()> {
         self.update_menu().await
-    }
-
-    async fn show_gnome_tray_menu(&self, x: i32, y: i32) -> Result<()> {
-        if handle::Handle::global().is_exiting() {
-            return Ok(());
-        }
-
-        if !is_running_on_gnome() {
-            return Ok(());
-        }
-
-        let (menu_model, _) = generate_tray_menu_model().await?;
-        show_gnome_tray_window(&menu_model, Some((x, y)))?;
-        Ok(())
     }
 
     pub async fn update_tooltip(&self) -> Result<()> {

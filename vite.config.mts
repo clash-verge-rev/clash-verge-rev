@@ -62,10 +62,6 @@ export default defineConfig({
       },
     },
     rollupOptions: {
-      input: {
-        main: path.resolve("./src/index.html"),
-        "tray-menu": path.resolve("./src/entries/tray-menu/index.html"),
-      },
       treeshake: {
         preset: "recommended",
         moduleSideEffects: (id) => !id.endsWith(".css"),
