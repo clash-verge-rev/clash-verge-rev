@@ -46,17 +46,23 @@ impl HttpResponse {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum ProxyType {
     None,
     Localhost,
     System,
 }
 
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
+struct ClientConfig {
+    proxy_type: ProxyType,
+    timeout_secs: Option<u64>,
+    user_agent: String,
+    accept_invalid_certs: bool,
+}
+
 pub struct NetworkManager {
-    self_proxy_client: Mutex<Option<HttpClient>>,
-    system_proxy_client: Mutex<Option<HttpClient>>,
-    no_proxy_client: Mutex<Option<HttpClient>>,
+    clients: Mutex<std::collections::HashMap<ClientConfig, HttpClient>>,
     last_connection_error: Mutex<Option<(Instant, String)>>,
     connection_error_count: Mutex<usize>,
 }
@@ -70,9 +76,7 @@ impl Default for NetworkManager {
 impl NetworkManager {
     pub fn new() -> Self {
         Self {
-            self_proxy_client: Mutex::new(None),
-            system_proxy_client: Mutex::new(None),
-            no_proxy_client: Mutex::new(None),
+            clients: Mutex::new(std::collections::HashMap::new()),
             last_connection_error: Mutex::new(None),
             connection_error_count: Mutex::new(0),
         }
@@ -105,9 +109,7 @@ impl NetworkManager {
     }
 
     pub async fn reset_clients(&self) {
-        *self.self_proxy_client.lock().await = None;
-        *self.system_proxy_client.lock().await = None;
-        *self.no_proxy_client.lock().await = None;
+        self.clients.lock().await.clear();
         *self.connection_error_count.lock().await = 0;
     }
 
@@ -177,32 +179,33 @@ impl NetworkManager {
             }
         };
 
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            USER_AGENT,
-            HeaderValue::from_str(
-                &user_agent.unwrap_or_else(|| {
-                    format!("clash-verge/v{}", env!("CARGO_PKG_VERSION")).into()
-                }),
-            )?,
-        );
+        let user_agent_str = user_agent
+            .unwrap_or_else(|| format!("clash-verge/v{}", env!("CARGO_PKG_VERSION")).into());
 
-        // 复用 client
-        let target_cache = match proxy_type {
-            ProxyType::None => &self.no_proxy_client,
-            ProxyType::Localhost => &self.self_proxy_client,
-            ProxyType::System => &self.system_proxy_client,
+        // 创建配置键用于缓存
+        let config = ClientConfig {
+            proxy_type,
+            timeout_secs,
+            user_agent: user_agent_str.clone(),
+            accept_invalid_certs,
         };
 
+        // 检查缓存
         {
-            let guard = target_cache.lock().await;
-            if let Some(existing) = guard.as_ref() {
+            let guard = self.clients.lock().await;
+            if let Some(existing) = guard.get(&config) {
                 return Ok(existing.clone());
             }
         }
 
+        // 构建新客户端
+        let mut headers = HeaderMap::new();
+        headers.insert(USER_AGENT, HeaderValue::from_str(&user_agent_str)?);
+
         let client = self.build_client(proxy_uri, headers, accept_invalid_certs, timeout_secs)?;
-        *target_cache.lock().await = Some(client.clone());
+
+        // 缓存新客户端
+        self.clients.lock().await.insert(config, client.clone());
         Ok(client)
     }
 

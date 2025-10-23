@@ -151,15 +151,12 @@ impl EventDrivenProxyManager {
 
         // 初始化定时器，用于周期性检查代理设置
         let config = Self::get_proxy_config().await;
-        let mut guard_interval = tokio::time::interval(Duration::from_secs(config.guard_duration));
-        // 防抖
+        let guard_duration = config.guard_duration.max(5);
+        let mut guard_interval = tokio::time::interval(Duration::from_secs(guard_duration));
         guard_interval.set_missed_tick_behavior(MissedTickBehavior::Delay);
-        // 防止首次立即触发
         guard_interval.tick().await;
 
-        // 限制频繁重建 interval 的去抖时间
-        const INTERVAL_RESET_DEBOUNCE_MS: u64 = 300;
-        let mut last_interval_reset = std::time::Instant::now();
+        let mut current_guard_duration = guard_duration;
 
         loop {
             tokio::select! {
@@ -169,16 +166,14 @@ impl EventDrivenProxyManager {
                     Self::handle_event(&state, event).await;
 
                     // 检查是否是配置变更事件，如果是，则可能需要更新定时器
-                    if matches!(event_clone, ProxyEvent::ConfigChanged | ProxyEvent::AppStarted) {
-                        let now = std::time::Instant::now();
-                        if now.duration_since(last_interval_reset) >= Duration::from_millis(INTERVAL_RESET_DEBOUNCE_MS) {
-                            let new_config = Self::get_proxy_config().await;
-                            let secs = new_config.guard_duration.max(5);
-                            guard_interval = tokio::time::interval(Duration::from_secs(secs));
+                    if matches!(event_clone, ProxyEvent::ConfigChanged) {
+                        let new_config = Self::get_proxy_config().await;
+                        let new_duration = new_config.guard_duration.max(5);
+                        if new_duration != current_guard_duration {
+                            guard_interval = tokio::time::interval(Duration::from_secs(new_duration));
                             guard_interval.set_missed_tick_behavior(MissedTickBehavior::Delay);
-                            // 防止首次立即触发
                             guard_interval.tick().await;
-                            last_interval_reset = now;
+                            current_guard_duration = new_duration;
                         }
                     }
                 }

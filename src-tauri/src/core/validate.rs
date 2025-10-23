@@ -37,23 +37,21 @@ impl CoreConfigValidator {
     /// 检查文件是否为脚本文件
     async fn is_script_file(path: &str) -> Result<bool> {
         // 1. 先通过扩展名快速判断
-        if has_ext(std::path::Path::new(path), "yaml") || has_ext(std::path::Path::new(path), "yml")
-        {
+        if has_ext(path, "yaml") || has_ext(path, "yml") {
             return Ok(false); // YAML文件不是脚本文件
-        } else if has_ext(std::path::Path::new(path), "js") {
+        } else if has_ext(path, "js") {
             return Ok(true); // JS文件是脚本文件
         }
 
         // 2. 读取文件内容
-        let path_str = path.to_string();
-        let content = match tokio::fs::read_to_string(&path_str).await {
+        let content = match tokio::fs::read_to_string(path).await {
             Ok(content) => content,
             Err(err) => {
                 logging!(
                     warn,
                     Type::Validate,
                     "无法读取文件以检测类型: {}, 错误: {}",
-                    path_str,
+                    path,
                     err
                 );
                 return Err(anyhow::anyhow!(

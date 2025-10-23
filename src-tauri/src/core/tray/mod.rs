@@ -18,10 +18,14 @@ use crate::{
 use super::handle;
 use anyhow::Result;
 use parking_lot::Mutex;
+use scopeguard::defer;
 use smartstring::alias::String;
 use std::collections::HashMap;
 use std::{
-    sync::atomic::{AtomicBool, Ordering},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
     time::{Duration, Instant},
 };
 use tauri::{
@@ -63,9 +67,7 @@ pub struct Tray {
     last_menu_update: Mutex<Option<Instant>>,
     menu_updating: AtomicBool,
     // 缓存已创建的关键菜单项句柄
-    menu_handles: Mutex<Option<MenuHandles>>,
-    // 记录是否已成功构建过菜单
-    menu_built: AtomicBool,
+    menu_handles: Mutex<Option<Arc<MenuHandles>>>,
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -73,12 +75,9 @@ pub struct Tray {
     last_menu_update: Mutex<Option<Instant>>,
     menu_updating: AtomicBool,
     // 缓存已创建的关键菜单项句柄
-    menu_handles: Mutex<Option<MenuHandles>>,
-    // 记录是否已成功构建过菜单
-    menu_built: AtomicBool,
+    menu_handles: Mutex<Option<Arc<MenuHandles>>>,
 }
 
-#[derive(Clone)]
 struct MenuHandles {
     rule_mode: Option<CheckMenuItem<Wry>>,
     global_mode: Option<CheckMenuItem<Wry>>,
@@ -207,7 +206,6 @@ impl Default for Tray {
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
             menu_handles: Mutex::new(None),
-            menu_built: AtomicBool::new(false),
         }
     }
 }
@@ -291,46 +289,43 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        // 设置更新状态
-        self.menu_updating.store(true, Ordering::Release);
-
-        // 尝试增量更新，失败再完整重建
-        let result = if self.menu_built.load(Ordering::Acquire) {
-            match self.update_checks_only().await {
-                Ok(true) => Ok(()),
-                Ok(false) => self.update_menu_internal(app_handle).await,
-                Err(e) => {
-                    log::warn!(target: "app", "增量更新托盘菜单失败，回退到重建: {e}");
-                    self.update_menu_internal(app_handle).await
-                }
-            }
-        } else {
-            self.update_menu_internal(app_handle).await
-        };
-
+        // 使用 compare_exchange 防止并发更新
+        if self
+            .menu_updating
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
         {
+            return Ok(());
+        }
+        defer! {
+            self.menu_updating.store(false, Ordering::SeqCst);
             let mut last_update = self.last_menu_update.lock();
             *last_update = Some(Instant::now());
         }
-        self.menu_updating.store(false, Ordering::Release);
 
-        result
+        // 尝试增量更新，失败再完整重建
+        match self.update_checks_only().await {
+            Ok(true) => Ok(()),
+            Ok(false) => self.update_menu_internal(app_handle).await,
+            Err(e) => {
+                log::warn!(target: "app", "增量更新托盘菜单失败，回退到重建: {e}");
+                self.update_menu_internal(app_handle).await
+            }
+        }
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
         let verge = Config::verge().await.latest_ref().clone();
-        let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
-        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        let mode = {
-            Config::clash()
-                .await
-                .latest_ref()
-                .0
-                .get("mode")
-                .map(|val| val.as_str().unwrap_or("rule"))
-                .unwrap_or("rule")
-                .to_owned()
-        };
+        let system_proxy = *verge.enable_system_proxy.as_ref().unwrap_or(&false);
+        let tun_mode = *verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        let mode = Config::clash()
+            .await
+            .latest_ref()
+            .0
+            .get("mode")
+            .and_then(|val| val.as_str())
+            .unwrap_or("rule")
+            .to_owned();
         let profile_uid_and_name = Config::profiles()
             .await
             .data_mut()
@@ -342,9 +337,9 @@ impl Tray {
             Some(tray) => {
                 let (menu, handles) = create_tray_menu(
                     app_handle,
-                    Some(mode.as_str()),
-                    *system_proxy,
-                    *tun_mode,
+                    Some(&mode),
+                    system_proxy,
+                    tun_mode,
                     profile_uid_and_name,
                     is_lightweight_mode,
                 )
@@ -355,9 +350,8 @@ impl Tray {
                 // 缓存句柄
                 {
                     let mut guard = self.menu_handles.lock();
-                    *guard = Some(handles);
+                    *guard = Some(Arc::new(handles));
                 }
-                self.menu_built.store(true, Ordering::Release);
 
                 log::debug!(target: "app", "托盘菜单更新成功");
                 Ok(())
@@ -375,8 +369,11 @@ impl Tray {
             return Ok(true);
         }
 
-        let handles_opt = { self.menu_handles.lock().clone() };
-        let Some(handles) = handles_opt else {
+        let handles = {
+            let guard = self.menu_handles.lock();
+            guard.clone()
+        };
+        let Some(handles) = handles else {
             return Ok(false);
         };
 
@@ -384,26 +381,27 @@ impl Tray {
         let verge = Config::verge().await.latest_ref().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        let mode = {
-            Config::clash()
-                .await
-                .latest_ref()
+
+        let (is_rule, is_global, is_direct) = {
+            let clash_config = Config::clash().await;
+            let clash_ref = clash_config.latest_ref();
+            let mode = clash_ref
                 .0
                 .get("mode")
-                .map(|val| val.as_str().unwrap_or("rule"))
-                .unwrap_or("rule")
-                .to_owned()
+                .and_then(|val| val.as_str())
+                .unwrap_or("rule");
+            (mode == "rule", mode == "global", mode == "direct")
         };
 
         // 更新模式选中态
         if let Some(item) = handles.rule_mode.as_ref() {
-            let _ = item.set_checked(mode == "rule");
+            let _ = item.set_checked(is_rule);
         }
         if let Some(item) = handles.global_mode.as_ref() {
-            let _ = item.set_checked(mode == "global");
+            let _ = item.set_checked(is_global);
         }
         if let Some(item) = handles.direct_mode.as_ref() {
-            let _ = item.set_checked(mode == "direct");
+            let _ = item.set_checked(is_direct);
         }
 
         // 更新开关类选中态
