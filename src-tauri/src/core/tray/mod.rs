@@ -783,7 +783,14 @@ async fn create_tray_menu(
                 .filter_map(|item| {
                     let mut parts = item.split(',');
                     match (parts.next(), parts.next()) {
-                        (Some(func), Some(key)) => Some((func.into(), key.into())),
+                        (Some(func), Some(key)) => {
+                            // 托盘菜单中的 `accelerator` 属性，在 Linux/Windows 中都不支持小键盘按键的解析
+                            if key.to_uppercase().contains("NUMPAD") {
+                                None
+                            } else {
+                                Some((func.into(), key.into()))
+                            }
+                        }
                         _ => None,
                     }
                 })

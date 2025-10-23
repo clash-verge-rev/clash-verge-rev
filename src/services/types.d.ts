@@ -862,6 +862,7 @@ interface IVergeConfig {
   webdav_password?: string;
   home_cards?: Record<string, boolean>;
   enable_hover_jump_navigator?: boolean;
+  hover_jump_navigator_delay?: number;
   enable_external_controller?: boolean;
 }
 
