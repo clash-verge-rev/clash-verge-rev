@@ -107,7 +107,7 @@
     "https-proxy-agent": "^7.0.6",
     "husky": "^9.1.7",
     "jiti": "^2.6.1",
-    "lint-staged": "^16.2.5",
+    "lint-staged": "^16.2.6",
     "meta-json-schema": "^1.19.14",
     "node-fetch": "^3.3.2",
     "prettier": "^3.6.2",
@@ -116,10 +116,10 @@
     "terser": "^5.44.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2",
-    "vite": "^7.1.11",
+    "vite": "^7.1.12",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.5.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.1"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

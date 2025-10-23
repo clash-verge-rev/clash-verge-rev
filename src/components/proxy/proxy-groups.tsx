@@ -25,7 +25,10 @@ import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";
-import { ProxyGroupNavigator } from "./proxy-group-navigator";
+import {
+  ProxyGroupNavigator,
+  DEFAULT_HOVER_DELAY,
+} from "./proxy-group-navigator";
 import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
 
@@ -515,10 +518,12 @@ export const ProxyGroups = (props: Props) => {
           anchorEl={ruleMenuAnchor}
           open={Boolean(ruleMenuAnchor)}
           onClose={handleGroupMenuClose}
-          PaperProps={{
-            sx: {
-              maxHeight: 300,
-              minWidth: 200,
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: 300,
+                minWidth: 200,
+              },
             },
           }}
         >
@@ -569,6 +574,8 @@ export const ProxyGroups = (props: Props) => {
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}
           onGroupLocation={handleGroupLocationByName}
+          enableHoverJump={verge?.enable_hover_jump_navigator ?? true}
+          hoverDelay={verge?.hover_jump_navigator_delay ?? DEFAULT_HOVER_DELAY}
         />
       )}
 

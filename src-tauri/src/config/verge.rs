@@ -217,6 +217,9 @@ pub struct IVerge {
     /// 启用代理页面自动滚动
     pub enable_hover_jump_navigator: Option<bool>,
 
+    /// 代理页面自动滚动延迟（毫秒）
+    pub hover_jump_navigator_delay: Option<u64>,
+
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
 
@@ -390,6 +393,7 @@ impl IVerge {
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_hover_jump_navigator: Some(true),
+            hover_jump_navigator_delay: Some(280),
             enable_system_proxy: Some(false),
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
@@ -472,6 +476,7 @@ impl IVerge {
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_hover_jump_navigator);
+        patch!(hover_jump_navigator_delay);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);
         #[cfg(not(target_os = "windows"))]
@@ -615,6 +620,7 @@ pub struct IVergeResponse {
     pub enable_dns_settings: Option<bool>,
     pub home_cards: Option<serde_json::Value>,
     pub enable_hover_jump_navigator: Option<bool>,
+    pub hover_jump_navigator_delay: Option<u64>,
     pub enable_external_controller: Option<bool>,
     pub enable_network_direct_fallback: Option<bool>,
 }
@@ -692,6 +698,7 @@ impl From<IVerge> for IVergeResponse {
             enable_dns_settings: verge.enable_dns_settings,
             home_cards: verge.home_cards,
             enable_hover_jump_navigator: verge.enable_hover_jump_navigator,
+            hover_jump_navigator_delay: verge.hover_jump_navigator_delay,
             enable_external_controller: verge.enable_external_controller,
             enable_network_direct_fallback: verge.enable_network_direct_fallback,
         }
