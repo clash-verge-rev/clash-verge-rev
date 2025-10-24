@@ -1,4 +1,4 @@
-import { listen } from "@tauri-apps/api/event";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import React, { useCallback, useEffect, useMemo } from "react";
 import useSWR from "swr";
 import {
@@ -9,13 +9,19 @@ import {
 
 import { useVerge } from "@/hooks/use-verge";
 import {
-  calcuProxies,
   calcuProxyProviders,
   getAppUptime,
   getRunningMode,
+  readProfileFile,
   getSystemProxy,
 } from "@/services/cmds";
-import { SWR_DEFAULTS, SWR_REALTIME, SWR_SLOW_POLL } from "@/services/config";
+import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
+import {
+  ensureProxyEventBridge,
+  fetchLiveProxies,
+  useProxyStore,
+} from "@/stores/proxy-store";
+import { createProxySnapshotFromProfile } from "@/utils/proxy-snapshot";
 
 import { AppDataContext, AppDataContextType } from "./app-data-context";
 
@@ -26,15 +32,9 @@ export const AppDataProvider = ({
   children: React.ReactNode;
 }) => {
   const { verge } = useVerge();
-
-  const { data: proxiesData, mutate: refreshProxy } = useSWR(
-    "getProxies",
-    calcuProxies,
-    {
-      ...SWR_REALTIME,
-      onError: (err) => console.warn("[DataProvider] Proxy fetch failed:", err),
-    },
-  );
+  const proxyView = useProxyStore((state) => state.data);
+  const proxyHydration = useProxyStore((state) => state.hydration);
+  const setProxySnapshot = useProxyStore((state) => state.setSnapshot);
 
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
     "getClashConfig",
@@ -60,9 +60,56 @@ export const AppDataProvider = ({
     SWR_DEFAULTS,
   );
 
+  const seedProxySnapshot = useCallback(
+    async (profileId: string) => {
+      if (!profileId) return;
+
+      try {
+        const yamlContent = await readProfileFile(profileId);
+        const snapshot = createProxySnapshotFromProfile(yamlContent);
+        if (!snapshot) return;
+
+        setProxySnapshot(snapshot, profileId);
+      } catch (error) {
+        console.warn(
+          "[DataProvider] Failed to seed proxy snapshot from profile:",
+          error,
+        );
+      }
+    },
+    [setProxySnapshot],
+  );
+
+  useEffect(() => {
+    let unlistenBridge: UnlistenFn | null = null;
+
+    ensureProxyEventBridge()
+      .then((unlisten) => {
+        unlistenBridge = unlisten;
+      })
+      .catch((error) => {
+        console.error(
+          "[DataProvider] Failed to establish proxy bridge:",
+          error,
+        );
+      });
+
+    fetchLiveProxies().catch((error) => {
+      console.error("[DataProvider] Initial proxy fetch failed:", error);
+    });
+
+    return () => {
+      if (unlistenBridge) {
+        void unlistenBridge();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     let lastProfileId: string | null = null;
-    let lastUpdateTime = 0;
+    let lastProfileChangeTime = 0;
+    let lastProxyRefreshTime = 0;
+    let lastClashRefreshTime = 0;
     const refreshThrottle = 800;
 
     let isUnmounted = false;
@@ -109,21 +156,52 @@ export const AppDataProvider = ({
       scheduledTimeouts.clear();
     };
 
+    const queueProxyRefresh = (
+      reason: string,
+      delays: number[] = [0, 250, 1000, 2000],
+    ) => {
+      delays.forEach((delay) => {
+        scheduleTimeout(() => {
+          fetchLiveProxies().catch((error) =>
+            console.warn(
+              `[DataProvider] Proxy refresh failed (${reason}, +${delay}ms):`,
+              error,
+            ),
+          );
+        }, delay);
+      });
+    };
+
     const handleProfileChanged = (event: { payload: string }) => {
       const newProfileId = event.payload;
       const now = Date.now();
-
       if (
         lastProfileId === newProfileId &&
-        now - lastUpdateTime < refreshThrottle
+        now - lastProfileChangeTime < refreshThrottle
       ) {
         return;
       }
 
       lastProfileId = newProfileId;
-      lastUpdateTime = now;
+      lastProfileChangeTime = now;
+      lastProxyRefreshTime = 0;
+      lastClashRefreshTime = 0;
+
+      void seedProxySnapshot(newProfileId);
 
       scheduleTimeout(() => {
+        queueProxyRefresh("profile-change");
+        void refreshProxyProviders()
+          .then(() => {
+            queueProxyRefresh("profile-change:providers", [0, 500, 1500]);
+          })
+          .catch((error) =>
+            console.warn(
+              "[DataProvider] Proxy providers refresh failed after profile change:",
+              error,
+            ),
+          );
+
         refreshRules().catch((error) =>
           console.warn("[DataProvider] Rules refresh failed:", error),
         );
@@ -133,27 +211,45 @@ export const AppDataProvider = ({
       }, 200);
     };
 
+    const handleProfileUpdateCompleted = (_: { payload: { uid: string } }) => {
+      const now = Date.now();
+      lastProxyRefreshTime = now;
+      lastClashRefreshTime = now;
+      scheduleTimeout(() => {
+        queueProxyRefresh("profile-update-completed");
+        void refreshProxyProviders()
+          .then(() => {
+            queueProxyRefresh(
+              "profile-update-completed:providers",
+              [0, 500, 1500],
+            );
+          })
+          .catch((error) =>
+            console.warn(
+              "[DataProvider] Proxy providers refresh failed after profile update completed:",
+              error,
+            ),
+          );
+      }, 120);
+    };
+
     const handleRefreshClash = () => {
       const now = Date.now();
-      if (now - lastUpdateTime <= refreshThrottle) return;
+      if (now - lastClashRefreshTime <= refreshThrottle) return;
 
-      lastUpdateTime = now;
+      lastClashRefreshTime = now;
       scheduleTimeout(() => {
-        refreshProxy().catch((error) =>
-          console.error("[DataProvider] Proxy refresh failed:", error),
-        );
+        queueProxyRefresh("refresh-clash");
       }, 200);
     };
 
     const handleRefreshProxy = () => {
       const now = Date.now();
-      if (now - lastUpdateTime <= refreshThrottle) return;
+      if (now - lastProxyRefreshTime <= refreshThrottle) return;
 
-      lastUpdateTime = now;
+      lastProxyRefreshTime = now;
       scheduleTimeout(() => {
-        refreshProxy().catch((error) =>
-          console.warn("[DataProvider] Proxy refresh failed:", error),
-        );
+        queueProxyRefresh("refresh-proxy");
       }, 200);
     };
 
@@ -163,7 +259,12 @@ export const AppDataProvider = ({
           "profile-changed",
           handleProfileChanged,
         );
+        const unlistenProfileCompleted = await listen<{
+          uid: string;
+        }>("profile-update-completed", handleProfileUpdateCompleted);
+
         registerCleanup(unlistenProfile);
+        registerCleanup(unlistenProfileCompleted);
       } catch (error) {
         console.error("[AppDataProvider] 监听 Profile 事件失败:", error);
       }
@@ -188,6 +289,16 @@ export const AppDataProvider = ({
         const fallbackHandlers: Array<[string, EventListener]> = [
           ["verge://refresh-clash-config", handleRefreshClash],
           ["verge://refresh-proxy-config", handleRefreshProxy],
+          [
+            "profile-update-completed",
+            ((event: Event) => {
+              const payload = (event as CustomEvent<{ uid: string }>)
+                .detail ?? {
+                uid: "",
+              };
+              handleProfileUpdateCompleted({ payload });
+            }) as EventListener,
+          ],
         ];
 
         fallbackHandlers.forEach(([eventName, handler]) => {
@@ -220,7 +331,12 @@ export const AppDataProvider = ({
         );
       }
     };
-  }, [refreshProxy, refreshRules, refreshRuleProviders]);
+  }, [
+    refreshProxyProviders,
+    refreshRules,
+    refreshRuleProviders,
+    seedProxySnapshot,
+  ]);
 
   const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
     "getSystemProxy",
@@ -243,7 +359,7 @@ export const AppDataProvider = ({
   // 提供统一的刷新方法
   const refreshAll = useCallback(async () => {
     await Promise.all([
-      refreshProxy(),
+      fetchLiveProxies(),
       refreshClashConfig(),
       refreshRules(),
       refreshSysproxy(),
@@ -251,7 +367,6 @@ export const AppDataProvider = ({
       refreshRuleProviders(),
     ]);
   }, [
-    refreshProxy,
     refreshClashConfig,
     refreshRules,
     refreshSysproxy,
@@ -294,7 +409,8 @@ export const AppDataProvider = ({
 
     return {
       // 数据
-      proxies: proxiesData,
+      proxies: proxyView,
+      proxyHydration,
       clashConfig,
       rules: rulesData?.rules || [],
       sysproxy,
@@ -308,7 +424,7 @@ export const AppDataProvider = ({
       systemProxyAddress: calculateSystemProxyAddress(),
 
       // 刷新方法
-      refreshProxy,
+      refreshProxy: fetchLiveProxies,
       refreshClashConfig,
       refreshRules,
       refreshSysproxy,
@@ -317,7 +433,8 @@ export const AppDataProvider = ({
       refreshAll,
     } as AppDataContextType;
   }, [
-    proxiesData,
+    proxyView,
+    proxyHydration,
     clashConfig,
     rulesData,
     sysproxy,
@@ -326,7 +443,6 @@ export const AppDataProvider = ({
     proxyProviders,
     ruleProviders,
     verge,
-    refreshProxy,
     refreshClashConfig,
     refreshRules,
     refreshSysproxy,

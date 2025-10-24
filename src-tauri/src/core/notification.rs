@@ -19,6 +19,8 @@ use tauri::{Emitter, WebviewWindow};
 pub enum FrontendEvent {
     RefreshClash,
     RefreshVerge,
+    RefreshProxy,
+    ProxiesUpdated { payload: serde_json::Value },
     NoticeMessage { status: String, message: String },
     ProfileChanged { current_profile_id: String },
     TimerUpdated { profile_index: String },
@@ -99,7 +101,7 @@ impl NotificationSystem {
             match rx.recv_timeout(std::time::Duration::from_millis(100)) {
                 Ok(event) => Self::process_event(handle, event),
                 Err(mpsc::RecvTimeoutError::Disconnected) => break,
-                Err(mpsc::RecvTimeoutError::Timeout) => break,
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
             }
         }
     }
@@ -160,6 +162,8 @@ impl NotificationSystem {
                 "verge://notice-message",
                 serde_json::to_value((status, message)),
             ),
+            FrontendEvent::RefreshProxy => ("verge://refresh-proxy-config", Ok(json!("yes"))),
+            FrontendEvent::ProxiesUpdated { payload } => ("proxies-updated", Ok(payload)),
             FrontendEvent::ProfileChanged { current_profile_id } => {
                 ("profile-changed", Ok(json!(current_profile_id)))
             }

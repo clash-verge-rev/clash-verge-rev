@@ -61,7 +61,7 @@ export const ProxyGroups = (props: Props) => {
   }>({ open: false, message: "" });
 
   const { verge } = useVerge();
-  const { proxies: proxiesData } = useAppData();
+  const { proxies: proxiesData, proxyHydration } = useAppData();
   const groups = proxiesData?.groups;
   const availableGroups = useMemo(() => groups ?? [], [groups]);
 
@@ -76,6 +76,21 @@ export const ProxyGroups = (props: Props) => {
     () => selectedGroup ?? defaultRuleGroup,
     [selectedGroup, defaultRuleGroup],
   );
+  const hydrationChip = useMemo(() => {
+    if (proxyHydration === "live") return null;
+
+    const label =
+      proxyHydration === "snapshot" ? t("Snapshot data") : t("Syncing...");
+
+    return (
+      <Chip
+        size="small"
+        color={proxyHydration === "snapshot" ? "warning" : "info"}
+        label={label}
+        sx={{ fontWeight: 500, height: 22 }}
+      />
+    );
+  }, [proxyHydration, t]);
 
   const { renderList, onProxies, onHeadState } = useRenderList(
     mode,
@@ -93,7 +108,7 @@ export const ProxyGroups = (props: Props) => {
     [renderList],
   );
 
-  // 统代理选择
+  // 系统代理选择
   const { handleProxyGroupChange } = useProxySelection({
     onSuccess: () => {
       onProxies();
@@ -306,12 +321,7 @@ export const ProxyGroups = (props: Props) => {
     try {
       await Promise.race([
         delayManager.checkListDelay(names, groupName, timeout),
-        delayGroup(groupName, url, timeout).then((result) => {
-          console.log(
-            `[ProxyGroups] getGroupProxyDelays返回结果数量:`,
-            Object.keys(result || {}).length,
-          );
-        }), // 查询group delays 将清除fixed(不关注调用结果)
+        delayGroup(groupName, url, timeout),
       ]);
       console.log(`[ProxyGroups] 延迟测试完成，组: ${groupName}`);
     } catch (error) {
@@ -455,8 +465,8 @@ export const ProxyGroups = (props: Props) => {
               ref={virtuosoRef}
               style={{
                 height:
-                  mode === "rule" && proxyGroups.length > 0
-                    ? "calc(100% - 80px)" // 只有标题的高度
+                  mode === "rule" && proxyGroupNames.length > 0
+                    ? "calc(100% - 80px)"
                     : "calc(100% - 14px)",
               }}
               totalCount={renderList.length}
@@ -547,17 +557,16 @@ export const ProxyGroups = (props: Props) => {
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
                   {group.name}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {group.type} · {group.all.length} 节点
-                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                ></Typography>
               </Box>
             </MenuItem>
           ))}
           {availableGroups.length === 0 && (
             <MenuItem disabled>
-              <Typography variant="body2" color="text.secondary">
-                暂无可用代理组
-              </Typography>
+              <Typography variant="body2" color="text.secondary"></Typography>
             </MenuItem>
           )}
         </Menu>
@@ -569,7 +578,21 @@ export const ProxyGroups = (props: Props) => {
     <div
       style={{ position: "relative", height: "100%", willChange: "transform" }}
     >
-      {/* 代理组导航栏 */}
+      {hydrationChip && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 16,
+            zIndex: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          {hydrationChip}
+        </Box>
+      )}
       {mode === "rule" && (
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}

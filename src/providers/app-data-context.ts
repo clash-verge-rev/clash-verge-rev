@@ -6,8 +6,11 @@ import {
   RuleProvider,
 } from "tauri-plugin-mihomo-api";
 
+import { ProxiesView } from "@/services/cmds";
+
 export interface AppDataContextType {
-  proxies: any;
+  proxies: ProxiesView | null;
+  proxyHydration: "none" | "snapshot" | "live";
   clashConfig: BaseConfig;
   rules: Rule[];
   sysproxy: any;

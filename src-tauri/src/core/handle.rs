@@ -1,7 +1,14 @@
-use crate::{APP_HANDLE, constants::timing, singleton};
+use crate::{
+    APP_HANDLE, config::Config, constants::timing, logging, singleton, utils::logging::Type,
+};
 use parking_lot::RwLock;
+use serde_json::{Value, json};
 use smartstring::alias::String;
-use std::{sync::Arc, thread};
+use std::{
+    sync::Arc,
+    thread,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use tauri::{AppHandle, Manager, WebviewWindow};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt};
 use tokio::sync::RwLockReadGuard;
@@ -69,7 +76,10 @@ impl Handle {
         let system_opt = handle.notification_system.read();
         if let Some(system) = system_opt.as_ref() {
             system.send_event(FrontendEvent::RefreshClash);
+            system.send_event(FrontendEvent::RefreshProxy);
         }
+
+        Self::spawn_proxy_snapshot();
     }
 
     pub fn refresh_verge() {
@@ -100,6 +110,86 @@ impl Handle {
 
     pub fn notify_profile_update_completed(uid: String) {
         Self::send_event(FrontendEvent::ProfileUpdateCompleted { uid });
+        Self::spawn_proxy_snapshot();
+    }
+
+    pub fn notify_proxies_updated(payload: Value) {
+        Self::send_event(FrontendEvent::ProxiesUpdated { payload });
+    }
+
+    pub async fn build_proxy_snapshot() -> Option<Value> {
+        let mihomo_guard = Self::mihomo().await;
+        let proxies = match mihomo_guard.get_proxies().await {
+            Ok(data) => match serde_json::to_value(&data) {
+                Ok(value) => value,
+                Err(error) => {
+                    logging!(
+                        warn,
+                        Type::Frontend,
+                        "Failed to serialize proxies snapshot: {error}"
+                    );
+                    return None;
+                }
+            },
+            Err(error) => {
+                logging!(
+                    warn,
+                    Type::Frontend,
+                    "Failed to fetch proxies for snapshot: {error}"
+                );
+                return None;
+            }
+        };
+
+        drop(mihomo_guard);
+
+        let providers_guard = Self::mihomo().await;
+        let providers_value = match providers_guard.get_proxy_providers().await {
+            Ok(data) => serde_json::to_value(&data).unwrap_or_else(|error| {
+                logging!(
+                    warn,
+                    Type::Frontend,
+                    "Failed to serialize proxy providers for snapshot: {error}"
+                );
+                Value::Null
+            }),
+            Err(error) => {
+                logging!(
+                    warn,
+                    Type::Frontend,
+                    "Failed to fetch proxy providers for snapshot: {error}"
+                );
+                Value::Null
+            }
+        };
+
+        drop(providers_guard);
+
+        let profile_guard = Config::profiles().await;
+        let profile_id = profile_guard.latest_ref().current.clone();
+        drop(profile_guard);
+
+        let emitted_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_millis() as i64)
+            .unwrap_or(0);
+
+        let payload = json!({
+            "proxies": proxies,
+            "providers": providers_value,
+            "profileId": profile_id,
+            "emittedAt": emitted_at,
+        });
+
+        Some(payload)
+    }
+
+    fn spawn_proxy_snapshot() {
+        tauri::async_runtime::spawn(async {
+            if let Some(payload) = Handle::build_proxy_snapshot().await {
+                Handle::notify_proxies_updated(payload);
+            }
+        });
     }
 
     pub fn notice_message<S: Into<String>, M: Into<String>>(status: S, msg: M) {

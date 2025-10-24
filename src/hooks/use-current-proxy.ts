@@ -2,12 +2,6 @@ import { useMemo } from "react";
 
 import { useAppData } from "@/providers/app-data-context";
 
-// 定义代理组类型
-interface ProxyGroup {
-  name: string;
-  now: string;
-}
-
 // 获取当前代理节点信息的自定义Hook
 export const useCurrentProxy = () => {
   // 从AppDataProvider获取数据
@@ -37,15 +31,15 @@ export const useCurrentProxy = () => {
         "自动选择",
       ];
       const primaryGroup =
-        groups.find((group: ProxyGroup) =>
+        groups.find((group) =>
           primaryKeywords.some((keyword) =>
             group.name.toLowerCase().includes(keyword.toLowerCase()),
           ),
-        ) || groups.filter((g: ProxyGroup) => g.name !== "GLOBAL")[0];
+        ) || groups.find((group) => group.name !== "GLOBAL");
 
       if (primaryGroup) {
         primaryGroupName = primaryGroup.name;
-        currentName = primaryGroup.now;
+        currentName = primaryGroup.now ?? currentName;
       }
     }
 

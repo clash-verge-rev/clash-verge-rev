@@ -14,50 +14,13 @@ import {
 } from "./use-head-state";
 import { useWindowWidth } from "./use-window-width";
 
-// 定义代理项接口
-interface IProxyItem {
-  name: string;
-  type: string;
-  udp: boolean;
-  xudp: boolean;
-  tfo: boolean;
-  mptcp: boolean;
-  smux: boolean;
-  history: {
-    time: string;
-    delay: number;
-  }[];
-  provider?: string;
-  testUrl?: string;
-  [key: string]: any; // 添加索引签名以适应其他可能的属性
-}
-
-// 代理组类型
-type ProxyGroup = {
-  name: string;
-  type: string;
-  udp: boolean;
-  xudp: boolean;
-  tfo: boolean;
-  mptcp: boolean;
-  smux: boolean;
-  history: {
-    time: string;
-    delay: number;
-  }[];
-  now: string;
-  all: IProxyItem[];
-  hidden?: boolean;
-  icon?: string;
-  testUrl?: string;
-  provider?: string;
-};
+type RenderGroup = IProxyGroupItem;
 
 export interface IRenderItem {
   // 组 | head | item | empty | item col
   type: 0 | 1 | 2 | 3 | 4;
   key: string;
-  group: ProxyGroup;
+  group: RenderGroup;
   proxy?: IProxyItem;
   col?: number;
   proxyCol?: IProxyItem[];
@@ -99,7 +62,7 @@ export const useRenderList = (
   selectedGroup?: string | null,
 ) => {
   // 使用全局数据提供者
-  const { proxies: proxiesData, refreshProxy } = useAppData();
+  const { proxies: proxiesData, proxyHydration, refreshProxy } = useAppData();
   const { verge } = useVerge();
   const { width } = useWindowWidth();
   const [headStates, setHeadState] = useHeadStateNew();
@@ -123,17 +86,29 @@ export const useRenderList = (
 
   // 确保代理数据加载
   useEffect(() => {
-    if (!proxiesData) return;
+    if (!proxiesData || proxyHydration !== "live") return;
     const { groups, proxies } = proxiesData;
 
     if (
       (mode === "rule" && !groups.length) ||
       (mode === "global" && proxies.length < 2)
     ) {
-      const handle = setTimeout(() => refreshProxy(), 500);
+      const handle = setTimeout(() => {
+        void refreshProxy().catch(() => {});
+      }, 500);
       return () => clearTimeout(handle);
     }
-  }, [proxiesData, mode, refreshProxy]);
+  }, [proxiesData, proxyHydration, mode, refreshProxy]);
+
+  useEffect(() => {
+    if (proxyHydration !== "snapshot") return;
+
+    const handle = setTimeout(() => {
+      void refreshProxy().catch(() => {});
+    }, 1800);
+
+    return () => clearTimeout(handle);
+  }, [proxyHydration, refreshProxy]);
 
   // 链式代理模式节点自动计算延迟
   useEffect(() => {
@@ -147,7 +122,7 @@ export const useRenderList = (
     // 设置组监听器，当有延迟更新时自动刷新
     const groupListener = () => {
       console.log("[ChainMode] 延迟更新，刷新UI");
-      refreshProxy();
+      void refreshProxy().catch(() => {});
     };
 
     delayManager.setGroupListener("chain-mode", groupListener);
@@ -188,9 +163,12 @@ export const useRenderList = (
     // 链式代理模式下，显示代理组和其节点
     if (isChainMode && runtimeConfig && mode === "rule") {
       // 使用正常的规则模式代理组
-      const allGroups = proxiesData.groups.length
-        ? proxiesData.groups
-        : [proxiesData.global!];
+      const chainGroups = proxiesData.groups ?? [];
+      const allGroups = chainGroups.length
+        ? chainGroups
+        : proxiesData.global
+          ? [proxiesData.global]
+          : [];
 
       // 如果选择了特定代理组，只显示该组的节点
       if (selectedGroup) {
@@ -282,7 +260,7 @@ export const useRenderList = (
       });
 
       // 创建一个虚拟的组来容纳所有节点
-      const virtualGroup: ProxyGroup = {
+      const virtualGroup: RenderGroup = {
         name: "All Proxies",
         type: "Selector",
         udp: false,
@@ -340,7 +318,7 @@ export const useRenderList = (
       });
 
       // 创建一个虚拟的组来容纳所有节点
-      const virtualGroup: ProxyGroup = {
+      const virtualGroup: RenderGroup = {
         name: "All Proxies",
         type: "Selector",
         udp: false,
@@ -380,12 +358,15 @@ export const useRenderList = (
 
     // 正常模式的渲染逻辑
     const useRule = mode === "rule" || mode === "script";
-    const renderGroups =
-      useRule && proxiesData.groups.length
-        ? proxiesData.groups
-        : [proxiesData.global!];
+    const renderGroups = (() => {
+      const groups = proxiesData.groups ?? [];
+      if (useRule && groups.length) {
+        return groups;
+      }
+      return proxiesData.global ? [proxiesData.global] : groups;
+    })();
 
-    const retList = renderGroups.flatMap((group: ProxyGroup) => {
+    const retList = renderGroups.flatMap((group: RenderGroup) => {
       const headState = headStates[group.name] || DEFAULT_STATE;
       const ret: IRenderItem[] = [
         {
