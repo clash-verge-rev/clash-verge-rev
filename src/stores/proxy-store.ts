@@ -25,8 +25,11 @@ interface ProxyStoreState {
   hydration: ProxyHydration;
   lastUpdated: number | null;
   lastProfileId: string | null;
+  liveFetchRequestId: number;
   setSnapshot: (snapshot: ProxiesView, profileId: string) => void;
   setLive: (payload: ProxiesUpdatedPayload) => void;
+  startLiveFetch: () => number;
+  completeLiveFetch: (requestId: number, view: ProxiesView) => void;
   reset: () => void;
 }
 
@@ -79,13 +82,15 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
   hydration: "none",
   lastUpdated: null,
   lastProfileId: null,
+  liveFetchRequestId: 0,
   setSnapshot(snapshot, profileId) {
-    set({
+    set((state) => ({
       data: snapshot,
       hydration: "snapshot",
       lastUpdated: null,
       lastProfileId: profileId,
-    });
+      liveFetchRequestId: state.liveFetchRequestId + 1,
+    }));
   },
   setLive(payload) {
     const state = get();
@@ -110,11 +115,35 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
     const view = buildProxyView(payload.proxies, providersRecord);
     const nextProfileId = payload.profileId ?? state.lastProfileId;
 
-    set({
+    set((current) => ({
       data: view,
       hydration: "live",
       lastUpdated: emittedAt,
       lastProfileId: nextProfileId ?? null,
+      liveFetchRequestId: current.liveFetchRequestId + 1,
+    }));
+  },
+  startLiveFetch() {
+    let nextRequestId = 0;
+    set((state) => {
+      nextRequestId = state.liveFetchRequestId + 1;
+      return {
+        liveFetchRequestId: nextRequestId,
+      };
+    });
+    return nextRequestId;
+  },
+  completeLiveFetch(requestId, view) {
+    const state = get();
+    if (requestId !== state.liveFetchRequestId) {
+      return;
+    }
+
+    set({
+      data: view,
+      hydration: "live",
+      lastUpdated: Date.now(),
+      lastProfileId: state.lastProfileId,
     });
   },
   reset() {
@@ -123,6 +152,7 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       hydration: "none",
       lastUpdated: null,
       lastProfileId: null,
+      liveFetchRequestId: 0,
     });
   },
 }));
@@ -136,18 +166,27 @@ export const ensureProxyEventBridge = () => {
       (event) => {
         useProxyStore.getState().setLive(event.payload);
       },
-    );
+    )
+      .then((unlisten) => {
+        let released = false;
+        return () => {
+          if (released) return;
+          released = true;
+          unlisten();
+          bridgePromise = null;
+        };
+      })
+      .catch((error) => {
+        bridgePromise = null;
+        throw error;
+      });
   }
 
   return bridgePromise;
 };
 
 export const fetchLiveProxies = async () => {
+  const requestId = useProxyStore.getState().startLiveFetch();
   const view = await calcuProxies();
-  useProxyStore.setState((state) => ({
-    data: view,
-    hydration: "live",
-    lastUpdated: Date.now(),
-    lastProfileId: state.lastProfileId,
-  }));
+  useProxyStore.getState().completeLiveFetch(requestId, view);
 };
