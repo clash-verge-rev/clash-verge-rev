@@ -43,7 +43,7 @@
     "@mui/icons-material": "^7.3.4",
     "@mui/lab": "7.0.0-beta.17",
     "@mui/material": "^7.3.4",
-    "@mui/x-data-grid": "^8.14.1",
+    "@mui/x-data-grid": "^8.15.0",
     "@tauri-apps/api": "2.9.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
@@ -68,7 +68,7 @@
     "react-dom": "19.2.0",
     "react-error-boundary": "6.0.0",
     "react-hook-form": "^7.65.0",
-    "react-i18next": "16.1.5",
+    "react-i18next": "16.1.6",
     "react-markdown": "10.1.0",
     "react-monaco-editor": "0.59.0",
     "react-router": "^7.9.4",
@@ -119,7 +119,7 @@
     "vite": "^7.1.12",
     "vite-plugin-monaco-editor": "^1.1.0",
     "vite-plugin-svgr": "^4.5.0",
-    "vitest": "^4.0.1"
+    "vitest": "^4.0.2"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
