@@ -381,16 +381,16 @@ export const ProxyGroups = (props: Props) => {
     return Array.from(new Set(names));
   }, [renderList]);
 
-  const virtuosoHeight =
-    mode === "rule" && proxyGroupNames.length > 0
-      ? "calc(100% - 80px)"
-      : "calc(100% - 14px)";
-
   if (mode === "direct") {
     return <BaseEmpty text={t("clash_mode_direct")} />;
   }
 
   if (isChainMode) {
+    const chainVirtuosoHeight =
+      mode === "rule" && proxyGroupNames.length > 0
+        ? "calc(100% - 80px)"
+        : "calc(100% - 14px)";
+
     // 获取所有代理组
     const proxyGroups = proxiesData?.groups || [];
 
@@ -469,7 +469,7 @@ export const ProxyGroups = (props: Props) => {
             <Virtuoso
               ref={virtuosoRef}
               style={{
-                height: virtuosoHeight,
+                height: chainVirtuosoHeight,
               }}
               totalCount={renderList.length}
               increaseViewportBy={{ top: 200, bottom: 200 }}
@@ -609,7 +609,7 @@ export const ProxyGroups = (props: Props) => {
 
       <Virtuoso
         ref={virtuosoRef}
-        style={{ height: virtuosoHeight }}
+        style={{ height: "calc(100% - 14px)" }}
         totalCount={renderList.length}
         increaseViewportBy={{ top: 200, bottom: 200 }}
         overscan={150}
