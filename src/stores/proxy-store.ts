@@ -35,29 +35,41 @@ const normalizeProviderPayload = (
 ): ProxyProviderRecord | null => {
   if (!raw || typeof raw !== "object") return null;
 
-  const entries = Object.entries(raw as Record<string, any>).map(
-    ([name, value]) => {
-      if (!value) return [name, undefined] as const;
+  const rawRecord = raw as Record<string, any>;
+  const source =
+    rawRecord.providers && typeof rawRecord.providers === "object"
+      ? (rawRecord.providers as Record<string, any>)
+      : rawRecord;
 
+  const entries = Object.entries(source)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .filter(([, value]) => {
+      if (!value || typeof value !== "object") {
+        return false;
+      }
+      const vehicleType = value.vehicleType;
+      return vehicleType === "HTTP" || vehicleType === "File";
+    })
+    .map(([name, value]) => {
       const normalized: IProxyProviderItem = {
         name: value.name ?? name,
         type: value.type ?? "",
         proxies: Array.isArray(value.proxies) ? value.proxies : [],
         updatedAt: value.updatedAt ?? "",
         vehicleType: value.vehicleType ?? "",
-        subscriptionInfo: value.subscriptionInfo
-          ? {
-              Upload: Number(value.subscriptionInfo.Upload ?? 0),
-              Download: Number(value.subscriptionInfo.Download ?? 0),
-              Total: Number(value.subscriptionInfo.Total ?? 0),
-              Expire: Number(value.subscriptionInfo.Expire ?? 0),
-            }
-          : undefined,
+        subscriptionInfo:
+          value.subscriptionInfo && typeof value.subscriptionInfo === "object"
+            ? {
+                Upload: Number(value.subscriptionInfo.Upload ?? 0),
+                Download: Number(value.subscriptionInfo.Download ?? 0),
+                Total: Number(value.subscriptionInfo.Total ?? 0),
+                Expire: Number(value.subscriptionInfo.Expire ?? 0),
+              }
+            : undefined,
       };
 
       return [name, normalized] as const;
-    },
-  );
+    });
 
   return Object.fromEntries(entries) as ProxyProviderRecord;
 };
@@ -71,7 +83,7 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
     set({
       data: snapshot,
       hydration: "snapshot",
-      lastUpdated: Date.now(),
+      lastUpdated: null,
       lastProfileId: profileId,
     });
   },
@@ -79,7 +91,12 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
     const state = get();
     const emittedAt = payload.emittedAt ?? Date.now();
 
-    if (state.lastUpdated && emittedAt <= state.lastUpdated) {
+    const shouldIgnoreStaleEvent =
+      state.hydration === "live" &&
+      state.lastUpdated !== null &&
+      emittedAt <= state.lastUpdated;
+
+    if (shouldIgnoreStaleEvent) {
       return;
     }
 
