@@ -381,6 +381,11 @@ export const ProxyGroups = (props: Props) => {
     return Array.from(new Set(names));
   }, [renderList]);
 
+  const virtuosoHeight =
+    mode === "rule" && proxyGroupNames.length > 0
+      ? "calc(100% - 80px)"
+      : "calc(100% - 14px)";
+
   if (mode === "direct") {
     return <BaseEmpty text={t("clash_mode_direct")} />;
   }
@@ -464,10 +469,7 @@ export const ProxyGroups = (props: Props) => {
             <Virtuoso
               ref={virtuosoRef}
               style={{
-                height:
-                  mode === "rule" && proxyGroupNames.length > 0
-                    ? "calc(100% - 80px)"
-                    : "calc(100% - 14px)",
+                height: virtuosoHeight,
               }}
               totalCount={renderList.length}
               increaseViewportBy={{ top: 200, bottom: 200 }}
@@ -607,7 +609,7 @@ export const ProxyGroups = (props: Props) => {
 
       <Virtuoso
         ref={virtuosoRef}
-        style={{ height: "calc(100% - 14px)" }}
+        style={{ height: virtuosoHeight }}
         totalCount={renderList.length}
         increaseViewportBy={{ top: 200, bottom: 200 }}
         overscan={150}

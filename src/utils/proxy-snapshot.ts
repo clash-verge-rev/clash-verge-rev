@@ -66,11 +66,10 @@ const parseProxyGroup = (
   const name = entry.name;
   if (!name) return null;
 
-  const rawList: unknown[] = Array.isArray(entry.proxies)
-    ? entry.proxies
-    : Array.isArray(entry.use)
-      ? entry.use
-      : [];
+  const rawList: unknown[] = [
+    ...(Array.isArray(entry.proxies) ? entry.proxies : []),
+    ...(Array.isArray(entry.use) ? entry.use : []),
+  ];
 
   const uniqueNames = Array.from(
     new Set(
