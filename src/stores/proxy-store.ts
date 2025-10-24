@@ -26,6 +26,7 @@ interface ProxyStoreState {
   lastUpdated: number | null;
   lastProfileId: string | null;
   liveFetchRequestId: number;
+  lastAppliedFetchId: number;
   setSnapshot: (snapshot: ProxiesView, profileId: string) => void;
   setLive: (payload: ProxiesUpdatedPayload) => void;
   startLiveFetch: () => number;
@@ -83,13 +84,14 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
   lastUpdated: null,
   lastProfileId: null,
   liveFetchRequestId: 0,
+  lastAppliedFetchId: 0,
   setSnapshot(snapshot, profileId) {
     set((state) => ({
       data: snapshot,
       hydration: "snapshot",
       lastUpdated: null,
       lastProfileId: profileId,
-      liveFetchRequestId: state.liveFetchRequestId + 1,
+      lastAppliedFetchId: state.liveFetchRequestId,
     }));
   },
   setLive(payload) {
@@ -120,7 +122,7 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       hydration: "live",
       lastUpdated: emittedAt,
       lastProfileId: nextProfileId ?? null,
-      liveFetchRequestId: current.liveFetchRequestId + 1,
+      lastAppliedFetchId: current.liveFetchRequestId,
     }));
   },
   startLiveFetch() {
@@ -135,7 +137,7 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
   },
   completeLiveFetch(requestId, view) {
     const state = get();
-    if (requestId !== state.liveFetchRequestId) {
+    if (requestId <= state.lastAppliedFetchId) {
       return;
     }
 
@@ -144,6 +146,7 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       hydration: "live",
       lastUpdated: Date.now(),
       lastProfileId: state.lastProfileId,
+      lastAppliedFetchId: requestId,
     });
   },
   reset() {
@@ -153,6 +156,7 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       lastUpdated: null,
       lastProfileId: null,
       liveFetchRequestId: 0,
+      lastAppliedFetchId: 0,
     });
   },
 }));
