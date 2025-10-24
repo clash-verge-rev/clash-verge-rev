@@ -557,16 +557,19 @@ export const ProxyGroups = (props: Props) => {
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
                   {group.name}
                 </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                ></Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {`${t("Group Type")}: ${group.type} · ${t("Proxy Count")}: ${
+                    Array.isArray(group.all) ? group.all.length : 0
+                  }`}
+                </Typography>
               </Box>
             </MenuItem>
           ))}
           {availableGroups.length === 0 && (
             <MenuItem disabled>
-              <Typography variant="body2" color="text.secondary"></Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t("Empty")}
+              </Typography>
             </MenuItem>
           )}
         </Menu>

@@ -91,6 +91,7 @@ const parseProxyGroup = (
     type: entry.type ? String(entry.type) : "Selector",
     provider: entry.provider,
     testUrl: entry.testUrl || entry.test_url,
+    now: typeof entry.now === "string" ? entry.now : undefined,
   });
 };
 
