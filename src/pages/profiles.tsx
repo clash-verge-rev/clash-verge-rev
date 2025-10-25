@@ -61,7 +61,7 @@ import {
 import { showNotice } from "@/services/noticeService";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 
-// 记录profile切换状态
+// Record profile switch state
 const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
   const timestamp = new Date().toISOString().substring(11, 23);
   console.log(
@@ -73,11 +73,17 @@ const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
 type ProfileSwitchFinishedPayload = {
   profileId: string;
   success: boolean;
+  notify: boolean;
 };
 
 type RustPanicPayload = {
   message: string;
   location: string;
+};
+
+type SwitchRequest = {
+  profileId: string;
+  notifySuccess: boolean;
 };
 
 const normalizeProfileUrl = (value?: string) => {
@@ -140,7 +146,7 @@ const createImportLandingVerifier = (
 
     if (currentCount > baselineCount) {
       console.log(
-        `[导入验证] 配置数量已增加: ${baselineCount} -> ${currentCount}`,
+        `[Import Verify] Configuration count increased: ${baselineCount} -> ${currentCount}`,
       );
       return true;
     }
@@ -158,7 +164,9 @@ const createImportLandingVerifier = (
     }
 
     if (!hadBaselineProfile) {
-      console.log("[导入验证] 检测到新的订阅记录，判定为导入成功");
+      console.log(
+        "[Import Verify] Detected new profile record; treating as success",
+      );
       return true;
     }
 
@@ -167,13 +175,15 @@ const createImportLandingVerifier = (
 
     if (currentUpdated > baselineUpdated) {
       console.log(
-        `[导入验证] 订阅更新时间已更新 ${baselineUpdated} -> ${currentUpdated}`,
+        `[Import Verify] Profile timestamp updated ${baselineUpdated} -> ${currentUpdated}`,
       );
       return true;
     }
 
     if (currentSignature !== baselineSignature) {
-      console.log("[导入验证] 订阅详情发生变化，判定为导入成功");
+      console.log(
+        "[Import Verify] Profile details changed; treating as success",
+      );
       return true;
     }
 
@@ -256,28 +266,28 @@ const ProfilePage = () => {
     };
   }, [addListener, mutateProfiles, t]);
 
-  // 添加紧急恢复功能
+  // Add emergency recovery capability
   const onEmergencyRefresh = useLockFn(async () => {
-    console.log("[紧急刷新] 开始强制刷新所有数据");
+    console.log("[Emergency Refresh] Starting forced refresh of all data");
 
     try {
-      // 清除所有SWR缓存
+      // Clear all SWR caches
       await mutate(() => true, undefined, { revalidate: false });
 
-      // 强制重新获取配置数据
+      // Force fetching profile data
       await mutateProfiles(undefined, {
         revalidate: true,
         rollbackOnError: false,
       });
 
-      // 等待状态稳定后增强配置
+      // Wait for state to stabilize before enhancing the profile
       await new Promise((resolve) => setTimeout(resolve, 500));
       await onEnhance(false);
 
-      showNotice("success", "数据已强制刷新", 2000);
+      showNotice("success", "Data forcibly refreshed", 2000);
     } catch (error: any) {
-      console.error("[紧急刷新] 失败:", error);
-      showNotice("error", `紧急刷新失败: ${error.message}`, 4000);
+      console.error("[Emergency Refresh] Failed:", error);
+      showNotice("error", `Emergency refresh failed: ${error.message}`, 4000);
     }
   });
 
@@ -304,7 +314,7 @@ const ProfilePage = () => {
 
   const onImport = async () => {
     if (!url) return;
-    // 校验url是否为http/https
+    // Validate that the URL uses http/https
     if (!/^https?:\/\//i.test(url)) {
       showNotice("error", t("Invalid Profile URL"));
       return;
@@ -334,7 +344,10 @@ const ProfilePage = () => {
             );
           }
         } catch (verifyErr) {
-          console.warn("[导入验证] 获取配置状态失败:", verifyErr);
+          console.warn(
+            "[Import Verify] Failed to fetch profile state:",
+            verifyErr,
+          );
           break;
         }
       }
@@ -343,33 +356,33 @@ const ProfilePage = () => {
     };
 
     try {
-      // 尝试正常导入
+      // Attempt standard import
       await importProfile(url);
       await handleImportSuccess("Profile Imported Successfully");
       return;
     } catch (initialErr) {
-      console.warn("[订阅导入] 首次导入失败:", initialErr);
+      console.warn("[Profile Import] Initial import failed:", initialErr);
 
       const alreadyImported = await waitForImportLanding();
       if (alreadyImported) {
         console.warn(
-          "[订阅导入] 接口返回失败，但检测到订阅已导入，跳过回退导入流程",
+          "[Profile Import] API reported failure, but profile already imported; skipping rollback",
         );
         await handleImportSuccess("Profile Imported Successfully");
         return;
       }
 
-      // 首次导入失败且未检测到数据变更，尝试使用自身代理
+      // Initial import failed without data change; try built-in proxy
       showNotice("info", t("Import failed, retrying with Clash proxy..."));
       try {
-        // 使用自身代理尝试导入
+        // Attempt import using built-in proxy
         await importProfile(url, {
           with_proxy: false,
           self_proxy: true,
         });
         await handleImportSuccess("Profile Imported with Clash proxy");
       } catch (retryErr: any) {
-        // 回退导入也失败
+        // Rollback import also failed
         const retryErrmsg = retryErr?.message || retryErr.toString();
         showNotice(
           "error",
@@ -384,7 +397,7 @@ const ProfilePage = () => {
 
   const currentProfileId = profiles.current ?? null;
 
-  // 强化的刷新策略
+  // Enhanced refresh strategy
   const performRobustRefresh = async (
     importVerifier: ImportLandingVerifier,
   ) => {
@@ -395,43 +408,50 @@ const ProfilePage = () => {
 
     while (retryCount < maxRetries) {
       try {
-        console.log(`[导入刷新] 第${retryCount + 1}次尝试刷新配置数据`);
+        console.log(
+          `[Import Refresh] Attempt ${retryCount + 1} to refresh profile data`,
+        );
 
-        // 强制刷新，绕过所有缓存
+        // Force refresh and bypass caches
         await mutateProfiles(undefined, {
           revalidate: true,
           rollbackOnError: false,
         });
 
-        // 等待状态稳定
+        // Wait for state to stabilize
         await new Promise((resolve) =>
           setTimeout(resolve, baseDelay * (retryCount + 1)),
         );
 
-        // 验证刷新是否成功
+        // Verify whether refresh succeeded
         const currentProfiles = await getProfiles();
         const currentCount = currentProfiles?.items?.length || 0;
 
         if (currentCount > baselineCount) {
           console.log(
-            `[导入刷新] 配置刷新成功，配置数量 ${baselineCount} -> ${currentCount}`,
+            `[Import Refresh] Profile refresh succeeded; count ${baselineCount} -> ${currentCount}`,
           );
           await onEnhance(false);
           return;
         }
 
         if (hasLanding(currentProfiles)) {
-          console.log("[导入刷新] 检测到订阅内容更新，判定刷新成功");
+          console.log(
+            "[Import Refresh] Detected profile update; treating as success",
+          );
           await onEnhance(false);
           return;
         }
 
         console.warn(
-          `[导入刷新] 配置数量未增加 (${currentCount}), 继续重试...`,
+          `[Import Refresh] Profile count unchanged (${currentCount}), retrying...`,
         );
         retryCount++;
       } catch (error) {
-        console.error(`[导入刷新] 第${retryCount + 1}次刷新失败:`, error);
+        console.error(
+          `[Import Refresh] Attempt ${retryCount + 1} failed:`,
+          error,
+        );
         retryCount++;
         await new Promise((resolve) =>
           setTimeout(resolve, baseDelay * retryCount),
@@ -439,10 +459,12 @@ const ProfilePage = () => {
       }
     }
 
-    // 所有重试失败后的最后尝试
-    console.warn(`[导入刷新] 常规刷新失败，尝试清除缓存重新获取`);
+    // Final attempt after all retries fail
+    console.warn(
+      `[Import Refresh] Regular refresh failed; clearing cache and retrying`,
+    );
     try {
-      // 清除SWR缓存并重新获取
+      // Clear SWR cache and refetch
       await mutate("getProfiles", getProfiles(), { revalidate: true });
       await onEnhance(false);
       showNotice(
@@ -451,7 +473,10 @@ const ProfilePage = () => {
         3000,
       );
     } catch (finalError) {
-      console.error(`[导入刷新] 最终刷新尝试失败:`, finalError);
+      console.error(
+        `[Import Refresh] Final refresh attempt failed:`,
+        finalError,
+      );
       showNotice(
         "error",
         t("Profile imported successfully, please restart if not visible"),
@@ -471,25 +496,108 @@ const ProfilePage = () => {
   const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(
     null,
   );
-  const pendingProfileRef = useRef<string | null>(null);
-  const isSwitching = switchingProfileId != null;
+  const activeSwitchRef = useRef<SwitchRequest | null>(null);
+  const pendingSwitchRef = useRef<SwitchRequest | null>(null);
+
+  const executeSwitch = useCallback(
+    async (targetProfile: string, notifySuccess: boolean) => {
+      const currentRequest = activeSwitchRef.current;
+      if (currentRequest?.profileId === targetProfile) {
+        if (currentRequest.notifySuccess !== notifySuccess) {
+          activeSwitchRef.current = { profileId: targetProfile, notifySuccess };
+        }
+        return;
+      }
+
+      activeSwitchRef.current = { profileId: targetProfile, notifySuccess };
+      setSwitchingProfileId(targetProfile);
+      setActivatings((prev) =>
+        prev.includes(targetProfile) ? prev : [...prev, targetProfile],
+      );
+
+      try {
+        const accepted = await switchProfileCommand(
+          targetProfile,
+          notifySuccess,
+        );
+        if (!accepted) {
+          throw new Error(t("Profile switch failed"));
+        }
+      } catch (error: any) {
+        if (activeSwitchRef.current?.profileId === targetProfile) {
+          activeSwitchRef.current = null;
+        }
+        setSwitchingProfileId((prev) => (prev === targetProfile ? null : prev));
+        setActivatings((prev) => prev.filter((id) => id !== targetProfile));
+        showNotice(
+          "error",
+          error?.message || error?.toString?.() || String(error),
+        );
+        await mutateProfiles();
+        const next = pendingSwitchRef.current;
+        pendingSwitchRef.current = null;
+        if (next) {
+          executeSwitch(next.profileId, next.notifySuccess);
+        }
+      }
+    },
+    [mutateProfiles, setActivatings, t],
+  );
+
+  const enqueueSwitch = useCallback(
+    (targetProfile: string, notifySuccess: boolean) => {
+      if (activeSwitchRef.current) {
+        pendingSwitchRef.current = { profileId: targetProfile, notifySuccess };
+        return;
+      }
+      executeSwitch(targetProfile, notifySuccess);
+    },
+    [executeSwitch],
+  );
 
   useEffect(() => {
     let mounted = true;
     const unlistenPromise = listen<ProfileSwitchFinishedPayload>(
       "profile-switch-finished",
-      (event) => {
+      async (event) => {
         if (!mounted) return;
         const payload = event.payload;
         if (!payload) return;
 
-        setActivatings((prev) => prev.filter((id) => id !== payload.profileId));
-        setSwitchingProfileId((prev) =>
-          prev === payload.profileId ? null : prev,
-        );
+        const { profileId, success, notify } = payload;
 
-        if (!payload.success) {
-          showNotice("error", t("Profile switch failed"));
+        setActivatings((prev) => prev.filter((id) => id !== profileId));
+
+        const isActive = activeSwitchRef.current?.profileId === profileId;
+        if (isActive) {
+          activeSwitchRef.current = null;
+          setSwitchingProfileId((prev) => (prev === profileId ? null : prev));
+
+          if (success) {
+            await mutateLogs();
+            await activateSelected();
+            if (notify) {
+              showNotice("success", t("Profile Switched"), 1000);
+            }
+          } else {
+            showNotice("error", t("Profile switch failed"));
+          }
+
+          await mutateProfiles();
+
+          const next = pendingSwitchRef.current;
+          pendingSwitchRef.current = null;
+          if (next && next.profileId !== profileId) {
+            executeSwitch(next.profileId, next.notifySuccess);
+          }
+        } else {
+          if (!success) {
+            showNotice("error", t("Profile switch failed"));
+          }
+          if (pendingSwitchRef.current?.profileId === profileId) {
+            pendingSwitchRef.current = null;
+          }
+          await mutateProfiles();
         }
       },
     );
@@ -498,73 +606,39 @@ const ProfilePage = () => {
       mounted = false;
       unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
     };
-  }, [setActivatings, t]);
-
-  const executeSwitch = useCallback(
-    async function run(targetProfile: string, notifySuccess: boolean) {
-      setSwitchingProfileId(targetProfile);
-      setActivatings((prev) => {
-        if (prev.includes(targetProfile)) return prev;
-        return [...prev, targetProfile];
-      });
-
-      try {
-        const success = await switchProfileCommand(
-          targetProfile,
-          notifySuccess,
-        );
-        if (!success) {
-          showNotice("error", t("Profile switch failed"));
-          return;
-        }
-        await mutateLogs();
-        await activateSelected();
-        if (notifySuccess) {
-          showNotice("success", t("Profile Switched"), 1000);
-        }
-      } catch (error: any) {
-        showNotice(
-          "error",
-          error?.message || error?.toString?.() || String(error),
-        );
-      } finally {
-        setActivatings((prev) => prev.filter((id) => id !== targetProfile));
-        setSwitchingProfileId(null);
-        await mutateProfiles();
-        const next = pendingProfileRef.current;
-        pendingProfileRef.current = null;
-        if (next && next !== targetProfile) {
-          await run(next, true);
-        }
-      }
-    },
-    [activateSelected, mutateLogs, mutateProfiles, setActivatings, t],
-  );
+  }, [
+    activateSelected,
+    enqueueSwitch,
+    executeSwitch,
+    mutateLogs,
+    mutateProfiles,
+    setActivatings,
+    t,
+  ]);
 
   const onSelect = useCallback(
     (targetProfile: string, force: boolean) => {
-      if (isSwitching) {
-        pendingProfileRef.current = targetProfile;
+      if (activeSwitchRef.current?.profileId === targetProfile) {
         return;
       }
       if (!force && targetProfile === currentProfileId) {
         debugProfileSwitch("ALREADY_CURRENT_IGNORED", targetProfile);
         return;
       }
-      executeSwitch(targetProfile, true);
+      enqueueSwitch(targetProfile, true);
     },
-    [currentProfileId, executeSwitch, isSwitching],
+    [currentProfileId, enqueueSwitch],
   );
 
   useEffect(() => {
     if (!current) return;
-    if (isSwitching) {
-      pendingProfileRef.current = current;
+    if (activeSwitchRef.current) {
+      pendingSwitchRef.current = { profileId: current, notifySuccess: false };
       return;
     }
     if (current === currentProfileId) return;
-    executeSwitch(current, false);
-  }, [current, currentProfileId, executeSwitch, isSwitching]);
+    enqueueSwitch(current, false);
+  }, [current, currentProfileId, enqueueSwitch]);
 
   useEffect(() => {
     let mounted = true;
@@ -587,7 +661,7 @@ const ProfilePage = () => {
   const onEnhance = useLockFn(async (notifySuccess: boolean) => {
     if (switchingProfileId) {
       console.log(
-        `[Profile] 有profile正在切换中(${switchingProfileId})，跳过enhance操作`,
+        `[Profile] A profile is currently switching (${switchingProfileId}); skipping enhance operation`,
       );
       return;
     }
@@ -604,7 +678,7 @@ const ProfilePage = () => {
     } catch (err: any) {
       showNotice("error", err.message || err.toString(), 3000);
     } finally {
-      // 保留正在切换的profile，清除其他状态
+      // Keep the switching profile active and clear other states
       setActivatings((prev) =>
         switchingProfileId
           ? prev.filter((id) => id === switchingProfileId)
@@ -630,7 +704,7 @@ const ProfilePage = () => {
     }
   });
 
-  // 更新所有订阅
+  // Update all profiles
   const setLoadingCache = useSetLoadingCache();
   const onUpdateAll = useLockFn(async () => {
     const throttleMutate = throttle(mutateProfiles, 2000, {
@@ -641,7 +715,7 @@ const ProfilePage = () => {
         await updateProfile(uid);
         throttleMutate();
       } catch (err: any) {
-        console.error(`更新订阅 ${uid} 失败:`, err);
+        console.error(`Failed to update profile ${uid}:`, err);
       } finally {
         setLoadingCache((cache) => ({ ...cache, [uid]: false }));
       }
@@ -649,7 +723,7 @@ const ProfilePage = () => {
 
     return new Promise((resolve) => {
       setLoadingCache((cache) => {
-        // 获取没有正在更新的订阅
+        // Gather profiles that are not updating
         const items = profileItems.filter(
           (e) => e.type === "remote" && !cache[e.uid],
         );
@@ -703,11 +777,11 @@ const ProfilePage = () => {
 
   const getSelectionState = () => {
     if (selectedProfiles.size === 0) {
-      return "none"; // 无选择
+      return "none"; // no selection
     } else if (selectedProfiles.size === profileItems.length) {
-      return "all"; // 全选
+      return "all"; // all selected
     } else {
-      return "partial"; // 部分选择
+      return "partial"; // partially selected
     }
   };
 
@@ -754,7 +828,7 @@ const ProfilePage = () => {
     ? "rgba(0, 0, 0, 0.06)"
     : "rgba(255, 255, 255, 0.06)";
 
-  // 监听后端配置变更
+  // Observe configuration changes from backend
   useEffect(() => {
     let unlistenPromise: Promise<() => void> | undefined;
     let lastProfileId: string | null = null;
@@ -768,29 +842,29 @@ const ProfilePage = () => {
         const newProfileId = event.payload;
         const now = Date.now();
 
-        console.log(`[Profile] 收到配置变更事件: ${newProfileId}`);
+        console.log(`[Profile] Received profile-change event: ${newProfileId}`);
 
         if (
           lastProfileId === newProfileId &&
           now - lastUpdateTime < debounceDelay
         ) {
-          console.log(`[Profile] 重复事件被防抖，跳过`);
+          console.log(`[Profile] Duplicate event throttled; skipping`);
           return;
         }
 
         lastProfileId = newProfileId;
         lastUpdateTime = now;
 
-        console.log(`[Profile] 执行配置数据刷新`);
+        console.log(`[Profile] Performing profile data refresh`);
 
         if (refreshTimer !== null) {
           window.clearTimeout(refreshTimer);
         }
 
-        // 使用异步调度避免阻塞事件处理
+        // Use async scheduling to avoid blocking event handling
         refreshTimer = window.setTimeout(() => {
           mutateProfiles().catch((error) => {
-            console.error("[Profile] 配置数据刷新失败:", error);
+            console.error("[Profile] Profile data refresh failed:", error);
           });
           refreshTimer = null;
         }, 0);
@@ -853,12 +927,12 @@ const ProfilePage = () => {
                 <LocalFireDepartmentRounded />
               </IconButton>
 
-              {/* 故障检测和紧急恢复按钮 */}
+              {/* Fault detection and emergency recovery button */}
               {(error || isStale) && (
                 <IconButton
                   size="small"
                   color="warning"
-                  title="数据异常，点击强制刷新"
+                  title="Data issue detected, click to force refresh"
                   onClick={onEmergencyRefresh}
                   sx={{
                     animation: "pulse 2s infinite",
@@ -1076,7 +1150,7 @@ const ProfilePage = () => {
         ref={viewerRef}
         onChange={async (isActivating) => {
           mutateProfiles();
-          // 只有更改当前激活的配置时才触发全局重新加载
+          // Only trigger global reload when the active profile changes
           if (isActivating) {
             await onEnhance(false);
           }

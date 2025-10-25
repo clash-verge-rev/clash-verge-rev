@@ -20,14 +20,34 @@ pub enum FrontendEvent {
     RefreshClash,
     RefreshVerge,
     RefreshProxy,
-    ProxiesUpdated { payload: serde_json::Value },
-    NoticeMessage { status: String, message: String },
-    ProfileChanged { current_profile_id: String },
-    ProfileSwitchFinished { profile_id: String, success: bool },
-    TimerUpdated { profile_index: String },
-    ProfileUpdateStarted { uid: String },
-    ProfileUpdateCompleted { uid: String },
-    RustPanic { message: String, location: String },
+    ProxiesUpdated {
+        payload: serde_json::Value,
+    },
+    NoticeMessage {
+        status: String,
+        message: String,
+    },
+    ProfileChanged {
+        current_profile_id: String,
+    },
+    ProfileSwitchFinished {
+        profile_id: String,
+        success: bool,
+        notify: bool,
+    },
+    TimerUpdated {
+        profile_index: String,
+    },
+    ProfileUpdateStarted {
+        uid: String,
+    },
+    ProfileUpdateCompleted {
+        uid: String,
+    },
+    RustPanic {
+        message: String,
+        location: String,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -172,9 +192,10 @@ impl NotificationSystem {
             FrontendEvent::ProfileSwitchFinished {
                 profile_id,
                 success,
+                notify,
             } => (
                 "profile-switch-finished",
-                Ok(json!({ "profileId": profile_id, "success": success })),
+                Ok(json!({ "profileId": profile_id, "success": success, "notify": notify })),
             ),
             FrontendEvent::TimerUpdated { profile_index } => {
                 ("verge://timer-updated", Ok(json!(profile_index)))

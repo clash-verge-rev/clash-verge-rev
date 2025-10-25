@@ -100,10 +100,11 @@ impl Handle {
         });
     }
 
-    pub fn notify_profile_switch_finished(profile_id: String, success: bool) {
+    pub fn notify_profile_switch_finished(profile_id: String, success: bool, notify: bool) {
         Self::send_event(FrontendEvent::ProfileSwitchFinished {
             profile_id,
             success,
+            notify,
         });
     }
 
