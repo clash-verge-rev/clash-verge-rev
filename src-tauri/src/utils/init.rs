@@ -1,3 +1,4 @@
+#[cfg(not(feature = "tracing"))]
 #[cfg(not(feature = "tauri-dev"))]
 use crate::utils::logging::NoModuleFilter;
 use crate::{
@@ -6,7 +7,7 @@ use crate::{
     logging,
     process::AsyncHandler,
     utils::{
-        dirs::{self, service_log_dir, sidecar_log_dir},
+        dirs::{self, PathBufExec, service_log_dir, sidecar_log_dir},
         help,
         logging::Type,
     },
@@ -38,7 +39,17 @@ pub async fn init_logger() -> Result<()> {
     };
 
     let log_dir = dirs::app_logs_dir()?;
-    let spec = LogSpecBuilder::new().default(log_level).build();
+    let mut spec = LogSpecBuilder::new();
+    let level = std::env::var("RUST_LOG")
+        .ok()
+        .and_then(|v| log::LevelFilter::from_str(&v).ok())
+        .unwrap_or(log_level);
+    spec.default(level);
+    #[cfg(feature = "tracing")]
+    spec.module("tauri", log::LevelFilter::Debug);
+    #[cfg(feature = "tracing")]
+    spec.module("wry", log::LevelFilter::Debug);
+    let spec = spec.build();
 
     let logger = Logger::with(spec)
         .log_to_file(FileSpec::default().directory(log_dir).basename(""))
@@ -52,8 +63,9 @@ pub async fn init_logger() -> Result<()> {
                 format: "%Y-%m-%d_%H-%M-%S",
             },
             Cleanup::KeepLogFiles(log_max_count),
-        )
-        .filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
+        );
+    #[cfg(not(feature = "tracing"))]
+    let logger = logger.filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
 
     let _handle = logger.start()?;
 
@@ -102,7 +114,7 @@ pub async fn service_writer_config() -> Result<WriterConfig> {
             verge.app_log_max_count.unwrap_or(8),
         )
     };
-    let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.to_string();
+    let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.into();
 
     Ok(WriterConfig {
         directory: service_log_dir,
@@ -147,9 +159,9 @@ pub async fn delete_log() -> Result<()> {
         let month = u32::from_str(sa[1])?;
         let day = u32::from_str(sa[2])?;
         let time = chrono::NaiveDate::from_ymd_opt(year, month, day)
-            .ok_or(anyhow::anyhow!("invalid time str"))?
+            .ok_or_else(|| anyhow::anyhow!("invalid time str"))?
             .and_hms_opt(0, 0, 0)
-            .ok_or(anyhow::anyhow!("invalid time str"))?;
+            .ok_or_else(|| anyhow::anyhow!("invalid time str"))?;
         Ok(time)
     };
 
@@ -163,12 +175,11 @@ pub async fn delete_log() -> Result<()> {
             let file_time = Local
                 .from_local_datetime(&created_time)
                 .single()
-                .ok_or(anyhow::anyhow!("invalid local datetime"))?;
+                .ok_or_else(|| anyhow::anyhow!("invalid local datetime"))?;
 
             let duration = now.signed_duration_since(file_time);
             if duration.num_days() > day {
-                let file_path = file.path();
-                let _ = fs::remove_file(file_path).await;
+                let _ = file.path().remove_if_exists().await;
                 logging!(info, Type::Setup, "delete log file: {}", file_name);
             }
         }
@@ -437,7 +448,7 @@ pub async fn init_resources() -> Result<()> {
         };
 
         if src_path.exists() && !dest_path.exists() {
-            handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
+            handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
             continue;
         }
 
@@ -447,12 +458,12 @@ pub async fn init_resources() -> Result<()> {
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
-                    handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
+                    handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
                 }
             }
             _ => {
                 logging!(debug, Type::Setup, "failed to get modified '{}'", file);
-                handle_copy(src_path.clone(), dest_path.clone(), file.to_string()).await;
+                handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
             }
         };
     }
@@ -483,17 +494,24 @@ pub fn init_scheme() -> Result<()> {
 }
 #[cfg(target_os = "linux")]
 pub fn init_scheme() -> Result<()> {
-    let output = std::process::Command::new("xdg-mime")
-        .arg("default")
-        .arg("clash-verge.desktop")
-        .arg("x-scheme-handler/clash")
-        .output()?;
-    if !output.status.success() {
-        return Err(anyhow::anyhow!(
-            "failed to set clash scheme, {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
+    const DESKTOP_FILE: &str = "clash-verge.desktop";
+
+    for scheme in DEEP_LINK_SCHEMES {
+        let handler = format!("x-scheme-handler/{scheme}");
+        let output = std::process::Command::new("xdg-mime")
+            .arg("default")
+            .arg(DESKTOP_FILE)
+            .arg(&handler)
+            .output()?;
+        if !output.status.success() {
+            return Err(anyhow::anyhow!(
+                "failed to set {handler}, {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
     }
+
+    crate::utils::linux::ensure_mimeapps_entries(DESKTOP_FILE, DEEP_LINK_SCHEMES)?;
     Ok(())
 }
 #[cfg(target_os = "macos")]
@@ -501,12 +519,15 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
+const DEEP_LINK_SCHEMES: &[&str] = &["clash", "clash-verge"];
+
 pub async fn startup_script() -> Result<()> {
     let app_handle = handle::Handle::app_handle();
     let script_path = {
         let verge = Config::verge().await;
         let verge = verge.latest_ref();
-        verge.startup_script.clone().unwrap_or("".to_string())
+        verge.startup_script.clone().unwrap_or_else(|| "".into())
     };
 
     if script_path.is_empty() {
@@ -524,19 +545,19 @@ pub async fn startup_script() -> Result<()> {
         ));
     };
 
-    let script_dir = PathBuf::from(&script_path);
+    let script_dir = PathBuf::from(script_path.as_str());
     if !script_dir.exists() {
         return Err(anyhow::anyhow!("script not found: {}", script_path));
     }
 
     let parent_dir = script_dir.parent();
-    let working_dir = parent_dir.unwrap_or(script_dir.as_ref());
+    let working_dir = parent_dir.unwrap_or_else(|| script_dir.as_ref());
 
     app_handle
         .shell()
         .command(shell_type)
         .current_dir(working_dir)
-        .args(&[script_path])
+        .args([script_path.as_str()])
         .output()
         .await?;
 

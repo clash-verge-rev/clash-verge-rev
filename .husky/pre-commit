@@ -1,24 +1,39 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "[pre-commit] Running lint-staged for JS/TS files..."
-# Auto-fix staged JS/TS files, print warnings but don't fail commit
-npx lint-staged || true
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+cd "$ROOT_DIR"
 
-# Check staged Rust files
-RUST_FILES=$(git diff --cached --name-only | grep -E '^src-tauri/.*\.rs$' || true)
-if [ -n "$RUST_FILES" ]; then
-    echo "[pre-commit] Running rustfmt and clippy on staged Rust files..."
-    cd src-tauri || exit
-
-    # Auto-format Rust code
-    cargo fmt
-
-    # Lint with clippy, print warnings but don't fail commit
-    cargo clippy || echo "⚠️ clippy found issues, but commit will continue."
-
-    cd ..
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "❌ pnpm is required for pre-commit checks."
+  exit 1
 fi
 
-echo "[pre-commit] Checks completed. Some warnings may exist, please review."
-exit 0
+echo "[pre-commit] Running lint-staged for JS/TS files..."
+pnpm exec lint-staged
+
+RUST_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^src-tauri/.*\.rs$' || true)"
+if [ -n "$RUST_FILES" ]; then
+  echo "[pre-commit] Formatting Rust changes with cargo fmt..."
+  (
+    cd src-tauri
+    cargo fmt
+  )
+  while IFS= read -r file; do
+    [ -n "$file" ] && git add "$file"
+  done <<< "$RUST_FILES"
+
+  echo "[pre-commit] Linting Rust changes with cargo clippy..."
+  (
+    cd src-tauri
+    cargo clippy-all
+  )
+fi
+
+TS_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx)$' || true)"
+if [ -n "$TS_FILES" ]; then
+  echo "[pre-commit] Running TypeScript type check..."
+  pnpm typecheck
+fi
+
+echo "[pre-commit] All checks completed successfully."

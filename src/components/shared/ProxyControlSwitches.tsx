@@ -1,14 +1,14 @@
 import {
-  SettingsRounded,
-  PlayCircleOutlineRounded,
-  PauseCircleOutlineRounded,
   BuildRounded,
   DeleteForeverRounded,
+  PauseCircleOutlineRounded,
+  PlayCircleOutlineRounded,
+  SettingsRounded,
   WarningRounded,
 } from "@mui/icons-material";
 import { Box, Typography, alpha, useTheme } from "@mui/material";
 import { useLockFn } from "ahooks";
-import React, { useRef, useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { DialogRef, Switch } from "@/components/base";
@@ -122,6 +122,7 @@ const ProxyControlSwitches = ({
     isTunModeAvailable,
     mutateRunningMode,
     mutateServiceOk,
+    mutateTunModeAvailable,
   } = useSystemState();
 
   const sysproxyRef = useRef<DialogRef>(null);
@@ -149,6 +150,7 @@ const ProxyControlSwitches = ({
       await installServiceAndRestartCore();
       await mutateRunningMode();
       await mutateServiceOk();
+      await mutateTunModeAvailable();
     } catch (err) {
       showNotice("error", (err as Error).message || String(err));
     }
@@ -156,9 +158,11 @@ const ProxyControlSwitches = ({
 
   const onUninstallService = useLockFn(async () => {
     try {
+      await handleTunToggle(false);
       await uninstallServiceAndRestartCore();
       await mutateRunningMode();
       await mutateServiceOk();
+      await mutateTunModeAvailable();
     } catch (err) {
       showNotice("error", (err as Error).message || String(err));
     }
@@ -184,13 +188,13 @@ const ProxyControlSwitches = ({
       {isTunMode && (
         <SwitchRow
           label={t("Tun Mode")}
-          active={!!enable_tun_mode}
+          active={enable_tun_mode || false}
           infoTitle={t("Tun Mode Info")}
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
           disabled={!isTunModeAvailable}
-          highlight={!!enable_tun_mode}
+          highlight={enable_tun_mode || false}
           extraIcons={
             <>
               {!isTunModeAvailable && (
@@ -200,7 +204,7 @@ const ProxyControlSwitches = ({
                   sx={{ color: "warning.main", ml: 1 }}
                 />
               )}
-              {!isServiceMode ? (
+              {!isTunModeAvailable && (
                 <TooltipIcon
                   title={t("Install Service")}
                   icon={BuildRounded}
@@ -208,7 +212,8 @@ const ProxyControlSwitches = ({
                   onClick={onInstallService}
                   sx={{ ml: 1 }}
                 />
-              ) : (
+              )}
+              {isServiceMode && (
                 <TooltipIcon
                   title={t("Uninstall Service")}
                   icon={DeleteForeverRounded}

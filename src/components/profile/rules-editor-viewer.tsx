@@ -31,7 +31,13 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import yaml from "js-yaml";
-import { useEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 import { Virtuoso } from "react-virtuoso";
@@ -305,7 +311,7 @@ export const RulesEditorViewer = (props: Props) => {
       }
     }
   };
-  const fetchContent = async () => {
+  const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property);
     const obj = yaml.load(data) as ISeqProfileConfig | null;
 
@@ -315,42 +321,57 @@ export const RulesEditorViewer = (props: Props) => {
 
     setPrevData(data);
     setCurrData(data);
-  };
+  }, [property]);
 
   useEffect(() => {
-    if (currData === "") return;
-    if (visualization !== true) return;
+    if (currData === "" || visualization !== true) {
+      return;
+    }
 
     const obj = yaml.load(currData) as ISeqProfileConfig | null;
-    setPrependSeq(obj?.prepend || []);
-    setAppendSeq(obj?.append || []);
-    setDeleteSeq(obj?.delete || []);
-  }, [visualization]);
+    startTransition(() => {
+      setPrependSeq(obj?.prepend ?? []);
+      setAppendSeq(obj?.append ?? []);
+      setDeleteSeq(obj?.delete ?? []);
+    });
+  }, [currData, visualization]);
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
-    if (prependSeq && appendSeq && deleteSeq) {
-      const serialize = () => {
-        try {
-          setCurrData(
-            yaml.dump(
-              { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
-              { forceQuotes: true },
-            ),
-          );
-        } catch (e: any) {
-          showNotice("error", e?.message || e?.toString() || "YAML dump error");
-        }
-      };
-      if (window.requestIdleCallback) {
-        window.requestIdleCallback(serialize);
-      } else {
-        setTimeout(serialize, 0);
-      }
+    if (!(prependSeq && appendSeq && deleteSeq)) {
+      return;
     }
+
+    const serialize = () => {
+      try {
+        setCurrData(
+          yaml.dump(
+            { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
+            { forceQuotes: true },
+          ),
+        );
+      } catch (e: any) {
+        showNotice("error", e?.message || e?.toString() || "YAML dump error");
+      }
+    };
+    let idleId: number | undefined;
+    let timeoutId: number | undefined;
+    if (window.requestIdleCallback) {
+      idleId = window.requestIdleCallback(serialize);
+    } else {
+      timeoutId = window.setTimeout(serialize, 0);
+    }
+    return () => {
+      if (idleId !== undefined && window.cancelIdleCallback) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [prependSeq, appendSeq, deleteSeq]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid); // 原配置文件
     const groupsData = await readProfileFile(groupsUid); // groups配置文件
     const mergeData = await readProfileFile(mergeUid); // merge配置文件
@@ -358,13 +379,25 @@ export const RulesEditorViewer = (props: Props) => {
 
     const rulesObj = yaml.load(data) as { rules: [] } | null;
 
-    const originGroupsObj = yaml.load(data) as { "proxy-groups": [] } | null;
+    const originGroupsObj = yaml.load(data) as {
+      "proxy-groups": IProxyGroupConfig[];
+    } | null;
     const originGroups = originGroupsObj?.["proxy-groups"] || [];
     const moreGroupsObj = yaml.load(groupsData) as ISeqProfileConfig | null;
-    const morePrependGroups = moreGroupsObj?.["prepend"] || [];
-    const moreAppendGroups = moreGroupsObj?.["append"] || [];
-    const moreDeleteGroups =
-      moreGroupsObj?.["delete"] || ([] as string[] | { name: string }[]);
+    const rawPrependGroups = moreGroupsObj?.["prepend"];
+    const morePrependGroups = Array.isArray(rawPrependGroups)
+      ? (rawPrependGroups as IProxyGroupConfig[])
+      : [];
+    const rawAppendGroups = moreGroupsObj?.["append"];
+    const moreAppendGroups = Array.isArray(rawAppendGroups)
+      ? (rawAppendGroups as IProxyGroupConfig[])
+      : [];
+    const rawDeleteGroups = moreGroupsObj?.["delete"];
+    const moreDeleteGroups: Array<string | { name: string }> = Array.isArray(
+      rawDeleteGroups,
+    )
+      ? (rawDeleteGroups as Array<string | { name: string }>)
+      : [];
     const groups = morePrependGroups.concat(
       originGroups.filter((group: any) => {
         if (group.name) {
@@ -376,14 +409,16 @@ export const RulesEditorViewer = (props: Props) => {
       moreAppendGroups,
     );
 
-    const originRuleSetObj = yaml.load(data) as { "rule-providers": {} } | null;
+    const originRuleSetObj = yaml.load(data) as {
+      "rule-providers": Record<string, unknown>;
+    } | null;
     const originRuleSet = originRuleSetObj?.["rule-providers"] || {};
     const moreRuleSetObj = yaml.load(mergeData) as {
-      "rule-providers": {};
+      "rule-providers": Record<string, unknown>;
     } | null;
     const moreRuleSet = moreRuleSetObj?.["rule-providers"] || {};
     const globalRuleSetObj = yaml.load(globalMergeData) as {
-      "rule-providers": {};
+      "rule-providers": Record<string, unknown>;
     } | null;
     const globalRuleSet = globalRuleSetObj?.["rule-providers"] || {};
     const ruleSet = Object.assign(
@@ -393,12 +428,16 @@ export const RulesEditorViewer = (props: Props) => {
       globalRuleSet,
     );
 
-    const originSubRuleObj = yaml.load(data) as { "sub-rules": {} } | null;
+    const originSubRuleObj = yaml.load(data) as {
+      "sub-rules": Record<string, unknown>;
+    } | null;
     const originSubRule = originSubRuleObj?.["sub-rules"] || {};
-    const moreSubRuleObj = yaml.load(mergeData) as { "sub-rules": {} } | null;
+    const moreSubRuleObj = yaml.load(mergeData) as {
+      "sub-rules": Record<string, unknown>;
+    } | null;
     const moreSubRule = moreSubRuleObj?.["sub-rules"] || {};
     const globalSubRuleObj = yaml.load(globalMergeData) as {
-      "sub-rules": {};
+      "sub-rules": Record<string, unknown>;
     } | null;
     const globalSubRule = globalSubRuleObj?.["sub-rules"] || {};
     const subRule = Object.assign(
@@ -413,13 +452,13 @@ export const RulesEditorViewer = (props: Props) => {
     setRuleSetList(Object.keys(ruleSet));
     setSubRuleList(Object.keys(subRule));
     setRuleList(rulesObj?.rules || []);
-  };
+  }, [groupsUid, mergeUid, profileUid]);
 
   useEffect(() => {
     if (!open) return;
     fetchContent();
     fetchProfile();
-  }, [open]);
+  }, [fetchContent, fetchProfile, open]);
 
   const validateRule = () => {
     if ((ruleType.required ?? true) && !ruleContent) {
@@ -626,10 +665,10 @@ export const RulesEditorViewer = (props: Props) => {
                             return x;
                           })}
                         >
-                          {filteredPrependSeq.map((item, index) => {
+                          {filteredPrependSeq.map((item) => {
                             return (
                               <RuleItem
-                                key={`${item}-${index}`}
+                                key={item}
                                 type="prepend"
                                 ruleRaw={item}
                                 onDelete={() => {
@@ -647,7 +686,7 @@ export const RulesEditorViewer = (props: Props) => {
                     const newIndex = index - shift;
                     return (
                       <RuleItem
-                        key={`${filteredRuleList[newIndex]}-${index}`}
+                        key={filteredRuleList[newIndex]}
                         type={
                           deleteSeq.includes(filteredRuleList[newIndex])
                             ? "delete"
@@ -682,10 +721,10 @@ export const RulesEditorViewer = (props: Props) => {
                             return x;
                           })}
                         >
-                          {filteredAppendSeq.map((item, index) => {
+                          {filteredAppendSeq.map((item) => {
                             return (
                               <RuleItem
-                                key={`${item}-${index}`}
+                                key={item}
                                 type="append"
                                 ruleRaw={item}
                                 onDelete={() => {

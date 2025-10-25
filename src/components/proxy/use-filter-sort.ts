@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer } from "react";
 
+import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
 
 // default | delay | alphabet
@@ -11,7 +12,8 @@ export default function useFilterSort(
   filterText: string,
   sortType: ProxySortType,
 ) {
-  const [, setRefresh] = useState({});
+  const { verge } = useVerge();
+  const [_, bumpRefresh] = useReducer((count: number) => count + 1, 0);
 
   useEffect(() => {
     let last = 0;
@@ -21,7 +23,7 @@ export default function useFilterSort(
       const now = Date.now();
       if (now - last > 666) {
         last = now;
-        setRefresh({});
+        bumpRefresh();
       }
     });
 
@@ -32,9 +34,20 @@ export default function useFilterSort(
 
   return useMemo(() => {
     const fp = filterProxies(proxies, groupName, filterText);
-    const sp = sortProxies(fp, groupName, sortType);
+    const sp = sortProxies(
+      fp,
+      groupName,
+      sortType,
+      verge?.default_latency_timeout,
+    );
     return sp;
-  }, [proxies, groupName, filterText, sortType]);
+  }, [
+    proxies,
+    groupName,
+    filterText,
+    sortType,
+    verge?.default_latency_timeout,
+  ]);
 }
 
 export function filterSort(
@@ -42,9 +55,10 @@ export function filterSort(
   groupName: string,
   filterText: string,
   sortType: ProxySortType,
+  latencyTimeout?: number,
 ) {
   const fp = filterProxies(proxies, groupName, filterText);
-  const sp = sortProxies(fp, groupName, sortType);
+  const sp = sortProxies(fp, groupName, sortType, latencyTimeout);
   return sp;
 }
 
@@ -102,21 +116,39 @@ function sortProxies(
   proxies: IProxyItem[],
   groupName: string,
   sortType: ProxySortType,
+  latencyTimeout?: number,
 ) {
   if (!proxies) return [];
   if (sortType === 0) return proxies;
 
   const list = proxies.slice();
+  const effectiveTimeout =
+    typeof latencyTimeout === "number" && latencyTimeout > 0
+      ? latencyTimeout
+      : 10000;
 
   if (sortType === 1) {
+    const categorizeDelay = (delay: number): [number, number] => {
+      if (!Number.isFinite(delay)) return [3, Number.MAX_SAFE_INTEGER];
+      if (delay > 1e5) return [4, delay];
+      if (delay === 0 || (delay >= effectiveTimeout && delay <= 1e5)) {
+        return [3, delay || effectiveTimeout];
+      }
+      if (delay < 0) {
+        // sentinel delays (-1, -2, etc.) should always sort after real measurements
+        return [5, Number.MAX_SAFE_INTEGER];
+      }
+      return [0, delay];
+    };
+
     list.sort((a, b) => {
       const ad = delayManager.getDelayFix(a, groupName);
       const bd = delayManager.getDelayFix(b, groupName);
+      const [ar, av] = categorizeDelay(ad);
+      const [br, bv] = categorizeDelay(bd);
 
-      if (ad === -1 || ad === -2) return 1;
-      if (bd === -1 || bd === -2) return -1;
-
-      return ad - bd;
+      if (ar !== br) return ar - br;
+      return av - bv;
     });
   } else {
     list.sort((a, b) => a.name.localeCompare(b.name));

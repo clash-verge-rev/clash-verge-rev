@@ -49,19 +49,43 @@ const UnlockPage = () => {
     return [...items].sort((a, b) => a.name.localeCompare(b.name));
   }, []);
 
-  // 保存测试结果到本地存储
-  const saveResultsToStorage = (items: UnlockItem[], time: string | null) => {
-    try {
-      localStorage.setItem(UNLOCK_RESULTS_STORAGE_KEY, JSON.stringify(items));
-      if (time) {
-        localStorage.setItem(UNLOCK_RESULTS_TIME_KEY, time);
+  const mergeUnlockItems = useCallback(
+    (defaults: UnlockItem[], existing?: UnlockItem[] | null) => {
+      if (!existing || existing.length === 0) {
+        return defaults;
       }
-    } catch (err) {
-      console.error("Failed to save results to storage:", err);
-    }
-  };
 
-  const loadResultsFromStorage = (): {
+      const existingMap = new Map(existing.map((item) => [item.name, item]));
+      const merged = defaults.map((item) => existingMap.get(item.name) ?? item);
+
+      const mergedNameSet = new Set(merged.map((item) => item.name));
+      existing.forEach((item) => {
+        if (!mergedNameSet.has(item.name)) {
+          merged.push(item);
+        }
+      });
+
+      return merged;
+    },
+    [],
+  );
+
+  // 保存测试结果到本地存储
+  const saveResultsToStorage = useCallback(
+    (items: UnlockItem[], time: string | null) => {
+      try {
+        localStorage.setItem(UNLOCK_RESULTS_STORAGE_KEY, JSON.stringify(items));
+        if (time) {
+          localStorage.setItem(UNLOCK_RESULTS_TIME_KEY, time);
+        }
+      } catch (err) {
+        console.error("Failed to save results to storage:", err);
+      }
+    },
+    [],
+  );
+
+  const loadResultsFromStorage = useCallback((): {
     items: UnlockItem[] | null;
     time: string | null;
   } => {
@@ -80,34 +104,42 @@ const UnlockPage = () => {
     }
 
     return { items: null, time: null };
-  };
+  }, []);
 
   const getUnlockItems = useCallback(
-    async (updateUI: boolean = true) => {
+    async (
+      existingItems: UnlockItem[] | null = null,
+      existingTime: string | null = null,
+    ) => {
       try {
-        const items = await invoke<UnlockItem[]>("get_unlock_items");
-        const sortedItems = sortItemsByName(items);
+        const defaultItems = await invoke<UnlockItem[]>("get_unlock_items");
+        const mergedItems = mergeUnlockItems(defaultItems, existingItems);
+        const sortedItems = sortItemsByName(mergedItems);
 
-        if (updateUI) {
-          setUnlockItems(sortedItems);
-        }
+        setUnlockItems(sortedItems);
+        saveResultsToStorage(
+          sortedItems,
+          existingItems && existingItems.length > 0 ? existingTime : null,
+        );
       } catch (err: any) {
         console.error("Failed to get unlock items:", err);
       }
     },
-    [sortItemsByName],
+    [mergeUnlockItems, saveResultsToStorage, sortItemsByName],
   );
 
   useEffect(() => {
-    const { items: storedItems } = loadResultsFromStorage();
+    void (async () => {
+      const { items: storedItems, time: storedTime } = loadResultsFromStorage();
 
-    if (storedItems && storedItems.length > 0) {
-      setUnlockItems(storedItems);
-      getUnlockItems(false);
-    } else {
-      getUnlockItems(true);
-    }
-  }, [getUnlockItems]);
+      if (storedItems && storedItems.length > 0) {
+        setUnlockItems(sortItemsByName(storedItems));
+        await getUnlockItems(storedItems, storedTime);
+      } else {
+        await getUnlockItems();
+      }
+    })();
+  }, [getUnlockItems, loadResultsFromStorage, sortItemsByName]);
 
   const invokeWithTimeout = async <T,>(
     cmd: string,

@@ -270,6 +270,7 @@ interface IProfileOption {
   update_interval?: number;
   timeout_seconds?: number;
   danger_accept_invalid_certs?: boolean;
+  allow_auto_update?: boolean;
   merge?: string;
   script?: string;
   rules?: string;
@@ -796,12 +797,14 @@ interface IVergeConfig {
   enable_memory_usage?: boolean;
   enable_group_icon?: boolean;
   menu_icon?: "monochrome" | "colorful" | "disable";
+  menu_order?: string[];
   tray_icon?: "monochrome" | "colorful";
   common_tray_icon?: boolean;
   sysproxy_tray_icon?: boolean;
   tun_tray_icon?: boolean;
   enable_tray_speed?: boolean;
   enable_tray_icon?: boolean;
+  tray_inline_proxy_groups?: boolean;
   enable_tun_mode?: boolean;
   enable_auto_light_weight_mode?: boolean;
   auto_light_weight_minutes?: number;
@@ -849,6 +852,7 @@ interface IVergeConfig {
   auto_check_update?: boolean;
   default_latency_test?: string;
   default_latency_timeout?: number;
+  enable_auto_delay_detection?: boolean;
   enable_builtin_enhanced?: boolean;
   auto_log_clean?: 0 | 1 | 2 | 3 | 4;
   proxy_layout_column?: number;
@@ -858,6 +862,7 @@ interface IVergeConfig {
   webdav_password?: string;
   home_cards?: Record<string, boolean>;
   enable_hover_jump_navigator?: boolean;
+  hover_jump_navigator_delay?: number;
   enable_external_controller?: boolean;
 }
 
@@ -868,6 +873,13 @@ interface IWebDavFile {
   content_length: number;
   content_type: string;
   tag: string;
+}
+
+interface ILocalBackupFile {
+  filename: string;
+  path: string;
+  last_modified: string;
+  content_length: number;
 }
 
 interface IWebDavConfig {

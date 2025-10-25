@@ -5,7 +5,7 @@ fn main() {
 
     // Check for --no-tray command line argument
     let args: Vec<String> = std::env::args().collect();
-    if args.contains(&"--no-tray".to_string()) {
+    if args.contains(&"--no-tray".into()) {
         unsafe {
             std::env::set_var("CLASH_VERGE_DISABLE_TRAY", "1");
         }

@@ -360,6 +360,8 @@
   "Auto Log Clean": "Pembersihan Log Otomatis",
   "Never Clean": "Jangan Pernah Bersihkan",
   "Retain _n Days": "Simpan {{n}} Hari",
+  "Auto Delay Detection": "Deteksi Latensi Otomatis",
+  "Auto Delay Detection Info": "Secara berkala menguji latensi node saat ini di latar belakang",
   "Default Latency Test": "Tes Latensi Default",
   "Default Latency Test Info": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi",
   "Default Latency Timeout": "Waktu Habis Latensi Default",

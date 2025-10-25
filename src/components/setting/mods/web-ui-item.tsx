@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Props {
@@ -37,6 +37,14 @@ export const WebUIItem = (props: Props) => {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const { t } = useTranslation();
+
+  const highlightedParts = useMemo(() => {
+    const placeholderRegex = /(%host|%port|%secret)/g;
+    if (!value) {
+      return ["NULL"];
+    }
+    return value.split(placeholderRegex).filter((part) => part !== "");
+  }, [value]);
 
   if (editing || onlyEdit) {
     return (
@@ -78,10 +86,26 @@ export const WebUIItem = (props: Props) => {
     );
   }
 
-  const html = value
-    ?.replace("%host", "<span>%host</span>")
-    .replace("%port", "<span>%port</span>")
-    .replace("%secret", "<span>%secret</span>");
+  const placeholderCounts: Record<string, number> = {};
+  let textCounter = 0;
+  const renderedParts = highlightedParts.map((part) => {
+    const isPlaceholder =
+      part === "%host" || part === "%port" || part === "%secret";
+
+    if (isPlaceholder) {
+      const count = placeholderCounts[part] ?? 0;
+      placeholderCounts[part] = count + 1;
+      return (
+        <span key={`placeholder-${part}-${count}`} className="placeholder">
+          {part}
+        </span>
+      );
+    }
+
+    const key = `text-${textCounter}-${part || "empty"}`;
+    textCounter += 1;
+    return <span key={key}>{part}</span>;
+  });
 
   return (
     <>
@@ -94,12 +118,13 @@ export const WebUIItem = (props: Props) => {
           sx={({ palette }) => ({
             overflow: "hidden",
             textOverflow: "ellipsis",
-            "> span": {
+            "> .placeholder": {
               color: palette.primary.main,
             },
           })}
-          dangerouslySetInnerHTML={{ __html: html || "NULL" }}
-        />
+        >
+          {renderedParts}
+        </Typography>
         <IconButton
           size="small"
           title={t("Open URL")}

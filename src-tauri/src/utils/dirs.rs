@@ -1,5 +1,6 @@
-use crate::core::handle;
+use crate::{core::handle, logging, utils::logging::Type};
 use anyhow::Result;
+use async_trait::async_trait;
 use once_cell::sync::OnceCell;
 use std::{fs, path::PathBuf};
 use tauri::Manager;
@@ -19,6 +20,7 @@ pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 pub static CLASH_CONFIG: &str = "config.yaml";
 pub static VERGE_CONFIG: &str = "verge.yaml";
 pub static PROFILE_YAML: &str = "profiles.yaml";
+pub static DNS_CONFIG: &str = "dns_config.yaml";
 
 /// init portable flag
 pub fn init_portable_flag() -> Result<()> {
@@ -46,7 +48,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
         let app_exe = dunce::canonicalize(app_exe)?;
         let app_dir = app_exe
             .parent()
-            .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
+            .ok_or_else(|| anyhow::anyhow!("failed to get the portable app dir"))?;
         return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
     }
 
@@ -108,7 +110,7 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
         match matching_files.first() {
             Some(first_path) => {
                 let first = path_to_str(first_path)?;
-                Ok(Some(first.to_string()))
+                Ok(Some(first.into()))
             }
             None => Ok(None),
         }
@@ -118,6 +120,13 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
 /// logs dir
 pub fn app_logs_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
+}
+
+/// local backups dir
+pub fn local_backup_dir() -> Result<PathBuf> {
+    let dir = app_home_dir()?.join(BACKUP_DIR);
+    fs::create_dir_all(&dir)?;
+    Ok(dir)
 }
 
 pub fn clash_path() -> Result<PathBuf> {
@@ -162,7 +171,7 @@ pub fn path_to_str(path: &PathBuf) -> Result<&str> {
     let path_str = path
         .as_os_str()
         .to_str()
-        .ok_or(anyhow::anyhow!("failed to get path from {:?}", path))?;
+        .ok_or_else(|| anyhow::anyhow!("failed to get path from {:?}", path))?;
     Ok(path_str)
 }
 
@@ -224,4 +233,19 @@ pub fn ipc_path() -> Result<PathBuf> {
 #[cfg(target_os = "windows")]
 pub fn ipc_path() -> Result<PathBuf> {
     Ok(PathBuf::from(r"\\.\pipe\verge-mihomo"))
+}
+#[async_trait]
+pub trait PathBufExec {
+    async fn remove_if_exists(&self) -> Result<()>;
+}
+
+#[async_trait]
+impl PathBufExec for PathBuf {
+    async fn remove_if_exists(&self) -> Result<()> {
+        if self.exists() {
+            tokio::fs::remove_file(self).await?;
+            logging!(info, Type::File, "Removed file: {:?}", self);
+        }
+        Ok(())
+    }
 }

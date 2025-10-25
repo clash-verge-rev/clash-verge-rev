@@ -323,6 +323,8 @@
   "Auto Log Clean": "Limpiar registros automáticamente",
   "Never Clean": "No limpiar",
   "Retain _n Days": "Retener {{n}} días",
+  "Auto Delay Detection": "Detección automática de latencia",
+  "Auto Delay Detection Info": "Prueba periódicamente la latencia del nodo actual en segundo plano",
   "Default Latency Test": "Enlace de prueba de latencia predeterminado",
   "Default Latency Test Info": "Solo se utiliza para pruebas de solicitudes de clientes HTTP y no afectará al archivo de configuración.",
   "Default Latency Timeout": "Tiempo de espera de la prueba de latencia",

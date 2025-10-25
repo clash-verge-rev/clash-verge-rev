@@ -13,23 +13,22 @@ import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import useSWR from "swr";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-context";
-import {
-  getRuntimeConfig,
-  updateProxyChainConfigInRuntime,
-} from "@/services/cmds";
+import { updateProxyChainConfigInRuntime } from "@/services/cmds";
 import delayManager from "@/services/delay";
 
 import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";
-import { ProxyGroupNavigator } from "./proxy-group-navigator";
+import {
+  ProxyGroupNavigator,
+  DEFAULT_HOVER_DELAY,
+} from "./proxy-group-navigator";
 import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
 
@@ -46,6 +45,8 @@ interface ProxyChainItem {
   delay?: number;
 }
 
+const VirtuosoFooter = () => <div style={{ height: "8px" }} />;
+
 export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation();
   const { mode, isChainMode = false, chainConfigData } = props;
@@ -61,23 +62,35 @@ export const ProxyGroups = (props: Props) => {
 
   const { verge } = useVerge();
   const { proxies: proxiesData } = useAppData();
+  const groups = proxiesData?.groups;
+  const availableGroups = useMemo(() => groups ?? [], [groups]);
 
-  // 当链式代理模式且规则模式下，如果没有选择代理组，默认选择第一个
-  useEffect(() => {
-    if (
-      isChainMode &&
-      mode === "rule" &&
-      !selectedGroup &&
-      proxiesData?.groups?.length > 0
-    ) {
-      setSelectedGroup(proxiesData.groups[0].name);
+  const defaultRuleGroup = useMemo(() => {
+    if (isChainMode && mode === "rule" && availableGroups.length > 0) {
+      return availableGroups[0].name;
     }
-  }, [isChainMode, mode, selectedGroup, proxiesData]);
+    return null;
+  }, [availableGroups, isChainMode, mode]);
+
+  const activeSelectedGroup = useMemo(
+    () => selectedGroup ?? defaultRuleGroup,
+    [selectedGroup, defaultRuleGroup],
+  );
 
   const { renderList, onProxies, onHeadState } = useRenderList(
     mode,
     isChainMode,
-    selectedGroup,
+    activeSelectedGroup,
+  );
+
+  const getGroupHeadState = useCallback(
+    (groupName: string) => {
+      const headItem = renderList.find(
+        (item) => item.type === 1 && item.group?.name === groupName,
+      );
+      return headItem?.headState;
+    },
+    [renderList],
   );
 
   // 统代理选择
@@ -102,6 +115,8 @@ export const ProxyGroups = (props: Props) => {
   useEffect(() => {
     if (renderList.length === 0) return;
 
+    let restoreTimer: ReturnType<typeof setTimeout> | null = null;
+
     try {
       const savedPositions = localStorage.getItem("proxy-scroll-positions");
       if (savedPositions) {
@@ -110,7 +125,7 @@ export const ProxyGroups = (props: Props) => {
         const savedPosition = positions[mode];
 
         if (savedPosition !== undefined) {
-          setTimeout(() => {
+          restoreTimer = setTimeout(() => {
             virtuosoRef.current?.scrollTo({
               top: savedPosition,
               behavior: "auto",
@@ -121,6 +136,12 @@ export const ProxyGroups = (props: Props) => {
     } catch (e) {
       console.error("Error restoring scroll position:", e);
     }
+
+    return () => {
+      if (restoreTimer) {
+        clearTimeout(restoreTimer);
+      }
+    };
   }, [mode, renderList.length]);
 
   // 改为使用节流函数保存滚动位置
@@ -140,25 +161,30 @@ export const ProxyGroups = (props: Props) => {
   );
 
   // 使用改进的滚动处理
-  const handleScroll = useCallback(
-    throttle((e: any) => {
-      const scrollTop = e.target.scrollTop;
-      setShowScrollTop(scrollTop > 100);
-      // 使用稳定的节流来保存位置，而不是setTimeout
-      saveScrollPosition(scrollTop);
-    }, 500), // 增加到500ms以确保平滑滚动
+  const handleScroll = useMemo(
+    () =>
+      throttle((event: Event) => {
+        const target = event.target as HTMLElement | null;
+        const scrollTop = target?.scrollTop ?? 0;
+        setShowScrollTop(scrollTop > 100);
+        // 使用稳定的节流来保存位置，而不是setTimeout
+        saveScrollPosition(scrollTop);
+      }, 500), // 增加到500ms以确保平滑滚动
     [saveScrollPosition],
   );
 
   // 添加和清理滚动事件监听器
   useEffect(() => {
-    if (!scrollerRef.current) return;
-    scrollerRef.current.addEventListener("scroll", handleScroll, {
-      passive: true,
-    });
+    const node = scrollerRef.current;
+    if (!node) return;
+
+    const listener = handleScroll as EventListener;
+    const options: AddEventListenerOptions = { passive: true };
+
+    node.addEventListener("scroll", listener, options);
 
     return () => {
-      scrollerRef.current?.removeEventListener("scroll", handleScroll);
+      node.removeEventListener("scroll", listener, options);
     };
   }, [handleScroll]);
 
@@ -176,18 +202,14 @@ export const ProxyGroups = (props: Props) => {
     setDuplicateWarning({ open: false, message: "" });
   }, []);
 
-  // 获取当前选中的代理组信息
-  const getCurrentGroup = useCallback(() => {
-    if (!selectedGroup || !proxiesData?.groups) return null;
-    return proxiesData.groups.find(
-      (group: any) => group.name === selectedGroup,
+  const currentGroup = useMemo(() => {
+    if (!activeSelectedGroup) return null;
+    return (
+      availableGroups.find(
+        (group: any) => group.name === activeSelectedGroup,
+      ) ?? null
     );
-  }, [selectedGroup, proxiesData]);
-
-  // 获取可用的代理组列表
-  const getAvailableGroups = useCallback(() => {
-    return proxiesData?.groups || [];
-  }, [proxiesData]);
+  }, [activeSelectedGroup, availableGroups]);
 
   // 处理代理组选择菜单
   const handleGroupMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -209,9 +231,6 @@ export const ProxyGroups = (props: Props) => {
       setProxyChain([]);
     }
   };
-
-  const currentGroup = getCurrentGroup();
-  const availableGroups = getAvailableGroups();
 
   const handleChangeProxy = useCallback(
     (group: IProxyGroupItem, proxy: IProxyItem) => {
@@ -297,9 +316,13 @@ export const ProxyGroups = (props: Props) => {
       console.log(`[ProxyGroups] 延迟测试完成，组: ${groupName}`);
     } catch (error) {
       console.error(`[ProxyGroups] 延迟测试出错，组: ${groupName}`, error);
+    } finally {
+      const headState = getGroupHeadState(groupName);
+      if (headState?.sortType === 1) {
+        onHeadState(groupName, { sortType: headState.sortType });
+      }
+      onProxies();
     }
-
-    onProxies();
   });
 
   // 滚到对应的节点
@@ -323,22 +346,6 @@ export const ProxyGroups = (props: Props) => {
     }
   };
 
-  // 获取运行时配置
-  const { data: runtimeConfig } = useSWR("getRuntimeConfig", getRuntimeConfig, {
-    revalidateOnFocus: false,
-    revalidateIfStale: true,
-  });
-
-  // 获取所有代理组名称
-  const getProxyGroupNames = useCallback(() => {
-    const config = runtimeConfig as any;
-    if (!config?.["proxy-groups"]) return [];
-
-    return config["proxy-groups"]
-      .map((group: any) => group.name)
-      .filter((name: string) => name && name.trim() !== "");
-  }, [runtimeConfig]);
-
   // 定位到指定的代理组
   const handleGroupLocationByName = useCallback(
     (groupName: string) => {
@@ -357,10 +364,12 @@ export const ProxyGroups = (props: Props) => {
     [renderList],
   );
 
-  const proxyGroupNames = useMemo(
-    () => getProxyGroupNames(),
-    [getProxyGroupNames],
-  );
+  const proxyGroupNames = useMemo(() => {
+    const names = renderList
+      .filter((item) => item.type === 0 && item.group?.name)
+      .map((item) => item.group!.name);
+    return Array.from(new Set(names));
+  }, [renderList]);
 
   if (mode === "direct") {
     return <BaseEmpty text={t("clash_mode_direct")} />;
@@ -458,7 +467,7 @@ export const ProxyGroups = (props: Props) => {
                 scrollerRef.current = ref as Element;
               }}
               components={{
-                Footer: () => <div style={{ height: "8px" }} />,
+                Footer: VirtuosoFooter,
               }}
               initialScrollTop={scrollPositionRef.current[mode]}
               computeItemKey={(index) => renderList[index].key}
@@ -484,7 +493,7 @@ export const ProxyGroups = (props: Props) => {
               onUpdateChain={setProxyChain}
               chainConfigData={chainConfigData}
               mode={mode}
-              selectedGroup={selectedGroup}
+              selectedGroup={activeSelectedGroup}
             />
           </Box>
         </Box>
@@ -509,18 +518,20 @@ export const ProxyGroups = (props: Props) => {
           anchorEl={ruleMenuAnchor}
           open={Boolean(ruleMenuAnchor)}
           onClose={handleGroupMenuClose}
-          PaperProps={{
-            sx: {
-              maxHeight: 300,
-              minWidth: 200,
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: 300,
+                minWidth: 200,
+              },
             },
           }}
         >
-          {availableGroups.map((group: any, _index: number) => (
+          {availableGroups.map((group: any) => (
             <MenuItem
               key={group.name}
               onClick={() => handleGroupSelect(group.name)}
-              selected={selectedGroup === group.name}
+              selected={activeSelectedGroup === group.name}
               sx={{
                 fontSize: "14px",
                 py: 1,
@@ -563,6 +574,8 @@ export const ProxyGroups = (props: Props) => {
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}
           onGroupLocation={handleGroupLocationByName}
+          enableHoverJump={verge?.enable_hover_jump_navigator ?? true}
+          hoverDelay={verge?.hover_jump_navigator_delay ?? DEFAULT_HOVER_DELAY}
         />
       )}
 
@@ -577,7 +590,7 @@ export const ProxyGroups = (props: Props) => {
           scrollerRef.current = ref as Element;
         }}
         components={{
-          Footer: () => <div style={{ height: "8px" }} />,
+          Footer: VirtuosoFooter,
         }}
         // 添加平滑滚动设置
         initialScrollTop={scrollPositionRef.current[mode]}

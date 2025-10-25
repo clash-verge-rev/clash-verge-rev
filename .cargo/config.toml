@@ -3,3 +3,7 @@ linker = "aarch64-linux-gnu-gcc"
 
 [target.armv7-unknown-linux-gnueabihf]
 linker = "arm-linux-gnueabihf-gcc"
+
+[alias]
+clippy-all = "clippy --all-targets --all-features -- -D warnings"
+clippy-only = "clippy --all-targets  --features clippy -- -D warnings"

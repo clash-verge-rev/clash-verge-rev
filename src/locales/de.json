@@ -323,6 +323,8 @@
   "Auto Log Clean": "Protokolle automatisch bereinigen",
   "Never Clean": "Nie bereinigen",
   "Retain _n Days": "{{n}} Tage behalten",
+  "Auto Delay Detection": "Automatische Latenzprüfung",
+  "Auto Delay Detection Info": "Überprüft regelmäßig im Hintergrund die Latenz des aktuellen Knotens",
   "Default Latency Test": "Standard-Testlink",
   "Default Latency Test Info": "Dies wird nur für HTTP-Client-Anfragentests verwendet und hat keine Auswirkungen auf die Konfigurationsdatei.",
   "Default Latency Timeout": "Test-Timeout",

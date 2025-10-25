@@ -6,35 +6,18 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 
 use crate::config::{Config, IVerge};
 use crate::core::{async_proxy_query::AsyncProxyQuery, handle};
-use crate::logging_error;
 use crate::process::AsyncHandler;
-use crate::utils::logging::Type;
 use once_cell::sync::Lazy;
+use smartstring::alias::String;
 use sysproxy::{Autoproxy, Sysproxy};
 
 #[derive(Debug, Clone)]
 pub enum ProxyEvent {
     /// 配置变更事件
     ConfigChanged,
-    /// 强制检查代理状态
-    #[allow(dead_code)]
-    ForceCheck,
-    /// 启用系统代理
-    #[allow(dead_code)]
-    EnableProxy,
-    /// 禁用系统代理
-    #[allow(dead_code)]
-    DisableProxy,
-    /// 切换到PAC模式
-    #[allow(dead_code)]
-    SwitchToPac,
-    /// 切换到HTTP代理模式
-    #[allow(dead_code)]
-    SwitchToHttp,
     /// 应用启动事件
     AppStarted,
     /// 应用关闭事件
-    #[allow(dead_code)]
     AppStopping,
 }
 
@@ -55,13 +38,13 @@ impl Default for ProxyState {
             pac_enabled: false,
             auto_proxy: Autoproxy {
                 enable: false,
-                url: "".to_string(),
+                url: "".into(),
             },
             sys_proxy: Sysproxy {
                 enable: false,
-                host: "127.0.0.1".to_string(),
+                host: "127.0.0.1".into(),
                 port: 7897,
-                bypass: "".to_string(),
+                bypass: "".into(),
             },
             last_updated: std::time::Instant::now(),
             is_healthy: true,
@@ -145,27 +128,8 @@ impl EventDrivenProxyManager {
     }
 
     /// 通知应用即将关闭
-    #[allow(dead_code)]
     pub fn notify_app_stopping(&self) {
         self.send_event(ProxyEvent::AppStopping);
-    }
-
-    /// 启用系统代理
-    #[allow(dead_code)]
-    pub fn enable_proxy(&self) {
-        self.send_event(ProxyEvent::EnableProxy);
-    }
-
-    /// 禁用系统代理
-    #[allow(dead_code)]
-    pub fn disable_proxy(&self) {
-        self.send_event(ProxyEvent::DisableProxy);
-    }
-
-    /// 强制检查代理状态
-    #[allow(dead_code)]
-    pub fn force_check(&self) {
-        self.send_event(ProxyEvent::ForceCheck);
     }
 
     fn send_event(&self, event: ProxyEvent) {
@@ -230,20 +194,8 @@ impl EventDrivenProxyManager {
 
     async fn handle_event(state: &Arc<RwLock<ProxyState>>, event: ProxyEvent) {
         match event {
-            ProxyEvent::ConfigChanged | ProxyEvent::ForceCheck => {
+            ProxyEvent::ConfigChanged => {
                 Self::update_proxy_config(state).await;
-            }
-            ProxyEvent::EnableProxy => {
-                Self::enable_system_proxy(state).await;
-            }
-            ProxyEvent::DisableProxy => {
-                Self::disable_system_proxy(state);
-            }
-            ProxyEvent::SwitchToPac => {
-                Self::switch_proxy_mode(state, true).await;
-            }
-            ProxyEvent::SwitchToHttp => {
-                Self::switch_proxy_mode(state, false).await;
             }
             ProxyEvent::AppStarted => {
                 Self::initialize_proxy_state(state).await;
@@ -393,74 +345,6 @@ impl EventDrivenProxyManager {
         }
     }
 
-    async fn enable_system_proxy(state: &Arc<RwLock<ProxyState>>) {
-        if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过启用系统代理");
-            return;
-        }
-
-        log::info!(target: "app", "启用系统代理");
-
-        let pac_enabled = state.read().await.pac_enabled;
-
-        if pac_enabled {
-            let expected = Self::get_expected_pac_config().await;
-            if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
-                log::error!(target: "app", "启用PAC代理失败: {}", e);
-            }
-        } else {
-            let expected = Self::get_expected_sys_proxy().await;
-            if let Err(e) = Self::restore_sys_proxy(&expected).await {
-                log::error!(target: "app", "启用系统代理失败: {}", e);
-            }
-        }
-
-        Self::check_and_restore_proxy(state).await;
-    }
-
-    fn disable_system_proxy(_state: &Arc<RwLock<ProxyState>>) {
-        log::info!(target: "app", "禁用系统代理");
-
-        #[cfg(not(target_os = "windows"))]
-        {
-            let disabled_sys = Sysproxy::default();
-            let disabled_auto = Autoproxy::default();
-
-            logging_error!(Type::System, disabled_auto.set_auto_proxy());
-            logging_error!(Type::System, disabled_sys.set_system_proxy());
-        }
-    }
-
-    async fn switch_proxy_mode(state: &Arc<RwLock<ProxyState>>, to_pac: bool) {
-        if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过代理模式切换");
-            return;
-        }
-
-        log::info!(target: "app", "切换到{}模式", if to_pac { "PAC" } else { "HTTP代理" });
-
-        if to_pac {
-            let disabled_sys = Sysproxy::default();
-            logging_error!(Type::System, disabled_sys.set_system_proxy());
-
-            let expected = Self::get_expected_pac_config().await;
-            if let Err(e) = Self::restore_pac_proxy(&expected.url).await {
-                log::error!(target: "app", "切换到PAC模式失败: {}", e);
-            }
-        } else {
-            let disabled_auto = Autoproxy::default();
-            logging_error!(Type::System, disabled_auto.set_auto_proxy());
-
-            let expected = Self::get_expected_sys_proxy().await;
-            if let Err(e) = Self::restore_sys_proxy(&expected).await {
-                log::error!(target: "app", "切换到HTTP代理模式失败: {}", e);
-            }
-        }
-
-        Self::update_state_timestamp(state, |s| s.pac_enabled = to_pac).await;
-        Self::check_and_restore_proxy(state).await;
-    }
-
     async fn get_auto_proxy_with_timeout() -> Autoproxy {
         let async_proxy = AsyncProxyQuery::get_auto_proxy().await;
 
@@ -519,7 +403,7 @@ impl EventDrivenProxyManager {
             verge
                 .proxy_host
                 .clone()
-                .unwrap_or_else(|| "127.0.0.1".to_string())
+                .unwrap_or_else(|| "127.0.0.1".into())
         };
         let pac_port = IVerge::get_singleton_port();
         Autoproxy {
@@ -529,47 +413,44 @@ impl EventDrivenProxyManager {
     }
 
     async fn get_expected_sys_proxy() -> Sysproxy {
-        let verge_config = Config::verge().await;
-        let verge_mixed_port = verge_config.latest_ref().verge_mixed_port;
-        let proxy_host = verge_config.latest_ref().proxy_host.clone();
+        use crate::constants::network;
 
-        let port = verge_mixed_port.unwrap_or(Config::clash().await.latest_ref().get_mixed_port());
-        let proxy_host = proxy_host.unwrap_or_else(|| "127.0.0.1".to_string());
+        let (verge_mixed_port, proxy_host) = {
+            let verge_config = Config::verge().await;
+            let verge_ref = verge_config.latest_ref();
+            (verge_ref.verge_mixed_port, verge_ref.proxy_host.clone())
+        };
+
+        let default_port = {
+            let clash_config = Config::clash().await;
+            clash_config.latest_ref().get_mixed_port()
+        };
+
+        let port = verge_mixed_port.unwrap_or(default_port);
+        let host = proxy_host
+            .unwrap_or_else(|| network::DEFAULT_PROXY_HOST.into())
+            .into();
 
         Sysproxy {
             enable: true,
-            host: proxy_host,
+            host,
             port,
-            bypass: Self::get_bypass_config().await,
+            bypass: Self::get_bypass_config().await.into(),
         }
     }
 
     async fn get_bypass_config() -> String {
-        let (use_default, custom_bypass) = {
-            let verge_config = Config::verge().await;
-            let verge = verge_config.latest_ref();
-            (
-                verge.use_default_bypass.unwrap_or(true),
-                verge.system_proxy_bypass.clone().unwrap_or_default(),
-            )
-        };
+        use crate::constants::bypass;
 
-        #[cfg(target_os = "windows")]
-        let default_bypass = "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>";
+        let verge_config = Config::verge().await;
+        let verge = verge_config.latest_ref();
+        let use_default = verge.use_default_bypass.unwrap_or(true);
+        let custom = verge.system_proxy_bypass.as_deref().unwrap_or("");
 
-        #[cfg(target_os = "linux")]
-        let default_bypass =
-            "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1";
-
-        #[cfg(target_os = "macos")]
-        let default_bypass = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
-
-        if custom_bypass.is_empty() {
-            default_bypass.to_string()
-        } else if use_default {
-            format!("{default_bypass},{custom_bypass}")
-        } else {
-            custom_bypass
+        match (use_default, custom.is_empty()) {
+            (_, true) => bypass::DEFAULT.into(),
+            (true, false) => format!("{},{}", bypass::DEFAULT, custom).into(),
+            (false, false) => custom.into(),
         }
     }
 

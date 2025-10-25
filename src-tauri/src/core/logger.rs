@@ -1,12 +1,13 @@
 use std::{collections::VecDeque, sync::Arc};
 
+use compact_str::CompactString;
 use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard};
 
 const LOGS_QUEUE_LEN: usize = 100;
 
 pub struct ClashLogger {
-    logs: Arc<RwLock<VecDeque<String>>>,
+    logs: Arc<RwLock<VecDeque<CompactString>>>,
 }
 
 impl ClashLogger {
@@ -18,11 +19,11 @@ impl ClashLogger {
         })
     }
 
-    pub fn get_logs(&self) -> RwLockReadGuard<'_, VecDeque<String>> {
+    pub fn get_logs(&self) -> RwLockReadGuard<'_, VecDeque<CompactString>> {
         self.logs.read()
     }
 
-    pub fn append_log(&self, text: String) {
+    pub fn append_log(&self, text: CompactString) {
         let mut logs = self.logs.write();
         if logs.len() > LOGS_QUEUE_LEN {
             logs.pop_front();

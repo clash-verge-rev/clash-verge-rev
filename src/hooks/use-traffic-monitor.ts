@@ -1,9 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-
-// import { useClashInfo } from "@/hooks/use-clash";
-// import { useVisibility } from "@/hooks/use-visibility";
-
-import { useTrafficData } from "./use-traffic-data";
+import { useEffect, useRef, useCallback, useReducer } from "react";
+import { Traffic } from "tauri-plugin-mihomo-api";
 
 // 增强的流量数据点接口
 export interface ITrafficDataPoint {
@@ -175,18 +171,11 @@ class TrafficDataSampler {
 // 全局单例
 const refCounter = new ReferenceCounter();
 let globalSampler: TrafficDataSampler | null = null;
-// let lastValidData: ISystemMonitorOverview | null = null;
 
 /**
  * 增强的流量监控Hook - 支持数据压缩、采样和引用计数
  */
 export const useTrafficMonitorEnhanced = () => {
-  // const { clashInfo } = useClashInfo();
-  // const pageVisible = useVisibility();
-  const {
-    response: { data: traffic },
-  } = useTrafficData();
-
   // 初始化采样器
   if (!globalSampler) {
     globalSampler = new TrafficDataSampler({
@@ -196,12 +185,11 @@ export const useTrafficMonitorEnhanced = () => {
     });
   }
 
-  const [, forceUpdate] = useState({});
+  const [, forceRender] = useReducer((version: number) => version + 1, 0);
   const cleanupRef = useRef<(() => void) | null>(null);
 
-  // 强制组件更新
-  const triggerUpdate = useCallback(() => {
-    forceUpdate({});
+  const bumpRenderVersion = useCallback(() => {
+    forceRender();
   }, []);
 
   // 注册引用计数
@@ -233,8 +221,17 @@ export const useTrafficMonitorEnhanced = () => {
     refCounter.onCountChange(handleCountChange);
   }, []);
 
-  // const monitorData = useRef<ISystemMonitorOverview | null>(null);
-  useEffect(() => {
+  // 获取指定时间范围的数据
+  const getDataForTimeRange = useCallback(
+    (minutes: number): ITrafficDataPoint[] => {
+      if (!globalSampler) return [];
+      return globalSampler.getDataForTimeRange(minutes);
+    },
+    [],
+  );
+
+  // 添加流量数据
+  const appendData = useCallback((traffic: Traffic) => {
     if (globalSampler) {
       // 添加到采样器
       const timestamp = Date.now();
@@ -250,87 +247,16 @@ export const useTrafficMonitorEnhanced = () => {
         }),
       };
       globalSampler.addDataPoint(dataPoint);
-      triggerUpdate();
     }
-  }, [traffic, triggerUpdate]);
-
-  // const { data: monitorData, error } = useSWR<ISystemMonitorOverview>(
-  //   shouldFetch ? "getSystemMonitorOverviewSafe" : null,
-  //   getSystemMonitorOverviewSafe,
-  //   {
-  //     refreshInterval: shouldFetch ? 1000 : 0, // 只有在需要时才刷新
-  //     keepPreviousData: true,
-  //     onSuccess: (data) => {
-  //       // console.log("[TrafficMonitorEnhanced] 获取到监控数据:", data);
-
-  //       if (data?.traffic?.raw && globalSampler) {
-  //         // 保存最后有效数据
-  //         lastValidData = data;
-
-  //         // 添加到采样器
-  //         const timestamp = Date.now();
-  //         const dataPoint: ITrafficDataPoint = {
-  //           up: data.traffic.raw.up_rate || 0,
-  //           down: data.traffic.raw.down_rate || 0,
-  //           timestamp,
-  //           name: new Date(timestamp).toLocaleTimeString("en-US", {
-  //             hour12: false,
-  //             hour: "2-digit",
-  //             minute: "2-digit",
-  //             second: "2-digit",
-  //           }),
-  //         };
-
-  //         globalSampler.addDataPoint(dataPoint);
-  //         triggerUpdate();
-  //       }
-  //     },
-  //     onError: (error) => {
-  //       console.error(
-  //         "[TrafficMonitorEnhanced] 网络错误，使用最后有效数据. 错误详情:",
-  //         {
-  //           message: error?.message || "未知错误",
-  //           stack: error?.stack || "无堆栈信息",
-  //         },
-  //       );
-  //       // 网络错误时不清空数据，继续使用最后有效值
-  //       // 但是添加一个错误标记的数据点（流量为0）
-  //       if (globalSampler) {
-  //         const timestamp = Date.now();
-  //         const errorPoint: ITrafficDataPoint = {
-  //           up: 0,
-  //           down: 0,
-  //           timestamp,
-  //           name: new Date(timestamp).toLocaleTimeString("en-US", {
-  //             hour12: false,
-  //             hour: "2-digit",
-  //             minute: "2-digit",
-  //             second: "2-digit",
-  //           }),
-  //         };
-  //         globalSampler.addDataPoint(errorPoint);
-  //         triggerUpdate();
-  //       }
-  //     },
-  //   },
-  // );
-
-  // 获取指定时间范围的数据
-  const getDataForTimeRange = useCallback(
-    (minutes: number): ITrafficDataPoint[] => {
-      if (!globalSampler) return [];
-      return globalSampler.getDataForTimeRange(minutes);
-    },
-    [],
-  );
+  }, []);
 
   // 清空数据
   const clearData = useCallback(() => {
     if (globalSampler) {
       globalSampler.clear();
-      triggerUpdate();
+      bumpRenderVersion();
     }
-  }, [triggerUpdate]);
+  }, [bumpRenderVersion]);
 
   // 获取采样器统计信息
   const getSamplerStats = useCallback(() => {
@@ -344,63 +270,19 @@ export const useTrafficMonitorEnhanced = () => {
     );
   }, []);
 
-  // 构建返回的监控数据，优先使用当前数据，fallback到最后有效数据
-  // const currentData = monitorData.current || lastValidData;
-  // const trafficMonitorData = {
-  //   traffic: currentData?.traffic || {
-  //     raw: { up: 0, down: 0, up_rate: 0, down_rate: 0 },
-  //     formatted: {
-  //       up_rate: "0B",
-  //       down_rate: "0B",
-  //       total_up: "0B",
-  //       total_down: "0B",
-  //     },
-  //     is_fresh: false,
-  //   },
-  //   memory: currentData?.memory || {
-  //     raw: { inuse: 0, oslimit: 0, usage_percent: 0 },
-  //     formatted: { inuse: "0B", oslimit: "0B", usage_percent: 0 },
-  //     is_fresh: false,
-  //   },
-  // };
-
   return {
-    // 监控数据
-    // monitorData: trafficMonitorData,
-
     // 图表数据管理
     graphData: {
       dataPoints: globalSampler?.getDataForTimeRange(60) || [], // 默认获取1小时数据
       getDataForTimeRange,
+      appendData,
       clearData,
     },
-
-    // 状态信息
-    // isLoading: !currentData,
-    // isDataFresh: currentData?.traffic?.is_fresh || false,
-    // hasValidData: !!lastValidData,
-
     // 性能统计
     samplerStats: getSamplerStats(),
     referenceCount: refCounter.getCount(),
   };
 };
-
-/**
- * 轻量级流量数据Hook
- */
-// export const useTrafficDataEnhanced = () => {
-//   const { monitorData, isLoading, isDataFresh, hasValidData } =
-//     useTrafficMonitorEnhanced();
-
-//   return {
-//     traffic: monitorData.traffic,
-//     memory: monitorData.memory,
-//     isLoading,
-//     isDataFresh,
-//     hasValidData,
-//   };
-// };
 
 /**
  * 图表数据Hook

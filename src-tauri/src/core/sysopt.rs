@@ -7,15 +7,16 @@ use crate::{
     utils::logging::Type,
 };
 use anyhow::Result;
-use std::sync::Arc;
+use scopeguard::defer;
+use smartstring::alias::String;
+use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri::async_runtime::Mutex as TokioMutex;
 use tauri_plugin_autostart::ManagerExt;
 
 pub struct Sysopt {
-    update_sysproxy: Arc<TokioMutex<bool>>,
-    reset_sysproxy: Arc<TokioMutex<bool>>,
+    update_sysproxy: AtomicBool,
+    reset_sysproxy: AtomicBool,
 }
 
 #[cfg(target_os = "windows")]
@@ -39,13 +40,13 @@ async fn get_bypass() -> String {
     };
     let custom_bypass = match res {
         Some(bypass) => bypass,
-        None => "".to_string(),
+        None => "".into(),
     };
 
     if custom_bypass.is_empty() {
-        DEFAULT_BYPASS.to_string()
+        DEFAULT_BYPASS.into()
     } else if use_default {
-        format!("{DEFAULT_BYPASS},{custom_bypass}")
+        format!("{DEFAULT_BYPASS},{custom_bypass}").into()
     } else {
         custom_bypass
     }
@@ -53,7 +54,7 @@ async fn get_bypass() -> String {
 
 // Uses tokio Command with CREATE_NO_WINDOW flag to avoid DLL initialization issues during shutdown
 #[cfg(target_os = "windows")]
-async fn execute_sysproxy_command(args: Vec<String>) -> Result<()> {
+async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> {
     use crate::utils::dirs;
     use anyhow::bail;
     #[allow(unused_imports)] // Required for .creation_flags() method
@@ -68,7 +69,7 @@ async fn execute_sysproxy_command(args: Vec<String>) -> Result<()> {
     }
 
     let output = Command::new(sysproxy_exe)
-        .args(&args)
+        .args(args)
         .creation_flags(0x08000000) // CREATE_NO_WINDOW - 隐藏窗口
         .output()
         .await?;
@@ -83,8 +84,8 @@ async fn execute_sysproxy_command(args: Vec<String>) -> Result<()> {
 impl Default for Sysopt {
     fn default() -> Self {
         Sysopt {
-            update_sysproxy: Arc::new(TokioMutex::new(false)),
-            reset_sysproxy: Arc::new(TokioMutex::new(false)),
+            update_sysproxy: AtomicBool::new(false),
+            reset_sysproxy: AtomicBool::new(false),
         }
     }
 }
@@ -104,7 +105,16 @@ impl Sysopt {
 
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
-        let _lock = self.update_sysproxy.lock().await;
+        if self
+            .update_sysproxy
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
+            return Ok(());
+        }
+        defer! {
+            self.update_sysproxy.store(false, Ordering::SeqCst);
+        }
 
         let port = {
             let verge_port = Config::verge().await.latest_ref().verge_mixed_port;
@@ -132,9 +142,9 @@ impl Sysopt {
         {
             let mut sys = Sysproxy {
                 enable: false,
-                host: proxy_host.clone(),
+                host: proxy_host.clone().into(),
                 port,
-                bypass: get_bypass().await,
+                bypass: get_bypass().await.into(),
             };
             let mut auto = Autoproxy {
                 enable: false,
@@ -178,38 +188,51 @@ impl Sysopt {
                 return result;
             }
 
-            let args = if pac_enable {
+            let args: Vec<std::string::String> = if pac_enable {
                 let address = format!("http://{proxy_host}:{pac_port}/commands/pac");
-                vec!["pac".to_string(), address]
+                vec!["pac".into(), address]
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass().await;
-                vec!["global".to_string(), address, bypass]
+                vec!["global".into(), address, bypass.into()]
             };
 
             execute_sysproxy_command(args).await?;
         }
         let proxy_manager = EventDrivenProxyManager::global();
         proxy_manager.notify_config_changed();
-
         Ok(())
     }
 
     /// reset the sysproxy
+    #[allow(clippy::unused_async)]
     pub async fn reset_sysproxy(&self) -> Result<()> {
-        let _lock = self.reset_sysproxy.lock().await;
+        if self
+            .reset_sysproxy
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
+            return Ok(());
+        }
+        defer! {
+            self.reset_sysproxy.store(false, Ordering::SeqCst);
+        }
+
         //直接关闭所有代理
         #[cfg(not(target_os = "windows"))]
         {
-            let mut sysproxy: Sysproxy = Sysproxy::get_system_proxy()?;
+            let mut sysproxy: Sysproxy = match Sysproxy::get_system_proxy() {
+                Ok(sp) => sp,
+                Err(e) => {
+                    log::warn!(target: "app", "重置代理时获取系统代理配置失败: {e}, 使用默认配置");
+                    Sysproxy::default()
+                }
+            };
             let mut autoproxy = match Autoproxy::get_auto_proxy() {
                 Ok(ap) => ap,
                 Err(e) => {
                     log::warn!(target: "app", "重置代理时获取自动代理配置失败: {e}, 使用默认配置");
-                    Autoproxy {
-                        enable: false,
-                        url: "".to_string(),
-                    }
+                    Autoproxy::default()
                 }
             };
             sysproxy.enable = false;
@@ -220,7 +243,7 @@ impl Sysopt {
 
         #[cfg(target_os = "windows")]
         {
-            execute_sysproxy_command(vec!["set".to_string(), "1".to_string()]).await?;
+            execute_sysproxy_command(vec!["set".into(), "1".into()]).await?;
         }
 
         Ok(())
@@ -241,14 +264,14 @@ impl Sysopt {
         #[cfg(target_os = "windows")]
         {
             if is_enable {
-                if let Err(e) = startup_shortcut::create_shortcut() {
+                if let Err(e) = startup_shortcut::create_shortcut().await {
                     log::error!(target: "app", "创建启动快捷方式失败: {e}");
                     // 如果快捷方式创建失败，回退到原来的方法
                     self.try_original_autostart_method(is_enable);
                 } else {
                     return Ok(());
                 }
-            } else if let Err(e) = startup_shortcut::remove_shortcut() {
+            } else if let Err(e) = startup_shortcut::remove_shortcut().await {
                 log::error!(target: "app", "删除启动快捷方式失败: {e}");
                 self.try_original_autostart_method(is_enable);
             } else {

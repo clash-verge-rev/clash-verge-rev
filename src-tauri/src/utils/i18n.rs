@@ -22,13 +22,13 @@ pub fn get_supported_languages() -> Vec<String> {
             if let Some(file_name) = entry.file_name().to_str()
                 && let Some(lang) = file_name.strip_suffix(".json")
             {
-                languages.push(lang.to_string());
+                languages.push(lang.into());
             }
         }
     }
 
     if languages.is_empty() {
-        languages.push(DEFAULT_LANGUAGE.to_string());
+        languages.push(DEFAULT_LANGUAGE.into());
     }
     languages
 }
@@ -52,7 +52,7 @@ fn get_system_language() -> String {
         .map(|locale| locale.to_lowercase())
         .and_then(|locale| locale.split(['_', '-']).next().map(String::from))
         .filter(|lang| get_supported_languages().contains(lang))
-        .unwrap_or_else(|| DEFAULT_LANGUAGE.to_string())
+        .unwrap_or_else(|| DEFAULT_LANGUAGE.into())
 }
 
 pub async fn t(key: &str) -> String {
@@ -69,7 +69,7 @@ pub async fn t(key: &str) -> String {
             && cache.0 == current_lang
             && let Some(text) = cache.1.get(key).and_then(|val| val.as_str())
         {
-            return text.to_string();
+            return text.into();
         }
     }
 
@@ -79,7 +79,7 @@ pub async fn t(key: &str) -> String {
         *cache = (current_lang.clone(), new_json);
 
         if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
-            return text.to_string();
+            return text.into();
         }
     }
 
@@ -87,12 +87,12 @@ pub async fn t(key: &str) -> String {
         && let Some(default_json) = load_lang_file(DEFAULT_LANGUAGE)
         && let Ok(mut cache) = TRANSLATIONS.write()
     {
-        *cache = (DEFAULT_LANGUAGE.to_string(), default_json);
+        *cache = (DEFAULT_LANGUAGE.into(), default_json);
 
         if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
-            return text.to_string();
+            return text.into();
         }
     }
 
-    key.to_string()
+    key.into()
 }

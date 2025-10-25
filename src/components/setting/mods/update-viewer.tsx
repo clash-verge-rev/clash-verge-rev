@@ -2,7 +2,6 @@ import { Box, Button, LinearProgress } from "@mui/material";
 import { Event, UnlistenFn } from "@tauri-apps/api/event";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
-import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import type { Ref } from "react";
 import { useEffect, useImperativeHandle, useMemo, useState } from "react";
@@ -15,6 +14,7 @@ import { useListen } from "@/hooks/use-listen";
 import { portableFlag } from "@/pages/_layout";
 import { showNotice } from "@/services/noticeService";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
+import { checkUpdateSafe as checkUpdate } from "@/services/update";
 
 export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();

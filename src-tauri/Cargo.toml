@@ -13,7 +13,7 @@ build = "build.rs"
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.4.1", features = [] }
+tauri-build = { version = "2.5.1", features = [] }
 
 [dependencies]
 warp = { version = "0.4.2", features = ["server"] }
@@ -25,7 +25,7 @@ dunce = "1.0.5"
 nanoid = "0.4"
 chrono = "0.4.42"
 sysinfo = { version = "0.37.2", features = ["network", "system"] }
-boa_engine = "0.20.0"
+boa_engine = "0.21.0"
 serde_json = "1.0.145"
 serde_yaml_ng = "0.10.0"
 once_cell = "1.21.3"
@@ -33,17 +33,17 @@ port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 parking_lot = "0.12.5"
 percent-encoding = "2.3.2"
-tokio = { version = "1.47.1", features = [
+tokio = { version = "1.48.0", features = [
   "rt-multi-thread",
   "macros",
   "time",
   "sync",
 ] }
 serde = { version = "1.0.228", features = ["derive"] }
-reqwest = { version = "0.12.23", features = ["json", "cookies"] }
-regex = "1.12.1"
+reqwest = { version = "0.12.24", features = ["json", "cookies"] }
+regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-tauri = { version = "2.8.5", features = [
+tauri = { version = "2.9.1", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -62,11 +62,11 @@ zip = "6.0.0"
 reqwest_dav = "0.2.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
-getrandom = "0.3.3"
+getrandom = "0.3.4"
 futures = "0.3.31"
 sys-locale = "0.3.2"
 libc = "0.2.177"
-gethostname = "1.0.2"
+gethostname = "1.1.0"
 hmac = "0.12.1"
 sha2 = "0.10.9"
 hex = "0.4.3"
@@ -79,16 +79,19 @@ isahc = { version = "1.7.2", default-features = false, features = [
   "parking_lot",
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
+compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.2"
 flexi_logger = "0.31.7"
 console-subscriber = { version = "0.4.1", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
-clash_verge_logger = { version = "0.1.0", git = "https://github.com/clash-verge-rev/clash-verge-logger" }
-clash_verge_service_ipc = { version = "2.0.15", features = [
+clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
+async-trait = "0.1.89"
+smartstring = { version = "1.0.1", features = ["serde"] }
+clash_verge_service_ipc = { version = "2.0.17", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
-# clash_verge_service_ipc = { version = "2.0.14", features = [
+# clash_verge_service_ipc = { version = "2.0.17", features = [
 #   "client",
 # ], path = "../../clash-verge-service-ipc" }
 
@@ -133,12 +136,19 @@ custom-protocol = ["tauri/custom-protocol"]
 verge-dev = ["clash_verge_logger/color"]
 tauri-dev = []
 tokio-trace = ["console-subscriber"]
+clippy = ["tauri/test"]
+tracing = []
+
+[[bench]]
+name = "draft_benchmark"
+path = "benches/draft_benchmark.rs"
+harness = false
 
 [profile.release]
 panic = "abort"
-codegen-units = 16
+codegen-units = 1
 lto = "thin"
-opt-level = 2
+opt-level = 3
 debug = false
 strip = true
 overflow-checks = false
@@ -156,8 +166,8 @@ rpath = false
 
 [profile.fast-release]
 inherits = "release"
-incremental = true
 codegen-units = 64
+incremental = true
 lto = false
 opt-level = 0
 debug = true
@@ -168,7 +178,7 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
-criterion = "0.7.0"
+criterion = { version = "0.7.0", features = ["async_tokio"] }
 
 [lints.clippy]
 # Core categories - most important for code safety and correctness
@@ -220,3 +230,5 @@ needless_raw_string_hashes = "deny" # Too many in existing code
 #pedantic = { level = "allow", priority = -1 }
 #nursery = { level = "allow", priority = -1 }
 #restriction = { level = "allow", priority = -1 }
+
+or_fun_call = "deny"

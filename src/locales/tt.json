@@ -328,6 +328,8 @@
   "Auto Log Clean": "Логларны автоматик чистарту",
   "Never Clean": "Беркайчан чистартмаска",
   "Retain _n Days": "{{n}} көн саклау",
+  "Auto Delay Detection": "Автоматик тоткарлык ачыклау",
+  "Auto Delay Detection Info": "Фон режимында хәзерге төен тоткарлыгын периодик тикшерә",
   "Default Latency Test": "Тоткарлануны тикшерү сылтамасы (defaults)",
   "Default Latency Test Info": "Бу фәкать клиентның HTTP сораулары тесты өчен кулланыла, конфигурация файлына йогынты ясамый",
   "Default Latency Timeout": "Тоткарлануның стандарт таймауты",

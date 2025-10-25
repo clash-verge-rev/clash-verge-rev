@@ -1,10 +1,13 @@
+use compact_str::CompactString;
+use flexi_logger::DeferredNow;
+#[cfg(not(feature = "tauri-dev"))]
+use flexi_logger::filter::LogLineFilter;
 use flexi_logger::writers::FileLogWriter;
-#[cfg(not(feature = "tauri-dev"))]
-use flexi_logger::{DeferredNow, filter::LogLineFilter};
-#[cfg(not(feature = "tauri-dev"))]
+use flexi_logger::writers::LogWriter;
+use log::Level;
 use log::Record;
 use std::{fmt, sync::Arc};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 
 pub type SharedWriter = Arc<Mutex<FileLogWriter>>;
 
@@ -22,10 +25,12 @@ pub enum Type {
     Timer,
     Frontend,
     Backup,
+    File,
     Lightweight,
     Network,
     ProxyMode,
     // Cache,
+    Validate,
     ClashVergeRev,
 }
 
@@ -44,10 +49,12 @@ impl fmt::Display for Type {
             Type::Timer => write!(f, "[Timer]"),
             Type::Frontend => write!(f, "[Frontend]"),
             Type::Backup => write!(f, "[Backup]"),
+            Type::File => write!(f, "[File]"),
             Type::Lightweight => write!(f, "[Lightweight]"),
             Type::Network => write!(f, "[Network]"),
             Type::ProxyMode => write!(f, "[ProxMode]"),
             // Type::Cache => write!(f, "[Cache]"),
+            Type::Validate => write!(f, "[Validate]"),
             Type::ClashVergeRev => write!(f, "[ClashVergeRev]"),
         }
     }
@@ -91,21 +98,10 @@ macro_rules! wrap_err {
     // Case 1: Future<Result<T, E>>
     ($stat:expr, async) => {{
         match $stat.await {
-            Ok(a) => Ok(a),
+            Ok(a) => Ok::<_, ::anyhow::Error>(a),
             Err(err) => {
                 log::error!(target: "app", "{}", err);
-                Err(err.to_string())
-            }
-        }
-    }};
-
-    // Case 2: Result<T, E>
-    ($stat:expr) => {{
-        match $stat {
-            Ok(a) => Ok(a),
-            Err(err) => {
-                log::error!(target: "app", "{}", err);
-                Err(err.to_string())
+                Err(::anyhow::Error::msg(err.to_string()))
             }
         }
     }};
@@ -115,7 +111,7 @@ macro_rules! wrap_err {
 macro_rules! logging {
     // 不带 print 参数的版本（默认不打印）
     ($level:ident, $type:expr, $($arg:tt)*) => {
-        log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*));
+        log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*))
     };
 }
 
@@ -132,6 +128,23 @@ macro_rules! logging_error {
     ($type:expr, $fmt:literal $(, $arg:expr)*) => {
         log::error!(target: "app", "[{}] {}", $type, format_args!($fmt $(, $arg)*));
     };
+}
+
+pub fn write_sidecar_log(
+    writer: MutexGuard<'_, FileLogWriter>,
+    now: &mut DeferredNow,
+    level: Level,
+    message: &CompactString,
+) {
+    let args = format_args!("{}", message);
+
+    let record = Record::builder()
+        .args(args)
+        .level(level)
+        .target("sidecar")
+        .build();
+
+    let _ = writer.write(now, &record);
 }
 
 #[cfg(not(feature = "tauri-dev"))]

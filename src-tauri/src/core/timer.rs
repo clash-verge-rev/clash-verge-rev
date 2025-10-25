@@ -2,6 +2,7 @@ use crate::{config::Config, feat, logging, logging_error, singleton, utils::logg
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use parking_lot::RwLock;
+use smartstring::alias::String;
 use std::{
     collections::HashMap,
     pin::Pin,
@@ -264,7 +265,9 @@ impl Timer {
         if let Some(items) = Config::profiles().await.latest_ref().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref()
+                    && let Some(allow_auto_update) = option.allow_auto_update
                     && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
+                    && allow_auto_update
                     && interval > 0
                 {
                     logging!(
@@ -457,9 +460,9 @@ impl Timer {
     fn emit_update_event(_uid: &str, _is_start: bool) {
         {
             if _is_start {
-                super::handle::Handle::notify_profile_update_started(_uid.to_string());
+                super::handle::Handle::notify_profile_update_started(_uid.into());
             } else {
-                super::handle::Handle::notify_profile_update_completed(_uid.to_string());
+                super::handle::Handle::notify_profile_update_completed(_uid.into());
             }
         }
     }

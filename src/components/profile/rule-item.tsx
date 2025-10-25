@@ -95,11 +95,13 @@ export const RuleItem = (props: Props) => {
             </StyledSubtitle>
           </ListItemTextChild>
         }
-        secondaryTypographyProps={{
-          sx: {
-            display: "flex",
-            alignItems: "center",
-            color: "#ccc",
+        slotProps={{
+          secondary: {
+            sx: {
+              display: "flex",
+              alignItems: "center",
+              color: "#ccc",
+            },
           },
         }}
       />

@@ -45,23 +45,19 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   // file input
   const fileDataRef = useRef<string | null>(null);
 
-  const {
-    control,
-    watch,
-    register: _register,
-    ...formIns
-  } = useForm<IProfileItem>({
-    defaultValues: {
-      type: "remote",
-      name: "",
-      desc: "",
-      url: "",
-      option: {
-        with_proxy: false,
-        self_proxy: false,
+  const { control, watch, setValue, reset, handleSubmit, getValues } =
+    useForm<IProfileItem>({
+      defaultValues: {
+        type: "remote",
+        name: "",
+        desc: "",
+        url: "",
+        option: {
+          with_proxy: false,
+          self_proxy: false,
+        },
       },
-    },
-  });
+    });
 
   useImperativeHandle(ref, () => ({
     create: () => {
@@ -71,7 +67,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     edit: (item: IProfileItem) => {
       if (item) {
         Object.entries(item).forEach(([key, value]) => {
-          formIns.setValue(key as any, value);
+          setValue(key as any, value);
         });
       }
       setOpenType("edit");
@@ -83,15 +79,15 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   const withProxy = watch("option.with_proxy");
 
   useEffect(() => {
-    if (selfProxy) formIns.setValue("option.with_proxy", false);
-  }, [selfProxy]);
+    if (selfProxy) setValue("option.with_proxy", false);
+  }, [selfProxy, setValue]);
 
   useEffect(() => {
-    if (withProxy) formIns.setValue("option.self_proxy", false);
-  }, [withProxy]);
+    if (withProxy) setValue("option.self_proxy", false);
+  }, [setValue, withProxy]);
 
   const handleOk = useLockFn(
-    formIns.handleSubmit(async (form) => {
+    handleSubmit(async (form) => {
       if (form.option?.timeout_seconds) {
         form.option.timeout_seconds = +form.option.timeout_seconds;
       }
@@ -183,7 +179,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
 
         // 成功后的操作
         setOpen(false);
-        setTimeout(() => formIns.reset(), 500);
+        setTimeout(() => reset(), 500);
         fileDataRef.current = null;
 
         // 优化：UI先关闭，异步通知父组件
@@ -202,7 +198,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     try {
       setOpen(false);
       fileDataRef.current = null;
-      setTimeout(() => formIns.reset(), 500);
+      setTimeout(() => reset(), 500);
     } catch (e) {
       console.warn("[ProfileViewer] handleClose error:", e);
     }
@@ -341,7 +337,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
       {isLocal && openType === "new" && (
         <FileInput
           onChange={(file, val) => {
-            formIns.setValue("name", formIns.getValues("name") || file.name);
+            setValue("name", getValues("name") || file.name);
             fileDataRef.current = val;
           }}
         />
@@ -377,6 +373,17 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>{t("Accept Invalid Certs (Danger)")}</InputLabel>
+                <Switch checked={field.value} {...field} color="primary" />
+              </StyledBox>
+            )}
+          />
+
+          <Controller
+            name="option.allow_auto_update"
+            control={control}
+            render={({ field }) => (
+              <StyledBox>
+                <InputLabel>{t("Allow Auto Update")}</InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
             )}

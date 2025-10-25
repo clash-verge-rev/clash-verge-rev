@@ -1,5 +1,6 @@
 import { useTheme } from "@mui/material";
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
+import { Traffic } from "tauri-plugin-mihomo-api";
 
 const maxPoint = 30;
 
@@ -14,10 +15,8 @@ const downLineWidth = 4;
 
 const defaultList = Array(maxPoint + 2).fill({ up: 0, down: 0 });
 
-type TrafficData = { up: number; down: number };
-
 export interface TrafficRef {
-  appendData: (data: TrafficData) => void;
+  appendData: (data: Traffic) => void;
   toggleStyle: () => void;
 }
 
@@ -27,15 +26,15 @@ export interface TrafficRef {
 export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
   const countRef = useRef(0);
   const styleRef = useRef(true);
-  const listRef = useRef<TrafficData[]>(defaultList);
+  const listRef = useRef<Traffic[]>(defaultList);
   const canvasRef = useRef<HTMLCanvasElement>(null!);
 
-  const cacheRef = useRef<TrafficData | null>(null);
+  const cacheRef = useRef<Traffic | null>(null);
 
   const { palette } = useTheme();
 
   useImperativeHandle(ref, () => ({
-    appendData: (data: TrafficData) => {
+    appendData: (data: Traffic) => {
       cacheRef.current = data;
     },
     toggleStyle: () => {
@@ -173,7 +172,11 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       context.globalAlpha = upLineAlpha;
       context.lineWidth = upLineWidth;
       context.strokeStyle = upLineColor;
-      lineStyle ? drawBezier(listUp, offset) : drawLine(listUp, offset);
+      if (lineStyle) {
+        drawBezier(listUp, offset);
+      } else {
+        drawLine(listUp, offset);
+      }
       context.stroke();
       context.closePath();
 
@@ -181,7 +184,11 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       context.globalAlpha = downLineAlpha;
       context.lineWidth = downLineWidth;
       context.strokeStyle = downLineColor;
-      lineStyle ? drawBezier(listDown, offset) : drawLine(listDown, offset);
+      if (lineStyle) {
+        drawBezier(listDown, offset);
+      } else {
+        drawLine(listDown, offset);
+      }
       context.stroke();
       context.closePath();
 

@@ -1,32 +1,42 @@
 #!/bin/bash
 set -euo pipefail
 
-remote_name="$1"
+remote_name="${1:-origin}"
+remote_url="${2:-unknown}"
 
-# --- Rust clippy for staged files in src-tauri ---
-if git diff --cached --name-only | grep -q '^src-tauri/'; then
-    echo "[pre-push] Running clippy on src-tauri..."
-    cargo clippy --manifest-path ./src-tauri/Cargo.toml -- -D warnings || {
-        echo "❌ Clippy found issues in src-tauri. Please fix them before pushing."
-        exit 1
-    }
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+cd "$ROOT_DIR"
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "❌ pnpm is required for pre-push checks."
+  exit 1
 fi
 
-# --- JS/TS format check only for main repo ---
-if git remote get-url "$remote_name" >/dev/null 2>&1; then
-    remote_url=$(git remote get-url "$remote_name")
-    if [[ "$remote_url" =~ github\.com[:/]+clash-verge-rev/clash-verge-rev(\.git)?$ ]]; then
-        echo "[pre-push] Detected push to clash-verge-rev/clash-verge-rev ($remote_url)"
-        echo "[pre-push] Running pnpm format:check..."
-        if ! pnpm format:check; then
-            echo "❌ Code format check failed. Please fix formatting before pushing."
-            exit 1
-        fi
-    else
-        echo "[pre-push] Not pushing to target repo. Skipping format check."
-    fi
+echo "[pre-push] Preparing to push to '$remote_name' ($remote_url). Running full validation..."
+
+echo "[pre-push] Checking Prettier formatting..."
+pnpm format:check
+
+echo "[pre-push] Running ESLint..."
+pnpm lint
+
+echo "[pre-push] Running TypeScript type checking..."
+pnpm typecheck
+
+if command -v cargo >/dev/null 2>&1; then
+  echo "[pre-push] Verifying Rust formatting..."
+  (
+    cd src-tauri
+    cargo fmt --check
+  )
+
+  echo "[pre-push] Running cargo clippy..."
+  (
+    cd src-tauri
+    cargo clippy-all
+  )
 else
-    echo "[pre-push] Remote '$remote_name' does not exist. Skipping format check."
+  echo "[pre-push] ⚠️ cargo not found; skipping Rust checks."
 fi
 
 echo "[pre-push] All checks passed."

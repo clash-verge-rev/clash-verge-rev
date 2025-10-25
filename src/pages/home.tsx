@@ -80,6 +80,12 @@ interface HomeSettingsDialogProps {
   onSave: (cards: HomeCardsSettings) => void;
 }
 
+const serializeCardFlags = (cards: HomeCardsSettings) =>
+  Object.keys(cards)
+    .sort()
+    .map((key) => `${key}:${cards[key] ? 1 : 0}`)
+    .join("|");
+
 // 首页设置对话框组件
 const HomeSettingsDialog = ({
   open,
@@ -209,6 +215,10 @@ const HomePage = () => {
 
   // 设置弹窗的状态
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [localHomeCards, setLocalHomeCards] = useState<{
+    value: HomeCardsSettings;
+    baseSignature: string;
+  } | null>(null);
 
   // 卡片显示状态
   const defaultCards = useMemo<HomeCardsSettings>(
@@ -227,9 +237,29 @@ const HomePage = () => {
     [],
   );
 
-  const [homeCards, setHomeCards] = useState<HomeCardsSettings>(() => {
-    return (verge?.home_cards as HomeCardsSettings) || defaultCards;
-  });
+  const vergeHomeCards = useMemo<HomeCardsSettings | null>(
+    () => (verge?.home_cards as HomeCardsSettings | undefined) ?? null,
+    [verge],
+  );
+
+  const remoteHomeCards = useMemo<HomeCardsSettings>(
+    () => vergeHomeCards ?? defaultCards,
+    [defaultCards, vergeHomeCards],
+  );
+
+  const remoteSignature = useMemo(
+    () => serializeCardFlags(remoteHomeCards),
+    [remoteHomeCards],
+  );
+
+  const pendingLocalCards = useMemo<HomeCardsSettings | null>(() => {
+    if (!localHomeCards) return null;
+    return localHomeCards.baseSignature === remoteSignature
+      ? localHomeCards.value
+      : null;
+  }, [localHomeCards, remoteSignature]);
+
+  const effectiveHomeCards = pendingLocalCards ?? remoteHomeCards;
 
   // 文档链接函数
   const toGithubDoc = useLockFn(() => {
@@ -243,7 +273,7 @@ const HomePage = () => {
 
   const renderCard = useCallback(
     (cardKey: string, component: React.ReactNode, size: number = 6) => {
-      if (!homeCards[cardKey]) return null;
+      if (!effectiveHomeCards[cardKey]) return null;
 
       return (
         <Grid size={size} key={cardKey}>
@@ -251,7 +281,7 @@ const HomePage = () => {
         </Grid>
       );
     },
-    [homeCards],
+    [effectiveHomeCards],
   );
 
   const criticalCards = useMemo(
@@ -270,9 +300,21 @@ const HomePage = () => {
   // 新增：保存设置时用requestIdleCallback/setTimeout
   const handleSaveSettings = (newCards: HomeCardsSettings) => {
     if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => setHomeCards(newCards));
+      window.requestIdleCallback(() =>
+        setLocalHomeCards({
+          value: newCards,
+          baseSignature: remoteSignature,
+        }),
+      );
     } else {
-      setTimeout(() => setHomeCards(newCards), 0);
+      setTimeout(
+        () =>
+          setLocalHomeCards({
+            value: newCards,
+            baseSignature: remoteSignature,
+          }),
+        0,
+      );
     }
   };
 
@@ -316,7 +358,10 @@ const HomePage = () => {
     ],
     [t, renderCard],
   );
-
+  const dialogKey = useMemo(
+    () => `${serializeCardFlags(effectiveHomeCards)}:${settingsOpen ? 1 : 0}`,
+    [effectiveHomeCards, settingsOpen],
+  );
   return (
     <BasePage
       title={t("Label-Home")}
@@ -353,9 +398,10 @@ const HomePage = () => {
 
       {/* 首页设置弹窗 */}
       <HomeSettingsDialog
+        key={dialogKey}
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        homeCards={homeCards}
+        homeCards={effectiveHomeCards}
         onSave={handleSaveSettings}
       />
     </BasePage>

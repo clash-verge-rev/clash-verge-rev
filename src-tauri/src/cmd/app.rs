@@ -1,37 +1,44 @@
 use super::CmdResult;
+use crate::core::sysopt::Sysopt;
 use crate::{
+    cmd::StringifyErr,
     feat, logging,
-    utils::{dirs, logging::Type},
-    wrap_err,
+    utils::{
+        dirs::{self, PathBufExec},
+        logging::Type,
+    },
 };
+use smartstring::alias::String;
+use std::path::Path;
 use tauri::{AppHandle, Manager};
+use tokio::fs;
 
 /// 打开应用程序所在目录
 #[tauri::command]
 pub async fn open_app_dir() -> CmdResult<()> {
-    let app_dir = wrap_err!(dirs::app_home_dir())?;
-    wrap_err!(open::that(app_dir))
+    let app_dir = dirs::app_home_dir().stringify_err()?;
+    open::that(app_dir).stringify_err()
 }
 
 /// 打开核心所在目录
 #[tauri::command]
 pub async fn open_core_dir() -> CmdResult<()> {
-    let core_dir = wrap_err!(tauri::utils::platform::current_exe())?;
+    let core_dir = tauri::utils::platform::current_exe().stringify_err()?;
     let core_dir = core_dir.parent().ok_or("failed to get core dir")?;
-    wrap_err!(open::that(core_dir))
+    open::that(core_dir).stringify_err()
 }
 
 /// 打开日志目录
 #[tauri::command]
 pub async fn open_logs_dir() -> CmdResult<()> {
-    let log_dir = wrap_err!(dirs::app_logs_dir())?;
-    wrap_err!(open::that(log_dir))
+    let log_dir = dirs::app_logs_dir().stringify_err()?;
+    open::that(log_dir).stringify_err()
 }
 
 /// 打开网页链接
 #[tauri::command]
 pub fn open_web_url(url: String) -> CmdResult<()> {
-    wrap_err!(open::that(url))
+    open::that(url.as_str()).stringify_err()
 }
 
 /// 打开/关闭开发者工具
@@ -68,36 +75,39 @@ pub fn get_portable_flag() -> CmdResult<bool> {
 /// 获取应用目录
 #[tauri::command]
 pub fn get_app_dir() -> CmdResult<String> {
-    let app_home_dir = wrap_err!(dirs::app_home_dir())?
+    let app_home_dir = dirs::app_home_dir()
+        .stringify_err()?
         .to_string_lossy()
-        .to_string();
+        .into();
     Ok(app_home_dir)
 }
 
 /// 获取当前自启动状态
 #[tauri::command]
 pub fn get_auto_launch_status() -> CmdResult<bool> {
-    use crate::core::sysopt::Sysopt;
-    wrap_err!(Sysopt::global().get_launch_status())
+    Sysopt::global().get_launch_status().stringify_err()
 }
 
 /// 下载图标缓存
 #[tauri::command]
 pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String> {
-    let icon_cache_dir = wrap_err!(dirs::app_home_dir())?.join("icons").join("cache");
-    let icon_path = icon_cache_dir.join(&name);
+    let icon_cache_dir = dirs::app_home_dir()
+        .stringify_err()?
+        .join("icons")
+        .join("cache");
+    let icon_path = icon_cache_dir.join(name.as_str());
 
     if icon_path.exists() {
-        return Ok(icon_path.to_string_lossy().to_string());
+        return Ok(icon_path.to_string_lossy().into());
     }
 
     if !icon_cache_dir.exists() {
         let _ = std::fs::create_dir_all(&icon_cache_dir);
     }
 
-    let temp_path = icon_cache_dir.join(format!("{}.downloading", &name));
+    let temp_path = icon_cache_dir.join(format!("{}.downloading", name.as_str()));
 
-    let response = wrap_err!(reqwest::get(&url).await)?;
+    let response = reqwest::get(url.as_str()).await.stringify_err()?;
 
     let content_type = response
         .headers()
@@ -107,7 +117,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
 
     let is_image = content_type.starts_with("image/");
 
-    let content = wrap_err!(response.bytes().await)?;
+    let content = response.bytes().await.stringify_err()?;
 
     let is_html = content.len() > 15
         && (content.starts_with(b"<!DOCTYPE html")
@@ -120,33 +130,33 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
                 Ok(file) => file,
                 Err(_) => {
                     if icon_path.exists() {
-                        return Ok(icon_path.to_string_lossy().to_string());
+                        return Ok(icon_path.to_string_lossy().into());
                     }
                     return Err("Failed to create temporary file".into());
                 }
             };
 
-            wrap_err!(std::io::copy(&mut content.as_ref(), &mut file))?;
+            std::io::copy(&mut content.as_ref(), &mut file).stringify_err()?;
         }
 
         if !icon_path.exists() {
             match std::fs::rename(&temp_path, &icon_path) {
                 Ok(_) => {}
                 Err(_) => {
-                    let _ = std::fs::remove_file(&temp_path);
+                    let _ = temp_path.remove_if_exists().await;
                     if icon_path.exists() {
-                        return Ok(icon_path.to_string_lossy().to_string());
+                        return Ok(icon_path.to_string_lossy().into());
                     }
                 }
             }
         } else {
-            let _ = std::fs::remove_file(&temp_path);
+            let _ = temp_path.remove_if_exists().await;
         }
 
-        Ok(icon_path.to_string_lossy().to_string())
+        Ok(icon_path.to_string_lossy().into())
     } else {
-        let _ = std::fs::remove_file(&temp_path);
-        Err(format!("下载的内容不是有效图片: {url}"))
+        let _ = temp_path.remove_if_exists().await;
+        Err(format!("下载的内容不是有效图片: {}", url.as_str()).into())
     }
 }
 
@@ -159,34 +169,43 @@ pub struct IconInfo {
 
 /// 复制图标文件
 #[tauri::command]
-pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
-    use std::{fs, path::Path};
+pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
+    let file_path = Path::new(path.as_str());
 
-    let file_path = Path::new(&path);
-
-    let icon_dir = wrap_err!(dirs::app_home_dir())?.join("icons");
+    let icon_dir = dirs::app_home_dir().stringify_err()?.join("icons");
     if !icon_dir.exists() {
-        let _ = fs::create_dir_all(&icon_dir);
+        let _ = fs::create_dir_all(&icon_dir).await;
     }
-    let ext = match file_path.extension() {
-        Some(e) => e.to_string_lossy().to_string(),
-        None => "ico".to_string(),
+    let ext: String = match file_path.extension() {
+        Some(e) => e.to_string_lossy().into(),
+        None => "ico".into(),
     };
 
     let dest_path = icon_dir.join(format!(
         "{0}-{1}.{ext}",
-        icon_info.name, icon_info.current_t
+        icon_info.name.as_str(),
+        icon_info.current_t.as_str()
     ));
     if file_path.exists() {
         if icon_info.previous_t.trim() != "" {
-            fs::remove_file(
-                icon_dir.join(format!("{0}-{1}.png", icon_info.name, icon_info.previous_t)),
-            )
-            .unwrap_or_default();
-            fs::remove_file(
-                icon_dir.join(format!("{0}-{1}.ico", icon_info.name, icon_info.previous_t)),
-            )
-            .unwrap_or_default();
+            icon_dir
+                .join(format!(
+                    "{0}-{1}.png",
+                    icon_info.name.as_str(),
+                    icon_info.previous_t.as_str()
+                ))
+                .remove_if_exists()
+                .await
+                .unwrap_or_default();
+            icon_dir
+                .join(format!(
+                    "{0}-{1}.ico",
+                    icon_info.name.as_str(),
+                    icon_info.previous_t.as_str()
+                ))
+                .remove_if_exists()
+                .await
+                .unwrap_or_default();
         }
         logging!(
             info,
@@ -195,12 +214,12 @@ pub fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
             path,
             dest_path
         );
-        match fs::copy(file_path, &dest_path) {
-            Ok(_) => Ok(dest_path.to_string_lossy().to_string()),
-            Err(err) => Err(err.to_string()),
+        match fs::copy(file_path, &dest_path).await {
+            Ok(_) => Ok(dest_path.to_string_lossy().into()),
+            Err(err) => Err(err.to_string().into()),
         }
     } else {
-        Err("file not found".to_string())
+        Err("file not found".into())
     }
 }
 
@@ -215,7 +234,7 @@ pub fn notify_ui_ready() -> CmdResult<()> {
 /// UI加载阶段
 #[tauri::command]
 pub fn update_ui_stage(stage: String) -> CmdResult<()> {
-    log::info!(target: "app", "UI加载阶段更新: {stage}");
+    log::info!(target: "app", "UI加载阶段更新: {}", stage.as_str());
 
     use crate::utils::resolve::ui::UiReadyStage;
 
@@ -226,8 +245,8 @@ pub fn update_ui_stage(stage: String) -> CmdResult<()> {
         "ResourcesLoaded" => UiReadyStage::ResourcesLoaded,
         "Ready" => UiReadyStage::Ready,
         _ => {
-            log::warn!(target: "app", "未知的UI加载阶段: {stage}");
-            return Err(format!("未知的UI加载阶段: {stage}"));
+            log::warn!(target: "app", "未知的UI加载阶段: {}", stage.as_str());
+            return Err(format!("未知的UI加载阶段: {}", stage.as_str()).into());
         }
     };
 

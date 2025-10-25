@@ -27,7 +27,7 @@ impl Default for AsyncSysproxy {
     fn default() -> Self {
         Self {
             enable: false,
-            host: "127.0.0.1".to_string(),
+            host: "127.0.0.1".into(),
             port: 7897,
             bypass: String::new(),
         }
@@ -153,7 +153,7 @@ impl AsyncProxyQuery {
                 log::debug!(target: "app", "PAC配置启用: URL={pac_url}, AutoDetect={auto_detect}");
 
                 if pac_url.is_empty() && auto_detect != 0 {
-                    pac_url = "auto-detect".to_string();
+                    pac_url = "auto-detect".into();
                 }
 
                 Ok(AsyncAutoproxy {
@@ -191,7 +191,7 @@ impl AsyncProxyQuery {
                 // 正确解析包含冒号的URL
                 // 格式: "ProxyAutoConfigURLString : http://127.0.0.1:11233/commands/pac"
                 if let Some(colon_pos) = line.find(" : ") {
-                    pac_url = line[colon_pos + 3..].trim().to_string();
+                    pac_url = line[colon_pos + 3..].trim().into();
                 }
             }
         }
@@ -227,7 +227,7 @@ impl AsyncProxyQuery {
         if let Ok(output) = output
             && output.status.success()
         {
-            let mode = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            let mode: String = String::from_utf8_lossy(&output.stdout).trim().into();
             if mode.contains("auto") {
                 // 获取 PAC URL
                 let pac_output = Command::new("gsettings")
@@ -238,11 +238,11 @@ impl AsyncProxyQuery {
                 if let Ok(pac_output) = pac_output
                     && pac_output.status.success()
                 {
-                    let pac_url = String::from_utf8_lossy(&pac_output.stdout)
+                    let pac_url: String = String::from_utf8_lossy(&pac_output.stdout)
                         .trim()
                         .trim_matches('\'')
                         .trim_matches('"')
-                        .to_string();
+                        .into();
 
                     if !pac_url.is_empty() {
                         return Ok(AsyncAutoproxy {
@@ -356,7 +356,7 @@ impl AsyncProxyQuery {
             if !proxy_server.is_empty() {
                 // 解析服务器地址和端口
                 let (host, port) = if let Some(colon_pos) = proxy_server.rfind(':') {
-                    let host = proxy_server[..colon_pos].to_string();
+                    let host = proxy_server[..colon_pos].into();
                     let port = proxy_server[colon_pos + 1..].parse::<u16>().unwrap_or(8080);
                     (host, port)
                 } else {
@@ -391,7 +391,7 @@ impl AsyncProxyQuery {
         let mut http_enabled = false;
         let mut http_host = String::new();
         let mut http_port = 8080u16;
-        let mut exceptions = Vec::new();
+        let mut exceptions: Vec<String> = Vec::new();
 
         for line in stdout.lines() {
             let line = line.trim();
@@ -399,7 +399,7 @@ impl AsyncProxyQuery {
                 http_enabled = true;
             } else if line.contains("HTTPProxy") && !line.contains("Port") {
                 if let Some(host_part) = line.split(':').nth(1) {
-                    http_host = host_part.trim().to_string();
+                    http_host = host_part.trim().into();
                 }
             } else if line.contains("HTTPPort") {
                 if let Some(port_part) = line.split(':').nth(1)
@@ -412,7 +412,7 @@ impl AsyncProxyQuery {
                 if let Some(list_part) = line.split(':').nth(1) {
                     let list = list_part.trim();
                     if !list.is_empty() {
-                        exceptions.push(list.to_string());
+                        exceptions.push(list.into());
                     }
                 }
             }
@@ -452,9 +452,7 @@ impl AsyncProxyQuery {
         if let Ok(mode_output) = mode_output
             && mode_output.status.success()
         {
-            let mode = String::from_utf8_lossy(&mode_output.stdout)
-                .trim()
-                .to_string();
+            let mode: String = String::from_utf8_lossy(&mode_output.stdout).trim().into();
             if mode.contains("manual") {
                 // 获取HTTP代理设置
                 let host_result = Command::new("gsettings")
@@ -471,11 +469,11 @@ impl AsyncProxyQuery {
                     && host_output.status.success()
                     && port_output.status.success()
                 {
-                    let host = String::from_utf8_lossy(&host_output.stdout)
+                    let host: String = String::from_utf8_lossy(&host_output.stdout)
                         .trim()
                         .trim_matches('\'')
                         .trim_matches('"')
-                        .to_string();
+                        .into();
 
                     let port = String::from_utf8_lossy(&port_output.stdout)
                         .trim()
@@ -513,11 +511,11 @@ impl AsyncProxyQuery {
 
         // 解析主机和端口
         let (host, port) = if let Some(colon_pos) = url.rfind(':') {
-            let host = url[..colon_pos].to_string();
+            let host: String = url[..colon_pos].into();
             let port = url[colon_pos + 1..].parse::<u16>().unwrap_or(8080);
             (host, port)
         } else {
-            (url.to_string(), 8080)
+            (url.into(), 8080)
         };
 
         if host.is_empty() {

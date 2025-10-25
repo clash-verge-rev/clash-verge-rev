@@ -6,6 +6,7 @@ import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
+import { createBrowserRouter, RouteObject } from "react-router";
 
 import ConnectionsSvg from "@/assets/image/itemicon/connections.svg?react";
 import HomeSvg from "@/assets/image/itemicon/home.svg?react";
@@ -15,8 +16,8 @@ import ProxiesSvg from "@/assets/image/itemicon/proxies.svg?react";
 import RulesSvg from "@/assets/image/itemicon/rules.svg?react";
 import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 import UnlockSvg from "@/assets/image/itemicon/unlock.svg?react";
-import { BaseErrorBoundary } from "@/components/base";
 
+import Layout from "./_layout";
 import ConnectionsPage from "./connections";
 import HomePage from "./home";
 import LogsPage from "./logs";
@@ -26,58 +27,67 @@ import RulesPage from "./rules";
 import SettingsPage from "./settings";
 import UnlockPage from "./unlock";
 
-export const routers = [
+export const navItems = [
   {
     label: "Label-Home",
-    path: "/home",
+    path: "/",
     icon: [<HomeRoundedIcon key="mui" />, <HomeSvg key="svg" />],
-    element: <HomePage />,
+    Component: HomePage,
   },
   {
     label: "Label-Proxies",
-    path: "/",
+    path: "/proxies",
     icon: [<WifiRoundedIcon key="mui" />, <ProxiesSvg key="svg" />],
-    element: <ProxiesPage />,
+    Component: ProxiesPage,
   },
   {
     label: "Label-Profiles",
     path: "/profile",
     icon: [<DnsRoundedIcon key="mui" />, <ProfilesSvg key="svg" />],
-    element: <ProfilesPage />,
+    Component: ProfilesPage,
   },
   {
     label: "Label-Connections",
     path: "/connections",
     icon: [<LanguageRoundedIcon key="mui" />, <ConnectionsSvg key="svg" />],
-    element: <ConnectionsPage />,
+    Component: ConnectionsPage,
   },
   {
     label: "Label-Rules",
     path: "/rules",
     icon: [<ForkRightRoundedIcon key="mui" />, <RulesSvg key="svg" />],
-    element: <RulesPage />,
+    Component: RulesPage,
   },
   {
     label: "Label-Logs",
     path: "/logs",
     icon: [<SubjectRoundedIcon key="mui" />, <LogsSvg key="svg" />],
-    element: <LogsPage />,
+    Component: LogsPage,
   },
   {
     label: "Label-Unlock",
     path: "/unlock",
     icon: [<LockOpenRoundedIcon key="mui" />, <UnlockSvg key="svg" />],
-    element: <UnlockPage />,
+    Component: UnlockPage,
   },
   {
     label: "Label-Settings",
     path: "/settings",
     icon: [<SettingsRoundedIcon key="mui" />, <SettingsSvg key="svg" />],
-    element: <SettingsPage />,
+    Component: SettingsPage,
   },
-].map((router) => ({
-  ...router,
-  element: (
-    <BaseErrorBoundary key={router.label}>{router.element}</BaseErrorBoundary>
-  ),
-}));
+];
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    Component: Layout,
+    children: navItems.map(
+      (item) =>
+        ({
+          path: item.path,
+          Component: item.Component,
+        }) as RouteObject,
+    ),
+  },
+]);

@@ -21,22 +21,19 @@ export const ProxyItem = (props: Props) => {
   const sortable = type === "prepend" || type === "append";
 
   const {
-    attributes,
-    listeners,
-    setNodeRef,
+    attributes: sortableAttributes,
+    listeners: sortableListeners,
+    setNodeRef: sortableSetNodeRef,
     transform,
     transition,
     isDragging,
-  } = sortable
-    ? useSortable({ id: proxy.name })
-    : {
-        attributes: {},
-        listeners: {},
-        setNodeRef: null,
-        transform: null,
-        transition: null,
-        isDragging: false,
-      };
+  } = useSortable({
+    id: proxy.name,
+    disabled: !sortable,
+  });
+  const dragAttributes = sortable ? sortableAttributes : undefined;
+  const dragListeners = sortable ? sortableListeners : undefined;
+  const dragNodeRef = sortable ? sortableSetNodeRef : undefined;
 
   return (
     <ListItem
@@ -60,9 +57,9 @@ export const ProxyItem = (props: Props) => {
       })}
     >
       <ListItemText
-        {...attributes}
-        {...listeners}
-        ref={setNodeRef}
+        {...(dragAttributes ?? {})}
+        {...(dragListeners ?? {})}
+        ref={dragNodeRef}
         sx={{ cursor: sortable ? "move" : "" }}
         primary={
           <StyledPrimary
@@ -86,11 +83,13 @@ export const ProxyItem = (props: Props) => {
             </Box>
           </ListItemTextChild>
         }
-        secondaryTypographyProps={{
-          sx: {
-            display: "flex",
-            alignItems: "center",
-            color: "#ccc",
+        slotProps={{
+          secondary: {
+            sx: {
+              display: "flex",
+              alignItems: "center",
+              color: "#ccc",
+            },
           },
         }}
       />

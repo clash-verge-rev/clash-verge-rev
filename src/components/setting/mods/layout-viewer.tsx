@@ -1,11 +1,13 @@
 import {
   Box,
   Button,
+  InputAdornment,
   List,
   ListItem,
   ListItemText,
   MenuItem,
   Select,
+  TextField,
   styled,
 } from "@mui/material";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -17,14 +19,23 @@ import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { DEFAULT_HOVER_DELAY } from "@/components/proxy/proxy-group-navigator";
 import { useVerge } from "@/hooks/use-verge";
 import { useWindowDecorations } from "@/hooks/use-window";
 import { copyIconFile, getAppDir } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
+
 import { GuardState } from "./guard-state";
 
 const OS = getSystem();
+
+const clampHoverDelay = (value: number) => {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_HOVER_DELAY;
+  }
+  return Math.min(5000, Math.max(0, Math.round(value)));
+};
 
 const getIcons = async (icon_dir: string, name: string) => {
   const updateTime = localStorage.getItem(`icon_${name}_update_time`) || "";
@@ -38,7 +49,7 @@ const getIcons = async (icon_dir: string, name: string) => {
   };
 };
 
-export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
+export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
   const { t } = useTranslation();
   const { verge, patchVerge, mutateVerge } = useVerge();
 
@@ -117,7 +128,7 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={async (e) => {
+            onChange={async () => {
               await toggleDecorations();
             }}
           >
@@ -192,13 +203,66 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
         </Item>
 
         <Item>
+          <ListItemText
+            primary={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <span>{t("Hover Jump Navigator Delay")}</span>
+                <TooltipIcon
+                  title={t("Hover Jump Navigator Delay Info")}
+                  sx={{ opacity: "0.7" }}
+                />
+              </Box>
+            }
+          />
+          <GuardState
+            value={verge?.hover_jump_navigator_delay ?? DEFAULT_HOVER_DELAY}
+            waitTime={400}
+            onCatch={onError}
+            onFormat={(e: any) => clampHoverDelay(Number(e.target.value))}
+            onChange={(value) =>
+              onChangeData({
+                hover_jump_navigator_delay: clampHoverDelay(value),
+              })
+            }
+            onGuard={(value) =>
+              patchVerge({ hover_jump_navigator_delay: clampHoverDelay(value) })
+            }
+          >
+            <TextField
+              type="number"
+              size="small"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              sx={{ width: 120 }}
+              disabled={!(verge?.enable_hover_jump_navigator ?? true)}
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      {t("millis")}
+                    </InputAdornment>
+                  ),
+                },
+                htmlInput: {
+                  min: 0,
+                  max: 5000,
+                  step: 20,
+                },
+              }}
+            />
+          </GuardState>
+        </Item>
+
+        <Item>
           <ListItemText primary={t("Nav Icon")} />
           <GuardState
             value={verge?.menu_icon ?? "monochrome"}
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
-            onChange={(e) => onChangeData({ menu_icon: e })}
-            onGuard={(e) => patchVerge({ menu_icon: e })}
+            onChange={(value) => onChangeData({ menu_icon: value })}
+            onGuard={(value) => patchVerge({ menu_icon: value })}
           >
             <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
               <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>
@@ -263,6 +327,19 @@ export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
             </GuardState>
           </Item>
         )}
+        <Item>
+          <ListItemText primary={t("Show Proxy Groups Inline")} />
+          <GuardState
+            value={verge?.tray_inline_proxy_groups ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ tray_inline_proxy_groups: e })}
+            onGuard={(e) => patchVerge({ tray_inline_proxy_groups: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
 
         <Item>
           <ListItemText primary={t("Common Tray Icon")} />

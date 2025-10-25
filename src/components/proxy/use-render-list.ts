@@ -103,6 +103,7 @@ export const useRenderList = (
   const { verge } = useVerge();
   const { width } = useWindowWidth();
   const [headStates, setHeadState] = useHeadStateNew();
+  const latencyTimeout = verge?.default_latency_timeout;
 
   // 获取运行时配置用于链式代理模式
   const { data: runtimeConfig } = useSWR(
@@ -197,7 +198,13 @@ export const useRenderList = (
           (g: any) => g.name === selectedGroup,
         );
         if (targetGroup) {
-          const proxies = filterSort(targetGroup.all, targetGroup.name, "", 0);
+          const proxies = filterSort(
+            targetGroup.all,
+            targetGroup.name,
+            "",
+            0,
+            latencyTimeout,
+          );
 
           if (col > 1) {
             return groupProxies(proxies, col).map((proxyCol, colIndex) => ({
@@ -226,7 +233,13 @@ export const useRenderList = (
       // 如果没有选择特定组，显示第一个组的节点（如果有组的话）
       if (allGroups.length > 0) {
         const firstGroup = allGroups[0];
-        const proxies = filterSort(firstGroup.all, firstGroup.name, "", 0);
+        const proxies = filterSort(
+          firstGroup.all,
+          firstGroup.name,
+          "",
+          0,
+          latencyTimeout,
+        );
 
         if (col > 1) {
           return groupProxies(proxies, col).map((proxyCol, colIndex) => ({
@@ -391,6 +404,7 @@ export const useRenderList = (
           group.name,
           headState.filterText,
           headState.sortType,
+          latencyTimeout,
         );
 
         ret.push({
@@ -445,6 +459,7 @@ export const useRenderList = (
     isChainMode,
     runtimeConfig,
     selectedGroup,
+    latencyTimeout,
   ]);
 
   return {

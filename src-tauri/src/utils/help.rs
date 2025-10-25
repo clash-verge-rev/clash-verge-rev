@@ -34,10 +34,9 @@ pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
 
             Ok(val
                 .as_mapping()
-                .ok_or(anyhow!(
-                    "failed to transform to yaml mapping \"{}\"",
-                    path.display()
-                ))?
+                .ok_or_else(|| {
+                    anyhow!("failed to transform to yaml mapping \"{}\"", path.display())
+                })?
                 .to_owned())
         }
         Err(err) => {

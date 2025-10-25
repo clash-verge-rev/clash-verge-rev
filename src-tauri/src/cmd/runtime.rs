@@ -1,7 +1,8 @@
 use super::CmdResult;
-use crate::{config::*, core::CoreManager, log_err, wrap_err};
-use anyhow::Context;
+use crate::{cmd::StringifyErr, config::*, core::CoreManager, log_err};
+use anyhow::{Context, anyhow};
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 use std::collections::HashMap;
 
 /// 获取运行时配置
@@ -17,12 +18,14 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = runtime.latest_ref();
 
     let config = runtime.config.as_ref();
-    wrap_err!(
-        config
-            .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
-            .and_then(|config| serde_yaml_ng::to_string(config)
-                .context("failed to convert config to yaml"))
-    )
+    config
+        .ok_or_else(|| anyhow!("failed to parse config to yaml file"))
+        .and_then(|config| {
+            serde_yaml_ng::to_string(config)
+                .context("failed to convert config to yaml")
+                .map(|s| s.into())
+        })
+        .stringify_err()
 }
 
 /// 获取运行时存在的键
@@ -42,12 +45,11 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_ref();
 
-    let config = wrap_err!(
-        runtime
-            .config
-            .as_ref()
-            .ok_or(anyhow::anyhow!("failed to parse config to yaml file"))
-    )?;
+    let config = runtime
+        .config
+        .as_ref()
+        .ok_or_else(|| anyhow!("failed to parse config to yaml file"))
+        .stringify_err()?;
 
     if let Some(serde_yaml_ng::Value::Sequence(proxies)) = config.get("proxies") {
         let mut proxy_name = Some(Some(proxy_chain_exit_node.as_str()));
@@ -78,13 +80,14 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 
         let mut config: HashMap<String, Vec<serde_yaml_ng::Value>> = HashMap::new();
 
-        config.insert("proxies".to_string(), proxies_chain);
+        config.insert("proxies".into(), proxies_chain);
 
-        wrap_err!(serde_yaml_ng::to_string(&config).context("YAML generation failed"))
+        serde_yaml_ng::to_string(&config)
+            .context("YAML generation failed")
+            .map(|s| s.into())
+            .stringify_err()
     } else {
-        wrap_err!(Err(anyhow::anyhow!(
-            "failed to get proxies or proxy-groups".to_string()
-        )))
+        Err("failed to get proxies or proxy-groups".into())
     }
 }
 
@@ -102,7 +105,9 @@ pub async fn update_proxy_chain_config_in_runtime(
     }
 
     // 生成新的运行配置文件并通知 Clash 核心重新加载
-    let run_path = wrap_err!(Config::generate_file(ConfigType::Run).await)?;
+    let run_path = Config::generate_file(ConfigType::Run)
+        .await
+        .stringify_err()?;
     log_err!(CoreManager::global().put_configs_force(run_path).await);
 
     Ok(())

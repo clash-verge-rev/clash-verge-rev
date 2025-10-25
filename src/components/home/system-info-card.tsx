@@ -14,11 +14,10 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { check as checkUpdate } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import useSWR from "swr";
 
 import { useSystemState } from "@/hooks/use-system-state";
@@ -26,9 +25,33 @@ import { useVerge } from "@/hooks/use-verge";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 import { getSystemInfo } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { checkUpdateSafe as checkUpdate } from "@/services/update";
 import { version as appVersion } from "@root/package.json";
 
 import { EnhancedCard } from "./enhanced-card";
+
+interface SystemState {
+  osInfo: string;
+  lastCheckUpdate: string;
+}
+
+type SystemStateAction =
+  | { type: "set-os-info"; payload: string }
+  | { type: "set-last-check-update"; payload: string };
+
+const systemStateReducer = (
+  state: SystemState,
+  action: SystemStateAction,
+): SystemState => {
+  switch (action.type) {
+    case "set-os-info":
+      return { ...state, osInfo: action.payload };
+    case "set-last-check-update":
+      return { ...state, lastCheckUpdate: action.payload };
+    default:
+      return state;
+  }
+};
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation();
@@ -38,13 +61,15 @@ export const SystemInfoCard = () => {
   const { installServiceAndRestartCore } = useServiceInstaller();
 
   // 系统信息状态
-  const [systemState, setSystemState] = useState({
+  const [systemState, dispatchSystemState] = useReducer(systemStateReducer, {
     osInfo: "",
     lastCheckUpdate: "-",
   });
 
   // 初始化系统信息
   useEffect(() => {
+    let timeoutId: number | undefined;
+
     getSystemInfo()
       .then((info) => {
         const lines = info.split("\n");
@@ -59,10 +84,10 @@ export const SystemInfoCard = () => {
             sysVersion = sysVersion.substring(sysName.length).trim();
           }
 
-          setSystemState((prev) => ({
-            ...prev,
-            osInfo: `${sysName} ${sysVersion}`,
-          }));
+          dispatchSystemState({
+            type: "set-os-info",
+            payload: `${sysName} ${sysVersion}`,
+          });
         }
       })
       .catch(console.error);
@@ -73,10 +98,10 @@ export const SystemInfoCard = () => {
       try {
         const timestamp = parseInt(lastCheck, 10);
         if (!isNaN(timestamp)) {
-          setSystemState((prev) => ({
-            ...prev,
-            lastCheckUpdate: new Date(timestamp).toLocaleString(),
-          }));
+          dispatchSystemState({
+            type: "set-last-check-update",
+            payload: new Date(timestamp).toLocaleString(),
+          });
         }
       } catch (e) {
         console.error("Error parsing last check update time", e);
@@ -85,18 +110,23 @@ export const SystemInfoCard = () => {
       // 如果启用了自动检查更新但没有记录，设置当前时间并延迟检查
       const now = Date.now();
       localStorage.setItem("last_check_update", now.toString());
-      setSystemState((prev) => ({
-        ...prev,
-        lastCheckUpdate: new Date(now).toLocaleString(),
-      }));
+      dispatchSystemState({
+        type: "set-last-check-update",
+        payload: new Date(now).toLocaleString(),
+      });
 
-      setTimeout(() => {
+      timeoutId = window.setTimeout(() => {
         if (verge?.auto_check_update) {
           checkUpdate().catch(console.error);
         }
       }, 5000);
     }
-  }, [verge?.auto_check_update]);
+    return () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [verge?.auto_check_update, dispatchSystemState]);
 
   // 自动检查更新逻辑
   useSWR(
@@ -104,10 +134,10 @@ export const SystemInfoCard = () => {
     async () => {
       const now = Date.now();
       localStorage.setItem("last_check_update", now.toString());
-      setSystemState((prev) => ({
-        ...prev,
-        lastCheckUpdate: new Date(now).toLocaleString(),
-      }));
+      dispatchSystemState({
+        type: "set-last-check-update",
+        payload: new Date(now).toLocaleString(),
+      });
       return await checkUpdate();
     },
     {

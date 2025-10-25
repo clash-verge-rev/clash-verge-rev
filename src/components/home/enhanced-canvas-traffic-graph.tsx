@@ -6,6 +6,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -80,6 +81,11 @@ interface EnhancedCanvasTrafficGraphProps {
   ref?: Ref<EnhancedCanvasTrafficGraphRef>;
 }
 
+const displayDataReducer = (
+  _: ITrafficDataPoint[],
+  payload: ITrafficDataPoint[],
+): ITrafficDataPoint[] => payload;
+
 /**
  * 稳定版Canvas流量图表组件
  * 修复闪烁问题，添加时间轴显示
@@ -118,7 +124,11 @@ export const EnhancedCanvasTrafficGraph = memo(
     const isInitializedRef = useRef<boolean>(false);
 
     // 当前显示的数据缓存
-    const [displayData, setDisplayData] = useState<ITrafficDataPoint[]>([]);
+    const [displayData, dispatchDisplayData] = useReducer(
+      displayDataReducer,
+      [],
+    );
+    const debounceTimeoutRef = useRef<number | null>(null);
 
     // 主题颜色配置
     const colors = useMemo(
@@ -133,26 +143,27 @@ export const EnhancedCanvasTrafficGraph = memo(
     );
 
     // 更新显示数据（防抖处理）
-    const updateDisplayDataDebounced = useMemo(() => {
-      let timeoutId: number;
-      return (newData: ITrafficDataPoint[]) => {
-        clearTimeout(timeoutId);
-        timeoutId = window.setTimeout(() => {
-          setDisplayData(newData);
-        }, 50); // 50ms防抖
-      };
+    const updateDisplayData = useCallback((newData: ITrafficDataPoint[]) => {
+      if (debounceTimeoutRef.current !== null) {
+        window.clearTimeout(debounceTimeoutRef.current);
+      }
+      debounceTimeoutRef.current = window.setTimeout(() => {
+        dispatchDisplayData(newData);
+      }, 50); // 50ms防抖
     }, []);
 
     // 监听数据变化
     useEffect(() => {
       const timeRangeData = getDataForTimeRange(timeRange);
-      updateDisplayDataDebounced(timeRangeData);
-    }, [
-      dataPoints,
-      timeRange,
-      getDataForTimeRange,
-      updateDisplayDataDebounced,
-    ]);
+      updateDisplayData(timeRangeData);
+
+      return () => {
+        if (debounceTimeoutRef.current !== null) {
+          window.clearTimeout(debounceTimeoutRef.current);
+          debounceTimeoutRef.current = null;
+        }
+      };
+    }, [dataPoints, timeRange, getDataForTimeRange, updateDisplayData]);
 
     // Y轴坐标计算 - 基于刻度范围的线性映射
     const calculateY = useCallback(

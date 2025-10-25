@@ -5,6 +5,7 @@ use crate::{
 };
 use anyhow::{Context, Result, bail};
 use clash_verge_service_ipc::CoreConfig;
+use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use std::{
     collections::VecDeque,
@@ -329,7 +330,7 @@ async fn check_service_version() -> Result<String> {
             return Err(anyhow::anyhow!(err_msg));
         }
 
-        let version = response.data.unwrap_or("unknown".to_string());
+        let version = response.data.unwrap_or_else(|| "unknown".into());
         Ok(version)
     };
 
@@ -360,9 +361,9 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 
     let payload = clash_verge_service_ipc::ClashConfig {
         core_config: CoreConfig {
-            config_path: dirs::path_to_str(config_file)?.to_string(),
-            core_path: dirs::path_to_str(&bin_path)?.to_string(),
-            config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.to_string(),
+            config_path: dirs::path_to_str(config_file)?.into(),
+            core_path: dirs::path_to_str(&bin_path)?.into(),
+            config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.into(),
         },
         log_config: service_writer_config().await?,
     };
@@ -393,7 +394,7 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     start_with_existing_service(config_file).await
 }
 
-pub(super) async fn get_clash_logs_by_service() -> Result<VecDeque<String>> {
+pub(super) async fn get_clash_logs_by_service() -> Result<VecDeque<CompactString>> {
     logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
 
     let response = clash_verge_service_ipc::get_clash_logs()

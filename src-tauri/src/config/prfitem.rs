@@ -6,6 +6,7 @@ use crate::utils::{
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 use std::{fs, time::Duration};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -101,6 +102,10 @@ pub struct PrfOption {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub danger_accept_invalid_certs: Option<bool>,
 
+    #[serde(default = "default_allow_auto_update")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_auto_update: Option<bool>,
+
     pub merge: Option<String>,
 
     pub script: Option<String>,
@@ -122,6 +127,7 @@ impl PrfOption {
                 a.danger_accept_invalid_certs = b
                     .danger_accept_invalid_certs
                     .or(a.danger_accept_invalid_certs);
+                a.allow_auto_update = b.allow_auto_update.or(a.allow_auto_update);
                 a.update_interval = b.update_interval.or(a.update_interval);
                 a.merge = b.merge.or(a.merge);
                 a.script = b.script.or(a.script);
@@ -158,8 +164,8 @@ impl PrfItem {
                 PrfItem::from_url(url, name, desc, item.option).await
             }
             "local" => {
-                let name = item.name.unwrap_or("Local File".into());
-                let desc = item.desc.unwrap_or("".into());
+                let name = item.name.unwrap_or_else(|| "Local File".into());
+                let desc = item.desc.unwrap_or_else(|| "".into());
                 PrfItem::from_local(name, desc, file_data, item.option).await
             }
             typ => bail!("invalid profile item type \"{typ}\""),
@@ -174,8 +180,8 @@ impl PrfItem {
         file_data: Option<String>,
         option: Option<PrfOption>,
     ) -> Result<PrfItem> {
-        let uid = help::get_uid("L");
-        let file = format!("{uid}.yaml");
+        let uid = help::get_uid("L").into();
+        let file = format!("{uid}.yaml").into();
         let opt_ref = option.as_ref();
         let update_interval = opt_ref.and_then(|o| o.update_interval);
         let mut merge = opt_ref.and_then(|o| o.merge.clone());
@@ -229,7 +235,7 @@ impl PrfItem {
             }),
             home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
-            file_data: Some(file_data.unwrap_or(tmpl::ITEM_LOCAL.into())),
+            file_data: Some(file_data.unwrap_or_else(|| tmpl::ITEM_LOCAL.into())),
         })
     }
 
@@ -246,6 +252,7 @@ impl PrfItem {
         let self_proxy = opt_ref.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs =
             opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
+        let allow_auto_update = opt_ref.map(|o| o.allow_auto_update.unwrap_or(true));
         let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
         let update_interval = opt_ref.and_then(|o| o.update_interval);
         let timeout = opt_ref.and_then(|o| o.timeout_seconds).unwrap_or(20);
@@ -312,19 +319,20 @@ impl PrfItem {
                     Some(filename) => {
                         let iter = percent_encoding::percent_decode(filename.as_bytes());
                         let filename = iter.decode_utf8().unwrap_or_default();
-                        filename.split("''").last().map(|s| s.to_string())
+                        filename.split("''").last().map(|s| s.into())
                     }
                     None => match help::parse_str::<String>(filename, "filename") {
                         Some(filename) => {
                             let filename = filename.trim_matches('"');
-                            Some(filename.to_string())
+                            Some(filename.into())
                         }
                         None => None,
                     },
                 }
             }
             None => Some(
-                crate::utils::help::get_last_part_and_decode(url).unwrap_or("Remote File".into()),
+                crate::utils::help::get_last_part_and_decode(url)
+                    .unwrap_or_else(|| "Remote File".into()),
             ),
         };
         let update_interval = match update_interval {
@@ -341,14 +349,14 @@ impl PrfItem {
         let home = match header.get("profile-web-page-url") {
             Some(value) => {
                 let str_value = value.to_str().unwrap_or("");
-                Some(str_value.to_string())
+                Some(str_value.into())
             }
             None => None,
         };
 
-        let uid = help::get_uid("R");
-        let file = format!("{uid}.yaml");
-        let name = name.unwrap_or(filename.unwrap_or("Remote File".into()));
+        let uid = help::get_uid("R").into();
+        let file = format!("{uid}.yaml").into();
+        let name = name.unwrap_or_else(|| filename.unwrap_or_else(|| "Remote File".into()).into());
         let data = resp.text_with_charset()?;
 
         // process the charset "UTF-8 with BOM"
@@ -404,6 +412,7 @@ impl PrfItem {
                 rules,
                 proxies,
                 groups,
+                allow_auto_update,
                 ..PrfOption::default()
             }),
             home,
@@ -415,13 +424,13 @@ impl PrfItem {
     /// ## Merge type (enhance)
     /// create the enhanced item by using `merge` rule
     pub fn from_merge(uid: Option<String>) -> Result<PrfItem> {
-        let mut id = help::get_uid("m");
+        let mut id = help::get_uid("m").into();
         let mut template = tmpl::ITEM_MERGE_EMPTY.into();
         if let Some(uid) = uid {
             id = uid;
             template = tmpl::ITEM_MERGE.into();
         }
-        let file = format!("{id}.yaml");
+        let file = format!("{id}.yaml").into();
 
         Ok(PrfItem {
             uid: Some(id),
@@ -442,11 +451,11 @@ impl PrfItem {
     /// ## Script type (enhance)
     /// create the enhanced item by using javascript quick.js
     pub fn from_script(uid: Option<String>) -> Result<PrfItem> {
-        let mut id = help::get_uid("s");
+        let mut id = help::get_uid("s").into();
         if let Some(uid) = uid {
             id = uid;
         }
-        let file = format!("{id}.js"); // js ext
+        let file = format!("{id}.js").into(); // js ext
 
         Ok(PrfItem {
             uid: Some(id),
@@ -466,8 +475,8 @@ impl PrfItem {
 
     /// ## Rules type (enhance)
     pub fn from_rules() -> Result<PrfItem> {
-        let uid = help::get_uid("r");
-        let file = format!("{uid}.yaml"); // yaml ext
+        let uid = help::get_uid("r").into();
+        let file = format!("{uid}.yaml").into(); // yaml ext
 
         Ok(PrfItem {
             uid: Some(uid),
@@ -487,8 +496,8 @@ impl PrfItem {
 
     /// ## Proxies type (enhance)
     pub fn from_proxies() -> Result<PrfItem> {
-        let uid = help::get_uid("p");
-        let file = format!("{uid}.yaml"); // yaml ext
+        let uid = help::get_uid("p").into();
+        let file = format!("{uid}.yaml").into(); // yaml ext
 
         Ok(PrfItem {
             uid: Some(uid),
@@ -508,8 +517,8 @@ impl PrfItem {
 
     /// ## Groups type (enhance)
     pub fn from_groups() -> Result<PrfItem> {
-        let uid = help::get_uid("g");
-        let file = format!("{uid}.yaml"); // yaml ext
+        let uid = help::get_uid("g").into();
+        let file = format!("{uid}.yaml").into(); // yaml ext
 
         Ok(PrfItem {
             uid: Some(uid),
@@ -533,8 +542,9 @@ impl PrfItem {
             .file
             .clone()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
-        let path = dirs::app_profiles_dir()?.join(file);
-        fs::read_to_string(path).context("failed to read the file")
+        let path = dirs::app_profiles_dir()?.join(file.as_str());
+        let content = fs::read_to_string(path).context("failed to read the file")?;
+        Ok(content.into())
     }
 
     /// save the file data
@@ -543,7 +553,12 @@ impl PrfItem {
             .file
             .clone()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
-        let path = dirs::app_profiles_dir()?.join(file);
+        let path = dirs::app_profiles_dir()?.join(file.as_str());
         fs::write(path, data.as_bytes()).context("failed to save the file")
     }
+}
+
+// 向前兼容，默认为订阅启用自动更新
+fn default_allow_auto_update() -> Option<bool> {
+    Some(true)
 }

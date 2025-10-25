@@ -12,8 +12,7 @@ import { BaseSearchBox } from "@/components/base/base-search-box";
 import { SearchState } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import LogItem from "@/components/log/log-item";
-import { useLogData } from "@/hooks/use-log-data-new";
-import { toggleLogEnabled } from "@/services/global-log-service";
+import { useLogData } from "@/hooks/use-log-data";
 import { LogFilter, useClashLog } from "@/services/states";
 
 const LogPage = () => {
@@ -52,11 +51,9 @@ const LogPage = () => {
 
   const handleLogLevelChange = (newLevel: string) => {
     setClashLog((pre: any) => ({ ...pre, logFilter: newLevel }));
-    // changeLogLevel(newLevel);
   };
 
   const handleToggleLog = async () => {
-    await toggleLogEnabled();
     setClashLog((pre: any) => ({ ...pre, enable: !enableLog }));
   };
 
@@ -90,7 +87,6 @@ const LogPage = () => {
             variant="contained"
             onClick={() => {
               refreshGetClashLog(true);
-              // clearGlobalLogs();
             }}
           >
             {t("Clear")}

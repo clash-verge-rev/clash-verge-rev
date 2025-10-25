@@ -32,7 +32,7 @@ import { useLockFn } from "ahooks";
 import { throttle } from "lodash-es";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import useSWR, { mutate } from "swr";
 import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
@@ -217,7 +217,7 @@ const ProfilePage = () => {
   // Batch selection states
   const [batchMode, setBatchMode] = useState(false);
   const [selectedProfiles, setSelectedProfiles] = useState<Set<string>>(
-    new Set(),
+    () => new Set(),
   );
 
   // 防止重复切换
@@ -899,6 +899,8 @@ const ProfilePage = () => {
     let lastUpdateTime = 0;
     const debounceDelay = 200;
 
+    let refreshTimer: number | null = null;
+
     const setupListener = async () => {
       unlistenPromise = listen<string>("profile-changed", (event) => {
         const newProfileId = event.payload;
@@ -919,11 +921,16 @@ const ProfilePage = () => {
 
         console.log(`[Profile] 执行配置数据刷新`);
 
+        if (refreshTimer !== null) {
+          window.clearTimeout(refreshTimer);
+        }
+
         // 使用异步调度避免阻塞事件处理
-        setTimeout(() => {
+        refreshTimer = window.setTimeout(() => {
           mutateProfiles().catch((error) => {
             console.error("[Profile] 配置数据刷新失败:", error);
           });
+          refreshTimer = null;
         }, 0);
       });
     };
@@ -931,6 +938,9 @@ const ProfilePage = () => {
     setupListener();
 
     return () => {
+      if (refreshTimer !== null) {
+        window.clearTimeout(refreshTimer);
+      }
       unlistenPromise?.then((unlisten) => unlisten()).catch(console.error);
     };
   }, [mutateProfiles]);
@@ -1068,6 +1078,16 @@ const ProfilePage = () => {
           value={url}
           variant="outlined"
           onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.nativeEvent.isComposing) {
+              return;
+            }
+            if (!url || disabled || loading) {
+              return;
+            }
+            event.preventDefault();
+            void onImport();
+          }}
           placeholder={t("Profile URL")}
           slotProps={{
             input: {
