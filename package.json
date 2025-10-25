@@ -92,7 +92,7 @@
     "@vitejs/plugin-react": "5.1.0",
     "adm-zip": "^0.5.16",
     "cli-color": "^2.0.4",
-    "commander": "^14.0.1",
+    "commander": "^14.0.2",
     "cross-env": "^10.1.0",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
