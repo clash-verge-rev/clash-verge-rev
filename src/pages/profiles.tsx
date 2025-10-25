@@ -29,17 +29,8 @@ import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useLockFn } from "ahooks";
-import type { TFunction } from "i18next";
 import { throttle } from "lodash-es";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
-import type { Dispatch, SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
 import useSWR, { mutate } from "swr";
@@ -68,6 +59,12 @@ import {
   updateProfile,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import {
+  enqueueSwitchTask,
+  subscribeSwitchWorker,
+  getSwitchWorkerSnapshot,
+  type SwitchWorkerEvent,
+} from "@/services/profile-switch-worker";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 
 // 记录profile切换状态
@@ -77,194 +74,6 @@ const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
     `[Profile-Debug][${timestamp}] ${action}: ${profile}`,
     extra || "",
   );
-};
-
-type SwitchRequest = {
-  profile: string;
-  notifySuccess: boolean;
-};
-
-interface SwitchState {
-  switching: SwitchRequest | null;
-  queued: SwitchRequest | null;
-  status: "idle" | "running";
-  lastError: string | null;
-}
-
-type SwitchAction =
-  | { type: "REQUEST"; payload: SwitchRequest }
-  | { type: "RUN_FINISHED"; payload: { error?: string | null } };
-
-const initialSwitchState: SwitchState = {
-  switching: null,
-  queued: null,
-  status: "idle",
-  lastError: null,
-};
-
-const switchReducer = (
-  state: SwitchState,
-  action: SwitchAction,
-): SwitchState => {
-  switch (action.type) {
-    case "REQUEST": {
-      const payload = action.payload;
-      if (state.switching) {
-        if (state.switching.profile === payload.profile) {
-          const notifySuccess =
-            state.switching.notifySuccess || payload.notifySuccess;
-          return {
-            ...state,
-            switching: { profile: payload.profile, notifySuccess },
-            lastError: null,
-          };
-        }
-        return {
-          ...state,
-          queued: payload,
-          lastError: null,
-        };
-      }
-
-      return {
-        switching: payload,
-        queued: null,
-        status: "running",
-        lastError: null,
-      };
-    }
-    case "RUN_FINISHED": {
-      const nextError = action.payload.error ?? null;
-      if (state.queued) {
-        return {
-          switching: state.queued,
-          queued: null,
-          status: "running",
-          lastError: nextError,
-        };
-      }
-
-      return {
-        switching: null,
-        queued: null,
-        status: "idle",
-        lastError: nextError,
-      };
-    }
-    default:
-      return state;
-  }
-};
-
-interface ProfileSwitchControllerOptions {
-  getCurrentProfileId: () => string | undefined;
-  patchProfiles: (value: Partial<IProfilesConfig>) => Promise<void>;
-  mutateLogs: () => Promise<void>;
-  closeAllConnections: () => Promise<void>;
-  activateSelected: () => Promise<void>;
-  setActivatings: Dispatch<SetStateAction<string[]>>;
-  t: TFunction;
-}
-
-const useProfileSwitchController = ({
-  getCurrentProfileId,
-  patchProfiles,
-  mutateLogs,
-  closeAllConnections,
-  activateSelected,
-  setActivatings,
-  t,
-}: ProfileSwitchControllerOptions) => {
-  const [state, dispatch] = useReducer(switchReducer, initialSwitchState);
-  const runningProfileRef = useRef<string | null>(null);
-
-  const requestSwitch = useCallback(
-    (profile: string, notifySuccess: boolean) => {
-      const currentId = getCurrentProfileId();
-      if (!notifySuccess && currentId === profile && state.status === "idle") {
-        debugProfileSwitch("ALREADY_CURRENT_IGNORED", profile);
-        return;
-      }
-
-      dispatch({ type: "REQUEST", payload: { profile, notifySuccess } });
-    },
-    [getCurrentProfileId, state.status],
-  );
-
-  useEffect(() => {
-    if (state.status !== "running" || !state.switching) return;
-    const { profile, notifySuccess } = state.switching;
-
-    if (runningProfileRef.current === profile) return;
-    runningProfileRef.current = profile;
-
-    let cancelled = false;
-    let delayTimer: number | null = null;
-    setActivatings((prev) => {
-      if (prev.includes(profile)) return prev;
-      return [...prev, profile];
-    });
-
-    (async () => {
-      let errorMessage: string | null = null;
-      try {
-        await patchProfiles({ current: profile });
-        if (cancelled) return;
-
-        await mutateLogs();
-        await closeAllConnections();
-
-        if (!cancelled && notifySuccess) {
-          showNotice("success", t("Profile Switched"), 1000);
-        }
-
-        if (!cancelled) {
-          await new Promise<void>((resolve) => {
-            delayTimer = window.setTimeout(() => {
-              delayTimer = null;
-              resolve();
-            }, 50);
-          });
-          await activateSelected();
-        }
-      } catch (error: any) {
-        if (!cancelled) {
-          errorMessage = error?.message || String(error);
-          showNotice("error", errorMessage, 4000);
-        }
-      } finally {
-        setActivatings((prev) => prev.filter((id) => id !== profile));
-        runningProfileRef.current = null;
-        if (!cancelled) {
-          dispatch({ type: "RUN_FINISHED", payload: { error: errorMessage } });
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      if (delayTimer !== null) {
-        clearTimeout(delayTimer);
-        delayTimer = null;
-      }
-    };
-  }, [
-    state.status,
-    state.switching,
-    patchProfiles,
-    mutateLogs,
-    closeAllConnections,
-    activateSelected,
-    setActivatings,
-    t,
-  ]);
-
-  return {
-    requestSwitch,
-    switchingProfile: state.switching?.profile ?? null,
-    status: state.status,
-    lastError: state.lastError,
-  };
 };
 
 const normalizeProfileUrl = (value?: string) => {
@@ -570,29 +379,33 @@ const ProfilePage = () => {
     }
   };
 
-  const getCurrentProfileId = useCallback(
-    () => profiles.current ?? undefined,
-    [profiles],
-  );
-
-  const memoizedMutateLogs = useCallback(async () => {
-    await mutateLogs();
-  }, [mutateLogs]);
-
   const closeConnections = useCallback(async () => {
     await closeAllConnections();
   }, []);
 
-  const { requestSwitch, switchingProfile: switchingProfileId } =
-    useProfileSwitchController({
-      getCurrentProfileId,
-      patchProfiles: (payload) => patchProfiles(payload),
-      mutateLogs: memoizedMutateLogs,
-      closeAllConnections: closeConnections,
-      activateSelected,
-      setActivatings,
-      t,
+  const currentProfileId = profiles.current ?? null;
+
+  const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(
+    () => getSwitchWorkerSnapshot().switching,
+  );
+
+  useEffect(() => {
+    const unsubscribe = subscribeSwitchWorker((event: SwitchWorkerEvent) => {
+      if (event.type === "success" || event.type === "error") {
+        setActivatings((prev) => prev.filter((id) => id !== event.profile));
+      }
+      setSwitchingProfileId(getSwitchWorkerSnapshot().switching);
     });
+    return unsubscribe;
+  }, [setActivatings]);
+
+  useEffect(() => {
+    if (!switchingProfileId) return;
+    setActivatings((prev) => {
+      if (prev.includes(switchingProfileId)) return prev;
+      return [...prev, switchingProfileId];
+    });
+  }, [setActivatings, switchingProfileId]);
 
   // 强化的刷新策略
   const performRobustRefresh = async (
@@ -680,27 +493,49 @@ const ProfilePage = () => {
     }
   };
 
-  const onSelect = (current: string, force: boolean) => {
-    // 阻止重复点击或已激活的profile
-    if (switchingProfileId === current) {
-      debugProfileSwitch("DUPLICATE_CLICK_IGNORED", current);
-      return;
-    }
+  const enqueueProfileSwitch = useCallback(
+    (targetProfile: string, notifySuccess: boolean) => {
+      const runSwitch = async () => {
+        await patchProfiles({ current: targetProfile });
+        await mutateLogs();
+        await closeConnections();
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        await activateSelected();
+        if (notifySuccess) {
+          showNotice("success", t("Profile Switched"), 1000);
+        }
+      };
 
-    if (!force && current === profiles.current) {
-      debugProfileSwitch("ALREADY_CURRENT_IGNORED", current);
-      return;
-    }
+      enqueueSwitchTask({
+        profile: targetProfile,
+        notifySuccess,
+        run: runSwitch,
+      });
+    },
+    [activateSelected, closeConnections, mutateLogs, patchProfiles, t],
+  );
 
-    requestSwitch(current, true);
-  };
+  const onSelect = useCallback(
+    (targetProfile: string, force: boolean) => {
+      if (switchingProfileId === targetProfile) {
+        debugProfileSwitch("DUPLICATE_CLICK_IGNORED", targetProfile);
+        return;
+      }
+      if (!force && targetProfile === currentProfileId) {
+        debugProfileSwitch("ALREADY_CURRENT_IGNORED", targetProfile);
+        return;
+      }
+      enqueueProfileSwitch(targetProfile, true);
+    },
+    [enqueueProfileSwitch, currentProfileId, switchingProfileId],
+  );
 
   useEffect(() => {
     if (current) {
       mutateProfiles();
-      requestSwitch(current, false);
+      enqueueProfileSwitch(current, false);
     }
-  }, [current, mutateProfiles, requestSwitch]);
+  }, [current, enqueueProfileSwitch, mutateProfiles]);
 
   const onEnhance = useLockFn(async (notifySuccess: boolean) => {
     if (switchingProfileId) {
