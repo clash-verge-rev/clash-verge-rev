@@ -33,6 +33,13 @@ export async function patchProfilesConfig(profiles: IProfilesConfig) {
   return invoke<void>("patch_profiles_config", { profiles });
 }
 
+export async function switchProfileCommand(
+  profileIndex: string,
+  notifySuccess: boolean,
+) {
+  return invoke<boolean>("switch_profile", { profileIndex, notifySuccess });
+}
+
 export async function createProfile(
   item: Partial<IProfileItem>,
   fileData?: string | null,

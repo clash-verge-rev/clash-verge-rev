@@ -15,14 +15,35 @@ use crate::{
     ret_err,
     utils::{dirs, help, logging::Type},
 };
+use futures::FutureExt;
+use once_cell::sync::OnceCell;
 use smartstring::alias::String;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::time::Duration;
+use std::{
+    panic::AssertUnwindSafe,
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+    time::Duration,
+};
+use tokio::sync::Mutex;
 
+static SWITCH_MUTEX: OnceCell<Mutex<()>> = OnceCell::new();
 // 全局请求序列号跟踪，用于避免队列化执行
 static CURRENT_REQUEST_SEQUENCE: AtomicU64 = AtomicU64::new(0);
-
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
+
+struct SwitchScope;
+
+impl SwitchScope {
+    fn begin() -> Self {
+        CURRENT_SWITCHING_PROFILE.store(true, Ordering::SeqCst);
+        Self
+    }
+}
+
+impl Drop for SwitchScope {
+    fn drop(&mut self) {
+        CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
+    }
+}
 
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
@@ -219,11 +240,17 @@ pub async fn delete_profile(index: String) -> CmdResult {
 /// 修改profiles的配置
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
+    let mutex = SWITCH_MUTEX.get_or_init(|| Mutex::new(()));
+    let _guard = mutex.lock().await;
+    patch_profiles_config_internal(profiles).await
+}
+
+async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> {
     if CURRENT_SWITCHING_PROFILE.load(Ordering::SeqCst) {
         logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
         return Ok(false);
     }
-    CURRENT_SWITCHING_PROFILE.store(true, Ordering::SeqCst);
+    let _switch_guard = SwitchScope::begin();
 
     // 为当前请求分配序列号
     let current_sequence = CURRENT_REQUEST_SEQUENCE.fetch_add(1, Ordering::SeqCst) + 1;
@@ -561,13 +588,56 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 /// 根据profile name修改profiles
 #[tauri::command]
 pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult<bool> {
-    logging!(info, Type::Cmd, "切换配置到: {}", profile_index);
+    switch_profile(profile_index, false).await
+}
 
-    let profiles = IProfiles {
-        current: Some(profile_index),
+#[tauri::command]
+pub async fn switch_profile(profile_index: String, notify_success: bool) -> CmdResult<bool> {
+    logging!(info, Type::Cmd, "请求切换配置到: {}", &profile_index);
+
+    let mutex = SWITCH_MUTEX.get_or_init(|| Mutex::new(()));
+    let _guard = mutex.lock().await;
+
+    let switch_result = AssertUnwindSafe(patch_profiles_config_internal(IProfiles {
+        current: Some(profile_index.clone()),
         items: None,
+    }))
+    .catch_unwind()
+    .await;
+
+    let result = match switch_result {
+        Ok(inner) => inner?,
+        Err(_) => {
+            logging!(
+                error,
+                Type::Cmd,
+                "切换配置过程中发生panic，目标: {}",
+                profile_index
+            );
+            handle::Handle::notice_message(
+                "config_validate::panic",
+                format!("profile switch panic: {}", profile_index),
+            );
+            handle::Handle::notify_profile_switch_finished(profile_index.clone(), false);
+            return Ok(false);
+        }
     };
-    patch_profiles_config(profiles).await
+
+    if result {
+        handle::Handle::notify_profile_switch_finished(profile_index.clone(), true);
+    } else {
+        handle::Handle::notify_profile_switch_finished(profile_index.clone(), false);
+    }
+
+    if let Err(err) = handle::Handle::mihomo().await.close_all_connections().await {
+        logging!(warn, Type::Cmd, "切换配置后关闭连接失败: {}", err);
+    }
+
+    if notify_success && result {
+        handle::Handle::notice_message("info", "Profile Switched");
+    }
+
+    Ok(result)
 }
 
 /// 修改某个profile item的

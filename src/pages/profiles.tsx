@@ -34,7 +34,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
 import useSWR, { mutate } from "swr";
-import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { BasePage, DialogRef } from "@/components/base";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
@@ -57,14 +56,9 @@ import {
   importProfile,
   reorderProfile,
   updateProfile,
+  switchProfileCommand,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
-import {
-  enqueueSwitchTask,
-  subscribeSwitchWorker,
-  getSwitchWorkerSnapshot,
-  type SwitchWorkerEvent,
-} from "@/services/profile-switch-worker";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 
 // 记录profile切换状态
@@ -74,6 +68,16 @@ const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
     `[Profile-Debug][${timestamp}] ${action}: ${profile}`,
     extra || "",
   );
+};
+
+type ProfileSwitchFinishedPayload = {
+  profileId: string;
+  success: boolean;
+};
+
+type RustPanicPayload = {
+  message: string;
+  location: string;
 };
 
 const normalizeProfileUrl = (value?: string) => {
@@ -208,7 +212,6 @@ const ProfilePage = () => {
   const {
     profiles = {},
     activateSelected,
-    patchProfiles,
     mutateProfiles,
     error,
     isStale,
@@ -379,33 +382,7 @@ const ProfilePage = () => {
     }
   };
 
-  const closeConnections = useCallback(async () => {
-    await closeAllConnections();
-  }, []);
-
   const currentProfileId = profiles.current ?? null;
-
-  const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(
-    () => getSwitchWorkerSnapshot().switching,
-  );
-
-  useEffect(() => {
-    const unsubscribe = subscribeSwitchWorker((event: SwitchWorkerEvent) => {
-      if (event.type === "success" || event.type === "error") {
-        setActivatings((prev) => prev.filter((id) => id !== event.profile));
-      }
-      setSwitchingProfileId(getSwitchWorkerSnapshot().switching);
-    });
-    return unsubscribe;
-  }, [setActivatings]);
-
-  useEffect(() => {
-    if (!switchingProfileId) return;
-    setActivatings((prev) => {
-      if (prev.includes(switchingProfileId)) return prev;
-      return [...prev, switchingProfileId];
-    });
-  }, [setActivatings, switchingProfileId]);
 
   // 强化的刷新策略
   const performRobustRefresh = async (
@@ -485,57 +462,127 @@ const ProfilePage = () => {
 
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (over) {
-      if (active.id !== over.id) {
-        await reorderProfile(active.id.toString(), over.id.toString());
-        mutateProfiles();
-      }
+    if (over && active.id !== over.id) {
+      await reorderProfile(active.id.toString(), over.id.toString());
+      mutateProfiles();
     }
   };
 
-  const enqueueProfileSwitch = useCallback(
-    (targetProfile: string, notifySuccess: boolean) => {
-      const runSwitch = async () => {
-        await patchProfiles({ current: targetProfile });
+  const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(
+    null,
+  );
+  const pendingProfileRef = useRef<string | null>(null);
+  const isSwitching = switchingProfileId != null;
+
+  useEffect(() => {
+    let mounted = true;
+    const unlistenPromise = listen<ProfileSwitchFinishedPayload>(
+      "profile-switch-finished",
+      (event) => {
+        if (!mounted) return;
+        const payload = event.payload;
+        if (!payload) return;
+
+        setActivatings((prev) => prev.filter((id) => id !== payload.profileId));
+        setSwitchingProfileId((prev) =>
+          prev === payload.profileId ? null : prev,
+        );
+
+        if (!payload.success) {
+          showNotice("error", t("Profile switch failed"));
+        }
+      },
+    );
+
+    return () => {
+      mounted = false;
+      unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
+    };
+  }, [setActivatings, t]);
+
+  const executeSwitch = useCallback(
+    async function run(targetProfile: string, notifySuccess: boolean) {
+      setSwitchingProfileId(targetProfile);
+      setActivatings((prev) => {
+        if (prev.includes(targetProfile)) return prev;
+        return [...prev, targetProfile];
+      });
+
+      try {
+        const success = await switchProfileCommand(
+          targetProfile,
+          notifySuccess,
+        );
+        if (!success) {
+          showNotice("error", t("Profile switch failed"));
+          return;
+        }
         await mutateLogs();
-        await closeConnections();
-        await new Promise((resolve) => setTimeout(resolve, 50));
         await activateSelected();
         if (notifySuccess) {
           showNotice("success", t("Profile Switched"), 1000);
         }
-      };
-
-      enqueueSwitchTask({
-        profile: targetProfile,
-        notifySuccess,
-        run: runSwitch,
-      });
+      } catch (error: any) {
+        showNotice(
+          "error",
+          error?.message || error?.toString?.() || String(error),
+        );
+      } finally {
+        setActivatings((prev) => prev.filter((id) => id !== targetProfile));
+        setSwitchingProfileId(null);
+        await mutateProfiles();
+        const next = pendingProfileRef.current;
+        pendingProfileRef.current = null;
+        if (next && next !== targetProfile) {
+          await run(next, true);
+        }
+      }
     },
-    [activateSelected, closeConnections, mutateLogs, patchProfiles, t],
+    [activateSelected, mutateLogs, mutateProfiles, setActivatings, t],
   );
 
   const onSelect = useCallback(
     (targetProfile: string, force: boolean) => {
-      if (switchingProfileId === targetProfile) {
-        debugProfileSwitch("DUPLICATE_CLICK_IGNORED", targetProfile);
+      if (isSwitching) {
+        pendingProfileRef.current = targetProfile;
         return;
       }
       if (!force && targetProfile === currentProfileId) {
         debugProfileSwitch("ALREADY_CURRENT_IGNORED", targetProfile);
         return;
       }
-      enqueueProfileSwitch(targetProfile, true);
+      executeSwitch(targetProfile, true);
     },
-    [enqueueProfileSwitch, currentProfileId, switchingProfileId],
+    [currentProfileId, executeSwitch, isSwitching],
   );
 
   useEffect(() => {
-    if (current) {
-      mutateProfiles();
-      enqueueProfileSwitch(current, false);
+    if (!current) return;
+    if (isSwitching) {
+      pendingProfileRef.current = current;
+      return;
     }
-  }, [current, enqueueProfileSwitch, mutateProfiles]);
+    if (current === currentProfileId) return;
+    executeSwitch(current, false);
+  }, [current, currentProfileId, executeSwitch, isSwitching]);
+
+  useEffect(() => {
+    let mounted = true;
+    const panicListener = listen<RustPanicPayload>("rust-panic", (event) => {
+      if (!mounted) return;
+      const payload = event.payload;
+      if (!payload) return;
+      showNotice(
+        "error",
+        `Rust panic: ${payload.message} @ ${payload.location}`,
+      );
+      console.error("Rust panic reported from backend:", payload);
+    });
+    return () => {
+      mounted = false;
+      panicListener.then((unlisten) => unlisten()).catch(() => {});
+    };
+  }, [t]);
 
   const onEnhance = useLockFn(async (notifySuccess: boolean) => {
     if (switchingProfileId) {

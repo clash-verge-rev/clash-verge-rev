@@ -23,9 +23,11 @@ pub enum FrontendEvent {
     ProxiesUpdated { payload: serde_json::Value },
     NoticeMessage { status: String, message: String },
     ProfileChanged { current_profile_id: String },
+    ProfileSwitchFinished { profile_id: String, success: bool },
     TimerUpdated { profile_index: String },
     ProfileUpdateStarted { uid: String },
     ProfileUpdateCompleted { uid: String },
+    RustPanic { message: String, location: String },
 }
 
 #[derive(Debug, Default)]
@@ -167,6 +169,13 @@ impl NotificationSystem {
             FrontendEvent::ProfileChanged { current_profile_id } => {
                 ("profile-changed", Ok(json!(current_profile_id)))
             }
+            FrontendEvent::ProfileSwitchFinished {
+                profile_id,
+                success,
+            } => (
+                "profile-switch-finished",
+                Ok(json!({ "profileId": profile_id, "success": success })),
+            ),
             FrontendEvent::TimerUpdated { profile_index } => {
                 ("verge://timer-updated", Ok(json!(profile_index)))
             }
@@ -176,6 +185,10 @@ impl NotificationSystem {
             FrontendEvent::ProfileUpdateCompleted { uid } => {
                 ("profile-update-completed", Ok(json!({ "uid": uid })))
             }
+            FrontendEvent::RustPanic { message, location } => (
+                "rust-panic",
+                Ok(json!({ "message": message, "location": location })),
+            ),
         }
     }
 
@@ -201,10 +214,19 @@ impl NotificationSystem {
         }
 
         if let Some(sender) = &self.sender {
-            sender.send(event).is_ok()
-        } else {
-            false
+            if sender.send(event).is_err() {
+                logging!(
+                    warn,
+                    Type::Frontend,
+                    "Failed to send event to worker thread"
+                );
+                self.handle_emit_error();
+                return false;
+            }
+            return true;
         }
+
+        false
     }
 
     pub fn shutdown(&mut self) {

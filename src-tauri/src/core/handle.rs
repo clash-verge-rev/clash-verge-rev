@@ -100,6 +100,17 @@ impl Handle {
         });
     }
 
+    pub fn notify_profile_switch_finished(profile_id: String, success: bool) {
+        Self::send_event(FrontendEvent::ProfileSwitchFinished {
+            profile_id,
+            success,
+        });
+    }
+
+    pub fn notify_rust_panic(message: String, location: String) {
+        Self::send_event(FrontendEvent::RustPanic { message, location });
+    }
+
     pub fn notify_timer_updated(profile_index: String) {
         Self::send_event(FrontendEvent::TimerUpdated { profile_index });
     }

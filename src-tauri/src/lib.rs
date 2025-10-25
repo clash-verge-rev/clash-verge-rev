@@ -192,6 +192,7 @@ mod app_init {
             cmd::get_profiles,
             cmd::enhance_profiles,
             cmd::patch_profiles_config,
+            cmd::switch_profile,
             cmd::view_profile,
             cmd::patch_profile,
             cmd::create_profile,
@@ -355,6 +356,28 @@ pub fn run() {
             }
         }
     }
+
+    std::panic::set_hook(Box::new(|info| {
+        let payload = info
+            .payload()
+            .downcast_ref::<&'static str>()
+            .map(|s| (*s).to_string())
+            .or_else(|| info.payload().downcast_ref::<String>().cloned())
+            .unwrap_or_else(|| "Unknown panic".to_string());
+        let location = info
+            .location()
+            .map(|loc| format!("{}:{}", loc.file(), loc.line()))
+            .unwrap_or_else(|| "unknown location".to_string());
+
+        logging!(
+            error,
+            Type::System,
+            "Rust panic captured: {} @ {}",
+            payload,
+            location
+        );
+        handle::Handle::notify_rust_panic(payload.into(), location.into());
+    }));
 
     #[cfg(feature = "clippy")]
     let context = tauri::test::mock_context(tauri::test::noop_assets());
