@@ -1,9 +1,6 @@
 use super::{
     CmdResult,
-    state::{
-        CURRENT_REQUEST_SEQUENCE, CURRENT_SWITCHING_PROFILE, SWITCH_CLEANUP_TIMEOUT,
-        SWITCH_JOB_TIMEOUT, SWITCH_MUTEX, SwitchRequest, SwitchScope,
-    },
+    state::{SWITCH_CLEANUP_TIMEOUT, SWITCH_JOB_TIMEOUT, SwitchManager, SwitchRequest, manager},
     validation::validate_switch_request,
 };
 use crate::cmd::StringifyErr;
@@ -16,15 +13,35 @@ use crate::{
 };
 use futures::FutureExt;
 use serde_yaml_ng as serde_yaml;
-use std::{any::Any, panic::AssertUnwindSafe, sync::atomic::Ordering, time::Duration};
-use tokio::{fs as tokio_fs, sync::Mutex, time};
+use smartstring::alias::String as SmartString;
+use std::{any::Any, panic::AssertUnwindSafe, time::Duration};
+use tokio::{fs as tokio_fs, time};
 
-pub(super) async fn run_switch_job(mutex: &'static Mutex<()>, request: &SwitchRequest) -> bool {
-    let profile_id = request.profile_id.clone();
-    let task_id = request.task_id;
-    let notify = request.notify;
+pub(super) async fn run_switch_job(
+    manager: &'static SwitchManager,
+    request: SwitchRequest,
+) -> bool {
+    if request.cancel_token().is_cancelled() {
+        logging!(
+            info,
+            Type::Cmd,
+            "Switch task {} cancelled before validation",
+            request.task_id()
+        );
+        handle::Handle::notify_profile_switch_finished(
+            request.profile_id().clone(),
+            false,
+            request.notify(),
+            request.task_id(),
+        );
+        return false;
+    }
 
-    if let Err(err) = validate_switch_request(task_id, &profile_id).await {
+    let profile_id = request.profile_id().clone();
+    let task_id = request.task_id();
+    let notify = request.notify();
+
+    if let Err(err) = validate_switch_request(task_id, profile_id.as_str()).await {
         logging!(
             warn,
             Type::Cmd,
@@ -47,13 +64,17 @@ pub(super) async fn run_switch_job(mutex: &'static Mutex<()>, request: &SwitchRe
         notify
     );
 
-    let profile_for_patch = profile_id.clone();
+    let request_clone = request.clone();
     let pipeline = async move {
-        let _guard = mutex.lock().await;
-        patch_profiles_config_internal(IProfiles {
-            current: Some(profile_for_patch),
-            items: None,
-        })
+        let _core_guard = manager.core_mutex().lock().await;
+        patch_profiles_config_internal(
+            manager,
+            Some(&request_clone),
+            IProfiles {
+                current: Some(request_clone.profile_id().clone()),
+                items: None,
+            },
+        )
         .await
     };
 
@@ -148,13 +169,17 @@ pub(super) async fn run_switch_job(mutex: &'static Mutex<()>, request: &SwitchRe
 }
 
 pub(super) async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
-    let mutex = SWITCH_MUTEX.get_or_init(|| Mutex::new(()));
-    let _guard = mutex.lock().await;
-    patch_profiles_config_internal(profiles).await
+    let manager = manager();
+    let _core_guard = manager.core_mutex().lock().await;
+    patch_profiles_config_internal(manager, None, profiles).await
 }
 
-async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> {
-    if CURRENT_SWITCHING_PROFILE.load(Ordering::SeqCst) {
+async fn patch_profiles_config_internal(
+    manager: &'static SwitchManager,
+    request_ctx: Option<&SwitchRequest>,
+    profiles: IProfiles,
+) -> CmdResult<bool> {
+    if manager.is_switching() {
         logging!(
             info,
             Type::Cmd,
@@ -162,10 +187,22 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
         );
         return Ok(false);
     }
-    let _switch_guard = SwitchScope::begin();
 
-    let current_sequence = CURRENT_REQUEST_SEQUENCE.fetch_add(1, Ordering::SeqCst) + 1;
-    let target_profile = profiles.current.clone();
+    if let Some(req) = request_ctx
+        && req.cancel_token().is_cancelled()
+    {
+        return Ok(false);
+    }
+
+    let _switch_guard = manager.begin_switch();
+
+    let current_sequence = manager.next_request_sequence();
+    let mut target_profile = profiles.current.clone();
+    if target_profile.is_none()
+        && let Some(req) = request_ctx
+    {
+        target_profile = Some(req.profile_id().clone());
+    }
 
     logging!(
         info,
@@ -175,134 +212,46 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
         target_profile
     );
 
-    let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-    if current_sequence < latest_sequence {
+    if current_sequence < manager.latest_request_sequence() {
         logging!(
             info,
             Type::Cmd,
             "Detected a newer request after acquiring the lock (sequence: {} < {}), abandoning current request",
             current_sequence,
-            latest_sequence
+            manager.latest_request_sequence()
         );
         return Ok(false);
     }
 
-    let current_profile = Config::profiles().await.latest_ref().current.clone();
+    let current_profile = {
+        let profiles_guard = Config::profiles().await;
+        profiles_guard.latest_ref().current.clone()
+    };
     logging!(info, Type::Cmd, "Current profile: {:?}", current_profile);
 
-    if let Some(new_profile) = profiles.current.as_ref()
+    if let Some(new_profile) = target_profile.as_ref()
         && current_profile.as_ref() != Some(new_profile)
     {
         logging!(info, Type::Cmd, "Switching to new profile: {}", new_profile);
 
-        let config_file_result = {
-            let profiles_config = Config::profiles().await;
-            let profiles_data = profiles_config.latest_ref();
-            match profiles_data.get_item(new_profile) {
-                Ok(item) => {
-                    if let Some(file) = &item.file {
-                        let path = dirs::app_profiles_dir().map(|dir| dir.join(file.as_str()));
-                        path.ok()
-                    } else {
-                        None
-                    }
-                }
-                Err(e) => {
-                    logging!(
-                        error,
-                        Type::Cmd,
-                        "Failed to load target profile metadata: {}",
-                        e
-                    );
-                    None
-                }
-            }
-        };
+        if let Some(req) = request_ctx
+            && req.cancel_token().is_cancelled()
+        {
+            return Ok(false);
+        }
 
-        if let Some(file_path) = config_file_result {
-            if !file_path.exists() {
-                logging!(
-                    error,
-                    Type::Cmd,
-                    "Target profile file does not exist: {}",
-                    file_path.display()
-                );
-                handle::Handle::notice_message(
-                    "config_validate::file_not_found",
-                    format!("{}", file_path.display()),
-                );
-                return Ok(false);
-            }
-
-            let file_read_result =
-                time::timeout(Duration::from_secs(5), tokio_fs::read_to_string(&file_path)).await;
-
-            match file_read_result {
-                Ok(Ok(content)) => {
-                    let yaml_parse_result = AsyncHandler::spawn_blocking(move || {
-                        serde_yaml::from_str::<serde_yaml::Value>(&content)
-                    })
-                    .await;
-
-                    match yaml_parse_result {
-                        Ok(Ok(_)) => {
-                            logging!(info, Type::Cmd, "Target profile YAML syntax is valid");
-                        }
-                        Ok(Err(err)) => {
-                            let error_msg = format!(" {err}");
-                            logging!(
-                                error,
-                                Type::Cmd,
-                                "Target profile contains YAML syntax errors: {}",
-                                error_msg
-                            );
-                            handle::Handle::notice_message(
-                                "config_validate::yaml_syntax_error",
-                                error_msg.clone(),
-                            );
-                            return Ok(false);
-                        }
-                        Err(join_err) => {
-                            let error_msg = format!("YAML parsing task failed: {join_err}");
-                            logging!(error, Type::Cmd, "{}", error_msg);
-                            handle::Handle::notice_message(
-                                "config_validate::yaml_parse_error",
-                                error_msg.clone(),
-                            );
-                            return Ok(false);
-                        }
-                    }
-                }
-                Ok(Err(err)) => {
-                    let error_msg = format!("Failed to read target profile file: {err}");
-                    logging!(error, Type::Cmd, "{}", error_msg);
-                    handle::Handle::notice_message(
-                        "config_validate::file_read_error",
-                        error_msg.clone(),
-                    );
-                    return Ok(false);
-                }
-                Err(_) => {
-                    let error_msg = "Timed out reading profile file (5s)".to_string();
-                    logging!(error, Type::Cmd, "{}", error_msg);
-                    handle::Handle::notice_message(
-                        "config_validate::file_read_timeout",
-                        error_msg.clone(),
-                    );
-                    return Ok(false);
-                }
-            }
+        if !validate_profile_yaml(new_profile).await? {
+            return Ok(false);
         }
     }
 
-    let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-    if current_sequence < latest_sequence {
+    if current_sequence < manager.latest_request_sequence() {
         logging!(
             info,
             Type::Cmd,
             "Detected a newer request before core operation (sequence: {} < {}), abandoning current request",
             current_sequence,
-            latest_sequence
+            manager.latest_request_sequence()
         );
         return Ok(false);
     }
@@ -315,17 +264,15 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
     );
 
     let current_value = profiles.current.clone();
-
     let _ = Config::profiles().await.draft_mut().patch_config(profiles);
 
-    let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-    if current_sequence < latest_sequence {
+    if current_sequence < manager.latest_request_sequence() {
         logging!(
             info,
             Type::Cmd,
             "Detected a newer request before core interaction (sequence: {} < {}), abandoning current request",
             current_sequence,
-            latest_sequence
+            manager.latest_request_sequence()
         );
         Config::profiles().await.discard();
         return Ok(false);
@@ -345,14 +292,13 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
 
     match update_result {
         Ok(Ok((true, _))) => {
-            let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-            if current_sequence < latest_sequence {
+            if current_sequence < manager.latest_request_sequence() {
                 logging!(
                     info,
                     Type::Cmd,
                     "Detected a newer request after core operation (sequence: {} < {}), ignoring current result",
                     current_sequence,
-                    latest_sequence
+                    manager.latest_request_sequence()
                 );
                 Config::profiles().await.discard();
                 return Ok(false);
@@ -394,7 +340,7 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
                 );
             }
 
-            if let Some(current) = &current_value {
+            if let Some(current) = current_value {
                 logging!(
                     info,
                     Type::Cmd,
@@ -402,10 +348,9 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
                     current,
                     current_sequence
                 );
-                handle::Handle::notify_profile_changed(current.clone());
+                handle::Handle::notify_profile_changed(current);
             }
 
-            CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
             Ok(true)
         }
         Ok(Ok((false, error_msg))) => {
@@ -416,44 +361,8 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
                 error_msg
             );
             Config::profiles().await.discard();
-            if let Some(prev_profile) = current_profile {
-                logging!(
-                    info,
-                    Type::Cmd,
-                    "Attempting to restore previous configuration: {}",
-                    prev_profile
-                );
-                let restore_profiles = IProfiles {
-                    current: Some(prev_profile),
-                    items: None,
-                };
-                Config::profiles()
-                    .await
-                    .draft_mut()
-                    .patch_config(restore_profiles)
-                    .stringify_err()?;
-                Config::profiles().await.apply();
-
-                AsyncHandler::spawn(|| async move {
-                    if let Err(e) = profiles_save_file_safe().await {
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Failed to persist restored configuration asynchronously: {}",
-                            e
-                        );
-                    }
-                });
-
-                logging!(
-                    info,
-                    Type::Cmd,
-                    "Successfully restored previous configuration"
-                );
-            }
-
+            restore_previous_profile(current_profile).await?;
             handle::Handle::notice_message("config_validate::error", error_msg.to_string());
-            CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
             Ok(false)
         }
         Ok(Err(e)) => {
@@ -467,7 +376,6 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
             Config::profiles().await.discard();
             handle::Handle::notice_message("config_validate::boot_error", e.to_string());
 
-            CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
             Ok(false)
         }
         Err(_) => {
@@ -480,35 +388,143 @@ async fn patch_profiles_config_internal(profiles: IProfiles) -> CmdResult<bool> 
                 current_sequence
             );
             Config::profiles().await.discard();
-
-            if let Some(prev_profile) = current_profile {
-                logging!(
-                    info,
-                    Type::Cmd,
-                    "Attempting to restore previous configuration after timeout: {}, sequence: {}",
-                    prev_profile,
-                    current_sequence
-                );
-                let restore_profiles = IProfiles {
-                    current: Some(prev_profile),
-                    items: None,
-                };
-                Config::profiles()
-                    .await
-                    .draft_mut()
-                    .patch_config(restore_profiles)
-                    .stringify_err()?;
-                Config::profiles().await.apply();
-            }
-
+            restore_previous_profile(current_profile).await?;
             handle::Handle::notice_message("config_validate::timeout", timeout_msg);
-            CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
             Ok(false)
         }
     }
 }
 
-async fn close_connections_after_switch(profile_id: &str) {
+async fn validate_profile_yaml(profile: &SmartString) -> CmdResult<bool> {
+    let file_path = {
+        let profiles_guard = Config::profiles().await;
+        let profiles_data = profiles_guard.latest_ref();
+        match profiles_data.get_item(profile) {
+            Ok(item) => item.file.as_ref().and_then(|file| {
+                dirs::app_profiles_dir()
+                    .ok()
+                    .map(|dir| dir.join(file.as_str()))
+            }),
+            Err(e) => {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Failed to load target profile metadata: {}",
+                    e
+                );
+                return Ok(false);
+            }
+        }
+    };
+
+    let Some(path) = file_path else {
+        return Ok(true);
+    };
+
+    if !path.exists() {
+        logging!(
+            error,
+            Type::Cmd,
+            "Target profile file does not exist: {}",
+            path.display()
+        );
+        handle::Handle::notice_message(
+            "config_validate::file_not_found",
+            format!("{}", path.display()),
+        );
+        return Ok(false);
+    }
+
+    let file_read_result =
+        time::timeout(Duration::from_secs(5), tokio_fs::read_to_string(&path)).await;
+
+    match file_read_result {
+        Ok(Ok(content)) => {
+            let yaml_parse_result = AsyncHandler::spawn_blocking(move || {
+                serde_yaml::from_str::<serde_yaml::Value>(&content)
+            })
+            .await;
+
+            match yaml_parse_result {
+                Ok(Ok(_)) => {
+                    logging!(info, Type::Cmd, "Target profile YAML syntax is valid");
+                    Ok(true)
+                }
+                Ok(Err(err)) => {
+                    let error_msg = format!(" {err}");
+                    logging!(
+                        error,
+                        Type::Cmd,
+                        "Target profile contains YAML syntax errors: {}",
+                        error_msg
+                    );
+                    handle::Handle::notice_message(
+                        "config_validate::yaml_syntax_error",
+                        error_msg.clone(),
+                    );
+                    Ok(false)
+                }
+                Err(join_err) => {
+                    let error_msg = format!("YAML parsing task failed: {join_err}");
+                    logging!(error, Type::Cmd, "{}", error_msg);
+                    handle::Handle::notice_message(
+                        "config_validate::yaml_parse_error",
+                        error_msg.clone(),
+                    );
+                    Ok(false)
+                }
+            }
+        }
+        Ok(Err(err)) => {
+            let error_msg = format!("Failed to read target profile file: {err}");
+            logging!(error, Type::Cmd, "{}", error_msg);
+            handle::Handle::notice_message("config_validate::file_read_error", error_msg.clone());
+            Ok(false)
+        }
+        Err(_) => {
+            let error_msg = "Timed out reading profile file (5s)".to_string();
+            logging!(error, Type::Cmd, "{}", error_msg);
+            handle::Handle::notice_message("config_validate::file_read_timeout", error_msg.clone());
+            Err(error_msg.into())
+        }
+    }
+}
+
+async fn restore_previous_profile(previous: Option<SmartString>) -> CmdResult<()> {
+    if let Some(prev_profile) = previous {
+        logging!(
+            info,
+            Type::Cmd,
+            "Attempting to restore previous configuration: {}",
+            prev_profile
+        );
+        let restore_profiles = IProfiles {
+            current: Some(prev_profile),
+            items: None,
+        };
+        Config::profiles()
+            .await
+            .draft_mut()
+            .patch_config(restore_profiles)
+            .stringify_err()?;
+        Config::profiles().await.apply();
+
+        AsyncHandler::spawn(|| async move {
+            if let Err(e) = profiles_save_file_safe().await {
+                logging!(
+                    warn,
+                    Type::Cmd,
+                    "Failed to persist restored configuration asynchronously: {}",
+                    e
+                );
+            }
+        });
+    }
+
+    Ok(())
+}
+
+async fn close_connections_after_switch(profile_id: &SmartString) {
     match time::timeout(SWITCH_CLEANUP_TIMEOUT, async {
         handle::Handle::mihomo().await.close_all_connections().await
     })
