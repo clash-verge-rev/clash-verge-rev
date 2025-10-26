@@ -6,7 +6,7 @@ use super::{
 use crate::cmd::StringifyErr;
 use crate::{
     config::{Config, IProfiles, profiles::profiles_save_file_safe},
-    core::{CoreManager, handle, tray::Tray},
+    core::handle,
     logging,
     process::AsyncHandler,
     utils::{dirs, logging::Type},
@@ -16,6 +16,10 @@ use serde_yaml_ng as serde_yaml;
 use smartstring::alias::String as SmartString;
 use std::{any::Any, panic::AssertUnwindSafe, time::Duration};
 use tokio::{fs as tokio_fs, time};
+
+mod state_machine;
+
+use state_machine::SwitchStateMachine;
 
 pub(super) async fn run_switch_job(
     manager: &'static SwitchManager,
@@ -64,17 +68,18 @@ pub(super) async fn run_switch_job(
         notify
     );
 
-    let request_clone = request.clone();
+    let pipeline_request = request;
     let pipeline = async move {
-        let _core_guard = manager.core_mutex().lock().await;
-        patch_profiles_config_internal(
+        let target_profile = pipeline_request.profile_id().clone();
+        SwitchStateMachine::new(
             manager,
-            Some(&request_clone),
+            Some(pipeline_request),
             IProfiles {
-                current: Some(request_clone.profile_id().clone()),
+                current: Some(target_profile),
                 items: None,
             },
         )
+        .run()
         .await
     };
 
@@ -169,233 +174,12 @@ pub(super) async fn run_switch_job(
 }
 
 pub(super) async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
-    let manager = manager();
-    let _core_guard = manager.core_mutex().lock().await;
-    patch_profiles_config_internal(manager, None, profiles).await
+    SwitchStateMachine::new(manager(), None, profiles)
+        .run()
+        .await
 }
 
-async fn patch_profiles_config_internal(
-    manager: &'static SwitchManager,
-    request_ctx: Option<&SwitchRequest>,
-    profiles: IProfiles,
-) -> CmdResult<bool> {
-    if manager.is_switching() {
-        logging!(
-            info,
-            Type::Cmd,
-            "Profile switch already in progress; skipping request"
-        );
-        return Ok(false);
-    }
-
-    if let Some(req) = request_ctx
-        && req.cancel_token().is_cancelled()
-    {
-        return Ok(false);
-    }
-
-    let _switch_guard = manager.begin_switch();
-
-    let current_sequence = manager.next_request_sequence();
-    let mut target_profile = profiles.current.clone();
-    if target_profile.is_none()
-        && let Some(req) = request_ctx
-    {
-        target_profile = Some(req.profile_id().clone());
-    }
-
-    logging!(
-        info,
-        Type::Cmd,
-        "Begin modifying configuration; sequence: {}, target profile: {:?}",
-        current_sequence,
-        target_profile
-    );
-
-    if current_sequence < manager.latest_request_sequence() {
-        logging!(
-            info,
-            Type::Cmd,
-            "Detected a newer request after acquiring the lock (sequence: {} < {}), abandoning current request",
-            current_sequence,
-            manager.latest_request_sequence()
-        );
-        return Ok(false);
-    }
-
-    let current_profile = {
-        let profiles_guard = Config::profiles().await;
-        profiles_guard.latest_ref().current.clone()
-    };
-    logging!(info, Type::Cmd, "Current profile: {:?}", current_profile);
-
-    if let Some(new_profile) = target_profile.as_ref()
-        && current_profile.as_ref() != Some(new_profile)
-    {
-        logging!(info, Type::Cmd, "Switching to new profile: {}", new_profile);
-
-        if let Some(req) = request_ctx
-            && req.cancel_token().is_cancelled()
-        {
-            return Ok(false);
-        }
-
-        if !validate_profile_yaml(new_profile).await? {
-            return Ok(false);
-        }
-    }
-
-    if current_sequence < manager.latest_request_sequence() {
-        logging!(
-            info,
-            Type::Cmd,
-            "Detected a newer request before core operation (sequence: {} < {}), abandoning current request",
-            current_sequence,
-            manager.latest_request_sequence()
-        );
-        return Ok(false);
-    }
-
-    logging!(
-        info,
-        Type::Cmd,
-        "Updating configuration draft, sequence: {}",
-        current_sequence
-    );
-
-    let current_value = profiles.current.clone();
-    let _ = Config::profiles().await.draft_mut().patch_config(profiles);
-
-    if current_sequence < manager.latest_request_sequence() {
-        logging!(
-            info,
-            Type::Cmd,
-            "Detected a newer request before core interaction (sequence: {} < {}), abandoning current request",
-            current_sequence,
-            manager.latest_request_sequence()
-        );
-        Config::profiles().await.discard();
-        return Ok(false);
-    }
-
-    logging!(
-        info,
-        Type::Cmd,
-        "Starting core configuration update, sequence: {}",
-        current_sequence
-    );
-    let update_result = time::timeout(
-        Duration::from_secs(30),
-        CoreManager::global().update_config(),
-    )
-    .await;
-
-    match update_result {
-        Ok(Ok((true, _))) => {
-            if current_sequence < manager.latest_request_sequence() {
-                logging!(
-                    info,
-                    Type::Cmd,
-                    "Detected a newer request after core operation (sequence: {} < {}), ignoring current result",
-                    current_sequence,
-                    manager.latest_request_sequence()
-                );
-                Config::profiles().await.discard();
-                return Ok(false);
-            }
-
-            logging!(
-                info,
-                Type::Cmd,
-                "Configuration update succeeded, sequence: {}",
-                current_sequence
-            );
-            Config::profiles().await.apply();
-            handle::Handle::refresh_clash();
-
-            if let Err(e) = Tray::global().update_tooltip().await {
-                logging!(
-                    warn,
-                    Type::Cmd,
-                    "Failed to update tray tooltip asynchronously: {}",
-                    e
-                );
-            }
-
-            if let Err(e) = Tray::global().update_menu().await {
-                logging!(
-                    warn,
-                    Type::Cmd,
-                    "Failed to update tray menu asynchronously: {}",
-                    e
-                );
-            }
-
-            if let Err(e) = profiles_save_file_safe().await {
-                logging!(
-                    warn,
-                    Type::Cmd,
-                    "Failed to persist configuration file asynchronously: {}",
-                    e
-                );
-            }
-
-            if let Some(current) = current_value {
-                logging!(
-                    info,
-                    Type::Cmd,
-                    "Emitting configuration change event to frontend: {}, sequence: {}",
-                    current,
-                    current_sequence
-                );
-                handle::Handle::notify_profile_changed(current);
-            }
-
-            Ok(true)
-        }
-        Ok(Ok((false, error_msg))) => {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Configuration validation failed: {}",
-                error_msg
-            );
-            Config::profiles().await.discard();
-            restore_previous_profile(current_profile).await?;
-            handle::Handle::notice_message("config_validate::error", error_msg.to_string());
-            Ok(false)
-        }
-        Ok(Err(e)) => {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Error occurred during update: {}, sequence: {}",
-                e,
-                current_sequence
-            );
-            Config::profiles().await.discard();
-            handle::Handle::notice_message("config_validate::boot_error", e.to_string());
-
-            Ok(false)
-        }
-        Err(_) => {
-            let timeout_msg = "Configuration update timed out (30s); possible validation or core communication stall";
-            logging!(
-                error,
-                Type::Cmd,
-                "{}, sequence: {}",
-                timeout_msg,
-                current_sequence
-            );
-            Config::profiles().await.discard();
-            restore_previous_profile(current_profile).await?;
-            handle::Handle::notice_message("config_validate::timeout", timeout_msg);
-            Ok(false)
-        }
-    }
-}
-
-async fn validate_profile_yaml(profile: &SmartString) -> CmdResult<bool> {
+pub(super) async fn validate_profile_yaml(profile: &SmartString) -> CmdResult<bool> {
     let file_path = {
         let profiles_guard = Config::profiles().await;
         let profiles_data = profiles_guard.latest_ref();
@@ -490,7 +274,7 @@ async fn validate_profile_yaml(profile: &SmartString) -> CmdResult<bool> {
     }
 }
 
-async fn restore_previous_profile(previous: Option<SmartString>) -> CmdResult<()> {
+pub(super) async fn restore_previous_profile(previous: Option<SmartString>) -> CmdResult<()> {
     if let Some(prev_profile) = previous {
         logging!(
             info,
