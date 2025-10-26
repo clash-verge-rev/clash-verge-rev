@@ -30,7 +30,14 @@ import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useLockFn } from "ahooks";
 import { throttle } from "lodash-es";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
 import useSWR, { mutate } from "swr";
@@ -84,6 +91,148 @@ type RustPanicPayload = {
 type SwitchRequest = {
   profileId: string;
   notifySuccess: boolean;
+};
+
+type SwitchQueueEntry = SwitchRequest & { token: number };
+
+type SwitchQueueState = {
+  active: SwitchQueueEntry | null;
+  queue: SwitchQueueEntry[];
+  seq: number;
+  lastError: string | null;
+};
+
+type SwitchQueueAction =
+  | { type: "enqueue"; request: SwitchRequest }
+  | { type: "complete"; profileId: string }
+  | { type: "failure"; profileId: string; error: string }
+  | { type: "reset-error" };
+
+const initialSwitchQueueState: SwitchQueueState = {
+  active: null,
+  queue: [],
+  seq: 0,
+  lastError: null,
+};
+
+const promoteNext = (
+  queue: SwitchQueueEntry[],
+): { next: SwitchQueueEntry | null; rest: SwitchQueueEntry[] } => {
+  if (queue.length === 0) {
+    return { next: null, rest: [] };
+  }
+  const [next, ...rest] = queue;
+  return { next, rest };
+};
+
+const switchQueueReducer = (
+  state: SwitchQueueState,
+  action: SwitchQueueAction,
+): SwitchQueueState => {
+  switch (action.type) {
+    case "enqueue": {
+      const { request } = action;
+      if (state.active?.profileId === request.profileId) {
+        if (!state.active.notifySuccess && request.notifySuccess) {
+          return {
+            ...state,
+            active: { ...state.active, notifySuccess: true },
+          };
+        }
+        return state;
+      }
+
+      const filteredQueue = state.queue.filter(
+        (entry) => entry.profileId !== request.profileId,
+      );
+      const nextEntry: SwitchQueueEntry = {
+        ...request,
+        token: state.seq + 1,
+      };
+
+      if (!state.active) {
+        return {
+          active: nextEntry,
+          queue: filteredQueue,
+          seq: state.seq + 1,
+          lastError: null,
+        };
+      }
+
+      return {
+        ...state,
+        queue: [...filteredQueue, nextEntry],
+        seq: state.seq + 1,
+        lastError: null,
+      };
+    }
+    case "complete": {
+      if (state.active?.profileId === action.profileId) {
+        if (state.queue.length === 0) {
+          return {
+            ...state,
+            active: null,
+            lastError: null,
+          };
+        }
+        const [next, ...rest] = state.queue;
+        return {
+          ...state,
+          active: next,
+          queue: rest,
+          lastError: null,
+        };
+      }
+
+      return {
+        ...state,
+        queue: state.queue.filter(
+          (entry) => entry.profileId !== action.profileId,
+        ),
+      };
+    }
+    case "failure": {
+      const remainingQueue = state.queue.filter(
+        (entry) => entry.profileId !== action.profileId,
+      );
+
+      if (state.active?.profileId === action.profileId) {
+        const { next, rest } = promoteNext(remainingQueue);
+        return {
+          ...state,
+          active: next,
+          queue: rest,
+          lastError: action.error,
+        };
+      }
+
+      return {
+        ...state,
+        queue: remainingQueue,
+        lastError: action.error,
+      };
+    }
+    case "reset-error": {
+      if (!state.lastError) {
+        return state;
+      }
+      return {
+        ...state,
+        lastError: null,
+      };
+    }
+    default:
+      return state;
+  }
+};
+
+const getSwitchingProfileIds = (state: SwitchQueueState) => {
+  const ids = new Set<string>();
+  if (state.active) {
+    ids.add(state.active.profileId);
+  }
+  state.queue.forEach((entry) => ids.add(entry.profileId));
+  return Array.from(ids);
 };
 
 const normalizeProfileUrl = (value?: string) => {
@@ -202,8 +351,23 @@ const ProfilePage = () => {
   const { addListener } = useListen();
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-  const [activatings, setActivatings] = useState<string[]>([]);
+  const [manualActivatings, setManualActivatings] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [switchState, dispatchSwitch] = useReducer(
+    switchQueueReducer,
+    initialSwitchQueueState,
+  );
+  const switchingProfileId = switchState.active?.profileId ?? null;
+  const switchCommandTokenRef = useRef<number | null>(null);
+  const switchActivatingIds = useMemo(
+    () => getSwitchingProfileIds(switchState),
+    [switchState],
+  );
+  const activatings = useMemo(() => {
+    const merged = new Set<string>(manualActivatings);
+    switchActivatingIds.forEach((id) => merged.add(id));
+    return Array.from(merged);
+  }, [manualActivatings, switchActivatingIds]);
 
   // Batch selection states
   const [batchMode, setBatchMode] = useState(false);
@@ -226,6 +390,22 @@ const ProfilePage = () => {
     error,
     isStale,
   } = useProfiles();
+  const activateSelectedRef = useRef(activateSelected);
+  const mutateProfilesRef = useRef(mutateProfiles);
+  const mutateLogsRef = useRef<(() => Promise<any> | void) | null>(null);
+  const tRef = useRef(t);
+
+  useEffect(() => {
+    activateSelectedRef.current = activateSelected;
+  }, [activateSelected]);
+
+  useEffect(() => {
+    mutateProfilesRef.current = mutateProfiles;
+  }, [mutateProfiles]);
+
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   useEffect(() => {
     const handleFileDrop = async () => {
@@ -295,6 +475,9 @@ const ProfilePage = () => {
     "getRuntimeLogs",
     getRuntimeLogs,
   );
+  useEffect(() => {
+    mutateLogsRef.current = mutateLogs;
+  }, [mutateLogs]);
 
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
@@ -493,66 +676,14 @@ const ProfilePage = () => {
     }
   };
 
-  const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(
-    null,
-  );
-  const activeSwitchRef = useRef<SwitchRequest | null>(null);
-  const pendingSwitchRef = useRef<SwitchRequest | null>(null);
-
-  const executeSwitch = useCallback(
-    async (targetProfile: string, notifySuccess: boolean) => {
-      const currentRequest = activeSwitchRef.current;
-      if (currentRequest?.profileId === targetProfile) {
-        if (currentRequest.notifySuccess !== notifySuccess) {
-          activeSwitchRef.current = { profileId: targetProfile, notifySuccess };
-        }
-        return;
-      }
-
-      activeSwitchRef.current = { profileId: targetProfile, notifySuccess };
-      setSwitchingProfileId(targetProfile);
-      setActivatings((prev) =>
-        prev.includes(targetProfile) ? prev : [...prev, targetProfile],
-      );
-
-      try {
-        const accepted = await switchProfileCommand(
-          targetProfile,
-          notifySuccess,
-        );
-        if (!accepted) {
-          throw new Error(t("Profile switch failed"));
-        }
-      } catch (error: any) {
-        if (activeSwitchRef.current?.profileId === targetProfile) {
-          activeSwitchRef.current = null;
-        }
-        setSwitchingProfileId((prev) => (prev === targetProfile ? null : prev));
-        setActivatings((prev) => prev.filter((id) => id !== targetProfile));
-        showNotice(
-          "error",
-          error?.message || error?.toString?.() || String(error),
-        );
-        await mutateProfiles();
-        const next = pendingSwitchRef.current;
-        pendingSwitchRef.current = null;
-        if (next) {
-          executeSwitch(next.profileId, next.notifySuccess);
-        }
-      }
-    },
-    [mutateProfiles, setActivatings, t],
-  );
-
   const enqueueSwitch = useCallback(
     (targetProfile: string, notifySuccess: boolean) => {
-      if (activeSwitchRef.current) {
-        pendingSwitchRef.current = { profileId: targetProfile, notifySuccess };
-        return;
-      }
-      executeSwitch(targetProfile, notifySuccess);
+      dispatchSwitch({
+        type: "enqueue",
+        request: { profileId: targetProfile, notifySuccess },
+      });
     },
-    [executeSwitch],
+    [dispatchSwitch],
   );
 
   useEffect(() => {
@@ -565,40 +696,27 @@ const ProfilePage = () => {
         if (!payload) return;
 
         const { profileId, success, notify } = payload;
+        setManualActivatings((prev) => prev.filter((id) => id !== profileId));
 
-        setActivatings((prev) => prev.filter((id) => id !== profileId));
-
-        const isActive = activeSwitchRef.current?.profileId === profileId;
-        if (isActive) {
-          activeSwitchRef.current = null;
-          setSwitchingProfileId((prev) => (prev === profileId ? null : prev));
-
-          if (success) {
-            await mutateLogs();
-            await activateSelected();
-            if (notify) {
-              showNotice("success", t("Profile Switched"), 1000);
-            }
-          } else {
-            showNotice("error", t("Profile switch failed"));
-          }
-
-          await mutateProfiles();
-
-          const next = pendingSwitchRef.current;
-          pendingSwitchRef.current = null;
-          if (next && next.profileId !== profileId) {
-            executeSwitch(next.profileId, next.notifySuccess);
+        if (success) {
+          dispatchSwitch({ type: "complete", profileId });
+          switchCommandTokenRef.current = null;
+          await mutateLogsRef.current?.();
+          await activateSelectedRef.current?.();
+          if (notify) {
+            showNotice("success", tRef.current("Profile Switched"), 1000);
           }
         } else {
-          if (!success) {
-            showNotice("error", t("Profile switch failed"));
-          }
-          if (pendingSwitchRef.current?.profileId === profileId) {
-            pendingSwitchRef.current = null;
-          }
-          await mutateProfiles();
+          dispatchSwitch({
+            type: "failure",
+            profileId,
+            error: tRef.current("Profile switch failed"),
+          });
+          switchCommandTokenRef.current = null;
+          showNotice("error", tRef.current("Profile switch failed"));
         }
+
+        await mutateProfilesRef.current?.();
       },
     );
 
@@ -606,21 +724,51 @@ const ProfilePage = () => {
       mounted = false;
       unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
     };
-  }, [
-    activateSelected,
-    enqueueSwitch,
-    executeSwitch,
-    mutateLogs,
-    mutateProfiles,
-    setActivatings,
-    t,
-  ]);
+  }, [dispatchSwitch, setManualActivatings]);
+
+  useEffect(() => {
+    const active = switchState.active;
+    if (!active) {
+      switchCommandTokenRef.current = null;
+      return;
+    }
+    if (switchCommandTokenRef.current === active.token) {
+      return;
+    }
+    switchCommandTokenRef.current = active.token;
+    let cancelled = false;
+    const runSwitch = async () => {
+      try {
+        const accepted = await switchProfileCommand(
+          active.profileId,
+          active.notifySuccess,
+        );
+        if (!accepted) {
+          throw new Error(t("Profile switch failed"));
+        }
+      } catch (error: any) {
+        if (cancelled) return;
+        const message = error?.message || error?.toString?.() || String(error);
+        showNotice("error", message);
+        dispatchSwitch({
+          type: "failure",
+          profileId: active.profileId,
+          error: message,
+        });
+        switchCommandTokenRef.current = null;
+        await mutateProfiles();
+      }
+    };
+
+    runSwitch();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatchSwitch, mutateProfiles, switchState.active, t]);
 
   const onSelect = useCallback(
     (targetProfile: string, force: boolean) => {
-      if (activeSwitchRef.current?.profileId === targetProfile) {
-        return;
-      }
       if (!force && targetProfile === currentProfileId) {
         debugProfileSwitch("ALREADY_CURRENT_IGNORED", targetProfile);
         return;
@@ -632,13 +780,10 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (!current) return;
-    if (activeSwitchRef.current) {
-      pendingSwitchRef.current = { profileId: current, notifySuccess: false };
-      return;
-    }
     if (current === currentProfileId) return;
+    if (switchActivatingIds.includes(current)) return;
     enqueueSwitch(current, false);
-  }, [current, currentProfileId, enqueueSwitch]);
+  }, [current, currentProfileId, enqueueSwitch, switchActivatingIds]);
 
   useEffect(() => {
     let mounted = true;
@@ -667,7 +812,7 @@ const ProfilePage = () => {
     }
 
     const currentProfiles = currentActivatings();
-    setActivatings((prev) => [...new Set([...prev, ...currentProfiles])]);
+    setManualActivatings((prev) => [...new Set([...prev, ...currentProfiles])]);
 
     try {
       await enhanceProfiles();
@@ -678,19 +823,14 @@ const ProfilePage = () => {
     } catch (err: any) {
       showNotice("error", err.message || err.toString(), 3000);
     } finally {
-      // Keep the switching profile active and clear other states
-      setActivatings((prev) =>
-        switchingProfileId
-          ? prev.filter((id) => id === switchingProfileId)
-          : [],
-      );
+      setManualActivatings([]);
     }
   });
 
   const onDelete = useLockFn(async (uid: string) => {
     const current = profiles.current === uid;
     try {
-      setActivatings([...(current ? currentActivatings() : []), uid]);
+      setManualActivatings([...(current ? currentActivatings() : []), uid]);
       await deleteProfile(uid);
       mutateProfiles();
       mutateLogs();
@@ -700,7 +840,7 @@ const ProfilePage = () => {
     } catch (err: any) {
       showNotice("error", err?.message || err.toString());
     } finally {
-      setActivatings([]);
+      setManualActivatings([]);
     }
   });
 
@@ -795,7 +935,9 @@ const ProfilePage = () => {
           ? [profiles.current]
           : [];
 
-      setActivatings((prev) => [...new Set([...prev, ...currentActivating])]);
+      setManualActivatings((prev) => [
+        ...new Set([...prev, ...currentActivating]),
+      ]);
 
       // Delete all selected profiles
       for (const uid of selectedProfiles) {
@@ -818,7 +960,7 @@ const ProfilePage = () => {
     } catch (err: any) {
       showNotice("error", err?.message || err.toString());
     } finally {
-      setActivatings([]);
+      setManualActivatings([]);
     }
   });
 
