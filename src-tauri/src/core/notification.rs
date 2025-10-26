@@ -34,6 +34,7 @@ pub enum FrontendEvent {
         profile_id: String,
         success: bool,
         notify: bool,
+        task_id: u64,
     },
     TimerUpdated {
         profile_index: String,
@@ -193,9 +194,15 @@ impl NotificationSystem {
                 profile_id,
                 success,
                 notify,
+                task_id,
             } => (
                 "profile-switch-finished",
-                Ok(json!({ "profileId": profile_id, "success": success, "notify": notify })),
+                Ok(json!({
+                    "profileId": profile_id,
+                    "success": success,
+                    "notify": notify,
+                    "taskId": task_id
+                })),
             ),
             FrontendEvent::TimerUpdated { profile_index } => {
                 ("verge://timer-updated", Ok(json!(profile_index)))

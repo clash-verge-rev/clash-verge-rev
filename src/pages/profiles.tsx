@@ -81,6 +81,7 @@ type ProfileSwitchFinishedPayload = {
   profileId: string;
   success: boolean;
   notify: boolean;
+  taskId: number;
 };
 
 type RustPanicPayload = {
@@ -695,7 +696,12 @@ const ProfilePage = () => {
         const payload = event.payload;
         if (!payload) return;
 
-        const { profileId, success, notify } = payload;
+        const { profileId, success, notify, taskId } = payload;
+        debugProfileSwitch("SWITCH_FINISHED", profileId, {
+          success,
+          taskId,
+          notify,
+        });
         setManualActivatings((prev) => prev.filter((id) => id !== profileId));
 
         if (success) {
