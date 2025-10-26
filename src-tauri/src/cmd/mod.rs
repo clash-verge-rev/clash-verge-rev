@@ -11,6 +11,7 @@ pub mod lightweight;
 pub mod media_unlock_checker;
 pub mod network;
 pub mod profile;
+mod profile_switch;
 pub mod proxy;
 pub mod runtime;
 pub mod save_profile;
