@@ -1,6 +1,7 @@
 use crate::{config::Config, utils::dirs};
 use once_cell::sync::Lazy;
 use serde_json::Value;
+use smartstring::alias::String;
 use std::{fs, path::PathBuf, sync::RwLock};
 use sys_locale;
 
