@@ -606,6 +606,7 @@ impl Tray {
     }
 }
 
+#[allow(clippy::cognitive_complexity)]
 async fn create_tray_menu(
     app_handle: &AppHandle,
     mode: Option<&str>,
