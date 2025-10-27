@@ -53,7 +53,7 @@
     "@tauri-apps/plugin-shell": "2.3.2",
     "@tauri-apps/plugin-updater": "2.9.0",
     "@types/json-schema": "^7.0.15",
-    "ahooks": "^3.9.5",
+    "ahooks": "^3.9.6",
     "axios": "^1.12.2",
     "dayjs": "1.11.18",
     "foxact": "^0.2.49",
@@ -80,7 +80,7 @@
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
-    "@eslint-react/eslint-plugin": "^2.2.3",
+    "@eslint-react/eslint-plugin": "^2.2.4",
     "@eslint/js": "^9.38.0",
     "@tauri-apps/cli": "2.9.1",
     "@types/js-yaml": "^4.0.9",
