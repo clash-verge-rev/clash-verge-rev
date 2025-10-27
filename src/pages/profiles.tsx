@@ -67,6 +67,7 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
+import { AsyncEventQueue, afterPaint } from "@/utils/asyncQueue";
 
 // Record profile switch state
 const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
@@ -346,13 +347,31 @@ const createImportLandingVerifier = (
   };
 };
 
+const isDev = import.meta.env.DEV;
+
 const ProfilePage = () => {
+  const switchEventQueue = useMemo(() => new AsyncEventQueue(), []);
+  const postSwitchEffectQueue = useMemo(() => new AsyncEventQueue(), []);
+  const mountedRef = useRef(false);
+
   const { t } = useTranslation();
   const location = useLocation();
   const { addListener } = useListen();
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
   const [manualActivatings, setManualActivatings] = useState<string[]>([]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      switchEventQueue.clear();
+      postSwitchEffectQueue.clear();
+      if (isDev) {
+        console.debug("[ProfileSwitch] component unmounted, queues cleared");
+      }
+    };
+  }, [postSwitchEffectQueue, switchEventQueue]);
   const [loading, setLoading] = useState(false);
   const [switchState, dispatchSwitch] = useReducer(
     switchQueueReducer,
@@ -393,6 +412,7 @@ const ProfilePage = () => {
   } = useProfiles();
   const activateSelectedRef = useRef(activateSelected);
   const mutateProfilesRef = useRef(mutateProfiles);
+  const profileMutateScheduledRef = useRef(false);
   const mutateLogsRef = useRef<(() => Promise<any> | void) | null>(null);
   const tRef = useRef(t);
 
@@ -479,6 +499,32 @@ const ProfilePage = () => {
   useEffect(() => {
     mutateLogsRef.current = mutateLogs;
   }, [mutateLogs]);
+
+  useEffect(() => {
+    activateSelectedRef.current = activateSelected;
+  }, [activateSelected]);
+
+  useEffect(() => {
+    mutateProfilesRef.current = mutateProfiles;
+  }, [mutateProfiles]);
+
+  const scheduleProfileMutate = useCallback(() => {
+    if (profileMutateScheduledRef.current) return;
+    if (!mountedRef.current) return;
+    profileMutateScheduledRef.current = true;
+    requestAnimationFrame(() => {
+      profileMutateScheduledRef.current = false;
+      const mutateProfilesFn = mutateProfilesRef.current;
+      if (mutateProfilesFn) {
+        void mutateProfilesFn();
+        if (isDev) {
+          console.debug(
+            "[ProfileSwitch] mutateProfiles executed from schedule",
+          );
+        }
+      }
+    });
+  }, []);
 
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
@@ -688,49 +734,117 @@ const ProfilePage = () => {
   );
 
   useEffect(() => {
-    let mounted = true;
     const unlistenPromise = listen<ProfileSwitchFinishedPayload>(
       "profile-switch-finished",
-      async (event) => {
-        if (!mounted) return;
+      (event) => {
         const payload = event.payload;
         if (!payload) return;
 
-        const { profileId, success, notify, taskId } = payload;
-        debugProfileSwitch("SWITCH_FINISHED", profileId, {
-          success,
-          taskId,
-          notify,
-        });
-        setManualActivatings((prev) => prev.filter((id) => id !== profileId));
+        const enqueueStart = isDev ? performance.now() : 0;
+        switchEventQueue.enqueue(() => {
+          if (!mountedRef.current) return;
 
-        if (success) {
-          dispatchSwitch({ type: "complete", profileId });
-          switchCommandTokenRef.current = null;
-          await mutateLogsRef.current?.();
-          await activateSelectedRef.current?.();
-          if (notify) {
-            showNotice("success", tRef.current("Profile Switched"), 1000);
-          }
-        } else {
-          dispatchSwitch({
-            type: "failure",
-            profileId,
-            error: tRef.current("Profile switch failed"),
+          const { profileId, success, notify, taskId } = payload;
+          debugProfileSwitch("SWITCH_FINISHED", profileId, {
+            success,
+            taskId,
+            notify,
           });
-          switchCommandTokenRef.current = null;
-          showNotice("error", tRef.current("Profile switch failed"));
-        }
 
-        await mutateProfilesRef.current?.();
+          setManualActivatings((prev) => prev.filter((id) => id !== profileId));
+
+          if (isDev) {
+            console.groupCollapsed(
+              `[ProfileSwitch] task ${taskId} (${profileId}) immediate phase`,
+            );
+            console.debug(
+              `[ProfileSwitch] queued after ${(performance.now() - enqueueStart).toFixed(1)}ms`,
+            );
+          }
+
+          if (success) {
+            dispatchSwitch({ type: "complete", profileId });
+            switchCommandTokenRef.current = null;
+
+            postSwitchEffectQueue.enqueue(async () => {
+              const phaseStart = isDev ? performance.now() : 0;
+              const operations: Promise<unknown>[] = [];
+              const mutateLogs = mutateLogsRef.current;
+              if (mutateLogs) {
+                operations.push(Promise.resolve(mutateLogs()));
+              }
+              const activateSelected = activateSelectedRef.current;
+              if (activateSelected) {
+                operations.push(Promise.resolve(activateSelected()));
+              }
+
+              if (operations.length > 0) {
+                await Promise.allSettled(operations);
+                if (isDev) {
+                  console.debug(
+                    `[ProfileSwitch] task ${taskId} settled ${operations.length} operations in ${(performance.now() - phaseStart).toFixed(1)}ms`,
+                  );
+                }
+              }
+
+              if (notify) {
+                await afterPaint();
+                showNotice("success", tRef.current("Profile Switched"), 1000);
+                if (isDev) {
+                  console.debug(
+                    `[ProfileSwitch] task ${taskId} notice rendered after ${(performance.now() - phaseStart).toFixed(1)}ms`,
+                  );
+                }
+              }
+
+              scheduleProfileMutate();
+              if (isDev) {
+                console.debug(
+                  `[ProfileSwitch] task ${taskId} success post phase ${(performance.now() - phaseStart).toFixed(1)}ms`,
+                );
+              }
+            });
+          } else {
+            dispatchSwitch({
+              type: "failure",
+              profileId,
+              error: tRef.current("Profile switch failed"),
+            });
+            switchCommandTokenRef.current = null;
+
+            postSwitchEffectQueue.enqueue(async () => {
+              const phaseStart = isDev ? performance.now() : 0;
+              await afterPaint();
+              showNotice("error", tRef.current("Profile switch failed"));
+              scheduleProfileMutate();
+              if (isDev) {
+                console.debug(
+                  `[ProfileSwitch] task ${taskId} failure post phase ${(performance.now() - phaseStart).toFixed(1)}ms`,
+                );
+              }
+            });
+          }
+
+          if (isDev) {
+            console.debug(
+              `[ProfileSwitch] task ${taskId} immediate phase done`,
+            );
+            console.groupEnd();
+          }
+        });
       },
     );
 
     return () => {
-      mounted = false;
       unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
     };
-  }, [dispatchSwitch, setManualActivatings]);
+  }, [
+    dispatchSwitch,
+    postSwitchEffectQueue,
+    scheduleProfileMutate,
+    setManualActivatings,
+    switchEventQueue,
+  ]);
 
   useEffect(() => {
     const active = switchState.active;

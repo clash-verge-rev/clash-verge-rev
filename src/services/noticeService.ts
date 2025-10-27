@@ -14,8 +14,18 @@ let nextId = 0;
 let notices: NoticeItem[] = [];
 const listeners: Set<Listener> = new Set();
 
-function notifyListeners() {
+function flushListeners() {
   listeners.forEach((listener) => listener([...notices])); // Pass a copy
+}
+
+let notifyScheduled = false;
+function scheduleNotify() {
+  if (notifyScheduled) return;
+  notifyScheduled = true;
+  requestAnimationFrame(() => {
+    notifyScheduled = false;
+    flushListeners();
+  });
 }
 
 // Shows a notification.
@@ -44,7 +54,7 @@ export function showNotice(
   }
 
   notices = [...notices, newNotice];
-  notifyListeners();
+  scheduleNotify();
   return id;
 }
 
@@ -56,7 +66,7 @@ export function hideNotice(id: number) {
     clearTimeout(notice.timerId); // Clear timeout if manually closed
   }
   notices = notices.filter((n) => n.id !== id);
-  notifyListeners();
+  scheduleNotify();
 }
 
 // Subscribes a listener function to notice state changes.
@@ -77,5 +87,5 @@ export function clearAllNotices() {
     if (n.timerId) clearTimeout(n.timerId);
   });
   notices = [];
-  notifyListeners();
+  scheduleNotify();
 }

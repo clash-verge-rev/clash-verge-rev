@@ -10,6 +10,7 @@ import {
   getCachedProxyProviders,
   setCachedProxyProviders,
 } from "@/services/cmds";
+import { AsyncEventQueue, nextTick } from "@/utils/asyncQueue";
 type ProxyHydration = "none" | "snapshot" | "live";
 type RawProxiesResponse = Awaited<ReturnType<typeof getProxies>>;
 
@@ -161,6 +162,9 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
   },
 }));
 
+const proxiesEventQueue = new AsyncEventQueue();
+let latestLivePayload: ProxiesUpdatedPayload | null = null;
+
 let bridgePromise: Promise<UnlistenFn> | null = null;
 
 export const ensureProxyEventBridge = () => {
@@ -168,7 +172,28 @@ export const ensureProxyEventBridge = () => {
     bridgePromise = listen<ProxiesUpdatedPayload>(
       "proxies-updated",
       (event) => {
-        useProxyStore.getState().setLive(event.payload);
+        const payload = event.payload;
+        if (!payload) {
+          return;
+        }
+
+        latestLivePayload = payload;
+        const enqueueStarted = performance?.now?.() ?? 0;
+        proxiesEventQueue.enqueue(async () => {
+          if (latestLivePayload !== payload) {
+            return;
+          }
+          latestLivePayload = null;
+          if (import.meta.env.DEV) {
+            const queuedMs = performance?.now?.() ?? 0 - enqueueStarted;
+            console.debug(
+              `%c[Proxies] applying live payload (queued ${queuedMs.toFixed?.(1) ?? queuedMs}ms)`,
+              "color:#888",
+            );
+          }
+          await nextTick();
+          useProxyStore.getState().setLive(payload);
+        });
       },
     )
       .then((unlisten) => {
@@ -177,6 +202,7 @@ export const ensureProxyEventBridge = () => {
           if (released) return;
           released = true;
           unlisten();
+          proxiesEventQueue.clear();
           bridgePromise = null;
         };
       })
