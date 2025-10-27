@@ -44,10 +44,10 @@ pub async fn current_language() -> String {
         .unwrap_or_else(get_system_language)
 }
 
-static TRANSLATIONS: Lazy<RwLock<(String, Value)>> = Lazy::new(|| {
+static TRANSLATIONS: Lazy<RwLock<(String, Box<Value>)>> = Lazy::new(|| {
     let lang = get_system_language();
     let json = load_lang_file(&lang).unwrap_or_else(|| Value::Object(Default::default()));
-    RwLock::new((lang, json))
+    RwLock::new((lang, Box::new(json)))
 });
 
 fn load_lang_file(lang: &str) -> Option<Value> {
@@ -81,7 +81,7 @@ pub async fn t(key: &str) -> String {
     if let Some(new_json) = load_lang_file(&current_lang)
         && let Ok(mut cache) = TRANSLATIONS.write()
     {
-        *cache = (current_lang.clone(), new_json);
+        *cache = (current_lang.clone(), Box::new(new_json));
 
         if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
             return text.into();
@@ -92,7 +92,7 @@ pub async fn t(key: &str) -> String {
         && let Some(default_json) = load_lang_file(DEFAULT_LANGUAGE)
         && let Ok(mut cache) = TRANSLATIONS.write()
     {
-        *cache = (DEFAULT_LANGUAGE.into(), default_json);
+        *cache = (DEFAULT_LANGUAGE.into(), Box::new(default_json));
 
         if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
             return text.into();
