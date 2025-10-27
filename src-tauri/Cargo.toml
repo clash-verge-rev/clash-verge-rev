@@ -51,12 +51,12 @@ tauri = { version = "2.9.1", features = [
   "image-png",
 ] }
 network-interface = { version = "2.0.3", features = ["serde"] }
-tauri-plugin-shell = "2.3.1"
-tauri-plugin-dialog = "2.4.0"
-tauri-plugin-fs = "2.4.2"
+tauri-plugin-shell = "2.3.2"
+tauri-plugin-dialog = "2.4.1"
+tauri-plugin-fs = "2.4.3"
 tauri-plugin-process = "2.3.0"
-tauri-plugin-clipboard-manager = "2.3.0"
-tauri-plugin-deep-link = "2.4.3"
+tauri-plugin-clipboard-manager = "2.3.1"
+tauri-plugin-deep-link = "2.4.4"
 tauri-plugin-window-state = "2.4.0"
 zip = "6.0.0"
 reqwest_dav = "0.2.2"
@@ -72,7 +72,7 @@ sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
 dashmap = "6.1.0"
-tauri-plugin-notification = "2.3.1"
+tauri-plugin-notification = "2.3.2"
 tokio-stream = "0.1.17"
 isahc = { version = "1.7.2", default-features = false, features = [
   "text-decoding",
@@ -80,7 +80,7 @@ isahc = { version = "1.7.2", default-features = false, features = [
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 compact_str = { version = "0.9.0", features = ["serde"] }
-tauri-plugin-http = "2.5.2"
+tauri-plugin-http = "2.5.3"
 flexi_logger = "0.31.7"
 console-subscriber = { version = "0.4.1", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
@@ -112,9 +112,18 @@ winapi = { version = "0.3.9", features = [
   "winhttp",
   "winreg",
 ] }
+windows-sys = { version = "0.61.2", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_System_SystemServices",
+  "Win32_UI_WindowsAndMessaging",
+] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 users = "0.11.0"
+
+[target.'cfg(unix)'.dependencies]
+signal-hook = "0.3.18"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.0"

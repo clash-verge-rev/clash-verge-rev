@@ -9,6 +9,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 const NONCE_LENGTH: usize = 12;
 
 /// Encrypt data
+#[allow(deprecated)]
 pub fn encrypt_data(data: &str) -> Result<String, Box<dyn std::error::Error>> {
     let encryption_key = get_encryption_key()?;
     let key = Key::<Aes256Gcm>::from_slice(&encryption_key);
@@ -30,6 +31,7 @@ pub fn encrypt_data(data: &str) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 /// Decrypt data
+#[allow(deprecated)]
 pub fn decrypt_data(encrypted: &str) -> Result<String, Box<dyn std::error::Error>> {
     let encryption_key = get_encryption_key()?;
     let key = Key::<Aes256Gcm>::from_slice(&encryption_key);
