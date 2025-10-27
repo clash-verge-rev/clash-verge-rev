@@ -261,6 +261,7 @@ interface IProfileItem {
   };
   option?: IProfileOption;
   home?: string;
+  group_id?: string;
 }
 
 interface IProfileOption {
@@ -278,10 +279,21 @@ interface IProfileOption {
   groups?: string;
 }
 
+interface IProfileGroup {
+  id: string;
+  name: string;
+  order: number;
+}
+
+interface IProfileGroups {
+  groups: IProfileGroup[];
+}
+
 interface IProfilesConfig {
   current?: string;
   valid?: string[];
   items?: IProfileItem[];
+  groups?: IProfileGroups;
 }
 
 interface IVergeTestItem {

@@ -218,6 +218,10 @@ mod app_init {
             cmd::get_system_info,
             cmd::get_unlock_items,
             cmd::check_media_unlock,
+            cmd::add_profile_group,
+            cmd::remove_profile_group,
+            cmd::rename_profile_group,
+            cmd::move_profile_to_group,
         ]
     }
 }

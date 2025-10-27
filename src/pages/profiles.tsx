@@ -15,6 +15,7 @@ import {
 import {
   ClearRounded,
   ContentPasteRounded,
+  FolderOpenRounded,
   LocalFireDepartmentRounded,
   RefreshRounded,
   TextSnippetOutlined,
@@ -38,6 +39,11 @@ import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { BasePage, DialogRef } from "@/components/base";
 import { BaseStyledTextField } from "@/components/base/base-styled-text-field";
+import { ProfileGroupSection } from "@/components/profile/profile-group-section";
+import {
+  ProfileGroupsManager,
+  ProfileGroupsManagerRef,
+} from "@/components/profile/profile-groups-manager";
 import { ProfileItem } from "@/components/profile/profile-item";
 import { ProfileMore } from "@/components/profile/profile-more";
 import {
@@ -359,6 +365,7 @@ const ProfilePage = () => {
 
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
+  const groupsManagerRef = useRef<ProfileGroupsManagerRef>(null);
 
   // distinguish type
   const profileItems = useMemo(() => {
@@ -368,6 +375,34 @@ const ProfilePage = () => {
 
     return items.filter((i) => i && type1.includes(i.type!));
   }, [profiles]);
+
+  // 按分组组织配置
+  const groupedProfiles = useMemo(() => {
+    const groups = profiles.groups?.groups || [
+      { id: "default", name: "Default", order: 0 },
+    ];
+    const groupMap = new Map<string, IProfileItem[]>();
+
+    // 初始化所有分组
+    groups.forEach((group) => {
+      groupMap.set(group.id, []);
+    });
+
+    // 将配置分配到各分组
+    profileItems.forEach((item) => {
+      const groupId = item.group_id || "default";
+      if (!groupMap.has(groupId)) {
+        // 如果分组不存在，放入默认分组
+        const defaultItems = groupMap.get("default") || [];
+        defaultItems.push(item);
+        groupMap.set("default", defaultItems);
+      } else {
+        groupMap.get(groupId)!.push(item);
+      }
+    });
+
+    return { groups, groupMap };
+  }, [profiles, profileItems]);
 
   const currentActivatings = () => {
     return [...new Set([profiles.current ?? ""])].filter(Boolean);
@@ -1001,6 +1036,15 @@ const ProfilePage = () => {
                 <LocalFireDepartmentRounded />
               </IconButton>
 
+              <IconButton
+                size="small"
+                color="inherit"
+                title={t("Manage Groups")}
+                onClick={() => groupsManagerRef.current?.open()}
+              >
+                <FolderOpenRounded />
+              </IconButton>
+
               {/* 故障检测和紧急恢复按钮 */}
               {(error || isStale) && (
                 <IconButton
@@ -1148,43 +1192,63 @@ const ProfilePage = () => {
           }}
         >
           <Box sx={{ mb: 1.5 }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
-              <SortableContext
-                items={profileItems.map((x) => {
-                  return x.uid;
-                })}
-              >
-                {profileItems.map((item) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
-                    <ProfileItem
-                      id={item.uid}
-                      selected={profiles.current === item.uid}
-                      activating={activatings.includes(item.uid)}
-                      itemData={item}
-                      onSelect={(f) => onSelect(item.uid, f)}
-                      onEdit={() => viewerRef.current?.edit(item)}
-                      onSave={async (prev, curr) => {
-                        if (prev !== curr && profiles.current === item.uid) {
-                          await onEnhance(false);
-                          //  await restartCore();
-                          //   Notice.success(t("Clash Core Restarted"), 1000);
-                        }
-                      }}
-                      onDelete={() => {
-                        if (batchMode) {
-                          toggleProfileSelection(item.uid);
-                        } else {
-                          onDelete(item.uid);
-                        }
-                      }}
-                      batchMode={batchMode}
-                      isSelected={selectedProfiles.has(item.uid)}
-                      onSelectionChange={() => toggleProfileSelection(item.uid)}
-                    />
-                  </Grid>
-                ))}
-              </SortableContext>
-            </Grid>
+            <SortableContext
+              items={profileItems.map((x) => {
+                return x.uid;
+              })}
+            >
+              {groupedProfiles.groups.map((group) => {
+                const groupProfiles =
+                  groupedProfiles.groupMap.get(group.id) || [];
+                if (groupProfiles.length === 0) return null;
+
+                return (
+                  <ProfileGroupSection
+                    key={group.id}
+                    group={group}
+                    profileCount={groupProfiles.length}
+                  >
+                    <Grid container spacing={{ xs: 1, lg: 1 }}>
+                      {groupProfiles.map((item) => (
+                        <Grid
+                          size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                          key={item.file}
+                        >
+                          <ProfileItem
+                            id={item.uid}
+                            selected={profiles.current === item.uid}
+                            activating={activatings.includes(item.uid)}
+                            itemData={item}
+                            onSelect={(f) => onSelect(item.uid, f)}
+                            onEdit={() => viewerRef.current?.edit(item)}
+                            onSave={async (prev, curr) => {
+                              if (
+                                prev !== curr &&
+                                profiles.current === item.uid
+                              ) {
+                                await onEnhance(false);
+                              }
+                            }}
+                            onDelete={() => {
+                              if (batchMode) {
+                                toggleProfileSelection(item.uid);
+                              } else {
+                                onDelete(item.uid);
+                              }
+                            }}
+                            batchMode={batchMode}
+                            isSelected={selectedProfiles.has(item.uid)}
+                            onSelectionChange={() =>
+                              toggleProfileSelection(item.uid)
+                            }
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </ProfileGroupSection>
+                );
+              })}
+            </SortableContext>
           </Box>
           <Divider
             variant="middle"
@@ -1231,6 +1295,11 @@ const ProfilePage = () => {
         }}
       />
       <ConfigViewer ref={configRef} />
+      <ProfileGroupsManager
+        ref={groupsManagerRef}
+        groups={profiles.groups?.groups || []}
+        onUpdate={() => mutateProfiles()}
+      />
     </BasePage>
   );
 };
