@@ -50,8 +50,7 @@ export const ConnectionTable = (props: Props) => {
             <GridActionsCellItem
               key={id.toString()}
               icon={<GridCloseIcon />}
-              label="Cancel"
-              className="textPrimary"
+              label="Close"
               onClick={() => closeConnections(id.toString())}
               color="inherit"
             />,
