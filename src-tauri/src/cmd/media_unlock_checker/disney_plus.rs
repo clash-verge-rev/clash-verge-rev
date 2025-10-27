@@ -6,6 +6,7 @@ use crate::{logging, utils::logging::Type};
 use super::UnlockItem;
 use super::utils::{country_code_to_emoji, get_local_date_string};
 
+#[allow(clippy::cognitive_complexity)]
 pub(super) async fn check_disney_plus(client: &Client) -> UnlockItem {
     let device_api_url = "https://disney.api.edge.bamgrid.com/devices";
     let auth_header =

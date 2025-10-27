@@ -42,23 +42,23 @@ importers:
         specifier: 2.9.0
         version: 2.9.0
       '@tauri-apps/plugin-clipboard-manager':
+        specifier: ^2.3.2
+        version: 2.3.2
+      '@tauri-apps/plugin-dialog':
+        specifier: ^2.4.2
+        version: 2.4.2
+      '@tauri-apps/plugin-fs':
+        specifier: ^2.4.4
+        version: 2.4.4
+      '@tauri-apps/plugin-http':
+        specifier: ~2.5.4
+        version: 2.5.4
+      '@tauri-apps/plugin-process':
         specifier: ^2.3.1
         version: 2.3.1
-      '@tauri-apps/plugin-dialog':
-        specifier: ^2.4.1
-        version: 2.4.1
-      '@tauri-apps/plugin-fs':
-        specifier: ^2.4.3
-        version: 2.4.3
-      '@tauri-apps/plugin-http':
-        specifier: ~2.5.3
-        version: 2.5.3
-      '@tauri-apps/plugin-process':
-        specifier: ^2.3.0
-        version: 2.3.0
       '@tauri-apps/plugin-shell':
-        specifier: 2.3.2
-        version: 2.3.2
+        specifier: 2.3.3
+        version: 2.3.3
       '@tauri-apps/plugin-updater':
         specifier: 2.9.0
         version: 2.9.0
@@ -111,8 +111,8 @@ importers:
         specifier: ^7.65.0
         version: 7.65.0(react@19.2.0)
       react-i18next:
-        specifier: 16.2.0
-        version: 16.2.0(i18next@25.6.0(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        specifier: 16.2.1
+        version: 16.2.1(i18next@25.6.0(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       react-markdown:
         specifier: 10.1.0
         version: 10.1.0(@types/react@19.2.2)(react@19.2.0)
@@ -259,8 +259,8 @@ importers:
         specifier: ^4.5.0
         version: 4.5.0(rollup@4.46.2)(typescript@5.9.3)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1))
       vitest:
-        specifier: ^4.0.3
-        version: 4.0.3(@types/debug@4.1.12)(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1)
+        specifier: ^4.0.4
+        version: 4.0.4(@types/debug@4.1.12)(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1)
 
 packages:
 
@@ -1695,23 +1695,23 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@tauri-apps/plugin-clipboard-manager@2.3.1':
-    resolution: {integrity: sha512-lQMaUSFs5my8oEHuvQOLJoPHfxRJNn0gwXyTsyMhtQZBD4sYLiDux8p+EsagY6vv5SkSYWVViJYvlcPIjJ+Dog==}
+  '@tauri-apps/plugin-clipboard-manager@2.3.2':
+    resolution: {integrity: sha512-CUlb5Hqi2oZbcZf4VUyUH53XWPPdtpw43EUpCza5HWZJwxEoDowFzNUDt1tRUXA8Uq+XPn17Ysfptip33sG4eQ==}
 
-  '@tauri-apps/plugin-dialog@2.4.1':
-    resolution: {integrity: sha512-2eAueoxstrUnAf5cZWT9A/jzh4mTdUu646Q8zEX0a3RQmht7fQhdhxWfgQH4/of8iy1etDLKzokXbF2CxdBFHg==}
+  '@tauri-apps/plugin-dialog@2.4.2':
+    resolution: {integrity: sha512-lNIn5CZuw8WZOn8zHzmFmDSzg5zfohWoa3mdULP0YFh/VogVdMVWZPcWSHlydsiJhRQYaTNSYKN7RmZKE2lCYQ==}
 
-  '@tauri-apps/plugin-fs@2.4.3':
-    resolution: {integrity: sha512-/ZVHrwf/FTMSReWgMfiraeJjBcIr4QrDQC5BalvSSLXgtEiELPjQkRaXox7zG7z5nB04m/TwTLqfeeBROg0LLQ==}
+  '@tauri-apps/plugin-fs@2.4.4':
+    resolution: {integrity: sha512-MTorXxIRmOnOPT1jZ3w96vjSuScER38ryXY88vl5F0uiKdnvTKKTtaEjTEo8uPbl4e3gnUtfsDVwC7h77GQLvQ==}
 
-  '@tauri-apps/plugin-http@2.5.3':
-    resolution: {integrity: sha512-YiizgUWd9jQBPGX2x3k1l6qdBiDYOo3FjqMEjkeJ0I8IRIkp6OQ8ff6fRcaiUt0sl8+h3r4983+6O/m+//PMVQ==}
+  '@tauri-apps/plugin-http@2.5.4':
+    resolution: {integrity: sha512-/i4U/9za3mrytTgfRn5RHneKubZE/dwRmshYwyMvNRlkWjvu1m4Ma72kcbVJMZFGXpkbl+qLyWMGrihtWB76Zg==}
 
-  '@tauri-apps/plugin-process@2.3.0':
-    resolution: {integrity: sha512-0DNj6u+9csODiV4seSxxRbnLpeGYdojlcctCuLOCgpH9X3+ckVZIEj6H7tRQ7zqWr7kSTEWnrxtAdBb0FbtrmQ==}
+  '@tauri-apps/plugin-process@2.3.1':
+    resolution: {integrity: sha512-nCa4fGVaDL/B9ai03VyPOjfAHRHSBz5v6F/ObsB73r/dA3MHHhZtldaDMIc0V/pnUw9ehzr2iEG+XkSEyC0JJA==}
 
-  '@tauri-apps/plugin-shell@2.3.2':
-    resolution: {integrity: sha512-pop78bu3T25UVxL6kn/dFc+LZQhHB9WHCUoLIrXPagO4hlEGtdOKVEnIzQr4E9X8COrBAKcR/G/rNWuim8eEOg==}
+  '@tauri-apps/plugin-shell@2.3.3':
+    resolution: {integrity: sha512-Xod+pRcFxmOWFWEnqH5yZcA7qwAMuaaDkMR1Sply+F8VfBj++CGnj2xf5UoialmjZ2Cvd8qrvSCbU+7GgNVsKQ==}
 
   '@tauri-apps/plugin-updater@2.9.0':
     resolution: {integrity: sha512-j++sgY8XpeDvzImTrzWA08OqqGqgkNyxczLD7FjNJJx/uXxMZFz5nDcfkyoI/rCjYuj2101Tci/r/HFmOmoxCg==}
@@ -1971,11 +1971,11 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
 
-  '@vitest/expect@4.0.3':
-    resolution: {integrity: sha512-v3eSDx/bF25pzar6aEJrrdTXJduEBU3uSGXHslIdGIpJVP8tQQHV6x1ZfzbFQ/bLIomLSbR/2ZCfnaEGkWkiVQ==}
+  '@vitest/expect@4.0.4':
+    resolution: {integrity: sha512-0ioMscWJtfpyH7+P82sGpAi3Si30OVV73jD+tEqXm5+rIx9LgnfdaOn45uaFkKOncABi/PHL00Yn0oW/wK4cXw==}
 
-  '@vitest/mocker@4.0.3':
-    resolution: {integrity: sha512-evZcRspIPbbiJEe748zI2BRu94ThCBE+RkjCpVF8yoVYuTV7hMe+4wLF/7K86r8GwJHSmAPnPbZhpXWWrg1qbA==}
+  '@vitest/mocker@4.0.4':
+    resolution: {integrity: sha512-UTtKgpjWj+pvn3lUM55nSg34098obGhSHH+KlJcXesky8b5wCUgg7s60epxrS6yAG8slZ9W8T9jGWg4PisMf5Q==}
     peerDependencies:
       msw: ^2.4.9
       vite: ^6.0.0 || ^7.0.0-0
@@ -1985,20 +1985,20 @@ packages:
       vite:
         optional: true
 
-  '@vitest/pretty-format@4.0.3':
-    resolution: {integrity: sha512-N7gly/DRXzxa9w9sbDXwD9QNFYP2hw90LLLGDobPNwiWgyW95GMxsCt29/COIKKh3P7XJICR38PSDePenMBtsw==}
+  '@vitest/pretty-format@4.0.4':
+    resolution: {integrity: sha512-lHI2rbyrLVSd1TiHGJYyEtbOBo2SDndIsN3qY4o4xe2pBxoJLD6IICghNCvD7P+BFin6jeyHXiUICXqgl6vEaQ==}
 
-  '@vitest/runner@4.0.3':
-    resolution: {integrity: sha512-1/aK6fPM0lYXWyGKwop2Gbvz1plyTps/HDbIIJXYtJtspHjpXIeB3If07eWpVH4HW7Rmd3Rl+IS/+zEAXrRtXA==}
+  '@vitest/runner@4.0.4':
+    resolution: {integrity: sha512-99EDqiCkncCmvIZj3qJXBZbyoQ35ghOwVWNnQ5nj0Hnsv4Qm40HmrMJrceewjLVvsxV/JSU4qyx2CGcfMBmXJw==}
 
-  '@vitest/snapshot@4.0.3':
-    resolution: {integrity: sha512-amnYmvZ5MTjNCP1HZmdeczAPLRD6iOm9+2nMRUGxbe/6sQ0Ymur0NnR9LIrWS8JA3wKE71X25D6ya/3LN9YytA==}
+  '@vitest/snapshot@4.0.4':
+    resolution: {integrity: sha512-XICqf5Gi4648FGoBIeRgnHWSNDp+7R5tpclGosFaUUFzY6SfcpsfHNMnC7oDu/iOLBxYfxVzaQpylEvpgii3zw==}
 
-  '@vitest/spy@4.0.3':
-    resolution: {integrity: sha512-82vVL8Cqz7rbXaNUl35V2G7xeNMAjBdNOVaHbrzznT9BmiCiPOzhf0FhU3eP41nP1bLDm/5wWKZqkG4nyU95DQ==}
+  '@vitest/spy@4.0.4':
+    resolution: {integrity: sha512-G9L13AFyYECo40QG7E07EdYnZZYCKMTSp83p9W8Vwed0IyCG1GnpDLxObkx8uOGPXfDpdeVf24P1Yka8/q1s9g==}
 
-  '@vitest/utils@4.0.3':
-    resolution: {integrity: sha512-qV6KJkq8W3piW6MDIbGOmn1xhvcW4DuA07alqaQ+vdx7YA49J85pnwnxigZVQFQw3tWnQNRKWwhz5wbP6iv/GQ==}
+  '@vitest/utils@4.0.4':
+    resolution: {integrity: sha512-4bJLmSvZLyVbNsYFRpPYdJViG9jZyRvMZ35IF4ymXbRZoS+ycYghmwTGiscTXduUg2lgKK7POWIyXJNute1hjw==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -3576,8 +3576,8 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
 
-  react-i18next@16.2.0:
-    resolution: {integrity: sha512-giCEDa6NtQYvuLGW9xaBo4HCVxT0Y8jrOpX/uSnd+lZ3Dmm/2BNrGNEgRZzWDkSobmE6IWPJ+/Ow9Rhi/gP6+g==}
+  react-i18next@16.2.1:
+    resolution: {integrity: sha512-z7TVwd8q4AjFo2n7oOwzNusY7xVL4uHykwX1zZRvasUQnmnXlp7Z1FZqXvhK/6hQaCvWTZmZW1bMaUWKowtvVw==}
     peerDependencies:
       i18next: '>= 25.5.2'
       react: '>= 16.8.0'
@@ -4148,18 +4148,18 @@ packages:
       yaml:
         optional: true
 
-  vitest@4.0.3:
-    resolution: {integrity: sha512-IUSop8jgaT7w0g1yOM/35qVtKjr/8Va4PrjzH1OUb0YH4c3OXB2lCZDkMAB6glA8T5w8S164oJGsbcmAecr4sA==}
+  vitest@4.0.4:
+    resolution: {integrity: sha512-hV31h0/bGbtmDQc0KqaxsTO1v4ZQeF8ojDFuy4sZhFadwAqqvJA0LDw68QUocctI5EDpFMql/jVWKuPYHIf2Ew==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@types/debug': ^4.1.12
       '@types/node': ^20.0.0 || ^22.0.0 || >=24.0.0
-      '@vitest/browser-playwright': 4.0.3
-      '@vitest/browser-preview': 4.0.3
-      '@vitest/browser-webdriverio': 4.0.3
-      '@vitest/ui': 4.0.3
+      '@vitest/browser-playwright': 4.0.4
+      '@vitest/browser-preview': 4.0.4
+      '@vitest/browser-webdriverio': 4.0.4
+      '@vitest/ui': 4.0.4
       happy-dom: '*'
       jsdom: '*'
     peerDependenciesMeta:
@@ -5840,27 +5840,27 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.9.1
       '@tauri-apps/cli-win32-x64-msvc': 2.9.1
 
-  '@tauri-apps/plugin-clipboard-manager@2.3.1':
+  '@tauri-apps/plugin-clipboard-manager@2.3.2':
     dependencies:
       '@tauri-apps/api': 2.9.0
 
-  '@tauri-apps/plugin-dialog@2.4.1':
+  '@tauri-apps/plugin-dialog@2.4.2':
     dependencies:
       '@tauri-apps/api': 2.9.0
 
-  '@tauri-apps/plugin-fs@2.4.3':
+  '@tauri-apps/plugin-fs@2.4.4':
     dependencies:
       '@tauri-apps/api': 2.9.0
 
-  '@tauri-apps/plugin-http@2.5.3':
+  '@tauri-apps/plugin-http@2.5.4':
     dependencies:
       '@tauri-apps/api': 2.9.0
 
-  '@tauri-apps/plugin-process@2.3.0':
+  '@tauri-apps/plugin-process@2.3.1':
     dependencies:
       '@tauri-apps/api': 2.9.0
 
-  '@tauri-apps/plugin-shell@2.3.2':
+  '@tauri-apps/plugin-shell@2.3.3':
     dependencies:
       '@tauri-apps/api': 2.9.0
 
@@ -6144,43 +6144,43 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/expect@4.0.3':
+  '@vitest/expect@4.0.4':
     dependencies:
       '@standard-schema/spec': 1.0.0
       '@types/chai': 5.2.2
-      '@vitest/spy': 4.0.3
-      '@vitest/utils': 4.0.3
+      '@vitest/spy': 4.0.4
+      '@vitest/utils': 4.0.4
       chai: 6.2.0
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.3(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1))':
+  '@vitest/mocker@4.0.4(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1))':
     dependencies:
-      '@vitest/spy': 4.0.3
+      '@vitest/spy': 4.0.4
       estree-walker: 3.0.3
       magic-string: 0.30.19
     optionalDependencies:
       vite: 7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1)
 
-  '@vitest/pretty-format@4.0.3':
+  '@vitest/pretty-format@4.0.4':
     dependencies:
       tinyrainbow: 3.0.3
 
-  '@vitest/runner@4.0.3':
+  '@vitest/runner@4.0.4':
     dependencies:
-      '@vitest/utils': 4.0.3
+      '@vitest/utils': 4.0.4
       pathe: 2.0.3
 
-  '@vitest/snapshot@4.0.3':
+  '@vitest/snapshot@4.0.4':
     dependencies:
-      '@vitest/pretty-format': 4.0.3
+      '@vitest/pretty-format': 4.0.4
       magic-string: 0.30.19
       pathe: 2.0.3
 
-  '@vitest/spy@4.0.3': {}
+  '@vitest/spy@4.0.4': {}
 
-  '@vitest/utils@4.0.3':
+  '@vitest/utils@4.0.4':
     dependencies:
-      '@vitest/pretty-format': 4.0.3
+      '@vitest/pretty-format': 4.0.4
       tinyrainbow: 3.0.3
 
   acorn-jsx@5.3.2(acorn@8.15.0):
@@ -8140,7 +8140,7 @@ snapshots:
     dependencies:
       react: 19.2.0
 
-  react-i18next@16.2.0(i18next@25.6.0(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3):
+  react-i18next@16.2.1(i18next@25.6.0(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.28.4
       html-parse-stringify: 3.0.1
@@ -8830,15 +8830,15 @@ snapshots:
       terser: 5.44.0
       yaml: 2.8.1
 
-  vitest@4.0.3(@types/debug@4.1.12)(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1):
+  vitest@4.0.4(@types/debug@4.1.12)(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1):
     dependencies:
-      '@vitest/expect': 4.0.3
-      '@vitest/mocker': 4.0.3(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1))
-      '@vitest/pretty-format': 4.0.3
-      '@vitest/runner': 4.0.3
-      '@vitest/snapshot': 4.0.3
-      '@vitest/spy': 4.0.3
-      '@vitest/utils': 4.0.3
+      '@vitest/expect': 4.0.4
+      '@vitest/mocker': 4.0.4(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1))
+      '@vitest/pretty-format': 4.0.4
+      '@vitest/runner': 4.0.4
+      '@vitest/snapshot': 4.0.4
+      '@vitest/spy': 4.0.4
+      '@vitest/utils': 4.0.4
       debug: 4.4.3
       es-module-lexer: 1.7.0
       expect-type: 1.2.2

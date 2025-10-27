@@ -18,7 +18,7 @@ const REFRESH_TIMEOUT: Duration = Duration::from_secs(3);
 pub(super) const SAVE_PROFILES_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// Explicit state machine for profile switching so we can reason about
-/// cancellation, stale requests, and side-effects at each stage.
+/// cancellation, stale requests, and side effects at each stage.
 pub(super) struct SwitchStateMachine {
     ctx: SwitchContext,
     state: SwitchState,
@@ -324,163 +324,211 @@ impl SwitchStateMachine {
 
     async fn handle_finalize(&mut self, outcome: CoreUpdateOutcome) -> CmdResult<SwitchState> {
         match outcome {
-            CoreUpdateOutcome::Success => {
-                if self.ctx.stale() {
-                    StaleStage::AfterCoreOperation.log(&self.ctx);
-                    Config::profiles().await.discard();
-                    return Ok(SwitchState::Complete(false));
-                }
-
-                logging!(
-                    info,
-                    Type::Cmd,
-                    "Configuration update succeeded, sequence: {}",
-                    self.ctx.sequence()
-                );
-                let apply_result = time::timeout(CONFIG_APPLY_TIMEOUT, async {
-                    AsyncHandler::spawn_blocking(|| {
-                        futures::executor::block_on(async {
-                            Config::profiles().await.apply();
-                        });
-                    })
-                    .await
-                })
-                .await;
-
-                match apply_result {
-                    Ok(_) => {}
-                    Err(_) => {
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Applying profile configuration timed out after {:?}",
-                            CONFIG_APPLY_TIMEOUT
-                        );
-                        Config::profiles().await.discard();
-                        return Ok(SwitchState::Complete(false));
-                    }
-                }
-
-                if time::timeout(REFRESH_TIMEOUT, async {
-                    handle::Handle::refresh_clash();
-                })
-                .await
-                .is_err()
-                {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Refreshing Clash state timed out after {:?}",
-                        REFRESH_TIMEOUT
-                    );
-                }
-
-                let update_tooltip = time::timeout(TRAY_UPDATE_TIMEOUT, async {
-                    Tray::global().update_tooltip().await
-                })
-                .await;
-                if update_tooltip.is_err() {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Updating tray tooltip timed out after {:?}",
-                        TRAY_UPDATE_TIMEOUT
-                    );
-                } else if let Ok(Err(err)) = update_tooltip {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Failed to update tray tooltip asynchronously: {}",
-                        err
-                    );
-                }
-
-                let update_menu = time::timeout(TRAY_UPDATE_TIMEOUT, async {
-                    Tray::global().update_menu().await
-                })
-                .await;
-                if update_menu.is_err() {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Updating tray menu timed out after {:?}",
-                        TRAY_UPDATE_TIMEOUT
-                    );
-                } else if let Ok(Err(err)) = update_menu {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Failed to update tray menu asynchronously: {}",
-                        err
-                    );
-                }
-
-                let save_future = AsyncHandler::spawn_blocking(|| {
-                    futures::executor::block_on(async { profiles_save_file_safe().await })
-                });
-                if time::timeout(SAVE_PROFILES_TIMEOUT, save_future)
-                    .await
-                    .is_err()
-                {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Persisting configuration file timed out after {:?}",
-                        SAVE_PROFILES_TIMEOUT
-                    );
-                }
-
-                if let Some(current) = self.ctx.new_profile_for_event.clone() {
-                    logging!(
-                        info,
-                        Type::Cmd,
-                        "Emitting configuration change event to frontend: {}, sequence: {}",
-                        current,
-                        self.ctx.sequence()
-                    );
-                    handle::Handle::notify_profile_changed(current);
-                }
-
-                Ok(SwitchState::Complete(true))
-            }
+            CoreUpdateOutcome::Success => self.finalize_success().await,
             CoreUpdateOutcome::ValidationFailed { message } => {
-                logging!(
-                    warn,
-                    Type::Cmd,
-                    "Configuration validation failed: {}",
-                    message
-                );
-                Config::profiles().await.discard();
-                restore_previous_profile(self.ctx.previous_profile.clone()).await?;
-                handle::Handle::notice_message("config_validate::error", message);
-                Ok(SwitchState::Complete(false))
+                self.finalize_validation_failed(message).await
             }
-            CoreUpdateOutcome::CoreError { message } => {
-                logging!(
-                    warn,
-                    Type::Cmd,
-                    "Error occurred during update: {}, sequence: {}",
-                    message,
-                    self.ctx.sequence()
-                );
-                Config::profiles().await.discard();
-                handle::Handle::notice_message("config_validate::boot_error", message);
-                Ok(SwitchState::Complete(false))
-            }
-            CoreUpdateOutcome::Timeout => {
-                let timeout_msg = "Configuration update timed out (30s); possible validation or core communication stall";
-                logging!(
-                    error,
-                    Type::Cmd,
-                    "{}, sequence: {}",
-                    timeout_msg,
-                    self.ctx.sequence()
-                );
-                Config::profiles().await.discard();
-                restore_previous_profile(self.ctx.previous_profile.clone()).await?;
-                handle::Handle::notice_message("config_validate::timeout", timeout_msg);
-                Ok(SwitchState::Complete(false))
-            }
+            CoreUpdateOutcome::CoreError { message } => self.finalize_core_error(message).await,
+            CoreUpdateOutcome::Timeout => self.finalize_timeout().await,
+        }
+    }
+
+    async fn finalize_success(&mut self) -> CmdResult<SwitchState> {
+        if self.abort_if_stale_post_core().await? {
+            return Ok(SwitchState::Complete(false));
+        }
+
+        self.log_successful_update();
+
+        if !self.apply_config_with_timeout().await? {
+            return Ok(SwitchState::Complete(false));
+        }
+
+        self.refresh_clash_with_timeout().await;
+        self.update_tray_tooltip_with_timeout().await;
+        self.update_tray_menu_with_timeout().await;
+        self.persist_profiles_with_timeout().await;
+        self.emit_profile_change_event();
+
+        Ok(SwitchState::Complete(true))
+    }
+
+    async fn finalize_validation_failed(&mut self, message: String) -> CmdResult<SwitchState> {
+        logging!(
+            warn,
+            Type::Cmd,
+            "Configuration validation failed: {}",
+            message
+        );
+        Config::profiles().await.discard();
+        restore_previous_profile(self.ctx.previous_profile.clone()).await?;
+        handle::Handle::notice_message("config_validate::error", message);
+        Ok(SwitchState::Complete(false))
+    }
+
+    async fn finalize_core_error(&mut self, message: String) -> CmdResult<SwitchState> {
+        logging!(
+            warn,
+            Type::Cmd,
+            "Error occurred during update: {}, sequence: {}",
+            message,
+            self.ctx.sequence()
+        );
+        Config::profiles().await.discard();
+        handle::Handle::notice_message("config_validate::boot_error", message);
+        Ok(SwitchState::Complete(false))
+    }
+
+    async fn finalize_timeout(&mut self) -> CmdResult<SwitchState> {
+        let timeout_msg =
+            "Configuration update timed out (30s); possible validation or core communication stall";
+        logging!(
+            error,
+            Type::Cmd,
+            "{}, sequence: {}",
+            timeout_msg,
+            self.ctx.sequence()
+        );
+        Config::profiles().await.discard();
+        restore_previous_profile(self.ctx.previous_profile.clone()).await?;
+        handle::Handle::notice_message("config_validate::timeout", timeout_msg);
+        Ok(SwitchState::Complete(false))
+    }
+
+    async fn abort_if_stale_post_core(&mut self) -> CmdResult<bool> {
+        if self.ctx.stale() {
+            StaleStage::AfterCoreOperation.log(&self.ctx);
+            Config::profiles().await.discard();
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    fn log_successful_update(&self) {
+        logging!(
+            info,
+            Type::Cmd,
+            "Configuration update succeeded, sequence: {}",
+            self.ctx.sequence()
+        );
+    }
+
+    async fn apply_config_with_timeout(&mut self) -> CmdResult<bool> {
+        let apply_result = time::timeout(CONFIG_APPLY_TIMEOUT, async {
+            AsyncHandler::spawn_blocking(|| {
+                futures::executor::block_on(async {
+                    Config::profiles().await.apply();
+                });
+            })
+            .await
+        })
+        .await;
+
+        if apply_result.is_ok() {
+            return Ok(true);
+        }
+
+        logging!(
+            warn,
+            Type::Cmd,
+            "Applying profile configuration timed out after {:?}",
+            CONFIG_APPLY_TIMEOUT
+        );
+        Config::profiles().await.discard();
+        Ok(false)
+    }
+
+    async fn refresh_clash_with_timeout(&self) {
+        if time::timeout(REFRESH_TIMEOUT, async {
+            handle::Handle::refresh_clash();
+        })
+        .await
+        .is_err()
+        {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Refreshing Clash state timed out after {:?}",
+                REFRESH_TIMEOUT
+            );
+        }
+    }
+
+    async fn update_tray_tooltip_with_timeout(&self) {
+        let update_tooltip = time::timeout(TRAY_UPDATE_TIMEOUT, async {
+            Tray::global().update_tooltip().await
+        })
+        .await;
+
+        if update_tooltip.is_err() {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Updating tray tooltip timed out after {:?}",
+                TRAY_UPDATE_TIMEOUT
+            );
+        } else if let Ok(Err(err)) = update_tooltip {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Failed to update tray tooltip asynchronously: {}",
+                err
+            );
+        }
+    }
+
+    async fn update_tray_menu_with_timeout(&self) {
+        let update_menu = time::timeout(TRAY_UPDATE_TIMEOUT, async {
+            Tray::global().update_menu().await
+        })
+        .await;
+
+        if update_menu.is_err() {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Updating tray menu timed out after {:?}",
+                TRAY_UPDATE_TIMEOUT
+            );
+        } else if let Ok(Err(err)) = update_menu {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Failed to update tray menu asynchronously: {}",
+                err
+            );
+        }
+    }
+
+    async fn persist_profiles_with_timeout(&self) {
+        let save_future = AsyncHandler::spawn_blocking(|| {
+            futures::executor::block_on(async { profiles_save_file_safe().await })
+        });
+
+        if time::timeout(SAVE_PROFILES_TIMEOUT, save_future)
+            .await
+            .is_err()
+        {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Persisting configuration file timed out after {:?}",
+                SAVE_PROFILES_TIMEOUT
+            );
+        }
+    }
+
+    fn emit_profile_change_event(&self) {
+        if let Some(current) = self.ctx.new_profile_for_event.clone() {
+            logging!(
+                info,
+                Type::Cmd,
+                "Emitting configuration change event to frontend: {}, sequence: {}",
+                current,
+                self.ctx.sequence()
+            );
+            handle::Handle::notify_profile_changed(current);
         }
     }
 }

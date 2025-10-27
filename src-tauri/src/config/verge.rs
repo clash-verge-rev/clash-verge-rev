@@ -438,6 +438,7 @@ impl IVerge {
 
     /// patch verge config
     /// only save to file
+    #[allow(clippy::cognitive_complexity)]
     pub fn patch_config(&mut self, patch: IVerge) {
         macro_rules! patch {
             ($key: tt) => {

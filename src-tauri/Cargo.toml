@@ -51,13 +51,13 @@ tauri = { version = "2.9.1", features = [
   "image-png",
 ] }
 network-interface = { version = "2.0.3", features = ["serde"] }
-tauri-plugin-shell = "2.3.2"
-tauri-plugin-dialog = "2.4.1"
-tauri-plugin-fs = "2.4.3"
-tauri-plugin-process = "2.3.0"
-tauri-plugin-clipboard-manager = "2.3.1"
-tauri-plugin-deep-link = "2.4.4"
-tauri-plugin-window-state = "2.4.0"
+tauri-plugin-shell = "2.3.3"
+tauri-plugin-dialog = "2.4.2"
+tauri-plugin-fs = "2.4.4"
+tauri-plugin-process = "2.3.1"
+tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-deep-link = "2.4.5"
+tauri-plugin-window-state = "2.4.1"
 zip = "6.0.0"
 reqwest_dav = "0.2.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
@@ -72,7 +72,7 @@ sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
 dashmap = "6.1.0"
-tauri-plugin-notification = "2.3.2"
+tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.17"
 isahc = { version = "1.7.2", default-features = false, features = [
   "text-decoding",
@@ -80,7 +80,7 @@ isahc = { version = "1.7.2", default-features = false, features = [
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 compact_str = { version = "0.9.0", features = ["serde"] }
-tauri-plugin-http = "2.5.3"
+tauri-plugin-http = "2.5.4"
 flexi_logger = "0.31.7"
 console-subscriber = { version = "0.4.1", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
@@ -126,8 +126,8 @@ users = "0.11.0"
 signal-hook = "0.3.18"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-autostart = "2.5.0"
-tauri-plugin-global-shortcut = "2.3.0"
+tauri-plugin-autostart = "2.5.1"
+tauri-plugin-global-shortcut = "2.3.1"
 tauri-plugin-updater = "2.9.0"
 
 [features]
@@ -232,3 +232,4 @@ needless_raw_string_hashes = "deny" # Too many in existing code
 #restriction = { level = "allow", priority = -1 }
 
 or_fun_call = "deny"
+cognitive_complexity = "deny"
