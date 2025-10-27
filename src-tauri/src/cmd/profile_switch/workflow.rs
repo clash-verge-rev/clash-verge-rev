@@ -19,12 +19,13 @@ use tokio::{fs as tokio_fs, time};
 
 mod state_machine;
 
+pub(super) use state_machine::SwitchPanicInfo;
 use state_machine::SwitchStateMachine;
 
 pub(super) async fn run_switch_job(
     manager: &'static SwitchManager,
     request: SwitchRequest,
-) -> bool {
+) -> Result<bool, SwitchPanicInfo> {
     if request.cancel_token().is_cancelled() {
         logging!(
             info,
@@ -38,7 +39,7 @@ pub(super) async fn run_switch_job(
             request.notify(),
             request.task_id(),
         );
-        return false;
+        return Ok(false);
     }
 
     let profile_id = request.profile_id().clone();
@@ -56,7 +57,7 @@ pub(super) async fn run_switch_job(
         );
         handle::Handle::notice_message("config_validate::error", err.clone());
         handle::Handle::notify_profile_switch_finished(profile_id.clone(), false, notify, task_id);
-        return false;
+        return Ok(false);
     }
 
     logging!(
@@ -107,7 +108,7 @@ pub(super) async fn run_switch_job(
                 notify,
                 task_id,
             );
-            false
+            Ok(false)
         }
         Ok(Err(panic_payload)) => {
             let panic_message = describe_panic_payload(panic_payload.as_ref());
@@ -129,54 +130,86 @@ pub(super) async fn run_switch_job(
                 notify,
                 task_id,
             );
-            false
+            Err(SwitchPanicInfo::workflow_root(panic_message))
         }
-        Ok(Ok(result)) => match result {
-            Ok(success) => {
-                handle::Handle::notify_profile_switch_finished(
-                    profile_id.clone(),
-                    success,
-                    notify,
-                    task_id,
-                );
-                close_connections_after_switch(&profile_id).await;
-                if notify && success {
-                    handle::Handle::notice_message("info", "Profile Switched");
+        Ok(Ok(machine_result)) => match machine_result {
+            Ok(cmd_result) => match cmd_result {
+                Ok(success) => {
+                    handle::Handle::notify_profile_switch_finished(
+                        profile_id.clone(),
+                        success,
+                        notify,
+                        task_id,
+                    );
+                    close_connections_after_switch(&profile_id).await;
+                    if notify && success {
+                        handle::Handle::notice_message("info", "Profile Switched");
+                    }
+                    logging!(
+                        info,
+                        Type::Cmd,
+                        "Profile switch task finished: {} (success={})",
+                        profile_id,
+                        success
+                    );
+                    Ok(success)
                 }
-                logging!(
-                    info,
-                    Type::Cmd,
-                    "Profile switch task finished: {} (success={})",
-                    profile_id,
-                    success
-                );
-                success
-            }
-            Err(err) => {
+                Err(err) => {
+                    logging!(
+                        error,
+                        Type::Cmd,
+                        "Profile switch failed ({}): {}",
+                        profile_id,
+                        err
+                    );
+                    handle::Handle::notice_message("config_validate::error", err.clone());
+                    handle::Handle::notify_profile_switch_finished(
+                        profile_id.clone(),
+                        false,
+                        notify,
+                        task_id,
+                    );
+                    Ok(false)
+                }
+            },
+            Err(panic_info) => {
                 logging!(
                     error,
                     Type::Cmd,
-                    "Profile switch failed ({}): {}",
+                    "State machine panic during profile switch task {} ({} {:?}): {}",
+                    task_id,
                     profile_id,
-                    err
+                    panic_info.stage,
+                    panic_info.detail
                 );
-                handle::Handle::notice_message("config_validate::error", err.clone());
+                handle::Handle::notice_message(
+                    "config_validate::panic",
+                    format!("profile switch panic: {}", profile_id),
+                );
                 handle::Handle::notify_profile_switch_finished(
                     profile_id.clone(),
                     false,
                     notify,
                     task_id,
                 );
-                false
+                Err(panic_info)
             }
         },
     }
 }
 
 pub(super) async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
-    SwitchStateMachine::new(manager(), None, profiles)
+    match SwitchStateMachine::new(manager(), None, profiles)
         .run()
         .await
+    {
+        Ok(result) => result,
+        Err(panic_info) => Err(format!(
+            "profile switch panic ({:?}): {}",
+            panic_info.stage, panic_info.detail
+        )
+        .into()),
+    }
 }
 
 pub(super) async fn validate_profile_yaml(profile: &SmartString) -> CmdResult<bool> {
@@ -336,7 +369,7 @@ async fn close_connections_after_switch(profile_id: &SmartString) {
     }
 }
 
-fn describe_panic_payload(payload: &(dyn Any + Send)) -> String {
+pub(super) fn describe_panic_payload(payload: &(dyn Any + Send)) -> String {
     if let Some(message) = payload.downcast_ref::<&str>() {
         (*message).to_string()
     } else if let Some(message) = payload.downcast_ref::<std::string::String>() {

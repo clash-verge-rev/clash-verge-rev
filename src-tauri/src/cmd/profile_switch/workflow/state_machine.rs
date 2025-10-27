@@ -1,4 +1,4 @@
-use super::{CmdResult, restore_previous_profile, validate_profile_yaml};
+use super::{CmdResult, describe_panic_payload, restore_previous_profile, validate_profile_yaml};
 use crate::{
     cmd::profile_switch::state::{SwitchManager, SwitchRequest, SwitchScope},
     config::{Config, IProfiles, profiles::profiles_save_file_safe},
@@ -6,8 +6,9 @@ use crate::{
     logging,
     utils::logging::Type,
 };
+use futures::FutureExt;
 use smartstring::alias::String as SmartString;
-use std::{mem, time::Duration};
+use std::{mem, panic::AssertUnwindSafe, time::Duration};
 use tokio::{sync::MutexGuard, time};
 
 /// Explicit state machine for profile switching so we can reason about
@@ -15,6 +16,39 @@ use tokio::{sync::MutexGuard, time};
 pub(super) struct SwitchStateMachine {
     ctx: SwitchContext,
     state: SwitchState,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SwitchStage {
+    Start,
+    AcquireCore,
+    Prepare,
+    ValidateTarget,
+    PatchDraft,
+    UpdateCore,
+    Finalize,
+    Workflow,
+    DriverTask,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct SwitchPanicInfo {
+    pub(crate) stage: SwitchStage,
+    pub(crate) detail: String,
+}
+
+impl SwitchPanicInfo {
+    pub(crate) fn new(stage: SwitchStage, detail: String) -> Self {
+        Self { stage, detail }
+    }
+
+    pub(crate) fn workflow_root(detail: String) -> Self {
+        Self::new(SwitchStage::Workflow, detail)
+    }
+
+    pub(crate) fn driver_task(detail: String) -> Self {
+        Self::new(SwitchStage::DriverTask, detail)
+    }
 }
 
 impl SwitchStateMachine {
@@ -29,21 +63,86 @@ impl SwitchStateMachine {
         }
     }
 
-    pub(super) async fn run(mut self) -> CmdResult<bool> {
+    pub(super) async fn run(mut self) -> Result<CmdResult<bool>, SwitchPanicInfo> {
         loop {
             let current_state = mem::replace(&mut self.state, SwitchState::Complete(false));
-            let next = match current_state {
-                SwitchState::Start => self.handle_start(),
-                SwitchState::AcquireCore => self.handle_acquire_core().await,
-                SwitchState::Prepare => self.handle_prepare().await,
-                SwitchState::ValidateTarget => self.handle_validate_target().await,
-                SwitchState::PatchDraft => self.handle_patch_draft().await,
-                SwitchState::UpdateCore => self.handle_update_core().await,
-                SwitchState::Finalize(outcome) => self.handle_finalize(outcome).await,
-                SwitchState::Complete(result) => return Ok(result),
-            }?;
-            self.state = next;
+            match current_state {
+                SwitchState::Complete(result) => return Ok(Ok(result)),
+                _ => match self.run_state(current_state).await? {
+                    Ok(state) => self.state = state,
+                    Err(err) => return Ok(Err(err)),
+                },
+            }
         }
+    }
+
+    async fn run_state(
+        &mut self,
+        current: SwitchState,
+    ) -> Result<CmdResult<SwitchState>, SwitchPanicInfo> {
+        match current {
+            SwitchState::Start => {
+                self.with_stage(
+                    SwitchStage::Start,
+                    |this| async move { this.handle_start() },
+                )
+                .await
+            }
+            SwitchState::AcquireCore => {
+                self.with_stage(SwitchStage::AcquireCore, |this| async move {
+                    this.handle_acquire_core().await
+                })
+                .await
+            }
+            SwitchState::Prepare => {
+                self.with_stage(SwitchStage::Prepare, |this| async move {
+                    this.handle_prepare().await
+                })
+                .await
+            }
+            SwitchState::ValidateTarget => {
+                self.with_stage(SwitchStage::ValidateTarget, |this| async move {
+                    this.handle_validate_target().await
+                })
+                .await
+            }
+            SwitchState::PatchDraft => {
+                self.with_stage(SwitchStage::PatchDraft, |this| async move {
+                    this.handle_patch_draft().await
+                })
+                .await
+            }
+            SwitchState::UpdateCore => {
+                self.with_stage(SwitchStage::UpdateCore, |this| async move {
+                    this.handle_update_core().await
+                })
+                .await
+            }
+            SwitchState::Finalize(outcome) => {
+                self.with_stage(SwitchStage::Finalize, |this| async move {
+                    this.handle_finalize(outcome).await
+                })
+                .await
+            }
+            SwitchState::Complete(result) => Ok(Ok(SwitchState::Complete(result))),
+        }
+    }
+
+    async fn with_stage<'a, F, Fut>(
+        &'a mut self,
+        stage: SwitchStage,
+        f: F,
+    ) -> Result<CmdResult<SwitchState>, SwitchPanicInfo>
+    where
+        F: FnOnce(&'a mut Self) -> Fut,
+        Fut: std::future::Future<Output = CmdResult<SwitchState>> + 'a,
+    {
+        AssertUnwindSafe(f(self))
+            .catch_unwind()
+            .await
+            .map_err(|payload| {
+                SwitchPanicInfo::new(stage, describe_panic_payload(payload.as_ref()))
+            })
     }
 
     fn handle_start(&mut self) -> CmdResult<SwitchState> {
@@ -137,10 +236,7 @@ impl SwitchStateMachine {
             self.ctx.sequence()
         );
 
-        let patch = self
-            .ctx
-            .take_profiles_patch()
-            .ok_or_else(|| "profiles patch already consumed".to_string())?;
+        let patch = self.ctx.take_profiles_patch()?;
         self.ctx.new_profile_for_event = patch.current.clone();
         let _ = Config::profiles().await.draft_mut().patch_config(patch);
 
@@ -323,8 +419,10 @@ impl SwitchContext {
         }
     }
 
-    fn take_profiles_patch(&mut self) -> Option<IProfiles> {
-        self.profiles_patch.take()
+    fn take_profiles_patch(&mut self) -> CmdResult<IProfiles> {
+        self.profiles_patch
+            .take()
+            .ok_or_else(|| "profiles patch already consumed".into())
     }
 
     fn cancelled(&self) -> bool {

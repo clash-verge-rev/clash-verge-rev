@@ -1,12 +1,16 @@
 use super::{
     CmdResult,
     state::{SwitchCancellation, SwitchManager, SwitchRequest, manager},
-    workflow,
+    workflow::{self, SwitchPanicInfo},
 };
 use crate::{logging, utils::logging::Type};
+use futures::FutureExt;
 use once_cell::sync::OnceCell;
 use smartstring::alias::String as SmartString;
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    panic::AssertUnwindSafe,
+};
 use tokio::sync::{
     mpsc::{self, error::TrySendError},
     oneshot,
@@ -30,8 +34,14 @@ enum SwitchDriverMessage {
     },
     Completion {
         request: SwitchRequest,
-        success: bool,
+        outcome: SwitchJobOutcome,
     },
+}
+
+#[derive(Debug)]
+enum SwitchJobOutcome {
+    Completed { success: bool },
+    Panicked { info: SwitchPanicInfo },
 }
 
 pub(super) async fn switch_profile(
@@ -139,8 +149,8 @@ fn switch_driver_sender() -> &'static mpsc::Sender<SwitchDriverMessage> {
                     } => {
                         handle_enqueue(&mut state, request, respond_to, driver_tx.clone(), manager);
                     }
-                    SwitchDriverMessage::Completion { request, success } => {
-                        handle_completion(&mut state, request, success, driver_tx.clone(), manager);
+                    SwitchDriverMessage::Completion { request, outcome } => {
+                        handle_completion(&mut state, request, outcome, driver_tx.clone(), manager);
                     }
                 }
             }
@@ -203,17 +213,31 @@ fn handle_enqueue(
 fn handle_completion(
     state: &mut SwitchDriverState,
     request: SwitchRequest,
-    success: bool,
+    outcome: SwitchJobOutcome,
     driver_tx: mpsc::Sender<SwitchDriverMessage>,
     manager: &'static SwitchManager,
 ) {
-    logging!(
-        info,
-        Type::Cmd,
-        "Switch task {} completed (success={})",
-        request.task_id(),
-        success
-    );
+    match &outcome {
+        SwitchJobOutcome::Completed { success } => {
+            logging!(
+                info,
+                Type::Cmd,
+                "Switch task {} completed (success={})",
+                request.task_id(),
+                success
+            );
+        }
+        SwitchJobOutcome::Panicked { info } => {
+            logging!(
+                error,
+                Type::Cmd,
+                "Switch task {} panicked at stage {:?}: {}",
+                request.task_id(),
+                info.stage,
+                info.detail
+            );
+        }
+    }
 
     if let Some(active) = state.active.as_ref()
         && active.task_id() == request.task_id()
@@ -242,11 +266,23 @@ fn start_switch_job(
 ) {
     let completion_request = request.clone();
     tokio::spawn(async move {
-        let success = workflow::run_switch_job(manager, request).await;
+        let job_result = match AssertUnwindSafe(workflow::run_switch_job(manager, request))
+            .catch_unwind()
+            .await
+        {
+            Ok(Ok(success)) => SwitchJobOutcome::Completed { success },
+            Ok(Err(info)) => SwitchJobOutcome::Panicked { info },
+            Err(payload) => SwitchJobOutcome::Panicked {
+                info: SwitchPanicInfo::driver_task(workflow::describe_panic_payload(
+                    payload.as_ref(),
+                )),
+            },
+        };
+
         if let Err(err) = driver_tx
             .send(SwitchDriverMessage::Completion {
                 request: completion_request,
-                success,
+                outcome: job_result,
             })
             .await
         {
