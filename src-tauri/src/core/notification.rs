@@ -158,12 +158,39 @@ impl NotificationSystem {
             }
         };
 
+        logging!(
+            info,
+            Type::Frontend,
+            "Async emit scheduled after delay: {}",
+            event_name
+        );
         async_runtime::spawn(async move {
+            let start = Instant::now();
             sleep(Duration::from_millis(50)).await;
+            logging!(
+                info,
+                Type::Frontend,
+                "Async emit invoking emit_to: {} (delay {:?})",
+                event_name,
+                start.elapsed()
+            );
+            let emit_start = Instant::now();
             if let Err(err) = Self::emit_via_app(event_name, payload).await {
-                logging!(warn, Type::Frontend, "Async emit failed: {}", err);
+                logging!(
+                    warn,
+                    Type::Frontend,
+                    "Async emit failed: {} after {:?}",
+                    err,
+                    emit_start.elapsed()
+                );
             } else {
-                logging!(info, Type::Frontend, "Async emit completed: {}", event_name);
+                logging!(
+                    info,
+                    Type::Frontend,
+                    "Async emit completed: {} (emit duration {:?})",
+                    event_name,
+                    emit_start.elapsed()
+                );
             }
         });
     }
@@ -181,7 +208,19 @@ impl NotificationSystem {
         payload: serde_json::Value,
     ) -> Result<(), String> {
         let app_handle = super::handle::Handle::app_handle().clone();
+        logging!(
+            info,
+            Type::Frontend,
+            "emit_via_app entering spawn_blocking: {}",
+            event_name
+        );
         async_runtime::spawn_blocking(move || {
+            logging!(
+                info,
+                Type::Frontend,
+                "emit_via_app calling emit_to synchronously: {}",
+                event_name
+            );
             app_handle
                 .emit_to("main", event_name, payload)
                 .map_err(|e| e.to_string())

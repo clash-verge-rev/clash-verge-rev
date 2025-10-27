@@ -25,6 +25,7 @@ import {
 } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Divider, Grid, IconButton, Stack } from "@mui/material";
+import { invoke } from "@tauri-apps/api/core";
 import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { readTextFile } from "@tauri-apps/plugin-fs";
@@ -356,6 +357,23 @@ const ProfilePage = () => {
 
   const { t } = useTranslation();
   const location = useLocation();
+  const logToBackend = useCallback(
+    (
+      level: "debug" | "info" | "warn" | "error",
+      message: string,
+      context?: Record<string, unknown>,
+    ) => {
+      const payload: Record<string, unknown> = {
+        level,
+        message,
+      };
+      if (context !== undefined) {
+        payload.context = context;
+      }
+      invoke("frontend_log", payload).catch(() => {});
+    },
+    [],
+  );
   const { addListener } = useListen();
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
@@ -372,11 +390,55 @@ const ProfilePage = () => {
       }
     };
   }, [postSwitchEffectQueue, switchEventQueue]);
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      logToBackend("error", "[ProfileSwitch] window error captured", {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        stack: event.error?.stack,
+      });
+      console.error(
+        "[ProfileSwitch] window error captured",
+        event.message,
+        event.error,
+      );
+    };
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      let reasonSummary: string;
+      if (typeof event.reason === "object") {
+        try {
+          reasonSummary = JSON.stringify(event.reason);
+        } catch (error) {
+          reasonSummary = `[unserializable reason: ${String(error)}]`;
+        }
+      } else {
+        reasonSummary = String(event.reason);
+      }
+      logToBackend("error", "[ProfileSwitch] unhandled rejection captured", {
+        reason: reasonSummary,
+      });
+      console.error(
+        "[ProfileSwitch] unhandled rejection captured",
+        event.reason,
+      );
+    };
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleRejection);
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleRejection);
+    };
+  }, [logToBackend]);
   const [loading, setLoading] = useState(false);
   const [switchState, dispatchSwitch] = useReducer(
     switchQueueReducer,
     initialSwitchQueueState,
   );
+  const switchStateRef = useRef(switchState);
+  const lastProcessedTaskRef = useRef(0);
+  const postSwitchGenerationRef = useRef(0);
   const switchingProfileId = switchState.active?.profileId ?? null;
   const switchCommandTokenRef = useRef<number | null>(null);
   const switchActivatingIds = useMemo(
@@ -388,6 +450,10 @@ const ProfilePage = () => {
     switchActivatingIds.forEach((id) => merged.add(id));
     return Array.from(merged);
   }, [manualActivatings, switchActivatingIds]);
+
+  useEffect(() => {
+    switchStateRef.current = switchState;
+  }, [switchState]);
 
   // Batch selection states
   const [batchMode, setBatchMode] = useState(false);
@@ -725,12 +791,20 @@ const ProfilePage = () => {
 
   const enqueueSwitch = useCallback(
     (targetProfile: string, notifySuccess: boolean) => {
+      const nextGeneration = postSwitchGenerationRef.current + 1;
+      logToBackend("info", "[ProfileSwitch] enqueue switch request", {
+        targetProfile,
+        notifySuccess,
+        nextGeneration,
+      });
+      postSwitchGenerationRef.current = nextGeneration;
+      postSwitchEffectQueue.clear();
       dispatchSwitch({
         type: "enqueue",
         request: { profileId: targetProfile, notifySuccess },
       });
     },
-    [dispatchSwitch],
+    [dispatchSwitch, logToBackend, postSwitchEffectQueue],
   );
 
   useEffect(() => {
@@ -745,6 +819,17 @@ const ProfilePage = () => {
           if (!mountedRef.current) return;
 
           const { profileId, success, notify, taskId } = payload;
+          const stateSnapshot = switchStateRef.current;
+          logToBackend("info", "[ProfileSwitch] received completion event", {
+            profileId,
+            success,
+            notify,
+            taskId,
+            activeProfile: stateSnapshot.active?.profileId ?? null,
+            queueLength: stateSnapshot.queue.length,
+            lastProcessed: lastProcessedTaskRef.current,
+            generation: postSwitchGenerationRef.current,
+          });
           debugProfileSwitch("SWITCH_FINISHED", profileId, {
             success,
             taskId,
@@ -752,6 +837,47 @@ const ProfilePage = () => {
           });
 
           setManualActivatings((prev) => prev.filter((id) => id !== profileId));
+
+          if (taskId <= lastProcessedTaskRef.current) {
+            logToBackend(
+              "warn",
+              "[ProfileSwitch] stale completion event ignored",
+              {
+                profileId,
+                taskId,
+                lastProcessed: lastProcessedTaskRef.current,
+              },
+            );
+            if (isDev) {
+              console.debug(
+                `[ProfileSwitch] task ${taskId} ignored (duplicate or out-of-order event)`,
+              );
+            }
+            return;
+          }
+
+          const activeEntry = stateSnapshot.active;
+          if (!activeEntry || activeEntry.profileId !== profileId) {
+            logToBackend(
+              "info",
+              "[ProfileSwitch] completion for inactive profile ignored",
+              {
+                profileId,
+                taskId,
+                activeProfile: activeEntry?.profileId ?? null,
+              },
+            );
+            if (isDev) {
+              console.debug(
+                `[ProfileSwitch] task ${taskId} ignored (profile ${profileId} no longer active)`,
+              );
+            }
+            lastProcessedTaskRef.current = taskId;
+            return;
+          }
+
+          lastProcessedTaskRef.current = taskId;
+          const eventGeneration = postSwitchGenerationRef.current;
 
           if (isDev) {
             console.groupCollapsed(
@@ -767,6 +893,25 @@ const ProfilePage = () => {
             switchCommandTokenRef.current = null;
 
             postSwitchEffectQueue.enqueue(async () => {
+              if (!mountedRef.current) return;
+              if (postSwitchGenerationRef.current !== eventGeneration) {
+                logToBackend(
+                  "info",
+                  "[ProfileSwitch] success post-phase skipped (generation advanced)",
+                  {
+                    taskId,
+                    profileId,
+                    expectedGeneration: eventGeneration,
+                    currentGeneration: postSwitchGenerationRef.current,
+                  },
+                );
+                if (isDev) {
+                  console.debug(
+                    `[ProfileSwitch] task ${taskId} success post phase skipped (generation advanced)`,
+                  );
+                }
+                return;
+              }
               const phaseStart = isDev ? performance.now() : 0;
               const operations: Promise<unknown>[] = [];
               const mutateLogs = mutateLogsRef.current;
@@ -798,6 +943,15 @@ const ProfilePage = () => {
               }
 
               scheduleProfileMutate();
+              logToBackend(
+                "info",
+                "[ProfileSwitch] success post-phase completed",
+                {
+                  taskId,
+                  profileId,
+                  notify,
+                },
+              );
               if (isDev) {
                 console.debug(
                   `[ProfileSwitch] task ${taskId} success post phase ${(performance.now() - phaseStart).toFixed(1)}ms`,
@@ -813,10 +967,37 @@ const ProfilePage = () => {
             switchCommandTokenRef.current = null;
 
             postSwitchEffectQueue.enqueue(async () => {
+              if (!mountedRef.current) return;
+              if (postSwitchGenerationRef.current !== eventGeneration) {
+                logToBackend(
+                  "info",
+                  "[ProfileSwitch] failure post-phase skipped (generation advanced)",
+                  {
+                    taskId,
+                    profileId,
+                    expectedGeneration: eventGeneration,
+                    currentGeneration: postSwitchGenerationRef.current,
+                  },
+                );
+                if (isDev) {
+                  console.debug(
+                    `[ProfileSwitch] task ${taskId} failure post phase skipped (generation advanced)`,
+                  );
+                }
+                return;
+              }
               const phaseStart = isDev ? performance.now() : 0;
               await afterPaint();
               showNotice("error", tRef.current("Profile switch failed"));
               scheduleProfileMutate();
+              logToBackend(
+                "warn",
+                "[ProfileSwitch] failure post-phase completed",
+                {
+                  taskId,
+                  profileId,
+                },
+              );
               if (isDev) {
                 console.debug(
                   `[ProfileSwitch] task ${taskId} failure post phase ${(performance.now() - phaseStart).toFixed(1)}ms`,
@@ -840,6 +1021,7 @@ const ProfilePage = () => {
     };
   }, [
     dispatchSwitch,
+    logToBackend,
     postSwitchEffectQueue,
     scheduleProfileMutate,
     setManualActivatings,

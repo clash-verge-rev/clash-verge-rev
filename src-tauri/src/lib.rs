@@ -219,6 +219,7 @@ mod app_init {
             cmd::get_system_info,
             cmd::get_unlock_items,
             cmd::check_media_unlock,
+            cmd::frontend_log,
         ]
     }
 }
