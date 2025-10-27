@@ -4,6 +4,7 @@ use crate::{
     config::{Config, IProfiles, profiles::profiles_save_file_safe},
     core::{CoreManager, handle, tray::Tray},
     logging,
+    process::AsyncHandler,
     utils::logging::Type,
 };
 use futures::FutureExt;
@@ -316,6 +317,8 @@ impl SwitchStateMachine {
             Err(_) => CoreUpdateOutcome::Timeout,
         };
 
+        self.ctx.release_locks();
+
         Ok(SwitchState::Finalize(outcome))
     }
 
@@ -334,12 +337,18 @@ impl SwitchStateMachine {
                     "Configuration update succeeded, sequence: {}",
                     self.ctx.sequence()
                 );
-                match time::timeout(CONFIG_APPLY_TIMEOUT, async {
-                    Config::profiles().await.apply();
+                let apply_result = time::timeout(CONFIG_APPLY_TIMEOUT, async {
+                    AsyncHandler::spawn_blocking(|| {
+                        futures::executor::block_on(async {
+                            Config::profiles().await.apply();
+                        });
+                    })
+                    .await
                 })
-                .await
-                {
-                    Ok(()) => {}
+                .await;
+
+                match apply_result {
+                    Ok(_) => {}
                     Err(_) => {
                         logging!(
                             warn,
@@ -366,64 +375,59 @@ impl SwitchStateMachine {
                     );
                 }
 
-                match time::timeout(TRAY_UPDATE_TIMEOUT, Tray::global().update_tooltip()).await {
-                    Ok(Ok(())) => {}
-                    Ok(Err(err)) => {
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Failed to update tray tooltip asynchronously: {}",
-                            err
-                        );
-                    }
-                    Err(_) => {
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Updating tray tooltip timed out after {:?}",
-                            TRAY_UPDATE_TIMEOUT
-                        );
-                    }
+                let update_tooltip = time::timeout(TRAY_UPDATE_TIMEOUT, async {
+                    Tray::global().update_tooltip().await
+                })
+                .await;
+                if update_tooltip.is_err() {
+                    logging!(
+                        warn,
+                        Type::Cmd,
+                        "Updating tray tooltip timed out after {:?}",
+                        TRAY_UPDATE_TIMEOUT
+                    );
+                } else if let Ok(Err(err)) = update_tooltip {
+                    logging!(
+                        warn,
+                        Type::Cmd,
+                        "Failed to update tray tooltip asynchronously: {}",
+                        err
+                    );
                 }
 
-                match time::timeout(TRAY_UPDATE_TIMEOUT, Tray::global().update_menu()).await {
-                    Ok(Ok(())) => {}
-                    Ok(Err(err)) => {
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Failed to update tray menu asynchronously: {}",
-                            err
-                        );
-                    }
-                    Err(_) => {
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Updating tray menu timed out after {:?}",
-                            TRAY_UPDATE_TIMEOUT
-                        );
-                    }
+                let update_menu = time::timeout(TRAY_UPDATE_TIMEOUT, async {
+                    Tray::global().update_menu().await
+                })
+                .await;
+                if update_menu.is_err() {
+                    logging!(
+                        warn,
+                        Type::Cmd,
+                        "Updating tray menu timed out after {:?}",
+                        TRAY_UPDATE_TIMEOUT
+                    );
+                } else if let Ok(Err(err)) = update_menu {
+                    logging!(
+                        warn,
+                        Type::Cmd,
+                        "Failed to update tray menu asynchronously: {}",
+                        err
+                    );
                 }
 
-                match time::timeout(SAVE_PROFILES_TIMEOUT, profiles_save_file_safe()).await {
-                    Ok(Ok(())) => {}
-                    Ok(Err(err)) => {
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Failed to persist configuration file asynchronously: {}",
-                            err
-                        );
-                    }
-                    Err(_) => {
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Persisting configuration file timed out after {:?}",
-                            SAVE_PROFILES_TIMEOUT
-                        );
-                    }
+                let save_future = AsyncHandler::spawn_blocking(|| {
+                    futures::executor::block_on(async { profiles_save_file_safe().await })
+                });
+                if time::timeout(SAVE_PROFILES_TIMEOUT, save_future)
+                    .await
+                    .is_err()
+                {
+                    logging!(
+                        warn,
+                        Type::Cmd,
+                        "Persisting configuration file timed out after {:?}",
+                        SAVE_PROFILES_TIMEOUT
+                    );
                 }
 
                 if let Some(current) = self.ctx.new_profile_for_event.clone() {
@@ -619,6 +623,11 @@ impl SwitchContext {
                 since_last
             ),
         }
+    }
+
+    fn release_locks(&mut self) {
+        self.core_guard = None;
+        self.switch_scope = None;
     }
 }
 

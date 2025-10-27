@@ -135,23 +135,7 @@ pub(super) async fn run_switch_job(
         Ok(Ok(machine_result)) => match machine_result {
             Ok(cmd_result) => match cmd_result {
                 Ok(success) => {
-                    handle::Handle::notify_profile_switch_finished(
-                        profile_id.clone(),
-                        success,
-                        notify,
-                        task_id,
-                    );
-                    close_connections_after_switch(&profile_id).await;
-                    if notify && success {
-                        handle::Handle::notice_message("info", "Profile Switched");
-                    }
-                    logging!(
-                        info,
-                        Type::Cmd,
-                        "Profile switch task finished: {} (success={})",
-                        profile_id,
-                        success
-                    );
+                    schedule_post_switch_success(profile_id.clone(), success, notify, task_id);
                     Ok(success)
                 }
                 Err(err) => {
@@ -340,16 +324,24 @@ pub(super) async fn restore_previous_profile(previous: Option<SmartString>) -> C
         }
 
         AsyncHandler::spawn(|| async move {
-            match time::timeout(SAVE_PROFILES_TIMEOUT, profiles_save_file_safe()).await {
-                Ok(Ok(())) => {}
-                Ok(Err(e)) => {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Failed to persist restored configuration asynchronously: {}",
-                        e
-                    );
-                }
+            let save_future = AsyncHandler::spawn_blocking(|| {
+                futures::executor::block_on(async { profiles_save_file_safe().await })
+            });
+            match time::timeout(SAVE_PROFILES_TIMEOUT, save_future).await {
+                Ok(join_res) => match join_res {
+                    Ok(Ok(())) => {}
+                    Ok(Err(err)) => {
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Failed to persist restored configuration asynchronously: {}",
+                            err
+                        );
+                    }
+                    Err(join_err) => {
+                        logging!(warn, Type::Cmd, "Blocking save task failed: {}", join_err);
+                    }
+                },
                 Err(_) => {
                     logging!(
                         warn,
@@ -391,6 +383,32 @@ async fn close_connections_after_switch(profile_id: &SmartString) {
             );
         }
     }
+}
+
+fn schedule_close_connections(profile_id: SmartString) {
+    AsyncHandler::spawn(|| async move {
+        close_connections_after_switch(&profile_id).await;
+    });
+}
+
+fn schedule_post_switch_success(
+    profile_id: SmartString,
+    success: bool,
+    notify: bool,
+    task_id: u64,
+) {
+    AsyncHandler::spawn(move || async move {
+        handle::Handle::notify_profile_switch_finished(
+            profile_id.clone(),
+            success,
+            notify,
+            task_id,
+        );
+        if notify && success {
+            handle::Handle::notice_message("info", "Profile Switched");
+        }
+        schedule_close_connections(profile_id);
+    });
 }
 
 pub(super) fn describe_panic_payload(payload: &(dyn Any + Send)) -> String {
