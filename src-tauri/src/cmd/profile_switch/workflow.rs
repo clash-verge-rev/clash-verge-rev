@@ -408,9 +408,6 @@ fn schedule_post_switch_success(
             notify,
             task_id,
         );
-        if notify && success {
-            handle::Handle::notice_message("info", "Profile Switched");
-        }
         close_connections_after_switch(profile_id).await;
     })
 }

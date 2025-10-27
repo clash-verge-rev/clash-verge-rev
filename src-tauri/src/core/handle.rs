@@ -73,11 +73,11 @@ impl Handle {
             return;
         }
 
-        let system_opt = handle.notification_system.read();
-        if let Some(system) = system_opt.as_ref() {
-            system.send_event(FrontendEvent::RefreshClash);
-            system.send_event(FrontendEvent::RefreshProxy);
-        }
+        logging!(
+            info,
+            Type::Frontend,
+            "refresh_clash suppressed during diagnostics (no events emitted)"
+        );
 
         Self::spawn_proxy_snapshot();
     }
@@ -95,9 +95,12 @@ impl Handle {
     }
 
     pub fn notify_profile_changed(profile_id: String) {
-        Self::send_event(FrontendEvent::ProfileChanged {
-            current_profile_id: profile_id,
-        });
+        logging!(
+            info,
+            Type::Frontend,
+            "notify_profile_changed suppressed during diagnostics (profile={})",
+            profile_id
+        );
     }
 
     pub fn notify_profile_switch_finished(

@@ -1,4 +1,5 @@
 use crate::{constants::retry, logging, utils::logging::Type};
+use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use smartstring::alias::String;
 use std::{
@@ -12,6 +13,9 @@ use std::{
 use tauri::{Emitter, async_runtime};
 use tokio::time::{Duration, sleep};
 
+static EMIT_SERIALIZER: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
+
+#[allow(dead_code)] // Temporarily suppress warnings while diagnostics disable certain events
 #[derive(Debug, Clone)]
 pub enum FrontendEvent {
     RefreshClash,
@@ -165,6 +169,13 @@ impl NotificationSystem {
             event_name
         );
         async_runtime::spawn(async move {
+            let _guard = EMIT_SERIALIZER.lock().await;
+            logging!(
+                info,
+                Type::Frontend,
+                "Async emit acquired serializer: {}",
+                event_name
+            );
             let start = Instant::now();
             sleep(Duration::from_millis(50)).await;
             logging!(
