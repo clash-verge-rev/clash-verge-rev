@@ -34,6 +34,16 @@ pub fn get_supported_languages() -> Vec<String> {
     languages
 }
 
+pub async fn current_language() -> String {
+    Config::verge()
+        .await
+        .latest_ref()
+        .language
+        .as_deref()
+        .map(String::from)
+        .unwrap_or_else(get_system_language)
+}
+
 static TRANSLATIONS: Lazy<RwLock<(String, Value)>> = Lazy::new(|| {
     let lang = get_system_language();
     let json = load_lang_file(&lang).unwrap_or_else(|| Value::Object(Default::default()));
@@ -57,13 +67,7 @@ fn get_system_language() -> String {
 }
 
 pub async fn t(key: &str) -> String {
-    let current_lang = Config::verge()
-        .await
-        .latest_ref()
-        .language
-        .as_deref()
-        .map(String::from)
-        .unwrap_or_else(get_system_language);
+    let current_lang = current_language().await;
 
     {
         if let Ok(cache) = TRANSLATIONS.read()

@@ -33,58 +33,12 @@ use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
 };
+mod menu_def;
+use menu_def::{MenuIds, MenuTexts};
 
 // TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
 
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
-
-struct MenuTexts {
-    dashboard: String,
-    rule_mode: String,
-    global_mode: String,
-    direct_mode: String,
-    profiles: String,
-    proxies: String,
-    system_proxy: String,
-    tun_mode: String,
-    close_all_connections: String,
-    lightweight_mode: String,
-    copy_env: String,
-    conf_dir: String,
-    core_dir: String,
-    logs_dir: String,
-    open_dir: String,
-    restart_clash: String,
-    restart_app: String,
-    verge_version: String,
-    more: String,
-    exit: String,
-}
-
-async fn fetch_menu_texts() -> MenuTexts {
-    MenuTexts {
-        dashboard: t("Dashboard").await,
-        rule_mode: t("Rule Mode").await,
-        global_mode: t("Global Mode").await,
-        direct_mode: t("Direct Mode").await,
-        profiles: t("Profiles").await,
-        proxies: t("Proxies").await,
-        system_proxy: t("System Proxy").await,
-        tun_mode: t("TUN Mode").await,
-        close_all_connections: t("Close All Connections").await,
-        lightweight_mode: t("LightWeight Mode").await,
-        copy_env: t("Copy Env").await,
-        conf_dir: t("Conf Dir").await,
-        core_dir: t("Core Dir").await,
-        logs_dir: t("Logs Dir").await,
-        open_dir: t("Open Dir").await,
-        restart_clash: t("Restart Clash Core").await,
-        restart_app: t("Restart App").await,
-        verge_version: t("Verge Version").await,
-        more: t("More").await,
-        exit: t("Exit").await,
-    }
-}
 
 #[derive(Clone)]
 struct TrayState {}
@@ -864,7 +818,7 @@ fn create_proxy_menu_item(
         (
             Some(Submenu::with_id_and_items(
                 app_handle,
-                "proxies",
+                MenuIds::PROXIES,
                 proxies_text,
                 true,
                 &proxy_submenu_refs,
@@ -947,8 +901,7 @@ async fn create_tray_menu(
         create_profile_menu_item(app_handle, profile_uid_and_name).await?;
 
     // Pre-fetch all localized strings
-    let texts = &fetch_menu_texts().await;
-
+    let texts = &MenuTexts::new().await;
     // Convert to references only when needed
     let profile_menu_items_refs: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
         .iter()
@@ -957,7 +910,7 @@ async fn create_tray_menu(
 
     let open_window = &MenuItem::with_id(
         app_handle,
-        "open_window",
+        MenuIds::DASHBOARD,
         &texts.dashboard,
         true,
         hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
@@ -965,7 +918,7 @@ async fn create_tray_menu(
 
     let rule_mode = &CheckMenuItem::with_id(
         app_handle,
-        "rule_mode",
+        MenuIds::RULE_MODE,
         &texts.rule_mode,
         true,
         current_proxy_mode == "rule",
@@ -974,7 +927,7 @@ async fn create_tray_menu(
 
     let global_mode = &CheckMenuItem::with_id(
         app_handle,
-        "global_mode",
+        MenuIds::GLOBAL_MODE,
         &texts.global_mode,
         true,
         current_proxy_mode == "global",
@@ -983,7 +936,7 @@ async fn create_tray_menu(
 
     let direct_mode = &CheckMenuItem::with_id(
         app_handle,
-        "direct_mode",
+        MenuIds::DIRECT_MODE,
         &texts.direct_mode,
         true,
         current_proxy_mode == "direct",
@@ -992,7 +945,7 @@ async fn create_tray_menu(
 
     let profiles = &Submenu::with_id_and_items(
         app_handle,
-        "profiles",
+        MenuIds::PROFILES,
         &texts.profiles,
         true,
         &profile_menu_items_refs,
@@ -1015,7 +968,7 @@ async fn create_tray_menu(
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
-        "system_proxy",
+        MenuIds::SYSTEM_PROXY,
         &texts.system_proxy,
         true,
         system_proxy_enabled,
@@ -1024,7 +977,7 @@ async fn create_tray_menu(
 
     let tun_mode = &CheckMenuItem::with_id(
         app_handle,
-        "tun_mode",
+        MenuIds::TUN_MODE,
         &texts.tun_mode,
         true,
         tun_mode_enabled,
@@ -1033,26 +986,32 @@ async fn create_tray_menu(
 
     let close_all_connections = &MenuItem::with_id(
         app_handle,
-        "close_all_connections",
+        MenuIds::CLOSE_ALL_CONNECTIONS,
         &texts.close_all_connections,
         true,
         None::<&str>,
     )?;
 
-    let lighteweight_mode = &CheckMenuItem::with_id(
+    let lightweight_mode = &CheckMenuItem::with_id(
         app_handle,
-        "entry_lightweight_mode",
+        MenuIds::LIGHTWEIGHT_MODE,
         &texts.lightweight_mode,
         true,
         is_lightweight_mode,
         hotkeys.get("entry_lightweight_mode").map(|s| s.as_str()),
     )?;
 
-    let copy_env = &MenuItem::with_id(app_handle, "copy_env", &texts.copy_env, true, None::<&str>)?;
+    let copy_env = &MenuItem::with_id(
+        app_handle,
+        MenuIds::COPY_ENV,
+        &texts.copy_env,
+        true,
+        None::<&str>,
+    )?;
 
     let open_app_dir = &MenuItem::with_id(
         app_handle,
-        "open_app_dir",
+        MenuIds::CONF_DIR,
         &texts.conf_dir,
         true,
         None::<&str>,
@@ -1060,7 +1019,7 @@ async fn create_tray_menu(
 
     let open_core_dir = &MenuItem::with_id(
         app_handle,
-        "open_core_dir",
+        MenuIds::CORE_DIR,
         &texts.core_dir,
         true,
         None::<&str>,
@@ -1068,7 +1027,7 @@ async fn create_tray_menu(
 
     let open_logs_dir = &MenuItem::with_id(
         app_handle,
-        "open_logs_dir",
+        MenuIds::LOGS_DIR,
         &texts.logs_dir,
         true,
         None::<&str>,
@@ -1076,7 +1035,7 @@ async fn create_tray_menu(
 
     let open_dir = &Submenu::with_id_and_items(
         app_handle,
-        "open_dir",
+        MenuIds::OPEN_DIR,
         &texts.open_dir,
         true,
         &[open_app_dir, open_core_dir, open_logs_dir],
@@ -1084,7 +1043,7 @@ async fn create_tray_menu(
 
     let restart_clash = &MenuItem::with_id(
         app_handle,
-        "restart_clash",
+        MenuIds::RESTART_CLASH,
         &texts.restart_clash,
         true,
         None::<&str>,
@@ -1092,7 +1051,7 @@ async fn create_tray_menu(
 
     let restart_app = &MenuItem::with_id(
         app_handle,
-        "restart_app",
+        MenuIds::RESTART_APP,
         &texts.restart_app,
         true,
         None::<&str>,
@@ -1100,7 +1059,7 @@ async fn create_tray_menu(
 
     let app_version = &MenuItem::with_id(
         app_handle,
-        "app_version",
+        MenuIds::VERGE_VERSION,
         format!("{} {version}", &texts.verge_version),
         true,
         None::<&str>,
@@ -1108,7 +1067,7 @@ async fn create_tray_menu(
 
     let more = &Submenu::with_id_and_items(
         app_handle,
-        "more",
+        MenuIds::MORE,
         &texts.more,
         true,
         &[
@@ -1121,7 +1080,7 @@ async fn create_tray_menu(
 
     let quit = &MenuItem::with_id(
         app_handle,
-        "quit",
+        MenuIds::EXIT,
         &texts.exit,
         true,
         Some("CmdOrControl+Q"),
@@ -1154,7 +1113,7 @@ async fn create_tray_menu(
         system_proxy as &dyn IsMenuItem<Wry>,
         tun_mode as &dyn IsMenuItem<Wry>,
         separator,
-        lighteweight_mode as &dyn IsMenuItem<Wry>,
+        lightweight_mode as &dyn IsMenuItem<Wry>,
         copy_env as &dyn IsMenuItem<Wry>,
         open_dir as &dyn IsMenuItem<Wry>,
         more as &dyn IsMenuItem<Wry>,
@@ -1171,12 +1130,13 @@ async fn create_tray_menu(
 fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     AsyncHandler::spawn(|| async move {
         match event.id.as_ref() {
-            mode @ ("rule_mode" | "global_mode" | "direct_mode") => {
-                let mode = &mode[0..mode.len() - 5]; // Removing the "_mode" suffix
+            mode @ (MenuIds::RULE_MODE | MenuIds::GLOBAL_MODE | MenuIds::DIRECT_MODE) => {
+                // Removing the the "tray_" preffix and "_mode" suffix
+                let mode = &mode[5..mode.len() - 5];
                 logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", mode);
                 feat::change_clash_mode(mode.into()).await;
             }
-            "open_window" => {
+            MenuIds::DASHBOARD => {
                 log::info!(target: "app", "托盘菜单点击: 打开窗口");
 
                 if !should_handle_tray_click() {
@@ -1186,40 +1146,41 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     WindowManager::show_main_window().await;
                 };
             }
-            "system_proxy" => {
+            MenuIds::SYSTEM_PROXY => {
                 feat::toggle_system_proxy().await;
             }
-            "tun_mode" => {
+            MenuIds::TUN_MODE => {
                 feat::toggle_tun_mode(None).await;
             }
-            "close_all_connections" => {
+            MenuIds::CLOSE_ALL_CONNECTIONS => {
                 if let Err(err) = handle::Handle::mihomo().await.close_all_connections().await {
                     log::error!(target: "app", "Failed to close all connections from tray: {err}");
                 }
             }
-            "copy_env" => feat::copy_clash_env().await,
-            "open_app_dir" => {
+            MenuIds::COPY_ENV => feat::copy_clash_env().await,
+            MenuIds::CONF_DIR => {
+                println!("Open directory submenu clicked");
                 let _ = cmd::open_app_dir().await;
             }
-            "open_core_dir" => {
+            MenuIds::CORE_DIR => {
                 let _ = cmd::open_core_dir().await;
             }
-            "open_logs_dir" => {
+            MenuIds::LOGS_DIR => {
                 let _ = cmd::open_logs_dir().await;
             }
-            "restart_clash" => feat::restart_clash_core().await,
-            "restart_app" => feat::restart_app().await,
-            "entry_lightweight_mode" => {
+            MenuIds::RESTART_CLASH => feat::restart_clash_core().await,
+            MenuIds::RESTART_APP => feat::restart_app().await,
+            MenuIds::LIGHTWEIGHT_MODE => {
                 if !should_handle_tray_click() {
                     return;
                 }
                 if !is_in_lightweight_mode() {
-                    lightweight::entry_lightweight_mode().await; // Await async function
+                    lightweight::entry_lightweight_mode().await;
                 } else {
-                    lightweight::exit_lightweight_mode().await; // Await async function
+                    lightweight::exit_lightweight_mode().await;
                 }
             }
-            "quit" => {
+            MenuIds::EXIT => {
                 feat::quit().await;
             }
             id if id.starts_with("profiles_") => {
