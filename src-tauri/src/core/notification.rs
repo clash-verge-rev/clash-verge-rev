@@ -6,7 +6,6 @@ use crate::{
 use parking_lot::RwLock;
 use smartstring::alias::String;
 use std::{
-    env,
     sync::{
         atomic::{AtomicU64, Ordering},
         mpsc,
@@ -58,13 +57,6 @@ struct EventStats {
     total_errors: AtomicU64,
     last_error_time: RwLock<Option<Instant>>,
 }
-
-const SKIP_PROFILE_SWITCH_FINISHED_STATIC: bool = false;
-const SKIP_PROFILE_SWITCH_FINISHED_ENV: &str = "CVR_SKIP_PROFILE_SWITCH_FINISHED";
-const SKIP_NOTICE_MESSAGE_STATIC: bool = true;
-const SKIP_NOTICE_MESSAGE_ENV: &str = "CVR_SKIP_NOTICE_MESSAGE";
-const SKIP_REFRESH_PROXY_STATIC: bool = true;
-const SKIP_REFRESH_PROXY_ENV: &str = "CVR_SKIP_REFRESH_PROXY";
 
 #[derive(Debug, Clone)]
 pub struct ErrorMessage {
@@ -127,25 +119,14 @@ impl NotificationSystem {
         use super::handle::Handle;
 
         let handle = Handle::global();
-        logging!(info, Type::Frontend, "Notification worker started");
 
         while !handle.is_exiting() {
             match rx.recv_timeout(std::time::Duration::from_millis(100)) {
-                Ok(event) => {
-                    logging!(
-                        info,
-                        Type::Frontend,
-                        "Worker received event: {}",
-                        Self::describe_event(&event)
-                    );
-                    Self::process_event(handle, event)
-                }
+                Ok(event) => Self::process_event(handle, event),
                 Err(mpsc::RecvTimeoutError::Disconnected) => break,
                 Err(mpsc::RecvTimeoutError::Timeout) => {}
             }
         }
-
-        logging!(info, Type::Frontend, "Notification worker exiting");
     }
 
     fn process_event(handle: &super::handle::Handle, event: FrontendEvent) {
@@ -159,86 +140,17 @@ impl NotificationSystem {
         }
 
         if let Some(window) = super::handle::Handle::get_window() {
-            logging!(
-                info,
-                Type::Frontend,
-                "Processing event for window: {}",
-                Self::describe_event(&event)
-            );
-            let start = std::time::Instant::now();
             system.emit_to_window(&window, event);
-            let elapsed = start.elapsed();
-            logging!(info, Type::Frontend, "Event processed in {:?}", elapsed);
             thread::sleep(timing::EVENT_EMIT_DELAY);
         }
     }
 
     fn should_skip_event(&self, event: &FrontendEvent) -> bool {
         let is_emergency = *self.emergency_mode.read();
-        if (SKIP_PROFILE_SWITCH_FINISHED_STATIC || Self::skip_profile_switch_finished_env())
-            && matches!(event, FrontendEvent::ProfileSwitchFinished { .. })
-        {
-            logging!(
-                warn,
-                Type::Frontend,
-                "Skipping ProfileSwitchFinished event (static={}, env={})",
-                SKIP_PROFILE_SWITCH_FINISHED_STATIC,
-                env::var(SKIP_PROFILE_SWITCH_FINISHED_ENV).unwrap_or_else(|_| "unset".into())
-            );
-            return true;
-        }
-
-        if (SKIP_NOTICE_MESSAGE_STATIC || Self::skip_notice_env())
-            && matches!(event, FrontendEvent::NoticeMessage { .. })
-        {
-            logging!(
-                warn,
-                Type::Frontend,
-                "Skipping NoticeMessage event (static={}, env={})",
-                SKIP_NOTICE_MESSAGE_STATIC,
-                env::var(SKIP_NOTICE_MESSAGE_ENV).unwrap_or_else(|_| "unset".into())
-            );
-            return true;
-        }
-
-        if (SKIP_REFRESH_PROXY_STATIC || Self::skip_refresh_proxy_env())
-            && matches!(event, FrontendEvent::RefreshProxy)
-        {
-            logging!(
-                warn,
-                Type::Frontend,
-                "Skipping RefreshProxy event (static={}, env={})",
-                SKIP_REFRESH_PROXY_STATIC,
-                env::var(SKIP_REFRESH_PROXY_ENV).unwrap_or_else(|_| "unset".into())
-            );
-            return true;
-        }
-
         matches!(
             (is_emergency, event),
             (true, FrontendEvent::NoticeMessage { status, .. }) if status == "info"
         )
-    }
-
-    fn skip_profile_switch_finished_env() -> bool {
-        match env::var(SKIP_PROFILE_SWITCH_FINISHED_ENV) {
-            Ok(value) => value != "0",
-            Err(_) => false,
-        }
-    }
-
-    fn skip_notice_env() -> bool {
-        match env::var(SKIP_NOTICE_MESSAGE_ENV) {
-            Ok(value) => value != "0",
-            Err(_) => false,
-        }
-    }
-
-    fn skip_refresh_proxy_env() -> bool {
-        match env::var(SKIP_REFRESH_PROXY_ENV) {
-            Ok(value) => value != "0",
-            Err(_) => false,
-        }
     }
 
     fn emit_to_window(&self, window: &WebviewWindow, event: FrontendEvent) {
@@ -249,79 +161,14 @@ impl NotificationSystem {
             return;
         };
 
-        let emit_result =
-            if event_name == "profile-switch-finished" || event_name == "verge://notice-message" {
-                let app_handle = super::handle::Handle::app_handle();
-                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    app_handle
-                        .emit_to("main", event_name, payload.clone())
-                        .map_err(|e| e)
-                }))
-            } else {
-                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    window.emit(event_name, payload.clone()).map_err(|e| e)
-                }))
-            };
-
-        match emit_result {
-            Ok(Ok(())) => {
+        match window.emit(event_name, payload) {
+            Ok(_) => {
                 self.stats.total_sent.fetch_add(1, Ordering::Relaxed);
-                logging!(
-                    info,
-                    Type::Frontend,
-                    "Event emitted: {} payload={}",
-                    event_name,
-                    payload
-                );
             }
-            Ok(Err(e)) => {
+            Err(e) => {
                 logging!(warn, Type::Frontend, "Event emit failed: {}", e);
                 self.handle_emit_error();
             }
-            Err(payload) => {
-                logging!(
-                    error,
-                    Type::Frontend,
-                    "Event emit panicked: {} ({})",
-                    event_name,
-                    super::handle::describe_panic(payload.as_ref())
-                );
-                self.handle_emit_error();
-            }
-        }
-    }
-
-    fn describe_event(event: &FrontendEvent) -> String {
-        match event {
-            FrontendEvent::RefreshClash => String::from("RefreshClash"),
-            FrontendEvent::RefreshVerge => String::from("RefreshVerge"),
-            FrontendEvent::RefreshProxy => String::from("RefreshProxy"),
-            FrontendEvent::ProxiesUpdated { .. } => String::from("ProxiesUpdated"),
-            FrontendEvent::NoticeMessage { status, .. } => {
-                format!("NoticeMessage({})", status).into()
-            }
-            FrontendEvent::ProfileChanged { current_profile_id } => {
-                format!("ProfileChanged({})", current_profile_id).into()
-            }
-            FrontendEvent::ProfileSwitchFinished {
-                profile_id,
-                task_id,
-                ..
-            } => format!(
-                "ProfileSwitchFinished(profile={}, task={})",
-                profile_id, task_id
-            )
-            .into(),
-            FrontendEvent::TimerUpdated { profile_index } => {
-                format!("TimerUpdated({})", profile_index).into()
-            }
-            FrontendEvent::ProfileUpdateStarted { uid } => {
-                format!("ProfileUpdateStarted({})", uid).into()
-            }
-            FrontendEvent::ProfileUpdateCompleted { uid } => {
-                format!("ProfileUpdateCompleted({})", uid).into()
-            }
-            FrontendEvent::RustPanic { message, .. } => format!("RustPanic({})", message).into(),
         }
     }
 

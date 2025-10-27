@@ -368,25 +368,12 @@ pub(super) async fn restore_previous_profile(previous: Option<SmartString>) -> C
 }
 
 async fn close_connections_after_switch(profile_id: SmartString) {
-    logging!(
-        info,
-        Type::Cmd,
-        "Starting post-switch cleanup for profile {}",
-        profile_id.as_str()
-    );
     match time::timeout(SWITCH_CLEANUP_TIMEOUT, async {
         handle::Handle::mihomo().await.close_all_connections().await
     })
     .await
     {
-        Ok(Ok(())) => {
-            logging!(
-                info,
-                Type::Cmd,
-                "Post-switch cleanup finished for profile {}",
-                profile_id.as_str()
-            );
-        }
+        Ok(Ok(())) => {}
         Ok(Err(err)) => {
             logging!(
                 warn,
@@ -415,46 +402,16 @@ fn schedule_post_switch_success(
     task_id: u64,
 ) -> CleanupHandle {
     AsyncHandler::spawn(move || async move {
-        logging!(
-            info,
-            Type::Cmd,
-            "Post-switch notify start (success={}, profile={}, task={})",
-            success,
-            profile_id.as_str(),
-            task_id
-        );
-        let notify_result = handle::Handle::notify_profile_switch_finished(
+        handle::Handle::notify_profile_switch_finished(
             profile_id.clone(),
             success,
             notify,
             task_id,
         );
-        logging!(
-            info,
-            Type::Cmd,
-            "notify_profile_switch_finished completed (success={}, task={}, result={:?})",
-            success,
-            task_id,
-            notify_result
-        );
         if notify && success {
-            let notice_result = handle::Handle::notice_message("info", "Profile Switched");
-            logging!(
-                info,
-                Type::Cmd,
-                "notice_message returned for task {} (result={:?})",
-                task_id,
-                notice_result
-            );
+            handle::Handle::notice_message("info", "Profile Switched");
         }
         close_connections_after_switch(profile_id).await;
-        logging!(
-            info,
-            Type::Cmd,
-            "Post-switch notify finished (success={}, task={})",
-            success,
-            task_id
-        );
     })
 }
 
@@ -464,21 +421,8 @@ pub(super) fn schedule_post_switch_failure(
     task_id: u64,
 ) -> CleanupHandle {
     AsyncHandler::spawn(move || async move {
-        logging!(
-            info,
-            Type::Cmd,
-            "Post-switch notify start (success=false, profile={}, task={})",
-            profile_id.as_str(),
-            task_id
-        );
         handle::Handle::notify_profile_switch_finished(profile_id.clone(), false, notify, task_id);
         close_connections_after_switch(profile_id).await;
-        logging!(
-            info,
-            Type::Cmd,
-            "Post-switch notify finished (success=false, task={})",
-            task_id
-        );
     })
 }
 

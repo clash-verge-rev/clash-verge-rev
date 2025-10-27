@@ -460,19 +460,9 @@ impl Timer {
     fn emit_update_event(_uid: &str, _is_start: bool) {
         {
             if _is_start {
-                logging!(
-                    warn,
-                    Type::Timer,
-                    "Skipping profile update started event for uid={} (static bypass)",
-                    _uid
-                );
+                super::handle::Handle::notify_profile_update_started(_uid.into());
             } else {
-                logging!(
-                    warn,
-                    Type::Timer,
-                    "Skipping profile update completed event for uid={} (static bypass)",
-                    _uid
-                );
+                super::handle::Handle::notify_profile_update_completed(_uid.into());
             }
         }
     }
