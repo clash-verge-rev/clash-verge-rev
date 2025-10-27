@@ -190,7 +190,6 @@ fn handle_enqueue(
     let accepted = true;
     let profile_key = request.profile_id().clone();
     let cleanup_pending = state.active.is_none() && !state.cleanup_profiles.is_empty();
-
     if cleanup_pending && state.cleanup_profiles.contains_key(&profile_key) {
         logging!(
             debug,
@@ -209,12 +208,11 @@ fn handle_enqueue(
         logging!(
             debug,
             Type::Cmd,
-            "Cleanup running for {} profile(s); collapsing pending requests before enqueuing task {} -> {}",
+            "Cleanup running for {} profile(s); queueing task {} -> {} for later",
             state.cleanup_profiles.len(),
             request.task_id(),
             profile_key
         );
-        drop_pending_requests(state);
     }
 
     if let Some(previous) = state
@@ -305,12 +303,6 @@ fn handle_completion(
     );
 
     start_next_job(state, driver_tx, manager);
-}
-
-fn drop_pending_requests(state: &mut SwitchDriverState) {
-    while let Some(request) = state.queue.pop_front() {
-        discard_request(state, request);
-    }
 }
 
 fn discard_request(state: &mut SwitchDriverState, request: SwitchRequest) {

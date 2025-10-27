@@ -5,6 +5,8 @@ use parking_lot::RwLock;
 use serde_json::{Value, json};
 use smartstring::alias::String;
 use std::{
+    any::Any,
+    env,
     sync::Arc,
     thread,
     time::{SystemTime, UNIX_EPOCH},
@@ -14,6 +16,9 @@ use tauri_plugin_mihomo::{Mihomo, MihomoExt};
 use tokio::sync::RwLockReadGuard;
 
 use super::notification::{ErrorMessage, FrontendEvent, NotificationSystem};
+
+const BYPASS_PROFILE_SWITCH_FINISHED_STATIC: bool = false;
+const BYPASS_NOTICE_MESSAGE_STATIC: bool = false;
 
 #[derive(Debug, Clone)]
 pub struct Handle {
@@ -106,12 +111,52 @@ impl Handle {
         notify: bool,
         task_id: u64,
     ) {
-        Self::send_event(FrontendEvent::ProfileSwitchFinished {
+        logging!(
+            info,
+            Type::Cmd,
+            "Frontend notify start (profile_switch_finished, profile={}, success={}, notify={}, task={})",
             profile_id,
             success,
             notify,
-            task_id,
+            task_id
+        );
+
+        if BYPASS_PROFILE_SWITCH_FINISHED_STATIC || Self::should_bypass_profile_switch_finished() {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Frontend notify bypassed (static={}, env={}, task={})",
+                BYPASS_PROFILE_SWITCH_FINISHED_STATIC,
+                env::var("CVR_BYPASS_PROFILE_SWITCH_FINISHED").unwrap_or_else(|_| "unset".into()),
+                task_id
+            );
+            return;
+        }
+
+        let result = std::panic::catch_unwind(|| {
+            Self::send_event(FrontendEvent::ProfileSwitchFinished {
+                profile_id,
+                success,
+                notify,
+                task_id,
+            });
         });
+
+        match result {
+            Ok(_) => logging!(
+                info,
+                Type::Cmd,
+                "Frontend notify completed (profile_switch_finished, task={})",
+                task_id
+            ),
+            Err(payload) => logging!(
+                error,
+                Type::Cmd,
+                "Frontend notify panicked (profile_switch_finished, task={}, payload={})",
+                task_id,
+                describe_panic(payload.as_ref())
+            ),
+        }
     }
 
     pub fn notify_rust_panic(message: String, location: String) {
@@ -228,10 +273,61 @@ impl Handle {
             return;
         }
 
-        Self::send_event(FrontendEvent::NoticeMessage {
-            status: status_str,
-            message: msg_str,
-        });
+        logging!(
+            info,
+            Type::Frontend,
+            "Frontend notice start (status={}, msg={})",
+            status_str,
+            msg_str
+        );
+
+        if BYPASS_NOTICE_MESSAGE_STATIC || Self::should_bypass_notice_message() {
+            logging!(
+                warn,
+                Type::Frontend,
+                "Frontend notice bypassed (static={}, env={}, status={})",
+                BYPASS_NOTICE_MESSAGE_STATIC,
+                env::var("CVR_BYPASS_NOTICE_MESSAGE").unwrap_or_else(|_| "unset".into()),
+                status_str
+            );
+            return;
+        }
+
+        let event = FrontendEvent::NoticeMessage {
+            status: status_str.clone(),
+            message: msg_str.clone(),
+        };
+
+        let result = std::panic::catch_unwind(|| Self::send_event(event));
+        match result {
+            Ok(_) => logging!(
+                info,
+                Type::Frontend,
+                "Frontend notice completed (status={})",
+                status_str
+            ),
+            Err(payload) => logging!(
+                error,
+                Type::Frontend,
+                "Frontend notice panicked (status={}, payload={})",
+                status_str,
+                describe_panic(payload.as_ref())
+            ),
+        }
+    }
+
+    fn should_bypass_profile_switch_finished() -> bool {
+        match env::var("CVR_BYPASS_PROFILE_SWITCH_FINISHED") {
+            Ok(value) => value != "0",
+            Err(_) => false,
+        }
+    }
+
+    fn should_bypass_notice_message() -> bool {
+        match env::var("CVR_BYPASS_NOTICE_MESSAGE") {
+            Ok(value) => value != "0",
+            Err(_) => false,
+        }
     }
 
     fn send_event(event: FrontendEvent) {
@@ -300,6 +396,16 @@ impl Handle {
 
     pub fn is_exiting(&self) -> bool {
         *self.is_exiting.read()
+    }
+}
+
+pub(crate) fn describe_panic(payload: &(dyn Any + Send)) -> String {
+    if let Some(message) = payload.downcast_ref::<&str>() {
+        (*message).to_string().into()
+    } else if let Some(message) = payload.downcast_ref::<String>() {
+        message.clone().into()
+    } else {
+        "unknown panic".into()
     }
 }
 
