@@ -33,9 +33,8 @@ pub(super) async fn run_switch_job(
             "Switch task {} cancelled before validation",
             request.task_id()
         );
-        handle::Handle::notify_profile_switch_finished(
+        schedule_post_switch_failure(
             request.profile_id().clone(),
-            false,
             request.notify(),
             request.task_id(),
         );
@@ -56,7 +55,7 @@ pub(super) async fn run_switch_job(
             err
         );
         handle::Handle::notice_message("config_validate::error", err.clone());
-        handle::Handle::notify_profile_switch_finished(profile_id.clone(), false, notify, task_id);
+        schedule_post_switch_failure(profile_id.clone(), notify, task_id);
         return Ok(false);
     }
 
@@ -102,12 +101,7 @@ pub(super) async fn run_switch_job(
                 "config_validate::error",
                 format!("profile switch timed out: {}", profile_id),
             );
-            handle::Handle::notify_profile_switch_finished(
-                profile_id.clone(),
-                false,
-                notify,
-                task_id,
-            );
+            schedule_post_switch_failure(profile_id.clone(), notify, task_id);
             Ok(false)
         }
         Ok(Err(panic_payload)) => {
@@ -124,12 +118,7 @@ pub(super) async fn run_switch_job(
                 "config_validate::panic",
                 format!("profile switch panic: {}", profile_id),
             );
-            handle::Handle::notify_profile_switch_finished(
-                profile_id.clone(),
-                false,
-                notify,
-                task_id,
-            );
+            schedule_post_switch_failure(profile_id.clone(), notify, task_id);
             Err(SwitchPanicInfo::workflow_root(panic_message))
         }
         Ok(Ok(machine_result)) => match machine_result {
@@ -147,12 +136,7 @@ pub(super) async fn run_switch_job(
                         err
                     );
                     handle::Handle::notice_message("config_validate::error", err.clone());
-                    handle::Handle::notify_profile_switch_finished(
-                        profile_id.clone(),
-                        false,
-                        notify,
-                        task_id,
-                    );
+                    schedule_post_switch_failure(profile_id.clone(), notify, task_id);
                     Ok(false)
                 }
             },
@@ -170,12 +154,7 @@ pub(super) async fn run_switch_job(
                     "config_validate::panic",
                     format!("profile switch panic: {}", profile_id),
                 );
-                handle::Handle::notify_profile_switch_finished(
-                    profile_id.clone(),
-                    false,
-                    notify,
-                    task_id,
-                );
+                schedule_post_switch_failure(profile_id.clone(), notify, task_id);
                 Err(panic_info)
             }
         },
@@ -407,6 +386,13 @@ fn schedule_post_switch_success(
         if notify && success {
             handle::Handle::notice_message("info", "Profile Switched");
         }
+        schedule_close_connections(profile_id);
+    });
+}
+
+fn schedule_post_switch_failure(profile_id: SmartString, notify: bool, task_id: u64) {
+    AsyncHandler::spawn(move || async move {
+        handle::Handle::notify_profile_switch_finished(profile_id.clone(), false, notify, task_id);
         schedule_close_connections(profile_id);
     });
 }

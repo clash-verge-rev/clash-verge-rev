@@ -31,6 +31,7 @@ struct SwitchDriverState {
     active: Option<SwitchRequest>,
     queue: VecDeque<SwitchRequest>,
     latest_tokens: HashMap<SmartString, SwitchCancellation>,
+    cleanup_profiles: HashMap<SmartString, tokio::task::JoinHandle<()>>,
 }
 
 #[derive(Debug)]
@@ -42,6 +43,9 @@ enum SwitchDriverMessage {
     Completion {
         request: SwitchRequest,
         outcome: SwitchJobOutcome,
+    },
+    CleanupDone {
+        profile: SmartString,
     },
 }
 
@@ -159,6 +163,9 @@ fn switch_driver_sender() -> &'static mpsc::Sender<SwitchDriverMessage> {
                     SwitchDriverMessage::Completion { request, outcome } => {
                         handle_completion(&mut state, request, outcome, driver_tx.clone(), manager);
                     }
+                    SwitchDriverMessage::CleanupDone { profile } => {
+                        handle_cleanup_done(&mut state, profile, driver_tx.clone(), manager);
+                    }
                 }
             }
         });
@@ -176,6 +183,33 @@ fn handle_enqueue(
     let mut responder = Some(respond_to);
     let accepted = true;
     let profile_key = request.profile_id().clone();
+    let cleanup_pending = state.active.is_none() && !state.cleanup_profiles.is_empty();
+
+    if cleanup_pending && state.cleanup_profiles.contains_key(&profile_key) {
+        logging!(
+            debug,
+            Type::Cmd,
+            "Switch task {} -> {} ignored because cleanup is still running",
+            request.task_id(),
+            profile_key
+        );
+        if let Some(sender) = responder.take() {
+            let _ = sender.send(accepted);
+        }
+        return;
+    }
+
+    if cleanup_pending {
+        logging!(
+            debug,
+            Type::Cmd,
+            "Cleanup running for {} profile(s); collapsing pending requests before enqueuing task {} -> {}",
+            state.cleanup_profiles.len(),
+            request.task_id(),
+            profile_key
+        );
+        drop_pending_requests(state);
+    }
 
     if let Some(previous) = state
         .latest_tokens
@@ -203,18 +237,12 @@ fn handle_enqueue(
         .queue
         .retain(|queued| queued.profile_id() != &profile_key);
 
-    if state.active.is_none() {
-        state.active = Some(request.clone());
-        if let Some(sender) = responder.take() {
-            let _ = sender.send(accepted);
-        }
-        start_switch_job(driver_tx, manager, request);
-    } else {
-        state.queue.push_back(request.clone());
-        if let Some(sender) = responder.take() {
-            let _ = sender.send(accepted);
-        }
+    state.queue.push_back(request.clone());
+    if let Some(sender) = responder.take() {
+        let _ = sender.send(accepted);
     }
+
+    start_next_job(state, driver_tx, manager);
 }
 
 fn handle_completion(
@@ -258,11 +286,32 @@ fn handle_completion(
         state.latest_tokens.remove(request.profile_id());
     }
 
-    if state.active.is_none()
-        && let Some(next) = state.queue.pop_front()
-    {
-        state.active = Some(next.clone());
-        start_switch_job(driver_tx, manager, next);
+    // Schedule cleanup tracking removal once background task finishes.
+    track_cleanup(state, driver_tx.clone(), request.profile_id().clone());
+
+    start_next_job(state, driver_tx, manager);
+}
+
+fn drop_pending_requests(state: &mut SwitchDriverState) {
+    while let Some(request) = state.queue.pop_front() {
+        discard_request(state, request);
+    }
+}
+
+fn discard_request(state: &mut SwitchDriverState, request: SwitchRequest) {
+    let key = request.profile_id().clone();
+    let should_remove = state
+        .latest_tokens
+        .get(&key)
+        .map(|latest| latest.same_token(request.cancel_token()))
+        .unwrap_or(false);
+
+    if should_remove {
+        state.latest_tokens.remove(&key);
+    }
+
+    if !request.cancel_token().is_cancelled() {
+        request.cancel_token().cancel();
     }
 }
 
@@ -336,4 +385,58 @@ fn start_switch_job(
             );
         }
     });
+}
+
+fn track_cleanup(
+    state: &mut SwitchDriverState,
+    driver_tx: mpsc::Sender<SwitchDriverMessage>,
+    profile: SmartString,
+) {
+    if state.cleanup_profiles.contains_key(&profile) {
+        return;
+    }
+
+    let profile_clone = profile.clone();
+    let handle = tokio::spawn(async move {
+        time::sleep(Duration::from_millis(10)).await;
+        let _ = driver_tx
+            .send(SwitchDriverMessage::CleanupDone {
+                profile: profile_clone,
+            })
+            .await;
+    });
+    state.cleanup_profiles.insert(profile, handle);
+}
+
+fn handle_cleanup_done(
+    state: &mut SwitchDriverState,
+    profile: SmartString,
+    driver_tx: mpsc::Sender<SwitchDriverMessage>,
+    manager: &'static SwitchManager,
+) {
+    if let Some(handle) = state.cleanup_profiles.remove(&profile) {
+        handle.abort();
+    }
+    start_next_job(state, driver_tx, manager);
+}
+
+fn start_next_job(
+    state: &mut SwitchDriverState,
+    driver_tx: mpsc::Sender<SwitchDriverMessage>,
+    manager: &'static SwitchManager,
+) {
+    if state.active.is_some() || !state.cleanup_profiles.is_empty() {
+        return;
+    }
+
+    while let Some(request) = state.queue.pop_front() {
+        if request.cancel_token().is_cancelled() {
+            discard_request(state, request);
+            continue;
+        }
+
+        state.active = Some(request.clone());
+        start_switch_job(driver_tx, manager, request);
+        break;
+    }
 }
