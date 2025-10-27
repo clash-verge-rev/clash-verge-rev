@@ -38,7 +38,10 @@ macro_rules! patch {
 
 impl IProfiles {
     // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
-    fn take_item_file_by_uid(items: &mut Vec<PrfItem>, target_uid: Option<String>) -> Option<String> {
+    fn take_item_file_by_uid(
+        items: &mut Vec<PrfItem>,
+        target_uid: Option<String>,
+    ) -> Option<String> {
         for (i, _) in items.iter().enumerate() {
             if items[i].uid == target_uid {
                 return items.remove(i).file;
@@ -289,24 +292,42 @@ impl IProfiles {
 
         // remove the main item (if exists) and delete its file
         if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.clone())) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            let _ = dirs::app_profiles_dir()?
+                .join(file.as_str())
+                .remove_if_exists()
+                .await;
         }
 
         // remove related extension items (merge, script, rules, proxies, groups)
         if let Some(file) = Self::take_item_file_by_uid(&mut items, merge_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            let _ = dirs::app_profiles_dir()?
+                .join(file.as_str())
+                .remove_if_exists()
+                .await;
         }
         if let Some(file) = Self::take_item_file_by_uid(&mut items, script_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            let _ = dirs::app_profiles_dir()?
+                .join(file.as_str())
+                .remove_if_exists()
+                .await;
         }
         if let Some(file) = Self::take_item_file_by_uid(&mut items, rules_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            let _ = dirs::app_profiles_dir()?
+                .join(file.as_str())
+                .remove_if_exists()
+                .await;
         }
         if let Some(file) = Self::take_item_file_by_uid(&mut items, proxies_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            let _ = dirs::app_profiles_dir()?
+                .join(file.as_str())
+                .remove_if_exists()
+                .await;
         }
         if let Some(file) = Self::take_item_file_by_uid(&mut items, groups_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            let _ = dirs::app_profiles_dir()?
+                .join(file.as_str())
+                .remove_if_exists()
+                .await;
         }
         // delete the original uid
         if current == uid {
