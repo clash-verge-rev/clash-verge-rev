@@ -38,7 +38,6 @@ use tauri::{
 
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
-#[derive(Clone)]
 struct MenuTexts {
     dashboard: String,
     rule_mode: String,
@@ -845,7 +844,7 @@ fn create_proxy_menu_item(
     app_handle: &AppHandle,
     show_proxy_groups_inline: bool,
     proxy_submenus: Vec<Submenu<Wry>>,
-    proxies_text: String,
+    proxies_text: &String,
 ) -> Result<ProxyMenuItem> {
     // 创建代理主菜单
     let (proxies_submenu, inline_proxy_items) = if show_proxy_groups_inline {
@@ -948,7 +947,7 @@ async fn create_tray_menu(
         create_profile_menu_item(app_handle, profile_uid_and_name).await?;
 
     // Pre-fetch all localized strings
-    let texts = fetch_menu_texts().await;
+    let texts = &fetch_menu_texts().await;
 
     // Convert to references only when needed
     let profile_menu_items_refs: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
@@ -959,7 +958,7 @@ async fn create_tray_menu(
     let open_window = &MenuItem::with_id(
         app_handle,
         "open_window",
-        texts.dashboard,
+        &texts.dashboard,
         true,
         hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
     )?;
@@ -967,7 +966,7 @@ async fn create_tray_menu(
     let rule_mode = &CheckMenuItem::with_id(
         app_handle,
         "rule_mode",
-        texts.rule_mode,
+        &texts.rule_mode,
         true,
         current_proxy_mode == "rule",
         hotkeys.get("clash_mode_rule").map(|s| s.as_str()),
@@ -976,7 +975,7 @@ async fn create_tray_menu(
     let global_mode = &CheckMenuItem::with_id(
         app_handle,
         "global_mode",
-        texts.global_mode,
+        &texts.global_mode,
         true,
         current_proxy_mode == "global",
         hotkeys.get("clash_mode_global").map(|s| s.as_str()),
@@ -985,7 +984,7 @@ async fn create_tray_menu(
     let direct_mode = &CheckMenuItem::with_id(
         app_handle,
         "direct_mode",
-        texts.direct_mode,
+        &texts.direct_mode,
         true,
         current_proxy_mode == "direct",
         hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
@@ -994,7 +993,7 @@ async fn create_tray_menu(
     let profiles = &Submenu::with_id_and_items(
         app_handle,
         "profiles",
-        texts.profiles,
+        &texts.profiles,
         true,
         &profile_menu_items_refs,
     )?;
@@ -1011,13 +1010,13 @@ async fn create_tray_menu(
         app_handle,
         show_proxy_groups_inline,
         proxy_sub_menus,
-        texts.proxies,
+        &texts.proxies,
     )?;
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
         "system_proxy",
-        texts.system_proxy,
+        &texts.system_proxy,
         true,
         system_proxy_enabled,
         hotkeys.get("toggle_system_proxy").map(|s| s.as_str()),
@@ -1026,7 +1025,7 @@ async fn create_tray_menu(
     let tun_mode = &CheckMenuItem::with_id(
         app_handle,
         "tun_mode",
-        texts.tun_mode,
+        &texts.tun_mode,
         true,
         tun_mode_enabled,
         hotkeys.get("toggle_tun_mode").map(|s| s.as_str()),
@@ -1035,7 +1034,7 @@ async fn create_tray_menu(
     let close_all_connections = &MenuItem::with_id(
         app_handle,
         "close_all_connections",
-        texts.close_all_connections,
+        &texts.close_all_connections,
         true,
         None::<&str>,
     )?;
@@ -1043,18 +1042,18 @@ async fn create_tray_menu(
     let lighteweight_mode = &CheckMenuItem::with_id(
         app_handle,
         "entry_lightweight_mode",
-        texts.lightweight_mode,
+        &texts.lightweight_mode,
         true,
         is_lightweight_mode,
         hotkeys.get("entry_lightweight_mode").map(|s| s.as_str()),
     )?;
 
-    let copy_env = &MenuItem::with_id(app_handle, "copy_env", texts.copy_env, true, None::<&str>)?;
+    let copy_env = &MenuItem::with_id(app_handle, "copy_env", &texts.copy_env, true, None::<&str>)?;
 
     let open_app_dir = &MenuItem::with_id(
         app_handle,
         "open_app_dir",
-        texts.conf_dir,
+        &texts.conf_dir,
         true,
         None::<&str>,
     )?;
@@ -1062,7 +1061,7 @@ async fn create_tray_menu(
     let open_core_dir = &MenuItem::with_id(
         app_handle,
         "open_core_dir",
-        texts.core_dir,
+        &texts.core_dir,
         true,
         None::<&str>,
     )?;
@@ -1070,7 +1069,7 @@ async fn create_tray_menu(
     let open_logs_dir = &MenuItem::with_id(
         app_handle,
         "open_logs_dir",
-        texts.logs_dir,
+        &texts.logs_dir,
         true,
         None::<&str>,
     )?;
@@ -1078,7 +1077,7 @@ async fn create_tray_menu(
     let open_dir = &Submenu::with_id_and_items(
         app_handle,
         "open_dir",
-        texts.open_dir,
+        &texts.open_dir,
         true,
         &[open_app_dir, open_core_dir, open_logs_dir],
     )?;
@@ -1086,7 +1085,7 @@ async fn create_tray_menu(
     let restart_clash = &MenuItem::with_id(
         app_handle,
         "restart_clash",
-        texts.restart_clash,
+        &texts.restart_clash,
         true,
         None::<&str>,
     )?;
@@ -1094,7 +1093,7 @@ async fn create_tray_menu(
     let restart_app = &MenuItem::with_id(
         app_handle,
         "restart_app",
-        texts.restart_app,
+        &texts.restart_app,
         true,
         None::<&str>,
     )?;
@@ -1102,7 +1101,7 @@ async fn create_tray_menu(
     let app_version = &MenuItem::with_id(
         app_handle,
         "app_version",
-        format!("{} {version}", texts.verge_version),
+        format!("{} {version}", &texts.verge_version),
         true,
         None::<&str>,
     )?;
@@ -1110,7 +1109,7 @@ async fn create_tray_menu(
     let more = &Submenu::with_id_and_items(
         app_handle,
         "more",
-        texts.more,
+        &texts.more,
         true,
         &[
             close_all_connections,
@@ -1120,7 +1119,13 @@ async fn create_tray_menu(
         ],
     )?;
 
-    let quit = &MenuItem::with_id(app_handle, "quit", texts.exit, true, Some("CmdOrControl+Q"))?;
+    let quit = &MenuItem::with_id(
+        app_handle,
+        "quit",
+        &texts.exit,
+        true,
+        Some("CmdOrControl+Q"),
+    )?;
 
     let separator = &PredefinedMenuItem::separator(app_handle)?;
 
