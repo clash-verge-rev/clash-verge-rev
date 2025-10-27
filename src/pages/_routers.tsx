@@ -1,3 +1,4 @@
+import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
 import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
@@ -18,6 +19,7 @@ import SettingsSvg from "@/assets/image/itemicon/settings.svg?react";
 import UnlockSvg from "@/assets/image/itemicon/unlock.svg?react";
 
 import Layout from "./_layout";
+import AnalysisPage from "./analysis";
 import ConnectionsPage from "./connections";
 import HomePage from "./home";
 import LogsPage from "./logs";
@@ -51,6 +53,15 @@ export const navItems = [
     path: "/connections",
     icon: [<LanguageRoundedIcon key="mui" />, <ConnectionsSvg key="svg" />],
     Component: ConnectionsPage,
+  },
+  {
+    label: "Label-Analysis",
+    path: "/analysis",
+    icon: [
+      <AssessmentRoundedIcon key="mui" />,
+      <AssessmentRoundedIcon key="svg" />,
+    ],
+    Component: AnalysisPage,
   },
   {
     label: "Label-Rules",
