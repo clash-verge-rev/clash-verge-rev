@@ -3,7 +3,7 @@ import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 
 function ErrorFallback({ error }: FallbackProps) {
   return (
-    <div role="alert" style={{ padding: 16 }}>
+    <div role="alert" style={{ padding: 16, height: "100%", overflow: "auto" }}>
       <h4>Something went wrong:(</h4>
 
       <pre>{error.message}</pre>

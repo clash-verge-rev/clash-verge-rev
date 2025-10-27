@@ -1,13 +1,16 @@
 import {
   DataGrid,
+  GridActionsCellItem,
+  GridCloseIcon,
   GridColDef,
   GridColumnResizeParams,
   useGridApiRef,
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useLocalStorage } from "foxact/use-local-storage";
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { closeConnections } from "tauri-plugin-mihomo-api";
 
 import parseTraffic from "@/utils/parse-traffic";
 import { truncateStr } from "@/utils/truncate-str";
@@ -21,129 +24,6 @@ export const ConnectionTable = (props: Props) => {
   const { connections, onShowDetail } = props;
   const { t } = useTranslation();
   const apiRef = useGridApiRef();
-  useLayoutEffect(() => {
-    const PATCH_FLAG_KEY = "__clashPatchedPublishEvent" as const;
-    const ORIGINAL_KEY = "__clashOriginalPublishEvent" as const;
-    let isUnmounted = false;
-    let retryHandle: ReturnType<typeof setTimeout> | null = null;
-    let cleanupOriginal: (() => void) | null = null;
-
-    const scheduleRetry = () => {
-      if (isUnmounted || retryHandle !== null) return;
-      retryHandle = setTimeout(() => {
-        retryHandle = null;
-        ensurePatched();
-      }, 16);
-    };
-
-    // Safari occasionally emits grid events without an event object,
-    // and MUI expects `defaultMuiPrevented` to exist. Normalize here to avoid crashes.
-    const createFallbackEvent = () => {
-      const fallback = {
-        defaultMuiPrevented: false,
-        preventDefault() {
-          fallback.defaultMuiPrevented = true;
-        },
-      };
-      return fallback;
-    };
-
-    const ensureMuiEvent = (
-      value: unknown,
-    ): {
-      defaultMuiPrevented: boolean;
-      preventDefault: () => void;
-      [key: string]: unknown;
-    } => {
-      if (!value || typeof value !== "object" || Array.isArray(value)) {
-        return createFallbackEvent();
-      }
-
-      const eventObject = value as {
-        defaultMuiPrevented?: unknown;
-        preventDefault?: () => void;
-        [key: string]: unknown;
-      };
-
-      if (typeof eventObject.defaultMuiPrevented !== "boolean") {
-        eventObject.defaultMuiPrevented = false;
-      }
-
-      if (typeof eventObject.preventDefault !== "function") {
-        eventObject.preventDefault = () => {
-          eventObject.defaultMuiPrevented = true;
-        };
-      }
-
-      return eventObject as {
-        defaultMuiPrevented: boolean;
-        preventDefault: () => void;
-        [key: string]: unknown;
-      };
-    };
-
-    const ensurePatched = () => {
-      if (isUnmounted) return;
-      const api = apiRef.current;
-
-      if (!api?.publishEvent) {
-        scheduleRetry();
-        return;
-      }
-
-      const metadataApi = api as unknown as typeof api &
-        Record<string, unknown>;
-      if (metadataApi[PATCH_FLAG_KEY] === true) return;
-
-      const originalPublishEvent = api.publishEvent;
-
-      // Use Proxy to create a more resilient wrapper that always normalizes events
-      const patchedPublishEvent = new Proxy(originalPublishEvent, {
-        apply(target, thisArg, rawArgs: unknown[]) {
-          rawArgs[2] = ensureMuiEvent(rawArgs[2]);
-
-          return Reflect.apply(
-            target as (...args: unknown[]) => unknown,
-            thisArg,
-            rawArgs,
-          );
-        },
-      }) as typeof originalPublishEvent;
-
-      api.publishEvent = patchedPublishEvent;
-      metadataApi[PATCH_FLAG_KEY] = true;
-      metadataApi[ORIGINAL_KEY] = originalPublishEvent;
-
-      cleanupOriginal = () => {
-        const storedOriginal = metadataApi[ORIGINAL_KEY] as
-          | typeof originalPublishEvent
-          | undefined;
-
-        api.publishEvent = (
-          typeof storedOriginal === "function"
-            ? storedOriginal
-            : originalPublishEvent
-        ) as typeof originalPublishEvent;
-
-        delete metadataApi[PATCH_FLAG_KEY];
-        delete metadataApi[ORIGINAL_KEY];
-      };
-    };
-
-    ensurePatched();
-
-    return () => {
-      isUnmounted = true;
-      if (retryHandle !== null) {
-        clearTimeout(retryHandle);
-        retryHandle = null;
-      }
-      if (cleanupOriginal) {
-        cleanupOriginal();
-        cleanupOriginal = null;
-      }
-    };
-  }, [apiRef]);
 
   const [columnVisible, setColumnVisible] = useState<
     Partial<Record<keyof IConnectionsItem, boolean>>
@@ -160,6 +40,30 @@ export const ConnectionTable = (props: Props) => {
 
   const columns = useMemo<GridColDef[]>(() => {
     return [
+      {
+        field: "actions",
+        type: "actions",
+        width: 30,
+        className: "actions",
+        getActions: ({ id }) => {
+          return [
+            <GridActionsCellItem
+              key={id.toString()}
+              icon={<GridCloseIcon />}
+              label="Cancel"
+              className="textPrimary"
+              onClick={() => closeConnections(id.toString())}
+              color="inherit"
+            />,
+          ];
+        },
+      },
+      {
+        field: "type",
+        headerName: t("Type"),
+        width: columnWidths["type"] || 100,
+        minWidth: 100,
+      },
       {
         field: "host",
         headerName: t("Host"),
@@ -239,12 +143,6 @@ export const ConnectionTable = (props: Props) => {
         width: columnWidths["remoteDestination"] || 200,
         minWidth: 130,
       },
-      {
-        field: "type",
-        headerName: t("Type"),
-        width: columnWidths["type"] || 160,
-        minWidth: 100,
-      },
     ];
   }, [columnWidths, t]);
 
@@ -266,6 +164,7 @@ export const ConnectionTable = (props: Props) => {
         ? `${metadata.destinationIP}:${metadata.destinationPort}`
         : `${metadata.remoteDestination}:${metadata.destinationPort}`;
       return {
+        type: `${metadata.type}(${metadata.network})`,
         id: each.id,
         host: metadata.host
           ? `${metadata.host}:${metadata.destinationPort}`
@@ -280,7 +179,6 @@ export const ConnectionTable = (props: Props) => {
         time: each.start,
         source: `${metadata.sourceIP}:${metadata.sourcePort}`,
         remoteDestination: Destination,
-        type: `${metadata.type}(${metadata.network})`,
         connectionData: each,
       };
     });
@@ -289,7 +187,6 @@ export const ConnectionTable = (props: Props) => {
   return (
     <DataGrid
       apiRef={apiRef}
-      hideFooter
       rows={connRows}
       columns={columns}
       onRowClick={(e) => onShowDetail(e.row.connectionData)}

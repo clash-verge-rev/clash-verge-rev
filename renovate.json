@@ -40,6 +40,10 @@
       "description": "Group all GitHub Actions updates into a single PR",
       "matchManagers": ["github-actions"],
       "groupName": "github actions"
+    },
+    {
+      "matchPackageNames": ["@mui/x-data-grid"],
+      "matchCurrentVersion": "<8.0.0"
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],
