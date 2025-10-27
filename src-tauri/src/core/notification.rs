@@ -1,8 +1,4 @@
-use crate::{
-    constants::{retry, timing},
-    logging,
-    utils::logging::Type,
-};
+use crate::{constants::retry, logging, utils::logging::Type};
 use parking_lot::RwLock;
 use smartstring::alias::String;
 use std::{
@@ -13,7 +9,8 @@ use std::{
     thread,
     time::Instant,
 };
-use tauri::{Emitter, WebviewWindow};
+use tauri::{Emitter, async_runtime};
+use tokio::time::{Duration, sleep};
 
 #[derive(Debug, Clone)]
 pub enum FrontendEvent {
@@ -53,7 +50,6 @@ pub enum FrontendEvent {
 
 #[derive(Debug, Default)]
 struct EventStats {
-    total_sent: AtomicU64,
     total_errors: AtomicU64,
     last_error_time: RwLock<Option<Instant>>,
 }
@@ -139,10 +135,37 @@ impl NotificationSystem {
             return;
         }
 
-        if let Some(window) = super::handle::Handle::get_window() {
-            system.emit_to_window(&window, event);
-            thread::sleep(timing::EVENT_EMIT_DELAY);
-        }
+        let event_label = Self::describe_event(&event);
+        logging!(
+            info,
+            Type::Frontend,
+            "Queueing event for async emit: {}",
+            event_label
+        );
+
+        let (event_name, payload_result) = system.serialize_event(event);
+        let payload = match payload_result {
+            Ok(value) => value,
+            Err(err) => {
+                logging!(
+                    warn,
+                    Type::Frontend,
+                    "Failed to serialize event {}: {}",
+                    event_name,
+                    err
+                );
+                return;
+            }
+        };
+
+        async_runtime::spawn(async move {
+            sleep(Duration::from_millis(50)).await;
+            if let Err(err) = Self::emit_via_app(event_name, payload).await {
+                logging!(warn, Type::Frontend, "Async emit failed: {}", err);
+            } else {
+                logging!(info, Type::Frontend, "Async emit completed: {}", event_name);
+            }
+        });
     }
 
     fn should_skip_event(&self, event: &FrontendEvent) -> bool {
@@ -153,22 +176,52 @@ impl NotificationSystem {
         )
     }
 
-    fn emit_to_window(&self, window: &WebviewWindow, event: FrontendEvent) {
-        let (event_name, payload) = self.serialize_event(event);
+    async fn emit_via_app(
+        event_name: &'static str,
+        payload: serde_json::Value,
+    ) -> Result<(), String> {
+        let app_handle = super::handle::Handle::app_handle().clone();
+        async_runtime::spawn_blocking(move || {
+            app_handle
+                .emit_to("main", event_name, payload)
+                .map_err(|e| e.to_string())
+        })
+        .await
+        .map_err(|e| String::from(format!("Join error: {}", e)))?
+        .map_err(String::from)
+    }
 
-        let Ok(payload) = payload else {
-            self.stats.total_errors.fetch_add(1, Ordering::Relaxed);
-            return;
-        };
-
-        match window.emit(event_name, payload) {
-            Ok(_) => {
-                self.stats.total_sent.fetch_add(1, Ordering::Relaxed);
+    fn describe_event(event: &FrontendEvent) -> String {
+        match event {
+            FrontendEvent::RefreshClash => "RefreshClash".into(),
+            FrontendEvent::RefreshVerge => "RefreshVerge".into(),
+            FrontendEvent::RefreshProxy => "RefreshProxy".into(),
+            FrontendEvent::ProxiesUpdated { .. } => "ProxiesUpdated".into(),
+            FrontendEvent::NoticeMessage { status, .. } => {
+                format!("NoticeMessage({})", status).into()
             }
-            Err(e) => {
-                logging!(warn, Type::Frontend, "Event emit failed: {}", e);
-                self.handle_emit_error();
+            FrontendEvent::ProfileChanged { current_profile_id } => {
+                format!("ProfileChanged({})", current_profile_id).into()
             }
+            FrontendEvent::ProfileSwitchFinished {
+                profile_id,
+                task_id,
+                ..
+            } => format!(
+                "ProfileSwitchFinished(profile={}, task={})",
+                profile_id, task_id
+            )
+            .into(),
+            FrontendEvent::TimerUpdated { profile_index } => {
+                format!("TimerUpdated({})", profile_index).into()
+            }
+            FrontendEvent::ProfileUpdateStarted { uid } => {
+                format!("ProfileUpdateStarted({})", uid).into()
+            }
+            FrontendEvent::ProfileUpdateCompleted { uid } => {
+                format!("ProfileUpdateCompleted({})", uid).into()
+            }
+            FrontendEvent::RustPanic { message, .. } => format!("RustPanic({})", message).into(),
         }
     }
 
