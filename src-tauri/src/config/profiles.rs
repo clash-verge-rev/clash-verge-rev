@@ -37,6 +37,18 @@ macro_rules! patch {
 }
 
 impl IProfiles {
+    // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
+    fn take_item_file_by_uid(
+        items: &mut Vec<PrfItem>,
+        target_uid: Option<String>,
+    ) -> Option<String> {
+        for (i, _) in items.iter().enumerate() {
+            if items[i].uid == target_uid {
+                return items.remove(i).file;
+            }
+        }
+        None
+    }
     pub async fn new() -> Self {
         match dirs::profiles_path() {
             Ok(path) => match help::read_yaml::<Self>(&path).await {
@@ -277,98 +289,41 @@ impl IProfiles {
         let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
         let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
         let mut items = self.items.take().unwrap_or_default();
-        let mut index = None;
-        let mut merge_index = None;
-        let mut script_index = None;
-        let mut rules_index = None;
-        let mut proxies_index = None;
-        let mut groups_index = None;
 
-        // get the index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == Some(uid.clone()) {
-                index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = index
-            && let Some(file) = items.remove(index).file
-        {
+        // remove the main item (if exists) and delete its file
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.clone())) {
             let _ = dirs::app_profiles_dir()?
                 .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the merge index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == merge_uid {
-                merge_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = merge_index
-            && let Some(file) = items.remove(index).file
-        {
+
+        // remove related extension items (merge, script, rules, proxies, groups)
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, merge_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
                 .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the script index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == script_uid {
-                script_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = script_index
-            && let Some(file) = items.remove(index).file
-        {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, script_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
                 .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the rules index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == rules_uid {
-                rules_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = rules_index
-            && let Some(file) = items.remove(index).file
-        {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, rules_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
                 .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the proxies index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == proxies_uid {
-                proxies_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = proxies_index
-            && let Some(file) = items.remove(index).file
-        {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, proxies_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
                 .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the groups index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == groups_uid {
-                groups_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = groups_index
-            && let Some(file) = items.remove(index).file
-        {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, groups_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
                 .join(file.as_str())
                 .remove_if_exists()

@@ -7,18 +7,9 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 
 /// Toggle system proxy on/off
 pub async fn toggle_system_proxy() {
-    // 获取当前系统代理状态
-    let enable = {
-        let verge = Config::verge().await;
-
-        verge.latest_ref().enable_system_proxy.unwrap_or(false)
-    };
-    // 获取自动关闭连接设置
-    let auto_close_connection = {
-        let verge = Config::verge().await;
-
-        verge.latest_ref().auto_close_connection.unwrap_or(false)
-    };
+    let verge = Config::verge().await;
+    let enable = verge.latest_ref().enable_system_proxy.unwrap_or(false);
+    let auto_close_connection = verge.latest_ref().auto_close_connection.unwrap_or(false);
 
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
     if enable

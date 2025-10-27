@@ -12,7 +12,7 @@ async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) ->
         .await
     {
         let emsg = format!("{} Service failed: {}", op_type, e);
-        return Err(t(emsg.as_str()).await.into());
+        return Err(t(emsg.as_str()).await);
     }
     Ok(())
 }

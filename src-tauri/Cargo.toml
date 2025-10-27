@@ -232,3 +232,4 @@ needless_raw_string_hashes = "deny" # Too many in existing code
 #restriction = { level = "allow", priority = -1 }
 
 or_fun_call = "deny"
+cognitive_complexity = "deny"
