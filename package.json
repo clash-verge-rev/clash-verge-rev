@@ -54,7 +54,7 @@
     "@tauri-apps/plugin-updater": "2.9.0",
     "@types/json-schema": "^7.0.15",
     "ahooks": "^3.9.6",
-    "axios": "^1.12.2",
+    "axios": "^1.13.0",
     "dayjs": "1.11.18",
     "foxact": "^0.2.49",
     "i18next": "^25.6.0",
