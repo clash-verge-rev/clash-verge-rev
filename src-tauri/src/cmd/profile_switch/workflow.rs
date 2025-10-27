@@ -22,10 +22,22 @@ mod state_machine;
 use state_machine::{CONFIG_APPLY_TIMEOUT, SAVE_PROFILES_TIMEOUT, SwitchStateMachine};
 pub(super) use state_machine::{SwitchPanicInfo, SwitchStage};
 
+pub(super) type CleanupHandle = tauri::async_runtime::JoinHandle<()>;
+
+pub(super) struct SwitchWorkflowResult {
+    pub success: bool,
+    pub cleanup: CleanupHandle,
+}
+
+pub(super) struct SwitchWorkflowError {
+    pub info: SwitchPanicInfo,
+    pub cleanup: CleanupHandle,
+}
+
 pub(super) async fn run_switch_job(
     manager: &'static SwitchManager,
     request: SwitchRequest,
-) -> Result<bool, SwitchPanicInfo> {
+) -> Result<SwitchWorkflowResult, SwitchWorkflowError> {
     if request.cancel_token().is_cancelled() {
         logging!(
             info,
@@ -33,12 +45,15 @@ pub(super) async fn run_switch_job(
             "Switch task {} cancelled before validation",
             request.task_id()
         );
-        schedule_post_switch_failure(
+        let cleanup = schedule_post_switch_failure(
             request.profile_id().clone(),
             request.notify(),
             request.task_id(),
         );
-        return Ok(false);
+        return Ok(SwitchWorkflowResult {
+            success: false,
+            cleanup,
+        });
     }
 
     let profile_id = request.profile_id().clone();
@@ -55,8 +70,11 @@ pub(super) async fn run_switch_job(
             err
         );
         handle::Handle::notice_message("config_validate::error", err.clone());
-        schedule_post_switch_failure(profile_id.clone(), notify, task_id);
-        return Ok(false);
+        let cleanup = schedule_post_switch_failure(profile_id.clone(), notify, task_id);
+        return Ok(SwitchWorkflowResult {
+            success: false,
+            cleanup,
+        });
     }
 
     logging!(
@@ -101,8 +119,11 @@ pub(super) async fn run_switch_job(
                 "config_validate::error",
                 format!("profile switch timed out: {}", profile_id),
             );
-            schedule_post_switch_failure(profile_id.clone(), notify, task_id);
-            Ok(false)
+            let cleanup = schedule_post_switch_failure(profile_id.clone(), notify, task_id);
+            Ok(SwitchWorkflowResult {
+                success: false,
+                cleanup,
+            })
         }
         Ok(Err(panic_payload)) => {
             let panic_message = describe_panic_payload(panic_payload.as_ref());
@@ -118,14 +139,18 @@ pub(super) async fn run_switch_job(
                 "config_validate::panic",
                 format!("profile switch panic: {}", profile_id),
             );
-            schedule_post_switch_failure(profile_id.clone(), notify, task_id);
-            Err(SwitchPanicInfo::workflow_root(panic_message))
+            let cleanup = schedule_post_switch_failure(profile_id.clone(), notify, task_id);
+            Err(SwitchWorkflowError {
+                info: SwitchPanicInfo::workflow_root(panic_message),
+                cleanup,
+            })
         }
         Ok(Ok(machine_result)) => match machine_result {
             Ok(cmd_result) => match cmd_result {
                 Ok(success) => {
-                    schedule_post_switch_success(profile_id.clone(), success, notify, task_id);
-                    Ok(success)
+                    let cleanup =
+                        schedule_post_switch_success(profile_id.clone(), success, notify, task_id);
+                    Ok(SwitchWorkflowResult { success, cleanup })
                 }
                 Err(err) => {
                     logging!(
@@ -136,8 +161,11 @@ pub(super) async fn run_switch_job(
                         err
                     );
                     handle::Handle::notice_message("config_validate::error", err.clone());
-                    schedule_post_switch_failure(profile_id.clone(), notify, task_id);
-                    Ok(false)
+                    let cleanup = schedule_post_switch_failure(profile_id.clone(), notify, task_id);
+                    Ok(SwitchWorkflowResult {
+                        success: false,
+                        cleanup,
+                    })
                 }
             },
             Err(panic_info) => {
@@ -154,8 +182,11 @@ pub(super) async fn run_switch_job(
                     "config_validate::panic",
                     format!("profile switch panic: {}", profile_id),
                 );
-                schedule_post_switch_failure(profile_id.clone(), notify, task_id);
-                Err(panic_info)
+                let cleanup = schedule_post_switch_failure(profile_id.clone(), notify, task_id);
+                Err(SwitchWorkflowError {
+                    info: panic_info,
+                    cleanup,
+                })
             }
         },
     }
@@ -336,7 +367,7 @@ pub(super) async fn restore_previous_profile(previous: Option<SmartString>) -> C
     Ok(())
 }
 
-async fn close_connections_after_switch(profile_id: &SmartString) {
+async fn close_connections_after_switch(profile_id: SmartString) {
     match time::timeout(SWITCH_CLEANUP_TIMEOUT, async {
         handle::Handle::mihomo().await.close_all_connections().await
     })
@@ -364,18 +395,12 @@ async fn close_connections_after_switch(profile_id: &SmartString) {
     }
 }
 
-fn schedule_close_connections(profile_id: SmartString) {
-    AsyncHandler::spawn(|| async move {
-        close_connections_after_switch(&profile_id).await;
-    });
-}
-
 fn schedule_post_switch_success(
     profile_id: SmartString,
     success: bool,
     notify: bool,
     task_id: u64,
-) {
+) -> CleanupHandle {
     AsyncHandler::spawn(move || async move {
         handle::Handle::notify_profile_switch_finished(
             profile_id.clone(),
@@ -386,15 +411,19 @@ fn schedule_post_switch_success(
         if notify && success {
             handle::Handle::notice_message("info", "Profile Switched");
         }
-        schedule_close_connections(profile_id);
-    });
+        close_connections_after_switch(profile_id).await;
+    })
 }
 
-fn schedule_post_switch_failure(profile_id: SmartString, notify: bool, task_id: u64) {
+pub(super) fn schedule_post_switch_failure(
+    profile_id: SmartString,
+    notify: bool,
+    task_id: u64,
+) -> CleanupHandle {
     AsyncHandler::spawn(move || async move {
         handle::Handle::notify_profile_switch_finished(profile_id.clone(), false, notify, task_id);
-        schedule_close_connections(profile_id);
-    });
+        close_connections_after_switch(profile_id).await;
+    })
 }
 
 pub(super) fn describe_panic_payload(payload: &(dyn Any + Send)) -> String {

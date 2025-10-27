@@ -51,8 +51,14 @@ enum SwitchDriverMessage {
 
 #[derive(Debug)]
 enum SwitchJobOutcome {
-    Completed { success: bool },
-    Panicked { info: SwitchPanicInfo },
+    Completed {
+        success: bool,
+        cleanup: workflow::CleanupHandle,
+    },
+    Panicked {
+        info: SwitchPanicInfo,
+        cleanup: workflow::CleanupHandle,
+    },
 }
 
 pub(super) async fn switch_profile(
@@ -253,7 +259,7 @@ fn handle_completion(
     manager: &'static SwitchManager,
 ) {
     match &outcome {
-        SwitchJobOutcome::Completed { success } => {
+        SwitchJobOutcome::Completed { success, .. } => {
             logging!(
                 info,
                 Type::Cmd,
@@ -262,7 +268,7 @@ fn handle_completion(
                 success
             );
         }
-        SwitchJobOutcome::Panicked { info } => {
+        SwitchJobOutcome::Panicked { info, .. } => {
             logging!(
                 error,
                 Type::Cmd,
@@ -286,8 +292,17 @@ fn handle_completion(
         state.latest_tokens.remove(request.profile_id());
     }
 
-    // Schedule cleanup tracking removal once background task finishes.
-    track_cleanup(state, driver_tx.clone(), request.profile_id().clone());
+    let cleanup = match outcome {
+        SwitchJobOutcome::Completed { cleanup, .. } => cleanup,
+        SwitchJobOutcome::Panicked { cleanup, .. } => cleanup,
+    };
+
+    track_cleanup(
+        state,
+        driver_tx.clone(),
+        request.profile_id().clone(),
+        cleanup,
+    );
 
     start_next_job(state, driver_tx, manager);
 }
@@ -338,13 +353,25 @@ fn start_switch_job(
             tokio::select! {
                 res = workflow_fut.as_mut() => {
                     break match res {
-                        Ok(Ok(success)) => SwitchJobOutcome::Completed { success },
-                        Ok(Err(info)) => SwitchJobOutcome::Panicked { info },
-                        Err(payload) => SwitchJobOutcome::Panicked {
-                            info: SwitchPanicInfo::driver_task(
-                                workflow::describe_panic_payload(payload.as_ref()),
-                            ),
+                        Ok(Ok(result)) => SwitchJobOutcome::Completed {
+                            success: result.success,
+                            cleanup: result.cleanup,
                         },
+                        Ok(Err(error)) => SwitchJobOutcome::Panicked {
+                            info: error.info,
+                            cleanup: error.cleanup,
+                        },
+                        Err(payload) => {
+                            let info = SwitchPanicInfo::driver_task(
+                                workflow::describe_panic_payload(payload.as_ref()),
+                            );
+                            let cleanup = workflow::schedule_post_switch_failure(
+                                profile_label.clone(),
+                                completion_request.notify(),
+                                completion_request.task_id(),
+                            );
+                            SwitchJobOutcome::Panicked { info, cleanup }
+                        }
                     };
                 }
                 _ = watchdog_interval.tick() => {
@@ -391,19 +418,39 @@ fn track_cleanup(
     state: &mut SwitchDriverState,
     driver_tx: mpsc::Sender<SwitchDriverMessage>,
     profile: SmartString,
+    cleanup: workflow::CleanupHandle,
 ) {
-    if state.cleanup_profiles.contains_key(&profile) {
-        return;
+    if let Some(existing) = state.cleanup_profiles.remove(&profile) {
+        existing.abort();
     }
 
     let profile_clone = profile.clone();
+    let driver_clone = driver_tx.clone();
     let handle = tokio::spawn(async move {
-        time::sleep(Duration::from_millis(10)).await;
-        let _ = driver_tx
+        let profile_label = profile_clone.clone();
+        if let Err(err) = cleanup.await {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Cleanup task for profile {} failed: {}",
+                profile_label.as_str(),
+                err
+            );
+        }
+        if let Err(err) = driver_clone
             .send(SwitchDriverMessage::CleanupDone {
                 profile: profile_clone,
             })
-            .await;
+            .await
+        {
+            logging!(
+                error,
+                Type::Cmd,
+                "Failed to push cleanup completion for profile {}: {}",
+                profile_label.as_str(),
+                err
+            );
+        }
     });
     state.cleanup_profiles.insert(profile, handle);
 }
