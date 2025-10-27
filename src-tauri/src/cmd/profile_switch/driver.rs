@@ -1,7 +1,7 @@
 use super::{
     CmdResult,
     state::{SwitchCancellation, SwitchManager, SwitchRequest, manager},
-    workflow::{self, SwitchPanicInfo},
+    workflow::{self, SwitchPanicInfo, SwitchStage},
 };
 use crate::{logging, utils::logging::Type};
 use futures::FutureExt;
@@ -10,14 +10,21 @@ use smartstring::alias::String as SmartString;
 use std::{
     collections::{HashMap, VecDeque},
     panic::AssertUnwindSafe,
+    time::Duration,
 };
-use tokio::sync::{
-    mpsc::{self, error::TrySendError},
-    oneshot,
+use tokio::{
+    sync::{
+        mpsc::{self, error::TrySendError},
+        oneshot,
+    },
+    time::{self, MissedTickBehavior},
 };
 
 const SWITCH_QUEUE_CAPACITY: usize = 32;
 static SWITCH_QUEUE: OnceCell<mpsc::Sender<SwitchDriverMessage>> = OnceCell::new();
+
+const WATCHDOG_TIMEOUT: Duration = Duration::from_secs(5);
+const WATCHDOG_TICK: Duration = Duration::from_millis(500);
 
 #[derive(Debug, Default)]
 struct SwitchDriverState {
@@ -265,18 +272,53 @@ fn start_switch_job(
     request: SwitchRequest,
 ) {
     let completion_request = request.clone();
+    let heartbeat = request.heartbeat().clone();
+    let cancel_token = request.cancel_token().clone();
+    let task_id = request.task_id();
+    let profile_label = request.profile_id().clone();
+
     tokio::spawn(async move {
-        let job_result = match AssertUnwindSafe(workflow::run_switch_job(manager, request))
-            .catch_unwind()
-            .await
-        {
-            Ok(Ok(success)) => SwitchJobOutcome::Completed { success },
-            Ok(Err(info)) => SwitchJobOutcome::Panicked { info },
-            Err(payload) => SwitchJobOutcome::Panicked {
-                info: SwitchPanicInfo::driver_task(workflow::describe_panic_payload(
-                    payload.as_ref(),
-                )),
-            },
+        let mut watchdog_interval = time::interval(WATCHDOG_TICK);
+        watchdog_interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+
+        let workflow_fut =
+            AssertUnwindSafe(workflow::run_switch_job(manager, request)).catch_unwind();
+        tokio::pin!(workflow_fut);
+
+        let job_result = loop {
+            tokio::select! {
+                res = workflow_fut.as_mut() => {
+                    break match res {
+                        Ok(Ok(success)) => SwitchJobOutcome::Completed { success },
+                        Ok(Err(info)) => SwitchJobOutcome::Panicked { info },
+                        Err(payload) => SwitchJobOutcome::Panicked {
+                            info: SwitchPanicInfo::driver_task(
+                                workflow::describe_panic_payload(payload.as_ref()),
+                            ),
+                        },
+                    };
+                }
+                _ = watchdog_interval.tick() => {
+                    if cancel_token.is_cancelled() {
+                        continue;
+                    }
+                    let elapsed = heartbeat.elapsed();
+                    if elapsed > WATCHDOG_TIMEOUT {
+                        let stage = SwitchStage::from_code(heartbeat.stage_code())
+                            .unwrap_or(SwitchStage::Workflow);
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Switch task {} watchdog timeout (profile={} stage={:?}, elapsed={:?}); cancelling",
+                            task_id,
+                            profile_label.as_str(),
+                            stage,
+                            elapsed
+                        );
+                        cancel_token.cancel();
+                    }
+                }
+            }
         };
 
         if let Err(err) = driver_tx

@@ -19,8 +19,8 @@ use tokio::{fs as tokio_fs, time};
 
 mod state_machine;
 
-pub(super) use state_machine::SwitchPanicInfo;
-use state_machine::SwitchStateMachine;
+use state_machine::{CONFIG_APPLY_TIMEOUT, SAVE_PROFILES_TIMEOUT, SwitchStateMachine};
+pub(super) use state_machine::{SwitchPanicInfo, SwitchStage};
 
 pub(super) async fn run_switch_job(
     manager: &'static SwitchManager,
@@ -324,16 +324,40 @@ pub(super) async fn restore_previous_profile(previous: Option<SmartString>) -> C
             .draft_mut()
             .patch_config(restore_profiles)
             .stringify_err()?;
-        Config::profiles().await.apply();
+        if time::timeout(CONFIG_APPLY_TIMEOUT, async {
+            Config::profiles().await.apply();
+        })
+        .await
+        .is_err()
+        {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Restoring previous configuration timed out after {:?}",
+                CONFIG_APPLY_TIMEOUT
+            );
+            return Ok(());
+        }
 
         AsyncHandler::spawn(|| async move {
-            if let Err(e) = profiles_save_file_safe().await {
-                logging!(
-                    warn,
-                    Type::Cmd,
-                    "Failed to persist restored configuration asynchronously: {}",
-                    e
-                );
+            match time::timeout(SAVE_PROFILES_TIMEOUT, profiles_save_file_safe()).await {
+                Ok(Ok(())) => {}
+                Ok(Err(e)) => {
+                    logging!(
+                        warn,
+                        Type::Cmd,
+                        "Failed to persist restored configuration asynchronously: {}",
+                        e
+                    );
+                }
+                Err(_) => {
+                    logging!(
+                        warn,
+                        Type::Cmd,
+                        "Persisting restored configuration timed out after {:?}",
+                        SAVE_PROFILES_TIMEOUT
+                    );
+                }
             }
         });
     }

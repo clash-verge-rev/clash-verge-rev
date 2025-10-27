@@ -1,6 +1,6 @@
 use super::{CmdResult, describe_panic_payload, restore_previous_profile, validate_profile_yaml};
 use crate::{
-    cmd::profile_switch::state::{SwitchManager, SwitchRequest, SwitchScope},
+    cmd::profile_switch::state::{SwitchHeartbeat, SwitchManager, SwitchRequest, SwitchScope},
     config::{Config, IProfiles, profiles::profiles_save_file_safe},
     core::{CoreManager, handle, tray::Tray},
     logging,
@@ -10,6 +10,11 @@ use futures::FutureExt;
 use smartstring::alias::String as SmartString;
 use std::{mem, panic::AssertUnwindSafe, time::Duration};
 use tokio::{sync::MutexGuard, time};
+
+pub(super) const CONFIG_APPLY_TIMEOUT: Duration = Duration::from_secs(5);
+const TRAY_UPDATE_TIMEOUT: Duration = Duration::from_secs(3);
+const REFRESH_TIMEOUT: Duration = Duration::from_secs(3);
+pub(super) const SAVE_PROFILES_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// Explicit state machine for profile switching so we can reason about
 /// cancellation, stale requests, and side-effects at each stage.
@@ -29,6 +34,37 @@ pub(crate) enum SwitchStage {
     Finalize,
     Workflow,
     DriverTask,
+}
+
+impl SwitchStage {
+    pub(crate) fn as_code(self) -> u32 {
+        match self {
+            SwitchStage::Start => 0,
+            SwitchStage::AcquireCore => 1,
+            SwitchStage::Prepare => 2,
+            SwitchStage::ValidateTarget => 3,
+            SwitchStage::PatchDraft => 4,
+            SwitchStage::UpdateCore => 5,
+            SwitchStage::Finalize => 6,
+            SwitchStage::Workflow => 7,
+            SwitchStage::DriverTask => 8,
+        }
+    }
+
+    pub(crate) fn from_code(code: u32) -> Option<Self> {
+        Some(match code {
+            0 => SwitchStage::Start,
+            1 => SwitchStage::AcquireCore,
+            2 => SwitchStage::Prepare,
+            3 => SwitchStage::ValidateTarget,
+            4 => SwitchStage::PatchDraft,
+            5 => SwitchStage::UpdateCore,
+            6 => SwitchStage::Finalize,
+            7 => SwitchStage::Workflow,
+            8 => SwitchStage::DriverTask,
+            _ => return None,
+        })
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -57,8 +93,13 @@ impl SwitchStateMachine {
         request: Option<SwitchRequest>,
         profiles: IProfiles,
     ) -> Self {
+        let heartbeat = request
+            .as_ref()
+            .map(|req| req.heartbeat().clone())
+            .unwrap_or_else(SwitchHeartbeat::new);
+
         Self {
-            ctx: SwitchContext::new(manager, request, profiles),
+            ctx: SwitchContext::new(manager, request, profiles, heartbeat),
             state: SwitchState::Start,
         }
     }
@@ -137,6 +178,7 @@ impl SwitchStateMachine {
         F: FnOnce(&'a mut Self) -> Fut,
         Fut: std::future::Future<Output = CmdResult<SwitchState>> + 'a,
     {
+        self.ctx.record_stage(stage);
         AssertUnwindSafe(f(self))
             .catch_unwind()
             .await
@@ -292,34 +334,96 @@ impl SwitchStateMachine {
                     "Configuration update succeeded, sequence: {}",
                     self.ctx.sequence()
                 );
-                Config::profiles().await.apply();
-                handle::Handle::refresh_clash();
+                match time::timeout(CONFIG_APPLY_TIMEOUT, async {
+                    Config::profiles().await.apply();
+                })
+                .await
+                {
+                    Ok(()) => {}
+                    Err(_) => {
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Applying profile configuration timed out after {:?}",
+                            CONFIG_APPLY_TIMEOUT
+                        );
+                        Config::profiles().await.discard();
+                        return Ok(SwitchState::Complete(false));
+                    }
+                }
 
-                if let Err(err) = Tray::global().update_tooltip().await {
+                if time::timeout(REFRESH_TIMEOUT, async {
+                    handle::Handle::refresh_clash();
+                })
+                .await
+                .is_err()
+                {
                     logging!(
                         warn,
                         Type::Cmd,
-                        "Failed to update tray tooltip asynchronously: {}",
-                        err
+                        "Refreshing Clash state timed out after {:?}",
+                        REFRESH_TIMEOUT
                     );
                 }
 
-                if let Err(err) = Tray::global().update_menu().await {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Failed to update tray menu asynchronously: {}",
-                        err
-                    );
+                match time::timeout(TRAY_UPDATE_TIMEOUT, Tray::global().update_tooltip()).await {
+                    Ok(Ok(())) => {}
+                    Ok(Err(err)) => {
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Failed to update tray tooltip asynchronously: {}",
+                            err
+                        );
+                    }
+                    Err(_) => {
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Updating tray tooltip timed out after {:?}",
+                            TRAY_UPDATE_TIMEOUT
+                        );
+                    }
                 }
 
-                if let Err(err) = profiles_save_file_safe().await {
-                    logging!(
-                        warn,
-                        Type::Cmd,
-                        "Failed to persist configuration file asynchronously: {}",
-                        err
-                    );
+                match time::timeout(TRAY_UPDATE_TIMEOUT, Tray::global().update_menu()).await {
+                    Ok(Ok(())) => {}
+                    Ok(Err(err)) => {
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Failed to update tray menu asynchronously: {}",
+                            err
+                        );
+                    }
+                    Err(_) => {
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Updating tray menu timed out after {:?}",
+                            TRAY_UPDATE_TIMEOUT
+                        );
+                    }
+                }
+
+                match time::timeout(SAVE_PROFILES_TIMEOUT, profiles_save_file_safe()).await {
+                    Ok(Ok(())) => {}
+                    Ok(Err(err)) => {
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Failed to persist configuration file asynchronously: {}",
+                            err
+                        );
+                    }
+                    Err(_) => {
+                        logging!(
+                            warn,
+                            Type::Cmd,
+                            "Persisting configuration file timed out after {:?}",
+                            SAVE_PROFILES_TIMEOUT
+                        );
+                    }
                 }
 
                 if let Some(current) = self.ctx.new_profile_for_event.clone() {
@@ -387,6 +491,10 @@ struct SwitchContext {
     new_profile_for_event: Option<SmartString>,
     switch_scope: Option<SwitchScope<'static>>,
     core_guard: Option<MutexGuard<'static, ()>>,
+    heartbeat: SwitchHeartbeat,
+    task_id: Option<u64>,
+    profile_label: SmartString,
+    active_stage: SwitchStage,
 }
 
 impl SwitchContext {
@@ -394,7 +502,15 @@ impl SwitchContext {
         manager: &'static SwitchManager,
         request: Option<SwitchRequest>,
         profiles: IProfiles,
+        heartbeat: SwitchHeartbeat,
     ) -> Self {
+        let task_id = request.as_ref().map(|req| req.task_id());
+        let profile_label = request
+            .as_ref()
+            .map(|req| req.profile_id().clone())
+            .or_else(|| profiles.current.clone())
+            .unwrap_or_else(|| SmartString::from("unknown"));
+        heartbeat.touch();
         Self {
             manager,
             request,
@@ -405,6 +521,10 @@ impl SwitchContext {
             new_profile_for_event: None,
             switch_scope: None,
             core_guard: None,
+            heartbeat,
+            task_id,
+            profile_label,
+            active_stage: SwitchStage::Start,
         }
     }
 
@@ -462,16 +582,42 @@ impl SwitchContext {
     }
 
     fn sequence(&self) -> u64 {
-        match self.sequence {
-            Some(sequence) => sequence,
-            None => {
-                logging!(
-                    warn,
-                    Type::Cmd,
-                    "Sequence unexpectedly missing in switch context; defaulting to 0"
-                );
-                0
-            }
+        self.sequence.unwrap_or_else(|| {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Sequence unexpectedly missing in switch context; defaulting to 0"
+            );
+            0
+        })
+    }
+
+    fn record_stage(&mut self, stage: SwitchStage) {
+        let since_last = self.heartbeat.elapsed();
+        let previous = self.active_stage;
+        self.active_stage = stage;
+        self.heartbeat.set_stage(stage.as_code());
+
+        match self.task_id {
+            Some(task_id) => logging!(
+                debug,
+                Type::Cmd,
+                "Switch task {} (profile={}) transitioned {:?} -> {:?} after {:?}",
+                task_id,
+                self.profile_label,
+                previous,
+                stage,
+                since_last
+            ),
+            None => logging!(
+                debug,
+                Type::Cmd,
+                "Profile patch {} transitioned {:?} -> {:?} after {:?}",
+                self.profile_label,
+                previous,
+                stage,
+                since_last
+            ),
         }
     }
 }

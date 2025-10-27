@@ -1,8 +1,8 @@
 use once_cell::sync::OnceCell;
 use smartstring::alias::String as SmartString;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::time::Duration;
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
 
 pub(super) const SWITCH_JOB_TIMEOUT: Duration = Duration::from_secs(30);
@@ -97,6 +97,7 @@ pub(super) struct SwitchRequest {
     profile_id: SmartString,
     notify: bool,
     cancel_token: SwitchCancellation,
+    heartbeat: SwitchHeartbeat,
 }
 
 impl SwitchRequest {
@@ -106,6 +107,7 @@ impl SwitchRequest {
             profile_id,
             notify,
             cancel_token: SwitchCancellation::new(),
+            heartbeat: SwitchHeartbeat::new(),
         }
     }
 
@@ -129,5 +131,53 @@ impl SwitchRequest {
 
     pub(super) fn cancel_token(&self) -> &SwitchCancellation {
         &self.cancel_token
+    }
+
+    pub(super) fn heartbeat(&self) -> &SwitchHeartbeat {
+        &self.heartbeat
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(super) struct SwitchHeartbeat {
+    last_tick_millis: Arc<AtomicU64>,
+    stage_code: Arc<AtomicU32>,
+}
+
+impl SwitchHeartbeat {
+    fn now_millis() -> u64 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or(Duration::ZERO)
+            .as_millis() as u64
+    }
+
+    pub(super) fn new() -> Self {
+        let heartbeat = Self {
+            last_tick_millis: Arc::new(AtomicU64::new(Self::now_millis())),
+            stage_code: Arc::new(AtomicU32::new(0)),
+        };
+        heartbeat.touch();
+        heartbeat
+    }
+
+    pub(super) fn touch(&self) {
+        self.last_tick_millis
+            .store(Self::now_millis(), Ordering::SeqCst);
+    }
+
+    pub(super) fn elapsed(&self) -> Duration {
+        let last = self.last_tick_millis.load(Ordering::SeqCst);
+        let now = Self::now_millis();
+        Duration::from_millis(now.saturating_sub(last))
+    }
+
+    pub(super) fn set_stage(&self, stage: u32) {
+        self.stage_code.store(stage, Ordering::SeqCst);
+        self.touch();
+    }
+
+    pub(super) fn stage_code(&self) -> u32 {
+        self.stage_code.load(Ordering::SeqCst)
     }
 }
