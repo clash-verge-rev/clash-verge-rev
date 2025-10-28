@@ -14,7 +14,7 @@ impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
         self.prepare_startup().await?;
 
-        match self.get_running_mode() {
+        match *self.get_running_mode() {
             RunningMode::Service => self.start_core_by_service().await,
             RunningMode::NotRunning | RunningMode::Sidecar => self.start_core_by_sidecar().await,
         }
@@ -23,7 +23,7 @@ impl CoreManager {
     pub async fn stop_core(&self) -> Result<()> {
         ClashLogger::global().clear_logs();
 
-        match self.get_running_mode() {
+        match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar(),
             RunningMode::NotRunning => Ok(()),
