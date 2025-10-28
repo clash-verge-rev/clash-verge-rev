@@ -1,6 +1,7 @@
 use super::use_lowercase;
 use anyhow::{Error, Result};
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 
 pub fn use_script(
     script: String,
@@ -44,7 +45,7 @@ pub fn use_script(
                         )
                     })?;
                     let mut out = copy_outputs.borrow_mut();
-                    out.push((level, data));
+                    out.push((level.into(), data.into()));
                     Ok(JsValue::undefined())
                 },
             ),
@@ -94,7 +95,7 @@ pub fn use_script(
         match res {
             Ok(config) => Ok((use_lowercase(config), out.to_vec())),
             Err(err) => {
-                out.push(("exception".into(), err.to_string()));
+                out.push(("exception".into(), err.to_string().into()));
                 Ok((config, out.to_vec()))
             }
         }
@@ -121,7 +122,7 @@ fn strip_outer_quotes(s: &str) -> &str {
 
 // 转义单引号和反斜杠，用于单引号包裹的JavaScript字符串
 fn escape_js_string_for_single_quote(s: &str) -> String {
-    s.replace('\\', "\\\\").replace('\'', "\\'")
+    s.replace('\\', "\\\\").replace('\'', "\\'").into()
 }
 
 #[test]
@@ -150,7 +151,7 @@ fn test_script() {
   ";
 
     let config = serde_yaml_ng::from_str(config).expect("Failed to parse test config YAML");
-    let (config, results) = use_script(script.into(), config, "".to_string())
+    let (config, results) = use_script(script.into(), config, "".into())
         .expect("Script execution should succeed in test");
 
     let _ = serde_yaml_ng::to_string(&config).expect("Failed to serialize config to YAML");

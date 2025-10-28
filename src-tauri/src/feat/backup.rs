@@ -11,6 +11,7 @@ use anyhow::{Result, anyhow};
 use chrono::Utc;
 use reqwest_dav::list_cmd::ListFile;
 use serde::Serialize;
+use smartstring::alias::String;
 use std::{fs, path::PathBuf};
 
 #[derive(Debug, Serialize)]
@@ -82,7 +83,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
 
     let backup_storage_path = app_home_dir()
         .map_err(|e| anyhow::anyhow!("Failed to get app home dir: {e}"))?
-        .join(&filename);
+        .join(filename.as_str());
     backup::WebDavClient::global()
         .download(filename, backup_storage_path.clone())
         .await
@@ -128,7 +129,7 @@ pub async fn create_local_backup() -> Result<()> {
     })?;
 
     let backup_dir = local_backup_dir()?;
-    let target_path = backup_dir.join(&file_name);
+    let target_path = backup_dir.join(file_name.as_str());
 
     if let Err(err) = move_file(temp_file_path.clone(), target_path.clone()) {
         logging!(
@@ -196,9 +197,9 @@ pub fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
             .map(|time| chrono::DateTime::<Utc>::from(time).to_rfc3339())
             .unwrap_or_default();
         backups.push(LocalBackupFile {
-            filename: file_name.to_string(),
-            path: path.to_string_lossy().to_string(),
-            last_modified,
+            filename: file_name.into(),
+            path: path.to_string_lossy().into(),
+            last_modified: last_modified.into(),
             content_length: metadata.len(),
         });
     }
@@ -210,7 +211,7 @@ pub fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
 /// Delete local backup
 pub async fn delete_local_backup(filename: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
-    let target_path = backup_dir.join(&filename);
+    let target_path = backup_dir.join(filename.as_str());
     if !target_path.exists() {
         logging!(
             warn,
@@ -227,7 +228,7 @@ pub async fn delete_local_backup(filename: String) -> Result<()> {
 /// Restore local backup
 pub async fn restore_local_backup(filename: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
-    let target_path = backup_dir.join(&filename);
+    let target_path = backup_dir.join(filename.as_str());
     if !target_path.exists() {
         return Err(anyhow!("Backup file not found: {}", filename));
     }
@@ -259,12 +260,12 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
 /// Export local backup file to user selected destination
 pub fn export_local_backup(filename: String, destination: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
-    let source_path = backup_dir.join(&filename);
+    let source_path = backup_dir.join(filename.as_str());
     if !source_path.exists() {
         return Err(anyhow!("Backup file not found: {}", filename));
     }
 
-    let dest_path = PathBuf::from(destination);
+    let dest_path = PathBuf::from(destination.as_str());
     if let Some(parent) = dest_path.parent() {
         fs::create_dir_all(parent)?;
     }

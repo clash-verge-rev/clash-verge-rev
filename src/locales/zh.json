@@ -182,6 +182,7 @@
   "Table View": "表格视图",
   "List View": "列表视图",
   "Close All": "关闭全部",
+  "Close All Connections": "关闭所有连接",
   "Upload": "上传",
   "Download": "下载",
   "Download Speed": "下载速度",
@@ -283,6 +284,8 @@
   "Silent Start Info": "程序启动时以后台模式运行，不显示程序面板",
   "Hover Jump Navigator": "悬浮跳转导航",
   "Hover Jump Navigator Info": "鼠标悬停在字母上时自动滚动到对应代理组",
+  "Hover Jump Navigator Delay": "悬浮跳转导航延迟",
+  "Hover Jump Navigator Delay Info": "鼠标悬停后触发自动跳转前等待的毫秒数",
   "TG Channel": "Telegram 频道",
   "Manual": "使用手册",
   "Github Repo": "GitHub 项目地址",
@@ -707,5 +710,8 @@
   "Prefer System Titlebar": "优先使用系统标题栏",
   "App Log Max Size": "应用日志最大大小",
   "App Log Max Count": "应用日志最大数量",
-  "Allow Auto Update": "允许自动更新"
+  "Allow Auto Update": "允许自动更新",
+  "Menu reorder mode": "菜单排序模式",
+  "Unlock menu order": "解锁菜单排序",
+  "Lock menu order": "锁定菜单排序"
 }

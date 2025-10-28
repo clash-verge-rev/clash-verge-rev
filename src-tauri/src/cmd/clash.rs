@@ -6,9 +6,10 @@ use crate::{
     config::Config,
     core::{CoreManager, handle, validate::CoreConfigValidator},
 };
-use crate::{config::*, feat, logging, utils::logging::Type, wrap_err};
+use crate::{config::*, feat, logging, utils::logging::Type};
 use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 
 /// 复制Clash环境变量
 #[tauri::command]
@@ -26,7 +27,7 @@ pub async fn get_clash_info() -> CmdResult<ClashInfo> {
 /// 修改Clash配置
 #[tauri::command]
 pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
-    wrap_err!(feat::patch_clash(payload).await)
+    feat::patch_clash(payload).await.stringify_err()
 }
 
 /// 修改Clash模式
@@ -54,22 +55,23 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
                         Type::Core,
                         "core changed and restarted to {clash_core}"
                     );
-                    handle::Handle::notice_message("config_core::change_success", &clash_core);
+                    handle::Handle::notice_message("config_core::change_success", clash_core);
                     handle::Handle::refresh_clash();
                     Ok(None)
                 }
                 Err(err) => {
-                    let error_msg = format!("Core changed but failed to restart: {err}");
+                    let error_msg: String =
+                        format!("Core changed but failed to restart: {err}").into();
+                    handle::Handle::notice_message("config_core::change_error", error_msg.clone());
                     logging!(error, Type::Core, "{error_msg}");
-                    handle::Handle::notice_message("config_core::change_error", &error_msg);
                     Ok(Some(error_msg))
                 }
             }
         }
         Err(err) => {
-            let error_msg = err;
+            let error_msg: String = err;
             logging!(error, Type::Core, "failed to change core: {error_msg}");
-            handle::Handle::notice_message("config_core::change_error", &error_msg);
+            handle::Handle::notice_message("config_core::change_error", error_msg.clone());
             Ok(Some(error_msg))
         }
     }
@@ -78,7 +80,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
 /// 启动核心
 #[tauri::command]
 pub async fn start_core() -> CmdResult {
-    let result = wrap_err!(CoreManager::global().start_core().await);
+    let result = CoreManager::global().start_core().await.stringify_err();
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }
@@ -88,7 +90,7 @@ pub async fn start_core() -> CmdResult {
 /// 关闭核心
 #[tauri::command]
 pub async fn stop_core() -> CmdResult {
-    let result = wrap_err!(CoreManager::global().stop_core().await);
+    let result = CoreManager::global().stop_core().await.stringify_err();
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }
@@ -98,7 +100,7 @@ pub async fn stop_core() -> CmdResult {
 /// 重启核心
 #[tauri::command]
 pub async fn restart_core() -> CmdResult {
-    let result = wrap_err!(CoreManager::global().restart_core().await);
+    let result = CoreManager::global().restart_core().await.stringify_err();
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }
@@ -250,7 +252,7 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
         return Err("DNS config file not found".into());
     }
 
-    let content = fs::read_to_string(&dns_path).await.stringify_err()?;
+    let content = fs::read_to_string(&dns_path).await.stringify_err()?.into();
     Ok(content)
 }
 

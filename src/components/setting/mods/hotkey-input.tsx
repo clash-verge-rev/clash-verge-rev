@@ -7,7 +7,7 @@ import { parseHotkey } from "@/utils/parse-hotkey";
 
 const KeyWrapper = styled("div")(({ theme }) => ({
   position: "relative",
-  width: 165,
+  width: 230,
   minHeight: 36,
 
   "> input": {
@@ -39,6 +39,7 @@ const KeyWrapper = styled("div")(({ theme }) => ({
     },
   },
   ".item": {
+    fontSize: "14px",
     color: theme.palette.text.primary,
     border: "1px solid",
     borderColor: alpha(theme.palette.text.secondary, 0.2),
@@ -76,11 +77,10 @@ export const HotkeyInput = (props: Props) => {
             }
           }}
           onKeyDown={(e) => {
-            const evt = e.nativeEvent;
             e.preventDefault();
             e.stopPropagation();
 
-            const key = parseHotkey(evt.key);
+            const key = parseHotkey(e);
             if (key === "UNIDENTIFIED") return;
 
             changeRef.current = [...new Set([...changeRef.current, key])];

@@ -69,7 +69,7 @@ const SettingClash = ({ onError }: Props) => {
       await updateGeo();
       showNotice("success", t("GeoData Updated"));
     } catch (err: any) {
-      showNotice("error", err?.response.data.message || err.toString());
+      showNotice("error", err.message || err.toString());
     }
   };
 

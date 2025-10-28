@@ -1,10 +1,14 @@
 import { Box, Button, Tooltip } from "@mui/material";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 interface ProxyGroupNavigatorProps {
   proxyGroupNames: string[];
   onGroupLocation: (groupName: string) => void;
+  enableHoverJump?: boolean;
+  hoverDelay?: number;
 }
+
+export const DEFAULT_HOVER_DELAY = 280;
 
 // 提取代理组名的第一个字符
 const getGroupDisplayChar = (groupName: string): string => {
@@ -18,13 +22,58 @@ const getGroupDisplayChar = (groupName: string): string => {
 export const ProxyGroupNavigator = ({
   proxyGroupNames,
   onGroupLocation,
+  enableHoverJump = true,
+  hoverDelay = DEFAULT_HOVER_DELAY,
 }: ProxyGroupNavigatorProps) => {
+  const lastHoveredRef = useRef<string | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const hoverDelayMs = hoverDelay >= 0 ? hoverDelay : 0;
+
+  const clearHoverTimer = useCallback(() => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!enableHoverJump) {
+      clearHoverTimer();
+      lastHoveredRef.current = null;
+    }
+    return () => {
+      clearHoverTimer();
+    };
+  }, [clearHoverTimer, enableHoverJump]);
+
   const handleGroupClick = useCallback(
     (groupName: string) => {
+      clearHoverTimer();
+      lastHoveredRef.current = groupName;
       onGroupLocation(groupName);
     },
-    [onGroupLocation],
+    [clearHoverTimer, onGroupLocation],
   );
+
+  const handleGroupHover = useCallback(
+    (groupName: string) => {
+      if (!enableHoverJump) return;
+      if (lastHoveredRef.current === groupName) return;
+      clearHoverTimer();
+      hoverTimerRef.current = setTimeout(() => {
+        hoverTimerRef.current = null;
+        lastHoveredRef.current = groupName;
+        onGroupLocation(groupName);
+      }, hoverDelayMs);
+    },
+    [clearHoverTimer, enableHoverJump, hoverDelayMs, onGroupLocation],
+  );
+
+  const handleButtonLeave = useCallback(() => {
+    clearHoverTimer();
+    lastHoveredRef.current = null;
+  }, [clearHoverTimer]);
 
   // 处理代理组数据，去重和排序
   const processedGroups = useMemo(() => {
@@ -66,6 +115,10 @@ export const ProxyGroupNavigator = ({
             size="small"
             variant="text"
             onClick={() => handleGroupClick(name)}
+            onMouseEnter={() => handleGroupHover(name)}
+            onFocus={() => handleGroupHover(name)}
+            onMouseLeave={handleButtonLeave}
+            onBlur={handleButtonLeave}
             sx={{
               minWidth: 28,
               minHeight: 28,

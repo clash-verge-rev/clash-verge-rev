@@ -6,6 +6,7 @@ use crate::{
 use anyhow::Result;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
+use smartstring::alias::String;
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -55,6 +56,9 @@ pub struct IVerge {
 
     /// menu icon
     pub menu_icon: Option<String>,
+
+    /// menu order
+    pub menu_order: Option<Vec<String>>,
 
     /// sysproxy tray icon
     pub sysproxy_tray_icon: Option<bool>,
@@ -199,8 +203,7 @@ pub struct IVerge {
 
     pub enable_tray_speed: Option<bool>,
 
-    pub enable_tray_icon: Option<bool>,
-
+    // pub enable_tray_icon: Option<bool>,
     /// show proxy groups directly on tray root menu
     pub tray_inline_proxy_groups: Option<bool>,
 
@@ -212,6 +215,9 @@ pub struct IVerge {
 
     /// 启用代理页面自动滚动
     pub enable_hover_jump_navigator: Option<bool>,
+
+    /// 代理页面自动滚动延迟（毫秒）
+    pub hover_jump_navigator_delay: Option<u64>,
 
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
@@ -322,7 +328,7 @@ impl IVerge {
 
     fn get_system_language() -> String {
         let sys_lang = sys_locale::get_locale()
-            .unwrap_or_else(|| String::from("en"))
+            .unwrap_or_else(|| "en".into())
             .to_lowercase();
 
         let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
@@ -383,6 +389,7 @@ impl IVerge {
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_hover_jump_navigator: Some(true),
+            hover_jump_navigator_delay: Some(280),
             enable_system_proxy: Some(false),
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
@@ -411,7 +418,7 @@ impl IVerge {
             webdav_username: None,
             webdav_password: None,
             enable_tray_speed: Some(false),
-            enable_tray_icon: Some(true),
+            // enable_tray_icon: Some(true),
             tray_inline_proxy_groups: Some(false),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
@@ -430,6 +437,7 @@ impl IVerge {
 
     /// patch verge config
     /// only save to file
+    #[allow(clippy::cognitive_complexity)]
     pub fn patch_config(&mut self, patch: IVerge) {
         macro_rules! patch {
             ($key: tt) => {
@@ -455,6 +463,7 @@ impl IVerge {
         #[cfg(target_os = "macos")]
         patch!(tray_icon);
         patch!(menu_icon);
+        patch!(menu_order);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);
@@ -463,6 +472,7 @@ impl IVerge {
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_hover_jump_navigator);
+        patch!(hover_jump_navigator_delay);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);
         #[cfg(not(target_os = "windows"))]
@@ -504,7 +514,7 @@ impl IVerge {
         patch!(webdav_username);
         patch!(webdav_password);
         patch!(enable_tray_speed);
-        patch!(enable_tray_icon);
+        // patch!(enable_tray_icon);
         patch!(tray_inline_proxy_groups);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);
@@ -513,13 +523,8 @@ impl IVerge {
         patch!(enable_external_controller);
     }
 
-    /// 在初始化前尝试拿到单例端口的值
     pub fn get_singleton_port() -> u16 {
-        #[cfg(not(feature = "verge-dev"))]
-        const SERVER_PORT: u16 = 33331;
-        #[cfg(feature = "verge-dev")]
-        const SERVER_PORT: u16 = 11233;
-        SERVER_PORT
+        crate::constants::network::ports::SINGLETON_SERVER
     }
 
     /// 获取日志等级
@@ -558,6 +563,7 @@ pub struct IVergeResponse {
     #[cfg(target_os = "macos")]
     pub tray_icon: Option<String>,
     pub menu_icon: Option<String>,
+    pub menu_order: Option<Vec<String>>,
     pub sysproxy_tray_icon: Option<bool>,
     pub tun_tray_icon: Option<bool>,
     pub enable_tun_mode: Option<bool>,
@@ -602,13 +608,14 @@ pub struct IVergeResponse {
     pub webdav_username: Option<String>,
     pub webdav_password: Option<String>,
     pub enable_tray_speed: Option<bool>,
-    pub enable_tray_icon: Option<bool>,
+    // pub enable_tray_icon: Option<bool>,
     pub tray_inline_proxy_groups: Option<bool>,
     pub enable_auto_light_weight_mode: Option<bool>,
     pub auto_light_weight_minutes: Option<u64>,
     pub enable_dns_settings: Option<bool>,
     pub home_cards: Option<serde_json::Value>,
     pub enable_hover_jump_navigator: Option<bool>,
+    pub hover_jump_navigator_delay: Option<u64>,
     pub enable_external_controller: Option<bool>,
 }
 
@@ -633,6 +640,7 @@ impl From<IVerge> for IVergeResponse {
             #[cfg(target_os = "macos")]
             tray_icon: verge.tray_icon,
             menu_icon: verge.menu_icon,
+            menu_order: verge.menu_order,
             sysproxy_tray_icon: verge.sysproxy_tray_icon,
             tun_tray_icon: verge.tun_tray_icon,
             enable_tun_mode: verge.enable_tun_mode,
@@ -677,13 +685,14 @@ impl From<IVerge> for IVergeResponse {
             webdav_username: verge.webdav_username,
             webdav_password: verge.webdav_password,
             enable_tray_speed: verge.enable_tray_speed,
-            enable_tray_icon: verge.enable_tray_icon,
+            // enable_tray_icon: verge.enable_tray_icon,
             tray_inline_proxy_groups: verge.tray_inline_proxy_groups,
             enable_auto_light_weight_mode: verge.enable_auto_light_weight_mode,
             auto_light_weight_minutes: verge.auto_light_weight_minutes,
             enable_dns_settings: verge.enable_dns_settings,
             home_cards: verge.home_cards,
             enable_hover_jump_navigator: verge.enable_hover_jump_navigator,
+            hover_jump_navigator_delay: verge.hover_jump_navigator_delay,
             enable_external_controller: verge.enable_external_controller,
         }
     }

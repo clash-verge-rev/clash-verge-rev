@@ -73,6 +73,50 @@ interface Props {
 
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
+const normalizeDeleteSeq = (input?: unknown): string[] => {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  const names = input
+    .map((item) => {
+      if (typeof item === "string") {
+        return item;
+      }
+
+      if (
+        item &&
+        typeof item === "object" &&
+        "name" in item &&
+        typeof (item as { name: unknown }).name === "string"
+      ) {
+        return (item as { name: string }).name;
+      }
+
+      return undefined;
+    })
+    .filter(
+      (name): name is string => typeof name === "string" && name.length > 0,
+    );
+
+  return Array.from(new Set(names));
+};
+
+const buildGroupsYaml = (
+  prepend: IProxyGroupConfig[],
+  append: IProxyGroupConfig[],
+  deleteList: string[],
+) => {
+  return yaml.dump(
+    {
+      prepend,
+      append,
+      delete: deleteList,
+    },
+    { forceQuotes: true },
+  );
+};
+
 export const GroupsEditorViewer = (props: Props) => {
   const { mergeUid, proxiesUid, profileUid, property, open, onClose, onSave } =
     props;
@@ -172,7 +216,16 @@ export const GroupsEditorViewer = (props: Props) => {
 
     setPrependSeq(obj?.prepend || []);
     setAppendSeq(obj?.append || []);
-    setDeleteSeq(obj?.delete || []);
+    setDeleteSeq((prev) => {
+      const normalized = normalizeDeleteSeq(obj?.delete);
+      if (
+        normalized.length === prev.length &&
+        normalized.every((item, index) => item === prev[index])
+      ) {
+        return prev;
+      }
+      return normalized;
+    });
 
     setPrevData(data);
     setCurrData(data);
@@ -187,7 +240,16 @@ export const GroupsEditorViewer = (props: Props) => {
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? []);
       setAppendSeq(obj?.append ?? []);
-      setDeleteSeq(obj?.delete ?? []);
+      setDeleteSeq((prev) => {
+        const normalized = normalizeDeleteSeq(obj?.delete);
+        if (
+          normalized.length === prev.length &&
+          normalized.every((item, index) => item === prev[index])
+        ) {
+          return prev;
+        }
+        return normalized;
+      });
     });
   }, [currData, visualization]);
 
@@ -196,12 +258,7 @@ export const GroupsEditorViewer = (props: Props) => {
     if (prependSeq && appendSeq && deleteSeq) {
       const serialize = () => {
         try {
-          setCurrData(
-            yaml.dump(
-              { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
-              { forceQuotes: true },
-            ),
-          );
+          setCurrData(buildGroupsYaml(prependSeq, appendSeq, deleteSeq));
         } catch (e) {
           console.warn("[GroupsEditorViewer] yaml.dump failed:", e);
           // 防止异常导致UI卡死
@@ -227,30 +284,37 @@ export const GroupsEditorViewer = (props: Props) => {
     const moreProxiesObj = yaml.load(proxiesData) as ISeqProfileConfig | null;
     const morePrependProxies = moreProxiesObj?.prepend || [];
     const moreAppendProxies = moreProxiesObj?.append || [];
-    const moreDeleteProxies =
-      moreProxiesObj?.delete || ([] as string[] | { name: string }[]);
+    const moreDeleteProxies = normalizeDeleteSeq(moreProxiesObj?.delete);
 
     const proxies = morePrependProxies.concat(
       originProxies.filter((proxy: any) => {
-        if (proxy.name) {
-          return !moreDeleteProxies.includes(proxy.name);
-        } else {
-          return !moreDeleteProxies.includes(proxy);
-        }
+        const proxyName =
+          typeof proxy === "string"
+            ? proxy
+            : (proxy?.name as string | undefined);
+        return proxyName ? !moreDeleteProxies.includes(proxyName) : true;
       }),
       moreAppendProxies,
     );
 
-    setProxyPolicyList(
-      builtinProxyPolicies.concat(
-        prependSeq.map((group: IProxyGroupConfig) => group.name),
-        originGroupsObj?.["proxy-groups"]
-          .map((group: IProxyGroupConfig) => group.name)
-          .filter((name) => !deleteSeq.includes(name)) || [],
-        appendSeq.map((group: IProxyGroupConfig) => group.name),
-        proxies.map((proxy: any) => proxy.name),
-      ),
+    const proxyNames = proxies
+      .map((proxy: any) =>
+        typeof proxy === "string" ? proxy : (proxy?.name as string | undefined),
+      )
+      .filter(
+        (name): name is string => typeof name === "string" && name.length > 0,
+      );
+
+    const computedPolicyList = builtinProxyPolicies.concat(
+      prependSeq.map((group: IProxyGroupConfig) => group.name),
+      (originGroupsObj?.["proxy-groups"] || [])
+        .map((group: IProxyGroupConfig) => group.name)
+        .filter((name) => !deleteSeq.includes(name)),
+      appendSeq.map((group: IProxyGroupConfig) => group.name),
+      proxyNames,
     );
+
+    setProxyPolicyList(Array.from(new Set(computedPolicyList)));
   }, [appendSeq, deleteSeq, prependSeq, profileUid, proxiesUid]);
   const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid);
@@ -291,21 +355,16 @@ export const GroupsEditorViewer = (props: Props) => {
     setInterfaceNameList(list);
   }, []);
   useEffect(() => {
+    if (!open) return;
     fetchProxyPolicy();
-  }, [fetchProxyPolicy]);
+  }, [fetchProxyPolicy, open]);
+
   useEffect(() => {
     if (!open) return;
     fetchContent();
-    fetchProxyPolicy();
     fetchProfile();
     getInterfaceNameList();
-  }, [
-    fetchContent,
-    fetchProfile,
-    fetchProxyPolicy,
-    getInterfaceNameList,
-    open,
-  ]);
+  }, [fetchContent, fetchProfile, getInterfaceNameList, open]);
 
   const validateGroup = () => {
     const group = formIns.getValues();
@@ -316,9 +375,18 @@ export const GroupsEditorViewer = (props: Props) => {
 
   const handleSave = useLockFn(async () => {
     try {
-      await saveProfileFile(property, currData);
+      const nextData = visualization
+        ? buildGroupsYaml(prependSeq, appendSeq, deleteSeq)
+        : currData;
+
+      if (visualization) {
+        setCurrData(nextData);
+      }
+
+      await saveProfileFile(property, nextData);
       showNotice("success", t("Saved Successfully"));
-      onSave?.(prevData, currData);
+      setPrevData(nextData);
+      onSave?.(prevData, nextData);
       onClose();
     } catch (err: any) {
       showNotice("error", err.toString());

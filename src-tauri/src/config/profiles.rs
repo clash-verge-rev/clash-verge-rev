@@ -6,6 +6,7 @@ use crate::utils::{
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 use std::collections::HashSet;
 use tokio::fs;
 
@@ -36,6 +37,18 @@ macro_rules! patch {
 }
 
 impl IProfiles {
+    // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
+    fn take_item_file_by_uid(
+        items: &mut Vec<PrfItem>,
+        target_uid: Option<String>,
+    ) -> Option<String> {
+        for (i, _) in items.iter().enumerate() {
+            if items[i].uid == target_uid {
+                return items.remove(i).file;
+            }
+        }
+        None
+    }
     pub async fn new() -> Self {
         match dirs::profiles_path() {
             Ok(path) => match help::read_yaml::<Self>(&path).await {
@@ -47,7 +60,7 @@ impl IProfiles {
                     if let Some(items) = profiles.items.as_mut() {
                         for item in items.iter_mut() {
                             if item.uid.is_none() {
-                                item.uid = Some(help::get_uid("d"));
+                                item.uid = Some(help::get_uid("d").into());
                             }
                         }
                     }
@@ -142,7 +155,7 @@ impl IProfiles {
             let file = item.file.clone().ok_or_else(|| {
                 anyhow::anyhow!("file field is required when file_data is provided")
             })?;
-            let path = dirs::app_profiles_dir()?.join(&file);
+            let path = dirs::app_profiles_dir()?.join(file.as_str());
 
             fs::write(&path, file_data.as_bytes())
                 .await
@@ -240,13 +253,16 @@ impl IProfiles {
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
-                        let file =
-                            file.unwrap_or(item.file.take().unwrap_or(format!("{}.yaml", &uid)));
+                        let file = file.unwrap_or_else(|| {
+                            item.file
+                                .take()
+                                .unwrap_or_else(|| format!("{}.yaml", &uid).into())
+                        });
 
                         // the file must exists
                         each.file = Some(file.clone());
 
-                        let path = dirs::app_profiles_dir()?.join(&file);
+                        let path = dirs::app_profiles_dir()?.join(file.as_str());
 
                         fs::write(&path, file_data.as_bytes())
                             .await
@@ -273,100 +289,43 @@ impl IProfiles {
         let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
         let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
         let mut items = self.items.take().unwrap_or_default();
-        let mut index = None;
-        let mut merge_index = None;
-        let mut script_index = None;
-        let mut rules_index = None;
-        let mut proxies_index = None;
-        let mut groups_index = None;
 
-        // get the index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == Some(uid.clone()) {
-                index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = index
-            && let Some(file) = items.remove(index).file
-        {
+        // remove the main item (if exists) and delete its file
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.clone())) {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the merge index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == merge_uid {
-                merge_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = merge_index
-            && let Some(file) = items.remove(index).file
-        {
+
+        // remove related extension items (merge, script, rules, proxies, groups)
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, merge_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the script index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == script_uid {
-                script_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = script_index
-            && let Some(file) = items.remove(index).file
-        {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, script_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the rules index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == rules_uid {
-                rules_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = rules_index
-            && let Some(file) = items.remove(index).file
-        {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, rules_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the proxies index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == proxies_uid {
-                proxies_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = proxies_index
-            && let Some(file) = items.remove(index).file
-        {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, proxies_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
-        // get the groups index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == groups_uid {
-                groups_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = groups_index
-            && let Some(file) = items.remove(index).file
-        {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, groups_uid.clone()) {
             let _ = dirs::app_profiles_dir()?
-                .join(file)
+                .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
@@ -392,7 +351,7 @@ impl IProfiles {
             (Some(current), Some(items)) => {
                 if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
                     let file_path = match item.file.as_ref() {
-                        Some(file) => dirs::app_profiles_dir()?.join(file),
+                        Some(file) => dirs::app_profiles_dir()?.join(file.as_str()),
                         None => bail!("failed to get the file field"),
                     };
                     return help::read_mapping(&file_path).await;
@@ -544,7 +503,7 @@ impl IProfiles {
                             log::info!(target: "app", "已清理冗余文件: {file_name}");
                         }
                         Err(e) => {
-                            failed_deletions.push(format!("{file_name}: {e}"));
+                            failed_deletions.push(format!("{file_name}: {e}").into());
                             log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
                         }
                     }

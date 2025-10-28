@@ -24,8 +24,8 @@ macro_rules! append {
 pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
-    let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
-        val.as_mapping().cloned().unwrap_or(Mapping::new())
+    let mut tun_val = tun_val.map_or_else(Mapping::new, |val| {
+        val.as_mapping().cloned().unwrap_or_else(Mapping::new)
     });
 
     if enable {
@@ -52,8 +52,8 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
         // 读取DNS配置
         let dns_key = Value::from("dns");
         let dns_val = config.get(&dns_key);
-        let mut dns_val = dns_val.map_or(Mapping::new(), |val| {
-            val.as_mapping().cloned().unwrap_or(Mapping::new())
+        let mut dns_val = dns_val.map_or_else(Mapping::new, |val| {
+            val.as_mapping().cloned().unwrap_or_else(Mapping::new)
         });
         let ipv6_key = Value::from("ipv6");
         let ipv6_val = config

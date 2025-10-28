@@ -1,5 +1,6 @@
 import { useTheme } from "@mui/material";
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
+import { Traffic } from "tauri-plugin-mihomo-api";
 
 const maxPoint = 30;
 
@@ -14,10 +15,8 @@ const downLineWidth = 4;
 
 const defaultList = Array(maxPoint + 2).fill({ up: 0, down: 0 });
 
-type TrafficData = { up: number; down: number };
-
 export interface TrafficRef {
-  appendData: (data: TrafficData) => void;
+  appendData: (data: Traffic) => void;
   toggleStyle: () => void;
 }
 
@@ -27,15 +26,15 @@ export interface TrafficRef {
 export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
   const countRef = useRef(0);
   const styleRef = useRef(true);
-  const listRef = useRef<TrafficData[]>(defaultList);
+  const listRef = useRef<Traffic[]>(defaultList);
   const canvasRef = useRef<HTMLCanvasElement>(null!);
 
-  const cacheRef = useRef<TrafficData | null>(null);
+  const cacheRef = useRef<Traffic | null>(null);
 
   const { palette } = useTheme();
 
   useImperativeHandle(ref, () => ({
-    appendData: (data: TrafficData) => {
+    appendData: (data: Traffic) => {
       cacheRef.current = data;
     },
     toggleStyle: () => {

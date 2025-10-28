@@ -1,4 +1,5 @@
 use serde_yaml_ng::{Mapping, Value};
+use smartstring::alias::String;
 use std::collections::HashSet;
 
 pub const HANDLE_FIELDS: [&str; 12] = [
@@ -31,7 +32,7 @@ pub fn use_lowercase(config: Mapping) -> Mapping {
         if let Some(key_str) = key.as_str() {
             let mut key_str = String::from(key_str);
             key_str.make_ascii_lowercase();
-            ret.insert(Value::from(key_str), value);
+            ret.insert(Value::from(key_str.as_str()), value);
         }
     }
     ret
@@ -70,8 +71,8 @@ pub fn use_keys(config: &Mapping) -> Vec<String> {
     config
         .iter()
         .filter_map(|(key, _)| key.as_str())
-        .map(|s| {
-            let mut s = s.to_string();
+        .map(|s: &str| {
+            let mut s: String = s.into();
             s.make_ascii_lowercase();
             s
         })

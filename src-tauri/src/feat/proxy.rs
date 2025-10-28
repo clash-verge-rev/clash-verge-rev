@@ -9,18 +9,9 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 
 /// Toggle system proxy on/off
 pub async fn toggle_system_proxy() {
-    // 获取当前系统代理状态
-    let enable = {
-        let verge = Config::verge().await;
-
-        verge.latest_ref().enable_system_proxy.unwrap_or(false)
-    };
-    // 获取自动关闭连接设置
-    let auto_close_connection = {
-        let verge = Config::verge().await;
-
-        verge.latest_ref().auto_close_connection.unwrap_or(false)
-    };
+    let verge = Config::verge().await;
+    let enable = verge.latest_ref().enable_system_proxy.unwrap_or(false);
+    let auto_close_connection = verge.latest_ref().auto_close_connection.unwrap_or(false);
 
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
     if enable
@@ -74,7 +65,7 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
 pub async fn copy_clash_env() {
     // 从环境变量获取IP地址，如果没有则从配置中获取 proxy_host，默认为 127.0.0.1
     let clash_verge_rev_ip = match env::var("CLASH_VERGE_REV_IP") {
-        Ok(ip) => ip,
+        Ok(ip) => ip.into(),
         Err(_) => Config::verge()
             .await
             .latest_ref()

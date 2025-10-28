@@ -13,23 +13,22 @@ import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import useSWR from "swr";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-context";
-import {
-  getRuntimeConfig,
-  updateProxyChainConfigInRuntime,
-} from "@/services/cmds";
+import { updateProxyChainConfigInRuntime } from "@/services/cmds";
 import delayManager from "@/services/delay";
 
 import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";
-import { ProxyGroupNavigator } from "./proxy-group-navigator";
+import {
+  ProxyGroupNavigator,
+  DEFAULT_HOVER_DELAY,
+} from "./proxy-group-navigator";
 import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
 
@@ -347,22 +346,6 @@ export const ProxyGroups = (props: Props) => {
     }
   };
 
-  // 获取运行时配置
-  const { data: runtimeConfig } = useSWR("getRuntimeConfig", getRuntimeConfig, {
-    revalidateOnFocus: false,
-    revalidateIfStale: true,
-  });
-
-  // 获取所有代理组名称
-  const getProxyGroupNames = useCallback(() => {
-    const config = runtimeConfig as any;
-    if (!config?.["proxy-groups"]) return [];
-
-    return config["proxy-groups"]
-      .map((group: any) => group.name)
-      .filter((name: string) => name && name.trim() !== "");
-  }, [runtimeConfig]);
-
   // 定位到指定的代理组
   const handleGroupLocationByName = useCallback(
     (groupName: string) => {
@@ -381,10 +364,12 @@ export const ProxyGroups = (props: Props) => {
     [renderList],
   );
 
-  const proxyGroupNames = useMemo(
-    () => getProxyGroupNames(),
-    [getProxyGroupNames],
-  );
+  const proxyGroupNames = useMemo(() => {
+    const names = renderList
+      .filter((item) => item.type === 0 && item.group?.name)
+      .map((item) => item.group!.name);
+    return Array.from(new Set(names));
+  }, [renderList]);
 
   if (mode === "direct") {
     return <BaseEmpty text={t("clash_mode_direct")} />;
@@ -533,10 +518,12 @@ export const ProxyGroups = (props: Props) => {
           anchorEl={ruleMenuAnchor}
           open={Boolean(ruleMenuAnchor)}
           onClose={handleGroupMenuClose}
-          PaperProps={{
-            sx: {
-              maxHeight: 300,
-              minWidth: 200,
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: 300,
+                minWidth: 200,
+              },
             },
           }}
         >
@@ -587,6 +574,8 @@ export const ProxyGroups = (props: Props) => {
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}
           onGroupLocation={handleGroupLocationByName}
+          enableHoverJump={verge?.enable_hover_jump_navigator ?? true}
+          hoverDelay={verge?.hover_jump_navigator_delay ?? DEFAULT_HOVER_DELAY}
         />
       )}
 

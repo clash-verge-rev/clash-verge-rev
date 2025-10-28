@@ -13,7 +13,7 @@ build = "build.rs"
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.4.1", features = [] }
+tauri-build = { version = "2.5.1", features = [] }
 
 [dependencies]
 warp = { version = "0.4.2", features = ["server"] }
@@ -25,7 +25,7 @@ dunce = "1.0.5"
 nanoid = "0.4"
 chrono = "0.4.42"
 sysinfo = { version = "0.37.2", features = ["network", "system"] }
-boa_engine = "0.20.0"
+boa_engine = "0.21.0"
 serde_json = "1.0.145"
 serde_yaml_ng = "0.10.0"
 once_cell = "1.21.3"
@@ -43,7 +43,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 reqwest = { version = "0.12.24", features = ["json", "cookies"] }
 regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-tauri = { version = "2.8.5", features = [
+tauri = { version = "2.9.1", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -51,13 +51,13 @@ tauri = { version = "2.8.5", features = [
   "image-png",
 ] }
 network-interface = { version = "2.0.3", features = ["serde"] }
-tauri-plugin-shell = "2.3.1"
-tauri-plugin-dialog = "2.4.0"
-tauri-plugin-fs = "2.4.2"
-tauri-plugin-process = "2.3.0"
-tauri-plugin-clipboard-manager = "2.3.0"
-tauri-plugin-deep-link = "2.4.3"
-tauri-plugin-window-state = "2.4.0"
+tauri-plugin-shell = "2.3.3"
+tauri-plugin-dialog = "2.4.2"
+tauri-plugin-fs = "2.4.4"
+tauri-plugin-process = "2.3.1"
+tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-deep-link = "2.4.5"
+tauri-plugin-window-state = "2.4.1"
 zip = "6.0.0"
 reqwest_dav = "0.2.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
@@ -72,7 +72,7 @@ sha2 = "0.10.9"
 hex = "0.4.3"
 scopeguard = "1.2.0"
 dashmap = "6.1.0"
-tauri-plugin-notification = "2.3.1"
+tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.17"
 isahc = { version = "1.7.2", default-features = false, features = [
   "text-decoding",
@@ -80,17 +80,18 @@ isahc = { version = "1.7.2", default-features = false, features = [
 ] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 compact_str = { version = "0.9.0", features = ["serde"] }
-tauri-plugin-http = "2.5.2"
+tauri-plugin-http = "2.5.4"
 flexi_logger = "0.31.7"
 console-subscriber = { version = "0.4.1", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
-clash_verge_logger = { version = "0.1.0", git = "https://github.com/clash-verge-rev/clash-verge-logger" }
-clash_verge_service_ipc = { version = "2.0.16", features = [
+clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
+async-trait = "0.1.89"
+smartstring = { version = "1.0.1", features = ["serde"] }
+clash_verge_service_ipc = { version = "2.0.17", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
-async-trait = "0.1.89"
-# clash_verge_service_ipc = { version = "2.0.16", features = [
+# clash_verge_service_ipc = { version = "2.0.17", features = [
 #   "client",
 # ], path = "../../clash-verge-service-ipc" }
 
@@ -111,13 +112,22 @@ winapi = { version = "0.3.9", features = [
   "winhttp",
   "winreg",
 ] }
+windows-sys = { version = "0.61.2", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_System_SystemServices",
+  "Win32_UI_WindowsAndMessaging",
+] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 users = "0.11.0"
 
+[target.'cfg(unix)'.dependencies]
+signal-hook = "0.3.18"
+
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-autostart = "2.5.0"
-tauri-plugin-global-shortcut = "2.3.0"
+tauri-plugin-autostart = "2.5.1"
+tauri-plugin-global-shortcut = "2.3.1"
 tauri-plugin-updater = "2.9.0"
 
 [features]
@@ -136,9 +146,9 @@ harness = false
 
 [profile.release]
 panic = "abort"
-codegen-units = 16
+codegen-units = 1
 lto = "thin"
-opt-level = 2
+opt-level = 3
 debug = false
 strip = true
 overflow-checks = false
@@ -156,8 +166,8 @@ rpath = false
 
 [profile.fast-release]
 inherits = "release"
-incremental = true
 codegen-units = 64
+incremental = true
 lto = false
 opt-level = 0
 debug = true
@@ -220,3 +230,6 @@ needless_raw_string_hashes = "deny" # Too many in existing code
 #pedantic = { level = "allow", priority = -1 }
 #nursery = { level = "allow", priority = -1 }
 #restriction = { level = "allow", priority = -1 }
+
+or_fun_call = "deny"
+cognitive_complexity = "deny"

@@ -11,7 +11,7 @@ use tokio::sync::{Mutex, MutexGuard};
 
 pub type SharedWriter = Arc<Mutex<FileLogWriter>>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Type {
     Cmd,
     Core,
@@ -98,21 +98,10 @@ macro_rules! wrap_err {
     // Case 1: Future<Result<T, E>>
     ($stat:expr, async) => {{
         match $stat.await {
-            Ok(a) => Ok(a),
+            Ok(a) => Ok::<_, ::anyhow::Error>(a),
             Err(err) => {
                 log::error!(target: "app", "{}", err);
-                Err(err.to_string())
-            }
-        }
-    }};
-
-    // Case 2: Result<T, E>
-    ($stat:expr) => {{
-        match $stat {
-            Ok(a) => Ok(a),
-            Err(err) => {
-                log::error!(target: "app", "{}", err);
-                Err(err.to_string())
+                Err(::anyhow::Error::msg(err.to_string()))
             }
         }
     }};
@@ -122,7 +111,7 @@ macro_rules! wrap_err {
 macro_rules! logging {
     // 不带 print 参数的版本（默认不打印）
     ($level:ident, $type:expr, $($arg:tt)*) => {
-        log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*));
+        log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*))
     };
 }
 

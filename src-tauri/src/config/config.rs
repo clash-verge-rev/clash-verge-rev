@@ -2,19 +2,17 @@ use super::{IClashTemp, IProfiles, IRuntime, IVerge};
 use crate::{
     cmd,
     config::{PrfItem, profiles_append_item_safe},
+    constants::{files, timing},
     core::{CoreManager, handle, service, validate::CoreConfigValidator},
     enhance, logging, logging_error,
     utils::{Draft, dirs, help, logging::Type},
 };
 use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
+use smartstring::alias::String;
 use std::path::PathBuf;
-use std::time::Duration;
 use tokio::sync::OnceCell;
 use tokio::time::sleep;
-
-pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
-pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
 
 pub struct Config {
     clash_config: Draft<Box<IClashTemp>>,
@@ -56,24 +54,7 @@ impl Config {
 
     /// 初始化订阅
     pub async fn init_config() -> Result<()> {
-        if Self::profiles()
-            .await
-            .latest_ref()
-            .get_item(&"Merge".into())
-            .is_err()
-        {
-            let merge_item = PrfItem::from_merge(Some("Merge".into()))?;
-            profiles_append_item_safe(merge_item.clone()).await?;
-        }
-        if Self::profiles()
-            .await
-            .latest_ref()
-            .get_item(&"Script".into())
-            .is_err()
-        {
-            let script_item = PrfItem::from_script(Some("Script".into()))?;
-            profiles_append_item_safe(script_item.clone()).await?;
-        }
+        Self::ensure_default_profile_items().await?;
 
         // init Tun mode
         if !cmd::system::is_admin().unwrap_or_default()
@@ -88,6 +69,31 @@ impl Config {
             logging_error!(Type::Core, verge_data.save_file().await);
         }
 
+        let validation_result = Self::generate_and_validate().await?;
+
+        if let Some((msg_type, msg_content)) = validation_result {
+            sleep(timing::STARTUP_ERROR_DELAY).await;
+            handle::Handle::notice_message(msg_type, msg_content);
+        }
+
+        Ok(())
+    }
+
+    // Ensure "Merge" and "Script" profile items exist, adding them if missing.
+    async fn ensure_default_profile_items() -> Result<()> {
+        let profiles = Self::profiles().await;
+        if profiles.latest_ref().get_item(&"Merge".into()).is_err() {
+            let merge_item = PrfItem::from_merge(Some("Merge".into()))?;
+            profiles_append_item_safe(merge_item.clone()).await?;
+        }
+        if profiles.latest_ref().get_item(&"Script".into()).is_err() {
+            let script_item = PrfItem::from_script(Some("Script".into()))?;
+            profiles_append_item_safe(script_item.clone()).await?;
+        }
+        Ok(())
+    }
+
+    async fn generate_and_validate() -> Result<Option<(&'static str, String)>> {
         // 生成运行时配置
         if let Err(err) = Self::generate().await {
             logging!(error, Type::Config, "生成运行时配置失败: {}", err);
@@ -98,7 +104,7 @@ impl Config {
         // 生成运行时配置文件并验证
         let config_result = Self::generate_file(ConfigType::Run).await;
 
-        let validation_result = if config_result.is_ok() {
+        if config_result.is_ok() {
             // 验证配置文件
             logging!(info, Type::Config, "开始验证配置");
 
@@ -114,12 +120,12 @@ impl Config {
                         CoreManager::global()
                             .use_default_config("config_validate::boot_error", &error_msg)
                             .await?;
-                        Some(("config_validate::boot_error", error_msg))
+                        Ok(Some(("config_validate::boot_error", error_msg)))
                     } else {
                         logging!(info, Type::Config, "配置验证成功");
                         // 前端没有必要知道验证成功的消息，也没有事件驱动
                         // Some(("config_validate::success", String::new()))
-                        None
+                        Ok(None)
                     }
                 }
                 Err(err) => {
@@ -127,7 +133,7 @@ impl Config {
                     CoreManager::global()
                         .use_default_config("config_validate::process_terminated", "")
                         .await?;
-                    Some(("config_validate::process_terminated", String::new()))
+                    Ok(Some(("config_validate::process_terminated", String::new())))
                 }
             }
         } else {
@@ -135,23 +141,14 @@ impl Config {
             CoreManager::global()
                 .use_default_config("config_validate::error", "")
                 .await?;
-            Some(("config_validate::error", String::new()))
-        };
-
-        // 在单独的任务中发送通知
-        if let Some((msg_type, msg_content)) = validation_result {
-            sleep(Duration::from_secs(2)).await;
-            handle::Handle::notice_message(msg_type, &msg_content);
+            Ok(Some(("config_validate::error", String::new())))
         }
-
-        Ok(())
     }
 
-    /// 将订阅丢到对应的文件中
     pub async fn generate_file(typ: ConfigType) -> Result<PathBuf> {
         let path = match typ {
-            ConfigType::Run => dirs::app_home_dir()?.join(RUNTIME_CONFIG),
-            ConfigType::Check => dirs::app_home_dir()?.join(CHECK_CONFIG),
+            ConfigType::Run => dirs::app_home_dir()?.join(files::RUNTIME_CONFIG),
+            ConfigType::Check => dirs::app_home_dir()?.join(files::CHECK_CONFIG),
         };
 
         let runtime = Config::runtime().await;
@@ -159,7 +156,7 @@ impl Config {
             .latest_ref()
             .config
             .as_ref()
-            .ok_or(anyhow!("failed to get runtime config"))?
+            .ok_or_else(|| anyhow!("failed to get runtime config"))?
             .clone();
         drop(runtime); // 显式释放锁
 
@@ -167,7 +164,6 @@ impl Config {
         Ok(path)
     }
 
-    /// 生成订阅存好
     pub async fn generate() -> Result<()> {
         let (config, exists_keys, logs) = enhance::enhance().await;
 
@@ -181,8 +177,6 @@ impl Config {
     }
 
     pub async fn verify_config_initialization() {
-        logging!(info, Type::Setup, "Verifying config initialization...");
-
         let backoff_strategy = ExponentialBackoff {
             initial_interval: std::time::Duration::from_millis(100),
             max_interval: std::time::Duration::from_secs(2),
@@ -193,48 +187,14 @@ impl Config {
 
         let operation = || async {
             if Config::runtime().await.latest_ref().config.is_some() {
-                logging!(
-                    info,
-                    Type::Setup,
-                    "Config initialization verified successfully"
-                );
                 return Ok::<(), BackoffError<anyhow::Error>>(());
             }
 
-            logging!(
-                warn,
-                Type::Setup,
-                "Runtime config not found, attempting to regenerate..."
-            );
-
-            match Config::generate().await {
-                Ok(_) => {
-                    logging!(info, Type::Setup, "Config successfully regenerated");
-                    Ok(())
-                }
-                Err(e) => {
-                    logging!(warn, Type::Setup, "Failed to generate config: {}", e);
-                    Err(BackoffError::transient(e))
-                }
-            }
+            Config::generate().await.map_err(BackoffError::transient)
         };
 
-        match backoff::future::retry(backoff_strategy, operation).await {
-            Ok(_) => {
-                logging!(
-                    info,
-                    Type::Setup,
-                    "Config initialization verified with backoff retry"
-                );
-            }
-            Err(e) => {
-                logging!(
-                    error,
-                    Type::Setup,
-                    "Failed to verify config initialization after retries: {}",
-                    e
-                );
-            }
+        if let Err(e) = backoff::future::retry(backoff_strategy, operation).await {
+            logging!(error, Type::Setup, "Config init verification failed: {}", e);
         }
     }
 }

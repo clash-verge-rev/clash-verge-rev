@@ -1,8 +1,9 @@
 use anyhow::Result;
+use scopeguard::defer;
+use smartstring::alias::String;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri_plugin_shell::ShellExt;
-use tokio::sync::Mutex;
 
 use crate::config::{Config, ConfigType};
 use crate::core::handle;
@@ -10,30 +11,27 @@ use crate::singleton_lazy;
 use crate::utils::dirs;
 use crate::{logging, utils::logging::Type};
 
-// pub enum ValidationResult {
-//     Valid,
-//     Invalid(String),
-// }
-
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum ValidationProcessStatus {
-    Ongoing,
-    Completed,
-}
-
 pub struct CoreConfigValidator {
-    // inner: Vec<String>,
-    // result: ValidationResult,
-    process_status: Arc<Mutex<ValidationProcessStatus>>,
+    is_processing: AtomicBool,
 }
 
 impl CoreConfigValidator {
     pub fn new() -> Self {
-        CoreConfigValidator {
-            process_status: Arc::new(Mutex::new(ValidationProcessStatus::Completed)),
+        Self {
+            is_processing: AtomicBool::new(false),
         }
     }
 
+    pub fn try_start(&self) -> bool {
+        !self.is_processing.swap(true, Ordering::AcqRel)
+    }
+
+    pub fn finish(&self) {
+        self.is_processing.store(false, Ordering::Release)
+    }
+}
+
+impl CoreConfigValidator {
     /// 检查文件是否为脚本文件
     fn is_script_file<P>(path: P) -> Result<bool>
     where
@@ -124,7 +122,7 @@ impl CoreConfigValidator {
         let content = match std::fs::read_to_string(config_path) {
             Ok(content) => content,
             Err(err) => {
-                let error_msg = format!("Failed to read file: {err}");
+                let error_msg = format!("Failed to read file: {err}").into();
                 logging!(error, Type::Validate, "无法读取文件: {}", error_msg);
                 return Ok((false, error_msg));
             }
@@ -138,7 +136,7 @@ impl CoreConfigValidator {
             }
             Err(err) => {
                 // 使用标准化的前缀，以便错误处理函数能正确识别
-                let error_msg = format!("YAML syntax error: {err}");
+                let error_msg = format!("YAML syntax error: {err}").into();
                 logging!(error, Type::Validate, "YAML语法错误: {}", error_msg);
                 Ok((false, error_msg))
             }
@@ -151,7 +149,7 @@ impl CoreConfigValidator {
         let content = match std::fs::read_to_string(path) {
             Ok(content) => content,
             Err(err) => {
-                let error_msg = format!("Failed to read script file: {err}");
+                let error_msg = format!("Failed to read script file: {err}").into();
                 logging!(warn, Type::Validate, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 return Ok((false, error_msg));
@@ -184,7 +182,7 @@ impl CoreConfigValidator {
                 Ok((true, String::new()))
             }
             Err(err) => {
-                let error_msg = format!("Script syntax error: {err}");
+                let error_msg = format!("Script syntax error: {err}").into();
                 logging!(warn, Type::Validate, "脚本语法错误: {}", err);
                 //handle::Handle::notice_message("config_validate::script_syntax_error", &error_msg);
                 Ok((false, error_msg))
@@ -205,7 +203,7 @@ impl CoreConfigValidator {
 
         // 检查文件是否存在
         if !std::path::Path::new(config_path).exists() {
-            let error_msg = format!("File not found: {config_path}");
+            let error_msg = format!("File not found: {config_path}").into();
             //handle::Handle::notice_message("config_validate::file_not_found", &error_msg);
             return Ok((false, error_msg));
         }
@@ -282,13 +280,13 @@ impl CoreConfigValidator {
         // 使用子进程运行clash验证配置
         let output = app_handle
             .shell()
-            .sidecar(clash_core)?
+            .sidecar(clash_core.as_str())?
             .args(["-t", "-d", app_dir_str, "-f", config_path])
             .output()
             .await?;
 
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = std::string::String::from_utf8_lossy(&output.stderr);
+        let stdout = std::string::String::from_utf8_lossy(&output.stdout);
 
         // 检查进程退出状态和错误输出
         let error_keywords = ["FATA", "fatal", "Parse config error", "level=fatal"];
@@ -314,7 +312,7 @@ impl CoreConfigValidator {
             };
 
             logging!(info, Type::Validate, "-------- 验证结束 --------");
-            Ok((false, error_msg)) // 返回错误消息给调用者处理
+            Ok((false, error_msg.into())) // 返回错误消息给调用者处理
         } else {
             logging!(info, Type::Validate, "验证成功");
             logging!(info, Type::Validate, "-------- 验证结束 --------");
@@ -324,22 +322,18 @@ impl CoreConfigValidator {
 
     /// 验证运行时配置
     pub async fn validate_config(&self) -> Result<(bool, String)> {
-        if *self.process_status.lock().await == ValidationProcessStatus::Ongoing {
+        if !self.try_start() {
             logging!(info, Type::Validate, "验证已在进行中，跳过新的验证请求");
             return Ok((true, String::new()));
         }
-        *self.process_status.lock().await = ValidationProcessStatus::Ongoing;
+        defer! {
+            self.finish();
+        }
         logging!(info, Type::Validate, "生成临时配置文件用于验证");
 
-        let result = async {
-            let config_path = Config::generate_file(ConfigType::Check).await?;
-            let config_path = dirs::path_to_str(&config_path)?;
-            Self::validate_config_internal(config_path).await
-        }
-        .await;
-
-        *self.process_status.lock().await = ValidationProcessStatus::Completed;
-        result
+        let config_path = Config::generate_file(ConfigType::Check).await?;
+        let config_path = dirs::path_to_str(&config_path)?;
+        Self::validate_config_internal(config_path).await
     }
 }
 

@@ -22,6 +22,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check src-tauri changes
+        if: github.event_name != 'workflow_dispatch'
         id: check_changes
         uses: dorny/paths-filter@v3
         with:
@@ -30,12 +31,17 @@ jobs:
               - 'src-tauri/**'
 
       - name: Skip if src-tauri not changed
-        if: steps.check_changes.outputs.rust != 'true'
+        if: github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust != 'true'
         run: echo "No src-tauri changes, skipping clippy lint."
 
       - name: Continue if src-tauri changed
-        if: steps.check_changes.outputs.rust == 'true'
+        if: github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true'
         run: echo "src-tauri changed, running clippy lint."
+
+      - name: Manual trigger - always run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Manual trigger detected: skipping changes check and running clippy."
 
       - name: Checkout Repository
         uses: actions/checkout@v4
