@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import type { CSSProperties } from "react";
 import {
   useCallback,
   useEffect,
@@ -33,7 +34,6 @@ import {
   useRef,
   useState,
 } from "react";
-import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router";
 import { SWRConfig } from "swr";

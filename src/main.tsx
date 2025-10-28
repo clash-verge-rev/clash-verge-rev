@@ -4,7 +4,6 @@ import "./assets/styles/index.scss";
 
 import { ResizeObserver } from "@juggle/resize-observer";
 import { ComposeContextProvider } from "foxact/compose-context-provider";
-import React from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
@@ -56,17 +55,15 @@ const initializeApp = () => {
 
   const root = createRoot(container);
   root.render(
-    <React.StrictMode>
-      <ComposeContextProvider contexts={contexts}>
-        <BaseErrorBoundary>
-          <WindowProvider>
-            <AppDataProvider>
-              <RouterProvider router={router} />
-            </AppDataProvider>
-          </WindowProvider>
-        </BaseErrorBoundary>
-      </ComposeContextProvider>
-    </React.StrictMode>,
+    <ComposeContextProvider contexts={contexts}>
+      <BaseErrorBoundary>
+        <WindowProvider>
+          <AppDataProvider>
+            <RouterProvider router={router} />
+          </AppDataProvider>
+        </WindowProvider>
+      </BaseErrorBoundary>
+    </ComposeContextProvider>,
   );
 };
 
