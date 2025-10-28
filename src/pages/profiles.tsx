@@ -67,6 +67,7 @@ import {
   switchProfileCommand,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { refreshClashData } from "@/services/refresh";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 import { AsyncEventQueue, afterPaint } from "@/utils/asyncQueue";
 
@@ -922,6 +923,7 @@ const ProfilePage = () => {
               if (activateSelected) {
                 operations.push(Promise.resolve(activateSelected()));
               }
+              operations.push(refreshClashData());
 
               if (operations.length > 0) {
                 await Promise.allSettled(operations);

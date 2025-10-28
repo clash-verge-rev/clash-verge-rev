@@ -1,4 +1,4 @@
-import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+﻿import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import React, { useCallback, useEffect, useMemo } from "react";
 import useSWR from "swr";
 import {
@@ -25,7 +25,7 @@ import { createProxySnapshotFromProfile } from "@/utils/proxy-snapshot";
 
 import { AppDataContext, AppDataContextType } from "./app-data-context";
 
-// 全局数据提供者组件
+// Global app data provider
 export const AppDataProvider = ({
   children,
 }: {
@@ -266,7 +266,10 @@ export const AppDataProvider = ({
         registerCleanup(unlistenProfile);
         registerCleanup(unlistenProfileCompleted);
       } catch (error) {
-        console.error("[AppDataProvider] 监听 Profile 事件失败:", error);
+        console.error(
+          "[AppDataProvider] failed to attach profile listeners:",
+          error,
+        );
       }
 
       try {
@@ -284,7 +287,10 @@ export const AppDataProvider = ({
           unlistenProxy();
         });
       } catch (error) {
-        console.warn("[AppDataProvider] 设置 Tauri 事件监听器失败:", error);
+        console.warn(
+          "[AppDataProvider] failed to register Tauri event listener",
+          error,
+        );
 
         const fallbackHandlers: Array<[string, EventListener]> = [
           ["verge://refresh-clash-config", handleRefreshClash],
@@ -356,7 +362,7 @@ export const AppDataProvider = ({
     errorRetryCount: 1,
   });
 
-  // 提供统一的刷新方法
+  // Provide unified refresh method
   const refreshAll = useCallback(async () => {
     await Promise.all([
       fetchLiveProxies(),
@@ -374,22 +380,22 @@ export const AppDataProvider = ({
     refreshRuleProviders,
   ]);
 
-  // 聚合所有数据
+  // Aggregate data into context value
   const value = useMemo(() => {
-    // 计算系统代理地址
+    // Compute the system proxy address
     const calculateSystemProxyAddress = () => {
       if (!verge || !clashConfig) return "-";
 
       const isPacMode = verge.proxy_auto_config ?? false;
 
       if (isPacMode) {
-        // PAC模式：显示我们期望设置的代理地址
+        // PAC mode: display the desired proxy address
         const proxyHost = verge.proxy_host || "127.0.0.1";
         const proxyPort =
           verge.verge_mixed_port || clashConfig.mixedPort || 7897;
         return `${proxyHost}:${proxyPort}`;
       } else {
-        // HTTP代理模式：优先使用系统地址，但如果格式不正确则使用期望地址
+        // HTTP proxy mode: prefer system address, fallback to desired address if invalid
         const systemServer = sysproxy?.server;
         if (
           systemServer &&
@@ -398,7 +404,7 @@ export const AppDataProvider = ({
         ) {
           return systemServer;
         } else {
-          // 系统地址无效，返回期望的代理地址
+          // System address invalid: fallback to desired proxy address
           const proxyHost = verge.proxy_host || "127.0.0.1";
           const proxyPort =
             verge.verge_mixed_port || clashConfig.mixedPort || 7897;
@@ -408,7 +414,7 @@ export const AppDataProvider = ({
     };
 
     return {
-      // 数据
+      // Data
       proxies: proxyView,
       proxyHydration,
       clashConfig,
@@ -417,13 +423,13 @@ export const AppDataProvider = ({
       runningMode,
       uptime: uptimeData || 0,
 
-      // 提供者数据
+      // Provider data
       proxyProviders: proxyProviders || {},
       ruleProviders: ruleProviders?.providers || {},
 
       systemProxyAddress: calculateSystemProxyAddress(),
 
-      // 刷新方法
+      // Refresh helpers
       refreshProxy: fetchLiveProxies,
       refreshClashConfig,
       refreshRules,
