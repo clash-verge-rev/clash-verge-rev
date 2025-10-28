@@ -19,7 +19,12 @@ import {
   type ProfileSwitchStatus,
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
-import { fetchLiveProxies, useProxyStore } from "@/stores/proxy-store";
+import {
+  applyLiveProxyPayload,
+  fetchLiveProxies,
+  useProxyStore,
+  type ProxiesUpdatedPayload,
+} from "@/stores/proxy-store";
 import { createProxySnapshotFromProfile } from "@/utils/proxy-snapshot";
 
 import { AppDataContext, AppDataContextType } from "./app-data-context";
@@ -93,9 +98,58 @@ export const AppDataProvider = ({
   );
 
   useEffect(() => {
+    let disposed = false;
+    let fallbackTimeout: number | null = null;
+
+    const scheduleFallbackFetch = (delay = 400) => {
+      if (fallbackTimeout !== null) {
+        window.clearTimeout(fallbackTimeout);
+        fallbackTimeout = null;
+      }
+      fallbackTimeout = window.setTimeout(() => {
+        fallbackTimeout = null;
+        if (disposed) return;
+        fetchLiveProxies().catch((error) =>
+          console.warn(
+            "[DataProvider] Live proxy fallback refresh failed:",
+            error,
+          ),
+        );
+      }, delay);
+    };
+
     fetchLiveProxies().catch((error) => {
       console.error("[DataProvider] Initial proxy fetch failed:", error);
     });
+
+    const attach = listen<ProxiesUpdatedPayload>("proxies-updated", (event) => {
+      if (disposed) return;
+      const payload = event.payload;
+      if (!payload) return;
+      applyLiveProxyPayload(payload);
+      scheduleFallbackFetch(600);
+    })
+      .then((unlisten) => unlisten)
+      .catch((error) => {
+        console.error(
+          "[DataProvider] Failed to attach proxies-updated listener:",
+          error,
+        );
+        return null;
+      });
+
+    return () => {
+      disposed = true;
+      if (fallbackTimeout !== null) {
+        window.clearTimeout(fallbackTimeout);
+        fallbackTimeout = null;
+      }
+      attach.then((cleanup) => {
+        if (cleanup) {
+          cleanup();
+        }
+      });
+    };
   }, []);
 
   const isUnmountedRef = useRef(false);
@@ -133,17 +187,15 @@ export const AppDataProvider = ({
   }, []);
 
   const queueProxyRefresh = useCallback(
-    (reason: string, delays: number[] = [0, 250, 1000, 2000]) => {
-      delays.forEach((delay) => {
-        scheduleTimeout(() => {
-          fetchLiveProxies().catch((error) =>
-            console.warn(
-              `[DataProvider] Proxy refresh failed (${reason}, +${delay}ms):`,
-              error,
-            ),
-          );
-        }, delay);
-      });
+    (reason: string, delay = 600) => {
+      scheduleTimeout(() => {
+        fetchLiveProxies().catch((error) =>
+          console.warn(
+            `[DataProvider] Proxy refresh failed (${reason}, fallback):`,
+            error,
+          ),
+        );
+      }, delay);
     },
     [scheduleTimeout],
   );
@@ -178,26 +230,21 @@ export const AppDataProvider = ({
       meta.lastResultFinishedAt = lastResult.finishedAt;
 
       queueProxyRefresh("profile-switch-finished");
-      void refreshProxyProviders()
-        .then(() => {
-          queueProxyRefresh(
-            "profile-switch-finished:providers",
-            [0, 500, 1500],
-          );
-        })
-        .catch((error) =>
-          console.warn(
-            "[DataProvider] Proxy providers refresh failed after profile switch:",
-            error,
-          ),
-        );
-
-      refreshRules().catch((error) =>
-        console.warn("[DataProvider] Rules refresh failed:", error),
-      );
-      refreshRuleProviders().catch((error) =>
-        console.warn("[DataProvider] Rule providers refresh failed:", error),
-      );
+      void Promise.allSettled([
+        refreshProxyProviders(),
+        refreshRules(),
+        refreshRuleProviders(),
+      ]).then((results) => {
+        results.forEach((result, index) => {
+          if (result.status === "rejected") {
+            const label = ["Proxy providers", "Rules", "Rule providers"][index];
+            console.warn(
+              `[DataProvider] ${label} refresh failed after profile switch:`,
+              result.reason,
+            );
+          }
+        });
+      });
     }
   }, [
     switchStatus,
@@ -222,22 +269,13 @@ export const AppDataProvider = ({
     };
 
     const handleProfileUpdateCompleted = (_: { payload: { uid: string } }) => {
-      scheduleTimeout(() => {
-        queueProxyRefresh("profile-update-completed");
-        void refreshProxyProviders()
-          .then(() => {
-            queueProxyRefresh(
-              "profile-update-completed:providers",
-              [0, 500, 1500],
-            );
-          })
-          .catch((error) =>
-            console.warn(
-              "[DataProvider] Proxy providers refresh failed after profile update completed:",
-              error,
-            ),
-          );
-      }, 120);
+      queueProxyRefresh("profile-update-completed", 800);
+      void refreshProxyProviders().catch((error) =>
+        console.warn(
+          "[DataProvider] Proxy providers refresh failed after profile update completed:",
+          error,
+        ),
+      );
     };
 
     listen<{ uid: string }>(

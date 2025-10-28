@@ -1,7 +1,25 @@
+import type { getProxies } from "tauri-plugin-mihomo-api";
 import { create } from "zustand";
 
-import { ProxiesView, calcuProxies } from "@/services/cmds";
+import {
+  ProxiesView,
+  ProxyProviderRecord,
+  buildProxyView,
+  calcuProxies,
+  getCachedProxyProviders,
+  setCachedProxyProviders,
+} from "@/services/cmds";
+import { AsyncEventQueue, nextTick } from "@/utils/asyncQueue";
+
 type ProxyHydration = "none" | "snapshot" | "live";
+type RawProxiesResponse = Awaited<ReturnType<typeof getProxies>>;
+
+export interface ProxiesUpdatedPayload {
+  proxies: RawProxiesResponse;
+  providers?: Record<string, unknown> | null;
+  emittedAt?: number;
+  profileId?: string | null;
+}
 
 interface ProxyStoreState {
   data: ProxiesView | null;
@@ -11,10 +29,55 @@ interface ProxyStoreState {
   liveFetchRequestId: number;
   lastAppliedFetchId: number;
   setSnapshot: (snapshot: ProxiesView, profileId: string) => void;
+  setLive: (payload: ProxiesUpdatedPayload) => void;
   startLiveFetch: () => number;
   completeLiveFetch: (requestId: number, view: ProxiesView) => void;
   reset: () => void;
 }
+
+const normalizeProviderPayload = (
+  raw: ProxiesUpdatedPayload["providers"],
+): ProxyProviderRecord | null => {
+  if (!raw || typeof raw !== "object") return null;
+
+  const rawRecord = raw as Record<string, any>;
+  const source =
+    rawRecord.providers && typeof rawRecord.providers === "object"
+      ? (rawRecord.providers as Record<string, any>)
+      : rawRecord;
+
+  const entries = Object.entries(source)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .filter(([, value]) => {
+      if (!value || typeof value !== "object") {
+        return false;
+      }
+      const vehicleType = value.vehicleType;
+      return vehicleType === "HTTP" || vehicleType === "File";
+    })
+    .map(([name, value]) => {
+      const normalized: IProxyProviderItem = {
+        name: value.name ?? name,
+        type: value.type ?? "",
+        proxies: Array.isArray(value.proxies) ? value.proxies : [],
+        updatedAt: value.updatedAt ?? "",
+        vehicleType: value.vehicleType ?? "",
+        subscriptionInfo:
+          value.subscriptionInfo && typeof value.subscriptionInfo === "object"
+            ? {
+                Upload: Number(value.subscriptionInfo.Upload ?? 0),
+                Download: Number(value.subscriptionInfo.Download ?? 0),
+                Total: Number(value.subscriptionInfo.Total ?? 0),
+                Expire: Number(value.subscriptionInfo.Expire ?? 0),
+              }
+            : undefined,
+      };
+
+      return [name, normalized] as const;
+    });
+
+  return Object.fromEntries(entries) as ProxyProviderRecord;
+};
 
 export const useProxyStore = create<ProxyStoreState>((set, get) => ({
   data: null,
@@ -30,6 +93,36 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       lastUpdated: null,
       lastProfileId: profileId,
       lastAppliedFetchId: state.liveFetchRequestId,
+    }));
+  },
+  setLive(payload) {
+    const state = get();
+    const emittedAt = payload.emittedAt ?? Date.now();
+
+    if (
+      state.hydration === "live" &&
+      state.lastUpdated !== null &&
+      emittedAt <= state.lastUpdated
+    ) {
+      return;
+    }
+
+    const providersRecord =
+      normalizeProviderPayload(payload.providers) ?? getCachedProxyProviders();
+
+    if (providersRecord) {
+      setCachedProxyProviders(providersRecord);
+    }
+
+    const view = buildProxyView(payload.proxies, providersRecord);
+    const nextProfileId = payload.profileId ?? state.lastProfileId;
+
+    set((current) => ({
+      data: view,
+      hydration: "live",
+      lastUpdated: emittedAt,
+      lastProfileId: nextProfileId ?? null,
+      lastAppliedFetchId: current.liveFetchRequestId,
     }));
   },
   startLiveFetch() {
@@ -67,6 +160,41 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
     });
   },
 }));
+
+const liveApplyQueue = new AsyncEventQueue();
+let pendingLivePayload: ProxiesUpdatedPayload | null = null;
+let liveApplyScheduled = false;
+
+const scheduleLiveApply = () => {
+  if (liveApplyScheduled) return;
+  liveApplyScheduled = true;
+
+  const dispatch = () => {
+    liveApplyScheduled = false;
+    const payload = pendingLivePayload;
+    pendingLivePayload = null;
+    if (!payload) return;
+
+    liveApplyQueue.enqueue(async () => {
+      await nextTick();
+      useProxyStore.getState().setLive(payload);
+    });
+  };
+
+  if (
+    typeof window !== "undefined" &&
+    typeof window.requestAnimationFrame === "function"
+  ) {
+    window.requestAnimationFrame(dispatch);
+  } else {
+    setTimeout(dispatch, 16);
+  }
+};
+
+export const applyLiveProxyPayload = (payload: ProxiesUpdatedPayload) => {
+  pendingLivePayload = payload;
+  scheduleLiveApply();
+};
 
 export const fetchLiveProxies = async () => {
   const requestId = useProxyStore.getState().startLiveFetch();
