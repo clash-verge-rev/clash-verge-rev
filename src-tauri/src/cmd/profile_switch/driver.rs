@@ -1,6 +1,9 @@
 use super::{
     CmdResult,
-    state::{SwitchCancellation, SwitchManager, SwitchRequest, manager},
+    state::{
+        ProfileSwitchStatus, SwitchCancellation, SwitchManager, SwitchRequest, SwitchResultStatus,
+        SwitchTaskStatus, current_millis, manager,
+    },
     workflow::{self, SwitchPanicInfo, SwitchStage},
 };
 use crate::{logging, utils::logging::Type};
@@ -32,6 +35,7 @@ struct SwitchDriverState {
     queue: VecDeque<SwitchRequest>,
     latest_tokens: HashMap<SmartString, SwitchCancellation>,
     cleanup_profiles: HashMap<SmartString, tokio::task::JoinHandle<()>>,
+    last_result: Option<SwitchResultStatus>,
 }
 
 #[derive(Debug)]
@@ -158,6 +162,7 @@ fn switch_driver_sender() -> &'static mpsc::Sender<SwitchDriverMessage> {
         tokio::spawn(async move {
             let manager = manager();
             let mut state = SwitchDriverState::default();
+            manager.set_status(state.snapshot(manager));
             while let Some(message) = rx.recv().await {
                 match message {
                     SwitchDriverMessage::Request {
@@ -249,6 +254,7 @@ fn handle_enqueue(
     }
 
     start_next_job(state, driver_tx, manager);
+    publish_status(state, manager);
 }
 
 fn handle_completion(
@@ -258,7 +264,7 @@ fn handle_completion(
     driver_tx: mpsc::Sender<SwitchDriverMessage>,
     manager: &'static SwitchManager,
 ) {
-    match &outcome {
+    let result_record = match &outcome {
         SwitchJobOutcome::Completed { success, .. } => {
             logging!(
                 info,
@@ -267,6 +273,11 @@ fn handle_completion(
                 request.task_id(),
                 success
             );
+            if *success {
+                SwitchResultStatus::success(request.task_id(), request.profile_id())
+            } else {
+                SwitchResultStatus::failed(request.task_id(), request.profile_id(), None, None)
+            }
         }
         SwitchJobOutcome::Panicked { info, .. } => {
             logging!(
@@ -277,8 +288,14 @@ fn handle_completion(
                 info.stage,
                 info.detail
             );
+            SwitchResultStatus::failed(
+                request.task_id(),
+                request.profile_id(),
+                Some(format!("{:?}", info.stage)),
+                Some(info.detail.clone()),
+            )
         }
-    }
+    };
 
     if let Some(active) = state.active.as_ref()
         && active.task_id() == request.task_id()
@@ -304,7 +321,9 @@ fn handle_completion(
         cleanup,
     );
 
+    state.last_result = Some(result_record);
     start_next_job(state, driver_tx, manager);
+    publish_status(state, manager);
 }
 
 fn drop_pending_requests(state: &mut SwitchDriverState) {
@@ -465,6 +484,7 @@ fn handle_cleanup_done(
         handle.abort();
     }
     start_next_job(state, driver_tx, manager);
+    publish_status(state, manager);
 }
 
 fn start_next_job(
@@ -473,6 +493,7 @@ fn start_next_job(
     manager: &'static SwitchManager,
 ) {
     if state.active.is_some() || !state.cleanup_profiles.is_empty() {
+        publish_status(state, manager);
         return;
     }
 
@@ -485,5 +506,39 @@ fn start_next_job(
         state.active = Some(request.clone());
         start_switch_job(driver_tx, manager, request);
         break;
+    }
+
+    publish_status(state, manager);
+}
+
+fn publish_status(state: &SwitchDriverState, manager: &'static SwitchManager) {
+    manager.set_status(state.snapshot(manager));
+}
+
+impl SwitchDriverState {
+    fn snapshot(&self, manager: &SwitchManager) -> ProfileSwitchStatus {
+        let active = self
+            .active
+            .as_ref()
+            .map(|req| SwitchTaskStatus::from_request(req, false));
+        let queue = self
+            .queue
+            .iter()
+            .map(|req| SwitchTaskStatus::from_request(req, true))
+            .collect::<Vec<_>>();
+        let cleanup_profiles = self
+            .cleanup_profiles
+            .keys()
+            .map(|key| key.to_string())
+            .collect::<Vec<_>>();
+
+        ProfileSwitchStatus {
+            is_switching: manager.is_switching(),
+            active,
+            queue,
+            cleanup_profiles,
+            last_result: self.last_result.clone(),
+            last_updated: current_millis(),
+        }
     }
 }

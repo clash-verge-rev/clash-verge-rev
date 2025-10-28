@@ -9,6 +9,32 @@ export type ProxyProviderRecord = Record<
   IProxyProviderItem | undefined
 >;
 
+export interface SwitchTaskStatus {
+  taskId: number;
+  profileId: string;
+  notify: boolean;
+  stage?: number | null;
+  queued: boolean;
+}
+
+export interface SwitchResultStatus {
+  taskId: number;
+  profileId: string;
+  success: boolean;
+  finishedAt: number;
+  errorStage?: string | null;
+  errorDetail?: string | null;
+}
+
+export interface ProfileSwitchStatus {
+  isSwitching: boolean;
+  active?: SwitchTaskStatus | null;
+  queue: SwitchTaskStatus[];
+  cleanupProfiles: string[];
+  lastResult?: SwitchResultStatus | null;
+  lastUpdated: number;
+}
+
 let cachedProxyProviders: ProxyProviderRecord | null = null;
 
 export const getCachedProxyProviders = () => cachedProxyProviders;
@@ -616,4 +642,8 @@ export const isAdmin = async () => {
 
 export async function getNextUpdateTime(uid: string) {
   return invoke<number | null>("get_next_update_time", { uid });
+}
+
+export async function getProfileSwitchStatus() {
+  return invoke<ProfileSwitchStatus>("get_profile_switch_status");
 }

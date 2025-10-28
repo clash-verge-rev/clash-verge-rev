@@ -3,6 +3,8 @@ mod state;
 mod validation;
 mod workflow;
 
+pub use state::ProfileSwitchStatus;
+
 use smartstring::alias::String;
 
 use super::CmdResult;
@@ -19,4 +21,8 @@ pub(super) async fn patch_profiles_config_by_profile_index(
 
 pub(super) async fn switch_profile(profile_index: String, notify_success: bool) -> CmdResult<bool> {
     driver::switch_profile(profile_index, notify_success).await
+}
+
+pub(super) fn get_switch_status() -> CmdResult<ProfileSwitchStatus> {
+    Ok(state::manager().status_snapshot())
 }

@@ -1,4 +1,6 @@
 use once_cell::sync::OnceCell;
+use parking_lot::RwLock;
+use serde::Serialize;
 use smartstring::alias::String as SmartString;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
@@ -20,6 +22,7 @@ pub(super) struct SwitchManager {
     request_sequence: AtomicU64,
     switching: AtomicBool,
     task_sequence: AtomicU64,
+    status: RwLock<ProfileSwitchStatus>,
 }
 
 impl Default for SwitchManager {
@@ -29,6 +32,7 @@ impl Default for SwitchManager {
             request_sequence: AtomicU64::new(0),
             switching: AtomicBool::new(false),
             task_sequence: AtomicU64::new(0),
+            status: RwLock::new(ProfileSwitchStatus::default()),
         }
     }
 }
@@ -57,6 +61,14 @@ impl SwitchManager {
 
     pub(super) fn is_switching(&self) -> bool {
         self.switching.load(Ordering::SeqCst)
+    }
+
+    pub(super) fn set_status(&self, status: ProfileSwitchStatus) {
+        *self.status.write() = status;
+    }
+
+    pub(super) fn status_snapshot(&self) -> ProfileSwitchStatus {
+        self.status.read().clone()
     }
 }
 
@@ -142,6 +154,94 @@ impl SwitchRequest {
 pub(super) struct SwitchHeartbeat {
     last_tick_millis: Arc<AtomicU64>,
     stage_code: Arc<AtomicU32>,
+}
+
+fn now_millis() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or(Duration::ZERO)
+        .as_millis() as u64
+}
+
+#[derive(Debug, Clone, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileSwitchStatus {
+    pub is_switching: bool,
+    pub active: Option<SwitchTaskStatus>,
+    pub queue: Vec<SwitchTaskStatus>,
+    pub cleanup_profiles: Vec<String>,
+    pub last_result: Option<SwitchResultStatus>,
+    pub last_updated: u64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SwitchTaskStatus {
+    pub task_id: u64,
+    pub profile_id: String,
+    pub notify: bool,
+    pub stage: Option<u32>,
+    pub queued: bool,
+}
+
+impl SwitchTaskStatus {
+    pub(super) fn from_request(request: &SwitchRequest, queued: bool) -> Self {
+        Self {
+            task_id: request.task_id(),
+            profile_id: request.profile_id().to_string(),
+            notify: request.notify(),
+            stage: if queued {
+                None
+            } else {
+                Some(request.heartbeat().stage_code())
+            },
+            queued,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SwitchResultStatus {
+    pub task_id: u64,
+    pub profile_id: String,
+    pub success: bool,
+    pub finished_at: u64,
+    pub error_stage: Option<String>,
+    pub error_detail: Option<String>,
+}
+
+impl SwitchResultStatus {
+    pub(super) fn success(task_id: u64, profile_id: &SmartString) -> Self {
+        Self {
+            task_id,
+            profile_id: profile_id.to_string(),
+            success: true,
+            finished_at: now_millis(),
+            error_stage: None,
+            error_detail: None,
+        }
+    }
+
+    pub(super) fn failed(
+        task_id: u64,
+        profile_id: &SmartString,
+        stage: Option<String>,
+        detail: Option<String>,
+    ) -> Self {
+        Self {
+            task_id,
+            profile_id: profile_id.to_string(),
+            success: false,
+            finished_at: now_millis(),
+            error_stage: stage,
+            error_detail: detail,
+        }
+    }
+}
+
+pub(super) fn current_millis() -> u64 {
+    now_millis()
 }
 
 impl SwitchHeartbeat {

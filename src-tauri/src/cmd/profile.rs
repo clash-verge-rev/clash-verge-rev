@@ -15,6 +15,8 @@ use crate::{
 use smartstring::alias::String;
 use std::time::Duration;
 
+use crate::cmd::profile_switch::ProfileSwitchStatus;
+
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
     // Strategy 1: attempt to fetch the latest data quickly
@@ -350,4 +352,10 @@ pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
     let timer = Timer::global();
     let next_time = timer.get_next_update_time(&uid).await;
     Ok(next_time)
+}
+
+/// Get current profile switch status snapshot
+#[tauri::command]
+pub async fn get_profile_switch_status() -> CmdResult<ProfileSwitchStatus> {
+    profile_switch::get_switch_status()
 }

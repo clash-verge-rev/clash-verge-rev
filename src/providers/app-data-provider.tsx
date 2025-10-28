@@ -1,4 +1,4 @@
-﻿import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
 import {
@@ -11,10 +11,12 @@ import { useVerge } from "@/hooks/use-verge";
 import {
   calcuProxyProviders,
   getAppUptime,
+  getProfileSwitchStatus,
   getRunningMode,
   readProfileFile,
   getSystemProxy,
   type ProxiesView,
+  type ProfileSwitchStatus,
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
 import {
@@ -62,6 +64,18 @@ export const AppDataProvider = ({
     SWR_DEFAULTS,
   );
 
+  const { data: switchStatus } = useSWR<ProfileSwitchStatus>(
+    "getProfileSwitchStatus",
+    getProfileSwitchStatus,
+    {
+      refreshInterval: (status) =>
+        status && (status.isSwitching || (status.queue?.length ?? 0) > 0)
+          ? 400
+          : 4000,
+      dedupingInterval: 200,
+    },
+  );
+
   const seedProxySnapshot = useCallback(
     async (profileId: string) => {
       if (!profileId) return;
@@ -107,61 +121,43 @@ export const AppDataProvider = ({
     };
   }, []);
 
-  useEffect(() => {
-    let lastProfileId: string | null = null;
-    let lastProfileChangeTime = 0;
-    let lastProxyRefreshTime = 0;
-    let lastClashRefreshTime = 0;
-    const refreshThrottle = 800;
+  const isUnmountedRef = useRef(false);
+  const scheduledTimeoutsRef = useRef<Set<number>>(new Set());
+  const lastRefreshTimesRef = useRef({ proxy: 0, clash: 0 });
+  const switchMetaRef = useRef<{
+    pendingProfileId: string | null;
+    lastResultFinishedAt: number | null;
+  }>({
+    pendingProfileId: null,
+    lastResultFinishedAt: null,
+  });
 
-    let isUnmounted = false;
-    const scheduledTimeouts = new Set<number>();
-    const cleanupFns: Array<() => void> = [];
-
-    const registerCleanup = (fn: () => void) => {
-      if (isUnmounted) {
-        try {
-          fn();
-        } catch (error) {
-          console.error("[DataProvider] Immediate cleanup failed:", error);
-        }
-      } else {
-        cleanupFns.push(fn);
-      }
-    };
-
-    const addWindowListener = (eventName: string, handler: EventListener) => {
-      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
-      window.addEventListener(eventName, handler);
-      return () => window.removeEventListener(eventName, handler);
-    };
-
-    const scheduleTimeout = (
-      callback: () => void | Promise<void>,
-      delay: number,
-    ) => {
-      if (isUnmounted) return -1;
+  const scheduleTimeout = useCallback(
+    (callback: () => void | Promise<void>, delay: number) => {
+      if (isUnmountedRef.current) return -1;
 
       const timeoutId = window.setTimeout(() => {
-        scheduledTimeouts.delete(timeoutId);
-        if (!isUnmounted) {
+        scheduledTimeoutsRef.current.delete(timeoutId);
+        if (!isUnmountedRef.current) {
           void callback();
         }
       }, delay);
 
-      scheduledTimeouts.add(timeoutId);
+      scheduledTimeoutsRef.current.add(timeoutId);
       return timeoutId;
-    };
+    },
+    [],
+  );
 
-    const clearAllTimeouts = () => {
-      scheduledTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
-      scheduledTimeouts.clear();
-    };
+  const clearAllTimeouts = useCallback(() => {
+    scheduledTimeoutsRef.current.forEach((timeoutId) =>
+      clearTimeout(timeoutId),
+    );
+    scheduledTimeoutsRef.current.clear();
+  }, []);
 
-    const queueProxyRefresh = (
-      reason: string,
-      delays: number[] = [0, 250, 1000, 2000],
-    ) => {
+  const queueProxyRefresh = useCallback(
+    (reason: string, delays: number[] = [0, 250, 1000, 2000]) => {
       delays.forEach((delay) => {
         scheduleTimeout(() => {
           fetchLiveProxies().catch((error) =>
@@ -172,51 +168,90 @@ export const AppDataProvider = ({
           );
         }, delay);
       });
+    },
+    [scheduleTimeout],
+  );
+
+  useEffect(() => {
+    isUnmountedRef.current = false;
+    return () => {
+      isUnmountedRef.current = true;
+      clearAllTimeouts();
+    };
+  }, [clearAllTimeouts]);
+
+  useEffect(() => {
+    if (!switchStatus) {
+      return;
+    }
+
+    const meta = switchMetaRef.current;
+    const nextTarget =
+      switchStatus.active?.profileId ??
+      (switchStatus.queue.length > 0 ? switchStatus.queue[0].profileId : null);
+
+    if (nextTarget && nextTarget !== meta.pendingProfileId) {
+      meta.pendingProfileId = nextTarget;
+      void seedProxySnapshot(nextTarget);
+    } else if (!nextTarget) {
+      meta.pendingProfileId = null;
+    }
+
+    const lastResult = switchStatus.lastResult ?? null;
+    if (lastResult && lastResult.finishedAt !== meta.lastResultFinishedAt) {
+      meta.lastResultFinishedAt = lastResult.finishedAt;
+
+      queueProxyRefresh("profile-switch-finished");
+      void refreshProxyProviders()
+        .then(() => {
+          queueProxyRefresh(
+            "profile-switch-finished:providers",
+            [0, 500, 1500],
+          );
+        })
+        .catch((error) =>
+          console.warn(
+            "[DataProvider] Proxy providers refresh failed after profile switch:",
+            error,
+          ),
+        );
+
+      refreshRules().catch((error) =>
+        console.warn("[DataProvider] Rules refresh failed:", error),
+      );
+      refreshRuleProviders().catch((error) =>
+        console.warn("[DataProvider] Rule providers refresh failed:", error),
+      );
+    }
+  }, [
+    switchStatus,
+    seedProxySnapshot,
+    queueProxyRefresh,
+    refreshProxyProviders,
+    refreshRules,
+    refreshRuleProviders,
+  ]);
+
+  const REFRESH_THROTTLE = 800;
+
+  useEffect(() => {
+    const cleanupFns: Array<() => void> = [];
+
+    const registerCleanup = (fn: () => void) => {
+      cleanupFns.push(fn);
     };
 
-    const handleProfileChanged = (event: { payload: string }) => {
-      const newProfileId = event.payload;
-      const now = Date.now();
-      if (
-        lastProfileId === newProfileId &&
-        now - lastProfileChangeTime < refreshThrottle
-      ) {
-        return;
-      }
-
-      lastProfileId = newProfileId;
-      lastProfileChangeTime = now;
-      lastProxyRefreshTime = 0;
-      lastClashRefreshTime = 0;
-
-      void seedProxySnapshot(newProfileId);
-
-      scheduleTimeout(() => {
-        queueProxyRefresh("profile-change");
-        void refreshProxyProviders()
-          .then(() => {
-            queueProxyRefresh("profile-change:providers", [0, 500, 1500]);
-          })
-          .catch((error) =>
-            console.warn(
-              "[DataProvider] Proxy providers refresh failed after profile change:",
-              error,
-            ),
-          );
-
-        refreshRules().catch((error) =>
-          console.warn("[DataProvider] Rules refresh failed:", error),
-        );
-        refreshRuleProviders().catch((error) =>
-          console.warn("[DataProvider] Rule providers refresh failed:", error),
-        );
-      }, 200);
+    const addWindowListener = (eventName: string, handler: EventListener) => {
+      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
+      window.addEventListener(eventName, handler);
+      return () => window.removeEventListener(eventName, handler);
     };
 
     const handleProfileUpdateCompleted = (_: { payload: { uid: string } }) => {
       const now = Date.now();
-      lastProxyRefreshTime = now;
-      lastClashRefreshTime = now;
+      lastRefreshTimesRef.current.proxy = now;
+      lastRefreshTimesRef.current.clash = now;
+
       scheduleTimeout(() => {
         queueProxyRefresh("profile-update-completed");
         void refreshProxyProviders()
@@ -237,9 +272,9 @@ export const AppDataProvider = ({
 
     const handleRefreshClash = () => {
       const now = Date.now();
-      if (now - lastClashRefreshTime <= refreshThrottle) return;
+      if (now - lastRefreshTimesRef.current.clash <= REFRESH_THROTTLE) return;
 
-      lastClashRefreshTime = now;
+      lastRefreshTimesRef.current.clash = now;
       scheduleTimeout(() => {
         queueProxyRefresh("refresh-clash");
       }, 200);
@@ -247,106 +282,80 @@ export const AppDataProvider = ({
 
     const handleRefreshProxy = () => {
       const now = Date.now();
-      if (now - lastProxyRefreshTime <= refreshThrottle) return;
+      if (now - lastRefreshTimesRef.current.proxy <= REFRESH_THROTTLE) return;
 
-      lastProxyRefreshTime = now;
+      lastRefreshTimesRef.current.proxy = now;
       scheduleTimeout(() => {
         queueProxyRefresh("refresh-proxy");
       }, 200);
     };
 
-    const initializeListeners = async () => {
-      try {
-        const unlistenProfile = await listen<string>(
-          "profile-changed",
-          handleProfileChanged,
-        );
-        const unlistenProfileCompleted = await listen<{
-          uid: string;
-        }>("profile-update-completed", handleProfileUpdateCompleted);
-
-        registerCleanup(unlistenProfile);
-        registerCleanup(unlistenProfileCompleted);
-      } catch (error) {
+    listen<{ uid: string }>(
+      "profile-update-completed",
+      handleProfileUpdateCompleted,
+    )
+      .then(registerCleanup)
+      .catch((error) =>
         console.error(
-          "[AppDataProvider] failed to attach profile listeners:",
+          "[AppDataProvider] failed to attach profile update listeners:",
           error,
-        );
-      }
+        ),
+      );
 
-      try {
-        const unlistenClash = await listen(
-          "verge://refresh-clash-config",
-          handleRefreshClash,
-        );
-        const unlistenProxy = await listen(
-          "verge://refresh-proxy-config",
-          handleRefreshProxy,
-        );
-
-        registerCleanup(() => {
-          unlistenClash();
-          unlistenProxy();
-        });
-      } catch (error) {
+    listen("verge://refresh-clash-config", handleRefreshClash)
+      .then(registerCleanup)
+      .catch((error) =>
         console.warn(
-          "[AppDataProvider] failed to register Tauri event listener",
+          "[AppDataProvider] failed to register clash refresh listener",
           error,
-        );
+        ),
+      );
 
-        const fallbackHandlers: Array<[string, EventListener]> = [
-          ["verge://refresh-clash-config", handleRefreshClash],
-          ["verge://refresh-proxy-config", handleRefreshProxy],
-          [
-            "profile-update-completed",
-            ((event: Event) => {
-              const payload = (event as CustomEvent<{ uid: string }>)
-                .detail ?? {
-                uid: "",
-              };
-              handleProfileUpdateCompleted({ payload });
-            }) as EventListener,
-          ],
-        ];
+    listen("verge://refresh-proxy-config", handleRefreshProxy)
+      .then(registerCleanup)
+      .catch((error) =>
+        console.warn(
+          "[AppDataProvider] failed to register proxy refresh listener",
+          error,
+        ),
+      );
 
-        fallbackHandlers.forEach(([eventName, handler]) => {
-          registerCleanup(addWindowListener(eventName, handler));
-        });
-      }
-    };
+    const fallbackHandlers: Array<[string, EventListener]> = [
+      [
+        "profile-update-completed",
+        ((event: Event) => {
+          const payload = (event as CustomEvent<{ uid: string }>).detail ?? {
+            uid: "",
+          };
+          handleProfileUpdateCompleted({ payload });
+        }) as EventListener,
+      ],
+      ["verge://refresh-clash-config", handleRefreshClash],
+      ["verge://refresh-proxy-config", handleRefreshProxy],
+    ];
 
-    void initializeListeners();
+    fallbackHandlers.forEach(([eventName, handler]) => {
+      registerCleanup(addWindowListener(eventName, handler));
+    });
 
     return () => {
-      isUnmounted = true;
-      clearAllTimeouts();
-
-      const errors: Error[] = [];
-      cleanupFns.splice(0).forEach((fn) => {
+      cleanupFns.forEach((fn) => {
         try {
           fn();
         } catch (error) {
-          errors.push(
-            error instanceof Error ? error : new Error(String(error)),
-          );
+          console.error("[AppDataProvider] cleanup error:", error);
         }
       });
-
-      if (errors.length > 0) {
-        console.error(
-          `[DataProvider] ${errors.length} errors during cleanup:`,
-          errors,
-        );
-      }
     };
-  }, [
-    refreshProxyProviders,
-    refreshRules,
-    refreshRuleProviders,
-    seedProxySnapshot,
-  ]);
+  }, [queueProxyRefresh, refreshProxyProviders, scheduleTimeout]);
 
-  const proxyTargetProfileId = proxyProfileId ?? null;
+  const switchTargetProfileId =
+    switchStatus?.active?.profileId ??
+    (switchStatus && switchStatus.queue.length > 0
+      ? switchStatus.queue[0].profileId
+      : null);
+
+  const proxyTargetProfileId = switchTargetProfileId ?? proxyProfileId ?? null;
   const displayProxyStateRef = useRef<{
     view: ProxiesView | null;
     profileId: string | null;
@@ -387,7 +396,9 @@ export const AppDataProvider = ({
   const proxyDisplayProfileId = displayProxyState.profileId;
   const proxiesForRender = displayProxyState.view ?? proxyView;
   const isProxyRefreshPending =
-    proxyHydration !== "live" || proxyTargetProfileId !== proxyDisplayProfileId;
+    (switchStatus?.isSwitching ?? false) ||
+    proxyHydration !== "live" ||
+    proxyTargetProfileId !== proxyDisplayProfileId;
 
   const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
     "getSystemProxy",
@@ -465,6 +476,7 @@ export const AppDataProvider = ({
       proxyTargetProfileId,
       proxyDisplayProfileId,
       isProxyRefreshPending,
+      switchStatus: switchStatus ?? null,
       clashConfig,
       rules: rulesData?.rules || [],
       sysproxy,
@@ -492,6 +504,7 @@ export const AppDataProvider = ({
     proxyTargetProfileId,
     proxyDisplayProfileId,
     isProxyRefreshPending,
+    switchStatus,
     clashConfig,
     rulesData,
     sysproxy,

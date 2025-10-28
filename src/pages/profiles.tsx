@@ -54,6 +54,7 @@ import {
 import { ConfigViewer } from "@/components/setting/mods/config-viewer";
 import { useListen } from "@/hooks/use-listen";
 import { useProfiles } from "@/hooks/use-profiles";
+import { useAppData } from "@/providers/app-data-context";
 import {
   createProfile,
   deleteProfile,
@@ -65,6 +66,8 @@ import {
   reorderProfile,
   updateProfile,
   switchProfileCommand,
+  type ProfileSwitchStatus,
+  type SwitchTaskStatus,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { refreshClashData } from "@/services/refresh";
@@ -80,163 +83,80 @@ const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
   );
 };
 
-type ProfileSwitchFinishedPayload = {
-  profileId: string;
-  success: boolean;
-  notify: boolean;
-  taskId: number;
-};
-
 type RustPanicPayload = {
   message: string;
   location: string;
 };
 
-type SwitchRequest = {
-  profileId: string;
-  notifySuccess: boolean;
-};
+type SwitchTaskMeta = { profileId: string; notify: boolean };
 
-type SwitchQueueEntry = SwitchRequest & { token: number };
-
-type SwitchQueueState = {
-  active: SwitchQueueEntry | null;
-  queue: SwitchQueueEntry[];
-  seq: number;
-  lastError: string | null;
-};
-
-type SwitchQueueAction =
-  | { type: "enqueue"; request: SwitchRequest }
-  | { type: "complete"; profileId: string }
-  | { type: "failure"; profileId: string; error: string }
-  | { type: "reset-error" };
-
-const initialSwitchQueueState: SwitchQueueState = {
-  active: null,
-  queue: [],
-  seq: 0,
-  lastError: null,
-};
-
-const promoteNext = (
-  queue: SwitchQueueEntry[],
-): { next: SwitchQueueEntry | null; rest: SwitchQueueEntry[] } => {
-  if (queue.length === 0) {
-    return { next: null, rest: [] };
+const collectSwitchingProfileIds = (
+  status: ProfileSwitchStatus | null,
+): string[] => {
+  if (!status) return [];
+  const ids = new Set<string>();
+  if (status.active) {
+    ids.add(status.active.profileId);
   }
-  const [next, ...rest] = queue;
-  return { next, rest };
+  status.queue.forEach((task) => ids.add(task.profileId));
+  return Array.from(ids);
 };
 
-const switchQueueReducer = (
-  state: SwitchQueueState,
-  action: SwitchQueueAction,
-): SwitchQueueState => {
+type ManualActivatingAction =
+  | { type: "reset" }
+  | { type: "set"; value: string[] }
+  | { type: "add"; ids: string[] }
+  | { type: "remove"; id: string }
+  | { type: "filterAllowed"; allowed: Set<string> };
+
+const manualActivatingReducer = (
+  state: string[],
+  action: ManualActivatingAction,
+): string[] => {
   switch (action.type) {
-    case "enqueue": {
-      const { request } = action;
-      if (state.active?.profileId === request.profileId) {
-        if (!state.active.notifySuccess && request.notifySuccess) {
-          return {
-            ...state,
-            active: { ...state.active, notifySuccess: true },
-          };
-        }
+    case "reset":
+      return state.length > 0 ? [] : state;
+    case "set": {
+      const unique = Array.from(
+        new Set(action.value.filter((id) => typeof id === "string" && id)),
+      );
+      if (
+        unique.length === state.length &&
+        unique.every((id, index) => id === state[index])
+      ) {
         return state;
       }
-
-      const filteredQueue = state.queue.filter(
-        (entry) => entry.profileId !== request.profileId,
-      );
-      const nextEntry: SwitchQueueEntry = {
-        ...request,
-        token: state.seq + 1,
-      };
-
-      if (!state.active) {
-        return {
-          active: nextEntry,
-          queue: filteredQueue,
-          seq: state.seq + 1,
-          lastError: null,
-        };
-      }
-
-      return {
-        ...state,
-        queue: [...filteredQueue, nextEntry],
-        seq: state.seq + 1,
-        lastError: null,
-      };
+      return unique;
     }
-    case "complete": {
-      if (state.active?.profileId === action.profileId) {
-        if (state.queue.length === 0) {
-          return {
-            ...state,
-            active: null,
-            lastError: null,
-          };
-        }
-        const [next, ...rest] = state.queue;
-        return {
-          ...state,
-          active: next,
-          queue: rest,
-          lastError: null,
-        };
-      }
-
-      return {
-        ...state,
-        queue: state.queue.filter(
-          (entry) => entry.profileId !== action.profileId,
-        ),
-      };
-    }
-    case "failure": {
-      const remainingQueue = state.queue.filter(
-        (entry) => entry.profileId !== action.profileId,
-      );
-
-      if (state.active?.profileId === action.profileId) {
-        const { next, rest } = promoteNext(remainingQueue);
-        return {
-          ...state,
-          active: next,
-          queue: rest,
-          lastError: action.error,
-        };
-      }
-
-      return {
-        ...state,
-        queue: remainingQueue,
-        lastError: action.error,
-      };
-    }
-    case "reset-error": {
-      if (!state.lastError) {
+    case "add": {
+      const incoming = action.ids.filter((id) => typeof id === "string" && id);
+      if (incoming.length === 0) {
         return state;
       }
-      return {
-        ...state,
-        lastError: null,
-      };
+      const next = new Set(state);
+      let changed = false;
+      incoming.forEach((id) => {
+        const before = next.size;
+        next.add(id);
+        if (next.size !== before) {
+          changed = true;
+        }
+      });
+      return changed ? Array.from(next) : state;
+    }
+    case "remove": {
+      if (!state.includes(action.id)) {
+        return state;
+      }
+      return state.filter((id) => id !== action.id);
+    }
+    case "filterAllowed": {
+      const next = state.filter((id) => action.allowed.has(id));
+      return next.length === state.length ? state : next;
     }
     default:
       return state;
   }
-};
-
-const getSwitchingProfileIds = (state: SwitchQueueState) => {
-  const ids = new Set<string>();
-  if (state.active) {
-    ids.add(state.active.profileId);
-  }
-  state.queue.forEach((entry) => ids.add(entry.profileId));
-  return Array.from(ids);
 };
 
 const normalizeProfileUrl = (value?: string) => {
@@ -376,9 +296,15 @@ const ProfilePage = () => {
     [],
   );
   const { addListener } = useListen();
+  const { switchStatus } = useAppData();
   const [url, setUrl] = useState("");
   const [disabled, setDisabled] = useState(false);
-  const [manualActivatings, setManualActivatings] = useState<string[]>([]);
+  const [manualActivatings, dispatchManualActivatings] = useReducer(
+    manualActivatingReducer,
+    [],
+  );
+  const taskMetaRef = useRef<Map<number, SwitchTaskMeta>>(new Map());
+  const lastResultAtRef = useRef(0);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -433,28 +359,17 @@ const ProfilePage = () => {
     };
   }, [logToBackend]);
   const [loading, setLoading] = useState(false);
-  const [switchState, dispatchSwitch] = useReducer(
-    switchQueueReducer,
-    initialSwitchQueueState,
-  );
-  const switchStateRef = useRef(switchState);
-  const lastProcessedTaskRef = useRef(0);
   const postSwitchGenerationRef = useRef(0);
-  const switchingProfileId = switchState.active?.profileId ?? null;
-  const switchCommandTokenRef = useRef<number | null>(null);
+  const switchingProfileId = switchStatus?.active?.profileId ?? null;
   const switchActivatingIds = useMemo(
-    () => getSwitchingProfileIds(switchState),
-    [switchState],
+    () => collectSwitchingProfileIds(switchStatus ?? null),
+    [switchStatus],
   );
   const activatings = useMemo(() => {
     const merged = new Set<string>(manualActivatings);
     switchActivatingIds.forEach((id) => merged.add(id));
     return Array.from(merged);
   }, [manualActivatings, switchActivatingIds]);
-
-  useEffect(() => {
-    switchStateRef.current = switchState;
-  }, [switchState]);
 
   // Batch selection states
   const [batchMode, setBatchMode] = useState(false);
@@ -482,6 +397,8 @@ const ProfilePage = () => {
   const profileMutateScheduledRef = useRef(false);
   const mutateLogsRef = useRef<(() => Promise<any> | void) | null>(null);
   const tRef = useRef(t);
+  const showNoticeRef = useRef(showNotice);
+  const refreshClashDataRef = useRef(refreshClashData);
 
   useEffect(() => {
     activateSelectedRef.current = activateSelected;
@@ -494,6 +411,9 @@ const ProfilePage = () => {
   useEffect(() => {
     tRef.current = t;
   }, [t]);
+
+  showNoticeRef.current = showNotice;
+  refreshClashDataRef.current = refreshClashData;
 
   useEffect(() => {
     const handleFileDrop = async () => {
@@ -592,6 +512,116 @@ const ProfilePage = () => {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!switchStatus) {
+      taskMetaRef.current.clear();
+      dispatchManualActivatings({ type: "reset" });
+      return;
+    }
+
+    const trackedProfiles = new Set<string>();
+    const registerTask = (task: SwitchTaskStatus | null | undefined) => {
+      if (!task) return;
+      taskMetaRef.current.set(task.taskId, {
+        profileId: task.profileId,
+        notify: task.notify,
+      });
+      trackedProfiles.add(task.profileId);
+    };
+
+    registerTask(switchStatus.active ?? null);
+    switchStatus.queue.forEach((task) => registerTask(task));
+
+    dispatchManualActivatings({
+      type: "filterAllowed",
+      allowed: trackedProfiles,
+    });
+
+    const lastResult = switchStatus.lastResult ?? null;
+    if (lastResult && lastResult.finishedAt !== lastResultAtRef.current) {
+      lastResultAtRef.current = lastResult.finishedAt;
+      const { profileId, success, finishedAt, errorDetail } = lastResult;
+      const meta = taskMetaRef.current.get(lastResult.taskId);
+      const notifySuccess = meta?.notify ?? true;
+      taskMetaRef.current.delete(lastResult.taskId);
+
+      debugProfileSwitch("STATUS_RESULT", profileId, {
+        success,
+        finishedAt,
+        notifySuccess,
+      });
+
+      switchEventQueue.enqueue(() => {
+        if (!mountedRef.current) return;
+
+        dispatchManualActivatings({ type: "remove", id: profileId });
+
+        const eventGeneration = postSwitchGenerationRef.current;
+
+        postSwitchEffectQueue.enqueue(async () => {
+          if (!mountedRef.current) return;
+          if (postSwitchGenerationRef.current !== eventGeneration) {
+            return;
+          }
+
+          logToBackend(
+            success ? "info" : "warn",
+            "[ProfileSwitch] status result received",
+            {
+              profileId,
+              success,
+              finishedAt,
+            },
+          );
+
+          if (success) {
+            const operations: Promise<unknown>[] = [];
+            const mutateLogs = mutateLogsRef.current;
+            if (mutateLogs) {
+              operations.push(Promise.resolve(mutateLogs()));
+            }
+            const activateSelected = activateSelectedRef.current;
+            if (activateSelected) {
+              operations.push(Promise.resolve(activateSelected()));
+            }
+            const refreshFn = refreshClashDataRef.current;
+            if (refreshFn) {
+              operations.push(Promise.resolve(refreshFn()));
+            }
+
+            if (operations.length > 0) {
+              await Promise.allSettled(operations);
+            }
+
+            scheduleProfileMutate();
+            if (notifySuccess) {
+              await afterPaint();
+              showNoticeRef.current?.(
+                "success",
+                tRef.current("Profile Switched"),
+                1000,
+              );
+            }
+          } else {
+            scheduleProfileMutate();
+            await afterPaint();
+            showNoticeRef.current?.(
+              "error",
+              errorDetail ?? tRef.current("Profile switch failed"),
+            );
+          }
+        });
+      });
+    }
+  }, [
+    dispatchManualActivatings,
+    logToBackend,
+    postSwitchEffectQueue,
+    scheduleProfileMutate,
+    switchEventQueue,
+    switchStatus,
+  ]);
 
   const viewerRef = useRef<ProfileViewerRef>(null);
   const configRef = useRef<DialogRef>(null);
@@ -790,286 +820,55 @@ const ProfilePage = () => {
     }
   };
 
-  const enqueueSwitch = useCallback(
+  const requestSwitch = useCallback(
     (targetProfile: string, notifySuccess: boolean) => {
       const nextGeneration = postSwitchGenerationRef.current + 1;
-      logToBackend("info", "[ProfileSwitch] enqueue switch request", {
-        targetProfile,
-        notifySuccess,
-        nextGeneration,
-      });
       postSwitchGenerationRef.current = nextGeneration;
       postSwitchEffectQueue.clear();
-      dispatchSwitch({
-        type: "enqueue",
-        request: { profileId: targetProfile, notifySuccess },
+
+      debugProfileSwitch("REQUEST_SWITCH", targetProfile, {
+        notifySuccess,
+        generation: nextGeneration,
       });
-    },
-    [dispatchSwitch, logToBackend, postSwitchEffectQueue],
-  );
 
-  useEffect(() => {
-    const unlistenPromise = listen<ProfileSwitchFinishedPayload>(
-      "profile-switch-finished",
-      (event) => {
-        const payload = event.payload;
-        if (!payload) return;
+      logToBackend("info", "[ProfileSwitch] request switch", {
+        targetProfile,
+        notifySuccess,
+        generation: nextGeneration,
+      });
 
-        const enqueueStart = isDev ? performance.now() : 0;
-        switchEventQueue.enqueue(() => {
-          if (!mountedRef.current) return;
+      dispatchManualActivatings({ type: "add", ids: [targetProfile] });
 
-          const { profileId, success, notify, taskId } = payload;
-          const stateSnapshot = switchStateRef.current;
-          logToBackend("info", "[ProfileSwitch] received completion event", {
-            profileId,
-            success,
-            notify,
-            taskId,
-            activeProfile: stateSnapshot.active?.profileId ?? null,
-            queueLength: stateSnapshot.queue.length,
-            lastProcessed: lastProcessedTaskRef.current,
-            generation: postSwitchGenerationRef.current,
+      void (async () => {
+        try {
+          const accepted = await switchProfileCommand(
+            targetProfile,
+            notifySuccess,
+          );
+          if (!accepted) {
+            throw new Error(tRef.current("Profile switch failed"));
+          }
+        } catch (error: any) {
+          const message =
+            error?.message || error?.toString?.() || String(error);
+          logToBackend("error", "[ProfileSwitch] switch command failed", {
+            profileId: targetProfile,
+            message,
           });
-          debugProfileSwitch("SWITCH_FINISHED", profileId, {
-            success,
-            taskId,
-            notify,
-          });
-
-          setManualActivatings((prev) => prev.filter((id) => id !== profileId));
-
-          if (taskId <= lastProcessedTaskRef.current) {
-            logToBackend(
-              "warn",
-              "[ProfileSwitch] stale completion event ignored",
-              {
-                profileId,
-                taskId,
-                lastProcessed: lastProcessedTaskRef.current,
-              },
-            );
-            if (isDev) {
-              console.debug(
-                `[ProfileSwitch] task ${taskId} ignored (duplicate or out-of-order event)`,
-              );
-            }
-            return;
-          }
-
-          const activeEntry = stateSnapshot.active;
-          if (!activeEntry || activeEntry.profileId !== profileId) {
-            logToBackend(
-              "info",
-              "[ProfileSwitch] completion for inactive profile ignored",
-              {
-                profileId,
-                taskId,
-                activeProfile: activeEntry?.profileId ?? null,
-              },
-            );
-            if (isDev) {
-              console.debug(
-                `[ProfileSwitch] task ${taskId} ignored (profile ${profileId} no longer active)`,
-              );
-            }
-            lastProcessedTaskRef.current = taskId;
-            return;
-          }
-
-          lastProcessedTaskRef.current = taskId;
-          const eventGeneration = postSwitchGenerationRef.current;
-
-          if (isDev) {
-            console.groupCollapsed(
-              `[ProfileSwitch] task ${taskId} (${profileId}) immediate phase`,
-            );
-            console.debug(
-              `[ProfileSwitch] queued after ${(performance.now() - enqueueStart).toFixed(1)}ms`,
-            );
-          }
-
-          if (success) {
-            dispatchSwitch({ type: "complete", profileId });
-            switchCommandTokenRef.current = null;
-
-            postSwitchEffectQueue.enqueue(async () => {
-              if (!mountedRef.current) return;
-              if (postSwitchGenerationRef.current !== eventGeneration) {
-                logToBackend(
-                  "info",
-                  "[ProfileSwitch] success post-phase skipped (generation advanced)",
-                  {
-                    taskId,
-                    profileId,
-                    expectedGeneration: eventGeneration,
-                    currentGeneration: postSwitchGenerationRef.current,
-                  },
-                );
-                if (isDev) {
-                  console.debug(
-                    `[ProfileSwitch] task ${taskId} success post phase skipped (generation advanced)`,
-                  );
-                }
-                return;
-              }
-              const phaseStart = isDev ? performance.now() : 0;
-              const operations: Promise<unknown>[] = [];
-              const mutateLogs = mutateLogsRef.current;
-              if (mutateLogs) {
-                operations.push(Promise.resolve(mutateLogs()));
-              }
-              const activateSelected = activateSelectedRef.current;
-              if (activateSelected) {
-                operations.push(Promise.resolve(activateSelected()));
-              }
-              operations.push(refreshClashData());
-
-              if (operations.length > 0) {
-                await Promise.allSettled(operations);
-                if (isDev) {
-                  console.debug(
-                    `[ProfileSwitch] task ${taskId} settled ${operations.length} operations in ${(performance.now() - phaseStart).toFixed(1)}ms`,
-                  );
-                }
-              }
-
-              if (notify) {
-                await afterPaint();
-                showNotice("success", tRef.current("Profile Switched"), 1000);
-                if (isDev) {
-                  console.debug(
-                    `[ProfileSwitch] task ${taskId} notice rendered after ${(performance.now() - phaseStart).toFixed(1)}ms`,
-                  );
-                }
-              }
-
-              scheduleProfileMutate();
-              logToBackend(
-                "info",
-                "[ProfileSwitch] success post-phase completed",
-                {
-                  taskId,
-                  profileId,
-                  notify,
-                },
-              );
-              if (isDev) {
-                console.debug(
-                  `[ProfileSwitch] task ${taskId} success post phase ${(performance.now() - phaseStart).toFixed(1)}ms`,
-                );
-              }
-            });
-          } else {
-            dispatchSwitch({
-              type: "failure",
-              profileId,
-              error: tRef.current("Profile switch failed"),
-            });
-            switchCommandTokenRef.current = null;
-
-            postSwitchEffectQueue.enqueue(async () => {
-              if (!mountedRef.current) return;
-              if (postSwitchGenerationRef.current !== eventGeneration) {
-                logToBackend(
-                  "info",
-                  "[ProfileSwitch] failure post-phase skipped (generation advanced)",
-                  {
-                    taskId,
-                    profileId,
-                    expectedGeneration: eventGeneration,
-                    currentGeneration: postSwitchGenerationRef.current,
-                  },
-                );
-                if (isDev) {
-                  console.debug(
-                    `[ProfileSwitch] task ${taskId} failure post phase skipped (generation advanced)`,
-                  );
-                }
-                return;
-              }
-              const phaseStart = isDev ? performance.now() : 0;
-              await afterPaint();
-              showNotice("error", tRef.current("Profile switch failed"));
-              scheduleProfileMutate();
-              logToBackend(
-                "warn",
-                "[ProfileSwitch] failure post-phase completed",
-                {
-                  taskId,
-                  profileId,
-                },
-              );
-              if (isDev) {
-                console.debug(
-                  `[ProfileSwitch] task ${taskId} failure post phase ${(performance.now() - phaseStart).toFixed(1)}ms`,
-                );
-              }
-            });
-          }
-
-          if (isDev) {
-            console.debug(
-              `[ProfileSwitch] task ${taskId} immediate phase done`,
-            );
-            console.groupEnd();
-          }
-        });
-      },
-    );
-
-    return () => {
-      unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
-    };
-  }, [
-    dispatchSwitch,
-    logToBackend,
-    postSwitchEffectQueue,
-    scheduleProfileMutate,
-    setManualActivatings,
-    switchEventQueue,
-  ]);
-
-  useEffect(() => {
-    const active = switchState.active;
-    if (!active) {
-      switchCommandTokenRef.current = null;
-      return;
-    }
-    if (switchCommandTokenRef.current === active.token) {
-      return;
-    }
-    switchCommandTokenRef.current = active.token;
-    let cancelled = false;
-    const runSwitch = async () => {
-      try {
-        const accepted = await switchProfileCommand(
-          active.profileId,
-          active.notifySuccess,
-        );
-        if (!accepted) {
-          throw new Error(t("Profile switch failed"));
+          dispatchManualActivatings({ type: "remove", id: targetProfile });
+          scheduleProfileMutate();
+          await afterPaint();
+          showNoticeRef.current?.("error", message);
         }
-      } catch (error: any) {
-        if (cancelled) return;
-        const message = error?.message || error?.toString?.() || String(error);
-        showNotice("error", message);
-        dispatchSwitch({
-          type: "failure",
-          profileId: active.profileId,
-          error: message,
-        });
-        switchCommandTokenRef.current = null;
-        await mutateProfiles();
-      }
-    };
-
-    runSwitch();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [dispatchSwitch, mutateProfiles, switchState.active, t]);
+      })();
+    },
+    [
+      dispatchManualActivatings,
+      logToBackend,
+      postSwitchEffectQueue,
+      scheduleProfileMutate,
+    ],
+  );
 
   const onSelect = useCallback(
     (targetProfile: string, force: boolean) => {
@@ -1077,17 +876,17 @@ const ProfilePage = () => {
         debugProfileSwitch("ALREADY_CURRENT_IGNORED", targetProfile);
         return;
       }
-      enqueueSwitch(targetProfile, true);
+      requestSwitch(targetProfile, true);
     },
-    [currentProfileId, enqueueSwitch],
+    [currentProfileId, requestSwitch],
   );
 
   useEffect(() => {
     if (!current) return;
     if (current === currentProfileId) return;
     if (switchActivatingIds.includes(current)) return;
-    enqueueSwitch(current, false);
-  }, [current, currentProfileId, enqueueSwitch, switchActivatingIds]);
+    requestSwitch(current, false);
+  }, [current, currentProfileId, requestSwitch, switchActivatingIds]);
 
   useEffect(() => {
     let mounted = true;
@@ -1116,7 +915,7 @@ const ProfilePage = () => {
     }
 
     const currentProfiles = currentActivatings();
-    setManualActivatings((prev) => [...new Set([...prev, ...currentProfiles])]);
+    dispatchManualActivatings({ type: "add", ids: currentProfiles });
 
     try {
       await enhanceProfiles();
@@ -1127,14 +926,17 @@ const ProfilePage = () => {
     } catch (err: any) {
       showNotice("error", err.message || err.toString(), 3000);
     } finally {
-      setManualActivatings([]);
+      dispatchManualActivatings({ type: "reset" });
     }
   });
 
   const onDelete = useLockFn(async (uid: string) => {
     const current = profiles.current === uid;
     try {
-      setManualActivatings([...(current ? currentActivatings() : []), uid]);
+      dispatchManualActivatings({
+        type: "set",
+        value: [...new Set([...(current ? currentActivatings() : []), uid])],
+      });
       await deleteProfile(uid);
       mutateProfiles();
       mutateLogs();
@@ -1144,7 +946,7 @@ const ProfilePage = () => {
     } catch (err: any) {
       showNotice("error", err?.message || err.toString());
     } finally {
-      setManualActivatings([]);
+      dispatchManualActivatings({ type: "reset" });
     }
   });
 
@@ -1239,9 +1041,7 @@ const ProfilePage = () => {
           ? [profiles.current]
           : [];
 
-      setManualActivatings((prev) => [
-        ...new Set([...prev, ...currentActivating]),
-      ]);
+      dispatchManualActivatings({ type: "add", ids: currentActivating });
 
       // Delete all selected profiles
       for (const uid of selectedProfiles) {
@@ -1264,7 +1064,7 @@ const ProfilePage = () => {
     } catch (err: any) {
       showNotice("error", err?.message || err.toString());
     } finally {
-      setManualActivatings([]);
+      dispatchManualActivatings({ type: "reset" });
     }
   });
 
