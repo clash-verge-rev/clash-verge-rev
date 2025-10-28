@@ -307,7 +307,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             </GuardState>
           </Item>
         )} */}
-        {OS === "macos" && (
+        {/* {OS === "macos" && (
           <Item>
             <ListItemText primary={t("Enable Tray Icon")} />
             <GuardState
@@ -326,7 +326,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               <Switch edge="end" />
             </GuardState>
           </Item>
-        )}
+        )} */}
         <Item>
           <ListItemText primary={t("Show Proxy Groups Inline")} />
           <GuardState
