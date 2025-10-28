@@ -61,10 +61,17 @@ export const ProxyGroups = (props: Props) => {
   }>({ open: false, message: "" });
 
   const { verge } = useVerge();
-  const { proxies: proxiesData, proxyHydration } = useAppData();
+  const {
+    proxies: proxiesData,
+    proxyHydration,
+    proxyTargetProfileId,
+    proxyDisplayProfileId,
+    isProxyRefreshPending,
+  } = useAppData();
   const groups = proxiesData?.groups;
   const availableGroups = useMemo(() => groups ?? [], [groups]);
-
+  const showHydrationOverlay = isProxyRefreshPending;
+  const pendingProfileSwitch = proxyTargetProfileId !== proxyDisplayProfileId;
   const defaultRuleGroup = useMemo(() => {
     if (isChainMode && mode === "rule" && availableGroups.length > 0) {
       return availableGroups[0].name;
@@ -91,6 +98,20 @@ export const ProxyGroups = (props: Props) => {
       />
     );
   }, [proxyHydration, t]);
+
+  const overlayMessage = useMemo(() => {
+    if (!showHydrationOverlay) return null;
+
+    if (pendingProfileSwitch) {
+      return t("Loading proxy data for the selected profile...");
+    }
+
+    if (proxyHydration === "snapshot") {
+      return t("Preparing proxy snapshot...");
+    }
+
+    return t("Syncing proxy data...");
+  }, [showHydrationOverlay, pendingProfileSwitch, proxyHydration, t]);
 
   const { renderList, onProxies, onHeadState } = useRenderList(
     mode,
@@ -581,7 +602,13 @@ export const ProxyGroups = (props: Props) => {
 
   return (
     <div
-      style={{ position: "relative", height: "100%", willChange: "transform" }}
+      style={{
+        position: "relative",
+        height: "100%",
+        willChange: "transform",
+        opacity: showHydrationOverlay ? 0.45 : 1,
+        transition: "opacity 120ms ease",
+      }}
     >
       {hydrationChip && (
         <Box
@@ -636,6 +663,38 @@ export const ProxyGroups = (props: Props) => {
         )}
       />
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
+      {showHydrationOverlay && overlayMessage && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 3,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            backgroundColor: "rgba(8, 8, 8, 0.12)",
+          }}
+        >
+          <Box
+            sx={{
+              px: 2.5,
+              py: 1.5,
+              borderRadius: 1,
+              bgcolor: "background.paper",
+              boxShadow: 3,
+            }}
+          >
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontWeight: 500 }}
+            >
+              {overlayMessage}
+            </Typography>
+          </Box>
+        </Box>
+      )}
     </div>
   );
 };

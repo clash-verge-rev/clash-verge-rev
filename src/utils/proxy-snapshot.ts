@@ -14,6 +14,9 @@ const createProxyItem = (
   history: [],
   provider: partial.provider,
   testUrl: partial.testUrl,
+  hidden: partial.hidden,
+  icon: partial.icon,
+  fixed: partial.fixed,
 });
 
 const createGroupItem = (
@@ -182,7 +185,10 @@ export const createProxySnapshotFromProfile = (
     );
     const unique = Array.from(new Set(globalRefs));
     const all = unique.map((name) => ensureProxyItem(proxyMap, name));
-    global = createGroupItem("GLOBAL", all, { type: "Selector" });
+    global = createGroupItem("GLOBAL", all, {
+      type: "Selector",
+      hidden: true,
+    });
     groups.unshift(global);
   }
 

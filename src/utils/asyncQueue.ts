@@ -18,7 +18,11 @@ export class AsyncEventQueue {
 
 export const nextTick = () =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, 0);
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(resolve);
+    } else {
+      Promise.resolve().then(() => resolve());
+    }
   });
 
 export const afterPaint = () =>

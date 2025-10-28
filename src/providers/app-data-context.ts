@@ -11,6 +11,9 @@ import { ProxiesView } from "@/services/cmds";
 export interface AppDataContextType {
   proxies: ProxiesView | null;
   proxyHydration: "none" | "snapshot" | "live";
+  proxyTargetProfileId: string | null;
+  proxyDisplayProfileId: string | null;
+  isProxyRefreshPending: boolean;
   clashConfig: BaseConfig;
   rules: Rule[];
   sysproxy: any;

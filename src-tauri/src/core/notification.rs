@@ -4,7 +4,8 @@ use parking_lot::RwLock;
 use smartstring::alias::String;
 use std::{
     sync::{
-        atomic::{AtomicU64, Ordering},
+        Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc,
     },
     thread,
@@ -58,6 +59,12 @@ struct EventStats {
     last_error_time: RwLock<Option<Instant>>,
 }
 
+#[derive(Debug, Default)]
+struct BufferedProxies {
+    pending: parking_lot::Mutex<Option<serde_json::Value>>,
+    in_flight: AtomicBool,
+}
+
 #[derive(Debug, Clone)]
 pub struct ErrorMessage {
     pub status: String,
@@ -72,6 +79,7 @@ pub struct NotificationSystem {
     pub(super) is_running: bool,
     stats: EventStats,
     emergency_mode: RwLock<bool>,
+    proxies_buffer: Arc<BufferedProxies>,
 }
 
 impl Default for NotificationSystem {
@@ -88,6 +96,7 @@ impl NotificationSystem {
             is_running: false,
             stats: EventStats::default(),
             emergency_mode: RwLock::new(false),
+            proxies_buffer: Arc::new(BufferedProxies::default()),
         }
     }
 
@@ -140,70 +149,113 @@ impl NotificationSystem {
         }
 
         let event_label = Self::describe_event(&event);
-        logging!(
-            info,
-            Type::Frontend,
-            "Queueing event for async emit: {}",
-            event_label
-        );
 
-        let (event_name, payload_result) = system.serialize_event(event);
-        let payload = match payload_result {
-            Ok(value) => value,
-            Err(err) => {
-                logging!(
-                    warn,
-                    Type::Frontend,
-                    "Failed to serialize event {}: {}",
-                    event_name,
-                    err
-                );
-                return;
-            }
-        };
-
-        logging!(
-            info,
-            Type::Frontend,
-            "Async emit scheduled after delay: {}",
-            event_name
-        );
-        async_runtime::spawn(async move {
-            let _guard = EMIT_SERIALIZER.lock().await;
-            logging!(
-                info,
-                Type::Frontend,
-                "Async emit acquired serializer: {}",
-                event_name
-            );
-            let start = Instant::now();
-            sleep(Duration::from_millis(50)).await;
-            logging!(
-                info,
-                Type::Frontend,
-                "Async emit invoking emit_to: {} (delay {:?})",
-                event_name,
-                start.elapsed()
-            );
-            let emit_start = Instant::now();
-            if let Err(err) = Self::emit_via_app(event_name, payload).await {
-                logging!(
-                    warn,
-                    Type::Frontend,
-                    "Async emit failed: {} after {:?}",
-                    err,
-                    emit_start.elapsed()
-                );
-            } else {
+        match event {
+            FrontendEvent::ProxiesUpdated { payload } => {
                 logging!(
                     info,
                     Type::Frontend,
-                    "Async emit completed: {} (emit duration {:?})",
-                    event_name,
-                    emit_start.elapsed()
+                    "Queueing proxies-updated event for buffered emit: {}",
+                    event_label
                 );
+                system.enqueue_proxies_updated(payload);
             }
-        });
+            other => {
+                logging!(
+                    info,
+                    Type::Frontend,
+                    "Queueing event for async emit: {}",
+                    event_label
+                );
+
+                let (event_name, payload_result) = system.serialize_event(other);
+                let payload = match payload_result {
+                    Ok(value) => value,
+                    Err(err) => {
+                        logging!(
+                            warn,
+                            Type::Frontend,
+                            "Failed to serialize event {}: {}",
+                            event_name,
+                            err
+                        );
+                        return;
+                    }
+                };
+
+                logging!(
+                    info,
+                    Type::Frontend,
+                    "Async emit scheduled after delay: {}",
+                    event_name
+                );
+                async_runtime::spawn(async move {
+                    let _guard = EMIT_SERIALIZER.lock().await;
+                    logging!(
+                        info,
+                        Type::Frontend,
+                        "Async emit acquired serializer: {}",
+                        event_name
+                    );
+                    let start = Instant::now();
+                    sleep(Duration::from_millis(50)).await;
+                    logging!(
+                        info,
+                        Type::Frontend,
+                        "Async emit invoking emit_to: {} (delay {:?})",
+                        event_name,
+                        start.elapsed()
+                    );
+                    let emit_start = Instant::now();
+                    if let Err(err) = Self::emit_via_app(event_name, payload).await {
+                        logging!(
+                            warn,
+                            Type::Frontend,
+                            "Async emit failed: {} after {:?}",
+                            err,
+                            emit_start.elapsed()
+                        );
+                    } else {
+                        logging!(
+                            info,
+                            Type::Frontend,
+                            "Async emit completed: {} (emit duration {:?})",
+                            event_name,
+                            emit_start.elapsed()
+                        );
+                    }
+                });
+            }
+        }
+    }
+
+    fn enqueue_proxies_updated(&self, payload: serde_json::Value) {
+        let replaced = {
+            let mut slot = self.proxies_buffer.pending.lock();
+            let had_pending = slot.is_some();
+            *slot = Some(payload);
+            had_pending
+        };
+
+        if replaced {
+            logging!(
+                info,
+                Type::Frontend,
+                "Replaced pending proxies-updated payload with latest snapshot"
+            );
+        }
+
+        if self
+            .proxies_buffer
+            .in_flight
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+            .is_ok()
+        {
+            let buffer = Arc::clone(&self.proxies_buffer);
+            async_runtime::spawn(async move {
+                Self::flush_proxies(buffer).await;
+            });
+        }
     }
 
     fn should_skip_event(&self, event: &FrontendEvent) -> bool {
@@ -239,6 +291,67 @@ impl NotificationSystem {
         .await
         .map_err(|e| String::from(format!("Join error: {}", e)))?
         .map_err(String::from)
+    }
+
+    async fn flush_proxies(buffer: Arc<BufferedProxies>) {
+        const EVENT_NAME: &str = "proxies-updated";
+
+        loop {
+            let payload_opt = {
+                let mut guard = buffer.pending.lock();
+                guard.take()
+            };
+
+            let Some(payload) = payload_opt else {
+                buffer.in_flight.store(false, Ordering::Release);
+
+                if buffer.pending.lock().is_some()
+                    && buffer
+                        .in_flight
+                        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+                        .is_ok()
+                {
+                    continue;
+                }
+
+                break;
+            };
+
+            let _guard = EMIT_SERIALIZER.lock().await;
+            logging!(
+                info,
+                Type::Frontend,
+                "Buffered proxies emit acquired serializer: {}",
+                EVENT_NAME
+            );
+            let start = Instant::now();
+            sleep(Duration::from_millis(50)).await;
+            logging!(
+                info,
+                Type::Frontend,
+                "Buffered proxies emit invoking emit_to: {} (delay {:?})",
+                EVENT_NAME,
+                start.elapsed()
+            );
+            let emit_start = Instant::now();
+            if let Err(err) = Self::emit_via_app(EVENT_NAME, payload).await {
+                logging!(
+                    warn,
+                    Type::Frontend,
+                    "Buffered proxies emit failed: {} after {:?}",
+                    err,
+                    emit_start.elapsed()
+                );
+            } else {
+                logging!(
+                    info,
+                    Type::Frontend,
+                    "Buffered proxies emit completed: {} (emit duration {:?})",
+                    EVENT_NAME,
+                    emit_start.elapsed()
+                );
+            }
+        }
     }
 
     fn describe_event(event: &FrontendEvent) -> String {

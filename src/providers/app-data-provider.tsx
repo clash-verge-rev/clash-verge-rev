@@ -1,5 +1,5 @@
 ﻿import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
 import {
   getBaseConfig,
@@ -14,6 +14,7 @@ import {
   getRunningMode,
   readProfileFile,
   getSystemProxy,
+  type ProxiesView,
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
 import {
@@ -34,6 +35,7 @@ export const AppDataProvider = ({
   const { verge } = useVerge();
   const proxyView = useProxyStore((state) => state.data);
   const proxyHydration = useProxyStore((state) => state.hydration);
+  const proxyProfileId = useProxyStore((state) => state.lastProfileId);
   const setProxySnapshot = useProxyStore((state) => state.setSnapshot);
 
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
@@ -344,6 +346,49 @@ export const AppDataProvider = ({
     seedProxySnapshot,
   ]);
 
+  const proxyTargetProfileId = proxyProfileId ?? null;
+  const displayProxyStateRef = useRef<{
+    view: ProxiesView | null;
+    profileId: string | null;
+  }>({
+    view: proxyView,
+    profileId: proxyTargetProfileId,
+  });
+
+  const currentDisplay = displayProxyStateRef.current;
+
+  if (!proxyView) {
+    if (
+      currentDisplay.view !== null ||
+      currentDisplay.profileId !== proxyTargetProfileId
+    ) {
+      displayProxyStateRef.current = {
+        view: null,
+        profileId: proxyTargetProfileId,
+      };
+    }
+  } else if (proxyHydration === "live") {
+    if (
+      currentDisplay.view !== proxyView ||
+      currentDisplay.profileId !== proxyTargetProfileId
+    ) {
+      displayProxyStateRef.current = {
+        view: proxyView,
+        profileId: proxyTargetProfileId,
+      };
+    }
+  } else if (!currentDisplay.view) {
+    displayProxyStateRef.current = {
+      view: proxyView,
+      profileId: proxyTargetProfileId,
+    };
+  }
+  const displayProxyState = displayProxyStateRef.current;
+  const proxyDisplayProfileId = displayProxyState.profileId;
+  const proxiesForRender = displayProxyState.view ?? proxyView;
+  const isProxyRefreshPending =
+    proxyHydration !== "live" || proxyTargetProfileId !== proxyDisplayProfileId;
+
   const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
     "getSystemProxy",
     getSystemProxy,
@@ -415,8 +460,11 @@ export const AppDataProvider = ({
 
     return {
       // Data
-      proxies: proxyView,
+      proxies: proxiesForRender,
       proxyHydration,
+      proxyTargetProfileId,
+      proxyDisplayProfileId,
+      isProxyRefreshPending,
       clashConfig,
       rules: rulesData?.rules || [],
       sysproxy,
@@ -439,8 +487,11 @@ export const AppDataProvider = ({
       refreshAll,
     } as AppDataContextType;
   }, [
-    proxyView,
+    proxiesForRender,
     proxyHydration,
+    proxyTargetProfileId,
+    proxyDisplayProfileId,
+    isProxyRefreshPending,
     clashConfig,
     rulesData,
     sysproxy,
