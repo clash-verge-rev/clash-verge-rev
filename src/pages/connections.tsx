@@ -1,10 +1,16 @@
 import {
-  PauseCircleOutlineRounded,
-  PlayCircleOutlineRounded,
+  Clear,
   TableChartRounded,
   TableRowsRounded,
 } from "@mui/icons-material";
-import { Box, Button, IconButton, MenuItem } from "@mui/material";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Fab,
+  IconButton,
+  MenuItem,
+} from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,28 +27,24 @@ import {
 import { ConnectionItem } from "@/components/connection/connection-item";
 import { ConnectionTable } from "@/components/connection/connection-table";
 import { useConnectionData } from "@/hooks/use-connection-data";
-import { useVisibility } from "@/hooks/use-visibility";
 import { useConnectionSetting } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
-
-const initConn: IConnections = {
-  uploadTotal: 0,
-  downloadTotal: 0,
-  connections: [],
-};
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
 const ConnectionsPage = () => {
   const { t } = useTranslation();
-  const pageVisible = useVisibility();
   const [match, setMatch] = useState<(input: string) => boolean>(
     () => () => true,
   );
   const [curOrderOpt, setCurOrderOpt] = useState("Default");
+  const [connectionsType, setConnectionsType] = useState<"active" | "closed">(
+    "active",
+  );
 
   const {
     response: { data: connections },
+    clearClosedConnections,
   } = useConnectionData();
 
   const [setting, setSetting] = useConnectionSetting();
@@ -65,43 +67,23 @@ const ConnectionsPage = () => {
     [],
   );
 
-  const [isPaused, setIsPaused] = useState(false);
-  const [frozenData, setFrozenData] = useState<IConnections | null>(null);
-
-  // 使用全局连接数据
-  const displayData = useMemo(() => {
-    if (!pageVisible) return initConn;
-
-    if (isPaused) {
-      return (
-        frozenData ?? {
-          uploadTotal: connections?.uploadTotal,
-          downloadTotal: connections?.downloadTotal,
-          connections: connections?.connections,
-        }
-      );
-    }
-
-    return {
-      uploadTotal: connections?.uploadTotal,
-      downloadTotal: connections?.downloadTotal,
-      connections: connections?.connections,
-    };
-  }, [isPaused, frozenData, connections, pageVisible]);
-
   const [filterConn] = useMemo(() => {
     const orderFunc = orderOpts[curOrderOpt];
-    let conns = displayData.connections?.filter((conn) => {
+    const conns =
+      (connectionsType === "active"
+        ? connections?.activeConnections
+        : connections?.closedConnections) ?? [];
+    let matchConns = conns.filter((conn) => {
       const { host, destinationIP, process } = conn.metadata;
       return (
         match(host || "") || match(destinationIP || "") || match(process || "")
       );
     });
 
-    if (orderFunc) conns = orderFunc(conns ?? []);
+    if (orderFunc) matchConns = orderFunc(matchConns ?? []);
 
-    return [conns];
-  }, [displayData, match, curOrderOpt, orderOpts]);
+    return [matchConns];
+  }, [connections, connectionsType, match, curOrderOpt, orderOpts]);
 
   const onCloseAll = useLockFn(closeAllConnections);
 
@@ -110,21 +92,6 @@ const ConnectionsPage = () => {
   const handleSearch = useCallback((match: (content: string) => boolean) => {
     setMatch(() => match);
   }, []);
-
-  const handlePauseToggle = useCallback(() => {
-    setIsPaused((prev) => {
-      if (!prev) {
-        setFrozenData({
-          uploadTotal: connections?.uploadTotal ?? 0,
-          downloadTotal: connections?.downloadTotal ?? 0,
-          connections: connections?.connections ?? [],
-        });
-      } else {
-        setFrozenData(null);
-      }
-      return !prev;
-    });
-  }, [connections]);
 
   return (
     <BasePage
@@ -140,10 +107,10 @@ const ConnectionsPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ mx: 1 }}>
-            {t("Downloaded")}: {parseTraffic(displayData.downloadTotal)}
+            {t("Downloaded")}: {parseTraffic(connections?.downloadTotal)}
           </Box>
           <Box sx={{ mx: 1 }}>
-            {t("Uploaded")}: {parseTraffic(displayData.uploadTotal)}
+            {t("Uploaded")}: {parseTraffic(connections?.uploadTotal)}
           </Box>
           <IconButton
             color="inherit"
@@ -160,18 +127,6 @@ const ConnectionsPage = () => {
               <TableRowsRounded titleAccess={t("List View")} />
             ) : (
               <TableChartRounded titleAccess={t("Table View")} />
-            )}
-          </IconButton>
-          <IconButton
-            color="inherit"
-            size="small"
-            onClick={handlePauseToggle}
-            title={isPaused ? t("Resume") : t("Pause")}
-          >
-            {isPaused ? (
-              <PlayCircleOutlineRounded />
-            ) : (
-              <PauseCircleOutlineRounded />
             )}
           </IconButton>
           <Button size="small" variant="contained" onClick={onCloseAll}>
@@ -194,6 +149,22 @@ const ConnectionsPage = () => {
           zIndex: 2,
         }}
       >
+        <ButtonGroup sx={{ mr: 1, flexBasis: "content" }}>
+          <Button
+            size="small"
+            variant={connectionsType === "active" ? "contained" : "outlined"}
+            onClick={() => setConnectionsType("active")}
+          >
+            {t("Active")} {connections?.activeConnections.length}
+          </Button>
+          <Button
+            size="small"
+            variant={connectionsType === "closed" ? "contained" : "outlined"}
+            onClick={() => setConnectionsType("closed")}
+          >
+            {t("Closed")} {connections?.closedConnections.length}
+          </Button>
+        </ButtonGroup>
         {!isTableLayout && (
           <BaseStyledSelect
             value={curOrderOpt}
@@ -232,6 +203,17 @@ const ConnectionsPage = () => {
         />
       )}
       <ConnectionDetail ref={detailRef} />
+      {connectionsType === "closed" && (
+        <Fab
+          variant="extended"
+          sx={{ position: "absolute", right: 16, bottom: 16 }}
+          color="primary"
+          onClick={() => clearClosedConnections()}
+        >
+          <Clear sx={{ mr: 1 }} />
+          {t("Clear")}
+        </Fab>
+      )}
     </BasePage>
   );
 };

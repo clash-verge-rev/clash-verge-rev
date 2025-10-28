@@ -187,7 +187,7 @@ export const EnhancedTrafficStats = () => {
       uploadTotalUnit,
       downloadTotal,
       downloadTotalUnit,
-      connectionsCount: connections?.connections.length,
+      connectionsCount: connections?.activeConnections.length,
     };
   }, [traffic, memory, connections]);
 
