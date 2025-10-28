@@ -5,6 +5,7 @@ use tauri_plugin_mihomo::models::Proxies;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
 use crate::config::PrfSelected;
+use crate::core::service;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
 use crate::utils::window_manager::WindowManager;
@@ -297,6 +298,9 @@ impl Tray {
         let verge = Config::verge().await.latest_ref().clone();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        let tun_mode_available = cmd::system::is_admin().unwrap_or_default()
+            || service::is_service_available().await.is_ok();
+        println!("tun_mode_available: {}", tun_mode_available);
         let mode = {
             Config::clash()
                 .await
@@ -322,6 +326,7 @@ impl Tray {
                         Some(mode.as_str()),
                         *system_proxy,
                         *tun_mode,
+                        tun_mode_available,
                         profile_uid_and_name,
                         is_lightweight_mode,
                     )
@@ -837,6 +842,7 @@ async fn create_tray_menu(
     mode: Option<&str>,
     system_proxy_enabled: bool,
     tun_mode_enabled: bool,
+    tun_mode_available: bool,
     profile_uid_and_name: Vec<(String, String)>,
     is_lightweight_mode: bool,
 ) -> Result<tauri::menu::Menu<Wry>> {
@@ -980,7 +986,7 @@ async fn create_tray_menu(
         app_handle,
         MenuIds::TUN_MODE,
         &texts.tun_mode,
-        true,
+        tun_mode_available,
         tun_mode_enabled,
         hotkeys.get("toggle_tun_mode").map(|s| s.as_str()),
     )?;

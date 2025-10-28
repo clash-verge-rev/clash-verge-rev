@@ -3,7 +3,7 @@ use crate::{
     cmd,
     config::{PrfItem, profiles_append_item_safe},
     constants::{files, timing},
-    core::{CoreManager, handle, service, validate::CoreConfigValidator},
+    core::{CoreManager, handle, service, tray, validate::CoreConfigValidator},
     enhance, logging, logging_error,
     utils::{Draft, dirs, help, logging::Type},
 };
@@ -63,6 +63,7 @@ impl Config {
             let verge = Config::verge().await;
             verge.draft_mut().enable_tun_mode = Some(false);
             verge.apply();
+            let _ = tray::Tray::global().update_tray_display().await;
 
             // 分离数据获取和异步调用避免Send问题
             let verge_data = Config::verge().await.latest_ref().clone();
