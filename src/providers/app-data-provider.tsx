@@ -1,4 +1,4 @@
-import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
 import {
@@ -19,11 +19,7 @@ import {
   type ProfileSwitchStatus,
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
-import {
-  ensureProxyEventBridge,
-  fetchLiveProxies,
-  useProxyStore,
-} from "@/stores/proxy-store";
+import { fetchLiveProxies, useProxyStore } from "@/stores/proxy-store";
 import { createProxySnapshotFromProfile } from "@/utils/proxy-snapshot";
 
 import { AppDataContext, AppDataContextType } from "./app-data-context";
@@ -97,33 +93,13 @@ export const AppDataProvider = ({
   );
 
   useEffect(() => {
-    let unlistenBridge: UnlistenFn | null = null;
-
-    ensureProxyEventBridge()
-      .then((unlisten) => {
-        unlistenBridge = unlisten;
-      })
-      .catch((error) => {
-        console.error(
-          "[DataProvider] Failed to establish proxy bridge:",
-          error,
-        );
-      });
-
     fetchLiveProxies().catch((error) => {
       console.error("[DataProvider] Initial proxy fetch failed:", error);
     });
-
-    return () => {
-      if (unlistenBridge) {
-        void unlistenBridge();
-      }
-    };
   }, []);
 
   const isUnmountedRef = useRef(false);
   const scheduledTimeoutsRef = useRef<Set<number>>(new Set());
-  const lastRefreshTimesRef = useRef({ proxy: 0, clash: 0 });
   const switchMetaRef = useRef<{
     pendingProfileId: string | null;
     lastResultFinishedAt: number | null;
@@ -232,8 +208,6 @@ export const AppDataProvider = ({
     refreshRuleProviders,
   ]);
 
-  const REFRESH_THROTTLE = 800;
-
   useEffect(() => {
     const cleanupFns: Array<() => void> = [];
 
@@ -248,10 +222,6 @@ export const AppDataProvider = ({
     };
 
     const handleProfileUpdateCompleted = (_: { payload: { uid: string } }) => {
-      const now = Date.now();
-      lastRefreshTimesRef.current.proxy = now;
-      lastRefreshTimesRef.current.clash = now;
-
       scheduleTimeout(() => {
         queueProxyRefresh("profile-update-completed");
         void refreshProxyProviders()
@@ -270,26 +240,6 @@ export const AppDataProvider = ({
       }, 120);
     };
 
-    const handleRefreshClash = () => {
-      const now = Date.now();
-      if (now - lastRefreshTimesRef.current.clash <= REFRESH_THROTTLE) return;
-
-      lastRefreshTimesRef.current.clash = now;
-      scheduleTimeout(() => {
-        queueProxyRefresh("refresh-clash");
-      }, 200);
-    };
-
-    const handleRefreshProxy = () => {
-      const now = Date.now();
-      if (now - lastRefreshTimesRef.current.proxy <= REFRESH_THROTTLE) return;
-
-      lastRefreshTimesRef.current.proxy = now;
-      scheduleTimeout(() => {
-        queueProxyRefresh("refresh-proxy");
-      }, 200);
-    };
-
     listen<{ uid: string }>(
       "profile-update-completed",
       handleProfileUpdateCompleted,
@@ -298,24 +248,6 @@ export const AppDataProvider = ({
       .catch((error) =>
         console.error(
           "[AppDataProvider] failed to attach profile update listeners:",
-          error,
-        ),
-      );
-
-    listen("verge://refresh-clash-config", handleRefreshClash)
-      .then(registerCleanup)
-      .catch((error) =>
-        console.warn(
-          "[AppDataProvider] failed to register clash refresh listener",
-          error,
-        ),
-      );
-
-    listen("verge://refresh-proxy-config", handleRefreshProxy)
-      .then(registerCleanup)
-      .catch((error) =>
-        console.warn(
-          "[AppDataProvider] failed to register proxy refresh listener",
           error,
         ),
       );
@@ -330,8 +262,6 @@ export const AppDataProvider = ({
           handleProfileUpdateCompleted({ payload });
         }) as EventListener,
       ],
-      ["verge://refresh-clash-config", handleRefreshClash],
-      ["verge://refresh-proxy-config", handleRefreshProxy],
     ];
 
     fallbackHandlers.forEach(([eventName, handler]) => {
