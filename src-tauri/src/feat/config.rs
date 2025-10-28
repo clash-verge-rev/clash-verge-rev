@@ -94,7 +94,7 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
     let http_enabled = patch.verge_http_enabled;
     let http_port = patch.verge_port;
     let enable_tray_speed = patch.enable_tray_speed;
-    let enable_tray_icon = patch.enable_tray_icon;
+    // let enable_tray_icon = patch.enable_tray_icon;
     let enable_global_hotkey = patch.enable_global_hotkey;
     let tray_event = &patch.tray_event;
     let home_cards = patch.home_cards.clone();
@@ -149,7 +149,7 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
         || tun_tray_icon.is_some()
         || tray_icon.is_some()
         || enable_tray_speed.is_some()
-        || enable_tray_icon.is_some()
+    // || enable_tray_icon.is_some()
     {
         update_flags |= UpdateFlags::SystrayIcon as i32;
     }

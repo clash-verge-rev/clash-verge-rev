@@ -1,11 +1,11 @@
 use crate::utils::i18n::t;
-use smartstring::alias::String;
+use std::sync::Arc;
 
 macro_rules! define_menu {
     ($($field:ident => $const_name:ident, $id:expr, $text:expr),+ $(,)?) => {
         #[derive(Debug)]
         pub struct MenuTexts {
-            $(pub $field: String,)+
+            $(pub $field: Arc<str>,)+
         }
 
         pub struct MenuIds;

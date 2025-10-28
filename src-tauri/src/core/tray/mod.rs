@@ -23,6 +23,7 @@ use futures::future::join_all;
 use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::{
     fs,
     sync::atomic::{AtomicBool, Ordering},
@@ -798,7 +799,7 @@ fn create_proxy_menu_item(
     app_handle: &AppHandle,
     show_proxy_groups_inline: bool,
     proxy_submenus: Vec<Submenu<Wry>>,
-    proxies_text: &String,
+    proxies_text: &Arc<str>,
 ) -> Result<ProxyMenuItem> {
     // 创建代理主菜单
     let (proxies_submenu, inline_proxy_items) = if show_proxy_groups_inline {
