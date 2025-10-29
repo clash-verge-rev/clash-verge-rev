@@ -5,7 +5,7 @@ use smartstring::alias::String as SmartString;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, Notify};
 
 pub(super) const SWITCH_JOB_TIMEOUT: Duration = Duration::from_secs(30);
 pub(super) const SWITCH_CLEANUP_TIMEOUT: Duration = Duration::from_secs(5);
@@ -83,23 +83,37 @@ impl Drop for SwitchScope<'_> {
 }
 
 #[derive(Debug, Clone)]
-pub(super) struct SwitchCancellation(Arc<AtomicBool>);
+pub(super) struct SwitchCancellation {
+    flag: Arc<AtomicBool>,
+    notify: Arc<Notify>,
+}
 
 impl SwitchCancellation {
     pub(super) fn new() -> Self {
-        Self(Arc::new(AtomicBool::new(false)))
+        Self {
+            flag: Arc::new(AtomicBool::new(false)),
+            notify: Arc::new(Notify::new()),
+        }
     }
 
     pub(super) fn cancel(&self) {
-        self.0.store(true, Ordering::SeqCst);
+        self.flag.store(true, Ordering::SeqCst);
+        self.notify.notify_waiters();
     }
 
     pub(super) fn is_cancelled(&self) -> bool {
-        self.0.load(Ordering::SeqCst)
+        self.flag.load(Ordering::SeqCst)
     }
 
     pub(super) fn same_token(&self, other: &SwitchCancellation) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
+        Arc::ptr_eq(&self.flag, &other.flag)
+    }
+
+    pub(super) async fn cancelled_future(&self) {
+        if self.is_cancelled() {
+            return;
+        }
+        self.notify.notified().await;
     }
 }
 

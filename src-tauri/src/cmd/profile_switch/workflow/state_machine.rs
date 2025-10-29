@@ -1,17 +1,21 @@
 use super::{CmdResult, describe_panic_payload, restore_previous_profile, validate_profile_yaml};
 use crate::{
-    cmd::profile_switch::state::{SwitchHeartbeat, SwitchManager, SwitchRequest, SwitchScope},
+    cmd::profile_switch::state::{
+        SwitchCancellation, SwitchHeartbeat, SwitchManager, SwitchRequest, SwitchScope,
+    },
     config::{Config, IProfiles, profiles::profiles_save_file_safe},
     core::{CoreManager, handle, tray::Tray},
     logging,
     process::AsyncHandler,
     utils::logging::Type,
 };
-use futures::FutureExt;
+use anyhow::Error;
+use futures::{FutureExt, future};
 use smartstring::alias::String as SmartString;
 use std::{
     mem,
     panic::AssertUnwindSafe,
+    pin::Pin,
     time::{Duration, Instant},
 };
 use tokio::{sync::MutexGuard, time};
@@ -317,40 +321,57 @@ impl SwitchStateMachine {
         let update_future = CoreManager::global().update_config();
         tokio::pin!(update_future);
 
-        let staged_update = async {
-            loop {
-                tokio::select! {
-                    res = &mut update_future => break res,
-                    _ = ticker.tick() => {
-                        let elapsed_ms = start.elapsed().as_millis();
-                        heartbeat.touch();
-                        match task_id {
-                            Some(id) => logging!(
-                                debug,
-                                Type::Cmd,
-                                "Switch task {} (profile={}) UpdateCore still running (elapsed={}ms)",
-                                id,
-                                profile,
-                                elapsed_ms
-                            ),
-                            None => logging!(
-                                debug,
-                                Type::Cmd,
-                                "Profile patch {} UpdateCore still running (elapsed={}ms)",
-                                profile,
-                                elapsed_ms
-                            ),
-                        }
+        let timeout = time::sleep(Duration::from_secs(30));
+        tokio::pin!(timeout);
+
+        let cancel_token = self.ctx.cancel_token();
+        let mut cancel_notifier: Pin<Box<dyn std::future::Future<Output = ()> + Send>> =
+            match cancel_token {
+                Some(token) => Box::pin(async move {
+                    token.cancelled_future().await;
+                }),
+                None => Box::pin(future::pending()),
+            };
+
+        enum UpdateOutcome {
+            Finished(Result<(bool, SmartString), Error>),
+            Timeout,
+            Cancelled,
+        }
+
+        let update_outcome = loop {
+            tokio::select! {
+                res = &mut update_future => break UpdateOutcome::Finished(res),
+                _ = &mut timeout => break UpdateOutcome::Timeout,
+                _ = &mut cancel_notifier => break UpdateOutcome::Cancelled,
+                _ = ticker.tick() => {
+                    let elapsed_ms = start.elapsed().as_millis();
+                    heartbeat.touch();
+                    match task_id {
+                        Some(id) => logging!(
+                            debug,
+                            Type::Cmd,
+                            "Switch task {} (profile={}) UpdateCore still running (elapsed={}ms)",
+                            id,
+                            profile,
+                            elapsed_ms
+                        ),
+                        None => logging!(
+                            debug,
+                            Type::Cmd,
+                            "Profile patch {} UpdateCore still running (elapsed={}ms)",
+                            profile,
+                            elapsed_ms
+                        ),
                     }
                 }
             }
         };
 
-        let update_result = time::timeout(Duration::from_secs(30), staged_update).await;
         let elapsed_ms = start.elapsed().as_millis();
 
-        let outcome = match update_result {
-            Ok(Ok((true, _))) => {
+        let outcome = match update_outcome {
+            UpdateOutcome::Finished(Ok((true, _))) => {
                 logging!(
                     info,
                     Type::Cmd,
@@ -359,7 +380,7 @@ impl SwitchStateMachine {
                 );
                 CoreUpdateOutcome::Success
             }
-            Ok(Ok((false, msg))) => {
+            UpdateOutcome::Finished(Ok((false, msg))) => {
                 logging!(
                     warn,
                     Type::Cmd,
@@ -371,7 +392,7 @@ impl SwitchStateMachine {
                     message: msg.to_string(),
                 }
             }
-            Ok(Err(err)) => {
+            UpdateOutcome::Finished(Err(err)) => {
                 logging!(
                     error,
                     Type::Cmd,
@@ -383,7 +404,7 @@ impl SwitchStateMachine {
                     message: err.to_string(),
                 }
             }
-            Err(_) => {
+            UpdateOutcome::Timeout => {
                 logging!(
                     error,
                     Type::Cmd,
@@ -391,6 +412,18 @@ impl SwitchStateMachine {
                     elapsed_ms
                 );
                 CoreUpdateOutcome::Timeout
+            }
+            UpdateOutcome::Cancelled => {
+                self.ctx.log_cancelled("during core update");
+                logging!(
+                    info,
+                    Type::Cmd,
+                    "Core configuration update cancelled after {}ms",
+                    elapsed_ms
+                );
+                self.ctx.release_locks();
+                Config::profiles().await.discard();
+                return Ok(SwitchState::Complete(false));
             }
         };
 
@@ -716,6 +749,10 @@ impl SwitchContext {
         self.profiles_patch
             .take()
             .ok_or_else(|| "profiles patch already consumed".into())
+    }
+
+    fn cancel_token(&self) -> Option<SwitchCancellation> {
+        self.request.as_ref().map(|req| req.cancel_token().clone())
     }
 
     fn cancelled(&self) -> bool {

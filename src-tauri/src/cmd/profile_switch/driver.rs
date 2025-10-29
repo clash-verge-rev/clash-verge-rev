@@ -244,9 +244,34 @@ fn handle_enqueue(
         return;
     }
 
+    if let Some(active) = state.active.as_ref() {
+        logging!(
+            debug,
+            Type::Cmd,
+            "Cancelling active switch task {} (profile={}) in favour of task {} -> {}",
+            active.task_id(),
+            active.profile_id(),
+            request.task_id(),
+            profile_key
+        );
+        active.cancel_token().cancel();
+    }
+
     state
         .queue
         .retain(|queued| queued.profile_id() != &profile_key);
+
+    if !state.queue.is_empty() {
+        logging!(
+            debug,
+            Type::Cmd,
+            "Collapsing {} pending switch request(s) before enqueuing task {} -> {}",
+            state.queue.len(),
+            request.task_id(),
+            profile_key
+        );
+        drop_pending_requests(state);
+    }
 
     state.queue.push_back(request.clone());
     if let Some(sender) = responder.take() {
