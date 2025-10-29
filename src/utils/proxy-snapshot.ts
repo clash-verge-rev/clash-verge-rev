@@ -61,6 +61,9 @@ const parseProxyEntry = (entry: any): IProxyItem | null => {
   });
 };
 
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
+
 const parseProxyGroup = (
   entry: any,
   proxyMap: Map<string, IProxyItem>,
@@ -69,21 +72,15 @@ const parseProxyGroup = (
   const name = entry.name;
   if (!name) return null;
 
-  const rawList: unknown[] = [
-    ...(Array.isArray(entry.proxies) ? entry.proxies : []),
-    ...(Array.isArray(entry.use) ? entry.use : []),
-  ];
+  const rawProxies: unknown[] = Array.isArray(entry.proxies)
+    ? entry.proxies
+    : [];
 
-  const uniqueNames = Array.from(
-    new Set(
-      rawList
-        .filter(
-          (item): item is string =>
-            typeof item === "string" && item.trim().length > 0,
-        )
-        .map((item) => item.trim()),
-    ),
-  );
+  const proxyRefs: string[] = rawProxies
+    .filter(isNonEmptyString)
+    .map((item) => item.trim());
+
+  const uniqueNames: string[] = Array.from(new Set(proxyRefs));
 
   const all = uniqueNames.map((proxyName) =>
     ensureProxyItem(proxyMap, proxyName),

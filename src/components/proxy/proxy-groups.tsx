@@ -672,7 +672,8 @@ export const ProxyGroups = (props: Props) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            pointerEvents: "none",
+            pointerEvents: "auto",
+            cursor: "wait",
             backgroundColor: "rgba(8, 8, 8, 0.12)",
           }}
         >
