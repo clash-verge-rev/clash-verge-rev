@@ -305,6 +305,7 @@ const ProfilePage = () => {
   );
   const taskMetaRef = useRef<Map<number, SwitchTaskMeta>>(new Map());
   const lastResultAtRef = useRef(0);
+  const initialLastResultSyncRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -539,6 +540,13 @@ const ProfilePage = () => {
     });
 
     const lastResult = switchStatus.lastResult ?? null;
+    if (initialLastResultSyncRef.current) {
+      initialLastResultSyncRef.current = false;
+      if (lastResult) {
+        lastResultAtRef.current = lastResult.finishedAt;
+      }
+    }
+
     if (lastResult && lastResult.finishedAt !== lastResultAtRef.current) {
       lastResultAtRef.current = lastResult.finishedAt;
       const { profileId, success, finishedAt, errorDetail } = lastResult;
@@ -602,9 +610,7 @@ const ProfilePage = () => {
             }
 
             if (operations.length > 0) {
-              setTimeout(() => {
-                void Promise.allSettled(operations);
-              }, 0);
+              void Promise.resolve().then(() => Promise.allSettled(operations));
             }
           } else {
             scheduleProfileMutate();
