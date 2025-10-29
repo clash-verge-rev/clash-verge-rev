@@ -141,9 +141,11 @@ export const useConnectionData = () => {
 
   const clearClosedConnections = () => {
     mutate(`$sub$${subscriptKey}`, {
-      activeConnections: response.data?.activeConnections,
+      uploadTotal: response.data?.uploadTotal ?? 0,
+      downloadTotal: response.data?.downloadTotal ?? 0,
+      activeConnections: response.data?.activeConnections ?? [],
       closedConnections: [],
-    });
+    } as ConnectionMonitorData);
   };
 
   return { response, refreshGetClashConnection, clearClosedConnections };
