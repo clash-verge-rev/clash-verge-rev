@@ -9,7 +9,6 @@ pub enum NotificationEvent<'a> {
     },
     SystemProxyToggled,
     TunModeToggled,
-    TunModeNeedService,
     LightweightModeEntered,
     AppQuit,
     #[cfg(target_os = "macos")]
@@ -51,12 +50,6 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
             notify(
                 &t("TunModeToggledTitle").await,
                 &t("TunModeToggledBody").await,
-            );
-        }
-        NotificationEvent::TunModeNeedService => {
-            notify(
-                &t("TunModeToggledTitle").await,
-                &t("TUN Mode Service Required").await,
             );
         }
         NotificationEvent::LightweightModeEntered => {
