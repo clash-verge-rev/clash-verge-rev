@@ -402,6 +402,17 @@ export const AppDataProvider = ({
         ),
       );
 
+    listen("verge://refresh-proxy-config", () => {
+      queueProxyRefresh("refresh-proxy-config-tauri", 500);
+    })
+      .then(registerCleanup)
+      .catch((error) =>
+        console.error(
+          "[AppDataProvider] failed to attach refresh-proxy-config listener:",
+          error,
+        ),
+      );
+
     const fallbackHandlers: Array<[string, EventListener]> = [
       [
         "profile-update-completed",
@@ -417,6 +428,12 @@ export const AppDataProvider = ({
         ((event: Event) => {
           const payload = (event as CustomEvent<ProxiesUpdatedPayload>).detail;
           handleProxiesUpdatedPayload(payload, "window");
+        }) as EventListener,
+      ],
+      [
+        "verge://refresh-proxy-config",
+        (() => {
+          queueProxyRefresh("refresh-proxy-config-window", 500);
         }) as EventListener,
       ],
     ];
