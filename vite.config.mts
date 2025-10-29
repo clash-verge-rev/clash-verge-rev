@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import legacy from "@vitejs/plugin-legacy";
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
 import monacoEditorPlugin, {
   type IMonacoEditorOpts,
 } from "vite-plugin-monaco-editor";
