@@ -39,12 +39,38 @@ impl CoreManager {
             return Ok((true, String::new()));
         }
 
+        let start = Instant::now();
+
         let _permit = self
             .update_semaphore
             .try_acquire()
             .map_err(|_| anyhow!("Config update already in progress"))?;
 
-        self.perform_config_update().await
+        let result = self.perform_config_update().await;
+
+        match &result {
+            Ok((success, msg)) => {
+                logging!(
+                    info,
+                    Type::Core,
+                    "[ConfigUpdate] Finished (success={}, elapsed={}ms, msg={})",
+                    success,
+                    start.elapsed().as_millis(),
+                    msg
+                );
+            }
+            Err(err) => {
+                logging!(
+                    error,
+                    Type::Core,
+                    "[ConfigUpdate] Failed after {}ms: {}",
+                    start.elapsed().as_millis(),
+                    err
+                );
+            }
+        }
+
+        result
     }
 
     fn should_update_config(&self) -> Result<bool> {
@@ -62,20 +88,73 @@ impl CoreManager {
     }
 
     async fn perform_config_update(&self) -> Result<(bool, String)> {
-        Config::generate().await?;
+        logging!(debug, Type::Core, "[ConfigUpdate] Pipeline start");
+        let total_start = Instant::now();
 
-        match CoreConfigValidator::global().validate_config().await {
+        let mut stage_timer = Instant::now();
+        Config::generate().await?;
+        logging!(
+            debug,
+            Type::Core,
+            "[ConfigUpdate] Generation completed in {}ms",
+            stage_timer.elapsed().as_millis()
+        );
+
+        stage_timer = Instant::now();
+        let validation_result = CoreConfigValidator::global().validate_config().await;
+        logging!(
+            debug,
+            Type::Core,
+            "[ConfigUpdate] Validation completed in {}ms",
+            stage_timer.elapsed().as_millis()
+        );
+
+        match validation_result {
             Ok((true, _)) => {
+                stage_timer = Instant::now();
                 let run_path = Config::generate_file(ConfigType::Run).await?;
+                logging!(
+                    debug,
+                    Type::Core,
+                    "[ConfigUpdate] Runtime file generated in {}ms",
+                    stage_timer.elapsed().as_millis()
+                );
+                stage_timer = Instant::now();
                 self.apply_config(run_path).await?;
+                logging!(
+                    debug,
+                    Type::Core,
+                    "[ConfigUpdate] Core apply completed in {}ms",
+                    stage_timer.elapsed().as_millis()
+                );
+                logging!(
+                    debug,
+                    Type::Core,
+                    "[ConfigUpdate] Pipeline succeeded in {}ms",
+                    total_start.elapsed().as_millis()
+                );
                 Ok((true, String::new()))
             }
             Ok((false, error_msg)) => {
                 Config::runtime().await.discard();
+                logging!(
+                    warn,
+                    Type::Core,
+                    "[ConfigUpdate] Validation reported failure after {}ms: {}",
+                    total_start.elapsed().as_millis(),
+                    error_msg
+                );
                 Ok((false, error_msg))
             }
             Err(e) => {
                 Config::runtime().await.discard();
+                logging!(
+                    error,
+                    Type::Core,
+                    "[ConfigUpdate] Validation errored after {}ms: {}",
+                    total_start.elapsed().as_millis(),
+                    e
+                );
                 Err(e)
             }
         }
@@ -88,17 +167,37 @@ impl CoreManager {
     pub(super) async fn apply_config(&self, path: PathBuf) -> Result<()> {
         let path_str = dirs::path_to_str(&path)?;
 
+        let reload_start = Instant::now();
         match self.reload_config(path_str).await {
             Ok(_) => {
                 Config::runtime().await.apply();
-                logging!(info, Type::Core, "Configuration applied");
+                logging!(
+                    debug,
+                    Type::Core,
+                    "Configuration applied (reload={}ms)",
+                    reload_start.elapsed().as_millis()
+                );
                 Ok(())
             }
             Err(err) if Self::should_restart_on_error(&err) => {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "Reload failed after {}ms with retryable error; restarting core: {}",
+                    reload_start.elapsed().as_millis(),
+                    err
+                );
                 self.retry_with_restart(path_str).await
             }
             Err(err) => {
                 Config::runtime().await.discard();
+                logging!(
+                    error,
+                    Type::Core,
+                    "Failed to apply config after {}ms: {}",
+                    reload_start.elapsed().as_millis(),
+                    err
+                );
                 Err(anyhow!("Failed to apply config: {}", err))
             }
         }

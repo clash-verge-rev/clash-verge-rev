@@ -576,6 +576,17 @@ const ProfilePage = () => {
           );
 
           if (success) {
+            scheduleProfileMutate();
+
+            if (notifySuccess) {
+              await afterPaint();
+              showNoticeRef.current?.(
+                "success",
+                tRef.current("Profile Switched"),
+                1000,
+              );
+            }
+
             const operations: Promise<unknown>[] = [];
             const mutateLogs = mutateLogsRef.current;
             if (mutateLogs) {
@@ -591,17 +602,9 @@ const ProfilePage = () => {
             }
 
             if (operations.length > 0) {
-              await Promise.allSettled(operations);
-            }
-
-            scheduleProfileMutate();
-            if (notifySuccess) {
-              await afterPaint();
-              showNoticeRef.current?.(
-                "success",
-                tRef.current("Profile Switched"),
-                1000,
-              );
+              setTimeout(() => {
+                void Promise.allSettled(operations);
+              }, 0);
             }
           } else {
             scheduleProfileMutate();

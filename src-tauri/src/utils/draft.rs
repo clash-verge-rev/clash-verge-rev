@@ -68,6 +68,13 @@ impl<T: Clone + ToOwned> Draft<Box<T>> {
         })
     }
 
+    /// 尝试获取最新只读视图，若当前持有写锁则返回 `None`
+    pub fn try_latest_ref(&self) -> Option<MappedRwLockReadGuard<'_, Box<T>>> {
+        self.inner
+            .try_read()
+            .map(|guard| RwLockReadGuard::map(guard, |inner| inner.1.as_ref().unwrap_or(&inner.0)))
+    }
+
     /// 提交草稿，返回旧正式数据
     pub fn apply(&self) -> Option<Box<T>> {
         let mut inner = self.inner.write();

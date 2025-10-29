@@ -12,76 +12,173 @@ use crate::{
     feat, logging, ret_err,
     utils::{dirs, help, logging::Type},
 };
+use once_cell::sync::Lazy;
+use parking_lot::RwLock;
 use smartstring::alias::String;
-use std::time::Duration;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use crate::cmd::profile_switch::ProfileSwitchStatus;
 
+#[derive(Clone)]
+struct CachedProfiles {
+    snapshot: IProfiles,
+    captured_at: Instant,
+}
+
+static PROFILES_CACHE: Lazy<RwLock<Option<CachedProfiles>>> = Lazy::new(|| RwLock::new(None));
+
+#[derive(Default)]
+struct SnapshotMetrics {
+    fast_hits: AtomicU64,
+    cache_hits: AtomicU64,
+    blocking_hits: AtomicU64,
+    refresh_scheduled: AtomicU64,
+    last_log_ms: AtomicU64,
+}
+
+static SNAPSHOT_METRICS: Lazy<SnapshotMetrics> = Lazy::new(SnapshotMetrics::default);
+
+fn update_profiles_cache(snapshot: &IProfiles) {
+    *PROFILES_CACHE.write() = Some(CachedProfiles {
+        snapshot: snapshot.clone(),
+        captured_at: Instant::now(),
+    });
+}
+
+fn cached_profiles_snapshot() -> Option<(IProfiles, u128)> {
+    PROFILES_CACHE.read().as_ref().map(|entry| {
+        (
+            entry.snapshot.clone(),
+            entry.captured_at.elapsed().as_millis(),
+        )
+    })
+}
+
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
-    // Strategy 1: attempt to fetch the latest data quickly
-    let latest_result = tokio::time::timeout(Duration::from_millis(500), async {
-        let profiles = Config::profiles().await;
-        let latest = profiles.latest_ref();
-        IProfiles {
-            current: latest.current.clone(),
-            items: latest.items.clone(),
-        }
-    })
-    .await;
+    let started_at = Instant::now();
 
-    match latest_result {
-        Ok(profiles) => {
-            logging!(info, Type::Cmd, "Fetched configuration list successfully");
-            return Ok(profiles);
-        }
-        Err(_) => {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Quick configuration fetch timed out (500ms)"
-            );
-        }
+    if let Some(snapshot) = read_profiles_snapshot_nonblocking().await {
+        let item_count = snapshot
+            .items
+            .as_ref()
+            .map(|items| items.len())
+            .unwrap_or(0);
+        update_profiles_cache(&snapshot);
+        SNAPSHOT_METRICS.fast_hits.fetch_add(1, Ordering::Relaxed);
+        logging!(
+            debug,
+            Type::Cmd,
+            "[Profiles] Snapshot served (path=fast, items={}, elapsed={}ms)",
+            item_count,
+            started_at.elapsed().as_millis()
+        );
+        maybe_log_snapshot_metrics();
+        return Ok(snapshot);
     }
 
-    // Strategy 2: fall back to data() if the quick fetch fails
-    let data_result = tokio::time::timeout(Duration::from_secs(2), async {
-        let profiles = Config::profiles().await;
-        let data = profiles.latest_ref();
-        IProfiles {
-            current: data.current.clone(),
-            items: data.items.clone(),
-        }
-    })
-    .await;
-
-    match data_result {
-        Ok(profiles) => {
-            logging!(
-                info,
-                Type::Cmd,
-                "Fetched draft configuration list successfully"
-            );
-            return Ok(profiles);
-        }
-        Err(join_err) => {
-            logging!(
-                error,
-                Type::Cmd,
-                "Draft configuration task failed or timed out: {}",
-                join_err
-            );
-        }
+    if let Some((cached, age_ms)) = cached_profiles_snapshot() {
+        SNAPSHOT_METRICS.cache_hits.fetch_add(1, Ordering::Relaxed);
+        logging!(
+            debug,
+            Type::Cmd,
+            "[Profiles] Served cached snapshot while lock busy (age={}ms)",
+            age_ms
+        );
+        schedule_profiles_snapshot_refresh();
+        maybe_log_snapshot_metrics();
+        return Ok(cached);
     }
 
-    // Strategy 3: fallback to recreating the configuration
+    let snapshot = read_profiles_snapshot_blocking().await;
+    let item_count = snapshot
+        .items
+        .as_ref()
+        .map(|items| items.len())
+        .unwrap_or(0);
+    update_profiles_cache(&snapshot);
+    SNAPSHOT_METRICS
+        .blocking_hits
+        .fetch_add(1, Ordering::Relaxed);
     logging!(
-        warn,
+        debug,
         Type::Cmd,
-        "All retrieval strategies failed; attempting fallback"
+        "[Profiles] Snapshot served (path=blocking, items={}, elapsed={}ms)",
+        item_count,
+        started_at.elapsed().as_millis()
     );
+    maybe_log_snapshot_metrics();
+    Ok(snapshot)
+}
 
-    Ok(IProfiles::new().await)
+async fn read_profiles_snapshot_nonblocking() -> Option<IProfiles> {
+    let profiles = Config::profiles().await;
+    profiles.try_latest_ref().map(|guard| (**guard).clone())
+}
+
+async fn read_profiles_snapshot_blocking() -> IProfiles {
+    let profiles = Config::profiles().await;
+    let guard = profiles.latest_ref();
+    (**guard).clone()
+}
+
+fn schedule_profiles_snapshot_refresh() {
+    crate::process::AsyncHandler::spawn(|| async {
+        SNAPSHOT_METRICS
+            .refresh_scheduled
+            .fetch_add(1, Ordering::Relaxed);
+        let snapshot = read_profiles_snapshot_blocking().await;
+        update_profiles_cache(&snapshot);
+        logging!(
+            debug,
+            Type::Cmd,
+            "[Profiles] Cache refreshed after busy snapshot"
+        );
+    });
+}
+
+fn maybe_log_snapshot_metrics() {
+    const LOG_INTERVAL_MS: u64 = 5_000;
+    let now_ms = current_millis();
+    let last_ms = SNAPSHOT_METRICS.last_log_ms.load(Ordering::Relaxed);
+    if now_ms.saturating_sub(last_ms) < LOG_INTERVAL_MS {
+        return;
+    }
+
+    if SNAPSHOT_METRICS
+        .last_log_ms
+        .compare_exchange(last_ms, now_ms, Ordering::SeqCst, Ordering::Relaxed)
+        .is_err()
+    {
+        return;
+    }
+
+    let fast = SNAPSHOT_METRICS.fast_hits.swap(0, Ordering::SeqCst);
+    let cache = SNAPSHOT_METRICS.cache_hits.swap(0, Ordering::SeqCst);
+    let blocking = SNAPSHOT_METRICS.blocking_hits.swap(0, Ordering::SeqCst);
+    let refresh = SNAPSHOT_METRICS.refresh_scheduled.swap(0, Ordering::SeqCst);
+
+    if fast == 0 && cache == 0 && blocking == 0 && refresh == 0 {
+        return;
+    }
+
+    logging!(
+        debug,
+        Type::Cmd,
+        "[Profiles][Metrics] 5s window => fast={}, cache={}, blocking={}, refresh_jobs={}",
+        fast,
+        cache,
+        blocking,
+        refresh
+    );
+}
+
+fn current_millis() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or(Duration::ZERO)
+        .as_millis() as u64
 }
 
 /// Enhance profiles

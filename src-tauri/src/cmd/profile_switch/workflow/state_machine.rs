@@ -9,7 +9,11 @@ use crate::{
 };
 use futures::FutureExt;
 use smartstring::alias::String as SmartString;
-use std::{mem, panic::AssertUnwindSafe, time::Duration};
+use std::{
+    mem,
+    panic::AssertUnwindSafe,
+    time::{Duration, Instant},
+};
 use tokio::{sync::MutexGuard, time};
 
 pub(super) const CONFIG_APPLY_TIMEOUT: Duration = Duration::from_secs(5);
@@ -293,28 +297,101 @@ impl SwitchStateMachine {
     }
 
     async fn handle_update_core(&mut self) -> CmdResult<SwitchState> {
+        let sequence = self.ctx.sequence();
+        let task_id = self.ctx.task_id;
+        let profile = self.ctx.profile_label.clone();
         logging!(
             info,
             Type::Cmd,
-            "Starting core configuration update, sequence: {}",
-            self.ctx.sequence()
+            "Starting core configuration update, sequence: {}, task={:?}, profile={}",
+            sequence,
+            task_id,
+            profile
         );
 
-        let update_result = time::timeout(
-            Duration::from_secs(30),
-            CoreManager::global().update_config(),
-        )
-        .await;
+        let heartbeat = self.ctx.heartbeat.clone();
+        let start = Instant::now();
+        let mut ticker = time::interval(Duration::from_secs(1));
+        ticker.set_missed_tick_behavior(time::MissedTickBehavior::Delay);
+
+        let update_future = CoreManager::global().update_config();
+        tokio::pin!(update_future);
+
+        let staged_update = async {
+            loop {
+                tokio::select! {
+                    res = &mut update_future => break res,
+                    _ = ticker.tick() => {
+                        let elapsed_ms = start.elapsed().as_millis();
+                        heartbeat.touch();
+                        match task_id {
+                            Some(id) => logging!(
+                                debug,
+                                Type::Cmd,
+                                "Switch task {} (profile={}) UpdateCore still running (elapsed={}ms)",
+                                id,
+                                profile,
+                                elapsed_ms
+                            ),
+                            None => logging!(
+                                debug,
+                                Type::Cmd,
+                                "Profile patch {} UpdateCore still running (elapsed={}ms)",
+                                profile,
+                                elapsed_ms
+                            ),
+                        }
+                    }
+                }
+            }
+        };
+
+        let update_result = time::timeout(Duration::from_secs(30), staged_update).await;
+        let elapsed_ms = start.elapsed().as_millis();
 
         let outcome = match update_result {
-            Ok(Ok((true, _))) => CoreUpdateOutcome::Success,
-            Ok(Ok((false, msg))) => CoreUpdateOutcome::ValidationFailed {
-                message: msg.to_string(),
-            },
-            Ok(Err(err)) => CoreUpdateOutcome::CoreError {
-                message: err.to_string(),
-            },
-            Err(_) => CoreUpdateOutcome::Timeout,
+            Ok(Ok((true, _))) => {
+                logging!(
+                    info,
+                    Type::Cmd,
+                    "Core configuration update succeeded in {}ms",
+                    elapsed_ms
+                );
+                CoreUpdateOutcome::Success
+            }
+            Ok(Ok((false, msg))) => {
+                logging!(
+                    warn,
+                    Type::Cmd,
+                    "Core configuration update validation failed in {}ms: {}",
+                    elapsed_ms,
+                    msg
+                );
+                CoreUpdateOutcome::ValidationFailed {
+                    message: msg.to_string(),
+                }
+            }
+            Ok(Err(err)) => {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Core configuration update errored in {}ms: {}",
+                    elapsed_ms,
+                    err
+                );
+                CoreUpdateOutcome::CoreError {
+                    message: err.to_string(),
+                }
+            }
+            Err(_) => {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Core configuration update timed out after {}ms",
+                    elapsed_ms
+                );
+                CoreUpdateOutcome::Timeout
+            }
         };
 
         self.ctx.release_locks();
@@ -349,6 +426,12 @@ impl SwitchStateMachine {
         self.update_tray_menu_with_timeout().await;
         self.persist_profiles_with_timeout().await;
         self.emit_profile_change_event();
+        logging!(
+            debug,
+            Type::Cmd,
+            "Finalize success pipeline completed for sequence {}",
+            self.ctx.sequence()
+        );
 
         Ok(SwitchState::Complete(true))
     }
@@ -440,33 +523,45 @@ impl SwitchStateMachine {
     }
 
     async fn refresh_clash_with_timeout(&self) {
-        if time::timeout(REFRESH_TIMEOUT, async {
+        let start = Instant::now();
+        let result = time::timeout(REFRESH_TIMEOUT, async {
             handle::Handle::refresh_clash();
         })
-        .await
-        .is_err()
-        {
-            logging!(
+        .await;
+
+        let elapsed = start.elapsed().as_millis();
+        match result {
+            Ok(_) => logging!(
+                debug,
+                Type::Cmd,
+                "refresh_clash_with_timeout completed in {}ms",
+                elapsed
+            ),
+            Err(_) => logging!(
                 warn,
                 Type::Cmd,
-                "Refreshing Clash state timed out after {:?}",
-                REFRESH_TIMEOUT
-            );
+                "Refreshing Clash state timed out after {:?} (elapsed={}ms)",
+                REFRESH_TIMEOUT,
+                elapsed
+            ),
         }
     }
 
     async fn update_tray_tooltip_with_timeout(&self) {
+        let start = Instant::now();
         let update_tooltip = time::timeout(TRAY_UPDATE_TIMEOUT, async {
             Tray::global().update_tooltip().await
         })
         .await;
+        let elapsed = start.elapsed().as_millis();
 
         if update_tooltip.is_err() {
             logging!(
                 warn,
                 Type::Cmd,
-                "Updating tray tooltip timed out after {:?}",
-                TRAY_UPDATE_TIMEOUT
+                "Updating tray tooltip timed out after {:?} (elapsed={}ms)",
+                TRAY_UPDATE_TIMEOUT,
+                elapsed
             );
         } else if let Ok(Err(err)) = update_tooltip {
             logging!(
@@ -475,21 +570,31 @@ impl SwitchStateMachine {
                 "Failed to update tray tooltip asynchronously: {}",
                 err
             );
+        } else {
+            logging!(
+                debug,
+                Type::Cmd,
+                "update_tray_tooltip_with_timeout completed in {}ms",
+                elapsed
+            );
         }
     }
 
     async fn update_tray_menu_with_timeout(&self) {
+        let start = Instant::now();
         let update_menu = time::timeout(TRAY_UPDATE_TIMEOUT, async {
             Tray::global().update_menu().await
         })
         .await;
+        let elapsed = start.elapsed().as_millis();
 
         if update_menu.is_err() {
             logging!(
                 warn,
                 Type::Cmd,
-                "Updating tray menu timed out after {:?}",
-                TRAY_UPDATE_TIMEOUT
+                "Updating tray menu timed out after {:?} (elapsed={}ms)",
+                TRAY_UPDATE_TIMEOUT,
+                elapsed
             );
         } else if let Ok(Err(err)) = update_menu {
             logging!(
@@ -498,23 +603,39 @@ impl SwitchStateMachine {
                 "Failed to update tray menu asynchronously: {}",
                 err
             );
+        } else {
+            logging!(
+                debug,
+                Type::Cmd,
+                "update_tray_menu_with_timeout completed in {}ms",
+                elapsed
+            );
         }
     }
 
     async fn persist_profiles_with_timeout(&self) {
+        let start = Instant::now();
         let save_future = AsyncHandler::spawn_blocking(|| {
             futures::executor::block_on(async { profiles_save_file_safe().await })
         });
 
-        if time::timeout(SAVE_PROFILES_TIMEOUT, save_future)
-            .await
-            .is_err()
-        {
+        let result = time::timeout(SAVE_PROFILES_TIMEOUT, save_future).await;
+        let elapsed = start.elapsed().as_millis();
+
+        if result.is_err() {
             logging!(
                 warn,
                 Type::Cmd,
-                "Persisting configuration file timed out after {:?}",
-                SAVE_PROFILES_TIMEOUT
+                "Persisting configuration file timed out after {:?} (elapsed={}ms)",
+                SAVE_PROFILES_TIMEOUT,
+                elapsed
+            );
+        } else {
+            logging!(
+                debug,
+                Type::Cmd,
+                "persist_profiles_with_timeout completed in {}ms",
+                elapsed
             );
         }
     }

@@ -71,10 +71,8 @@ export const useProfiles = () => {
     try {
       console.log("[ActivateSelected] 开始处理代理选择");
 
-      const [proxiesData, profileData] = await Promise.all([
-        calcuProxies(),
-        getProfiles(),
-      ]);
+      const proxiesData = await calcuProxies();
+      const profileData = profiles;
 
       if (!profileData || !proxiesData) {
         console.log("[ActivateSelected] 代理或配置数据不可用，跳过处理");

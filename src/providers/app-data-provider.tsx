@@ -65,17 +65,18 @@ export const AppDataProvider = ({
     SWR_DEFAULTS,
   );
 
-  const { data: switchStatus } = useSWR<ProfileSwitchStatus>(
-    "getProfileSwitchStatus",
-    getProfileSwitchStatus,
-    {
-      refreshInterval: (status) =>
-        status && (status.isSwitching || (status.queue?.length ?? 0) > 0)
-          ? 400
-          : 4000,
-      dedupingInterval: 200,
-    },
-  );
+  const { data: switchStatus, mutate: mutateSwitchStatus } =
+    useSWR<ProfileSwitchStatus>(
+      "getProfileSwitchStatus",
+      getProfileSwitchStatus,
+      {
+        refreshInterval: (status) =>
+          status && (status.isSwitching || (status.queue?.length ?? 0) > 0)
+            ? 400
+            : 4000,
+        dedupingInterval: 200,
+      },
+    );
 
   const seedProxySnapshot = useCallback(
     async (profileId: string) => {
@@ -100,6 +101,7 @@ export const AppDataProvider = ({
   useEffect(() => {
     let disposed = false;
     let fallbackTimeout: number | null = null;
+    let unlistenSwitchFinished: (() => void) | null = null;
 
     const scheduleFallbackFetch = (delay = 400) => {
       if (fallbackTimeout !== null) {
@@ -121,6 +123,29 @@ export const AppDataProvider = ({
     fetchLiveProxies().catch((error) => {
       console.error("[DataProvider] Initial proxy fetch failed:", error);
     });
+
+    listen("profile-switch-finished", () => {
+      void mutateSwitchStatus(undefined, {
+        revalidate: true,
+        rollbackOnError: false,
+      }).catch((error) =>
+        console.warn(
+          "[DataProvider] Failed to revalidate switch status after event:",
+          error,
+        ),
+      );
+    })
+      .then((unlisten) => {
+        unlistenSwitchFinished = unlisten;
+        return unlisten;
+      })
+      .catch((error) => {
+        console.error(
+          "[DataProvider] Failed to attach profile-switch-finished listener:",
+          error,
+        );
+        return null;
+      });
 
     const attach = listen<ProxiesUpdatedPayload>("proxies-updated", (event) => {
       if (disposed) return;
@@ -144,13 +169,24 @@ export const AppDataProvider = ({
         window.clearTimeout(fallbackTimeout);
         fallbackTimeout = null;
       }
+      if (unlistenSwitchFinished) {
+        try {
+          unlistenSwitchFinished();
+        } catch (error) {
+          console.warn(
+            "[DataProvider] Failed to remove profile-switch-finished listener:",
+            error,
+          );
+        }
+        unlistenSwitchFinished = null;
+      }
       attach.then((cleanup) => {
         if (cleanup) {
           cleanup();
         }
       });
     };
-  }, []);
+  }, [mutateSwitchStatus]);
 
   const isUnmountedRef = useRef(false);
   const scheduledTimeoutsRef = useRef<Set<number>>(new Set());
