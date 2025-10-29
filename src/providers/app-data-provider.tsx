@@ -23,12 +23,7 @@ import {
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
 import { useProfileStore } from "@/stores/profile-store";
-import {
-  applyLiveProxyPayload,
-  fetchLiveProxies,
-  useProxyStore,
-  type ProxiesUpdatedPayload,
-} from "@/stores/proxy-store";
+import { fetchLiveProxies, useProxyStore } from "@/stores/proxy-store";
 import { createProxySnapshotFromProfile } from "@/utils/proxy-snapshot";
 
 import { AppDataContext, AppDataContextType } from "./app-data-context";
@@ -89,116 +84,6 @@ export const AppDataProvider = ({
       },
     );
 
-  const seedProxySnapshot = useCallback(
-    async (profileId: string) => {
-      if (!profileId) return;
-
-      try {
-        const yamlContent = await readProfileFile(profileId);
-        const snapshot = createProxySnapshotFromProfile(yamlContent);
-        if (!snapshot) return;
-
-        setProxySnapshot(snapshot, profileId);
-      } catch (error) {
-        console.warn(
-          "[DataProvider] Failed to seed proxy snapshot from profile:",
-          error,
-        );
-      }
-    },
-    [setProxySnapshot],
-  );
-
-  useEffect(() => {
-    let disposed = false;
-    let fallbackTimeout: number | null = null;
-    let unlistenSwitchFinished: (() => void) | null = null;
-
-    const scheduleFallbackFetch = (delay = 400) => {
-      if (fallbackTimeout !== null) {
-        window.clearTimeout(fallbackTimeout);
-        fallbackTimeout = null;
-      }
-      fallbackTimeout = window.setTimeout(() => {
-        fallbackTimeout = null;
-        if (disposed) return;
-        fetchLiveProxies().catch((error) =>
-          console.warn(
-            "[DataProvider] Live proxy fallback refresh failed:",
-            error,
-          ),
-        );
-      }, delay);
-    };
-
-    fetchLiveProxies().catch((error) => {
-      console.error("[DataProvider] Initial proxy fetch failed:", error);
-    });
-
-    listen("profile-switch-finished", () => {
-      void mutateSwitchStatus(undefined, {
-        revalidate: true,
-        rollbackOnError: false,
-      }).catch((error) =>
-        console.warn(
-          "[DataProvider] Failed to revalidate switch status after event:",
-          error,
-        ),
-      );
-    })
-      .then((unlisten) => {
-        unlistenSwitchFinished = unlisten;
-        return unlisten;
-      })
-      .catch((error) => {
-        console.error(
-          "[DataProvider] Failed to attach profile-switch-finished listener:",
-          error,
-        );
-        return null;
-      });
-
-    const attach = listen<ProxiesUpdatedPayload>("proxies-updated", (event) => {
-      if (disposed) return;
-      const payload = event.payload;
-      if (!payload) return;
-      applyLiveProxyPayload(payload);
-      scheduleFallbackFetch(600);
-    })
-      .then((unlisten) => unlisten)
-      .catch((error) => {
-        console.error(
-          "[DataProvider] Failed to attach proxies-updated listener:",
-          error,
-        );
-        return null;
-      });
-
-    return () => {
-      disposed = true;
-      if (fallbackTimeout !== null) {
-        window.clearTimeout(fallbackTimeout);
-        fallbackTimeout = null;
-      }
-      if (unlistenSwitchFinished) {
-        try {
-          unlistenSwitchFinished();
-        } catch (error) {
-          console.warn(
-            "[DataProvider] Failed to remove profile-switch-finished listener:",
-            error,
-          );
-        }
-        unlistenSwitchFinished = null;
-      }
-      attach.then((cleanup) => {
-        if (cleanup) {
-          cleanup();
-        }
-      });
-    };
-  }, [mutateSwitchStatus]);
-
   const isUnmountedRef = useRef(false);
   const scheduledTimeoutsRef = useRef<Set<number>>(new Set());
   const switchMetaRef = useRef<{
@@ -234,8 +119,6 @@ export const AppDataProvider = ({
     scheduledTimeoutsRef.current.clear();
   }, []);
 
-  const fetchProfiles = useCallback(() => fetchProfilesConfig(), []);
-
   const queueProxyRefresh = useCallback(
     (reason: string, delay = 1500) => {
       scheduleTimeout(() => {
@@ -248,6 +131,25 @@ export const AppDataProvider = ({
       }, delay);
     },
     [scheduleTimeout],
+  );
+  const seedProxySnapshot = useCallback(
+    async (profileId: string) => {
+      if (!profileId) return;
+
+      try {
+        const yamlContent = await readProfileFile(profileId);
+        const snapshot = createProxySnapshotFromProfile(yamlContent);
+        if (!snapshot) return;
+
+        setProxySnapshot(snapshot, profileId);
+      } catch (error) {
+        console.warn(
+          "[DataProvider] Failed to seed proxy snapshot from profile:",
+          error,
+        );
+      }
+    },
+    [setProxySnapshot],
   );
 
   const handleSwitchResult = useCallback(
@@ -276,7 +178,7 @@ export const AppDataProvider = ({
 
       scheduleTimeout(() => {
         void Promise.allSettled([
-          fetchProfiles().then((data) => {
+          fetchProfilesConfig().then((data) => {
             commitProfileSnapshot(data);
             globalMutate("getProfiles", data, false);
           }),
@@ -321,7 +223,6 @@ export const AppDataProvider = ({
       mutateSwitchStatus,
       applyProfileSwitchResult,
       commitProfileSnapshot,
-      fetchProfiles,
     ],
   );
 
