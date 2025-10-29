@@ -249,6 +249,7 @@ pub struct SwitchResultStatus {
     pub task_id: u64,
     pub profile_id: String,
     pub success: bool,
+    pub cancelled: bool,
     pub finished_at: u64,
     pub error_stage: Option<String>,
     pub error_detail: Option<String>,
@@ -260,6 +261,7 @@ impl SwitchResultStatus {
             task_id,
             profile_id: profile_id.to_string(),
             success: true,
+            cancelled: false,
             finished_at: now_millis(),
             error_stage: None,
             error_detail: None,
@@ -276,8 +278,25 @@ impl SwitchResultStatus {
             task_id,
             profile_id: profile_id.to_string(),
             success: false,
+            cancelled: false,
             finished_at: now_millis(),
             error_stage: stage,
+            error_detail: detail,
+        }
+    }
+
+    pub(super) fn cancelled(
+        task_id: u64,
+        profile_id: &SmartString,
+        detail: Option<String>,
+    ) -> Self {
+        Self {
+            task_id,
+            profile_id: profile_id.to_string(),
+            success: false,
+            cancelled: true,
+            finished_at: now_millis(),
+            error_stage: Some("cancelled".to_string()),
             error_detail: detail,
         }
     }

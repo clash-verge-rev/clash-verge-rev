@@ -21,6 +21,7 @@ export interface SwitchResultStatus {
   taskId: number;
   profileId: string;
   success: boolean;
+  cancelled?: boolean;
   finishedAt: number;
   errorStage?: string | null;
   errorDetail?: string | null;

@@ -481,10 +481,9 @@ fn discard_request(state: &mut SwitchDriverState, request: SwitchRequest) {
 
     notify_completion_waiter(
         request.task_id(),
-        SwitchResultStatus::failed(
+        SwitchResultStatus::cancelled(
             request.task_id(),
             request.profile_id(),
-            Some("cancelled".to_string()),
             Some("request superseded".to_string()),
         ),
     );

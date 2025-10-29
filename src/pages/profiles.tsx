@@ -551,7 +551,9 @@ const ProfilePage = () => {
 
     if (lastResult && lastResult.finishedAt !== lastResultAtRef.current) {
       lastResultAtRef.current = lastResult.finishedAt;
-      const { profileId, success, finishedAt, errorDetail } = lastResult;
+      const { profileId, success, finishedAt, errorDetail, cancelled } =
+        lastResult;
+      const isCancelled = Boolean(cancelled);
       const meta = taskMetaRef.current.get(lastResult.taskId);
       const notifySuccess = meta?.notify ?? true;
       taskMetaRef.current.delete(lastResult.taskId);
@@ -560,6 +562,7 @@ const ProfilePage = () => {
         success,
         finishedAt,
         notifySuccess,
+        cancelled: isCancelled,
       });
 
       switchEventQueue.enqueue(() => {
@@ -576,18 +579,19 @@ const ProfilePage = () => {
           }
 
           logToBackend(
-            success ? "info" : "warn",
+            success || isCancelled ? "info" : "warn",
             "[ProfileSwitch] status result received",
             {
               profileId,
               success,
+              cancelled: isCancelled,
               finishedAt,
             },
           );
 
-          if (success) {
-            scheduleProfileMutate();
+          scheduleProfileMutate();
 
+          if (success) {
             if (notifySuccess) {
               await afterPaint();
               showNoticeRef.current?.(
@@ -614,8 +618,7 @@ const ProfilePage = () => {
             if (operations.length > 0) {
               void Promise.resolve().then(() => Promise.allSettled(operations));
             }
-          } else {
-            scheduleProfileMutate();
+          } else if (!isCancelled) {
             await afterPaint();
             showNoticeRef.current?.(
               "error",
