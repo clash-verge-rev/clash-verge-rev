@@ -22,6 +22,7 @@ import {
   type SwitchResultStatus,
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
+import { useProfileStore } from "@/stores/profile-store";
 import {
   applyLiveProxyPayload,
   fetchLiveProxies,
@@ -39,6 +40,13 @@ export const AppDataProvider = ({
   children: React.ReactNode;
 }) => {
   const { verge } = useVerge();
+  const applyProfileSwitchResult = useProfileStore(
+    (state) => state.applySwitchResult,
+  );
+  const commitProfileSnapshot = useProfileStore(
+    (state) => state.commitHydrated,
+  );
+  const setSwitchEventSeq = useProfileStore((state) => state.setLastEventSeq);
   const proxyView = useProxyStore((state) => state.data);
   const proxyHydration = useProxyStore((state) => state.hydration);
   const proxyProfileId = useProxyStore((state) => state.lastProfileId);
@@ -351,6 +359,7 @@ export const AppDataProvider = ({
         const events = await getProfileSwitchEvents(switchEventSeqRef.current);
         if (events.length > 0) {
           switchEventSeqRef.current = events[events.length - 1].sequence;
+          setSwitchEventSeq(switchEventSeqRef.current);
           events.forEach((event) => handleSwitchResult(event.result));
         }
       } catch (error) {
@@ -372,7 +381,7 @@ export const AppDataProvider = ({
     return () => {
       disposed = true;
     };
-  }, [scheduleTimeout, handleSwitchResult, switchStatus]);
+  }, [scheduleTimeout, handleSwitchResult, switchStatus, setSwitchEventSeq]);
 
   useEffect(() => {
     const cleanupFns: Array<() => void> = [];
