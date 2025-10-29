@@ -346,7 +346,9 @@ fn handle_completion(
         cleanup,
     );
 
+    let event_record = result_record.clone();
     state.last_result = Some(result_record);
+    manager.push_event(event_record);
     start_next_job(state, driver_tx, manager);
     publish_status(state, manager);
 }

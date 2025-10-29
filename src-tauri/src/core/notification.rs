@@ -1,5 +1,4 @@
 use crate::{constants::retry, logging, utils::logging::Type};
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use smartstring::alias::String;
 use std::{
@@ -11,10 +10,6 @@ use std::{
     thread,
     time::Instant,
 };
-use tauri::{Emitter, async_runtime};
-use tokio::time::{Duration, sleep};
-
-static EMIT_SERIALIZER: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
 
 #[allow(dead_code)] // Temporarily suppress warnings while diagnostics disable certain events
 #[derive(Debug, Clone)]
@@ -60,6 +55,7 @@ struct EventStats {
 }
 
 #[derive(Debug, Default)]
+#[allow(dead_code)]
 struct BufferedProxies {
     pending: parking_lot::Mutex<Option<serde_json::Value>>,
     in_flight: AtomicBool,
@@ -79,7 +75,8 @@ pub struct NotificationSystem {
     pub(super) is_running: bool,
     stats: EventStats,
     emergency_mode: RwLock<bool>,
-    proxies_buffer: Arc<BufferedProxies>,
+    #[allow(dead_code)]
+    _proxies_buffer: Arc<BufferedProxies>,
 }
 
 impl Default for NotificationSystem {
@@ -96,7 +93,7 @@ impl NotificationSystem {
             is_running: false,
             stats: EventStats::default(),
             emergency_mode: RwLock::new(false),
-            proxies_buffer: Arc::new(BufferedProxies::default()),
+            _proxies_buffer: Arc::new(BufferedProxies::default()),
         }
     }
 
@@ -140,122 +137,27 @@ impl NotificationSystem {
 
     fn process_event(handle: &super::handle::Handle, event: FrontendEvent) {
         let system_guard = handle.notification_system.read();
-        let Some(system) = system_guard.as_ref() else {
+        let Some(_system) = system_guard.as_ref() else {
             return;
         };
-
-        if system.should_skip_event(&event) {
-            return;
-        }
 
         let event_label = Self::describe_event(&event);
 
-        match event {
-            FrontendEvent::ProxiesUpdated { payload } => {
-                logging!(
-                    debug,
-                    Type::Frontend,
-                    "Queueing proxies-updated event for buffered emit: {}",
-                    event_label
-                );
-                system.enqueue_proxies_updated(payload);
-            }
-            other => {
-                logging!(
-                    debug,
-                    Type::Frontend,
-                    "Queueing event for async emit: {}",
-                    event_label
-                );
-
-                let (event_name, payload_result) = system.serialize_event(other);
-                let payload = match payload_result {
-                    Ok(value) => value,
-                    Err(err) => {
-                        logging!(
-                            warn,
-                            Type::Frontend,
-                            "Failed to serialize event {}: {}",
-                            event_name,
-                            err
-                        );
-                        return;
-                    }
-                };
-
-                logging!(
-                    debug,
-                    Type::Frontend,
-                    "Async emit scheduled after delay: {}",
-                    event_name
-                );
-                async_runtime::spawn(async move {
-                    let _guard = EMIT_SERIALIZER.lock().await;
-                    logging!(
-                        debug,
-                        Type::Frontend,
-                        "Async emit acquired serializer: {}",
-                        event_name
-                    );
-                    let start = Instant::now();
-                    sleep(Duration::from_millis(50)).await;
-                    logging!(
-                        debug,
-                        Type::Frontend,
-                        "Async emit invoking emit_to: {} (delay {:?})",
-                        event_name,
-                        start.elapsed()
-                    );
-                    let emit_start = Instant::now();
-                    if let Err(err) = Self::emit_via_app(event_name, payload) {
-                        logging!(
-                            warn,
-                            Type::Frontend,
-                            "Async emit failed: {} after {:?}",
-                            err,
-                            emit_start.elapsed()
-                        );
-                    } else {
-                        logging!(
-                            debug,
-                            Type::Frontend,
-                            "Async emit completed: {} (emit duration {:?})",
-                            event_name,
-                            emit_start.elapsed()
-                        );
-                    }
-                });
-            }
-        }
+        logging!(
+            debug,
+            Type::Frontend,
+            "Diagnostics mode: skipping frontend event {}",
+            event_label
+        );
     }
 
-    fn enqueue_proxies_updated(&self, payload: serde_json::Value) {
-        let replaced = {
-            let mut slot = self.proxies_buffer.pending.lock();
-            let had_pending = slot.is_some();
-            *slot = Some(payload);
-            had_pending
-        };
-
-        if replaced {
-            logging!(
-                debug,
-                Type::Frontend,
-                "Replaced pending proxies-updated payload with latest snapshot"
-            );
-        }
-
-        if self
-            .proxies_buffer
-            .in_flight
-            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-            .is_ok()
-        {
-            let buffer = Arc::clone(&self.proxies_buffer);
-            async_runtime::spawn(async move {
-                Self::flush_proxies(buffer).await;
-            });
-        }
+    #[allow(dead_code)]
+    fn enqueue_proxies_updated(&self, _payload: serde_json::Value) {
+        logging!(
+            debug,
+            Type::Frontend,
+            "Skipping proxies-updated event (emit suppressed)"
+        );
     }
 
     fn should_skip_event(&self, event: &FrontendEvent) -> bool {
@@ -266,84 +168,18 @@ impl NotificationSystem {
         )
     }
 
-    fn emit_via_app(event_name: &'static str, payload: serde_json::Value) -> Result<(), String> {
-        let app_handle = super::handle::Handle::app_handle().clone();
-        let event_name = event_name.to_string();
-        let emit_payload = payload.clone();
-        async_runtime::spawn(async move {
-            let result = app_handle.emit_to("main", event_name.as_str(), emit_payload);
-            if let Err(err) = result {
-                logging!(
-                    warn,
-                    Type::Frontend,
-                    "emit_to failed for {}: {}",
-                    event_name,
-                    err
-                );
-            }
-        });
+    #[allow(dead_code)]
+    fn emit_via_app(_event_name: &'static str, _payload: serde_json::Value) -> Result<(), String> {
         Ok(())
     }
 
-    async fn flush_proxies(buffer: Arc<BufferedProxies>) {
-        const EVENT_NAME: &str = "proxies-updated";
-
-        loop {
-            let payload_opt = {
-                let mut guard = buffer.pending.lock();
-                guard.take()
-            };
-
-            let Some(payload) = payload_opt else {
-                buffer.in_flight.store(false, Ordering::Release);
-
-                if buffer.pending.lock().is_some()
-                    && buffer
-                        .in_flight
-                        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-                        .is_ok()
-                {
-                    continue;
-                }
-
-                break;
-            };
-
-            let _guard = EMIT_SERIALIZER.lock().await;
-            logging!(
-                debug,
-                Type::Frontend,
-                "Buffered proxies emit acquired serializer: {}",
-                EVENT_NAME
-            );
-            let start = Instant::now();
-            sleep(Duration::from_millis(50)).await;
-            logging!(
-                debug,
-                Type::Frontend,
-                "Buffered proxies emit invoking emit_to: {} (delay {:?})",
-                EVENT_NAME,
-                start.elapsed()
-            );
-            let emit_start = Instant::now();
-            let result = Self::emit_via_app(EVENT_NAME, payload);
-            if let Err(err) = result {
-                logging!(
-                    warn,
-                    Type::Frontend,
-                    "Buffered proxies emit dispatch failed: {}",
-                    err
-                );
-            } else {
-                logging!(
-                    debug,
-                    Type::Frontend,
-                    "Buffered proxies emit dispatched: {} (emit duration {:?})",
-                    EVENT_NAME,
-                    emit_start.elapsed()
-                );
-            }
-        }
+    #[allow(dead_code)]
+    fn flush_proxies(_buffer: Arc<BufferedProxies>) {
+        logging!(
+            debug,
+            Type::Frontend,
+            "Skipping buffered proxies emit (emit suppressed)"
+        );
     }
 
     fn describe_event(event: &FrontendEvent) -> String {
@@ -380,6 +216,7 @@ impl NotificationSystem {
         }
     }
 
+    #[allow(dead_code)]
     fn serialize_event(
         &self,
         event: FrontendEvent,

@@ -18,7 +18,7 @@ use smartstring::alias::String;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use crate::cmd::profile_switch::ProfileSwitchStatus;
+use crate::cmd::profile_switch::{ProfileSwitchStatus, SwitchResultEvent};
 
 #[derive(Clone)]
 struct CachedProfiles {
@@ -455,4 +455,9 @@ pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
 #[tauri::command]
 pub async fn get_profile_switch_status() -> CmdResult<ProfileSwitchStatus> {
     profile_switch::get_switch_status()
+}
+
+#[tauri::command]
+pub async fn get_profile_switch_events(after_sequence: u64) -> CmdResult<Vec<SwitchResultEvent>> {
+    profile_switch::get_switch_events(after_sequence)
 }

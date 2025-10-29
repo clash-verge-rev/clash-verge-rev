@@ -35,6 +35,11 @@ export interface ProfileSwitchStatus {
   lastUpdated: number;
 }
 
+export interface SwitchResultEvent {
+  sequence: number;
+  result: SwitchResultStatus;
+}
+
 let cachedProxyProviders: ProxyProviderRecord | null = null;
 
 export const getCachedProxyProviders = () => cachedProxyProviders;
@@ -646,4 +651,10 @@ export async function getNextUpdateTime(uid: string) {
 
 export async function getProfileSwitchStatus() {
   return invoke<ProfileSwitchStatus>("get_profile_switch_status");
+}
+
+export async function getProfileSwitchEvents(afterSequence: number) {
+  return invoke<SwitchResultEvent[]>("get_profile_switch_events", {
+    afterSequence,
+  });
 }

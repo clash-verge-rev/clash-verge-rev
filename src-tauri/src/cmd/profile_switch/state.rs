@@ -2,6 +2,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use serde::Serialize;
 use smartstring::alias::String as SmartString;
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -23,6 +24,8 @@ pub(super) struct SwitchManager {
     switching: AtomicBool,
     task_sequence: AtomicU64,
     status: RwLock<ProfileSwitchStatus>,
+    event_sequence: AtomicU64,
+    recent_events: RwLock<VecDeque<SwitchResultEvent>>,
 }
 
 impl Default for SwitchManager {
@@ -33,6 +36,8 @@ impl Default for SwitchManager {
             switching: AtomicBool::new(false),
             task_sequence: AtomicU64::new(0),
             status: RwLock::new(ProfileSwitchStatus::default()),
+            event_sequence: AtomicU64::new(0),
+            recent_events: RwLock::new(VecDeque::with_capacity(32)),
         }
     }
 }
@@ -69,6 +74,24 @@ impl SwitchManager {
 
     pub(super) fn status_snapshot(&self) -> ProfileSwitchStatus {
         self.status.read().clone()
+    }
+    pub(super) fn push_event(&self, result: SwitchResultStatus) {
+        const MAX_EVENTS: usize = 64;
+        let sequence = self.event_sequence.fetch_add(1, Ordering::SeqCst) + 1;
+        let mut guard = self.recent_events.write();
+        if guard.len() == MAX_EVENTS {
+            guard.pop_front();
+        }
+        guard.push_back(SwitchResultEvent { sequence, result });
+    }
+
+    pub(super) fn events_after(&self, sequence: u64) -> Vec<SwitchResultEvent> {
+        self.recent_events
+            .read()
+            .iter()
+            .filter(|event| event.sequence > sequence)
+            .cloned()
+            .collect()
     }
 }
 
@@ -252,6 +275,13 @@ impl SwitchResultStatus {
             error_detail: detail,
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SwitchResultEvent {
+    pub sequence: u64,
+    pub result: SwitchResultStatus,
 }
 
 pub(super) fn current_millis() -> u64 {

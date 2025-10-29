@@ -3,7 +3,7 @@ mod state;
 mod validation;
 mod workflow;
 
-pub use state::ProfileSwitchStatus;
+pub use state::{ProfileSwitchStatus, SwitchResultEvent};
 
 use smartstring::alias::String;
 
@@ -25,4 +25,8 @@ pub(super) async fn switch_profile(profile_index: String, notify_success: bool) 
 
 pub(super) fn get_switch_status() -> CmdResult<ProfileSwitchStatus> {
     Ok(state::manager().status_snapshot())
+}
+
+pub(super) fn get_switch_events(after_sequence: u64) -> CmdResult<Vec<SwitchResultEvent>> {
+    Ok(state::manager().events_after(after_sequence))
 }

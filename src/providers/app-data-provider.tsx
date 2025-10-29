@@ -1,6 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import useSWR from "swr";
+import useSWR, { mutate as globalMutate } from "swr";
 import {
   getBaseConfig,
   getRuleProviders,
@@ -12,11 +12,13 @@ import {
   calcuProxyProviders,
   getAppUptime,
   getProfileSwitchStatus,
+  getProfileSwitchEvents,
   getRunningMode,
   readProfileFile,
   getSystemProxy,
   type ProxiesView,
   type ProfileSwitchStatus,
+  type SwitchResultStatus,
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
 import {
@@ -197,6 +199,7 @@ export const AppDataProvider = ({
     pendingProfileId: null,
     lastResultFinishedAt: null,
   });
+  const switchEventSeqRef = useRef(0);
 
   const scheduleTimeout = useCallback(
     (callback: () => void | Promise<void>, delay: number) => {
@@ -236,6 +239,49 @@ export const AppDataProvider = ({
     [scheduleTimeout],
   );
 
+  const handleSwitchResult = useCallback(
+    (result: SwitchResultStatus) => {
+      const meta = switchMetaRef.current;
+      if (result.finishedAt === meta.lastResultFinishedAt) {
+        return;
+      }
+      meta.lastResultFinishedAt = result.finishedAt;
+
+      void globalMutate("getProfiles", undefined, {
+        revalidate: true,
+        rollbackOnError: false,
+      }).catch((error) => {
+        console.warn("[DataProvider] Immediate profile mutate failed:", error);
+      });
+
+      scheduleTimeout(() => {
+        void Promise.allSettled([
+          fetchLiveProxies(),
+          refreshProxyProviders(),
+          refreshRules(),
+          refreshRuleProviders(),
+        ]).catch((error) => {
+          console.warn(
+            "[DataProvider] Background refresh after profile switch failed:",
+            error,
+          );
+        });
+      }, 0);
+
+      void mutateSwitchStatus(undefined, {
+        revalidate: true,
+        rollbackOnError: false,
+      });
+    },
+    [
+      scheduleTimeout,
+      refreshProxyProviders,
+      refreshRules,
+      refreshRuleProviders,
+      mutateSwitchStatus,
+    ],
+  );
+
   useEffect(() => {
     isUnmountedRef.current = false;
     return () => {
@@ -262,40 +308,44 @@ export const AppDataProvider = ({
     }
 
     const lastResult = switchStatus.lastResult ?? null;
-    if (lastResult && lastResult.finishedAt !== meta.lastResultFinishedAt) {
-      meta.lastResultFinishedAt = lastResult.finishedAt;
-
-      queueProxyRefresh("profile-switch-finished");
-      void refreshProxyProviders()
-        .catch((error) =>
-          console.warn(
-            "[DataProvider] Proxy providers refresh failed after profile switch:",
-            error,
-          ),
-        )
-        .then(() => refreshRules())
-        .catch((error) =>
-          console.warn(
-            "[DataProvider] Rules refresh failed after profile switch:",
-            error,
-          ),
-        )
-        .then(() => refreshRuleProviders())
-        .catch((error) =>
-          console.warn(
-            "[DataProvider] Rule providers refresh failed after profile switch:",
-            error,
-          ),
-        );
+    if (lastResult) {
+      handleSwitchResult(lastResult);
     }
-  }, [
-    switchStatus,
-    seedProxySnapshot,
-    queueProxyRefresh,
-    refreshProxyProviders,
-    refreshRules,
-    refreshRuleProviders,
-  ]);
+  }, [switchStatus, seedProxySnapshot, handleSwitchResult]);
+
+  useEffect(() => {
+    let disposed = false;
+
+    const pollEvents = async () => {
+      if (disposed) {
+        return;
+      }
+      try {
+        const events = await getProfileSwitchEvents(switchEventSeqRef.current);
+        if (events.length > 0) {
+          switchEventSeqRef.current = events[events.length - 1].sequence;
+          events.forEach((event) => handleSwitchResult(event.result));
+        }
+      } catch (error) {
+        console.warn("[DataProvider] Failed to poll switch events:", error);
+      } finally {
+        if (!disposed) {
+          const nextDelay =
+            switchStatus &&
+            (switchStatus.isSwitching || (switchStatus.queue?.length ?? 0) > 0)
+              ? 250
+              : 1000;
+          scheduleTimeout(pollEvents, nextDelay);
+        }
+      }
+    };
+
+    scheduleTimeout(pollEvents, 0);
+
+    return () => {
+      disposed = true;
+    };
+  }, [scheduleTimeout, handleSwitchResult, switchStatus]);
 
   useEffect(() => {
     const cleanupFns: Array<() => void> = [];

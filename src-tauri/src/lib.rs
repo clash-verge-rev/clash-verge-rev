@@ -204,6 +204,7 @@ mod app_init {
             cmd::save_profile_file,
             cmd::get_next_update_time,
             cmd::get_profile_switch_status,
+            cmd::get_profile_switch_events,
             cmd::script_validate_notice,
             cmd::validate_script_file,
             cmd::create_local_backup,
