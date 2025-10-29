@@ -479,13 +479,28 @@ impl SwitchStateMachine {
         self.log_successful_update();
 
         if !self.apply_config_with_timeout().await? {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Apply step failed; attempting to restore previous profile before completing"
+            );
+            restore_previous_profile(self.ctx.previous_profile.clone()).await?;
             return Ok(SwitchState::Complete(false));
         }
 
         self.refresh_clash_with_timeout().await;
         self.update_tray_tooltip_with_timeout().await;
         self.update_tray_menu_with_timeout().await;
-        self.persist_profiles_with_timeout().await;
+        if let Err(err) = self.persist_profiles_with_timeout().await {
+            logging!(
+                error,
+                Type::Cmd,
+                "Persisting new profile configuration failed; attempting to restore previous profile: {}",
+                err
+            );
+            restore_previous_profile(self.ctx.previous_profile.clone()).await?;
+            return Err(err);
+        }
         self.emit_profile_change_event();
         logging!(
             debug,
@@ -685,30 +700,47 @@ impl SwitchStateMachine {
         }
     }
 
-    async fn persist_profiles_with_timeout(&self) {
+    async fn persist_profiles_with_timeout(&self) -> CmdResult<()> {
         let start = Instant::now();
         let save_future = AsyncHandler::spawn_blocking(|| {
             futures::executor::block_on(async { profiles_save_file_safe().await })
         });
 
-        let result = time::timeout(SAVE_PROFILES_TIMEOUT, save_future).await;
         let elapsed = start.elapsed().as_millis();
-
-        if result.is_err() {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Persisting configuration file timed out after {:?} (elapsed={}ms)",
-                SAVE_PROFILES_TIMEOUT,
-                elapsed
-            );
-        } else {
-            logging!(
-                debug,
-                Type::Cmd,
-                "persist_profiles_with_timeout completed in {}ms",
-                elapsed
-            );
+        match time::timeout(SAVE_PROFILES_TIMEOUT, save_future).await {
+            Err(_) => {
+                let message = format!(
+                    "Persisting configuration file timed out after {:?} (elapsed={}ms)",
+                    SAVE_PROFILES_TIMEOUT, elapsed
+                );
+                logging!(warn, Type::Cmd, "{}", message);
+                Err(message.into())
+            }
+            Ok(join_result) => match join_result {
+                Err(join_err) => {
+                    let message = format!(
+                        "Persisting configuration file failed: blocking task join error: {join_err}"
+                    );
+                    logging!(error, Type::Cmd, "{}", message);
+                    Err(message.into())
+                }
+                Ok(save_result) => match save_result {
+                    Ok(()) => {
+                        logging!(
+                            debug,
+                            Type::Cmd,
+                            "persist_profiles_with_timeout completed in {}ms",
+                            elapsed
+                        );
+                        Ok(())
+                    }
+                    Err(err) => {
+                        let message = format!("Persisting configuration file failed: {}", err);
+                        logging!(error, Type::Cmd, "{}", message);
+                        Err(message.into())
+                    }
+                },
+            },
         }
     }
 
