@@ -293,7 +293,7 @@ const ProfilePage = () => {
       if (context !== undefined) {
         payload.context = context;
       }
-      invoke("frontend_log", payload).catch(() => {});
+      invoke("frontend_log", { payload }).catch(() => {});
     },
     [],
   );
