@@ -100,6 +100,7 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
     let home_cards = patch.home_cards.clone();
     let enable_auto_light_weight = patch.enable_auto_light_weight_mode;
     let enable_external_controller = patch.enable_external_controller;
+    let tray_inline_proxy_groups = patch.tray_inline_proxy_groups;
 
     if tun_mode.is_some() {
         update_flags |= UpdateFlags::ClashConfig as i32;
@@ -169,6 +170,10 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
 
     if enable_external_controller.is_some() {
         update_flags |= UpdateFlags::RestartCore as i32;
+    }
+
+    if tray_inline_proxy_groups.is_some() {
+        update_flags |= UpdateFlags::SystrayMenu as i32;
     }
 
     update_flags

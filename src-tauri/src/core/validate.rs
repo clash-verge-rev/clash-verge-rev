@@ -1,9 +1,9 @@
 use anyhow::Result;
+use scopeguard::defer;
 use smartstring::alias::String;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri_plugin_shell::ShellExt;
-use tokio::sync::Mutex;
 
 use crate::config::{Config, ConfigType};
 use crate::core::handle;
@@ -11,30 +11,27 @@ use crate::singleton_lazy;
 use crate::utils::dirs;
 use crate::{logging, utils::logging::Type};
 
-// pub enum ValidationResult {
-//     Valid,
-//     Invalid(String),
-// }
-
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum ValidationProcessStatus {
-    Ongoing,
-    Completed,
-}
-
 pub struct CoreConfigValidator {
-    // inner: Vec<String>,
-    // result: ValidationResult,
-    process_status: Arc<Mutex<ValidationProcessStatus>>,
+    is_processing: AtomicBool,
 }
 
 impl CoreConfigValidator {
     pub fn new() -> Self {
-        CoreConfigValidator {
-            process_status: Arc::new(Mutex::new(ValidationProcessStatus::Completed)),
+        Self {
+            is_processing: AtomicBool::new(false),
         }
     }
 
+    pub fn try_start(&self) -> bool {
+        !self.is_processing.swap(true, Ordering::AcqRel)
+    }
+
+    pub fn finish(&self) {
+        self.is_processing.store(false, Ordering::Release)
+    }
+}
+
+impl CoreConfigValidator {
     /// 检查文件是否为脚本文件
     fn is_script_file<P>(path: P) -> Result<bool>
     where
@@ -325,22 +322,18 @@ impl CoreConfigValidator {
 
     /// 验证运行时配置
     pub async fn validate_config(&self) -> Result<(bool, String)> {
-        if *self.process_status.lock().await == ValidationProcessStatus::Ongoing {
+        if !self.try_start() {
             logging!(info, Type::Validate, "验证已在进行中，跳过新的验证请求");
             return Ok((true, String::new()));
         }
-        *self.process_status.lock().await = ValidationProcessStatus::Ongoing;
+        defer! {
+            self.finish();
+        }
         logging!(info, Type::Validate, "生成临时配置文件用于验证");
 
-        let result = async {
-            let config_path = Config::generate_file(ConfigType::Check).await?;
-            let config_path = dirs::path_to_str(&config_path)?;
-            Self::validate_config_internal(config_path).await
-        }
-        .await;
-
-        *self.process_status.lock().await = ValidationProcessStatus::Completed;
-        result
+        let config_path = Config::generate_file(ConfigType::Check).await?;
+        let config_path = dirs::path_to_str(&config_path)?;
+        Self::validate_config_internal(config_path).await
     }
 }
 
