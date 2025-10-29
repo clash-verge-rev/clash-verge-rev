@@ -13,6 +13,7 @@ import {
   getAppUptime,
   getProfileSwitchStatus,
   getProfileSwitchEvents,
+  getProfiles as fetchProfilesConfig,
   getRunningMode,
   readProfileFile,
   getSystemProxy,
@@ -247,15 +248,25 @@ export const AppDataProvider = ({
       }
       meta.lastResultFinishedAt = result.finishedAt;
 
-      void globalMutate("getProfiles", undefined, {
-        revalidate: true,
-        rollbackOnError: false,
-      }).catch((error) => {
-        console.warn("[DataProvider] Immediate profile mutate failed:", error);
-      });
+      void globalMutate(
+        "getProfiles",
+        (current?: IProfilesConfig | null) => {
+          if (!current) {
+            return current;
+          }
+          return {
+            ...current,
+            current: result.profileId,
+          };
+        },
+        false,
+      );
 
       scheduleTimeout(() => {
         void Promise.allSettled([
+          fetchProfilesConfig().then((data) => {
+            globalMutate("getProfiles", data, false);
+          }),
           fetchLiveProxies(),
           refreshProxyProviders(),
           refreshRules(),
@@ -266,12 +277,28 @@ export const AppDataProvider = ({
             error,
           );
         });
-      }, 0);
+      }, 100);
 
-      void mutateSwitchStatus(undefined, {
-        revalidate: true,
-        rollbackOnError: false,
-      });
+      void mutateSwitchStatus((current) => {
+        if (!current) {
+          return current;
+        }
+        const filteredQueue = current.queue.filter(
+          (task) => task.taskId !== result.taskId,
+        );
+        const active =
+          current.active && current.active.taskId === result.taskId
+            ? null
+            : current.active;
+        const isSwitching = filteredQueue.length > 0;
+        return {
+          ...current,
+          active,
+          queue: filteredQueue,
+          isSwitching,
+          lastResult: result,
+        };
+      }, false);
     },
     [
       scheduleTimeout,
