@@ -455,20 +455,26 @@ impl SwitchStateMachine {
             }
         };
 
-        self.ctx.release_locks();
+        self.ctx.release_core_guard();
 
         Ok(SwitchState::Finalize(outcome))
     }
 
     async fn handle_finalize(&mut self, outcome: CoreUpdateOutcome) -> CmdResult<SwitchState> {
-        match outcome {
+        let next_state = match outcome {
             CoreUpdateOutcome::Success => self.finalize_success().await,
             CoreUpdateOutcome::ValidationFailed { message } => {
                 self.finalize_validation_failed(message).await
             }
             CoreUpdateOutcome::CoreError { message } => self.finalize_core_error(message).await,
             CoreUpdateOutcome::Timeout => self.finalize_timeout().await,
+        };
+
+        if next_state.is_err() || matches!(next_state, Ok(SwitchState::Complete(_))) {
+            self.ctx.release_switch_scope();
         }
+
+        next_state
     }
 
     async fn finalize_success(&mut self) -> CmdResult<SwitchState> {
@@ -575,37 +581,21 @@ impl SwitchStateMachine {
 
     async fn apply_config_with_timeout(&mut self) -> CmdResult<bool> {
         let apply_result = time::timeout(CONFIG_APPLY_TIMEOUT, async {
-            AsyncHandler::spawn_blocking(|| {
-                futures::executor::block_on(async {
-                    Config::profiles().await.apply();
-                });
-            })
-            .await
+            Config::profiles().await.apply()
         })
         .await;
 
-        match apply_result {
-            Ok(Ok(())) => Ok(true),
-            Ok(Err(join_err)) => {
-                logging!(
-                    error,
-                    Type::Cmd,
-                    "Applying profile configuration failed: {}",
-                    join_err
-                );
-                Config::profiles().await.discard();
-                Ok(false)
-            }
-            Err(_) => {
-                logging!(
-                    warn,
-                    Type::Cmd,
-                    "Applying profile configuration timed out after {:?}",
-                    CONFIG_APPLY_TIMEOUT
-                );
-                Config::profiles().await.discard();
-                Ok(false)
-            }
+        if apply_result.is_ok() {
+            Ok(true)
+        } else {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Applying profile configuration timed out after {:?}",
+                CONFIG_APPLY_TIMEOUT
+            );
+            Config::profiles().await.discard();
+            Ok(false)
         }
     }
 
@@ -904,9 +894,17 @@ impl SwitchContext {
         }
     }
 
-    fn release_locks(&mut self) {
+    fn release_core_guard(&mut self) {
         self.core_guard = None;
+    }
+
+    fn release_switch_scope(&mut self) {
         self.switch_scope = None;
+    }
+
+    fn release_locks(&mut self) {
+        self.release_core_guard();
+        self.release_switch_scope();
     }
 }
 
