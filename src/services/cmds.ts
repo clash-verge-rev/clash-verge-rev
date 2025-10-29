@@ -40,6 +40,7 @@ export interface SwitchResultEvent {
   result: SwitchResultStatus;
 }
 
+// Persist the last proxy provider payload so UI can render while waiting on Mihomo.
 let cachedProxyProviders: ProxyProviderRecord | null = null;
 
 export const getCachedProxyProviders = () => cachedProxyProviders;
@@ -64,6 +65,7 @@ export async function patchProfilesConfig(profiles: IProfilesConfig) {
   return invoke<void>("patch_profiles_config", { profiles });
 }
 
+// Triggers the async state-machine driven switch flow on the backend.
 export async function switchProfileCommand(
   profileIndex: string,
   notifySuccess: boolean,

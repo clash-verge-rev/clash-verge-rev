@@ -20,6 +20,7 @@ export const useProfileStore = create<ProfileStoreState>((set) => ({
   lastEventSeq: 0,
   lastResult: null,
   applySwitchResult(result) {
+    // Record the optimistic switch outcome so the UI reflects the desired profile immediately.
     set((state) => ({
       lastResult: result,
       optimisticCurrent: result.success ? result.profileId : null,
@@ -42,6 +43,7 @@ export const selectEffectiveProfiles = (state: ProfileStoreState) => {
   if (!state.data) {
     return null;
   }
+  // Prefer the optimistic selection while hydration is pending.
   const current = state.optimisticCurrent ?? state.data.current;
   if (
     state.optimisticCurrent &&

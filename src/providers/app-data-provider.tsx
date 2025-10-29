@@ -90,7 +90,9 @@ export const AppDataProvider = ({
     );
 
   const isUnmountedRef = useRef(false);
+  // Keep track of pending timers so we can cancel them on unmount and avoid stray updates.
   const scheduledTimeoutsRef = useRef<Set<number>>(new Set());
+  // Shared metadata to dedupe switch events coming from both polling and subscriptions.
   const switchMetaRef = useRef<{
     pendingProfileId: string | null;
     lastResultTaskId: number | null;
@@ -100,6 +102,7 @@ export const AppDataProvider = ({
   });
   const switchEventSeqRef = useRef(0);
 
+  // Thin wrapper around setTimeout that no-ops once the provider unmounts.
   const scheduleTimeout = useCallback(
     (callback: () => void | Promise<void>, delay: number) => {
       if (isUnmountedRef.current) return -1;
@@ -124,6 +127,7 @@ export const AppDataProvider = ({
     scheduledTimeoutsRef.current.clear();
   }, []);
 
+  // Delay live proxy refreshes slightly so we don't hammer Mihomo while a switch is still applying.
   const queueProxyRefresh = useCallback(
     (reason: string, delay = 1500) => {
       scheduleTimeout(() => {
@@ -137,6 +141,7 @@ export const AppDataProvider = ({
     },
     [scheduleTimeout],
   );
+  // Prime the proxy store with the static selections from the profile YAML before live data arrives.
   const seedProxySnapshot = useCallback(
     async (profileId: string) => {
       if (!profileId) return;
@@ -159,12 +164,14 @@ export const AppDataProvider = ({
 
   const handleSwitchResult = useCallback(
     (result: SwitchResultStatus) => {
+      // Ignore duplicate notifications for the same switch execution.
       const meta = switchMetaRef.current;
       if (result.taskId === meta.lastResultTaskId) {
         return;
       }
       meta.lastResultTaskId = result.taskId;
 
+      // Optimistically update the SWR cache so the UI shows the new profile immediately.
       void globalMutate(
         "getProfiles",
         (current?: IProfilesConfig | null) => {
@@ -184,6 +191,7 @@ export const AppDataProvider = ({
 
       applyProfileSwitchResult(result);
 
+      // Once the backend settles, refresh all dependent data in the background.
       scheduleTimeout(() => {
         void Promise.allSettled([
           fetchProfilesConfig().then((data) => {

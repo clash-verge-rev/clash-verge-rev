@@ -39,6 +39,7 @@ struct SnapshotMetrics {
 
 static SNAPSHOT_METRICS: Lazy<SnapshotMetrics> = Lazy::new(SnapshotMetrics::default);
 
+/// Store the latest snapshot so cache consumers can reuse it without hitting the lock again.
 fn update_profiles_cache(snapshot: &IProfiles) {
     *PROFILES_CACHE.write() = Some(CachedProfiles {
         snapshot: snapshot.clone(),
@@ -46,6 +47,7 @@ fn update_profiles_cache(snapshot: &IProfiles) {
     });
 }
 
+/// Return the cached snapshot and how old it is, if present.
 fn cached_profiles_snapshot() -> Option<(IProfiles, u128)> {
     PROFILES_CACHE.read().as_ref().map(|entry| {
         (
@@ -55,10 +57,14 @@ fn cached_profiles_snapshot() -> Option<(IProfiles, u128)> {
     })
 }
 
+/// Return the latest profiles snapshot, preferring cached data so UI requests never block.
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
     let started_at = Instant::now();
 
+    // Resolve snapshots in three tiers so UI reads never stall on a mutex:
+    // 1) try a non-blocking read, 2) fall back to the last cached copy while a
+    // writer holds the lock, 3) block and refresh the cache as a final resort.
     if let Some(snapshot) = read_profiles_snapshot_nonblocking().await {
         let item_count = snapshot
             .items
@@ -112,19 +118,24 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
     Ok(snapshot)
 }
 
+/// Try to grab the latest profile data without waiting for the writer.
 async fn read_profiles_snapshot_nonblocking() -> Option<IProfiles> {
     let profiles = Config::profiles().await;
     profiles.try_latest_ref().map(|guard| (**guard).clone())
 }
 
+/// Fall back to a blocking read when we absolutely must have fresh data.
 async fn read_profiles_snapshot_blocking() -> IProfiles {
     let profiles = Config::profiles().await;
     let guard = profiles.latest_ref();
     (**guard).clone()
 }
 
+/// Schedule a background cache refresh once the exclusive lock becomes available again.
 fn schedule_profiles_snapshot_refresh() {
     crate::process::AsyncHandler::spawn(|| async {
+        // Once the lock is released we refresh the cached snapshot so the next
+        // request observes the latest data instead of the stale fallback.
         SNAPSHOT_METRICS
             .refresh_scheduled
             .fetch_add(1, Ordering::Relaxed);
@@ -181,7 +192,7 @@ fn current_millis() -> u64 {
         .as_millis() as u64
 }
 
-/// Enhance profiles
+/// Run the optional enhancement pipeline and refresh Clash when it completes.
 #[tauri::command]
 pub async fn enhance_profiles() -> CmdResult {
     match feat::enhance_profiles().await {
@@ -195,7 +206,7 @@ pub async fn enhance_profiles() -> CmdResult {
     Ok(())
 }
 
-/// Import profile
+/// Download a profile from the given URL and persist it to the local catalog.
 #[tauri::command]
 pub async fn import_profile(url: std::string::String, option: Option<PrfOption>) -> CmdResult {
     logging!(info, Type::Cmd, "[Profile Import] Begin: {}", url);
@@ -267,7 +278,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
     Ok(())
 }
 
-/// Reorder profiles
+/// Move a profile in the list relative to another entry.
 #[tauri::command]
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
     match profiles_reorder_safe(active_id, over_id).await {
@@ -282,8 +293,7 @@ pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
     }
 }
 
-/// Create a new profile
-/// Create a new configuration file
+/// Create a new profile entry and optionally write its backing file.
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
     match profiles_append_item_with_filedata_safe(item.clone(), file_data).await {
@@ -307,7 +317,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
     }
 }
 
-/// Update profile
+/// Force-refresh a profile from its remote source, if available.
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
     match feat::update_profile(index, option, Some(true)).await {
@@ -319,7 +329,7 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
     }
 }
 
-/// Delete profile
+/// Remove a profile and refresh the running configuration if necessary.
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
     println!("delete_profile: {}", index);
@@ -351,24 +361,25 @@ pub async fn delete_profile(index: String) -> CmdResult {
     Ok(())
 }
 
-/// Patch profiles configuration
+/// Apply partial profile list updates through the switching workflow.
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     profile_switch::patch_profiles_config(profiles).await
 }
 
-/// Patch profiles configuration by profile name
+/// Switch to the provided profile index and wait for completion before returning.
 #[tauri::command]
 pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult<bool> {
     profile_switch::patch_profiles_config_by_profile_index(profile_index).await
 }
 
+/// Enqueue a profile switch request and optionally notify on success.
 #[tauri::command]
 pub async fn switch_profile(profile_index: String, notify_success: bool) -> CmdResult<bool> {
     profile_switch::switch_profile(profile_index, notify_success).await
 }
 
-/// Patch a specific profile item
+/// Update a specific profile item and refresh timers if its schedule changed.
 #[tauri::command]
 pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // Check for update_interval changes before saving
@@ -411,7 +422,7 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     Ok(())
 }
 
-/// View profile file
+/// Open the profile file in the system viewer.
 #[tauri::command]
 pub async fn view_profile(index: String) -> CmdResult {
     let profiles = Config::profiles().await;
@@ -433,7 +444,7 @@ pub async fn view_profile(index: String) -> CmdResult {
     help::open_file(path).stringify_err()
 }
 
-/// Read profile file contents
+/// Return the raw YAML contents for the given profile file.
 #[tauri::command]
 pub async fn read_profile_file(index: String) -> CmdResult<String> {
     let profiles = Config::profiles().await;
@@ -443,7 +454,7 @@ pub async fn read_profile_file(index: String) -> CmdResult<String> {
     Ok(data)
 }
 
-/// Get the next update time
+/// Report the scheduled refresh timestamp (if any) for the profile timer.
 #[tauri::command]
 pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
     let timer = Timer::global();
@@ -451,12 +462,13 @@ pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
     Ok(next_time)
 }
 
-/// Get current profile switch status snapshot
+/// Return the latest driver snapshot describing active and queued switch tasks.
 #[tauri::command]
 pub async fn get_profile_switch_status() -> CmdResult<ProfileSwitchStatus> {
     profile_switch::get_switch_status()
 }
 
+/// Fetch switch result events newer than the provided sequence number.
 #[tauri::command]
 pub async fn get_profile_switch_events(after_sequence: u64) -> CmdResult<Vec<SwitchResultEvent>> {
     profile_switch::get_switch_events(after_sequence)

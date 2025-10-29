@@ -24,6 +24,8 @@ use tokio::{
     time::{self, MissedTickBehavior},
 };
 
+// Single shared queue so profile switches are executed sequentially and can
+// collapse redundant requests for the same profile.
 const SWITCH_QUEUE_CAPACITY: usize = 32;
 static SWITCH_QUEUE: OnceCell<mpsc::Sender<SwitchDriverMessage>> = OnceCell::new();
 
@@ -31,10 +33,12 @@ type CompletionRegistry = AsyncMutex<HashMap<u64, oneshot::Sender<SwitchResultSt
 
 static SWITCH_COMPLETION_WAITERS: OnceCell<CompletionRegistry> = OnceCell::new();
 
+/// Global map of task id → completion channel sender used when callers await the result.
 fn completion_waiters() -> &'static CompletionRegistry {
     SWITCH_COMPLETION_WAITERS.get_or_init(|| AsyncMutex::new(HashMap::new()))
 }
 
+/// Register a oneshot sender so `switch_profile_and_wait` can be notified when its task finishes.
 async fn register_completion_waiter(task_id: u64) -> oneshot::Receiver<SwitchResultStatus> {
     let (sender, receiver) = oneshot::channel();
     let mut guard = completion_waiters().lock().await;
@@ -49,10 +53,12 @@ async fn register_completion_waiter(task_id: u64) -> oneshot::Receiver<SwitchRes
     receiver
 }
 
+/// Remove an outstanding completion waiter; used when enqueue fails or succeeds immediately.
 async fn remove_completion_waiter(task_id: u64) -> Option<oneshot::Sender<SwitchResultStatus>> {
     completion_waiters().lock().await.remove(&task_id)
 }
 
+/// Fire-and-forget notify helper so we do not block the driver loop.
 fn notify_completion_waiter(task_id: u64, result: SwitchResultStatus) {
     tokio::spawn(async move {
         let sender = completion_waiters().lock().await.remove(&task_id);
@@ -65,6 +71,7 @@ fn notify_completion_waiter(task_id: u64, result: SwitchResultStatus) {
 const WATCHDOG_TIMEOUT: Duration = Duration::from_secs(5);
 const WATCHDOG_TICK: Duration = Duration::from_millis(500);
 
+// Mutable snapshot of the driver's world; all mutations happen on the driver task.
 #[derive(Debug, Default)]
 struct SwitchDriverState {
     active: Option<SwitchRequest>,
@@ -74,6 +81,7 @@ struct SwitchDriverState {
     last_result: Option<SwitchResultStatus>,
 }
 
+// Messages passed through SWITCH_QUEUE so the driver can react to events in order.
 #[derive(Debug)]
 enum SwitchDriverMessage {
     Request {
@@ -120,6 +128,7 @@ async fn switch_profile_impl(
     notify_success: bool,
     wait_for_completion: bool,
 ) -> CmdResult<bool> {
+    // wait_for_completion is used by CLI flows that must block until the switch finishes.
     let manager = manager();
     let sender = switch_driver_sender();
 
@@ -280,6 +289,7 @@ fn handle_enqueue(
     driver_tx: mpsc::Sender<SwitchDriverMessage>,
     manager: &'static SwitchManager,
 ) {
+    // Each new request supersedes older ones for the same profile to avoid thrashing the core.
     let mut responder = Some(respond_to);
     let accepted = true;
     let profile_key = request.profile_id().clone();
@@ -342,6 +352,7 @@ fn handle_enqueue(
         if let Some(sender) = responder.take() {
             let _ = sender.send(accepted);
         }
+        publish_status(state, manager);
         return;
     }
 
@@ -390,6 +401,7 @@ fn handle_completion(
     driver_tx: mpsc::Sender<SwitchDriverMessage>,
     manager: &'static SwitchManager,
 ) {
+    // Translate the workflow result into an event the frontend can understand.
     let result_record = match &outcome {
         SwitchJobOutcome::Completed { success, .. } => {
             logging!(
@@ -455,12 +467,14 @@ fn handle_completion(
     publish_status(state, manager);
 }
 
+/// Cancel and discard any queued requests that are now obsolete.
 fn drop_pending_requests(state: &mut SwitchDriverState) {
     while let Some(request) = state.queue.pop_front() {
         discard_request(state, request);
     }
 }
 
+/// Mark a request as failed because a newer request superseded it.
 fn discard_request(state: &mut SwitchDriverState, request: SwitchRequest) {
     let key = request.profile_id().clone();
     let should_remove = state
@@ -493,6 +507,7 @@ fn start_switch_job(
     manager: &'static SwitchManager,
     request: SwitchRequest,
 ) {
+    // Run the workflow in a background task while the driver keeps processing messages.
     let completion_request = request.clone();
     let heartbeat = request.heartbeat().clone();
     let cancel_token = request.cancel_token().clone();
@@ -624,6 +639,7 @@ fn track_cleanup(
     state.cleanup_profiles.insert(profile, handle);
 }
 
+/// Cleanup task finished; clear bookkeeping and attempt to start the next job.
 fn handle_cleanup_done(
     state: &mut SwitchDriverState,
     profile: SmartString,
@@ -637,6 +653,7 @@ fn handle_cleanup_done(
     publish_status(state, manager);
 }
 
+/// Decide whether a new job should start and keep the status snapshot in sync.
 fn start_next_job(
     state: &mut SwitchDriverState,
     driver_tx: mpsc::Sender<SwitchDriverMessage>,
@@ -661,11 +678,13 @@ fn start_next_job(
     publish_status(state, manager);
 }
 
+/// Persist the latest driver state so polling clients get up-to-date information.
 fn publish_status(state: &SwitchDriverState, manager: &'static SwitchManager) {
     manager.set_status(state.snapshot(manager));
 }
 
 impl SwitchDriverState {
+    /// Lightweight struct suitable for sharing across the command boundary.
     fn snapshot(&self, manager: &SwitchManager) -> ProfileSwitchStatus {
         let active = self
             .active

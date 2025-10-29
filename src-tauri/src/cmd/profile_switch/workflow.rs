@@ -38,6 +38,7 @@ pub(super) async fn run_switch_job(
     manager: &'static SwitchManager,
     request: SwitchRequest,
 ) -> Result<SwitchWorkflowResult, SwitchWorkflowError> {
+    // Short-circuit cancelled jobs before we allocate resources or emit events.
     if request.cancel_token().is_cancelled() {
         logging!(
             info,
@@ -87,6 +88,7 @@ pub(super) async fn run_switch_job(
     );
 
     let pipeline_request = request;
+    // The state machine owns the heavy lifting. We wrap it with timeout/panic guards so the driver never hangs.
     let pipeline = async move {
         let target_profile = pipeline_request.profile_id().clone();
         SwitchStateMachine::new(
@@ -192,6 +194,7 @@ pub(super) async fn run_switch_job(
     }
 }
 
+/// Allow patch operations (no driver request) to use the same state machine pipeline.
 pub(super) async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     match SwitchStateMachine::new(manager(), None, profiles)
         .run()
@@ -206,6 +209,7 @@ pub(super) async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool
     }
 }
 
+/// Parse the target profile YAML on a background thread to catch syntax errors early.
 pub(super) async fn validate_profile_yaml(profile: &SmartString) -> CmdResult<bool> {
     let file_path = {
         let profiles_guard = Config::profiles().await;
@@ -301,6 +305,7 @@ pub(super) async fn validate_profile_yaml(profile: &SmartString) -> CmdResult<bo
     }
 }
 
+/// Best-effort rollback invoked when a switch fails midway through the pipeline.
 pub(super) async fn restore_previous_profile(previous: Option<SmartString>) -> CmdResult<()> {
     if let Some(prev_profile) = previous {
         logging!(
@@ -367,6 +372,7 @@ pub(super) async fn restore_previous_profile(previous: Option<SmartString>) -> C
     Ok(())
 }
 
+/// Give Mihomo a chance to drop lingering connections after we switch profiles.
 async fn close_connections_after_switch(profile_id: SmartString) {
     match time::timeout(SWITCH_CLEANUP_TIMEOUT, async {
         handle::Handle::mihomo().await.close_all_connections().await
@@ -401,6 +407,7 @@ fn schedule_post_switch_success(
     notify: bool,
     task_id: u64,
 ) -> CleanupHandle {
+    // Post-success cleanup runs detached from the driver so the queue keeps moving.
     AsyncHandler::spawn(move || async move {
         handle::Handle::notify_profile_switch_finished(
             profile_id.clone(),
@@ -417,6 +424,7 @@ pub(super) fn schedule_post_switch_failure(
     notify: bool,
     task_id: u64,
 ) -> CleanupHandle {
+    // Failure path shares the same connection-draining behaviour but always reports success=false.
     AsyncHandler::spawn(move || async move {
         handle::Handle::notify_profile_switch_finished(profile_id.clone(), false, notify, task_id);
         close_connections_after_switch(profile_id).await;

@@ -18,6 +18,7 @@ pub(super) fn manager() -> &'static SwitchManager {
 }
 
 #[derive(Debug)]
+// Central coordination point shared between the driver and workflow state machine.
 pub(super) struct SwitchManager {
     core_mutex: Mutex<()>,
     request_sequence: AtomicU64,
@@ -47,10 +48,12 @@ impl SwitchManager {
         &self.core_mutex
     }
 
+    // Monotonic identifiers so logs can correlate enqueue/finish pairs.
     pub(super) fn next_task_id(&self) -> u64 {
         self.task_sequence.fetch_add(1, Ordering::SeqCst) + 1
     }
 
+    /// Sequence id assigned to each enqueue request so we can spot stale work.
     pub(super) fn next_request_sequence(&self) -> u64 {
         self.request_sequence.fetch_add(1, Ordering::SeqCst) + 1
     }
@@ -124,6 +127,7 @@ impl SwitchCancellation {
         self.notify.notify_waiters();
     }
 
+    /// True if another request already cancelled this job.
     pub(super) fn is_cancelled(&self) -> bool {
         self.flag.load(Ordering::SeqCst)
     }
@@ -133,6 +137,7 @@ impl SwitchCancellation {
     }
 
     pub(super) async fn cancelled_future(&self) {
+        // Used by async blocks that want to pause until a newer request pre-empts them.
         if self.is_cancelled() {
             return;
         }
@@ -173,6 +178,7 @@ impl SwitchRequest {
     }
 
     pub(super) fn merge_notify(&mut self, notify: bool) {
+        // When a new request wants a toast, remember it even if an older request did not.
         if notify {
             self.notify = true;
         }
@@ -310,6 +316,7 @@ impl SwitchHeartbeat {
             .store(Self::now_millis(), Ordering::SeqCst);
     }
 
+    /// Update the internal timer to reflect the amount of time since the last heartbeat.
     pub(super) fn elapsed(&self) -> Duration {
         let last = self.last_tick_millis.load(Ordering::SeqCst);
         let now = Self::now_millis();

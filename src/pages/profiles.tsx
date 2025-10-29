@@ -272,7 +272,9 @@ const createImportLandingVerifier = (
 const isDev = import.meta.env.DEV;
 
 const ProfilePage = () => {
+  // Serialize profile switch events so state transitions stay deterministic.
   const switchEventQueue = useMemo(() => new AsyncEventQueue(), []);
+  // Stage follow-up effects (hydration, refresh) to run sequentially after switch completion.
   const postSwitchEffectQueue = useMemo(() => new AsyncEventQueue(), []);
   const mountedRef = useRef(false);
 

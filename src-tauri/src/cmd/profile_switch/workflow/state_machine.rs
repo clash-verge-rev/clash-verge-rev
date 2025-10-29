@@ -114,6 +114,7 @@ impl SwitchStateMachine {
     }
 
     pub(super) async fn run(mut self) -> Result<CmdResult<bool>, SwitchPanicInfo> {
+        // Drive the state machine until we either complete successfully or bubble up a panic.
         loop {
             let current_state = mem::replace(&mut self.state, SwitchState::Complete(false));
             match current_state {
@@ -178,6 +179,7 @@ impl SwitchStateMachine {
         }
     }
 
+    /// Helper that wraps each stage with consistent logging and panic reporting.
     async fn with_stage<'a, F, Fut>(
         &'a mut self,
         stage: SwitchStage,
@@ -233,6 +235,7 @@ impl SwitchStateMachine {
         Ok(SwitchState::AcquireCore)
     }
 
+    /// Grab the core lock, mark the manager as switching, and compute the target profile.
     async fn handle_acquire_core(&mut self) -> CmdResult<SwitchState> {
         self.ctx.core_guard = Some(self.ctx.manager.core_mutex().lock().await);
         self.ctx.switch_scope = Some(self.ctx.manager.begin_switch());
@@ -740,6 +743,7 @@ struct SwitchContext {
 }
 
 impl SwitchContext {
+    // Captures all mutable data required across states (locks, profile ids, etc).
     fn new(
         manager: &'static SwitchManager,
         request: Option<SwitchRequest>,
@@ -771,6 +775,7 @@ impl SwitchContext {
     }
 
     fn ensure_target_profile(&mut self) {
+        // Lazily determine which profile we're switching to so shared paths (patch vs. driver) behave the same.
         if let Some(patch) = self.profiles_patch.as_mut() {
             if patch.current.is_none()
                 && let Some(request) = self.request.as_ref()
@@ -873,6 +878,7 @@ impl SwitchContext {
     }
 }
 
+/// High-level state machine nodes executed in strict sequence.
 enum SwitchState {
     Start,
     AcquireCore,
@@ -884,6 +890,7 @@ enum SwitchState {
     Complete(bool),
 }
 
+/// Result of trying to apply the draft configuration to the core.
 enum CoreUpdateOutcome {
     Success,
     ValidationFailed { message: String },
@@ -891,6 +898,7 @@ enum CoreUpdateOutcome {
     Timeout,
 }
 
+/// Indicates where a stale request was detected so logs stay descriptive.
 enum StaleStage {
     AfterLock,
     BeforeCoreOperation,

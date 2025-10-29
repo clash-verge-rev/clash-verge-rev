@@ -1,3 +1,5 @@
+// Profile switch orchestration: plumbing between the public tauri commands,
+// the async driver queue, validation helpers, and the state machine workflow.
 mod driver;
 mod state;
 mod validation;

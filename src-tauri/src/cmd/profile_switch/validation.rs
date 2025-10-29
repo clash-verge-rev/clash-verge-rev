@@ -7,6 +7,7 @@ use serde_yaml_ng as serde_yaml;
 use smartstring::alias::String;
 use std::fs;
 
+/// Verify that the requested profile exists locally and is well-formed before switching.
 pub(super) async fn validate_switch_request(task_id: u64, profile_id: &str) -> Result<(), String> {
     logging!(
         info,
@@ -47,6 +48,7 @@ pub(super) async fn validate_switch_request(task_id: u64, profile_id: &str) -> R
     }
 
     if matches!(profile_type.as_deref(), Some("remote")) {
+        // Remote profiles must retain a URL so the subsequent refresh job knows where to download.
         let has_url = remote_url.as_ref().map(|u| !u.is_empty()).unwrap_or(false);
         if !has_url {
             return Err({
@@ -66,6 +68,7 @@ pub(super) async fn validate_switch_request(task_id: u64, profile_id: &str) -> R
             format!("Failed to read profile file {}: {}", path.display(), err).into()
         })?;
 
+        // Basic YAML parse to surface syntax issues before touching the live config.
         serde_yaml::from_str::<serde_yaml::Value>(&contents).map_err(|err| -> String {
             format!("Profile YAML parse failed for {}: {}", path.display(), err).into()
         })?;
