@@ -297,7 +297,10 @@ impl PrfItem {
         let header = resp.headers();
 
         // parse the Subscription UserInfo
-        let extra = match header.get("Subscription-Userinfo") {
+        let extra = match header
+            .get("Subscription-Userinfo")
+            .or_else(|| headers.get("x-oss-meta-subscription-userinfo"))
+        {
             Some(value) => {
                 let sub_info = value.to_str().unwrap_or("");
                 Some(PrfExtra {
