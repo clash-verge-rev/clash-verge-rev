@@ -234,6 +234,8 @@ export const AppDataProvider = ({
     scheduledTimeoutsRef.current.clear();
   }, []);
 
+  const fetchProfiles = useCallback(() => fetchProfilesConfig(), []);
+
   const queueProxyRefresh = useCallback(
     (reason: string, delay = 1500) => {
       scheduleTimeout(() => {
@@ -270,9 +272,12 @@ export const AppDataProvider = ({
         false,
       );
 
+      applyProfileSwitchResult(result);
+
       scheduleTimeout(() => {
         void Promise.allSettled([
-          fetchProfilesConfig().then((data) => {
+          fetchProfiles().then((data) => {
+            commitProfileSnapshot(data);
             globalMutate("getProfiles", data, false);
           }),
           fetchLiveProxies(),
@@ -314,6 +319,9 @@ export const AppDataProvider = ({
       refreshRules,
       refreshRuleProviders,
       mutateSwitchStatus,
+      applyProfileSwitchResult,
+      commitProfileSnapshot,
+      fetchProfiles,
     ],
   );
 
