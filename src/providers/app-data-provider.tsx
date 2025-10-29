@@ -93,10 +93,10 @@ export const AppDataProvider = ({
   const scheduledTimeoutsRef = useRef<Set<number>>(new Set());
   const switchMetaRef = useRef<{
     pendingProfileId: string | null;
-    lastResultFinishedAt: number | null;
+    lastResultTaskId: number | null;
   }>({
     pendingProfileId: null,
-    lastResultFinishedAt: null,
+    lastResultTaskId: null,
   });
   const switchEventSeqRef = useRef(0);
 
@@ -160,15 +160,18 @@ export const AppDataProvider = ({
   const handleSwitchResult = useCallback(
     (result: SwitchResultStatus) => {
       const meta = switchMetaRef.current;
-      if (result.finishedAt === meta.lastResultFinishedAt) {
+      if (result.taskId === meta.lastResultTaskId) {
         return;
       }
-      meta.lastResultFinishedAt = result.finishedAt;
+      meta.lastResultTaskId = result.taskId;
 
       void globalMutate(
         "getProfiles",
         (current?: IProfilesConfig | null) => {
-          if (!current) {
+          if (!current || !result.success) {
+            return current;
+          }
+          if (current.current === result.profileId) {
             return current;
           }
           return {
