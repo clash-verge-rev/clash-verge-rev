@@ -50,7 +50,13 @@ export const AppDataProvider = ({
   const proxyView = useProxyStore((state) => state.data);
   const proxyHydration = useProxyStore((state) => state.hydration);
   const proxyProfileId = useProxyStore((state) => state.lastProfileId);
+  const pendingProxyProfileId = useProxyStore(
+    (state) => state.pendingProfileId,
+  );
   const setProxySnapshot = useProxyStore((state) => state.setSnapshot);
+  const clearPendingProxyProfile = useProxyStore(
+    (state) => state.clearPendingProfile,
+  );
 
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
     "getClashConfig",
@@ -190,6 +196,9 @@ export const AppDataProvider = ({
       );
 
       applyProfileSwitchResult(result);
+      if (!result.success) {
+        clearPendingProxyProfile();
+      }
 
       // Once the backend settles, refresh all dependent data in the background.
       scheduleTimeout(() => {
@@ -239,6 +248,7 @@ export const AppDataProvider = ({
       mutateSwitchStatus,
       applyProfileSwitchResult,
       commitProfileSnapshot,
+      clearPendingProxyProfile,
     ],
   );
 
@@ -432,7 +442,8 @@ export const AppDataProvider = ({
       ? switchStatus.queue[0].profileId
       : null);
 
-  const proxyTargetProfileId = switchTargetProfileId ?? proxyProfileId ?? null;
+  const proxyTargetProfileId =
+    switchTargetProfileId ?? pendingProxyProfileId ?? proxyProfileId ?? null;
   const displayProxyStateRef = useRef<{
     view: ProxiesView | null;
     profileId: string | null;

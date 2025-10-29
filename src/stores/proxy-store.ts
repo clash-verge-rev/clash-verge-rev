@@ -28,10 +28,13 @@ interface ProxyStoreState {
   lastProfileId: string | null;
   liveFetchRequestId: number;
   lastAppliedFetchId: number;
+  pendingProfileId: string | null;
+  pendingSnapshotFetchId: number | null;
   setSnapshot: (snapshot: ProxiesView, profileId: string) => void;
   setLive: (payload: ProxiesUpdatedPayload) => void;
   startLiveFetch: () => number;
   completeLiveFetch: (requestId: number, view: ProxiesView) => void;
+  clearPendingProfile: () => void;
   reset: () => void;
 }
 
@@ -86,13 +89,15 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
   lastProfileId: null,
   liveFetchRequestId: 0,
   lastAppliedFetchId: 0,
+  pendingProfileId: null,
+  pendingSnapshotFetchId: null,
   setSnapshot(snapshot, profileId) {
     set((state) => ({
       data: snapshot,
       hydration: "snapshot",
       lastUpdated: null,
-      lastProfileId: profileId,
-      lastAppliedFetchId: state.liveFetchRequestId,
+      pendingProfileId: profileId,
+      pendingSnapshotFetchId: state.liveFetchRequestId,
     }));
   },
   setLive(payload) {
@@ -123,6 +128,8 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       lastUpdated: emittedAt,
       lastProfileId: nextProfileId ?? null,
       lastAppliedFetchId: current.liveFetchRequestId,
+      pendingProfileId: null,
+      pendingSnapshotFetchId: null,
     }));
   },
   startLiveFetch() {
@@ -141,12 +148,28 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       return;
     }
 
+    const shouldAdoptPending =
+      state.pendingProfileId !== null &&
+      requestId >= (state.pendingSnapshotFetchId ?? 0);
+
     set({
       data: view,
       hydration: "live",
       lastUpdated: Date.now(),
-      lastProfileId: state.lastProfileId,
+      lastProfileId: shouldAdoptPending
+        ? state.pendingProfileId
+        : state.lastProfileId,
       lastAppliedFetchId: requestId,
+      pendingProfileId: shouldAdoptPending ? null : state.pendingProfileId,
+      pendingSnapshotFetchId: shouldAdoptPending
+        ? null
+        : state.pendingSnapshotFetchId,
+    });
+  },
+  clearPendingProfile() {
+    set({
+      pendingProfileId: null,
+      pendingSnapshotFetchId: null,
     });
   },
   reset() {
@@ -157,6 +180,8 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       lastProfileId: null,
       liveFetchRequestId: 0,
       lastAppliedFetchId: 0,
+      pendingProfileId: null,
+      pendingSnapshotFetchId: null,
     });
   },
 }));
