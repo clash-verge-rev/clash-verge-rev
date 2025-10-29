@@ -297,21 +297,25 @@ impl PrfItem {
         let header = resp.headers();
 
         // parse the Subscription UserInfo
-        let extra = match header
-            .get("Subscription-Userinfo")
-            .or_else(|| headers.get("x-oss-meta-subscription-userinfo"))
-        {
-            Some(value) => {
-                let sub_info = value.to_str().unwrap_or("");
-                Some(PrfExtra {
-                    upload: help::parse_str(sub_info, "upload").unwrap_or(0),
-                    download: help::parse_str(sub_info, "download").unwrap_or(0),
-                    total: help::parse_str(sub_info, "total").unwrap_or(0),
-                    expire: help::parse_str(sub_info, "expire").unwrap_or(0),
-                })
+        let extra;
+        'extra: {
+            for (k, v) in header.iter() {
+                if k.to_string()
+                    .to_lowercase()
+                    .contains("subscription-userinfo")
+                {
+                    let sub_info = v.to_str().unwrap_or("");
+                    extra = Some(PrfExtra {
+                        upload: help::parse_str(sub_info, "upload").unwrap_or(0),
+                        download: help::parse_str(sub_info, "download").unwrap_or(0),
+                        total: help::parse_str(sub_info, "total").unwrap_or(0),
+                        expire: help::parse_str(sub_info, "expire").unwrap_or(0),
+                    });
+                    break 'extra;
+                }
             }
-            None => None,
-        };
+            extra = None;
+        }
 
         // parse the Content-Disposition
         let filename = match header.get("Content-Disposition") {
