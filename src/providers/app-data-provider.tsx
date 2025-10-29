@@ -23,7 +23,12 @@ import {
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_SLOW_POLL } from "@/services/config";
 import { useProfileStore } from "@/stores/profile-store";
-import { fetchLiveProxies, useProxyStore } from "@/stores/proxy-store";
+import {
+  applyLiveProxyPayload,
+  fetchLiveProxies,
+  type ProxiesUpdatedPayload,
+  useProxyStore,
+} from "@/stores/proxy-store";
 import { createProxySnapshotFromProfile } from "@/utils/proxy-snapshot";
 
 import { AppDataContext, AppDataContextType } from "./app-data-context";
@@ -319,6 +324,40 @@ export const AppDataProvider = ({
       }
     };
 
+    const isProxiesPayload = (
+      value: unknown,
+    ): value is ProxiesUpdatedPayload => {
+      if (!value || typeof value !== "object") {
+        return false;
+      }
+      const candidate = value as Partial<ProxiesUpdatedPayload>;
+      return candidate.proxies !== undefined && candidate.proxies !== null;
+    };
+
+    const handleProxiesUpdatedPayload = (
+      rawPayload: unknown,
+      source: "tauri" | "window",
+    ) => {
+      if (!isProxiesPayload(rawPayload)) {
+        console.warn(
+          `[AppDataProvider] Ignored ${source} proxies-updated payload`,
+          rawPayload,
+        );
+        queueProxyRefresh(`proxies-updated-${source}-invalid`, 500);
+        return;
+      }
+
+      try {
+        applyLiveProxyPayload(rawPayload);
+      } catch (error) {
+        console.warn(
+          `[AppDataProvider] Failed to apply ${source} proxies-updated payload`,
+          error,
+        );
+        queueProxyRefresh(`proxies-updated-${source}-apply-failed`, 500);
+      }
+    };
+
     listen<{ uid: string }>(
       "profile-update-completed",
       handleProfileUpdateCompleted,
@@ -331,6 +370,17 @@ export const AppDataProvider = ({
         ),
       );
 
+    listen<ProxiesUpdatedPayload>("proxies-updated", (event) => {
+      handleProxiesUpdatedPayload(event.payload, "tauri");
+    })
+      .then(registerCleanup)
+      .catch((error) =>
+        console.error(
+          "[AppDataProvider] failed to attach proxies-updated listener:",
+          error,
+        ),
+      );
+
     const fallbackHandlers: Array<[string, EventListener]> = [
       [
         "profile-update-completed",
@@ -339,6 +389,13 @@ export const AppDataProvider = ({
             uid: "",
           };
           handleProfileUpdateCompleted({ payload });
+        }) as EventListener,
+      ],
+      [
+        "proxies-updated",
+        ((event: Event) => {
+          const payload = (event as CustomEvent<ProxiesUpdatedPayload>).detail;
+          handleProxiesUpdatedPayload(payload, "window");
         }) as EventListener,
       ],
     ];

@@ -200,13 +200,25 @@ fn handle_enqueue(
         logging!(
             debug,
             Type::Cmd,
-            "Switch task {} -> {} ignored because cleanup is still running",
+            "Cleanup running for {}; queueing switch task {} -> {} to run afterwards",
+            profile_key,
             request.task_id(),
             profile_key
         );
+        if let Some(previous) = state
+            .latest_tokens
+            .insert(profile_key.clone(), request.cancel_token().clone())
+        {
+            previous.cancel();
+        }
+        state
+            .queue
+            .retain(|queued| queued.profile_id() != &profile_key);
+        state.queue.push_back(request);
         if let Some(sender) = responder.take() {
             let _ = sender.send(accepted);
         }
+        publish_status(state, manager);
         return;
     }
 
