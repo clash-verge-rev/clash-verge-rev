@@ -187,7 +187,7 @@ export const AppDataProvider = ({
   }, []);
 
   const queueProxyRefresh = useCallback(
-    (reason: string, delay = 600) => {
+    (reason: string, delay = 1500) => {
       scheduleTimeout(() => {
         fetchLiveProxies().catch((error) =>
           console.warn(
@@ -230,21 +230,27 @@ export const AppDataProvider = ({
       meta.lastResultFinishedAt = lastResult.finishedAt;
 
       queueProxyRefresh("profile-switch-finished");
-      void Promise.allSettled([
-        refreshProxyProviders(),
-        refreshRules(),
-        refreshRuleProviders(),
-      ]).then((results) => {
-        results.forEach((result, index) => {
-          if (result.status === "rejected") {
-            const label = ["Proxy providers", "Rules", "Rule providers"][index];
-            console.warn(
-              `[DataProvider] ${label} refresh failed after profile switch:`,
-              result.reason,
-            );
-          }
-        });
-      });
+      void refreshProxyProviders()
+        .catch((error) =>
+          console.warn(
+            "[DataProvider] Proxy providers refresh failed after profile switch:",
+            error,
+          ),
+        )
+        .then(() => refreshRules())
+        .catch((error) =>
+          console.warn(
+            "[DataProvider] Rules refresh failed after profile switch:",
+            error,
+          ),
+        )
+        .then(() => refreshRuleProviders())
+        .catch((error) =>
+          console.warn(
+            "[DataProvider] Rule providers refresh failed after profile switch:",
+            error,
+          ),
+        );
     }
   }, [
     switchStatus,
@@ -269,13 +275,17 @@ export const AppDataProvider = ({
     };
 
     const handleProfileUpdateCompleted = (_: { payload: { uid: string } }) => {
-      queueProxyRefresh("profile-update-completed", 800);
-      void refreshProxyProviders().catch((error) =>
-        console.warn(
-          "[DataProvider] Proxy providers refresh failed after profile update completed:",
-          error,
-        ),
-      );
+      queueProxyRefresh("profile-update-completed", 3000);
+      if (!isUnmountedRef.current) {
+        scheduleTimeout(() => {
+          void refreshProxyProviders().catch((error) =>
+            console.warn(
+              "[DataProvider] Proxy providers refresh failed after profile update completed:",
+              error,
+            ),
+          );
+        }, 0);
+      }
     };
 
     listen<{ uid: string }>(
