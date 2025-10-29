@@ -2,7 +2,7 @@ use super::{CoreManager, RunningMode};
 use crate::{
     AsyncHandler,
     config::Config,
-    core::{handle, logger::ClashLogger, service},
+    core::{handle, logger::CLASH_LOGGER, service},
     logging,
     process::CommandChildGuard,
     utils::{
@@ -16,15 +16,14 @@ use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;
 use scopeguard::defer;
-use std::collections::VecDeque;
 use tauri_plugin_shell::ShellExt;
 
 impl CoreManager {
-    pub async fn get_clash_logs(&self) -> Result<VecDeque<CompactString>> {
+    pub async fn get_clash_logs(&self) -> Result<Vec<CompactString>> {
         match *self.get_running_mode() {
             RunningMode::Service => service::get_clash_logs_by_service().await,
-            RunningMode::Sidecar => Ok(ClashLogger::global().get_logs().clone()),
-            RunningMode::NotRunning => Ok(VecDeque::new()),
+            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs().await),
+            RunningMode::NotRunning => Ok(Vec::new()),
         }
     }
 
@@ -65,7 +64,7 @@ impl CoreManager {
                         let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Error, &message);
-                        ClashLogger::global().append_log(message);
+                        CLASH_LOGGER.append_log(message).await;
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let mut now = DeferredNow::default();
@@ -78,7 +77,7 @@ impl CoreManager {
                         };
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Info, &message);
-                        ClashLogger::global().clear_logs();
+                        CLASH_LOGGER.clear_logs().await;
                         break;
                     }
                     _ => {}

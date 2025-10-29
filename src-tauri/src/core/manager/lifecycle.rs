@@ -1,7 +1,7 @@
 use super::{CoreManager, RunningMode};
 use crate::{
     core::{
-        logger::ClashLogger,
+        logger::CLASH_LOGGER,
         service::{SERVICE_MANAGER, ServiceStatus},
     },
     logging,
@@ -21,7 +21,7 @@ impl CoreManager {
     }
 
     pub async fn stop_core(&self) -> Result<()> {
-        ClashLogger::global().clear_logs();
+        CLASH_LOGGER.clear_logs().await;
 
         match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
