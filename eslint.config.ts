@@ -97,6 +97,7 @@ export default defineConfig([
           varsIgnorePattern: "^_+$",
           args: "after-used",
           argsIgnorePattern: "^_+$",
+          caughtErrorsIgnorePattern: "^ignore",
         },
       ],
 
