@@ -373,18 +373,6 @@ fn handle_enqueue(
         .queue
         .retain(|queued| queued.profile_id() != &profile_key);
 
-    if !state.queue.is_empty() {
-        logging!(
-            debug,
-            Type::Cmd,
-            "Collapsing {} pending switch request(s) before enqueuing task {} -> {}",
-            state.queue.len(),
-            request.task_id(),
-            profile_key
-        );
-        drop_pending_requests(state);
-    }
-
     state.queue.push_back(request.clone());
     if let Some(sender) = responder.take() {
         let _ = sender.send(accepted);

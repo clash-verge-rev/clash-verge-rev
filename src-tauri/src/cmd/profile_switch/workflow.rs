@@ -415,7 +415,9 @@ fn schedule_post_switch_success(
             notify,
             task_id,
         );
-        close_connections_after_switch(profile_id).await;
+        if success {
+            close_connections_after_switch(profile_id).await;
+        }
     })
 }
 
