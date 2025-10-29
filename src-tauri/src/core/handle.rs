@@ -73,13 +73,16 @@ impl Handle {
             return;
         }
 
-        logging!(
-            info,
-            Type::Frontend,
-            "refresh_clash suppressed during diagnostics (no events emitted)"
-        );
+        let system_opt = handle.notification_system.read();
+        let dispatched = if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::RefreshClash)
+        } else {
+            false
+        };
 
-        Self::spawn_proxy_snapshot();
+        if !dispatched {
+            Self::spawn_proxy_snapshot();
+        }
     }
 
     pub fn refresh_verge() {
@@ -95,12 +98,17 @@ impl Handle {
     }
 
     pub fn notify_profile_changed(profile_id: String) {
-        logging!(
-            info,
-            Type::Frontend,
-            "notify_profile_changed suppressed during diagnostics (profile={})",
-            profile_id
-        );
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        let system_opt = handle.notification_system.read();
+        if let Some(system) = system_opt.as_ref() {
+            system.send_event(FrontendEvent::ProfileChanged {
+                current_profile_id: profile_id,
+            });
+        }
     }
 
     pub fn notify_profile_switch_finished(
