@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use super::CmdResult;
 use crate::{
     cmd::StringifyErr,
@@ -275,7 +273,7 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
 }
 
 #[tauri::command]
-pub async fn get_clash_logs() -> CmdResult<VecDeque<CompactString>> {
+pub async fn get_clash_logs() -> CmdResult<Vec<CompactString>> {
     let logs = CoreManager::global()
         .get_clash_logs()
         .await
