@@ -73,16 +73,14 @@ impl Handle {
             return;
         }
 
-        let system_opt = handle.notification_system.read();
-        let dispatched = if let Some(system) = system_opt.as_ref() {
-            system.send_event(FrontendEvent::RefreshClash)
-        } else {
-            false
-        };
-
-        if !dispatched {
-            Self::spawn_proxy_snapshot();
+        {
+            let system_opt = handle.notification_system.read();
+            if let Some(system) = system_opt.as_ref() {
+                system.send_event(FrontendEvent::RefreshClash);
+            }
         }
+
+        Self::spawn_proxy_snapshot();
     }
 
     pub fn refresh_verge() {
