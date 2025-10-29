@@ -10,7 +10,10 @@ use anyhow::{Result, anyhow};
 use smartstring::alias::String;
 use std::{path::PathBuf, time::Instant};
 use tauri_plugin_mihomo::Error as MihomoError;
-use tokio::time::sleep;
+use tokio::time::{sleep, timeout};
+
+const RELOAD_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+const MAX_RELOAD_ATTEMPTS: usize = 3;
 
 impl CoreManager {
     pub async fn use_default_config(&self, error_key: &str, error_msg: &str) -> Result<()> {
@@ -168,7 +171,7 @@ impl CoreManager {
         let path_str = dirs::path_to_str(&path)?;
 
         let reload_start = Instant::now();
-        match self.reload_config(path_str).await {
+        match self.reload_config_with_retry(path_str).await {
             Ok(_) => {
                 Config::runtime().await.apply();
                 logging!(
@@ -179,17 +182,21 @@ impl CoreManager {
                 );
                 Ok(())
             }
-            Err(err) if Self::should_restart_on_error(&err) => {
-                logging!(
-                    warn,
-                    Type::Core,
-                    "Reload failed after {}ms with retryable error; restarting core: {}",
-                    reload_start.elapsed().as_millis(),
-                    err
-                );
-                self.retry_with_restart(path_str).await
-            }
             Err(err) => {
+                if let Some(mihomo_err) = err
+                    .downcast_ref::<MihomoError>()
+                    .filter(|mihomo_err| Self::should_restart_on_error(mihomo_err))
+                {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "Reload failed after {}ms with retryable error; restarting core: {}",
+                        reload_start.elapsed().as_millis(),
+                        mihomo_err
+                    );
+                    return self.retry_with_restart(path_str).await;
+                }
+
                 Config::runtime().await.discard();
                 logging!(
                     error,
@@ -212,13 +219,73 @@ impl CoreManager {
         self.restart_core().await?;
         sleep(timing::CONFIG_RELOAD_DELAY).await;
 
-        self.reload_config(config_path).await?;
+        self.reload_config_with_retry(config_path).await?;
         Config::runtime().await.apply();
         logging!(info, Type::Core, "Configuration applied after restart");
         Ok(())
     }
 
-    async fn reload_config(&self, path: &str) -> Result<(), MihomoError> {
+    async fn reload_config_with_retry(&self, path: &str) -> Result<()> {
+        for attempt in 1..=MAX_RELOAD_ATTEMPTS {
+            let attempt_start = Instant::now();
+            let reload_future = self.reload_config_once(path);
+            match timeout(RELOAD_TIMEOUT, reload_future).await {
+                Ok(Ok(())) => {
+                    logging!(
+                        debug,
+                        Type::Core,
+                        "reload_config attempt {}/{} succeeded in {}ms",
+                        attempt,
+                        MAX_RELOAD_ATTEMPTS,
+                        attempt_start.elapsed().as_millis()
+                    );
+                    return Ok(());
+                }
+                Ok(Err(err)) => {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "reload_config attempt {}/{} failed after {}ms: {}",
+                        attempt,
+                        MAX_RELOAD_ATTEMPTS,
+                        attempt_start.elapsed().as_millis(),
+                        err
+                    );
+                    if attempt == MAX_RELOAD_ATTEMPTS {
+                        return Err(anyhow!(
+                            "Failed to reload config after {} attempts: {}",
+                            attempt,
+                            err
+                        ));
+                    }
+                }
+                Err(_) => {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "reload_config attempt {}/{} timed out after {:?}",
+                        attempt,
+                        MAX_RELOAD_ATTEMPTS,
+                        RELOAD_TIMEOUT
+                    );
+                    if attempt == MAX_RELOAD_ATTEMPTS {
+                        return Err(anyhow!(
+                            "Config reload timed out after {:?} ({} attempts)",
+                            RELOAD_TIMEOUT,
+                            MAX_RELOAD_ATTEMPTS
+                        ));
+                    }
+                }
+            }
+        }
+
+        Err(anyhow!(
+            "Config reload retry loop exited unexpectedly ({} attempts)",
+            MAX_RELOAD_ATTEMPTS
+        ))
+    }
+
+    async fn reload_config_once(&self, path: &str) -> Result<(), MihomoError> {
         handle::Handle::mihomo()
             .await
             .reload_config(true, path)
