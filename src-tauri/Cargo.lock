@@ -1183,8 +1183,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.0.19"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#1d9b8a6f5ea9a7f8c52ffef814b51f48d6cdad33"
+version = "2.0.20"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#c0b6e99da27e7956047d42aee104f5c33083c970"
 dependencies = [
  "anyhow",
  "compact_str",
