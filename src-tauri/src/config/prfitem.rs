@@ -302,7 +302,7 @@ impl PrfItem {
             for (k, v) in header.iter() {
                 if k.to_string()
                     .to_lowercase()
-                    .contains("subscription-userinfo")
+                    .ends_with("subscription-userinfo")
                 {
                     let sub_info = v.to_str().unwrap_or("");
                     extra = Some(PrfExtra {
