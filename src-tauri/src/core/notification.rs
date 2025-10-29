@@ -207,7 +207,7 @@ impl NotificationSystem {
                         start.elapsed()
                     );
                     let emit_start = Instant::now();
-                    if let Err(err) = Self::emit_via_app(event_name, payload).await {
+                    if let Err(err) = Self::emit_via_app(event_name, payload) {
                         logging!(
                             warn,
                             Type::Frontend,
@@ -266,31 +266,23 @@ impl NotificationSystem {
         )
     }
 
-    async fn emit_via_app(
-        event_name: &'static str,
-        payload: serde_json::Value,
-    ) -> Result<(), String> {
+    fn emit_via_app(event_name: &'static str, payload: serde_json::Value) -> Result<(), String> {
         let app_handle = super::handle::Handle::app_handle().clone();
-        logging!(
-            debug,
-            Type::Frontend,
-            "emit_via_app entering spawn_blocking: {}",
-            event_name
-        );
-        async_runtime::spawn_blocking(move || {
-            logging!(
-                debug,
-                Type::Frontend,
-                "emit_via_app calling emit_to synchronously: {}",
-                event_name
-            );
-            app_handle
-                .emit_to("main", event_name, payload)
-                .map_err(|e| e.to_string())
-        })
-        .await
-        .map_err(|e| String::from(format!("Join error: {}", e)))?
-        .map_err(String::from)
+        let event_name = event_name.to_string();
+        let emit_payload = payload.clone();
+        async_runtime::spawn(async move {
+            let result = app_handle.emit_to("main", event_name.as_str(), emit_payload);
+            if let Err(err) = result {
+                logging!(
+                    warn,
+                    Type::Frontend,
+                    "emit_to failed for {}: {}",
+                    event_name,
+                    err
+                );
+            }
+        });
+        Ok(())
     }
 
     async fn flush_proxies(buffer: Arc<BufferedProxies>) {
@@ -334,19 +326,19 @@ impl NotificationSystem {
                 start.elapsed()
             );
             let emit_start = Instant::now();
-            if let Err(err) = Self::emit_via_app(EVENT_NAME, payload).await {
+            let result = Self::emit_via_app(EVENT_NAME, payload);
+            if let Err(err) = result {
                 logging!(
                     warn,
                     Type::Frontend,
-                    "Buffered proxies emit failed: {} after {:?}",
-                    err,
-                    emit_start.elapsed()
+                    "Buffered proxies emit dispatch failed: {}",
+                    err
                 );
             } else {
                 logging!(
                     debug,
                     Type::Frontend,
-                    "Buffered proxies emit completed: {} (emit duration {:?})",
+                    "Buffered proxies emit dispatched: {} (emit duration {:?})",
                     EVENT_NAME,
                     emit_start.elapsed()
                 );
