@@ -17,6 +17,7 @@ use std::{
 };
 use tokio::{
     sync::{
+        Mutex as AsyncMutex,
         mpsc::{self, error::TrySendError},
         oneshot,
     },
@@ -25,6 +26,41 @@ use tokio::{
 
 const SWITCH_QUEUE_CAPACITY: usize = 32;
 static SWITCH_QUEUE: OnceCell<mpsc::Sender<SwitchDriverMessage>> = OnceCell::new();
+
+type CompletionRegistry = AsyncMutex<HashMap<u64, oneshot::Sender<SwitchResultStatus>>>;
+
+static SWITCH_COMPLETION_WAITERS: OnceCell<CompletionRegistry> = OnceCell::new();
+
+fn completion_waiters() -> &'static CompletionRegistry {
+    SWITCH_COMPLETION_WAITERS.get_or_init(|| AsyncMutex::new(HashMap::new()))
+}
+
+async fn register_completion_waiter(task_id: u64) -> oneshot::Receiver<SwitchResultStatus> {
+    let (sender, receiver) = oneshot::channel();
+    let mut guard = completion_waiters().lock().await;
+    if guard.insert(task_id, sender).is_some() {
+        logging!(
+            warn,
+            Type::Cmd,
+            "Replacing existing completion waiter for task {}",
+            task_id
+        );
+    }
+    receiver
+}
+
+async fn remove_completion_waiter(task_id: u64) -> Option<oneshot::Sender<SwitchResultStatus>> {
+    completion_waiters().lock().await.remove(&task_id)
+}
+
+fn notify_completion_waiter(task_id: u64, result: SwitchResultStatus) {
+    tokio::spawn(async move {
+        let sender = completion_waiters().lock().await.remove(&task_id);
+        if let Some(sender) = sender {
+            let _ = sender.send(result);
+        }
+    });
+}
 
 const WATCHDOG_TIMEOUT: Duration = Duration::from_secs(5);
 const WATCHDOG_TICK: Duration = Duration::from_millis(500);
@@ -69,10 +105,21 @@ pub(super) async fn switch_profile(
     profile_index: impl Into<SmartString>,
     notify_success: bool,
 ) -> CmdResult<bool> {
-    switch_profile_impl(profile_index.into(), notify_success).await
+    switch_profile_impl(profile_index.into(), notify_success, false).await
 }
 
-async fn switch_profile_impl(profile_index: SmartString, notify_success: bool) -> CmdResult<bool> {
+pub(super) async fn switch_profile_and_wait(
+    profile_index: impl Into<SmartString>,
+    notify_success: bool,
+) -> CmdResult<bool> {
+    switch_profile_impl(profile_index.into(), notify_success, true).await
+}
+
+async fn switch_profile_impl(
+    profile_index: SmartString,
+    notify_success: bool,
+    wait_for_completion: bool,
+) -> CmdResult<bool> {
     let manager = manager();
     let sender = switch_driver_sender();
 
@@ -91,9 +138,16 @@ async fn switch_profile_impl(profile_index: SmartString, notify_success: bool) -
         notify_success
     );
 
+    let task_id = request.task_id();
+    let mut completion_rx = if wait_for_completion {
+        Some(register_completion_waiter(task_id).await)
+    } else {
+        None
+    };
+
     let (tx, rx) = oneshot::channel();
 
-    match sender.try_send(SwitchDriverMessage::Request {
+    let enqueue_result = match sender.try_send(SwitchDriverMessage::Request {
         request,
         respond_to: tx,
     }) {
@@ -152,6 +206,41 @@ async fn switch_profile_impl(profile_index: SmartString, notify_success: bool) -
             );
             Err("switch profile queue unavailable".into())
         }
+    };
+
+    let accepted = match enqueue_result {
+        Ok(result) => result,
+        Err(err) => {
+            if completion_rx.is_some() {
+                remove_completion_waiter(task_id).await;
+            }
+            return Err(err);
+        }
+    };
+
+    if !accepted {
+        if completion_rx.is_some() {
+            remove_completion_waiter(task_id).await;
+        }
+        return Ok(false);
+    }
+
+    if let Some(rx_completion) = completion_rx.take() {
+        match rx_completion.await {
+            Ok(status) => Ok(status.success),
+            Err(err) => {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Switch task {} completion channel dropped: {}",
+                    task_id,
+                    err
+                );
+                Err("profile switch completion unavailable".into())
+            }
+        }
+    } else {
+        Ok(true)
     }
 }
 
@@ -360,6 +449,7 @@ fn handle_completion(
 
     let event_record = result_record.clone();
     state.last_result = Some(result_record);
+    notify_completion_waiter(request.task_id(), event_record.clone());
     manager.push_event(event_record);
     start_next_job(state, driver_tx, manager);
     publish_status(state, manager);
@@ -386,6 +476,16 @@ fn discard_request(state: &mut SwitchDriverState, request: SwitchRequest) {
     if !request.cancel_token().is_cancelled() {
         request.cancel_token().cancel();
     }
+
+    notify_completion_waiter(
+        request.task_id(),
+        SwitchResultStatus::failed(
+            request.task_id(),
+            request.profile_id(),
+            Some("cancelled".to_string()),
+            Some("request superseded".to_string()),
+        ),
+    );
 }
 
 fn start_switch_job(
@@ -455,6 +555,8 @@ fn start_switch_job(
             }
         };
 
+        let request_for_error = completion_request.clone();
+
         if let Err(err) = driver_tx
             .send(SwitchDriverMessage::Completion {
                 request: completion_request,
@@ -467,6 +569,15 @@ fn start_switch_job(
                 Type::Cmd,
                 "Failed to push switch completion to driver: {}",
                 err
+            );
+            notify_completion_waiter(
+                request_for_error.task_id(),
+                SwitchResultStatus::failed(
+                    request_for_error.task_id(),
+                    request_for_error.profile_id(),
+                    Some("driver".to_string()),
+                    Some(format!("completion dispatch failed: {}", err)),
+                ),
             );
         }
     });

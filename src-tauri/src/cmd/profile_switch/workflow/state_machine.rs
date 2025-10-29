@@ -566,18 +566,29 @@ impl SwitchStateMachine {
         })
         .await;
 
-        if apply_result.is_ok() {
-            return Ok(true);
+        match apply_result {
+            Ok(Ok(())) => Ok(true),
+            Ok(Err(join_err)) => {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Applying profile configuration failed: {}",
+                    join_err
+                );
+                Config::profiles().await.discard();
+                Ok(false)
+            }
+            Err(_) => {
+                logging!(
+                    warn,
+                    Type::Cmd,
+                    "Applying profile configuration timed out after {:?}",
+                    CONFIG_APPLY_TIMEOUT
+                );
+                Config::profiles().await.discard();
+                Ok(false)
+            }
         }
-
-        logging!(
-            warn,
-            Type::Cmd,
-            "Applying profile configuration timed out after {:?}",
-            CONFIG_APPLY_TIMEOUT
-        );
-        Config::profiles().await.discard();
-        Ok(false)
     }
 
     async fn refresh_clash_with_timeout(&self) {
