@@ -3,6 +3,7 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect } from "react";
 
 import { useListen } from "@/hooks/use-listen";
+import { refreshClashData, refreshVergeData } from "@/services/refresh";
 export const useLayoutEvents = (
   handleNotice: (payload: [string, string]) => void,
 ) => {
@@ -38,6 +39,26 @@ export const useLayoutEvents = (
       addListener("verge://notice-message", ({ payload }) =>
         handleNotice(payload as [string, string]),
       ),
+    );
+
+    register(
+      addListener("verge://refresh-clash-config", async () => {
+        try {
+          await refreshClashData();
+        } catch (error) {
+          console.error("[事件监听] 刷新 Clash 配置失败", error);
+        }
+      }),
+    );
+
+    register(
+      addListener("verge://refresh-verge-config", () => {
+        try {
+          refreshVergeData();
+        } catch (error) {
+          console.error("[事件监听] 刷新 Verge 配置失败", error);
+        }
+      }),
     );
 
     const appWindow = getCurrentWebviewWindow();
