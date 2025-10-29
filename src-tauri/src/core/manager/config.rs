@@ -183,20 +183,28 @@ impl CoreManager {
                 Ok(())
             }
             Err(err) => {
-                if let Some(mihomo_err) = err
-                    .downcast_ref::<MihomoError>()
-                    .filter(|mihomo_err| Self::should_restart_on_error(mihomo_err))
-                {
+                if Self::should_restart_for_anyhow(&err) {
                     logging!(
                         warn,
                         Type::Core,
-                        "Reload failed after {}ms with retryable error; restarting core: {}",
+                        "Reload failed after {}ms with retryable/timeout error; attempting restart: {}",
                         reload_start.elapsed().as_millis(),
-                        mihomo_err
+                        err
                     );
-                    return self.retry_with_restart(path_str).await;
+                    match self.retry_with_restart(path_str).await {
+                        Ok(_) => return Ok(()),
+                        Err(retry_err) => {
+                            logging!(
+                                error,
+                                Type::Core,
+                                "Reload retry with restart failed: {}",
+                                retry_err
+                            );
+                            Config::runtime().await.discard();
+                            return Err(retry_err);
+                        }
+                    }
                 }
-
                 Config::runtime().await.discard();
                 logging!(
                     error,
@@ -286,10 +294,49 @@ impl CoreManager {
     }
 
     async fn reload_config_once(&self, path: &str) -> Result<(), MihomoError> {
-        handle::Handle::mihomo()
+        logging!(
+            info,
+            Type::Core,
+            "[ConfigUpdate] reload_config_once begin path={} ",
+            path
+        );
+        let start = Instant::now();
+        let result = handle::Handle::mihomo()
             .await
             .reload_config(true, path)
-            .await
+            .await;
+        let elapsed = start.elapsed().as_millis();
+        match result {
+            Ok(()) => {
+                logging!(
+                    info,
+                    Type::Core,
+                    "[ConfigUpdate] reload_config_once succeeded (elapsed={}ms)",
+                    elapsed
+                );
+                Ok(())
+            }
+            Err(err) => {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "[ConfigUpdate] reload_config_once failed (elapsed={}ms, err={})",
+                    elapsed,
+                    err
+                );
+                Err(err)
+            }
+        }
+    }
+
+    fn should_restart_for_anyhow(err: &anyhow::Error) -> bool {
+        if let Some(mihomo_err) = err.downcast_ref::<MihomoError>() {
+            return Self::should_restart_on_error(mihomo_err);
+        }
+        let msg = err.to_string();
+        msg.contains("timed out")
+            || msg.contains("reload")
+            || msg.contains("Failed to apply config")
     }
 
     fn should_restart_on_error(err: &MihomoError) -> bool {

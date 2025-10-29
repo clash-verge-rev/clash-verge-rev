@@ -153,7 +153,7 @@ impl NotificationSystem {
         match event {
             FrontendEvent::ProxiesUpdated { payload } => {
                 logging!(
-                    info,
+                    debug,
                     Type::Frontend,
                     "Queueing proxies-updated event for buffered emit: {}",
                     event_label
@@ -162,7 +162,7 @@ impl NotificationSystem {
             }
             other => {
                 logging!(
-                    info,
+                    debug,
                     Type::Frontend,
                     "Queueing event for async emit: {}",
                     event_label
@@ -184,7 +184,7 @@ impl NotificationSystem {
                 };
 
                 logging!(
-                    info,
+                    debug,
                     Type::Frontend,
                     "Async emit scheduled after delay: {}",
                     event_name
@@ -192,7 +192,7 @@ impl NotificationSystem {
                 async_runtime::spawn(async move {
                     let _guard = EMIT_SERIALIZER.lock().await;
                     logging!(
-                        info,
+                        debug,
                         Type::Frontend,
                         "Async emit acquired serializer: {}",
                         event_name
@@ -200,7 +200,7 @@ impl NotificationSystem {
                     let start = Instant::now();
                     sleep(Duration::from_millis(50)).await;
                     logging!(
-                        info,
+                        debug,
                         Type::Frontend,
                         "Async emit invoking emit_to: {} (delay {:?})",
                         event_name,
@@ -217,7 +217,7 @@ impl NotificationSystem {
                         );
                     } else {
                         logging!(
-                            info,
+                            debug,
                             Type::Frontend,
                             "Async emit completed: {} (emit duration {:?})",
                             event_name,
@@ -239,7 +239,7 @@ impl NotificationSystem {
 
         if replaced {
             logging!(
-                info,
+                debug,
                 Type::Frontend,
                 "Replaced pending proxies-updated payload with latest snapshot"
             );
@@ -272,14 +272,14 @@ impl NotificationSystem {
     ) -> Result<(), String> {
         let app_handle = super::handle::Handle::app_handle().clone();
         logging!(
-            info,
+            debug,
             Type::Frontend,
             "emit_via_app entering spawn_blocking: {}",
             event_name
         );
         async_runtime::spawn_blocking(move || {
             logging!(
-                info,
+                debug,
                 Type::Frontend,
                 "emit_via_app calling emit_to synchronously: {}",
                 event_name
@@ -319,7 +319,7 @@ impl NotificationSystem {
 
             let _guard = EMIT_SERIALIZER.lock().await;
             logging!(
-                info,
+                debug,
                 Type::Frontend,
                 "Buffered proxies emit acquired serializer: {}",
                 EVENT_NAME
@@ -327,7 +327,7 @@ impl NotificationSystem {
             let start = Instant::now();
             sleep(Duration::from_millis(50)).await;
             logging!(
-                info,
+                debug,
                 Type::Frontend,
                 "Buffered proxies emit invoking emit_to: {} (delay {:?})",
                 EVENT_NAME,
@@ -344,7 +344,7 @@ impl NotificationSystem {
                 );
             } else {
                 logging!(
-                    info,
+                    debug,
                     Type::Frontend,
                     "Buffered proxies emit completed: {} (emit duration {:?})",
                     EVENT_NAME,

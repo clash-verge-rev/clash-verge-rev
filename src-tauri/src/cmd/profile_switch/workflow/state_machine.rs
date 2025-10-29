@@ -187,12 +187,37 @@ impl SwitchStateMachine {
         F: FnOnce(&'a mut Self) -> Fut,
         Fut: std::future::Future<Output = CmdResult<SwitchState>> + 'a,
     {
+        let sequence = self.ctx.sequence();
+        let task = self.ctx.task_id;
+        let profile = self.ctx.profile_label.clone();
+        logging!(
+            info,
+            Type::Cmd,
+            "Enter {:?} (sequence={}, task={:?}, profile={})",
+            stage,
+            sequence,
+            task,
+            profile
+        );
+        let stage_start = Instant::now();
         self.ctx.record_stage(stage);
         AssertUnwindSafe(f(self))
             .catch_unwind()
             .await
             .map_err(|payload| {
                 SwitchPanicInfo::new(stage, describe_panic_payload(payload.as_ref()))
+            })
+            .inspect(|_| {
+                logging!(
+                    info,
+                    Type::Cmd,
+                    "Exit {:?} (sequence={}, task={:?}, profile={}, elapsed={}ms)",
+                    stage,
+                    sequence,
+                    task,
+                    profile,
+                    stage_start.elapsed().as_millis()
+                );
             })
     }
 
