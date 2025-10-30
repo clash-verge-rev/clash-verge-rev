@@ -100,12 +100,10 @@ export const CurrentProxyCard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
-  const { proxies, proxyHydration, clashConfig, refreshProxy, rules } =
-    useAppData();
+  const { proxies, clashConfig, refreshProxy, rules } = useAppData();
   const { verge } = useVerge();
   const { current: currentProfile } = useProfiles();
   const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false;
-  const isLiveHydration = proxyHydration === "live";
   const currentProfileId = currentProfile?.uid || null;
 
   const getProfileStorageKey = useCallback(
@@ -717,6 +715,7 @@ export const CurrentProxyCard = () => {
         );
       }
     }
+
     refreshProxy();
     if (sortType === 1) {
       setDelaySortRefresh((prev) => prev + 1);
@@ -841,24 +840,13 @@ export const CurrentProxyCard = () => {
       iconColor={currentProxy ? "primary" : undefined}
       action={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {!isLiveHydration && (
-            <Chip
-              size="small"
-              color={proxyHydration === "snapshot" ? "warning" : "info"}
-              label={
-                proxyHydration === "snapshot"
-                  ? t("Snapshot data")
-                  : t("Syncing...")
-              }
-            />
-          )}
           <Tooltip title={t("Delay check")}>
             <span>
               <IconButton
                 size="small"
                 color="inherit"
                 onClick={handleCheckDelay}
-                disabled={isDirectMode || !isLiveHydration}
+                disabled={isDirectMode}
               >
                 <NetworkCheckRounded />
               </IconButton>
@@ -972,7 +960,7 @@ export const CurrentProxyCard = () => {
               value={state.selection.group}
               onChange={handleGroupChange}
               label={t("Group")}
-              disabled={isGlobalMode || isDirectMode || !isLiveHydration}
+              disabled={isGlobalMode || isDirectMode}
             >
               {state.proxyData.groups.map((group) => (
                 <MenuItem key={group.name} value={group.name}>
@@ -990,7 +978,7 @@ export const CurrentProxyCard = () => {
               value={state.selection.proxy}
               onChange={handleProxyChange}
               label={t("Proxy")}
-              disabled={isDirectMode || !isLiveHydration}
+              disabled={isDirectMode}
               renderValue={renderProxyValue}
               MenuProps={{
                 PaperProps: {

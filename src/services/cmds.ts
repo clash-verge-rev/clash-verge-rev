@@ -4,52 +4,6 @@ import { getProxies, getProxyProviders } from "tauri-plugin-mihomo-api";
 
 import { showNotice } from "@/services/noticeService";
 
-export type ProxyProviderRecord = Record<
-  string,
-  IProxyProviderItem | undefined
->;
-
-export interface SwitchTaskStatus {
-  taskId: number;
-  profileId: string;
-  notify: boolean;
-  stage?: number | null;
-  queued: boolean;
-}
-
-export interface SwitchResultStatus {
-  taskId: number;
-  profileId: string;
-  success: boolean;
-  cancelled?: boolean;
-  finishedAt: number;
-  errorStage?: string | null;
-  errorDetail?: string | null;
-}
-
-export interface ProfileSwitchStatus {
-  isSwitching: boolean;
-  active?: SwitchTaskStatus | null;
-  queue: SwitchTaskStatus[];
-  cleanupProfiles: string[];
-  lastResult?: SwitchResultStatus | null;
-  lastUpdated: number;
-}
-
-export interface SwitchResultEvent {
-  sequence: number;
-  result: SwitchResultStatus;
-}
-
-// Persist the last proxy provider payload so UI can render while waiting on Mihomo.
-let cachedProxyProviders: ProxyProviderRecord | null = null;
-
-export const getCachedProxyProviders = () => cachedProxyProviders;
-
-export const setCachedProxyProviders = (record: ProxyProviderRecord | null) => {
-  cachedProxyProviders = record;
-};
-
 export async function copyClashEnv() {
   return invoke<void>("copy_clash_env");
 }
@@ -64,14 +18,6 @@ export async function enhanceProfiles() {
 
 export async function patchProfilesConfig(profiles: IProfilesConfig) {
   return invoke<void>("patch_profiles_config", { profiles });
-}
-
-// Triggers the async state-machine driven switch flow on the backend.
-export async function switchProfileCommand(
-  profileIndex: string,
-  notifySuccess: boolean,
-) {
-  return invoke<boolean>("switch_profile", { profileIndex, notifySuccess });
 }
 
 export async function createProfile(
@@ -167,29 +113,27 @@ export async function syncTrayProxySelection() {
   return invoke<void>("sync_tray_proxy_selection");
 }
 
-export interface ProxiesView {
+export async function calcuProxies(): Promise<{
   global: IProxyGroupItem;
   direct: IProxyItem;
   groups: IProxyGroupItem[];
   records: Record<string, IProxyItem>;
   proxies: IProxyItem[];
-}
+}> {
+  const [proxyResponse, providerResponse] = await Promise.all([
+    getProxies(),
+    calcuProxyProviders(),
+  ]);
 
-export function buildProxyView(
-  proxyResponse: Awaited<ReturnType<typeof getProxies>>,
-  providerRecord?: ProxyProviderRecord | null,
-): ProxiesView {
   const proxyRecord = proxyResponse.proxies;
+  const providerRecord = providerResponse;
 
   // provider name map
-  const providerMap = providerRecord
-    ? Object.fromEntries(
-        Object.entries(providerRecord).flatMap(([provider, item]) => {
-          if (!item) return [];
-          return item.proxies.map((p) => [p.name, { ...p, provider }]);
-        }),
-      )
-    : {};
+  const providerMap = Object.fromEntries(
+    Object.entries(providerRecord).flatMap(([provider, item]) =>
+      item!.proxies.map((p) => [p.name, { ...p, provider }]),
+    ),
+  );
 
   // compatible with proxy-providers
   const generateItem = (name: string) => {
@@ -263,56 +207,16 @@ export function buildProxyView(
   };
 }
 
-export async function calcuProxies(): Promise<ProxiesView> {
-  const proxyResponse = await getProxies();
-
-  let providerRecord = cachedProxyProviders;
-  if (!providerRecord) {
-    try {
-      providerRecord = await calcuProxyProviders();
-    } catch (error) {
-      console.warn("[calcuProxies] 代理提供者加载失败:", error);
-    }
-  }
-
-  return buildProxyView(proxyResponse, providerRecord);
-}
-
 export async function calcuProxyProviders() {
   const providers = await getProxyProviders();
-  const mappedEntries = Object.entries(providers.providers)
-    .sort()
-    .filter(
-      ([, item]) =>
-        item?.vehicleType === "HTTP" || item?.vehicleType === "File",
-    )
-    .map(([name, item]) => {
-      if (!item) return [name, undefined] as const;
-
-      const subscriptionInfo =
-        item.subscriptionInfo && typeof item.subscriptionInfo === "object"
-          ? {
-              Upload: item.subscriptionInfo.Upload ?? 0,
-              Download: item.subscriptionInfo.Download ?? 0,
-              Total: item.subscriptionInfo.Total ?? 0,
-              Expire: item.subscriptionInfo.Expire ?? 0,
-            }
-          : undefined;
-
-      const normalized: IProxyProviderItem = {
-        name: item.name,
-        type: item.type,
-        proxies: item.proxies ?? [],
-        updatedAt: item.updatedAt ?? "",
-        vehicleType: item.vehicleType ?? "",
-        subscriptionInfo,
-      };
-      return [name, normalized] as const;
-    });
-
-  const mapped = Object.fromEntries(mappedEntries) as ProxyProviderRecord;
-  cachedProxyProviders = mapped;
-  return mapped;
+  return Object.fromEntries(
+    Object.entries(providers.providers)
+      .sort()
+      .filter(
+        ([_, item]) =>
+          item?.vehicleType === "HTTP" || item?.vehicleType === "File",
+      ),
+  );
 }
 
 export async function getClashLogs() {
@@ -650,14 +554,4 @@ export const isAdmin = async () => {
 
 export async function getNextUpdateTime(uid: string) {
   return invoke<number | null>("get_next_update_time", { uid });
-}
-
-export async function getProfileSwitchStatus() {
-  return invoke<ProfileSwitchStatus>("get_profile_switch_status");
-}
-
-export async function getProfileSwitchEvents(afterSequence: number) {
-  return invoke<SwitchResultEvent[]>("get_profile_switch_events", {
-    afterSequence,
-  });
 }
