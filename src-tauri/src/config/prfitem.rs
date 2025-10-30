@@ -51,6 +51,10 @@ pub struct PrfItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<String>,
 
+    /// group id
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group_id: Option<String>,
+
     /// the file data
     #[serde(skip)]
     pub file_data: Option<String>,
@@ -234,6 +238,7 @@ impl PrfItem {
                 ..PrfOption::default()
             }),
             home: None,
+            group_id: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(file_data.unwrap_or_else(|| tmpl::ITEM_LOCAL.into())),
         })
@@ -425,6 +430,7 @@ impl PrfItem {
                 ..PrfOption::default()
             }),
             home,
+            group_id: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(data.into()),
         })
@@ -452,6 +458,7 @@ impl PrfItem {
             extra: None,
             option: None,
             home: None,
+            group_id: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(template),
         })
@@ -477,6 +484,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
+            group_id: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
         })
@@ -498,6 +506,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
+            group_id: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_RULES.into()),
         })
@@ -519,6 +528,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
+            group_id: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_PROXIES.into()),
         })
@@ -540,6 +550,7 @@ impl PrfItem {
             selected: None,
             extra: None,
             option: None,
+            group_id: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_GROUPS.into()),
         })

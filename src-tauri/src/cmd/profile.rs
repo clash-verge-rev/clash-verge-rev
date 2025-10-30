@@ -33,6 +33,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
         IProfiles {
             current: latest.current.clone(),
             items: latest.items.clone(),
+            groups: latest.groups.clone(),
         }
     })
     .await;
@@ -54,6 +55,7 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
         IProfiles {
             current: data.current.clone(),
             items: data.items.clone(),
+            groups: data.groups.clone(),
         }
     })
     .await;
@@ -330,6 +332,7 @@ async fn restore_previous_profile(prev_profile: String) -> CmdResult<()> {
     let restore_profiles = IProfiles {
         current: Some(prev_profile),
         items: None,
+        groups: None,
     };
     Config::profiles()
         .await
@@ -563,6 +566,7 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
     let profiles = IProfiles {
         current: Some(profile_index),
         items: None,
+        groups: None,
     };
     patch_profiles_config(profiles).await
 }
@@ -644,4 +648,98 @@ pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
     let timer = Timer::global();
     let next_time = timer.get_next_update_time(&uid).await;
     Ok(next_time)
+}
+
+/// 添加分组
+#[tauri::command]
+pub async fn add_profile_group(name: String) -> CmdResult<crate::config::ProfileGroup> {
+    let result: Result<crate::config::ProfileGroup, anyhow::Error> = Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.ensure_groups();
+            let group = profiles
+                .get_groups_mut()
+                .ok_or_else(|| anyhow::anyhow!("groups not initialized"))?
+                .add_group(name)?;
+            profiles.save_file().await?;
+            Ok((profiles, group))
+        })
+        .await;
+    result.stringify_err()
+}
+
+/// 删除分组
+#[tauri::command]
+pub async fn remove_profile_group(id: String) -> CmdResult {
+    let result: Result<(), anyhow::Error> = Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.ensure_groups();
+            let groups = profiles
+                .get_groups_mut()
+                .ok_or_else(|| anyhow::anyhow!("groups not initialized"))?;
+            groups.remove_group(&id)?;
+
+            // 将该分组的配置文件移到默认分组
+            if let Some(items) = profiles.items.as_mut() {
+                for item in items.iter_mut() {
+                    if item.group_id.as_ref() == Some(&id) {
+                        item.group_id = None;
+                    }
+                }
+            }
+
+            profiles.save_file().await?;
+            Ok((profiles, ()))
+        })
+        .await;
+    result.stringify_err()
+}
+
+/// 重命名分组
+#[tauri::command]
+pub async fn rename_profile_group(id: String, new_name: String) -> CmdResult {
+    let result: Result<(), anyhow::Error> = Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.ensure_groups();
+            profiles
+                .get_groups_mut()
+                .ok_or_else(|| anyhow::anyhow!("groups not initialized"))?
+                .rename_group(&id, new_name)?;
+            profiles.save_file().await?;
+            Ok((profiles, ()))
+        })
+        .await;
+    result.stringify_err()
+}
+
+/// 移动配置文件到分组
+#[tauri::command]
+pub async fn move_profile_to_group(profile_uid: String, group_id: Option<String>) -> CmdResult {
+    let result: Result<(), anyhow::Error> = Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.ensure_groups();
+
+            // 验证分组是否存在
+            if let Some(groups) = profiles.get_groups() {
+                groups.validate_group_id(group_id.as_ref())?;
+            }
+
+            // 更新配置文件的分组
+            profiles
+                .patch_item(
+                    profile_uid,
+                    PrfItem {
+                        group_id,
+                        ..Default::default()
+                    },
+                )
+                .await?;
+
+            Ok((profiles, ()))
+        })
+        .await;
+    result.stringify_err()
 }

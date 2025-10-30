@@ -18,6 +18,10 @@ pub struct IProfiles {
 
     /// profile list
     pub items: Option<Vec<PrfItem>>,
+
+    /// profile groups
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub groups: Option<super::ProfileGroups>,
 }
 
 /// 清理结果
@@ -64,6 +68,7 @@ impl IProfiles {
                             }
                         }
                     }
+                    profiles.ensure_groups();
                     profiles
                 }
                 Err(err) => {
@@ -81,6 +86,7 @@ impl IProfiles {
     pub fn template() -> Self {
         Self {
             items: Some(vec![]),
+            groups: Some(super::ProfileGroups::new()),
             ..Self::default()
         }
     }
@@ -110,6 +116,23 @@ impl IProfiles {
         }
 
         Ok(())
+    }
+
+    pub fn ensure_groups(&mut self) {
+        if self.groups.is_none() {
+            self.groups = Some(super::ProfileGroups::new());
+        }
+        if let Some(groups) = self.groups.as_mut() {
+            groups.ensure_default_group();
+        }
+    }
+
+    pub fn get_groups(&self) -> Option<&super::ProfileGroups> {
+        self.groups.as_ref()
+    }
+
+    pub fn get_groups_mut(&mut self) -> Option<&mut super::ProfileGroups> {
+        self.groups.as_mut()
     }
 
     pub fn get_current(&self) -> Option<String> {
@@ -220,6 +243,7 @@ impl IProfiles {
                 patch!(each, item, extra);
                 patch!(each, item, updated);
                 patch!(each, item, option);
+                patch!(each, item, group_id);
 
                 self.items = Some(items);
                 return self.save_file().await;

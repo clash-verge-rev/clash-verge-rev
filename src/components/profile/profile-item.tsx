@@ -496,14 +496,14 @@ export const ProfileItem = (props: Props) => {
       sx={{
         position: "relative",
         transform: CSS.Transform.toString(transform),
-        transition,
+        transition: transition || "transform 0.2s",
         zIndex: isDragging ? "calc(infinity)" : undefined,
+        opacity: isDragging ? 0.5 : 1,
       }}
     >
       <ProfileBox
         aria-selected={selected}
         onClick={(e) => {
-          // 如果正在激活中，阻止重复点击
           if (activating) {
             e.preventDefault();
             e.stopPropagation();

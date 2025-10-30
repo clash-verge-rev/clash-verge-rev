@@ -52,6 +52,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         name: "",
         desc: "",
         url: "",
+        group_id: "default",
         option: {
           with_proxy: false,
           self_proxy: false,
@@ -61,6 +62,17 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
 
   useImperativeHandle(ref, () => ({
     create: () => {
+      reset({
+        type: "remote",
+        name: "",
+        desc: "",
+        url: "",
+        group_id: "default",
+        option: {
+          with_proxy: false,
+          self_proxy: false,
+        },
+      });
       setOpenType("new");
       setOpen(true);
     },
@@ -69,6 +81,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         Object.entries(item).forEach(([key, value]) => {
           setValue(key as any, value);
         });
+        if (!item.group_id) {
+          setValue("group_id", "default");
+        }
       }
       setOpenType("edit");
       setOpen(true);
@@ -256,6 +271,31 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         control={control}
         render={({ field }) => (
           <TextField {...text} {...field} label={t("Descriptions")} />
+        )}
+      />
+
+      <Controller
+        name="group_id"
+        control={control}
+        render={({ field }) => (
+          <FormControl size="small" fullWidth sx={{ mt: 2, mb: 1 }}>
+            <InputLabel>{t("Group")}</InputLabel>
+            <Select
+              {...field}
+              label={t("Group")}
+              value={field.value || "default"}
+              onChange={(e) => {
+                const value = e.target.value || "default";
+                field.onChange(value);
+              }}
+            >
+              {(profiles?.groups?.groups || []).map((group) => (
+                <MenuItem key={group.id} value={group.id}>
+                  {group.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         )}
       />
 

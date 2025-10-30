@@ -555,3 +555,22 @@ export const isAdmin = async () => {
 export async function getNextUpdateTime(uid: string) {
   return invoke<number | null>("get_next_update_time", { uid });
 }
+
+export async function addProfileGroup(name: string) {
+  return invoke<IProfileGroup>("add_profile_group", { name });
+}
+
+export async function removeProfileGroup(id: string) {
+  return invoke<void>("remove_profile_group", { id });
+}
+
+export async function renameProfileGroup(id: string, newName: string) {
+  return invoke<void>("rename_profile_group", { id, newName });
+}
+
+export async function moveProfileToGroup(
+  profileUid: string,
+  groupId: string | null,
+) {
+  return invoke<void>("move_profile_to_group", { profileUid, groupId });
+}
