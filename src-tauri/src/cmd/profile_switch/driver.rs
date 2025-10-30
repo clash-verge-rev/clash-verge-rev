@@ -325,12 +325,11 @@ fn handle_enqueue(
         logging!(
             debug,
             Type::Cmd,
-            "Cleanup running for {} profile(s); collapsing pending requests before enqueuing task {} -> {}",
+            "Cleanup running for {} profile(s); queueing task {} -> {} to run after cleanup without clearing existing requests",
             state.cleanup_profiles.len(),
             request.task_id(),
             profile_key
         );
-        drop_pending_requests(state);
     }
 
     if let Some(previous) = state
@@ -455,15 +454,12 @@ fn handle_completion(
     publish_status(state, manager);
 }
 
-/// Cancel and discard any queued requests that are now obsolete.
-fn drop_pending_requests(state: &mut SwitchDriverState) {
-    while let Some(request) = state.queue.pop_front() {
-        discard_request(state, request);
-    }
-}
-
 /// Mark a request as failed because a newer request superseded it.
-fn discard_request(state: &mut SwitchDriverState, request: SwitchRequest) {
+fn discard_request(
+    state: &mut SwitchDriverState,
+    request: SwitchRequest,
+    manager: &'static SwitchManager,
+) {
     let key = request.profile_id().clone();
     let should_remove = state
         .latest_tokens
@@ -479,14 +475,15 @@ fn discard_request(state: &mut SwitchDriverState, request: SwitchRequest) {
         request.cancel_token().cancel();
     }
 
-    notify_completion_waiter(
+    let event = SwitchResultStatus::cancelled(
         request.task_id(),
-        SwitchResultStatus::cancelled(
-            request.task_id(),
-            request.profile_id(),
-            Some("request superseded".to_string()),
-        ),
+        request.profile_id(),
+        Some("request superseded".to_string()),
     );
+
+    state.last_result = Some(event.clone());
+    notify_completion_waiter(request.task_id(), event.clone());
+    manager.push_event(event);
 }
 
 fn start_switch_job(
@@ -653,7 +650,7 @@ fn start_next_job(
 
     while let Some(request) = state.queue.pop_front() {
         if request.cancel_token().is_cancelled() {
-            discard_request(state, request);
+            discard_request(state, request, manager);
             continue;
         }
 
