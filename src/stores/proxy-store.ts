@@ -92,6 +92,8 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
   pendingProfileId: null,
   pendingSnapshotFetchId: null,
   setSnapshot(snapshot, profileId) {
+    const stateBefore = get();
+
     set((state) => ({
       data: snapshot,
       hydration: "snapshot",
@@ -99,6 +101,20 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       pendingProfileId: profileId,
       pendingSnapshotFetchId: state.liveFetchRequestId,
     }));
+
+    const hasLiveHydration =
+      stateBefore.hydration === "live" &&
+      stateBefore.lastProfileId === profileId;
+
+    if (profileId && !hasLiveHydration) {
+      void fetchLiveProxies().catch((error) => {
+        console.warn(
+          "[ProxyStore] Failed to bootstrap live proxies from snapshot:",
+          error,
+        );
+        scheduleBootstrapLiveFetch(800);
+      });
+    }
   },
   setLive(payload) {
     const state = get();
@@ -183,6 +199,7 @@ export const useProxyStore = create<ProxyStoreState>((set, get) => ({
       pendingProfileId: null,
       pendingSnapshotFetchId: null,
     });
+    scheduleBootstrapLiveFetch(200);
   },
 }));
 
@@ -226,3 +243,56 @@ export const fetchLiveProxies = async () => {
   const view = await calcuProxies();
   useProxyStore.getState().completeLiveFetch(requestId, view);
 };
+
+const MAX_BOOTSTRAP_ATTEMPTS = 5;
+const BOOTSTRAP_BASE_DELAY_MS = 600;
+let bootstrapAttempts = 0;
+let bootstrapTimer: number | null = null;
+
+function attemptBootstrapLiveFetch() {
+  const state = useProxyStore.getState();
+  if (state.hydration === "live") {
+    bootstrapAttempts = 0;
+    return;
+  }
+
+  if (bootstrapAttempts >= MAX_BOOTSTRAP_ATTEMPTS) {
+    return;
+  }
+
+  const attemptNumber = ++bootstrapAttempts;
+
+  void fetchLiveProxies()
+    .then(() => {
+      bootstrapAttempts = 0;
+    })
+    .catch((error) => {
+      console.warn(
+        `[ProxyStore] Bootstrap live fetch attempt ${attemptNumber} failed:`,
+        error,
+      );
+      if (attemptNumber < MAX_BOOTSTRAP_ATTEMPTS) {
+        scheduleBootstrapLiveFetch(BOOTSTRAP_BASE_DELAY_MS * attemptNumber);
+      }
+    });
+}
+
+function scheduleBootstrapLiveFetch(delay = 0) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (bootstrapTimer !== null) {
+    window.clearTimeout(bootstrapTimer);
+    bootstrapTimer = null;
+  }
+
+  bootstrapTimer = window.setTimeout(() => {
+    bootstrapTimer = null;
+    attemptBootstrapLiveFetch();
+  }, delay);
+}
+
+if (typeof window !== "undefined") {
+  void nextTick().then(() => scheduleBootstrapLiveFetch(0));
+}
