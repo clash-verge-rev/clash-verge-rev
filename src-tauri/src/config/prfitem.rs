@@ -300,9 +300,11 @@ impl PrfItem {
         let extra;
         'extra: {
             for (k, v) in header.iter() {
-                if k.to_string()
-                    .to_lowercase()
-                    .ends_with("subscription-userinfo")
+                let key_lower = k.as_str().to_ascii_lowercase();
+                // Accept standard custom-metadata prefixes (x-amz-meta-, x-obs-meta-, x-cos-meta-, etc.).
+                if key_lower
+                    .strip_suffix("subscription-userinfo")
+                    .is_some_and(|prefix| prefix.is_empty() || prefix.ends_with('-'))
                 {
                     let sub_info = v.to_str().unwrap_or("");
                     extra = Some(PrfExtra {
