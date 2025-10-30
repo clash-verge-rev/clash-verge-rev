@@ -426,10 +426,9 @@ pub(super) fn schedule_post_switch_failure(
     notify: bool,
     task_id: u64,
 ) -> CleanupHandle {
-    // Failure path shares the same connection-draining behaviour but always reports success=false.
+    // Failures or cancellations do not alter the active profile, so skip draining live connections.
     AsyncHandler::spawn(move || async move {
         handle::Handle::notify_profile_switch_finished(profile_id.clone(), false, notify, task_id);
-        close_connections_after_switch(profile_id).await;
     })
 }
 

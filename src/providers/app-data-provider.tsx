@@ -200,24 +200,26 @@ export const AppDataProvider = ({
         clearPendingProxyProfile();
       }
 
-      // Once the backend settles, refresh all dependent data in the background.
-      scheduleTimeout(() => {
-        void Promise.allSettled([
-          fetchProfilesConfig().then((data) => {
-            commitProfileSnapshot(data);
-            globalMutate("getProfiles", data, false);
-          }),
-          fetchLiveProxies(),
-          refreshProxyProviders(),
-          refreshRules(),
-          refreshRuleProviders(),
-        ]).catch((error) => {
-          console.warn(
-            "[DataProvider] Background refresh after profile switch failed:",
-            error,
-          );
-        });
-      }, 100);
+      if (result.success && result.cancelled !== true) {
+        // Once the backend settles, refresh all dependent data in the background.
+        scheduleTimeout(() => {
+          void Promise.allSettled([
+            fetchProfilesConfig().then((data) => {
+              commitProfileSnapshot(data);
+              globalMutate("getProfiles", data, false);
+            }),
+            fetchLiveProxies(),
+            refreshProxyProviders(),
+            refreshRules(),
+            refreshRuleProviders(),
+          ]).catch((error) => {
+            console.warn(
+              "[DataProvider] Background refresh after profile switch failed:",
+              error,
+            );
+          });
+        }, 100);
+      }
 
       void mutateSwitchStatus((current) => {
         if (!current) {
