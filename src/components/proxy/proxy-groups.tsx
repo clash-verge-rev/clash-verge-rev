@@ -61,10 +61,17 @@ export const ProxyGroups = (props: Props) => {
   }>({ open: false, message: "" });
 
   const { verge } = useVerge();
-  const { proxies: proxiesData } = useAppData();
+  const {
+    proxies: proxiesData,
+    proxyHydration,
+    proxyTargetProfileId,
+    proxyDisplayProfileId,
+    isProxyRefreshPending,
+  } = useAppData();
   const groups = proxiesData?.groups;
   const availableGroups = useMemo(() => groups ?? [], [groups]);
-
+  const showHydrationOverlay = isProxyRefreshPending;
+  const pendingProfileSwitch = proxyTargetProfileId !== proxyDisplayProfileId;
   const defaultRuleGroup = useMemo(() => {
     if (isChainMode && mode === "rule" && availableGroups.length > 0) {
       return availableGroups[0].name;
@@ -76,6 +83,35 @@ export const ProxyGroups = (props: Props) => {
     () => selectedGroup ?? defaultRuleGroup,
     [selectedGroup, defaultRuleGroup],
   );
+  const hydrationChip = useMemo(() => {
+    if (proxyHydration === "live") return null;
+
+    const label =
+      proxyHydration === "snapshot" ? t("Snapshot data") : t("Syncing...");
+
+    return (
+      <Chip
+        size="small"
+        color={proxyHydration === "snapshot" ? "warning" : "info"}
+        label={label}
+        sx={{ fontWeight: 500, height: 22 }}
+      />
+    );
+  }, [proxyHydration, t]);
+
+  const overlayMessage = useMemo(() => {
+    if (!showHydrationOverlay) return null;
+
+    if (pendingProfileSwitch) {
+      return t("Loading proxy data for the selected profile...");
+    }
+
+    if (proxyHydration === "snapshot") {
+      return t("Preparing proxy snapshot...");
+    }
+
+    return t("Syncing proxy data...");
+  }, [showHydrationOverlay, pendingProfileSwitch, proxyHydration, t]);
 
   const { renderList, onProxies, onHeadState } = useRenderList(
     mode,
@@ -93,7 +129,7 @@ export const ProxyGroups = (props: Props) => {
     [renderList],
   );
 
-  // 统代理选择
+  // 系统代理选择
   const { handleProxyGroupChange } = useProxySelection({
     onSuccess: () => {
       onProxies();
@@ -306,12 +342,7 @@ export const ProxyGroups = (props: Props) => {
     try {
       await Promise.race([
         delayManager.checkListDelay(names, groupName, timeout),
-        delayGroup(groupName, url, timeout).then((result) => {
-          console.log(
-            `[ProxyGroups] getGroupProxyDelays返回结果数量:`,
-            Object.keys(result || {}).length,
-          );
-        }), // 查询group delays 将清除fixed(不关注调用结果)
+        delayGroup(groupName, url, timeout),
       ]);
       console.log(`[ProxyGroups] 延迟测试完成，组: ${groupName}`);
     } catch (error) {
@@ -376,6 +407,11 @@ export const ProxyGroups = (props: Props) => {
   }
 
   if (isChainMode) {
+    const chainVirtuosoHeight =
+      mode === "rule" && proxyGroupNames.length > 0
+        ? "calc(100% - 80px)"
+        : "calc(100% - 14px)";
+
     // 获取所有代理组
     const proxyGroups = proxiesData?.groups || [];
 
@@ -454,10 +490,7 @@ export const ProxyGroups = (props: Props) => {
             <Virtuoso
               ref={virtuosoRef}
               style={{
-                height:
-                  mode === "rule" && proxyGroups.length > 0
-                    ? "calc(100% - 80px)" // 只有标题的高度
-                    : "calc(100% - 14px)",
+                height: chainVirtuosoHeight,
               }}
               totalCount={renderList.length}
               increaseViewportBy={{ top: 200, bottom: 200 }}
@@ -548,7 +581,9 @@ export const ProxyGroups = (props: Props) => {
                   {group.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {group.type} · {group.all.length} 节点
+                  {`${t("Group Type")}: ${group.type} · ${t("Proxy Count")}: ${
+                    Array.isArray(group.all) ? group.all.length : 0
+                  }`}
                 </Typography>
               </Box>
             </MenuItem>
@@ -556,7 +591,7 @@ export const ProxyGroups = (props: Props) => {
           {availableGroups.length === 0 && (
             <MenuItem disabled>
               <Typography variant="body2" color="text.secondary">
-                暂无可用代理组
+                {t("Empty")}
               </Typography>
             </MenuItem>
           )}
@@ -567,9 +602,29 @@ export const ProxyGroups = (props: Props) => {
 
   return (
     <div
-      style={{ position: "relative", height: "100%", willChange: "transform" }}
+      style={{
+        position: "relative",
+        height: "100%",
+        willChange: "transform",
+        opacity: showHydrationOverlay ? 0.45 : 1,
+        transition: "opacity 120ms ease",
+      }}
     >
-      {/* 代理组导航栏 */}
+      {hydrationChip && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 16,
+            zIndex: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          {hydrationChip}
+        </Box>
+      )}
       {mode === "rule" && (
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}
@@ -608,6 +663,39 @@ export const ProxyGroups = (props: Props) => {
         )}
       />
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
+      {showHydrationOverlay && overlayMessage && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 3,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "auto",
+            cursor: "wait",
+            backgroundColor: "rgba(8, 8, 8, 0.12)",
+          }}
+        >
+          <Box
+            sx={{
+              px: 2.5,
+              py: 1.5,
+              borderRadius: 1,
+              bgcolor: "background.paper",
+              boxShadow: 3,
+            }}
+          >
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontWeight: 500 }}
+            >
+              {overlayMessage}
+            </Typography>
+          </Box>
+        </Box>
+      )}
     </div>
   );
 };

@@ -6,8 +6,15 @@ import {
   RuleProvider,
 } from "tauri-plugin-mihomo-api";
 
+import { ProxiesView, type ProfileSwitchStatus } from "@/services/cmds";
+
 export interface AppDataContextType {
-  proxies: any;
+  proxies: ProxiesView | null;
+  proxyHydration: "none" | "snapshot" | "live";
+  proxyTargetProfileId: string | null;
+  proxyDisplayProfileId: string | null;
+  isProxyRefreshPending: boolean;
+  switchStatus: ProfileSwitchStatus | null;
   clashConfig: BaseConfig;
   rules: Rule[];
   sysproxy: any;

@@ -1,6 +1,7 @@
 import { RefreshRounded, StorageOutlined } from "@mui/icons-material";
 import {
   Box,
+  Chip,
   Button,
   Dialog,
   DialogActions,
@@ -18,7 +19,7 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
@@ -48,29 +49,61 @@ const parseExpire = (expire?: number) => {
 export const ProviderButton = () => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const { proxyProviders, refreshProxy, refreshProxyProviders } = useAppData();
+  const {
+    proxyProviders,
+    proxyHydration,
+    refreshProxy,
+    refreshProxyProviders,
+  } = useAppData();
+
+  const isHydrating = proxyHydration !== "live";
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
 
   // 检查是否有提供者
   const hasProviders = Object.keys(proxyProviders || {}).length > 0;
 
+  // Hydration hint badge keeps users aware of sync state
+  const hydrationChip = useMemo(() => {
+    if (proxyHydration === "live") return null;
+
+    return (
+      <Chip
+        size="small"
+        color={proxyHydration === "snapshot" ? "warning" : "info"}
+        label={
+          proxyHydration === "snapshot"
+            ? t("Snapshot data")
+            : t("Proxy data is syncing, please wait")
+        }
+        sx={{ fontWeight: 500 }}
+      />
+    );
+  }, [proxyHydration, t]);
+
   // 更新单个代理提供者
   const updateProvider = useLockFn(async (name: string) => {
+    if (isHydrating) {
+      showNotice("info", t("Proxy data is syncing, please wait"));
+      return;
+    }
+
     try {
       // 设置更新状态
       setUpdating((prev) => ({ ...prev, [name]: true }));
-
       await updateProxyProvider(name);
-
-      // 刷新数据
-      await refreshProxy();
       await refreshProxyProviders();
-
-      showNotice("success", `${name} 更新成功`);
+      await refreshProxy();
+      showNotice(
+        "success",
+        t("Provider {{name}} updated successfully", { name }),
+      );
     } catch (err: any) {
       showNotice(
         "error",
-        `${name} 更新失败: ${err?.message || err.toString()}`,
+        t("Provider {{name}} update failed: {{message}}", {
+          name,
+          message: err?.message || err.toString(),
+        }),
       );
     } finally {
       // 清除更新状态
@@ -80,11 +113,16 @@ export const ProviderButton = () => {
 
   // 更新所有代理提供者
   const updateAllProviders = useLockFn(async () => {
+    if (isHydrating) {
+      showNotice("info", t("Proxy data is syncing, please wait"));
+      return;
+    }
+
     try {
       // 获取所有provider的名称
       const allProviders = Object.keys(proxyProviders || {});
       if (allProviders.length === 0) {
-        showNotice("info", "没有可更新的代理提供者");
+        showNotice("info", t("No providers to update"));
         return;
       }
 
@@ -110,54 +148,67 @@ export const ProviderButton = () => {
         }
       }
 
-      // 刷新数据
-      await refreshProxy();
       await refreshProxyProviders();
-
-      showNotice("success", "全部代理提供者更新成功");
+      await refreshProxy();
+      showNotice("success", t("All providers updated successfully"));
     } catch (err: any) {
-      showNotice("error", `更新失败: ${err?.message || err.toString()}`);
+      showNotice(
+        "error",
+        t("Failed to update providers: {{message}}", {
+          message: err?.message || err.toString(),
+        }),
+      );
     } finally {
       // 清除所有更新状态
       setUpdating({});
     }
   });
 
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const handleClose = () => setOpen(false);
 
   if (!hasProviders) return null;
 
   return (
     <>
-      <Button
-        variant="outlined"
-        size="small"
-        startIcon={<StorageOutlined />}
-        onClick={() => setOpen(true)}
-        sx={{ mr: 1 }}
-      >
-        {t("Proxy Provider")}
-      </Button>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mr: 1 }}>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<StorageOutlined />}
+          onClick={() => setOpen(true)}
+          disabled={isHydrating}
+          title={
+            isHydrating ? t("Proxy data is syncing, please wait") : undefined
+          }
+        >
+          {t("Proxy Provider")}
+        </Button>
+        {hydrationChip}
+      </Box>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
           >
             <Typography variant="h6">{t("Proxy Provider")}</Typography>
-            <Box>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={updateAllProviders}
-              >
-                {t("Update All")}
-              </Button>
-            </Box>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={updateAllProviders}
+              disabled={isHydrating}
+              title={
+                isHydrating
+                  ? t("Proxy data is syncing, please wait")
+                  : undefined
+              }
+            >
+              {t("Update All")}
+            </Button>
           </Box>
         </DialogTitle>
 
@@ -166,54 +217,63 @@ export const ProviderButton = () => {
             {Object.entries(proxyProviders || {})
               .sort()
               .map(([key, item]) => {
-                const provider = item;
-                const time = dayjs(provider.updatedAt);
+                if (!item) return null;
+
+                const time = dayjs(item.updatedAt);
                 const isUpdating = updating[key];
-
-                // 订阅信息
-                const sub = provider.subscriptionInfo;
-                const hasSubInfo = !!sub;
-                const upload = sub?.Upload || 0;
-                const download = sub?.Download || 0;
-                const total = sub?.Total || 0;
-                const expire = sub?.Expire || 0;
-
-                // 流量使用进度
+                const sub = item.subscriptionInfo;
+                const hasSubInfo = Boolean(sub);
+                const upload = sub?.Upload ?? 0;
+                const download = sub?.Download ?? 0;
+                const total = sub?.Total ?? 0;
+                const expire = sub?.Expire ?? 0;
                 const progress =
                   total > 0
                     ? Math.min(
-                        Math.round(((download + upload) * 100) / total) + 1,
                         100,
+                        Math.max(0, ((upload + download) / total) * 100),
                       )
                     : 0;
 
                 return (
                   <ListItem
                     key={key}
-                    sx={[
-                      {
-                        p: 0,
-                        mb: "8px",
-                        borderRadius: 2,
-                        overflow: "hidden",
-                        transition: "all 0.2s",
-                      },
-                      ({ palette: { mode, primary } }) => {
-                        const bgcolor =
-                          mode === "light" ? "#ffffff" : "#24252f";
-                        const hoverColor =
-                          mode === "light"
-                            ? alpha(primary.main, 0.1)
-                            : alpha(primary.main, 0.2);
-
-                        return {
-                          backgroundColor: bgcolor,
-                          "&:hover": {
-                            backgroundColor: hoverColor,
-                          },
-                        };
-                      },
-                    ]}
+                    secondaryAction={
+                      <Box
+                        sx={{
+                          width: 40,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => updateProvider(key)}
+                          disabled={isUpdating || isHydrating}
+                          sx={{
+                            animation: isUpdating
+                              ? "spin 1s linear infinite"
+                              : "none",
+                            "@keyframes spin": {
+                              "0%": { transform: "rotate(0deg)" },
+                              "100%": { transform: "rotate(360deg)" },
+                            },
+                          }}
+                          title={t("Update Provider") as string}
+                        >
+                          <RefreshRounded />
+                        </IconButton>
+                      </Box>
+                    }
+                    sx={{
+                      mb: 1,
+                      borderRadius: 1,
+                      border: "1px solid",
+                      borderColor: alpha("#ccc", 0.4),
+                      backgroundColor: alpha("#fff", 0.02),
+                    }}
                   >
                     <ListItemText
                       sx={{ px: 2, py: 1 }}
@@ -223,6 +283,7 @@ export const ProviderButton = () => {
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
+                            gap: 1,
                           }}
                         >
                           <Typography
@@ -232,12 +293,12 @@ export const ProviderButton = () => {
                             title={key}
                             sx={{ display: "flex", alignItems: "center" }}
                           >
-                            <span style={{ marginRight: "8px" }}>{key}</span>
+                            <span style={{ marginRight: 8 }}>{key}</span>
                             <TypeBox component="span">
-                              {provider.proxies.length}
+                              {item.proxies.length}
                             </TypeBox>
                             <TypeBox component="span">
-                              {provider.vehicleType}
+                              {item.vehicleType}
                             </TypeBox>
                           </Typography>
 
@@ -252,72 +313,39 @@ export const ProviderButton = () => {
                         </Box>
                       }
                       secondary={
-                        <>
-                          {/* 订阅信息 */}
-                          {hasSubInfo && (
-                            <>
-                              <Box
-                                sx={{
-                                  mb: 1,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <span title={t("Used / Total") as string}>
-                                  {parseTraffic(upload + download)} /{" "}
-                                  {parseTraffic(total)}
-                                </span>
-                                <span title={t("Expire Time") as string}>
-                                  {parseExpire(expire)}
-                                </span>
-                              </Box>
+                        hasSubInfo ? (
+                          <>
+                            <Box
+                              sx={{
+                                mb: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span title={t("Used / Total") as string}>
+                                {parseTraffic(upload + download)} /{" "}
+                                {parseTraffic(total)}
+                              </span>
+                              <span title={t("Expire Time") as string}>
+                                {parseExpire(expire)}
+                              </span>
+                            </Box>
 
-                              {/* 进度条 */}
-                              <LinearProgress
-                                variant="determinate"
-                                value={progress}
-                                sx={{
-                                  height: 6,
-                                  borderRadius: 3,
-                                  opacity: total > 0 ? 1 : 0,
-                                }}
-                              />
-                            </>
-                          )}
-                        </>
+                            <LinearProgress
+                              variant="determinate"
+                              value={progress}
+                              sx={{
+                                height: 6,
+                                borderRadius: 3,
+                                opacity: total > 0 ? 1 : 0,
+                              }}
+                            />
+                          </>
+                        ) : null
                       }
                     />
                     <Divider orientation="vertical" flexItem />
-                    <Box
-                      sx={{
-                        width: 40,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => {
-                          updateProvider(key);
-                        }}
-                        disabled={isUpdating}
-                        sx={{
-                          animation: isUpdating
-                            ? "spin 1s linear infinite"
-                            : "none",
-                          "@keyframes spin": {
-                            "0%": { transform: "rotate(0deg)" },
-                            "100%": { transform: "rotate(360deg)" },
-                          },
-                        }}
-                        title={t("Update Provider") as string}
-                      >
-                        <RefreshRounded />
-                      </IconButton>
-                    </Box>
                   </ListItem>
                 );
               })}

@@ -5,32 +5,53 @@ import {
   getProfiles,
   patchProfile,
   patchProfilesConfig,
+  calcuProxies,
 } from "@/services/cmds";
-import { calcuProxies } from "@/services/cmds";
+import {
+  useProfileStore,
+  selectEffectiveProfiles,
+  selectIsHydrating,
+  selectLastResult,
+} from "@/stores/profile-store";
 
 export const useProfiles = () => {
+  const profilesFromStore = useProfileStore(selectEffectiveProfiles);
+  const storeHydrating = useProfileStore(selectIsHydrating);
+  const lastResult = useProfileStore(selectLastResult);
+  const commitProfileSnapshot = useProfileStore(
+    (state) => state.commitHydrated,
+  );
+
   const {
-    data: profiles,
+    data: swrProfiles,
     mutate: mutateProfiles,
     error,
     isValidating,
   } = useSWR("getProfiles", getProfiles, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
-    dedupingInterval: 500, // 减少去重时间，提高响应性
+    dedupingInterval: 500,
     errorRetryCount: 3,
     errorRetryInterval: 1000,
-    refreshInterval: 0, // 完全由手动控制
-    onError: (error) => {
-      console.error("[useProfiles] SWR错误:", error);
+    refreshInterval: 0,
+    onError: (err) => {
+      console.error("[useProfiles] SWR错误:", err);
     },
     onSuccess: (data) => {
+      commitProfileSnapshot(data);
       console.log(
-        "[useProfiles] 配置数据更新成功，配置数量:",
+        "[useProfiles] 配置数据更新成功，配置数量",
         data?.items?.length || 0,
       );
     },
   });
+
+  const rawProfiles = profilesFromStore ?? swrProfiles;
+  const profiles = (rawProfiles ?? {
+    current: null,
+    items: [],
+  }) as IProfilesConfig;
+  const hasProfiles = rawProfiles != null;
 
   const patchProfiles = async (
     value: Partial<IProfilesConfig>,
@@ -49,32 +70,30 @@ export const useProfiles = () => {
       await mutateProfiles();
 
       return success;
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        throw error;
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw err;
       }
 
       await mutateProfiles();
-      throw error;
+      throw err;
     }
   };
 
   const patchCurrent = async (value: Partial<IProfileItem>) => {
-    if (profiles?.current) {
-      await patchProfile(profiles.current, value);
-      mutateProfiles();
+    if (!hasProfiles || !profiles.current) {
+      return;
     }
+    await patchProfile(profiles.current, value);
+    mutateProfiles();
   };
 
-  // 根据selected的节点选择
   const activateSelected = async () => {
     try {
       console.log("[ActivateSelected] 开始处理代理选择");
 
-      const [proxiesData, profileData] = await Promise.all([
-        calcuProxies(),
-        getProfiles(),
-      ]);
+      const proxiesData = await calcuProxies();
+      const profileData = hasProfiles ? profiles : null;
 
       if (!profileData || !proxiesData) {
         console.log("[ActivateSelected] 代理或配置数据不可用，跳过处理");
@@ -90,7 +109,6 @@ export const useProfiles = () => {
         return;
       }
 
-      // 检查是否有saved的代理选择
       const { selected = [] } = current;
       if (selected.length === 0) {
         console.log("[ActivateSelected] 当前profile无保存的代理选择，跳过");
@@ -98,7 +116,7 @@ export const useProfiles = () => {
       }
 
       console.log(
-        `[ActivateSelected] 当前profile有 ${selected.length} 个代理选择配置`,
+        `[ActivateSelected] 当前profile有${selected.length} 个代理选择配置`,
       );
 
       const selectedMap = Object.fromEntries(
@@ -115,7 +133,6 @@ export const useProfiles = () => {
         "LoadBalance",
       ]);
 
-      // 处理所有代理组
       [global, ...groups].forEach((group) => {
         if (!group) {
           return;
@@ -150,7 +167,7 @@ export const useProfiles = () => {
 
         if (!existsInGroup) {
           console.warn(
-            `[ActivateSelected] 保存的代理 ${savedProxy} 不存在于代理组 ${name}`,
+            `[ActivateSelected] 保存的代理${savedProxy} 不存在于代理组${name}`,
           );
           hasChange = true;
           newSelected.push({ name, now: now ?? savedProxy });
@@ -173,7 +190,7 @@ export const useProfiles = () => {
         return;
       }
 
-      console.log(`[ActivateSelected] 完成代理切换，保存新的选择配置`);
+      console.log("[ActivateSelected] 完成代理切换，保存新的选择配置");
 
       try {
         await patchProfile(profileData.current!, { selected: newSelected });
@@ -195,14 +212,18 @@ export const useProfiles = () => {
 
   return {
     profiles,
-    current: profiles?.items?.find((p) => p && p.uid === profiles.current),
+    hasProfiles,
+    current: hasProfiles
+      ? (profiles.items?.find((p) => p && p.uid === profiles.current) ?? null)
+      : null,
     activateSelected,
     patchProfiles,
     patchCurrent,
     mutateProfiles,
-    // 新增故障检测状态
-    isLoading: isValidating,
+    isLoading: isValidating || storeHydrating,
+    isHydrating: storeHydrating,
+    lastResult,
     error,
-    isStale: !profiles && !error && !isValidating, // 检测是否处于异常状态
+    isStale: !hasProfiles && !error && !isValidating,
   };
 };

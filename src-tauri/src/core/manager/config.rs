@@ -10,7 +10,10 @@ use anyhow::{Result, anyhow};
 use smartstring::alias::String;
 use std::{path::PathBuf, time::Instant};
 use tauri_plugin_mihomo::Error as MihomoError;
-use tokio::time::sleep;
+use tokio::time::{sleep, timeout};
+
+const RELOAD_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+const MAX_RELOAD_ATTEMPTS: usize = 3;
 
 impl CoreManager {
     pub async fn use_default_config(&self, error_key: &str, error_msg: &str) -> Result<()> {
@@ -39,12 +42,38 @@ impl CoreManager {
             return Ok((true, String::new()));
         }
 
+        let start = Instant::now();
+
         let _permit = self
             .update_semaphore
             .try_acquire()
             .map_err(|_| anyhow!("Config update already in progress"))?;
 
-        self.perform_config_update().await
+        let result = self.perform_config_update().await;
+
+        match &result {
+            Ok((success, msg)) => {
+                logging!(
+                    info,
+                    Type::Core,
+                    "[ConfigUpdate] Finished (success={}, elapsed={}ms, msg={})",
+                    success,
+                    start.elapsed().as_millis(),
+                    msg
+                );
+            }
+            Err(err) => {
+                logging!(
+                    error,
+                    Type::Core,
+                    "[ConfigUpdate] Failed after {}ms: {}",
+                    start.elapsed().as_millis(),
+                    err
+                );
+            }
+        }
+
+        result
     }
 
     fn should_update_config(&self) -> Result<bool> {
@@ -62,20 +91,73 @@ impl CoreManager {
     }
 
     async fn perform_config_update(&self) -> Result<(bool, String)> {
-        Config::generate().await?;
+        logging!(debug, Type::Core, "[ConfigUpdate] Pipeline start");
+        let total_start = Instant::now();
 
-        match CoreConfigValidator::global().validate_config().await {
+        let mut stage_timer = Instant::now();
+        Config::generate().await?;
+        logging!(
+            debug,
+            Type::Core,
+            "[ConfigUpdate] Generation completed in {}ms",
+            stage_timer.elapsed().as_millis()
+        );
+
+        stage_timer = Instant::now();
+        let validation_result = CoreConfigValidator::global().validate_config().await;
+        logging!(
+            debug,
+            Type::Core,
+            "[ConfigUpdate] Validation completed in {}ms",
+            stage_timer.elapsed().as_millis()
+        );
+
+        match validation_result {
             Ok((true, _)) => {
+                stage_timer = Instant::now();
                 let run_path = Config::generate_file(ConfigType::Run).await?;
+                logging!(
+                    debug,
+                    Type::Core,
+                    "[ConfigUpdate] Runtime file generated in {}ms",
+                    stage_timer.elapsed().as_millis()
+                );
+                stage_timer = Instant::now();
                 self.apply_config(run_path).await?;
+                logging!(
+                    debug,
+                    Type::Core,
+                    "[ConfigUpdate] Core apply completed in {}ms",
+                    stage_timer.elapsed().as_millis()
+                );
+                logging!(
+                    debug,
+                    Type::Core,
+                    "[ConfigUpdate] Pipeline succeeded in {}ms",
+                    total_start.elapsed().as_millis()
+                );
                 Ok((true, String::new()))
             }
             Ok((false, error_msg)) => {
                 Config::runtime().await.discard();
+                logging!(
+                    warn,
+                    Type::Core,
+                    "[ConfigUpdate] Validation reported failure after {}ms: {}",
+                    total_start.elapsed().as_millis(),
+                    error_msg
+                );
                 Ok((false, error_msg))
             }
             Err(e) => {
                 Config::runtime().await.discard();
+                logging!(
+                    error,
+                    Type::Core,
+                    "[ConfigUpdate] Validation errored after {}ms: {}",
+                    total_start.elapsed().as_millis(),
+                    e
+                );
                 Err(e)
             }
         }
@@ -88,17 +170,49 @@ impl CoreManager {
     pub(super) async fn apply_config(&self, path: PathBuf) -> Result<()> {
         let path_str = dirs::path_to_str(&path)?;
 
-        match self.reload_config(path_str).await {
+        let reload_start = Instant::now();
+        match self.reload_config_with_retry(path_str).await {
             Ok(_) => {
                 Config::runtime().await.apply();
-                logging!(info, Type::Core, "Configuration applied");
+                logging!(
+                    debug,
+                    Type::Core,
+                    "Configuration applied (reload={}ms)",
+                    reload_start.elapsed().as_millis()
+                );
                 Ok(())
             }
-            Err(err) if Self::should_restart_on_error(&err) => {
-                self.retry_with_restart(path_str).await
-            }
             Err(err) => {
+                if Self::should_restart_for_anyhow(&err) {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "Reload failed after {}ms with retryable/timeout error; attempting restart: {}",
+                        reload_start.elapsed().as_millis(),
+                        err
+                    );
+                    match self.retry_with_restart(path_str).await {
+                        Ok(_) => return Ok(()),
+                        Err(retry_err) => {
+                            logging!(
+                                error,
+                                Type::Core,
+                                "Reload retry with restart failed: {}",
+                                retry_err
+                            );
+                            Config::runtime().await.discard();
+                            return Err(retry_err);
+                        }
+                    }
+                }
                 Config::runtime().await.discard();
+                logging!(
+                    error,
+                    Type::Core,
+                    "Failed to apply config after {}ms: {}",
+                    reload_start.elapsed().as_millis(),
+                    err
+                );
                 Err(anyhow!("Failed to apply config: {}", err))
             }
         }
@@ -113,17 +227,116 @@ impl CoreManager {
         self.restart_core().await?;
         sleep(timing::CONFIG_RELOAD_DELAY).await;
 
-        self.reload_config(config_path).await?;
+        self.reload_config_with_retry(config_path).await?;
         Config::runtime().await.apply();
         logging!(info, Type::Core, "Configuration applied after restart");
         Ok(())
     }
 
-    async fn reload_config(&self, path: &str) -> Result<(), MihomoError> {
-        handle::Handle::mihomo()
+    async fn reload_config_with_retry(&self, path: &str) -> Result<()> {
+        for attempt in 1..=MAX_RELOAD_ATTEMPTS {
+            let attempt_start = Instant::now();
+            let reload_future = self.reload_config_once(path);
+            match timeout(RELOAD_TIMEOUT, reload_future).await {
+                Ok(Ok(())) => {
+                    logging!(
+                        debug,
+                        Type::Core,
+                        "reload_config attempt {}/{} succeeded in {}ms",
+                        attempt,
+                        MAX_RELOAD_ATTEMPTS,
+                        attempt_start.elapsed().as_millis()
+                    );
+                    return Ok(());
+                }
+                Ok(Err(err)) => {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "reload_config attempt {}/{} failed after {}ms: {}",
+                        attempt,
+                        MAX_RELOAD_ATTEMPTS,
+                        attempt_start.elapsed().as_millis(),
+                        err
+                    );
+                    if attempt == MAX_RELOAD_ATTEMPTS {
+                        return Err(anyhow!(
+                            "Failed to reload config after {} attempts: {}",
+                            attempt,
+                            err
+                        ));
+                    }
+                }
+                Err(_) => {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "reload_config attempt {}/{} timed out after {:?}",
+                        attempt,
+                        MAX_RELOAD_ATTEMPTS,
+                        RELOAD_TIMEOUT
+                    );
+                    if attempt == MAX_RELOAD_ATTEMPTS {
+                        return Err(anyhow!(
+                            "Config reload timed out after {:?} ({} attempts)",
+                            RELOAD_TIMEOUT,
+                            MAX_RELOAD_ATTEMPTS
+                        ));
+                    }
+                }
+            }
+        }
+
+        Err(anyhow!(
+            "Config reload retry loop exited unexpectedly ({} attempts)",
+            MAX_RELOAD_ATTEMPTS
+        ))
+    }
+
+    async fn reload_config_once(&self, path: &str) -> Result<(), MihomoError> {
+        logging!(
+            info,
+            Type::Core,
+            "[ConfigUpdate] reload_config_once begin path={} ",
+            path
+        );
+        let start = Instant::now();
+        let result = handle::Handle::mihomo()
             .await
             .reload_config(true, path)
-            .await
+            .await;
+        let elapsed = start.elapsed().as_millis();
+        match result {
+            Ok(()) => {
+                logging!(
+                    info,
+                    Type::Core,
+                    "[ConfigUpdate] reload_config_once succeeded (elapsed={}ms)",
+                    elapsed
+                );
+                Ok(())
+            }
+            Err(err) => {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "[ConfigUpdate] reload_config_once failed (elapsed={}ms, err={})",
+                    elapsed,
+                    err
+                );
+                Err(err)
+            }
+        }
+    }
+
+    fn should_restart_for_anyhow(err: &anyhow::Error) -> bool {
+        if let Some(mihomo_err) = err.downcast_ref::<MihomoError>() {
+            return Self::should_restart_on_error(mihomo_err);
+        }
+        let msg = err.to_string();
+        msg.contains("timed out")
+            || msg.contains("reload")
+            || msg.contains("Failed to apply config")
     }
 
     fn should_restart_on_error(err: &MihomoError) -> bool {

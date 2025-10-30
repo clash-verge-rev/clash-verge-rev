@@ -1,11 +1,9 @@
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect } from "react";
-import { mutate } from "swr";
 
 import { useListen } from "@/hooks/use-listen";
-import { getAxios } from "@/services/api";
-
+import { refreshClashData, refreshVergeData } from "@/services/refresh";
 export const useLayoutEvents = (
   handleNotice: (payload: [string, string]) => void,
 ) => {
@@ -38,29 +36,29 @@ export const useLayoutEvents = (
     };
 
     register(
+      addListener("verge://notice-message", ({ payload }) =>
+        handleNotice(payload as [string, string]),
+      ),
+    );
+
+    register(
       addListener("verge://refresh-clash-config", async () => {
-        await getAxios(true);
-        mutate("getProxies");
-        mutate("getVersion");
-        mutate("getClashConfig");
-        mutate("getProxyProviders");
+        try {
+          await refreshClashData();
+        } catch (error) {
+          console.error("[事件监听] 刷新 Clash 配置失败", error);
+        }
       }),
     );
 
     register(
       addListener("verge://refresh-verge-config", () => {
-        mutate("getVergeConfig");
-        mutate("getSystemProxy");
-        mutate("getAutotemProxy");
-        mutate("getRunningMode");
-        mutate("isServiceAvailable");
+        try {
+          refreshVergeData();
+        } catch (error) {
+          console.error("[事件监听] 刷新 Verge 配置失败", error);
+        }
       }),
-    );
-
-    register(
-      addListener("verge://notice-message", ({ payload }) =>
-        handleNotice(payload as [string, string]),
-      ),
     );
 
     const appWindow = getCurrentWebviewWindow();
