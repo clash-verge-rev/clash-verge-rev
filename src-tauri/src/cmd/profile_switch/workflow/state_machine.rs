@@ -24,6 +24,9 @@ pub(super) const CONFIG_APPLY_TIMEOUT: Duration = Duration::from_secs(5);
 const TRAY_UPDATE_TIMEOUT: Duration = Duration::from_secs(3);
 const REFRESH_TIMEOUT: Duration = Duration::from_secs(3);
 pub(super) const SAVE_PROFILES_TIMEOUT: Duration = Duration::from_secs(5);
+const SWITCH_IDLE_WAIT_TIMEOUT: Duration = Duration::from_secs(30);
+const SWITCH_IDLE_WAIT_POLL: Duration = Duration::from_millis(25);
+const SWITCH_IDLE_WAIT_MAX_BACKOFF: Duration = Duration::from_millis(250);
 
 /// Explicit state machine for profile switching so we can reason about
 /// cancellation, stale requests, and side effects at each stage.
@@ -228,18 +231,59 @@ impl SwitchStateMachine {
             logging!(
                 info,
                 Type::Cmd,
-                "Profile switch already in progress; skipping request"
+                "Profile switch already in progress; queuing request for task={:?}, profile={}",
+                self.ctx.task_id,
+                self.ctx.profile_label
             );
-            return Ok(SwitchState::Complete(false));
         }
         Ok(SwitchState::AcquireCore)
     }
 
     /// Grab the core lock, mark the manager as switching, and compute the target profile.
     async fn handle_acquire_core(&mut self) -> CmdResult<SwitchState> {
-        self.ctx.core_guard = Some(self.ctx.manager.core_mutex().lock().await);
-        self.ctx.switch_scope = Some(self.ctx.manager.begin_switch());
-        self.ctx.sequence = Some(self.ctx.manager.next_request_sequence());
+        let manager = self.ctx.manager;
+        let core_guard = manager.core_mutex().lock().await;
+
+        if manager.is_switching() {
+            logging!(
+                info,
+                Type::Cmd,
+                "Active profile switch detected; waiting before acquiring scope"
+            );
+            let wait_start = Instant::now();
+            let mut backoff = SWITCH_IDLE_WAIT_POLL;
+            while manager.is_switching() {
+                if self.ctx.cancelled() {
+                    self.ctx
+                        .log_cancelled("while waiting for active switch to finish");
+                    return Ok(SwitchState::Complete(false));
+                }
+                if wait_start.elapsed() >= SWITCH_IDLE_WAIT_TIMEOUT {
+                    let message = format!(
+                        "Timed out after {:?} waiting for active profile switch to finish",
+                        SWITCH_IDLE_WAIT_TIMEOUT
+                    );
+                    logging!(error, Type::Cmd, "{}", message);
+                    return Err(message.into());
+                }
+
+                time::sleep(backoff).await;
+                backoff = backoff.saturating_mul(2).min(SWITCH_IDLE_WAIT_MAX_BACKOFF);
+            }
+            let waited = wait_start.elapsed().as_millis();
+            if waited > 0 {
+                logging!(
+                    info,
+                    Type::Cmd,
+                    "Waited {}ms for active switch to finish before acquiring scope",
+                    waited
+                );
+            }
+        }
+
+        self.ctx.core_guard = Some(core_guard);
+        self.ctx.switch_scope = Some(manager.begin_switch());
+        self.ctx.sequence = Some(manager.next_request_sequence());
         self.ctx.ensure_target_profile();
 
         logging!(
