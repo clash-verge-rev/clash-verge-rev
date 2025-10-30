@@ -107,6 +107,16 @@ export const AppDataProvider = ({
     lastResultTaskId: null,
   });
   const switchEventSeqRef = useRef(0);
+  const profileChangeMetaRef = useRef<{
+    lastProfileId: string | null;
+    lastEventTs: number;
+  }>({
+    lastProfileId: null,
+    lastEventTs: 0,
+  });
+  const lastClashRefreshAtRef = useRef(0);
+  const PROFILE_EVENT_DEDUP_MS = 400;
+  const CLASH_REFRESH_DEDUP_MS = 300;
 
   // Thin wrapper around setTimeout that no-ops once the provider unmounts.
   const scheduleTimeout = useCallback(
@@ -333,6 +343,104 @@ export const AppDataProvider = ({
       return () => window.removeEventListener(eventName, handler);
     };
 
+    const runProfileChangedPipeline = (
+      profileId: string | null,
+      source: "tauri" | "window",
+    ) => {
+      const now = Date.now();
+      const meta = profileChangeMetaRef.current;
+
+      if (
+        meta.lastProfileId === profileId &&
+        now - meta.lastEventTs < PROFILE_EVENT_DEDUP_MS
+      ) {
+        return;
+      }
+
+      meta.lastProfileId = profileId;
+      meta.lastEventTs = now;
+
+      if (profileId) {
+        void seedProxySnapshot(profileId);
+      }
+
+      queueProxyRefresh(`profile-changed-${source}`, 500);
+
+      scheduleTimeout(() => {
+        void fetchProfilesConfig()
+          .then((data) => {
+            commitProfileSnapshot(data);
+            globalMutate("getProfiles", data, false);
+          })
+          .catch((error) =>
+            console.warn(
+              "[AppDataProvider] Failed to refresh profiles after profile change:",
+              error,
+            ),
+          );
+        void refreshProxyProviders().catch((error) =>
+          console.warn(
+            "[AppDataProvider] Proxy providers refresh failed after profile change:",
+            error,
+          ),
+        );
+        void refreshRules().catch((error) =>
+          console.warn(
+            "[AppDataProvider] Rules refresh failed after profile change:",
+            error,
+          ),
+        );
+        void refreshRuleProviders().catch((error) =>
+          console.warn(
+            "[AppDataProvider] Rule providers refresh failed after profile change:",
+            error,
+          ),
+        );
+      }, 200);
+    };
+
+    const handleProfileChanged = (event: { payload: string }) => {
+      runProfileChangedPipeline(event.payload ?? null, "tauri");
+    };
+
+    const runRefreshClashPipeline = (source: "tauri" | "window") => {
+      const now = Date.now();
+      if (now - lastClashRefreshAtRef.current < CLASH_REFRESH_DEDUP_MS) {
+        return;
+      }
+
+      lastClashRefreshAtRef.current = now;
+
+      scheduleTimeout(() => {
+        void refreshClashConfig().catch((error) =>
+          console.warn(
+            "[AppDataProvider] Clash config refresh failed after backend update:",
+            error,
+          ),
+        );
+        void refreshRules().catch((error) =>
+          console.warn(
+            "[AppDataProvider] Rules refresh failed after backend update:",
+            error,
+          ),
+        );
+        void refreshRuleProviders().catch((error) =>
+          console.warn(
+            "[AppDataProvider] Rule providers refresh failed after backend update:",
+            error,
+          ),
+        );
+        void refreshProxyProviders().catch((error) =>
+          console.warn(
+            "[AppDataProvider] Proxy providers refresh failed after backend update:",
+            error,
+          ),
+        );
+      }, 0);
+
+      queueProxyRefresh(`refresh-clash-config-${source}`, 400);
+    };
+
     const handleProfileUpdateCompleted = (_: { payload: { uid: string } }) => {
       queueProxyRefresh("profile-update-completed", 3000);
       if (!isUnmountedRef.current) {
@@ -393,6 +501,15 @@ export const AppDataProvider = ({
         ),
       );
 
+    listen<string>("profile-changed", handleProfileChanged)
+      .then(registerCleanup)
+      .catch((error) =>
+        console.error(
+          "[AppDataProvider] failed to attach profile-changed listener:",
+          error,
+        ),
+      );
+
     listen<ProxiesUpdatedPayload>("proxies-updated", (event) => {
       handleProxiesUpdatedPayload(event.payload, "tauri");
     })
@@ -400,6 +517,17 @@ export const AppDataProvider = ({
       .catch((error) =>
         console.error(
           "[AppDataProvider] failed to attach proxies-updated listener:",
+          error,
+        ),
+      );
+
+    listen("verge://refresh-clash-config", () => {
+      runRefreshClashPipeline("tauri");
+    })
+      .then(registerCleanup)
+      .catch((error) =>
+        console.error(
+          "[AppDataProvider] failed to attach refresh-clash-config listener:",
           error,
         ),
       );
@@ -426,10 +554,23 @@ export const AppDataProvider = ({
         }) as EventListener,
       ],
       [
+        "profile-changed",
+        ((event: Event) => {
+          const payload = (event as CustomEvent<string | null>).detail ?? null;
+          runProfileChangedPipeline(payload, "window");
+        }) as EventListener,
+      ],
+      [
         "proxies-updated",
         ((event: Event) => {
           const payload = (event as CustomEvent<ProxiesUpdatedPayload>).detail;
           handleProxiesUpdatedPayload(payload, "window");
+        }) as EventListener,
+      ],
+      [
+        "verge://refresh-clash-config",
+        (() => {
+          runRefreshClashPipeline("window");
         }) as EventListener,
       ],
       [
@@ -453,7 +594,16 @@ export const AppDataProvider = ({
         }
       });
     };
-  }, [queueProxyRefresh, refreshProxyProviders, scheduleTimeout]);
+  }, [
+    commitProfileSnapshot,
+    queueProxyRefresh,
+    refreshClashConfig,
+    refreshProxyProviders,
+    refreshRuleProviders,
+    refreshRules,
+    scheduleTimeout,
+    seedProxySnapshot,
+  ]);
 
   const switchTargetProfileId =
     switchStatus?.active?.profileId ??
