@@ -1,232 +1,30 @@
-use super::{CmdResult, describe_panic_payload, restore_previous_profile, validate_profile_yaml};
-use crate::{
-    cmd::profile_switch::state::{
-        SwitchCancellation, SwitchHeartbeat, SwitchManager, SwitchRequest, SwitchScope,
+use super::{
+    CmdResult,
+    core::{
+        CONFIG_APPLY_TIMEOUT, CoreUpdateOutcome, REFRESH_TIMEOUT, SAVE_PROFILES_TIMEOUT,
+        SWITCH_IDLE_WAIT_MAX_BACKOFF, SWITCH_IDLE_WAIT_POLL, SWITCH_IDLE_WAIT_TIMEOUT, StaleStage,
+        SwitchState, SwitchStateMachine, TRAY_UPDATE_TIMEOUT,
     },
-    config::{Config, IProfiles, profiles::profiles_save_file_safe},
+    restore_previous_profile, validate_profile_yaml,
+};
+use crate::{
+    config::{Config, profiles::profiles_save_file_safe},
     core::{CoreManager, handle, tray::Tray},
     logging,
     process::AsyncHandler,
     utils::logging::Type,
 };
 use anyhow::Error;
-use futures::{FutureExt, future};
+use futures::future;
 use smartstring::alias::String as SmartString;
 use std::{
-    mem,
-    panic::AssertUnwindSafe,
     pin::Pin,
     time::{Duration, Instant},
 };
-use tokio::{sync::MutexGuard, time};
-
-pub(super) const CONFIG_APPLY_TIMEOUT: Duration = Duration::from_secs(5);
-const TRAY_UPDATE_TIMEOUT: Duration = Duration::from_secs(3);
-const REFRESH_TIMEOUT: Duration = Duration::from_secs(3);
-pub(super) const SAVE_PROFILES_TIMEOUT: Duration = Duration::from_secs(5);
-const SWITCH_IDLE_WAIT_TIMEOUT: Duration = Duration::from_secs(30);
-const SWITCH_IDLE_WAIT_POLL: Duration = Duration::from_millis(25);
-const SWITCH_IDLE_WAIT_MAX_BACKOFF: Duration = Duration::from_millis(250);
-
-/// Explicit state machine for profile switching so we can reason about
-/// cancellation, stale requests, and side effects at each stage.
-pub(super) struct SwitchStateMachine {
-    ctx: SwitchContext,
-    state: SwitchState,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum SwitchStage {
-    Start,
-    AcquireCore,
-    Prepare,
-    ValidateTarget,
-    PatchDraft,
-    UpdateCore,
-    Finalize,
-    Workflow,
-    DriverTask,
-}
-
-impl SwitchStage {
-    pub(crate) fn as_code(self) -> u32 {
-        match self {
-            SwitchStage::Start => 0,
-            SwitchStage::AcquireCore => 1,
-            SwitchStage::Prepare => 2,
-            SwitchStage::ValidateTarget => 3,
-            SwitchStage::PatchDraft => 4,
-            SwitchStage::UpdateCore => 5,
-            SwitchStage::Finalize => 6,
-            SwitchStage::Workflow => 7,
-            SwitchStage::DriverTask => 8,
-        }
-    }
-
-    pub(crate) fn from_code(code: u32) -> Option<Self> {
-        Some(match code {
-            0 => SwitchStage::Start,
-            1 => SwitchStage::AcquireCore,
-            2 => SwitchStage::Prepare,
-            3 => SwitchStage::ValidateTarget,
-            4 => SwitchStage::PatchDraft,
-            5 => SwitchStage::UpdateCore,
-            6 => SwitchStage::Finalize,
-            7 => SwitchStage::Workflow,
-            8 => SwitchStage::DriverTask,
-            _ => return None,
-        })
-    }
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct SwitchPanicInfo {
-    pub(crate) stage: SwitchStage,
-    pub(crate) detail: String,
-}
-
-impl SwitchPanicInfo {
-    pub(crate) fn new(stage: SwitchStage, detail: String) -> Self {
-        Self { stage, detail }
-    }
-
-    pub(crate) fn workflow_root(detail: String) -> Self {
-        Self::new(SwitchStage::Workflow, detail)
-    }
-
-    pub(crate) fn driver_task(detail: String) -> Self {
-        Self::new(SwitchStage::DriverTask, detail)
-    }
-}
+use tokio::time;
 
 impl SwitchStateMachine {
-    pub(super) fn new(
-        manager: &'static SwitchManager,
-        request: Option<SwitchRequest>,
-        profiles: IProfiles,
-    ) -> Self {
-        let heartbeat = request
-            .as_ref()
-            .map(|req| req.heartbeat().clone())
-            .unwrap_or_else(SwitchHeartbeat::new);
-
-        Self {
-            ctx: SwitchContext::new(manager, request, profiles, heartbeat),
-            state: SwitchState::Start,
-        }
-    }
-
-    pub(super) async fn run(mut self) -> Result<CmdResult<bool>, SwitchPanicInfo> {
-        // Drive the state machine until we either complete successfully or bubble up a panic.
-        loop {
-            let current_state = mem::replace(&mut self.state, SwitchState::Complete(false));
-            match current_state {
-                SwitchState::Complete(result) => return Ok(Ok(result)),
-                _ => match self.run_state(current_state).await? {
-                    Ok(state) => self.state = state,
-                    Err(err) => return Ok(Err(err)),
-                },
-            }
-        }
-    }
-
-    async fn run_state(
-        &mut self,
-        current: SwitchState,
-    ) -> Result<CmdResult<SwitchState>, SwitchPanicInfo> {
-        match current {
-            SwitchState::Start => {
-                self.with_stage(
-                    SwitchStage::Start,
-                    |this| async move { this.handle_start() },
-                )
-                .await
-            }
-            SwitchState::AcquireCore => {
-                self.with_stage(SwitchStage::AcquireCore, |this| async move {
-                    this.handle_acquire_core().await
-                })
-                .await
-            }
-            SwitchState::Prepare => {
-                self.with_stage(SwitchStage::Prepare, |this| async move {
-                    this.handle_prepare().await
-                })
-                .await
-            }
-            SwitchState::ValidateTarget => {
-                self.with_stage(SwitchStage::ValidateTarget, |this| async move {
-                    this.handle_validate_target().await
-                })
-                .await
-            }
-            SwitchState::PatchDraft => {
-                self.with_stage(SwitchStage::PatchDraft, |this| async move {
-                    this.handle_patch_draft().await
-                })
-                .await
-            }
-            SwitchState::UpdateCore => {
-                self.with_stage(SwitchStage::UpdateCore, |this| async move {
-                    this.handle_update_core().await
-                })
-                .await
-            }
-            SwitchState::Finalize(outcome) => {
-                self.with_stage(SwitchStage::Finalize, |this| async move {
-                    this.handle_finalize(outcome).await
-                })
-                .await
-            }
-            SwitchState::Complete(result) => Ok(Ok(SwitchState::Complete(result))),
-        }
-    }
-
-    /// Helper that wraps each stage with consistent logging and panic reporting.
-    async fn with_stage<'a, F, Fut>(
-        &'a mut self,
-        stage: SwitchStage,
-        f: F,
-    ) -> Result<CmdResult<SwitchState>, SwitchPanicInfo>
-    where
-        F: FnOnce(&'a mut Self) -> Fut,
-        Fut: std::future::Future<Output = CmdResult<SwitchState>> + 'a,
-    {
-        let sequence = self.ctx.sequence();
-        let task = self.ctx.task_id;
-        let profile = self.ctx.profile_label.clone();
-        logging!(
-            info,
-            Type::Cmd,
-            "Enter {:?} (sequence={}, task={:?}, profile={})",
-            stage,
-            sequence,
-            task,
-            profile
-        );
-        let stage_start = Instant::now();
-        self.ctx.record_stage(stage);
-        AssertUnwindSafe(f(self))
-            .catch_unwind()
-            .await
-            .map_err(|payload| {
-                SwitchPanicInfo::new(stage, describe_panic_payload(payload.as_ref()))
-            })
-            .inspect(|_| {
-                logging!(
-                    info,
-                    Type::Cmd,
-                    "Exit {:?} (sequence={}, task={:?}, profile={}, elapsed={}ms)",
-                    stage,
-                    sequence,
-                    task,
-                    profile,
-                    stage_start.elapsed().as_millis()
-                );
-            })
-    }
-
-    fn handle_start(&mut self) -> CmdResult<SwitchState> {
+    pub(super) fn handle_start(&mut self) -> CmdResult<SwitchState> {
         if self.ctx.manager.is_switching() {
             logging!(
                 info,
@@ -240,7 +38,7 @@ impl SwitchStateMachine {
     }
 
     /// Grab the core lock, mark the manager as switching, and compute the target profile.
-    async fn handle_acquire_core(&mut self) -> CmdResult<SwitchState> {
+    pub(super) async fn handle_acquire_core(&mut self) -> CmdResult<SwitchState> {
         let manager = self.ctx.manager;
         let core_guard = manager.core_mutex().lock().await;
 
@@ -307,7 +105,7 @@ impl SwitchStateMachine {
         Ok(SwitchState::Prepare)
     }
 
-    async fn handle_prepare(&mut self) -> CmdResult<SwitchState> {
+    pub(super) async fn handle_prepare(&mut self) -> CmdResult<SwitchState> {
         let current_profile = {
             let profiles_guard = Config::profiles().await;
             profiles_guard.latest_ref().current.clone()
@@ -318,7 +116,7 @@ impl SwitchStateMachine {
         Ok(SwitchState::ValidateTarget)
     }
 
-    async fn handle_validate_target(&mut self) -> CmdResult<SwitchState> {
+    pub(super) async fn handle_validate_target(&mut self) -> CmdResult<SwitchState> {
         if self.ctx.cancelled() {
             self.ctx.log_cancelled("before validation");
             return Ok(SwitchState::Complete(false));
@@ -346,7 +144,7 @@ impl SwitchStateMachine {
         Ok(SwitchState::PatchDraft)
     }
 
-    async fn handle_patch_draft(&mut self) -> CmdResult<SwitchState> {
+    pub(super) async fn handle_patch_draft(&mut self) -> CmdResult<SwitchState> {
         if self.ctx.cancelled() {
             self.ctx.log_cancelled("before patching configuration");
             return Ok(SwitchState::Complete(false));
@@ -372,7 +170,7 @@ impl SwitchStateMachine {
         Ok(SwitchState::UpdateCore)
     }
 
-    async fn handle_update_core(&mut self) -> CmdResult<SwitchState> {
+    pub(super) async fn handle_update_core(&mut self) -> CmdResult<SwitchState> {
         let sequence = self.ctx.sequence();
         let task_id = self.ctx.task_id;
         let profile = self.ctx.profile_label.clone();
@@ -504,7 +302,10 @@ impl SwitchStateMachine {
         Ok(SwitchState::Finalize(outcome))
     }
 
-    async fn handle_finalize(&mut self, outcome: CoreUpdateOutcome) -> CmdResult<SwitchState> {
+    pub(super) async fn handle_finalize(
+        &mut self,
+        outcome: CoreUpdateOutcome,
+    ) -> CmdResult<SwitchState> {
         let next_state = match outcome {
             CoreUpdateOutcome::Success => self.finalize_success().await,
             CoreUpdateOutcome::ValidationFailed { message } => {
@@ -521,7 +322,7 @@ impl SwitchStateMachine {
         next_state
     }
 
-    async fn finalize_success(&mut self) -> CmdResult<SwitchState> {
+    pub(super) async fn finalize_success(&mut self) -> CmdResult<SwitchState> {
         if self.abort_if_stale_post_core().await? {
             return Ok(SwitchState::Complete(false));
         }
@@ -562,7 +363,10 @@ impl SwitchStateMachine {
         Ok(SwitchState::Complete(true))
     }
 
-    async fn finalize_validation_failed(&mut self, message: String) -> CmdResult<SwitchState> {
+    pub(super) async fn finalize_validation_failed(
+        &mut self,
+        message: String,
+    ) -> CmdResult<SwitchState> {
         logging!(
             warn,
             Type::Cmd,
@@ -575,7 +379,7 @@ impl SwitchStateMachine {
         Ok(SwitchState::Complete(false))
     }
 
-    async fn finalize_core_error(&mut self, message: String) -> CmdResult<SwitchState> {
+    pub(super) async fn finalize_core_error(&mut self, message: String) -> CmdResult<SwitchState> {
         logging!(
             warn,
             Type::Cmd,
@@ -588,7 +392,7 @@ impl SwitchStateMachine {
         Ok(SwitchState::Complete(false))
     }
 
-    async fn finalize_timeout(&mut self) -> CmdResult<SwitchState> {
+    pub(super) async fn finalize_timeout(&mut self) -> CmdResult<SwitchState> {
         let timeout_msg =
             "Configuration update timed out (30s); possible validation or core communication stall";
         logging!(
@@ -604,7 +408,7 @@ impl SwitchStateMachine {
         Ok(SwitchState::Complete(false))
     }
 
-    async fn abort_if_stale_post_core(&mut self) -> CmdResult<bool> {
+    pub(super) async fn abort_if_stale_post_core(&mut self) -> CmdResult<bool> {
         if self.ctx.stale() {
             StaleStage::AfterCoreOperation.log(&self.ctx);
             Config::profiles().await.discard();
@@ -614,7 +418,7 @@ impl SwitchStateMachine {
         Ok(false)
     }
 
-    fn log_successful_update(&self) {
+    pub(super) fn log_successful_update(&self) {
         logging!(
             info,
             Type::Cmd,
@@ -623,7 +427,7 @@ impl SwitchStateMachine {
         );
     }
 
-    async fn apply_config_with_timeout(&mut self) -> CmdResult<bool> {
+    pub(super) async fn apply_config_with_timeout(&mut self) -> CmdResult<bool> {
         let apply_result = time::timeout(CONFIG_APPLY_TIMEOUT, async {
             Config::profiles().await.apply()
         })
@@ -643,7 +447,7 @@ impl SwitchStateMachine {
         }
     }
 
-    async fn refresh_clash_with_timeout(&self) {
+    pub(super) async fn refresh_clash_with_timeout(&self) {
         let start = Instant::now();
         let result = time::timeout(REFRESH_TIMEOUT, async {
             handle::Handle::refresh_clash();
@@ -668,7 +472,7 @@ impl SwitchStateMachine {
         }
     }
 
-    async fn update_tray_tooltip_with_timeout(&self) {
+    pub(super) async fn update_tray_tooltip_with_timeout(&self) {
         let start = Instant::now();
         let update_tooltip = time::timeout(TRAY_UPDATE_TIMEOUT, async {
             Tray::global().update_tooltip().await
@@ -701,7 +505,7 @@ impl SwitchStateMachine {
         }
     }
 
-    async fn update_tray_menu_with_timeout(&self) {
+    pub(super) async fn update_tray_menu_with_timeout(&self) {
         let start = Instant::now();
         let update_menu = time::timeout(TRAY_UPDATE_TIMEOUT, async {
             Tray::global().update_menu().await
@@ -734,7 +538,7 @@ impl SwitchStateMachine {
         }
     }
 
-    async fn persist_profiles_with_timeout(&self) -> CmdResult<()> {
+    pub(super) async fn persist_profiles_with_timeout(&self) -> CmdResult<()> {
         let start = Instant::now();
         let save_future = AsyncHandler::spawn_blocking(|| {
             futures::executor::block_on(async { profiles_save_file_safe().await })
@@ -778,7 +582,7 @@ impl SwitchStateMachine {
         }
     }
 
-    fn emit_profile_change_event(&self) {
+    pub(super) fn emit_profile_change_event(&self) {
         if let Some(current) = self.ctx.new_profile_for_event.clone() {
             logging!(
                 info,
@@ -789,237 +593,5 @@ impl SwitchStateMachine {
             );
             handle::Handle::notify_profile_changed(current);
         }
-    }
-}
-
-struct SwitchContext {
-    manager: &'static SwitchManager,
-    request: Option<SwitchRequest>,
-    profiles_patch: Option<IProfiles>,
-    sequence: Option<u64>,
-    target_profile: Option<SmartString>,
-    previous_profile: Option<SmartString>,
-    new_profile_for_event: Option<SmartString>,
-    switch_scope: Option<SwitchScope<'static>>,
-    core_guard: Option<MutexGuard<'static, ()>>,
-    heartbeat: SwitchHeartbeat,
-    task_id: Option<u64>,
-    profile_label: SmartString,
-    active_stage: SwitchStage,
-}
-
-impl SwitchContext {
-    // Captures all mutable data required across states (locks, profile ids, etc).
-    fn new(
-        manager: &'static SwitchManager,
-        request: Option<SwitchRequest>,
-        profiles: IProfiles,
-        heartbeat: SwitchHeartbeat,
-    ) -> Self {
-        let task_id = request.as_ref().map(|req| req.task_id());
-        let profile_label = request
-            .as_ref()
-            .map(|req| req.profile_id().clone())
-            .or_else(|| profiles.current.clone())
-            .unwrap_or_else(|| SmartString::from("unknown"));
-        heartbeat.touch();
-        Self {
-            manager,
-            request,
-            profiles_patch: Some(profiles),
-            sequence: None,
-            target_profile: None,
-            previous_profile: None,
-            new_profile_for_event: None,
-            switch_scope: None,
-            core_guard: None,
-            heartbeat,
-            task_id,
-            profile_label,
-            active_stage: SwitchStage::Start,
-        }
-    }
-
-    fn ensure_target_profile(&mut self) {
-        // Lazily determine which profile we're switching to so shared paths (patch vs. driver) behave the same.
-        if let Some(patch) = self.profiles_patch.as_mut() {
-            if patch.current.is_none()
-                && let Some(request) = self.request.as_ref()
-            {
-                patch.current = Some(request.profile_id().clone());
-            }
-            self.target_profile = patch.current.clone();
-        }
-    }
-
-    fn take_profiles_patch(&mut self) -> CmdResult<IProfiles> {
-        self.profiles_patch
-            .take()
-            .ok_or_else(|| "profiles patch already consumed".into())
-    }
-
-    fn cancel_token(&self) -> Option<SwitchCancellation> {
-        self.request.as_ref().map(|req| req.cancel_token().clone())
-    }
-
-    fn cancelled(&self) -> bool {
-        self.request
-            .as_ref()
-            .map(|req| req.cancel_token().is_cancelled())
-            .unwrap_or(false)
-    }
-
-    fn log_cancelled(&self, stage: &str) {
-        if let Some(request) = self.request.as_ref() {
-            logging!(
-                info,
-                Type::Cmd,
-                "Switch task {} cancelled {}; profile={}",
-                request.task_id(),
-                stage,
-                request.profile_id()
-            );
-        } else {
-            logging!(info, Type::Cmd, "Profile switch cancelled {}", stage);
-        }
-    }
-
-    fn should_validate_target(&self) -> bool {
-        match (&self.target_profile, &self.previous_profile) {
-            (Some(target), Some(current)) => current != target,
-            (Some(_), None) => true,
-            _ => false,
-        }
-    }
-
-    fn stale(&self) -> bool {
-        self.sequence
-            .map(|seq| seq < self.manager.latest_request_sequence())
-            .unwrap_or(false)
-    }
-
-    fn sequence(&self) -> u64 {
-        self.sequence.unwrap_or_else(|| {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Sequence unexpectedly missing in switch context; defaulting to 0"
-            );
-            0
-        })
-    }
-
-    fn record_stage(&mut self, stage: SwitchStage) {
-        let since_last = self.heartbeat.elapsed();
-        let previous = self.active_stage;
-        self.active_stage = stage;
-        self.heartbeat.set_stage(stage.as_code());
-
-        match self.task_id {
-            Some(task_id) => logging!(
-                debug,
-                Type::Cmd,
-                "Switch task {} (profile={}) transitioned {:?} -> {:?} after {:?}",
-                task_id,
-                self.profile_label,
-                previous,
-                stage,
-                since_last
-            ),
-            None => logging!(
-                debug,
-                Type::Cmd,
-                "Profile patch {} transitioned {:?} -> {:?} after {:?}",
-                self.profile_label,
-                previous,
-                stage,
-                since_last
-            ),
-        }
-    }
-
-    fn release_core_guard(&mut self) {
-        self.core_guard = None;
-    }
-
-    fn release_switch_scope(&mut self) {
-        self.switch_scope = None;
-    }
-
-    fn release_locks(&mut self) {
-        self.release_core_guard();
-        self.release_switch_scope();
-    }
-}
-
-/// High-level state machine nodes executed in strict sequence.
-enum SwitchState {
-    Start,
-    AcquireCore,
-    Prepare,
-    ValidateTarget,
-    PatchDraft,
-    UpdateCore,
-    Finalize(CoreUpdateOutcome),
-    Complete(bool),
-}
-
-/// Result of trying to apply the draft configuration to the core.
-enum CoreUpdateOutcome {
-    Success,
-    ValidationFailed { message: String },
-    CoreError { message: String },
-    Timeout,
-}
-
-/// Indicates where a stale request was detected so logs stay descriptive.
-enum StaleStage {
-    AfterLock,
-    BeforeCoreOperation,
-    BeforeCoreInteraction,
-    AfterCoreOperation,
-}
-
-impl StaleStage {
-    fn log(&self, ctx: &SwitchContext) {
-        let sequence = ctx.sequence();
-        let latest = ctx.manager.latest_request_sequence();
-        match self {
-            StaleStage::AfterLock => logging!(
-                info,
-                Type::Cmd,
-                "Detected a newer request after acquiring the lock (sequence: {} < {}), abandoning current request",
-                sequence,
-                latest
-            ),
-            StaleStage::BeforeCoreOperation => logging!(
-                info,
-                Type::Cmd,
-                "Detected a newer request before core operation (sequence: {} < {}), abandoning current request",
-                sequence,
-                latest
-            ),
-            StaleStage::BeforeCoreInteraction => logging!(
-                info,
-                Type::Cmd,
-                "Detected a newer request before core interaction (sequence: {} < {}), abandoning current request",
-                sequence,
-                latest
-            ),
-            StaleStage::AfterCoreOperation => logging!(
-                info,
-                Type::Cmd,
-                "Detected a newer request after core operation (sequence: {} < {}), ignoring current result",
-                sequence,
-                latest
-            ),
-        }
-    }
-}
-
-impl Drop for SwitchContext {
-    fn drop(&mut self) {
-        self.core_guard.take();
-        self.switch_scope.take();
     }
 }

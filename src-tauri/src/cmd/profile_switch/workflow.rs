@@ -1,6 +1,6 @@
 use super::{
     CmdResult,
-    state::{SWITCH_CLEANUP_TIMEOUT, SWITCH_JOB_TIMEOUT, SwitchManager, SwitchRequest, manager},
+    state::{SWITCH_JOB_TIMEOUT, SwitchManager, SwitchRequest, manager},
     validation::validate_switch_request,
 };
 use crate::cmd::StringifyErr;
@@ -17,12 +17,14 @@ use smartstring::alias::String as SmartString;
 use std::{any::Any, panic::AssertUnwindSafe, time::Duration};
 use tokio::{fs as tokio_fs, time};
 
+mod cleanup;
 mod state_machine;
+pub(super) use cleanup::{
+    CleanupHandle, schedule_post_switch_failure, schedule_post_switch_success,
+};
 
 use state_machine::{CONFIG_APPLY_TIMEOUT, SAVE_PROFILES_TIMEOUT, SwitchStateMachine};
 pub(super) use state_machine::{SwitchPanicInfo, SwitchStage};
-
-pub(super) type CleanupHandle = tauri::async_runtime::JoinHandle<()>;
 
 pub(super) struct SwitchWorkflowResult {
     pub success: bool,
@@ -370,66 +372,6 @@ pub(super) async fn restore_previous_profile(previous: Option<SmartString>) -> C
     }
 
     Ok(())
-}
-
-/// Give Mihomo a chance to drop lingering connections after we switch profiles.
-async fn close_connections_after_switch(profile_id: SmartString) {
-    match time::timeout(SWITCH_CLEANUP_TIMEOUT, async {
-        handle::Handle::mihomo().await.close_all_connections().await
-    })
-    .await
-    {
-        Ok(Ok(())) => {}
-        Ok(Err(err)) => {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Failed to close connections after profile switch ({}): {}",
-                profile_id,
-                err
-            );
-        }
-        Err(_) => {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Closing connections after profile switch ({}) timed out after {:?}",
-                profile_id,
-                SWITCH_CLEANUP_TIMEOUT
-            );
-        }
-    }
-}
-
-fn schedule_post_switch_success(
-    profile_id: SmartString,
-    success: bool,
-    notify: bool,
-    task_id: u64,
-) -> CleanupHandle {
-    // Post-success cleanup runs detached from the driver so the queue keeps moving.
-    AsyncHandler::spawn(move || async move {
-        handle::Handle::notify_profile_switch_finished(
-            profile_id.clone(),
-            success,
-            notify,
-            task_id,
-        );
-        if success {
-            close_connections_after_switch(profile_id).await;
-        }
-    })
-}
-
-pub(super) fn schedule_post_switch_failure(
-    profile_id: SmartString,
-    notify: bool,
-    task_id: u64,
-) -> CleanupHandle {
-    // Failures or cancellations do not alter the active profile, so skip draining live connections.
-    AsyncHandler::spawn(move || async move {
-        handle::Handle::notify_profile_switch_finished(profile_id.clone(), false, notify, task_id);
-    })
 }
 
 pub(super) fn describe_panic_payload(payload: &(dyn Any + Send)) -> String {

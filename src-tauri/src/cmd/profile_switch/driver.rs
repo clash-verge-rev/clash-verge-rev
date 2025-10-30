@@ -33,7 +33,7 @@ type CompletionRegistry = AsyncMutex<HashMap<u64, oneshot::Sender<SwitchResultSt
 
 static SWITCH_COMPLETION_WAITERS: OnceCell<CompletionRegistry> = OnceCell::new();
 
-/// Global map of task id → completion channel sender used when callers await the result.
+/// Global map of task id -> completion channel sender used when callers await the result.
 fn completion_waiters() -> &'static CompletionRegistry {
     SWITCH_COMPLETION_WAITERS.get_or_init(|| AsyncMutex::new(HashMap::new()))
 }
@@ -255,416 +255,402 @@ async fn switch_profile_impl(
 
 fn switch_driver_sender() -> &'static mpsc::Sender<SwitchDriverMessage> {
     SWITCH_QUEUE.get_or_init(|| {
-        let (tx, mut rx) = mpsc::channel::<SwitchDriverMessage>(SWITCH_QUEUE_CAPACITY);
+        let (tx, rx) = mpsc::channel::<SwitchDriverMessage>(SWITCH_QUEUE_CAPACITY);
         let driver_tx = tx.clone();
         tokio::spawn(async move {
             let manager = manager();
-            let mut state = SwitchDriverState::default();
-            manager.set_status(state.snapshot(manager));
-            while let Some(message) = rx.recv().await {
-                match message {
-                    SwitchDriverMessage::Request {
-                        request,
-                        respond_to,
-                    } => {
-                        handle_enqueue(&mut state, request, respond_to, driver_tx.clone(), manager);
-                    }
-                    SwitchDriverMessage::Completion { request, outcome } => {
-                        handle_completion(&mut state, request, outcome, driver_tx.clone(), manager);
-                    }
-                    SwitchDriverMessage::CleanupDone { profile } => {
-                        handle_cleanup_done(&mut state, profile, driver_tx.clone(), manager);
-                    }
-                }
-            }
+            let driver = SwitchDriver::new(manager, driver_tx);
+            driver.run(rx).await;
         });
         tx
     })
 }
 
-fn handle_enqueue(
-    state: &mut SwitchDriverState,
-    request: SwitchRequest,
-    respond_to: oneshot::Sender<bool>,
-    driver_tx: mpsc::Sender<SwitchDriverMessage>,
+struct SwitchDriver {
     manager: &'static SwitchManager,
-) {
-    // Each new request supersedes older ones for the same profile to avoid thrashing the core.
-    let mut responder = Some(respond_to);
-    let accepted = true;
-    let profile_key = request.profile_id().clone();
-    let cleanup_pending = state.active.is_none() && !state.cleanup_profiles.is_empty();
+    sender: mpsc::Sender<SwitchDriverMessage>,
+    state: SwitchDriverState,
+}
 
-    if cleanup_pending && state.cleanup_profiles.contains_key(&profile_key) {
-        logging!(
-            debug,
-            Type::Cmd,
-            "Cleanup running for {}; queueing switch task {} -> {} to run afterwards",
-            profile_key,
-            request.task_id(),
-            profile_key
-        );
-        if let Some(previous) = state
+impl SwitchDriver {
+    fn new(manager: &'static SwitchManager, sender: mpsc::Sender<SwitchDriverMessage>) -> Self {
+        let state = SwitchDriverState::default();
+        manager.set_status(state.snapshot(manager));
+        Self {
+            manager,
+            sender,
+            state,
+        }
+    }
+
+    async fn run(mut self, mut rx: mpsc::Receiver<SwitchDriverMessage>) {
+        while let Some(message) = rx.recv().await {
+            match message {
+                SwitchDriverMessage::Request {
+                    request,
+                    respond_to,
+                } => {
+                    self.handle_enqueue(request, respond_to);
+                }
+                SwitchDriverMessage::Completion { request, outcome } => {
+                    self.handle_completion(request, outcome);
+                }
+                SwitchDriverMessage::CleanupDone { profile } => {
+                    self.handle_cleanup_done(profile);
+                }
+            }
+        }
+    }
+
+    fn handle_enqueue(&mut self, request: SwitchRequest, respond_to: oneshot::Sender<bool>) {
+        // Each new request supersedes older ones for the same profile to avoid thrashing the core.
+        let mut responder = Some(respond_to);
+        let accepted = true;
+        let profile_key = request.profile_id().clone();
+        let cleanup_pending =
+            self.state.active.is_none() && !self.state.cleanup_profiles.is_empty();
+
+        if cleanup_pending && self.state.cleanup_profiles.contains_key(&profile_key) {
+            logging!(
+                debug,
+                Type::Cmd,
+                "Cleanup running for {}; queueing switch task {} -> {} to run afterwards",
+                profile_key,
+                request.task_id(),
+                profile_key
+            );
+            if let Some(previous) = self
+                .state
+                .latest_tokens
+                .insert(profile_key.clone(), request.cancel_token().clone())
+            {
+                previous.cancel();
+            }
+            self.state
+                .queue
+                .retain(|queued| queued.profile_id() != &profile_key);
+            self.state.queue.push_back(request);
+            if let Some(sender) = responder.take() {
+                let _ = sender.send(accepted);
+            }
+            self.publish_status();
+            return;
+        }
+
+        if cleanup_pending {
+            logging!(
+                debug,
+                Type::Cmd,
+                "Cleanup running for {} profile(s); queueing task {} -> {} to run after cleanup without clearing existing requests",
+                self.state.cleanup_profiles.len(),
+                request.task_id(),
+                profile_key
+            );
+        }
+
+        if let Some(previous) = self
+            .state
             .latest_tokens
             .insert(profile_key.clone(), request.cancel_token().clone())
         {
             previous.cancel();
         }
-        state
-            .queue
-            .retain(|queued| queued.profile_id() != &profile_key);
-        state.queue.push_back(request);
-        if let Some(sender) = responder.take() {
-            let _ = sender.send(accepted);
-        }
-        publish_status(state, manager);
-        return;
-    }
 
-    if cleanup_pending {
-        logging!(
-            debug,
-            Type::Cmd,
-            "Cleanup running for {} profile(s); queueing task {} -> {} to run after cleanup without clearing existing requests",
-            state.cleanup_profiles.len(),
-            request.task_id(),
-            profile_key
-        );
-    }
-
-    if let Some(previous) = state
-        .latest_tokens
-        .insert(profile_key.clone(), request.cancel_token().clone())
-    {
-        previous.cancel();
-    }
-
-    if let Some(active) = state.active.as_mut()
-        && active.profile_id() == &profile_key
-    {
-        active.cancel_token().cancel();
-        active.merge_notify(request.notify());
-        state
-            .queue
-            .retain(|queued| queued.profile_id() != &profile_key);
-        state.queue.push_front(request.clone());
-        if let Some(sender) = responder.take() {
-            let _ = sender.send(accepted);
-        }
-        publish_status(state, manager);
-        return;
-    }
-
-    if let Some(active) = state.active.as_ref() {
-        logging!(
-            debug,
-            Type::Cmd,
-            "Cancelling active switch task {} (profile={}) in favour of task {} -> {}",
-            active.task_id(),
-            active.profile_id(),
-            request.task_id(),
-            profile_key
-        );
-        active.cancel_token().cancel();
-    }
-
-    state
-        .queue
-        .retain(|queued| queued.profile_id() != &profile_key);
-
-    state.queue.push_back(request.clone());
-    if let Some(sender) = responder.take() {
-        let _ = sender.send(accepted);
-    }
-
-    start_next_job(state, driver_tx, manager);
-    publish_status(state, manager);
-}
-
-fn handle_completion(
-    state: &mut SwitchDriverState,
-    request: SwitchRequest,
-    outcome: SwitchJobOutcome,
-    driver_tx: mpsc::Sender<SwitchDriverMessage>,
-    manager: &'static SwitchManager,
-) {
-    // Translate the workflow result into an event the frontend can understand.
-    let result_record = match &outcome {
-        SwitchJobOutcome::Completed { success, .. } => {
-            logging!(
-                info,
-                Type::Cmd,
-                "Switch task {} completed (success={})",
-                request.task_id(),
-                success
-            );
-            if *success {
-                SwitchResultStatus::success(request.task_id(), request.profile_id())
-            } else {
-                SwitchResultStatus::failed(request.task_id(), request.profile_id(), None, None)
+        if let Some(active) = self.state.active.as_mut()
+            && active.profile_id() == &profile_key
+        {
+            active.cancel_token().cancel();
+            active.merge_notify(request.notify());
+            self.state
+                .queue
+                .retain(|queued| queued.profile_id() != &profile_key);
+            self.state.queue.push_front(request.clone());
+            if let Some(sender) = responder.take() {
+                let _ = sender.send(accepted);
             }
+            self.publish_status();
+            return;
         }
-        SwitchJobOutcome::Panicked { info, .. } => {
+
+        if let Some(active) = self.state.active.as_ref() {
             logging!(
-                error,
+                debug,
                 Type::Cmd,
-                "Switch task {} panicked at stage {:?}: {}",
+                "Cancelling active switch task {} (profile={}) in favour of task {} -> {}",
+                active.task_id(),
+                active.profile_id(),
                 request.task_id(),
-                info.stage,
-                info.detail
+                profile_key
             );
-            SwitchResultStatus::failed(
-                request.task_id(),
-                request.profile_id(),
-                Some(format!("{:?}", info.stage)),
-                Some(info.detail.clone()),
-            )
+            active.cancel_token().cancel();
         }
-    };
 
-    if let Some(active) = state.active.as_ref()
-        && active.task_id() == request.task_id()
-    {
-        state.active = None;
+        self.state
+            .queue
+            .retain(|queued| queued.profile_id() != &profile_key);
+
+        self.state.queue.push_back(request.clone());
+        if let Some(sender) = responder.take() {
+            let _ = sender.send(accepted);
+        }
+
+        self.start_next_job();
+        self.publish_status();
     }
 
-    if let Some(latest) = state.latest_tokens.get(request.profile_id())
-        && latest.same_token(request.cancel_token())
-    {
-        state.latest_tokens.remove(request.profile_id());
-    }
-
-    let cleanup = match outcome {
-        SwitchJobOutcome::Completed { cleanup, .. } => cleanup,
-        SwitchJobOutcome::Panicked { cleanup, .. } => cleanup,
-    };
-
-    track_cleanup(
-        state,
-        driver_tx.clone(),
-        request.profile_id().clone(),
-        cleanup,
-    );
-
-    let event_record = result_record.clone();
-    state.last_result = Some(result_record);
-    notify_completion_waiter(request.task_id(), event_record.clone());
-    manager.push_event(event_record);
-    start_next_job(state, driver_tx, manager);
-    publish_status(state, manager);
-}
-
-/// Mark a request as failed because a newer request superseded it.
-fn discard_request(
-    state: &mut SwitchDriverState,
-    request: SwitchRequest,
-    manager: &'static SwitchManager,
-) {
-    let key = request.profile_id().clone();
-    let should_remove = state
-        .latest_tokens
-        .get(&key)
-        .map(|latest| latest.same_token(request.cancel_token()))
-        .unwrap_or(false);
-
-    if should_remove {
-        state.latest_tokens.remove(&key);
-    }
-
-    if !request.cancel_token().is_cancelled() {
-        request.cancel_token().cancel();
-    }
-
-    let event = SwitchResultStatus::cancelled(
-        request.task_id(),
-        request.profile_id(),
-        Some("request superseded".to_string()),
-    );
-
-    state.last_result = Some(event.clone());
-    notify_completion_waiter(request.task_id(), event.clone());
-    manager.push_event(event);
-}
-
-fn start_switch_job(
-    driver_tx: mpsc::Sender<SwitchDriverMessage>,
-    manager: &'static SwitchManager,
-    request: SwitchRequest,
-) {
-    // Run the workflow in a background task while the driver keeps processing messages.
-    let completion_request = request.clone();
-    let heartbeat = request.heartbeat().clone();
-    let cancel_token = request.cancel_token().clone();
-    let task_id = request.task_id();
-    let profile_label = request.profile_id().clone();
-
-    tokio::spawn(async move {
-        let mut watchdog_interval = time::interval(WATCHDOG_TICK);
-        watchdog_interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
-
-        let workflow_fut =
-            AssertUnwindSafe(workflow::run_switch_job(manager, request)).catch_unwind();
-        tokio::pin!(workflow_fut);
-
-        let job_result = loop {
-            tokio::select! {
-                res = workflow_fut.as_mut() => {
-                    break match res {
-                        Ok(Ok(result)) => SwitchJobOutcome::Completed {
-                            success: result.success,
-                            cleanup: result.cleanup,
-                        },
-                        Ok(Err(error)) => SwitchJobOutcome::Panicked {
-                            info: error.info,
-                            cleanup: error.cleanup,
-                        },
-                        Err(payload) => {
-                            let info = SwitchPanicInfo::driver_task(
-                                workflow::describe_panic_payload(payload.as_ref()),
-                            );
-                            let cleanup = workflow::schedule_post_switch_failure(
-                                profile_label.clone(),
-                                completion_request.notify(),
-                                completion_request.task_id(),
-                            );
-                            SwitchJobOutcome::Panicked { info, cleanup }
-                        }
-                    };
+    fn handle_completion(&mut self, request: SwitchRequest, outcome: SwitchJobOutcome) {
+        // Translate the workflow result into an event the frontend can understand.
+        let result_record = match &outcome {
+            SwitchJobOutcome::Completed { success, .. } => {
+                logging!(
+                    info,
+                    Type::Cmd,
+                    "Switch task {} completed (success={})",
+                    request.task_id(),
+                    success
+                );
+                if *success {
+                    SwitchResultStatus::success(request.task_id(), request.profile_id())
+                } else {
+                    SwitchResultStatus::failed(request.task_id(), request.profile_id(), None, None)
                 }
-                _ = watchdog_interval.tick() => {
-                    if cancel_token.is_cancelled() {
-                        continue;
-                    }
-                    let elapsed = heartbeat.elapsed();
-                    if elapsed > WATCHDOG_TIMEOUT {
-                        let stage = SwitchStage::from_code(heartbeat.stage_code())
-                            .unwrap_or(SwitchStage::Workflow);
-                        logging!(
-                            warn,
-                            Type::Cmd,
-                            "Switch task {} watchdog timeout (profile={} stage={:?}, elapsed={:?}); cancelling",
-                            task_id,
-                            profile_label.as_str(),
-                            stage,
-                            elapsed
-                        );
-                        cancel_token.cancel();
-                    }
-                }
+            }
+            SwitchJobOutcome::Panicked { info, .. } => {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Switch task {} panicked at stage {:?}: {}",
+                    request.task_id(),
+                    info.stage,
+                    info.detail
+                );
+                SwitchResultStatus::failed(
+                    request.task_id(),
+                    request.profile_id(),
+                    Some(format!("{:?}", info.stage)),
+                    Some(info.detail.clone()),
+                )
             }
         };
 
-        let request_for_error = completion_request.clone();
-
-        if let Err(err) = driver_tx
-            .send(SwitchDriverMessage::Completion {
-                request: completion_request,
-                outcome: job_result,
-            })
-            .await
+        if let Some(active) = self.state.active.as_ref()
+            && active.task_id() == request.task_id()
         {
-            logging!(
-                error,
-                Type::Cmd,
-                "Failed to push switch completion to driver: {}",
-                err
-            );
-            notify_completion_waiter(
-                request_for_error.task_id(),
-                SwitchResultStatus::failed(
+            self.state.active = None;
+        }
+
+        if let Some(latest) = self.state.latest_tokens.get(request.profile_id())
+            && latest.same_token(request.cancel_token())
+        {
+            self.state.latest_tokens.remove(request.profile_id());
+        }
+
+        let cleanup = match outcome {
+            SwitchJobOutcome::Completed { cleanup, .. } => cleanup,
+            SwitchJobOutcome::Panicked { cleanup, .. } => cleanup,
+        };
+
+        self.track_cleanup(request.profile_id().clone(), cleanup);
+
+        let event_record = result_record.clone();
+        self.state.last_result = Some(result_record);
+        notify_completion_waiter(request.task_id(), event_record.clone());
+        self.manager.push_event(event_record);
+        self.start_next_job();
+        self.publish_status();
+    }
+
+    fn handle_cleanup_done(&mut self, profile: SmartString) {
+        if let Some(handle) = self.state.cleanup_profiles.remove(&profile) {
+            handle.abort();
+        }
+        self.start_next_job();
+        self.publish_status();
+    }
+
+    fn start_next_job(&mut self) {
+        if self.state.active.is_some() || !self.state.cleanup_profiles.is_empty() {
+            self.publish_status();
+            return;
+        }
+
+        while let Some(request) = self.state.queue.pop_front() {
+            if request.cancel_token().is_cancelled() {
+                self.discard_request(request);
+                continue;
+            }
+
+            self.state.active = Some(request.clone());
+            self.start_switch_job(request);
+            break;
+        }
+
+        self.publish_status();
+    }
+
+    fn track_cleanup(&mut self, profile: SmartString, cleanup: workflow::CleanupHandle) {
+        if let Some(existing) = self.state.cleanup_profiles.remove(&profile) {
+            existing.abort();
+        }
+
+        let driver_tx = self.sender.clone();
+        let profile_clone = profile.clone();
+        let handle = tokio::spawn(async move {
+            let profile_label = profile_clone.clone();
+            if let Err(err) = cleanup.await {
+                logging!(
+                    warn,
+                    Type::Cmd,
+                    "Cleanup task for profile {} failed: {}",
+                    profile_label.as_str(),
+                    err
+                );
+            }
+            if let Err(err) = driver_tx
+                .send(SwitchDriverMessage::CleanupDone {
+                    profile: profile_clone,
+                })
+                .await
+            {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Failed to push cleanup completion for profile {}: {}",
+                    profile_label.as_str(),
+                    err
+                );
+            }
+        });
+        self.state.cleanup_profiles.insert(profile, handle);
+    }
+
+    fn start_switch_job(&self, request: SwitchRequest) {
+        // Run the workflow in a background task while the driver keeps processing messages.
+        let driver_tx = self.sender.clone();
+        let manager = self.manager;
+
+        let completion_request = request.clone();
+        let heartbeat = request.heartbeat().clone();
+        let cancel_token = request.cancel_token().clone();
+        let task_id = request.task_id();
+        let profile_label = request.profile_id().clone();
+
+        tokio::spawn(async move {
+            let mut watchdog_interval = time::interval(WATCHDOG_TICK);
+            watchdog_interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+
+            let workflow_fut =
+                AssertUnwindSafe(workflow::run_switch_job(manager, request)).catch_unwind();
+            tokio::pin!(workflow_fut);
+
+            let job_result = loop {
+                tokio::select! {
+                    res = workflow_fut.as_mut() => {
+                        break match res {
+                            Ok(Ok(result)) => SwitchJobOutcome::Completed {
+                                success: result.success,
+                                cleanup: result.cleanup,
+                            },
+                            Ok(Err(error)) => SwitchJobOutcome::Panicked {
+                                info: error.info,
+                                cleanup: error.cleanup,
+                            },
+                            Err(payload) => {
+                                let info = SwitchPanicInfo::driver_task(
+                                    workflow::describe_panic_payload(payload.as_ref()),
+                                );
+                                let cleanup = workflow::schedule_post_switch_failure(
+                                    profile_label.clone(),
+                                    completion_request.notify(),
+                                    completion_request.task_id(),
+                                );
+                                SwitchJobOutcome::Panicked { info, cleanup }
+                            }
+                        };
+                    }
+                    _ = watchdog_interval.tick() => {
+                        if cancel_token.is_cancelled() {
+                            continue;
+                        }
+                        let elapsed = heartbeat.elapsed();
+                        if elapsed > WATCHDOG_TIMEOUT {
+                            let stage = SwitchStage::from_code(heartbeat.stage_code())
+                                .unwrap_or(SwitchStage::Workflow);
+                            logging!(
+                                warn,
+                                Type::Cmd,
+                                "Switch task {} watchdog timeout (profile={} stage={:?}, elapsed={:?}); cancelling",
+                                task_id,
+                                profile_label.as_str(),
+                                stage,
+                                elapsed
+                            );
+                            cancel_token.cancel();
+                        }
+                    }
+                }
+            };
+
+            let request_for_error = completion_request.clone();
+
+            if let Err(err) = driver_tx
+                .send(SwitchDriverMessage::Completion {
+                    request: completion_request,
+                    outcome: job_result,
+                })
+                .await
+            {
+                logging!(
+                    error,
+                    Type::Cmd,
+                    "Failed to push switch completion to driver: {}",
+                    err
+                );
+                notify_completion_waiter(
                     request_for_error.task_id(),
-                    request_for_error.profile_id(),
-                    Some("driver".to_string()),
-                    Some(format!("completion dispatch failed: {}", err)),
-                ),
-            );
-        }
-    });
-}
-
-fn track_cleanup(
-    state: &mut SwitchDriverState,
-    driver_tx: mpsc::Sender<SwitchDriverMessage>,
-    profile: SmartString,
-    cleanup: workflow::CleanupHandle,
-) {
-    if let Some(existing) = state.cleanup_profiles.remove(&profile) {
-        existing.abort();
+                    SwitchResultStatus::failed(
+                        request_for_error.task_id(),
+                        request_for_error.profile_id(),
+                        Some("driver".to_string()),
+                        Some(format!("completion dispatch failed: {}", err)),
+                    ),
+                );
+            }
+        });
     }
 
-    let profile_clone = profile.clone();
-    let driver_clone = driver_tx.clone();
-    let handle = tokio::spawn(async move {
-        let profile_label = profile_clone.clone();
-        if let Err(err) = cleanup.await {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Cleanup task for profile {} failed: {}",
-                profile_label.as_str(),
-                err
-            );
-        }
-        if let Err(err) = driver_clone
-            .send(SwitchDriverMessage::CleanupDone {
-                profile: profile_clone,
-            })
-            .await
-        {
-            logging!(
-                error,
-                Type::Cmd,
-                "Failed to push cleanup completion for profile {}: {}",
-                profile_label.as_str(),
-                err
-            );
-        }
-    });
-    state.cleanup_profiles.insert(profile, handle);
-}
+    /// Mark a request as failed because a newer request superseded it.
+    fn discard_request(&mut self, request: SwitchRequest) {
+        let key = request.profile_id().clone();
+        let should_remove = self
+            .state
+            .latest_tokens
+            .get(&key)
+            .map(|latest| latest.same_token(request.cancel_token()))
+            .unwrap_or(false);
 
-/// Cleanup task finished; clear bookkeeping and attempt to start the next job.
-fn handle_cleanup_done(
-    state: &mut SwitchDriverState,
-    profile: SmartString,
-    driver_tx: mpsc::Sender<SwitchDriverMessage>,
-    manager: &'static SwitchManager,
-) {
-    if let Some(handle) = state.cleanup_profiles.remove(&profile) {
-        handle.abort();
-    }
-    start_next_job(state, driver_tx, manager);
-    publish_status(state, manager);
-}
-
-/// Decide whether a new job should start and keep the status snapshot in sync.
-fn start_next_job(
-    state: &mut SwitchDriverState,
-    driver_tx: mpsc::Sender<SwitchDriverMessage>,
-    manager: &'static SwitchManager,
-) {
-    if state.active.is_some() || !state.cleanup_profiles.is_empty() {
-        publish_status(state, manager);
-        return;
-    }
-
-    while let Some(request) = state.queue.pop_front() {
-        if request.cancel_token().is_cancelled() {
-            discard_request(state, request, manager);
-            continue;
+        if should_remove {
+            self.state.latest_tokens.remove(&key);
         }
 
-        state.active = Some(request.clone());
-        start_switch_job(driver_tx, manager, request);
-        break;
+        if !request.cancel_token().is_cancelled() {
+            request.cancel_token().cancel();
+        }
+
+        let event = SwitchResultStatus::cancelled(
+            request.task_id(),
+            request.profile_id(),
+            Some("request superseded".to_string()),
+        );
+
+        self.state.last_result = Some(event.clone());
+        notify_completion_waiter(request.task_id(), event.clone());
+        self.manager.push_event(event);
     }
 
-    publish_status(state, manager);
-}
-
-/// Persist the latest driver state so polling clients get up-to-date information.
-fn publish_status(state: &SwitchDriverState, manager: &'static SwitchManager) {
-    manager.set_status(state.snapshot(manager));
+    fn publish_status(&self) {
+        self.manager.set_status(self.state.snapshot(self.manager));
+    }
 }
 
 impl SwitchDriverState {
