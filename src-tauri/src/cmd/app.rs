@@ -41,6 +41,20 @@ pub fn open_web_url(url: String) -> CmdResult<()> {
     open::that(url.as_str()).stringify_err()
 }
 
+// TODO 后续可以为前端提供接口，当前作为托盘菜单使用
+/// 打开 Verge 最新日志
+#[tauri::command]
+pub async fn open_app_log() -> CmdResult<()> {
+    open::that(dirs::app_latest_log().stringify_err()?).stringify_err()
+}
+
+// TODO 后续可以为前端提供接口，当前作为托盘菜单使用
+/// 打开 Clash 最新日志
+#[tauri::command]
+pub async fn open_core_log() -> CmdResult<()> {
+    open::that(dirs::clash_latest_log().stringify_err()?).stringify_err()
+}
+
 /// 打开/关闭开发者工具
 #[tauri::command]
 pub fn open_devtools(app_handle: AppHandle) {

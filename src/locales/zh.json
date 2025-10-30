@@ -713,5 +713,7 @@
   "Allow Auto Update": "允许自动更新",
   "Menu reorder mode": "菜单排序模式",
   "Unlock menu order": "解锁菜单排序",
-  "Lock menu order": "锁定菜单排序"
+  "Lock menu order": "锁定菜单排序",
+  "Open App Log": "应用日志",
+  "Open Core Log": "内核日志"
 }

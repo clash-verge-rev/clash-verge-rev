@@ -1,4 +1,8 @@
-use crate::{core::handle, logging, utils::logging::Type};
+use crate::{
+    core::{CoreManager, handle, manager::RunningMode},
+    logging,
+    utils::logging::Type,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use once_cell::sync::OnceCell;
@@ -122,6 +126,11 @@ pub fn app_logs_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
 }
 
+// latest verge log
+pub fn app_latest_log() -> Result<PathBuf> {
+    Ok(app_logs_dir()?.join("latest.log"))
+}
+
 /// local backups dir
 pub fn local_backup_dir() -> Result<PathBuf> {
     let dir = app_home_dir()?.join(BACKUP_DIR);
@@ -165,6 +174,15 @@ pub fn service_log_dir() -> Result<PathBuf> {
     let _ = std::fs::create_dir_all(&log_dir);
 
     Ok(log_dir)
+}
+
+pub fn clash_latest_log() -> Result<PathBuf> {
+    match *CoreManager::global().get_running_mode() {
+        RunningMode::Service => Ok(service_log_dir()?.join("service_latest.log")),
+        RunningMode::Sidecar | RunningMode::NotRunning => {
+            Ok(sidecar_log_dir()?.join("sidecar_latest.log"))
+        }
+    }
 }
 
 pub fn path_to_str(path: &PathBuf) -> Result<&str> {

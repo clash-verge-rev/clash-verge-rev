@@ -39,6 +39,8 @@ define_menu! {
     core_dir => CORE_DIR, "tray_core_dir", "Core Dir",
     logs_dir => LOGS_DIR, "tray_logs_dir", "Logs Dir",
     open_dir => OPEN_DIR, "tray_open_dir", "Open Dir",
+    app_log => APP_LOG, "tray_app_log", "Open App Log",
+    core_log => CORE_LOG, "tray_core_log", "Open Core Log",
     restart_clash => RESTART_CLASH, "tray_restart_clash", "Restart Clash Core",
     restart_app => RESTART_APP, "tray_restart_app", "Restart App",
     verge_version => VERGE_VERSION, "tray_verge_version", "Verge Version",
