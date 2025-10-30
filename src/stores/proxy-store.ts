@@ -244,8 +244,9 @@ export const fetchLiveProxies = async () => {
   useProxyStore.getState().completeLiveFetch(requestId, view);
 };
 
-const MAX_BOOTSTRAP_ATTEMPTS = 5;
+const MAX_BOOTSTRAP_BACKOFF_STEP = 5;
 const BOOTSTRAP_BASE_DELAY_MS = 600;
+const BOOTSTRAP_SLOW_RETRY_MS = 5000;
 let bootstrapAttempts = 0;
 let bootstrapTimer: number | null = null;
 
@@ -253,10 +254,6 @@ function attemptBootstrapLiveFetch() {
   const state = useProxyStore.getState();
   if (state.hydration === "live") {
     bootstrapAttempts = 0;
-    return;
-  }
-
-  if (bootstrapAttempts >= MAX_BOOTSTRAP_ATTEMPTS) {
     return;
   }
 
@@ -271,9 +268,12 @@ function attemptBootstrapLiveFetch() {
         `[ProxyStore] Bootstrap live fetch attempt ${attemptNumber} failed:`,
         error,
       );
-      if (attemptNumber < MAX_BOOTSTRAP_ATTEMPTS) {
-        scheduleBootstrapLiveFetch(BOOTSTRAP_BASE_DELAY_MS * attemptNumber);
-      }
+      const backoffStep = Math.min(attemptNumber, MAX_BOOTSTRAP_BACKOFF_STEP);
+      const nextDelay =
+        attemptNumber <= MAX_BOOTSTRAP_BACKOFF_STEP
+          ? BOOTSTRAP_BASE_DELAY_MS * backoffStep
+          : BOOTSTRAP_SLOW_RETRY_MS;
+      scheduleBootstrapLiveFetch(nextDelay);
     });
 }
 
