@@ -1040,12 +1040,34 @@ async fn create_tray_menu(
         None::<&str>,
     )?;
 
+    let open_app_log = &MenuItem::with_id(
+        app_handle,
+        MenuIds::APP_LOG,
+        &texts.app_log,
+        true,
+        None::<&str>,
+    )?;
+
+    let open_core_log = &MenuItem::with_id(
+        app_handle,
+        MenuIds::CORE_LOG,
+        &texts.core_log,
+        true,
+        None::<&str>,
+    )?;
+
     let open_dir = &Submenu::with_id_and_items(
         app_handle,
         MenuIds::OPEN_DIR,
         &texts.open_dir,
         true,
-        &[open_app_dir, open_core_dir, open_logs_dir],
+        &[
+            open_app_dir,
+            open_core_dir,
+            open_logs_dir,
+            open_app_log,
+            open_core_log,
+        ],
     )?;
 
     let restart_clash = &MenuItem::with_id(
@@ -1174,6 +1196,12 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             MenuIds::LOGS_DIR => {
                 let _ = cmd::open_logs_dir().await;
+            }
+            MenuIds::APP_LOG => {
+                let _ = cmd::open_app_log().await;
+            }
+            MenuIds::CORE_LOG => {
+                let _ = cmd::open_core_log().await;
             }
             MenuIds::RESTART_CLASH => feat::restart_clash_core().await,
             MenuIds::RESTART_APP => feat::restart_app().await,

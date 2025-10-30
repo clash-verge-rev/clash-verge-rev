@@ -99,6 +99,12 @@ impl Timer {
                 items
                     .iter()
                     .filter_map(|item| {
+                        let allow_auto_update =
+                            item.option.as_ref()?.allow_auto_update.unwrap_or_default();
+                        if !allow_auto_update {
+                            return None;
+                        }
+
                         let interval = item.option.as_ref()?.update_interval? as i64;
                         let updated = item.updated? as i64;
                         let uid = item.uid.as_ref()?;
