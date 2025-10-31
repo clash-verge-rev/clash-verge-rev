@@ -242,7 +242,7 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
     Config::verge().await.apply();
     if !not_save_file {
         // 分离数据获取和异步调用
-        let verge_data = Config::verge().await.data_mut().clone();
+        let verge_data = Config::verge().await.data_ref().clone();
         verge_data.save_file().await?;
     }
     Ok(())
