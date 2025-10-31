@@ -1,6 +1,7 @@
 import { CloseRounded } from "@mui/icons-material";
 import { Snackbar, Alert, IconButton, Box } from "@mui/material";
 import React, { useSyncExternalStore } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   subscribeNotices,
@@ -9,6 +10,7 @@ import {
 } from "@/services/noticeService";
 
 export const NoticeManager: React.FC = () => {
+  const { t } = useTranslation();
   const currentNotices = useSyncExternalStore(
     subscribeNotices,
     getSnapshotNotices,
@@ -60,7 +62,12 @@ export const NoticeManager: React.FC = () => {
               </IconButton>
             }
           >
-            {notice.message}
+            {notice.i18n
+              ? t(notice.i18n.i18nKey, {
+                  defaultValue: notice.i18n.fallback,
+                  ...(notice.i18n.params ?? {}),
+                })
+              : notice.message}
           </Alert>
         </Snackbar>
       ))}

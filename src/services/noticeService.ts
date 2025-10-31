@@ -1,9 +1,20 @@
 import { ReactNode } from "react";
 
+type NoticeType = "success" | "error" | "info";
+
+export interface NoticeTranslationDescriptor {
+  i18nKey: string;
+  params?: Record<string, unknown>;
+  fallback?: string;
+}
+
+type NoticeMessage = ReactNode | NoticeTranslationDescriptor;
+
 interface NoticeItem {
   id: number;
-  type: "success" | "error" | "info";
-  message: ReactNode;
+  type: NoticeType;
+  message?: ReactNode;
+  i18n?: NoticeTranslationDescriptor;
   duration: number;
   timerId?: ReturnType<typeof setTimeout>;
 }
@@ -18,11 +29,25 @@ function notifyListeners() {
   listeners.forEach((listener) => listener([...notices])); // Pass a copy
 }
 
+function isTranslationDescriptor(
+  message: NoticeMessage,
+): message is NoticeTranslationDescriptor {
+  if (
+    typeof message === "object" &&
+    message !== null &&
+    Object.prototype.hasOwnProperty.call(message, "i18nKey")
+  ) {
+    const descriptor = message as NoticeTranslationDescriptor;
+    return typeof descriptor.i18nKey === "string";
+  }
+  return false;
+}
+
 // Shows a notification.
 
 export function showNotice(
-  type: "success" | "error" | "info",
-  message: ReactNode,
+  type: NoticeType,
+  message: NoticeMessage,
   duration?: number,
 ): number {
   const id = nextId++;
@@ -32,9 +57,14 @@ export function showNotice(
   const newNotice: NoticeItem = {
     id,
     type,
-    message,
     duration: effectiveDuration,
   };
+
+  if (isTranslationDescriptor(message)) {
+    newNotice.i18n = message;
+  } else {
+    newNotice.message = message;
+  }
 
   // Auto-hide timer (only if duration is not null/0)
   if (effectiveDuration > 0) {
@@ -46,6 +76,26 @@ export function showNotice(
   notices = [...notices, newNotice];
   notifyListeners();
   return id;
+}
+
+export function showTranslatedNotice(
+  type: NoticeType,
+  i18nKey: string,
+  options?: {
+    params?: Record<string, unknown>;
+    fallback?: string;
+  },
+  duration?: number,
+) {
+  return showNotice(
+    type,
+    {
+      i18nKey,
+      params: options?.params,
+      fallback: options?.fallback,
+    },
+    duration,
+  );
 }
 
 // Hides a specific notification by its ID.

@@ -58,12 +58,16 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
 
-      showNotice("success", `${name} 更新成功`);
+      showNotice("success", {
+        i18nKey: "notice.provider.updateSuccess",
+        params: { name },
+      });
     } catch (err: any) {
-      showNotice(
-        "error",
-        `${name} 更新失败: ${err?.message || err.toString()}`,
-      );
+      const message = err?.message || err?.toString?.() || String(err);
+      showNotice("error", {
+        i18nKey: "notice.provider.updateFailed",
+        params: { name, message },
+      });
     } finally {
       // 清除更新状态
       setUpdating((prev) => ({ ...prev, [name]: false }));
@@ -76,7 +80,9 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(ruleProviders || {});
       if (allProviders.length === 0) {
-        showNotice("info", "没有可更新的规则提供者");
+        showNotice("info", {
+          i18nKey: "notice.provider.none",
+        });
         return;
       }
 
@@ -106,9 +112,15 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
 
-      showNotice("success", "全部规则提供者更新成功");
+      showNotice("success", {
+        i18nKey: "notice.provider.allUpdated",
+      });
     } catch (err: any) {
-      showNotice("error", `更新失败: ${err?.message || err.toString()}`);
+      const message = err?.message || err?.toString?.() || String(err);
+      showNotice("error", {
+        i18nKey: "notice.provider.genericError",
+        params: { message },
+      });
     } finally {
       // 清除所有更新状态
       setUpdating({});

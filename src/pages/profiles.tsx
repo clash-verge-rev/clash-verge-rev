@@ -345,10 +345,18 @@ const ProfilePage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       await onEnhance(false);
 
-      showNotice("success", "数据已强制刷新", 2000);
+      showNotice("success", { i18nKey: "notice.forceRefreshCompleted" }, 2000);
     } catch (error: any) {
       console.error("[紧急刷新] 失败:", error);
-      showNotice("error", `紧急刷新失败: ${error.message}`, 4000);
+      const message = error?.message || String(error);
+      showNotice(
+        "error",
+        {
+          i18nKey: "notice.emergencyRefreshFailed",
+          params: { message },
+        },
+        4000,
+      );
     }
   });
 
