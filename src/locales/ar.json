@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
       }
+    },
+    "connections": {
+      "title": "الاتصالات",
+      "summary": {
+        "downloaded": "تم التنزيل",
+        "uploaded": "تم الرفع"
+      },
+      "actions": {
+        "listView": "عرض القائمة",
+        "tableView": "عرض الجدول",
+        "pause": "إيقاف مؤقت",
+        "resume": "استأنف",
+        "closeAll": "إغلاق الكل"
+      }
     }
   },
   "Label-Home": "Home",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "اختر ملف"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "المضيف",
+        "downloaded": "تم التنزيل",
+        "uploaded": "تم الرفع",
+        "dlSpeed": "سرعة التنزيل",
+        "ulSpeed": "سرعة الرفع",
+        "chains": "السلاسل",
+        "rule": "قاعدة",
+        "process": "عملية",
+        "time": "الوقت",
+        "source": "المصدر",
+        "destination": "عنوان IP الوجهة",
+        "destinationPort": "ميناء الوجهة",
+        "type": "النوع"
+      },
+      "actions": {
+        "closeConnection": "إغلاق الاتصال"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "سرعة الرفع",
+        "downloadSpeed": "سرعة التنزيل"
       }
     }
   }

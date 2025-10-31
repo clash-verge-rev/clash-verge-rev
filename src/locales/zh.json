@@ -110,6 +110,20 @@
         "switchInterrupted": "配置切换被新选择中断",
         "batchDeleted": "选中的订阅已成功删除"
       }
+    },
+    "connections": {
+      "title": "连接",
+      "summary": {
+        "downloaded": "下载量",
+        "uploaded": "上传量"
+      },
+      "actions": {
+        "listView": "列表视图",
+        "tableView": "表格视图",
+        "pause": "暂停",
+        "resume": "继续",
+        "closeAll": "关闭全部"
+      }
     }
   },
   "Label-Home": "首 页",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "选择文件"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "主机",
+        "downloaded": "下载量",
+        "uploaded": "上传量",
+        "dlSpeed": "下载速度",
+        "ulSpeed": "上传速度",
+        "chains": "链路",
+        "rule": "规则",
+        "process": "进程",
+        "time": "连接时间",
+        "source": "源地址",
+        "destination": "目标地址",
+        "destinationPort": "目标端口",
+        "type": "类型"
+      },
+      "actions": {
+        "closeConnection": "关闭连接"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "上传速度",
+        "downloadSpeed": "下载速度"
       }
     }
   }

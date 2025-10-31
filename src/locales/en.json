@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
       }
+    },
+    "connections": {
+      "title": "Connections",
+      "summary": {
+        "downloaded": "Downloaded",
+        "uploaded": "Uploaded"
+      },
+      "actions": {
+        "listView": "List View",
+        "tableView": "Table View",
+        "pause": "Pause",
+        "resume": "Resume",
+        "closeAll": "Close All"
+      }
     }
   },
   "Label-Home": "Home",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "Choose File"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "Host",
+        "downloaded": "Downloaded",
+        "uploaded": "Uploaded",
+        "dlSpeed": "DL Speed",
+        "ulSpeed": "UL Speed",
+        "chains": "Chains",
+        "rule": "Rule",
+        "process": "Process",
+        "time": "Time",
+        "source": "Source",
+        "destination": "Destination",
+        "destinationPort": "Destination Port",
+        "type": "Type"
+      },
+      "actions": {
+        "closeConnection": "Close Connection"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Upload Speed",
+        "downloadSpeed": "Download Speed"
       }
     }
   }

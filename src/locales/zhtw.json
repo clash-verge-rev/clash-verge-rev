@@ -110,6 +110,20 @@
         "switchInterrupted": "配置切換被新的選擇中斷",
         "batchDeleted": "選取的訂閱已成功刪除"
       }
+    },
+    "connections": {
+      "title": "連線",
+      "summary": {
+        "downloaded": "下載量",
+        "uploaded": "上傳量"
+      },
+      "actions": {
+        "listView": "列表檢視",
+        "tableView": "表格檢視",
+        "pause": "暫停",
+        "resume": "繼續",
+        "closeAll": "關閉全部"
+      }
     }
   },
   "Label-Home": "首 頁",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "選擇檔案"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "主機",
+        "downloaded": "下載量",
+        "uploaded": "上傳量",
+        "dlSpeed": "下載速度",
+        "ulSpeed": "上傳速度",
+        "chains": "鏈路",
+        "rule": "規則",
+        "process": "處理程序",
+        "time": "連線時間",
+        "source": "來源位址",
+        "destination": "目標位址",
+        "destinationPort": "目標連接埠",
+        "type": "類型"
+      },
+      "actions": {
+        "closeConnection": "關閉連線"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "上傳速度",
+        "downloadSpeed": "下載速度"
       }
     }
   }

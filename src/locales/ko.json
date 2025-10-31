@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
       }
+    },
+    "connections": {
+      "title": "연결",
+      "summary": {
+        "downloaded": "다운로드됨",
+        "uploaded": "업로드됨"
+      },
+      "actions": {
+        "listView": "목록 보기",
+        "tableView": "테이블 보기",
+        "pause": "일시 정지",
+        "resume": "재개",
+        "closeAll": "모두 닫기"
+      }
     }
   },
   "Label-Home": "홈",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "파일 선택"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "호스트",
+        "downloaded": "다운로드됨",
+        "uploaded": "업로드됨",
+        "dlSpeed": "다운로드 속도",
+        "ulSpeed": "업로드 속도",
+        "chains": "체인",
+        "rule": "규칙",
+        "process": "프로세스",
+        "time": "시간",
+        "source": "소스",
+        "destination": "목적지",
+        "destinationPort": "목적지 포트",
+        "type": "유형"
+      },
+      "actions": {
+        "closeConnection": "연결 닫기"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "업로드 속도",
+        "downloadSpeed": "다운로드 속도"
       }
     }
   }

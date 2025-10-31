@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
       }
+    },
+    "connections": {
+      "title": "اتصالات",
+      "summary": {
+        "downloaded": "دانلود شده",
+        "uploaded": "بارگذاری شده"
+      },
+      "actions": {
+        "listView": "نمای لیستی",
+        "tableView": "نمای جدولی",
+        "pause": "توقف",
+        "resume": "از سرگیری",
+        "closeAll": "بستن همه"
+      }
     }
   },
   "Label-Home": "Home",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "انتخاب فایل"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "میزبان",
+        "downloaded": "دانلود شده",
+        "uploaded": "بارگذاری شده",
+        "dlSpeed": "سرعت دانلود",
+        "ulSpeed": "سرعت بارگذاری",
+        "chains": "زنجیره‌ها",
+        "rule": "قانون",
+        "process": "فرآیند",
+        "time": "زمان",
+        "source": "منبع",
+        "destination": "آدرس IP مقصد",
+        "destinationPort": "بندر هدف",
+        "type": "نوع"
+      },
+      "actions": {
+        "closeConnection": "بستن اتصال"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "سرعت بارگذاری",
+        "downloadSpeed": "سرعت دانلود"
       }
     }
   }

@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
       }
+    },
+    "connections": {
+      "title": "Conexiones",
+      "summary": {
+        "downloaded": "Descargado",
+        "uploaded": "Subido"
+      },
+      "actions": {
+        "listView": "Vista de lista",
+        "tableView": "Vista de tabla",
+        "pause": "Pausar",
+        "resume": "Reanudar",
+        "closeAll": "Cerrar todas"
+      }
     }
   },
   "Label-Home": "Hogar",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "Elegir archivo"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "Host",
+        "downloaded": "Descargado",
+        "uploaded": "Subido",
+        "dlSpeed": "Velocidad de descarga",
+        "ulSpeed": "Velocidad de subida",
+        "chains": "Cadenas",
+        "rule": "Regla",
+        "process": "Proceso",
+        "time": "Tiempo de conexión",
+        "source": "Dirección de origen",
+        "destination": "Dirección de destino",
+        "destinationPort": "Puerto de destino",
+        "type": "Tipo"
+      },
+      "actions": {
+        "closeConnection": "Cerrar conexión"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Velocidad de subida",
+        "downloadSpeed": "Velocidad de descarga"
       }
     }
   }

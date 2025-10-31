@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
       }
+    },
+    "connections": {
+      "title": "Тоташулар",
+      "summary": {
+        "downloaded": "Йөкләнгән",
+        "uploaded": "Чыгарылган"
+      },
+      "actions": {
+        "listView": "Исемлек күзаллау",
+        "tableView": "Таблица күзаллау",
+        "pause": "Туктау",
+        "resume": "Дәвам",
+        "closeAll": "Барысын да ябу"
+      }
     }
   },
   "Label-Home": "Home",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "Файл сайлау"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "Хост",
+        "downloaded": "Йөкләнгән",
+        "uploaded": "Чыгарылган",
+        "dlSpeed": "Йөкләү тизл.",
+        "ulSpeed": "Чыгару тизл.",
+        "chains": "Чылбырлар",
+        "rule": "Кагыйдә",
+        "process": "Процесс",
+        "time": "Тоташу вакыты",
+        "source": "Чыганак адресы",
+        "destination": "Максат IP-адресы",
+        "destinationPort": "Барасы порты",
+        "type": "Төр"
+      },
+      "actions": {
+        "closeConnection": "Тоташуны ябу"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+        "downloadSpeed": "Йөкләү тизлеге"
       }
     }
   }

@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Выбранные профили успешно удалены"
       }
+    },
+    "connections": {
+      "title": "Соединения",
+      "summary": {
+        "downloaded": "Скачано",
+        "uploaded": "Загружено"
+      },
+      "actions": {
+        "listView": "Отображать в виде списка",
+        "tableView": "Отображать в виде таблицы",
+        "pause": "Пауза",
+        "resume": "Возобновить",
+        "closeAll": "Закрыть всё"
+      }
     }
   },
   "Label-Home": "Главная",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "Выбрать файл"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "Хост",
+        "downloaded": "Скачано",
+        "uploaded": "Загружено",
+        "dlSpeed": "Скорость скачивания",
+        "ulSpeed": "Скорость загрузки",
+        "chains": "Цепочки",
+        "rule": "Правило",
+        "process": "Процесс",
+        "time": "Время подключения",
+        "source": "Исходный адрес",
+        "destination": "IP-адрес назначения",
+        "destinationPort": "Целевой порт",
+        "type": "Тип"
+      },
+      "actions": {
+        "closeConnection": "Закрыть соединение"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Скорость загрузки",
+        "downloadSpeed": "Скорость скачивания"
       }
     }
   }

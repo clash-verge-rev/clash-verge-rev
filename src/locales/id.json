@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
       }
+    },
+    "connections": {
+      "title": "Koneksi",
+      "summary": {
+        "downloaded": "Diunduh",
+        "uploaded": "Diunggah"
+      },
+      "actions": {
+        "listView": "Tampilan Daftar",
+        "tableView": "Tampilan Tabel",
+        "pause": "Jeda",
+        "resume": "Lanjut",
+        "closeAll": "Tutup Semua"
+      }
     }
   },
   "Label-Home": "Home",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "Pilih Berkas"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "Host",
+        "downloaded": "Diunduh",
+        "uploaded": "Diunggah",
+        "dlSpeed": "Kecepatan Unduh",
+        "ulSpeed": "Kecepatan Unggah",
+        "chains": "Rantai",
+        "rule": "Aturan",
+        "process": "Proses",
+        "time": "Waktu",
+        "source": "Sumber",
+        "destination": "IP Tujuan",
+        "destinationPort": "Port Tujuan",
+        "type": "Jenis"
+      },
+      "actions": {
+        "closeConnection": "Tutup Koneksi"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Kecepatan Unggah",
+        "downloadSpeed": "Kecepatan Unduh"
       }
     }
   }

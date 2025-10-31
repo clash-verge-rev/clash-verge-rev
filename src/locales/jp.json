@@ -110,6 +110,20 @@
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "選択したプロファイルが正常に削除されました"
       }
+    },
+    "connections": {
+      "title": "接続",
+      "summary": {
+        "downloaded": "ダウンロード量",
+        "uploaded": "アップロード量"
+      },
+      "actions": {
+        "listView": "リストビュー",
+        "tableView": "テーブルビュー",
+        "pause": "一時停止",
+        "resume": "再開",
+        "closeAll": "すべて閉じる"
+      }
     }
   },
   "Label-Home": "ホーム",
@@ -870,6 +884,31 @@
       },
       "fileInput": {
         "chooseFile": "ファイルを選択"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "ホスト",
+        "downloaded": "ダウンロード量",
+        "uploaded": "アップロード量",
+        "dlSpeed": "ダウンロード速度",
+        "ulSpeed": "アップロード速度",
+        "chains": "チェーン",
+        "rule": "ルール",
+        "process": "プロセス",
+        "time": "接続時間",
+        "source": "送信元アドレス",
+        "destination": "宛先アドレス",
+        "destinationPort": "宛先ポート",
+        "type": "タイプ"
+      },
+      "actions": {
+        "closeConnection": "接続を閉じる"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "アップロード速度",
+        "downloadSpeed": "ダウンロード速度"
       }
     }
   }
