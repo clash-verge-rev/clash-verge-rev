@@ -41,7 +41,7 @@ tokio = { version = "1.48.0", features = [
 serde = { version = "1.0.228", features = ["derive"] }
 reqwest = { version = "0.12.24", features = ["json", "cookies"] }
 regex = "1.12.2"
-sysproxy = { version = "0.3.1", git = "https://github.com/clash-verge-rev/sysproxy-rs" }
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
 tauri = { version = "2.9.1", features = [
   "protocol-asset",
   "devtools",
