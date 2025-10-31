@@ -75,8 +75,7 @@
     "react-virtuoso": "^4.14.1",
     "swr": "^2.3.6",
     "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo",
-    "types-pac": "^1.0.3",
-    "zustand": "^5.0.8"
+    "types-pac": "^1.0.3"
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
@@ -117,7 +116,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2",
     "vite": "^7.1.12",
-    "vite-plugin-monaco-editor": "^1.1.0",
+    "vite-plugin-monaco-editor-esm": "^2.0.2",
     "vite-plugin-svgr": "^4.5.0",
     "vitest": "^4.0.5"
   },
