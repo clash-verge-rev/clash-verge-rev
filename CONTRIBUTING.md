@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Clash Verge Rev! This document pr
 
 ## Internationalization (i18n)
 
-We welcome translations and improvements to existing locales. Please follow the detailed guidelines in [CONTRIBUTING_i18n.md](CONTRIBUTING_i18n.md) for instructions on extracting strings, file naming conventions, testing translations, and submitting translation PRs.
+We welcome translations and improvements to existing locales. Please follow the detailed guidelines in [CONTRIBUTING_i18n.md](docs/CONTRIBUTING_i18n.md) for instructions on extracting strings, file naming conventions, testing translations, and submitting translation PRs.
 
 ## Development Setup
 
