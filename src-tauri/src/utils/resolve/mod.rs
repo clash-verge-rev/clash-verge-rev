@@ -103,7 +103,7 @@ pub(super) async fn resolve_setup_logger() {
     logging_error!(Type::Setup, init::init_logger().await);
 }
 
-pub async fn resolve_scheme(param: String) -> Result<()> {
+pub async fn resolve_scheme(param: &String) -> Result<()> {
     logging_error!(Type::Setup, scheme::resolve_scheme(param).await);
     Ok(())
 }

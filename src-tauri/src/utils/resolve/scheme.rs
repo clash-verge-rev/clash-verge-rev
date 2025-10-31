@@ -10,7 +10,7 @@ use crate::{
     utils::logging::Type,
 };
 
-pub(super) async fn resolve_scheme(param: String) -> Result<()> {
+pub(super) async fn resolve_scheme(param: &String) -> Result<()> {
     log::info!(target:"app", "received deep link: {param}");
 
     let param_str = if param.starts_with("[") && param.len() > 4 {

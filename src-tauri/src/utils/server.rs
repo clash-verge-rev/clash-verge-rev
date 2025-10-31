@@ -107,9 +107,8 @@ pub fn embed_server() {
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
             .map(|query: QueryParam| {
-                let param = query.param.clone();
                 tokio::task::spawn_local(async move {
-                    logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
+                    logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
                 });
                 warp::reply::with_status::<std::string::String>(
                     "ok".to_string(),
