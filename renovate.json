@@ -42,6 +42,6 @@
       "groupName": "github actions"
     }
   ],
-  "postUpdateOptions": ["pnpmDedupe"],
+  "postUpdateOptions": ["pnpmDedupe", "updateCargoLock"],
   "ignoreDeps": ["criterion"]
 }
