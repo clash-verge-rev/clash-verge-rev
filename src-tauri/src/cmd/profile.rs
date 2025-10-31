@@ -572,14 +572,16 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 保存修改前检查是否有更新 update_interval
     let profiles = Config::profiles().await;
-    let should_refresh_timer = if let Ok(old_profile) = profiles.latest_ref().get_item(&index) {
+    let should_refresh_timer = if let Ok(old_profile) = profiles.latest_ref().get_item(&index)
+        && let Some(new_option) = profile.option.as_ref()
+    {
         let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
-        let new_interval = profile.option.as_ref().and_then(|o| o.update_interval);
+        let new_interval = new_option.update_interval;
         let old_allow_auto_update = old_profile
             .option
             .as_ref()
             .and_then(|o| o.allow_auto_update);
-        let new_allow_auto_update = profile.option.as_ref().and_then(|o| o.allow_auto_update);
+        let new_allow_auto_update = new_option.allow_auto_update;
         (old_interval != new_interval) || (old_allow_auto_update != new_allow_auto_update)
     } else {
         false
