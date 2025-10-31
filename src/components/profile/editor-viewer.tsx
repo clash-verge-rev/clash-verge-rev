@@ -1,7 +1,8 @@
+import MonacoEditor from "@monaco-editor/react";
 import {
+  CloseFullscreenRounded,
   FormatPaintRounded,
   OpenInFullRounded,
-  CloseFullscreenRounded,
 } from "@mui/icons-material";
 import {
   Button,
@@ -22,7 +23,6 @@ import { configureMonacoYaml } from "monaco-yaml";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import MonacoEditor from "react-monaco-editor";
 import pac from "types-pac/pac.d.ts?raw";
 
 import { showNotice } from "@/services/noticeService";
@@ -103,17 +103,15 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     [initialData],
   );
 
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(undefined);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const prevData = useRef<string | undefined>("");
   const currData = useRef<string | undefined>("");
 
-  const editorWillMount = () => {
+  const beforeMount = () => {
     monacoInitialization(); // initialize monaco
   };
 
-  const editorDidMount = async (
-    editor: monaco.editor.IStandaloneCodeEditor,
-  ) => {
+  const onMount = async (editor: monaco.editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
 
     // retrieve initial data
@@ -177,12 +175,12 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     return () => {
       unlistenResized.then((fn) => fn());
       editorRef.current?.dispose();
-      editorRef.current = undefined;
+      editorRef.current = null;
     };
   }, [editorResize]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="xl" fullWidth>
       <DialogTitle>{resolvedTitle}</DialogTitle>
 
       <DialogContent
@@ -218,8 +216,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
             fontLigatures: false, // 连字符
             smoothScrolling: true, // 平滑滚动
           }}
-          editorWillMount={editorWillMount}
-          editorDidMount={editorDidMount}
+          beforeMount={beforeMount}
+          onMount={onMount}
           onChange={handleChange}
         />
 
