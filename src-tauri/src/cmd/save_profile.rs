@@ -125,7 +125,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                     Type::Config,
                     "[cmd配置save] YAML配置文件验证失败，发送通知"
                 );
-                let result = (false, error_msg.clone());
+                let result = (false, error_msg.to_owned());
                 crate::cmd::validate::handle_yaml_validation_notice(&result, "YAML配置文件");
             } else if is_script_error {
                 // 脚本错误使用专门的通知处理
@@ -134,7 +134,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
                     Type::Config,
                     "[cmd配置save] 脚本文件验证失败，发送通知"
                 );
-                let result = (false, error_msg.clone());
+                let result = (false, error_msg.to_owned());
                 crate::cmd::validate::handle_script_validation_notice(&result, "脚本文件");
             } else {
                 // 普通配置错误使用一般通知

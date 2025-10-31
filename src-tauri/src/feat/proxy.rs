@@ -20,7 +20,7 @@ pub async fn toggle_system_proxy() {
     }
 
     let patch_result = super::patch_verge(
-        IVerge {
+        &IVerge {
             enable_system_proxy: Some(!enable),
             ..IVerge::default()
         },
@@ -40,7 +40,7 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
     let enable = enable.unwrap_or(false);
 
     match super::patch_verge(
-        IVerge {
+        &IVerge {
             enable_tun_mode: Some(!enable),
             ..IVerge::default()
         },
