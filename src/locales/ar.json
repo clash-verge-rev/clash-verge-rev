@@ -16,6 +16,57 @@
   "Delete": "حذف",
   "Enable": "تمكين",
   "Disable": "تعطيل",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "مجموعات الوكلاء",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 بروكسي السلسلة",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "مزود الوكيل"
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "فحص التأخير لإلغاء الثابت"
+      },
+      "tooltips": {
+        "locate": "الموقع",
+        "delayCheck": "فحص التأخير",
+        "sortDefault": "الترتيب الافتراضي",
+        "sortDelay": "الترتيب حسب التأخير",
+        "sortName": "الترتيب حسب الاسم",
+        "delayCheckUrl": "رابط فحص التأخير",
+        "showBasic": "إعدادات الوكيل الأساسية",
+        "showDetail": "تفاصيل الوكيل",
+        "filter": "تصفية"
+      },
+      "placeholders": {
+        "filter": "شروط التصفية",
+        "delayCheckUrl": "رابط فحص التأخير"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
   "Label-Home": "Home",
   "Label-Proxies": "الوكلاء",
   "Label-Profiles": "الملفات الشخصية",

@@ -16,6 +16,57 @@
   "Delete": "Бетерү",
   "Enable": "Кушу",
   "Disable": "Сүндерү",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "Прокси төркемнәре",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Чылбыр прокси",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Прокси провайдеры"
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "Беркетелгәнне гамәлдән чыгару өчен задержканы тикшерү"
+      },
+      "tooltips": {
+        "locate": "Урын",
+        "delayCheck": "Задержканы тикшерү",
+        "sortDefault": "Башлангыч итеп сортлау",
+        "sortDelay": "Задержка буенча сортлау",
+        "sortName": "Исем буенча сортлау",
+        "delayCheckUrl": "Задержканы тикшерү URL-ы",
+        "showBasic": "Прокси турында кыскача мәгълүмат",
+        "showDetail": "Прокси турында тулы мәгълүмат",
+        "filter": "Фильтр"
+      },
+      "placeholders": {
+        "filter": "Фильтр шартлары",
+        "delayCheckUrl": "Задержканы тикшерү URL-ы"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
   "Label-Home": "Home",
   "Label-Proxies": "Прокси",
   "Label-Profiles": "Профильләр",

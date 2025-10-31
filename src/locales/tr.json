@@ -16,6 +16,57 @@
   "Delete": "Sil",
   "Enable": "Etkinleştir",
   "Disable": "Devre Dışı Bırak",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "Vekil Grupları",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Zincir Proxy",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Vekil Sağlayıcısı"
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Vekil Sayısı",
+        "delayCheckReset": "Sabit iptali için gecikme kontrolü"
+      },
+      "tooltips": {
+        "locate": "konum",
+        "delayCheck": "Gecikme kontrolü",
+        "sortDefault": "Varsayılana göre sırala",
+        "sortDelay": "Gecikmeye göre sırala",
+        "sortName": "İsme göre sırala",
+        "delayCheckUrl": "Gecikme kontrol URL'si",
+        "showBasic": "Temel Vekil",
+        "showDetail": "Vekil detayı",
+        "filter": "Filtre"
+      },
+      "placeholders": {
+        "filter": "Filtre koşulları",
+        "delayCheckUrl": "Gecikme kontrol URL'si"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
   "Label-Home": "Ana Sayfa",
   "Label-Proxies": "Vekil'ler",
   "Label-Profiles": "Profiller",

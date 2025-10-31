@@ -16,6 +16,57 @@
   "Delete": "Удалить",
   "Enable": "Включить",
   "Disable": "Отключить",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "Группы прокси",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Цепной прокси",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Провайдер прокси"
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "Проверка задержки для отмены фиксированного"
+      },
+      "tooltips": {
+        "locate": "Местоположение",
+        "delayCheck": "Проверка задержки",
+        "sortDefault": "Сортировать по умолчанию",
+        "sortDelay": "Сортировать по задержке",
+        "sortName": "Сортировать по названию",
+        "delayCheckUrl": "URL проверки задержки",
+        "showBasic": "Отображать меньше сведений о прокси",
+        "showDetail": "Отображать больше сведений о прокси",
+        "filter": "Фильтр"
+      },
+      "placeholders": {
+        "filter": "Условия фильтрации",
+        "delayCheckUrl": "URL проверки задержки"
+      },
+      "chain": {
+        "header": "Конфигурация цепочки прокси",
+        "empty": "Цепочка прокси не настроена",
+        "instruction": "Нажимайте узлы по порядку, чтобы добавить в цепочку прокси",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
   "Label-Home": "Главная",
   "Label-Proxies": "Прокси",
   "Label-Profiles": "Профили",

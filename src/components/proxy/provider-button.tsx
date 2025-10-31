@@ -150,7 +150,7 @@ export const ProviderButton = () => {
         onClick={() => setOpen(true)}
         sx={{ mr: 1 }}
       >
-        {t("Proxy Provider")}
+        {t("pages.proxies.provider.title")}
       </Button>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -160,7 +160,9 @@ export const ProviderButton = () => {
             justifyContent="space-between"
             alignItems="center"
           >
-            <Typography variant="h6">{t("Proxy Provider")}</Typography>
+            <Typography variant="h6">
+              {t("pages.proxies.provider.title")}
+            </Typography>
             <Box>
               <Button
                 variant="contained"

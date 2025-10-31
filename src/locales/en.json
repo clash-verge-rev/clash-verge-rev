@@ -16,6 +16,57 @@
   "Delete": "Delete",
   "Enable": "Enable",
   "Disable": "Disable",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "Proxy Groups",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Chain Proxy",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Proxy Provider"
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "Delay check to cancel fixed"
+      },
+      "tooltips": {
+        "locate": "locate",
+        "delayCheck": "Delay check",
+        "sortDefault": "Sort by default",
+        "sortDelay": "Sort by delay",
+        "sortName": "Sort by name",
+        "delayCheckUrl": "Delay check URL",
+        "showBasic": "Proxy basic",
+        "showDetail": "Proxy detail",
+        "filter": "Filter"
+      },
+      "placeholders": {
+        "filter": "Filter conditions",
+        "delayCheckUrl": "Delay check URL"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
   "Label-Home": "Home",
   "Label-Proxies": "Proxies",
   "Label-Profiles": "Profiles",

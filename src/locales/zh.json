@@ -16,6 +16,57 @@
   "Delete": "删除",
   "Enable": "启用",
   "Disable": "禁用",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "代理组",
+        "chainMode": "链式代理模式"
+      },
+      "actions": {
+        "toggleChain": "🔗 链式代理",
+        "connect": "连接",
+        "disconnect": "断开",
+        "connecting": "连接中...",
+        "clearChainConfig": "删除链式配置"
+      },
+      "provider": {
+        "title": "代理集合"
+      },
+      "rules": {
+        "title": "代理规则",
+        "select": "选择规则"
+      },
+      "labels": {
+        "proxyCount": "节点数量",
+        "delayCheckReset": "进行延迟测试，以取消固定"
+      },
+      "tooltips": {
+        "locate": "当前节点",
+        "delayCheck": "延迟测试",
+        "sortDefault": "默认排序",
+        "sortDelay": "按延迟排序",
+        "sortName": "按名称排序",
+        "delayCheckUrl": "延迟测试链接",
+        "showBasic": "隐藏节点细节",
+        "showDetail": "展示节点细节",
+        "filter": "过滤节点"
+      },
+      "placeholders": {
+        "filter": "过滤条件",
+        "delayCheckUrl": "延迟测试链接"
+      },
+      "chain": {
+        "header": "代理链配置",
+        "empty": "暂无代理链配置",
+        "instruction": "顺序点击节点添加到代理链中",
+        "minimumNodes": "链式代理至少需要 2 个节点",
+        "minimumNodesHint": "链式代理至少需要 2 个节点，请再添加一个节点。",
+        "connectFailed": "连接链式代理失败",
+        "disconnectFailed": "断开链式代理失败",
+        "duplicateNode": "该节点已在链式代理表中"
+      }
+    }
+  },
   "Label-Home": "首 页",
   "Label-Proxies": "代 理",
   "Label-Profiles": "订 阅",

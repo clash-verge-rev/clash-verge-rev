@@ -16,6 +16,57 @@
   "Delete": "Hapus",
   "Enable": "Aktifkan",
   "Disable": "Nonaktifkan",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "Grup Proksi",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Proxy Rantai",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Penyedia Proksi"
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "Periksa keterlambatan untuk membatalkan tetap"
+      },
+      "tooltips": {
+        "locate": "Lokasi",
+        "delayCheck": "Periksa Keterlambatan",
+        "sortDefault": "Urutkan secara default",
+        "sortDelay": "Urutkan berdasarkan keterlambatan",
+        "sortName": "Urutkan berdasarkan nama",
+        "delayCheckUrl": "URL Periksa Keterlambatan",
+        "showBasic": "Dasar Proksi",
+        "showDetail": "Detail Proksi",
+        "filter": "Filter"
+      },
+      "placeholders": {
+        "filter": "Kondisi Filter",
+        "delayCheckUrl": "URL Periksa Keterlambatan"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
   "Label-Home": "Home",
   "Label-Proxies": "Proksi",
   "Label-Profiles": "Profil",

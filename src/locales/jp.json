@@ -16,6 +16,57 @@
   "Delete": "削除",
   "Enable": "有効にする",
   "Disable": "無効にする",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "プロキシグループ",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 チェーンプロキシ",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "プロキシプロバイダー"
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "ノード数",
+        "delayCheckReset": "遅延テストを実行して固定を解除する"
+      },
+      "tooltips": {
+        "locate": "現在のノード",
+        "delayCheck": "遅延テスト",
+        "sortDefault": "デフォルトでソート",
+        "sortDelay": "遅延でソート",
+        "sortName": "名前でソート",
+        "delayCheckUrl": "遅延テストURL",
+        "showBasic": "ノードの詳細を隠す",
+        "showDetail": "ノードの詳細を表示する",
+        "filter": "ノードをフィルタリング"
+      },
+      "placeholders": {
+        "filter": "フィルタリング条件",
+        "delayCheckUrl": "遅延テストURL"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
   "Label-Home": "ホーム",
   "Label-Proxies": "プロキシ",
   "Label-Profiles": "プロファイル",

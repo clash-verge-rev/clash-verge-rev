@@ -16,6 +16,57 @@
   "Delete": "Löschen",
   "Enable": "Aktivieren",
   "Disable": "Deaktivieren",
+  "pages": {
+    "proxies": {
+      "title": {
+        "default": "Proxy-Gruppen",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Ketten-Proxy",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Proxy-Sammlung"
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Anzahl der Knoten",
+        "delayCheckReset": "Latenztest durchführen, um Fixierung aufzuheben"
+      },
+      "tooltips": {
+        "locate": "Aktueller Knoten",
+        "delayCheck": "Latenztest",
+        "sortDefault": "Standard Sortierung",
+        "sortDelay": "Nach Latenz sortieren",
+        "sortName": "Nach Name sortieren",
+        "delayCheckUrl": "Latenztest-URL",
+        "showBasic": "Knotendetails ausblenden",
+        "showDetail": "Knotendetails anzeigen",
+        "filter": "Knoten filtern"
+      },
+      "placeholders": {
+        "filter": "Filterbedingungen",
+        "delayCheckUrl": "Latenztest-URL"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
   "Label-Home": "Startseite",
   "Label-Proxies": "Proxy",
   "Label-Profiles": "Abonnement",
