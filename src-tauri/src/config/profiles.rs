@@ -182,16 +182,16 @@ impl IProfiles {
     }
 
     /// reorder items
-    pub async fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
+    pub async fn reorder(&mut self, active_id: &String, over_id: &String) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
         let mut new_index = None;
 
         for (i, _) in items.iter().enumerate() {
-            if items[i].uid == Some(active_id.clone()) {
+            if items[i].uid.as_ref() == Some(active_id) {
                 old_index = Some(i);
             }
-            if items[i].uid == Some(over_id.clone()) {
+            if items[i].uid.as_ref() == Some(over_id) {
                 new_index = Some(i);
             }
         }
@@ -233,13 +233,13 @@ impl IProfiles {
 
     /// be used to update the remote item
     /// only patch `updated` `extra` `file_data`
-    pub async fn update_item(&mut self, uid: String, mut item: PrfItem) -> Result<()> {
+    pub async fn update_item(&mut self, uid: &String, mut item: PrfItem) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
         // find the item
-        let _ = self.get_item(&uid)?;
+        let _ = self.get_item(uid)?;
 
         if let Some(items) = self.items.as_mut() {
             let some_uid = Some(uid.clone());
@@ -280,10 +280,10 @@ impl IProfiles {
 
     /// delete item
     /// if delete the current then return true
-    pub async fn delete_item(&mut self, uid: String) -> Result<bool> {
-        let current = self.current.as_ref().unwrap_or(&uid);
+    pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
+        let current = self.current.as_ref().unwrap_or(uid);
         let current = current.clone();
-        let item = self.get_item(&uid)?;
+        let item = self.get_item(uid)?;
         let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
         let script_uid = item.option.as_ref().and_then(|e| e.script.clone());
         let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
@@ -331,7 +331,7 @@ impl IProfiles {
                 .await;
         }
         // delete the original uid
-        if current == uid {
+        if current == *uid {
             self.current = None;
             for item in items.iter() {
                 if item.itype == Some("remote".into()) || item.itype == Some("local".into()) {
@@ -343,7 +343,7 @@ impl IProfiles {
 
         self.items = Some(items);
         self.save_file().await?;
-        Ok(current == uid)
+        Ok(current == *uid)
     }
 
     /// 获取current指向的订阅内容
@@ -654,7 +654,7 @@ pub async fn profiles_patch_item_safe(index: &String, item: PrfItem) -> Result<(
         .await
 }
 
-pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
+pub async fn profiles_delete_item_safe(index: &String) -> Result<bool> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -664,7 +664,7 @@ pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
         .await
 }
 
-pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result<()> {
+pub async fn profiles_reorder_safe(active_id: &String, over_id: &String) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -684,7 +684,7 @@ pub async fn profiles_save_file_safe() -> Result<()> {
         .await
 }
 
-pub async fn profiles_draft_update_item_safe(index: String, item: PrfItem) -> Result<()> {
+pub async fn profiles_draft_update_item_safe(index: &String, item: PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {

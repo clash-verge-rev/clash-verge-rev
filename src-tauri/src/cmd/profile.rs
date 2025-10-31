@@ -145,7 +145,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
 /// 调整profile的顺序
 #[tauri::command]
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
-    match profiles_reorder_safe(active_id, over_id).await {
+    match profiles_reorder_safe(&active_id, &over_id).await {
         Ok(_) => {
             log::info!(target: "app", "重新排序配置文件");
             Ok(())
@@ -194,9 +194,7 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 pub async fn delete_profile(index: String) -> CmdResult {
     println!("delete_profile: {}", index);
     // 使用Send-safe helper函数
-    let should_update = profiles_delete_item_safe(index.clone())
-        .await
-        .stringify_err()?;
+    let should_update = profiles_delete_item_safe(&index).await.stringify_err()?;
     profiles_save_file_safe().await.stringify_err()?;
 
     if should_update {

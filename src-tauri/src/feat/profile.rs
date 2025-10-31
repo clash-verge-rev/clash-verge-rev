@@ -71,7 +71,7 @@ async fn perform_profile_update(
         Ok(item) => {
             log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
             let profiles = Config::profiles().await;
-            profiles_draft_update_item_safe(uid.clone(), item).await?;
+            profiles_draft_update_item_safe(uid, item).await?;
             let is_current = Some(uid.clone()) == profiles.latest_ref().get_current();
             log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
             Ok(is_current)
@@ -97,7 +97,7 @@ async fn perform_profile_update(
                     }
 
                     let profiles = Config::profiles().await;
-                    profiles_draft_update_item_safe(uid.clone(), item.clone()).await?;
+                    profiles_draft_update_item_safe(uid, item.clone()).await?;
 
                     let profile_name = item.name.clone().unwrap_or_else(|| uid.clone());
                     handle::Handle::notice_message("update_with_clash_proxy", profile_name);
