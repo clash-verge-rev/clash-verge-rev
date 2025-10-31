@@ -593,14 +593,13 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 
     // 如果更新间隔或允许自动更新变更，异步刷新定时器
     if should_refresh_timer {
-        let index_clone = index.clone();
         crate::process::AsyncHandler::spawn(move || async move {
             logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");
             if let Err(e) = crate::core::Timer::global().refresh().await {
                 logging!(error, Type::Timer, "刷新定时器失败: {}", e);
             } else {
                 // 刷新成功后发送自定义事件，不触发配置重载
-                crate::core::handle::Handle::notify_timer_updated(index_clone);
+                crate::core::handle::Handle::notify_timer_updated(index);
             }
         });
     }
