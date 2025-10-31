@@ -31,7 +31,7 @@ pub struct CleanupResult {
 macro_rules! patch {
     ($lv: expr, $rv: expr, $key: tt) => {
         if ($rv.$key).is_some() {
-            $lv.$key = $rv.$key;
+            $lv.$key = $rv.$key.clone();
         }
     };
 }
@@ -207,7 +207,7 @@ impl IProfiles {
     }
 
     /// update the item value
-    pub async fn patch_item(&mut self, uid: &String, item: PrfItem) -> Result<()> {
+    pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
@@ -233,7 +233,7 @@ impl IProfiles {
 
     /// be used to update the remote item
     /// only patch `updated` `extra` `file_data`
-    pub async fn update_item(&mut self, uid: &String, mut item: PrfItem) -> Result<()> {
+    pub async fn update_item(&mut self, uid: &String, item: &mut PrfItem) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
@@ -248,7 +248,7 @@ impl IProfiles {
                 if each.uid == some_uid {
                     each.extra = item.extra;
                     each.updated = item.updated;
-                    each.home = item.home;
+                    each.home = item.home.to_owned();
                     each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
                     // save the file data
                     // move the field value after save
@@ -644,7 +644,7 @@ pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
         .await
 }
 
-pub async fn profiles_patch_item_safe(index: &String, item: PrfItem) -> Result<()> {
+pub async fn profiles_patch_item_safe(index: &String, item: &PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -684,7 +684,7 @@ pub async fn profiles_save_file_safe() -> Result<()> {
         .await
 }
 
-pub async fn profiles_draft_update_item_safe(index: &String, item: PrfItem) -> Result<()> {
+pub async fn profiles_draft_update_item_safe(index: &String, item: &mut PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {

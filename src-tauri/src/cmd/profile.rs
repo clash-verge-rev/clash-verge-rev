@@ -577,7 +577,7 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         false
     };
 
-    profiles_patch_item_safe(&index, profile)
+    profiles_patch_item_safe(&index, &profile)
         .await
         .stringify_err()?;
 
