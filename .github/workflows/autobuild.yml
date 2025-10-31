@@ -169,7 +169,8 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-shared
+          shared-key: autobuild-${{ runner.os }}-${{ matrix.target }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -196,6 +197,14 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Pnpm install and check
         run: |
@@ -259,7 +268,8 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-shared
+          shared-key: autobuild-${{ runner.os }}-${{ matrix.target }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -271,6 +281,14 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Pnpm install and check
         run: |
@@ -391,7 +409,8 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-shared
+          shared-key: autobuild-${{ runner.os }}-${{ matrix.target }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -403,6 +422,14 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Pnpm install and check
         run: |
