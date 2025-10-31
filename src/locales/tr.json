@@ -72,6 +72,44 @@
         "trigger": "Kural Sağlayıcısı",
         "dialogTitle": "Kural Sağlayıcısı"
       }
+    },
+    "profiles": {
+      "title": "Profiller",
+      "actions": {
+        "updateAll": "Tüm Profilleri Güncelle",
+        "viewRuntimeConfig": "Çalışma Zamanı Yapılandırmasını Görüntüle",
+        "reactivate": "Profilleri Yeniden Etkinleştir",
+        "import": "İçe Aktar",
+        "new": "Yeni"
+      },
+      "batch": {
+        "title": "Toplu İşlemler",
+        "delete": "Seçili Profilleri Sil",
+        "selectAll": "Tümünü Seç",
+        "deselectAll": "Tüm Seçimi Kaldır",
+        "done": "Tamam",
+        "selected": "Seçildi",
+        "items": "öğeler"
+      },
+      "import": {
+        "placeholder": "Profil URL'si",
+        "paste": "Yapıştır",
+        "clear": "Temizle"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Yalnızca YAML Dosyaları Desteklenir"
+      },
+      "notifications": {
+        "importRetry": "İçe aktarma başarısız oldu, Clash vekil ile yeniden deneniyor...",
+        "importFail": "Clash vekil ile bile içe aktarma başarısız oldu",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Profil Değiştirildi",
+        "profileReactivated": "Profil Yeniden Etkinleştirildi",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Seçili profiller başarıyla silindi"
+      }
     }
   },
   "Label-Home": "Ana Sayfa",
@@ -801,6 +839,37 @@
           "conditionRequired": "Kural Koşulu Gerekli",
           "invalidRule": "Geçersiz Kural"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "Profil Oluştur",
+          "edit": "Profili Düzenle"
+        },
+        "buttons": {
+          "save": "Kaydet",
+          "cancel": "İptal"
+        },
+        "fields": {
+          "type": "Tip",
+          "name": "İsim",
+          "description": "Açıklamalar",
+          "subscriptionUrl": "Abonelik URL'si",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "Güncelleme Aralığı",
+          "useSystemProxy": "Sistem Vekil'ini Kullan",
+          "useClashProxy": "Clash Vekil'ini Kullan",
+          "acceptInvalidCerts": "Geçersiz Sertifikalara İzin Ver (Tehlikeli)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "notifications": {
+          "creationRetry": "Profil oluşturma başarısız oldu, Clash vekil ile yeniden deneniyor...",
+          "creationSuccess": "Clash vekil ile profil oluşturma başarılı oldu"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "Dosya Seç"
       }
     }
   }

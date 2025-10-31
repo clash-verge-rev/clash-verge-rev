@@ -72,6 +72,44 @@
         "trigger": "ルールプロバイダー",
         "dialogTitle": "ルールプロバイダー"
       }
+    },
+    "profiles": {
+      "title": "プロファイル",
+      "actions": {
+        "updateAll": "すべてのプロファイルを更新",
+        "viewRuntimeConfig": "実行時のプロファイルを表示",
+        "reactivate": "プロファイルを再アクティブ化",
+        "import": "インポート",
+        "new": "新規作成"
+      },
+      "batch": {
+        "title": "バッチ操作",
+        "delete": "選択したプロファイルを削除",
+        "selectAll": "すべて選択",
+        "deselectAll": "すべての選択を解除",
+        "done": "完了",
+        "selected": "選択済み",
+        "items": "アイテム"
+      },
+      "import": {
+        "placeholder": "プロファイルファイルのURL",
+        "paste": "貼り付け",
+        "clear": "クリア"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "YAMLファイルのみサポートされています。"
+      },
+      "notifications": {
+        "importRetry": "インポートに失敗しました。Clashプロキシを使用して再試行します...",
+        "importFail": "Clashプロキシを使用してもインポートに失敗しました。",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "プロファイルが切り替えられました。",
+        "profileReactivated": "プロファイルが再アクティブ化されました。",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "選択したプロファイルが正常に削除されました"
+      }
     }
   },
   "Label-Home": "ホーム",
@@ -801,6 +839,37 @@
           "conditionRequired": "ルール条件が必要です",
           "invalidRule": "無効なルール"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "新規プロファイルを作成",
+          "edit": "プロファイルを編集"
+        },
+        "buttons": {
+          "save": "保存",
+          "cancel": "キャンセル"
+        },
+        "fields": {
+          "type": "タイプ",
+          "name": "名前",
+          "description": "説明",
+          "subscriptionUrl": "サブスクリプションURL",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "更新間隔",
+          "useSystemProxy": "システムプロキシを使用して更新",
+          "useClashProxy": "クラッシュプロキシを使用して更新",
+          "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "notifications": {
+          "creationRetry": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",
+          "creationSuccess": "Clashプロキシを使用してプロファイルの作成に成功しました。"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "ファイルを選択"
       }
     }
   }

@@ -72,6 +72,44 @@
         "trigger": "规则集合",
         "dialogTitle": "规则集合"
       }
+    },
+    "profiles": {
+      "title": "订阅",
+      "actions": {
+        "updateAll": "更新所有订阅",
+        "viewRuntimeConfig": "查看运行时订阅",
+        "reactivate": "重新激活订阅",
+        "import": "导入",
+        "new": "新建"
+      },
+      "batch": {
+        "title": "批量操作",
+        "delete": "删除选中订阅",
+        "selectAll": "全选",
+        "deselectAll": "取消全选",
+        "done": "完成",
+        "selected": "已选中",
+        "items": "项目"
+      },
+      "import": {
+        "placeholder": "订阅文件链接",
+        "paste": "粘贴",
+        "clear": "清除"
+      },
+      "errors": {
+        "invalidUrl": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址",
+        "onlyYaml": "仅支持 YAML 文件"
+      },
+      "notifications": {
+        "importRetry": "订阅导入失败，尝试使用 Clash 代理导入",
+        "importFail": "使用 Clash 代理导入订阅也失败",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "订阅已切换",
+        "profileReactivated": "订阅已激活",
+        "switchInterrupted": "配置切换被新选择中断",
+        "batchDeleted": "选中的订阅已成功删除"
+      }
     }
   },
   "Label-Home": "首 页",
@@ -801,6 +839,37 @@
           "conditionRequired": "规则条件缺失",
           "invalidRule": "无效规则"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "新建配置",
+          "edit": "编辑配置"
+        },
+        "buttons": {
+          "save": "保存",
+          "cancel": "取消"
+        },
+        "fields": {
+          "type": "类型",
+          "name": "名称",
+          "description": "描述",
+          "subscriptionUrl": "订阅链接",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "更新间隔",
+          "useSystemProxy": "使用系统代理更新",
+          "useClashProxy": "使用内核代理更新",
+          "acceptInvalidCerts": "允许无效证书（危险）",
+          "allowAutoUpdate": "允许自动更新"
+        },
+        "notifications": {
+          "creationRetry": "订阅创建失败，尝试使用 Clash 代理创建",
+          "creationSuccess": "使用 Clash 代理创建订阅成功"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "选择文件"
       }
     }
   }

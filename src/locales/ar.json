@@ -72,6 +72,44 @@
         "trigger": "مزود القواعد",
         "dialogTitle": "مزود القواعد"
       }
+    },
+    "profiles": {
+      "title": "الملفات الشخصية",
+      "actions": {
+        "updateAll": "تحديث جميع الملفات الشخصية",
+        "viewRuntimeConfig": "عرض تكوين وقت التشغيل",
+        "reactivate": "إعادة تنشيط الملفات الشخصية",
+        "import": "استيراد",
+        "new": "جديد"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "رابط الملف الشخصي",
+        "paste": "لصق",
+        "clear": "مسح"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "لا يتم دعم سوى ملفات YAML"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "تم التبديل إلى الملف الشخصي",
+        "profileReactivated": "تم إعادة تنشيط الملف الشخصي",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      }
     }
   },
   "Label-Home": "Home",
@@ -801,6 +839,37 @@
           "conditionRequired": "شرط القاعدة مطلوب",
           "invalidRule": "قاعدة غير صالحة"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "إنشاء ملف شخصي",
+          "edit": "تعديل الملف الشخصي"
+        },
+        "buttons": {
+          "save": "حفظ",
+          "cancel": "إلغاء"
+        },
+        "fields": {
+          "type": "النوع",
+          "name": "الاسم",
+          "description": "الوصف",
+          "subscriptionUrl": "رابط الاشتراك",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "فاصل التحديث",
+          "useSystemProxy": "استخدام وكيل النظام",
+          "useClashProxy": "استخدام وكيل Clash",
+          "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "notifications": {
+          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+          "creationSuccess": "Profile creation succeeded with Clash proxy"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "اختر ملف"
       }
     }
   }

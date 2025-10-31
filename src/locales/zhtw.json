@@ -72,6 +72,44 @@
         "trigger": "規則集合",
         "dialogTitle": "規則集合"
       }
+    },
+    "profiles": {
+      "title": "訂閱",
+      "actions": {
+        "updateAll": "更新所有訂閱",
+        "viewRuntimeConfig": "查看執行時訂閱",
+        "reactivate": "重新啟用訂閱",
+        "import": "匯入",
+        "new": "新增"
+      },
+      "batch": {
+        "title": "批次操作",
+        "delete": "刪除選取訂閱",
+        "selectAll": "全選",
+        "deselectAll": "取消選取",
+        "done": "完成",
+        "selected": "已選取",
+        "items": "項目"
+      },
+      "import": {
+        "placeholder": "訂閱檔網址",
+        "paste": "貼上",
+        "clear": "清除"
+      },
+      "errors": {
+        "invalidUrl": "無效的訂閱網址，請輸入以 http:// 或 https:// 開頭的位址",
+        "onlyYaml": "僅支援 YAML 檔案"
+      },
+      "notifications": {
+        "importRetry": "訂閱匯入失敗，嘗試使用 Clash 代理匯入",
+        "importFail": "使用 Clash 代理匯入訂閱也失敗",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "訂閱已切換",
+        "profileReactivated": "訂閱已啟用",
+        "switchInterrupted": "配置切換被新的選擇中斷",
+        "batchDeleted": "選取的訂閱已成功刪除"
+      }
     }
   },
   "Label-Home": "首 頁",
@@ -801,6 +839,37 @@
           "conditionRequired": "規則條件為必填",
           "invalidRule": "無效規則"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "新增設定檔",
+          "edit": "編輯設定檔"
+        },
+        "buttons": {
+          "save": "儲存",
+          "cancel": "取消"
+        },
+        "fields": {
+          "type": "類型",
+          "name": "名稱",
+          "description": "描述",
+          "subscriptionUrl": "訂閱網址",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "更新間隔",
+          "useSystemProxy": "使用系統代理更新",
+          "useClashProxy": "使用內核代理更新",
+          "acceptInvalidCerts": "允許無效憑證（危險）",
+          "allowAutoUpdate": "允許自動更新"
+        },
+        "notifications": {
+          "creationRetry": "訂閱建立失敗，嘗試使用 Clash 代理建立",
+          "creationSuccess": "使用 Clash 代理建立訂閱成功"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "選擇檔案"
       }
     }
   }

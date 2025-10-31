@@ -72,6 +72,44 @@
         "trigger": "Провайдеры правил",
         "dialogTitle": "Провайдеры правил"
       }
+    },
+    "profiles": {
+      "title": "Профили",
+      "actions": {
+        "updateAll": "Обновить все профили",
+        "viewRuntimeConfig": "Просмотреть используемый конфиг",
+        "reactivate": "Перезапустить профиль",
+        "import": "Импорт",
+        "new": "Новый"
+      },
+      "batch": {
+        "title": "Пакетные операции",
+        "delete": "Удалить выбранные профили",
+        "selectAll": "Выбрать все",
+        "deselectAll": "Отменить выбор всех",
+        "done": "Готово",
+        "selected": "Выбрано",
+        "items": "элементы"
+      },
+      "import": {
+        "placeholder": "URL профиля",
+        "paste": "Вставить",
+        "clear": "Очистить"
+      },
+      "errors": {
+        "invalidUrl": "Недопустимая ссылка на профиль, введите адрес, начинающийся с http:// или https://",
+        "onlyYaml": "Поддерживаются только файлы YAML"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Профиль изменен",
+        "profileReactivated": "Профиль перезапущен",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Выбранные профили успешно удалены"
+      }
     }
   },
   "Label-Home": "Главная",
@@ -801,6 +839,37 @@
           "conditionRequired": "Требуется условие правила",
           "invalidRule": "Недействительное правило"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "Создать профиль",
+          "edit": "Изменить профиль"
+        },
+        "buttons": {
+          "save": "Сохранить",
+          "cancel": "Отмена"
+        },
+        "fields": {
+          "type": "Тип",
+          "name": "Название",
+          "description": "Описание",
+          "subscriptionUrl": "URL подписки",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "Интервал обновления",
+          "useSystemProxy": "Использовать системный прокси для обновления",
+          "useClashProxy": "Использовать прокси Clash для обновления",
+          "acceptInvalidCerts": "Принимать недействительные сертификаты (ОПАСНО)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "notifications": {
+          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+          "creationSuccess": "Profile creation succeeded with Clash proxy"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "Выбрать файл"
       }
     }
   }

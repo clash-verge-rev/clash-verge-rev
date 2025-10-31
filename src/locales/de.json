@@ -72,6 +72,44 @@
         "trigger": "Regelsammlung",
         "dialogTitle": "Regelsammlung"
       }
+    },
+    "profiles": {
+      "title": "Abonnement",
+      "actions": {
+        "updateAll": "Alle Abonnements aktualisieren",
+        "viewRuntimeConfig": "Laufzeit-Abonnement anzeigen",
+        "reactivate": "Abonnement erneut aktivieren",
+        "import": "Importieren",
+        "new": "Neu"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "Abonnement-Datei-Link",
+        "paste": "Einfügen",
+        "clear": "Löschen"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Nur YAML-Dateien werden unterstützt"
+      },
+      "notifications": {
+        "importRetry": "Import des Abonnements fehlgeschlagen. Versuche es mit dem Clash-Proxy erneut...",
+        "importFail": "Import des Abonnements auch mit Clash-Proxy fehlgeschlagen",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Abonnement gewechselt",
+        "profileReactivated": "Abonnement erneut aktiviert",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      }
     }
   },
   "Label-Home": "Startseite",
@@ -801,6 +839,37 @@
           "conditionRequired": "Regelbedingung fehlt",
           "invalidRule": "Ungültige Regel"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "Neue Konfiguration erstellen",
+          "edit": "Konfiguration bearbeiten"
+        },
+        "buttons": {
+          "save": "Speichern",
+          "cancel": "Abbrechen"
+        },
+        "fields": {
+          "type": "Typ",
+          "name": "Name",
+          "description": "Beschreibung",
+          "subscriptionUrl": "Abonnement-Link",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "Aktualisierungsintervall",
+          "useSystemProxy": "Systemproxy zur Aktualisierung verwenden",
+          "useClashProxy": "Kernel-Proxy zur Aktualisierung verwenden",
+          "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "notifications": {
+          "creationRetry": "Erstellung des Abonnements fehlgeschlagen. Versuche es mit dem Clash-Proxy erneut...",
+          "creationSuccess": "Erstellung des Abonnements mit Clash-Proxy erfolgreich"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "Datei auswählen"
       }
     }
   }

@@ -72,6 +72,44 @@
         "trigger": "Penyedia Aturan",
         "dialogTitle": "Penyedia Aturan"
       }
+    },
+    "profiles": {
+      "title": "Profil",
+      "actions": {
+        "updateAll": "Perbarui Semua Profil",
+        "viewRuntimeConfig": "Lihat Konfigurasi Runtime",
+        "reactivate": "Reaktivasi Profil",
+        "import": "Impor",
+        "new": "Baru"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "URL Profil",
+        "paste": "Tempel",
+        "clear": "Bersihkan"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Hanya File YAML yang Didukung"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Profil Beralih",
+        "profileReactivated": "Profil Diaktifkan Kembali",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      }
     }
   },
   "Label-Home": "Home",
@@ -801,6 +839,37 @@
           "conditionRequired": "Kondisi Aturan Diperlukan",
           "invalidRule": "Aturan Tidak Valid"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "Buat Profil",
+          "edit": "Ubah Profil"
+        },
+        "buttons": {
+          "save": "Simpan",
+          "cancel": "Batal"
+        },
+        "fields": {
+          "type": "Jenis",
+          "name": "Nama",
+          "description": "Deskripsi",
+          "subscriptionUrl": "URL Langganan",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "Interval Pembaruan",
+          "useSystemProxy": "Gunakan Proksi Sistem",
+          "useClashProxy": "Gunakan Proksi Clash",
+          "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "notifications": {
+          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+          "creationSuccess": "Profile creation succeeded with Clash proxy"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "Pilih Berkas"
       }
     }
   }

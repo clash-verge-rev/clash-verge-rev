@@ -146,7 +146,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             // 首次创建/更新失败，尝试使用自身代理
             showNotice(
               "info",
-              t("Profile creation failed, retrying with Clash proxy..."),
+              t("components.profile.viewer.notifications.creationRetry"),
             );
 
             // 使用自身代理的配置
@@ -172,7 +172,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
 
             showNotice(
               "success",
-              t("Profile creation succeeded with Clash proxy"),
+              t("components.profile.viewer.notifications.creationSuccess"),
             );
           }
         }
@@ -220,10 +220,14 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   return (
     <BaseDialog
       open={open}
-      title={openType === "new" ? t("Create Profile") : t("Edit Profile")}
+      title={
+        openType === "new"
+          ? t("components.profile.viewer.title.create")
+          : t("components.profile.viewer.title.edit")
+      }
       contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("components.profile.viewer.buttons.save")}
+      cancelBtn={t("components.profile.viewer.buttons.cancel")}
       onClose={handleClose}
       onCancel={handleClose}
       onOk={handleOk}
@@ -234,8 +238,14 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         control={control}
         render={({ field }) => (
           <FormControl size="small" fullWidth sx={{ mt: 1, mb: 1 }}>
-            <InputLabel>{t("Type")}</InputLabel>
-            <Select {...field} autoFocus label={t("Type")}>
+            <InputLabel>
+              {t("components.profile.viewer.fields.type")}
+            </InputLabel>
+            <Select
+              {...field}
+              autoFocus
+              label={t("components.profile.viewer.fields.type")}
+            >
               <MenuItem value="remote">Remote</MenuItem>
               <MenuItem value="local">Local</MenuItem>
             </Select>
@@ -247,7 +257,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         name="name"
         control={control}
         render={({ field }) => (
-          <TextField {...text} {...field} label={t("Name")} />
+          <TextField
+            {...text}
+            {...field}
+            label={t("components.profile.viewer.fields.name")}
+          />
         )}
       />
 
@@ -255,7 +269,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         name="desc"
         control={control}
         render={({ field }) => (
-          <TextField {...text} {...field} label={t("Descriptions")} />
+          <TextField
+            {...text}
+            {...field}
+            label={t("components.profile.viewer.fields.description")}
+          />
         )}
       />
 
@@ -269,7 +287,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...text}
                 {...field}
                 multiline
-                label={t("Subscription URL")}
+                label={t("components.profile.viewer.fields.subscriptionUrl")}
               />
             )}
           />
@@ -296,7 +314,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...field}
                 type="number"
                 placeholder="60"
-                label={t("HTTP Request Timeout")}
+                label={t("components.profile.viewer.fields.httpTimeout")}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -321,7 +339,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               {...text}
               {...field}
               type="number"
-              label={t("Update Interval")}
+              label={t("components.profile.viewer.fields.updateInterval")}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -350,7 +368,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             control={control}
             render={({ field }) => (
               <StyledBox>
-                <InputLabel>{t("Use System Proxy")}</InputLabel>
+                <InputLabel>
+                  {t("components.profile.viewer.fields.useSystemProxy")}
+                </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
             )}
@@ -361,7 +381,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             control={control}
             render={({ field }) => (
               <StyledBox>
-                <InputLabel>{t("Use Clash Proxy")}</InputLabel>
+                <InputLabel>
+                  {t("components.profile.viewer.fields.useClashProxy")}
+                </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
             )}
@@ -372,7 +394,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             control={control}
             render={({ field }) => (
               <StyledBox>
-                <InputLabel>{t("Accept Invalid Certs (Danger)")}</InputLabel>
+                <InputLabel>
+                  {t("components.profile.viewer.fields.acceptInvalidCerts")}
+                </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
             )}
@@ -383,7 +407,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             control={control}
             render={({ field }) => (
               <StyledBox>
-                <InputLabel>{t("Allow Auto Update")}</InputLabel>
+                <InputLabel>
+                  {t("components.profile.viewer.fields.allowAutoUpdate")}
+                </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
             )}

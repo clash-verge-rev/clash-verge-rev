@@ -72,6 +72,44 @@
         "trigger": "규칙 제공자",
         "dialogTitle": "규칙 제공자"
       }
+    },
+    "profiles": {
+      "title": "프로필",
+      "actions": {
+        "updateAll": "모든 프로필 업데이트",
+        "viewRuntimeConfig": "런타임 설정 보기",
+        "reactivate": "프로필 재활성화",
+        "import": "가져오기",
+        "new": "새로 만들기"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "프로필 URL",
+        "paste": "붙여넣기",
+        "clear": "지우기"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Only YAML Files Supported"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Profile Switched",
+        "profileReactivated": "Profile Reactivated",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      }
     }
   },
   "Label-Home": "홈",
@@ -801,6 +839,37 @@
           "conditionRequired": "규칙 조건 필요",
           "invalidRule": "잘못된 규칙"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "프로필 생성",
+          "edit": "프로필 편집"
+        },
+        "buttons": {
+          "save": "저장",
+          "cancel": "취소"
+        },
+        "fields": {
+          "type": "유형",
+          "name": "이름",
+          "description": "설명",
+          "subscriptionUrl": "구독 URL",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "업데이트 간격",
+          "useSystemProxy": "시스템 프록시 사용",
+          "useClashProxy": "Clash 프록시 사용",
+          "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "notifications": {
+          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+          "creationSuccess": "Profile creation succeeded with Clash proxy"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "파일 선택"
       }
     }
   }

@@ -253,7 +253,7 @@ const ProfilePage = () => {
       setActivatings((prev) => prev.filter((id) => id !== previousSwitching));
       showNotice(
         "info",
-        `${t("Profile switch interrupted by new selection")}: ${previousSwitching} → ${newProfile}`,
+        `${t("pages.profiles.notifications.switchInterrupted")}: ${previousSwitching} → ${newProfile}`,
         3000,
       );
     },
@@ -297,7 +297,7 @@ const ProfilePage = () => {
 
           for (const file of paths) {
             if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-              showNotice("error", t("Only YAML Files Supported"));
+              showNotice("error", t("pages.profiles.errors.onlyYaml"));
               continue;
             }
             const item = {
@@ -385,7 +385,7 @@ const ProfilePage = () => {
     if (!url) return;
     // 校验url是否为http/https
     if (!/^https?:\/\//i.test(url)) {
-      showNotice("error", t("Invalid Profile URL"));
+      showNotice("error", t("pages.profiles.errors.invalidUrl"));
       return;
     }
     setLoading(true);
@@ -439,7 +439,7 @@ const ProfilePage = () => {
       }
 
       // 首次导入失败且未检测到数据变更，尝试使用自身代理
-      showNotice("info", t("Import failed, retrying with Clash proxy..."));
+      showNotice("info", t("pages.profiles.notifications.importRetry"));
       try {
         // 使用自身代理尝试导入
         await importProfile(url, {
@@ -452,7 +452,7 @@ const ProfilePage = () => {
         const retryErrmsg = retryErr?.message || retryErr.toString();
         showNotice(
           "error",
-          `${t("Import failed even with Clash proxy")}: ${retryErrmsg}`,
+          `${t("pages.profiles.notifications.importFail")}: ${retryErrmsg}`,
         );
       }
     } finally {
@@ -524,14 +524,14 @@ const ProfilePage = () => {
       await onEnhance(false);
       showNotice(
         "error",
-        t("Profile imported but may need manual refresh"),
+        t("pages.profiles.notifications.importNeedsRefresh"),
         3000,
       );
     } catch (finalError) {
       console.error(`[导入刷新] 最终刷新尝试失败:`, finalError);
       showNotice(
         "error",
-        t("Profile imported successfully, please restart if not visible"),
+        t("pages.profiles.notifications.importSuccess"),
         5000,
       );
     }
@@ -650,7 +650,11 @@ const ProfilePage = () => {
         closeAllConnections();
 
         if (notifySuccess && success) {
-          showNotice("success", t("Profile Switched"), 1000);
+          showNotice(
+            "success",
+            t("pages.profiles.notifications.profileSwitched"),
+            1000,
+          );
         }
 
         console.log(
@@ -747,7 +751,11 @@ const ProfilePage = () => {
       await enhanceProfiles();
       mutateLogs();
       if (notifySuccess) {
-        showNotice("success", t("Profile Reactivated"), 1000);
+        showNotice(
+          "success",
+          t("pages.profiles.notifications.profileReactivated"),
+          1000,
+        );
       }
     } catch (err: any) {
       showNotice("error", err.message || err.toString(), 3000);
@@ -886,7 +894,7 @@ const ProfilePage = () => {
       setSelectedProfiles(new Set());
       setBatchMode(false);
 
-      showNotice("success", t("Selected profiles deleted successfully"));
+      showNotice("success", t("pages.profiles.notifications.batchDeleted"));
     } catch (err: any) {
       showNotice("error", err?.message || err.toString());
     } finally {
@@ -966,7 +974,7 @@ const ProfilePage = () => {
   return (
     <BasePage
       full
-      title={t("Profiles")}
+      title={t("pages.profiles.title")}
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -976,7 +984,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={t("Batch Operations")}
+                title={t("pages.profiles.batch.title")}
                 onClick={toggleBatchMode}
               >
                 <CheckBoxOutlineBlankRounded />
@@ -985,7 +993,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={t("Update All Profiles")}
+                title={t("pages.profiles.actions.updateAll")}
                 onClick={onUpdateAll}
               >
                 <RefreshRounded />
@@ -994,7 +1002,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={t("View Runtime Config")}
+                title={t("pages.profiles.actions.viewRuntimeConfig")}
                 onClick={() => configRef.current?.open()}
               >
                 <TextSnippetOutlined />
@@ -1003,7 +1011,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="primary"
-                title={t("Reactivate Profiles")}
+                title={t("pages.profiles.actions.reactivate")}
                 onClick={() => onEnhance(true)}
               >
                 <LocalFireDepartmentRounded />
@@ -1035,7 +1043,11 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={isAllSelected() ? t("Deselect All") : t("Select All")}
+                title={
+                  isAllSelected()
+                    ? t("pages.profiles.batch.deselectAll")
+                    : t("pages.profiles.batch.selectAll")
+                }
                 onClick={
                   isAllSelected() ? clearAllSelections : selectAllProfiles
                 }
@@ -1051,19 +1063,20 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="error"
-                title={t("Delete Selected Profiles")}
+                title={t("pages.profiles.batch.delete")}
                 onClick={deleteSelectedProfiles}
                 disabled={selectedProfiles.size === 0}
               >
                 <DeleteRounded />
               </IconButton>
               <Button size="small" variant="outlined" onClick={toggleBatchMode}>
-                {t("Done")}
+                {t("pages.profiles.batch.done")}
               </Button>
               <Box
                 sx={{ flex: 1, textAlign: "right", color: "text.secondary" }}
               >
-                {t("Selected")} {selectedProfiles.size} {t("items")}
+                {t("pages.profiles.batch.selected")} {selectedProfiles.size}{" "}
+                {t("pages.profiles.batch.items")}
               </Box>
             </Box>
           )}
@@ -1096,7 +1109,7 @@ const ProfilePage = () => {
             event.preventDefault();
             void onImport();
           }}
-          placeholder={t("Profile URL")}
+          placeholder={t("pages.profiles.import.placeholder")}
           slotProps={{
             input: {
               sx: { pr: 1 },
@@ -1104,7 +1117,7 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
-                  title={t("Paste")}
+                  title={t("pages.profiles.import.paste")}
                   onClick={onCopyLink}
                 >
                   <ContentPasteRounded fontSize="inherit" />
@@ -1113,7 +1126,7 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
-                  title={t("Clear")}
+                  title={t("pages.profiles.import.clear")}
                   onClick={() => setUrl("")}
                 >
                   <ClearRounded fontSize="inherit" />
@@ -1130,7 +1143,7 @@ const ProfilePage = () => {
           sx={{ borderRadius: "6px" }}
           onClick={onImport}
         >
-          {t("Import")}
+          {t("pages.profiles.actions.import")}
         </LoadingButton>
         <Button
           variant="contained"
@@ -1138,7 +1151,7 @@ const ProfilePage = () => {
           sx={{ borderRadius: "6px" }}
           onClick={() => viewerRef.current?.create()}
         >
-          {t("New")}
+          {t("pages.profiles.actions.new")}
         </Button>
       </Stack>
 

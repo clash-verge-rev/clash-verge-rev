@@ -72,6 +72,44 @@
         "trigger": "Proveedor de reglas",
         "dialogTitle": "Proveedor de reglas"
       }
+    },
+    "profiles": {
+      "title": "Suscripciones",
+      "actions": {
+        "updateAll": "Actualizar todas las suscripciones",
+        "viewRuntimeConfig": "Ver configuración en tiempo de ejecución",
+        "reactivate": "Reactivar suscripciones",
+        "import": "Importar",
+        "new": "Nuevo"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "Enlace del archivo de suscripción",
+        "paste": "Pegar",
+        "clear": "Limpiar"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Solo se admiten archivos YAML"
+      },
+      "notifications": {
+        "importRetry": "Error al importar la suscripción. Intentando con el proxy de Clash...",
+        "importFail": "Error al importar incluso con el proxy de Clash",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Suscripción cambiada",
+        "profileReactivated": "Suscripción reactivada",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      }
     }
   },
   "Label-Home": "Hogar",
@@ -801,6 +839,37 @@
           "conditionRequired": "Falta la condición de la regla",
           "invalidRule": "Regla no válida"
         }
+      }
+    },
+    "profile": {
+      "viewer": {
+        "title": {
+          "create": "Crear configuración",
+          "edit": "Editar configuración"
+        },
+        "buttons": {
+          "save": "Guardar",
+          "cancel": "Cancelar"
+        },
+        "fields": {
+          "type": "Tipo",
+          "name": "Nombre",
+          "description": "Descripción",
+          "subscriptionUrl": "Enlace de suscripción",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "Intervalo de actualización",
+          "useSystemProxy": "Usar proxy del sistema para actualizar",
+          "useClashProxy": "Usar proxy del núcleo para actualizar",
+          "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "notifications": {
+          "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
+          "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
+        }
+      },
+      "fileInput": {
+        "chooseFile": "Elegir archivo"
       }
     }
   }
