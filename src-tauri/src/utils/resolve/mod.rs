@@ -1,5 +1,4 @@
 use anyhow::Result;
-use smartstring::alias::String;
 
 use crate::{
     config::Config,
@@ -103,7 +102,7 @@ pub(super) async fn resolve_setup_logger() {
     logging_error!(Type::Setup, init::init_logger().await);
 }
 
-pub async fn resolve_scheme(param: &String) -> Result<()> {
+pub async fn resolve_scheme(param: &str) -> Result<()> {
     logging_error!(Type::Setup, scheme::resolve_scheme(param).await);
     Ok(())
 }

@@ -91,14 +91,14 @@ mod app_init {
         }
 
         app.deep_link().on_open_url(|event| {
-            let url = event.urls().first().map(|u| u.to_string());
-            if let Some(url) = url {
-                AsyncHandler::spawn(|| async {
-                    if let Err(e) = resolve::resolve_scheme(&url.into()).await {
-                        logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
-                    }
-                });
-            }
+            let urls = event.urls();
+            AsyncHandler::spawn(move || async move {
+                if let Some(url) = urls.first()
+                    && let Err(e) = resolve::resolve_scheme(url.as_ref()).await
+                {
+                    logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
+                }
+            });
         });
 
         Ok(())

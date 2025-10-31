@@ -10,7 +10,7 @@ use crate::{
     utils::logging::Type,
 };
 
-pub(super) async fn resolve_scheme(param: &String) -> Result<()> {
+pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
     log::info!(target:"app", "received deep link: {param}");
 
     let param_str = if param.starts_with("[") && param.len() > 4 {
@@ -18,7 +18,7 @@ pub(super) async fn resolve_scheme(param: &String) -> Result<()> {
             .get(2..param.len() - 2)
             .ok_or_else(|| anyhow::anyhow!("Invalid string slice boundaries"))?
     } else {
-        param.as_str()
+        param
     };
 
     // 解析 URL
