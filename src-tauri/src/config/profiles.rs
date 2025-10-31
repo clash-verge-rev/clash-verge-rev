@@ -139,11 +139,11 @@ impl IProfiles {
     /// append new item
     /// if the file_data is some
     /// then should save the data to file
-    pub async fn append_item(&mut self, mut item: PrfItem) -> Result<()> {
-        if item.uid.is_none() {
+    pub async fn append_item(&mut self, item: &mut PrfItem) -> Result<()> {
+        let uid = &item.uid;
+        if uid.is_none() {
             bail!("the uid should not be null");
         }
-        let uid = item.uid.clone();
 
         // save the file data
         // move the field value after save
@@ -165,7 +165,7 @@ impl IProfiles {
         if self.current.is_none()
             && (item.itype == Some("remote".into()) || item.itype == Some("local".into()))
         {
-            self.current = uid;
+            self.current = uid.to_owned();
         }
 
         if self.items.is_none() {
@@ -173,10 +173,9 @@ impl IProfiles {
         }
 
         if let Some(items) = self.items.as_mut() {
-            items.push(item)
+            items.push(item.to_owned());
         }
 
-        // self.save_file().await
         Ok(())
     }
 
@@ -629,11 +628,11 @@ pub async fn profiles_append_item_with_filedata_safe(
     item: PrfItem,
     file_data: Option<String>,
 ) -> Result<()> {
-    let item = PrfItem::from(item, file_data).await?;
+    let item = &mut PrfItem::from(item, file_data).await?;
     profiles_append_item_safe(item).await
 }
 
-pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
+pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {

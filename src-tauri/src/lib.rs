@@ -115,7 +115,7 @@ mod app_init {
         {
             auto_start_plugin_builder = auto_start_plugin_builder
                 .macos_launcher(MacosLauncher::LaunchAgent)
-                .app_name(app.config().identifier.clone());
+                .app_name(&app.config().identifier);
         }
         app.handle().plugin(auto_start_plugin_builder.build())?;
         Ok(())

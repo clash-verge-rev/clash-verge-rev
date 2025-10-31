@@ -3,7 +3,12 @@ use percent_encoding::percent_decode_str;
 use smartstring::alias::String;
 use tauri::Url;
 
-use crate::{config::PrfItem, core::handle, logging, logging_error, utils::logging::Type};
+use crate::{
+    config::{PrfItem, profiles},
+    core::handle,
+    logging, logging_error,
+    utils::logging::Type,
+};
 
 pub(super) async fn resolve_scheme(param: String) -> Result<()> {
     log::info!(target:"app", "received deep link: {param}");
@@ -46,7 +51,7 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
             Some(url) => {
                 log::info!(target:"app", "decoded subscription url: {url}");
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
-                    Ok(item) => {
+                    Ok(mut item) => {
                         let uid = match item.uid.clone() {
                             Some(uid) => uid,
                             None => {
@@ -58,7 +63,7 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
                                 return Ok(());
                             }
                         };
-                        let result = crate::config::profiles::profiles_append_item_safe(item).await;
+                        let result = profiles::profiles_append_item_safe(&mut item).await;
                         logging_error!(
                             Type::Config,
                             "failed to import subscription url: {:?}",

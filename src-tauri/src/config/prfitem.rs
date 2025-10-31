@@ -1,7 +1,10 @@
-use crate::utils::{
-    dirs, help,
-    network::{NetworkManager, ProxyType},
-    tmpl,
+use crate::{
+    config::profiles,
+    utils::{
+        dirs, help,
+        network::{NetworkManager, ProxyType},
+        tmpl,
+    },
 };
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
@@ -191,29 +194,29 @@ impl PrfItem {
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
         if merge.is_none() {
-            let merge_item = PrfItem::from_merge(None)?;
-            crate::config::profiles::profiles_append_item_safe(merge_item.clone()).await?;
-            merge = merge_item.uid;
+            let merge_item = &mut PrfItem::from_merge(None)?;
+            profiles::profiles_append_item_safe(merge_item).await?;
+            merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = PrfItem::from_script(None)?;
-            crate::config::profiles::profiles_append_item_safe(script_item.clone()).await?;
-            script = script_item.uid;
+            let script_item = &mut PrfItem::from_script(None)?;
+            profiles::profiles_append_item_safe(script_item).await?;
+            script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = PrfItem::from_rules()?;
-            crate::config::profiles::profiles_append_item_safe(rules_item.clone()).await?;
-            rules = rules_item.uid;
+            let rules_item = &mut PrfItem::from_rules()?;
+            profiles::profiles_append_item_safe(rules_item).await?;
+            rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = PrfItem::from_proxies()?;
-            crate::config::profiles::profiles_append_item_safe(proxies_item.clone()).await?;
-            proxies = proxies_item.uid;
+            let proxies_item = &mut PrfItem::from_proxies()?;
+            profiles::profiles_append_item_safe(proxies_item).await?;
+            proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = PrfItem::from_groups()?;
-            crate::config::profiles::profiles_append_item_safe(groups_item.clone()).await?;
-            groups = groups_item.uid;
+            let groups_item = &mut PrfItem::from_groups()?;
+            profiles::profiles_append_item_safe(groups_item).await?;
+            groups = groups_item.uid.clone();
         }
         Ok(PrfItem {
             uid: Some(uid),
@@ -380,29 +383,29 @@ impl PrfItem {
         }
 
         if merge.is_none() {
-            let merge_item = PrfItem::from_merge(None)?;
-            crate::config::profiles::profiles_append_item_safe(merge_item.clone()).await?;
-            merge = merge_item.uid;
+            let merge_item = &mut PrfItem::from_merge(None)?;
+            profiles::profiles_append_item_safe(merge_item).await?;
+            merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = PrfItem::from_script(None)?;
-            crate::config::profiles::profiles_append_item_safe(script_item.clone()).await?;
-            script = script_item.uid;
+            let script_item = &mut PrfItem::from_script(None)?;
+            profiles::profiles_append_item_safe(script_item).await?;
+            script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = PrfItem::from_rules()?;
-            crate::config::profiles::profiles_append_item_safe(rules_item.clone()).await?;
-            rules = rules_item.uid;
+            let rules_item = &mut PrfItem::from_rules()?;
+            profiles::profiles_append_item_safe(rules_item).await?;
+            rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = PrfItem::from_proxies()?;
-            crate::config::profiles::profiles_append_item_safe(proxies_item.clone()).await?;
-            proxies = proxies_item.uid;
+            let proxies_item = &mut PrfItem::from_proxies()?;
+            profiles::profiles_append_item_safe(proxies_item).await?;
+            proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = PrfItem::from_groups()?;
-            crate::config::profiles::profiles_append_item_safe(groups_item.clone()).await?;
-            groups = groups_item.uid;
+            let groups_item = &mut PrfItem::from_groups()?;
+            profiles::profiles_append_item_safe(groups_item).await?;
+            groups = groups_item.uid.clone();
         }
 
         Ok(PrfItem {
