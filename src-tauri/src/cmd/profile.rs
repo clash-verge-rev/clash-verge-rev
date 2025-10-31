@@ -99,7 +99,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
     logging!(info, Type::Cmd, "[导入订阅] 开始导入: {}", url);
 
     // 直接依赖 PrfItem::from_url 自身的超时/重试逻辑，不再使用 tokio::time::timeout 包裹
-    let mut item = match PrfItem::from_url(&url, None, None, option).await {
+    let mut item = match PrfItem::from_url(&url, None, None, option.as_ref()).await {
         Ok(it) => {
             logging!(info, Type::Cmd, "[导入订阅] 下载完成，开始保存配置");
             it
@@ -161,7 +161,7 @@ pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
 /// 创建一个新的配置文件
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
-    match profiles_append_item_with_filedata_safe(item.clone(), file_data).await {
+    match profiles_append_item_with_filedata_safe(&item, file_data).await {
         Ok(_) => {
             // 发送配置变更通知
             if let Some(uid) = &item.uid {

@@ -30,10 +30,11 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
     };
 
     if link_parsed.scheme() == "clash" || link_parsed.scheme() == "clash-verge" {
-        let name = link_parsed
+        let name_owned: Option<String> = link_parsed
             .query_pairs()
             .find(|(key, _)| key == "name")
-            .map(|(_, value)| value.into());
+            .map(|(_, value)| value.into_owned().into());
+        let name = name_owned.as_ref();
 
         let url_param = if let Some(query) = link_parsed.query() {
             let prefix = "url=";
@@ -48,9 +49,9 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
         };
 
         match url_param {
-            Some(url) => {
+            Some(ref url) => {
                 log::info!(target:"app", "decoded subscription url: {url}");
-                match PrfItem::from_url(url.as_ref(), name, None, None).await {
+                match PrfItem::from_url(url, name, None, None).await {
                     Ok(mut item) => {
                         let uid = match item.uid.clone() {
                             Some(uid) => uid,

@@ -151,13 +151,14 @@ impl PrfOption {
 impl PrfItem {
     /// From partial item
     /// must contain `itype`
-    pub async fn from(item: PrfItem, file_data: Option<String>) -> Result<PrfItem> {
+    pub async fn from(item: &PrfItem, file_data: Option<String>) -> Result<PrfItem> {
         if item.itype.is_none() {
             bail!("type should not be null");
         }
 
         let itype = item
             .itype
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("type should not be null"))?;
         match itype.as_str() {
             "remote" => {
@@ -165,14 +166,16 @@ impl PrfItem {
                     .url
                     .as_ref()
                     .ok_or_else(|| anyhow::anyhow!("url should not be null"))?;
-                let name = item.name;
-                let desc = item.desc;
-                PrfItem::from_url(url, name, desc, item.option).await
+                let name = item.name.as_ref();
+                let desc = item.desc.as_ref();
+                let option = item.option.as_ref();
+                PrfItem::from_url(url, name, desc, option).await
             }
             "local" => {
-                let name = item.name.unwrap_or_else(|| "Local File".into());
-                let desc = item.desc.unwrap_or_else(|| "".into());
-                PrfItem::from_local(name, desc, file_data, item.option).await
+                let name = item.name.clone().unwrap_or_else(|| "Local File".into());
+                let desc = item.desc.clone().unwrap_or_else(|| "".into());
+                let option = item.option.as_ref();
+                PrfItem::from_local(name, desc, file_data, option).await
             }
             typ => bail!("invalid profile item type \"{typ}\""),
         }
@@ -184,7 +187,7 @@ impl PrfItem {
         name: String,
         desc: String,
         file_data: Option<String>,
-        option: Option<PrfOption>,
+        option: Option<&PrfOption>,
     ) -> Result<PrfItem> {
         let uid = help::get_uid("L").into();
         let file = format!("{uid}.yaml").into();
@@ -249,24 +252,23 @@ impl PrfItem {
     /// create a new item from url
     pub async fn from_url(
         url: &str,
-        name: Option<String>,
-        desc: Option<String>,
-        option: Option<PrfOption>,
+        name: Option<&String>,
+        desc: Option<&String>,
+        option: Option<&PrfOption>,
     ) -> Result<PrfItem> {
-        let opt_ref = option.as_ref();
-        let with_proxy = opt_ref.is_some_and(|o| o.with_proxy.unwrap_or(false));
-        let self_proxy = opt_ref.is_some_and(|o| o.self_proxy.unwrap_or(false));
+        let with_proxy = option.is_some_and(|o| o.with_proxy.unwrap_or(false));
+        let self_proxy = option.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs =
-            opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
-        let allow_auto_update = opt_ref.map(|o| o.allow_auto_update.unwrap_or(true));
-        let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
-        let update_interval = opt_ref.and_then(|o| o.update_interval);
-        let timeout = opt_ref.and_then(|o| o.timeout_seconds).unwrap_or(20);
-        let mut merge = opt_ref.and_then(|o| o.merge.clone());
-        let mut script = opt_ref.and_then(|o| o.script.clone());
-        let mut rules = opt_ref.and_then(|o| o.rules.clone());
-        let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
-        let mut groups = opt_ref.and_then(|o| o.groups.clone());
+            option.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
+        let allow_auto_update = option.map(|o| o.allow_auto_update.unwrap_or(true));
+        let user_agent = option.and_then(|o| o.user_agent.clone());
+        let update_interval = option.and_then(|o| o.update_interval);
+        let timeout = option.and_then(|o| o.timeout_seconds).unwrap_or(20);
+        let mut merge = option.and_then(|o| o.merge.clone());
+        let mut script = option.and_then(|o| o.script.clone());
+        let mut rules = option.and_then(|o| o.rules.clone());
+        let mut proxies = option.and_then(|o| o.proxies.clone());
+        let mut groups = option.and_then(|o| o.groups.clone());
 
         // 选择代理类型
         let proxy_type = if self_proxy {
@@ -371,7 +373,11 @@ impl PrfItem {
 
         let uid = help::get_uid("R").into();
         let file = format!("{uid}.yaml").into();
-        let name = name.unwrap_or_else(|| filename.unwrap_or_else(|| "Remote File".into()).into());
+        let name = name.map(|s| s.to_owned()).unwrap_or_else(|| {
+            filename
+                .map(|s| s.into())
+                .unwrap_or_else(|| "Remote File".into())
+        });
         let data = resp.text_with_charset()?;
 
         // process the charset "UTF-8 with BOM"
@@ -415,7 +421,7 @@ impl PrfItem {
             uid: Some(uid),
             itype: Some("remote".into()),
             name: Some(name),
-            desc,
+            desc: desc.cloned(),
             file: Some(file),
             url: Some(url.into()),
             selected: None,

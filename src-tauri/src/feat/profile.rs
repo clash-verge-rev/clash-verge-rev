@@ -67,7 +67,7 @@ async fn perform_profile_update(
     log::info!(target: "app", "[订阅更新] 开始下载新的订阅内容");
     let merged_opt = PrfOption::merge(opt, option);
 
-    match PrfItem::from_url(url, None, None, merged_opt.clone()).await {
+    match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
         Ok(mut item) => {
             log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
             let profiles = Config::profiles().await;
@@ -87,7 +87,7 @@ async fn perform_profile_update(
             fallback_opt.with_proxy = Some(false);
             fallback_opt.self_proxy = Some(true);
 
-            match PrfItem::from_url(url, None, None, Some(fallback_opt)).await {
+            match PrfItem::from_url(url, None, None, Some(&fallback_opt)).await {
                 Ok(mut item) => {
                     log::info!(target: "app", "[订阅更新] 使用Clash代理更新成功");
 

@@ -627,7 +627,7 @@ impl IProfiles {
 use crate::config::Config;
 
 pub async fn profiles_append_item_with_filedata_safe(
-    item: PrfItem,
+    item: &PrfItem,
     file_data: Option<String>,
 ) -> Result<()> {
     let item = &mut PrfItem::from(item, file_data).await?;
