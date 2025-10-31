@@ -124,7 +124,7 @@ impl PrfOption {
     pub fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
         match (one, other) {
             (Some(a_ref), Some(b_ref)) => {
-                let mut result = a_ref.clone(); // 从 a_ref 创建一个可变的、拥有的副本
+                let mut result = a_ref.clone();
                 result.user_agent = b_ref.user_agent.clone().or(result.user_agent);
                 result.with_proxy = b_ref.with_proxy.or(result.with_proxy);
                 result.self_proxy = b_ref.self_proxy.or(result.self_proxy);
