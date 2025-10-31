@@ -124,6 +124,14 @@
         "resume": "Lanjut",
         "closeAll": "Tutup Semua"
       }
+    },
+    "settings": {
+      "title": "Pengaturan",
+      "actions": {
+        "manual": "Manual",
+        "telegram": "Saluran Telegram",
+        "github": "Repositori Github"
+      }
     }
   },
   "Label-Home": "Home",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "Kecepatan Unggah",
         "downloadSpeed": "Kecepatan Unduh"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "Pengaturan Sistem",
+        "toggles": {
+          "tunMode": "Mode Tun (NIC Virtual)",
+          "systemProxy": "Proksi Sistem"
+        },
+        "labels": {
+          "autoLaunch": "Peluncuran Otomatis",
+          "silentStart": "Mulai Senyap"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "Mulai program dalam mode latar belakang tanpa menampilkan panel"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "Proksi Sistem",
+          "tunMode": "Mode Tun (NIC Virtual)"
+        },
+        "tooltips": {
+          "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
+          "tunMode": "Mode Tun (NIC Virtual): Menangkap semua lalu lintas sistem, saat diaktifkan, tidak perlu mengaktifkan proksi sistem.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        },
+        "actions": {
+          "installService": "Instal Layanan",
+          "uninstallService": "Uninstall Service"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Pengaturan Dasar Verge",
+          "items": {
+            "language": "Bahasa",
+            "themeMode": "Mode Tema",
+            "trayClickEvent": "Acara Klik Tray",
+            "copyEnvType": "Salin Jenis Env",
+            "startPage": "Halaman Mulai",
+            "startupScript": "Skrip Startup",
+            "themeSetting": "Pengaturan Tema",
+            "layoutSetting": "Pengaturan Tata Letak",
+            "misc": "Lain-lain",
+            "hotkeySetting": "Pengaturan Pintasan"
+          },
+          "actions": {
+            "browse": "Jelajahi",
+            "clear": "Bersihkan"
+          },
+          "notifications": {
+            "copySuccess": "Salin Berhasil"
+          },
+          "trayOptions": {
+            "showMainWindow": "Tampilkan Jendela Utama",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "Nonaktifkan"
+          }
+        }
       }
     }
   }

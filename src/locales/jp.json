@@ -124,6 +124,14 @@
         "resume": "再開",
         "closeAll": "すべて閉じる"
       }
+    },
+    "settings": {
+      "title": "設定",
+      "actions": {
+        "manual": "マニュアル",
+        "telegram": "Telegramチャンネル",
+        "github": "GitHubリポジトリ"
+      }
     }
   },
   "Label-Home": "ホーム",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "アップロード速度",
         "downloadSpeed": "ダウンロード速度"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "システム設定",
+        "toggles": {
+          "tunMode": "仮想ネットワークカードモード",
+          "systemProxy": "システムプロキシ"
+        },
+        "labels": {
+          "autoLaunch": "起動時に自動起動",
+          "silentStart": "サイレント起動"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。",
+          "silentStart": "アプリケーションを起動すると、バックグラウンドモードで実行され、アプリケーションパネルは表示されません。"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "システムプロキシ",
+          "tunMode": "仮想ネットワークカードモード"
+        },
+        "tooltips": {
+          "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
+          "tunMode": "TUN（仮想ネットワークカード）モードはシステムのすべてのトラフィックを制御します。有効にすると、システムプロキシを開く必要はありません。",
+          "tunUnavailable": "TUNモードはサービスモードまたは管理者モードが必要です"
+        },
+        "actions": {
+          "installService": "サービスをインストール",
+          "uninstallService": "サービスのアンインストール"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge基本設定",
+          "items": {
+            "language": "言語設定",
+            "themeMode": "テーマモード",
+            "trayClickEvent": "トレイアイコンクリックイベント",
+            "copyEnvType": "環境変数タイプをコピー",
+            "startPage": "起動ページ",
+            "startupScript": "起動スクリプト",
+            "themeSetting": "テーマ設定",
+            "layoutSetting": "レイアウト設定",
+            "misc": "その他の設定",
+            "hotkeySetting": "ホットキー設定"
+          },
+          "actions": {
+            "browse": "参照",
+            "clear": "クリア"
+          },
+          "notifications": {
+            "copySuccess": "コピー成功"
+          },
+          "trayOptions": {
+            "showMainWindow": "メインウィンドウを表示",
+            "showTrayMenu": "トレイメニューを表示",
+            "disable": "無効にする"
+          }
+        }
       }
     }
   }

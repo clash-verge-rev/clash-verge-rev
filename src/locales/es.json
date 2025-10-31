@@ -124,6 +124,14 @@
         "resume": "Reanudar",
         "closeAll": "Cerrar todas"
       }
+    },
+    "settings": {
+      "title": "Ajustes",
+      "actions": {
+        "manual": "Manual de uso",
+        "telegram": "Canal de Telegram",
+        "github": "Dirección del proyecto en GitHub"
+      }
     }
   },
   "Label-Home": "Hogar",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "Velocidad de subida",
         "downloadSpeed": "Velocidad de descarga"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "Ajustes del sistema",
+        "toggles": {
+          "tunMode": "Modo de interfaz virtual (TUN)",
+          "systemProxy": "Proxy del sistema"
+        },
+        "labels": {
+          "autoLaunch": "Inicio automático al arrancar el sistema",
+          "silentStart": "Inicio silencioso"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático.",
+          "silentStart": "El programa se ejecutará en segundo plano al iniciarse y no mostrará el panel."
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "Proxy del sistema",
+          "tunMode": "Modo de interfaz virtual (TUN)"
+        },
+        "tooltips": {
+          "systemProxy": "Modifica la configuración del proxy del sistema operativo. Si no se puede habilitar, puede modificar manualmente la configuración del proxy del sistema operativo.",
+          "tunMode": "El modo TUN (interfaz virtual) gestiona todo el tráfico del sistema. No es necesario habilitar el proxy del sistema cuando está activado.",
+          "tunUnavailable": "El modo TUN requiere el modo de servicio o el modo de administrador"
+        },
+        "actions": {
+          "installService": "Instalar servicio",
+          "uninstallService": "Desinstalar servicio"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Ajustes básicos de Verge",
+          "items": {
+            "language": "Configuración de idioma",
+            "themeMode": "Modo de tema",
+            "trayClickEvent": "Evento de clic en el icono de la bandeja",
+            "copyEnvType": "Copiar tipo de variable de entorno",
+            "startPage": "Página de inicio",
+            "startupScript": "Script de inicio",
+            "themeSetting": "Configuración de tema",
+            "layoutSetting": "Configuración de la interfaz",
+            "misc": "Ajustes varios",
+            "hotkeySetting": "Configuración de atajos de teclado"
+          },
+          "actions": {
+            "browse": "Examinar",
+            "clear": "Limpiar"
+          },
+          "notifications": {
+            "copySuccess": "Copia exitosa"
+          },
+          "trayOptions": {
+            "showMainWindow": "Mostrar ventana principal",
+            "showTrayMenu": "Mostrar menú de la bandeja",
+            "disable": "Deshabilitar"
+          }
+        }
       }
     }
   }

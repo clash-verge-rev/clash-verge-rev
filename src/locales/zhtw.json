@@ -124,6 +124,14 @@
         "resume": "繼續",
         "closeAll": "關閉全部"
       }
+    },
+    "settings": {
+      "title": "設定",
+      "actions": {
+        "manual": "使用手冊",
+        "telegram": "Telegram 頻道",
+        "github": "GitHub 專案位址"
+      }
     }
   },
   "Label-Home": "首 頁",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "上傳速度",
         "downloadSpeed": "下載速度"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "系統設定",
+        "toggles": {
+          "tunMode": "虛擬網路介面卡模式",
+          "systemProxy": "系統代理"
+        },
+        "labels": {
+          "autoLaunch": "開機自啟",
+          "silentStart": "靜默啟動"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理員模式可能不支援開機自啟",
+          "silentStart": "程序啟動時以後台模式執行，不顯示程序面板"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "系統代理",
+          "tunMode": "虛擬網路介面卡模式"
+        },
+        "tooltips": {
+          "systemProxy": "修改作業系統的代理設定，如果開啟失敗，可手動修改作業系統的代理設定",
+          "tunMode": "TUN（虛擬網路介面卡）模式接管系統所有流量，啟用時無需開啟系統代理",
+          "tunUnavailable": "虛擬網路介面卡模式需要安裝服務模式或以系統管理員身分執行"
+        },
+        "actions": {
+          "installService": "安裝服務",
+          "uninstallService": "解除安裝服務"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge 基礎設定",
+          "items": {
+            "language": "語言設定",
+            "themeMode": "主題模式",
+            "trayClickEvent": "系統匣點擊事件",
+            "copyEnvType": "複製環境變數類型",
+            "startPage": "啟動頁面",
+            "startupScript": "啟動指令碼",
+            "themeSetting": "主題設定",
+            "layoutSetting": "介面設定",
+            "misc": "雜項設定",
+            "hotkeySetting": "快速鍵設定"
+          },
+          "actions": {
+            "browse": "瀏覽",
+            "clear": "清除"
+          },
+          "notifications": {
+            "copySuccess": "複製成功"
+          },
+          "trayOptions": {
+            "showMainWindow": "顯示主視窗",
+            "showTrayMenu": "顯示系統匣選單",
+            "disable": "停用"
+          }
+        }
       }
     }
   }

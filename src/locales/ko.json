@@ -124,6 +124,14 @@
         "resume": "재개",
         "closeAll": "모두 닫기"
       }
+    },
+    "settings": {
+      "title": "설정",
+      "actions": {
+        "manual": "Manual",
+        "telegram": "Telegram Channel",
+        "github": "Github Repo"
+      }
     }
   },
   "Label-Home": "홈",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "업로드 속도",
         "downloadSpeed": "다운로드 속도"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "시스템 설정",
+        "toggles": {
+          "tunMode": "Tun 모드",
+          "systemProxy": "시스템 프록시"
+        },
+        "labels": {
+          "autoLaunch": "Auto Launch",
+          "silentStart": "자동 시작"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "Start the program in background mode without displaying the panel"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "시스템 프록시",
+          "tunMode": "Tun 모드"
+        },
+        "tooltips": {
+          "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
+          "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        },
+        "actions": {
+          "installService": "Install Service",
+          "uninstallService": "Uninstall Service"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge 기본 설정",
+          "items": {
+            "language": "언어",
+            "themeMode": "테마 모드",
+            "trayClickEvent": "트레이 클릭 이벤트",
+            "copyEnvType": "환경 유형 복사",
+            "startPage": "시작 페이지",
+            "startupScript": "시작 스크립트",
+            "themeSetting": "Theme Setting",
+            "layoutSetting": "레이아웃 설정",
+            "misc": "Miscellaneous",
+            "hotkeySetting": "단축키 설정"
+          },
+          "actions": {
+            "browse": "Browse",
+            "clear": "지우기"
+          },
+          "notifications": {
+            "copySuccess": "복사 성공"
+          },
+          "trayOptions": {
+            "showMainWindow": "메인 창 표시",
+            "showTrayMenu": "트레이 메뉴 표시",
+            "disable": "비활성화"
+          }
+        }
       }
     }
   }

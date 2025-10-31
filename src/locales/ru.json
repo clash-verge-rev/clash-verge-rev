@@ -124,6 +124,14 @@
         "resume": "Возобновить",
         "closeAll": "Закрыть всё"
       }
+    },
+    "settings": {
+      "title": "Настройки",
+      "actions": {
+        "manual": "Документация",
+        "telegram": "Telegram-канал",
+        "github": "GitHub репозиторий"
+      }
     }
   },
   "Label-Home": "Главная",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "Скорость загрузки",
         "downloadSpeed": "Скорость скачивания"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "Настройки системы",
+        "toggles": {
+          "tunMode": "Режим TUN",
+          "systemProxy": "Системный прокси"
+        },
+        "labels": {
+          "autoLaunch": "Автозапуск",
+          "silentStart": "Тихий запуск"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "Запускать программу в фоновом режиме без отображения панели"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "Системный прокси",
+          "tunMode": "Режим TUN"
+        },
+        "tooltips": {
+          "systemProxy": "Разрешить изменение настроек прокси-сервера операционной системы. Если разрешение не удастся, измените настройки прокси-сервера операционной системы вручную",
+          "tunMode": "Режим Tun: захватывает весь системный трафик, при включении нет необходимости включать системный прокси-сервер.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        },
+        "actions": {
+          "installService": "Установить службу",
+          "uninstallService": "Uninstall Service"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Основные настройки Verge",
+          "items": {
+            "language": "Язык",
+            "themeMode": "Цветовая тема",
+            "trayClickEvent": "Событие при щелчке по иконке в трее",
+            "copyEnvType": "Скопировать тип Env",
+            "startPage": "Главная страница",
+            "startupScript": "Скрипт запуска",
+            "themeSetting": "Настройки темы",
+            "layoutSetting": "Настройки раскладки",
+            "misc": "Расширенные настройки",
+            "hotkeySetting": "Настройки сочетаний клавиш"
+          },
+          "actions": {
+            "browse": "Просмотреть",
+            "clear": "Очистить"
+          },
+          "notifications": {
+            "copySuccess": "Скопировано"
+          },
+          "trayOptions": {
+            "showMainWindow": "Показать главное окно",
+            "showTrayMenu": "Показать меню в трее",
+            "disable": "Отключить"
+          }
+        }
       }
     }
   }

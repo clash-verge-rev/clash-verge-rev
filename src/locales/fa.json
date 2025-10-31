@@ -124,6 +124,14 @@
         "resume": "از سرگیری",
         "closeAll": "بستن همه"
       }
+    },
+    "settings": {
+      "title": "تنظیمات",
+      "actions": {
+        "manual": "راهنما",
+        "telegram": "کانال تلگرام",
+        "github": "مخزن GitHub"
+      }
     }
   },
   "Label-Home": "Home",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "سرعت بارگذاری",
         "downloadSpeed": "سرعت دانلود"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "تنظیمات سیستم",
+        "toggles": {
+          "tunMode": "Tun (کارت شبکه مجازی)",
+          "systemProxy": "پراکسی سیستم"
+        },
+        "labels": {
+          "autoLaunch": "راه‌اندازی خودکار",
+          "silentStart": "شروع بی‌صدا"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "برنامه را در حالت پس‌زمینه بدون نمایش پانل اجرا کنید"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "پراکسی سیستم",
+          "tunMode": "Tun (کارت شبکه مجازی)"
+        },
+        "tooltips": {
+          "systemProxy": "به امکانات تنظیم پروکسی سیستم عامل دسترسی پیدا کنید. اگر فعال‌سازی ناموفق بود، پروکسی سیستم عامل را به‌صورت دستی تغییر دهید",
+          "tunMode": "حالت Tun (NIC مجازی): تمام ترافیک سیستم را ضبط می کند، وقتی فعال باشد، نیازی به فعال کردن پروکسی سیستم نیست.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        },
+        "actions": {
+          "installService": "نصب سرویس",
+          "uninstallService": "Uninstall Service"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "تنظیمات پایه Verge",
+          "items": {
+            "language": "زبان",
+            "themeMode": "حالت تم",
+            "trayClickEvent": "رویداد کلیک در سینی سیستم",
+            "copyEnvType": "کپی نوع محیط",
+            "startPage": "صفحه شروع",
+            "startupScript": "اسکریپت راه‌اندازی",
+            "themeSetting": "تنظیمات تم",
+            "layoutSetting": "تنظیمات چیدمان",
+            "misc": "متفرقه",
+            "hotkeySetting": "تنظیمات کلیدهای میانبر"
+          },
+          "actions": {
+            "browse": "مرور کردن",
+            "clear": "پاک کردن"
+          },
+          "notifications": {
+            "copySuccess": "کپی با موفقیت انجام شد"
+          },
+          "trayOptions": {
+            "showMainWindow": "نمایش پنجره اصلی",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "غیرفعال کردن"
+          }
+        }
       }
     }
   }

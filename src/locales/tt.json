@@ -124,6 +124,14 @@
         "resume": "Дәвам",
         "closeAll": "Барысын да ябу"
       }
+    },
+    "settings": {
+      "title": "Көйләүләр",
+      "actions": {
+        "manual": "Документация",
+        "telegram": "Telegram каналы",
+        "github": "GitHub репозиториясе"
+      }
     }
   },
   "Label-Home": "Home",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "Йөкләү (чыгару) тизлеге",
         "downloadSpeed": "Йөкләү тизлеге"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "Система көйләүләре",
+        "toggles": {
+          "tunMode": "Tun режимы (виртуаль челтәр адаптеры)",
+          "systemProxy": "Системалы прокси"
+        },
+        "labels": {
+          "autoLaunch": "Автостарт",
+          "silentStart": "Фон режимында башлау"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "Программаны фоновый режимда, тәрәзәсез эшләтеп җибәрү"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "Системалы прокси",
+          "tunMode": "Tun режимы (виртуаль челтәр адаптеры)"
+        },
+        "tooltips": {
+          "systemProxy": "Системалы прокси көйләүләрен үзгәртү рөхсәтен бирегез. Әгәр рөхсәт алу мөмкин түгел икән, прокси көйләүләрен кулдан үзгәртегез",
+          "tunMode": "Tun режимы бөтен системаның трафигын тотып ала. Аны кабызган очракта системалы проксины аерым кабызу таләп ителми.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        },
+        "actions": {
+          "installService": "Хезмәтне урнаштыру",
+          "uninstallService": "Uninstall Service"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge Төп көйләүләр",
+          "items": {
+            "language": "Тел",
+            "themeMode": "Теманың режимы",
+            "trayClickEvent": "Трейдагы басу вакыйгасы",
+            "copyEnvType": "Env төрен күчереп алу",
+            "startPage": "Баш бит",
+            "startupScript": "Башлану скрипты",
+            "themeSetting": "Тема көйләүләре",
+            "layoutSetting": "Расположение көйләүләре",
+            "misc": "Өстәмә көйләүләр",
+            "hotkeySetting": "Клавиатура төймәләре (hotkey) көйләүләре"
+          },
+          "actions": {
+            "browse": "Карау",
+            "clear": "Чистарту"
+          },
+          "notifications": {
+            "copySuccess": "Күчерелде"
+          },
+          "trayOptions": {
+            "showMainWindow": "Төп тәрәзәне күрсәтү",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "Сүндерү"
+          }
+        }
       }
     }
   }

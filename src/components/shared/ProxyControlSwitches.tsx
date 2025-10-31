@@ -132,9 +132,9 @@ const ProxyControlSwitches = ({
 
   const handleTunToggle = async (value: boolean) => {
     if (!isTunModeAvailable) {
-      const msg = "TUN requires Service Mode or Admin Mode";
-      showErrorNotice(msg);
-      throw new Error(t(msg));
+      const msgKey = "components.settings.proxyControl.tooltips.tunUnavailable";
+      showErrorNotice(msgKey);
+      throw new Error(t(msgKey));
     }
     mutateVerge({ ...verge, enable_tun_mode: value }, false);
     await patchVerge({ enable_tun_mode: value });
@@ -161,16 +161,17 @@ const ProxyControlSwitches = ({
     }
   });
 
-  const isSystemProxyMode = label === t("System Proxy") || !label;
-  const isTunMode = label === t("Tun Mode");
+  const isSystemProxyMode =
+    label === t("components.settings.system.toggles.systemProxy") || !label;
+  const isTunMode = label === t("components.settings.system.toggles.tunMode");
 
   return (
     <Box sx={{ width: "100%", pr: noRightPadding ? 1 : 2 }}>
       {isSystemProxyMode && (
         <SwitchRow
-          label={t("System Proxy")}
+          label={t("components.settings.proxyControl.labels.systemProxy")}
           active={systemProxyActualState}
-          infoTitle={t("System Proxy Info")}
+          infoTitle={t("components.settings.proxyControl.tooltips.systemProxy")}
           onInfoClick={() => sysproxyRef.current?.open()}
           onToggle={(value) => toggleSystemProxy(value)}
           onError={onError}
@@ -180,9 +181,9 @@ const ProxyControlSwitches = ({
 
       {isTunMode && (
         <SwitchRow
-          label={t("Tun Mode")}
+          label={t("components.settings.proxyControl.labels.tunMode")}
           active={enable_tun_mode || false}
-          infoTitle={t("Tun Mode Info")}
+          infoTitle={t("components.settings.proxyControl.tooltips.tunMode")}
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
@@ -193,12 +194,16 @@ const ProxyControlSwitches = ({
               {!isTunModeAvailable && (
                 <>
                   <TooltipIcon
-                    title={t("TUN requires Service Mode or Admin Mode")}
+                    title={t(
+                      "components.settings.proxyControl.tooltips.tunUnavailable",
+                    )}
                     icon={WarningRounded}
                     sx={{ color: "warning.main", ml: 1 }}
                   />
                   <TooltipIcon
-                    title={t("Install Service")}
+                    title={t(
+                      "components.settings.proxyControl.actions.installService",
+                    )}
                     icon={BuildRounded}
                     color="primary"
                     onClick={onInstallService}
@@ -208,7 +213,9 @@ const ProxyControlSwitches = ({
               )}
               {isServiceOk && (
                 <TooltipIcon
-                  title={t("Uninstall Service")}
+                  title={t(
+                    "components.settings.proxyControl.actions.uninstallService",
+                  )}
                   icon={DeleteForeverRounded}
                   color="secondary"
                   onClick={onUninstallService}

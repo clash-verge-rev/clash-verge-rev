@@ -124,6 +124,14 @@
         "resume": "继续",
         "closeAll": "关闭全部"
       }
+    },
+    "settings": {
+      "title": "设置",
+      "actions": {
+        "manual": "使用手册",
+        "telegram": "Telegram 频道",
+        "github": "GitHub 项目地址"
+      }
     }
   },
   "Label-Home": "首 页",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "上传速度",
         "downloadSpeed": "下载速度"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "系统设置",
+        "toggles": {
+          "tunMode": "虚拟网卡模式",
+          "systemProxy": "系统代理"
+        },
+        "labels": {
+          "autoLaunch": "开机自启",
+          "silentStart": "静默启动"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理员模式可能不支持开机自启",
+          "silentStart": "程序启动时以后台模式运行，不显示程序面板"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "系统代理",
+          "tunMode": "虚拟网卡模式"
+        },
+        "tooltips": {
+          "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
+          "tunMode": "TUN（虚拟网卡）模式接管系统所有流量，启用时无须打开系统代理",
+          "tunUnavailable": "TUN 模式需要安装服务模式或管理员模式"
+        },
+        "actions": {
+          "installService": "安装服务",
+          "uninstallService": "卸载服务"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge 基础设置",
+          "items": {
+            "language": "语言设置",
+            "themeMode": "主题模式",
+            "trayClickEvent": "托盘点击事件",
+            "copyEnvType": "复制环境变量类型",
+            "startPage": "启动页面",
+            "startupScript": "启动脚本",
+            "themeSetting": "主题设置",
+            "layoutSetting": "界面设置",
+            "misc": "杂项设置",
+            "hotkeySetting": "热键设置"
+          },
+          "actions": {
+            "browse": "浏览",
+            "clear": "清除"
+          },
+          "notifications": {
+            "copySuccess": "复制成功"
+          },
+          "trayOptions": {
+            "showMainWindow": "显示主窗口",
+            "showTrayMenu": "显示托盘菜单",
+            "disable": "禁用"
+          }
+        }
       }
     }
   }

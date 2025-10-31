@@ -124,6 +124,14 @@
         "resume": "Sürdür",
         "closeAll": "Tümünü Kapat"
       }
+    },
+    "settings": {
+      "title": "Ayarlar",
+      "actions": {
+        "manual": "Kılavuz",
+        "telegram": "Telegram Kanalı",
+        "github": "Github Repo"
+      }
     }
   },
   "Label-Home": "Ana Sayfa",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "Yükleme Hızı",
         "downloadSpeed": "İndirme Hızı"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "Sistem Ayarları",
+        "toggles": {
+          "tunMode": "Tun Modu",
+          "systemProxy": "Sistem Vekil'i"
+        },
+        "labels": {
+          "autoLaunch": "Otomatik Başlatma",
+          "silentStart": "Sessiz Başlatma"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir",
+          "silentStart": "Programı paneli görüntülemeden arka plan modunda başlatır"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "Sistem Vekil'i",
+          "tunMode": "Tun Modu"
+        },
+        "tooltips": {
+          "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
+          "tunMode": "Tun (Sanal Ağ Kartı) modu: Tüm sistem trafiğini yakalar, etkinleştirildiğinde sistem vekil'ini etkinleştirmeye gerek yoktur.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        },
+        "actions": {
+          "installService": "Hizmeti Kur",
+          "uninstallService": "Uninstall Service"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge Temel Ayarı",
+          "items": {
+            "language": "Dil",
+            "themeMode": "Tema Modu",
+            "trayClickEvent": "Sistem Tepsisi Tıklama Olayı",
+            "copyEnvType": "Env Tipini Kopyala",
+            "startPage": "Başlangıç Sayfası",
+            "startupScript": "Başlangıç Betiği",
+            "themeSetting": "Tema Ayarı",
+            "layoutSetting": "Düzen Ayarı",
+            "misc": "Çeşitli",
+            "hotkeySetting": "Kısayol Tuşu Ayarı"
+          },
+          "actions": {
+            "browse": "Gözat",
+            "clear": "Temizle"
+          },
+          "notifications": {
+            "copySuccess": "Kopyalama Başarılı"
+          },
+          "trayOptions": {
+            "showMainWindow": "Ana Pencereyi Göster",
+            "showTrayMenu": "Tepsi Menüsünü Göster",
+            "disable": "Devre Dışı Bırak"
+          }
+        }
       }
     }
   }

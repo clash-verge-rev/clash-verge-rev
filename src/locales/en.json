@@ -124,6 +124,14 @@
         "resume": "Resume",
         "closeAll": "Close All"
       }
+    },
+    "settings": {
+      "title": "Settings",
+      "actions": {
+        "manual": "Manual",
+        "telegram": "Telegram Channel",
+        "github": "Github Repo"
+      }
     }
   },
   "Label-Home": "Home",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "Upload Speed",
         "downloadSpeed": "Download Speed"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "System Setting",
+        "toggles": {
+          "tunMode": "Tun Mode",
+          "systemProxy": "System Proxy"
+        },
+        "labels": {
+          "autoLaunch": "Auto Launch",
+          "silentStart": "Silent Start"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "Start the program in background mode without displaying the panel"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "System Proxy",
+          "tunMode": "Tun Mode"
+        },
+        "tooltips": {
+          "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
+          "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        },
+        "actions": {
+          "installService": "Install Service",
+          "uninstallService": "Uninstall Service"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge Basic Setting",
+          "items": {
+            "language": "Language",
+            "themeMode": "Theme Mode",
+            "trayClickEvent": "Tray Click Event",
+            "copyEnvType": "Copy Env Type",
+            "startPage": "Start Page",
+            "startupScript": "Startup Script",
+            "themeSetting": "Theme Setting",
+            "layoutSetting": "Layout Setting",
+            "misc": "Miscellaneous",
+            "hotkeySetting": "Hotkey Setting"
+          },
+          "actions": {
+            "browse": "Browse",
+            "clear": "Clear"
+          },
+          "notifications": {
+            "copySuccess": "Copy Success"
+          },
+          "trayOptions": {
+            "showMainWindow": "Show Main Window",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "Disable"
+          }
+        }
       }
     }
   }

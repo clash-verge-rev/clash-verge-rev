@@ -124,6 +124,14 @@
         "resume": "Fortsetzen",
         "closeAll": "Alle schließen"
       }
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "actions": {
+        "manual": "Bedienungsanleitung",
+        "telegram": "Telegram-Kanal",
+        "github": "GitHub-Projektadresse"
+      }
     }
   },
   "Label-Home": "Startseite",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "Upload-Geschwindigkeit",
         "downloadSpeed": "Download-Geschwindigkeit"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "Systemeinstellungen",
+        "toggles": {
+          "tunMode": "Virtual Network Interface-Modus",
+          "systemProxy": "Systemproxy"
+        },
+        "labels": {
+          "autoLaunch": "Beim Start automatisch starten",
+          "silentStart": "Stillstart"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion.",
+          "silentStart": "Die Anwendung wird im Hintergrund gestartet, ohne dass das Programmfenster angezeigt wird."
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "Systemproxy",
+          "tunMode": "Virtual Network Interface-Modus"
+        },
+        "tooltips": {
+          "systemProxy": "Ändern Sie die Proxy-Einstellungen des Betriebssystems. Wenn die Aktivierung fehlschlägt, können Sie die Proxy-Einstellungen des Betriebssystems manuell ändern.",
+          "tunMode": "Der TUN-Modus (Virtual Network Interface) übernimmt den gesamten Systemverkehr. Wenn dieser Modus aktiviert ist, muss der Systemproxy nicht geöffnet werden.",
+          "tunUnavailable": "TUN-Modus erfordert Service-Modus oder Administrator-Modus"
+        },
+        "actions": {
+          "installService": "Service installieren",
+          "uninstallService": "Dienst deinstallieren"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge-Grundeinstellungen",
+          "items": {
+            "language": "Spracheinstellungen",
+            "themeMode": "Thema",
+            "trayClickEvent": "Tray-Klickereignis",
+            "copyEnvType": "Umgebungsvariablentyp kopieren",
+            "startPage": "Startseite",
+            "startupScript": "Startskript",
+            "themeSetting": "Thema-Einstellungen",
+            "layoutSetting": "Layout-Einstellungen",
+            "misc": "Sonstige Einstellungen",
+            "hotkeySetting": "Tastenkombinationseinstellungen"
+          },
+          "actions": {
+            "browse": "Durchsuchen",
+            "clear": "Löschen"
+          },
+          "notifications": {
+            "copySuccess": "Kopieren erfolgreich"
+          },
+          "trayOptions": {
+            "showMainWindow": "Hauptfenster anzeigen",
+            "showTrayMenu": "Tray-Menü anzeigen",
+            "disable": "Deaktivieren"
+          }
+        }
       }
     }
   }

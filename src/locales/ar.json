@@ -124,6 +124,14 @@
         "resume": "استأنف",
         "closeAll": "إغلاق الكل"
       }
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "actions": {
+        "manual": "دليل",
+        "telegram": "قناة تيليجرام",
+        "github": "مستودع Github"
+      }
     }
   },
   "Label-Home": "Home",
@@ -909,6 +917,67 @@
         "default": "Default",
         "uploadSpeed": "سرعة الرفع",
         "downloadSpeed": "سرعة التنزيل"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "إعدادات النظام",
+        "toggles": {
+          "tunMode": "وضع TUN",
+          "systemProxy": "وكيل النظام"
+        },
+        "labels": {
+          "autoLaunch": "إطلاق تلقائي",
+          "silentStart": "بدء صامت"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "بدء البرنامج في الخلفية دون عرض الواجهة"
+        }
+      },
+      "proxyControl": {
+        "labels": {
+          "systemProxy": "وكيل النظام",
+          "tunMode": "وضع TUN"
+        },
+        "tooltips": {
+          "systemProxy": "عند التمكين، سيتم تعديل إعدادات الوكيل في نظام التشغيل. إذا فشل التمكين، فقم بتعديل إعدادات الوكيل في النظام يدويًا.",
+          "tunMode": "وضع TUN (بطاقة شبكة افتراضية): يلتقط كل حركة المرور في النظام. عند تمكينه، لا حاجة لتفعيل وكيل النظام.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        },
+        "actions": {
+          "installService": "تثبيت الخدمة ",
+          "uninstallService": "Uninstall Service"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "الإعدادات الأساسية  Verge",
+          "items": {
+            "language": "اللغة",
+            "themeMode": "وضع السمة",
+            "trayClickEvent": "حدث النقر على الأيقونة في شريط المهام",
+            "copyEnvType": "نسخ نوع البيئة",
+            "startPage": "صفحة البدء",
+            "startupScript": "سكريبت بدء التشغيل",
+            "themeSetting": "إعدادات السمة",
+            "layoutSetting": "إعدادات التخطيط",
+            "misc": "متفرقات",
+            "hotkeySetting": "إعدادات الاختصارات"
+          },
+          "actions": {
+            "browse": "استعراض",
+            "clear": "مسح"
+          },
+          "notifications": {
+            "copySuccess": "تم النسخ بنجاح"
+          },
+          "trayOptions": {
+            "showMainWindow": "إظهار النافذة الرئيسية",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "تعطيل"
+          }
+        }
       }
     }
   }
