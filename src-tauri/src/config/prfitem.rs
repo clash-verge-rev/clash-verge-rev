@@ -121,26 +121,29 @@ pub struct PrfOption {
 }
 
 impl PrfOption {
-    pub fn merge(one: Option<Self>, other: Option<Self>) -> Option<Self> {
+    pub fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
         match (one, other) {
-            (Some(mut a), Some(b)) => {
-                a.user_agent = b.user_agent.or(a.user_agent);
-                a.with_proxy = b.with_proxy.or(a.with_proxy);
-                a.self_proxy = b.self_proxy.or(a.self_proxy);
-                a.danger_accept_invalid_certs = b
+            (Some(a_ref), Some(b_ref)) => {
+                let mut result = a_ref.clone(); // 从 a_ref 创建一个可变的、拥有的副本
+                result.user_agent = b_ref.user_agent.clone().or(result.user_agent);
+                result.with_proxy = b_ref.with_proxy.or(result.with_proxy);
+                result.self_proxy = b_ref.self_proxy.or(result.self_proxy);
+                result.danger_accept_invalid_certs = b_ref
                     .danger_accept_invalid_certs
-                    .or(a.danger_accept_invalid_certs);
-                a.allow_auto_update = b.allow_auto_update.or(a.allow_auto_update);
-                a.update_interval = b.update_interval.or(a.update_interval);
-                a.merge = b.merge.or(a.merge);
-                a.script = b.script.or(a.script);
-                a.rules = b.rules.or(a.rules);
-                a.proxies = b.proxies.or(a.proxies);
-                a.groups = b.groups.or(a.groups);
-                a.timeout_seconds = b.timeout_seconds.or(a.timeout_seconds);
-                Some(a)
+                    .or(result.danger_accept_invalid_certs);
+                result.allow_auto_update = b_ref.allow_auto_update.or(result.allow_auto_update);
+                result.update_interval = b_ref.update_interval.or(result.update_interval);
+                result.merge = b_ref.merge.clone().or(result.merge);
+                result.script = b_ref.script.clone().or(result.script);
+                result.rules = b_ref.rules.clone().or(result.rules);
+                result.proxies = b_ref.proxies.clone().or(result.proxies);
+                result.groups = b_ref.groups.clone().or(result.groups);
+                result.timeout_seconds = b_ref.timeout_seconds.or(result.timeout_seconds);
+                Some(result)
             }
-            t => t.0.or(t.1),
+            (Some(a_ref), None) => Some(a_ref.clone()),
+            (None, Some(b_ref)) => Some(b_ref.clone()),
+            (None, None) => None,
         }
     }
 }

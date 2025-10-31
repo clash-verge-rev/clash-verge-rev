@@ -247,7 +247,7 @@ impl IProfiles {
                     each.extra = item.extra;
                     each.updated = item.updated;
                     each.home = item.home;
-                    each.option = PrfOption::merge(each.option.clone(), item.option);
+                    each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
                     // save the file data
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {

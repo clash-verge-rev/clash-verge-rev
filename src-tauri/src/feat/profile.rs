@@ -23,10 +23,10 @@ pub async fn toggle_proxy_profile(profile_index: String) {
     }
 }
 
-async fn should_update_profile(uid: String) -> Result<Option<(String, Option<PrfOption>)>> {
+async fn should_update_profile(uid: &String) -> Result<Option<(String, Option<PrfOption>)>> {
     let profiles = Config::profiles().await;
     let profiles = profiles.latest_ref();
-    let item = profiles.get_item(&uid)?;
+    let item = profiles.get_item(uid)?;
     let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
     if !is_remote {
@@ -59,15 +59,15 @@ async fn should_update_profile(uid: String) -> Result<Option<(String, Option<Prf
 }
 
 async fn perform_profile_update(
-    uid: String,
-    url: String,
-    opt: Option<PrfOption>,
-    option: Option<PrfOption>,
+    uid: &String,
+    url: &String,
+    opt: Option<&PrfOption>,
+    option: Option<&PrfOption>,
 ) -> Result<bool> {
     log::info!(target: "app", "[订阅更新] 开始下载新的订阅内容");
-    let merged_opt = PrfOption::merge(opt.clone(), option.clone());
+    let merged_opt = PrfOption::merge(opt, option);
 
-    match PrfItem::from_url(&url, None, None, merged_opt.clone()).await {
+    match PrfItem::from_url(url, None, None, merged_opt.clone()).await {
         Ok(item) => {
             log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
             let profiles = Config::profiles().await;
@@ -87,7 +87,7 @@ async fn perform_profile_update(
             fallback_opt.with_proxy = Some(false);
             fallback_opt.self_proxy = Some(true);
 
-            match PrfItem::from_url(&url, None, None, Some(fallback_opt)).await {
+            match PrfItem::from_url(url, None, None, Some(fallback_opt)).await {
                 Ok(mut item) => {
                     log::info!(target: "app", "[订阅更新] 使用Clash代理更新成功");
 
@@ -120,18 +120,16 @@ async fn perform_profile_update(
 }
 
 pub async fn update_profile(
-    uid: String,
-    option: Option<PrfOption>,
-    auto_refresh: Option<bool>,
+    uid: &String,
+    option: Option<&PrfOption>,
+    auto_refresh: bool,
 ) -> Result<()> {
     logging!(info, Type::Config, "[订阅更新] 开始更新订阅 {}", uid);
-    let auto_refresh = auto_refresh.unwrap_or(true);
-
-    let url_opt = should_update_profile(uid.clone()).await?;
+    let url_opt = should_update_profile(uid).await?;
 
     let should_refresh = match url_opt {
         Some((url, opt)) => {
-            perform_profile_update(uid.clone(), url, opt, option).await? && auto_refresh
+            perform_profile_update(uid, &url, opt.as_ref(), option).await? && auto_refresh
         }
         None => auto_refresh,
     };
