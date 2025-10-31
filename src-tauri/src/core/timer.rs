@@ -419,13 +419,15 @@ impl Timer {
         };
 
         // Get the profile updated timestamp - now safe to await
-        let config_profiles = Config::profiles().await;
-        let profiles = config_profiles.data_ref().clone();
-        let items = match profiles.get_items() {
-            Some(i) => i,
-            None => {
-                logging!(warn, Type::Timer, "获取配置列表失败");
-                return None;
+        let items = {
+            let profiles = Config::profiles().await;
+            let profiles_guard = profiles.latest_ref();
+            match profiles_guard.get_items() {
+                Some(i) => i.clone(),
+                None => {
+                    logging!(warn, Type::Timer, "获取配置列表失败");
+                    return None;
+                }
             }
         };
 

@@ -102,7 +102,7 @@ async fn perform_profile_update(
                     let profile_name = item.name.clone().unwrap_or_else(|| uid.clone());
                     handle::Handle::notice_message("update_with_clash_proxy", profile_name);
 
-                    let is_current = Some(uid.clone()) == profiles.data_ref().get_current();
+                    let is_current = Some(uid.clone()) == profiles.latest_ref().get_current();
                     log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
                     Ok(is_current)
                 }

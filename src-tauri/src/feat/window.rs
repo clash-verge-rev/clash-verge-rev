@@ -47,7 +47,7 @@ pub async fn clean_async() -> bool {
     let tun_task = async {
         let tun_enabled = Config::verge()
             .await
-            .data_ref()
+            .latest_ref()
             .enable_tun_mode
             .unwrap_or(false);
 

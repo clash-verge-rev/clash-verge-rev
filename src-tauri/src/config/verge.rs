@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::{
     config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
     logging,
@@ -304,18 +305,16 @@ impl IVerge {
 
     /// 配置修正后重新加载配置
     async fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
-        use crate::config::Config;
-
-        let config_draft = Config::verge().await;
-        *config_draft.draft_mut() = Box::new(updated_config.clone());
-        config_draft.apply();
-
         logging!(
             info,
             Type::Config,
             "内存配置已强制更新，新的clash_core: {:?}",
-            updated_config.clash_core
+            &updated_config.clash_core
         );
+
+        let config_draft = Config::verge().await;
+        **config_draft.draft_mut() = updated_config;
+        config_draft.apply();
 
         Ok(())
     }
