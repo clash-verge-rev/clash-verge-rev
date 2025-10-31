@@ -631,10 +631,15 @@ pub async fn view_profile(index: String) -> CmdResult {
 /// 读取配置文件内容
 #[tauri::command]
 pub async fn read_profile_file(index: String) -> CmdResult<String> {
-    let profiles = Config::profiles().await;
-    let profiles_ref = profiles.latest_ref();
-    let item = profiles_ref.get_item(&index).stringify_err()?;
-    let data = item.read_file().stringify_err()?;
+    let item = {
+        let profiles = Config::profiles().await;
+        let profiles_ref = profiles.latest_ref();
+        PrfItem {
+            file: profiles_ref.get_item(&index).stringify_err()?.file.clone(),
+            ..Default::default()
+        }
+    };
+    let data = item.read_file().await.stringify_err()?;
     Ok(data)
 }
 
