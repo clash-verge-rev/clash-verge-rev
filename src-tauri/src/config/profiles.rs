@@ -122,18 +122,20 @@ impl IProfiles {
     }
 
     /// find the item by the uid
-    pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
-        if let Some(items) = self.items.as_ref() {
-            let some_uid = Some(uid.clone());
+    pub fn get_item(&self, uid: impl AsRef<str>) -> Result<&PrfItem> {
+        let uid_str = uid.as_ref();
 
+        if let Some(items) = self.items.as_ref() {
             for each in items.iter() {
-                if each.uid == some_uid {
+                if let Some(uid_val) = &each.uid
+                    && uid_val.as_str() == uid_str
+                {
                     return Ok(each);
                 }
             }
         }
 
-        bail!("failed to get the profile item \"uid:{uid}\"");
+        bail!("failed to get the profile item \"uid:{}\"", uid_str);
     }
 
     /// append new item
