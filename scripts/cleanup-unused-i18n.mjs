@@ -13,6 +13,7 @@ const DEFAULT_SOURCE_DIRS = [
   path.resolve(__dirname, "../src-tauri"),
 ];
 const LOCALES_DIR = path.resolve(__dirname, "../src/locales");
+const DEFAULT_BASELINE_LANG = "en";
 const IGNORE_DIR_NAMES = new Set([
   ".git",
   ".idea",
@@ -51,11 +52,16 @@ const WHITELIST_KEYS = new Set([
   "Already Using Latest Core Version",
 ]);
 
+const MAX_PREVIEW_ENTRIES = 40;
+
 function printUsage() {
   console.log(`Usage: pnpm node scripts/cleanup-unused-i18n.mjs [options]
 
 Options:
   --apply            Write locale files with unused keys removed (default: report only)
+  --align            Align locale structure/order using the baseline locale
+  --baseline <lang>  Baseline locale file name (default: ${DEFAULT_BASELINE_LANG})
+  --keep-extra       Preserve keys that exist only in non-baseline locales when aligning
   --no-backup        Skip creating \`.bak\` backups when applying changes
   --report <path>    Write a JSON report to the given path
   --src <path>       Include an additional source directory (repeatable)
@@ -69,6 +75,9 @@ function parseArgs(argv) {
     backup: true,
     reportPath: null,
     extraSources: [],
+    align: false,
+    baseline: DEFAULT_BASELINE_LANG,
+    keepExtra: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -76,6 +85,12 @@ function parseArgs(argv) {
     switch (arg) {
       case "--apply":
         options.apply = true;
+        break;
+      case "--align":
+        options.align = true;
+        break;
+      case "--keep-extra":
+        options.keepExtra = true;
         break;
       case "--no-backup":
         options.backup = false;
@@ -86,6 +101,15 @@ function parseArgs(argv) {
           throw new Error("--report requires a file path");
         }
         options.reportPath = path.resolve(process.cwd(), next);
+        i += 1;
+        break;
+      }
+      case "--baseline": {
+        const next = argv[i + 1];
+        if (!next) {
+          throw new Error("--baseline requires a locale name (e.g. en)");
+        }
+        options.baseline = next.replace(/\.json$/, "");
         i += 1;
         break;
       }
@@ -182,6 +206,89 @@ function flattenLocale(obj, parent = "") {
   return entries;
 }
 
+function diffLocaleKeys(baselineEntries, localeEntries) {
+  const missing = [];
+  const extra = [];
+
+  for (const key of baselineEntries.keys()) {
+    if (!localeEntries.has(key)) {
+      missing.push(key);
+    }
+  }
+
+  for (const key of localeEntries.keys()) {
+    if (!baselineEntries.has(key)) {
+      extra.push(key);
+    }
+  }
+
+  missing.sort();
+  extra.sort();
+
+  return { missing, extra };
+}
+
+function alignToBaseline(baselineNode, localeNode, options) {
+  const shouldCopyLocale =
+    localeNode && typeof localeNode === "object" && !Array.isArray(localeNode);
+
+  if (
+    baselineNode &&
+    typeof baselineNode === "object" &&
+    !Array.isArray(baselineNode)
+  ) {
+    const result = {};
+    const baselineKeys = Object.keys(baselineNode);
+    for (const key of baselineKeys) {
+      const baselineValue = baselineNode[key];
+      const localeValue = shouldCopyLocale ? localeNode[key] : undefined;
+
+      if (
+        baselineValue &&
+        typeof baselineValue === "object" &&
+        !Array.isArray(baselineValue)
+      ) {
+        result[key] = alignToBaseline(
+          baselineValue,
+          localeValue && typeof localeValue === "object" ? localeValue : {},
+          options,
+        );
+      } else if (localeValue === undefined) {
+        result[key] = baselineValue;
+      } else {
+        result[key] = localeValue;
+      }
+    }
+
+    if (options.keepExtra && shouldCopyLocale) {
+      const extraKeys = Object.keys(localeNode)
+        .filter((key) => !baselineKeys.includes(key))
+        .sort();
+      for (const key of extraKeys) {
+        result[key] = localeNode[key];
+      }
+    }
+
+    return result;
+  }
+
+  return shouldCopyLocale ? localeNode : baselineNode;
+}
+
+function logPreviewEntries(label, items) {
+  if (!items || items.length === 0) return;
+
+  const preview = items.slice(0, MAX_PREVIEW_ENTRIES);
+  for (const item of preview) {
+    console.log(`    · ${label}: ${item}`);
+  }
+  if (items.length > preview.length) {
+    console.log(
+      `    · ${label}: ... and ${items.length - preview.length} more`,
+    );
+  }
+}
+
 function removeKey(target, dottedKey) {
   const parts = dottedKey.split(".");
   const last = parts.pop();
@@ -268,10 +375,19 @@ function ensureBackup(localePath) {
   return backupPath;
 }
 
-function processLocale(locale, allSourceContent, options) {
+function processLocale(
+  locale,
+  baselineData,
+  baselineEntries,
+  allSourceContent,
+  options,
+) {
   const raw = fs.readFileSync(locale.path, "utf8");
   const data = JSON.parse(raw);
   const flattened = flattenLocale(data);
+  const expectedTotal = baselineEntries.size;
+
+  const { missing, extra } = diffLocaleKeys(baselineEntries, flattened);
 
   const unused = [];
   for (const key of flattened.keys()) {
@@ -280,27 +396,34 @@ function processLocale(locale, allSourceContent, options) {
     }
   }
 
-  if (unused.length === 0) {
-    console.log(`[${locale.name}] No unused keys 🎉`);
-    return {
-      locale: locale.name,
-      file: locale.path,
-      totalKeys: flattened.size,
-      unusedKeys: [],
-      removed: [],
-    };
-  }
-
-  console.log(
-    `[${locale.name}] Found ${unused.length} unused keys (of ${flattened.size}):`,
-  );
-  for (const key of unused) {
-    console.log(`  - ${key}`);
+  if (
+    unused.length === 0 &&
+    missing.length === 0 &&
+    extra.length === 0 &&
+    !options.align
+  ) {
+    console.log(`[${locale.name}] No issues detected 🎉`);
+  } else {
+    console.log(`[${locale.name}] Check results:`);
+    console.log(
+      `  unused: ${unused.length}, missing vs baseline: ${missing.length}, extra: ${extra.length}`,
+    );
+    logPreviewEntries("unused", unused);
+    logPreviewEntries("missing", missing);
+    logPreviewEntries("extra", extra);
   }
 
   const removed = [];
+  let aligned = false;
   if (options.apply) {
-    const updated = JSON.parse(JSON.stringify(data));
+    let updated;
+    if (options.align) {
+      aligned = true;
+      updated = alignToBaseline(baselineData, data, options);
+    } else {
+      updated = JSON.parse(JSON.stringify(data));
+    }
+
     for (const key of unused) {
       removeKey(updated, key);
       removed.push(key);
@@ -317,7 +440,9 @@ function processLocale(locale, allSourceContent, options) {
     const serialized = JSON.stringify(updated, null, 2);
     fs.writeFileSync(locale.path, `${serialized}\n`, "utf8");
     console.log(
-      `[${locale.name}] Updated locale file saved (${removed.length} keys removed)`,
+      `[${locale.name}] Updated locale file saved (${removed.length} unused removed${
+        aligned ? ", structure aligned" : ""
+      })`,
     );
   }
 
@@ -325,8 +450,12 @@ function processLocale(locale, allSourceContent, options) {
     locale: locale.name,
     file: locale.path,
     totalKeys: flattened.size,
+    expectedKeys: expectedTotal,
     unusedKeys: unused,
     removed,
+    missingKeys: missing,
+    extraKeys: extra,
+    aligned: aligned && options.apply,
   };
 }
 
@@ -360,24 +489,60 @@ function main() {
     return;
   }
 
+  const baselineLocale = locales.find(
+    (item) => item.name.toLowerCase() === options.baseline.toLowerCase(),
+  );
+
+  if (!baselineLocale) {
+    const available = locales.map((item) => item.name).join(", ");
+    throw new Error(
+      `Baseline locale "${options.baseline}" not found. Available locales: ${available}`,
+    );
+  }
+
+  const baselineData = JSON.parse(fs.readFileSync(baselineLocale.path, "utf8"));
+  const baselineEntries = flattenLocale(baselineData);
+
+  locales.sort((a, b) => {
+    if (a.name === baselineLocale.name) return -1;
+    if (b.name === baselineLocale.name) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
   console.log(`\nChecking ${locales.length} locale files...\n`);
 
   const results = locales.map((locale) =>
-    processLocale(locale, allSourceContent, options),
+    processLocale(
+      locale,
+      baselineData,
+      baselineEntries,
+      allSourceContent,
+      options,
+    ),
   );
 
   const totalUnused = results.reduce(
     (count, result) => count + result.unusedKeys.length,
     0,
   );
+  const totalMissing = results.reduce(
+    (count, result) => count + result.missingKeys.length,
+    0,
+  );
+  const totalExtra = results.reduce(
+    (count, result) => count + result.extraKeys.length,
+    0,
+  );
 
   console.log("\nSummary:");
   for (const result of results) {
     console.log(
-      `  • ${result.locale}: ${result.unusedKeys.length} unused / ${result.totalKeys} total`,
+      `  • ${result.locale}: unused=${result.unusedKeys.length}, missing=${result.missingKeys.length}, extra=${result.extraKeys.length}, total=${result.totalKeys}, expected=${result.expectedKeys}`,
     );
   }
-  console.log(`\nTotal unused keys: ${totalUnused}`);
+  console.log(
+    `\nTotals → unused: ${totalUnused}, missing: ${totalMissing}, extra: ${totalExtra}`,
+  );
   if (options.apply) {
     console.log(
       "Files were updated in-place; review diffs before committing changes.",
@@ -386,6 +551,15 @@ function main() {
     console.log(
       "Run with --apply to write cleaned locale files. Backups will be created unless --no-backup is passed.",
     );
+    if (options.align) {
+      console.log(
+        "Alignment was evaluated in dry-run mode; rerun with --apply to rewrite locale files.",
+      );
+    } else {
+      console.log(
+        "Pass --align to normalize locale structure/order based on the baseline locale.",
+      );
+    }
   }
 
   if (options.reportPath) {
@@ -394,6 +568,9 @@ function main() {
       options: {
         apply: options.apply,
         backup: options.backup,
+        align: options.align,
+        baseline: baselineLocale.name,
+        keepExtra: options.keepExtra,
         sourceDirs,
       },
       results,

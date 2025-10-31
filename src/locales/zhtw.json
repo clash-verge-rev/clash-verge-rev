@@ -203,6 +203,13 @@
   "Close Connection": "關閉連線",
   "Rules": "規則",
   "Rule Provider": "規則集合",
+  "notice.forceRefreshCompleted": "Force refresh completed",
+  "notice.emergencyRefreshFailed": "Emergency refresh failed: {{message}}",
+  "notice.provider.updateSuccess": "{{name}} updated successfully",
+  "notice.provider.updateFailed": "Failed to update {{name}}: {{message}}",
+  "notice.provider.genericError": "Update failed: {{message}}",
+  "notice.provider.none": "No providers available to update",
+  "notice.provider.allUpdated": "All providers updated successfully",
   "Logs": "日誌",
   "Pause": "暫停",
   "Resume": "繼續",
@@ -217,6 +224,7 @@
   "Settings": "設定",
   "System Setting": "系統設定",
   "Tun Mode": "虛擬網路介面卡模式",
+  "TUN requires Service Mode": "TUN mode requires install service",
   "Install Service": "安裝服務",
   "Install Service failed": "安裝服務失敗",
   "Uninstall Service": "解除安裝服務",
@@ -304,6 +312,7 @@
   "Socks Port": "SOCKS 代理連接埠",
   "Http Port": "HTTP(S) 代理連接埠",
   "Redir Port": "Redir 透明代理連接埠",
+  "Tproxy Port": "Tproxy Port",
   "Port settings saved": "連結埠設定已儲存",
   "Failed to save port settings": "連結埠設定儲存失敗",
   "External": "外部控制",
@@ -712,5 +721,6 @@
   "Menu reorder mode": "選單排序模式",
   "Unlock menu order": "解鎖選單排序",
   "Lock menu order": "鎖定選單排序",
-  "TPROXY Port": "TPROXY 透明代理連接埠"
+  "Open App Log": "Open App Log",
+  "Open Core Log": "Open Core Log"
 }
