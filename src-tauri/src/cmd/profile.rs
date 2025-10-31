@@ -285,7 +285,7 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
                         );
                         handle::Handle::notice_message(
                             "config_validate::yaml_syntax_error",
-                            error_msg.clone(),
+                            error_msg,
                         );
                         Err(())
                     }
@@ -294,7 +294,7 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
                         logging!(error, Type::Cmd, "{}", error_msg);
                         handle::Handle::notice_message(
                             "config_validate::yaml_parse_error",
-                            error_msg.clone(),
+                            error_msg,
                         );
                         Err(())
                     }
@@ -303,19 +303,13 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
             Ok(Err(err)) => {
                 let error_msg = format!("无法读取目标配置文件: {err}");
                 logging!(error, Type::Cmd, "{}", error_msg);
-                handle::Handle::notice_message(
-                    "config_validate::file_read_error",
-                    error_msg.clone(),
-                );
+                handle::Handle::notice_message("config_validate::file_read_error", error_msg);
                 Err(())
             }
             Err(_) => {
                 let error_msg = "读取配置文件超时(5秒)".to_string();
                 logging!(error, Type::Cmd, "{}", error_msg);
-                handle::Handle::notice_message(
-                    "config_validate::file_read_timeout",
-                    error_msg.clone(),
-                );
+                handle::Handle::notice_message("config_validate::file_read_timeout", error_msg);
                 Err(())
             }
         }
@@ -585,20 +579,19 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         false
     };
 
-    profiles_patch_item_safe(index.clone(), profile)
+    profiles_patch_item_safe(&index, profile)
         .await
         .stringify_err()?;
 
     // 如果更新间隔或允许自动更新变更，异步刷新定时器
     if should_refresh_timer {
-        let index_clone = index.clone();
         crate::process::AsyncHandler::spawn(move || async move {
             logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");
             if let Err(e) = crate::core::Timer::global().refresh().await {
                 logging!(error, Type::Timer, "刷新定时器失败: {}", e);
             } else {
                 // 刷新成功后发送自定义事件，不触发配置重载
-                crate::core::handle::Handle::notify_timer_updated(index_clone);
+                crate::core::handle::Handle::notify_timer_updated(index);
             }
         });
     }

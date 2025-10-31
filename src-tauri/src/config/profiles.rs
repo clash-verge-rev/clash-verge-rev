@@ -207,11 +207,11 @@ impl IProfiles {
     }
 
     /// update the item value
-    pub async fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
+    pub async fn patch_item(&mut self, uid: &String, item: PrfItem) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
-            if each.uid == Some(uid.clone()) {
+            if each.uid.as_ref() == Some(uid) {
                 patch!(each, item, itype);
                 patch!(each, item, name);
                 patch!(each, item, desc);
@@ -644,7 +644,7 @@ pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
         .await
 }
 
-pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()> {
+pub async fn profiles_patch_item_safe(index: &String, item: PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
