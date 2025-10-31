@@ -1,9 +1,10 @@
 use super::{IClashTemp, IProfiles, IRuntime, IVerge};
 use crate::{
+    cmd,
     config::{PrfItem, profiles_append_item_safe},
     constants::{files, timing},
-    core::{CoreManager, handle, validate::CoreConfigValidator},
-    enhance, logging,
+    core::{CoreManager, handle, service, tray, validate::CoreConfigValidator},
+    enhance, logging, logging_error,
     utils::{Draft, dirs, help, logging::Type},
 };
 use anyhow::{Result, anyhow};
@@ -54,6 +55,20 @@ impl Config {
     /// 初始化订阅
     pub async fn init_config() -> Result<()> {
         Self::ensure_default_profile_items().await?;
+
+        // init Tun mode
+        if !cmd::system::is_admin().unwrap_or_default()
+            && service::is_service_available().await.is_err()
+        {
+            let verge = Config::verge().await;
+            verge.draft_mut().enable_tun_mode = Some(false);
+            verge.apply();
+            let _ = tray::Tray::global().update_tray_display().await;
+
+            // 分离数据获取和异步调用避免Send问题
+            let verge_data = Config::verge().await.latest_ref().clone();
+            logging_error!(Type::Core, verge_data.save_file().await);
+        }
 
         let validation_result = Self::generate_and_validate().await?;
 

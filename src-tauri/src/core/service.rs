@@ -1,5 +1,6 @@
 use crate::{
     config::Config,
+    core::tray,
     logging, logging_error,
     utils::{dirs, init::service_writer_config, logging::Type},
 };
@@ -531,6 +532,7 @@ impl ServiceManager {
                 return Err(anyhow::anyhow!("服务不可用: {}", reason));
             }
         }
+        let _ = tray::Tray::global().update_tray_display().await;
         Ok(())
     }
 }
