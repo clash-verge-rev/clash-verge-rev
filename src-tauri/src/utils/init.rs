@@ -429,26 +429,8 @@ pub async fn init_resources() -> Result<()> {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
 
-        let handle_copy = |src: PathBuf, dest: PathBuf, file: String| async move {
-            match fs::copy(&src, &dest).await {
-                Ok(_) => {
-                    logging!(debug, Type::Setup, "resources copied '{}'", file);
-                }
-                Err(err) => {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        "failed to copy resources '{}' to '{:?}', {}",
-                        file,
-                        dest,
-                        err
-                    );
-                }
-            };
-        };
-
         if src_path.exists() && !dest_path.exists() {
-            handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
+            handle_copy(&src_path, &dest_path, file).await;
             continue;
         }
 
@@ -458,12 +440,12 @@ pub async fn init_resources() -> Result<()> {
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
-                    handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
+                    handle_copy(&src_path, &dest_path, file).await;
                 }
             }
             _ => {
                 logging!(debug, Type::Setup, "failed to get modified '{}'", file);
-                handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
+                handle_copy(&src_path, &dest_path, file).await;
             }
         };
     }
@@ -562,4 +544,22 @@ pub async fn startup_script() -> Result<()> {
         .await?;
 
     Ok(())
+}
+
+async fn handle_copy(src: &PathBuf, dest: &PathBuf, file: &str) {
+    match fs::copy(src, dest).await {
+        Ok(_) => {
+            logging!(debug, Type::Setup, "resources copied '{}'", file);
+        }
+        Err(err) => {
+            logging!(
+                error,
+                Type::Setup,
+                "failed to copy resources '{}' to '{:?}', {}",
+                file,
+                dest,
+                err
+            );
+        }
+    };
 }
