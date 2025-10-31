@@ -65,6 +65,13 @@
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
       }
+    },
+    "rules": {
+      "title": "ルール",
+      "provider": {
+        "trigger": "ルールプロバイダー",
+        "dialogTitle": "ルールプロバイダー"
+      }
     }
   },
   "Label-Home": "ホーム",
@@ -773,5 +780,28 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "ルールを編集",
+      "form": {
+        "labels": {
+          "type": "ルールタイプ",
+          "content": "ルール内容",
+          "proxyPolicy": "プロキシポリシー"
+        },
+        "toggles": {
+          "noResolve": "DNS解決をスキップ"
+        },
+        "actions": {
+          "prependRule": "前置ルールを追加",
+          "appendRule": "後置ルールを追加"
+        },
+        "validation": {
+          "conditionRequired": "ルール条件が必要です",
+          "invalidRule": "無効なルール"
+        }
+      }
+    }
+  }
 }

@@ -65,6 +65,13 @@
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
       }
+    },
+    "rules": {
+      "title": "Rules",
+      "provider": {
+        "trigger": "Rule Provider",
+        "dialogTitle": "Rule Providers"
+      }
     }
   },
   "Label-Home": "Home",
@@ -773,5 +780,28 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "Edit Rules",
+      "form": {
+        "labels": {
+          "type": "Rule Type",
+          "content": "Rule Content",
+          "proxyPolicy": "Proxy Policy"
+        },
+        "toggles": {
+          "noResolve": "No Resolve"
+        },
+        "actions": {
+          "prependRule": "Prepend Rule",
+          "appendRule": "Append Rule"
+        },
+        "validation": {
+          "conditionRequired": "Rule Condition Required",
+          "invalidRule": "Invalid Rule"
+        }
+      }
+    }
+  }
 }

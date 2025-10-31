@@ -141,7 +141,7 @@ export const ProviderButton = () => {
         startIcon={<StorageOutlined />}
         onClick={() => setOpen(true)}
       >
-        {t("Rule Provider")}
+        {t("pages.rules.provider.trigger")}
       </Button>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -151,7 +151,9 @@ export const ProviderButton = () => {
             justifyContent="space-between"
             alignItems="center"
           >
-            <Typography variant="h6">{t("Rule Providers")}</Typography>
+            <Typography variant="h6">
+              {t("pages.rules.provider.dialogTitle")}
+            </Typography>
             <Button
               variant="contained"
               size="small"

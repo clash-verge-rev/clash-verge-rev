@@ -48,7 +48,7 @@ const RulesPage = () => {
   return (
     <BasePage
       full
-      title={t("Rules")}
+      title={t("pages.rules.title")}
       contentStyle={{
         height: "100%",
         display: "flex",

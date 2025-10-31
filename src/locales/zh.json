@@ -65,6 +65,13 @@
         "disconnectFailed": "断开链式代理失败",
         "duplicateNode": "该节点已在链式代理表中"
       }
+    },
+    "rules": {
+      "title": "规则",
+      "provider": {
+        "trigger": "规则集合",
+        "dialogTitle": "规则集合"
+      }
     }
   },
   "Label-Home": "首 页",
@@ -773,5 +780,28 @@
   "Unlock menu order": "解锁菜单排序",
   "Lock menu order": "锁定菜单排序",
   "Open App Log": "应用日志",
-  "Open Core Log": "内核日志"
+  "Open Core Log": "内核日志",
+  "components": {
+    "ruleEditor": {
+      "title": "编辑规则",
+      "form": {
+        "labels": {
+          "type": "规则类型",
+          "content": "规则内容",
+          "proxyPolicy": "代理策略"
+        },
+        "toggles": {
+          "noResolve": "跳过 DNS 解析"
+        },
+        "actions": {
+          "prependRule": "添加前置规则",
+          "appendRule": "添加后置规则"
+        },
+        "validation": {
+          "conditionRequired": "规则条件缺失",
+          "invalidRule": "无效规则"
+        }
+      }
+    }
+  }
 }

@@ -65,6 +65,13 @@
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
       }
+    },
+    "rules": {
+      "title": "Kurallar",
+      "provider": {
+        "trigger": "Kural Sağlayıcısı",
+        "dialogTitle": "Kural Sağlayıcısı"
+      }
     }
   },
   "Label-Home": "Ana Sayfa",
@@ -773,5 +780,28 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "Kuralları Düzenle",
+      "form": {
+        "labels": {
+          "type": "Kural Tipi",
+          "content": "Kural İçeriği",
+          "proxyPolicy": "Vekil Politikası"
+        },
+        "toggles": {
+          "noResolve": "Çözümleme Yok"
+        },
+        "actions": {
+          "prependRule": "Kuralın Başına Ekle",
+          "appendRule": "Kuralın Sonuna Ekle"
+        },
+        "validation": {
+          "conditionRequired": "Kural Koşulu Gerekli",
+          "invalidRule": "Geçersiz Kural"
+        }
+      }
+    }
+  }
 }

@@ -65,6 +65,13 @@
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
       }
+    },
+    "rules": {
+      "title": "Правила",
+      "provider": {
+        "trigger": "Провайдеры правил",
+        "dialogTitle": "Провайдеры правил"
+      }
     }
   },
   "Label-Home": "Главная",
@@ -773,5 +780,28 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "Редактировать правила",
+      "form": {
+        "labels": {
+          "type": "Тип правила",
+          "content": "Содержимое правила",
+          "proxyPolicy": "Политика прокси"
+        },
+        "toggles": {
+          "noResolve": "Без разрешения"
+        },
+        "actions": {
+          "prependRule": "Добавить правило в начало",
+          "appendRule": "Добавить правило в конец"
+        },
+        "validation": {
+          "conditionRequired": "Требуется условие правила",
+          "invalidRule": "Недействительное правило"
+        }
+      }
+    }
+  }
 }

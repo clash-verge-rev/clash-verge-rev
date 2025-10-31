@@ -65,6 +65,13 @@
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
       }
+    },
+    "rules": {
+      "title": "Reglas",
+      "provider": {
+        "trigger": "Proveedor de reglas",
+        "dialogTitle": "Proveedor de reglas"
+      }
     }
   },
   "Label-Home": "Hogar",
@@ -773,5 +780,28 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "Editar reglas",
+      "form": {
+        "labels": {
+          "type": "Tipo de regla",
+          "content": "Contenido de la regla",
+          "proxyPolicy": "Política de proxy"
+        },
+        "toggles": {
+          "noResolve": "Omitir resolución DNS"
+        },
+        "actions": {
+          "prependRule": "Agregar regla previa",
+          "appendRule": "Agregar regla posterior"
+        },
+        "validation": {
+          "conditionRequired": "Falta la condición de la regla",
+          "invalidRule": "Regla no válida"
+        }
+      }
+    }
+  }
 }

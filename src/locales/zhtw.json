@@ -65,6 +65,13 @@
         "disconnectFailed": "中斷鏈式代理失敗",
         "duplicateNode": "該節點已在鏈式代理表中"
       }
+    },
+    "rules": {
+      "title": "規則",
+      "provider": {
+        "trigger": "規則集合",
+        "dialogTitle": "規則集合"
+      }
     }
   },
   "Label-Home": "首 頁",
@@ -773,5 +780,28 @@
   "Unlock menu order": "解鎖選單排序",
   "Lock menu order": "鎖定選單排序",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "編輯規則",
+      "form": {
+        "labels": {
+          "type": "規則類型",
+          "content": "規則內容",
+          "proxyPolicy": "代理策略"
+        },
+        "toggles": {
+          "noResolve": "跳過 DNS 解析"
+        },
+        "actions": {
+          "prependRule": "新增前置規則",
+          "appendRule": "新增後置規則"
+        },
+        "validation": {
+          "conditionRequired": "規則條件為必填",
+          "invalidRule": "無效規則"
+        }
+      }
+    }
+  }
 }

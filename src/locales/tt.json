@@ -65,6 +65,13 @@
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
       }
+    },
+    "rules": {
+      "title": "Кагыйдәләр",
+      "provider": {
+        "trigger": "Кагыйдә провайдеры",
+        "dialogTitle": "Кагыйдә провайдеры"
+      }
     }
   },
   "Label-Home": "Home",
@@ -773,5 +780,28 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "Кагыйдәләрне үзгәртү",
+      "form": {
+        "labels": {
+          "type": "Кагыйдә төре",
+          "content": "Кагыйдә эчтәлеге",
+          "proxyPolicy": "Прокси сәясәте"
+        },
+        "toggles": {
+          "noResolve": "Резолвсыз"
+        },
+        "actions": {
+          "prependRule": "Кагыйдәне өскә өстәү",
+          "appendRule": "Кагыйдәне аска өстәү"
+        },
+        "validation": {
+          "conditionRequired": "Кагыйдә шарты кирәк",
+          "invalidRule": "Яраксыз кагыйдә"
+        }
+      }
+    }
+  }
 }

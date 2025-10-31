@@ -65,6 +65,13 @@
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
       }
+    },
+    "rules": {
+      "title": "규칙",
+      "provider": {
+        "trigger": "규칙 제공자",
+        "dialogTitle": "규칙 제공자"
+      }
     }
   },
   "Label-Home": "홈",
@@ -773,5 +780,28 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "규칙 편집",
+      "form": {
+        "labels": {
+          "type": "규칙 유형",
+          "content": "규칙 내용",
+          "proxyPolicy": "프록시 정책"
+        },
+        "toggles": {
+          "noResolve": "해석 안함"
+        },
+        "actions": {
+          "prependRule": "규칙 앞에 추가",
+          "appendRule": "규칙 뒤에 추가"
+        },
+        "validation": {
+          "conditionRequired": "규칙 조건 필요",
+          "invalidRule": "잘못된 규칙"
+        }
+      }
+    }
+  }
 }

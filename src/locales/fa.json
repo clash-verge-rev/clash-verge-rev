@@ -65,6 +65,13 @@
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
       }
+    },
+    "rules": {
+      "title": "قوانین",
+      "provider": {
+        "trigger": "تأمین‌کننده قانون",
+        "dialogTitle": "تأمین‌کننده قانون"
+      }
     }
   },
   "Label-Home": "Home",
@@ -773,5 +780,28 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log"
+  "Open Core Log": "Open Core Log",
+  "components": {
+    "ruleEditor": {
+      "title": "ویرایش قوانین",
+      "form": {
+        "labels": {
+          "type": "نوع قانون",
+          "content": "محتوای قانون",
+          "proxyPolicy": "سیاست پروکسی"
+        },
+        "toggles": {
+          "noResolve": "بدون حل"
+        },
+        "actions": {
+          "prependRule": "اضافه کردن قانون به ابتدا",
+          "appendRule": "اضافه کردن قانون به انتها"
+        },
+        "validation": {
+          "conditionRequired": "شرط قانون الزامی است",
+          "invalidRule": "قانون نامعتبر"
+        }
+      }
+    }
+  }
 }
