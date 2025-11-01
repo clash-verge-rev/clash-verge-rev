@@ -180,7 +180,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 /// 更新配置文件
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    match feat::update_profile(index, option, Some(true)).await {
+    match feat::update_profile(index, option, Some(true), Some(true)).await {
         Ok(_) => Ok(()),
         Err(e) => {
             log::error!(target: "app", "{}", e);

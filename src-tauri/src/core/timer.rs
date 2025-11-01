@@ -492,7 +492,7 @@ impl Timer {
                 is_current
             );
 
-            feat::update_profile(uid.clone(), None, Some(is_current)).await
+            feat::update_profile(uid.clone(), None, Some(is_current), None).await
         })
         .await
         {

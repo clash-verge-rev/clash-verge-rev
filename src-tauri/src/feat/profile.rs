@@ -23,7 +23,10 @@ pub async fn toggle_proxy_profile(profile_index: String) {
     }
 }
 
-async fn should_update_profile(uid: String) -> Result<Option<(String, Option<PrfOption>)>> {
+async fn should_update_profile(
+    uid: String,
+    ignore_auto_update: bool,
+) -> Result<Option<(String, Option<PrfOption>)>> {
     let profiles = Config::profiles().await;
     let profiles = profiles.latest_ref();
     let item = profiles.get_item(&uid)?;
@@ -35,11 +38,12 @@ async fn should_update_profile(uid: String) -> Result<Option<(String, Option<Prf
     } else if item.url.is_none() {
         log::warn!(target: "app", "[订阅更新] {uid} 缺少URL，无法更新");
         bail!("failed to get the profile item url");
-    } else if !item
-        .option
-        .as_ref()
-        .and_then(|o| o.allow_auto_update)
-        .unwrap_or(true)
+    } else if !ignore_auto_update
+        && !item
+            .option
+            .as_ref()
+            .and_then(|o| o.allow_auto_update)
+            .unwrap_or(true)
     {
         log::info!(target: "app", "[订阅更新] {} 禁止自动更新，跳过更新", uid);
         Ok(None)
@@ -123,11 +127,13 @@ pub async fn update_profile(
     uid: String,
     option: Option<PrfOption>,
     auto_refresh: Option<bool>,
+    ignore_auto_update: Option<bool>,
 ) -> Result<()> {
     logging!(info, Type::Config, "[订阅更新] 开始更新订阅 {}", uid);
     let auto_refresh = auto_refresh.unwrap_or(true);
+    let ignore_auto_update = ignore_auto_update.unwrap_or(false);
 
-    let url_opt = should_update_profile(uid.clone()).await?;
+    let url_opt = should_update_profile(uid.clone(), ignore_auto_update).await?;
 
     let should_refresh = match url_opt {
         Some((url, opt)) => {
