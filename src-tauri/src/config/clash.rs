@@ -215,9 +215,9 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7896);
+            .unwrap_or(network::ports::DEFAULT_TPROXY.into());
         if port == 0 {
-            port = 7896;
+            port = network::ports::DEFAULT_TPROXY;
         }
         port
     }

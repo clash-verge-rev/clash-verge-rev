@@ -3,6 +3,7 @@
 use crate::utils::logging::NoModuleFilter;
 use crate::{
     config::*,
+    constants,
     core::handle,
     logging,
     process::AsyncHandler,
@@ -304,7 +305,7 @@ async fn init_dns_config() -> Result<()> {
 
     // 检查DNS配置文件是否存在
     let app_dir = dirs::app_home_dir()?;
-    let dns_path = app_dir.join("dns_config.yaml");
+    let dns_path = app_dir.join(constants::files::DNS_CONFIG);
 
     if !dns_path.exists() {
         logging!(info, Type::Setup, "Creating default DNS config file");
