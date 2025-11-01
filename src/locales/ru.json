@@ -969,14 +969,44 @@
             "browse": "Просмотреть",
             "clear": "Очистить"
           },
-          "notifications": {
-            "copySuccess": "Скопировано"
-          },
           "trayOptions": {
             "showMainWindow": "Показать главное окно",
             "showTrayMenu": "Показать меню в трее",
             "disable": "Отключить"
           }
+        },
+        "advanced": {
+          "title": "Расширенные настройки Verge",
+          "items": {
+            "backupSetting": "Настройки резервного копирования",
+            "runtimeConfig": "Используемый конфиг",
+            "openConfDir": "Открыть папку приложения",
+            "openCoreDir": "Открыть папку ядра",
+            "openLogsDir": "Открыть папку логов",
+            "checkUpdates": "Проверить обновления",
+            "openDevTools": "Открыть Dev Tools",
+            "liteModeSettings": "Настройки LightWeight Mode",
+            "exit": "Выход",
+            "exportDiagnostics": "Экспорт диагностической информации",
+            "vergeVersion": "Версия Clash Verge Rev"
+          },
+          "tooltips": {
+            "backupInfo": "Поддерживает файлы конфигурации резервного копирования WebDAV",
+            "openConfDir": "Если программное обеспечение работает неправильно, сделайте резервную копию и удалите все файлы в этой папке, а затем перезапустите ПО",
+            "liteMode": "Режим, в котором работает только ядро Clash, а графический интрефейс закрыт"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Обновление не требуется",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "Скопировано"
         }
       }
     }

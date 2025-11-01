@@ -78,7 +78,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
     await copyClashEnv();
     showNotice(
       "success",
-      t("components.settings.verge.basic.notifications.copySuccess"),
+      t("components.settings.common.notifications.copySuccess"),
       1000,
     );
   }, [t]);

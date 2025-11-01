@@ -969,14 +969,44 @@
             "browse": "Jelajahi",
             "clear": "Bersihkan"
           },
-          "notifications": {
-            "copySuccess": "Salin Berhasil"
-          },
           "trayOptions": {
             "showMainWindow": "Tampilkan Jendela Utama",
             "showTrayMenu": "Show Tray Menu",
             "disable": "Nonaktifkan"
           }
+        },
+        "advanced": {
+          "title": "Pengaturan Lanjutan Verge",
+          "items": {
+            "backupSetting": "Pengaturan Cadangan",
+            "runtimeConfig": "Konfigurasi Runtime",
+            "openConfDir": "Buka Direktori Konfigurasi",
+            "openCoreDir": "Buka Direktori Core",
+            "openLogsDir": "Buka Direktori Log",
+            "checkUpdates": "Periksa Pembaruan",
+            "openDevTools": "Buka Alat Pengembang",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Keluar",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Versi Verge"
+          },
+          "tooltips": {
+            "backupInfo": "Mendukung file konfigurasi cadangan WebDAV",
+            "openConfDir": "Jika perangkat lunak berjalan tidak normal, CADANGKAN dan hapus semua file di folder ini lalu mulai ulang perangkat lunak",
+            "liteMode": "Tutup GUI dan biarkan hanya kernel yang berjalan"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Saat ini pada Versi Terbaru",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "Salin Berhasil"
         }
       }
     }

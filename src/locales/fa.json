@@ -969,14 +969,44 @@
             "browse": "مرور کردن",
             "clear": "پاک کردن"
           },
-          "notifications": {
-            "copySuccess": "کپی با موفقیت انجام شد"
-          },
           "trayOptions": {
             "showMainWindow": "نمایش پنجره اصلی",
             "showTrayMenu": "Show Tray Menu",
             "disable": "غیرفعال کردن"
           }
+        },
+        "advanced": {
+          "title": "تنظیمات پیشرفته Verge",
+          "items": {
+            "backupSetting": "تنظیمات پشتیبان گیری",
+            "runtimeConfig": "پیکربندی زمان اجرا",
+            "openConfDir": "باز کردن پوشه برنامه",
+            "openCoreDir": "باز کردن پوشه هسته",
+            "openLogsDir": "باز کردن پوشه لاگ‌ها",
+            "checkUpdates": "بررسی برای به‌روزرسانی‌ها",
+            "openDevTools": "باز کردن ابزارهای توسعه‌دهنده",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "خروج",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "نسخه Verge"
+          },
+          "tooltips": {
+            "backupInfo": "از فایل های پیکربندی پشتیبان WebDAV پشتیبانی می کند",
+            "openConfDir": "اگر نرم‌افزار به‌طور غیرعادی اجرا می‌شود، از تمام فایل‌های موجود در این پوشه نسخه پشتیبان تهیه و پاک کنید تا نرم‌افزار را مجدداً راه‌اندازی کنید",
+            "liteMode": "رابط کاربری گرافیکی را ببندید و فقط هسته را در حال اجرا نگه دارید"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "در حال حاضر در آخرین نسخه",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "کپی با موفقیت انجام شد"
         }
       }
     }

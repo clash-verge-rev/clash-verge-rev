@@ -969,14 +969,44 @@
             "browse": "浏览",
             "clear": "清除"
           },
-          "notifications": {
-            "copySuccess": "复制成功"
-          },
           "trayOptions": {
             "showMainWindow": "显示主窗口",
             "showTrayMenu": "显示托盘菜单",
             "disable": "禁用"
           }
+        },
+        "advanced": {
+          "title": "Verge 高级设置",
+          "items": {
+            "backupSetting": "备份设置",
+            "runtimeConfig": "当前配置",
+            "openConfDir": "配置目录",
+            "openCoreDir": "内核目录",
+            "openLogsDir": "日志目录",
+            "checkUpdates": "检查更新",
+            "openDevTools": "开发者工具",
+            "liteModeSettings": "轻量模式设置",
+            "exit": "退出",
+            "exportDiagnostics": "导出诊断信息",
+            "vergeVersion": "Verge 版本"
+          },
+          "tooltips": {
+            "backupInfo": "支持本地或 WebDAV 方式备份配置文件",
+            "openConfDir": "如果软件运行异常，!备份!并删除此文件夹下的所有文件，重启软件",
+            "liteMode": "关闭GUI界面，仅保留内核运行"
+          },
+          "actions": {
+            "copyVersion": "复制Verge版本号"
+          },
+          "notifications": {
+            "latestVersion": "当前已是最新版本",
+            "versionCopied": "Verge版本已复制到剪贴板"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "复制成功"
         }
       }
     }

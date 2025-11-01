@@ -969,14 +969,44 @@
             "browse": "Durchsuchen",
             "clear": "Löschen"
           },
-          "notifications": {
-            "copySuccess": "Kopieren erfolgreich"
-          },
           "trayOptions": {
             "showMainWindow": "Hauptfenster anzeigen",
             "showTrayMenu": "Tray-Menü anzeigen",
             "disable": "Deaktivieren"
           }
+        },
+        "advanced": {
+          "title": "Verge-Erweiterte Einstellungen",
+          "items": {
+            "backupSetting": "Sicherungseinstellungen",
+            "runtimeConfig": "Aktuelle Konfiguration",
+            "openConfDir": "Konfigurationsverzeichnis",
+            "openCoreDir": "Kernverzeichnis",
+            "openLogsDir": "Protokollverzeichnis",
+            "checkUpdates": "Auf Updates prüfen",
+            "openDevTools": "Entwicklertools öffnen",
+            "liteModeSettings": "Einstellungen für den Leichtgewichtigen Modus",
+            "exit": "Beenden",
+            "exportDiagnostics": "Diagnoseinformationen exportieren",
+            "vergeVersion": "Verge-Version"
+          },
+          "tooltips": {
+            "backupInfo": "Unterstützt die Sicherung von Konfigurationsdateien über WebDAV",
+            "openConfDir": "Wenn die Software fehlerhaft funktioniert, !sichern Sie! alle Dateien in diesem Verzeichnis, löschen Sie sie und starten Sie die Software neu.",
+            "liteMode": "GUI-Oberfläche schließen, nur den Kern laufen lassen"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Sie verwenden bereits die neueste Version",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "Kopieren erfolgreich"
         }
       }
     }

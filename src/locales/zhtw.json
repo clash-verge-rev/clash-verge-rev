@@ -969,14 +969,44 @@
             "browse": "瀏覽",
             "clear": "清除"
           },
-          "notifications": {
-            "copySuccess": "複製成功"
-          },
           "trayOptions": {
             "showMainWindow": "顯示主視窗",
             "showTrayMenu": "顯示系統匣選單",
             "disable": "停用"
           }
+        },
+        "advanced": {
+          "title": "Verge 進階設定",
+          "items": {
+            "backupSetting": "備份設定",
+            "runtimeConfig": "執行期設定",
+            "openConfDir": "配置目錄",
+            "openCoreDir": "內核目錄",
+            "openLogsDir": "日誌目錄",
+            "checkUpdates": "檢查更新",
+            "openDevTools": "開發人員工具",
+            "liteModeSettings": "輕量模式設定",
+            "exit": "離開",
+            "exportDiagnostics": "匯出診斷資訊",
+            "vergeVersion": "Verge 版本"
+          },
+          "tooltips": {
+            "backupInfo": "支援本機或 WebDAV 方式備份配置檔案",
+            "openConfDir": "如果軟體執行異常，!備份!並刪除此資料夾下的所有檔案，重新啟動軟體",
+            "liteMode": "關閉 GUI 介面，僅保留內核執行"
+          },
+          "actions": {
+            "copyVersion": "複製Verge版本號"
+          },
+          "notifications": {
+            "latestVersion": "目前已是最新版本",
+            "versionCopied": "Verge版本已複製到剪貼簿"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "複製成功"
         }
       }
     }

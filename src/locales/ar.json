@@ -969,14 +969,44 @@
             "browse": "استعراض",
             "clear": "مسح"
           },
-          "notifications": {
-            "copySuccess": "تم النسخ بنجاح"
-          },
           "trayOptions": {
             "showMainWindow": "إظهار النافذة الرئيسية",
             "showTrayMenu": "Show Tray Menu",
             "disable": "تعطيل"
           }
+        },
+        "advanced": {
+          "title": "الإعدادات الأساسية  Verge",
+          "items": {
+            "backupSetting": "إعداد النسخ الاحتياطي",
+            "runtimeConfig": "تكوين وقت التشغيل",
+            "openConfDir": "فتح مجلد التكوين",
+            "openCoreDir": "فتح مجلد النواة",
+            "openLogsDir": "فتح مجلد السجلات",
+            "checkUpdates": "التحقق من وجود تحديثات",
+            "openDevTools": "أدوات المطور",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "خروج",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "إصدار Verge"
+          },
+          "tooltips": {
+            "backupInfo": "Support local or WebDAV backup of configuration files",
+            "openConfDir": "إذا عمل البرنامج بشكل غير طبيعي، قم بالنسخ الاحتياطي ثم حذف جميع الملفات في هذا المجلد ثم أعد تشغيل البرنامج",
+            "liteMode": "إيقاف الواجهة الرسومية والإبقاء على تشغيل النواة"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "أنت على أحدث إصدار حاليًا",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "تم النسخ بنجاح"
         }
       }
     }

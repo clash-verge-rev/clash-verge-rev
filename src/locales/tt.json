@@ -969,14 +969,44 @@
             "browse": "Карау",
             "clear": "Чистарту"
           },
-          "notifications": {
-            "copySuccess": "Күчерелде"
-          },
           "trayOptions": {
             "showMainWindow": "Төп тәрәзәне күрсәтү",
             "showTrayMenu": "Show Tray Menu",
             "disable": "Сүндерү"
           }
+        },
+        "advanced": {
+          "title": "Verge Киңәйтелгән көйләүләр",
+          "items": {
+            "backupSetting": "Резерв копия көйләүләре",
+            "runtimeConfig": "Агымдагы конфигурация",
+            "openConfDir": "Кушымта папкасын ачу",
+            "openCoreDir": "Ядро сакланган папканы ачу",
+            "openLogsDir": "Логлар папкасын ачу",
+            "checkUpdates": "Яңартуларны тикшерү",
+            "openDevTools": "Разработчик коралларын ачу",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Чыгу",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Verge версиясе"
+          },
+          "tooltips": {
+            "backupInfo": "WebDAV аша конфигурация файлын саклауны хуплый",
+            "openConfDir": "Әгәр программада хаталар чыкса, бу папкадагы файлларны саклап калыгыз да, аннары барысын да бетереп, программаны яңадан башлагыз",
+            "liteMode": "GUI-ны ябыгыз һәм бары тик төшне генә эшләтеп калдырыгыз"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Сездә иң соңгы версия урнаштырылган",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "Күчерелде"
         }
       }
     }

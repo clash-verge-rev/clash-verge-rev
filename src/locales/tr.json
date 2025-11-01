@@ -969,14 +969,44 @@
             "browse": "Gözat",
             "clear": "Temizle"
           },
-          "notifications": {
-            "copySuccess": "Kopyalama Başarılı"
-          },
           "trayOptions": {
             "showMainWindow": "Ana Pencereyi Göster",
             "showTrayMenu": "Tepsi Menüsünü Göster",
             "disable": "Devre Dışı Bırak"
           }
+        },
+        "advanced": {
+          "title": "Verge Gelişmiş Ayarı",
+          "items": {
+            "backupSetting": "Yedekleme Ayarı",
+            "runtimeConfig": "Çalışma Zamanı Yapılandırması",
+            "openConfDir": "Yapılandırma Dizinini Aç",
+            "openCoreDir": "Çekirdek Dizinini Aç",
+            "openLogsDir": "Günlük Dizinini Aç",
+            "checkUpdates": "Güncellemeleri Kontrol Et",
+            "openDevTools": "Geliştirici Araçları",
+            "liteModeSettings": "Hafif Mod Ayarları",
+            "exit": "Çıkış",
+            "exportDiagnostics": "Tanılama Bilgilerini Dışa Aktar",
+            "vergeVersion": "Verge Sürümü"
+          },
+          "tooltips": {
+            "backupInfo": "WebDAV yedekleme yapılandırma dosyalarını destekler",
+            "openConfDir": "Yazılım anormal çalışıyorsa, bu klasördeki tüm dosyaları YEDEKLEYİN ve silin, ardından yazılımı yeniden başlatın",
+            "liteMode": "GUI'yi kapatın ve yalnızca çekirdeği çalışır durumda tutun"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Şu Anda En Son Sürümdesiniz",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "Kopyalama Başarılı"
         }
       }
     }

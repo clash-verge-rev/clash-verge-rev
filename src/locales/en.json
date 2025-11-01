@@ -969,14 +969,44 @@
             "browse": "Browse",
             "clear": "Clear"
           },
-          "notifications": {
-            "copySuccess": "Copy Success"
-          },
           "trayOptions": {
             "showMainWindow": "Show Main Window",
             "showTrayMenu": "Show Tray Menu",
             "disable": "Disable"
           }
+        },
+        "advanced": {
+          "title": "Verge Advanced Setting",
+          "items": {
+            "backupSetting": "Backup Setting",
+            "runtimeConfig": "Runtime Config",
+            "openConfDir": "Open Conf Dir",
+            "openCoreDir": "Open Core Dir",
+            "openLogsDir": "Open Logs Dir",
+            "checkUpdates": "Check for Updates",
+            "openDevTools": "Dev Tools",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Exit",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Verge Version"
+          },
+          "tooltips": {
+            "backupInfo": "Support local or WebDAV backup of configuration files",
+            "openConfDir": "If the software runs abnormally, BACKUP and delete all files in this folder then restart the software",
+            "liteMode": "Close the GUI and keep only the kernel running"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Currently on the Latest Version",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "Copy Success"
         }
       }
     }

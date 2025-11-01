@@ -969,14 +969,44 @@
             "browse": "参照",
             "clear": "クリア"
           },
-          "notifications": {
-            "copySuccess": "コピー成功"
-          },
           "trayOptions": {
             "showMainWindow": "メインウィンドウを表示",
             "showTrayMenu": "トレイメニューを表示",
             "disable": "無効にする"
           }
+        },
+        "advanced": {
+          "title": "Verge詳細設定",
+          "items": {
+            "backupSetting": "バックアップ設定",
+            "runtimeConfig": "現在の設定",
+            "openConfDir": "設定ディレクトリを開く",
+            "openCoreDir": "コアディレクトリを開く",
+            "openLogsDir": "ログディレクトリを開く",
+            "checkUpdates": "更新を確認",
+            "openDevTools": "開発者ツールを開く",
+            "liteModeSettings": "軽量モード設定",
+            "exit": "終了",
+            "exportDiagnostics": "診断情報をエクスポート",
+            "vergeVersion": "Vergeバージョン"
+          },
+          "tooltips": {
+            "backupInfo": "WebDAVを使用した設定ファイルのバックアップをサポートします。",
+            "openConfDir": "アプリケーションが正常に動作しない場合は、このフォルダ内のすべてのファイルを!バックアップ!して削除し、アプリケーションを再起動してください。",
+            "liteMode": "GUIを閉じて、コアのみを実行します。"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "現在は最新バージョンです。",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "コピー成功"
         }
       }
     }

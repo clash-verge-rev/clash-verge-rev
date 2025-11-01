@@ -969,14 +969,44 @@
             "browse": "Examinar",
             "clear": "Limpiar"
           },
-          "notifications": {
-            "copySuccess": "Copia exitosa"
-          },
           "trayOptions": {
             "showMainWindow": "Mostrar ventana principal",
             "showTrayMenu": "Mostrar menú de la bandeja",
             "disable": "Deshabilitar"
           }
+        },
+        "advanced": {
+          "title": "Ajustes avanzados de Verge",
+          "items": {
+            "backupSetting": "Configuración de copia de seguridad",
+            "runtimeConfig": "Configuración actual",
+            "openConfDir": "Directorio de configuración",
+            "openCoreDir": "Directorio del núcleo",
+            "openLogsDir": "Directorio de registros",
+            "checkUpdates": "Comprobar actualizaciones",
+            "openDevTools": "Abrir herramientas de desarrollo",
+            "liteModeSettings": "Configuración del modo ligero",
+            "exit": "Salir",
+            "exportDiagnostics": "Exportar información de diagnóstico",
+            "vergeVersion": "Versión de Verge"
+          },
+          "tooltips": {
+            "backupInfo": "Soporte para la copia de seguridad de archivos de configuración a través de WebDAV",
+            "openConfDir": "Si el software no funciona correctamente, !realice una copia de seguridad! y elimine todos los archivos de esta carpeta, luego reinicie el software.",
+            "liteMode": "Cierra la interfaz gráfica y solo mantiene el núcleo en ejecución"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Actualmente está en la última versión",
+            "versionCopied": "Version copied to clipboard"
+          }
+        }
+      },
+      "common": {
+        "notifications": {
+          "copySuccess": "Copia exitosa"
         }
       }
     }
