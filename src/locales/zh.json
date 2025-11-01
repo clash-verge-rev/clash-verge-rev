@@ -1023,6 +1023,34 @@
           "dialogs": {
             "editCssTitle": "Edit CSS"
           }
+        },
+        "layout": {
+          "title": "界面设置",
+          "fields": {
+            "preferSystemTitlebar": "优先使用系统标题栏",
+            "trafficGraph": "流量图显",
+            "memoryUsage": "内核占用",
+            "proxyGroupIcon": "代理组图标",
+            "hoverNavigator": "悬浮跳转导航",
+            "hoverNavigatorDelay": "悬浮跳转导航延迟",
+            "navIcon": "导航栏图标",
+            "trayIcon": "托盘图标",
+            "showProxyGroupsInline": "将代理组显示在托盘一级菜单",
+            "commonTrayIcon": "常规托盘图标",
+            "systemProxyTrayIcon": "系统代理托盘图标",
+            "tunTrayIcon": "TUN 模式托盘图标"
+          },
+          "tooltips": {
+            "hoverNavigator": "鼠标悬停在字母上时自动滚动到对应代理组",
+            "hoverNavigatorDelay": "鼠标悬停后触发自动跳转前等待的毫秒数"
+          },
+          "options": {
+            "icon": {
+              "monochrome": "单色图标",
+              "colorful": "彩色图标",
+              "disable": "禁用"
+            }
+          }
         }
       },
       "common": {

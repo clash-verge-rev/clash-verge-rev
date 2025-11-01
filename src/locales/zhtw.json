@@ -1023,6 +1023,34 @@
           "dialogs": {
             "editCssTitle": "Edit CSS"
           }
+        },
+        "layout": {
+          "title": "介面設定",
+          "fields": {
+            "preferSystemTitlebar": "優先使用系統標題欄",
+            "trafficGraph": "流量圖表",
+            "memoryUsage": "內核佔用",
+            "proxyGroupIcon": "代理組圖示",
+            "hoverNavigator": "懸浮跳轉導航",
+            "hoverNavigatorDelay": "懸浮跳轉導航延遲",
+            "navIcon": "導覽列圖示",
+            "trayIcon": "系統匣圖示",
+            "showProxyGroupsInline": "將代理組顯示在系統匣一級選單",
+            "commonTrayIcon": "一般系統匣圖示",
+            "systemProxyTrayIcon": "系統代理系統匣圖示",
+            "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示"
+          },
+          "tooltips": {
+            "hoverNavigator": "滑鼠懸停在字母上時自動捲動到對應代理組",
+            "hoverNavigatorDelay": "滑鼠懸停後觸發自動跳轉前等待的毫秒數"
+          },
+          "options": {
+            "icon": {
+              "monochrome": "單色圖示",
+              "colorful": "彩色圖示",
+              "disable": "停用"
+            }
+          }
         }
       },
       "common": {

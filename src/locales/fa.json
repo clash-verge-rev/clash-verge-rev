@@ -1023,6 +1023,34 @@
           "dialogs": {
             "editCssTitle": "Edit CSS"
           }
+        },
+        "layout": {
+          "title": "تنظیمات چیدمان",
+          "fields": {
+            "preferSystemTitlebar": "Prefer System Titlebar",
+            "trafficGraph": "نمودار ترافیک",
+            "memoryUsage": "استفاده از حافظه",
+            "proxyGroupIcon": "آیکون گروه پراکسی",
+            "hoverNavigator": "Hover Jump Navigator",
+            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+            "navIcon": "آیکون ناوبری",
+            "trayIcon": "آیکون سینی سیستم",
+            "showProxyGroupsInline": "Show Proxy Groups Inline",
+            "commonTrayIcon": "آیکون مشترک سینی سیستم",
+            "systemProxyTrayIcon": "آیکون سینی پراکسی سیستم",
+            "tunTrayIcon": "آیکون سینی Tun"
+          },
+          "tooltips": {
+            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          },
+          "options": {
+            "icon": {
+              "monochrome": "تک رنگ",
+              "colorful": "رنگارنگ",
+              "disable": "غیرفعال کردن"
+            }
+          }
         }
       },
       "common": {

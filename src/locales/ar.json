@@ -1023,6 +1023,34 @@
           "dialogs": {
             "editCssTitle": "Edit CSS"
           }
+        },
+        "layout": {
+          "title": "إعدادات التخطيط",
+          "fields": {
+            "preferSystemTitlebar": "Prefer System Titlebar",
+            "trafficGraph": "مخطط حركة المرور",
+            "memoryUsage": "استهلاك الذاكرة",
+            "proxyGroupIcon": "أيقونة مجموعة الوكلاء",
+            "hoverNavigator": "Hover Jump Navigator",
+            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+            "navIcon": "أيقونة التنقل",
+            "trayIcon": "أيقونة شريط المهام",
+            "showProxyGroupsInline": "Show Proxy Groups Inline",
+            "commonTrayIcon": "أيقونة شريط مهام عامة",
+            "systemProxyTrayIcon": "أيقونة شريط المهام لوكيل النظام",
+            "tunTrayIcon": "أيقونة شريط المهام لـ TUN"
+          },
+          "tooltips": {
+            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          },
+          "options": {
+            "icon": {
+              "monochrome": "أحادي اللون",
+              "colorful": "ملون",
+              "disable": "تعطيل"
+            }
+          }
         }
       },
       "common": {

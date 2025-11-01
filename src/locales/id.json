@@ -1023,6 +1023,34 @@
           "dialogs": {
             "editCssTitle": "Edit CSS"
           }
+        },
+        "layout": {
+          "title": "Pengaturan Tata Letak",
+          "fields": {
+            "preferSystemTitlebar": "Prefer System Titlebar",
+            "trafficGraph": "Grafik Lalu Lintas",
+            "memoryUsage": "Penggunaan Memori",
+            "proxyGroupIcon": "Ikon Grup Proksi",
+            "hoverNavigator": "Hover Jump Navigator",
+            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+            "navIcon": "Ikon Navigasi",
+            "trayIcon": "Ikon Tray",
+            "showProxyGroupsInline": "Show Proxy Groups Inline",
+            "commonTrayIcon": "Ikon Tray Umum",
+            "systemProxyTrayIcon": "Ikon Tray Proksi Sistem",
+            "tunTrayIcon": "Ikon Tray Tun"
+          },
+          "tooltips": {
+            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          },
+          "options": {
+            "icon": {
+              "monochrome": "Monokrom",
+              "colorful": "Berwarna",
+              "disable": "Nonaktifkan"
+            }
+          }
         }
       },
       "common": {

@@ -1023,6 +1023,34 @@
           "dialogs": {
             "editCssTitle": "Edit CSS"
           }
+        },
+        "layout": {
+          "title": "Layout Setting",
+          "fields": {
+            "preferSystemTitlebar": "Prefer System Titlebar",
+            "trafficGraph": "Traffic Graph",
+            "memoryUsage": "Core Usage",
+            "proxyGroupIcon": "Proxy Group Icon",
+            "hoverNavigator": "Hover Jump Navigator",
+            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+            "navIcon": "Nav Icon",
+            "trayIcon": "Tray Icon",
+            "showProxyGroupsInline": "Show Proxy Groups Inline",
+            "commonTrayIcon": "Common Tray Icon",
+            "systemProxyTrayIcon": "System Proxy Tray Icon",
+            "tunTrayIcon": "Tun Tray Icon"
+          },
+          "tooltips": {
+            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          },
+          "options": {
+            "icon": {
+              "monochrome": "Monochrome",
+              "colorful": "Colorful",
+              "disable": "Disable"
+            }
+          }
         }
       },
       "common": {
