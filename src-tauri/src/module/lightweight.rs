@@ -168,7 +168,11 @@ fn setup_window_close_listener() {
         let handler_id = window.listen("tauri://close-requested", move |_event| {
             std::mem::drop(AsyncHandler::spawn(|| async {
                 if let Err(e) = setup_light_weight_timer().await {
-                    log::warn!("Failed to setup light weight timer: {e}");
+                    logging!(
+                        warn,
+                        Type::Lightweight,
+                        "Warning: Failed to setup light weight timer: {e}"
+                    );
                 }
             }));
             logging!(info, Type::Lightweight, "监听到关闭请求，开始轻量模式计时");

@@ -85,7 +85,7 @@ pub async fn enhance_profiles() -> CmdResult {
     match feat::enhance_profiles().await {
         Ok(_) => {}
         Err(e) => {
-            log::error!(target: "app", "{}", e);
+            logging!(error, Type::Cmd, "{}", e);
             return Err(e.to_string().into());
         }
     }
@@ -147,11 +147,11 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
     match profiles_reorder_safe(&active_id, &over_id).await {
         Ok(_) => {
-            log::info!(target: "app", "重新排序配置文件");
+            logging!(info, Type::Cmd, "重新排序配置文件");
             Ok(())
         }
         Err(err) => {
-            log::error!(target: "app", "重新排序配置文件失败: {}", err);
+            logging!(error, Type::Cmd, "重新排序配置文件失败: {}", err);
             Err(format!("重新排序配置文件失败: {}", err).into())
         }
     }
@@ -183,7 +183,7 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
     match feat::update_profile(&index, option.as_ref(), true, true).await {
         Ok(_) => Ok(()),
         Err(e) => {
-            log::error!(target: "app", "{}", e);
+            logging!(error, Type::Cmd, "{}", e);
             Err(e.to_string().into())
         }
     }
@@ -206,7 +206,7 @@ pub async fn delete_profile(index: String) -> CmdResult {
                 handle::Handle::notify_profile_changed(index);
             }
             Err(e) => {
-                log::error!(target: "app", "{}", e);
+                logging!(error, Type::Cmd, "{}", e);
                 return Err(e.to_string().into());
             }
         }
@@ -337,7 +337,7 @@ async fn restore_previous_profile(prev_profile: String) -> CmdResult<()> {
     Config::profiles().await.apply();
     crate::process::AsyncHandler::spawn(|| async move {
         if let Err(e) = profiles_save_file_safe().await {
-            log::warn!(target: "app", "异步保存恢复配置文件失败: {e}");
+            logging!(warn, Type::Cmd, "Warning: 异步保存恢复配置文件失败: {e}");
         }
     });
     logging!(info, Type::Cmd, "成功恢复到之前的配置");
@@ -368,15 +368,15 @@ async fn handle_success(current_sequence: u64, current_value: Option<String>) ->
     handle::Handle::refresh_clash();
 
     if let Err(e) = Tray::global().update_tooltip().await {
-        log::warn!(target: "app", "异步更新托盘提示失败: {e}");
+        logging!(warn, Type::Cmd, "Warning: 异步更新托盘提示失败: {e}");
     }
 
     if let Err(e) = Tray::global().update_menu().await {
-        log::warn!(target: "app", "异步更新托盘菜单失败: {e}");
+        logging!(warn, Type::Cmd, "Warning: 异步更新托盘菜单失败: {e}");
     }
 
     if let Err(e) = profiles_save_file_safe().await {
-        log::warn!(target: "app", "异步保存配置文件失败: {e}");
+        logging!(warn, Type::Cmd, "Warning: 异步保存配置文件失败: {e}");
     }
 
     if let Some(current) = &current_value {

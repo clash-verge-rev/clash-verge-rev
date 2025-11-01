@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
-    log::info!(target:"app", "received deep link: {param}");
+    logging!(info, Type::Config, "received deep link: {param}");
 
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param
@@ -50,8 +50,8 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
 
         match url_param {
             Some(ref url) => {
-                log::info!(target:"app", "decoded subscription url: {url}");
-                match PrfItem::from_url(url, name, None, None).await {
+                logging!(info, Type::Config, "decoded subscription url: {url}");
+                match PrfItem::from_url(url.as_ref(), name, None, None).await {
                     Ok(mut item) => {
                         let uid = match item.uid.clone() {
                             Some(uid) => uid,

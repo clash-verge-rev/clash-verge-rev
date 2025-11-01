@@ -353,12 +353,12 @@ impl IVerge {
                     config
                 }
                 Err(err) => {
-                    log::error!(target: "app", "{err}");
+                    logging!(error, Type::Config, "{err}");
                     Self::template()
                 }
             },
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                logging!(error, Type::Config, "{err}");
                 Self::template()
             }
         }

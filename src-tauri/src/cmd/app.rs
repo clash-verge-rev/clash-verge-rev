@@ -241,7 +241,7 @@ pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<Stri
 /// 通知UI已准备就绪
 #[tauri::command]
 pub fn notify_ui_ready() -> CmdResult<()> {
-    log::info!(target: "app", "前端UI已准备就绪");
+    logging!(info, Type::Cmd, "前端UI已准备就绪");
     crate::utils::resolve::ui::mark_ui_ready();
     Ok(())
 }
@@ -249,7 +249,7 @@ pub fn notify_ui_ready() -> CmdResult<()> {
 /// UI加载阶段
 #[tauri::command]
 pub fn update_ui_stage(stage: String) -> CmdResult<()> {
-    log::info!(target: "app", "UI加载阶段更新: {}", stage.as_str());
+    logging!(info, Type::Cmd, "UI加载阶段更新: {}", stage.as_str());
 
     use crate::utils::resolve::ui::UiReadyStage;
 
@@ -260,7 +260,12 @@ pub fn update_ui_stage(stage: String) -> CmdResult<()> {
         "ResourcesLoaded" => UiReadyStage::ResourcesLoaded,
         "Ready" => UiReadyStage::Ready,
         _ => {
-            log::warn!(target: "app", "未知的UI加载阶段: {}", stage.as_str());
+            logging!(
+                warn,
+                Type::Cmd,
+                "Warning: 未知的UI加载阶段: {}",
+                stage.as_str()
+            );
             return Err(format!("未知的UI加载阶段: {}", stage.as_str()).into());
         }
     };

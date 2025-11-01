@@ -51,7 +51,11 @@ pub async fn check_singleton() -> Result<()> {
                 .send()
                 .await?;
         }
-        log::error!("failed to setup singleton listen server");
+        logging!(
+            error,
+            Type::Window,
+            "failed to setup singleton listen server"
+        );
         bail!("app exists");
     }
     Ok(())
@@ -129,7 +133,7 @@ pub fn embed_server() {
 }
 
 pub fn shutdown_embedded_server() {
-    log::info!("shutting down embedded server");
+    logging!(info, Type::Window, "shutting down embedded server");
     if let Some(sender) = SHUTDOWN_SENDER.get()
         && let Some(sender) = sender.lock().take()
     {
