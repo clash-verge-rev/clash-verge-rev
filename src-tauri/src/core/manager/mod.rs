@@ -1,6 +1,5 @@
 mod config;
 mod lifecycle;
-mod process;
 mod state;
 
 use anyhow::Result;
@@ -74,7 +73,6 @@ impl CoreManager {
     }
 
     pub async fn init(&self) -> Result<()> {
-        self.cleanup_orphaned_processes().await?;
         self.start_core().await?;
         Ok(())
     }
