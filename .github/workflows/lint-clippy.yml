@@ -24,6 +24,11 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Check src-tauri changes
         if: github.event_name != 'workflow_dispatch'
         id: check_changes
@@ -46,21 +51,19 @@ jobs:
         run: |
           echo "Manual trigger detected: skipping changes check and running clippy."
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Install Rust Stable
+        if: github.event_name == 'workflow_dispatch' || (github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true')
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
           components: clippy
 
       - name: Add Rust Target
+        if: github.event_name == 'workflow_dispatch' || (github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true')
         run: rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
+        if: github.event_name == 'workflow_dispatch' || (github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true')
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
@@ -70,11 +73,12 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'ubuntu-22.04'
+        if: (github.event_name == 'workflow_dispatch' || (github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true')) && matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Run Clippy
+        if: github.event_name == 'workflow_dispatch' || (github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true')
         working-directory: ./src-tauri
         run: cargo clippy-all
