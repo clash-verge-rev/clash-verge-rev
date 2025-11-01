@@ -1,5 +1,6 @@
 #[cfg(target_os = "windows")]
 use crate::process::AsyncHandler;
+use crate::{logging, utils::logging::Type};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, timeout};
@@ -41,15 +42,21 @@ impl AsyncProxyQuery {
     pub async fn get_auto_proxy() -> AsyncAutoproxy {
         match timeout(Duration::from_secs(3), Self::get_auto_proxy_impl()).await {
             Ok(Ok(proxy)) => {
-                log::debug!(target: "app", "异步获取自动代理成功: enable={}, url={}", proxy.enable, proxy.url);
+                logging!(
+                    debug,
+                    Type::Network,
+                    "异步获取自动代理成功: enable={}, url={}",
+                    proxy.enable,
+                    proxy.url
+                );
                 proxy
             }
             Ok(Err(e)) => {
-                log::warn!(target: "app", "异步获取自动代理失败: {e}");
+                logging!(warn, Type::Network, "Warning: 异步获取自动代理失败: {e}");
                 AsyncAutoproxy::default()
             }
             Err(_) => {
-                log::warn!(target: "app", "异步获取自动代理超时");
+                logging!(warn, Type::Network, "Warning: 异步获取自动代理超时");
                 AsyncAutoproxy::default()
             }
         }
@@ -59,15 +66,22 @@ impl AsyncProxyQuery {
     pub async fn get_system_proxy() -> AsyncSysproxy {
         match timeout(Duration::from_secs(3), Self::get_system_proxy_impl()).await {
             Ok(Ok(proxy)) => {
-                log::debug!(target: "app", "异步获取系统代理成功: enable={}, {}:{}", proxy.enable, proxy.host, proxy.port);
+                logging!(
+                    debug,
+                    Type::Network,
+                    "异步获取系统代理成功: enable={}, {}:{}",
+                    proxy.enable,
+                    proxy.host,
+                    proxy.port
+                );
                 proxy
             }
             Ok(Err(e)) => {
-                log::warn!(target: "app", "异步获取系统代理失败: {e}");
+                logging!(warn, Type::Network, "Warning: 异步获取系统代理失败: {e}");
                 AsyncSysproxy::default()
             }
             Err(_) => {
-                log::warn!(target: "app", "异步获取系统代理超时");
+                logging!(warn, Type::Network, "Warning: 异步获取系统代理超时");
                 AsyncSysproxy::default()
             }
         }
@@ -99,7 +113,7 @@ impl AsyncProxyQuery {
                 RegOpenKeyExW(HKEY_CURRENT_USER, key_path.as_ptr(), 0, KEY_READ, &mut hkey);
 
             if result != 0 {
-                log::debug!(target: "app", "无法打开注册表项");
+                logging!(debug, Type::Network, "无法打开注册表项");
                 return Ok(AsyncAutoproxy::default());
             }
 
@@ -125,7 +139,7 @@ impl AsyncProxyQuery {
                     .position(|&x| x == 0)
                     .unwrap_or(url_buffer.len());
                 pac_url = String::from_utf16_lossy(&url_buffer[..end_pos]);
-                log::debug!(target: "app", "从注册表读取到PAC URL: {pac_url}");
+                logging!(debug, Type::Network, "从注册表读取到PAC URL: {pac_url}");
             }
 
             // 2. 检查自动检测设置是否启用
@@ -150,7 +164,11 @@ impl AsyncProxyQuery {
                 || (detect_query_result == 0 && detect_value_type == REG_DWORD && auto_detect != 0);
 
             if pac_enabled {
-                log::debug!(target: "app", "PAC配置启用: URL={pac_url}, AutoDetect={auto_detect}");
+                logging!(
+                    debug,
+                    Type::Network,
+                    "PAC配置启用: URL={pac_url}, AutoDetect={auto_detect}"
+                );
 
                 if pac_url.is_empty() && auto_detect != 0 {
                     pac_url = "auto-detect".into();
@@ -161,7 +179,7 @@ impl AsyncProxyQuery {
                     url: pac_url,
                 })
             } else {
-                log::debug!(target: "app", "PAC配置未启用");
+                logging!(debug, Type::Network, "PAC配置未启用");
                 Ok(AsyncAutoproxy::default())
             }
         }
@@ -177,7 +195,11 @@ impl AsyncProxyQuery {
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        log::debug!(target: "app", "scutil output: {stdout}");
+        crate::logging!(
+            debug,
+            crate::utils::logging::Type::Network,
+            "scutil output: {stdout}"
+        );
 
         let mut pac_enabled = false;
         let mut pac_url = String::new();
@@ -196,7 +218,11 @@ impl AsyncProxyQuery {
             }
         }
 
-        log::debug!(target: "app", "解析结果: pac_enabled={pac_enabled}, pac_url={pac_url}");
+        crate::logging!(
+            debug,
+            crate::utils::logging::Type::Network,
+            "解析结果: pac_enabled={pac_enabled}, pac_url={pac_url}"
+        );
 
         Ok(AsyncAutoproxy {
             enable: pac_enabled && !pac_url.is_empty(),
@@ -363,7 +389,11 @@ impl AsyncProxyQuery {
                     (proxy_server, 8080)
                 };
 
-                log::debug!(target: "app", "从注册表读取到代理设置: {host}:{port}, bypass: {bypass_list}");
+                logging!(
+                    debug,
+                    Type::Network,
+                    "从注册表读取到代理设置: {host}:{port}, bypass: {bypass_list}"
+                );
 
                 Ok(AsyncSysproxy {
                     enable: true,
@@ -386,7 +416,7 @@ impl AsyncProxyQuery {
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        log::debug!(target: "app", "scutil proxy output: {stdout}");
+        logging!(debug, Type::Network, "scutil proxy output: {stdout}");
 
         let mut http_enabled = false;
         let mut http_host = String::new();

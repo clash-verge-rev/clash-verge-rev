@@ -1,4 +1,9 @@
-use crate::{config::Config, process::AsyncHandler, utils::dirs};
+use crate::{
+    config::Config,
+    logging,
+    process::AsyncHandler,
+    utils::{dirs, logging::Type},
+};
 use anyhow::Error;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -137,9 +142,14 @@ impl WebDavClient {
             .is_err()
         {
             match client.mkcol(dirs::BACKUP_DIR).await {
-                Ok(_) => log::info!("Successfully created backup directory"),
+                Ok(_) => logging!(info, Type::Backup, "Successfully created backup directory"),
                 Err(e) => {
-                    log::warn!("Failed to create backup directory: {}", e);
+                    logging!(
+                        warn,
+                        Type::Backup,
+                        "Warning: Failed to create backup directory: {}",
+                        e
+                    );
                     // 清除缓存，强制下次重新尝试
                     self.reset();
                     return Err(anyhow::Error::msg(format!(
@@ -180,7 +190,11 @@ impl WebDavClient {
 
         match upload_result {
             Err(_) => {
-                log::warn!("Upload timed out, retrying once");
+                logging!(
+                    warn,
+                    Type::Backup,
+                    "Warning: Upload timed out, retrying once"
+                );
                 tokio::time::sleep(Duration::from_millis(500)).await;
                 timeout(
                     Duration::from_secs(TIMEOUT_UPLOAD),
@@ -191,7 +205,11 @@ impl WebDavClient {
             }
 
             Ok(Err(e)) => {
-                log::warn!("Upload failed, retrying once: {e}");
+                logging!(
+                    warn,
+                    Type::Backup,
+                    "Warning: Upload failed, retrying once: {e}"
+                );
                 tokio::time::sleep(Duration::from_millis(500)).await;
                 timeout(
                     Duration::from_secs(TIMEOUT_UPLOAD),

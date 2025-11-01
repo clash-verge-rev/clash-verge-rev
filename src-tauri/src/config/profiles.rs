@@ -3,6 +3,7 @@ use crate::utils::{
     dirs::{self, PathBufExec},
     help,
 };
+use crate::{logging, utils::logging::Type};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
@@ -67,12 +68,12 @@ impl IProfiles {
                     profiles
                 }
                 Err(err) => {
-                    log::error!(target: "app", "{err}");
+                    logging!(error, Type::Config, "{err}");
                     Self::template()
                 }
             },
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                logging!(error, Type::Config, "{err}");
                 Self::template()
             }
         }
@@ -492,7 +493,7 @@ impl IProfiles {
             {
                 // 检查是否为全局扩展文件
                 if protected_files.contains(file_name) {
-                    log::debug!(target: "app", "保护全局扩展配置文件: {file_name}");
+                    logging!(debug, Type::Config, "保护全局扩展配置文件: {file_name}");
                     continue;
                 }
 
@@ -501,11 +502,15 @@ impl IProfiles {
                     match path.to_path_buf().remove_if_exists().await {
                         Ok(_) => {
                             deleted_files.push(file_name.into());
-                            log::info!(target: "app", "已清理冗余文件: {file_name}");
+                            logging!(info, Type::Config, "已清理冗余文件: {file_name}");
                         }
                         Err(e) => {
                             failed_deletions.push(format!("{file_name}: {e}").into());
-                            log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
+                            logging!(
+                                warn,
+                                Type::Config,
+                                "Warning: 清理文件失败: {file_name} - {e}"
+                            );
                         }
                     }
                 }
@@ -518,8 +523,9 @@ impl IProfiles {
             failed_deletions,
         };
 
-        log::info!(
-            target: "app",
+        logging!(
+            info,
+            Type::Config,
             "Profile 文件清理完成: 总文件数={}, 删除文件数={}, 失败数={}",
             result.total_files,
             result.deleted_files.len(),

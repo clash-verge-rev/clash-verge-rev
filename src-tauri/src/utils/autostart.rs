@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
-use anyhow::{Result, anyhow};
+use crate::{logging, utils::logging::Type};
 #[cfg(target_os = "windows")]
-use log::info;
+use anyhow::{Result, anyhow};
 
 #[cfg(target_os = "windows")]
 use std::{os::windows::process::CommandExt, path::Path, path::PathBuf};
@@ -49,15 +49,15 @@ pub async fn create_shortcut() -> Result<()> {
         .remove_if_exists()
         .await
         .inspect(|_| {
-            info!(target: "app", "成功移除旧启动快捷方式");
+            logging!(info, Type::Setup, "成功移除旧启动快捷方式");
         })
         .inspect_err(|err| {
-            log::error!(target: "app", "移除旧启动快捷方式失败: {err}");
+            logging!(error, Type::Setup, "移除旧启动快捷方式失败: {err}");
         });
 
     // 如果新快捷方式已存在，直接返回成功
     if new_shortcut_path.exists() {
-        info!(target: "app", "启动快捷方式已存在");
+        logging!(info, Type::Setup, "启动快捷方式已存在");
         return Ok(());
     }
 
@@ -83,7 +83,7 @@ pub async fn create_shortcut() -> Result<()> {
         return Err(anyhow!("创建快捷方式失败: {}", error_msg));
     }
 
-    info!(target: "app", "成功创建启动快捷方式");
+    logging!(info, Type::Setup, "成功创建启动快捷方式");
     Ok(())
 }
 
@@ -102,22 +102,22 @@ pub async fn remove_shortcut() -> Result<()> {
         .remove_if_exists()
         .await
         .inspect(|_| {
-            info!(target: "app", "成功删除旧启动快捷方式");
+            logging!(info, Type::Setup, "成功删除旧启动快捷方式");
             removed_any = true;
         })
         .inspect_err(|err| {
-            log::error!(target: "app", "删除旧启动快捷方式失败: {err}");
+            logging!(error, Type::Setup, "删除旧启动快捷方式失败: {err}");
         });
 
     let _ = new_shortcut_path
         .remove_if_exists()
         .await
         .inspect(|_| {
-            info!(target: "app", "成功删除启动快捷方式");
+            logging!(info, Type::Setup, "成功删除启动快捷方式");
             removed_any = true;
         })
         .inspect_err(|err| {
-            log::error!(target: "app", "删除启动快捷方式失败: {err}");
+            logging!(error, Type::Setup, "删除启动快捷方式失败: {err}");
         });
 
     Ok(())

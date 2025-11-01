@@ -29,7 +29,6 @@ pub enum Type {
     Lightweight,
     Network,
     ProxyMode,
-    // Cache,
     Validate,
     ClashVergeRev,
 }
@@ -53,7 +52,6 @@ impl fmt::Display for Type {
             Type::Lightweight => write!(f, "[Lightweight]"),
             Type::Network => write!(f, "[Network]"),
             Type::ProxyMode => write!(f, "[ProxMode]"),
-            // Type::Cache => write!(f, "[Cache]"),
             Type::Validate => write!(f, "[Validate]"),
             Type::ClashVergeRev => write!(f, "[ClashVergeRev]"),
         }

@@ -2,6 +2,8 @@ use serde_yaml_ng::{Mapping, Value};
 
 #[cfg(target_os = "macos")]
 use crate::process::AsyncHandler;
+#[cfg(target_os = "linux")]
+use crate::{logging, utils::logging::Type};
 
 macro_rules! revise {
     ($map: expr, $key: expr, $val: expr) => {
@@ -42,9 +44,10 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
 
             if should_override {
                 revise!(tun_val, "stack", "mixed");
-                log::warn!(
-                    target: "app",
-                    "gVisor TUN stack detected on Linux; falling back to 'mixed' for compatibility"
+                logging!(
+                    warn,
+                    Type::Network,
+                    "Warning: gVisor TUN stack detected on Linux; falling back to 'mixed' for compatibility"
                 );
             }
         }
