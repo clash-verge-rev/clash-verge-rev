@@ -48,17 +48,18 @@ jobs:
         if: steps.changes.outputs.web == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: "lts/*"
+          node-version: "22"
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Enable corepack
+      - name: Enable Corepack
         if: steps.changes.outputs.web == 'true'
         run: corepack enable
 
       - name: Install dependencies
         if: steps.changes.outputs.web == 'true'
-        run: corepack pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Run ESLint
         if: steps.changes.outputs.web == 'true'
-        run: corepack pnpm lint
+        run: pnpm lint

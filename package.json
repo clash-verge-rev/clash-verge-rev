@@ -132,5 +132,19 @@
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@9.13.2"
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@swc/core",
+      "core-js",
+      "es5-ext",
+      "esbuild",
+      "meta-json-schema",
+      "unrs-resolver"
+    ]
+  }
 }

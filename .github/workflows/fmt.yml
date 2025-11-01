@@ -72,16 +72,25 @@ jobs:
         if: steps.check_web.outputs.web != 'true'
         run: echo "No web changes, skipping prettier."
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
         if: steps.check_web.outputs.web == 'true'
+        uses: actions/setup-node@v4
         with:
-          node-version: "lts/*"
-      - run: corepack enable
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Enable Corepack
         if: steps.check_web.outputs.web == 'true'
-      - run: corepack pnpm install --frozen-lockfile
+        run: corepack enable
+
+      - name: Install dependencies
         if: steps.check_web.outputs.web == 'true'
-      - run: corepack pnpm format:check
+        run: pnpm install --frozen-lockfile
+
+      - name: Run format check
         if: steps.check_web.outputs.web == 'true'
+        run: pnpm format:check
 
   # taplo:
   #   name: taplo (.toml files)
