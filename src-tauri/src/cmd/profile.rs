@@ -99,7 +99,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
     logging!(info, Type::Cmd, "[导入订阅] 开始导入: {}", url);
 
     // 直接依赖 PrfItem::from_url 自身的超时/重试逻辑，不再使用 tokio::time::timeout 包裹
-    let mut item = match PrfItem::from_url(&url, None, None, option.as_ref()).await {
+    let item = &mut match PrfItem::from_url(&url, None, None, option.as_ref()).await {
         Ok(it) => {
             logging!(info, Type::Cmd, "[导入订阅] 下载完成，开始保存配置");
             it
@@ -110,7 +110,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
         }
     };
 
-    match profiles_append_item_safe(&mut item).await {
+    match profiles_append_item_safe(item).await {
         Ok(_) => match profiles_save_file_safe().await {
             Ok(_) => {
                 logging!(info, Type::Cmd, "[导入订阅] 配置文件保存成功");
@@ -180,7 +180,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 /// 更新配置文件
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    match feat::update_profile(&index, option.as_ref(), true).await {
+    match feat::update_profile(&index, option.as_ref(), Some(true), None).await {
         Ok(_) => Ok(()),
         Err(e) => {
             log::error!(target: "app", "{}", e);
@@ -283,7 +283,7 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
                         );
                         handle::Handle::notice_message(
                             "config_validate::yaml_syntax_error",
-                            error_msg,
+                            error_msg.clone(),
                         );
                         Err(())
                     }
@@ -292,7 +292,7 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
                         logging!(error, Type::Cmd, "{}", error_msg);
                         handle::Handle::notice_message(
                             "config_validate::yaml_parse_error",
-                            error_msg,
+                            error_msg.clone(),
                         );
                         Err(())
                     }
@@ -301,13 +301,19 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
             Ok(Err(err)) => {
                 let error_msg = format!("无法读取目标配置文件: {err}");
                 logging!(error, Type::Cmd, "{}", error_msg);
-                handle::Handle::notice_message("config_validate::file_read_error", error_msg);
+                handle::Handle::notice_message(
+                    "config_validate::file_read_error",
+                    error_msg.clone(),
+                );
                 Err(())
             }
             Err(_) => {
                 let error_msg = "读取配置文件超时(5秒)".to_string();
                 logging!(error, Type::Cmd, "{}", error_msg);
-                handle::Handle::notice_message("config_validate::file_read_timeout", error_msg);
+                handle::Handle::notice_message(
+                    "config_validate::file_read_timeout",
+                    error_msg.clone(),
+                );
                 Err(())
             }
         }
@@ -583,13 +589,14 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 
     // 如果更新间隔或允许自动更新变更，异步刷新定时器
     if should_refresh_timer {
+        let index_clone = index.clone();
         crate::process::AsyncHandler::spawn(move || async move {
             logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");
             if let Err(e) = crate::core::Timer::global().refresh().await {
                 logging!(error, Type::Timer, "刷新定时器失败: {}", e);
             } else {
                 // 刷新成功后发送自定义事件，不触发配置重载
-                crate::core::handle::Handle::notify_timer_updated(index);
+                crate::core::handle::Handle::notify_timer_updated(index_clone);
             }
         });
     }
@@ -622,10 +629,15 @@ pub async fn view_profile(index: String) -> CmdResult {
 /// 读取配置文件内容
 #[tauri::command]
 pub async fn read_profile_file(index: String) -> CmdResult<String> {
-    let profiles = Config::profiles().await;
-    let profiles_ref = profiles.latest_ref();
-    let item = profiles_ref.get_item(&index).stringify_err()?;
-    let data = item.read_file().stringify_err()?;
+    let item = {
+        let profiles = Config::profiles().await;
+        let profiles_ref = profiles.latest_ref();
+        PrfItem {
+            file: profiles_ref.get_item(&index).stringify_err()?.file.clone(),
+            ..Default::default()
+        }
+    };
+    let data = item.read_file().await.stringify_err()?;
     Ok(data)
 }
 

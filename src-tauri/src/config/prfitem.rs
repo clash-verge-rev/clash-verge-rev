@@ -10,7 +10,8 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::{fs, time::Duration};
+use std::time::Duration;
+use tokio::fs;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
@@ -558,24 +559,28 @@ impl PrfItem {
     }
 
     /// get the file data
-    pub fn read_file(&self) -> Result<String> {
+    pub async fn read_file(&self) -> Result<String> {
         let file = self
             .file
-            .clone()
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file.as_str());
-        let content = fs::read_to_string(path).context("failed to read the file")?;
+        let content = fs::read_to_string(path)
+            .await
+            .context("failed to read the file")?;
         Ok(content.into())
     }
 
     /// save the file data
-    pub fn save_file(&self, data: String) -> Result<()> {
+    pub async fn save_file(&self, data: String) -> Result<()> {
         let file = self
             .file
-            .clone()
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file.as_str());
-        fs::write(path, data.as_bytes()).context("failed to save the file")
+        fs::write(path, data.as_bytes())
+            .await
+            .context("failed to save the file")
     }
 }
 

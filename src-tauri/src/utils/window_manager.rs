@@ -359,7 +359,6 @@ impl WindowManager {
             }
             return WindowOperationResult::Destroyed;
         }
-        logging!(warn, Type::Window, "窗口摧毁失败");
         WindowOperationResult::Failed
     }
 

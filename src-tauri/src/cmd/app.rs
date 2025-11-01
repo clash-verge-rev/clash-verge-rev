@@ -12,6 +12,7 @@ use smartstring::alias::String;
 use std::path::Path;
 use tauri::{AppHandle, Manager};
 use tokio::fs;
+use tokio::io::AsyncWriteExt;
 
 /// 打开应用程序所在目录
 #[tauri::command]
@@ -116,7 +117,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
     }
 
     if !icon_cache_dir.exists() {
-        let _ = std::fs::create_dir_all(&icon_cache_dir);
+        let _ = fs::create_dir_all(&icon_cache_dir).await;
     }
 
     let temp_path = icon_cache_dir.join(format!("{}.downloading", name.as_str()));
@@ -140,7 +141,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
 
     if is_image && !is_html {
         {
-            let mut file = match std::fs::File::create(&temp_path) {
+            let mut file = match fs::File::create(&temp_path).await {
                 Ok(file) => file,
                 Err(_) => {
                     if icon_path.exists() {
@@ -149,12 +150,12 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
                     return Err("Failed to create temporary file".into());
                 }
             };
-
-            std::io::copy(&mut content.as_ref(), &mut file).stringify_err()?;
+            file.write_all(content.as_ref()).await.stringify_err()?;
+            file.flush().await.stringify_err()?;
         }
 
         if !icon_path.exists() {
-            match std::fs::rename(&temp_path, &icon_path) {
+            match fs::rename(&temp_path, &icon_path).await {
                 Ok(_) => {}
                 Err(_) => {
                     let _ = temp_path.remove_if_exists().await;

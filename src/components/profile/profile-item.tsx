@@ -341,7 +341,8 @@ export const ProfileItem = (props: Props) => {
 
     try {
       // 调用后端更新（后端会自动处理回退逻辑）
-      await updateProfile(itemData.uid, option);
+      const payload = Object.keys(option).length > 0 ? option : undefined;
+      await updateProfile(itemData.uid, payload);
 
       // 更新成功，刷新列表
       mutate("getProfiles");

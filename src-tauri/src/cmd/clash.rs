@@ -8,6 +8,7 @@ use crate::{config::*, feat, logging, utils::logging::Type};
 use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
+use tokio::fs;
 
 /// 复制Clash环境变量
 #[tauri::command]
@@ -155,11 +156,9 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             return Err("DNS config file not found".into());
         }
 
-        let dns_yaml = tokio::fs::read_to_string(&dns_path)
-            .await
-            .stringify_err_log(|e| {
-                logging!(error, Type::Config, "Failed to read DNS config: {e}");
-            })?;
+        let dns_yaml = fs::read_to_string(&dns_path).await.stringify_err_log(|e| {
+            logging!(error, Type::Config, "Failed to read DNS config: {e}");
+        })?;
 
         // 解析DNS配置
         let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)

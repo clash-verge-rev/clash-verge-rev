@@ -155,7 +155,7 @@ impl Timer {
             .set_maximum_parallel_runnable_num(1)
             .set_frequency_count_down_by_seconds(3, 3)
             .spawn_async_routine(|| async move {
-                logging!(info, Type::Timer, "Updating tray menu");
+                logging!(debug, Type::Timer, "Updating tray menu");
                 crate::core::tray::Tray::global()
                     .update_tray_display()
                     .await
@@ -492,7 +492,7 @@ impl Timer {
                 is_current
             );
 
-            feat::update_profile(uid, None, is_current).await
+            feat::update_profile(uid, None, Some(is_current), None).await
         })
         .await
         {

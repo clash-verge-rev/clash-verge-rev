@@ -6,10 +6,12 @@ pub mod seq;
 mod tun;
 
 use self::{chain::*, field::*, merge::*, script::*, seq::*, tun::*};
+use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
+use tokio::fs;
 
 type ResultLog = Vec<(String, String)>;
 #[derive(Debug)]
@@ -437,34 +439,29 @@ fn apply_builtin_scripts(
     config
 }
 
-fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
-    if enable_dns_settings {
-        use crate::utils::dirs;
-        use std::fs;
+async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
+    if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
+        let dns_path = app_dir.join("dns_config.yaml");
 
-        if let Ok(app_dir) = dirs::app_home_dir() {
-            let dns_path = app_dir.join("dns_config.yaml");
-
-            if dns_path.exists()
-                && let Ok(dns_yaml) = fs::read_to_string(&dns_path)
-                && let Ok(dns_config) = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+        if dns_path.exists()
+            && let Ok(dns_yaml) = fs::read_to_string(&dns_path).await
+            && let Ok(dns_config) = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+        {
+            if let Some(hosts_value) = dns_config.get("hosts")
+                && hosts_value.is_mapping()
             {
-                if let Some(hosts_value) = dns_config.get("hosts")
-                    && hosts_value.is_mapping()
-                {
-                    config.insert("hosts".into(), hosts_value.clone());
-                    log::info!(target: "app", "apply hosts configuration");
-                }
+                config.insert("hosts".into(), hosts_value.clone());
+                log::info!(target: "app", "apply hosts configuration");
+            }
 
-                if let Some(dns_value) = dns_config.get("dns") {
-                    if let Some(dns_mapping) = dns_value.as_mapping() {
-                        config.insert("dns".into(), dns_mapping.clone().into());
-                        log::info!(target: "app", "apply dns_config.yaml (dns section)");
-                    }
-                } else {
-                    config.insert("dns".into(), dns_config.into());
-                    log::info!(target: "app", "apply dns_config.yaml");
+            if let Some(dns_value) = dns_config.get("dns") {
+                if let Some(dns_mapping) = dns_value.as_mapping() {
+                    config.insert("dns".into(), dns_mapping.clone().into());
+                    log::info!(target: "app", "apply dns_config.yaml (dns section)");
                 }
+            } else {
+                config.insert("dns".into(), dns_config.into());
+                log::info!(target: "app", "apply dns_config.yaml");
             }
         }
     }
@@ -540,7 +537,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     config = use_sort(config);
 
     // dns settings
-    config = apply_dns_settings(config, enable_dns_settings);
+    config = apply_dns_settings(config, enable_dns_settings).await;
 
     let mut exists_set = HashSet::new();
     exists_set.extend(exists_keys);

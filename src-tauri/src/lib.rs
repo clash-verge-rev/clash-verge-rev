@@ -10,6 +10,8 @@ mod feat;
 mod module;
 mod process;
 pub mod utils;
+#[cfg(target_os = "macos")]
+use crate::module::lightweight;
 #[cfg(target_os = "linux")]
 use crate::utils::linux;
 #[cfg(target_os = "macos")]
@@ -286,6 +288,11 @@ pub fn run() {
         #[cfg(target_os = "macos")]
         pub async fn handle_reopen(has_visible_windows: bool) {
             handle::Handle::global().init();
+
+            if lightweight::is_in_lightweight_mode() {
+                lightweight::exit_lightweight_mode().await;
+                return;
+            }
 
             if !has_visible_windows {
                 handle::Handle::global().set_activation_policy_regular();
