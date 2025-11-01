@@ -33,6 +33,7 @@
 - 修复悬浮跳转导航失效
 - 修复小键盘热键映射错误
 - 修复前端无法及时刷新操作状态
+- 修复 macOS 从 Dock 栏退出轻量模式状态不同步
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>

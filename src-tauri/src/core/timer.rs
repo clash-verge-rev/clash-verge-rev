@@ -155,7 +155,7 @@ impl Timer {
             .set_maximum_parallel_runnable_num(1)
             .set_frequency_count_down_by_seconds(3, 3)
             .spawn_async_routine(|| async move {
-                logging!(info, Type::Timer, "Updating tray menu");
+                logging!(debug, Type::Timer, "Updating tray menu");
                 crate::core::tray::Tray::global()
                     .update_tray_display()
                     .await
