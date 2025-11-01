@@ -138,7 +138,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&merge_uid).ok().cloned()
+            profiles.get_item(merge_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -155,7 +155,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&script_uid).ok().cloned()
+            profiles.get_item(script_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -172,7 +172,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&rules_uid).ok().cloned()
+            profiles.get_item(rules_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -189,7 +189,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&proxies_uid).ok().cloned()
+            profiles.get_item(proxies_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -206,7 +206,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&groups_uid).ok().cloned()
+            profiles.get_item(groups_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -223,7 +223,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&"Merge".into()).ok().cloned()
+            profiles.get_item("Merge").ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -240,7 +240,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&"Script".into()).ok().cloned()
+            profiles.get_item("Script").ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await

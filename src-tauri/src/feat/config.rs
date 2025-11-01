@@ -226,15 +226,12 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
     Ok(())
 }
 
-pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
-    Config::verge()
-        .await
-        .draft_mut()
-        .patch_config(patch.clone());
+pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
+    Config::verge().await.draft_mut().patch_config(patch);
 
-    let update_flags = determine_update_flags(&patch);
+    let update_flags = determine_update_flags(patch);
     let process_flag_result: std::result::Result<(), anyhow::Error> = {
-        process_terminated_flags(update_flags, &patch).await?;
+        process_terminated_flags(update_flags, patch).await?;
         Ok(())
     };
 
@@ -245,7 +242,7 @@ pub async fn patch_verge(patch: IVerge, not_save_file: bool) -> Result<()> {
     Config::verge().await.apply();
     if !not_save_file {
         // 分离数据获取和异步调用
-        let verge_data = Config::verge().await.data_mut().clone();
+        let verge_data = Config::verge().await.data_ref().clone();
         verge_data.save_file().await?;
     }
     Ok(())

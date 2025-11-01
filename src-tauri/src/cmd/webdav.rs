@@ -12,10 +12,7 @@ pub async fn save_webdav_config(url: String, username: String, password: String)
         webdav_password: Some(password),
         ..IVerge::default()
     };
-    Config::verge()
-        .await
-        .draft_mut()
-        .patch_config(patch.clone());
+    Config::verge().await.draft_mut().patch_config(&patch);
     Config::verge().await.apply();
 
     // 分离数据获取和异步调用

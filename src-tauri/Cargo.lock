@@ -962,9 +962,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.44"
+version = "1.2.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37521ac7aabe3d13122dc382493e20c9416f299d2ccd5b3a5340a2570cdeb0f3"
+checksum = "739eb0f94557554b3ca9a86d2d37bebd49c5e6d0c1d2bda35ba5bdac830befc2"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -1161,8 +1161,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_logger"
-version = "0.2.1"
-source = "git+https://github.com/clash-verge-rev/clash-verge-logger#955f1b709890640ff01fd30009df0f35816bbca6"
+version = "0.2.0"
+source = "git+https://github.com/clash-verge-rev/clash-verge-logger#9bb189b5b5c4c2eee35168ff4997e8fb10901c81"
 dependencies = [
  "arraydeque",
  "compact_str",
@@ -8752,9 +8752,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "version-compare"
-version = "0.2.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03c2856837ef78f57382f06b2b8563a2f512f7185d732608fd9176cb3b8edf0e"
+checksum = "852e951cb7832cb45cb1169900d19760cfa39b82bc0ea9c0e5a14ae88411c98b"
 
 [[package]]
 name = "version_check"

@@ -106,7 +106,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     logging_error!(
         Type::Backup,
         super::patch_verge(
-            IVerge {
+            &IVerge {
                 webdav_url,
                 webdav_username,
                 webdav_password,
@@ -253,7 +253,7 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
     logging_error!(
         Type::Backup,
         super::patch_verge(
-            IVerge {
+            &IVerge {
                 webdav_url,
                 webdav_username,
                 webdav_password,

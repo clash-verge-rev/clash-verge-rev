@@ -83,13 +83,13 @@ impl Config {
     // Ensure "Merge" and "Script" profile items exist, adding them if missing.
     async fn ensure_default_profile_items() -> Result<()> {
         let profiles = Self::profiles().await;
-        if profiles.latest_ref().get_item(&"Merge".into()).is_err() {
-            let merge_item = PrfItem::from_merge(Some("Merge".into()))?;
-            profiles_append_item_safe(merge_item.clone()).await?;
+        if profiles.latest_ref().get_item("Merge").is_err() {
+            let merge_item = &mut PrfItem::from_merge(Some("Merge".into()))?;
+            profiles_append_item_safe(merge_item).await?;
         }
-        if profiles.latest_ref().get_item(&"Script".into()).is_err() {
-            let script_item = PrfItem::from_script(Some("Script".into()))?;
-            profiles_append_item_safe(script_item.clone()).await?;
+        if profiles.latest_ref().get_item("Script").is_err() {
+            let script_item = &mut PrfItem::from_script(Some("Script".into()))?;
+            profiles_append_item_safe(script_item).await?;
         }
         Ok(())
     }

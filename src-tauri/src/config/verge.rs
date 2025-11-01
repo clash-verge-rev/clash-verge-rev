@@ -437,11 +437,11 @@ impl IVerge {
     /// patch verge config
     /// only save to file
     #[allow(clippy::cognitive_complexity)]
-    pub fn patch_config(&mut self, patch: IVerge) {
+    pub fn patch_config(&mut self, patch: &IVerge) {
         macro_rules! patch {
             ($key: tt) => {
                 if patch.$key.is_some() {
-                    self.$key = patch.$key;
+                    self.$key = patch.$key.clone();
                 }
             };
         }
@@ -694,5 +694,11 @@ impl From<IVerge> for IVergeResponse {
             hover_jump_navigator_delay: verge.hover_jump_navigator_delay,
             enable_external_controller: verge.enable_external_controller,
         }
+    }
+}
+
+impl From<Box<IVerge>> for IVergeResponse {
+    fn from(verge: Box<IVerge>) -> Self {
+        IVergeResponse::from(*verge)
     }
 }
