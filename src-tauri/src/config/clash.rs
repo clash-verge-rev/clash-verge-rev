@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::constants::{network, tun as tun_const};
 use crate::utils::dirs::{ipc_path, path_to_str};
 use crate::utils::{dirs, help};
 use crate::{logging, utils::logging::Type};
@@ -48,8 +49,6 @@ impl IClashTemp {
     }
 
     pub fn template() -> Self {
-        use crate::constants::{network, tun as tun_const};
-
         let mut map = Mapping::new();
         let mut tun_config = Mapping::new();
         let mut cors_map = Mapping::new();
@@ -215,9 +214,9 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7896);
+            .unwrap_or(network::ports::DEFAULT_TPROXY);
         if port == 0 {
-            port = 7896;
+            port = network::ports::DEFAULT_TPROXY;
         }
         port
     }

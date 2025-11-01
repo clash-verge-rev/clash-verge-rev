@@ -10,6 +10,7 @@ mod feat;
 mod module;
 mod process;
 pub mod utils;
+use crate::constants::files;
 #[cfg(target_os = "macos")]
 use crate::module::lightweight;
 #[cfg(target_os = "linux")]
@@ -21,6 +22,7 @@ use crate::{
     process::AsyncHandler,
     utils::{resolve, server},
 };
+use anyhow::Result;
 use config::Config;
 use once_cell::sync::OnceCell;
 use tauri::{AppHandle, Manager};
@@ -32,8 +34,6 @@ use utils::logging::Type;
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 /// Application initialization helper functions
 mod app_init {
-    use anyhow::Result;
-
     use super::*;
 
     /// Initialize singleton monitoring for other instances
@@ -126,7 +126,7 @@ mod app_init {
     pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         logging!(info, Type::Setup, "初始化窗口状态管理...");
         let window_state_plugin = tauri_plugin_window_state::Builder::new()
-            .with_filename("window_state.json")
+            .with_filename(files::WINDOW_STATE)
             .with_state_flags(tauri_plugin_window_state::StateFlags::default())
             .build();
         app.handle().plugin(window_state_plugin)?;

@@ -24,7 +24,6 @@ pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 pub static CLASH_CONFIG: &str = "config.yaml";
 pub static VERGE_CONFIG: &str = "verge.yaml";
 pub static PROFILE_YAML: &str = "profiles.yaml";
-pub static DNS_CONFIG: &str = "dns_config.yaml";
 
 /// init portable flag
 pub fn init_portable_flag() -> Result<()> {
