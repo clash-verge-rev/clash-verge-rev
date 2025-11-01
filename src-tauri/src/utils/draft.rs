@@ -29,6 +29,11 @@ impl<T: Clone + ToOwned> From<T> for Draft<T> {
 /// - `apply`: Commits the draft data, replacing the committed data and returning the old committed value if a draft existed.
 /// - `discard`: Discards the draft data and returns it if it existed.
 impl<T: Clone + ToOwned> Draft<Box<T>> {
+    /// 正式数据视图
+    pub fn data_ref(&self) -> MappedRwLockReadGuard<'_, Box<T>> {
+        RwLockReadGuard::map(self.inner.read(), |inner| &inner.0)
+    }
+
     /// 可写正式数据
     pub fn data_mut(&self) -> MappedRwLockWriteGuard<'_, Box<T>> {
         RwLockWriteGuard::map(self.inner.write(), |inner| &mut inner.0)

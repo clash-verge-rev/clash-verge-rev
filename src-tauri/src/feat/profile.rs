@@ -24,12 +24,12 @@ pub async fn toggle_proxy_profile(profile_index: String) {
 }
 
 async fn should_update_profile(
-    uid: String,
+    uid: &String,
     ignore_auto_update: bool,
 ) -> Result<Option<(String, Option<PrfOption>)>> {
     let profiles = Config::profiles().await;
     let profiles = profiles.latest_ref();
-    let item = profiles.get_item(&uid)?;
+    let item = profiles.get_item(uid)?;
     let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
     if !is_remote {
@@ -63,19 +63,19 @@ async fn should_update_profile(
 }
 
 async fn perform_profile_update(
-    uid: String,
-    url: String,
-    opt: Option<PrfOption>,
-    option: Option<PrfOption>,
+    uid: &String,
+    url: &String,
+    opt: Option<&PrfOption>,
+    option: Option<&PrfOption>,
 ) -> Result<bool> {
     log::info!(target: "app", "[订阅更新] 开始下载新的订阅内容");
-    let merged_opt = PrfOption::merge(opt.clone(), option.clone());
+    let merged_opt = PrfOption::merge(opt, option);
 
-    match PrfItem::from_url(&url, None, None, merged_opt.clone()).await {
-        Ok(item) => {
+    match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
+        Ok(mut item) => {
             log::info!(target: "app", "[订阅更新] 更新订阅配置成功");
             let profiles = Config::profiles().await;
-            profiles_draft_update_item_safe(uid.clone(), item).await?;
+            profiles_draft_update_item_safe(uid, &mut item).await?;
             let is_current = Some(uid.clone()) == profiles.latest_ref().get_current();
             log::info!(target: "app", "[订阅更新] 是否为当前使用的订阅: {is_current}");
             Ok(is_current)
@@ -91,7 +91,7 @@ async fn perform_profile_update(
             fallback_opt.with_proxy = Some(false);
             fallback_opt.self_proxy = Some(true);
 
-            match PrfItem::from_url(&url, None, None, Some(fallback_opt)).await {
+            match PrfItem::from_url(url, None, None, Some(&fallback_opt)).await {
                 Ok(mut item) => {
                     log::info!(target: "app", "[订阅更新] 使用Clash代理更新成功");
 
@@ -101,7 +101,7 @@ async fn perform_profile_update(
                     }
 
                     let profiles = Config::profiles().await;
-                    profiles_draft_update_item_safe(uid.clone(), item.clone()).await?;
+                    profiles_draft_update_item_safe(uid, &mut item).await?;
 
                     let profile_name = item.name.clone().unwrap_or_else(|| uid.clone());
                     handle::Handle::notice_message("update_with_clash_proxy", profile_name);
@@ -124,20 +124,17 @@ async fn perform_profile_update(
 }
 
 pub async fn update_profile(
-    uid: String,
-    option: Option<PrfOption>,
-    auto_refresh: Option<bool>,
-    ignore_auto_update: Option<bool>,
+    uid: &String,
+    option: Option<&PrfOption>,
+    auto_refresh: bool,
+    ignore_auto_update: bool,
 ) -> Result<()> {
     logging!(info, Type::Config, "[订阅更新] 开始更新订阅 {}", uid);
-    let auto_refresh = auto_refresh.unwrap_or(true);
-    let ignore_auto_update = ignore_auto_update.unwrap_or(false);
-
-    let url_opt = should_update_profile(uid.clone(), ignore_auto_update).await?;
+    let url_opt = should_update_profile(uid, ignore_auto_update).await?;
 
     let should_refresh = match url_opt {
         Some((url, opt)) => {
-            perform_profile_update(uid.clone(), url, opt, option).await? && auto_refresh
+            perform_profile_update(uid, &url, opt.as_ref(), option).await? && auto_refresh
         }
         None => auto_refresh,
     };

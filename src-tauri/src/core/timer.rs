@@ -390,7 +390,7 @@ impl Timer {
             .spawn_async_routine(move || {
                 let uid = uid.clone();
                 Box::pin(async move {
-                    Self::async_task(uid).await;
+                    Self::async_task(&uid).await;
                 }) as Pin<Box<dyn std::future::Future<Output = ()> + Send>>
             })
             .context("failed to create timer task")?;
@@ -476,14 +476,14 @@ impl Timer {
     }
 
     /// Async task with better error handling and logging
-    async fn async_task(uid: String) {
+    async fn async_task(uid: &String) {
         let task_start = std::time::Instant::now();
         logging!(info, Type::Timer, "Running timer task for profile: {}", uid);
 
         match tokio::time::timeout(std::time::Duration::from_secs(40), async {
-            Self::emit_update_event(&uid, true);
+            Self::emit_update_event(uid, true);
 
-            let is_current = Config::profiles().await.latest_ref().current.as_ref() == Some(&uid);
+            let is_current = Config::profiles().await.latest_ref().current.as_ref() == Some(uid);
             logging!(
                 info,
                 Type::Timer,
@@ -492,7 +492,7 @@ impl Timer {
                 is_current
             );
 
-            feat::update_profile(uid.clone(), None, Some(is_current), None).await
+            feat::update_profile(uid, None, is_current, false).await
         })
         .await
         {
@@ -517,7 +517,7 @@ impl Timer {
         }
 
         // Emit completed event
-        Self::emit_update_event(&uid, false);
+        Self::emit_update_event(uid, false);
     }
 }
 

@@ -41,10 +41,7 @@ pub async fn patch_clash_mode(payload: String) -> CmdResult {
 pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {
     logging!(info, Type::Config, "changing core to {clash_core}");
 
-    match CoreManager::global()
-        .change_core(Some(clash_core.clone()))
-        .await
-    {
+    match CoreManager::global().change_core(&clash_core).await {
         Ok(_) => {
             // 切换内核后重启内核
             match CoreManager::global().restart_core().await {
