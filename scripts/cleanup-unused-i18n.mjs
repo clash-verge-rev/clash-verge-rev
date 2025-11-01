@@ -8,11 +8,16 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const LOCALES_DIR = path.resolve(__dirname, "../src/locales");
+const TAURI_LOCALES_DIR = path.resolve(
+  __dirname,
+  "../src-tauri/resources/locales",
+);
 const DEFAULT_SOURCE_DIRS = [
   path.resolve(__dirname, "../src"),
   path.resolve(__dirname, "../src-tauri"),
 ];
-const LOCALES_DIR = path.resolve(__dirname, "../src/locales");
+const EXCLUDE_USAGE_DIRS = [LOCALES_DIR, TAURI_LOCALES_DIR];
 const DEFAULT_BASELINE_LANG = "en";
 const IGNORE_DIR_NAMES = new Set([
   ".git",
@@ -174,8 +179,14 @@ function getAllFiles(start, predicate) {
 
 function loadSourceContents(sourceDirs) {
   const sourceFiles = sourceDirs.flatMap((dir) =>
-    getAllFiles(dir, (filePath) =>
-      SUPPORTED_EXTENSIONS.has(path.extname(filePath)),
+    getAllFiles(
+      dir,
+      (filePath) =>
+        SUPPORTED_EXTENSIONS.has(path.extname(filePath)) &&
+        !EXCLUDE_USAGE_DIRS.some((excluded) =>
+          filePath.startsWith(`${excluded}${path.sep}`),
+        ) &&
+        !EXCLUDE_USAGE_DIRS.includes(filePath),
     ),
   );
 
