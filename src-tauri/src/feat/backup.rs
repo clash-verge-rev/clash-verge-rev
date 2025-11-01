@@ -2,6 +2,7 @@ use crate::{
     config::{Config, IVerge},
     core::backup,
     logging, logging_error,
+    process::AsyncHandler,
     utils::{
         dirs::{PathBufExec, app_home_dir, local_backup_dir},
         logging::Type,
@@ -98,7 +99,9 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         })?;
 
     // extract zip file
-    let mut zip = zip::ZipArchive::new(std::fs::File::open(backup_storage_path.clone())?)?;
+    let value = backup_storage_path.clone();
+    let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&value)).await??;
+    let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(app_home_dir()?)?;
     logging_error!(
         Type::Backup,
@@ -244,7 +247,8 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
     let webdav_username = verge_data.webdav_username.clone();
     let webdav_password = verge_data.webdav_password.clone();
 
-    let mut zip = zip::ZipArchive::new(std::fs::File::open(&target_path)?)?;
+    let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&target_path)).await??;
+    let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(app_home_dir()?)?;
     logging_error!(
         Type::Backup,

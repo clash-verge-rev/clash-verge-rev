@@ -1,4 +1,4 @@
-use crate::{config::Config, utils::dirs};
+use crate::{config::Config, process::AsyncHandler, utils::dirs};
 use anyhow::Error;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -254,7 +254,8 @@ pub async fn create_backup() -> Result<(String, PathBuf), Error> {
     let zip_file_name: String = format!("{OS}-backup-{now}.zip").into();
     let zip_path = temp_dir().join(zip_file_name.as_str());
 
-    let file = std::fs::File::create(&zip_path)?;
+    let value = zip_path.clone();
+    let file = AsyncHandler::spawn_blocking(move || std::fs::File::create(&value)).await??;
     let mut zip = zip::ZipWriter::new(file);
     zip.add_directory("profiles/", SimpleFileOptions::default())?;
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
