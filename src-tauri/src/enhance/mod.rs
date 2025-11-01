@@ -8,6 +8,7 @@ mod tun;
 use self::{chain::*, field::*, merge::*, script::*, seq::*, tun::*};
 use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
+use crate::{logging, utils::logging::Type};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
@@ -422,14 +423,14 @@ fn apply_builtin_scripts(
             .filter(|(s, _)| s.is_support(clash_core.as_ref()))
             .map(|(_, c)| c)
             .for_each(|item| {
-                log::debug!(target: "app", "run builtin script {}", item.uid);
+                logging!(debug, Type::Core, "run builtin script {}", item.uid);
                 if let ChainType::Script(script) = item.data {
                     match use_script(script, config.to_owned(), "".into()) {
                         Ok((res_config, _)) => {
                             config = res_config;
                         }
                         Err(err) => {
-                            log::error!(target: "app", "builtin script error `{err}`");
+                            logging!(error, Type::Core, "builtin script error `{err}`");
                         }
                     }
                 }
@@ -451,17 +452,17 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
                 && hosts_value.is_mapping()
             {
                 config.insert("hosts".into(), hosts_value.clone());
-                log::info!(target: "app", "apply hosts configuration");
+                logging!(info, Type::Core, "apply hosts configuration");
             }
 
             if let Some(dns_value) = dns_config.get("dns") {
                 if let Some(dns_mapping) = dns_value.as_mapping() {
                     config.insert("dns".into(), dns_mapping.clone().into());
-                    log::info!(target: "app", "apply dns_config.yaml (dns section)");
+                    logging!(info, Type::Core, "apply dns_config.yaml (dns section)");
                 }
             } else {
                 config.insert("dns".into(), dns_config.into());
-                log::info!(target: "app", "apply dns_config.yaml");
+                logging!(info, Type::Core, "apply dns_config.yaml");
             }
         }
     }

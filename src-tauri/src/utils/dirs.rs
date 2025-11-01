@@ -62,7 +62,11 @@ pub fn app_home_dir() -> Result<PathBuf> {
     match app_handle.path().data_dir() {
         Ok(dir) => Ok(dir.join(APP_ID)),
         Err(e) => {
-            log::error!(target: "app", "Failed to get the app home directory: {e}");
+            logging!(
+                error,
+                Type::File,
+                "Failed to get the app home directory: {e}"
+            );
             Err(anyhow::anyhow!("Failed to get the app homedirectory"))
         }
     }
@@ -76,7 +80,11 @@ pub fn app_resources_dir() -> Result<PathBuf> {
     match app_handle.path().resource_dir() {
         Ok(dir) => Ok(dir.join("resources")),
         Err(e) => {
-            log::error!(target: "app", "Failed to get the resource directory: {e}");
+            logging!(
+                error,
+                Type::File,
+                "Failed to get the resource directory: {e}"
+            );
             Err(anyhow::anyhow!("Failed to get the resource directory"))
         }
     }
@@ -229,7 +237,11 @@ pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
                 if home_config.exists() || fs::create_dir_all(&home_config).is_ok() {
                     Some(home_config)
                 } else {
-                    log::error!(target: "app", "Failed to create safe directory: {home_config:?}");
+                    logging!(
+                        error,
+                        Type::File,
+                        "Failed to create safe directory: {home_config:?}"
+                    );
                     None
                 }
             })

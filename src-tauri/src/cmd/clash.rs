@@ -109,7 +109,7 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
     let result = match feat::test_delay(url).await {
         Ok(delay) => delay,
         Err(e) => {
-            log::error!(target: "app", "{}", e);
+            logging!(error, Type::Cmd, "{}", e);
             10000u32
         }
     };

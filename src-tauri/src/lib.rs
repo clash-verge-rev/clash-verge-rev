@@ -30,7 +30,6 @@ use tauri_plugin_deep_link::DeepLinkExt;
 use utils::logging::Type;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
-
 /// Application initialization helper functions
 mod app_init {
     use anyhow::Result;

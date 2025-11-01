@@ -73,3 +73,10 @@ jobs:
       - name: Run Clippy
         working-directory: ./src-tauri
         run: cargo clippy-all
+
+      - name: Run Logging Check
+        working-directory: ./src-tauri
+        shell: bash
+        run: |
+          cargo install --git https://github.com/clash-verge-rev/clash-verge-logging-check.git
+          clash-verge-logging-check

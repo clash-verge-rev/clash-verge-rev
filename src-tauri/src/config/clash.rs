@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::utils::dirs::{ipc_path, path_to_str};
 use crate::utils::{dirs, help};
+use crate::{logging, utils::logging::Type};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
@@ -40,7 +41,7 @@ impl IClashTemp {
                 Self(Self::guard(map))
             }
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                logging!(error, Type::Config, "{err}");
                 template
             }
         }
@@ -330,7 +331,7 @@ impl IClashTemp {
             .ok()
             .and_then(|path| path_to_str(&path).ok().map(|s| s.into()))
             .unwrap_or_else(|| {
-                log::error!(target: "app", "Failed to get IPC path");
+                logging!(error, Type::Config, "Failed to get IPC path");
                 crate::constants::network::DEFAULT_EXTERNAL_CONTROLLER.into()
             })
     }
