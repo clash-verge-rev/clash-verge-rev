@@ -10,5 +10,6 @@ fn main() {
             std::env::set_var("CLASH_VERGE_DISABLE_TRAY", "1");
         }
     }
+    log::info!("Starting Clash Verge Rev...");
     app_lib::run();
 }
