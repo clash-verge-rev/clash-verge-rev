@@ -77,12 +77,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
 
       - name: Enable Corepack
         if: steps.check_web.outputs.web == 'true'
         run: corepack enable
+
+      - name: Activate pnpm version
+        if: steps.check_web.outputs.web == 'true'
+        run: corepack prepare $(node -p "require('./package.json').packageManager") --activate
+
+      - name: Determine pnpm store path
+        if: steps.check_web.outputs.web == 'true'
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        if: steps.check_web.outputs.web == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
         if: steps.check_web.outputs.web == 'true'
