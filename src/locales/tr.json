@@ -17,6 +17,33 @@
   "Enable": "Etkinleştir",
   "Disable": "Devre Dışı Bırak",
   "pages": {
+    "home": {
+      "title": "Ana Sayfa",
+      "tooltips": {
+        "lightweightMode": "Hafif Mod",
+        "manual": "Kılavuz",
+        "settings": "Ana Sayfa Ayarları"
+      },
+      "cards": {
+        "trafficStats": "Trafik İstatistikleri",
+        "networkSettings": "Ağ Ayarları",
+        "proxyMode": "Vekil Modu"
+      },
+      "settings": {
+        "title": "Ana Sayfa Ayarları",
+        "cards": {
+          "profile": "Profil Kartı",
+          "currentProxy": "Geçerli Vekil Kartı",
+          "network": "Ağ Ayarları Kartı",
+          "proxyMode": "Vekil Modu Kartı",
+          "traffic": "Trafik İstatistikleri Kartı",
+          "tests": "Web Sitesi Testleri Kartı",
+          "ip": "IP Bilgi Kartı",
+          "clashInfo": "Clash Bilgi Kartları",
+          "systemInfo": "Sistem Bilgi Kartları"
+        }
+      }
+    },
     "proxies": {
       "title": {
         "default": "Vekil Grupları",
@@ -892,6 +919,21 @@
       },
       "fileInput": {
         "chooseFile": "Dosya Seç"
+      }
+    },
+    "home": {
+      "proxyTunCard": {
+        "status": {
+          "systemProxyEnabled": "Sistem vekil'i etkinleştirildi, uygulamalarınız vekil üzerinden ağa erişecek",
+          "systemProxyDisabled": "Sistem vekil'i devre dışı, çoğu kullanıcı için bu seçeneği açmanız önerilir",
+          "tunModeServiceRequired": "TUN modu hizmet modu gerektirir, lütfen önce hizmeti kurun",
+          "tunModeEnabled": "TUN modu etkinleştirildi, uygulamalar sanal ağ kartı üzerinden ağa erişecek",
+          "tunModeDisabled": "TUN modu devre dışı, özel uygulamalar için uygundur"
+        },
+        "tooltips": {
+          "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
+          "tunMode": "TUN modu tüm uygulama trafiğini ele alabilir, sistem vekil ayarlarını takip etmeyen özel uygulamalar için uygundur"
+        }
       }
     },
     "connection": {

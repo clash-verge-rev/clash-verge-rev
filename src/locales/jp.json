@@ -17,6 +17,33 @@
   "Enable": "有効にする",
   "Disable": "無効にする",
   "pages": {
+    "home": {
+      "title": "ホーム",
+      "tooltips": {
+        "lightweightMode": "軽量モード",
+        "manual": "マニュアル",
+        "settings": "ホーム設定"
+      },
+      "cards": {
+        "trafficStats": "トラフィック統計",
+        "networkSettings": "ネットワーク設定",
+        "proxyMode": "プロキシモード"
+      },
+      "settings": {
+        "title": "ホーム設定",
+        "cards": {
+          "profile": "プロファイルカード",
+          "currentProxy": "現在のプロキシカード",
+          "network": "ネットワーク設定カード",
+          "proxyMode": "プロキシモードカード",
+          "traffic": "トラフィック統計カード",
+          "tests": "ウェブサイトテストカード",
+          "ip": "IP情報カード",
+          "clashInfo": "Clash情報カード",
+          "systemInfo": "システム情報カード"
+        }
+      }
+    },
     "proxies": {
       "title": {
         "default": "プロキシグループ",
@@ -892,6 +919,21 @@
       },
       "fileInput": {
         "chooseFile": "ファイルを選択"
+      }
+    },
+    "home": {
+      "proxyTunCard": {
+        "status": {
+          "systemProxyEnabled": "システムプロキシが有効になっています。アプリケーションはプロキシを通じてネットワークにアクセスします。",
+          "systemProxyDisabled": "システムプロキシが無効になっています。ほとんどのユーザーはこのオプションをオンにすることをお勧めします。",
+          "tunModeServiceRequired": "TUNモードはサービスモードが必要です。まずサービスをインストールしてください。",
+          "tunModeEnabled": "TUNモードが有効になっています。アプリケーションは仮想ネットワークカードを通じてネットワークにアクセスします。",
+          "tunModeDisabled": "TUNモードが無効になっています。特殊なアプリケーションに適しています。"
+        },
+        "tooltips": {
+          "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
+          "tunMode": "TUNモードは全てのアプリケーションのトラフィックを制御できます。システムプロキシ設定に従わない特殊なアプリケーションに適しています。"
+        }
       }
     },
     "connection": {

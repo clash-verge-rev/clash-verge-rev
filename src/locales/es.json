@@ -17,6 +17,33 @@
   "Enable": "Habilitar",
   "Disable": "Deshabilitar",
   "pages": {
+    "home": {
+      "title": "Hogar",
+      "tooltips": {
+        "lightweightMode": "Modo ligero",
+        "manual": "Manual de uso",
+        "settings": "Configuración de la página de inicio"
+      },
+      "cards": {
+        "trafficStats": "Estadísticas de tráfico",
+        "networkSettings": "Configuración de red",
+        "proxyMode": "Modo de proxy"
+      },
+      "settings": {
+        "title": "Configuración de la página de inicio",
+        "cards": {
+          "profile": "Tarjeta de suscripción",
+          "currentProxy": "Tarjeta de proxy actual",
+          "network": "Tarjeta de configuración de red",
+          "proxyMode": "Tarjeta de modo de proxy",
+          "traffic": "Tarjeta de estadísticas de tráfico",
+          "tests": "Tarjeta de pruebas de sitios web",
+          "ip": "Tarjeta de información de IP",
+          "clashInfo": "Tarjetas de información de Clash",
+          "systemInfo": "Tarjetas de información del sistema"
+        }
+      }
+    },
     "proxies": {
       "title": {
         "default": "Grupos de proxies",
@@ -892,6 +919,21 @@
       },
       "fileInput": {
         "chooseFile": "Elegir archivo"
+      }
+    },
+    "home": {
+      "proxyTunCard": {
+        "status": {
+          "systemProxyEnabled": "El proxy del sistema está habilitado. Sus aplicaciones accederán a Internet a través del proxy.",
+          "systemProxyDisabled": "El proxy del sistema está deshabilitado. Se recomienda a la mayoría de los usuarios habilitar esta opción.",
+          "tunModeServiceRequired": "El modo TUN requiere el modo de servicio. Instale el servicio primero.",
+          "tunModeEnabled": "El modo TUN está habilitado. Las aplicaciones accederán a Internet a través de la interfaz virtual.",
+          "tunModeDisabled": "El modo TUN está deshabilitado. Este modo es adecuado para aplicaciones especiales."
+        },
+        "tooltips": {
+          "systemProxy": "Modifica la configuración del proxy del sistema operativo. Si no se puede habilitar, puede modificar manualmente la configuración del proxy del sistema operativo.",
+          "tunMode": "El modo TUN puede gestionar todo el tráfico de las aplicaciones. Es adecuado para aplicaciones que no siguen la configuración del proxy del sistema."
+        }
       }
     },
     "connection": {

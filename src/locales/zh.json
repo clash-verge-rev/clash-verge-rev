@@ -17,6 +17,33 @@
   "Enable": "启用",
   "Disable": "禁用",
   "pages": {
+    "home": {
+      "title": "首页",
+      "tooltips": {
+        "lightweightMode": "轻量模式",
+        "manual": "使用手册",
+        "settings": "首页设置"
+      },
+      "cards": {
+        "trafficStats": "流量统计",
+        "networkSettings": "网络设置",
+        "proxyMode": "代理模式"
+      },
+      "settings": {
+        "title": "首页设置",
+        "cards": {
+          "profile": "订阅卡",
+          "currentProxy": "当前代理卡",
+          "network": "网络设置卡",
+          "proxyMode": "代理模式卡",
+          "traffic": "流量统计卡",
+          "tests": "网站测试卡",
+          "ip": "IP 信息卡",
+          "clashInfo": "Clash 信息卡",
+          "systemInfo": "系统信息卡"
+        }
+      }
+    },
     "proxies": {
       "title": {
         "default": "代理组",
@@ -892,6 +919,21 @@
       },
       "fileInput": {
         "chooseFile": "选择文件"
+      }
+    },
+    "home": {
+      "proxyTunCard": {
+        "status": {
+          "systemProxyEnabled": "系统代理已启用，您的应用将通过代理访问网络",
+          "systemProxyDisabled": "系统代理已关闭，建议大多数用户打开此选项",
+          "tunModeServiceRequired": "TUN模式需要服务模式，请先安装服务",
+          "tunModeEnabled": "TUN 模式已启用，应用将通过虚拟网卡访问网络",
+          "tunModeDisabled": "TUN 模式已关闭，适用于特殊应用"
+        },
+        "tooltips": {
+          "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
+          "tunMode": "TUN模式可以接管所有应用流量，适用于特殊不遵循系统代理设置的应用"
+        }
       }
     },
     "connection": {

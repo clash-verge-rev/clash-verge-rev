@@ -17,6 +17,33 @@
   "Enable": "Aktivieren",
   "Disable": "Deaktivieren",
   "pages": {
+    "home": {
+      "title": "Startseite",
+      "tooltips": {
+        "lightweightMode": "Leichtgewichtiger Modus",
+        "manual": "Bedienungsanleitung",
+        "settings": "Startseite-Einstellungen"
+      },
+      "cards": {
+        "trafficStats": "Verkehrsstatistik",
+        "networkSettings": "Netzwerkeinstellungen",
+        "proxyMode": "Proxy-Modus"
+      },
+      "settings": {
+        "title": "Startseite-Einstellungen",
+        "cards": {
+          "profile": "Abonnement-Karte",
+          "currentProxy": "Aktueller Proxy-Karte",
+          "network": "Netzwerkeinstellungen-Karte",
+          "proxyMode": "Proxy-Modus-Karte",
+          "traffic": "Verkehrsstatistik-Karte",
+          "tests": "Website-Tests-Karte",
+          "ip": "IP-Informationen-Karte",
+          "clashInfo": "Clash-Informationen-Karten",
+          "systemInfo": "Systeminformationen-Karten"
+        }
+      }
+    },
     "proxies": {
       "title": {
         "default": "Proxy-Gruppen",
@@ -892,6 +919,21 @@
       },
       "fileInput": {
         "chooseFile": "Datei auswählen"
+      }
+    },
+    "home": {
+      "proxyTunCard": {
+        "status": {
+          "systemProxyEnabled": "Der Systemproxy ist aktiviert. Ihre Anwendungen werden über den Proxy auf das Netzwerk zugreifen.",
+          "systemProxyDisabled": "Der Systemproxy ist deaktiviert. Es wird empfohlen, diesen Eintrag für die meisten Benutzer zu aktivieren.",
+          "tunModeServiceRequired": "Der TUN-Modus erfordert den Service-Modus. Bitte installieren Sie zuerst den Service.",
+          "tunModeEnabled": "Der TUN-Modus ist aktiviert. Die Anwendungen werden über die virtuelle Netzwerkschnittstelle auf das Netzwerk zugreifen.",
+          "tunModeDisabled": "Der TUN-Modus ist deaktiviert. Dies ist für spezielle Anwendungen geeignet."
+        },
+        "tooltips": {
+          "systemProxy": "Ändern Sie die Proxy-Einstellungen des Betriebssystems. Wenn die Aktivierung fehlschlägt, können Sie die Proxy-Einstellungen des Betriebssystems manuell ändern.",
+          "tunMode": "Der TUN-Modus kann den gesamten Anwendungsverkehr übernehmen und eignet sich für spezielle Anwendungen, die die Systemproxy-Einstellungen nicht befolgen."
+        }
       }
     },
     "connection": {

@@ -160,18 +160,18 @@ export const ProxyTunCard: FC = () => {
     if (activeTab === "system") {
       return {
         text: systemProxyActualState
-          ? t("System Proxy Enabled")
-          : t("System Proxy Disabled"),
-        tooltip: t("System Proxy Info"),
+          ? t("components.home.proxyTunCard.status.systemProxyEnabled")
+          : t("components.home.proxyTunCard.status.systemProxyDisabled"),
+        tooltip: t("components.home.proxyTunCard.tooltips.systemProxy"),
       };
     } else {
       return {
         text: !isTunModeAvailable
-          ? t("TUN Mode Service Required")
+          ? t("components.home.proxyTunCard.status.tunModeServiceRequired")
           : enable_tun_mode
-            ? t("TUN Mode Enabled")
-            : t("TUN Mode Disabled"),
-        tooltip: t("TUN Mode Intercept Info"),
+            ? t("components.home.proxyTunCard.status.tunModeEnabled")
+            : t("components.home.proxyTunCard.status.tunModeDisabled"),
+        tooltip: t("components.home.proxyTunCard.tooltips.tunMode"),
       };
     }
   }, [

@@ -17,6 +17,33 @@
   "Enable": "활성화",
   "Disable": "비활성화",
   "pages": {
+    "home": {
+      "title": "홈",
+      "tooltips": {
+        "lightweightMode": "Lightweight Mode",
+        "manual": "Manual",
+        "settings": "Home Settings"
+      },
+      "cards": {
+        "trafficStats": "Traffic Stats",
+        "networkSettings": "Network Settings",
+        "proxyMode": "Proxy Mode"
+      },
+      "settings": {
+        "title": "Home Settings",
+        "cards": {
+          "profile": "Profile Card",
+          "currentProxy": "Current Proxy Card",
+          "network": "Network Settings Card",
+          "proxyMode": "Proxy Mode Card",
+          "traffic": "Traffic Stats Card",
+          "tests": "Website Tests Card",
+          "ip": "IP Information Card",
+          "clashInfo": "Clash Info Cards",
+          "systemInfo": "System Info Cards"
+        }
+      }
+    },
     "proxies": {
       "title": {
         "default": "프록시 그룹",
@@ -892,6 +919,21 @@
       },
       "fileInput": {
         "chooseFile": "파일 선택"
+      }
+    },
+    "home": {
+      "proxyTunCard": {
+        "status": {
+          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+        },
+        "tooltips": {
+          "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
+          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+        }
       }
     },
     "connection": {

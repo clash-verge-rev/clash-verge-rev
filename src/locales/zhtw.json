@@ -17,6 +17,33 @@
   "Enable": "啟用",
   "Disable": "停用",
   "pages": {
+    "home": {
+      "title": "首頁",
+      "tooltips": {
+        "lightweightMode": "輕量模式",
+        "manual": "使用手冊",
+        "settings": "首頁設定"
+      },
+      "cards": {
+        "trafficStats": "流量統計",
+        "networkSettings": "網路設定",
+        "proxyMode": "代理模式"
+      },
+      "settings": {
+        "title": "首頁設定",
+        "cards": {
+          "profile": "訂閱卡",
+          "currentProxy": "目前代理卡",
+          "network": "網路設定卡",
+          "proxyMode": "代理模式卡",
+          "traffic": "流量統計卡",
+          "tests": "網站測試卡",
+          "ip": "IP資訊卡",
+          "clashInfo": "Clash 資訊卡",
+          "systemInfo": "系統資訊卡"
+        }
+      }
+    },
     "proxies": {
       "title": {
         "default": "代理組",
@@ -892,6 +919,21 @@
       },
       "fileInput": {
         "chooseFile": "選擇檔案"
+      }
+    },
+    "home": {
+      "proxyTunCard": {
+        "status": {
+          "systemProxyEnabled": "系統代理已啟用，您的應用程式將透過代理存取網路",
+          "systemProxyDisabled": "系統代理已關閉，建議大多數使用者開啟此選項",
+          "tunModeServiceRequired": "虛擬網路介面卡模式需要服務模式，請先安裝服務",
+          "tunModeEnabled": "虛擬網路介面卡模式已啟用，應用程式將透過虛擬網路介面卡存取網路",
+          "tunModeDisabled": "虛擬網路介面卡模式已關閉，適用於特殊應用程式"
+        },
+        "tooltips": {
+          "systemProxy": "修改作業系統的代理設定，如果開啟失敗，可手動修改作業系統的代理設定",
+          "tunMode": "虛擬網路介面卡模式可以接管所有應用程式流量，適用於不遵循系統代理設定的特殊應用程式"
+        }
       }
     },
     "connection": {
