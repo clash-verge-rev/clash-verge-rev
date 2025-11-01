@@ -1,3 +1,4 @@
+use crate::constants::files::DNS_CONFIG;
 use crate::{
     config::Config,
     logging,
@@ -306,9 +307,9 @@ pub async fn create_backup() -> Result<(String, PathBuf), Error> {
     zip.start_file(dirs::VERGE_CONFIG, options)?;
     zip.write_all(serde_yaml_ng::to_string(&verge_config)?.as_bytes())?;
 
-    let dns_config_path = dirs::app_home_dir()?.join(dirs::DNS_CONFIG);
+    let dns_config_path = dirs::app_home_dir()?.join(DNS_CONFIG);
     if dns_config_path.exists() {
-        zip.start_file(dirs::DNS_CONFIG, options)?;
+        zip.start_file(DNS_CONFIG, options)?;
         zip.write_all(fs::read(&dns_config_path).await?.as_slice())?;
     }
 

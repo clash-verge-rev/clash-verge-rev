@@ -6,6 +6,7 @@ pub mod seq;
 mod tun;
 
 use self::{chain::*, field::*, merge::*, script::*, seq::*, tun::*};
+use crate::constants;
 use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
 use crate::{logging, utils::logging::Type};
@@ -442,7 +443,7 @@ fn apply_builtin_scripts(
 
 async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
     if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
-        let dns_path = app_dir.join("dns_config.yaml");
+        let dns_path = app_dir.join(constants::files::DNS_CONFIG);
 
         if dns_path.exists()
             && let Ok(dns_yaml) = fs::read_to_string(&dns_path).await
