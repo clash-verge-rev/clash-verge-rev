@@ -1,4 +1,4 @@
-use crate::{config::Config, utils::dirs};
+use crate::{config::Config, process::AsyncHandler, utils::dirs};
 use anyhow::Error;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -7,13 +7,12 @@ use smartstring::alias::String;
 use std::{
     collections::HashMap,
     env::{consts::OS, temp_dir},
-    fs,
     io::Write,
     path::PathBuf,
     sync::Arc,
     time::Duration,
 };
-use tokio::time::timeout;
+use tokio::{fs, time::timeout};
 use zip::write::SimpleFileOptions;
 
 // 应用版本常量，来自 tauri.conf.json
@@ -170,7 +169,7 @@ impl WebDavClient {
         let webdav_path: String = format!("{}/{}", dirs::BACKUP_DIR, file_name).into();
 
         // 读取文件并上传，如果失败尝试一次重试
-        let file_content = fs::read(&file_path)?;
+        let file_content = fs::read(&file_path).await?;
 
         // 添加超时保护
         let upload_result = timeout(
@@ -212,7 +211,7 @@ impl WebDavClient {
         let fut = async {
             let response = client.get(path.as_str()).await?;
             let content = response.bytes().await?;
-            fs::write(&storage_path, &content)?;
+            fs::write(&storage_path, &content).await?;
             Ok::<(), Error>(())
         };
 
@@ -250,18 +249,19 @@ impl WebDavClient {
     }
 }
 
-pub fn create_backup() -> Result<(String, PathBuf), Error> {
+pub async fn create_backup() -> Result<(String, PathBuf), Error> {
     let now = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
     let zip_file_name: String = format!("{OS}-backup-{now}.zip").into();
     let zip_path = temp_dir().join(zip_file_name.as_str());
 
-    let file = fs::File::create(&zip_path)?;
+    let value = zip_path.clone();
+    let file = AsyncHandler::spawn_blocking(move || std::fs::File::create(&value)).await??;
     let mut zip = zip::ZipWriter::new(file);
     zip.add_directory("profiles/", SimpleFileOptions::default())?;
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
-    if let Ok(entries) = fs::read_dir(dirs::app_profiles_dir()?) {
-        for entry in entries {
-            let entry = entry?;
+
+    if let Ok(mut entries) = fs::read_dir(dirs::app_profiles_dir()?).await {
+        while let Some(entry) = entries.next_entry().await? {
             let path = entry.path();
             if path.is_file() {
                 let file_name_os = entry.file_name();
@@ -270,16 +270,16 @@ pub fn create_backup() -> Result<(String, PathBuf), Error> {
                     .ok_or_else(|| anyhow::Error::msg("Invalid file name encoding"))?;
                 let backup_path = format!("profiles/{}", file_name);
                 zip.start_file(backup_path, options)?;
-                let file_content = fs::read(&path)?;
+                let file_content = fs::read(&path).await?;
                 zip.write_all(&file_content)?;
             }
         }
     }
     zip.start_file(dirs::CLASH_CONFIG, options)?;
-    zip.write_all(fs::read(dirs::clash_path()?)?.as_slice())?;
+    zip.write_all(fs::read(dirs::clash_path()?).await?.as_slice())?;
 
-    let mut verge_config: serde_json::Value =
-        serde_yaml_ng::from_str(&fs::read_to_string(dirs::verge_path()?)?)?;
+    let verge_text = fs::read_to_string(dirs::verge_path()?).await?;
+    let mut verge_config: serde_json::Value = serde_yaml_ng::from_str(&verge_text)?;
     if let Some(obj) = verge_config.as_object_mut() {
         obj.remove("webdav_username");
         obj.remove("webdav_password");
@@ -291,11 +291,11 @@ pub fn create_backup() -> Result<(String, PathBuf), Error> {
     let dns_config_path = dirs::app_home_dir()?.join(dirs::DNS_CONFIG);
     if dns_config_path.exists() {
         zip.start_file(dirs::DNS_CONFIG, options)?;
-        zip.write_all(fs::read(&dns_config_path)?.as_slice())?;
+        zip.write_all(fs::read(&dns_config_path).await?.as_slice())?;
     }
 
     zip.start_file(dirs::PROFILE_YAML, options)?;
-    zip.write_all(fs::read(dirs::profiles_path()?)?.as_slice())?;
+    zip.write_all(fs::read(dirs::profiles_path()?).await?.as_slice())?;
     zip.finish()?;
     Ok((zip_file_name, zip_path))
 }

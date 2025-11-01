@@ -2,6 +2,7 @@ use once_cell::sync::OnceCell;
 use tauri::Emitter;
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_mihomo::models::Proxies;
+use tokio::fs;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
 use crate::config::PrfSelected;
@@ -26,7 +27,6 @@ use smartstring::alias::String;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::{
-    fs,
     sync::atomic::{AtomicBool, Ordering},
     time::{Duration, Instant},
 };
@@ -86,7 +86,7 @@ impl TrayState {
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
         if is_common_tray_icon
             && let Ok(Some(common_icon_path)) = find_target_icons("common")
-            && let Ok(icon_data) = fs::read(common_icon_path)
+            && let Ok(icon_data) = fs::read(common_icon_path).await
         {
             return (true, icon_data);
         }
@@ -123,7 +123,7 @@ impl TrayState {
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
         if is_sysproxy_tray_icon
             && let Ok(Some(sysproxy_icon_path)) = find_target_icons("sysproxy")
-            && let Ok(icon_data) = fs::read(sysproxy_icon_path)
+            && let Ok(icon_data) = fs::read(sysproxy_icon_path).await
         {
             return (true, icon_data);
         }
@@ -160,7 +160,7 @@ impl TrayState {
         let is_tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
         if is_tun_tray_icon
             && let Ok(Some(tun_icon_path)) = find_target_icons("tun")
-            && let Ok(icon_data) = fs::read(tun_icon_path)
+            && let Ok(icon_data) = fs::read(tun_icon_path).await
         {
             return (true, icon_data);
         }
