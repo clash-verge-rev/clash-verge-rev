@@ -26,8 +26,8 @@
     "publish-version": "node scripts/publish-version.mjs",
     "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
     "clippy": "cargo clippy --all-features --all-targets --manifest-path ./src-tauri/Cargo.toml",
-    "lint": "eslint -c eslint.config.ts --cache --cache-location .eslintcache src",
-    "lint:fix": "eslint -c eslint.config.ts --cache --cache-location .eslintcache --fix src",
+    "lint": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache src",
+    "lint:fix": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache --fix src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
@@ -122,7 +122,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
+      "eslint --fix --max-warnings=0",
       "prettier --write",
       "git add"
     ],
