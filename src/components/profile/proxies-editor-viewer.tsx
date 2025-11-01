@@ -263,7 +263,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice("success", t("Saved Successfully"));
+      showNotice("success", t("components.profile.notifications.saved"));
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
@@ -276,7 +276,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">
-            {t("Edit Proxies")}
+            {t("components.profile.proxiesEditor.title")}
             <Box>
               <Button
                 variant="contained"
@@ -285,7 +285,9 @@ export const ProxiesEditorViewer = (props: Props) => {
                   setVisualization((prev) => !prev);
                 }}
               >
-                {visualization ? t("Advanced") : t("Visualization")}
+                {visualization
+                  ? t("common.editorModes.advanced")
+                  : t("common.editorModes.visualization")}
               </Button>
             </Box>
           </Box>
@@ -312,7 +314,9 @@ export const ProxiesEditorViewer = (props: Props) => {
                 <Item>
                   <TextField
                     autoComplete="new-password"
-                    placeholder={t("Use newlines for multiple uri")}
+                    placeholder={t(
+                      "components.profile.proxiesEditor.placeholders.multiUri",
+                    )}
                     fullWidth
                     rows={9}
                     multiline
@@ -332,7 +336,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                     });
                   }}
                 >
-                  {t("Prepend Proxy")}
+                  {t("components.profile.proxiesEditor.actions.prepend")}
                 </Button>
               </Item>
               <Item>
@@ -346,7 +350,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                     });
                   }}
                 >
-                  {t("Append Proxy")}
+                  {t("components.profile.proxiesEditor.actions.append")}
                 </Button>
               </Item>
             </List>

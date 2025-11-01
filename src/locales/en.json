@@ -7,7 +7,6 @@
   "Confirm": "Confirm",
   "Maximize": "Maximize",
   "Minimize": "Minimize",
-  "Format document": "Format document",
   "Empty": "Empty",
   "New": "New",
   "Edit": "Edit",
@@ -168,7 +167,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "Settings",
   "Proxies": "Proxies",
-  "Connecting...": "Connecting...",
   "Update All": "Update All",
   "Update At": "Update At",
   "rule": "rule",
@@ -186,15 +184,6 @@
   "Update Time": "Update Time",
   "Used / Total": "Used / Total",
   "Expire Time": "Expire Time",
-  "Edit Proxies": "Edit Proxies",
-  "Use newlines for multiple uri": "Use newlines for multiple uri(Base64 encoding supported)",
-  "Edit Rules": "Edit Rules",
-  "Prepend Group": "Prepend Group",
-  "Append Group": "Append Group",
-  "Prepend Proxy": "Prepend Proxy",
-  "Append Proxy": "Append Proxy",
-  "Advanced": "Advanced",
-  "Visualization": "Visualization",
   "DOMAIN": "Matches the full domain name",
   "DOMAIN-SUFFIX": "Matches the domain suffix",
   "DOMAIN-KEYWORD": "Matches the domain keyword",
@@ -232,48 +221,16 @@
   "REJECT": "Intercepts requests",
   "REJECT-DROP": "Discards requests",
   "PASS": "Skips this rule when matched",
-  "Edit Groups": "Edit Proxy Groups",
-  "Group Type": "Group Type",
   "select": "Select proxy manually",
   "url-test": "Select proxy based on URL test delay",
   "fallback": "Switch to another proxy on error",
   "load-balance": "Distribute proxy based on load balancing",
   "relay": "Pass through the defined proxy chain",
-  "Group Name": "Group Name",
-  "Use Proxies": "Use Proxies",
-  "Use Provider": "Use Provider",
-  "Health Check Url": "Health Check Url",
-  "Expected Status": "Expected Status",
-  "Interval": "Interval",
-  "Lazy": "Lazy",
   "Timeout": "Timeout",
-  "Max Failed Times": "Max Failed Times",
-  "Interface Name": "Interface Name",
-  "Routing Mark": "Routing Mark",
-  "Include All": "Include All Proxies and Providers",
-  "Include All Providers": "Include All Providers",
-  "Include All Proxies": "Include All Proxies",
-  "Exclude Filter": "Exclude Filter",
-  "Exclude Type": "Exclude Type",
-  "Disable UDP": "Disable UDP",
-  "Hidden": "Hidden",
-  "Group Name Required": "Group Name Required",
-  "Group Name Already Exists": "Group Name Already Exists",
-  "Extend Config": "Extend Config",
-  "Extend Script": "Extend Script",
   "Type": "Type",
   "Name": "Name",
   "Refresh": "Refresh",
-  "Home": "Home",
-  "Select": "Select",
-  "Edit Info": "Edit Info",
-  "Edit File": "Edit File",
-  "Open File": "Open File",
   "Update": "Update",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "Confirm deletion",
-  "This operation is not reversible": "This operation is not reversible",
-  "Script Console": "Script Console",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -380,7 +337,6 @@
   "theme.system": "System",
   "Copy Success": "Copy Success",
   "Memory Usage": "Core Usage",
-  "Proxy Group Icon": "Proxy Group Icon",
   "Miscellaneous": "Miscellaneous",
   "App Log Level": "App Log Level",
   "Auto Close Connections": "Auto Close Connections",
@@ -415,8 +371,6 @@
   "Exit": "Exit",
   "Verge Version": "Verge Version",
   "ReadOnly": "ReadOnly",
-  "ReadOnlyMessage": "Cannot edit in read-only editor",
-  "Filter": "Filter",
   "Filter conditions": "Filter conditions",
   "Match Case": "Match Case",
   "Match Whole Word": "Match Whole Word",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "Service Uninstalled Successfully",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "Proxy Daemon Duration Cannot be Less than 1 Second",
   "Invalid Bypass Format": "Invalid Bypass Format",
-  "Waiting for service to be ready...": "Waiting for service to be ready...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Service was ready, but core restart might have issues or service became unavailable. Please check.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Service installation or core restart encountered issues. Service might not be available. Please check system logs.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "Core restarted. Service is now available.",
   "Core Version Updated": "Core Version Updated",
   "Clash Core Restarted": "Clash Core Restarted",
   "GeoData Updated": "GeoData Updated",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
-  "Last Update failed": "Last Update failed",
-  "Next Up": "Next Up",
-  "No schedule": "No schedule",
   "Unknown": "Unknown",
-  "Auto update disabled": "Auto update disabled",
   "Update failed, retrying with Clash proxy...": "Update failed, retrying with Clash proxy...",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",
-  "Import failed, retrying with Clash proxy...": "Import failed, retrying with Clash proxy...",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
   "Current Node": "Current Node",
   "No active proxy node": "No active proxy node",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "Choose File"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "Edit Proxies",
+        "placeholders": {
+          "multiUri": "Use newlines for multiple uri(Base64 encoding supported)"
+        },
+        "actions": {
+          "prepend": "Prepend Proxy",
+          "append": "Append Proxy"
+        }
+      },
+      "groupsEditor": {
+        "title": "Edit Proxy Groups",
+        "errors": {
+          "nameRequired": "Group Name Required",
+          "nameExists": "Group Name Already Exists"
+        },
+        "fields": {
+          "type": "Group Type",
+          "name": "Group Name",
+          "icon": "Proxy Group Icon",
+          "proxies": "Use Proxies",
+          "provider": "Use Provider",
+          "healthCheckUrl": "Health Check Url",
+          "expectedStatus": "Expected Status",
+          "interval": "Interval",
+          "timeout": "Timeout",
+          "maxFailedTimes": "Max Failed Times",
+          "interfaceName": "Interface Name",
+          "routingMark": "Routing Mark",
+          "filter": "Filter",
+          "excludeFilter": "Exclude Filter",
+          "excludeType": "Exclude Type",
+          "includeAll": "Include All Proxies and Providers",
+          "includeAllProxies": "Include All Proxies",
+          "includeAllProviders": "Include All Providers"
+        },
+        "toggles": {
+          "lazy": "Lazy",
+          "disableUdp": "Disable UDP",
+          "hidden": "Hidden"
+        },
+        "actions": {
+          "prepend": "Prepend Group",
+          "append": "Append Group"
+        }
+      },
+      "menu": {
+        "home": "Home",
+        "select": "Select",
+        "editInfo": "Edit Info",
+        "editFile": "Edit File",
+        "editRules": "Edit Rules",
+        "editProxies": "Edit Proxies",
+        "editGroups": "Edit Proxy Groups",
+        "extendConfig": "Extend Config",
+        "extendScript": "Extend Script",
+        "openFile": "Open File",
+        "update": "Update",
+        "updateViaProxy": "Update via proxy",
+        "delete": "Delete"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "Confirm deletion",
+          "message": "This operation is not reversible"
+        }
+      },
+      "logViewer": {
+        "title": "Script Console"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "Format document",
+        "readOnlyMessage": "Cannot edit in read-only editor"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "Copy Success"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "Visualization",
+      "advanced": "Advanced"
     }
   }
 }

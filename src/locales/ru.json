@@ -7,7 +7,6 @@
   "Confirm": "Подтвердить",
   "Maximize": "Развернуть",
   "Minimize": "Свернуть",
-  "Format document": "Форматировать документ",
   "Empty": "Пусто",
   "New": "Новый",
   "Edit": "Редактировать",
@@ -168,7 +167,6 @@
   "Label-Unlock": "Тест",
   "Label-Settings": "Настройки",
   "Proxies": "Прокси",
-  "Connecting...": "Connecting...",
   "Update All": "Обновить все",
   "Update At": "Обновлено в",
   "rule": "правила",
@@ -186,15 +184,6 @@
   "Update Time": "Время обновления",
   "Used / Total": "Использовано / Всего",
   "Expire Time": "Время окончания",
-  "Edit Proxies": "Редактировать прокси",
-  "Use newlines for multiple uri": "Используйте символы новой строки для нескольких URI (поддерживается кодировка Base64)",
-  "Edit Rules": "Редактировать правила",
-  "Prepend Group": "Добавить группу в начало",
-  "Append Group": "Добавить группу в конец",
-  "Prepend Proxy": "Добавить прокси в начало",
-  "Append Proxy": "Добавить прокси в конец",
-  "Advanced": "Дополнительно",
-  "Visualization": "Визуализация",
   "DOMAIN": "Соответствует полному доменному имени",
   "DOMAIN-SUFFIX": "Соответствует суффиксу домена",
   "DOMAIN-KEYWORD": "Соответствует ключевому слову домена",
@@ -232,48 +221,16 @@
   "REJECT": "Перехватывает запросы",
   "REJECT-DROP": "Отклоняет запросы",
   "PASS": "Пропускает это правило при совпадении",
-  "Edit Groups": "Редактировать группы прокси",
-  "Group Type": "Тип группы",
   "select": "Выбор прокси вручную",
   "url-test": "Выбор прокси на основе задержки теста URL",
   "fallback": "Переключение на другой прокси при ошибке",
   "load-balance": "Распределение прокси на основе балансировки нагрузки",
   "relay": "Передача через определенную цепочку прокси",
-  "Group Name": "Имя группы",
-  "Use Proxies": "Использовать прокси",
-  "Use Provider": "Использовать провайдера",
-  "Health Check Url": "URL проверки здоровья",
-  "Expected Status": "Ожидаемый статус",
-  "Interval": "Интервал",
-  "Lazy": "Ленивый",
   "Timeout": "Таймаут",
-  "Max Failed Times": "Максимальное количество неудач",
-  "Interface Name": "Имя интерфейса",
-  "Routing Mark": "Марка маршрутизации",
-  "Include All": "Включить все прокси и провайдеры",
-  "Include All Providers": "Включить всех провайдеров",
-  "Include All Proxies": "Включить все прокси",
-  "Exclude Filter": "Исключить фильтр",
-  "Exclude Type": "Тип исключения",
-  "Disable UDP": "Отключить UDP",
-  "Hidden": "Скрытый",
-  "Group Name Required": "Требуется имя группы",
-  "Group Name Already Exists": "Имя группы уже существует",
-  "Extend Config": "Изменить Merge",
-  "Extend Script": "Изменить Script",
   "Type": "Тип",
   "Name": "Название",
   "Refresh": "Обновить",
-  "Home": "Главная",
-  "Select": "Выбрать",
-  "Edit Info": "Изменить информацию",
-  "Edit File": "Изменить файл",
-  "Open File": "Открыть файл",
   "Update": "Обновить",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "Подтвердите удаление",
-  "This operation is not reversible": "Эта операция необратима",
-  "Script Console": "Консоль скрипта",
   "Close All Connections": "Close All Connections",
   "Upload": "Загрузка",
   "Download": "Скачивание",
@@ -380,7 +337,6 @@
   "theme.system": "Системная",
   "Copy Success": "Скопировано",
   "Memory Usage": "Использование памяти",
-  "Proxy Group Icon": "Иконка Группы прокси",
   "Miscellaneous": "Расширенные настройки",
   "App Log Level": "Уровень журнала приложения",
   "Auto Close Connections": "Автоматическое закрытие соединений",
@@ -415,8 +371,6 @@
   "Exit": "Выход",
   "Verge Version": "Версия Clash Verge Rev",
   "ReadOnly": "Только для чтения",
-  "ReadOnlyMessage": "Невозможно редактировать в режиме только для чтения",
-  "Filter": "Фильтр",
   "Filter conditions": "Условия фильтрации",
   "Match Case": "Учитывать регистр",
   "Match Whole Word": "Полное совпадение слова",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "Служба успешно удалена",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "Продолжительность работы прокси-демона не может быть меньше 1 секунды",
   "Invalid Bypass Format": "Неверный формат обхода",
-  "Waiting for service to be ready...": "Waiting for service to be ready...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Service was ready, but core restart might have issues or service became unavailable. Please check.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Service installation or core restart encountered issues. Service might not be available. Please check system logs.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "Core restarted. Service is now available.",
   "Core Version Updated": "Ядро обновлено до последней версии",
   "Clash Core Restarted": "Ядро перезапущено",
   "GeoData Updated": "Файлы GeoData обновлены",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "Последняя проверка обновлений",
   "Click to import subscription": "Нажмите, чтобы импортировать подписку",
-  "Last Update failed": "Last Update failed",
-  "Next Up": "Next Up",
-  "No schedule": "No schedule",
   "Unknown": "Unknown",
-  "Auto update disabled": "Auto update disabled",
   "Update failed, retrying with Clash proxy...": "Update failed, retrying with Clash proxy...",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",
-  "Import failed, retrying with Clash proxy...": "Import failed, retrying with Clash proxy...",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
   "Current Node": "Текущий сервер",
   "No active proxy node": "Нет активного прокси-узла",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "Выбрать файл"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "Редактировать прокси",
+        "placeholders": {
+          "multiUri": "Используйте символы новой строки для нескольких URI (поддерживается кодировка Base64)"
+        },
+        "actions": {
+          "prepend": "Добавить прокси в начало",
+          "append": "Добавить прокси в конец"
+        }
+      },
+      "groupsEditor": {
+        "title": "Редактировать группы прокси",
+        "errors": {
+          "nameRequired": "Требуется имя группы",
+          "nameExists": "Имя группы уже существует"
+        },
+        "fields": {
+          "type": "Тип группы",
+          "name": "Имя группы",
+          "icon": "Иконка Группы прокси",
+          "proxies": "Использовать прокси",
+          "provider": "Использовать провайдера",
+          "healthCheckUrl": "URL проверки здоровья",
+          "expectedStatus": "Ожидаемый статус",
+          "interval": "Интервал",
+          "timeout": "Таймаут",
+          "maxFailedTimes": "Максимальное количество неудач",
+          "interfaceName": "Имя интерфейса",
+          "routingMark": "Марка маршрутизации",
+          "filter": "Фильтр",
+          "excludeFilter": "Исключить фильтр",
+          "excludeType": "Тип исключения",
+          "includeAll": "Включить все прокси и провайдеры",
+          "includeAllProxies": "Включить все прокси",
+          "includeAllProviders": "Включить всех провайдеров"
+        },
+        "toggles": {
+          "lazy": "Ленивый",
+          "disableUdp": "Отключить UDP",
+          "hidden": "Скрытый"
+        },
+        "actions": {
+          "prepend": "Добавить группу в начало",
+          "append": "Добавить группу в конец"
+        }
+      },
+      "menu": {
+        "home": "Главная",
+        "select": "Выбрать",
+        "editInfo": "Изменить информацию",
+        "editFile": "Изменить файл",
+        "editRules": "Редактировать правила",
+        "editProxies": "Редактировать прокси",
+        "editGroups": "Редактировать группы прокси",
+        "extendConfig": "Изменить Merge",
+        "extendScript": "Изменить Script",
+        "openFile": "Открыть файл",
+        "update": "Обновить",
+        "updateViaProxy": "Update via proxy",
+        "delete": "Удалить"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "Подтвердите удаление",
+          "message": "Эта операция необратима"
+        }
+      },
+      "logViewer": {
+        "title": "Консоль скрипта"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "Форматировать документ",
+        "readOnlyMessage": "Невозможно редактировать в режиме только для чтения"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "Скопировано"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "Визуализация",
+      "advanced": "Дополнительно"
     }
   }
 }

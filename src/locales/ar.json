@@ -7,7 +7,6 @@
   "Confirm": "تأكيد",
   "Maximize": "تكبير",
   "Minimize": "تصغير",
-  "Format document": "تنسيق المستند",
   "Empty": "فارغ",
   "New": "جديد",
   "Edit": "تعديل",
@@ -168,7 +167,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "الإعدادات",
   "Proxies": "الوكلاء",
-  "Connecting...": "Connecting...",
   "Update All": "تحديث الكل",
   "Update At": "التحديث عند",
   "rule": "قاعدة",
@@ -186,15 +184,6 @@
   "Update Time": "وقت التحديث",
   "Used / Total": "المستخدم / الإجمالي",
   "Expire Time": "وقت الانتهاء",
-  "Edit Proxies": "تعديل الوكلاء",
-  "Use newlines for multiple uri": "استخدم أسطرًا جديدة لعدّة عناوين URI (يدعم التشفير Base64)",
-  "Edit Rules": "تعديل القواعد",
-  "Prepend Group": "إضافة مجموعة في البداية",
-  "Append Group": "إضافة مجموعة في النهاية",
-  "Prepend Proxy": "إضافة وكيل في البداية",
-  "Append Proxy": "إضافة وكيل في النهاية",
-  "Advanced": "متقدم",
-  "Visualization": "تصور",
   "DOMAIN": "مطابقة اسم المجال الكامل",
   "DOMAIN-SUFFIX": "مطابقة لاحقة المجال",
   "DOMAIN-KEYWORD": "مطابقة كلمة مفتاحية في المجال",
@@ -232,48 +221,16 @@
   "REJECT": "رفض الطلبات",
   "REJECT-DROP": "تجاهل الطلبات",
   "PASS": "تخطي هذه القاعدة عند المطابقة",
-  "Edit Groups": "تعديل مجموعات الوكلاء",
-  "Group Type": "نوع المجموعة",
   "select": "اختيار الوكيل يدويًا",
   "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
   "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
   "load-balance": "توزيع التحميل بين الوكلاء",
   "relay": "التمرير عبر سلسلة الوكلاء المحددة",
-  "Group Name": "اسم المجموعة",
-  "Use Proxies": "استخدام الوكلاء",
-  "Use Provider": "استخدام المزود",
-  "Health Check Url": "رابط فحص الصحة",
-  "Expected Status": "الحالة المتوقعة",
-  "Interval": "الفاصل الزمني",
-  "Lazy": "كسول",
   "Timeout": "مهلة",
-  "Max Failed Times": "الحد الأقصى لمحاولات الفشل",
-  "Interface Name": "اسم الواجهة",
-  "Routing Mark": "علامة التوجيه",
-  "Include All": "تضمين جميع الوكلاء والمزودين",
-  "Include All Providers": "تضمين جميع المزودين",
-  "Include All Proxies": "تضمين جميع الوكلاء",
-  "Exclude Filter": "استبعاد المرشح",
-  "Exclude Type": "استبعاد النوع",
-  "Disable UDP": "تعطيل UDP",
-  "Hidden": "مخفي",
-  "Group Name Required": "اسم المجموعة مطلوب",
-  "Group Name Already Exists": "اسم المجموعة موجود بالفعل",
-  "Extend Config": "توسيع الإعدادات",
-  "Extend Script": "توسيع السكربت",
   "Type": "النوع",
   "Name": "الاسم",
   "Refresh": "تحديث",
-  "Home": "الصفحة الرئيسية",
-  "Select": "اختيار",
-  "Edit Info": "تعديل المعلومات",
-  "Edit File": "تعديل الملف",
-  "Open File": "فتح الملف",
   "Update": "تحديث",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "تأكيد الحذف",
-  "This operation is not reversible": "لا يمكن التراجع عن هذه العملية",
-  "Script Console": "وحدة التحكم للسكريبت",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -380,7 +337,6 @@
   "theme.system": "سمة النظام",
   "Copy Success": "تم النسخ بنجاح",
   "Memory Usage": "استهلاك الذاكرة",
-  "Proxy Group Icon": "أيقونة مجموعة الوكلاء",
   "Miscellaneous": "متفرقات",
   "App Log Level": "مستوى سجلات التطبيق",
   "Auto Close Connections": "إغلاق الاتصالات تلقائيًا",
@@ -415,8 +371,6 @@
   "Exit": "خروج",
   "Verge Version": "إصدار Verge",
   "ReadOnly": "للقراءة فقط",
-  "ReadOnlyMessage": "لا يمكن التعديل في محرر القراءة فقط",
-  "Filter": "تصفية",
   "Filter conditions": "شروط التصفية",
   "Match Case": "مطابقة الحالة",
   "Match Whole Word": "مطابقة الكلمة بأكملها",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "تم إلغاء تثبيت الخدمة بنجاح",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "لا يمكن أن تقل مدة خادم الوكيل عن ثانية واحدة",
   "Invalid Bypass Format": "تنسيق التخطي غير صالح",
-  "Waiting for service to be ready...": "Waiting for service to be ready...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Service was ready, but core restart might have issues or service became unavailable. Please check.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Service installation or core restart encountered issues. Service might not be available. Please check system logs.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "Core restarted. Service is now available.",
   "Core Version Updated": "تم تحديث إصدار النواة",
   "Clash Core Restarted": "تم إعادة تشغيل نواة Clash",
   "GeoData Updated": "تم تحديث البيانات الجغرافية",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
-  "Last Update failed": "Last Update failed",
-  "Next Up": "Next Up",
-  "No schedule": "No schedule",
   "Unknown": "Unknown",
-  "Auto update disabled": "Auto update disabled",
   "Update failed, retrying with Clash proxy...": "Update failed, retrying with Clash proxy...",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",
-  "Import failed, retrying with Clash proxy...": "Import failed, retrying with Clash proxy...",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
   "Current Node": "Current Node",
   "No active proxy node": "No active proxy node",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "اختر ملف"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "تعديل الوكلاء",
+        "placeholders": {
+          "multiUri": "استخدم أسطرًا جديدة لعدّة عناوين URI (يدعم التشفير Base64)"
+        },
+        "actions": {
+          "prepend": "إضافة وكيل في البداية",
+          "append": "إضافة وكيل في النهاية"
+        }
+      },
+      "groupsEditor": {
+        "title": "تعديل مجموعات الوكلاء",
+        "errors": {
+          "nameRequired": "اسم المجموعة مطلوب",
+          "nameExists": "اسم المجموعة موجود بالفعل"
+        },
+        "fields": {
+          "type": "نوع المجموعة",
+          "name": "اسم المجموعة",
+          "icon": "أيقونة مجموعة الوكلاء",
+          "proxies": "استخدام الوكلاء",
+          "provider": "استخدام المزود",
+          "healthCheckUrl": "رابط فحص الصحة",
+          "expectedStatus": "الحالة المتوقعة",
+          "interval": "الفاصل الزمني",
+          "timeout": "مهلة",
+          "maxFailedTimes": "الحد الأقصى لمحاولات الفشل",
+          "interfaceName": "اسم الواجهة",
+          "routingMark": "علامة التوجيه",
+          "filter": "تصفية",
+          "excludeFilter": "استبعاد المرشح",
+          "excludeType": "استبعاد النوع",
+          "includeAll": "تضمين جميع الوكلاء والمزودين",
+          "includeAllProxies": "تضمين جميع الوكلاء",
+          "includeAllProviders": "تضمين جميع المزودين"
+        },
+        "toggles": {
+          "lazy": "كسول",
+          "disableUdp": "تعطيل UDP",
+          "hidden": "مخفي"
+        },
+        "actions": {
+          "prepend": "إضافة مجموعة في البداية",
+          "append": "إضافة مجموعة في النهاية"
+        }
+      },
+      "menu": {
+        "home": "Home",
+        "select": "اختيار",
+        "editInfo": "تعديل المعلومات",
+        "editFile": "تعديل الملف",
+        "editRules": "تعديل القواعد",
+        "editProxies": "تعديل الوكلاء",
+        "editGroups": "تعديل مجموعات الوكلاء",
+        "extendConfig": "توسيع الإعدادات",
+        "extendScript": "توسيع السكربت",
+        "openFile": "فتح الملف",
+        "update": "تحديث",
+        "updateViaProxy": "Update via proxy",
+        "delete": "حذف"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "تأكيد الحذف",
+          "message": "لا يمكن التراجع عن هذه العملية"
+        }
+      },
+      "logViewer": {
+        "title": "وحدة التحكم للسكريبت"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "تنسيق المستند",
+        "readOnlyMessage": "لا يمكن التعديل في محرر القراءة فقط"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "تم النسخ بنجاح"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "تصور",
+      "advanced": "متقدم"
     }
   }
 }

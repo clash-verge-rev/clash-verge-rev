@@ -7,7 +7,6 @@
   "Confirm": "Растау",
   "Maximize": "Зурайту",
   "Minimize": "Кечерәйтү",
-  "Format document": "Документны форматлау",
   "Empty": "Буш",
   "New": "Яңа",
   "Edit": "Үзгәртү",
@@ -168,7 +167,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "Көйләүләр",
   "Proxies": "Прокси",
-  "Connecting...": "Connecting...",
   "Update All": "Барысын да яңарту",
   "Update At": "Яңартылган вакыт",
   "rule": "кагыйдә",
@@ -186,15 +184,6 @@
   "Update Time": "Яңарту вакыты",
   "Used / Total": "Кулланылган / Барлыгы",
   "Expire Time": "Тамамлану вакыты",
-  "Edit Proxies": "Проксины үзгәртү",
-  "Use newlines for multiple uri": "Берничә URI өчен яңа юл символын кулланыгыз (Base64 кодлавы ярдәм ителә)",
-  "Edit Rules": "Кагыйдәләрне үзгәртү",
-  "Prepend Group": "Төркемне өскә өстәү",
-  "Append Group": "Төркемне аска өстәү",
-  "Prepend Proxy": "Проксины өскә өстәү",
-  "Append Proxy": "Проксины аска өстәү",
-  "Advanced": "Өстәмә",
-  "Visualization": "Визуализация",
   "DOMAIN": "Домен исеменең тулы туры килүе",
   "DOMAIN-SUFFIX": "Домен суффиксына туры килү",
   "DOMAIN-KEYWORD": "Доменда төп сүзгә туры килү",
@@ -232,48 +221,16 @@
   "REJECT": "Сорауларны тоткарлау",
   "REJECT-DROP": "Сорауларны кире кагу",
   "PASS": "Туры килсә дә, бу кагыйдәне урап узу",
-  "Edit Groups": "Прокси төркемнәрен үзгәртү",
-  "Group Type": "Төркем төре",
   "select": "Проксины кулдан сайлау",
   "url-test": "URL-тест задержкасына карап прокси сайлау",
   "fallback": "Хата булган очракта башка проксига күчү",
   "load-balance": "Трафикны баланслау нигезендә прокси тарату",
   "relay": "Билгеле прокси чылбыры аша тапшыру",
-  "Group Name": "Төркем исеме",
-  "Use Proxies": "Прокси куллану",
-  "Use Provider": "Провайдер куллану",
-  "Health Check Url": "Сәламәтлекне тикшерү URL-ы",
-  "Expected Status": "Көтелгән статус коды",
-  "Interval": "Интервал",
-  "Lazy": "Сак режим (lazy)",
   "Timeout": "Таймаут",
-  "Max Failed Times": "Иң күп хаталы тикшерү саны",
-  "Interface Name": "Интерфейс исеме",
-  "Routing Mark": "Маршрут билгесе",
-  "Include All": "Барлык прокси һәм провайдерларны кертү",
-  "Include All Providers": "Барлык провайдерларны кертү",
-  "Include All Proxies": "Барлык проксины кертү",
-  "Exclude Filter": "Фильтр аша чыгару",
-  "Exclude Type": "Чыгару төре",
-  "Disable UDP": "UDP'ны сүндерү",
-  "Hidden": "Яшерен",
-  "Group Name Required": "Төркем исеме кирәк",
-  "Group Name Already Exists": "Әлеге төркем исеме бар инде",
-  "Extend Config": "Merge-ны үзгәртергә",
-  "Extend Script": "Script-ны үзгәртергә",
   "Type": "Төр",
   "Name": "Исем",
   "Refresh": "Яңарту",
-  "Home": "Баш бит",
-  "Select": "Сайлау",
-  "Edit Info": "Мәгълүматны үзгәртү",
-  "Edit File": "Файлны үзгәртү",
-  "Open File": "Файлны ачу",
   "Update": "Яңарту",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "Бетерүне раслагыз",
-  "This operation is not reversible": "Бу гамәлне кире кайтарып булмый",
-  "Script Console": "Скрипт консоле",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -380,7 +337,6 @@
   "theme.system": "Система",
   "Copy Success": "Күчерелде",
   "Memory Usage": "Хәтер куллану",
-  "Proxy Group Icon": "Прокси төркеме иконкасы",
   "Miscellaneous": "Өстәмә көйләүләр",
   "App Log Level": "Кушымта журналы дәрәҗәсе",
   "Auto Close Connections": "Тоташуларны автоматик ябу",
@@ -415,8 +371,6 @@
   "Exit": "Чыгу",
   "Verge Version": "Verge версиясе",
   "ReadOnly": "Уку режимы гына",
-  "ReadOnlyMessage": "Уку режимында үзгәртү мөмкин түгел",
-  "Filter": "Фильтр",
   "Filter conditions": "Фильтр шартлары",
   "Match Case": "Регистрны исәпкә алу",
   "Match Whole Word": "Сүзнең тулы туры килүе",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "Сервис уңышлы салдырылды",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "Прокси-демон эш вакыты 1 секундтан ким була алмый",
   "Invalid Bypass Format": "Дөрес булмаган Bypass форматы",
-  "Waiting for service to be ready...": "Waiting for service to be ready...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Service was ready, but core restart might have issues or service became unavailable. Please check.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Service installation or core restart encountered issues. Service might not be available. Please check system logs.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "Core restarted. Service is now available.",
   "Core Version Updated": "Ядро версиясе яңартылды",
   "Clash Core Restarted": "Clash ядросы яңадан башланды",
   "GeoData Updated": "GeoData яңартылды",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
-  "Last Update failed": "Last Update failed",
-  "Next Up": "Next Up",
-  "No schedule": "No schedule",
   "Unknown": "Unknown",
-  "Auto update disabled": "Auto update disabled",
   "Update failed, retrying with Clash proxy...": "Update failed, retrying with Clash proxy...",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",
-  "Import failed, retrying with Clash proxy...": "Import failed, retrying with Clash proxy...",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
   "Current Node": "Current Node",
   "No active proxy node": "No active proxy node",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "Файл сайлау"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "Проксины үзгәртү",
+        "placeholders": {
+          "multiUri": "Берничә URI өчен яңа юл символын кулланыгыз (Base64 кодлавы ярдәм ителә)"
+        },
+        "actions": {
+          "prepend": "Проксины өскә өстәү",
+          "append": "Проксины аска өстәү"
+        }
+      },
+      "groupsEditor": {
+        "title": "Прокси төркемнәрен үзгәртү",
+        "errors": {
+          "nameRequired": "Төркем исеме кирәк",
+          "nameExists": "Әлеге төркем исеме бар инде"
+        },
+        "fields": {
+          "type": "Төркем төре",
+          "name": "Төркем исеме",
+          "icon": "Прокси төркеме иконкасы",
+          "proxies": "Прокси куллану",
+          "provider": "Провайдер куллану",
+          "healthCheckUrl": "Сәламәтлекне тикшерү URL-ы",
+          "expectedStatus": "Көтелгән статус коды",
+          "interval": "Интервал",
+          "timeout": "Таймаут",
+          "maxFailedTimes": "Иң күп хаталы тикшерү саны",
+          "interfaceName": "Интерфейс исеме",
+          "routingMark": "Маршрут билгесе",
+          "filter": "Фильтр",
+          "excludeFilter": "Фильтр аша чыгару",
+          "excludeType": "Чыгару төре",
+          "includeAll": "Барлык прокси һәм провайдерларны кертү",
+          "includeAllProxies": "Барлык проксины кертү",
+          "includeAllProviders": "Барлык провайдерларны кертү"
+        },
+        "toggles": {
+          "lazy": "Сак режим (lazy)",
+          "disableUdp": "UDP'ны сүндерү",
+          "hidden": "Яшерен"
+        },
+        "actions": {
+          "prepend": "Төркемне өскә өстәү",
+          "append": "Төркемне аска өстәү"
+        }
+      },
+      "menu": {
+        "home": "Home",
+        "select": "Сайлау",
+        "editInfo": "Мәгълүматны үзгәртү",
+        "editFile": "Файлны үзгәртү",
+        "editRules": "Кагыйдәләрне үзгәртү",
+        "editProxies": "Проксины үзгәртү",
+        "editGroups": "Прокси төркемнәрен үзгәртү",
+        "extendConfig": "Merge-ны үзгәртергә",
+        "extendScript": "Script-ны үзгәртергә",
+        "openFile": "Файлны ачу",
+        "update": "Яңарту",
+        "updateViaProxy": "Update via proxy",
+        "delete": "Бетерү"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "Бетерүне раслагыз",
+          "message": "Бу гамәлне кире кайтарып булмый"
+        }
+      },
+      "logViewer": {
+        "title": "Скрипт консоле"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "Документны форматлау",
+        "readOnlyMessage": "Уку режимында үзгәртү мөмкин түгел"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "Күчерелде"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "Визуализация",
+      "advanced": "Өстәмә"
     }
   }
 }

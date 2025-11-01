@@ -7,7 +7,6 @@
   "Confirm": "Konfirmasi",
   "Maximize": "Maksimalkan",
   "Minimize": "Minimalkan",
-  "Format document": "Format dokumen",
   "Empty": "Kosong",
   "New": "Baru",
   "Edit": "Ubah",
@@ -168,7 +167,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "Pengaturan",
   "Proxies": "Proksi",
-  "Connecting...": "Connecting...",
   "Update All": "Perbarui Semua",
   "Update At": "Diperbarui Pada",
   "rule": "aturan",
@@ -186,15 +184,6 @@
   "Update Time": "Waktu Pembaruan",
   "Used / Total": "Digunakan / Total",
   "Expire Time": "Waktu Kedaluwarsa",
-  "Edit Proxies": "Ubah Proksi",
-  "Use newlines for multiple uri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)",
-  "Edit Rules": "Ubah Aturan",
-  "Prepend Group": "Tambahkan Grup di Awal",
-  "Append Group": "Tambahkan Grup di Akhir",
-  "Prepend Proxy": "Tambahkan Proksi di Awal",
-  "Append Proxy": "Tambahkan Proksi di Akhir",
-  "Advanced": "Lanjutan",
-  "Visualization": "Visualisasi",
   "DOMAIN": "Cocok dengan nama domain lengkap",
   "DOMAIN-SUFFIX": "Cocok dengan sufiks domain",
   "DOMAIN-KEYWORD": "Cocok dengan kata kunci domain",
@@ -232,48 +221,16 @@
   "REJECT": "Mencegat permintaan",
   "REJECT-DROP": "Membuang permintaan",
   "PASS": "Lewati aturan ini saat cocok",
-  "Edit Groups": "Ubah Grup Proksi",
-  "Group Type": "Jenis Grup",
   "select": "Pilih proksi secara manual",
   "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
   "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
   "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
   "relay": "Lewatkan melalui rantai proksi yang ditentukan",
-  "Group Name": "Nama Grup",
-  "Use Proxies": "Gunakan Proksi",
-  "Use Provider": "Gunakan Penyedia",
-  "Health Check Url": "URL Pemeriksaan Kesehatan",
-  "Expected Status": "Status yang Diharapkan",
-  "Interval": "Interval",
-  "Lazy": "Malas",
   "Timeout": "Waktu Habis",
-  "Max Failed Times": "Jumlah Gagal Maksimal",
-  "Interface Name": "Nama Antarmuka",
-  "Routing Mark": "Tanda Routing",
-  "Include All": "Sertakan Semua Proksi dan Penyedia",
-  "Include All Providers": "Sertakan Semua Penyedia",
-  "Include All Proxies": "Sertakan Semua Proksi",
-  "Exclude Filter": "Kecualikan Filter",
-  "Exclude Type": "Kecualikan Jenis",
-  "Disable UDP": "Nonaktifkan UDP",
-  "Hidden": "Tersembunyi",
-  "Group Name Required": "Nama Grup Diperlukan",
-  "Group Name Already Exists": "Nama Grup Sudah Ada",
-  "Extend Config": "Perluas Konfigurasi",
-  "Extend Script": "Perluas Skrip",
   "Type": "Jenis",
   "Name": "Nama",
   "Refresh": "Segarkan",
-  "Home": "Beranda",
-  "Select": "Pilih",
-  "Edit Info": "Ubah Info",
-  "Edit File": "Ubah Berkas",
-  "Open File": "Buka Berkas",
   "Update": "Perbarui",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "Konfirmasi penghapusan",
-  "This operation is not reversible": "Operasi ini tidak dapat dibatalkan",
-  "Script Console": "Konsol Skrip",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -380,7 +337,6 @@
   "theme.system": "Sistem",
   "Copy Success": "Salin Berhasil",
   "Memory Usage": "Penggunaan Memori",
-  "Proxy Group Icon": "Ikon Grup Proksi",
   "Miscellaneous": "Lain-lain",
   "App Log Level": "Tingkat Log Aplikasi",
   "Auto Close Connections": "Tutup Koneksi Otomatis",
@@ -415,8 +371,6 @@
   "Exit": "Keluar",
   "Verge Version": "Versi Verge",
   "ReadOnly": "Hanya Baca",
-  "ReadOnlyMessage": "Tidak dapat mengedit di editor hanya baca",
-  "Filter": "Filter",
   "Filter conditions": "Kondisi Filter",
   "Match Case": "Cocokkan Kasus",
   "Match Whole Word": "Cocokkan Kata Utuh",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "Layanan Berhasil Dicopot",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "Durasi Daemon Proksi Tidak Boleh Kurang dari 1 Detik",
   "Invalid Bypass Format": "Format Bypass Tidak Valid",
-  "Waiting for service to be ready...": "Waiting for service to be ready...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Service was ready, but core restart might have issues or service became unavailable. Please check.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Service installation or core restart encountered issues. Service might not be available. Please check system logs.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "Core restarted. Service is now available.",
   "Core Version Updated": "Versi Core Diperbarui",
   "Clash Core Restarted": "Core Clash Dimulai Ulang",
   "GeoData Updated": "GeoData Diperbarui",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
-  "Last Update failed": "Last Update failed",
-  "Next Up": "Next Up",
-  "No schedule": "No schedule",
   "Unknown": "Unknown",
-  "Auto update disabled": "Auto update disabled",
   "Update failed, retrying with Clash proxy...": "Update failed, retrying with Clash proxy...",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",
-  "Import failed, retrying with Clash proxy...": "Import failed, retrying with Clash proxy...",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
   "Current Node": "Current Node",
   "No active proxy node": "No active proxy node",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "Pilih Berkas"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "Ubah Proksi",
+        "placeholders": {
+          "multiUri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)"
+        },
+        "actions": {
+          "prepend": "Tambahkan Proksi di Awal",
+          "append": "Tambahkan Proksi di Akhir"
+        }
+      },
+      "groupsEditor": {
+        "title": "Ubah Grup Proksi",
+        "errors": {
+          "nameRequired": "Nama Grup Diperlukan",
+          "nameExists": "Nama Grup Sudah Ada"
+        },
+        "fields": {
+          "type": "Jenis Grup",
+          "name": "Nama Grup",
+          "icon": "Ikon Grup Proksi",
+          "proxies": "Gunakan Proksi",
+          "provider": "Gunakan Penyedia",
+          "healthCheckUrl": "URL Pemeriksaan Kesehatan",
+          "expectedStatus": "Status yang Diharapkan",
+          "interval": "Interval",
+          "timeout": "Waktu Habis",
+          "maxFailedTimes": "Jumlah Gagal Maksimal",
+          "interfaceName": "Nama Antarmuka",
+          "routingMark": "Tanda Routing",
+          "filter": "Filter",
+          "excludeFilter": "Kecualikan Filter",
+          "excludeType": "Kecualikan Jenis",
+          "includeAll": "Sertakan Semua Proksi dan Penyedia",
+          "includeAllProxies": "Sertakan Semua Proksi",
+          "includeAllProviders": "Sertakan Semua Penyedia"
+        },
+        "toggles": {
+          "lazy": "Malas",
+          "disableUdp": "Nonaktifkan UDP",
+          "hidden": "Tersembunyi"
+        },
+        "actions": {
+          "prepend": "Tambahkan Grup di Awal",
+          "append": "Tambahkan Grup di Akhir"
+        }
+      },
+      "menu": {
+        "home": "Home",
+        "select": "Pilih",
+        "editInfo": "Ubah Info",
+        "editFile": "Ubah Berkas",
+        "editRules": "Ubah Aturan",
+        "editProxies": "Ubah Proksi",
+        "editGroups": "Ubah Grup Proksi",
+        "extendConfig": "Perluas Konfigurasi",
+        "extendScript": "Perluas Skrip",
+        "openFile": "Buka Berkas",
+        "update": "Perbarui",
+        "updateViaProxy": "Update via proxy",
+        "delete": "Hapus"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "Konfirmasi penghapusan",
+          "message": "Operasi ini tidak dapat dibatalkan"
+        }
+      },
+      "logViewer": {
+        "title": "Konsol Skrip"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "Format dokumen",
+        "readOnlyMessage": "Tidak dapat mengedit di editor hanya baca"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "Salin Berhasil"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "Visualisasi",
+      "advanced": "Lanjutan"
     }
   }
 }

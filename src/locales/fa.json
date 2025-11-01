@@ -7,7 +7,6 @@
   "Confirm": "تأیید",
   "Maximize": "بزرگ‌نمایی",
   "Minimize": "کوچک‌نمایی",
-  "Format document": "فرمت‌بندی سند",
   "Empty": "خالی خالی",
   "New": "جدید",
   "Edit": "ویرایش",
@@ -168,7 +167,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "تنظیمات",
   "Proxies": "پراکسی‌ها",
-  "Connecting...": "Connecting...",
   "Update All": "به‌روزرسانی همه",
   "Update At": "به‌روزرسانی در",
   "rule": "قانون",
@@ -186,15 +184,6 @@
   "Update Time": "زمان به‌روزرسانی",
   "Used / Total": "استفاده‌شده / کل",
   "Expire Time": "زمان انقضا",
-  "Edit Proxies": "ویرایش پروکسی‌ها",
-  "Use newlines for multiple uri": "استفاده از خطوط جدید برای چندین آدرس (پشتیبانی از رمزگذاری Base64)",
-  "Edit Rules": "ویرایش قوانین",
-  "Prepend Group": "اضافه کردن گروه به ابتدا",
-  "Append Group": "اضافه کردن گروه به انتها",
-  "Prepend Proxy": "پیش‌افزودن پراکسی",
-  "Append Proxy": "پس‌افزودن پراکسی",
-  "Advanced": "پیشرفته",
-  "Visualization": "تجسم",
   "DOMAIN": "مطابقت با نام کامل دامنه",
   "DOMAIN-SUFFIX": "مطابقت با پسوند دامنه",
   "DOMAIN-KEYWORD": "مطابقت با کلمه کلیدی دامنه",
@@ -232,48 +221,16 @@
   "REJECT": "درخواست‌ها را متوقف می‌کند",
   "REJECT-DROP": "درخواست‌ها را نادیده می‌گیرد",
   "PASS": "این قانون را در صورت تطابق نادیده می‌گیرد",
-  "Edit Groups": "ویرایش گروه‌های پروکسی",
-  "Group Type": "نوع گروه",
   "select": "انتخاب پروکسی به صورت دستی",
   "url-test": "انتخاب پروکسی بر اساس تأخیر آزمایش URL",
   "fallback": "تعویض به پروکسی دیگر در صورت بروز خطا",
   "load-balance": "توزیع پراکسی بر اساس توازن بار",
   "relay": "عبور از زنجیره پروکسی تعریف شده",
-  "Group Name": "نام گروه",
-  "Use Proxies": "استفاده از پروکسی‌ها",
-  "Use Provider": "استفاده از ارائه‌دهنده",
-  "Health Check Url": "آدرس بررسی سلامت",
-  "Expected Status": "وضعیت مورد انتظار",
-  "Interval": "فاصله زمانی",
-  "Lazy": "تنبل",
   "Timeout": "زمان قطع",
-  "Max Failed Times": "حداکثر تعداد شکست‌ها",
-  "Interface Name": "نام رابط",
-  "Routing Mark": "علامت مسیریابی",
-  "Include All": "شامل همه پروکسی‌ها و ارائه‌دهنده‌ها",
-  "Include All Providers": "شامل همه ارائه‌دهنده‌ها",
-  "Include All Proxies": "شامل همه پروکسی‌ها",
-  "Exclude Filter": "فیلتر استثناء",
-  "Exclude Type": "نوع استثناء",
-  "Disable UDP": "غیرفعال کردن UDP",
-  "Hidden": "مخفی",
-  "Group Name Required": "نام گروه مورد نیاز است",
-  "Group Name Already Exists": "نام گروه قبلا وجود دارد",
-  "Extend Config": "توسعه پیکربندی",
-  "Extend Script": "ادغام اسکریپت",
   "Type": "نوع",
   "Name": "نام",
   "Refresh": "بازنشانی",
-  "Home": "خانه",
-  "Select": "انتخاب",
-  "Edit Info": "ویرایش اطلاعات",
-  "Edit File": "ویرایش فایل",
-  "Open File": "باز کردن فایل",
   "Update": "به‌روزرسانی",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "تأیید حذف",
-  "This operation is not reversible": "این عملیات قابل برگشت نیست",
-  "Script Console": "کنسول اسکریپت",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -380,7 +337,6 @@
   "theme.system": "سیستم",
   "Copy Success": "کپی با موفقیت انجام شد",
   "Memory Usage": "استفاده از حافظه",
-  "Proxy Group Icon": "آیکون گروه پراکسی",
   "Miscellaneous": "متفرقه",
   "App Log Level": "سطح لاگ برنامه",
   "Auto Close Connections": "بستن خودکار اتصالات",
@@ -415,8 +371,6 @@
   "Exit": "خروج",
   "Verge Version": "نسخه Verge",
   "ReadOnly": "فقط خواندنی",
-  "ReadOnlyMessage": "نمی‌توان در ویرایشگر فقط خواندنی ویرایش کرد",
-  "Filter": "فیلتر",
   "Filter conditions": "شرایط فیلتر",
   "Match Case": "تطبیق حروف کوچک و بزرگ",
   "Match Whole Word": "تطبیق کل کلمه",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "سرویس با موفقیت حذف نصب شد",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "مدت زمان دیمن پراکسی نمی‌تواند کمتر از 1 ثانیه باشد",
   "Invalid Bypass Format": "فرمت عبور نامعتبر است",
-  "Waiting for service to be ready...": "Waiting for service to be ready...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Service was ready, but core restart might have issues or service became unavailable. Please check.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Service installation or core restart encountered issues. Service might not be available. Please check system logs.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "Core restarted. Service is now available.",
   "Core Version Updated": "نسخه هسته به‌روزرسانی شد",
   "Clash Core Restarted": "هسته Clash مجدداً راه‌اندازی شد",
   "GeoData Updated": "GeoData به‌روزرسانی شد",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
-  "Last Update failed": "Last Update failed",
-  "Next Up": "Next Up",
-  "No schedule": "No schedule",
   "Unknown": "Unknown",
-  "Auto update disabled": "Auto update disabled",
   "Update failed, retrying with Clash proxy...": "Update failed, retrying with Clash proxy...",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",
-  "Import failed, retrying with Clash proxy...": "Import failed, retrying with Clash proxy...",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
   "Current Node": "Current Node",
   "No active proxy node": "No active proxy node",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "انتخاب فایل"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "ویرایش پروکسی‌ها",
+        "placeholders": {
+          "multiUri": "استفاده از خطوط جدید برای چندین آدرس (پشتیبانی از رمزگذاری Base64)"
+        },
+        "actions": {
+          "prepend": "پیش‌افزودن پراکسی",
+          "append": "پس‌افزودن پراکسی"
+        }
+      },
+      "groupsEditor": {
+        "title": "ویرایش گروه‌های پروکسی",
+        "errors": {
+          "nameRequired": "نام گروه مورد نیاز است",
+          "nameExists": "نام گروه قبلا وجود دارد"
+        },
+        "fields": {
+          "type": "نوع گروه",
+          "name": "نام گروه",
+          "icon": "آیکون گروه پراکسی",
+          "proxies": "استفاده از پروکسی‌ها",
+          "provider": "استفاده از ارائه‌دهنده",
+          "healthCheckUrl": "آدرس بررسی سلامت",
+          "expectedStatus": "وضعیت مورد انتظار",
+          "interval": "فاصله زمانی",
+          "timeout": "زمان قطع",
+          "maxFailedTimes": "حداکثر تعداد شکست‌ها",
+          "interfaceName": "نام رابط",
+          "routingMark": "علامت مسیریابی",
+          "filter": "فیلتر",
+          "excludeFilter": "فیلتر استثناء",
+          "excludeType": "نوع استثناء",
+          "includeAll": "شامل همه پروکسی‌ها و ارائه‌دهنده‌ها",
+          "includeAllProxies": "شامل همه پروکسی‌ها",
+          "includeAllProviders": "شامل همه ارائه‌دهنده‌ها"
+        },
+        "toggles": {
+          "lazy": "تنبل",
+          "disableUdp": "غیرفعال کردن UDP",
+          "hidden": "مخفی"
+        },
+        "actions": {
+          "prepend": "اضافه کردن گروه به ابتدا",
+          "append": "اضافه کردن گروه به انتها"
+        }
+      },
+      "menu": {
+        "home": "Home",
+        "select": "انتخاب",
+        "editInfo": "ویرایش اطلاعات",
+        "editFile": "ویرایش فایل",
+        "editRules": "ویرایش قوانین",
+        "editProxies": "ویرایش پروکسی‌ها",
+        "editGroups": "ویرایش گروه‌های پروکسی",
+        "extendConfig": "توسعه پیکربندی",
+        "extendScript": "ادغام اسکریپت",
+        "openFile": "باز کردن فایل",
+        "update": "به‌روزرسانی",
+        "updateViaProxy": "Update via proxy",
+        "delete": "حذف"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "تأیید حذف",
+          "message": "این عملیات قابل برگشت نیست"
+        }
+      },
+      "logViewer": {
+        "title": "کنسول اسکریپت"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "فرمت‌بندی سند",
+        "readOnlyMessage": "نمی‌توان در ویرایشگر فقط خواندنی ویرایش کرد"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "کپی با موفقیت انجام شد"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "تجسم",
+      "advanced": "پیشرفته"
     }
   }
 }

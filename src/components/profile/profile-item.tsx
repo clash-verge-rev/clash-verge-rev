@@ -120,34 +120,42 @@ export const ProfileItem = (props: Props) => {
 
           // 如果已经过期，显示"更新失败"
           if (nextUpdateDate.isBefore(now)) {
-            setNextUpdateTime(t("Last Update failed"));
+            setNextUpdateTime(
+              t("components.profile.item.status.lastUpdateFailed"),
+            );
           } else {
             // 否则显示剩余时间
             const diffMinutes = nextUpdateDate.diff(now, "minute");
 
             if (diffMinutes < 60) {
               if (diffMinutes <= 0) {
-                setNextUpdateTime(`${t("Next Up")} <1m`);
+                setNextUpdateTime(
+                  `${t("components.profile.item.status.nextUp")} <1m`,
+                );
               } else {
-                setNextUpdateTime(`${t("Next Up")} ${diffMinutes}m`);
+                setNextUpdateTime(
+                  `${t("components.profile.item.status.nextUp")} ${diffMinutes}m`,
+                );
               }
             } else {
               const hours = Math.floor(diffMinutes / 60);
               const mins = diffMinutes % 60;
-              setNextUpdateTime(`${t("Next Up")} ${hours}h ${mins}m`);
+              setNextUpdateTime(
+                `${t("components.profile.item.status.nextUp")} ${hours}h ${mins}m`,
+              );
             }
           }
         } else {
           console.log(`返回的下次更新时间为空`);
-          setNextUpdateTime(t("No schedule"));
+          setNextUpdateTime(t("components.profile.item.status.noSchedule"));
         }
       } catch (err) {
         console.error(`获取下次更新时间出错:`, err);
-        setNextUpdateTime(t("Unknown"));
+        setNextUpdateTime(t("components.profile.item.status.unknown"));
       }
     } else {
       console.log(`该配置未设置更新间隔或间隔为0`);
-      setNextUpdateTime(t("Auto update disabled"));
+      setNextUpdateTime(t("components.profile.item.status.autoUpdateDisabled"));
     }
   });
 
@@ -354,42 +362,95 @@ export const ProfileItem = (props: Props) => {
     }
   });
 
-  const urlModeMenu = (
-    hasHome ? [{ label: "Home", handler: onOpenHome, disabled: false }] : []
-  ).concat([
-    { label: "Select", handler: onForceSelect, disabled: false },
-    { label: "Edit Info", handler: onEditInfo, disabled: false },
-    { label: "Edit File", handler: onEditFile, disabled: false },
+  type ContextMenuItem = {
+    label: string;
+    handler: () => void;
+    disabled: boolean;
+  };
+
+  const menuLabels = {
+    home: "components.profile.menu.home",
+    select: "components.profile.menu.select",
+    editInfo: "components.profile.menu.editInfo",
+    editFile: "components.profile.menu.editFile",
+    editRules: "components.profile.menu.editRules",
+    editProxies: "components.profile.menu.editProxies",
+    editGroups: "components.profile.menu.editGroups",
+    extendConfig: "components.profile.menu.extendConfig",
+    extendScript: "components.profile.menu.extendScript",
+    openFile: "components.profile.menu.openFile",
+    update: "components.profile.menu.update",
+    updateViaProxy: "components.profile.menu.updateViaProxy",
+    delete: "components.profile.menu.delete",
+  } as const;
+
+  const urlModeMenu: ContextMenuItem[] = [
+    ...(hasHome
+      ? [
+          {
+            label: menuLabels.home,
+            handler: onOpenHome,
+            disabled: false,
+          } satisfies ContextMenuItem,
+        ]
+      : []),
     {
-      label: "Edit Rules",
+      label: menuLabels.select,
+      handler: onForceSelect,
+      disabled: false,
+    },
+    {
+      label: menuLabels.editInfo,
+      handler: onEditInfo,
+      disabled: false,
+    },
+    {
+      label: menuLabels.editFile,
+      handler: onEditFile,
+      disabled: false,
+    },
+    {
+      label: menuLabels.editRules,
       handler: onEditRules,
       disabled: !option?.rules,
     },
     {
-      label: "Edit Proxies",
+      label: menuLabels.editProxies,
       handler: onEditProxies,
       disabled: !option?.proxies,
     },
     {
-      label: "Edit Groups",
+      label: menuLabels.editGroups,
       handler: onEditGroups,
       disabled: !option?.groups,
     },
     {
-      label: "Extend Config",
+      label: menuLabels.extendConfig,
       handler: onEditMerge,
       disabled: !option?.merge,
     },
     {
-      label: "Extend Script",
+      label: menuLabels.extendScript,
       handler: onEditScript,
       disabled: !option?.script,
     },
-    { label: "Open File", handler: onOpenFile, disabled: false },
-    { label: "Update", handler: () => onUpdate(0), disabled: false },
-    { label: "Update via proxy", handler: () => onUpdate(2), disabled: false },
     {
-      label: "Delete",
+      label: menuLabels.openFile,
+      handler: onOpenFile,
+      disabled: false,
+    },
+    {
+      label: menuLabels.update,
+      handler: () => onUpdate(0),
+      disabled: false,
+    },
+    {
+      label: menuLabels.updateViaProxy,
+      handler: () => onUpdate(2),
+      disabled: false,
+    },
+    {
+      label: menuLabels.delete,
       handler: () => {
         setAnchorEl(null);
         if (batchMode) {
@@ -403,39 +464,55 @@ export const ProfileItem = (props: Props) => {
       },
       disabled: false,
     },
-  ]);
-  const fileModeMenu = [
-    { label: "Select", handler: onForceSelect, disabled: false },
-    { label: "Edit Info", handler: onEditInfo, disabled: false },
-    { label: "Edit File", handler: onEditFile, disabled: false },
+  ];
+  const fileModeMenu: ContextMenuItem[] = [
     {
-      label: "Edit Rules",
+      label: menuLabels.select,
+      handler: onForceSelect,
+      disabled: false,
+    },
+    {
+      label: menuLabels.editInfo,
+      handler: onEditInfo,
+      disabled: false,
+    },
+    {
+      label: menuLabels.editFile,
+      handler: onEditFile,
+      disabled: false,
+    },
+    {
+      label: menuLabels.editRules,
       handler: onEditRules,
       disabled: !option?.rules,
     },
     {
-      label: "Edit Proxies",
+      label: menuLabels.editProxies,
       handler: onEditProxies,
       disabled: !option?.proxies,
     },
     {
-      label: "Edit Groups",
+      label: menuLabels.editGroups,
       handler: onEditGroups,
       disabled: !option?.groups,
     },
     {
-      label: "Extend Config",
+      label: menuLabels.extendConfig,
       handler: onEditMerge,
       disabled: !option?.merge,
     },
     {
-      label: "Extend Script",
+      label: menuLabels.extendScript,
       handler: onEditScript,
       disabled: !option?.script,
     },
-    { label: "Open File", handler: onOpenFile, disabled: false },
     {
-      label: "Delete",
+      label: menuLabels.openFile,
+      handler: onOpenFile,
+      disabled: false,
+    },
+    {
+      label: menuLabels.delete,
       handler: () => {
         setAnchorEl(null);
         if (batchMode) {
@@ -657,8 +734,8 @@ export const ProfileItem = (props: Props) => {
                     textAlign="right"
                     title={
                       showNextUpdate
-                        ? t("Click to show last update time")
-                        : `${t("Update Time")}: ${parseExpire(updated)}\n${t("Click to show next update")}`
+                        ? t("components.profile.item.tooltips.showLast")
+                        : `${t("Update Time")}: ${parseExpire(updated)}\n${t("components.profile.item.tooltips.showNext")}`
                     }
                     sx={{
                       cursor: "pointer",
@@ -728,7 +805,7 @@ export const ProfileItem = (props: Props) => {
               (theme) => {
                 return {
                   color:
-                    item.label === "Delete"
+                    item.label === menuLabels.delete
                       ? theme.palette.error.main
                       : undefined,
                 };
@@ -813,8 +890,8 @@ export const ProfileItem = (props: Props) => {
       )}
 
       <ConfirmViewer
-        title={t("Confirm deletion")}
-        message={t("This operation is not reversible")}
+        title={t("components.profile.confirm.delete.title")}
+        message={t("components.profile.confirm.delete.message")}
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={() => {

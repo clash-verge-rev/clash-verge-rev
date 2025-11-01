@@ -7,7 +7,6 @@
   "Confirm": "Onayla",
   "Maximize": "Büyüt",
   "Minimize": "Küçült",
-  "Format document": "Belgeyi biçimlendir",
   "Empty": "Boş",
   "New": "Yeni",
   "Edit": "Düzenle",
@@ -168,7 +167,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "Ayarlar",
   "Proxies": "Vekil'ler",
-  "Connecting...": "Connecting...",
   "Update All": "Tümünü Güncelle",
   "Update At": "Güncelleme Zamanı",
   "rule": "kural",
@@ -186,15 +184,6 @@
   "Update Time": "Güncelleme Zamanı",
   "Used / Total": "Kullanılan / Toplam",
   "Expire Time": "Sona Erme Zamanı",
-  "Edit Proxies": "Vekil'leri Düzenle",
-  "Use newlines for multiple uri": "Birden fazla URI için yeni satırlar kullanın (Base64 kodlaması desteklenir)",
-  "Edit Rules": "Kuralları Düzenle",
-  "Prepend Group": "Grubun Başına Ekle",
-  "Append Group": "Grubun Sonuna Ekle",
-  "Prepend Proxy": "Vekil'in Başına Ekle",
-  "Append Proxy": "Vekil'in Sonuna Ekle",
-  "Advanced": "Gelişmiş",
-  "Visualization": "Görselleştirme",
   "DOMAIN": "Tam alan adıyla eşleşir",
   "DOMAIN-SUFFIX": "Alan adı sonekiyle eşleşir",
   "DOMAIN-KEYWORD": "Alan adı anahtar kelimesiyle eşleşir",
@@ -232,48 +221,16 @@
   "REJECT": "İstekleri engeller",
   "REJECT-DROP": "İstekleri atar",
   "PASS": "Eşleştiğinde bu kuralı atlar",
-  "Edit Groups": "Vekil Gruplarını Düzenle",
-  "Group Type": "Grup Tipi",
   "select": "Vekil'i manuel olarak seçin",
   "url-test": "URL testi gecikmesine göre vekil seçin",
   "fallback": "Hata durumunda başka bir vekil'e geçin",
   "load-balance": "Yük dengelemeye göre vekil dağıtın",
   "relay": "Tanımlanan vekil zincirinden geçirin",
-  "Group Name": "Grup Adı",
-  "Use Proxies": "Vekil'leri Kullan",
-  "Use Provider": "Sağlayıcı Kullan",
-  "Health Check Url": "Sağlık Kontrolü URL'si",
-  "Expected Status": "Beklenen Durum",
-  "Interval": "Aralık",
-  "Lazy": "Tembel",
   "Timeout": "Zaman Aşımı",
-  "Max Failed Times": "Maksimum Başarısız Deneme",
-  "Interface Name": "Arayüz Adı",
-  "Routing Mark": "Yönlendirme İşareti",
-  "Include All": "Tüm Vekil'leri ve Sağlayıcıları Dahil Et",
-  "Include All Providers": "Tüm Sağlayıcıları Dahil Et",
-  "Include All Proxies": "Tüm Vekil'leri Dahil Et",
-  "Exclude Filter": "Hariç Tutma Filtresi",
-  "Exclude Type": "Hariç Tutma Tipi",
-  "Disable UDP": "UDP'yi Devre Dışı Bırak",
-  "Hidden": "Gizli",
-  "Group Name Required": "Grup Adı Gerekli",
-  "Group Name Already Exists": "Grup Adı Zaten Var",
-  "Extend Config": "Yapılandırma Genişletme",
-  "Extend Script": "Betik Genişletme",
   "Type": "Tip",
   "Name": "İsim",
   "Refresh": "Yenile",
-  "Home": "Ana Sayfa",
-  "Select": "Seç",
-  "Edit Info": "Bilgileri Düzenle",
-  "Edit File": "Dosyayı Düzenle",
-  "Open File": "Dosyayı Aç",
   "Update": "Güncelle",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "Silmeyi Onayla",
-  "This operation is not reversible": "Bu işlem geri alınamaz",
-  "Script Console": "Betik Konsolu",
   "Close All Connections": "Close All Connections",
   "Upload": "Yükleme",
   "Download": "İndirme",
@@ -380,7 +337,6 @@
   "theme.system": "Sistem",
   "Copy Success": "Kopyalama Başarılı",
   "Memory Usage": "Çekirdek Kullanımı",
-  "Proxy Group Icon": "Vekil Grup Simgesi",
   "Miscellaneous": "Çeşitli",
   "App Log Level": "Uygulama Günlük Seviyesi",
   "Auto Close Connections": "Bağlantıları Otomatik Kapat",
@@ -415,8 +371,6 @@
   "Exit": "Çıkış",
   "Verge Version": "Verge Sürümü",
   "ReadOnly": "Salt Okunur",
-  "ReadOnlyMessage": "Salt okunur düzenleyicide düzenlenemez",
-  "Filter": "Filtre",
   "Filter conditions": "Filtre koşulları",
   "Match Case": "Büyük/Küçük Harf Eşleştir",
   "Match Whole Word": "Tam Kelime Eşleştir",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "Hizmet Başarıyla Kaldırıldı",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "Vekil Koruyucu Süresi 1 Saniyeden Az Olamaz",
   "Invalid Bypass Format": "Geçersiz Baypas Formatı",
-  "Waiting for service to be ready...": "Waiting for service to be ready...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Service was ready, but core restart might have issues or service became unavailable. Please check.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Service installation or core restart encountered issues. Service might not be available. Please check system logs.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "Core restarted. Service is now available.",
   "Core Version Updated": "Çekirdek Sürümü Güncellendi",
   "Clash Core Restarted": "Clash Çekirdeği Yeniden Başlatıldı",
   "GeoData Updated": "GeoData Güncellendi",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Yönetici + Hizmet Modu",
   "Last Check Update": "Son Güncelleme Kontrolü",
   "Click to import subscription": "Abonelik içe aktarmak için tıklayın",
-  "Last Update failed": "Son güncelleme başarısız oldu",
-  "Next Up": "Sıradaki",
-  "No schedule": "Program yok",
   "Unknown": "Bilinmiyor",
-  "Auto update disabled": "Otomatik güncelleme devre dışı",
   "Update failed, retrying with Clash proxy...": "Güncelleme başarısız oldu, Clash vekil ile yeniden deneniyor...",
   "Update with Clash proxy successfully": "Clash vekil ile güncelleme başarılı",
   "Update failed even with Clash proxy": "Clash vekil ile bile güncelleme başarısız oldu",
-  "Profile creation failed, retrying with Clash proxy...": "Profil oluşturma başarısız oldu, Clash vekil ile yeniden deneniyor...",
-  "Import failed, retrying with Clash proxy...": "İçe aktarma başarısız oldu, Clash vekil ile yeniden deneniyor...",
   "Profile Imported with Clash proxy": "Profil Clash vekil ile içe aktarıldı",
   "Current Node": "Geçerli Düğüm",
   "No active proxy node": "Aktif vekil düğümü yok",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "Dosya Seç"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "Vekil'leri Düzenle",
+        "placeholders": {
+          "multiUri": "Birden fazla URI için yeni satırlar kullanın (Base64 kodlaması desteklenir)"
+        },
+        "actions": {
+          "prepend": "Vekil'in Başına Ekle",
+          "append": "Vekil'in Sonuna Ekle"
+        }
+      },
+      "groupsEditor": {
+        "title": "Vekil Gruplarını Düzenle",
+        "errors": {
+          "nameRequired": "Grup Adı Gerekli",
+          "nameExists": "Grup Adı Zaten Var"
+        },
+        "fields": {
+          "type": "Grup Tipi",
+          "name": "Grup Adı",
+          "icon": "Vekil Grup Simgesi",
+          "proxies": "Vekil'leri Kullan",
+          "provider": "Sağlayıcı Kullan",
+          "healthCheckUrl": "Sağlık Kontrolü URL'si",
+          "expectedStatus": "Beklenen Durum",
+          "interval": "Aralık",
+          "timeout": "Zaman Aşımı",
+          "maxFailedTimes": "Maksimum Başarısız Deneme",
+          "interfaceName": "Arayüz Adı",
+          "routingMark": "Yönlendirme İşareti",
+          "filter": "Filtre",
+          "excludeFilter": "Hariç Tutma Filtresi",
+          "excludeType": "Hariç Tutma Tipi",
+          "includeAll": "Tüm Vekil'leri ve Sağlayıcıları Dahil Et",
+          "includeAllProxies": "Tüm Vekil'leri Dahil Et",
+          "includeAllProviders": "Tüm Sağlayıcıları Dahil Et"
+        },
+        "toggles": {
+          "lazy": "Tembel",
+          "disableUdp": "UDP'yi Devre Dışı Bırak",
+          "hidden": "Gizli"
+        },
+        "actions": {
+          "prepend": "Grubun Başına Ekle",
+          "append": "Grubun Sonuna Ekle"
+        }
+      },
+      "menu": {
+        "home": "Ana Sayfa",
+        "select": "Seç",
+        "editInfo": "Bilgileri Düzenle",
+        "editFile": "Dosyayı Düzenle",
+        "editRules": "Kuralları Düzenle",
+        "editProxies": "Vekil'leri Düzenle",
+        "editGroups": "Vekil Gruplarını Düzenle",
+        "extendConfig": "Yapılandırma Genişletme",
+        "extendScript": "Betik Genişletme",
+        "openFile": "Dosyayı Aç",
+        "update": "Güncelle",
+        "updateViaProxy": "Update via proxy",
+        "delete": "Sil"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Son güncelleme başarısız oldu",
+          "nextUp": "Sıradaki",
+          "noSchedule": "Program yok",
+          "unknown": "Bilinmiyor",
+          "autoUpdateDisabled": "Otomatik güncelleme devre dışı"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "Silmeyi Onayla",
+          "message": "Bu işlem geri alınamaz"
+        }
+      },
+      "logViewer": {
+        "title": "Betik Konsolu"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "Belgeyi biçimlendir",
+        "readOnlyMessage": "Salt okunur düzenleyicide düzenlenemez"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "Kopyalama Başarılı"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "Görselleştirme",
+      "advanced": "Gelişmiş"
     }
   }
 }

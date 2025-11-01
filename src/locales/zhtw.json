@@ -7,7 +7,6 @@
   "Confirm": "確認",
   "Maximize": "最大化",
   "Minimize": "最小化",
-  "Format document": "格式化文件",
   "Empty": "空空如也",
   "New": "新增",
   "Edit": "編輯",
@@ -168,7 +167,6 @@
   "Label-Unlock": "解 鎖",
   "Label-Settings": "設 定",
   "Proxies": "代理",
-  "Connecting...": "連線中...",
   "Update All": "全部更新",
   "Update At": "更新於",
   "rule": "規則",
@@ -186,15 +184,6 @@
   "Update Time": "更新時間",
   "Used / Total": "已使用 / 總量",
   "Expire Time": "到期時間",
-  "Edit Proxies": "編輯節點",
-  "Use newlines for multiple uri": "多條網址，請使用換行分隔（支援 Base64 編碼）",
-  "Edit Rules": "編輯規則",
-  "Prepend Group": "新增前置代理組",
-  "Append Group": "新增後置代理組",
-  "Prepend Proxy": "新增前置代理節點",
-  "Append Proxy": "新增後置代理節點",
-  "Advanced": "進階",
-  "Visualization": "視覺化",
   "DOMAIN": "配對完整網域",
   "DOMAIN-SUFFIX": "配對網域後綴",
   "DOMAIN-KEYWORD": "配對網域關鍵字",
@@ -232,48 +221,16 @@
   "REJECT": "拒絕請求",
   "REJECT-DROP": "丟棄請求",
   "PASS": "跳過此規則",
-  "Edit Groups": "編輯代理組",
-  "Group Type": "代理組類型",
   "select": "手動選擇代理",
   "url-test": "根據網址測試延遲選擇代理",
   "fallback": "切換至另一個備用代理",
   "load-balance": "根據負載平衡分配代理",
   "relay": "根據定義的代理鏈傳送",
-  "Group Name": "代理組名稱",
-  "Use Proxies": "使用代理",
-  "Use Provider": "使用代理集合",
-  "Health Check Url": "健康檢查網址",
-  "Expected Status": "預期狀態碼",
-  "Interval": "檢查間隔",
-  "Lazy": "延遲載入",
   "Timeout": "逾時",
-  "Max Failed Times": "最大失敗次數",
-  "Interface Name": "輸出介面",
-  "Routing Mark": "路由標記",
-  "Include All": "包含所有輸出代理、代理集合",
-  "Include All Providers": "包含所有代理集合",
-  "Include All Proxies": "包含所有輸出代理",
-  "Exclude Filter": "排除節點",
-  "Exclude Type": "排除節點類型",
-  "Disable UDP": "停用 UDP",
-  "Hidden": "隱藏代理組",
-  "Group Name Required": "代理組名稱為必填",
-  "Group Name Already Exists": "代理組名稱已存在",
-  "Extend Config": "擴充覆寫設定",
-  "Extend Script": "擴充指令碼",
   "Type": "類型",
   "Name": "名稱",
   "Refresh": "重整",
-  "Home": "首頁",
-  "Select": "使用",
-  "Edit Info": "編輯資訊",
-  "Edit File": "編輯檔案",
-  "Open File": "開啟檔案",
   "Update": "更新",
-  "Update via proxy": "更新（代理）",
-  "Confirm deletion": "確認刪除",
-  "This operation is not reversible": "此操作無法復原",
-  "Script Console": "指令碼控制台輸出",
   "Close All Connections": "關閉全部連線",
   "Upload": "上傳",
   "Download": "下載",
@@ -380,7 +337,6 @@
   "theme.system": "系統",
   "Copy Success": "複製成功",
   "Memory Usage": "內核佔用",
-  "Proxy Group Icon": "代理組圖示",
   "Miscellaneous": "雜項設定",
   "App Log Level": "應用程式日誌等級",
   "Auto Close Connections": "自動關閉連線",
@@ -415,8 +371,6 @@
   "Exit": "離開",
   "Verge Version": "Verge 版本",
   "ReadOnly": "唯讀",
-  "ReadOnlyMessage": "無法在唯讀模式下編輯",
-  "Filter": "篩選節點",
   "Filter conditions": "篩選條件",
   "Match Case": "區分大小寫",
   "Match Whole Word": "完整字詞配對",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "已成功解除安裝服務",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "代理守護間隔時間不得低於 1 秒",
   "Invalid Bypass Format": "無效的代理繞過格式",
-  "Waiting for service to be ready...": "等待服務就緒...",
-  "Service not ready, retrying attempt {count}/{total}...": "服務未就緒，正在重試 {{count}}/{{total}} 次...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "檢查服務狀態失敗，正在重試 {{count}}/{{total}} 次...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "服務在嘗試後仍未就緒，正在重新啟動內核。",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "服務已就緒，但內核重啟可能存在問題或服務已不可用。請檢查。",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "服務安裝或內核重啟遇到問題。服務可能不可用。請檢查系統日誌。",
-  "Attempting to restart core as a fallback...": "嘗試重新啟動內核作為備援方案...",
-  "Core restarted. Service is now available.": "內核已重啟，服務已就緒",
   "Core Version Updated": "內核版本已更新",
   "Clash Core Restarted": "已重啟 Clash 內核",
   "GeoData Updated": "已更新 GeoData",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "系統管理員 + 服務模式",
   "Last Check Update": "最後檢查更新",
   "Click to import subscription": "點擊匯入訂閱",
-  "Last Update failed": "上次更新失敗",
-  "Next Up": "下次更新",
-  "No schedule": "沒有排程",
   "Unknown": "未知",
-  "Auto update disabled": "自動更新已停用",
   "Update failed, retrying with Clash proxy...": "訂閱更新失敗，嘗試使用 Clash 代理更新",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失敗",
-  "Profile creation failed, retrying with Clash proxy...": "訂閱建立失敗，嘗試使用 Clash 代理建立",
-  "Import failed, retrying with Clash proxy...": "訂閱匯入失敗，嘗試使用 Clash 代理匯入",
   "Profile Imported with Clash proxy": "使用 Clash 代理匯入訂閱成功",
   "Current Node": "目前節點",
   "No active proxy node": "暫無作用中的代理節點",
@@ -628,8 +568,6 @@
   "AppQuitBody": "已透過快速鍵退出應用程式",
   "AppHiddenTitle": "應用程式隱藏",
   "AppHiddenBody": "已透過快速鍵隱藏應用程式視窗",
-  "Saved Successfully": "儲存成功",
-  "Enable one-click CORS for external API. Click to toggle CORS": "設定內核跨來源存取，點擊切換跨來源資源共享是否啟用",
   "External Cors Settings": "外部跨來源資源共享設定",
   "External Cors Configuration": "外部跨來源資源共享設定",
   "Allow private network access": "允許專用網路存取",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "選擇檔案"
+      },
+      "notifications": {
+        "saved": "儲存成功"
+      },
+      "proxiesEditor": {
+        "title": "編輯節點",
+        "placeholders": {
+          "multiUri": "多條網址，請使用換行分隔（支援 Base64 編碼）"
+        },
+        "actions": {
+          "prepend": "新增前置代理節點",
+          "append": "新增後置代理節點"
+        }
+      },
+      "groupsEditor": {
+        "title": "編輯代理組",
+        "errors": {
+          "nameRequired": "代理組名稱為必填",
+          "nameExists": "代理組名稱已存在"
+        },
+        "fields": {
+          "type": "代理組類型",
+          "name": "代理組名稱",
+          "icon": "代理組圖示",
+          "proxies": "使用代理",
+          "provider": "使用代理集合",
+          "healthCheckUrl": "健康檢查網址",
+          "expectedStatus": "預期狀態碼",
+          "interval": "檢查間隔",
+          "timeout": "逾時",
+          "maxFailedTimes": "最大失敗次數",
+          "interfaceName": "輸出介面",
+          "routingMark": "路由標記",
+          "filter": "篩選節點",
+          "excludeFilter": "排除節點",
+          "excludeType": "排除節點類型",
+          "includeAll": "包含所有輸出代理、代理集合",
+          "includeAllProxies": "包含所有輸出代理",
+          "includeAllProviders": "包含所有代理集合"
+        },
+        "toggles": {
+          "lazy": "延遲載入",
+          "disableUdp": "停用 UDP",
+          "hidden": "隱藏代理組"
+        },
+        "actions": {
+          "prepend": "新增前置代理組",
+          "append": "新增後置代理組"
+        }
+      },
+      "menu": {
+        "home": "首 頁",
+        "select": "使用",
+        "editInfo": "編輯資訊",
+        "editFile": "編輯檔案",
+        "editRules": "編輯規則",
+        "editProxies": "編輯節點",
+        "editGroups": "編輯代理組",
+        "extendConfig": "擴充覆寫設定",
+        "extendScript": "擴充指令碼",
+        "openFile": "開啟檔案",
+        "update": "更新",
+        "updateViaProxy": "更新（代理）",
+        "delete": "刪除"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "上次更新失敗",
+          "nextUp": "下次更新",
+          "noSchedule": "沒有排程",
+          "unknown": "未知",
+          "autoUpdateDisabled": "自動更新已停用"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "確認刪除",
+          "message": "此操作無法復原"
+        }
+      },
+      "logViewer": {
+        "title": "指令碼控制台輸出"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "格式化文件",
+        "readOnlyMessage": "無法在唯讀模式下編輯"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "複製成功"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "視覺化",
+      "advanced": "進階"
     }
   }
 }

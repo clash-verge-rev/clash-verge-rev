@@ -7,7 +7,6 @@
   "Confirm": "확인",
   "Maximize": "최대화",
   "Minimize": "최소화",
-  "Format document": "문서 포맷",
   "Empty": "비어있음",
   "New": "새로 만들기",
   "Edit": "편집",
@@ -168,7 +167,6 @@
   "Label-Unlock": "테스트",
   "Label-Settings": "설정",
   "Proxies": "프록시",
-  "Connecting...": "Connecting...",
   "Update All": "모두 업데이트",
   "Update At": "업데이트 시간",
   "rule": "규칙",
@@ -186,15 +184,6 @@
   "Update Time": "업데이트 시간",
   "Used / Total": "사용됨 / 전체",
   "Expire Time": "만료 시간",
-  "Edit Proxies": "프록시 편집",
-  "Use newlines for multiple uri": "여러 URI의 경우 줄바꿈 사용(Base64 인코딩 지원)",
-  "Edit Rules": "규칙 편집",
-  "Prepend Group": "그룹 앞에 추가",
-  "Append Group": "그룹 뒤에 추가",
-  "Prepend Proxy": "프록시 앞에 추가",
-  "Append Proxy": "프록시 뒤에 추가",
-  "Advanced": "고급",
-  "Visualization": "시각화",
   "DOMAIN": "전체 도메인 이름과 일치",
   "DOMAIN-SUFFIX": "도메인 접미사와 일치",
   "DOMAIN-KEYWORD": "도메인 키워드와 일치",
@@ -232,48 +221,16 @@
   "REJECT": "요청 차단",
   "REJECT-DROP": "요청 폐기",
   "PASS": "일치할 경우 이 규칙 건너뛰기",
-  "Edit Groups": "프록시 그룹 편집",
-  "Group Type": "그룹 유형",
   "select": "수동으로 프록시 선택",
   "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
   "fallback": "오류 발생 시 다른 프록시로 전환",
   "load-balance": "부하 분산에 따라 프록시 분배",
   "relay": "정의된 프록시 체인을 통과",
-  "Group Name": "그룹 이름",
-  "Use Proxies": "프록시 사용",
-  "Use Provider": "제공자 사용",
-  "Health Check Url": "상태 확인 URL",
-  "Expected Status": "예상 상태",
-  "Interval": "간격",
-  "Lazy": "지연 로딩",
   "Timeout": "타임아웃",
-  "Max Failed Times": "최대 실패 횟수",
-  "Interface Name": "인터페이스 이름",
-  "Routing Mark": "라우팅 마크",
-  "Include All": "모든 프록시 및 제공자 포함",
-  "Include All Providers": "모든 제공자 포함",
-  "Include All Proxies": "모든 프록시 포함",
-  "Exclude Filter": "제외 필터",
-  "Exclude Type": "제외 유형",
-  "Disable UDP": "UDP 비활성화",
-  "Hidden": "숨김",
-  "Group Name Required": "그룹 이름 필수",
-  "Group Name Already Exists": "그룹 이름이 이미 존재함",
-  "Extend Config": "설정 확장",
-  "Extend Script": "스크립트 확장",
   "Type": "유형",
   "Name": "이름",
   "Refresh": "새로고침",
-  "Home": "홈",
-  "Select": "선택",
-  "Edit Info": "정보 편집",
-  "Edit File": "파일 편집",
-  "Open File": "파일 열기",
   "Update": "업데이트",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "삭제 확인",
-  "This operation is not reversible": "이 작업은 되돌릴 수 없습니다",
-  "Script Console": "스크립트 콘솔",
   "Close All Connections": "Close All Connections",
   "Upload": "업로드",
   "Download": "다운로드",
@@ -380,7 +337,6 @@
   "theme.system": "System",
   "Copy Success": "복사 성공",
   "Memory Usage": "메모리 사용량",
-  "Proxy Group Icon": "Proxy Group Icon",
   "Miscellaneous": "Miscellaneous",
   "App Log Level": "App Log Level",
   "Auto Close Connections": "Auto Close Connections",
@@ -415,8 +371,6 @@
   "Exit": "Exit",
   "Verge Version": "Verge Version",
   "ReadOnly": "ReadOnly",
-  "ReadOnlyMessage": "Cannot edit in read-only editor",
-  "Filter": "필터",
   "Filter conditions": "Filter conditions",
   "Match Case": "Match Case",
   "Match Whole Word": "Match Whole Word",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "Service Uninstalled Successfully",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "Proxy Daemon Duration Cannot be Less than 1 Second",
   "Invalid Bypass Format": "Invalid Bypass Format",
-  "Waiting for service to be ready...": "Waiting for service to be ready...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "Service was ready, but core restart might have issues or service became unavailable. Please check.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Service installation or core restart encountered issues. Service might not be available. Please check system logs.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "Core restarted. Service is now available.",
   "Core Version Updated": "Core Version Updated",
   "Clash Core Restarted": "Clash Core Restarted",
   "GeoData Updated": "GeoData Updated",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
-  "Last Update failed": "Last Update failed",
-  "Next Up": "Next Up",
-  "No schedule": "No schedule",
   "Unknown": "Unknown",
-  "Auto update disabled": "Auto update disabled",
   "Update failed, retrying with Clash proxy...": "업데이트 실패, Clash 프록시로 재시도 중...",
   "Update with Clash proxy successfully": "Clash 프록시로 업데이트 성공",
   "Update failed even with Clash proxy": "Clash 프록시로도 업데이트 실패",
-  "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",
-  "Import failed, retrying with Clash proxy...": "Import failed, retrying with Clash proxy...",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
   "Current Node": "Current Node",
   "No active proxy node": "No active proxy node",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "파일 선택"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "프록시 편집",
+        "placeholders": {
+          "multiUri": "여러 URI의 경우 줄바꿈 사용(Base64 인코딩 지원)"
+        },
+        "actions": {
+          "prepend": "프록시 앞에 추가",
+          "append": "프록시 뒤에 추가"
+        }
+      },
+      "groupsEditor": {
+        "title": "프록시 그룹 편집",
+        "errors": {
+          "nameRequired": "그룹 이름 필수",
+          "nameExists": "그룹 이름이 이미 존재함"
+        },
+        "fields": {
+          "type": "그룹 유형",
+          "name": "그룹 이름",
+          "icon": "Proxy Group Icon",
+          "proxies": "프록시 사용",
+          "provider": "제공자 사용",
+          "healthCheckUrl": "상태 확인 URL",
+          "expectedStatus": "예상 상태",
+          "interval": "간격",
+          "timeout": "타임아웃",
+          "maxFailedTimes": "최대 실패 횟수",
+          "interfaceName": "인터페이스 이름",
+          "routingMark": "라우팅 마크",
+          "filter": "필터",
+          "excludeFilter": "제외 필터",
+          "excludeType": "제외 유형",
+          "includeAll": "모든 프록시 및 제공자 포함",
+          "includeAllProxies": "모든 프록시 포함",
+          "includeAllProviders": "모든 제공자 포함"
+        },
+        "toggles": {
+          "lazy": "지연 로딩",
+          "disableUdp": "UDP 비활성화",
+          "hidden": "숨김"
+        },
+        "actions": {
+          "prepend": "그룹 앞에 추가",
+          "append": "그룹 뒤에 추가"
+        }
+      },
+      "menu": {
+        "home": "홈",
+        "select": "선택",
+        "editInfo": "정보 편집",
+        "editFile": "파일 편집",
+        "editRules": "규칙 편집",
+        "editProxies": "프록시 편집",
+        "editGroups": "프록시 그룹 편집",
+        "extendConfig": "설정 확장",
+        "extendScript": "스크립트 확장",
+        "openFile": "파일 열기",
+        "update": "업데이트",
+        "updateViaProxy": "Update via proxy",
+        "delete": "삭제"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "삭제 확인",
+          "message": "이 작업은 되돌릴 수 없습니다"
+        }
+      },
+      "logViewer": {
+        "title": "스크립트 콘솔"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "문서 포맷",
+        "readOnlyMessage": "Cannot edit in read-only editor"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "복사 성공"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "시각화",
+      "advanced": "고급"
     }
   }
 }

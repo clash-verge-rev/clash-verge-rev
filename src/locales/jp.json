@@ -7,7 +7,6 @@
   "Confirm": "確認",
   "Maximize": "最大化",
   "Minimize": "最小化",
-  "Format document": "文書を整形する",
   "Empty": "空っぽ",
   "New": "新規作成",
   "Edit": "編集",
@@ -168,7 +167,6 @@
   "Label-Unlock": "テスト",
   "Label-Settings": "設定",
   "Proxies": "Proxies",
-  "Connecting...": "Connecting...",
   "Update All": "すべて更新",
   "Update At": "更新日時",
   "rule": "ルール",
@@ -186,15 +184,6 @@
   "Update Time": "更新時間",
   "Used / Total": "使用済み / 合計",
   "Expire Time": "有効期限",
-  "Edit Proxies": "ノードを編集",
-  "Use newlines for multiple uri": "複数のURIは改行で区切ってください（Base64エンコードに対応）",
-  "Edit Rules": "ルールを編集",
-  "Prepend Group": "前置プロキシグループを追加",
-  "Append Group": "後置プロキシグループを追加",
-  "Prepend Proxy": "前置プロキシノードを追加",
-  "Append Proxy": "後置プロキシノードを追加",
-  "Advanced": "詳細設定",
-  "Visualization": "可視化",
   "DOMAIN": "完全なドメイン名を一致させる",
   "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
   "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
@@ -232,48 +221,16 @@
   "REJECT": "リクエストを拒否",
   "REJECT-DROP": "リクエストを破棄",
   "PASS": "このルールをスキップ",
-  "Edit Groups": "プロキシグループを編集",
-  "Group Type": "プロキシグループタイプ",
   "select": "手動でプロキシを選択",
   "url-test": "URLテストによる遅延でプロキシを選択",
   "fallback": "利用不可の場合は別のプロキシに切り替える",
   "load-balance": "負荷分散によりプロキシを割り当てる",
   "relay": "定義されたプロキシチェーンに沿って転送する",
-  "Group Name": "プロキシグループ名",
-  "Use Proxies": "プロキシを導入",
-  "Use Provider": "プロキシプロバイダーを導入",
-  "Health Check Url": "ヘルスチェックURL",
-  "Expected Status": "期待するステータスコード",
-  "Interval": "チェック間隔",
-  "Lazy": "遅延モード",
   "Timeout": "タイムアウト時間",
-  "Max Failed Times": "最大失敗回数",
-  "Interface Name": "出力インターフェース",
-  "Routing Mark": "ルーティングマーク",
-  "Include All": "すべての出力プロキシ、プロキシプロバイダーを導入",
-  "Include All Providers": "すべてのプロキシプロバイダーを導入",
-  "Include All Proxies": "すべての出力プロキシを導入",
-  "Exclude Filter": "除外ノード",
-  "Exclude Type": "除外ノードタイプ",
-  "Disable UDP": "UDPを無効にする",
-  "Hidden": "プロキシグループを隠す",
-  "Group Name Required": "プロキシグループ名は必須です",
-  "Group Name Already Exists": "プロキシグループ名はすでに存在します",
-  "Extend Config": "拡張上書き設定",
-  "Extend Script": "拡張スクリプト",
   "Type": "タイプ",
   "Name": "名前",
   "Refresh": "更新",
-  "Home": "ホーム",
-  "Select": "使用する",
-  "Edit Info": "情報を編集",
-  "Edit File": "ファイルを編集",
-  "Open File": "ファイルを開く",
   "Update": "更新",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "削除を確認",
-  "This operation is not reversible": "この操作は元に戻せません",
-  "Script Console": "スクリプトコンソール出力",
   "Close All Connections": "Close All Connections",
   "Upload": "アップロード",
   "Download": "ダウンロード",
@@ -380,7 +337,6 @@
   "theme.system": "システム",
   "Copy Success": "コピー成功",
   "Memory Usage": "コアメモリ使用量",
-  "Proxy Group Icon": "プロキシグループアイコン",
   "Miscellaneous": "その他の設定",
   "App Log Level": "アプリケーションログレベル",
   "Auto Close Connections": "接続を自動的に閉じる",
@@ -415,8 +371,6 @@
   "Exit": "終了",
   "Verge Version": "Vergeバージョン",
   "ReadOnly": "読み取り専用",
-  "ReadOnlyMessage": "読み取り専用モードでは編集できません。",
-  "Filter": "ノードをフィルタリング",
   "Filter conditions": "フィルタリング条件",
   "Match Case": "大文字小文字を区別する",
   "Match Whole Word": "完全一致",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "サービスのアンインストールに成功しました。",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "プロキシデーモンの間隔は1秒以上に設定する必要があります。",
   "Invalid Bypass Format": "無効なバイパス形式",
-  "Waiting for service to be ready...": "サービスの準備を待っています...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "サービスは準備が整っていましたが、コアの再起動に問題が発生したか、サービスが利用できなくなった可能性があります。ご確認ください。",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "サービスのインストールまたはコアの再起動中に問題が発生しました。サービスが利用できない可能性があります。システムログを確認してください。",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "コアが再起動され、サービスが利用可能になりました。",
   "Core Version Updated": "コアバージョンが更新されました。",
   "Clash Core Restarted": "Clashコアが再起動されました。",
   "GeoData Updated": "GeoDataが更新されました。",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "最後の更新チェック",
   "Click to import subscription": "クリックしてサブスクリプションをインポート",
-  "Last Update failed": "前回の更新に失敗しました。",
-  "Next Up": "次回の更新",
-  "No schedule": "予定がありません。",
   "Unknown": "不明",
-  "Auto update disabled": "自動更新が無効になっています。",
   "Update failed, retrying with Clash proxy...": "サブスクリプションの更新に失敗しました。Clashプロキシを使用して再試行します...",
   "Update with Clash proxy successfully": "Clashプロキシを使用して更新に成功しました。",
   "Update failed even with Clash proxy": "Clashプロキシを使用しても更新に失敗しました。",
-  "Profile creation failed, retrying with Clash proxy...": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",
-  "Import failed, retrying with Clash proxy...": "インポートに失敗しました。Clashプロキシを使用して再試行します...",
   "Profile Imported with Clash proxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",
   "Current Node": "現在のノード",
   "No active proxy node": "アクティブなプロキシノードがありません。",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "ファイルを選択"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "ノードを編集",
+        "placeholders": {
+          "multiUri": "複数のURIは改行で区切ってください（Base64エンコードに対応）"
+        },
+        "actions": {
+          "prepend": "前置プロキシノードを追加",
+          "append": "後置プロキシノードを追加"
+        }
+      },
+      "groupsEditor": {
+        "title": "プロキシグループを編集",
+        "errors": {
+          "nameRequired": "プロキシグループ名は必須です",
+          "nameExists": "プロキシグループ名はすでに存在します"
+        },
+        "fields": {
+          "type": "プロキシグループタイプ",
+          "name": "プロキシグループ名",
+          "icon": "プロキシグループアイコン",
+          "proxies": "プロキシを導入",
+          "provider": "プロキシプロバイダーを導入",
+          "healthCheckUrl": "ヘルスチェックURL",
+          "expectedStatus": "期待するステータスコード",
+          "interval": "チェック間隔",
+          "timeout": "タイムアウト時間",
+          "maxFailedTimes": "最大失敗回数",
+          "interfaceName": "出力インターフェース",
+          "routingMark": "ルーティングマーク",
+          "filter": "ノードをフィルタリング",
+          "excludeFilter": "除外ノード",
+          "excludeType": "除外ノードタイプ",
+          "includeAll": "すべての出力プロキシ、プロキシプロバイダーを導入",
+          "includeAllProxies": "すべての出力プロキシを導入",
+          "includeAllProviders": "すべてのプロキシプロバイダーを導入"
+        },
+        "toggles": {
+          "lazy": "遅延モード",
+          "disableUdp": "UDPを無効にする",
+          "hidden": "プロキシグループを隠す"
+        },
+        "actions": {
+          "prepend": "前置プロキシグループを追加",
+          "append": "後置プロキシグループを追加"
+        }
+      },
+      "menu": {
+        "home": "ホーム",
+        "select": "使用する",
+        "editInfo": "情報を編集",
+        "editFile": "ファイルを編集",
+        "editRules": "ルールを編集",
+        "editProxies": "ノードを編集",
+        "editGroups": "プロキシグループを編集",
+        "extendConfig": "拡張上書き設定",
+        "extendScript": "拡張スクリプト",
+        "openFile": "ファイルを開く",
+        "update": "更新",
+        "updateViaProxy": "Update via proxy",
+        "delete": "削除"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "前回の更新に失敗しました。",
+          "nextUp": "次回の更新",
+          "noSchedule": "予定がありません。",
+          "unknown": "不明",
+          "autoUpdateDisabled": "自動更新が無効になっています。"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "削除を確認",
+          "message": "この操作は元に戻せません"
+        }
+      },
+      "logViewer": {
+        "title": "スクリプトコンソール出力"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "文書を整形する",
+        "readOnlyMessage": "読み取り専用モードでは編集できません。"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "コピー成功"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "可視化",
+      "advanced": "詳細設定"
     }
   }
 }

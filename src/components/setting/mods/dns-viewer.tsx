@@ -631,7 +631,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 setVisualization((prev) => !prev);
               }}
             >
-              {visualization ? t("Advanced") : t("Visualization")}
+              {visualization
+                ? t("common.editorModes.advanced")
+                : t("common.editorModes.visualization")}
             </Button>
           </Box>
         </Box>

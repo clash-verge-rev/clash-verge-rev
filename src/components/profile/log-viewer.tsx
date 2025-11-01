@@ -26,7 +26,7 @@ export const LogViewer = (props: Props) => {
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{t("Script Console")}</DialogTitle>
+      <DialogTitle>{t("components.profile.logViewer.title")}</DialogTitle>
 
       <DialogContent
         sx={{

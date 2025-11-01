@@ -7,7 +7,6 @@
   "Confirm": "Confirmar",
   "Maximize": "Maximizar",
   "Minimize": "Minimizar",
-  "Format document": "Formatear documento",
   "Empty": "Vacío",
   "New": "Nuevo",
   "Edit": "Editar",
@@ -168,7 +167,6 @@
   "Label-Unlock": "Descubrir",
   "Label-Settings": "Ajustes",
   "Proxies": "Proxies",
-  "Connecting...": "Connecting...",
   "Update All": "Actualizar todo",
   "Update At": "Actualizado el",
   "rule": "Regla",
@@ -186,15 +184,6 @@
   "Update Time": "Hora de actualización",
   "Used / Total": "Utilizado / Total",
   "Expire Time": "Tiempo de expiración",
-  "Edit Proxies": "Editar nodos",
-  "Use newlines for multiple uri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)",
-  "Edit Rules": "Editar reglas",
-  "Prepend Group": "Agregar grupo de proxy previo",
-  "Append Group": "Agregar grupo de proxy posterior",
-  "Prepend Proxy": "Agregar nodo de proxy previo",
-  "Append Proxy": "Agregar nodo de proxy posterior",
-  "Advanced": "Avanzado",
-  "Visualization": "Visualización",
   "DOMAIN": "Coincidir con el nombre de dominio completo",
   "DOMAIN-SUFFIX": "Coincidir con el sufijo del nombre de dominio",
   "DOMAIN-KEYWORD": "Coincidir con la palabra clave del nombre de dominio",
@@ -232,48 +221,16 @@
   "REJECT": "Rechazar solicitud",
   "REJECT-DROP": "Descartar solicitud",
   "PASS": "Saltar esta regla",
-  "Edit Groups": "Editar grupos de proxy",
-  "Group Type": "Tipo de grupo de proxy",
   "select": "Seleccionar proxy manualmente",
   "url-test": "Seleccionar proxy según la prueba de latencia de la URL",
   "fallback": "Cambiar a otro proxy cuando no esté disponible",
   "load-balance": "Asignar proxy según el equilibrio de carga",
   "relay": "Transferir según la cadena de proxy definida",
-  "Group Name": "Nombre del grupo de proxy",
-  "Use Proxies": "Incluir proxies",
-  "Use Provider": "Incluir proveedor de proxies",
-  "Health Check Url": "URL de prueba de salud",
-  "Expected Status": "Código de estado esperado",
-  "Interval": "Intervalo de comprobación",
-  "Lazy": "Estado de inactividad",
   "Timeout": "Tiempo de espera",
-  "Max Failed Times": "Número máximo de fallos",
-  "Interface Name": "Nombre de la interfaz de salida",
-  "Routing Mark": "Marca de enrutamiento",
-  "Include All": "Incluir todos los proxies de salida y proveedores de proxies",
-  "Include All Providers": "Incluir todos los proveedores de proxies",
-  "Include All Proxies": "Incluir todos los proxies de salida",
-  "Exclude Filter": "Excluir nodos",
-  "Exclude Type": "Tipo de nodo a excluir",
-  "Disable UDP": "Deshabilitar UDP",
-  "Hidden": "Ocultar grupo de proxy",
-  "Group Name Required": "El nombre del grupo de proxy no puede estar vacío",
-  "Group Name Already Exists": "El nombre del grupo de proxy ya existe",
-  "Extend Config": "Configurar sobrescritura extendida",
-  "Extend Script": "Script extendido",
   "Type": "Tipo",
   "Name": "Nombre",
   "Refresh": "Actualizar",
-  "Home": "Inicio",
-  "Select": "Usar",
-  "Edit Info": "Editar información",
-  "Edit File": "Editar archivo",
-  "Open File": "Abrir archivo",
   "Update": "Actualizar",
-  "Update via proxy": "Update via proxy",
-  "Confirm deletion": "Confirmar eliminación",
-  "This operation is not reversible": "Esta operación no se puede deshacer",
-  "Script Console": "Salida de la consola del script",
   "Close All Connections": "Close All Connections",
   "Upload": "Subir",
   "Download": "Descargar",
@@ -380,7 +337,6 @@
   "theme.system": "System",
   "Copy Success": "Copia exitosa",
   "Memory Usage": "Uso de memoria del núcleo",
-  "Proxy Group Icon": "Icono del grupo de proxy",
   "Miscellaneous": "Ajustes varios",
   "App Log Level": "Nivel de registro de la aplicación",
   "Auto Close Connections": "Cerrar conexiones automáticamente",
@@ -415,8 +371,6 @@
   "Exit": "Salir",
   "Verge Version": "Versión de Verge",
   "ReadOnly": "Solo lectura",
-  "ReadOnlyMessage": "No se puede editar en modo de solo lectura",
-  "Filter": "Filtrar nodos",
   "Filter conditions": "Condiciones de filtrado",
   "Match Case": "Distinguir mayúsculas y minúsculas",
   "Match Whole Word": "Coincidencia exacta de palabras",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "Servicio desinstalado con éxito",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "El intervalo de tiempo del daemon de proxy no puede ser menor de 1 segundo",
   "Invalid Bypass Format": "Formato de omisión de proxy no válido",
-  "Waiting for service to be ready...": "Esperando a que el servicio esté listo...",
-  "Service not ready, retrying attempt {count}/{total}...": "Service not ready, retrying attempt {{count}}/{{total}}...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "Failed to check service status, retrying attempt {{count}}/{{total}}...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "Service did not become ready after attempts. Proceeding with core restart.",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "El servicio estaba listo, pero puede haber habido problemas al reiniciar el núcleo o el servicio se volvió inaccesible. Por favor, verifique.",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "Hubo problemas durante la instalación del servicio o al reiniciar el núcleo. El servicio podría no estar disponible. Por favor, revise los registros del sistema.",
-  "Attempting to restart core as a fallback...": "Attempting to restart core as a fallback...",
-  "Core restarted. Service is now available.": "El núcleo se ha reiniciado. El servicio está disponible.",
   "Core Version Updated": "Versión del núcleo actualizada",
   "Clash Core Restarted": "Núcleo de Clash reiniciado",
   "GeoData Updated": "GeoData actualizado",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "Admin + Service Mode",
   "Last Check Update": "Última comprobación de actualizaciones",
   "Click to import subscription": "Haga clic para importar una suscripción",
-  "Last Update failed": "La última actualización falló",
-  "Next Up": "Próxima actualización",
-  "No schedule": "Sin programación",
   "Unknown": "Desconocido",
-  "Auto update disabled": "La actualización automática está deshabilitada",
   "Update failed, retrying with Clash proxy...": "Error al actualizar la suscripción. Intentando con el proxy de Clash...",
   "Update with Clash proxy successfully": "Actualización con el proxy de Clash exitosa",
   "Update failed even with Clash proxy": "Error al actualizar incluso con el proxy de Clash",
-  "Profile creation failed, retrying with Clash proxy...": "Error al crear la suscripción. Intentando con el proxy de Clash...",
-  "Import failed, retrying with Clash proxy...": "Error al importar la suscripción. Intentando con el proxy de Clash...",
   "Profile Imported with Clash proxy": "Suscripción importada con el proxy de Clash",
   "Current Node": "Nodo actual",
   "No active proxy node": "No hay nodos de proxy activos",
@@ -628,8 +568,6 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Saved Successfully": "Saved successfully",
-  "Enable one-click CORS for external API. Click to toggle CORS": "Enable one-click CORS for external API. Click to toggle CORS",
   "External Cors Settings": "External Cors Settings",
   "External Cors Configuration": "External Cors Configuration",
   "Allow private network access": "Allow private network access",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "Elegir archivo"
+      },
+      "notifications": {
+        "saved": "Saved successfully"
+      },
+      "proxiesEditor": {
+        "title": "Editar nodos",
+        "placeholders": {
+          "multiUri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)"
+        },
+        "actions": {
+          "prepend": "Agregar nodo de proxy previo",
+          "append": "Agregar nodo de proxy posterior"
+        }
+      },
+      "groupsEditor": {
+        "title": "Editar grupos de proxy",
+        "errors": {
+          "nameRequired": "El nombre del grupo de proxy no puede estar vacío",
+          "nameExists": "El nombre del grupo de proxy ya existe"
+        },
+        "fields": {
+          "type": "Tipo de grupo de proxy",
+          "name": "Nombre del grupo de proxy",
+          "icon": "Icono del grupo de proxy",
+          "proxies": "Incluir proxies",
+          "provider": "Incluir proveedor de proxies",
+          "healthCheckUrl": "URL de prueba de salud",
+          "expectedStatus": "Código de estado esperado",
+          "interval": "Intervalo de comprobación",
+          "timeout": "Tiempo de espera",
+          "maxFailedTimes": "Número máximo de fallos",
+          "interfaceName": "Nombre de la interfaz de salida",
+          "routingMark": "Marca de enrutamiento",
+          "filter": "Filtrar nodos",
+          "excludeFilter": "Excluir nodos",
+          "excludeType": "Tipo de nodo a excluir",
+          "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
+          "includeAllProxies": "Incluir todos los proxies de salida",
+          "includeAllProviders": "Incluir todos los proveedores de proxies"
+        },
+        "toggles": {
+          "lazy": "Estado de inactividad",
+          "disableUdp": "Deshabilitar UDP",
+          "hidden": "Ocultar grupo de proxy"
+        },
+        "actions": {
+          "prepend": "Agregar grupo de proxy previo",
+          "append": "Agregar grupo de proxy posterior"
+        }
+      },
+      "menu": {
+        "home": "Hogar",
+        "select": "Usar",
+        "editInfo": "Editar información",
+        "editFile": "Editar archivo",
+        "editRules": "Editar reglas",
+        "editProxies": "Editar nodos",
+        "editGroups": "Editar grupos de proxy",
+        "extendConfig": "Configurar sobrescritura extendida",
+        "extendScript": "Script extendido",
+        "openFile": "Abrir archivo",
+        "update": "Actualizar",
+        "updateViaProxy": "Update via proxy",
+        "delete": "Eliminar"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "La última actualización falló",
+          "nextUp": "Próxima actualización",
+          "noSchedule": "Sin programación",
+          "unknown": "Desconocido",
+          "autoUpdateDisabled": "La actualización automática está deshabilitada"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "Confirmar eliminación",
+          "message": "Esta operación no se puede deshacer"
+        }
+      },
+      "logViewer": {
+        "title": "Salida de la consola del script"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "Formatear documento",
+        "readOnlyMessage": "No se puede editar en modo de solo lectura"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "Copia exitosa"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "Visualización",
+      "advanced": "Avanzado"
     }
   }
 }

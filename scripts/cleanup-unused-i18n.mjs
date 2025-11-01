@@ -301,13 +301,26 @@ function logPreviewEntries(label, items) {
 }
 
 function removeKey(target, dottedKey) {
-  const parts = dottedKey.split(".");
-  const last = parts.pop();
+  if (
+    !target ||
+    typeof target !== "object" ||
+    Array.isArray(target) ||
+    dottedKey === ""
+  ) {
+    return;
+  }
 
-  if (!last) return;
+  if (dottedKey in target) {
+    delete target[dottedKey];
+    return;
+  }
+
+  const parts = dottedKey.split(".").filter((part) => part !== "");
+  if (parts.length === 0) return;
 
   let current = target;
-  for (const part of parts) {
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index];
     if (
       !current ||
       typeof current !== "object" ||
@@ -316,11 +329,11 @@ function removeKey(target, dottedKey) {
     ) {
       return;
     }
+    if (index === parts.length - 1) {
+      delete current[part];
+      return;
+    }
     current = current[part];
-  }
-
-  if (current && typeof current === "object") {
-    delete current[last];
   }
 }
 

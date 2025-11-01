@@ -7,7 +7,6 @@
   "Confirm": "确认",
   "Maximize": "最大化",
   "Minimize": "最小化",
-  "Format document": "格式化文档",
   "Empty": "空空如也",
   "New": "新建",
   "Edit": "编辑",
@@ -168,7 +167,6 @@
   "Label-Unlock": "测 试",
   "Label-Settings": "设 置",
   "Proxies": "代理",
-  "Connecting...": "连接中...",
   "Update All": "更新全部",
   "Update At": "更新于",
   "rule": "规则",
@@ -186,15 +184,6 @@
   "Update Time": "更新时间",
   "Used / Total": "已使用 / 总量",
   "Expire Time": "到期时间",
-  "Edit Proxies": "编辑节点",
-  "Use newlines for multiple uri": "多条 URI 请使用换行分隔（支持 Base64 编码）",
-  "Edit Rules": "编辑规则",
-  "Prepend Group": "添加前置代理组",
-  "Append Group": "添加后置代理组",
-  "Prepend Proxy": "添加前置代理节点",
-  "Append Proxy": "添加后置代理节点",
-  "Advanced": "高级",
-  "Visualization": "可视化",
   "DOMAIN": "匹配完整域名",
   "DOMAIN-SUFFIX": "匹配域名后缀",
   "DOMAIN-KEYWORD": "匹配域名关键字",
@@ -232,48 +221,16 @@
   "REJECT": "拦截请求",
   "REJECT-DROP": "抛弃请求",
   "PASS": "跳过此规则",
-  "Edit Groups": "编辑代理组",
-  "Group Type": "代理组类型",
   "select": "手动选择代理",
   "url-test": "根据URL测试延迟选择代理",
   "fallback": "不可用时切换到另一个代理",
   "load-balance": "根据负载均衡分配代理",
   "relay": "根据定义的代理链传递",
-  "Group Name": "代理组组名",
-  "Use Proxies": "引入代理",
-  "Use Provider": "引入代理集合",
-  "Health Check Url": "健康检查测试地址",
-  "Expected Status": "期望状态码",
-  "Interval": "检查间隔",
-  "Lazy": "懒惰状态",
   "Timeout": "超时时间",
-  "Max Failed Times": "最大失败次数",
-  "Interface Name": "出站接口",
-  "Routing Mark": "路由标记",
-  "Include All": "引入所有出站代理、代理集合",
-  "Include All Providers": "引入所有代理集合",
-  "Include All Proxies": "引入所有出站代理",
-  "Exclude Filter": "排除节点",
-  "Exclude Type": "排除节点类型",
-  "Disable UDP": "禁用 UDP",
-  "Hidden": "隐藏代理组",
-  "Group Name Required": "代理组名称不能为空",
-  "Group Name Already Exists": "代理组名称已存在",
-  "Extend Config": "扩展覆写配置",
-  "Extend Script": "扩展脚本",
   "Type": "类型",
   "Name": "名称",
   "Refresh": "刷新",
-  "Home": "首页",
-  "Select": "使用",
-  "Edit Info": "编辑信息",
-  "Edit File": "编辑文件",
-  "Open File": "打开文件",
   "Update": "更新",
-  "Update via proxy": "更新（代理）",
-  "Confirm deletion": "确认删除",
-  "This operation is not reversible": "此操作不可逆",
-  "Script Console": "脚本控制台输出",
   "Close All Connections": "关闭所有连接",
   "Upload": "上传",
   "Download": "下载",
@@ -380,7 +337,6 @@
   "theme.system": "系统",
   "Copy Success": "复制成功",
   "Memory Usage": "内核占用",
-  "Proxy Group Icon": "代理组图标",
   "Miscellaneous": "杂项设置",
   "App Log Level": "应用日志等级",
   "Auto Close Connections": "自动关闭连接",
@@ -415,8 +371,6 @@
   "Exit": "退出",
   "Verge Version": "Verge 版本",
   "ReadOnly": "只读",
-  "ReadOnlyMessage": "无法在只读模式下编辑",
-  "Filter": "过滤节点",
   "Filter conditions": "过滤条件",
   "Match Case": "区分大小写",
   "Match Whole Word": "全字匹配",
@@ -431,14 +385,6 @@
   "Service Uninstalled Successfully": "已成功卸载服务",
   "Proxy Daemon Duration Cannot be Less than 1 Second": "代理守护间隔时间不得低于 1 秒",
   "Invalid Bypass Format": "无效的代理绕过格式",
-  "Waiting for service to be ready...": "等待服务准备就绪...",
-  "Service not ready, retrying attempt {count}/{total}...": "服务未就绪，正在重试 {{count}}/{{total}} 次...",
-  "Failed to check service status, retrying attempt {count}/{total}...": "检查服务状态失败，正在重试 {{count}}/{{total}} 次...",
-  "Service did not become ready after attempts. Proceeding with core restart.": "服务在尝试后仍未就绪。正在重启内核。",
-  "Service was ready, but core restart might have issues or service became unavailable. Please check.": "服务已就绪，但内核重启可能存在问题或服务变得不可用。请检查。",
-  "Service installation or core restart encountered issues. Service might not be available. Please check system logs.": "服务安装或内核重启遇到问题。服务可能不可用。请检查系统日志。",
-  "Attempting to restart core as a fallback...": "尝试重启内核作为后备方案...",
-  "Core restarted. Service is now available.": "内核已重启，服务现已可用",
   "Core Version Updated": "内核版本已更新",
   "Clash Core Restarted": "已重启 Clash 内核",
   "GeoData Updated": "已更新 GeoData",
@@ -580,16 +526,10 @@
   "Administrator + Service Mode": "管理员 + 服务模式",
   "Last Check Update": "最后检查更新",
   "Click to import subscription": "点击导入订阅",
-  "Last Update failed": "上次更新失败",
-  "Next Up": "下次更新",
-  "No schedule": "没有计划",
   "Unknown": "未知",
-  "Auto update disabled": "自动更新已禁用",
   "Update failed, retrying with Clash proxy...": "订阅更新失败，尝试使用 Clash 代理更新",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失败",
-  "Profile creation failed, retrying with Clash proxy...": "订阅创建失败，尝试使用 Clash 代理创建",
-  "Import failed, retrying with Clash proxy...": "订阅导入失败，尝试使用 Clash 代理导入",
   "Profile Imported with Clash proxy": "使用 Clash 代理导入订阅成功",
   "Current Node": "当前节点",
   "No active proxy node": "暂无激活的代理节点",
@@ -628,8 +568,6 @@
   "AppQuitBody": "已通过快捷键退出应用",
   "AppHiddenTitle": "应用隐藏",
   "AppHiddenBody": "已通过快捷键隐藏应用窗口",
-  "Saved Successfully": "保存成功",
-  "Enable one-click CORS for external API. Click to toggle CORS": "设置内核跨域访问，点击切换 CORS是否启用",
   "External Cors Settings": "外部控制跨域设置",
   "External Cors Configuration": "外部控制跨域配置",
   "Allow private network access": "允许专用网络访问",
@@ -704,6 +642,106 @@
       },
       "fileInput": {
         "chooseFile": "选择文件"
+      },
+      "notifications": {
+        "saved": "保存成功"
+      },
+      "proxiesEditor": {
+        "title": "编辑节点",
+        "placeholders": {
+          "multiUri": "多条 URI 请使用换行分隔（支持 Base64 编码）"
+        },
+        "actions": {
+          "prepend": "添加前置代理节点",
+          "append": "添加后置代理节点"
+        }
+      },
+      "groupsEditor": {
+        "title": "编辑代理组",
+        "errors": {
+          "nameRequired": "代理组名称不能为空",
+          "nameExists": "代理组名称已存在"
+        },
+        "fields": {
+          "type": "代理组类型",
+          "name": "代理组组名",
+          "icon": "代理组图标",
+          "proxies": "引入代理",
+          "provider": "引入代理集合",
+          "healthCheckUrl": "健康检查测试地址",
+          "expectedStatus": "期望状态码",
+          "interval": "检查间隔",
+          "timeout": "超时时间",
+          "maxFailedTimes": "最大失败次数",
+          "interfaceName": "出站接口",
+          "routingMark": "路由标记",
+          "filter": "过滤节点",
+          "excludeFilter": "排除节点",
+          "excludeType": "排除节点类型",
+          "includeAll": "引入所有出站代理、代理集合",
+          "includeAllProxies": "引入所有出站代理",
+          "includeAllProviders": "引入所有代理集合"
+        },
+        "toggles": {
+          "lazy": "懒惰状态",
+          "disableUdp": "禁用 UDP",
+          "hidden": "隐藏代理组"
+        },
+        "actions": {
+          "prepend": "添加前置代理组",
+          "append": "添加后置代理组"
+        }
+      },
+      "menu": {
+        "home": "首 页",
+        "select": "使用",
+        "editInfo": "编辑信息",
+        "editFile": "编辑文件",
+        "editRules": "编辑规则",
+        "editProxies": "编辑节点",
+        "editGroups": "编辑代理组",
+        "extendConfig": "扩展覆写配置",
+        "extendScript": "扩展脚本",
+        "openFile": "打开文件",
+        "update": "更新",
+        "updateViaProxy": "更新（代理）",
+        "delete": "删除"
+      },
+      "item": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "上次更新失败",
+          "nextUp": "下次更新",
+          "noSchedule": "没有计划",
+          "unknown": "未知",
+          "autoUpdateDisabled": "自动更新已禁用"
+        }
+      },
+      "confirm": {
+        "delete": {
+          "title": "确认删除",
+          "message": "此操作不可逆"
+        }
+      },
+      "logViewer": {
+        "title": "脚本控制台输出"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "editor": {
+        "format": "格式化文档",
+        "readOnlyMessage": "无法在只读模式下编辑"
       }
     },
     "home": {
@@ -885,6 +923,12 @@
           "copySuccess": "复制成功"
         }
       }
+    }
+  },
+  "common": {
+    "editorModes": {
+      "visualization": "可视化",
+      "advanced": "高级"
     }
   }
 }

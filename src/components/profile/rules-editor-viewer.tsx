@@ -479,7 +479,7 @@ export const RulesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice("success", t("Saved Successfully"));
+      showNotice("success", t("components.profile.notifications.saved"));
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
@@ -501,7 +501,9 @@ export const RulesEditorViewer = (props: Props) => {
                   setVisualization((prev) => !prev);
                 }}
               >
-                {visualization ? t("Advanced") : t("Visualization")}
+                {visualization
+                  ? t("common.editorModes.advanced")
+                  : t("common.editorModes.visualization")}
               </Button>
             </Box>
           </Box>
