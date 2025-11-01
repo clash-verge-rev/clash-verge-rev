@@ -1002,6 +1002,27 @@
             "latestVersion": "Обновление не требуется",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "Настройки темы",
+          "fields": {
+            "primaryColor": "Основной цвет",
+            "secondaryColor": "Вторичный цвет",
+            "primaryText": "Первичный текст",
+            "secondaryText": "Вторичный текст",
+            "infoColor": "Информационный цвет",
+            "warningColor": "Цвет предупреждения",
+            "errorColor": "Цвет ошибки",
+            "successColor": "Цвет успеха",
+            "fontFamily": "Семейство шрифтов",
+            "cssInjection": "Внедрение CSS"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

@@ -1002,6 +1002,27 @@
             "latestVersion": "Actualmente está en la última versión",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "Configuración de tema",
+          "fields": {
+            "primaryColor": "Color principal",
+            "secondaryColor": "Color secundario",
+            "primaryText": "Color principal del texto",
+            "secondaryText": "Color secundario del texto",
+            "infoColor": "Color de información",
+            "warningColor": "Color de advertencia",
+            "errorColor": "Color de error",
+            "successColor": "Color de éxito",
+            "fontFamily": "Familia tipográfica",
+            "cssInjection": "Inyección de CSS"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

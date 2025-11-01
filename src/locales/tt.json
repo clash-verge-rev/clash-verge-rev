@@ -1002,6 +1002,27 @@
             "latestVersion": "Сездә иң соңгы версия урнаштырылган",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "Тема көйләүләре",
+          "fields": {
+            "primaryColor": "Төп төс",
+            "secondaryColor": "Икенче төс",
+            "primaryText": "Primary Text",
+            "secondaryText": "Secondary Text",
+            "infoColor": "Мәгълүмат төсе",
+            "warningColor": "Кисәтү төсе",
+            "errorColor": "Хата төсе",
+            "successColor": "Уңыш төсе",
+            "fontFamily": "Шрифтлар гаиләсе",
+            "cssInjection": "CSS кертү"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

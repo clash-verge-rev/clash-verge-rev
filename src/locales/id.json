@@ -1002,6 +1002,27 @@
             "latestVersion": "Saat ini pada Versi Terbaru",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "Pengaturan Tema",
+          "fields": {
+            "primaryColor": "Warna Utama",
+            "secondaryColor": "Warna Sekunder",
+            "primaryText": "Teks Utama",
+            "secondaryText": "Teks Sekunder",
+            "infoColor": "Warna Info",
+            "warningColor": "Warna Peringatan",
+            "errorColor": "Warna Kesalahan",
+            "successColor": "Warna Keberhasilan",
+            "fontFamily": "Keluarga Font",
+            "cssInjection": "Injeksi CSS"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

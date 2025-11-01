@@ -1002,6 +1002,27 @@
             "latestVersion": "Sie verwenden bereits die neueste Version",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "Thema-Einstellungen",
+          "fields": {
+            "primaryColor": "Hauptfarbe",
+            "secondaryColor": "Sekundärfarbe",
+            "primaryText": "Haupttextfarbe",
+            "secondaryText": "Sekundärtextfarbe",
+            "infoColor": "Informationsfarbe",
+            "warningColor": "Warnfarbe",
+            "errorColor": "Fehlerfarbe",
+            "successColor": "Erfolgsfarbe",
+            "fontFamily": "Schriftfamilie",
+            "cssInjection": "CSS-Einbindung"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

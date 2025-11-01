@@ -1002,6 +1002,27 @@
             "latestVersion": "目前已是最新版本",
             "versionCopied": "Verge版本已複製到剪貼簿"
           }
+        },
+        "theme": {
+          "title": "主題設定",
+          "fields": {
+            "primaryColor": "主要顏色",
+            "secondaryColor": "次要顏色",
+            "primaryText": "文字主要顏色",
+            "secondaryText": "文字次要顏色",
+            "infoColor": "資訊顏色",
+            "warningColor": "警告顏色",
+            "errorColor": "錯誤顏色",
+            "successColor": "成功顏色",
+            "fontFamily": "字型系列",
+            "cssInjection": "CSS 注入"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

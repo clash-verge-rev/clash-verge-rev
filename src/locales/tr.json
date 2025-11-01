@@ -1002,6 +1002,27 @@
             "latestVersion": "Şu Anda En Son Sürümdesiniz",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "Tema Ayarı",
+          "fields": {
+            "primaryColor": "Ana Renk",
+            "secondaryColor": "İkincil Renk",
+            "primaryText": "Ana Metin",
+            "secondaryText": "İkincil Metin",
+            "infoColor": "Bilgi Rengi",
+            "warningColor": "Uyarı Rengi",
+            "errorColor": "Hata Rengi",
+            "successColor": "Başarı Rengi",
+            "fontFamily": "Yazı Tipi Ailesi",
+            "cssInjection": "CSS Enjeksiyonu"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

@@ -1002,6 +1002,27 @@
             "latestVersion": "در حال حاضر در آخرین نسخه",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "تنظیمات تم",
+          "fields": {
+            "primaryColor": "رنگ اصلی",
+            "secondaryColor": "رنگ ثانویه",
+            "primaryText": "متن اصلی",
+            "secondaryText": "متن ثانویه",
+            "infoColor": "رنگ اطلاعات",
+            "warningColor": "رنگ هشدار",
+            "errorColor": "رنگ خطا",
+            "successColor": "رنگ موفقیت",
+            "fontFamily": "خانواده فونت",
+            "cssInjection": "تزریق CSS"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

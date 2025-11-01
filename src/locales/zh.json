@@ -1002,6 +1002,27 @@
             "latestVersion": "当前已是最新版本",
             "versionCopied": "Verge版本已复制到剪贴板"
           }
+        },
+        "theme": {
+          "title": "主题设置",
+          "fields": {
+            "primaryColor": "主要颜色",
+            "secondaryColor": "次要颜色",
+            "primaryText": "文本主要颜色",
+            "secondaryText": "文本次要颜色",
+            "infoColor": "信息颜色",
+            "warningColor": "警告颜色",
+            "errorColor": "错误颜色",
+            "successColor": "成功颜色",
+            "fontFamily": "字体系列",
+            "cssInjection": "CSS 注入"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

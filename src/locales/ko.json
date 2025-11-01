@@ -1002,6 +1002,27 @@
             "latestVersion": "Currently on the Latest Version",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "Theme Setting",
+          "fields": {
+            "primaryColor": "기본 색상",
+            "secondaryColor": "Secondary Color",
+            "primaryText": "Primary Text",
+            "secondaryText": "Secondary Text",
+            "infoColor": "Info Color",
+            "warningColor": "Warning Color",
+            "errorColor": "Error Color",
+            "successColor": "Success Color",
+            "fontFamily": "Font Family",
+            "cssInjection": "CSS Injection"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {

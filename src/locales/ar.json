@@ -1002,6 +1002,27 @@
             "latestVersion": "أنت على أحدث إصدار حاليًا",
             "versionCopied": "Version copied to clipboard"
           }
+        },
+        "theme": {
+          "title": "إعدادات السمة",
+          "fields": {
+            "primaryColor": "اللون الأساسي",
+            "secondaryColor": "اللون الثانوي",
+            "primaryText": "النص الأساسي",
+            "secondaryText": "النص الثانوي",
+            "infoColor": "لون المعلومات",
+            "warningColor": "لون التحذير",
+            "errorColor": "لون الخطأ",
+            "successColor": "لون النجاح",
+            "fontFamily": "عائلة الخط",
+            "cssInjection": "حقن CSS"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
         }
       },
       "common": {
