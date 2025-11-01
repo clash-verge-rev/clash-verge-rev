@@ -1,0 +1,64 @@
+name: ESLint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+env:
+  HUSKY: 0
+
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect frontend changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web:
+              - 'src/**'
+              - 'eslint.config.ts'
+              - 'pnpm-lock.yaml'
+              - 'tsconfig.*'
+              - 'vite.config.*'
+              - '**/*.ts'
+              - '**/*.tsx'
+              - '**/*.js'
+              - '**/*.jsx'
+              - '**/*.cjs'
+              - '**/*.mjs'
+              - '**/*.json'
+              - '**/*.css'
+              - '**/*.scss'
+
+      - name: Skip ESLint (no relevant changes)
+        if: steps.changes.outputs.web != 'true'
+        run: echo "No frontend changes detected; skipping ESLint."
+
+      - name: Setup Node
+        if: steps.changes.outputs.web == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: pnpm
+
+      - name: Enable corepack
+        if: steps.changes.outputs.web == 'true'
+        run: corepack enable
+
+      - name: Install dependencies
+        if: steps.changes.outputs.web == 'true'
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        if: steps.changes.outputs.web == 'true'
+        run: corepack pnpm lint

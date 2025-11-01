@@ -127,7 +127,8 @@ If you changed the rust code, it's recommanded to execute code style formatting 
 ```bash
 # For rust backend
 $ clash-verge-rev: pnpm clippy
-# For frontend (not yet).
+# For frontend
+$ clash-verge-rev: pnpm lint
 ```
 
 2. Code style formatting

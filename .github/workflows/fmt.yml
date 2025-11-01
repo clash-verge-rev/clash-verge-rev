@@ -6,6 +6,10 @@ name: Check Formatting
 
 on:
   pull_request:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
 
 env:
   HUSKY: 0
@@ -15,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check Rust changes
         id: check_rust
@@ -43,6 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check Web changes
         id: check_web
@@ -70,9 +78,9 @@ jobs:
           node-version: "lts/*"
       - run: corepack enable
         if: steps.check_web.outputs.web == 'true'
-      - run: pnpm install --frozen-lockfile
+      - run: corepack pnpm install --frozen-lockfile
         if: steps.check_web.outputs.web == 'true'
-      - run: pnpm format:check
+      - run: corepack pnpm format:check
         if: steps.check_web.outputs.web == 'true'
 
   # taplo:

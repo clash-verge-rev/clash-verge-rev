@@ -2,6 +2,9 @@ name: Clippy Lint
 
 on:
   pull_request:
+  push:
+    branches:
+      - dev
   workflow_dispatch:
 env:
   HUSKY: 0
@@ -45,6 +48,8 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
