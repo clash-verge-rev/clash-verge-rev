@@ -126,13 +126,10 @@ async fn perform_profile_update(
 pub async fn update_profile(
     uid: &String,
     option: Option<&PrfOption>,
-    auto_refresh: Option<bool>,
-    ignore_auto_update: Option<bool>,
+    auto_refresh: bool,
+    ignore_auto_update: bool,
 ) -> Result<()> {
     logging!(info, Type::Config, "[订阅更新] 开始更新订阅 {}", uid);
-    let auto_refresh = auto_refresh.unwrap_or(true);
-    let ignore_auto_update = ignore_auto_update.unwrap_or(false);
-
     let url_opt = should_update_profile(uid, ignore_auto_update).await?;
 
     let should_refresh = match url_opt {
