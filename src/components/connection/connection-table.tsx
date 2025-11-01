@@ -250,7 +250,6 @@ export const ConnectionTable = (props: Props) => {
 
   const handleColumnResize = (params: GridColumnResizeParams) => {
     const { colDef, width } = params;
-    console.log("Column resize:", colDef.field, width);
     setColumnWidths((prev) => ({
       ...prev,
       [colDef.field]: width,
