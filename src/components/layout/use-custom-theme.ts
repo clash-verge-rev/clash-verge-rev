@@ -53,10 +53,13 @@ export const useCustomTheme = () => {
       return;
     }
 
-    if (
+    const preferBrowserMatchMedia =
       typeof window !== "undefined" &&
-      typeof window.matchMedia === "function"
-    ) {
+      typeof window.matchMedia === "function" &&
+      // Skip Tauri flow when running purely in browser.
+      !("__TAURI__" in window);
+
+    if (preferBrowserMatchMedia) {
       return;
     }
 
