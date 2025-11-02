@@ -1,5 +1,6 @@
 use super::CmdResult;
 use super::StringifyErr;
+use crate::utils::draft::SharedBox;
 use crate::{
     config::{
         Config, IProfiles, PrfItem, PrfOption,
@@ -25,11 +26,11 @@ static CURRENT_REQUEST_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
-pub async fn get_profiles() -> CmdResult<IProfiles> {
+pub async fn get_profiles() -> CmdResult<SharedBox<IProfiles>> {
     logging!(debug, Type::Cmd, "获取配置文件列表");
     let draft = Config::profiles().await;
-    let latest = draft.latest_ref();
-    Ok((**latest).clone())
+    let latest = draft.latest_arc();
+    Ok(latest)
 }
 
 /// 增强配置文件
@@ -174,7 +175,7 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
     // 获取目标配置文件路径
     let config_file_result = {
         let profiles_config = Config::profiles().await;
-        let profiles_data = profiles_config.latest_ref();
+        let profiles_data = profiles_config.latest_arc();
         match profiles_data.get_item(new_profile) {
             Ok(item) => {
                 if let Some(file) = &item.file {
@@ -284,8 +285,7 @@ async fn restore_previous_profile(prev_profile: String) -> CmdResult<()> {
     };
     Config::profiles()
         .await
-        .draft_mut()
-        .patch_config(restore_profiles)
+        .edit_draft(|d| d.patch_config(restore_profiles.clone()))
         .stringify_err()?;
     Config::profiles().await.apply();
     crate::process::AsyncHandler::spawn(|| async move {
@@ -452,7 +452,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     }
 
     // 保存当前配置，以便在验证失败时恢复
-    let current_profile = Config::profiles().await.latest_ref().current.clone();
+    let current_profile = Config::profiles().await.latest_arc().current.clone();
     logging!(info, Type::Cmd, "当前配置: {:?}", current_profile);
 
     // 如果要切换配置，先检查目标配置文件是否有语法错误
@@ -487,7 +487,9 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     let current_value = profiles.current.clone();
 
-    let _ = Config::profiles().await.draft_mut().patch_config(profiles);
+    let _ = Config::profiles()
+        .await
+        .edit_draft(|d| d.patch_config(profiles));
 
     // 在调用内核前再次验证请求有效性
     let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
@@ -523,7 +525,7 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 保存修改前检查是否有更新 update_interval
     let profiles = Config::profiles().await;
-    let should_refresh_timer = if let Ok(old_profile) = profiles.latest_ref().get_item(&index)
+    let should_refresh_timer = if let Ok(old_profile) = profiles.latest_arc().get_item(&index)
         && let Some(new_option) = profile.option.as_ref()
     {
         let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
@@ -562,7 +564,7 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 #[tauri::command]
 pub async fn view_profile(index: String) -> CmdResult {
     let profiles = Config::profiles().await;
-    let profiles_ref = profiles.latest_ref();
+    let profiles_ref = profiles.latest_arc();
     let file = profiles_ref
         .get_item(&index)
         .stringify_err()?
@@ -585,7 +587,7 @@ pub async fn view_profile(index: String) -> CmdResult {
 pub async fn read_profile_file(index: String) -> CmdResult<String> {
     let item = {
         let profiles = Config::profiles().await;
-        let profiles_ref = profiles.latest_ref();
+        let profiles_ref = profiles.latest_arc();
         PrfItem {
             file: profiles_ref.get_item(&index).stringify_err()?.file.clone(),
             ..Default::default()

@@ -313,7 +313,9 @@ impl IVerge {
         );
 
         let config_draft = Config::verge().await;
-        **config_draft.draft_mut() = updated_config;
+        config_draft.edit_draft(|d| {
+            *d = updated_config;
+        });
         config_draft.apply();
 
         Ok(())
@@ -694,11 +696,5 @@ impl From<IVerge> for IVergeResponse {
             hover_jump_navigator_delay: verge.hover_jump_navigator_delay,
             enable_external_controller: verge.enable_external_controller,
         }
-    }
-}
-
-impl From<Box<IVerge>> for IVergeResponse {
-    fn from(verge: Box<IVerge>) -> Self {
-        IVergeResponse::from(*verge)
     }
 }

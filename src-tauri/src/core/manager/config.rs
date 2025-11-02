@@ -17,13 +17,15 @@ impl CoreManager {
         use crate::constants::files::RUNTIME_CONFIG;
 
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
-        let clash_config = Config::clash().await.latest_ref().0.clone();
+        let clash_config = &Config::clash().await.latest_arc().0;
 
-        **Config::runtime().await.draft_mut() = IRuntime {
-            config: Some(clash_config.clone()),
-            exists_keys: vec![],
-            chain_logs: Default::default(),
-        };
+        Config::runtime().await.edit_draft(|d| {
+            *d = IRuntime {
+                config: Some(clash_config.to_owned()),
+                exists_keys: vec![],
+                chain_logs: Default::default(),
+            }
+        });
 
         help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime")).await?;
         handle::Handle::notice_message(error_key, error_msg);

@@ -22,7 +22,7 @@ pub async fn copy_clash_env() -> CmdResult {
 /// 获取Clash信息
 #[tauri::command]
 pub async fn get_clash_info() -> CmdResult<ClashInfo> {
-    Ok(Config::clash().await.latest_ref().get_client_info())
+    Ok(Config::clash().await.latest_arc().get_client_info())
 }
 
 /// 修改Clash配置
@@ -175,7 +175,9 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         patch.insert("dns".into(), patch_config.into());
 
         // 应用DNS配置到运行时配置
-        Config::runtime().await.draft_mut().patch_config(patch);
+        Config::runtime().await.edit_draft(|d| {
+            d.patch_config(patch);
+        });
 
         // 重新生成配置
         Config::generate().await.stringify_err_log(|err| {

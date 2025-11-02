@@ -319,7 +319,7 @@ pub fn run() {
             AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge()
                     .await
-                    .latest_ref()
+                    .latest_arc()
                     .enable_global_hotkey
                     .unwrap_or(true);
 

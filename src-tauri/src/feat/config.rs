@@ -12,8 +12,7 @@ use serde_yaml_ng::Mapping;
 pub async fn patch_clash(patch: Mapping) -> Result<()> {
     Config::clash()
         .await
-        .draft_mut()
-        .patch_config(patch.clone());
+        .edit_draft(|d| d.patch_config(patch.clone()));
 
     let res = {
         // 激活订阅
@@ -25,7 +24,9 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
                 logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
                 logging_error!(Type::Tray, tray::Tray::global().update_icon().await);
             }
-            Config::runtime().await.draft_mut().patch_config(patch);
+            Config::runtime()
+                .await
+                .edit_draft(|d| d.patch_config(patch));
             CoreManager::global().update_config().await?;
         }
         handle::Handle::refresh_clash();
@@ -35,7 +36,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         Ok(()) => {
             Config::clash().await.apply();
             // 分离数据获取和异步调用
-            let clash_data = Config::clash().await.data_mut().clone();
+            let clash_data = Config::clash().await.data_arc();
             clash_data.save_config().await?;
             Ok(())
         }
@@ -190,7 +191,9 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
         handle::Handle::refresh_clash();
     }
     if (update_flags & (UpdateFlags::VergeConfig as i32)) != 0 {
-        Config::verge().await.draft_mut().enable_global_hotkey = patch.enable_global_hotkey;
+        Config::verge()
+            .await
+            .edit_draft(|d| d.enable_global_hotkey = patch.enable_global_hotkey);
         handle::Handle::refresh_verge();
     }
     if (update_flags & (UpdateFlags::Launch as i32)) != 0 {
@@ -227,7 +230,7 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
 }
 
 pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
-    Config::verge().await.draft_mut().patch_config(patch);
+    Config::verge().await.edit_draft(|d| d.patch_config(patch));
 
     let update_flags = determine_update_flags(patch);
     let process_flag_result: std::result::Result<(), anyhow::Error> = {
@@ -242,7 +245,7 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
     Config::verge().await.apply();
     if !not_save_file {
         // 分离数据获取和异步调用
-        let verge_data = Config::verge().await.data_ref().clone();
+        let verge_data = Config::verge().await.data_arc();
         verge_data.save_file().await?;
     }
     Ok(())

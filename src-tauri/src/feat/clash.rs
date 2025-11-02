@@ -72,10 +72,12 @@ pub async fn change_clash_mode(mode: String) {
     {
         Ok(_) => {
             // 更新订阅
-            Config::clash().await.data_mut().patch_config(mapping);
+            Config::clash()
+                .await
+                .edit_draft(|d| d.patch_config(mapping));
 
             // 分离数据获取和异步调用
-            let clash_data = Config::clash().await.data_mut().clone();
+            let clash_data = Config::clash().await.data_arc();
             if clash_data.save_config().await.is_ok() {
                 handle::Handle::refresh_clash();
                 logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
@@ -84,7 +86,7 @@ pub async fn change_clash_mode(mode: String) {
 
             let is_auto_close_connection = Config::verge()
                 .await
-                .data_mut()
+                .data_arc()
                 .auto_close_connection
                 .unwrap_or(false);
             if is_auto_close_connection {
@@ -102,7 +104,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
 
     let tun_mode = Config::verge()
         .await
-        .latest_ref()
+        .latest_arc()
         .enable_tun_mode
         .unwrap_or(false);
 

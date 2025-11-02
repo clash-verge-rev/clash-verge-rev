@@ -87,11 +87,11 @@ async fn refresh_lightweight_tray_state() {
 pub async fn auto_lightweight_boot() -> Result<()> {
     let verge_config = Config::verge().await;
     let enable_auto = verge_config
-        .data_mut()
+        .latest_arc()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
     let is_silent_start = verge_config
-        .latest_ref()
+        .latest_arc()
         .enable_silent_start
         .unwrap_or(false);
 
@@ -236,7 +236,7 @@ async fn setup_light_weight_timer() -> Result<()> {
 
     let once_by_minutes = Config::verge()
         .await
-        .latest_ref()
+        .latest_arc()
         .auto_light_weight_minutes
         .unwrap_or(10);
 
