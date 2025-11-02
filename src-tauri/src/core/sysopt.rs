@@ -2,7 +2,7 @@
 use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
-    core::{EventDrivenProxyManager, handle::Handle},
+    core::handle::Handle,
     logging, logging_error, singleton_lazy,
     utils::logging::Type,
 };
@@ -100,15 +100,6 @@ impl Sysopt {
         self.initialed.load(Ordering::SeqCst)
     }
 
-    pub fn init_guard_sysproxy(&self) -> Result<()> {
-        // 使用事件驱动代理管理器
-        let proxy_manager = EventDrivenProxyManager::global();
-        proxy_manager.notify_app_started();
-
-        logging!(info, Type::Core, "已启用事件驱动代理守卫");
-        Ok(())
-    }
-
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
         self.initialed.store(true, Ordering::SeqCst);
@@ -161,8 +152,6 @@ impl Sysopt {
             if !sys_enable {
                 sys.set_system_proxy()?;
                 auto.set_auto_proxy()?;
-                let proxy_manager = EventDrivenProxyManager::global();
-                proxy_manager.notify_config_changed();
                 return Ok(());
             }
 
@@ -171,8 +160,6 @@ impl Sysopt {
                 auto.enable = true;
                 sys.set_system_proxy()?;
                 auto.set_auto_proxy()?;
-                let proxy_manager = EventDrivenProxyManager::global();
-                proxy_manager.notify_config_changed();
                 return Ok(());
             }
 
@@ -181,8 +168,6 @@ impl Sysopt {
                 sys.enable = true;
                 auto.set_auto_proxy()?;
                 sys.set_system_proxy()?;
-                let proxy_manager = EventDrivenProxyManager::global();
-                proxy_manager.notify_config_changed();
                 return Ok(());
             }
         }
@@ -190,8 +175,6 @@ impl Sysopt {
         {
             if !sys_enable {
                 let result = self.reset_sysproxy().await;
-                let proxy_manager = EventDrivenProxyManager::global();
-                proxy_manager.notify_config_changed();
                 return result;
             }
 
@@ -206,8 +189,6 @@ impl Sysopt {
 
             execute_sysproxy_command(args).await?;
         }
-        let proxy_manager = EventDrivenProxyManager::global();
-        proxy_manager.notify_config_changed();
         Ok(())
     }
 

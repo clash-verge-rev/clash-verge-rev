@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 pub mod network {
-    pub const DEFAULT_PROXY_HOST: &str = "127.0.0.1";
     pub const DEFAULT_EXTERNAL_CONTROLLER: &str = "127.0.0.1:9097";
 
     pub mod ports {
@@ -27,9 +26,6 @@ pub mod bypass {
     #[cfg(target_os = "linux")]
     pub const DEFAULT: &str =
         "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1";
-
-    #[cfg(target_os = "macos")]
-    pub const DEFAULT: &str = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
 }
 
 pub mod timing {

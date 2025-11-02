@@ -18,7 +18,7 @@ use crate::utils::linux;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
 use crate::{
-    core::{EventDrivenProxyManager, handle, hotkey},
+    core::{handle, hotkey},
     process::AsyncHandler,
     utils::{resolve, server},
 };
@@ -429,7 +429,6 @@ pub fn run() {
             let handle = core::handle::Handle::global();
             if !handle.is_exiting() {
                 handle.set_is_exiting();
-                EventDrivenProxyManager::global().notify_app_stopping();
                 feat::clean();
             }
         }
