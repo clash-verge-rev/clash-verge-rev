@@ -1,5 +1,10 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr, config::*, feat, utils::draft::SharedBox};
+use crate::{
+    cmd::StringifyErr,
+    config::{Config, IVerge},
+    feat,
+    utils::draft::SharedBox,
+};
 
 /// 获取Verge配置
 #[tauri::command]

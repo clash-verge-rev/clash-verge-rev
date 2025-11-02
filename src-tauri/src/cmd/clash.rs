@@ -2,11 +2,11 @@ use super::CmdResult;
 use crate::utils::dirs;
 use crate::{
     cmd::StringifyErr,
-    config::Config,
+    config::{ClashInfo, Config},
     constants,
     core::{CoreManager, handle, validate::CoreConfigValidator},
 };
-use crate::{config::*, feat, logging, utils::logging::Type};
+use crate::{feat, logging, utils::logging::Type};
 use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
@@ -141,12 +141,6 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 /// 应用或撤销DNS配置
 #[tauri::command]
 pub async fn apply_dns_config(apply: bool) -> CmdResult {
-    use crate::{
-        config::Config,
-        core::{CoreManager, handle},
-        utils::dirs,
-    };
-
     if apply {
         // 读取DNS配置文件
         let dns_path = dirs::app_home_dir()
