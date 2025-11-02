@@ -331,23 +331,6 @@
   "theme.system": "سیستم",
   "Copy Success": "کپی با موفقیت انجام شد",
   "Memory Usage": "استفاده از حافظه",
-  "Miscellaneous": "متفرقه",
-  "App Log Level": "سطح لاگ برنامه",
-  "Auto Close Connections": "بستن خودکار اتصالات",
-  "Auto Close Connections Info": "اتصالات برقرار شده را هنگام تغییر انتخاب گروه پروکسی یا حالت پروکسی خاتمه دهید",
-  "Auto Check Update": "بررسی خودکار به‌روزرسانی",
-  "Enable Builtin Enhanced": "فعال کردن تقویت داخلی",
-  "Enable Builtin Enhanced Info": "مدیریت سازگاری برای فایل پیکربندی",
-  "Proxy Layout Columns": "ستون چیدمان پراکسی",
-  "Auto Columns": "ستون‌های خودکار",
-  "Auto Log Clean": "پاکسازی خودکار لاگ",
-  "Never Clean": "هرگز پاک نکن",
-  "Retain _n Days": "نگهداری به مدت {{n}} روز",
-  "Auto Delay Detection": "تشخیص تأخیر خودکار",
-  "Auto Delay Detection Info": "به‌صورت دوره‌ای تأخیر گره فعلی را در پس‌زمینه آزمایش می‌کند",
-  "Default Latency Test": "آزمون تأخیر پیش‌فرض",
-  "Default Latency Test Info": "فقط برای تست درخواست‌های کلاینت HTTP استفاده می‌شود و بر فایل پیکربندی تأثیری نخواهد داشت",
-  "Default Latency Timeout": "زمان انتظار تأخیر پیش‌فرض",
   "Hotkey Setting": "تنظیمات کلیدهای میانبر",
   "Enable Global Hotkey": "فعال کردن کلید میانبر سراسری",
   "open_or_close_dashboard": "باز/بستن داشبورد",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "کپی با موفقیت انجام شد"
+        }
+      },
+      "misc": {
+        "title": "متفرقه",
+        "fields": {
+          "appLogLevel": "سطح لاگ برنامه",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "بستن خودکار اتصالات",
+          "autoCheckUpdate": "بررسی خودکار به‌روزرسانی",
+          "enableBuiltinEnhanced": "فعال کردن تقویت داخلی",
+          "proxyLayoutColumns": "ستون چیدمان پراکسی",
+          "autoLogClean": "پاکسازی خودکار لاگ",
+          "autoDelayDetection": "تشخیص تأخیر خودکار",
+          "defaultLatencyTest": "آزمون تأخیر پیش‌فرض",
+          "defaultLatencyTimeout": "زمان انتظار تأخیر پیش‌فرض"
+        },
+        "tooltips": {
+          "autoCloseConnections": "اتصالات برقرار شده را هنگام تغییر انتخاب گروه پروکسی یا حالت پروکسی خاتمه دهید",
+          "enableBuiltinEnhanced": "مدیریت سازگاری برای فایل پیکربندی",
+          "autoDelayDetection": "به‌صورت دوره‌ای تأخیر گره فعلی را در پس‌زمینه آزمایش می‌کند",
+          "defaultLatencyTest": "فقط برای تست درخواست‌های کلاینت HTTP استفاده می‌شود و بر فایل پیکربندی تأثیری نخواهد داشت"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "ستون‌های خودکار"
+          },
+          "autoLogClean": {
+            "never": "هرگز پاک نکن",
+            "retainDays": "نگهداری به مدت {{n}} روز"
+          }
         }
       }
     }

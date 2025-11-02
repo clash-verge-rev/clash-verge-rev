@@ -331,23 +331,6 @@
   "theme.system": "Система",
   "Copy Success": "Күчерелде",
   "Memory Usage": "Хәтер куллану",
-  "Miscellaneous": "Өстәмә көйләүләр",
-  "App Log Level": "Кушымта журналы дәрәҗәсе",
-  "Auto Close Connections": "Тоташуларны автоматик ябу",
-  "Auto Close Connections Info": "Прокси төркеме яисә режимын үзгәрткәндә актив тоташуларны өзү",
-  "Auto Check Update": "Яңартуларны автоматик тикшерү",
-  "Enable Builtin Enhanced": "Эчке камилләштерүне кабызу",
-  "Enable Builtin Enhanced Info": "Конфигурация файлы белән туры килә торган өстәмә оптимизация",
-  "Proxy Layout Columns": "Прокси күрсәтү баганалары саны",
-  "Auto Columns": "Авто баганалар",
-  "Auto Log Clean": "Логларны автоматик чистарту",
-  "Never Clean": "Беркайчан чистартмаска",
-  "Retain _n Days": "{{n}} көн саклау",
-  "Auto Delay Detection": "Автоматик тоткарлык ачыклау",
-  "Auto Delay Detection Info": "Фон режимында хәзерге төен тоткарлыгын периодик тикшерә",
-  "Default Latency Test": "Тоткарлануны тикшерү сылтамасы (defaults)",
-  "Default Latency Test Info": "Бу фәкать клиентның HTTP сораулары тесты өчен кулланыла, конфигурация файлына йогынты ясамый",
-  "Default Latency Timeout": "Тоткарлануның стандарт таймауты",
   "Hotkey Setting": "Клавиатура төймәләре (hotkey) көйләүләре",
   "Enable Global Hotkey": "Глобаль Хоткейны кушу",
   "open_or_close_dashboard": "Панельне ачу/ябу",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "Күчерелде"
+        }
+      },
+      "misc": {
+        "title": "Өстәмә көйләүләр",
+        "fields": {
+          "appLogLevel": "Кушымта журналы дәрәҗәсе",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "Тоташуларны автоматик ябу",
+          "autoCheckUpdate": "Яңартуларны автоматик тикшерү",
+          "enableBuiltinEnhanced": "Эчке камилләштерүне кабызу",
+          "proxyLayoutColumns": "Прокси күрсәтү баганалары саны",
+          "autoLogClean": "Логларны автоматик чистарту",
+          "autoDelayDetection": "Автоматик тоткарлык ачыклау",
+          "defaultLatencyTest": "Тоткарлануны тикшерү сылтамасы (defaults)",
+          "defaultLatencyTimeout": "Тоткарлануның стандарт таймауты"
+        },
+        "tooltips": {
+          "autoCloseConnections": "Прокси төркеме яисә режимын үзгәрткәндә актив тоташуларны өзү",
+          "enableBuiltinEnhanced": "Конфигурация файлы белән туры килә торган өстәмә оптимизация",
+          "autoDelayDetection": "Фон режимында хәзерге төен тоткарлыгын периодик тикшерә",
+          "defaultLatencyTest": "Бу фәкать клиентның HTTP сораулары тесты өчен кулланыла, конфигурация файлына йогынты ясамый"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "Авто баганалар"
+          },
+          "autoLogClean": {
+            "never": "Беркайчан чистартмаска",
+            "retainDays": "{{n}} көн саклау"
+          }
         }
       }
     }

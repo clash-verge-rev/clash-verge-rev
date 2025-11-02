@@ -331,23 +331,6 @@
   "theme.system": "系統",
   "Copy Success": "複製成功",
   "Memory Usage": "內核佔用",
-  "Miscellaneous": "雜項設定",
-  "App Log Level": "應用程式日誌等級",
-  "Auto Close Connections": "自動關閉連線",
-  "Auto Close Connections Info": "當代理組選中節點或代理模式變動時，關閉已建立的連線",
-  "Auto Check Update": "自動檢查更新",
-  "Enable Builtin Enhanced": "內建增強功能",
-  "Enable Builtin Enhanced Info": "配置檔案的相容性處理",
-  "Proxy Layout Columns": "代理頁面欄數",
-  "Auto Columns": "自動欄數",
-  "Auto Log Clean": "自動清理日誌",
-  "Never Clean": "不清理",
-  "Retain _n Days": "保留 {{n}} 天",
-  "Auto Delay Detection": "自動延遲偵測",
-  "Auto Delay Detection Info": "在背景定時偵測目前節點延遲",
-  "Default Latency Test": "預設測試網址",
-  "Default Latency Test Info": "僅用於 HTTP 客戶端請求測試，不會對配置檔案產生影響",
-  "Default Latency Timeout": "測試逾時",
   "Hotkey Setting": "快速鍵設定",
   "Enable Global Hotkey": "啟用全域快速鍵",
   "open_or_close_dashboard": "開啟/關閉儀表板",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "設定儲存失敗",
   "Saving...": "儲存中...",
   "Detection timeout or failed": "檢測逾時或失敗",
-  "App Log Max Size": "應用程式日誌最大大小",
-  "App Log Max Count": "應用程式日誌最大數量",
   "Menu reorder mode": "選單排序模式",
   "Unlock menu order": "解鎖選單排序",
   "Lock menu order": "鎖定選單排序",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "複製成功"
+        }
+      },
+      "misc": {
+        "title": "雜項設定",
+        "fields": {
+          "appLogLevel": "應用程式日誌等級",
+          "appLogMaxSize": "應用程式日誌最大大小",
+          "appLogMaxCount": "應用程式日誌最大數量",
+          "autoCloseConnections": "自動關閉連線",
+          "autoCheckUpdate": "自動檢查更新",
+          "enableBuiltinEnhanced": "內建增強功能",
+          "proxyLayoutColumns": "代理頁面欄數",
+          "autoLogClean": "自動清理日誌",
+          "autoDelayDetection": "自動延遲偵測",
+          "defaultLatencyTest": "預設測試網址",
+          "defaultLatencyTimeout": "測試逾時"
+        },
+        "tooltips": {
+          "autoCloseConnections": "當代理組選中節點或代理模式變動時，關閉已建立的連線",
+          "enableBuiltinEnhanced": "配置檔案的相容性處理",
+          "autoDelayDetection": "在背景定時偵測目前節點延遲",
+          "defaultLatencyTest": "僅用於 HTTP 客戶端請求測試，不會對配置檔案產生影響"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "自動欄數"
+          },
+          "autoLogClean": {
+            "never": "不清理",
+            "retainDays": "保留 {{n}} 天"
+          }
         }
       }
     }

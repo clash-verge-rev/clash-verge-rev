@@ -331,23 +331,6 @@
   "theme.system": "Системная",
   "Copy Success": "Скопировано",
   "Memory Usage": "Использование памяти",
-  "Miscellaneous": "Расширенные настройки",
-  "App Log Level": "Уровень журнала приложения",
-  "Auto Close Connections": "Автоматическое закрытие соединений",
-  "Auto Close Connections Info": "Закрыть установленные соединения при изменении выбора группы прокси или режима прокси",
-  "Auto Check Update": "Автоматическая проверка обновлений",
-  "Enable Builtin Enhanced": "Включить встроенные улучшения",
-  "Enable Builtin Enhanced Info": "Обработка совместимости для файла конфигурации",
-  "Proxy Layout Columns": "Количество столбцов в макете прокси",
-  "Auto Columns": "Авто колонки",
-  "Auto Log Clean": "Автоматическая очистка логов",
-  "Never Clean": "Никогда не очищать",
-  "Retain _n Days": "Сохранять {{n}} дней",
-  "Auto Delay Detection": "Автоматическое измерение задержки",
-  "Auto Delay Detection Info": "Периодически проверяет задержку текущего узла в фоновом режиме",
-  "Default Latency Test": "Ссылка на тест задержки",
-  "Default Latency Test Info": "Используется только для тестирования HTTP-запросов клиента и не влияет на файл конфигурации",
-  "Default Latency Timeout": "Таймаут задержки по умолчанию",
   "Hotkey Setting": "Настройки сочетаний клавиш",
   "Enable Global Hotkey": "Включить глобальную горячую клавишу",
   "open_or_close_dashboard": "Открыть/Закрыть панель управления",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "Скопировано"
+        }
+      },
+      "misc": {
+        "title": "Расширенные настройки",
+        "fields": {
+          "appLogLevel": "Уровень журнала приложения",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "Автоматическое закрытие соединений",
+          "autoCheckUpdate": "Автоматическая проверка обновлений",
+          "enableBuiltinEnhanced": "Включить встроенные улучшения",
+          "proxyLayoutColumns": "Количество столбцов в макете прокси",
+          "autoLogClean": "Автоматическая очистка логов",
+          "autoDelayDetection": "Автоматическое измерение задержки",
+          "defaultLatencyTest": "Ссылка на тест задержки",
+          "defaultLatencyTimeout": "Таймаут задержки по умолчанию"
+        },
+        "tooltips": {
+          "autoCloseConnections": "Закрыть установленные соединения при изменении выбора группы прокси или режима прокси",
+          "enableBuiltinEnhanced": "Обработка совместимости для файла конфигурации",
+          "autoDelayDetection": "Периодически проверяет задержку текущего узла в фоновом режиме",
+          "defaultLatencyTest": "Используется только для тестирования HTTP-запросов клиента и не влияет на файл конфигурации"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "Авто колонки"
+          },
+          "autoLogClean": {
+            "never": "Никогда не очищать",
+            "retainDays": "Сохранять {{n}} дней"
+          }
         }
       }
     }

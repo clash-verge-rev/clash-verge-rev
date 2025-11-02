@@ -331,23 +331,6 @@
   "theme.system": "系统",
   "Copy Success": "复制成功",
   "Memory Usage": "内核占用",
-  "Miscellaneous": "杂项设置",
-  "App Log Level": "应用日志等级",
-  "Auto Close Connections": "自动关闭连接",
-  "Auto Close Connections Info": "当代理组选中节点或代理模式变动时，关闭已建立的连接",
-  "Auto Check Update": "自动检查更新",
-  "Enable Builtin Enhanced": "内置增强功能",
-  "Enable Builtin Enhanced Info": "配置文件的兼容性处理",
-  "Proxy Layout Columns": "代理页布局列数",
-  "Auto Columns": "自动列数",
-  "Auto Log Clean": "自动清理日志",
-  "Never Clean": "不清理",
-  "Retain _n Days": "保留 {{n}} 天",
-  "Auto Delay Detection": "自动延迟检测",
-  "Auto Delay Detection Info": "后台定时检测当前节点延迟",
-  "Default Latency Test": "默认测试链接",
-  "Default Latency Test Info": "仅用于 HTTP 客户端请求测试，不会对配置文件产生影响",
-  "Default Latency Timeout": "测试超时时间",
   "Hotkey Setting": "热键设置",
   "Enable Global Hotkey": "启用全局热键",
   "open_or_close_dashboard": "打开/关闭面板",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "配置保存失败",
   "Saving...": "保存中...",
   "Detection timeout or failed": "检测超时或失败",
-  "App Log Max Size": "应用日志最大大小",
-  "App Log Max Count": "应用日志最大数量",
   "Menu reorder mode": "菜单排序模式",
   "Unlock menu order": "解锁菜单排序",
   "Lock menu order": "锁定菜单排序",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "复制成功"
+        }
+      },
+      "misc": {
+        "title": "杂项设置",
+        "fields": {
+          "appLogLevel": "应用日志等级",
+          "appLogMaxSize": "应用日志最大大小",
+          "appLogMaxCount": "应用日志最大数量",
+          "autoCloseConnections": "自动关闭连接",
+          "autoCheckUpdate": "自动检查更新",
+          "enableBuiltinEnhanced": "内置增强功能",
+          "proxyLayoutColumns": "代理页布局列数",
+          "autoLogClean": "自动清理日志",
+          "autoDelayDetection": "自动延迟检测",
+          "defaultLatencyTest": "默认测试链接",
+          "defaultLatencyTimeout": "测试超时时间"
+        },
+        "tooltips": {
+          "autoCloseConnections": "当代理组选中节点或代理模式变动时，关闭已建立的连接",
+          "enableBuiltinEnhanced": "配置文件的兼容性处理",
+          "autoDelayDetection": "后台定时检测当前节点延迟",
+          "defaultLatencyTest": "仅用于 HTTP 客户端请求测试，不会对配置文件产生影响"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "自动列数"
+          },
+          "autoLogClean": {
+            "never": "不清理",
+            "retainDays": "保留 {{n}} 天"
+          }
         }
       }
     }

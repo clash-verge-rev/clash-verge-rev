@@ -331,23 +331,6 @@
   "theme.system": "Sistem",
   "Copy Success": "Kopyalama Başarılı",
   "Memory Usage": "Çekirdek Kullanımı",
-  "Miscellaneous": "Çeşitli",
-  "App Log Level": "Uygulama Günlük Seviyesi",
-  "Auto Close Connections": "Bağlantıları Otomatik Kapat",
-  "Auto Close Connections Info": "Vekil grup seçimi veya vekil modu değiştiğinde kurulan bağlantıları sonlandır",
-  "Auto Check Update": "Otomatik Güncelleme Kontrolü",
-  "Enable Builtin Enhanced": "Yerleşik Geliştirilmiş Modu Etkinleştir",
-  "Enable Builtin Enhanced Info": "Yapılandırma dosyası için uyumluluk işleme",
-  "Proxy Layout Columns": "Vekil Düzeni Sütunları",
-  "Auto Columns": "Otomatik Sütunlar",
-  "Auto Log Clean": "Otomatik Günlük Temizleme",
-  "Never Clean": "Asla Temizleme",
-  "Retain _n Days": "{{n}} Gün Sakla",
-  "Auto Delay Detection": "Otomatik Gecikme Tespiti",
-  "Auto Delay Detection Info": "Arka planda mevcut düğümün gecikmesini periyodik olarak test eder",
-  "Default Latency Test": "Varsayılan Gecikme Testi",
-  "Default Latency Test Info": "Yalnızca HTTP istemci isteği testi için kullanılır ve yapılandırma dosyasında bir fark yaratmaz",
-  "Default Latency Timeout": "Varsayılan Gecikme Zaman Aşımı",
   "Hotkey Setting": "Kısayol Tuşu Ayarı",
   "Enable Global Hotkey": "Küresel Kısayol Tuşunu Etkinleştir",
   "open_or_close_dashboard": "Kontrol Panelini Aç/Kapat",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "Kopyalama Başarılı"
+        }
+      },
+      "misc": {
+        "title": "Çeşitli",
+        "fields": {
+          "appLogLevel": "Uygulama Günlük Seviyesi",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "Bağlantıları Otomatik Kapat",
+          "autoCheckUpdate": "Otomatik Güncelleme Kontrolü",
+          "enableBuiltinEnhanced": "Yerleşik Geliştirilmiş Modu Etkinleştir",
+          "proxyLayoutColumns": "Vekil Düzeni Sütunları",
+          "autoLogClean": "Otomatik Günlük Temizleme",
+          "autoDelayDetection": "Otomatik Gecikme Tespiti",
+          "defaultLatencyTest": "Varsayılan Gecikme Testi",
+          "defaultLatencyTimeout": "Varsayılan Gecikme Zaman Aşımı"
+        },
+        "tooltips": {
+          "autoCloseConnections": "Vekil grup seçimi veya vekil modu değiştiğinde kurulan bağlantıları sonlandır",
+          "enableBuiltinEnhanced": "Yapılandırma dosyası için uyumluluk işleme",
+          "autoDelayDetection": "Arka planda mevcut düğümün gecikmesini periyodik olarak test eder",
+          "defaultLatencyTest": "Yalnızca HTTP istemci isteği testi için kullanılır ve yapılandırma dosyasında bir fark yaratmaz"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "Otomatik Sütunlar"
+          },
+          "autoLogClean": {
+            "never": "Asla Temizleme",
+            "retainDays": "{{n}} Gün Sakla"
+          }
         }
       }
     }

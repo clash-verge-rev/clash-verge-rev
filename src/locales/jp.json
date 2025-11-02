@@ -331,23 +331,6 @@
   "theme.system": "システム",
   "Copy Success": "コピー成功",
   "Memory Usage": "コアメモリ使用量",
-  "Miscellaneous": "その他の設定",
-  "App Log Level": "アプリケーションログレベル",
-  "Auto Close Connections": "接続を自動的に閉じる",
-  "Auto Close Connections Info": "プロキシグループで選択されたノードまたはプロキシモードが変更されたときに、既存の接続を閉じます。",
-  "Auto Check Update": "自動更新チェック",
-  "Enable Builtin Enhanced": "組み込み拡張機能を有効にする",
-  "Enable Builtin Enhanced Info": "設定ファイルの互換性処理",
-  "Proxy Layout Columns": "プロキシページのレイアウト列数",
-  "Auto Columns": "自動列数",
-  "Auto Log Clean": "ログを自動的にクリーンアップ",
-  "Never Clean": "クリーンアップしない",
-  "Retain _n Days": "{{n}}日間保持",
-  "Auto Delay Detection": "自動遅延検出",
-  "Auto Delay Detection Info": "バックグラウンドで現在のノードのレイテンシーを定期的にテストします",
-  "Default Latency Test": "デフォルトの遅延テストURL",
-  "Default Latency Test Info": "HTTPクライアントリクエストテストにのみ使用され、設定ファイルには影響しません。",
-  "Default Latency Timeout": "テストタイムアウト時間",
   "Hotkey Setting": "ホットキー設定",
   "Enable Global Hotkey": "グローバルホットキーを有効にする",
   "open_or_close_dashboard": "ダッシュボードを開く/閉じる",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "コピー成功"
+        }
+      },
+      "misc": {
+        "title": "その他の設定",
+        "fields": {
+          "appLogLevel": "アプリケーションログレベル",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "接続を自動的に閉じる",
+          "autoCheckUpdate": "自動更新チェック",
+          "enableBuiltinEnhanced": "組み込み拡張機能を有効にする",
+          "proxyLayoutColumns": "プロキシページのレイアウト列数",
+          "autoLogClean": "ログを自動的にクリーンアップ",
+          "autoDelayDetection": "自動遅延検出",
+          "defaultLatencyTest": "デフォルトの遅延テストURL",
+          "defaultLatencyTimeout": "テストタイムアウト時間"
+        },
+        "tooltips": {
+          "autoCloseConnections": "プロキシグループで選択されたノードまたはプロキシモードが変更されたときに、既存の接続を閉じます。",
+          "enableBuiltinEnhanced": "設定ファイルの互換性処理",
+          "autoDelayDetection": "バックグラウンドで現在のノードのレイテンシーを定期的にテストします",
+          "defaultLatencyTest": "HTTPクライアントリクエストテストにのみ使用され、設定ファイルには影響しません。"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "自動列数"
+          },
+          "autoLogClean": {
+            "never": "クリーンアップしない",
+            "retainDays": "{{n}}日間保持"
+          }
         }
       }
     }

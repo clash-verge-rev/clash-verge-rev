@@ -331,23 +331,6 @@
   "theme.system": "سمة النظام",
   "Copy Success": "تم النسخ بنجاح",
   "Memory Usage": "استهلاك الذاكرة",
-  "Miscellaneous": "متفرقات",
-  "App Log Level": "مستوى سجلات التطبيق",
-  "Auto Close Connections": "إغلاق الاتصالات تلقائيًا",
-  "Auto Close Connections Info": "إنهاء الاتصالات القائمة عند تغيير اختيار مجموعة الوكيل أو وضع الوكيل",
-  "Auto Check Update": "فحص التحديث تلقائيًا",
-  "Enable Builtin Enhanced": "تفعيل التحسين المدمج",
-  "Enable Builtin Enhanced Info": "معالجة توافق ملف التكوين",
-  "Proxy Layout Columns": "أعمدة عرض الوكيل",
-  "Auto Columns": "أعمدة تلقائية",
-  "Auto Log Clean": "تنظيف السجلات تلقائيًا",
-  "Never Clean": "عدم التنظيف أبدًا",
-  "Retain _n Days": "الاحتفاظ لمدة {{n}} يومًا",
-  "Auto Delay Detection": "اكتشاف التأخير التلقائي",
-  "Auto Delay Detection Info": "يختبر زمن استجابة العقدة الحالية على نحو دوري في الخلفية",
-  "Default Latency Test": "اختبار التأخير الافتراضي",
-  "Default Latency Test Info": "يُستخدم فقط لاختبار طلب HTTP العميل. لن يؤثر على ملف التكوين",
-  "Default Latency Timeout": "مهلة التأخير الافتراضية",
   "Hotkey Setting": "إعدادات الاختصارات",
   "Enable Global Hotkey": "تمكين مفتاح التشغيل السريع العالمي",
   "open_or_close_dashboard": "فتح/إغلاق لوحة التحكم",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "تم النسخ بنجاح"
+        }
+      },
+      "misc": {
+        "title": "متفرقات",
+        "fields": {
+          "appLogLevel": "مستوى سجلات التطبيق",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "إغلاق الاتصالات تلقائيًا",
+          "autoCheckUpdate": "فحص التحديث تلقائيًا",
+          "enableBuiltinEnhanced": "تفعيل التحسين المدمج",
+          "proxyLayoutColumns": "أعمدة عرض الوكيل",
+          "autoLogClean": "تنظيف السجلات تلقائيًا",
+          "autoDelayDetection": "اكتشاف التأخير التلقائي",
+          "defaultLatencyTest": "اختبار التأخير الافتراضي",
+          "defaultLatencyTimeout": "مهلة التأخير الافتراضية"
+        },
+        "tooltips": {
+          "autoCloseConnections": "إنهاء الاتصالات القائمة عند تغيير اختيار مجموعة الوكيل أو وضع الوكيل",
+          "enableBuiltinEnhanced": "معالجة توافق ملف التكوين",
+          "autoDelayDetection": "يختبر زمن استجابة العقدة الحالية على نحو دوري في الخلفية",
+          "defaultLatencyTest": "يُستخدم فقط لاختبار طلب HTTP العميل. لن يؤثر على ملف التكوين"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "أعمدة تلقائية"
+          },
+          "autoLogClean": {
+            "never": "عدم التنظيف أبدًا",
+            "retainDays": "الاحتفاظ لمدة {{n}} يومًا"
+          }
         }
       }
     }

@@ -331,23 +331,6 @@
   "theme.system": "System",
   "Copy Success": "Copy Success",
   "Memory Usage": "Core Usage",
-  "Miscellaneous": "Miscellaneous",
-  "App Log Level": "App Log Level",
-  "Auto Close Connections": "Auto Close Connections",
-  "Auto Close Connections Info": "Terminate established connections when the proxy group selection or proxy mode changes",
-  "Auto Check Update": "Auto Check Update",
-  "Enable Builtin Enhanced": "Enable Builtin Enhanced",
-  "Enable Builtin Enhanced Info": "Compatibility handling for the configuration file",
-  "Proxy Layout Columns": "Proxy Layout Columns",
-  "Auto Columns": "Auto Columns",
-  "Auto Log Clean": "Auto Log Clean",
-  "Never Clean": "Never Clean",
-  "Retain _n Days": "Retain {{n}} Days",
-  "Auto Delay Detection": "Auto Delay Detection",
-  "Auto Delay Detection Info": "Periodically test the current node latency in the background",
-  "Default Latency Test": "Default Latency Test",
-  "Default Latency Test Info": "Used for HTTP client request testing only and won't make a difference to the configuration file",
-  "Default Latency Timeout": "Default Latency Timeout",
   "Hotkey Setting": "Hotkey Setting",
   "Enable Global Hotkey": "Enable Global Hotkey",
   "open_or_close_dashboard": "Open/Close Dashboard",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "Copy Success"
+        }
+      },
+      "misc": {
+        "title": "Miscellaneous",
+        "fields": {
+          "appLogLevel": "App Log Level",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "Auto Close Connections",
+          "autoCheckUpdate": "Auto Check Update",
+          "enableBuiltinEnhanced": "Enable Builtin Enhanced",
+          "proxyLayoutColumns": "Proxy Layout Columns",
+          "autoLogClean": "Auto Log Clean",
+          "autoDelayDetection": "Auto Delay Detection",
+          "defaultLatencyTest": "Default Latency Test",
+          "defaultLatencyTimeout": "Default Latency Timeout"
+        },
+        "tooltips": {
+          "autoCloseConnections": "Terminate established connections when the proxy group selection or proxy mode changes",
+          "enableBuiltinEnhanced": "Compatibility handling for the configuration file",
+          "autoDelayDetection": "Periodically test the current node latency in the background",
+          "defaultLatencyTest": "Used for HTTP client request testing only and won't make a difference to the configuration file"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "Auto Columns"
+          },
+          "autoLogClean": {
+            "never": "Never Clean",
+            "retainDays": "Retain {{n}} Days"
+          }
         }
       }
     }

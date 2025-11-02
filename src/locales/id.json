@@ -331,23 +331,6 @@
   "theme.system": "Sistem",
   "Copy Success": "Salin Berhasil",
   "Memory Usage": "Penggunaan Memori",
-  "Miscellaneous": "Lain-lain",
-  "App Log Level": "Tingkat Log Aplikasi",
-  "Auto Close Connections": "Tutup Koneksi Otomatis",
-  "Auto Close Connections Info": "Hentikan koneksi yang sudah ada saat pemilihan grup proksi atau mode proksi berubah",
-  "Auto Check Update": "Periksa Pembaruan Otomatis",
-  "Enable Builtin Enhanced": "Aktifkan Peningkatan Bawaan",
-  "Enable Builtin Enhanced Info": "Penanganan kompatibilitas untuk file konfigurasi",
-  "Proxy Layout Columns": "Kolom Tata Letak Proksi",
-  "Auto Columns": "Kolom Otomatis",
-  "Auto Log Clean": "Pembersihan Log Otomatis",
-  "Never Clean": "Jangan Pernah Bersihkan",
-  "Retain _n Days": "Simpan {{n}} Hari",
-  "Auto Delay Detection": "Deteksi Latensi Otomatis",
-  "Auto Delay Detection Info": "Secara berkala menguji latensi node saat ini di latar belakang",
-  "Default Latency Test": "Tes Latensi Default",
-  "Default Latency Test Info": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi",
-  "Default Latency Timeout": "Waktu Habis Latensi Default",
   "Hotkey Setting": "Pengaturan Pintasan",
   "Enable Global Hotkey": "Aktifkan Hotkey Global",
   "open_or_close_dashboard": "Buka/Tutup Dasbor",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "Salin Berhasil"
+        }
+      },
+      "misc": {
+        "title": "Lain-lain",
+        "fields": {
+          "appLogLevel": "Tingkat Log Aplikasi",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "Tutup Koneksi Otomatis",
+          "autoCheckUpdate": "Periksa Pembaruan Otomatis",
+          "enableBuiltinEnhanced": "Aktifkan Peningkatan Bawaan",
+          "proxyLayoutColumns": "Kolom Tata Letak Proksi",
+          "autoLogClean": "Pembersihan Log Otomatis",
+          "autoDelayDetection": "Deteksi Latensi Otomatis",
+          "defaultLatencyTest": "Tes Latensi Default",
+          "defaultLatencyTimeout": "Waktu Habis Latensi Default"
+        },
+        "tooltips": {
+          "autoCloseConnections": "Hentikan koneksi yang sudah ada saat pemilihan grup proksi atau mode proksi berubah",
+          "enableBuiltinEnhanced": "Penanganan kompatibilitas untuk file konfigurasi",
+          "autoDelayDetection": "Secara berkala menguji latensi node saat ini di latar belakang",
+          "defaultLatencyTest": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi"
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "Kolom Otomatis"
+          },
+          "autoLogClean": {
+            "never": "Jangan Pernah Bersihkan",
+            "retainDays": "Simpan {{n}} Hari"
+          }
         }
       }
     }

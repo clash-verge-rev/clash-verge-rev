@@ -77,7 +77,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Miscellaneous")}
+      title={t("components.settings.misc.title")}
       contentSx={{ width: 450 }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
@@ -87,7 +87,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("App Log Level")} />
+          <ListItemText
+            primary={t("components.settings.misc.fields.appLogLevel")}
+          />
           <Select
             size="small"
             sx={{ width: 100, "> div": { py: "7.5px" } }}
@@ -109,7 +111,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("App Log Max Size")}
+            primary={t("components.settings.misc.fields.appLogMaxSize")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TextField
@@ -139,7 +141,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("App Log Max Count")}
+            primary={t("components.settings.misc.fields.appLogMaxCount")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TextField
@@ -169,11 +171,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Auto Close Connections")}
+            primary={t("components.settings.misc.fields.autoCloseConnections")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Auto Close Connections Info")}
+            title={t("components.settings.misc.tooltips.autoCloseConnections")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -187,7 +189,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Auto Check Update")} />
+          <ListItemText
+            primary={t("components.settings.misc.fields.autoCheckUpdate")}
+          />
           <Switch
             edge="end"
             checked={values.autoCheckUpdate}
@@ -199,11 +203,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Enable Builtin Enhanced")}
+            primary={t("components.settings.misc.fields.enableBuiltinEnhanced")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Enable Builtin Enhanced Info")}
+            title={t("components.settings.misc.tooltips.enableBuiltinEnhanced")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -217,7 +221,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Proxy Layout Columns")} />
+          <ListItemText
+            primary={t("components.settings.misc.fields.proxyLayoutColumns")}
+          />
           <Select
             size="small"
             sx={{ width: 160, "> div": { py: "7.5px" } }}
@@ -230,7 +236,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             }
           >
             <MenuItem value={6} key={6}>
-              {t("Auto Columns")}
+              {t("components.settings.misc.options.proxyLayoutColumns.auto")}
             </MenuItem>
             {[1, 2, 3, 4, 5].map((i) => (
               <MenuItem value={i} key={i}>
@@ -241,7 +247,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Auto Log Clean")} />
+          <ListItemText
+            primary={t("components.settings.misc.fields.autoLogClean")}
+          />
           <Select
             size="small"
             sx={{ width: 160, "> div": { py: "7.5px" } }}
@@ -255,11 +263,38 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           >
             {/* 1: 1天, 2: 7天, 3: 30天, 4: 90天*/}
             {[
-              { key: t("Never Clean"), value: 0 },
-              { key: t("Retain _n Days", { n: 1 }), value: 1 },
-              { key: t("Retain _n Days", { n: 7 }), value: 2 },
-              { key: t("Retain _n Days", { n: 30 }), value: 3 },
-              { key: t("Retain _n Days", { n: 90 }), value: 4 },
+              {
+                key: t("components.settings.misc.options.autoLogClean.never"),
+                value: 0,
+              },
+              {
+                key: t(
+                  "components.settings.misc.options.autoLogClean.retainDays",
+                  { n: 1 },
+                ),
+                value: 1,
+              },
+              {
+                key: t(
+                  "components.settings.misc.options.autoLogClean.retainDays",
+                  { n: 7 },
+                ),
+                value: 2,
+              },
+              {
+                key: t(
+                  "components.settings.misc.options.autoLogClean.retainDays",
+                  { n: 30 },
+                ),
+                value: 3,
+              },
+              {
+                key: t(
+                  "components.settings.misc.options.autoLogClean.retainDays",
+                  { n: 90 },
+                ),
+                value: 4,
+              },
             ].map((i) => (
               <MenuItem key={i.value} value={i.value}>
                 {i.key}
@@ -270,11 +305,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Auto Delay Detection")}
+            primary={t("components.settings.misc.fields.autoDelayDetection")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Auto Delay Detection Info")}
+            title={t("components.settings.misc.tooltips.autoDelayDetection")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -289,11 +324,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Default Latency Test")}
+            primary={t("components.settings.misc.fields.defaultLatencyTest")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Default Latency Test Info")}
+            title={t("components.settings.misc.tooltips.defaultLatencyTest")}
             sx={{ opacity: "0.7" }}
           />
           <TextField
@@ -312,7 +347,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Default Latency Timeout")} />
+          <ListItemText
+            primary={t("components.settings.misc.fields.defaultLatencyTimeout")}
+          />
           <TextField
             autoComplete="new-password"
             size="small"

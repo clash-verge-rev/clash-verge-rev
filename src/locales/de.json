@@ -331,23 +331,6 @@
   "theme.system": "System",
   "Copy Success": "Kopieren erfolgreich",
   "Memory Usage": "Kern-Speichernutzung",
-  "Miscellaneous": "Sonstige Einstellungen",
-  "App Log Level": "Anwendungs-Protokolliergrad",
-  "Auto Close Connections": "Verbindungen automatisch schließen",
-  "Auto Close Connections Info": "Wenn der ausgewählte Knoten in der Proxy-Gruppe oder der Proxy-Modus geändert wird, werden die bestehenden Verbindungen geschlossen.",
-  "Auto Check Update": "Automatisch auf Updates prüfen",
-  "Enable Builtin Enhanced": "Eingebaute Verbesserungen aktivieren",
-  "Enable Builtin Enhanced Info": "Kompatibilitätsbehandlung der Konfigurationsdatei",
-  "Proxy Layout Columns": "Anzahl der Spalten im Proxy-Layout",
-  "Auto Columns": "Automatische Anzahl der Spalten",
-  "Auto Log Clean": "Protokolle automatisch bereinigen",
-  "Never Clean": "Nie bereinigen",
-  "Retain _n Days": "{{n}} Tage behalten",
-  "Auto Delay Detection": "Automatische Latenzprüfung",
-  "Auto Delay Detection Info": "Überprüft regelmäßig im Hintergrund die Latenz des aktuellen Knotens",
-  "Default Latency Test": "Standard-Testlink",
-  "Default Latency Test Info": "Dies wird nur für HTTP-Client-Anfragentests verwendet und hat keine Auswirkungen auf die Konfigurationsdatei.",
-  "Default Latency Timeout": "Test-Timeout",
   "Hotkey Setting": "Tastenkombinationseinstellungen",
   "Enable Global Hotkey": "Globale Tastenkombinationen aktivieren",
   "open_or_close_dashboard": "Dashboard öffnen/schließen",
@@ -527,8 +510,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "App Log Max Size": "App Log Max Size",
-  "App Log Max Count": "App Log Max Count",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
@@ -1023,6 +1004,37 @@
       "common": {
         "notifications": {
           "copySuccess": "Kopieren erfolgreich"
+        }
+      },
+      "misc": {
+        "title": "Sonstige Einstellungen",
+        "fields": {
+          "appLogLevel": "Anwendungs-Protokolliergrad",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "Verbindungen automatisch schließen",
+          "autoCheckUpdate": "Automatisch auf Updates prüfen",
+          "enableBuiltinEnhanced": "Eingebaute Verbesserungen aktivieren",
+          "proxyLayoutColumns": "Anzahl der Spalten im Proxy-Layout",
+          "autoLogClean": "Protokolle automatisch bereinigen",
+          "autoDelayDetection": "Automatische Latenzprüfung",
+          "defaultLatencyTest": "Standard-Testlink",
+          "defaultLatencyTimeout": "Test-Timeout"
+        },
+        "tooltips": {
+          "autoCloseConnections": "Wenn der ausgewählte Knoten in der Proxy-Gruppe oder der Proxy-Modus geändert wird, werden die bestehenden Verbindungen geschlossen.",
+          "enableBuiltinEnhanced": "Kompatibilitätsbehandlung der Konfigurationsdatei",
+          "autoDelayDetection": "Überprüft regelmäßig im Hintergrund die Latenz des aktuellen Knotens",
+          "defaultLatencyTest": "Dies wird nur für HTTP-Client-Anfragentests verwendet und hat keine Auswirkungen auf die Konfigurationsdatei."
+        },
+        "options": {
+          "proxyLayoutColumns": {
+            "auto": "Automatische Anzahl der Spalten"
+          },
+          "autoLogClean": {
+            "never": "Nie bereinigen",
+            "retainDays": "{{n}} Tage behalten"
+          }
         }
       }
     }
