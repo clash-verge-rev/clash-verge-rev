@@ -1,6 +1,6 @@
 use crate::{
     config::Config,
-    core::{handle, timer::Timer},
+    core::{handle, timer::Timer, tray::Tray},
     log_err, logging,
     process::AsyncHandler,
     utils::logging::Type,
@@ -78,6 +78,12 @@ pub fn is_in_lightweight_mode() -> bool {
     get_state() == LightweightState::In
 }
 
+async fn refresh_lightweight_tray_state() {
+    if let Err(err) = Tray::global().update_tray_display().await {
+        logging!(warn, Type::Lightweight, "更新托盘轻量模式状态失败: {err}");
+    }
+}
+
 pub async fn auto_lightweight_boot() -> Result<()> {
     let verge_config = Config::verge().await;
     let enable_auto = verge_config
@@ -130,11 +136,13 @@ pub fn disable_auto_light_weight_mode() {
 pub async fn entry_lightweight_mode() -> bool {
     if !try_transition(LightweightState::Normal, LightweightState::In) {
         logging!(info, Type::Lightweight, "无需进入轻量模式，跳过调用");
+        refresh_lightweight_tray_state().await;
         return false;
     }
     record_state_and_log(LightweightState::In);
     WindowManager::destroy_main_window();
     let _ = cancel_light_weight_timer();
+    refresh_lightweight_tray_state().await;
     true
 }
 
@@ -145,12 +153,14 @@ pub async fn exit_lightweight_mode() -> bool {
             Type::Lightweight,
             "轻量模式不在退出条件（可能已退出或正在退出），跳过调用"
         );
+        refresh_lightweight_tray_state().await;
         return false;
     }
     record_state_and_log(LightweightState::Exiting);
     WindowManager::show_main_window().await;
     let _ = cancel_light_weight_timer();
     record_state_and_log(LightweightState::Normal);
+    refresh_lightweight_tray_state().await;
     true
 }
 
