@@ -293,23 +293,8 @@
   "Install": "安装",
   "Uninstall": "卸载",
   "System Proxy": "系统代理",
-  "System Proxy Setting": "系统代理设置",
-  "Current System Proxy": "当前系统代理",
-  "Enable status": "开启状态：",
   "Enabled": "已启用",
   "Disabled": "未启用",
-  "Server Addr": "服务地址：",
-  "Proxy Host": "代理主机",
-  "Invalid Proxy Host Format": "代理主机格式无效",
-  "Proxy Guard": "系统代理守卫",
-  "Proxy Guard Info": "开启以防止其他软件修改操作系统的代理设置",
-  "Guard Duration": "代理守卫间隔",
-  "Always use Default Bypass": "始终使用默认绕过",
-  "Proxy Bypass": "代理绕过设置：",
-  "Bypass": "当前绕过：",
-  "Use PAC Mode": "使用 PAC 模式",
-  "PAC Script Content": "PAC 脚本内容",
-  "PAC URL": "PAC 地址：",
   "Auto Launch": "开机自启",
   "Administrator mode may not support auto launch": "管理员模式可能不支持开机自启",
   "Network Interface": "网络接口",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "卸载服务中...",
   "Service Installed Successfully": "已成功安装服务",
   "Service Uninstalled Successfully": "已成功卸载服务",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "代理守护间隔时间不得低于 1 秒",
-  "Invalid Bypass Format": "无效的代理绕过格式",
   "Core Version Updated": "内核版本已更新",
   "Clash Core Restarted": "已重启 Clash 内核",
   "Currently on the Latest Version": "当前已是最新版本",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "便携版不支持应用内更新，请手动下载替换",
           "breakChangeError": "此版本为重大更新，不支持应用内更新，请卸载后手动下载安装"
+        }
+      },
+      "sysproxy": {
+        "title": "系统代理设置",
+        "fieldsets": {
+          "currentStatus": "当前系统代理"
+        },
+        "fields": {
+          "enableStatus": "开启状态：",
+          "serverAddr": "服务地址：",
+          "pacUrl": "PAC 地址：",
+          "proxyHost": "代理主机",
+          "usePacMode": "使用 PAC 模式",
+          "proxyGuard": "系统代理守卫",
+          "guardDuration": "代理守卫间隔",
+          "alwaysUseDefaultBypass": "始终使用默认绕过",
+          "proxyBypass": "代理绕过设置：",
+          "bypass": "当前绕过：",
+          "pacScriptContent": "PAC 脚本内容"
+        },
+        "tooltips": {
+          "proxyGuard": "开启以防止其他软件修改操作系统的代理设置"
+        },
+        "messages": {
+          "durationTooShort": "代理守护间隔时间不得低于 1 秒",
+          "invalidBypass": "无效的代理绕过格式",
+          "invalidProxyHost": "代理主机格式无效"
+        },
+        "actions": {
+          "editPac": "编辑 PAC"
         }
       }
     }

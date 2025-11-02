@@ -293,23 +293,8 @@
   "Install": "Установить",
   "Uninstall": "Удалить",
   "System Proxy": "Системный прокси",
-  "System Proxy Setting": "Настройка системного прокси",
-  "Current System Proxy": "Текущий системный прокси",
-  "Enable status": "Статус включения",
   "Enabled": "Включено",
   "Disabled": "Отключено",
-  "Server Addr": "Адрес сервера: ",
-  "Proxy Host": "Хост прокси",
-  "Invalid Proxy Host Format": "Неверный формат хоста прокси",
-  "Proxy Guard": "Proxy Guard",
-  "Proxy Guard Info": "Включите эту функцию чтобы предотвратить изменение настроек прокси-сервера операционной системы другим ПО",
-  "Guard Duration": "Период защиты",
-  "Always use Default Bypass": "Всегда использовать стандартное обходное решение",
-  "Proxy Bypass": "Игнорируемые адреса: ",
-  "Bypass": "Игнорируемые адреса: ",
-  "Use PAC Mode": "Используйте режим PAC",
-  "PAC Script Content": "Содержание сценария PAC",
-  "PAC URL": "Адрес PAC: ",
   "Auto Launch": "Автозапуск",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "Сетевой интерфейс",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Служба успешно установлена",
   "Service Uninstalled Successfully": "Служба успешно удалена",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "Продолжительность работы прокси-демона не может быть меньше 1 секунды",
-  "Invalid Bypass Format": "Неверный формат обхода",
   "Core Version Updated": "Ядро обновлено до последней версии",
   "Clash Core Restarted": "Ядро перезапущено",
   "Currently on the Latest Version": "Обновление не требуется",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "Портативная версия не поддерживает обновление внутри приложения, пожалуйста, скачайте и замените файлы вручную",
           "breakChangeError": "Это крупное обновление, которое не поддерживает обновление внутри приложения. Пожалуйста, удалите его и загрузите установочный файл вручную."
+        }
+      },
+      "sysproxy": {
+        "title": "Настройка системного прокси",
+        "fieldsets": {
+          "currentStatus": "Текущий системный прокси"
+        },
+        "fields": {
+          "enableStatus": "Статус включения",
+          "serverAddr": "Адрес сервера: ",
+          "pacUrl": "Адрес PAC: ",
+          "proxyHost": "Хост прокси",
+          "usePacMode": "Используйте режим PAC",
+          "proxyGuard": "Proxy Guard",
+          "guardDuration": "Период защиты",
+          "alwaysUseDefaultBypass": "Всегда использовать стандартное обходное решение",
+          "proxyBypass": "Игнорируемые адреса: ",
+          "bypass": "Игнорируемые адреса: ",
+          "pacScriptContent": "Содержание сценария PAC"
+        },
+        "tooltips": {
+          "proxyGuard": "Включите эту функцию чтобы предотвратить изменение настроек прокси-сервера операционной системы другим ПО"
+        },
+        "messages": {
+          "durationTooShort": "Продолжительность работы прокси-демона не может быть меньше 1 секунды",
+          "invalidBypass": "Неверный формат обхода",
+          "invalidProxyHost": "Неверный формат хоста прокси"
+        },
+        "actions": {
+          "editPac": "Редактировать PAC"
         }
       }
     }

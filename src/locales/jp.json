@@ -293,23 +293,8 @@
   "Install": "インストール",
   "Uninstall": "アンインストール",
   "System Proxy": "システムプロキシ",
-  "System Proxy Setting": "システムプロキシ設定",
-  "Current System Proxy": "現在のシステムプロキシ",
-  "Enable status": "有効状態：",
   "Enabled": "有効",
   "Disabled": "無効",
-  "Server Addr": "サーバーアドレス：",
-  "Proxy Host": "プロキシホスト",
-  "Invalid Proxy Host Format": "プロキシホストの形式が無効です",
-  "Proxy Guard": "システムプロキシガード",
-  "Proxy Guard Info": "他のソフトウェアがオペレーティングシステムのプロキシ設定を変更するのを防ぐために有効にします。",
-  "Guard Duration": "プロキシガード間隔",
-  "Always use Default Bypass": "常にデフォルトのバイパスを使用",
-  "Proxy Bypass": "プロキシバイパス設定：",
-  "Bypass": "現在のバイパス：",
-  "Use PAC Mode": "PACモードを使用",
-  "PAC Script Content": "PACスクリプト内容",
-  "PAC URL": "PACアドレス：",
   "Auto Launch": "起動時に自動起動",
   "Administrator mode may not support auto launch": "管理者モードでは起動時の自動起動がサポートされない場合があります。",
   "Network Interface": "ネットワークインターフェース",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "サービスをアンインストール中...",
   "Service Installed Successfully": "サービスのインストールに成功しました。",
   "Service Uninstalled Successfully": "サービスのアンインストールに成功しました。",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "プロキシデーモンの間隔は1秒以上に設定する必要があります。",
-  "Invalid Bypass Format": "無効なバイパス形式",
   "Core Version Updated": "コアバージョンが更新されました。",
   "Clash Core Restarted": "Clashコアが再起動されました。",
   "Currently on the Latest Version": "現在は最新バージョンです。",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "ポータブル版ではアプリケーション内での更新はサポートされていません。手動でダウンロードして置き換えてください。",
           "breakChangeError": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。"
+        }
+      },
+      "sysproxy": {
+        "title": "システムプロキシ設定",
+        "fieldsets": {
+          "currentStatus": "現在のシステムプロキシ"
+        },
+        "fields": {
+          "enableStatus": "有効状態：",
+          "serverAddr": "サーバーアドレス：",
+          "pacUrl": "PACアドレス：",
+          "proxyHost": "プロキシホスト",
+          "usePacMode": "PACモードを使用",
+          "proxyGuard": "システムプロキシガード",
+          "guardDuration": "プロキシガード間隔",
+          "alwaysUseDefaultBypass": "常にデフォルトのバイパスを使用",
+          "proxyBypass": "プロキシバイパス設定：",
+          "bypass": "現在のバイパス：",
+          "pacScriptContent": "PACスクリプト内容"
+        },
+        "tooltips": {
+          "proxyGuard": "他のソフトウェアがオペレーティングシステムのプロキシ設定を変更するのを防ぐために有効にします。"
+        },
+        "messages": {
+          "durationTooShort": "プロキシデーモンの間隔は1秒以上に設定する必要があります。",
+          "invalidBypass": "無効なバイパス形式",
+          "invalidProxyHost": "プロキシホストの形式が無効です"
+        },
+        "actions": {
+          "editPac": "編集 PAC"
         }
       }
     }

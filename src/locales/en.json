@@ -293,23 +293,8 @@
   "Install": "Install",
   "Uninstall": "Uninstall",
   "System Proxy": "System Proxy",
-  "System Proxy Setting": "System Proxy Setting",
-  "Current System Proxy": "Current System Proxy",
-  "Enable status": "Enable Status:",
   "Enabled": "Enabled",
   "Disabled": "Disabled",
-  "Server Addr": "Server Addr: ",
-  "Proxy Host": "Proxy Host",
-  "Invalid Proxy Host Format": "Invalid Proxy Host Format",
-  "Proxy Guard": "Proxy Guard",
-  "Proxy Guard Info": "Enable to prevent other software from modifying the operating system's proxy settings",
-  "Guard Duration": "Guard Duration",
-  "Always use Default Bypass": "Always use Default Bypass",
-  "Proxy Bypass": "Proxy Bypass Settings: ",
-  "Bypass": "Bypass: ",
-  "Use PAC Mode": "Use PAC Mode",
-  "PAC Script Content": "PAC Script Content",
-  "PAC URL": "PAC URL: ",
   "Auto Launch": "Auto Launch",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "Network Interface",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Service Installed Successfully",
   "Service Uninstalled Successfully": "Service Uninstalled Successfully",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "Proxy Daemon Duration Cannot be Less than 1 Second",
-  "Invalid Bypass Format": "Invalid Bypass Format",
   "Core Version Updated": "Core Version Updated",
   "Clash Core Restarted": "Clash Core Restarted",
   "Currently on the Latest Version": "Currently on the Latest Version",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "The portable version does not support in-app updates. Please manually download and replace it",
           "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version"
+        }
+      },
+      "sysproxy": {
+        "title": "System Proxy Setting",
+        "fieldsets": {
+          "currentStatus": "Current System Proxy"
+        },
+        "fields": {
+          "enableStatus": "Enable Status:",
+          "serverAddr": "Server Addr: ",
+          "pacUrl": "PAC URL: ",
+          "proxyHost": "Proxy Host",
+          "usePacMode": "Use PAC Mode",
+          "proxyGuard": "Proxy Guard",
+          "guardDuration": "Guard Duration",
+          "alwaysUseDefaultBypass": "Always use Default Bypass",
+          "proxyBypass": "Proxy Bypass Settings: ",
+          "bypass": "Bypass: ",
+          "pacScriptContent": "PAC Script Content"
+        },
+        "tooltips": {
+          "proxyGuard": "Enable to prevent other software from modifying the operating system's proxy settings"
+        },
+        "messages": {
+          "durationTooShort": "Proxy Daemon Duration Cannot be Less than 1 Second",
+          "invalidBypass": "Invalid Bypass Format",
+          "invalidProxyHost": "Invalid Proxy Host Format"
+        },
+        "actions": {
+          "editPac": "Edit PAC"
         }
       }
     }

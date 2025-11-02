@@ -293,23 +293,8 @@
   "Install": "Kur",
   "Uninstall": "Kaldır",
   "System Proxy": "Sistem Vekil'i",
-  "System Proxy Setting": "Sistem Vekil Ayarı",
-  "Current System Proxy": "Geçerli Sistem Vekil'i",
-  "Enable status": "Etkinlik Durumu:",
   "Enabled": "Etkin",
   "Disabled": "Devre Dışı",
-  "Server Addr": "Sunucu Adresi: ",
-  "Proxy Host": "Vekil Sunucusu",
-  "Invalid Proxy Host Format": "Geçersiz Vekil Sunucusu Formatı",
-  "Proxy Guard": "Vekil Koruyucusu",
-  "Proxy Guard Info": "Diğer yazılımların işletim sisteminin vekil ayarlarını değiştirmesini önlemek için etkinleştirin",
-  "Guard Duration": "Koruma Süresi",
-  "Always use Default Bypass": "Her Zaman Varsayılan Baypas Kullan",
-  "Proxy Bypass": "Vekil Baypas Ayarları: ",
-  "Bypass": "Baypas: ",
-  "Use PAC Mode": "PAC Modunu Kullan",
-  "PAC Script Content": "PAC Betiği İçeriği",
-  "PAC URL": "PAC URL'si: ",
   "Auto Launch": "Otomatik Başlatma",
   "Administrator mode may not support auto launch": "Yönetici modu otomatik başlatmayı desteklemeyebilir",
   "Network Interface": "Ağ Arayüzü",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Hizmet Başarıyla Kuruldu",
   "Service Uninstalled Successfully": "Hizmet Başarıyla Kaldırıldı",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "Vekil Koruyucu Süresi 1 Saniyeden Az Olamaz",
-  "Invalid Bypass Format": "Geçersiz Baypas Formatı",
   "Core Version Updated": "Çekirdek Sürümü Güncellendi",
   "Clash Core Restarted": "Clash Çekirdeği Yeniden Başlatıldı",
   "Currently on the Latest Version": "Şu Anda En Son Sürümdesiniz",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "Taşınabilir sürüm uygulama içi güncellemeleri desteklemez. Lütfen manuel olarak indirip değiştirin",
           "breakChangeError": "Bu sürüm büyük bir güncellemedir ve uygulama içi güncellemeleri desteklemez. Lütfen kaldırın ve yeni sürümü manuel olarak indirip kurun"
+        }
+      },
+      "sysproxy": {
+        "title": "Sistem Vekil Ayarı",
+        "fieldsets": {
+          "currentStatus": "Geçerli Sistem Vekil'i"
+        },
+        "fields": {
+          "enableStatus": "Etkinlik Durumu:",
+          "serverAddr": "Sunucu Adresi: ",
+          "pacUrl": "PAC URL'si: ",
+          "proxyHost": "Vekil Sunucusu",
+          "usePacMode": "PAC Modunu Kullan",
+          "proxyGuard": "Vekil Koruyucusu",
+          "guardDuration": "Koruma Süresi",
+          "alwaysUseDefaultBypass": "Her Zaman Varsayılan Baypas Kullan",
+          "proxyBypass": "Vekil Baypas Ayarları: ",
+          "bypass": "Baypas: ",
+          "pacScriptContent": "PAC Betiği İçeriği"
+        },
+        "tooltips": {
+          "proxyGuard": "Diğer yazılımların işletim sisteminin vekil ayarlarını değiştirmesini önlemek için etkinleştirin"
+        },
+        "messages": {
+          "durationTooShort": "Vekil Koruyucu Süresi 1 Saniyeden Az Olamaz",
+          "invalidBypass": "Geçersiz Baypas Formatı",
+          "invalidProxyHost": "Geçersiz Vekil Sunucusu Formatı"
+        },
+        "actions": {
+          "editPac": "Düzenle PAC"
         }
       }
     }

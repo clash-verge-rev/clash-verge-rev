@@ -293,23 +293,8 @@
   "Install": "Instalar",
   "Uninstall": "Desinstalar",
   "System Proxy": "Proxy del sistema",
-  "System Proxy Setting": "Configuración del proxy del sistema",
-  "Current System Proxy": "Proxy del sistema actual",
-  "Enable status": "Estado de habilitación: ",
   "Enabled": "Habilitado",
   "Disabled": "Deshabilitado",
-  "Server Addr": "Dirección del servidor: ",
-  "Proxy Host": "Host del proxy",
-  "Invalid Proxy Host Format": "Formato de host del proxy no válido",
-  "Proxy Guard": "Guardia del proxy del sistema",
-  "Proxy Guard Info": "Habilite esta opción para evitar que otros programas modifiquen la configuración del proxy del sistema operativo.",
-  "Guard Duration": "Intervalo de guardia del proxy",
-  "Always use Default Bypass": "Siempre usar la lista de omisión predeterminada",
-  "Proxy Bypass": "Configuración de omisión del proxy: ",
-  "Bypass": "Omisión actual: ",
-  "Use PAC Mode": "Usar modo PAC",
-  "PAC Script Content": "Contenido del script PAC",
-  "PAC URL": "URL del PAC: ",
   "Auto Launch": "Inicio automático al arrancar el sistema",
   "Administrator mode may not support auto launch": "El modo de administrador puede no admitir el inicio automático.",
   "Network Interface": "Interfaz de red",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "Desinstalando servicio...",
   "Service Installed Successfully": "Servicio instalado con éxito",
   "Service Uninstalled Successfully": "Servicio desinstalado con éxito",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "El intervalo de tiempo del daemon de proxy no puede ser menor de 1 segundo",
-  "Invalid Bypass Format": "Formato de omisión de proxy no válido",
   "Core Version Updated": "Versión del núcleo actualizada",
   "Clash Core Restarted": "Núcleo de Clash reiniciado",
   "Currently on the Latest Version": "Actualmente está en la última versión",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "La versión portátil no admite la actualización desde dentro de la aplicación. Descargue e instale manualmente la actualización.",
           "breakChangeError": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión."
+        }
+      },
+      "sysproxy": {
+        "title": "Configuración del proxy del sistema",
+        "fieldsets": {
+          "currentStatus": "Proxy del sistema actual"
+        },
+        "fields": {
+          "enableStatus": "Estado de habilitación: ",
+          "serverAddr": "Dirección del servidor: ",
+          "pacUrl": "URL del PAC: ",
+          "proxyHost": "Host del proxy",
+          "usePacMode": "Usar modo PAC",
+          "proxyGuard": "Guardia del proxy del sistema",
+          "guardDuration": "Intervalo de guardia del proxy",
+          "alwaysUseDefaultBypass": "Siempre usar la lista de omisión predeterminada",
+          "proxyBypass": "Configuración de omisión del proxy: ",
+          "bypass": "Omisión actual: ",
+          "pacScriptContent": "Contenido del script PAC"
+        },
+        "tooltips": {
+          "proxyGuard": "Habilite esta opción para evitar que otros programas modifiquen la configuración del proxy del sistema operativo."
+        },
+        "messages": {
+          "durationTooShort": "El intervalo de tiempo del daemon de proxy no puede ser menor de 1 segundo",
+          "invalidBypass": "Formato de omisión de proxy no válido",
+          "invalidProxyHost": "Formato de host del proxy no válido"
+        },
+        "actions": {
+          "editPac": "Editar PAC"
         }
       }
     }

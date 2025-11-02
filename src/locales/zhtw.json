@@ -293,23 +293,8 @@
   "Install": "安裝",
   "Uninstall": "解除安裝",
   "System Proxy": "系統代理",
-  "System Proxy Setting": "系統代理設定",
-  "Current System Proxy": "目前系統代理",
-  "Enable status": "啟用狀態：",
   "Enabled": "已啟用",
   "Disabled": "已停用",
-  "Server Addr": "服務位址：",
-  "Proxy Host": "代理主機",
-  "Invalid Proxy Host Format": "代理主機格式無效",
-  "Proxy Guard": "系統代理守護",
-  "Proxy Guard Info": "開啟以防止其他軟體修改作業系統的代理設定",
-  "Guard Duration": "代理守護間隔",
-  "Always use Default Bypass": "始終使用預設繞過",
-  "Proxy Bypass": "代理繞過設定：",
-  "Bypass": "目前繞過：",
-  "Use PAC Mode": "使用 PAC 模式",
-  "PAC Script Content": "PAC 指令碼內容",
-  "PAC URL": "PAC 位址：",
   "Auto Launch": "開機自啟",
   "Administrator mode may not support auto launch": "管理員模式可能不支援開機自啟",
   "Network Interface": "網路介面",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "服務解除安裝中...",
   "Service Installed Successfully": "已成功安裝服務",
   "Service Uninstalled Successfully": "已成功解除安裝服務",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "代理守護間隔時間不得低於 1 秒",
-  "Invalid Bypass Format": "無效的代理繞過格式",
   "Core Version Updated": "內核版本已更新",
   "Clash Core Restarted": "已重啟 Clash 內核",
   "Currently on the Latest Version": "目前已是最新版本",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "可攜式版不支援應用程式內更新，請手動下載替換",
           "breakChangeError": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝"
+        }
+      },
+      "sysproxy": {
+        "title": "系統代理設定",
+        "fieldsets": {
+          "currentStatus": "目前系統代理"
+        },
+        "fields": {
+          "enableStatus": "啟用狀態：",
+          "serverAddr": "服務位址：",
+          "pacUrl": "PAC 位址：",
+          "proxyHost": "代理主機",
+          "usePacMode": "使用 PAC 模式",
+          "proxyGuard": "系統代理守護",
+          "guardDuration": "代理守護間隔",
+          "alwaysUseDefaultBypass": "始終使用預設繞過",
+          "proxyBypass": "代理繞過設定：",
+          "bypass": "目前繞過：",
+          "pacScriptContent": "PAC 指令碼內容"
+        },
+        "tooltips": {
+          "proxyGuard": "開啟以防止其他軟體修改作業系統的代理設定"
+        },
+        "messages": {
+          "durationTooShort": "代理守護間隔時間不得低於 1 秒",
+          "invalidBypass": "無效的代理繞過格式",
+          "invalidProxyHost": "代理主機格式無效"
+        },
+        "actions": {
+          "editPac": "編輯 PAC"
         }
       }
     }

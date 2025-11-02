@@ -293,23 +293,8 @@
   "Install": "Урнаштыру",
   "Uninstall": "Салдыру",
   "System Proxy": "Системалы прокси",
-  "System Proxy Setting": "Системалы прокси көйләүләре",
-  "Current System Proxy": "Агымдагы системалы прокси",
-  "Enable status": "Активлаштыру статусы",
   "Enabled": "Кушылган",
   "Disabled": "Сүнгән",
-  "Server Addr": "Сервер адресы",
-  "Proxy Host": "Прокси хосты",
-  "Invalid Proxy Host Format": "Прокси хосты форматы дөрес түгел",
-  "Proxy Guard": "Прокси саклаучы",
-  "Proxy Guard Info": "Системалы прокси көйләүләрен чит программа үзгәртмәсен өчен шушы функцияне кабызыгыз",
-  "Guard Duration": "Саклау вакыты",
-  "Always use Default Bypass": "Һәрвакыт төп Bypass-ны куллану",
-  "Proxy Bypass": "Проксины әйләнеп узу:",
-  "Bypass": "Әйләнеп узу:",
-  "Use PAC Mode": "PAC режимын куллану",
-  "PAC Script Content": "PAC скрипты эчтәлеге",
-  "PAC URL": "PAC адресы",
   "Auto Launch": "Автостарт",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "Челтәр интерфейсы",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Сервис уңышлы урнаштырылды",
   "Service Uninstalled Successfully": "Сервис уңышлы салдырылды",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "Прокси-демон эш вакыты 1 секундтан ким була алмый",
-  "Invalid Bypass Format": "Дөрес булмаган Bypass форматы",
   "Core Version Updated": "Ядро версиясе яңартылды",
   "Clash Core Restarted": "Clash ядросы яңадан башланды",
   "Currently on the Latest Version": "Сездә иң соңгы версия урнаштырылган",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "Портатив версиядә кушымта эчендә яңарту хупланмый, кулдан төшереп алыгыз",
           "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала."
+        }
+      },
+      "sysproxy": {
+        "title": "Системалы прокси көйләүләре",
+        "fieldsets": {
+          "currentStatus": "Агымдагы системалы прокси"
+        },
+        "fields": {
+          "enableStatus": "Активлаштыру статусы",
+          "serverAddr": "Сервер адресы",
+          "pacUrl": "PAC адресы",
+          "proxyHost": "Прокси хосты",
+          "usePacMode": "PAC режимын куллану",
+          "proxyGuard": "Прокси саклаучы",
+          "guardDuration": "Саклау вакыты",
+          "alwaysUseDefaultBypass": "Һәрвакыт төп Bypass-ны куллану",
+          "proxyBypass": "Проксины әйләнеп узу:",
+          "bypass": "Әйләнеп узу:",
+          "pacScriptContent": "PAC скрипты эчтәлеге"
+        },
+        "tooltips": {
+          "proxyGuard": "Системалы прокси көйләүләрен чит программа үзгәртмәсен өчен шушы функцияне кабызыгыз"
+        },
+        "messages": {
+          "durationTooShort": "Прокси-демон эш вакыты 1 секундтан ким була алмый",
+          "invalidBypass": "Дөрес булмаган Bypass форматы",
+          "invalidProxyHost": "Прокси хосты форматы дөрес түгел"
+        },
+        "actions": {
+          "editPac": "Үзгәртү PAC"
         }
       }
     }

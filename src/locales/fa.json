@@ -293,23 +293,8 @@
   "Install": "نصب",
   "Uninstall": "حذف نصب",
   "System Proxy": "پراکسی سیستم",
-  "System Proxy Setting": "تنظیمات پراکسی سیستم",
-  "Current System Proxy": "پراکسی سیستم فعلی",
-  "Enable status": "وضعیت فعال",
   "Enabled": "توانایی فعال شد",
   "Disabled": "غیرفعال شد",
-  "Server Addr": "آدرس سرور: ",
-  "Proxy Host": "میزبان پراکسی",
-  "Invalid Proxy Host Format": "فرمت میزبان پراکسی نامعتبر است",
-  "Proxy Guard": "محافظ پراکسی",
-  "Proxy Guard Info": "امکان جلوگیری از نرم‌افزارهای دیگر از تغییر تنظیمات پروکسی سیستم عامل را فعال کنید",
-  "Guard Duration": "مدت محافظت",
-  "Always use Default Bypass": "همیشه از دور زدن پیش‌فرض استفاده کنید",
-  "Proxy Bypass": "دور زدن پراکسی: ",
-  "Bypass": "دور زدن: ",
-  "Use PAC Mode": "استفاده از حالت PAC",
-  "PAC Script Content": "محتوای اسکریپت PAC",
-  "PAC URL": "PAC URL: ",
   "Auto Launch": "راه‌اندازی خودکار",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "رابط شبکه",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "سرویس با موفقیت نصب شد",
   "Service Uninstalled Successfully": "سرویس با موفقیت حذف نصب شد",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "مدت زمان دیمن پراکسی نمی‌تواند کمتر از 1 ثانیه باشد",
-  "Invalid Bypass Format": "فرمت عبور نامعتبر است",
   "Core Version Updated": "نسخه هسته به‌روزرسانی شد",
   "Clash Core Restarted": "هسته Clash مجدداً راه‌اندازی شد",
   "Currently on the Latest Version": "در حال حاضر در آخرین نسخه",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "نسخه پرتابل از به‌روزرسانی درون برنامه‌ای پشتیبانی نمی‌کند. لطفاً به صورت دستی دانلود و جایگزین کنید",
           "breakChangeError": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید."
+        }
+      },
+      "sysproxy": {
+        "title": "تنظیمات پراکسی سیستم",
+        "fieldsets": {
+          "currentStatus": "پراکسی سیستم فعلی"
+        },
+        "fields": {
+          "enableStatus": "وضعیت فعال",
+          "serverAddr": "آدرس سرور: ",
+          "pacUrl": "PAC URL: ",
+          "proxyHost": "میزبان پراکسی",
+          "usePacMode": "استفاده از حالت PAC",
+          "proxyGuard": "محافظ پراکسی",
+          "guardDuration": "مدت محافظت",
+          "alwaysUseDefaultBypass": "همیشه از دور زدن پیش‌فرض استفاده کنید",
+          "proxyBypass": "دور زدن پراکسی: ",
+          "bypass": "دور زدن: ",
+          "pacScriptContent": "محتوای اسکریپت PAC"
+        },
+        "tooltips": {
+          "proxyGuard": "امکان جلوگیری از نرم‌افزارهای دیگر از تغییر تنظیمات پروکسی سیستم عامل را فعال کنید"
+        },
+        "messages": {
+          "durationTooShort": "مدت زمان دیمن پراکسی نمی‌تواند کمتر از 1 ثانیه باشد",
+          "invalidBypass": "فرمت عبور نامعتبر است",
+          "invalidProxyHost": "فرمت میزبان پراکسی نامعتبر است"
+        },
+        "actions": {
+          "editPac": "ویرایش PAC"
         }
       }
     }

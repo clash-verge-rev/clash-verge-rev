@@ -293,23 +293,8 @@
   "Install": "Instal",
   "Uninstall": "Copot",
   "System Proxy": "Proksi Sistem",
-  "System Proxy Setting": "Pengaturan Proksi Sistem",
-  "Current System Proxy": "Proksi Sistem Saat Ini",
-  "Enable status": "Status Pengaktifan:",
   "Enabled": "Diaktifkan",
   "Disabled": "Dinonaktifkan",
-  "Server Addr": "Alamat Server: ",
-  "Proxy Host": "Host Proksi",
-  "Invalid Proxy Host Format": "Format Host Proksi Tidak Valid",
-  "Proxy Guard": "Penjaga Proksi",
-  "Proxy Guard Info": "Aktifkan untuk mencegah perangkat lunak lain mengubah pengaturan proksi sistem operasi",
-  "Guard Duration": "Durasi Penjagaan",
-  "Always use Default Bypass": "Selalu gunakan Bypass Default",
-  "Proxy Bypass": "Pengaturan Bypass Proksi: ",
-  "Bypass": "Bypass: ",
-  "Use PAC Mode": "Gunakan Mode PAC",
-  "PAC Script Content": "Konten Skrip PAC",
-  "PAC URL": "URL PAC: ",
   "Auto Launch": "Peluncuran Otomatis",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "Antarmuka Jaringan",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Layanan Berhasil Diinstal",
   "Service Uninstalled Successfully": "Layanan Berhasil Dicopot",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "Durasi Daemon Proksi Tidak Boleh Kurang dari 1 Detik",
-  "Invalid Bypass Format": "Format Bypass Tidak Valid",
   "Core Version Updated": "Versi Core Diperbarui",
   "Clash Core Restarted": "Core Clash Dimulai Ulang",
   "Currently on the Latest Version": "Saat ini pada Versi Terbaru",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "Versi portabel tidak mendukung pembaruan dalam aplikasi. Harap unduh dan ganti secara manual",
           "breakChangeError": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual"
+        }
+      },
+      "sysproxy": {
+        "title": "Pengaturan Proksi Sistem",
+        "fieldsets": {
+          "currentStatus": "Proksi Sistem Saat Ini"
+        },
+        "fields": {
+          "enableStatus": "Status Pengaktifan:",
+          "serverAddr": "Alamat Server: ",
+          "pacUrl": "URL PAC: ",
+          "proxyHost": "Host Proksi",
+          "usePacMode": "Gunakan Mode PAC",
+          "proxyGuard": "Penjaga Proksi",
+          "guardDuration": "Durasi Penjagaan",
+          "alwaysUseDefaultBypass": "Selalu gunakan Bypass Default",
+          "proxyBypass": "Pengaturan Bypass Proksi: ",
+          "bypass": "Bypass: ",
+          "pacScriptContent": "Konten Skrip PAC"
+        },
+        "tooltips": {
+          "proxyGuard": "Aktifkan untuk mencegah perangkat lunak lain mengubah pengaturan proksi sistem operasi"
+        },
+        "messages": {
+          "durationTooShort": "Durasi Daemon Proksi Tidak Boleh Kurang dari 1 Detik",
+          "invalidBypass": "Format Bypass Tidak Valid",
+          "invalidProxyHost": "Format Host Proksi Tidak Valid"
+        },
+        "actions": {
+          "editPac": "Ubah PAC"
         }
       }
     }

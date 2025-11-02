@@ -293,23 +293,8 @@
   "Install": "تثبيت",
   "Uninstall": "إلغاء التثبيت",
   "System Proxy": "وكيل النظام",
-  "System Proxy Setting": "إعداد وكيل النظام",
-  "Current System Proxy": "الوكيل الحالي للنظام",
-  "Enable status": "حالة التمكين:",
   "Enabled": "ممكّن",
   "Disabled": "معطّل",
-  "Server Addr": "عنوان الخادم:",
-  "Proxy Host": "مضيف الوكيل",
-  "Invalid Proxy Host Format": "تنسيق مضيف الوكيل غير صالح",
-  "Proxy Guard": "حماية الوكيل",
-  "Proxy Guard Info": "عند التمكين، يمنع برامج أخرى من تعديل إعدادات وكيل النظام",
-  "Guard Duration": "مدة الحماية",
-  "Always use Default Bypass": "استخدام التخطي الافتراضي دائمًا",
-  "Proxy Bypass": "إعدادات تخطي الوكيل:",
-  "Bypass": "تخطي:",
-  "Use PAC Mode": "استخدام وضع PAC",
-  "PAC Script Content": "محتوى سكريبت PAC",
-  "PAC URL": "رابط PAC:",
   "Auto Launch": "إطلاق تلقائي",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "واجهة الشبكة",
@@ -355,8 +340,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "تم تثبيت الخدمة بنجاح",
   "Service Uninstalled Successfully": "تم إلغاء تثبيت الخدمة بنجاح",
-  "Proxy Daemon Duration Cannot be Less than 1 Second": "لا يمكن أن تقل مدة خادم الوكيل عن ثانية واحدة",
-  "Invalid Bypass Format": "تنسيق التخطي غير صالح",
   "Core Version Updated": "تم تحديث إصدار النواة",
   "Clash Core Restarted": "تم إعادة تشغيل نواة Clash",
   "Currently on the Latest Version": "أنت على أحدث إصدار حاليًا",
@@ -1042,6 +1025,36 @@
         "messages": {
           "portableError": "الإصدار المحمول لا يدعم التحديث داخل التطبيق. يرجى التنزيل والاستبدال يدويًا",
           "breakChangeError": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا"
+        }
+      },
+      "sysproxy": {
+        "title": "إعداد وكيل النظام",
+        "fieldsets": {
+          "currentStatus": "الوكيل الحالي للنظام"
+        },
+        "fields": {
+          "enableStatus": "حالة التمكين:",
+          "serverAddr": "عنوان الخادم:",
+          "pacUrl": "رابط PAC:",
+          "proxyHost": "مضيف الوكيل",
+          "usePacMode": "استخدام وضع PAC",
+          "proxyGuard": "حماية الوكيل",
+          "guardDuration": "مدة الحماية",
+          "alwaysUseDefaultBypass": "استخدام التخطي الافتراضي دائمًا",
+          "proxyBypass": "إعدادات تخطي الوكيل:",
+          "bypass": "تخطي:",
+          "pacScriptContent": "محتوى سكريبت PAC"
+        },
+        "tooltips": {
+          "proxyGuard": "عند التمكين، يمنع برامج أخرى من تعديل إعدادات وكيل النظام"
+        },
+        "messages": {
+          "durationTooShort": "لا يمكن أن تقل مدة خادم الوكيل عن ثانية واحدة",
+          "invalidBypass": "تنسيق التخطي غير صالح",
+          "invalidProxyHost": "تنسيق مضيف الوكيل غير صالح"
+        },
+        "actions": {
+          "editPac": "تعديل PAC"
         }
       }
     }
