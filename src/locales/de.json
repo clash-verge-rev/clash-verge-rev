@@ -379,11 +379,6 @@
   "Merge File Error": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
   "Service Administrator Prompt": "Clash Verge benötigt Administratorrechte, um den Systemdienst zu installieren.",
   "Website Tests": "Website-Tests",
-  "Clash Info": "Clash-Informationen",
-  "Core Version": "Kernversion",
-  "System Proxy Address": "Systemproxy-Adresse",
-  "Uptime": "Laufzeit",
-  "Rules Count": "Anzahl der Regeln",
   "System Info": "Systeminformationen",
   "OS Info": "Betriebssysteminformationen",
   "Running Mode": "Betriebsmodus",
@@ -608,6 +603,16 @@
         "tooltips": {
           "systemProxy": "Ändern Sie die Proxy-Einstellungen des Betriebssystems. Wenn die Aktivierung fehlschlägt, können Sie die Proxy-Einstellungen des Betriebssystems manuell ändern.",
           "tunMode": "Der TUN-Modus kann den gesamten Anwendungsverkehr übernehmen und eignet sich für spezielle Anwendungen, die die Systemproxy-Einstellungen nicht befolgen."
+        }
+      },
+      "clashInfo": {
+        "title": "Clash-Informationen",
+        "fields": {
+          "coreVersion": "Kernversion",
+          "systemProxyAddress": "Systemproxy-Adresse",
+          "mixedPort": "Mixed Port",
+          "uptime": "Laufzeit",
+          "rulesCount": "Anzahl der Regeln"
         }
       }
     },

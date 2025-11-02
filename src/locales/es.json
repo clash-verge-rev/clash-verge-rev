@@ -379,11 +379,6 @@
   "Merge File Error": "Error en el archivo de sobrescritura. Los cambios se han deshecho",
   "Service Administrator Prompt": "Clash Verge requiere permisos de administrador para instalar el servicio del sistema",
   "Website Tests": "Pruebas de sitios web",
-  "Clash Info": "Información de Clash",
-  "Core Version": "Versión del núcleo",
-  "System Proxy Address": "Dirección del proxy del sistema",
-  "Uptime": "Tiempo de actividad",
-  "Rules Count": "Número de reglas",
   "System Info": "Información del sistema",
   "OS Info": "Información del sistema operativo",
   "Running Mode": "Modo de ejecución",
@@ -608,6 +603,16 @@
         "tooltips": {
           "systemProxy": "Modifica la configuración del proxy del sistema operativo. Si no se puede habilitar, puede modificar manualmente la configuración del proxy del sistema operativo.",
           "tunMode": "El modo TUN puede gestionar todo el tráfico de las aplicaciones. Es adecuado para aplicaciones que no siguen la configuración del proxy del sistema."
+        }
+      },
+      "clashInfo": {
+        "title": "Información de Clash",
+        "fields": {
+          "coreVersion": "Versión del núcleo",
+          "systemProxyAddress": "Dirección del proxy del sistema",
+          "mixedPort": "Mixed Port",
+          "uptime": "Tiempo de actividad",
+          "rulesCount": "Número de reglas"
         }
       }
     },

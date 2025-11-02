@@ -379,11 +379,6 @@
   "Merge File Error": "上書きファイルにエラーがあります。変更は取り消されました。",
   "Service Administrator Prompt": "Clash Vergeはシステムサービスをインストールするために管理者権限が必要です。",
   "Website Tests": "ウェブサイトテスト",
-  "Clash Info": "Clash情報",
-  "Core Version": "コアバージョン",
-  "System Proxy Address": "システムプロキシアドレス",
-  "Uptime": "稼働時間",
-  "Rules Count": "ルール数",
   "System Info": "システム情報",
   "OS Info": "オペレーティングシステム情報",
   "Running Mode": "実行モード",
@@ -608,6 +603,16 @@
         "tooltips": {
           "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
           "tunMode": "TUNモードは全てのアプリケーションのトラフィックを制御できます。システムプロキシ設定に従わない特殊なアプリケーションに適しています。"
+        }
+      },
+      "clashInfo": {
+        "title": "Clash情報",
+        "fields": {
+          "coreVersion": "コアバージョン",
+          "systemProxyAddress": "システムプロキシアドレス",
+          "mixedPort": "Mixed Port",
+          "uptime": "稼働時間",
+          "rulesCount": "ルール数"
         }
       }
     },

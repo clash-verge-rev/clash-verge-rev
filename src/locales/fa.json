@@ -379,11 +379,6 @@
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge برای نصب مجدد سرویس سیستم به امتیازات مدیر نیاز دارد",
   "Website Tests": "Website Tests",
-  "Clash Info": "Clash Info",
-  "Core Version": "Core Version",
-  "System Proxy Address": "System Proxy Address",
-  "Uptime": "Uptime",
-  "Rules Count": "Rules Count",
   "System Info": "System Info",
   "OS Info": "OS Info",
   "Running Mode": "Running Mode",
@@ -608,6 +603,16 @@
         "tooltips": {
           "systemProxy": "به امکانات تنظیم پروکسی سیستم عامل دسترسی پیدا کنید. اگر فعال‌سازی ناموفق بود، پروکسی سیستم عامل را به‌صورت دستی تغییر دهید",
           "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+        }
+      },
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
         }
       }
     },

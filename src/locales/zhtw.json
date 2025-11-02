@@ -379,11 +379,6 @@
   "Merge File Error": "覆寫檔案錯誤，變更已撤銷",
   "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
   "Website Tests": "網站測試",
-  "Clash Info": "Clash 資訊",
-  "Core Version": "內核版本",
-  "System Proxy Address": "系統代理位址",
-  "Uptime": "執行時間",
-  "Rules Count": "規則數量",
   "System Info": "系統資訊",
   "OS Info": "作業系統資訊",
   "Running Mode": "執行模式",
@@ -608,6 +603,16 @@
         "tooltips": {
           "systemProxy": "修改作業系統的代理設定，如果開啟失敗，可手動修改作業系統的代理設定",
           "tunMode": "虛擬網路介面卡模式可以接管所有應用程式流量，適用於不遵循系統代理設定的特殊應用程式"
+        }
+      },
+      "clashInfo": {
+        "title": "Clash 資訊",
+        "fields": {
+          "coreVersion": "內核版本",
+          "systemProxyAddress": "系統代理位址",
+          "mixedPort": "Mixed Port",
+          "uptime": "執行時間",
+          "rulesCount": "規則數量"
         }
       }
     },

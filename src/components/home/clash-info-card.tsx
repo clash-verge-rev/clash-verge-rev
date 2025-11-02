@@ -32,7 +32,7 @@ export const ClashInfoCard = () => {
       <Stack spacing={1.5}>
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("Core Version")}
+            {t("components.home.clashInfo.fields.coreVersion")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {clashVersion || "-"}
@@ -41,7 +41,7 @@ export const ClashInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("System Proxy Address")}
+            {t("components.home.clashInfo.fields.systemProxyAddress")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {systemProxyAddress}
@@ -50,7 +50,7 @@ export const ClashInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("Mixed Port")}
+            {t("components.home.clashInfo.fields.mixedPort")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {clashConfig.mixedPort || "-"}
@@ -59,7 +59,7 @@ export const ClashInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("Uptime")}
+            {t("components.home.clashInfo.fields.uptime")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {formattedUptime}
@@ -68,7 +68,7 @@ export const ClashInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("Rules Count")}
+            {t("components.home.clashInfo.fields.rulesCount")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {rules.length}
@@ -87,7 +87,7 @@ export const ClashInfoCard = () => {
 
   return (
     <EnhancedCard
-      title={t("Clash Info")}
+      title={t("components.home.clashInfo.title")}
       icon={<DeveloperBoardOutlined />}
       iconColor="warning"
       action={null}

@@ -379,11 +379,6 @@
   "Merge File Error": "Birleştirme dosyası hatası, değişiklikler geri alındı",
   "Service Administrator Prompt": "Clash Verge sistem hizmetini yeniden kurmak için yönetici ayrıcalıkları gerektiriyor",
   "Website Tests": "Web Sitesi Testleri",
-  "Clash Info": "Clash Bilgisi",
-  "Core Version": "Çekirdek Sürümü",
-  "System Proxy Address": "Sistem Vekil Adresi",
-  "Uptime": "Çalışma Süresi",
-  "Rules Count": "Kural Sayısı",
   "System Info": "Sistem Bilgisi",
   "OS Info": "İşletim Sistemi Bilgisi",
   "Running Mode": "Çalışma Modu",
@@ -608,6 +603,16 @@
         "tooltips": {
           "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
           "tunMode": "TUN modu tüm uygulama trafiğini ele alabilir, sistem vekil ayarlarını takip etmeyen özel uygulamalar için uygundur"
+        }
+      },
+      "clashInfo": {
+        "title": "Clash Bilgisi",
+        "fields": {
+          "coreVersion": "Çekirdek Sürümü",
+          "systemProxyAddress": "Sistem Vekil Adresi",
+          "mixedPort": "Mixed Port",
+          "uptime": "Çalışma Süresi",
+          "rulesCount": "Kural Sayısı"
         }
       }
     },
