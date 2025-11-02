@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "プロキシプロバイダー"
+        "title": "プロキシプロバイダー",
+        "actions": {
+          "updateAll": "すべて更新",
+          "update": "更新"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "ルール",
       "provider": {
         "trigger": "ルールプロバイダー",
-        "dialogTitle": "ルールプロバイダー"
+        "dialogTitle": "ルールプロバイダー",
+        "actions": {
+          "updateAll": "すべて更新",
+          "update": "更新"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "テスト",
   "Label-Settings": "設定",
   "Proxies": "Proxies",
-  "Update All": "すべて更新",
   "Update At": "更新日時",
   "rule": "ルール",
   "global": "グローバル",

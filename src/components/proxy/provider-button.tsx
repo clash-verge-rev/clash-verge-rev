@@ -168,8 +168,9 @@ export const ProviderButton = () => {
                 variant="contained"
                 size="small"
                 onClick={updateAllProviders}
+                aria-label={t("pages.proxies.provider.actions.updateAll")}
               >
-                {t("Update All")}
+                {t("pages.proxies.provider.actions.updateAll")}
               </Button>
             </Box>
           </Box>
@@ -327,7 +328,8 @@ export const ProviderButton = () => {
                             "100%": { transform: "rotate(360deg)" },
                           },
                         }}
-                        title={t("Update Provider") as string}
+                        title={t("pages.proxies.provider.actions.update")}
+                        aria-label={t("pages.proxies.provider.actions.update")}
                       >
                         <RefreshRounded />
                       </IconButton>

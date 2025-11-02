@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "Провайдер прокси"
+        "title": "Провайдер прокси",
+        "actions": {
+          "updateAll": "Обновить все",
+          "update": "Обновить"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "Правила",
       "provider": {
         "trigger": "Провайдеры правил",
-        "dialogTitle": "Провайдеры правил"
+        "dialogTitle": "Провайдеры правил",
+        "actions": {
+          "updateAll": "Обновить все",
+          "update": "Обновить"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "Тест",
   "Label-Settings": "Настройки",
   "Proxies": "Прокси",
-  "Update All": "Обновить все",
   "Update At": "Обновлено в",
   "rule": "правила",
   "global": "глобальный",

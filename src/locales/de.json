@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "Proxy-Sammlung"
+        "title": "Proxy-Sammlung",
+        "actions": {
+          "updateAll": "Alle aktualisieren",
+          "update": "Aktualisieren"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "Regeln",
       "provider": {
         "trigger": "Regelsammlung",
-        "dialogTitle": "Regelsammlung"
+        "dialogTitle": "Regelsammlung",
+        "actions": {
+          "updateAll": "Alle aktualisieren",
+          "update": "Aktualisieren"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "Testen",
   "Label-Settings": "Einstellungen",
   "Proxies": "Proxies",
-  "Update All": "Alle aktualisieren",
   "Update At": "Aktualisiert am",
   "rule": "Regel",
   "global": "Global",

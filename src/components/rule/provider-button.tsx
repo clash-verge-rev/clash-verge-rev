@@ -159,7 +159,7 @@ export const ProviderButton = () => {
               size="small"
               onClick={updateAllProviders}
             >
-              {t("Update All")}
+              {t("pages.rules.provider.actions.updateAll")}
             </Button>
           </Box>
         </DialogTitle>
@@ -260,6 +260,7 @@ export const ProviderButton = () => {
                         color="primary"
                         onClick={() => updateProvider(key)}
                         disabled={isUpdating}
+                        aria-label={t("pages.rules.provider.actions.update")}
                         sx={{
                           animation: isUpdating
                             ? "spin 1s linear infinite"
@@ -269,7 +270,7 @@ export const ProviderButton = () => {
                             "100%": { transform: "rotate(360deg)" },
                           },
                         }}
-                        title={t("Update Provider") as string}
+                        title={t("pages.rules.provider.actions.update")}
                       >
                         <RefreshRounded />
                       </IconButton>

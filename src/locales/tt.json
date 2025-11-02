@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "Прокси провайдеры"
+        "title": "Прокси провайдеры",
+        "actions": {
+          "updateAll": "Барысын да яңарту",
+          "update": "Яңарту"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "Кагыйдәләр",
       "provider": {
         "trigger": "Кагыйдә провайдеры",
-        "dialogTitle": "Кагыйдә провайдеры"
+        "dialogTitle": "Кагыйдә провайдеры",
+        "actions": {
+          "updateAll": "Барысын да яңарту",
+          "update": "Яңарту"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "Көйләүләр",
   "Proxies": "Прокси",
-  "Update All": "Барысын да яңарту",
   "Update At": "Яңартылган вакыт",
   "rule": "кагыйдә",
   "global": "глобаль",

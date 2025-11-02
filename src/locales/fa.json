@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "تأمین‌کننده پروکسی"
+        "title": "تأمین‌کننده پروکسی",
+        "actions": {
+          "updateAll": "به‌روزرسانی همه",
+          "update": "به‌روزرسانی"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "قوانین",
       "provider": {
         "trigger": "تأمین‌کننده قانون",
-        "dialogTitle": "تأمین‌کننده قانون"
+        "dialogTitle": "تأمین‌کننده قانون",
+        "actions": {
+          "updateAll": "به‌روزرسانی همه",
+          "update": "به‌روزرسانی"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "تنظیمات",
   "Proxies": "پراکسی‌ها",
-  "Update All": "به‌روزرسانی همه",
   "Update At": "به‌روزرسانی در",
   "rule": "قانون",
   "global": "جهانی",

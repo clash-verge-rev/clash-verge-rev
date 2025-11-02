@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "프록시 제공자"
+        "title": "프록시 제공자",
+        "actions": {
+          "updateAll": "모두 업데이트",
+          "update": "업데이트"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "규칙",
       "provider": {
         "trigger": "규칙 제공자",
-        "dialogTitle": "규칙 제공자"
+        "dialogTitle": "규칙 제공자",
+        "actions": {
+          "updateAll": "모두 업데이트",
+          "update": "업데이트"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "테스트",
   "Label-Settings": "설정",
   "Proxies": "프록시",
-  "Update All": "모두 업데이트",
   "Update At": "업데이트 시간",
   "rule": "규칙",
   "global": "전역",

@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "مزود الوكيل"
+        "title": "مزود الوكيل",
+        "actions": {
+          "updateAll": "تحديث الكل",
+          "update": "تحديث"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "القواعد",
       "provider": {
         "trigger": "مزود القواعد",
-        "dialogTitle": "مزود القواعد"
+        "dialogTitle": "مزود القواعد",
+        "actions": {
+          "updateAll": "تحديث الكل",
+          "update": "تحديث"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "الإعدادات",
   "Proxies": "الوكلاء",
-  "Update All": "تحديث الكل",
   "Update At": "التحديث عند",
   "rule": "قاعدة",
   "global": "عالمي",

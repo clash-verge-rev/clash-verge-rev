@@ -54,7 +54,11 @@
         "clearChainConfig": "删除链式配置"
       },
       "provider": {
-        "title": "代理集合"
+        "title": "代理集合",
+        "actions": {
+          "updateAll": "更新全部",
+          "update": "更新"
+        }
       },
       "rules": {
         "title": "代理规则",
@@ -94,7 +98,11 @@
       "title": "规则",
       "provider": {
         "trigger": "规则集合",
-        "dialogTitle": "规则集合"
+        "dialogTitle": "规则集合",
+        "actions": {
+          "updateAll": "更新全部",
+          "update": "更新"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "测 试",
   "Label-Settings": "设 置",
   "Proxies": "代理",
-  "Update All": "更新全部",
   "Update At": "更新于",
   "rule": "规则",
   "global": "全局",

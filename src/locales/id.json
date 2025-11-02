@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "Penyedia Proksi"
+        "title": "Penyedia Proksi",
+        "actions": {
+          "updateAll": "Perbarui Semua",
+          "update": "Perbarui"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "Aturan",
       "provider": {
         "trigger": "Penyedia Aturan",
-        "dialogTitle": "Penyedia Aturan"
+        "dialogTitle": "Penyedia Aturan",
+        "actions": {
+          "updateAll": "Perbarui Semua",
+          "update": "Perbarui"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "Pengaturan",
   "Proxies": "Proksi",
-  "Update All": "Perbarui Semua",
   "Update At": "Diperbarui Pada",
   "rule": "aturan",
   "global": "global",

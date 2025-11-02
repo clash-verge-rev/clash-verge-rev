@@ -54,7 +54,11 @@
         "clearChainConfig": "Delete Chain Config"
       },
       "provider": {
-        "title": "Vekil Sağlayıcısı"
+        "title": "Vekil Sağlayıcısı",
+        "actions": {
+          "updateAll": "Tümünü Güncelle",
+          "update": "Güncelle"
+        }
       },
       "rules": {
         "title": "Proxy Rules",
@@ -94,7 +98,11 @@
       "title": "Kurallar",
       "provider": {
         "trigger": "Kural Sağlayıcısı",
-        "dialogTitle": "Kural Sağlayıcısı"
+        "dialogTitle": "Kural Sağlayıcısı",
+        "actions": {
+          "updateAll": "Tümünü Güncelle",
+          "update": "Güncelle"
+        }
       }
     },
     "profiles": {
@@ -182,7 +190,6 @@
   "Label-Unlock": "Test",
   "Label-Settings": "Ayarlar",
   "Proxies": "Vekil'ler",
-  "Update All": "Tümünü Güncelle",
   "Update At": "Güncelleme Zamanı",
   "rule": "kural",
   "global": "küresel",
