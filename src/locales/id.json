@@ -279,21 +279,15 @@
   "Active Connections": "Active Connections",
   "Rule": "Aturan",
   "Icon": "Ikon",
-  "Settings": "Pengaturan",
   "Reset to Default": "Setel Ulang ke Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "Mode Layanan",
   "active": "aktif",
   "unknown": "tidak diketahui",
   "Install": "Instal",
   "Uninstall": "Copot",
   "System Proxy": "Proksi Sistem",
-  "Enabled": "Diaktifkan",
-  "Disabled": "Dinonaktifkan",
-  "Auto Launch": "Peluncuran Otomatis",
-  "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "Antarmuka Jaringan",
   "Ip Address": "Alamat IP",
   "Mac Address": "Alamat MAC",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "Konfigurasi Runtime",
   "Exit": "Keluar",
-  "Verge Version": "Versi Verge",
   "ReadOnly": "Hanya Baca",
   "Filter conditions": "Kondisi Filter",
   "Match Case": "Cocokkan Kasus",
@@ -379,13 +372,6 @@
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge memerlukan hak administrator untuk menginstal ulang layanan sistem",
   "Website Tests": "Website Tests",
-  "System Info": "System Info",
-  "OS Info": "OS Info",
-  "Running Mode": "Running Mode",
-  "Sidecar Mode": "User Mode",
-  "Administrator Mode": "Administrator Mode",
-  "Administrator + Service Mode": "Admin + Service Mode",
-  "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
   "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "Uptime",
           "rulesCount": "Rules Count"
+        }
+      },
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "Peluncuran Otomatis",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "Versi Verge"
+        },
+        "actions": {
+          "settings": "Pengaturan"
+        },
+        "labels": {
+          "enabled": "Diaktifkan",
+          "disabled": "Dinonaktifkan"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "Mode Layanan",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
         }
       }
     },

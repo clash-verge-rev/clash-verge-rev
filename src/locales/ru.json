@@ -279,21 +279,15 @@
   "Active Connections": "Активные соединения",
   "Rule": "Правило",
   "Icon": "Иконка",
-  "Settings": "Настройки",
   "Reset to Default": "Сбросить настройки",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "Режим системной службы",
   "active": "Активированный",
   "unknown": "неизвестный",
   "Install": "Установить",
   "Uninstall": "Удалить",
   "System Proxy": "Системный прокси",
-  "Enabled": "Включено",
-  "Disabled": "Отключено",
-  "Auto Launch": "Автозапуск",
-  "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "Сетевой интерфейс",
   "Ip Address": "IP адрес",
   "Mac Address": "MAC адрес",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "Вход в LightWeight Mode",
   "Runtime Config": "Используемый конфиг",
   "Exit": "Выход",
-  "Verge Version": "Версия Clash Verge Rev",
   "ReadOnly": "Только для чтения",
   "Filter conditions": "Условия фильтрации",
   "Match Case": "Учитывать регистр",
@@ -379,13 +372,6 @@
   "Merge File Error": "Ошибка Merge File, откат изменений",
   "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы",
   "Website Tests": "Проверка доступности веб-сайтов",
-  "System Info": "Информация о системе",
-  "OS Info": "Версия ОС",
-  "Running Mode": "Режим работы",
-  "Sidecar Mode": "Пользовательский режим",
-  "Administrator Mode": "Administrator Mode",
-  "Administrator + Service Mode": "Admin + Service Mode",
-  "Last Check Update": "Последняя проверка обновлений",
   "Click to import subscription": "Нажмите, чтобы импортировать подписку",
   "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "Время работы",
           "rulesCount": "Количество правил"
+        }
+      },
+      "systemInfo": {
+        "title": "Информация о системе",
+        "fields": {
+          "osInfo": "Версия ОС",
+          "autoLaunch": "Автозапуск",
+          "runningMode": "Режим работы",
+          "lastCheckUpdate": "Последняя проверка обновлений",
+          "vergeVersion": "Версия Clash Verge Rev"
+        },
+        "actions": {
+          "settings": "Настройки"
+        },
+        "labels": {
+          "enabled": "Включено",
+          "disabled": "Отключено"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "Режим системной службы",
+          "sidecarMode": "Пользовательский режим",
+          "adminServiceMode": "Admin + Service Mode"
         }
       }
     },

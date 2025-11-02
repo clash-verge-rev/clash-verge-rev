@@ -279,21 +279,15 @@
   "Active Connections": "作用中連線",
   "Rule": "規則",
   "Icon": "圖示",
-  "Settings": "設定",
   "Reset to Default": "重設為預設值",
   "TUN Mode automatically disabled due to service unavailable": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
   "Failed to disable TUN Mode automatically": "自動停用虛擬網路介面卡模式失敗",
   "Core communication error": "內核通信錯誤",
-  "Service Mode": "服務模式",
   "active": "作用中",
   "unknown": "未知",
   "Install": "安裝",
   "Uninstall": "解除安裝",
   "System Proxy": "系統代理",
-  "Enabled": "已啟用",
-  "Disabled": "已停用",
-  "Auto Launch": "開機自啟",
-  "Administrator mode may not support auto launch": "管理員模式可能不支援開機自啟",
   "Network Interface": "網路介面",
   "Ip Address": "IP 位址",
   "Mac Address": "MAC 位址",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "進入輕量模式",
   "Runtime Config": "執行期設定",
   "Exit": "離開",
-  "Verge Version": "Verge 版本",
   "ReadOnly": "唯讀",
   "Filter conditions": "篩選條件",
   "Match Case": "區分大小寫",
@@ -379,13 +372,6 @@
   "Merge File Error": "覆寫檔案錯誤，變更已撤銷",
   "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
   "Website Tests": "網站測試",
-  "System Info": "系統資訊",
-  "OS Info": "作業系統資訊",
-  "Running Mode": "執行模式",
-  "Sidecar Mode": "使用者模式",
-  "Administrator Mode": "管理員模式",
-  "Administrator + Service Mode": "系統管理員 + 服務模式",
-  "Last Check Update": "最後檢查更新",
   "Click to import subscription": "點擊匯入訂閱",
   "Unknown": "未知",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "執行時間",
           "rulesCount": "規則數量"
+        }
+      },
+      "systemInfo": {
+        "title": "系統資訊",
+        "fields": {
+          "osInfo": "作業系統資訊",
+          "autoLaunch": "開機自啟",
+          "runningMode": "執行模式",
+          "lastCheckUpdate": "最後檢查更新",
+          "vergeVersion": "Verge 版本"
+        },
+        "actions": {
+          "settings": "設定"
+        },
+        "labels": {
+          "enabled": "已啟用",
+          "disabled": "已停用"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理員模式可能不支援開機自啟"
+        },
+        "badges": {
+          "adminMode": "管理員模式",
+          "serviceMode": "服務模式",
+          "sidecarMode": "使用者模式",
+          "adminServiceMode": "系統管理員 + 服務模式"
         }
       }
     },

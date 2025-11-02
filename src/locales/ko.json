@@ -279,21 +279,15 @@
   "Active Connections": "활성 연결",
   "Rule": "규칙",
   "Icon": "아이콘",
-  "Settings": "설정",
   "Reset to Default": "Reset to Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "서비스 모드",
   "active": "active",
   "unknown": "unknown",
   "Install": "Install",
   "Uninstall": "Uninstall",
   "System Proxy": "시스템 프록시",
-  "Enabled": "Enabled",
-  "Disabled": "Disabled",
-  "Auto Launch": "Auto Launch",
-  "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "Network Interface",
   "Ip Address": "IP Address",
   "Mac Address": "MAC Address",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "Runtime Config",
   "Exit": "Exit",
-  "Verge Version": "Verge Version",
   "ReadOnly": "ReadOnly",
   "Filter conditions": "Filter conditions",
   "Match Case": "Match Case",
@@ -379,13 +372,6 @@
   "Merge File Error": "병합 파일 오류",
   "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
   "Website Tests": "Website Tests",
-  "System Info": "System Info",
-  "OS Info": "OS Info",
-  "Running Mode": "Running Mode",
-  "Sidecar Mode": "User Mode",
-  "Administrator Mode": "Administrator Mode",
-  "Administrator + Service Mode": "Admin + Service Mode",
-  "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
   "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Clash 프록시로 업데이트 성공",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "Uptime",
           "rulesCount": "Rules Count"
+        }
+      },
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "Auto Launch",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "Verge Version"
+        },
+        "actions": {
+          "settings": "설정"
+        },
+        "labels": {
+          "enabled": "Enabled",
+          "disabled": "Disabled"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "서비스 모드",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
         }
       }
     },

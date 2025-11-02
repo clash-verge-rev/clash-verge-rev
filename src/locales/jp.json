@@ -279,21 +279,15 @@
   "Active Connections": "アクティブな接続",
   "Rule": "ルール",
   "Icon": "アイコン",
-  "Settings": "設定",
   "Reset to Default": "デフォルト値にリセット",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "サービスモード",
   "active": "アクティブ",
   "unknown": "不明",
   "Install": "インストール",
   "Uninstall": "アンインストール",
   "System Proxy": "システムプロキシ",
-  "Enabled": "有効",
-  "Disabled": "無効",
-  "Auto Launch": "起動時に自動起動",
-  "Administrator mode may not support auto launch": "管理者モードでは起動時の自動起動がサポートされない場合があります。",
   "Network Interface": "ネットワークインターフェース",
   "Ip Address": "IPアドレス",
   "Mac Address": "MACアドレス",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "軽量モードに入る",
   "Runtime Config": "現在の設定",
   "Exit": "終了",
-  "Verge Version": "Vergeバージョン",
   "ReadOnly": "読み取り専用",
   "Filter conditions": "フィルタリング条件",
   "Match Case": "大文字小文字を区別する",
@@ -379,13 +372,6 @@
   "Merge File Error": "上書きファイルにエラーがあります。変更は取り消されました。",
   "Service Administrator Prompt": "Clash Vergeはシステムサービスをインストールするために管理者権限が必要です。",
   "Website Tests": "ウェブサイトテスト",
-  "System Info": "システム情報",
-  "OS Info": "オペレーティングシステム情報",
-  "Running Mode": "実行モード",
-  "Sidecar Mode": "ユーザーモード",
-  "Administrator Mode": "管理者モード",
-  "Administrator + Service Mode": "Admin + Service Mode",
-  "Last Check Update": "最後の更新チェック",
   "Click to import subscription": "クリックしてサブスクリプションをインポート",
   "Unknown": "不明",
   "Update with Clash proxy successfully": "Clashプロキシを使用して更新に成功しました。",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "稼働時間",
           "rulesCount": "ルール数"
+        }
+      },
+      "systemInfo": {
+        "title": "システム情報",
+        "fields": {
+          "osInfo": "オペレーティングシステム情報",
+          "autoLaunch": "起動時に自動起動",
+          "runningMode": "実行モード",
+          "lastCheckUpdate": "最後の更新チェック",
+          "vergeVersion": "Vergeバージョン"
+        },
+        "actions": {
+          "settings": "設定"
+        },
+        "labels": {
+          "enabled": "有効",
+          "disabled": "無効"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。"
+        },
+        "badges": {
+          "adminMode": "管理者モード",
+          "serviceMode": "サービスモード",
+          "sidecarMode": "ユーザーモード",
+          "adminServiceMode": "Admin + Service Mode"
         }
       }
     },

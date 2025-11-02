@@ -279,21 +279,15 @@
   "Active Connections": "Active Connections",
   "Rule": "Кагыйдә",
   "Icon": "Иконка",
-  "Settings": "Көйләүләр",
   "Reset to Default": "Башлангычка кайтару",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "Сервис режимы",
   "active": "Актив",
   "unknown": "Билгесез",
   "Install": "Урнаштыру",
   "Uninstall": "Салдыру",
   "System Proxy": "Системалы прокси",
-  "Enabled": "Кушылган",
-  "Disabled": "Сүнгән",
-  "Auto Launch": "Автостарт",
-  "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "Челтәр интерфейсы",
   "Ip Address": "IP адресы",
   "Mac Address": "MAC адресы",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "Агымдагы конфигурация",
   "Exit": "Чыгу",
-  "Verge Version": "Verge версиясе",
   "ReadOnly": "Уку режимы гына",
   "Filter conditions": "Фильтр шартлары",
   "Match Case": "Регистрны исәпкә алу",
@@ -379,13 +372,6 @@
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә",
   "Website Tests": "Website Tests",
-  "System Info": "System Info",
-  "OS Info": "OS Info",
-  "Running Mode": "Running Mode",
-  "Sidecar Mode": "User Mode",
-  "Administrator Mode": "Administrator Mode",
-  "Administrator + Service Mode": "Admin + Service Mode",
-  "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
   "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "Uptime",
           "rulesCount": "Rules Count"
+        }
+      },
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "Автостарт",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "Verge версиясе"
+        },
+        "actions": {
+          "settings": "Көйләүләр"
+        },
+        "labels": {
+          "enabled": "Кушылган",
+          "disabled": "Сүнгән"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "Сервис режимы",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
         }
       }
     },

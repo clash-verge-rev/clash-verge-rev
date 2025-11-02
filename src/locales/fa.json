@@ -279,21 +279,15 @@
   "Active Connections": "Active Connections",
   "Rule": "قانون",
   "Icon": "آیکون",
-  "Settings": "تنظیمات",
   "Reset to Default": "بازنشانی به پیش‌فرض",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "حالت سرویس",
   "active": "فعال",
   "unknown": "ناشناخته",
   "Install": "نصب",
   "Uninstall": "حذف نصب",
   "System Proxy": "پراکسی سیستم",
-  "Enabled": "توانایی فعال شد",
-  "Disabled": "غیرفعال شد",
-  "Auto Launch": "راه‌اندازی خودکار",
-  "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "رابط شبکه",
   "Ip Address": "آدرس IP",
   "Mac Address": "آدرس MAC",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "پیکربندی زمان اجرا",
   "Exit": "خروج",
-  "Verge Version": "نسخه Verge",
   "ReadOnly": "فقط خواندنی",
   "Filter conditions": "شرایط فیلتر",
   "Match Case": "تطبیق حروف کوچک و بزرگ",
@@ -379,13 +372,6 @@
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge برای نصب مجدد سرویس سیستم به امتیازات مدیر نیاز دارد",
   "Website Tests": "Website Tests",
-  "System Info": "System Info",
-  "OS Info": "OS Info",
-  "Running Mode": "Running Mode",
-  "Sidecar Mode": "User Mode",
-  "Administrator Mode": "Administrator Mode",
-  "Administrator + Service Mode": "Admin + Service Mode",
-  "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
   "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "Uptime",
           "rulesCount": "Rules Count"
+        }
+      },
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "راه‌اندازی خودکار",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "نسخه Verge"
+        },
+        "actions": {
+          "settings": "تنظیمات"
+        },
+        "labels": {
+          "enabled": "توانایی فعال شد",
+          "disabled": "غیرفعال شد"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "حالت سرویس",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
         }
       }
     },

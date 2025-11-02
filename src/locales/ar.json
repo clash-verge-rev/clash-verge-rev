@@ -279,21 +279,15 @@
   "Active Connections": "Active Connections",
   "Rule": "قاعدة",
   "Icon": "أيقونة",
-  "Settings": "الإعدادات",
   "Reset to Default": "إعادة تعيين إلى الافتراضي",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "وضع الخدمة",
   "active": "نشط",
   "unknown": "غير معروف",
   "Install": "تثبيت",
   "Uninstall": "إلغاء التثبيت",
   "System Proxy": "وكيل النظام",
-  "Enabled": "ممكّن",
-  "Disabled": "معطّل",
-  "Auto Launch": "إطلاق تلقائي",
-  "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
   "Network Interface": "واجهة الشبكة",
   "Ip Address": "عنوان IP",
   "Mac Address": "عنوان MAC",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "تكوين وقت التشغيل",
   "Exit": "خروج",
-  "Verge Version": "إصدار Verge",
   "ReadOnly": "للقراءة فقط",
   "Filter conditions": "شروط التصفية",
   "Match Case": "مطابقة الحالة",
@@ -379,13 +372,6 @@
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "يتطلب Clash Verge امتيازات المسؤول لإعادة تثبيت خدمة النظام",
   "Website Tests": "Website Tests",
-  "System Info": "System Info",
-  "OS Info": "OS Info",
-  "Running Mode": "Running Mode",
-  "Sidecar Mode": "User Mode",
-  "Administrator Mode": "Administrator Mode",
-  "Administrator + Service Mode": "Admin + Service Mode",
-  "Last Check Update": "Last Check Update",
   "Click to import subscription": "Click to import subscription",
   "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "Uptime",
           "rulesCount": "Rules Count"
+        }
+      },
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "إطلاق تلقائي",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "إصدار Verge"
+        },
+        "actions": {
+          "settings": "الإعدادات"
+        },
+        "labels": {
+          "enabled": "ممكّن",
+          "disabled": "معطّل"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "وضع الخدمة",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
         }
       }
     },

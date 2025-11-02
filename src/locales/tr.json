@@ -279,21 +279,15 @@
   "Active Connections": "Aktif Bağlantılar",
   "Rule": "Kural",
   "Icon": "Simge",
-  "Settings": "Ayarlar",
   "Reset to Default": "Varsayılana Sıfırla",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "Hizmet Modu",
   "active": "aktif",
   "unknown": "bilinmiyor",
   "Install": "Kur",
   "Uninstall": "Kaldır",
   "System Proxy": "Sistem Vekil'i",
-  "Enabled": "Etkin",
-  "Disabled": "Devre Dışı",
-  "Auto Launch": "Otomatik Başlatma",
-  "Administrator mode may not support auto launch": "Yönetici modu otomatik başlatmayı desteklemeyebilir",
   "Network Interface": "Ağ Arayüzü",
   "Ip Address": "IP Adresi",
   "Mac Address": "MAC Adresi",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "Hafif Moda Gir",
   "Runtime Config": "Çalışma Zamanı Yapılandırması",
   "Exit": "Çıkış",
-  "Verge Version": "Verge Sürümü",
   "ReadOnly": "Salt Okunur",
   "Filter conditions": "Filtre koşulları",
   "Match Case": "Büyük/Küçük Harf Eşleştir",
@@ -379,13 +372,6 @@
   "Merge File Error": "Birleştirme dosyası hatası, değişiklikler geri alındı",
   "Service Administrator Prompt": "Clash Verge sistem hizmetini yeniden kurmak için yönetici ayrıcalıkları gerektiriyor",
   "Website Tests": "Web Sitesi Testleri",
-  "System Info": "Sistem Bilgisi",
-  "OS Info": "İşletim Sistemi Bilgisi",
-  "Running Mode": "Çalışma Modu",
-  "Sidecar Mode": "Kullanıcı Modu",
-  "Administrator Mode": "Yönetici Modu",
-  "Administrator + Service Mode": "Yönetici + Hizmet Modu",
-  "Last Check Update": "Son Güncelleme Kontrolü",
   "Click to import subscription": "Abonelik içe aktarmak için tıklayın",
   "Unknown": "Bilinmiyor",
   "Update with Clash proxy successfully": "Clash vekil ile güncelleme başarılı",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "Çalışma Süresi",
           "rulesCount": "Kural Sayısı"
+        }
+      },
+      "systemInfo": {
+        "title": "Sistem Bilgisi",
+        "fields": {
+          "osInfo": "İşletim Sistemi Bilgisi",
+          "autoLaunch": "Otomatik Başlatma",
+          "runningMode": "Çalışma Modu",
+          "lastCheckUpdate": "Son Güncelleme Kontrolü",
+          "vergeVersion": "Verge Sürümü"
+        },
+        "actions": {
+          "settings": "Ayarlar"
+        },
+        "labels": {
+          "enabled": "Etkin",
+          "disabled": "Devre Dışı"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir"
+        },
+        "badges": {
+          "adminMode": "Yönetici Modu",
+          "serviceMode": "Hizmet Modu",
+          "sidecarMode": "Kullanıcı Modu",
+          "adminServiceMode": "Yönetici + Hizmet Modu"
         }
       }
     },

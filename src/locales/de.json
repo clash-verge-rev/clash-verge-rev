@@ -279,21 +279,15 @@
   "Active Connections": "Aktive Verbindungen",
   "Rule": "Regel",
   "Icon": "Symbol",
-  "Settings": "Einstellungen",
   "Reset to Default": "Auf Standardwerte zurücksetzen",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Service Mode": "Service-Modus",
   "active": "Aktiviert",
   "unknown": "Unbekannt",
   "Install": "Installieren",
   "Uninstall": "Deinstallieren",
   "System Proxy": "Systemproxy",
-  "Enabled": "Aktiviert",
-  "Disabled": "Deaktiviert",
-  "Auto Launch": "Beim Start automatisch starten",
-  "Administrator mode may not support auto launch": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion.",
   "Network Interface": "Netzwerkschnittstelle",
   "Ip Address": "IP-Adresse",
   "Mac Address": "MAC-Adresse",
@@ -322,7 +316,6 @@
   "entry_lightweight_mode": "Leichtgewichtigen Modus betreten",
   "Runtime Config": "Aktuelle Konfiguration",
   "Exit": "Beenden",
-  "Verge Version": "Verge-Version",
   "ReadOnly": "Schreibgeschützt",
   "Filter conditions": "Filterbedingungen",
   "Match Case": "Groß-/Kleinschreibung beachten",
@@ -379,13 +372,6 @@
   "Merge File Error": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
   "Service Administrator Prompt": "Clash Verge benötigt Administratorrechte, um den Systemdienst zu installieren.",
   "Website Tests": "Website-Tests",
-  "System Info": "Systeminformationen",
-  "OS Info": "Betriebssysteminformationen",
-  "Running Mode": "Betriebsmodus",
-  "Sidecar Mode": "Benutzermodus",
-  "Administrator Mode": "Administrator-Modus",
-  "Administrator + Service Mode": "Admin + Service Mode",
-  "Last Check Update": "Letzte Aktualitätsprüfung",
   "Click to import subscription": "Klicken Sie hier, um ein Abonnement zu importieren.",
   "Unknown": "Unbekannt",
   "Update with Clash proxy successfully": "Aktualisierung mit Clash-Proxy erfolgreich",
@@ -612,6 +598,32 @@
           "mixedPort": "Mixed Port",
           "uptime": "Laufzeit",
           "rulesCount": "Anzahl der Regeln"
+        }
+      },
+      "systemInfo": {
+        "title": "Systeminformationen",
+        "fields": {
+          "osInfo": "Betriebssysteminformationen",
+          "autoLaunch": "Beim Start automatisch starten",
+          "runningMode": "Betriebsmodus",
+          "lastCheckUpdate": "Letzte Aktualitätsprüfung",
+          "vergeVersion": "Verge-Version"
+        },
+        "actions": {
+          "settings": "Einstellungen"
+        },
+        "labels": {
+          "enabled": "Aktiviert",
+          "disabled": "Deaktiviert"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion."
+        },
+        "badges": {
+          "adminMode": "Administrator-Modus",
+          "serviceMode": "Service-Modus",
+          "sidecarMode": "Benutzermodus",
+          "adminServiceMode": "Admin + Service Mode"
         }
       }
     },
