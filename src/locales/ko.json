@@ -141,6 +141,10 @@
         "profileReactivated": "Profile Reactivated",
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
     },
     "connections": {
@@ -260,13 +264,6 @@
   "Uploaded": "업로드됨",
   "Active Connections": "활성 연결",
   "Rule": "규칙",
-  "notice.forceRefreshCompleted": "Force refresh completed",
-  "notice.emergencyRefreshFailed": "Emergency refresh failed: {{message}}",
-  "notice.provider.updateSuccess": "{{name}} updated successfully",
-  "notice.provider.updateFailed": "Failed to update {{name}}: {{message}}",
-  "notice.provider.genericError": "Update failed: {{message}}",
-  "notice.provider.none": "No providers available to update",
-  "notice.provider.allUpdated": "All providers updated successfully",
   "Test": "테스트",
   "Test All": "모두 테스트",
   "Testing...": "테스트 중...",
@@ -1068,6 +1065,15 @@
         "messages": {
           "applied": "Settings Applied"
         }
+      }
+    },
+    "providers": {
+      "notices": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
       }
     }
   },

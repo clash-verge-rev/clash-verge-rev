@@ -141,6 +141,10 @@
         "profileReactivated": "訂閱已啟用",
         "switchInterrupted": "配置切換被新的選擇中斷",
         "batchDeleted": "選取的訂閱已成功刪除"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
     },
     "connections": {
@@ -260,13 +264,6 @@
   "Uploaded": "上傳量",
   "Active Connections": "作用中連線",
   "Rule": "規則",
-  "notice.forceRefreshCompleted": "Force refresh completed",
-  "notice.emergencyRefreshFailed": "Emergency refresh failed: {{message}}",
-  "notice.provider.updateSuccess": "{{name}} updated successfully",
-  "notice.provider.updateFailed": "Failed to update {{name}}: {{message}}",
-  "notice.provider.genericError": "Update failed: {{message}}",
-  "notice.provider.none": "No providers available to update",
-  "notice.provider.allUpdated": "All providers updated successfully",
   "Test": "測試",
   "Test All": "測試全部",
   "Testing...": "測試中...",
@@ -1068,6 +1065,15 @@
         "messages": {
           "applied": "設定已套用"
         }
+      }
+    },
+    "providers": {
+      "notices": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
       }
     }
   },

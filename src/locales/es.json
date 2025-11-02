@@ -141,6 +141,10 @@
         "profileReactivated": "Suscripción reactivada",
         "switchInterrupted": "Profile switch interrupted by new selection",
         "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
     },
     "connections": {
@@ -260,13 +264,6 @@
   "Uploaded": "Subido",
   "Active Connections": "Conexiones activas",
   "Rule": "Regla",
-  "notice.forceRefreshCompleted": "Force refresh completed",
-  "notice.emergencyRefreshFailed": "Emergency refresh failed: {{message}}",
-  "notice.provider.updateSuccess": "{{name}} updated successfully",
-  "notice.provider.updateFailed": "Failed to update {{name}}: {{message}}",
-  "notice.provider.genericError": "Update failed: {{message}}",
-  "notice.provider.none": "No providers available to update",
-  "notice.provider.allUpdated": "All providers updated successfully",
   "Test": "Prueba",
   "Test All": "Probar todo",
   "Testing...": "Probando...",
@@ -1068,6 +1065,15 @@
         "messages": {
           "applied": "Ajustes aplicados"
         }
+      }
+    },
+    "providers": {
+      "notices": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
       }
     }
   },

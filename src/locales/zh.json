@@ -141,6 +141,10 @@
         "profileReactivated": "订阅已激活",
         "switchInterrupted": "配置切换被新选择中断",
         "batchDeleted": "选中的订阅已成功删除"
+      },
+      "notices": {
+        "forceRefreshCompleted": "数据已强制刷新",
+        "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
       }
     },
     "connections": {
@@ -260,13 +264,6 @@
   "Uploaded": "上传量",
   "Active Connections": "活跃连接",
   "Rule": "规则",
-  "notice.forceRefreshCompleted": "数据已强制刷新",
-  "notice.emergencyRefreshFailed": "紧急刷新失败: {{message}}",
-  "notice.provider.updateSuccess": "{{name}} 更新成功",
-  "notice.provider.updateFailed": "{{name}} 更新失败: {{message}}",
-  "notice.provider.genericError": "更新失败: {{message}}",
-  "notice.provider.none": "没有可更新的提供者",
-  "notice.provider.allUpdated": "全部提供者更新成功",
   "Test": "测试",
   "Test All": "测试全部",
   "Testing...": "测试中...",
@@ -1068,6 +1065,15 @@
         "messages": {
           "applied": "设置已应用"
         }
+      }
+    },
+    "providers": {
+      "notices": {
+        "updateSuccess": "{{name}} 更新成功",
+        "updateFailed": "{{name}} 更新失败: {{message}}",
+        "genericError": "更新失败: {{message}}",
+        "none": "没有可更新的提供者",
+        "allUpdated": "全部提供者更新成功"
       }
     }
   },
