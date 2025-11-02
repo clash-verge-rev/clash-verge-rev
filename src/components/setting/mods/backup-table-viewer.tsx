@@ -75,7 +75,10 @@ export const BackupTableViewer = memo(
 
     const handleRestore = useLockFn(async (filename: string) => {
       await onRestore(filename).then(() => {
-        showNotice("success", t("Restore Success, App will restart in 1s"));
+        showNotice(
+          "success",
+          t("components.settings.backup.messages.restoreSuccess"),
+        );
       });
       await restartApp();
     });
@@ -92,10 +95,16 @@ export const BackupTableViewer = memo(
           return;
         }
         await onExport(filename, savePath);
-        showNotice("success", t("Local Backup Exported"));
+        showNotice(
+          "success",
+          t("components.settings.backup.messages.localBackupExported"),
+        );
       } catch (error) {
         console.error(error);
-        showNotice("error", t("Local Backup Export Failed"));
+        showNotice(
+          "error",
+          t("components.settings.backup.messages.localBackupExportFailed"),
+        );
       }
     });
 
@@ -104,9 +113,15 @@ export const BackupTableViewer = memo(
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>{t("Filename")}</TableCell>
-              <TableCell>{t("Backup Time")}</TableCell>
-              <TableCell align="right">{t("Actions")}</TableCell>
+              <TableCell>
+                {t("components.settings.backup.table.filename")}
+              </TableCell>
+              <TableCell>
+                {t("components.settings.backup.table.backupTime")}
+              </TableCell>
+              <TableCell align="right">
+                {t("components.settings.backup.table.actions")}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -140,9 +155,13 @@ export const BackupTableViewer = memo(
                           <>
                             <IconButton
                               color="primary"
-                              aria-label={t("Export")}
+                              aria-label={t(
+                                "components.settings.backup.actions.export",
+                              )}
                               size="small"
-                              title={t("Export Backup")}
+                              title={t(
+                                "components.settings.backup.actions.exportBackup",
+                              )}
                               onClick={async (e: React.MouseEvent) => {
                                 e.preventDefault();
                                 await handleExport(file.filename);
@@ -159,13 +178,19 @@ export const BackupTableViewer = memo(
                         )}
                         <IconButton
                           color="secondary"
-                          aria-label={t("Delete")}
+                          aria-label={t(
+                            "components.settings.backup.actions.delete",
+                          )}
                           size="small"
-                          title={t("Delete Backup")}
+                          title={t(
+                            "components.settings.backup.actions.deleteBackup",
+                          )}
                           onClick={async (e: React.MouseEvent) => {
                             e.preventDefault();
                             const confirmed = await confirmAsync(
-                              t("Confirm to delete this backup file?"),
+                              t(
+                                "components.settings.backup.messages.confirmDelete",
+                              ),
                             );
                             if (confirmed) {
                               await handleDelete(file.filename);
@@ -181,14 +206,20 @@ export const BackupTableViewer = memo(
                         />
                         <IconButton
                           color="primary"
-                          aria-label={t("Restore")}
+                          aria-label={t(
+                            "components.settings.backup.actions.restore",
+                          )}
                           size="small"
-                          title={t("Restore Backup")}
+                          title={t(
+                            "components.settings.backup.actions.restoreBackup",
+                          )}
                           disabled={!file.allow_apply}
                           onClick={async (e: React.MouseEvent) => {
                             e.preventDefault();
                             const confirmed = await confirmAsync(
-                              t("Confirm to restore this backup file?"),
+                              t(
+                                "components.settings.backup.messages.confirmRestore",
+                              ),
                             );
                             if (confirmed) {
                               await handleRestore(file.filename);
@@ -219,7 +250,7 @@ export const BackupTableViewer = memo(
                       color="textSecondary"
                       align="center"
                     >
-                      {t("No Backups")}
+                      {t("components.settings.backup.table.noBackups")}
                     </Typography>
                   </Box>
                 </TableCell>
@@ -234,7 +265,7 @@ export const BackupTableViewer = memo(
           rowsPerPage={DEFAULT_ROWS_PER_PAGE}
           page={page}
           onPageChange={onPageChange}
-          labelRowsPerPage={t("Rows per page")}
+          labelRowsPerPage={t("components.settings.backup.table.rowsPerPage")}
         />
       </TableContainer>
     );

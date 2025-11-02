@@ -247,7 +247,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t("Backup Setting")}
+      title={t("components.settings.backup.title")}
       contentSx={{
         minWidth: { xs: 320, sm: 620 },
         maxWidth: "unset",
@@ -278,11 +278,17 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
           <Tabs
             value={source}
             onChange={handleChangeSource}
-            aria-label={t("Select Backup Target")}
+            aria-label={t("components.settings.backup.actions.selectTarget")}
             sx={{ mb: 2 }}
           >
-            <Tab value="local" label={t("Local Backup")} />
-            <Tab value="webdav" label={t("WebDAV Backup")} />
+            <Tab
+              value="local"
+              label={t("components.settings.backup.tabs.local")}
+            />
+            <Tab
+              value="webdav"
+              label={t("components.settings.backup.tabs.webdav")}
+            />
           </Tabs>
           {source === "local" ? (
             <LocalBackupActions
