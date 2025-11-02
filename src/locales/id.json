@@ -275,18 +275,10 @@
   "Icon": "Ikon",
   "Test URL": "URL Tes",
   "Settings": "Pengaturan",
-  "Tun Mode": "Mode Tun (NIC Virtual)",
   "Reset to Default": "Setel Ulang ke Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "Tumpukan Tun",
-  "Device": "Nama Perangkat",
-  "Auto Route": "Rute Otomatis",
-  "Strict Route": "Rute Ketat",
-  "Auto Detect Interface": "Deteksi Antarmuka Otomatis",
-  "DNS Hijack": "Pembajakan DNS",
-  "MTU": "Unit Transmisi Maksimum",
   "Service Mode": "Mode Layanan",
   "active": "aktif",
   "unknown": "tidak diketahui",
@@ -333,7 +325,6 @@
   "Match Whole Word": "Cocokkan Kata Utuh",
   "Use Regular Expression": "Gunakan Ekspresi Reguler",
   "Profile Imported Successfully": "Profil Berhasil Diimpor",
-  "Settings Applied": "Pengaturan Diterapkan",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "Memasang Layanan...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "Ubah PAC"
+        }
+      },
+      "tun": {
+        "title": "Mode Tun (NIC Virtual)",
+        "actions": {
+          "reset": "Setel Ulang ke Default"
+        },
+        "fields": {
+          "stack": "Tumpukan Tun",
+          "device": "Device Name",
+          "autoRoute": "Rute Otomatis",
+          "strictRoute": "Rute Ketat",
+          "autoDetectInterface": "Deteksi Antarmuka Otomatis",
+          "dnsHijack": "Pembajakan DNS",
+          "mtu": "Unit Transmisi Maksimum"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "Pengaturan Diterapkan"
         }
       }
     }

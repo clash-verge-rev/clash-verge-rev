@@ -275,18 +275,10 @@
   "Icon": "أيقونة",
   "Test URL": "رابط الاختبار",
   "Settings": "الإعدادات",
-  "Tun Mode": "وضع TUN",
   "Reset to Default": "إعادة تعيين إلى الافتراضي",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "مكدس TUN",
-  "Device": "اسم الجهاز",
-  "Auto Route": "توجيه تلقائي",
-  "Strict Route": "توجيه صارم",
-  "Auto Detect Interface": "الكشف التلقائي عن الواجهة",
-  "DNS Hijack": "اختطاف DNS",
-  "MTU": "وحدة الإرسال القصوى",
   "Service Mode": "وضع الخدمة",
   "active": "نشط",
   "unknown": "غير معروف",
@@ -333,7 +325,6 @@
   "Match Whole Word": "مطابقة الكلمة بأكملها",
   "Use Regular Expression": "استخدام التعبيرات العادية",
   "Profile Imported Successfully": "تم استيراد الملف الشخصي بنجاح",
-  "Settings Applied": "تم تطبيق الإعدادات",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "جاري تثبيت الخدمة...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "تعديل PAC"
+        }
+      },
+      "tun": {
+        "title": "وضع TUN",
+        "actions": {
+          "reset": "إعادة تعيين إلى الافتراضي"
+        },
+        "fields": {
+          "stack": "مكدس TUN",
+          "device": "Device Name",
+          "autoRoute": "توجيه تلقائي",
+          "strictRoute": "توجيه صارم",
+          "autoDetectInterface": "الكشف التلقائي عن الواجهة",
+          "dnsHijack": "اختطاف DNS",
+          "mtu": "وحدة الإرسال القصوى"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "تم تطبيق الإعدادات"
         }
       }
     }

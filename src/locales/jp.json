@@ -275,18 +275,10 @@
   "Icon": "アイコン",
   "Test URL": "テストURL",
   "Settings": "設定",
-  "Tun Mode": "仮想ネットワークカードモード",
   "Reset to Default": "デフォルト値にリセット",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "TUNモードスタック",
-  "Device": "TUNネットワークカード名",
-  "Auto Route": "グローバルルートを自動設定",
-  "Strict Route": "厳格なルート",
-  "Auto Detect Interface": "トラフィックの出口インターフェースを自動選択",
-  "DNS Hijack": "DNSハイジャック",
-  "MTU": "最大転送単位",
   "Service Mode": "サービスモード",
   "active": "アクティブ",
   "unknown": "不明",
@@ -333,7 +325,6 @@
   "Match Whole Word": "完全一致",
   "Use Regular Expression": "正規表現を使用する",
   "Profile Imported Successfully": "プロファイルのインポートに成功しました。",
-  "Settings Applied": "設定が適用されました。",
   "Stopping Core...": "コアを停止中...",
   "Restarting Core...": "コアを再起動中...",
   "Installing Service...": "サービスをインストール中...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "編集 PAC"
+        }
+      },
+      "tun": {
+        "title": "仮想ネットワークカードモード",
+        "actions": {
+          "reset": "デフォルト値にリセット"
+        },
+        "fields": {
+          "stack": "TUNモードスタック",
+          "device": "Device Name",
+          "autoRoute": "グローバルルートを自動設定",
+          "strictRoute": "厳格なルート",
+          "autoDetectInterface": "トラフィックの出口インターフェースを自動選択",
+          "dnsHijack": "DNSハイジャック",
+          "mtu": "最大転送単位"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "設定が適用されました。"
         }
       }
     }

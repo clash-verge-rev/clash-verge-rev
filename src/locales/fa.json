@@ -275,18 +275,10 @@
   "Icon": "آیکون",
   "Test URL": "آدرس آزمون",
   "Settings": "تنظیمات",
-  "Tun Mode": "Tun (کارت شبکه مجازی)",
   "Reset to Default": "بازنشانی به پیش‌فرض",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "انباشته Tun",
-  "Device": "نام دستگاه",
-  "Auto Route": "مسیر خودکار",
-  "Strict Route": "مسیر دقیق",
-  "Auto Detect Interface": "تشخیص خودکار رابط",
-  "DNS Hijack": "ربایش DNS",
-  "MTU": "واحد حداکثر انتقال",
   "Service Mode": "حالت سرویس",
   "active": "فعال",
   "unknown": "ناشناخته",
@@ -333,7 +325,6 @@
   "Match Whole Word": "تطبیق کل کلمه",
   "Use Regular Expression": "استفاده از عبارت منظم",
   "Profile Imported Successfully": "پروفایل با موفقیت وارد شد",
-  "Settings Applied": "تنظیمات اعمال شد",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "در حال نصب سرویس...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "ویرایش PAC"
+        }
+      },
+      "tun": {
+        "title": "Tun (کارت شبکه مجازی)",
+        "actions": {
+          "reset": "بازنشانی به پیش‌فرض"
+        },
+        "fields": {
+          "stack": "انباشته Tun",
+          "device": "Device Name",
+          "autoRoute": "مسیر خودکار",
+          "strictRoute": "مسیر دقیق",
+          "autoDetectInterface": "تشخیص خودکار رابط",
+          "dnsHijack": "ربایش DNS",
+          "mtu": "واحد حداکثر انتقال"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "تنظیمات اعمال شد"
         }
       }
     }

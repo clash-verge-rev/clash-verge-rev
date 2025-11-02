@@ -275,18 +275,10 @@
   "Icon": "圖示",
   "Test URL": "測試網址",
   "Settings": "設定",
-  "Tun Mode": "虛擬網路介面卡模式",
   "Reset to Default": "重設為預設值",
   "TUN Mode automatically disabled due to service unavailable": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
   "Failed to disable TUN Mode automatically": "自動停用虛擬網路介面卡模式失敗",
   "Core communication error": "內核通信錯誤",
-  "Stack": "虛擬網路介面卡模式堆疊",
-  "Device": "虛擬網路介面卡名稱",
-  "Auto Route": "自動設定全域路由",
-  "Strict Route": "嚴格路由",
-  "Auto Detect Interface": "自動偵測流量輸出介面",
-  "DNS Hijack": "DNS 綁架",
-  "MTU": "最大傳輸單位",
   "Service Mode": "服務模式",
   "active": "作用中",
   "unknown": "未知",
@@ -333,7 +325,6 @@
   "Match Whole Word": "完整字詞配對",
   "Use Regular Expression": "使用正規表示式",
   "Profile Imported Successfully": "匯入設定檔成功",
-  "Settings Applied": "設定已套用",
   "Stopping Core...": "內核停止中...",
   "Restarting Core...": "內核重啟中...",
   "Installing Service...": "安裝服務中...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "編輯 PAC"
+        }
+      },
+      "tun": {
+        "title": "虛擬網路介面卡模式",
+        "actions": {
+          "reset": "重設為預設值"
+        },
+        "fields": {
+          "stack": "虛擬網路介面卡模式堆疊",
+          "device": "Device Name",
+          "autoRoute": "自動設定全域路由",
+          "strictRoute": "嚴格路由",
+          "autoDetectInterface": "自動偵測流量輸出介面",
+          "dnsHijack": "DNS 綁架",
+          "mtu": "最大傳輸單位"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "設定已套用"
         }
       }
     }

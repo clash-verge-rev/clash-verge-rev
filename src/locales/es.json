@@ -275,18 +275,10 @@
   "Icon": "Icono",
   "Test URL": "URL de prueba",
   "Settings": "Ajustes",
-  "Tun Mode": "Modo de interfaz virtual (TUN)",
   "Reset to Default": "Restablecer a los valores predeterminados",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "Pila del modo TUN",
-  "Device": "Nombre de la interfaz TUN",
-  "Auto Route": "Configurar enrutamiento global automáticamente",
-  "Strict Route": "Enrutamiento estricto",
-  "Auto Detect Interface": "Detectar automáticamente la interfaz de salida del tráfico",
-  "DNS Hijack": "Secuestro de DNS",
-  "MTU": "Unidad máxima de transmisión",
   "Service Mode": "Modo de servicio",
   "active": "Activado",
   "unknown": "Desconocido",
@@ -333,7 +325,6 @@
   "Match Whole Word": "Coincidencia exacta de palabras",
   "Use Regular Expression": "Usar expresiones regulares",
   "Profile Imported Successfully": "Suscripción importada con éxito",
-  "Settings Applied": "Ajustes aplicados",
   "Stopping Core...": "Deteniendo núcleo...",
   "Restarting Core...": "Reiniciando núcleo...",
   "Installing Service...": "Instalando servicio...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "Editar PAC"
+        }
+      },
+      "tun": {
+        "title": "Modo de interfaz virtual (TUN)",
+        "actions": {
+          "reset": "Restablecer a los valores predeterminados"
+        },
+        "fields": {
+          "stack": "Pila del modo TUN",
+          "device": "Device Name",
+          "autoRoute": "Configurar enrutamiento global automáticamente",
+          "strictRoute": "Enrutamiento estricto",
+          "autoDetectInterface": "Detectar automáticamente la interfaz de salida del tráfico",
+          "dnsHijack": "Secuestro de DNS",
+          "mtu": "Unidad máxima de transmisión"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "Ajustes aplicados"
         }
       }
     }

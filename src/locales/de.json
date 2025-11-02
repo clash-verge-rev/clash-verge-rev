@@ -275,18 +275,10 @@
   "Icon": "Symbol",
   "Test URL": "Test-URL",
   "Settings": "Einstellungen",
-  "Tun Mode": "Virtual Network Interface-Modus",
   "Reset to Default": "Auf Standardwerte zurücksetzen",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "TUN-Modus-Stack",
-  "Device": "TUN-Netzwerkkartenname",
-  "Auto Route": "Globale Routing automatisch einstellen",
-  "Strict Route": "Strenges Routing",
-  "Auto Detect Interface": "Netzwerkschnittstelle automatisch auswählen",
-  "DNS Hijack": "DNS-Hijacking",
-  "MTU": "Maximale Übertragungseinheit",
   "Service Mode": "Service-Modus",
   "active": "Aktiviert",
   "unknown": "Unbekannt",
@@ -333,7 +325,6 @@
   "Match Whole Word": "Ganzes Wort übereinstimmen",
   "Use Regular Expression": "Regulären Ausdruck verwenden",
   "Profile Imported Successfully": "Abonnement erfolgreich importiert",
-  "Settings Applied": "Einstellungen angewendet",
   "Stopping Core...": "Kern wird gestoppt...",
   "Restarting Core...": "Kern wird neu gestartet...",
   "Installing Service...": "Service wird installiert...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "Bearbeiten PAC"
+        }
+      },
+      "tun": {
+        "title": "Virtual Network Interface-Modus",
+        "actions": {
+          "reset": "Auf Standardwerte zurücksetzen"
+        },
+        "fields": {
+          "stack": "TUN-Modus-Stack",
+          "device": "Device Name",
+          "autoRoute": "Globale Routing automatisch einstellen",
+          "strictRoute": "Strenges Routing",
+          "autoDetectInterface": "Netzwerkschnittstelle automatisch auswählen",
+          "dnsHijack": "DNS-Hijacking",
+          "mtu": "Maximale Übertragungseinheit"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "Einstellungen angewendet"
         }
       }
     }

@@ -275,18 +275,10 @@
   "Icon": "아이콘",
   "Test URL": "테스트 URL",
   "Settings": "설정",
-  "Tun Mode": "Tun 모드",
   "Reset to Default": "Reset to Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "스택",
-  "Device": "Device Name",
-  "Auto Route": "자동 라우팅",
-  "Strict Route": "Strict Route",
-  "Auto Detect Interface": "인터페이스 자동 감지",
-  "DNS Hijack": "DNS Hijack",
-  "MTU": "MTU",
   "Service Mode": "서비스 모드",
   "active": "active",
   "unknown": "unknown",
@@ -333,7 +325,6 @@
   "Match Whole Word": "Match Whole Word",
   "Use Regular Expression": "Use Regular Expression",
   "Profile Imported Successfully": "Profile Imported Successfully",
-  "Settings Applied": "Settings Applied",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "Installing Service...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "편집 PAC"
+        }
+      },
+      "tun": {
+        "title": "Tun 모드",
+        "actions": {
+          "reset": "Reset to Default"
+        },
+        "fields": {
+          "stack": "스택",
+          "device": "Device Name",
+          "autoRoute": "자동 라우팅",
+          "strictRoute": "Strict Route",
+          "autoDetectInterface": "인터페이스 자동 감지",
+          "dnsHijack": "DNS Hijack",
+          "mtu": "MTU"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "Settings Applied"
         }
       }
     }

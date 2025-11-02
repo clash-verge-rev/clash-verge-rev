@@ -80,7 +80,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       );
       try {
         await enhanceProfiles();
-        showNotice("success", t("Settings Applied"));
+        showNotice("success", t("components.settings.tun.messages.applied"));
       } catch (err: any) {
         showNotice("error", err.message || err.toString());
       }
@@ -95,7 +95,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between" gap={1}>
-          <Typography variant="h6">{t("Tun Mode")}</Typography>
+          <Typography variant="h6">
+            {t("components.settings.tun.title")}
+          </Typography>
           <Button
             variant="outlined"
             size="small"
@@ -128,7 +130,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               );
             }}
           >
-            {t("Reset to Default")}
+            {t("components.settings.tun.actions.reset")}
           </Button>
         </Box>
       }
@@ -141,7 +143,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Stack")} />
+          <ListItemText primary={t("components.settings.tun.fields.stack")} />
           <StackModeSwitch
             value={values.stack}
             onChange={(value) => {
@@ -154,7 +156,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Device")} />
+          <ListItemText primary={t("components.settings.tun.fields.device")} />
           <TextField
             autoComplete="new-password"
             size="small"
@@ -171,7 +173,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Auto Route")} />
+          <ListItemText
+            primary={t("components.settings.tun.fields.autoRoute")}
+          />
           <Switch
             edge="end"
             checked={values.autoRoute}
@@ -180,7 +184,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Strict Route")} />
+          <ListItemText
+            primary={t("components.settings.tun.fields.strictRoute")}
+          />
           <Switch
             edge="end"
             checked={values.strictRoute}
@@ -189,7 +195,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Auto Detect Interface")} />
+          <ListItemText
+            primary={t("components.settings.tun.fields.autoDetectInterface")}
+          />
           <Switch
             edge="end"
             checked={values.autoDetectInterface}
@@ -200,7 +208,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("DNS Hijack")} />
+          <ListItemText
+            primary={t("components.settings.tun.fields.dnsHijack")}
+          />
           <TextField
             autoComplete="new-password"
             size="small"
@@ -209,7 +219,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             spellCheck="false"
             sx={{ width: 250 }}
             value={values.dnsHijack.join(",")}
-            placeholder="Please use , to separate multiple DNS servers"
+            placeholder={t("components.settings.tun.tooltips.dnsHijack")}
             onChange={(e) =>
               setValues((v) => ({ ...v, dnsHijack: e.target.value.split(",") }))
             }
@@ -217,7 +227,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("MTU")} />
+          <ListItemText primary={t("components.settings.tun.fields.mtu")} />
           <TextField
             autoComplete="new-password"
             size="small"

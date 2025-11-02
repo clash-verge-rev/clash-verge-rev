@@ -275,18 +275,10 @@
   "Icon": "图标",
   "Test URL": "测试地址",
   "Settings": "设置",
-  "Tun Mode": "虚拟网卡模式",
   "Reset to Default": "重置为默认值",
   "TUN Mode automatically disabled due to service unavailable": "由于服务不可用，TUN 模式已自动关闭",
   "Failed to disable TUN Mode automatically": "自动关闭 TUN 模式失败",
   "Core communication error": "内核通信错误",
-  "Stack": "TUN 模式堆栈",
-  "Device": "TUN 网卡名称",
-  "Auto Route": "自动设置全局路由",
-  "Strict Route": "严格路由",
-  "Auto Detect Interface": "自动选择流量出口接口",
-  "DNS Hijack": "DNS 劫持",
-  "MTU": "最大传输单元",
   "Service Mode": "服务模式",
   "active": "已激活",
   "unknown": "未知",
@@ -333,7 +325,6 @@
   "Match Whole Word": "全字匹配",
   "Use Regular Expression": "使用正则表达式",
   "Profile Imported Successfully": "导入订阅成功",
-  "Settings Applied": "设置已应用",
   "Stopping Core...": "停止内核中...",
   "Restarting Core...": "重启内核中...",
   "Installing Service...": "安装服务中...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "编辑 PAC"
+        }
+      },
+      "tun": {
+        "title": "虚拟网卡模式",
+        "actions": {
+          "reset": "重置为默认值"
+        },
+        "fields": {
+          "stack": "TUN 模式堆栈",
+          "device": "虚拟网卡名称",
+          "autoRoute": "自动设置全局路由",
+          "strictRoute": "严格路由",
+          "autoDetectInterface": "自动选择流量出口接口",
+          "dnsHijack": "DNS 劫持",
+          "mtu": "最大传输单元"
+        },
+        "tooltips": {
+          "dnsHijack": "多个 DNS 服务器请使用 , 分隔"
+        },
+        "messages": {
+          "applied": "设置已应用"
         }
       }
     }

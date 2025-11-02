@@ -275,18 +275,10 @@
   "Icon": "Icon",
   "Test URL": "Test URL",
   "Settings": "Settings",
-  "Tun Mode": "Tun Mode",
   "Reset to Default": "Reset to Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "Tun Stack",
-  "Device": "Device Name",
-  "Auto Route": "Auto Route",
-  "Strict Route": "Strict Route",
-  "Auto Detect Interface": "Auto Detect Interface",
-  "DNS Hijack": "DNS Hijack",
-  "MTU": "Max Transmission Unit",
   "Service Mode": "Service Mode",
   "active": "active",
   "unknown": "unknown",
@@ -333,7 +325,6 @@
   "Match Whole Word": "Match Whole Word",
   "Use Regular Expression": "Use Regular Expression",
   "Profile Imported Successfully": "Profile Imported Successfully",
-  "Settings Applied": "Settings Applied",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "Installing Service...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "Edit PAC"
+        }
+      },
+      "tun": {
+        "title": "Tun Mode",
+        "actions": {
+          "reset": "Reset to Default"
+        },
+        "fields": {
+          "stack": "Tun Stack",
+          "device": "Device Name",
+          "autoRoute": "Auto Route",
+          "strictRoute": "Strict Route",
+          "autoDetectInterface": "Auto Detect Interface",
+          "dnsHijack": "DNS Hijack",
+          "mtu": "Max Transmission Unit"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "Settings Applied"
         }
       }
     }

@@ -275,18 +275,10 @@
   "Icon": "Иконка",
   "Test URL": "Тест URL-ы",
   "Settings": "Көйләүләр",
-  "Tun Mode": "Tun режимы (виртуаль челтәр адаптеры)",
   "Reset to Default": "Башлангычка кайтару",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "Стек",
-  "Device": "Җайланма исеме",
-  "Auto Route": "Авто-маршрутлау",
-  "Strict Route": "Катгый маршрутлау",
-  "Auto Detect Interface": "Интерфейсны автоматик ачыклау",
-  "DNS Hijack": "DNS'ны үзгәртеп тоту (hijack)",
-  "MTU": "MTU (макс. тапшыру берәмлеге)",
   "Service Mode": "Сервис режимы",
   "active": "Актив",
   "unknown": "Билгесез",
@@ -333,7 +325,6 @@
   "Match Whole Word": "Сүзнең тулы туры килүе",
   "Use Regular Expression": "Регуляр выражениеләр куллану",
   "Profile Imported Successfully": "Профиль уңышлы импортланды",
-  "Settings Applied": "Көйләүләр кулланылды",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "Хезмәт урнаштырыла...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "Үзгәртү PAC"
+        }
+      },
+      "tun": {
+        "title": "Tun режимы (виртуаль челтәр адаптеры)",
+        "actions": {
+          "reset": "Башлангычка кайтару"
+        },
+        "fields": {
+          "stack": "Стек",
+          "device": "Device Name",
+          "autoRoute": "Авто-маршрутлау",
+          "strictRoute": "Катгый маршрутлау",
+          "autoDetectInterface": "Интерфейсны автоматик ачыклау",
+          "dnsHijack": "DNS'ны үзгәртеп тоту (hijack)",
+          "mtu": "MTU (макс. тапшыру берәмлеге)"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "Көйләүләр кулланылды"
         }
       }
     }

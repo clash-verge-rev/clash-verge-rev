@@ -275,18 +275,10 @@
   "Icon": "Иконка",
   "Test URL": "URL проверка",
   "Settings": "Настройки",
-  "Tun Mode": "Режим TUN",
   "Reset to Default": "Сбросить настройки",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "Стек",
-  "Device": "Имя устройства",
-  "Auto Route": "Автоматическая маршрутизация",
-  "Strict Route": "Строгая маршрутизация",
-  "Auto Detect Interface": "Автоопределение интерфейса",
-  "DNS Hijack": "DNS-перехват",
-  "MTU": "MTU",
   "Service Mode": "Режим системной службы",
   "active": "Активированный",
   "unknown": "неизвестный",
@@ -333,7 +325,6 @@
   "Match Whole Word": "Полное совпадение слова",
   "Use Regular Expression": "Использовать регулярные выражения",
   "Profile Imported Successfully": "Профиль успешно импортирован",
-  "Settings Applied": "Настройки применены",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "Установка службы...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "Редактировать PAC"
+        }
+      },
+      "tun": {
+        "title": "Режим TUN",
+        "actions": {
+          "reset": "Сбросить настройки"
+        },
+        "fields": {
+          "stack": "Стек",
+          "device": "Device Name",
+          "autoRoute": "Автоматическая маршрутизация",
+          "strictRoute": "Строгая маршрутизация",
+          "autoDetectInterface": "Автоопределение интерфейса",
+          "dnsHijack": "DNS-перехват",
+          "mtu": "MTU"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "Настройки применены"
         }
       }
     }

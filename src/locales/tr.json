@@ -275,18 +275,10 @@
   "Icon": "Simge",
   "Test URL": "Test URL'si",
   "Settings": "Ayarlar",
-  "Tun Mode": "Tun Modu",
   "Reset to Default": "Varsayılana Sıfırla",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
   "Core communication error": "Core communication error",
-  "Stack": "Tun Yığını",
-  "Device": "Cihaz Adı",
-  "Auto Route": "Otomatik Yönlendirme",
-  "Strict Route": "Katı Yönlendirme",
-  "Auto Detect Interface": "Arayüzü Otomatik Algıla",
-  "DNS Hijack": "DNS Ele Geçirme",
-  "MTU": "Maksimum İletim Birimi",
   "Service Mode": "Hizmet Modu",
   "active": "aktif",
   "unknown": "bilinmiyor",
@@ -333,7 +325,6 @@
   "Match Whole Word": "Tam Kelime Eşleştir",
   "Use Regular Expression": "Düzenli İfade Kullan",
   "Profile Imported Successfully": "Profil Başarıyla İçe Aktarıldı",
-  "Settings Applied": "Ayarlar Uygulandı",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
   "Installing Service...": "Hizmet Kuruluyor...",
@@ -1055,6 +1046,27 @@
         },
         "actions": {
           "editPac": "Düzenle PAC"
+        }
+      },
+      "tun": {
+        "title": "Tun Modu",
+        "actions": {
+          "reset": "Varsayılana Sıfırla"
+        },
+        "fields": {
+          "stack": "Tun Yığını",
+          "device": "Device Name",
+          "autoRoute": "Otomatik Yönlendirme",
+          "strictRoute": "Katı Yönlendirme",
+          "autoDetectInterface": "Arayüzü Otomatik Algıla",
+          "dnsHijack": "DNS Ele Geçirme",
+          "mtu": "Maksimum İletim Birimi"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        },
+        "messages": {
+          "applied": "Ayarlar Uygulandı"
         }
       }
     }
