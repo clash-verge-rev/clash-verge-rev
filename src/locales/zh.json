@@ -1,7 +1,4 @@
 {
-  "Maximize": "最大化",
-  "Minimize": "最小化",
-  "Empty": "空空如也",
   "Proxies": "代理",
   "rule": "规则",
   "global": "全局",
@@ -65,13 +62,6 @@
   "theme.light": "浅色",
   "theme.dark": "深色",
   "theme.system": "系统",
-  "Copy Success": "复制成功",
-  "open_or_close_dashboard": "打开/关闭面板",
-  "clash_mode_rule": "规则模式",
-  "clash_mode_global": "全局模式",
-  "toggle_system_proxy": "打开/关闭系统代理",
-  "toggle_tun_mode": "打开/关闭 TUN 模式",
-  "entry_lightweight_mode": "进入轻量模式",
   "Exit": "退出",
   "Profile Imported Successfully": "导入订阅成功",
   "Stopping Core...": "停止内核中...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "卸载服务中...",
   "Service Installed Successfully": "已成功安装服务",
   "Service Uninstalled Successfully": "已成功卸载服务",
-  "Core Version Updated": "内核版本已更新",
-  "Currently on the Latest Version": "当前已是最新版本",
   "Import Subscription Successful": "导入订阅成功",
   "Profile": "配置",
   "Dashboard": "仪表板",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "流量统计组件发生错误，为防止崩溃已暂时停用。"
     },
     "states": {
-      "saving": "保存中..."
+      "saving": "保存中...",
+      "empty": "空空如也"
+    },
+    "window": {
+      "maximize": "最大化",
+      "minimize": "最小化"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "内核通信错误"
+      },
+      "labels": {
+        "rule": "规则模式",
+        "global": "全局模式",
+        "direct": "直连模式"
+      },
+      "descriptions": {
+        "rule": "按照规则自动选择代理。",
+        "global": "将所有网络请求转发到选定的代理。",
+        "direct": "绕过代理，直接连接互联网。"
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "已重启 Clash 内核"
+        "restartSuccess": "已重启 Clash 内核",
+        "versionUpdated": "内核版本已更新"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "启用全局热键"
       },
-      "title": "热键设置"
+      "title": "热键设置",
+      "functions": {
+        "rule": "规则模式",
+        "global": "全局模式",
+        "openOrCloseDashboard": "打开/关闭面板",
+        "toggleSystemProxy": "打开/关闭系统代理",
+        "toggleTunMode": "打开/关闭 TUN 模式",
+        "entryLightweightMode": "进入轻量模式",
+        "direct": "直连模式"
+      }
     },
     "password": {
       "prompts": {

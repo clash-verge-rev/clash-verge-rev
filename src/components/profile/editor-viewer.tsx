@@ -245,7 +245,9 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
           <IconButton
             size="medium"
             color="inherit"
-            title={t(isMaximized ? "Minimize" : "Maximize")}
+            title={t(
+              isMaximized ? "common.window.minimize" : "common.window.maximize",
+            )}
             onClick={() => appWindow.toggleMaximize().then(editorResize)}
           >
             {isMaximized ? <CloseFullscreenRounded /> : <OpenInFullRounded />}

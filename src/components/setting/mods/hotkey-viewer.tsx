@@ -24,7 +24,17 @@ const HOTKEY_FUNC = [
   "toggle_system_proxy",
   "toggle_tun_mode",
   "entry_lightweight_mode",
-];
+] as const;
+
+const HOTKEY_FUNC_LABELS: Record<(typeof HOTKEY_FUNC)[number], string> = {
+  open_or_close_dashboard: "settings.hotkey.functions.openOrCloseDashboard",
+  clash_mode_rule: "settings.hotkey.functions.rule",
+  clash_mode_global: "settings.hotkey.functions.global",
+  clash_mode_direct: "settings.hotkey.functions.direct",
+  toggle_system_proxy: "settings.hotkey.functions.toggleSystemProxy",
+  toggle_tun_mode: "settings.hotkey.functions.toggleTunMode",
+  entry_lightweight_mode: "settings.hotkey.functions.entryLightweightMode",
+};
 
 export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -108,7 +118,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
 
       {HOTKEY_FUNC.map((func) => (
         <ItemWrapper key={func}>
-          <Typography>{t(func)}</Typography>
+          <Typography>{t(HOTKEY_FUNC_LABELS[func])}</Typography>
           <HotkeyInput
             value={hotkeyMap[func] ?? []}
             onChange={(v) => setHotkeyMap((m) => ({ ...m, [func]: v }))}

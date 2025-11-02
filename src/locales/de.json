@@ -1,7 +1,4 @@
 {
-  "Maximize": "Maximieren",
-  "Minimize": "Minimieren",
-  "Empty": "Leer",
   "Proxies": "Proxies",
   "rule": "Regel",
   "global": "Global",
@@ -65,13 +62,6 @@
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
-  "Copy Success": "Kopieren erfolgreich",
-  "open_or_close_dashboard": "Dashboard öffnen/schließen",
-  "clash_mode_rule": "Regel-Modus",
-  "clash_mode_global": "Globaler Modus",
-  "toggle_system_proxy": "Systemproxy ein/ausschalten",
-  "toggle_tun_mode": "TUN-Modus ein/ausschalten",
-  "entry_lightweight_mode": "Leichtgewichtigen Modus betreten",
   "Exit": "Beenden",
   "Profile Imported Successfully": "Abonnement erfolgreich importiert",
   "Stopping Core...": "Kern wird gestoppt...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "Service wird deinstalliert...",
   "Service Installed Successfully": "Service erfolgreich installiert",
   "Service Uninstalled Successfully": "Service erfolgreich deinstalliert",
-  "Core Version Updated": "Kernversion wurde aktualisiert",
-  "Currently on the Latest Version": "Sie verwenden bereits die neueste Version",
   "Import Subscription Successful": "Abonnement erfolgreich importiert",
   "Profile": "Konfiguration",
   "Dashboard": "Dashboard",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "Leer"
+    },
+    "window": {
+      "maximize": "Maximieren",
+      "minimize": "Minimieren"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Regel-Modus",
+        "global": "Globaler Modus",
+        "direct": "Direktverbindungs-Modus"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "Clash-Kern wurde neu gestartet"
+        "restartSuccess": "Clash-Kern wurde neu gestartet",
+        "versionUpdated": "Kernversion wurde aktualisiert"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "Globale Tastenkombinationen aktivieren"
       },
-      "title": "Tastenkombinationseinstellungen"
+      "title": "Tastenkombinationseinstellungen",
+      "functions": {
+        "rule": "Regel-Modus",
+        "global": "Globaler Modus",
+        "openOrCloseDashboard": "Dashboard öffnen/schließen",
+        "toggleSystemProxy": "Systemproxy ein/ausschalten",
+        "toggleTunMode": "TUN-Modus ein/ausschalten",
+        "entryLightweightMode": "Leichtgewichtigen Modus betreten",
+        "direct": "Direktverbindungs-Modus"
+      }
     },
     "password": {
       "prompts": {

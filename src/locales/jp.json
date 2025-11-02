@@ -1,7 +1,4 @@
 {
-  "Maximize": "最大化",
-  "Minimize": "最小化",
-  "Empty": "空っぽ",
   "Proxies": "Proxies",
   "rule": "ルール",
   "global": "グローバル",
@@ -65,13 +62,6 @@
   "theme.light": "ライト",
   "theme.dark": "ダーク",
   "theme.system": "システム",
-  "Copy Success": "コピー成功",
-  "open_or_close_dashboard": "ダッシュボードを開く/閉じる",
-  "clash_mode_rule": "ルールモード",
-  "clash_mode_global": "グローバルモード",
-  "toggle_system_proxy": "システムプロキシを開く/閉じる",
-  "toggle_tun_mode": "TUNモードを開く/閉じる",
-  "entry_lightweight_mode": "軽量モードに入る",
   "Exit": "終了",
   "Profile Imported Successfully": "プロファイルのインポートに成功しました。",
   "Stopping Core...": "コアを停止中...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "サービスをアンインストール中...",
   "Service Installed Successfully": "サービスのインストールに成功しました。",
   "Service Uninstalled Successfully": "サービスのアンインストールに成功しました。",
-  "Core Version Updated": "コアバージョンが更新されました。",
-  "Currently on the Latest Version": "現在は最新バージョンです。",
   "Import Subscription Successful": "サブスクリプションのインポートに成功しました。",
   "Profile": "プロファイル",
   "Dashboard": "ダッシュボード",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "空っぽ"
+    },
+    "window": {
+      "maximize": "最大化",
+      "minimize": "最小化"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "ルールモード",
+        "global": "グローバルモード",
+        "direct": "直接接続モード"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "Clashコアが再起動されました。"
+        "restartSuccess": "Clashコアが再起動されました。",
+        "versionUpdated": "コアバージョンが更新されました。"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "グローバルホットキーを有効にする"
       },
-      "title": "ホットキー設定"
+      "title": "ホットキー設定",
+      "functions": {
+        "rule": "ルールモード",
+        "global": "グローバルモード",
+        "openOrCloseDashboard": "ダッシュボードを開く/閉じる",
+        "toggleSystemProxy": "システムプロキシを開く/閉じる",
+        "toggleTunMode": "TUNモードを開く/閉じる",
+        "entryLightweightMode": "軽量モードに入る",
+        "direct": "直接接続モード"
+      }
     },
     "password": {
       "prompts": {

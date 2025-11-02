@@ -1,7 +1,4 @@
 {
-  "Maximize": "最大化",
-  "Minimize": "最小化",
-  "Empty": "空空如也",
   "Proxies": "代理",
   "rule": "規則",
   "global": "全域",
@@ -65,13 +62,6 @@
   "theme.light": "淺色",
   "theme.dark": "深色",
   "theme.system": "系統",
-  "Copy Success": "複製成功",
-  "open_or_close_dashboard": "開啟/關閉儀表板",
-  "clash_mode_rule": "規則模式",
-  "clash_mode_global": "全域模式",
-  "toggle_system_proxy": "開啟/關閉系統代理",
-  "toggle_tun_mode": "開啟/關閉 虛擬網路介面卡模式",
-  "entry_lightweight_mode": "進入輕量模式",
   "Exit": "離開",
   "Profile Imported Successfully": "匯入設定檔成功",
   "Stopping Core...": "內核停止中...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "服務解除安裝中...",
   "Service Installed Successfully": "已成功安裝服務",
   "Service Uninstalled Successfully": "已成功解除安裝服務",
-  "Core Version Updated": "內核版本已更新",
-  "Currently on the Latest Version": "目前已是最新版本",
   "Import Subscription Successful": "匯入訂閱成功",
   "Profile": "配置",
   "Dashboard": "儀表板",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "流量統計元件發生錯誤，已停用以避免當機。"
     },
     "states": {
-      "saving": "儲存中..."
+      "saving": "儲存中...",
+      "empty": "空空如也"
+    },
+    "window": {
+      "maximize": "最大化",
+      "minimize": "最小化"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "內核通信錯誤"
+      },
+      "labels": {
+        "rule": "規則模式",
+        "global": "全域模式",
+        "direct": "直連模式"
+      },
+      "descriptions": {
+        "rule": "依照規則自動選擇代理。",
+        "global": "將所有網路請求轉送至所選代理。",
+        "direct": "略過代理，直接連線至網際網路。"
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "已重啟 Clash 內核"
+        "restartSuccess": "已重啟 Clash 內核",
+        "versionUpdated": "內核版本已更新"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "啟用全域快速鍵"
       },
-      "title": "快速鍵設定"
+      "title": "快速鍵設定",
+      "functions": {
+        "rule": "規則模式",
+        "global": "全域模式",
+        "openOrCloseDashboard": "開啟/關閉儀表板",
+        "toggleSystemProxy": "開啟/關閉系統代理",
+        "toggleTunMode": "開啟/關閉 虛擬網路介面卡模式",
+        "entryLightweightMode": "進入輕量模式",
+        "direct": "直連模式"
+      }
     },
     "password": {
       "prompts": {

@@ -372,7 +372,7 @@ export const ProxyGroups = (props: Props) => {
   }, [renderList]);
 
   if (mode === "direct") {
-    return <BaseEmpty text={t("proxies.page.messages.directMode")} />;
+    return <BaseEmpty textKey="proxies.page.messages.directMode" />;
   }
 
   if (isChainMode) {

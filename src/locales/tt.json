@@ -1,7 +1,4 @@
 {
-  "Maximize": "Зурайту",
-  "Minimize": "Кечерәйтү",
-  "Empty": "Буш",
   "Proxies": "Прокси",
   "rule": "кагыйдә",
   "global": "глобаль",
@@ -65,13 +62,6 @@
   "theme.light": "Якты",
   "theme.dark": "Караңгы",
   "theme.system": "Система",
-  "Copy Success": "Күчерелде",
-  "open_or_close_dashboard": "Панельне ачу/ябу",
-  "clash_mode_rule": "Кагыйдәләр режимы",
-  "clash_mode_global": "Глобаль режим",
-  "toggle_system_proxy": "Системалы проксины кабызу/сүндерү",
-  "toggle_tun_mode": "Tun режимын кабызу/сүндерү",
-  "entry_lightweight_mode": "Entry Lightweight Mode",
   "Exit": "Чыгу",
   "Profile Imported Successfully": "Профиль уңышлы импортланды",
   "Stopping Core...": "Stopping Core...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Сервис уңышлы урнаштырылды",
   "Service Uninstalled Successfully": "Сервис уңышлы салдырылды",
-  "Core Version Updated": "Ядро версиясе яңартылды",
-  "Currently on the Latest Version": "Сездә иң соңгы версия урнаштырылган",
   "Import Subscription Successful": "Import subscription successful",
   "Profile": "Профиль",
   "Dashboard": "Панель",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "Буш"
+    },
+    "window": {
+      "maximize": "Зурайту",
+      "minimize": "Кечерәйтү"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Кагыйдәләр режимы",
+        "global": "Глобаль режим",
+        "direct": "Туры режим"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "Clash ядросы яңадан башланды"
+        "restartSuccess": "Clash ядросы яңадан башланды",
+        "versionUpdated": "Ядро версиясе яңартылды"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "Глобаль Хоткейны кушу"
       },
-      "title": "Клавиатура төймәләре (hotkey) көйләүләре"
+      "title": "Клавиатура төймәләре (hotkey) көйләүләре",
+      "functions": {
+        "rule": "Кагыйдәләр режимы",
+        "global": "Глобаль режим",
+        "openOrCloseDashboard": "Панельне ачу/ябу",
+        "toggleSystemProxy": "Системалы проксины кабызу/сүндерү",
+        "toggleTunMode": "Tun режимын кабызу/сүндерү",
+        "entryLightweightMode": "Entry Lightweight Mode",
+        "direct": "Туры режим"
+      }
     },
     "password": {
       "prompts": {

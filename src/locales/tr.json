@@ -1,7 +1,4 @@
 {
-  "Maximize": "Büyüt",
-  "Minimize": "Küçült",
-  "Empty": "Boş",
   "Proxies": "Vekil'ler",
   "rule": "kural",
   "global": "küresel",
@@ -65,13 +62,6 @@
   "theme.light": "Açık",
   "theme.dark": "Koyu",
   "theme.system": "Sistem",
-  "Copy Success": "Kopyalama Başarılı",
-  "open_or_close_dashboard": "Kontrol Panelini Aç/Kapat",
-  "clash_mode_rule": "Kural Modu",
-  "clash_mode_global": "Küresel Mod",
-  "toggle_system_proxy": "Sistem Vekil'ini Etkinleştir/Devre Dışı Bırak",
-  "toggle_tun_mode": "Tun Modunu Etkinleştir/Devre Dışı Bırak",
-  "entry_lightweight_mode": "Hafif Moda Gir",
   "Exit": "Çıkış",
   "Profile Imported Successfully": "Profil Başarıyla İçe Aktarıldı",
   "Stopping Core...": "Stopping Core...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Hizmet Başarıyla Kuruldu",
   "Service Uninstalled Successfully": "Hizmet Başarıyla Kaldırıldı",
-  "Core Version Updated": "Çekirdek Sürümü Güncellendi",
-  "Currently on the Latest Version": "Şu Anda En Son Sürümdesiniz",
   "Import Subscription Successful": "Abonelik içe aktarımı başarılı",
   "Profile": "Profil",
   "Dashboard": "Kontrol Paneli",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "Boş"
+    },
+    "window": {
+      "maximize": "Büyüt",
+      "minimize": "Küçült"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Kural Modu",
+        "global": "Küresel Mod",
+        "direct": "Doğrudan Mod"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "Clash Çekirdeği Yeniden Başlatıldı"
+        "restartSuccess": "Clash Çekirdeği Yeniden Başlatıldı",
+        "versionUpdated": "Çekirdek Sürümü Güncellendi"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "Küresel Kısayol Tuşunu Etkinleştir"
       },
-      "title": "Kısayol Tuşu Ayarı"
+      "title": "Kısayol Tuşu Ayarı",
+      "functions": {
+        "rule": "Kural Modu",
+        "global": "Küresel Mod",
+        "openOrCloseDashboard": "Kontrol Panelini Aç/Kapat",
+        "toggleSystemProxy": "Sistem Vekil'ini Etkinleştir/Devre Dışı Bırak",
+        "toggleTunMode": "Tun Modunu Etkinleştir/Devre Dışı Bırak",
+        "entryLightweightMode": "Hafif Moda Gir",
+        "direct": "Doğrudan Mod"
+      }
     },
     "password": {
       "prompts": {

@@ -75,7 +75,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setRestarting(true);
       await restartCore();
-      showNotice.success("Clash Core Restarted");
+      showNotice.success(t("settings.clash.notifications.restartSuccess"));
       setRestarting(false);
     } catch (err) {
       setRestarting(false);
@@ -88,7 +88,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      showNotice.success("Core Version Updated");
+      showNotice.success(t("settings.clash.notifications.versionUpdated"));
     } catch (err: any) {
       setUpgrading(false);
       const errMsg = err?.response?.data?.message ?? String(err);

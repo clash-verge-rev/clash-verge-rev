@@ -1,7 +1,4 @@
 {
-  "Maximize": "Maximize",
-  "Minimize": "Minimize",
-  "Empty": "Empty",
   "Proxies": "Proxies",
   "rule": "rule",
   "global": "global",
@@ -65,13 +62,6 @@
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
-  "Copy Success": "Copy Success",
-  "open_or_close_dashboard": "Open/Close Dashboard",
-  "clash_mode_rule": "Rule Mode",
-  "clash_mode_global": "Global Mode",
-  "toggle_system_proxy": "Enable/Disable System Proxy",
-  "toggle_tun_mode": "Enable/Disable Tun Mode",
-  "entry_lightweight_mode": "Entry Lightweight Mode",
   "Exit": "Exit",
   "Profile Imported Successfully": "Profile Imported Successfully",
   "Stopping Core...": "Stopping Core...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Service Installed Successfully",
   "Service Uninstalled Successfully": "Service Uninstalled Successfully",
-  "Core Version Updated": "Core Version Updated",
-  "Currently on the Latest Version": "Currently on the Latest Version",
   "Import Subscription Successful": "Import subscription successful",
   "Profile": "Profile",
   "Dashboard": "Dashboard",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "Empty"
+    },
+    "window": {
+      "maximize": "Maximize",
+      "minimize": "Minimize"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Rule Mode",
+        "global": "Global Mode",
+        "direct": "Direct Mode"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "Clash Core Restarted"
+        "restartSuccess": "Clash Core Restarted",
+        "versionUpdated": "Core Version Updated"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "Enable Global Hotkey"
       },
-      "title": "Hotkey Setting"
+      "title": "Hotkey Setting",
+      "functions": {
+        "rule": "Rule Mode",
+        "global": "Global Mode",
+        "openOrCloseDashboard": "Open/Close Dashboard",
+        "toggleSystemProxy": "Enable/Disable System Proxy",
+        "toggleTunMode": "Enable/Disable Tun Mode",
+        "entryLightweightMode": "Entry Lightweight Mode",
+        "direct": "Direct Mode"
+      }
     },
     "password": {
       "prompts": {

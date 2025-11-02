@@ -1,7 +1,4 @@
 {
-  "Maximize": "Maksimalkan",
-  "Minimize": "Minimalkan",
-  "Empty": "Kosong",
   "Proxies": "Proksi",
   "rule": "aturan",
   "global": "global",
@@ -65,13 +62,6 @@
   "theme.light": "Terang",
   "theme.dark": "Gelap",
   "theme.system": "Sistem",
-  "Copy Success": "Salin Berhasil",
-  "open_or_close_dashboard": "Buka/Tutup Dasbor",
-  "clash_mode_rule": "Mode Aturan",
-  "clash_mode_global": "Mode Global",
-  "toggle_system_proxy": "Aktifkan/Nonaktifkan Proksi Sistem",
-  "toggle_tun_mode": "Aktifkan/Nonaktifkan Mode Tun",
-  "entry_lightweight_mode": "Entry Lightweight Mode",
   "Exit": "Keluar",
   "Profile Imported Successfully": "Profil Berhasil Diimpor",
   "Stopping Core...": "Stopping Core...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Layanan Berhasil Diinstal",
   "Service Uninstalled Successfully": "Layanan Berhasil Dicopot",
-  "Core Version Updated": "Versi Core Diperbarui",
-  "Currently on the Latest Version": "Saat ini pada Versi Terbaru",
   "Import Subscription Successful": "Berlangganan Berhasil Diimpor",
   "Profile": "Profil",
   "Dashboard": "Dasbor",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "Kosong"
+    },
+    "window": {
+      "maximize": "Maksimalkan",
+      "minimize": "Minimalkan"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Mode Aturan",
+        "global": "Mode Global",
+        "direct": "Mode Langsung"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "Core Clash Dimulai Ulang"
+        "restartSuccess": "Core Clash Dimulai Ulang",
+        "versionUpdated": "Versi Core Diperbarui"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "Aktifkan Hotkey Global"
       },
-      "title": "Pengaturan Pintasan"
+      "title": "Pengaturan Pintasan",
+      "functions": {
+        "rule": "Mode Aturan",
+        "global": "Mode Global",
+        "openOrCloseDashboard": "Buka/Tutup Dasbor",
+        "toggleSystemProxy": "Aktifkan/Nonaktifkan Proksi Sistem",
+        "toggleTunMode": "Aktifkan/Nonaktifkan Mode Tun",
+        "entryLightweightMode": "Entry Lightweight Mode",
+        "direct": "Mode Langsung"
+      }
     },
     "password": {
       "prompts": {

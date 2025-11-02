@@ -1,7 +1,4 @@
 {
-  "Maximize": "تكبير",
-  "Minimize": "تصغير",
-  "Empty": "فارغ",
   "Proxies": "الوكلاء",
   "rule": "قاعدة",
   "global": "عالمي",
@@ -65,13 +62,6 @@
   "theme.light": "سمة فاتحة",
   "theme.dark": "سمة داكنة",
   "theme.system": "سمة النظام",
-  "Copy Success": "تم النسخ بنجاح",
-  "open_or_close_dashboard": "فتح/إغلاق لوحة التحكم",
-  "clash_mode_rule": "وضع القواعد",
-  "clash_mode_global": "الوضع العالمي",
-  "toggle_system_proxy": "تفعيل/تعطيل وكيل النظام",
-  "toggle_tun_mode": "تفعيل/تعطيل وضع TUN",
-  "entry_lightweight_mode": "Entry Lightweight Mode",
   "Exit": "خروج",
   "Profile Imported Successfully": "تم استيراد الملف الشخصي بنجاح",
   "Stopping Core...": "Stopping Core...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "تم تثبيت الخدمة بنجاح",
   "Service Uninstalled Successfully": "تم إلغاء تثبيت الخدمة بنجاح",
-  "Core Version Updated": "تم تحديث إصدار النواة",
-  "Currently on the Latest Version": "أنت على أحدث إصدار حاليًا",
   "Import Subscription Successful": "تم استيراد الاشتراك بنجاح",
   "Profile": "الملف الشخصي",
   "Dashboard": "لوحة التحكم",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "فارغ"
+    },
+    "window": {
+      "maximize": "تكبير",
+      "minimize": "تصغير"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "وضع القواعد",
+        "global": "الوضع العالمي",
+        "direct": "الوضع المباشر"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "تم إعادة تشغيل نواة Clash"
+        "restartSuccess": "تم إعادة تشغيل نواة Clash",
+        "versionUpdated": "تم تحديث إصدار النواة"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "تمكين مفتاح التشغيل السريع العالمي"
       },
-      "title": "إعدادات الاختصارات"
+      "title": "إعدادات الاختصارات",
+      "functions": {
+        "rule": "وضع القواعد",
+        "global": "الوضع العالمي",
+        "openOrCloseDashboard": "فتح/إغلاق لوحة التحكم",
+        "toggleSystemProxy": "تفعيل/تعطيل وكيل النظام",
+        "toggleTunMode": "تفعيل/تعطيل وضع TUN",
+        "entryLightweightMode": "Entry Lightweight Mode",
+        "direct": "الوضع المباشر"
+      }
     },
     "password": {
       "prompts": {

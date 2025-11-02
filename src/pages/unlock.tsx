@@ -282,7 +282,7 @@ const UnlockPage = () => {
             height: "50%",
           }}
         >
-          <BaseEmpty text={t("unlock.page.empty")} />
+          <BaseEmpty textKey="unlock.page.empty" />
         </Box>
       ) : (
         <Grid container spacing={1.5} columns={{ xs: 1, sm: 2, md: 3 }}>

@@ -174,7 +174,9 @@ export const SystemInfoCard = () => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        showNotice.success("Currently on the Latest Version");
+        showNotice.success(
+          t("settings.verge.advanced.notifications.latestVersion"),
+        );
       } else {
         showNotice.info("Update Available", 2000);
         goToSettings();

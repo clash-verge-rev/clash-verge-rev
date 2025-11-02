@@ -1,7 +1,4 @@
 {
-  "Maximize": "بزرگ‌نمایی",
-  "Minimize": "کوچک‌نمایی",
-  "Empty": "خالی خالی",
   "Proxies": "پراکسی‌ها",
   "rule": "قانون",
   "global": "جهانی",
@@ -65,13 +62,6 @@
   "theme.light": "روشن",
   "theme.dark": "تاریک",
   "theme.system": "سیستم",
-  "Copy Success": "کپی با موفقیت انجام شد",
-  "open_or_close_dashboard": "باز/بستن داشبورد",
-  "clash_mode_rule": "حالت قانون",
-  "clash_mode_global": "حالت جهانی",
-  "toggle_system_proxy": "فعال/غیرفعال کردن پراکسی سیستم",
-  "toggle_tun_mode": "فعال/غیرفعال کردن حالت Tun",
-  "entry_lightweight_mode": "Entry Lightweight Mode",
   "Exit": "خروج",
   "Profile Imported Successfully": "پروفایل با موفقیت وارد شد",
   "Stopping Core...": "Stopping Core...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "سرویس با موفقیت نصب شد",
   "Service Uninstalled Successfully": "سرویس با موفقیت حذف نصب شد",
-  "Core Version Updated": "نسخه هسته به‌روزرسانی شد",
-  "Currently on the Latest Version": "در حال حاضر در آخرین نسخه",
   "Import Subscription Successful": "وارد کردن اشتراک با موفقیت انجام شد",
   "Profile": "پروفایل",
   "Dashboard": "داشبورد",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "خالی خالی"
+    },
+    "window": {
+      "maximize": "بزرگ‌نمایی",
+      "minimize": "کوچک‌نمایی"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "حالت قانون",
+        "global": "حالت جهانی",
+        "direct": "حالت مستقیم"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "هسته Clash مجدداً راه‌اندازی شد"
+        "restartSuccess": "هسته Clash مجدداً راه‌اندازی شد",
+        "versionUpdated": "نسخه هسته به‌روزرسانی شد"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "فعال کردن کلید میانبر سراسری"
       },
-      "title": "تنظیمات کلیدهای میانبر"
+      "title": "تنظیمات کلیدهای میانبر",
+      "functions": {
+        "rule": "حالت قانون",
+        "global": "حالت جهانی",
+        "openOrCloseDashboard": "باز/بستن داشبورد",
+        "toggleSystemProxy": "فعال/غیرفعال کردن پراکسی سیستم",
+        "toggleTunMode": "فعال/غیرفعال کردن حالت Tun",
+        "entryLightweightMode": "Entry Lightweight Mode",
+        "direct": "حالت مستقیم"
+      }
     },
     "password": {
       "prompts": {

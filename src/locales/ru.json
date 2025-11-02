@@ -1,7 +1,4 @@
 {
-  "Maximize": "Развернуть",
-  "Minimize": "Свернуть",
-  "Empty": "Пусто",
   "Proxies": "Прокси",
   "rule": "правила",
   "global": "глобальный",
@@ -65,13 +62,6 @@
   "theme.light": "Светлая",
   "theme.dark": "Тёмная",
   "theme.system": "Системная",
-  "Copy Success": "Скопировано",
-  "open_or_close_dashboard": "Открыть/Закрыть панель управления",
-  "clash_mode_rule": "Режим правил",
-  "clash_mode_global": "Глобальный режим",
-  "toggle_system_proxy": "Включить/Отключить системный прокси",
-  "toggle_tun_mode": "Включить/Отключить режим TUN",
-  "entry_lightweight_mode": "Вход в LightWeight Mode",
   "Exit": "Выход",
   "Profile Imported Successfully": "Профиль успешно импортирован",
   "Stopping Core...": "Stopping Core...",
@@ -80,8 +70,6 @@
   "Uninstalling Service...": "Uninstalling Service...",
   "Service Installed Successfully": "Служба успешно установлена",
   "Service Uninstalled Successfully": "Служба успешно удалена",
-  "Core Version Updated": "Ядро обновлено до последней версии",
-  "Currently on the Latest Version": "Обновление не требуется",
   "Import Subscription Successful": "Подписка успешно импортирована",
   "Profile": "Профиль",
   "Dashboard": "Панель управления",
@@ -209,7 +197,12 @@
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
     "states": {
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "Пусто"
+    },
+    "window": {
+      "maximize": "Развернуть",
+      "minimize": "Свернуть"
     }
   },
   "navigation": {
@@ -524,6 +517,16 @@
     "clashMode": {
       "errors": {
         "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Режим правил",
+        "global": "Глобальный режим",
+        "direct": "Прямой режим"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
       }
     }
   },
@@ -675,7 +678,8 @@
         }
       },
       "notifications": {
-        "restartSuccess": "Ядро перезапущено"
+        "restartSuccess": "Ядро перезапущено",
+        "versionUpdated": "Ядро обновлено до последней версии"
       }
     },
     "liteMode": {
@@ -1064,7 +1068,16 @@
       "toggles": {
         "enableGlobal": "Включить глобальную горячую клавишу"
       },
-      "title": "Настройки сочетаний клавиш"
+      "title": "Настройки сочетаний клавиш",
+      "functions": {
+        "rule": "Режим правил",
+        "global": "Глобальный режим",
+        "openOrCloseDashboard": "Открыть/Закрыть панель управления",
+        "toggleSystemProxy": "Включить/Отключить системный прокси",
+        "toggleTunMode": "Включить/Отключить режим TUN",
+        "entryLightweightMode": "Вход в LightWeight Mode",
+        "direct": "Прямой режим"
+      }
     },
     "password": {
       "prompts": {
