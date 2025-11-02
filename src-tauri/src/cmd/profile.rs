@@ -26,57 +26,10 @@ static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
 pub async fn get_profiles() -> CmdResult<IProfiles> {
-    // 策略1: 尝试快速获取latest数据
-    let latest_result = tokio::time::timeout(Duration::from_millis(500), async {
-        let profiles = Config::profiles().await;
-        let latest = profiles.latest_ref();
-        IProfiles {
-            current: latest.current.clone(),
-            items: latest.items.clone(),
-        }
-    })
-    .await;
-
-    match latest_result {
-        Ok(profiles) => {
-            logging!(info, Type::Cmd, "快速获取配置列表成功");
-            return Ok(profiles);
-        }
-        Err(_) => {
-            logging!(warn, Type::Cmd, "快速获取配置超时(500ms)");
-        }
-    }
-
-    // 策略2: 如果快速获取失败，尝试获取data()
-    let data_result = tokio::time::timeout(Duration::from_secs(2), async {
-        let profiles = Config::profiles().await;
-        let data = profiles.latest_ref();
-        IProfiles {
-            current: data.current.clone(),
-            items: data.items.clone(),
-        }
-    })
-    .await;
-
-    match data_result {
-        Ok(profiles) => {
-            logging!(info, Type::Cmd, "获取draft配置列表成功");
-            return Ok(profiles);
-        }
-        Err(join_err) => {
-            logging!(
-                error,
-                Type::Cmd,
-                "获取draft配置任务失败或超时: {}",
-                join_err
-            );
-        }
-    }
-
-    // 策略3: fallback，尝试重新创建配置
-    logging!(warn, Type::Cmd, "所有获取配置策略都失败，尝试fallback");
-
-    Ok(IProfiles::new().await)
+    logging!(debug, Type::Cmd, "获取配置文件列表");
+    let draft = Config::profiles().await;
+    let latest = draft.latest_ref();
+    Ok((**latest).clone())
 }
 
 /// 增强配置文件
