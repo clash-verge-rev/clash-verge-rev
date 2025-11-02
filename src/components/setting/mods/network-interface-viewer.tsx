@@ -109,8 +109,6 @@ const AddressDisplay = ({
   label: string;
   content: string;
 }) => {
-  const { t } = useTranslation();
-
   return (
     <Box
       sx={{
@@ -135,7 +133,7 @@ const AddressDisplay = ({
           size="small"
           onClick={async () => {
             await writeText(content);
-            showNotice("success", t("Copy Success"));
+            showNotice("success", { i18nKey: "Copy Success" });
           }}
         >
           <ContentCopyRounded sx={{ fontSize: "18px" }} />

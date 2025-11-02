@@ -23,7 +23,7 @@ import { DEFAULT_HOVER_DELAY } from "@/components/proxy/proxy-group-navigator";
 import { useVerge } from "@/hooks/use-verge";
 import { useWindowDecorations } from "@/hooks/use-window";
 import { copyIconFile, getAppDir } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
 
 import { GuardState } from "./guard-state";
@@ -104,7 +104,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
   const onError = (err: any) => {
-    showNotice("error", err.message || err.toString());
+    showNotice("error", createRawNotice(err.message || err.toString()));
   };
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false);

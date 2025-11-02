@@ -55,7 +55,7 @@ import {
   readProfileFile,
   saveProfileFile,
 } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
@@ -384,12 +384,14 @@ export const GroupsEditorViewer = (props: Props) => {
       }
 
       await saveProfileFile(property, nextData);
-      showNotice("success", t("components.profile.notifications.saved"));
+      showNotice("success", {
+        i18nKey: "components.profile.notifications.saved",
+      });
       setPrevData(nextData);
       onSave?.(prevData, nextData);
       onClose();
     } catch (err: any) {
-      showNotice("error", err.toString());
+      showNotice("error", createRawNotice(err.toString()));
     }
   });
 
@@ -920,7 +922,10 @@ export const GroupsEditorViewer = (props: Props) => {
                       }
                       setPrependSeq([formIns.getValues(), ...prependSeq]);
                     } catch (err: any) {
-                      showNotice("error", err.message || err.toString());
+                      showNotice(
+                        "error",
+                        createRawNotice(err.message || err.toString()),
+                      );
                     }
                   }}
                 >
@@ -946,7 +951,10 @@ export const GroupsEditorViewer = (props: Props) => {
                       }
                       setAppendSeq([...appendSeq, formIns.getValues()]);
                     } catch (err: any) {
-                      showNotice("error", err.message || err.toString());
+                      showNotice(
+                        "error",
+                        createRawNotice(err.message || err.toString()),
+                      );
                     }
                   }}
                 >

@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
+import { createPrefixedNotice, showNotice } from "@/services/noticeService";
 
 export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
@@ -56,20 +56,18 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       // 如果启用了外部控制器，则保存控制器地址和密钥
       if (enableController) {
         if (!controller.trim()) {
-          showNotice(
-            "error",
-            t(
+          showNotice("error", {
+            i18nKey:
               "components.settings.externalController.messages.addressRequired",
-            ),
-          );
+          });
           return;
         }
 
         if (!secret.trim()) {
-          showNotice(
-            "error",
-            t("components.settings.externalController.messages.secretRequired"),
-          );
+          showNotice("error", {
+            i18nKey:
+              "components.settings.externalController.messages.secretRequired",
+          });
           return;
         }
 
@@ -79,12 +77,15 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         await patchInfo({ "external-controller": "" });
       }
 
-      showNotice("success", t("Configuration saved successfully"));
+      showNotice("success", { i18nKey: "Configuration saved successfully" });
       setOpen(false);
     } catch (err: any) {
+      const message = err?.message || err?.toString?.();
       showNotice(
         "error",
-        err.message || t("Failed to save configuration"),
+        message
+          ? createPrefixedNotice(t("Failed to save configuration"), message)
+          : { i18nKey: "Failed to save configuration" },
         4000,
       );
     } finally {
@@ -101,10 +102,9 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         setTimeout(() => setCopySuccess(null));
       } catch (err) {
         console.warn("[ControllerViewer] copy to clipboard failed:", err);
-        showNotice(
-          "error",
-          t("components.settings.externalController.messages.copyFailed"),
-        );
+        showNotice("error", {
+          i18nKey: "components.settings.externalController.messages.copyFailed",
+        });
       }
     },
   );

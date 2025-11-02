@@ -21,7 +21,7 @@ import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
 import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
 
@@ -148,7 +148,7 @@ export const ProxyTunCard: FC = () => {
   const { enable_tun_mode } = verge ?? {};
 
   const handleError = (err: Error) => {
-    showNotice("error", err.message || err.toString());
+    showNotice("error", createRawNotice(err.message || err.toString()));
   };
 
   const handleTabChange = (tab: string) => {

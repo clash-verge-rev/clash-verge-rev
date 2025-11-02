@@ -34,7 +34,7 @@ import {
   saveProfileFile,
   getNextUpdateTime,
 } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import parseTraffic from "@/utils/parse-traffic";
 
@@ -321,7 +321,7 @@ export const ProfileItem = (props: Props) => {
     try {
       await viewProfile(itemData.uid);
     } catch (err: any) {
-      showNotice("error", err?.message || err.toString());
+      showNotice("error", createRawNotice(err?.message || err.toString()));
     }
   });
 

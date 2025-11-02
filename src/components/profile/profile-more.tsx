@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 
 import { LogViewer } from "./log-viewer";
 import { ProfileBox } from "./profile-box";
@@ -48,7 +48,7 @@ export const ProfileMore = (props: Props) => {
     try {
       await viewProfile(id);
     } catch (err: any) {
-      showNotice("error", err?.message || err.toString());
+      showNotice("error", createRawNotice(err?.message || err.toString()));
     }
   });
 

@@ -67,13 +67,13 @@ export const ProviderButton = () => {
       await refreshProxyProviders();
 
       showNotice("success", {
-        i18nKey: "components.notices.providers.updateSuccess",
+        i18nKey: "components.providers.notices.updateSuccess",
         params: { name },
       });
     } catch (err: any) {
       const message = err?.message || err?.toString?.() || String(err);
       showNotice("error", {
-        i18nKey: "components.notices.providers.updateFailed",
+        i18nKey: "components.providers.notices.updateFailed",
         params: { name, message },
       });
     } finally {
@@ -89,7 +89,7 @@ export const ProviderButton = () => {
       const allProviders = Object.keys(proxyProviders || {});
       if (allProviders.length === 0) {
         showNotice("info", {
-          i18nKey: "components.notices.providers.none",
+          i18nKey: "components.providers.notices.none",
         });
         return;
       }
@@ -121,12 +121,12 @@ export const ProviderButton = () => {
       await refreshProxyProviders();
 
       showNotice("success", {
-        i18nKey: "components.notices.providers.allUpdated",
+        i18nKey: "components.providers.notices.allUpdated",
       });
     } catch (err: any) {
       const message = err?.message || err?.toString?.() || String(err);
       showNotice("error", {
-        i18nKey: "components.notices.providers.genericError",
+        i18nKey: "components.providers.notices.genericError",
         params: { message },
       });
     } finally {

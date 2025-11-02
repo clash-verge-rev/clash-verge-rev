@@ -1081,6 +1081,10 @@
     "editorModes": {
       "visualization": "Görselleştirme",
       "advanced": "Gelişmiş"
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
     }
   }
 }

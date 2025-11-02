@@ -21,7 +21,7 @@ import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { changeClashCore, restartCore } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 
 const VALID_CORE = [
   { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
@@ -54,7 +54,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       const errorMsg = await changeClashCore(core);
 
       if (errorMsg) {
-        showNotice("error", errorMsg);
+        showNotice("error", createRawNotice(errorMsg));
         setChangingCore(null);
         return;
       }
@@ -67,7 +67,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }, 500);
     } catch (err: any) {
       setChangingCore(null);
-      showNotice("error", err.message || err.toString());
+      showNotice("error", createRawNotice(err.message || err.toString()));
     }
   });
 
@@ -75,11 +75,11 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setRestarting(true);
       await restartCore();
-      showNotice("success", t(`Clash Core Restarted`));
+      showNotice("success", { i18nKey: "Clash Core Restarted" });
       setRestarting(false);
     } catch (err: any) {
       setRestarting(false);
-      showNotice("error", err.message || err.toString());
+      showNotice("error", createRawNotice(err.message || err.toString()));
     }
   });
 
@@ -88,14 +88,14 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      showNotice("success", t(`Core Version Updated`));
+      showNotice("success", { i18nKey: "Core Version Updated" });
     } catch (err: any) {
       setUpgrading(false);
       const errMsg = err.response?.data?.message || err.toString();
       const showMsg = errMsg.includes("already using latest version")
         ? "Already Using Latest Core Version"
         : errMsg;
-      showNotice("error", t(showMsg));
+      showNotice("error", { i18nKey: showMsg, fallback: showMsg });
     }
   });
 

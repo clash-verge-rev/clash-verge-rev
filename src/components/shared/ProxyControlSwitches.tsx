@@ -21,7 +21,7 @@ import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 import { useServiceUninstaller } from "@/hooks/useServiceUninstaller";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 
 interface ProxySwitchProps {
   label?: string;
@@ -126,8 +126,8 @@ const ProxyControlSwitches = ({
   const { enable_tun_mode, enable_system_proxy } = verge ?? {};
 
   const showErrorNotice = useCallback(
-    (msg: string) => showNotice("error", t(msg)),
-    [t],
+    (msg: string) => showNotice("error", { i18nKey: msg }),
+    [],
   );
 
   const handleTunToggle = async (value: boolean) => {
@@ -145,7 +145,10 @@ const ProxyControlSwitches = ({
       await installServiceAndRestartCore();
       await mutateSystemState();
     } catch (err) {
-      showNotice("error", (err as Error).message || String(err));
+      showNotice(
+        "error",
+        createRawNotice((err as Error).message || String(err)),
+      );
     }
   });
 
@@ -157,7 +160,10 @@ const ProxyControlSwitches = ({
       await uninstallServiceAndRestartCore();
       await mutateSystemState();
     } catch (err) {
-      showNotice("error", (err as Error).message || String(err));
+      showNotice(
+        "error",
+        createRawNotice((err as Error).message || String(err)),
+      );
     }
   });
 

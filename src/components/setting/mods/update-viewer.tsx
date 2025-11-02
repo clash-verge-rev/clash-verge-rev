@@ -12,7 +12,7 @@ import useSWR from "swr";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useListen } from "@/hooks/use-listen";
 import { portableFlag } from "@/pages/_layout";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
 
@@ -95,7 +95,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       await updateInfo.downloadAndInstall();
       await relaunch();
     } catch (err: any) {
-      showNotice("error", err?.message || err.toString());
+      showNotice("error", createRawNotice(err?.message || err.toString()));
     } finally {
       setUpdateState(false);
       if (progressListener) {

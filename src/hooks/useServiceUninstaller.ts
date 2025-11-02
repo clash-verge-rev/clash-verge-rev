@@ -1,8 +1,7 @@
-import { t } from "i18next";
 import { useCallback } from "react";
 
 import { restartCore, stopCore, uninstallService } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 
 import { useSystemState } from "./use-system-state";
 
@@ -12,14 +11,14 @@ const executeWithErrorHandling = async (
   successMessage?: string,
 ) => {
   try {
-    showNotice("info", t(loadingMessage));
+    showNotice("info", { i18nKey: loadingMessage });
     await operation();
     if (successMessage) {
-      showNotice("success", t(successMessage));
+      showNotice("success", { i18nKey: successMessage });
     }
   } catch (err) {
     const msg = (err as Error)?.message || String(err);
-    showNotice("error", msg);
+    showNotice("error", createRawNotice(msg));
     throw err;
   }
 };

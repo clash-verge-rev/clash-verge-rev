@@ -1081,6 +1081,10 @@
     "editorModes": {
       "visualization": "تجسم",
       "advanced": "پیشرفته"
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
     }
   }
 }

@@ -98,6 +98,25 @@ export function showTranslatedNotice(
   );
 }
 
+export const createRawNotice = (
+  message: string,
+  fallback?: string,
+): NoticeTranslationDescriptor => ({
+  i18nKey: "common.notices.raw",
+  params: { message },
+  fallback: fallback ?? message,
+});
+
+export const createPrefixedNotice = (
+  prefix: string,
+  message: string,
+  fallback?: string,
+): NoticeTranslationDescriptor => ({
+  i18nKey: "common.notices.prefixedRaw",
+  params: { prefix, message },
+  fallback: fallback ?? `${prefix} ${message}`,
+});
+
 // Hides a specific notification by its ID.
 
 export function hideNotice(id: number) {

@@ -9,14 +9,14 @@ import SettingSystem from "@/components/setting/setting-system";
 import SettingVergeAdvanced from "@/components/setting/setting-verge-advanced";
 import SettingVergeBasic from "@/components/setting/setting-verge-basic";
 import { openWebUrl } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 
 const SettingPage = () => {
   const { t } = useTranslation();
 
   const onError = (err: any) => {
-    showNotice("error", err?.message || err.toString());
+    showNotice("error", createRawNotice(err?.message || err.toString()));
   };
 
   const toGithubRepo = useLockFn(() => {

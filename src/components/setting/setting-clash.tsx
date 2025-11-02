@@ -11,7 +11,7 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useClash } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { invoke_uwp_tool } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
@@ -72,7 +72,7 @@ const SettingClash = ({ onError }: Props) => {
         t("components.settings.clash.messages.geoDataUpdated"),
       );
     } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+      showNotice("error", createRawNotice(err.message || err.toString()));
     }
   };
 
@@ -89,7 +89,7 @@ const SettingClash = ({ onError }: Props) => {
     } catch (err: any) {
       setDnsSettingsEnabled(!enable);
       localStorage.setItem("dns_settings_enabled", String(!enable));
-      showNotice("error", err.message || err.toString());
+      showNotice("error", createRawNotice(err.message || err.toString()));
       await patchVerge({ enable_dns_settings: !enable }).catch(() => {});
       throw err;
     }

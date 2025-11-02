@@ -1081,6 +1081,10 @@
     "editorModes": {
       "visualization": "可視化",
       "advanced": "詳細設定"
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
     }
   }
 }

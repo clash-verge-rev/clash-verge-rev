@@ -13,7 +13,7 @@ import {
   openDevTools,
   openLogsDir,
 } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
 import { version } from "@root/package.json";
 
@@ -55,7 +55,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
         updateRef.current?.open();
       }
     } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+      showNotice("error", createRawNotice(err.message || err.toString()));
     }
   };
 

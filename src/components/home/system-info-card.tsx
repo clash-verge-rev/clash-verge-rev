@@ -24,7 +24,7 @@ import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
 import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 import { getSystemInfo } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
 import { version as appVersion } from "@root/package.json";
 
@@ -174,13 +174,15 @@ export const SystemInfoCard = () => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        showNotice("success", t("Currently on the Latest Version"));
+        showNotice("success", {
+          i18nKey: "Currently on the Latest Version",
+        });
       } else {
-        showNotice("info", t("Update Available"), 2000);
+        showNotice("info", { i18nKey: "Update Available" }, 2000);
         goToSettings();
       }
     } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+      showNotice("error", createRawNotice(err.message || err.toString()));
     }
   });
 

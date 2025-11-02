@@ -45,7 +45,7 @@ import { Virtuoso } from "react-virtuoso";
 import { Switch } from "@/components/base";
 import { RuleItem } from "@/components/profile/rule-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { createRawNotice, showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
@@ -351,7 +351,10 @@ export const RulesEditorViewer = (props: Props) => {
           ),
         );
       } catch (e: any) {
-        showNotice("error", e?.message || e?.toString() || "YAML dump error");
+        showNotice(
+          "error",
+          createRawNotice(e?.message || e?.toString() || "YAML dump error"),
+        );
       }
     };
     let idleId: number | undefined;
@@ -479,11 +482,13 @@ export const RulesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice("success", t("components.profile.notifications.saved"));
+      showNotice("success", {
+        i18nKey: "components.profile.notifications.saved",
+      });
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
-      showNotice("error", err.toString());
+      showNotice("error", createRawNotice(err.toString()));
     }
   });
 
@@ -626,7 +631,10 @@ export const RulesEditorViewer = (props: Props) => {
                       if (prependSeq.includes(raw)) return;
                       setPrependSeq([raw, ...prependSeq]);
                     } catch (err: any) {
-                      showNotice("error", err.message || err.toString());
+                      showNotice(
+                        "error",
+                        createRawNotice(err.message || err.toString()),
+                      );
                     }
                   }}
                 >
@@ -644,7 +652,10 @@ export const RulesEditorViewer = (props: Props) => {
                       if (appendSeq.includes(raw)) return;
                       setAppendSeq([...appendSeq, raw]);
                     } catch (err: any) {
-                      showNotice("error", err.message || err.toString());
+                      showNotice(
+                        "error",
+                        createRawNotice(err.message || err.toString()),
+                      );
                     }
                   }}
                 >
