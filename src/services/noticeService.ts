@@ -2,101 +2,116 @@ import { ReactNode } from "react";
 
 type NoticeType = "success" | "error" | "info";
 
+/**
+ * Descriptor used when the notice content should be resolved through i18n.
+ */
 export interface NoticeTranslationDescriptor {
   i18nKey: string;
   params?: Record<string, unknown>;
   fallback?: string;
 }
 
+/**
+ * Notification payload that either renders raw React content or defers to i18n.
+ */
 type NoticeMessage = ReactNode | NoticeTranslationDescriptor;
 
 interface NoticeItem {
-  id: number;
-  type: NoticeType;
-  message?: ReactNode;
-  i18n?: NoticeTranslationDescriptor;
-  duration: number;
+  readonly id: number;
+  readonly type: NoticeType;
+  readonly duration: number;
+  readonly message?: ReactNode;
+  readonly i18n?: NoticeTranslationDescriptor;
   timerId?: ReturnType<typeof setTimeout>;
 }
 
-type Listener = (notices: NoticeItem[]) => void;
+type NoticeShortcut = (message: NoticeMessage, duration?: number) => number;
+
+type ShowNotice = ((
+  type: NoticeType,
+  message: NoticeMessage,
+  duration?: number,
+) => number) & {
+  success: NoticeShortcut;
+  error: NoticeShortcut;
+  info: NoticeShortcut;
+};
+
+type NoticeSubscriber = () => void;
+
+const DEFAULT_DURATIONS: Readonly<Record<NoticeType, number>> = {
+  success: 3000,
+  info: 5000,
+  error: 8000,
+};
 
 let nextId = 0;
 let notices: NoticeItem[] = [];
-const listeners: Set<Listener> = new Set();
+const subscribers: Set<NoticeSubscriber> = new Set();
 
-function notifyListeners() {
-  listeners.forEach((listener) => listener([...notices])); // Pass a copy
+function notifySubscribers() {
+  subscribers.forEach((subscriber) => subscriber());
 }
 
-function isTranslationDescriptor(
-  message: NoticeMessage,
-): message is NoticeTranslationDescriptor {
-  if (
-    typeof message === "object" &&
-    message !== null &&
-    Object.prototype.hasOwnProperty.call(message, "i18nKey")
-  ) {
-    const descriptor = message as NoticeTranslationDescriptor;
-    return typeof descriptor.i18nKey === "string";
-  }
-  return false;
+function resolveDuration(type: NoticeType, override?: number) {
+  return override ?? DEFAULT_DURATIONS[type];
 }
 
-// Shows a notification.
-
-export function showNotice(
+function buildNotice(
+  id: number,
   type: NoticeType,
   message: NoticeMessage,
-  duration?: number,
-): number {
-  const id = nextId++;
-  const effectiveDuration =
-    duration ?? (type === "error" ? 8000 : type === "info" ? 5000 : 3000); // Longer defaults
+  duration: number,
+  timerId?: ReturnType<typeof setTimeout>,
+): NoticeItem {
+  if (isTranslationDescriptor(message)) {
+    return {
+      id,
+      type,
+      duration,
+      timerId,
+      i18n: message,
+    };
+  }
 
-  const newNotice: NoticeItem = {
+  return {
     id,
     type,
-    duration: effectiveDuration,
-  };
-
-  if (isTranslationDescriptor(message)) {
-    newNotice.i18n = message;
-  } else {
-    newNotice.message = message;
-  }
-
-  // Auto-hide timer (only if duration is not null/0)
-  if (effectiveDuration > 0) {
-    newNotice.timerId = setTimeout(() => {
-      hideNotice(id);
-    }, effectiveDuration);
-  }
-
-  notices = [...notices, newNotice];
-  notifyListeners();
-  return id;
-}
-
-export function showTranslatedNotice(
-  type: NoticeType,
-  i18nKey: string,
-  options?: {
-    params?: Record<string, unknown>;
-    fallback?: string;
-  },
-  duration?: number,
-) {
-  return showNotice(
-    type,
-    {
-      i18nKey,
-      params: options?.params,
-      fallback: options?.fallback,
-    },
     duration,
-  );
+    timerId,
+    message,
+  };
 }
+
+/**
+ * Imperative entry point for users to display new notices.
+ */
+const baseShowNotice = (
+  type: NoticeType,
+  message: NoticeMessage,
+  duration?: number,
+): number => {
+  const id = nextId++;
+  const effectiveDuration = resolveDuration(type, duration);
+  const timerId =
+    effectiveDuration > 0
+      ? setTimeout(() => hideNotice(id), effectiveDuration)
+      : undefined;
+  const notice = buildNotice(id, type, message, effectiveDuration, timerId);
+
+  notices = [...notices, notice];
+  notifySubscribers();
+  return id;
+};
+
+export const showNotice: ShowNotice = Object.assign(baseShowNotice, {
+  success: (message: NoticeMessage, duration?: number) =>
+    baseShowNotice("success", message, duration),
+  error: (message: NoticeMessage, duration?: number) =>
+    baseShowNotice("error", message, duration),
+  info: (message: NoticeMessage, duration?: number) =>
+    baseShowNotice("info", message, duration),
+});
 
 export const createRawNotice = (
   message: string,
@@ -117,34 +132,44 @@ export const createPrefixedNotice = (
   fallback: fallback ?? `${prefix} ${message}`,
 });
 
-// Hides a specific notification by its ID.
-
 export function hideNotice(id: number) {
-  const notice = notices.find((n) => n.id === id);
+  const notice = notices.find((candidate) => candidate.id === id);
   if (notice?.timerId) {
-    clearTimeout(notice.timerId); // Clear timeout if manually closed
+    clearTimeout(notice.timerId);
   }
-  notices = notices.filter((n) => n.id !== id);
-  notifyListeners();
+  notices = notices.filter((candidate) => candidate.id !== id);
+  notifySubscribers();
 }
 
-// Subscribes a listener function to notice state changes.
-
-export function subscribeNotices(listener: () => void) {
-  listeners.add(listener);
+export function subscribeNotices(subscriber: NoticeSubscriber) {
+  subscribers.add(subscriber);
   return () => {
-    listeners.delete(listener);
+    subscribers.delete(subscriber);
   };
 }
+
 export function getSnapshotNotices() {
   return notices;
 }
 
-// Function to clear all notices at once
 export function clearAllNotices() {
-  notices.forEach((n) => {
-    if (n.timerId) clearTimeout(n.timerId);
+  notices.forEach((notice) => {
+    if (notice.timerId) clearTimeout(notice.timerId);
   });
   notices = [];
-  notifyListeners();
+  notifySubscribers();
+}
+
+function isTranslationDescriptor(
+  message: NoticeMessage,
+): message is NoticeTranslationDescriptor {
+  if (
+    typeof message === "object" &&
+    message !== null &&
+    Object.prototype.hasOwnProperty.call(message, "i18nKey")
+  ) {
+    const descriptor = message as NoticeTranslationDescriptor;
+    return typeof descriptor.i18nKey === "string";
+  }
+  return false;
 }
