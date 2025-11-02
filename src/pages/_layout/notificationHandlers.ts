@@ -21,8 +21,6 @@ export const handleNoticeMessage = (
     "set_config::error": () => showNotice.error(msg),
     update_with_clash_proxy: () =>
       showNotice.success("Update with Clash proxy successfully", msg),
-    update_retry_with_clash: () =>
-      showNotice.info("Update failed, retrying with Clash proxy..."),
     update_failed_even_with_clash: () =>
       showNotice.error("Update failed even with Clash proxy", msg),
     update_failed: () => showNotice.error(msg),

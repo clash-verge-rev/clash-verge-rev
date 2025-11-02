@@ -388,7 +388,6 @@
   "Last Check Update": "最後の更新チェック",
   "Click to import subscription": "クリックしてサブスクリプションをインポート",
   "Unknown": "不明",
-  "Update failed, retrying with Clash proxy...": "サブスクリプションの更新に失敗しました。Clashプロキシを使用して再試行します...",
   "Update with Clash proxy successfully": "Clashプロキシを使用して更新に成功しました。",
   "Update failed even with Clash proxy": "Clashプロキシを使用しても更新に失敗しました。",
   "Profile Imported with Clash proxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",

@@ -388,7 +388,6 @@
   "Last Check Update": "Última comprobación de actualizaciones",
   "Click to import subscription": "Haga clic para importar una suscripción",
   "Unknown": "Desconocido",
-  "Update failed, retrying with Clash proxy...": "Error al actualizar la suscripción. Intentando con el proxy de Clash...",
   "Update with Clash proxy successfully": "Actualización con el proxy de Clash exitosa",
   "Update failed even with Clash proxy": "Error al actualizar incluso con el proxy de Clash",
   "Profile Imported with Clash proxy": "Suscripción importada con el proxy de Clash",

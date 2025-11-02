@@ -107,7 +107,6 @@ async fn perform_profile_update(
                 Type::Config,
                 "Warning: [订阅更新] 正常更新失败: {err}，尝试使用Clash代理更新"
             );
-            handle::Handle::notice_message("update_retry_with_clash", uid.clone());
 
             let original_with_proxy = merged_opt.as_ref().and_then(|o| o.with_proxy);
             let original_self_proxy = merged_opt.as_ref().and_then(|o| o.self_proxy);
@@ -140,14 +139,19 @@ async fn perform_profile_update(
                     Ok(is_current)
                 }
                 Err(retry_err) => {
+                    let failed_profile_name = Config::profiles()
+                        .await
+                        .latest_ref()
+                        .get_name_by_uid(uid)
+                        .unwrap_or_default();
                     logging!(
                         error,
                         Type::Config,
-                        "[订阅更新] 使用Clash代理更新仍然失败: {retry_err}"
+                        "[订阅更新] 使用Clash代理更新仍然失败: {failed_profile_name} - {retry_err}"
                     );
                     handle::Handle::notice_message(
                         "update_failed_even_with_clash",
-                        format!("{retry_err}"),
+                        format!("{failed_profile_name} - {retry_err}"),
                     );
                     Err(retry_err)
                 }

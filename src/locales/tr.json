@@ -388,7 +388,6 @@
   "Last Check Update": "Son Güncelleme Kontrolü",
   "Click to import subscription": "Abonelik içe aktarmak için tıklayın",
   "Unknown": "Bilinmiyor",
-  "Update failed, retrying with Clash proxy...": "Güncelleme başarısız oldu, Clash vekil ile yeniden deneniyor...",
   "Update with Clash proxy successfully": "Clash vekil ile güncelleme başarılı",
   "Update failed even with Clash proxy": "Clash vekil ile bile güncelleme başarısız oldu",
   "Profile Imported with Clash proxy": "Profil Clash vekil ile içe aktarıldı",

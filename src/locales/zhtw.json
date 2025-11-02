@@ -388,7 +388,6 @@
   "Last Check Update": "最後檢查更新",
   "Click to import subscription": "點擊匯入訂閱",
   "Unknown": "未知",
-  "Update failed, retrying with Clash proxy...": "訂閱更新失敗，嘗試使用 Clash 代理更新",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失敗",
   "Profile Imported with Clash proxy": "使用 Clash 代理匯入訂閱成功",
