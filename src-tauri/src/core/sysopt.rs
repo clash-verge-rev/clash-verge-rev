@@ -15,6 +15,7 @@ use sysproxy::{Autoproxy, Sysproxy};
 use tauri_plugin_autostart::ManagerExt;
 
 pub struct Sysopt {
+    initialed: AtomicBool,
     update_sysproxy: AtomicBool,
     reset_sysproxy: AtomicBool,
 }
@@ -84,6 +85,7 @@ async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> 
 impl Default for Sysopt {
     fn default() -> Self {
         Sysopt {
+            initialed: AtomicBool::new(false),
             update_sysproxy: AtomicBool::new(false),
             reset_sysproxy: AtomicBool::new(false),
         }
@@ -94,6 +96,10 @@ impl Default for Sysopt {
 singleton_lazy!(Sysopt, SYSOPT, Sysopt::default);
 
 impl Sysopt {
+    pub fn is_initialed(&self) -> bool {
+        self.initialed.load(Ordering::SeqCst)
+    }
+
     pub fn init_guard_sysproxy(&self) -> Result<()> {
         // 使用事件驱动代理管理器
         let proxy_manager = EventDrivenProxyManager::global();
@@ -105,6 +111,7 @@ impl Sysopt {
 
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
+        self.initialed.store(true, Ordering::SeqCst);
         if self
             .update_sysproxy
             .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)

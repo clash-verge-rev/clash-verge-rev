@@ -1,4 +1,7 @@
-use crate::{config::Config, feat, logging, logging_error, singleton, utils::logging::Type};
+use crate::{
+    config::Config, core::sysopt::Sysopt, feat, logging, logging_error, singleton,
+    utils::logging::Type,
+};
 use anyhow::{Context, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use parking_lot::RwLock;
@@ -10,7 +13,9 @@ use std::{
         Arc,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
+    time::Duration,
 };
+use tokio::time::{sleep, timeout};
 
 type TaskID = u64;
 
@@ -390,6 +395,7 @@ impl Timer {
             .spawn_async_routine(move || {
                 let uid = uid.clone();
                 Box::pin(async move {
+                    Self::wait_until_sysopt(Duration::from_millis(1000)).await;
                     Self::async_task(&uid).await;
                 }) as Pin<Box<dyn std::future::Future<Output = ()> + Send>>
             })
@@ -518,6 +524,16 @@ impl Timer {
 
         // Emit completed event
         Self::emit_update_event(uid, false);
+    }
+
+    async fn wait_until_sysopt(max_wait: Duration) {
+        let _ = timeout(max_wait, async {
+            while !Sysopt::global().is_initialed() {
+                logging!(warn, Type::Timer, "Waiting for Sysopt to be initialized...");
+                sleep(Duration::from_millis(30)).await;
+            }
+        })
+        .await;
     }
 }
 

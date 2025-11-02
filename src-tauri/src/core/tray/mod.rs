@@ -308,7 +308,6 @@ impl Tray {
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
         let tun_mode_available = cmd::system::is_admin().unwrap_or_default()
             || service::is_service_available().await.is_ok();
-        println!("tun_mode_available: {}", tun_mode_available);
         let mode = {
             Config::clash()
                 .await

@@ -1,6 +1,7 @@
 use crate::config::Config;
 use anyhow::Result;
 use base64::{Engine as _, engine::general_purpose};
+use isahc::config::DnsCache;
 use isahc::prelude::*;
 use isahc::{HttpClient, config::SslOption};
 use isahc::{
@@ -142,6 +143,12 @@ impl NetworkManager {
             }
 
             builder = builder.redirect_policy(RedirectPolicy::Follow);
+
+            // 禁用缓存，不关心连接复用
+            builder = builder.connection_cache_size(0);
+
+            // 禁用 DNS 缓存，避免因 DNS 变化导致的问题
+            builder = builder.dns_cache(DnsCache::Disable);
 
             Ok(builder.build()?)
         }
