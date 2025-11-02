@@ -60,7 +60,7 @@ const LogPage = () => {
   return (
     <BasePage
       full
-      title={t("Logs")}
+      title={t("pages.logs.title")}
       contentStyle={{
         height: "100%",
         display: "flex",
@@ -70,7 +70,16 @@ const LogPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
-            title={t(enableLog ? "Pause" : "Resume")}
+            title={t(
+              enableLog
+                ? "pages.logs.actions.pause"
+                : "pages.logs.actions.resume",
+            )}
+            aria-label={t(
+              enableLog
+                ? "pages.logs.actions.pause"
+                : "pages.logs.actions.resume",
+            )}
             size="small"
             color="inherit"
             onClick={handleToggleLog}
@@ -89,7 +98,7 @@ const LogPage = () => {
               refreshGetClashLog(true);
             }}
           >
-            {t("Clear")}
+            {t("pages.logs.actions.clear")}
           </Button>
         </Box>
       }
@@ -108,11 +117,11 @@ const LogPage = () => {
           value={logState}
           onChange={(e) => handleLogLevelChange(e.target.value as LogFilter)}
         >
-          <MenuItem value="all">ALL</MenuItem>
-          <MenuItem value="debug">DEBUG</MenuItem>
-          <MenuItem value="info">INFO</MenuItem>
-          <MenuItem value="warn">WARN</MenuItem>
-          <MenuItem value="err">ERROR</MenuItem>
+          <MenuItem value="all">{t("pages.logs.filters.all")}</MenuItem>
+          <MenuItem value="debug">{t("pages.logs.filters.debug")}</MenuItem>
+          <MenuItem value="info">{t("pages.logs.filters.info")}</MenuItem>
+          <MenuItem value="warn">{t("pages.logs.filters.warn")}</MenuItem>
+          <MenuItem value="err">{t("pages.logs.filters.error")}</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox
           onSearch={(matcher, state) => {

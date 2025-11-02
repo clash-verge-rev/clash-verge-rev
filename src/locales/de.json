@@ -156,6 +156,21 @@
         "telegram": "Telegram-Kanal",
         "github": "GitHub-Projektadresse"
       }
+    },
+    "logs": {
+      "title": "Protokolle",
+      "actions": {
+        "pause": "Pausieren",
+        "resume": "Fortsetzen",
+        "clear": "Löschen"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "Startseite",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "Protokolle",
-  "Pause": "Pausieren",
-  "Resume": "Fortsetzen",
-  "Clear": "Löschen",
   "Test": "Testen",
   "Test All": "Alle testen",
   "Testing...": "Wird getestet...",

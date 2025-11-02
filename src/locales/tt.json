@@ -156,6 +156,21 @@
         "telegram": "Telegram каналы",
         "github": "GitHub репозиториясе"
       }
+    },
+    "logs": {
+      "title": "Логлар",
+      "actions": {
+        "pause": "Туктау",
+        "resume": "Дәвам",
+        "clear": "Чистарту"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "Home",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "Логлар",
-  "Pause": "Туктау",
-  "Resume": "Дәвам",
-  "Clear": "Чистарту",
   "Test": "Тест",
   "Test All": "Барчасын тестлау",
   "Testing...": "Testing...",

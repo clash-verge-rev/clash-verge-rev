@@ -156,6 +156,21 @@
         "telegram": "Telegram Channel",
         "github": "Github Repo"
       }
+    },
+    "logs": {
+      "title": "Logs",
+      "actions": {
+        "pause": "Pause",
+        "resume": "Resume",
+        "clear": "Clear"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "Home",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "Logs",
-  "Pause": "Pause",
-  "Resume": "Resume",
-  "Clear": "Clear",
   "Test": "Test",
   "Test All": "Test All",
   "Testing...": "Testing...",

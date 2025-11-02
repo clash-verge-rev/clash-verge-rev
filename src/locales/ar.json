@@ -156,6 +156,21 @@
         "telegram": "قناة تيليجرام",
         "github": "مستودع Github"
       }
+    },
+    "logs": {
+      "title": "السجلات",
+      "actions": {
+        "pause": "إيقاف مؤقت",
+        "resume": "استأنف",
+        "clear": "مسح"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "Home",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "السجلات",
-  "Pause": "إيقاف مؤقت",
-  "Resume": "استأنف",
-  "Clear": "مسح",
   "Test": "اختبار",
   "Test All": "اختبار الكل",
   "Testing...": "Testing...",

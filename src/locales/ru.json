@@ -156,6 +156,21 @@
         "telegram": "Telegram-канал",
         "github": "GitHub репозиторий"
       }
+    },
+    "logs": {
+      "title": "Логи",
+      "actions": {
+        "pause": "Пауза",
+        "resume": "Возобновить",
+        "clear": "Очистить"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "Главная",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "Логи",
-  "Pause": "Пауза",
-  "Resume": "Возобновить",
-  "Clear": "Очистить",
   "Test": "Тест",
   "Test All": "Тестировать все",
   "Testing...": "Тестирование ...",

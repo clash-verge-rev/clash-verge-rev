@@ -156,6 +156,21 @@
         "telegram": "Telegram 頻道",
         "github": "GitHub 專案位址"
       }
+    },
+    "logs": {
+      "title": "日誌",
+      "actions": {
+        "pause": "暫停",
+        "resume": "繼續",
+        "clear": "清除"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "首 頁",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "日誌",
-  "Pause": "暫停",
-  "Resume": "繼續",
-  "Clear": "清除",
   "Test": "測試",
   "Test All": "測試全部",
   "Testing...": "測試中...",

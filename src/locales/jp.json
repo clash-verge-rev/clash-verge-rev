@@ -156,6 +156,21 @@
         "telegram": "Telegramチャンネル",
         "github": "GitHubリポジトリ"
       }
+    },
+    "logs": {
+      "title": "ログ",
+      "actions": {
+        "pause": "一時停止",
+        "resume": "再開",
+        "clear": "クリア"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "ホーム",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "ログ",
-  "Pause": "一時停止",
-  "Resume": "再開",
-  "Clear": "クリア",
   "Test": "テスト",
   "Test All": "すべてテスト",
   "Testing...": "テスト中...",

@@ -156,6 +156,21 @@
         "telegram": "Canal de Telegram",
         "github": "Dirección del proyecto en GitHub"
       }
+    },
+    "logs": {
+      "title": "Registros",
+      "actions": {
+        "pause": "Pausar",
+        "resume": "Reanudar",
+        "clear": "Limpiar"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "Hogar",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "Registros",
-  "Pause": "Pausar",
-  "Resume": "Reanudar",
-  "Clear": "Limpiar",
   "Test": "Prueba",
   "Test All": "Probar todo",
   "Testing...": "Probando...",

@@ -156,6 +156,21 @@
         "telegram": "Saluran Telegram",
         "github": "Repositori Github"
       }
+    },
+    "logs": {
+      "title": "Log",
+      "actions": {
+        "pause": "Jeda",
+        "resume": "Lanjut",
+        "clear": "Bersihkan"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "Home",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "Log",
-  "Pause": "Jeda",
-  "Resume": "Lanjut",
-  "Clear": "Bersihkan",
   "Test": "Tes",
   "Test All": "Tes Semua",
   "Testing...": "Testing...",

@@ -156,6 +156,21 @@
         "telegram": "Telegram Channel",
         "github": "Github Repo"
       }
+    },
+    "logs": {
+      "title": "로그",
+      "actions": {
+        "pause": "일시 정지",
+        "resume": "재개",
+        "clear": "지우기"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "홈",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "로그",
-  "Pause": "일시 정지",
-  "Resume": "재개",
-  "Clear": "지우기",
   "Test": "테스트",
   "Test All": "모두 테스트",
   "Testing...": "테스트 중...",

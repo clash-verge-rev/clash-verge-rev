@@ -156,6 +156,21 @@
         "telegram": "Telegram Kanalı",
         "github": "Github Repo"
       }
+    },
+    "logs": {
+      "title": "Günlükler",
+      "actions": {
+        "pause": "Duraklat",
+        "resume": "Sürdür",
+        "clear": "Temizle"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
     }
   },
   "Label-Home": "Ana Sayfa",
@@ -247,10 +262,6 @@
   "notice.provider.genericError": "Update failed: {{message}}",
   "notice.provider.none": "No providers available to update",
   "notice.provider.allUpdated": "All providers updated successfully",
-  "Logs": "Günlükler",
-  "Pause": "Duraklat",
-  "Resume": "Sürdür",
-  "Clear": "Temizle",
   "Test": "Test",
   "Test All": "Tümünü Test Et",
   "Testing...": "Test Ediliyor...",
