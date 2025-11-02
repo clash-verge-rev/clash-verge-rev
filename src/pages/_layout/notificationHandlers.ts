@@ -19,6 +19,8 @@ export const handleNoticeMessage = (
       showNotice("error", msg);
     },
     "set_config::error": () => showNotice("error", msg),
+    // 后端暂时没有启用相关通知， 批量更新可能造成扰人提醒
+    // update_success: () => showNotice("success", t("Update subscription successfully")),
     update_with_clash_proxy: () =>
       showNotice(
         "success",
