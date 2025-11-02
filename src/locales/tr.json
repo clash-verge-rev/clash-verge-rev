@@ -199,14 +199,6 @@
       "empty": "No unlock test items"
     }
   },
-  "Label-Home": "Ana Sayfa",
-  "Label-Proxies": "Vekil'ler",
-  "Label-Profiles": "Profiller",
-  "Label-Connections": "Bağlantılar",
-  "Label-Rules": "Kurallar",
-  "Label-Logs": "Günlükler",
-  "Label-Unlock": "Test",
-  "Label-Settings": "Ayarlar",
   "Proxies": "Vekil'ler",
   "Update At": "Güncelleme Zamanı",
   "rule": "kural",
@@ -214,16 +206,9 @@
   "direct": "doğrudan",
   "timeout": "Timeout",
   "script": "betik",
-  "Delay check": "Gecikme kontrolü",
   "Sort by default": "Varsayılana göre sırala",
   "Sort by delay": "Gecikmeye göre sırala",
   "Sort by name": "İsme göre sırala",
-  "Profiles": "Profiller",
-  "Import": "İçe Aktar",
-  "From": "Kaynak",
-  "Update Time": "Güncelleme Zamanı",
-  "Used / Total": "Kullanılan / Toplam",
-  "Expire Time": "Sona Erme Zamanı",
   "DOMAIN": "Tam alan adıyla eşleşir",
   "DOMAIN-SUFFIX": "Alan adı sonekiyle eşleşir",
   "DOMAIN-KEYWORD": "Alan adı anahtar kelimesiyle eşleşir",
@@ -337,9 +322,6 @@
   "Logs Dir": "Günlük Dizini",
   "Open Dir": "Dizin Aç",
   "More": "Daha Fazla",
-  "Rule Mode": "Kural Modu",
-  "Global Mode": "Küresel Mod",
-  "Direct Mode": "Doğrudan Mod",
   "Enable Tray Speed": "Tepsi Hızını Etkinleştir",
   "Enable Tray Icon": "Tepsi Simgesini Etkinleştir",
   "LightWeight Mode": "Hafif Mod",
@@ -364,14 +346,9 @@
   "Merge File Error": "Birleştirme dosyası hatası, değişiklikler geri alındı",
   "Service Administrator Prompt": "Clash Verge sistem hizmetini yeniden kurmak için yönetici ayrıcalıkları gerektiriyor",
   "Website Tests": "Web Sitesi Testleri",
-  "Click to import subscription": "Abonelik içe aktarmak için tıklayın",
   "Update with Clash proxy successfully": "Clash vekil ile güncelleme başarılı",
   "Update failed even with Clash proxy": "Clash vekil ile bile güncelleme başarısız oldu",
   "Profile Imported with Clash proxy": "Profil Clash vekil ile içe aktarıldı",
-  "Current Node": "Geçerli Düğüm",
-  "No active proxy node": "Aktif vekil düğümü yok",
-  "Group": "Grup",
-  "Proxy": "Vekil",
   "Pending": "Beklemede",
   "Yes": "Evet",
   "No": "Hayır",
@@ -401,9 +378,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "Menu reorder mode": "Menu reorder mode",
-  "Unlock menu order": "Unlock menu order",
-  "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "components": {
@@ -641,6 +615,32 @@
         },
         "patterns": {
           "minutes": "{{time}} Minutes"
+        }
+      },
+      "currentProxy": {
+        "title": "Geçerli Düğüm",
+        "actions": {
+          "refreshDelay": "Gecikme kontrolü"
+        },
+        "labels": {
+          "globalMode": "Küresel Mod",
+          "directMode": "Doğrudan Mod",
+          "group": "Grup",
+          "proxy": "Vekil",
+          "noActiveNode": "Aktif vekil düğümü yok"
+        }
+      },
+      "profile": {
+        "title": "Profiller",
+        "actions": {
+          "import": "İçe Aktar"
+        },
+        "labels": {
+          "from": "Kaynak",
+          "updateTime": "Güncelleme Zamanı",
+          "usedTotal": "Kullanılan / Toplam",
+          "expireTime": "Sona Erme Zamanı",
+          "clickToImport": "Abonelik içe aktarmak için tıklayın"
         }
       }
     },
@@ -1189,6 +1189,23 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "Ana Sayfa",
+      "proxies": "Vekil'ler",
+      "profiles": "Profiller",
+      "connections": "Bağlantılar",
+      "rules": "Kurallar",
+      "logs": "Günlükler",
+      "unlock": "Test",
+      "settings": "Ayarlar"
+    },
+    "menu": {
+      "reorderMode": "Menu reorder mode",
+      "unlock": "Unlock menu order",
+      "lock": "Lock menu order"
     }
   }
 }

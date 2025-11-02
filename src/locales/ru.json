@@ -199,14 +199,6 @@
       "empty": "No unlock test items"
     }
   },
-  "Label-Home": "Главная",
-  "Label-Proxies": "Прокси",
-  "Label-Profiles": "Профили",
-  "Label-Connections": "Соединения",
-  "Label-Rules": "Правила",
-  "Label-Logs": "Логи",
-  "Label-Unlock": "Тест",
-  "Label-Settings": "Настройки",
   "Proxies": "Прокси",
   "Update At": "Обновлено в",
   "rule": "правила",
@@ -214,16 +206,9 @@
   "direct": "прямой",
   "timeout": "Тайм-аут",
   "script": "скриптовый",
-  "Delay check": "Проверка задержки",
   "Sort by default": "Сортировать по умолчанию",
   "Sort by delay": "Сортировать по задержке",
   "Sort by name": "Сортировать по названию",
-  "Profiles": "Профили",
-  "Import": "Импорт",
-  "From": "От",
-  "Update Time": "Время обновления",
-  "Used / Total": "Использовано / Всего",
-  "Expire Time": "Время окончания",
   "DOMAIN": "Соответствует полному доменному имени",
   "DOMAIN-SUFFIX": "Соответствует суффиксу домена",
   "DOMAIN-KEYWORD": "Соответствует ключевому слову домена",
@@ -337,9 +322,6 @@
   "Logs Dir": "Директория логов",
   "Open Dir": "Открыть директорию",
   "More": "Ещё",
-  "Rule Mode": "Режим правил",
-  "Global Mode": "Глобальный режим",
-  "Direct Mode": "Прямой режим",
   "Enable Tray Speed": "Показывать скорость в трее",
   "Enable Tray Icon": "Показывать значок в трее",
   "LightWeight Mode": "LightWeight Mode",
@@ -364,14 +346,9 @@
   "Merge File Error": "Ошибка Merge File, откат изменений",
   "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы",
   "Website Tests": "Проверка доступности веб-сайтов",
-  "Click to import subscription": "Нажмите, чтобы импортировать подписку",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Current Node": "Текущий сервер",
-  "No active proxy node": "Нет активного прокси-узла",
-  "Group": "Группа",
-  "Proxy": "Прокси",
   "Pending": "В ожидании",
   "Yes": "Да",
   "No": "Нет",
@@ -401,9 +378,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "Menu reorder mode": "Menu reorder mode",
-  "Unlock menu order": "Unlock menu order",
-  "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "components": {
@@ -641,6 +615,32 @@
         },
         "patterns": {
           "minutes": "{{time}} Minutes"
+        }
+      },
+      "currentProxy": {
+        "title": "Текущий сервер",
+        "actions": {
+          "refreshDelay": "Проверка задержки"
+        },
+        "labels": {
+          "globalMode": "Глобальный режим",
+          "directMode": "Прямой режим",
+          "group": "Группа",
+          "proxy": "Прокси",
+          "noActiveNode": "Нет активного прокси-узла"
+        }
+      },
+      "profile": {
+        "title": "Профили",
+        "actions": {
+          "import": "Импорт"
+        },
+        "labels": {
+          "from": "От",
+          "updateTime": "Время обновления",
+          "usedTotal": "Использовано / Всего",
+          "expireTime": "Время окончания",
+          "clickToImport": "Нажмите, чтобы импортировать подписку"
         }
       }
     },
@@ -1189,6 +1189,23 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "Главная",
+      "proxies": "Прокси",
+      "profiles": "Профили",
+      "connections": "Соединения",
+      "rules": "Правила",
+      "logs": "Логи",
+      "unlock": "Тест",
+      "settings": "Настройки"
+    },
+    "menu": {
+      "reorderMode": "Menu reorder mode",
+      "unlock": "Unlock menu order",
+      "lock": "Lock menu order"
     }
   }
 }

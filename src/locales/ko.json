@@ -199,14 +199,6 @@
       "empty": "No unlock test items"
     }
   },
-  "Label-Home": "홈",
-  "Label-Proxies": "프록시",
-  "Label-Profiles": "프로필",
-  "Label-Connections": "연결",
-  "Label-Rules": "규칙",
-  "Label-Logs": "로그",
-  "Label-Unlock": "테스트",
-  "Label-Settings": "설정",
   "Proxies": "프록시",
   "Update At": "업데이트 시간",
   "rule": "규칙",
@@ -214,16 +206,9 @@
   "direct": "직접",
   "timeout": "Timeout",
   "script": "스크립트",
-  "Delay check": "지연 확인",
   "Sort by default": "기본값으로 정렬",
   "Sort by delay": "지연시간으로 정렬",
   "Sort by name": "이름으로 정렬",
-  "Profiles": "프로필",
-  "Import": "가져오기",
-  "From": "출처",
-  "Update Time": "업데이트 시간",
-  "Used / Total": "사용됨 / 전체",
-  "Expire Time": "만료 시간",
   "DOMAIN": "전체 도메인 이름과 일치",
   "DOMAIN-SUFFIX": "도메인 접미사와 일치",
   "DOMAIN-KEYWORD": "도메인 키워드와 일치",
@@ -337,9 +322,6 @@
   "Logs Dir": "Logs Dir",
   "Open Dir": "Open Dir",
   "More": "More",
-  "Rule Mode": "Rule Mode",
-  "Global Mode": "Global Mode",
-  "Direct Mode": "Direct Mode",
   "Enable Tray Speed": "Enable Tray Speed",
   "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "Lightweight Mode",
@@ -364,14 +346,9 @@
   "Merge File Error": "병합 파일 오류",
   "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
   "Website Tests": "Website Tests",
-  "Click to import subscription": "Click to import subscription",
   "Update with Clash proxy successfully": "Clash 프록시로 업데이트 성공",
   "Update failed even with Clash proxy": "Clash 프록시로도 업데이트 실패",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Current Node": "Current Node",
-  "No active proxy node": "No active proxy node",
-  "Group": "Group",
-  "Proxy": "Proxy",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -401,9 +378,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "Menu reorder mode": "Menu reorder mode",
-  "Unlock menu order": "Unlock menu order",
-  "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "components": {
@@ -641,6 +615,32 @@
         },
         "patterns": {
           "minutes": "{{time}} Minutes"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "지연 확인"
+        },
+        "labels": {
+          "globalMode": "Global Mode",
+          "directMode": "Direct Mode",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "profile": {
+        "title": "프로필",
+        "actions": {
+          "import": "가져오기"
+        },
+        "labels": {
+          "from": "출처",
+          "updateTime": "업데이트 시간",
+          "usedTotal": "사용됨 / 전체",
+          "expireTime": "만료 시간",
+          "clickToImport": "Click to import subscription"
         }
       }
     },
@@ -1189,6 +1189,23 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "홈",
+      "proxies": "프록시",
+      "profiles": "프로필",
+      "connections": "연결",
+      "rules": "규칙",
+      "logs": "로그",
+      "unlock": "테스트",
+      "settings": "설정"
+    },
+    "menu": {
+      "reorderMode": "Menu reorder mode",
+      "unlock": "Unlock menu order",
+      "lock": "Lock menu order"
     }
   }
 }

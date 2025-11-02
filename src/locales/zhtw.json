@@ -199,14 +199,6 @@
       "empty": "目前沒有解鎖測試項目"
     }
   },
-  "Label-Home": "首 頁",
-  "Label-Proxies": "代 理",
-  "Label-Profiles": "訂 閱",
-  "Label-Connections": "連 線",
-  "Label-Rules": "規 則",
-  "Label-Logs": "日 誌",
-  "Label-Unlock": "解 鎖",
-  "Label-Settings": "設 定",
   "Proxies": "代理",
   "Update At": "更新於",
   "rule": "規則",
@@ -214,16 +206,9 @@
   "direct": "直連",
   "timeout": "逾時",
   "script": "指令碼",
-  "Delay check": "延遲測試",
   "Sort by default": "預設排序",
   "Sort by delay": "按延遲排序",
   "Sort by name": "按名稱排序",
-  "Profiles": "訂閱",
-  "Import": "匯入",
-  "From": "來自",
-  "Update Time": "更新時間",
-  "Used / Total": "已使用 / 總量",
-  "Expire Time": "到期時間",
   "DOMAIN": "配對完整網域",
   "DOMAIN-SUFFIX": "配對網域後綴",
   "DOMAIN-KEYWORD": "配對網域關鍵字",
@@ -337,9 +322,6 @@
   "Logs Dir": "日誌目錄",
   "Open Dir": "開啟目錄",
   "More": "更多",
-  "Rule Mode": "規則模式",
-  "Global Mode": "全域模式",
-  "Direct Mode": "直連模式",
   "Enable Tray Speed": "啟用系統匣速率",
   "Enable Tray Icon": "啟用系統匣圖示",
   "LightWeight Mode": "輕量模式",
@@ -364,14 +346,9 @@
   "Merge File Error": "覆寫檔案錯誤，變更已撤銷",
   "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
   "Website Tests": "網站測試",
-  "Click to import subscription": "點擊匯入訂閱",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失敗",
   "Profile Imported with Clash proxy": "使用 Clash 代理匯入訂閱成功",
-  "Current Node": "目前節點",
-  "No active proxy node": "暫無作用中的代理節點",
-  "Group": "代理組",
-  "Proxy": "節點",
   "Pending": "待檢測",
   "Yes": "支援",
   "No": "不支援",
@@ -401,9 +378,6 @@
   "Failed to save configuration": "設定儲存失敗",
   "Saving...": "儲存中...",
   "Detection timeout or failed": "檢測逾時或失敗",
-  "Menu reorder mode": "選單排序模式",
-  "Unlock menu order": "解鎖選單排序",
-  "Lock menu order": "鎖定選單排序",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "components": {
@@ -641,6 +615,32 @@
         },
         "patterns": {
           "minutes": "{{time}} Minutes"
+        }
+      },
+      "currentProxy": {
+        "title": "目前節點",
+        "actions": {
+          "refreshDelay": "延遲測試"
+        },
+        "labels": {
+          "globalMode": "全域模式",
+          "directMode": "直連模式",
+          "group": "代理組",
+          "proxy": "節點",
+          "noActiveNode": "暫無作用中的代理節點"
+        }
+      },
+      "profile": {
+        "title": "訂閱",
+        "actions": {
+          "import": "匯入"
+        },
+        "labels": {
+          "from": "來自",
+          "updateTime": "更新時間",
+          "usedTotal": "已使用 / 總量",
+          "expireTime": "到期時間",
+          "clickToImport": "點擊匯入訂閱"
         }
       }
     },
@@ -1189,6 +1189,23 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "首 頁",
+      "proxies": "代 理",
+      "profiles": "訂 閱",
+      "connections": "連 線",
+      "rules": "規 則",
+      "logs": "日 誌",
+      "unlock": "解 鎖",
+      "settings": "設 定"
+    },
+    "menu": {
+      "reorderMode": "選單排序模式",
+      "unlock": "解鎖選單排序",
+      "lock": "鎖定選單排序"
     }
   }
 }

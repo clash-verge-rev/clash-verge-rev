@@ -199,14 +199,6 @@
       "empty": "アンロックテスト項目はありません"
     }
   },
-  "Label-Home": "ホーム",
-  "Label-Proxies": "プロキシ",
-  "Label-Profiles": "プロファイル",
-  "Label-Connections": "接続",
-  "Label-Rules": "ルール",
-  "Label-Logs": "ログ",
-  "Label-Unlock": "テスト",
-  "Label-Settings": "設定",
   "Proxies": "Proxies",
   "Update At": "更新日時",
   "rule": "ルール",
@@ -214,16 +206,9 @@
   "direct": "直接接続",
   "timeout": "Timeout",
   "script": "スクリプト",
-  "Delay check": "遅延テスト",
   "Sort by default": "デフォルトでソート",
   "Sort by delay": "遅延でソート",
   "Sort by name": "名前でソート",
-  "Profiles": "プロファイル",
-  "Import": "インポート",
-  "From": "から",
-  "Update Time": "更新時間",
-  "Used / Total": "使用済み / 合計",
-  "Expire Time": "有効期限",
   "DOMAIN": "完全なドメイン名を一致させる",
   "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
   "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
@@ -337,9 +322,6 @@
   "Logs Dir": "ログディレクトリ",
   "Open Dir": "ディレクトリを開く",
   "More": "もっと見る",
-  "Rule Mode": "ルールモード",
-  "Global Mode": "グローバルモード",
-  "Direct Mode": "直接接続モード",
   "Enable Tray Speed": "トレイの速度表示を有効にする",
   "Enable Tray Icon": "トレイアイコンを有効にする",
   "LightWeight Mode": "軽量モード",
@@ -364,14 +346,9 @@
   "Merge File Error": "上書きファイルにエラーがあります。変更は取り消されました。",
   "Service Administrator Prompt": "Clash Vergeはシステムサービスをインストールするために管理者権限が必要です。",
   "Website Tests": "ウェブサイトテスト",
-  "Click to import subscription": "クリックしてサブスクリプションをインポート",
   "Update with Clash proxy successfully": "Clashプロキシを使用して更新に成功しました。",
   "Update failed even with Clash proxy": "Clashプロキシを使用しても更新に失敗しました。",
   "Profile Imported with Clash proxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",
-  "Current Node": "現在のノード",
-  "No active proxy node": "アクティブなプロキシノードがありません。",
-  "Group": "プロキシグループ",
-  "Proxy": "ノード",
   "Pending": "検査待ち",
   "Yes": "サポートする",
   "No": "サポートしない",
@@ -401,9 +378,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "Menu reorder mode": "Menu reorder mode",
-  "Unlock menu order": "Unlock menu order",
-  "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "components": {
@@ -641,6 +615,32 @@
         },
         "patterns": {
           "minutes": "{{time}} Minutes"
+        }
+      },
+      "currentProxy": {
+        "title": "現在のノード",
+        "actions": {
+          "refreshDelay": "遅延テスト"
+        },
+        "labels": {
+          "globalMode": "グローバルモード",
+          "directMode": "直接接続モード",
+          "group": "プロキシグループ",
+          "proxy": "ノード",
+          "noActiveNode": "アクティブなプロキシノードがありません。"
+        }
+      },
+      "profile": {
+        "title": "プロファイル",
+        "actions": {
+          "import": "インポート"
+        },
+        "labels": {
+          "from": "から",
+          "updateTime": "更新時間",
+          "usedTotal": "使用済み / 合計",
+          "expireTime": "有効期限",
+          "clickToImport": "クリックしてサブスクリプションをインポート"
         }
       }
     },
@@ -1189,6 +1189,23 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "ホーム",
+      "proxies": "プロキシ",
+      "profiles": "プロファイル",
+      "connections": "接続",
+      "rules": "ルール",
+      "logs": "ログ",
+      "unlock": "テスト",
+      "settings": "設定"
+    },
+    "menu": {
+      "reorderMode": "Menu reorder mode",
+      "unlock": "Unlock menu order",
+      "lock": "Lock menu order"
     }
   }
 }

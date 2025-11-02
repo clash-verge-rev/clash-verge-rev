@@ -199,14 +199,6 @@
       "empty": "暂无解锁测试项目"
     }
   },
-  "Label-Home": "首 页",
-  "Label-Proxies": "代 理",
-  "Label-Profiles": "订 阅",
-  "Label-Connections": "连 接",
-  "Label-Rules": "规 则",
-  "Label-Logs": "日 志",
-  "Label-Unlock": "测 试",
-  "Label-Settings": "设 置",
   "Proxies": "代理",
   "Update At": "更新于",
   "rule": "规则",
@@ -214,16 +206,9 @@
   "direct": "直连",
   "timeout": "超时",
   "script": "脚本",
-  "Delay check": "延迟测试",
   "Sort by default": "默认排序",
   "Sort by delay": "按延迟排序",
   "Sort by name": "按名称排序",
-  "Profiles": "订阅",
-  "Import": "导入",
-  "From": "来自",
-  "Update Time": "更新时间",
-  "Used / Total": "已使用 / 总量",
-  "Expire Time": "到期时间",
   "DOMAIN": "匹配完整域名",
   "DOMAIN-SUFFIX": "匹配域名后缀",
   "DOMAIN-KEYWORD": "匹配域名关键字",
@@ -337,9 +322,6 @@
   "Logs Dir": "日志目录",
   "Open Dir": "打开目录",
   "More": "更多",
-  "Rule Mode": "规则模式",
-  "Global Mode": "全局模式",
-  "Direct Mode": "直连模式",
   "Enable Tray Speed": "启用托盘速率",
   "Enable Tray Icon": "启用托盘图标",
   "LightWeight Mode": "轻量模式",
@@ -364,14 +346,9 @@
   "Merge File Error": "覆写文件错误，变更已撤销",
   "Service Administrator Prompt": "Clash Verge 需要管理员权限安装系统服务",
   "Website Tests": "网站测试",
-  "Click to import subscription": "点击导入订阅",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失败",
   "Profile Imported with Clash proxy": "使用 Clash 代理导入订阅成功",
-  "Current Node": "当前节点",
-  "No active proxy node": "暂无激活的代理节点",
-  "Group": "代理组",
-  "Proxy": "节点",
   "Pending": "待检测",
   "Yes": "支持",
   "No": "不支持",
@@ -401,9 +378,6 @@
   "Failed to save configuration": "配置保存失败",
   "Saving...": "保存中...",
   "Detection timeout or failed": "检测超时或失败",
-  "Menu reorder mode": "菜单排序模式",
-  "Unlock menu order": "解锁菜单排序",
-  "Lock menu order": "锁定菜单排序",
   "Open App Log": "应用日志",
   "Open Core Log": "内核日志",
   "components": {
@@ -641,6 +615,32 @@
         },
         "patterns": {
           "minutes": "{{time}} Minutes"
+        }
+      },
+      "currentProxy": {
+        "title": "当前节点",
+        "actions": {
+          "refreshDelay": "延迟测试"
+        },
+        "labels": {
+          "globalMode": "全局模式",
+          "directMode": "直连模式",
+          "group": "代理组",
+          "proxy": "节点",
+          "noActiveNode": "暂无激活的代理节点"
+        }
+      },
+      "profile": {
+        "title": "订阅",
+        "actions": {
+          "import": "导入"
+        },
+        "labels": {
+          "from": "来自",
+          "updateTime": "更新时间",
+          "usedTotal": "已使用 / 总量",
+          "expireTime": "到期时间",
+          "clickToImport": "点击导入订阅"
         }
       }
     },
@@ -1189,6 +1189,23 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "首 页",
+      "proxies": "代 理",
+      "profiles": "订 阅",
+      "connections": "连 接",
+      "rules": "规 则",
+      "logs": "日 志",
+      "unlock": "测 试",
+      "settings": "设 置"
+    },
+    "menu": {
+      "reorderMode": "菜单排序模式",
+      "unlock": "解锁菜单排序",
+      "lock": "锁定菜单排序"
     }
   }
 }

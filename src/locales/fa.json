@@ -199,14 +199,6 @@
       "empty": "No unlock test items"
     }
   },
-  "Label-Home": "Home",
-  "Label-Proxies": "پراکسی‌ها",
-  "Label-Profiles": "پروفایل‌ها",
-  "Label-Connections": "اتصالات",
-  "Label-Rules": "قوانین",
-  "Label-Logs": "لاگ‌ها",
-  "Label-Unlock": "Test",
-  "Label-Settings": "تنظیمات",
   "Proxies": "پراکسی‌ها",
   "Update At": "به‌روزرسانی در",
   "rule": "قانون",
@@ -214,16 +206,9 @@
   "direct": "مستقیم",
   "timeout": "Timeout",
   "script": "اسکریپت",
-  "Delay check": "بررسی تأخیر",
   "Sort by default": "مرتب‌سازی بر اساس پیش‌فرض",
   "Sort by delay": "مرتب‌سازی بر اساس تأخیر",
   "Sort by name": "مرتب‌سازی بر اساس نام",
-  "Profiles": "پروفایل‌ها",
-  "Import": "وارد کردن",
-  "From": "از",
-  "Update Time": "زمان به‌روزرسانی",
-  "Used / Total": "استفاده‌شده / کل",
-  "Expire Time": "زمان انقضا",
   "DOMAIN": "مطابقت با نام کامل دامنه",
   "DOMAIN-SUFFIX": "مطابقت با پسوند دامنه",
   "DOMAIN-KEYWORD": "مطابقت با کلمه کلیدی دامنه",
@@ -337,9 +322,6 @@
   "Logs Dir": "پوشه لاگ‌ها",
   "Open Dir": "باز کردن پوشه",
   "More": "بیشتر",
-  "Rule Mode": "حالت قوانین",
-  "Global Mode": "حالت جهانی",
-  "Direct Mode": "حالت مستقیم",
   "Enable Tray Speed": "فعال کردن سرعت ترای",
   "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "در فارسی",
@@ -364,14 +346,9 @@
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge برای نصب مجدد سرویس سیستم به امتیازات مدیر نیاز دارد",
   "Website Tests": "Website Tests",
-  "Click to import subscription": "Click to import subscription",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Current Node": "Current Node",
-  "No active proxy node": "No active proxy node",
-  "Group": "Group",
-  "Proxy": "Proxy",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -401,9 +378,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "Menu reorder mode": "Menu reorder mode",
-  "Unlock menu order": "Unlock menu order",
-  "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "components": {
@@ -641,6 +615,32 @@
         },
         "patterns": {
           "minutes": "{{time}} Minutes"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "بررسی تأخیر"
+        },
+        "labels": {
+          "globalMode": "حالت جهانی",
+          "directMode": "حالت مستقیم",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "profile": {
+        "title": "پروفایل‌ها",
+        "actions": {
+          "import": "وارد کردن"
+        },
+        "labels": {
+          "from": "از",
+          "updateTime": "زمان به‌روزرسانی",
+          "usedTotal": "استفاده‌شده / کل",
+          "expireTime": "زمان انقضا",
+          "clickToImport": "Click to import subscription"
         }
       }
     },
@@ -1189,6 +1189,23 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "Home",
+      "proxies": "پراکسی‌ها",
+      "profiles": "پروفایل‌ها",
+      "connections": "اتصالات",
+      "rules": "قوانین",
+      "logs": "لاگ‌ها",
+      "unlock": "Test",
+      "settings": "تنظیمات"
+    },
+    "menu": {
+      "reorderMode": "Menu reorder mode",
+      "unlock": "Unlock menu order",
+      "lock": "Lock menu order"
     }
   }
 }

@@ -111,7 +111,9 @@ const ProfileDetails = ({
               noWrap
               sx={{ display: "flex", alignItems: "center" }}
             >
-              <span style={{ flexShrink: 0 }}>{t("From")}: </span>
+              <span style={{ flexShrink: 0 }}>
+                {t("components.home.profile.labels.from")}:{" "}
+              </span>
               {current.home ? (
                 <Link
                   component="button"
@@ -186,7 +188,7 @@ const ProfileDetails = ({
               sx={{ cursor: "pointer" }}
               onClick={onUpdateProfile}
             >
-              {t("Update Time")}:{" "}
+              {t("components.home.profile.labels.updateTime")}:{" "}
               <Box component="span" fontWeight="medium">
                 {dayjs(current.updated * 1000).format("YYYY-MM-DD HH:mm")}
               </Box>
@@ -199,7 +201,7 @@ const ProfileDetails = ({
             <Stack direction="row" alignItems="center" spacing={1}>
               <SpeedOutlined fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
-                {t("Used / Total")}:{" "}
+                {t("components.home.profile.labels.usedTotal")}:{" "}
                 <Box component="span" fontWeight="medium">
                   {parseTraffic(usedTraffic)} /{" "}
                   {parseTraffic(current.extra.total)}
@@ -211,7 +213,7 @@ const ProfileDetails = ({
               <Stack direction="row" alignItems="center" spacing={1}>
                 <EventOutlined fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">
-                  {t("Expire Time")}:{" "}
+                  {t("components.home.profile.labels.expireTime")}:{" "}
                   <Box component="span" fontWeight="medium">
                     {parseExpire(current.extra.expire)}
                   </Box>
@@ -266,10 +268,11 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
         sx={{ fontSize: 60, color: "primary.main", mb: 2 }}
       />
       <Typography variant="h6" gutterBottom>
-        {t("Import")} {t("Profiles")}
+        {t("components.home.profile.actions.import")}{" "}
+        {t("components.home.profile.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        {t("Click to import subscription")}
+        {t("components.home.profile.labels.clickToImport")}
       </Typography>
     </Box>
   );
@@ -310,7 +313,7 @@ export const HomeProfileCard = ({
 
   // 卡片标题
   const cardTitle = useMemo(() => {
-    if (!current) return t("Profiles");
+    if (!current) return t("components.home.profile.title");
 
     if (!current.home) return current.name;
 
@@ -363,7 +366,7 @@ export const HomeProfileCard = ({
         endIcon={<StorageOutlined fontSize="small" />}
         sx={{ borderRadius: 1.5 }}
       >
-        {t("Label-Profiles")}
+        {t("navigation.tabs.proxies")}
       </Button>
     );
   }, [current, goToProfiles, t]);

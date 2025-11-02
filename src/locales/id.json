@@ -199,14 +199,6 @@
       "empty": "No unlock test items"
     }
   },
-  "Label-Home": "Home",
-  "Label-Proxies": "Proksi",
-  "Label-Profiles": "Profil",
-  "Label-Connections": "Koneksi",
-  "Label-Rules": "Aturan",
-  "Label-Logs": "Log",
-  "Label-Unlock": "Test",
-  "Label-Settings": "Pengaturan",
   "Proxies": "Proksi",
   "Update At": "Diperbarui Pada",
   "rule": "aturan",
@@ -214,16 +206,9 @@
   "direct": "langsung",
   "timeout": "Timeout",
   "script": "skrip",
-  "Delay check": "Periksa Keterlambatan",
   "Sort by default": "Urutkan secara default",
   "Sort by delay": "Urutkan berdasarkan keterlambatan",
   "Sort by name": "Urutkan berdasarkan nama",
-  "Profiles": "Profil",
-  "Import": "Impor",
-  "From": "Dari",
-  "Update Time": "Waktu Pembaruan",
-  "Used / Total": "Digunakan / Total",
-  "Expire Time": "Waktu Kedaluwarsa",
   "DOMAIN": "Cocok dengan nama domain lengkap",
   "DOMAIN-SUFFIX": "Cocok dengan sufiks domain",
   "DOMAIN-KEYWORD": "Cocok dengan kata kunci domain",
@@ -337,9 +322,6 @@
   "Logs Dir": "Direktori Log",
   "Open Dir": "Buka Direktori",
   "More": "Lainnya",
-  "Rule Mode": "Mode Aturan",
-  "Global Mode": "Mode Global",
-  "Direct Mode": "Mode Langsung",
   "Enable Tray Speed": "Aktifkan Tray Speed",
   "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "Mode Ringan",
@@ -364,14 +346,9 @@
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge memerlukan hak administrator untuk menginstal ulang layanan sistem",
   "Website Tests": "Website Tests",
-  "Click to import subscription": "Click to import subscription",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Current Node": "Current Node",
-  "No active proxy node": "No active proxy node",
-  "Group": "Group",
-  "Proxy": "Proxy",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -401,9 +378,6 @@
   "Failed to save configuration": "Failed to save configuration",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
-  "Menu reorder mode": "Menu reorder mode",
-  "Unlock menu order": "Unlock menu order",
-  "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "components": {
@@ -641,6 +615,32 @@
         },
         "patterns": {
           "minutes": "{{time}} Minutes"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "Periksa Keterlambatan"
+        },
+        "labels": {
+          "globalMode": "Mode Global",
+          "directMode": "Mode Langsung",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "profile": {
+        "title": "Profil",
+        "actions": {
+          "import": "Impor"
+        },
+        "labels": {
+          "from": "Dari",
+          "updateTime": "Waktu Pembaruan",
+          "usedTotal": "Digunakan / Total",
+          "expireTime": "Waktu Kedaluwarsa",
+          "clickToImport": "Click to import subscription"
         }
       }
     },
@@ -1189,6 +1189,23 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "Home",
+      "proxies": "Proksi",
+      "profiles": "Profil",
+      "connections": "Koneksi",
+      "rules": "Aturan",
+      "logs": "Log",
+      "unlock": "Test",
+      "settings": "Pengaturan"
+    },
+    "menu": {
+      "reorderMode": "Menu reorder mode",
+      "unlock": "Unlock menu order",
+      "lock": "Lock menu order"
     }
   }
 }
