@@ -94,9 +94,10 @@ export default defineConfig([
         "warn",
         {
           vars: "all",
-          varsIgnorePattern: "^_+$",
+          varsIgnorePattern: "^_",
           args: "after-used",
-          argsIgnorePattern: "^_+$",
+          argsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^ignore",
         },
       ],
 

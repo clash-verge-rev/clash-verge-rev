@@ -1,6 +1,5 @@
-use crate::utils::i18n::t;
+use crate::{core::handle, utils::i18n::t};
 
-use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 
 pub enum NotificationEvent<'a> {
@@ -16,8 +15,10 @@ pub enum NotificationEvent<'a> {
     AppHidden,
 }
 
-fn notify(app: &AppHandle, title: &str, body: &str) {
-    app.notification()
+fn notify(title: &str, body: &str) {
+    let app_handle = handle::Handle::app_handle();
+    app_handle
+        .notification()
         .builder()
         .title(title)
         .body(body)
@@ -25,49 +26,44 @@ fn notify(app: &AppHandle, title: &str, body: &str) {
         .ok();
 }
 
-pub async fn notify_event<'a>(app: AppHandle, event: NotificationEvent<'a>) {
+pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
     match event {
         NotificationEvent::DashboardToggled => {
             notify(
-                &app,
                 &t("DashboardToggledTitle").await,
                 &t("DashboardToggledBody").await,
             );
         }
         NotificationEvent::ClashModeChanged { mode } => {
             notify(
-                &app,
                 &t("ClashModeChangedTitle").await,
                 &t_with_args("ClashModeChangedBody", mode).await,
             );
         }
         NotificationEvent::SystemProxyToggled => {
             notify(
-                &app,
                 &t("SystemProxyToggledTitle").await,
                 &t("SystemProxyToggledBody").await,
             );
         }
         NotificationEvent::TunModeToggled => {
             notify(
-                &app,
                 &t("TunModeToggledTitle").await,
                 &t("TunModeToggledBody").await,
             );
         }
         NotificationEvent::LightweightModeEntered => {
             notify(
-                &app,
                 &t("LightweightModeEnteredTitle").await,
                 &t("LightweightModeEnteredBody").await,
             );
         }
         NotificationEvent::AppQuit => {
-            notify(&app, &t("AppQuitTitle").await, &t("AppQuitBody").await);
+            notify(&t("AppQuitTitle").await, &t("AppQuitBody").await);
         }
         #[cfg(target_os = "macos")]
         NotificationEvent::AppHidden => {
-            notify(&app, &t("AppHiddenTitle").await, &t("AppHiddenBody").await);
+            notify(&t("AppHiddenTitle").await, &t("AppHiddenBody").await);
         }
     }
 }

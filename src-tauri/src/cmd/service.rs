@@ -3,6 +3,7 @@ use crate::{
     core::service::{self, SERVICE_MANAGER, ServiceStatus},
     utils::i18n::t,
 };
+use smartstring::SmartString;
 
 async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) -> CmdResult {
     if let Err(e) = SERVICE_MANAGER
@@ -12,7 +13,7 @@ async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) ->
         .await
     {
         let emsg = format!("{} Service failed: {}", op_type, e);
-        return Err(t(emsg.as_str()).await.into());
+        return Err(SmartString::from(&*t(emsg.as_str()).await));
     }
     Ok(())
 }

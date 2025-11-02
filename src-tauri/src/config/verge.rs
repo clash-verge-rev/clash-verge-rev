@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::{
     config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
     logging,
@@ -203,8 +204,7 @@ pub struct IVerge {
 
     pub enable_tray_speed: Option<bool>,
 
-    pub enable_tray_icon: Option<bool>,
-
+    // pub enable_tray_icon: Option<bool>,
     /// show proxy groups directly on tray root menu
     pub tray_inline_proxy_groups: Option<bool>,
 
@@ -305,18 +305,16 @@ impl IVerge {
 
     /// 配置修正后重新加载配置
     async fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
-        use crate::config::Config;
-
-        let config_draft = Config::verge().await;
-        *config_draft.draft_mut() = Box::new(updated_config.clone());
-        config_draft.apply();
-
         logging!(
             info,
             Type::Config,
             "内存配置已强制更新，新的clash_core: {:?}",
-            updated_config.clash_core
+            &updated_config.clash_core
         );
+
+        let config_draft = Config::verge().await;
+        **config_draft.draft_mut() = updated_config;
+        config_draft.apply();
 
         Ok(())
     }
@@ -355,12 +353,12 @@ impl IVerge {
                     config
                 }
                 Err(err) => {
-                    log::error!(target: "app", "{err}");
+                    logging!(error, Type::Config, "{err}");
                     Self::template()
                 }
             },
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                logging!(error, Type::Config, "{err}");
                 Self::template()
             }
         }
@@ -419,7 +417,7 @@ impl IVerge {
             webdav_username: None,
             webdav_password: None,
             enable_tray_speed: Some(false),
-            enable_tray_icon: Some(true),
+            // enable_tray_icon: Some(true),
             tray_inline_proxy_groups: Some(false),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
@@ -438,11 +436,12 @@ impl IVerge {
 
     /// patch verge config
     /// only save to file
-    pub fn patch_config(&mut self, patch: IVerge) {
+    #[allow(clippy::cognitive_complexity)]
+    pub fn patch_config(&mut self, patch: &IVerge) {
         macro_rules! patch {
             ($key: tt) => {
                 if patch.$key.is_some() {
-                    self.$key = patch.$key;
+                    self.$key = patch.$key.clone();
                 }
             };
         }
@@ -514,7 +513,7 @@ impl IVerge {
         patch!(webdav_username);
         patch!(webdav_password);
         patch!(enable_tray_speed);
-        patch!(enable_tray_icon);
+        // patch!(enable_tray_icon);
         patch!(tray_inline_proxy_groups);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);
@@ -608,7 +607,7 @@ pub struct IVergeResponse {
     pub webdav_username: Option<String>,
     pub webdav_password: Option<String>,
     pub enable_tray_speed: Option<bool>,
-    pub enable_tray_icon: Option<bool>,
+    // pub enable_tray_icon: Option<bool>,
     pub tray_inline_proxy_groups: Option<bool>,
     pub enable_auto_light_weight_mode: Option<bool>,
     pub auto_light_weight_minutes: Option<u64>,
@@ -685,7 +684,7 @@ impl From<IVerge> for IVergeResponse {
             webdav_username: verge.webdav_username,
             webdav_password: verge.webdav_password,
             enable_tray_speed: verge.enable_tray_speed,
-            enable_tray_icon: verge.enable_tray_icon,
+            // enable_tray_icon: verge.enable_tray_icon,
             tray_inline_proxy_groups: verge.tray_inline_proxy_groups,
             enable_auto_light_weight_mode: verge.enable_auto_light_weight_mode,
             auto_light_weight_minutes: verge.auto_light_weight_minutes,
@@ -695,5 +694,11 @@ impl From<IVerge> for IVergeResponse {
             hover_jump_navigator_delay: verge.hover_jump_navigator_delay,
             enable_external_controller: verge.enable_external_controller,
         }
+    }
+}
+
+impl From<Box<IVerge>> for IVergeResponse {
+    fn from(verge: Box<IVerge>) -> Self {
+        IVergeResponse::from(*verge)
     }
 }

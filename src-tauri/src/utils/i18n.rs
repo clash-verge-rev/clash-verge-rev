@@ -1,10 +1,17 @@
 use crate::{config::Config, utils::dirs};
 use once_cell::sync::Lazy;
-use serde_json::Value;
-use std::{fs, path::PathBuf, sync::RwLock};
+use smartstring::alias::String;
+use std::{
+    collections::HashMap,
+    fs,
+    path::PathBuf,
+    sync::{Arc, RwLock},
+};
 use sys_locale;
 
 const DEFAULT_LANGUAGE: &str = "zh";
+
+type TranslationMap = (String, HashMap<String, Arc<str>>);
 
 fn get_locales_dir() -> Option<PathBuf> {
     dirs::app_resources_dir()
@@ -33,18 +40,33 @@ pub fn get_supported_languages() -> Vec<String> {
     languages
 }
 
-static TRANSLATIONS: Lazy<RwLock<(String, Value)>> = Lazy::new(|| {
+pub async fn current_language() -> String {
+    Config::verge()
+        .await
+        .latest_ref()
+        .language
+        .as_deref()
+        .map(String::from)
+        .unwrap_or_else(get_system_language)
+}
+
+static TRANSLATIONS: Lazy<RwLock<TranslationMap>> = Lazy::new(|| {
     let lang = get_system_language();
-    let json = load_lang_file(&lang).unwrap_or_else(|| Value::Object(Default::default()));
-    RwLock::new((lang, json))
+    let map = load_lang_file(&lang).unwrap_or_default();
+    RwLock::new((lang, map))
 });
 
-fn load_lang_file(lang: &str) -> Option<Value> {
+fn load_lang_file(lang: &str) -> Option<HashMap<String, Arc<str>>> {
     let locales_dir = get_locales_dir()?;
     let file_path = locales_dir.join(format!("{lang}.json"));
     fs::read_to_string(file_path)
         .ok()
-        .and_then(|content| serde_json::from_str(&content).ok())
+        .and_then(|content| serde_json::from_str::<HashMap<String, String>>(&content).ok())
+        .map(|map| {
+            map.into_iter()
+                .map(|(k, v)| (k, Arc::from(v.as_str())))
+                .collect()
+        })
 }
 
 fn get_system_language() -> String {
@@ -55,44 +77,38 @@ fn get_system_language() -> String {
         .unwrap_or_else(|| DEFAULT_LANGUAGE.into())
 }
 
-pub async fn t(key: &str) -> String {
-    let current_lang = Config::verge()
-        .await
-        .latest_ref()
-        .language
-        .as_deref()
-        .map(String::from)
-        .unwrap_or_else(get_system_language);
+pub async fn t(key: &str) -> Arc<str> {
+    let current_lang = current_language().await;
 
     {
         if let Ok(cache) = TRANSLATIONS.read()
             && cache.0 == current_lang
-            && let Some(text) = cache.1.get(key).and_then(|val| val.as_str())
+            && let Some(text) = cache.1.get(key)
         {
-            return text.into();
+            return Arc::clone(text);
         }
     }
 
-    if let Some(new_json) = load_lang_file(&current_lang)
+    if let Some(new_map) = load_lang_file(&current_lang)
         && let Ok(mut cache) = TRANSLATIONS.write()
     {
-        *cache = (current_lang.clone(), new_json);
+        *cache = (current_lang.clone(), new_map);
 
-        if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
-            return text.into();
+        if let Some(text) = cache.1.get(key) {
+            return Arc::clone(text);
         }
     }
 
     if current_lang != DEFAULT_LANGUAGE
-        && let Some(default_json) = load_lang_file(DEFAULT_LANGUAGE)
+        && let Some(default_map) = load_lang_file(DEFAULT_LANGUAGE)
         && let Ok(mut cache) = TRANSLATIONS.write()
     {
-        *cache = (DEFAULT_LANGUAGE.into(), default_json);
+        *cache = (DEFAULT_LANGUAGE.into(), default_map);
 
-        if let Some(text) = cache.1.get(key).and_then(|val| val.as_str()) {
-            return text.into();
+        if let Some(text) = cache.1.get(key) {
+            return Arc::clone(text);
         }
     }
 
-    key.into()
+    Arc::from(key)
 }

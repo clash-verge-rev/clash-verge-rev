@@ -508,7 +508,6 @@
   "Fake IP Filter Mode": "Sahte IP Filtre Modu",
   "Enable IPv6 DNS resolution": "IPv6 DNS çözümlemesini etkinleştir",
   "Prefer H3": "H3'ü Tercih Et",
-  "DNS DOH uses HTTP/3": "DNS DOH HTTP/3 kullanır",
   "Respect Rules": "Kurallara Uy",
   "DNS connections follow routing rules": "DNS bağlantıları yönlendirme kurallarını takip eder",
   "Use Hosts": "Hosts Kullan",
@@ -575,7 +574,6 @@
   "Unknown": "Bilinmiyor",
   "Auto update disabled": "Otomatik güncelleme devre dışı",
   "Update subscription successfully": "Abonelik başarıyla güncellendi",
-  "Update failed, retrying with Clash proxy...": "Güncelleme başarısız oldu, Clash vekil ile yeniden deneniyor...",
   "Update with Clash proxy successfully": "Clash vekil ile güncelleme başarılı",
   "Update failed even with Clash proxy": "Clash vekil ile bile güncelleme başarısız oldu",
   "Profile creation failed, retrying with Clash proxy...": "Profil oluşturma başarısız oldu, Clash vekil ile yeniden deneniyor...",
@@ -616,5 +614,6 @@
   "items": "öğeler",
   "Select All": "Tümünü Seç",
   "Selected": "Seçildi",
-  "Selected profiles deleted successfully": "Seçili profiller başarıyla silindi"
+  "Selected profiles deleted successfully": "Seçili profiller başarıyla silindi",
+  "DNS DOH uses HTTP/3": "DNS DOH HTTP/3 kullanır"
 }

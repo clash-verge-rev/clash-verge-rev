@@ -46,6 +46,6 @@
       "matchCurrentVersion": "<8.0.0"
     }
   ],
-  "postUpdateOptions": ["pnpmDedupe"],
+  "postUpdateOptions": ["pnpmDedupe", "updateCargoLock"],
   "ignoreDeps": ["criterion"]
 }

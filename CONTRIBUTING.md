@@ -2,6 +2,10 @@
 
 Thank you for your interest in contributing to Clash Verge Rev! This document provides guidelines and instructions to help you set up your development environment and start contributing.
 
+## Internationalization (i18n)
+
+We welcome translations and improvements to existing locales. Please follow the detailed guidelines in [CONTRIBUTING_i18n.md](docs/CONTRIBUTING_i18n.md) for instructions on extracting strings, file naming conventions, testing translations, and submitting translation PRs.
+
 ## Development Setup
 
 Before you start contributing to the project, you need to set up your development environment. Here are the steps you need to follow:

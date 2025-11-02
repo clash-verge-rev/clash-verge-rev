@@ -11,3 +11,4 @@ scripts/_env.sh
 .idea
 .old
 .eslintcache
+target

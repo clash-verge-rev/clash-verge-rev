@@ -628,7 +628,6 @@
   "Unknown": "Unknown",
   "Auto update disabled": "Auto update disabled",
   "Update subscription successfully": "Update subscription successfully",
-  "Update failed, retrying with Clash proxy...": "Update failed, retrying with Clash proxy...",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",
@@ -713,5 +712,7 @@
   "Allow Auto Update": "Allow Auto Update",
   "Menu reorder mode": "Menu reorder mode",
   "Unlock menu order": "Unlock menu order",
-  "Lock menu order": "Lock menu order"
+  "Lock menu order": "Lock menu order",
+  "Open App Log": "Open App Log",
+  "Open Core Log": "Open Core Log"
 }

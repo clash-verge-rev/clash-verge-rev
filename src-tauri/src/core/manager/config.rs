@@ -19,11 +19,11 @@ impl CoreManager {
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
         let clash_config = Config::clash().await.latest_ref().0.clone();
 
-        *Config::runtime().await.draft_mut() = Box::new(IRuntime {
+        **Config::runtime().await.draft_mut() = IRuntime {
             config: Some(clash_config.clone()),
             exists_keys: vec![],
             chain_logs: Default::default(),
-        });
+        };
 
         help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime")).await?;
         handle::Handle::notice_message(error_key, error_msg);

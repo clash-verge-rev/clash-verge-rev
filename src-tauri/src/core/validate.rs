@@ -1,9 +1,9 @@
 use anyhow::Result;
+use scopeguard::defer;
 use smartstring::alias::String;
-use std::path::Path;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri_plugin_shell::ShellExt;
-use tokio::sync::Mutex;
+use tokio::fs;
 
 use crate::config::{Config, ConfigType};
 use crate::core::handle;
@@ -11,44 +11,38 @@ use crate::singleton_lazy;
 use crate::utils::dirs;
 use crate::{logging, utils::logging::Type};
 
-// pub enum ValidationResult {
-//     Valid,
-//     Invalid(String),
-// }
-
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum ValidationProcessStatus {
-    Ongoing,
-    Completed,
-}
-
 pub struct CoreConfigValidator {
-    // inner: Vec<String>,
-    // result: ValidationResult,
-    process_status: Arc<Mutex<ValidationProcessStatus>>,
+    is_processing: AtomicBool,
 }
 
 impl CoreConfigValidator {
     pub fn new() -> Self {
-        CoreConfigValidator {
-            process_status: Arc::new(Mutex::new(ValidationProcessStatus::Completed)),
+        Self {
+            is_processing: AtomicBool::new(false),
         }
     }
 
+    pub fn try_start(&self) -> bool {
+        !self.is_processing.swap(true, Ordering::AcqRel)
+    }
+
+    pub fn finish(&self) {
+        self.is_processing.store(false, Ordering::Release)
+    }
+}
+
+impl CoreConfigValidator {
     /// 检查文件是否为脚本文件
-    fn is_script_file<P>(path: P) -> Result<bool>
-    where
-        P: AsRef<Path> + std::fmt::Display,
-    {
+    async fn is_script_file(path: &str) -> Result<bool> {
         // 1. 先通过扩展名快速判断
-        if has_ext(&path, "yaml") || has_ext(&path, "yml") {
+        if has_ext(path, "yaml") || has_ext(path, "yml") {
             return Ok(false); // YAML文件不是脚本文件
-        } else if has_ext(&path, "js") {
+        } else if has_ext(path, "js") {
             return Ok(true); // JS文件是脚本文件
         }
 
         // 2. 读取文件内容
-        let content = match std::fs::read_to_string(&path) {
+        let content = match fs::read_to_string(path).await {
             Ok(content) => content,
             Err(err) => {
                 logging!(
@@ -118,11 +112,11 @@ impl CoreConfigValidator {
     }
 
     /// 只进行文件语法检查，不进行完整验证
-    fn validate_file_syntax(config_path: &str) -> Result<(bool, String)> {
+    async fn validate_file_syntax(config_path: &str) -> Result<(bool, String)> {
         logging!(info, Type::Validate, "开始检查文件: {}", config_path);
 
         // 读取文件内容
-        let content = match std::fs::read_to_string(config_path) {
+        let content = match fs::read_to_string(config_path).await {
             Ok(content) => content,
             Err(err) => {
                 let error_msg = format!("Failed to read file: {err}").into();
@@ -147,9 +141,9 @@ impl CoreConfigValidator {
     }
 
     /// 验证脚本文件语法
-    fn validate_script_file(path: &str) -> Result<(bool, String)> {
+    async fn validate_script_file(path: &str) -> Result<(bool, String)> {
         // 读取脚本内容
-        let content = match std::fs::read_to_string(path) {
+        let content = match fs::read_to_string(path).await {
             Ok(content) => content,
             Err(err) => {
                 let error_msg = format!("Failed to read script file: {err}").into();
@@ -219,14 +213,14 @@ impl CoreConfigValidator {
                 "检测到Merge文件，仅进行语法检查: {}",
                 config_path
             );
-            return Self::validate_file_syntax(config_path);
+            return Self::validate_file_syntax(config_path).await;
         }
 
         // 检查是否为脚本文件
         let is_script = if config_path.ends_with(".js") {
             true
         } else {
-            match Self::is_script_file(config_path) {
+            match Self::is_script_file(config_path).await {
                 Ok(result) => result,
                 Err(err) => {
                     // 如果无法确定文件类型，尝试使用Clash内核验证
@@ -249,7 +243,7 @@ impl CoreConfigValidator {
                 "检测到脚本文件，使用JavaScript验证: {}",
                 config_path
             );
-            return Self::validate_script_file(config_path);
+            return Self::validate_script_file(config_path).await;
         }
 
         // 对YAML配置文件使用Clash内核验证
@@ -325,22 +319,18 @@ impl CoreConfigValidator {
 
     /// 验证运行时配置
     pub async fn validate_config(&self) -> Result<(bool, String)> {
-        if *self.process_status.lock().await == ValidationProcessStatus::Ongoing {
+        if !self.try_start() {
             logging!(info, Type::Validate, "验证已在进行中，跳过新的验证请求");
             return Ok((true, String::new()));
         }
-        *self.process_status.lock().await = ValidationProcessStatus::Ongoing;
+        defer! {
+            self.finish();
+        }
         logging!(info, Type::Validate, "生成临时配置文件用于验证");
 
-        let result = async {
-            let config_path = Config::generate_file(ConfigType::Check).await?;
-            let config_path = dirs::path_to_str(&config_path)?;
-            Self::validate_config_internal(config_path).await
-        }
-        .await;
-
-        *self.process_status.lock().await = ValidationProcessStatus::Completed;
-        result
+        let config_path = Config::generate_file(ConfigType::Check).await?;
+        let config_path = dirs::path_to_str(&config_path)?;
+        Self::validate_config_internal(config_path).await
     }
 }
 

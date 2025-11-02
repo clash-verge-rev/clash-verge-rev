@@ -99,112 +99,6 @@ const isOperationAborted = (
   return false;
 };
 
-const normalizeProfileUrl = (value?: string) => {
-  if (!value) return "";
-  const trimmed = value.trim();
-
-  try {
-    const url = new URL(trimmed);
-    const auth =
-      url.username || url.password
-        ? `${url.username}${url.password ? `:${url.password}` : ""}@`
-        : "";
-    const normalized =
-      `${url.protocol.toLowerCase()}//${auth}${url.hostname.toLowerCase()}` +
-      `${url.port ? `:${url.port}` : ""}${url.pathname}${url.search}${url.hash}`;
-
-    return normalized.replace(/\/+$/, "");
-  } catch {
-    const schemeNormalized = trimmed.replace(
-      /^([a-z]+):\/\//i,
-      (match, scheme: string) => `${scheme.toLowerCase()}://`,
-    );
-    return schemeNormalized.replace(/\/+$/, "");
-  }
-};
-
-const getProfileSignature = (profile?: IProfileItem | null) => {
-  if (!profile) return "";
-  const { extra, selected, option, name, desc } = profile;
-  return JSON.stringify({
-    extra: extra ?? null,
-    selected: selected ?? null,
-    option: option ?? null,
-    name: name ?? null,
-    desc: desc ?? null,
-  });
-};
-
-type ImportLandingVerifier = {
-  baselineCount: number;
-  hasLanding: (config?: IProfilesConfig | null) => boolean;
-};
-
-const createImportLandingVerifier = (
-  items: IProfileItem[] | undefined,
-  url: string,
-): ImportLandingVerifier => {
-  const normalizedUrl = normalizeProfileUrl(url);
-  const baselineCount = items?.length ?? 0;
-  const baselineProfile = normalizedUrl
-    ? items?.find((item) => normalizeProfileUrl(item?.url) === normalizedUrl)
-    : undefined;
-  const baselineSignature = getProfileSignature(baselineProfile);
-  const baselineUpdated = baselineProfile?.updated ?? 0;
-  const hadBaselineProfile = Boolean(baselineProfile);
-
-  const hasLanding = (config?: IProfilesConfig | null) => {
-    const currentItems = config?.items ?? [];
-    const currentCount = currentItems.length;
-
-    if (currentCount > baselineCount) {
-      console.log(
-        `[导入验证] 配置数量已增加: ${baselineCount} -> ${currentCount}`,
-      );
-      return true;
-    }
-
-    if (!normalizedUrl) {
-      return false;
-    }
-
-    const matchingProfile = currentItems.find(
-      (item) => normalizeProfileUrl(item?.url) === normalizedUrl,
-    );
-
-    if (!matchingProfile) {
-      return false;
-    }
-
-    if (!hadBaselineProfile) {
-      console.log("[导入验证] 检测到新的订阅记录，判定为导入成功");
-      return true;
-    }
-
-    const currentSignature = getProfileSignature(matchingProfile);
-    const currentUpdated = matchingProfile.updated ?? 0;
-
-    if (currentUpdated > baselineUpdated) {
-      console.log(
-        `[导入验证] 订阅更新时间已更新 ${baselineUpdated} -> ${currentUpdated}`,
-      );
-      return true;
-    }
-
-    if (currentSignature !== baselineSignature) {
-      console.log("[导入验证] 订阅详情发生变化，判定为导入成功");
-      return true;
-    }
-
-    return false;
-  };
-
-  return {
-    baselineCount,
-    hasLanding,
-  };
-};
-
 const ProfilePage = () => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -382,55 +276,19 @@ const ProfilePage = () => {
     }
     setLoading(true);
 
-    const importVerifier = createImportLandingVerifier(profiles?.items, url);
-
     const handleImportSuccess = async (noticeKey: string) => {
       showNotice("success", t(noticeKey));
       setUrl("");
-      await performRobustRefresh(importVerifier);
-    };
-
-    const waitForImportLanding = async () => {
-      const maxChecks = 2;
-      for (let attempt = 0; attempt <= maxChecks; attempt++) {
-        try {
-          const currentProfiles = await getProfiles();
-          if (importVerifier.hasLanding(currentProfiles)) {
-            return true;
-          }
-
-          if (attempt < maxChecks) {
-            await new Promise((resolve) =>
-              setTimeout(resolve, 200 * (attempt + 1)),
-            );
-          }
-        } catch (verifyErr) {
-          console.warn("[导入验证] 获取配置状态失败:", verifyErr);
-          break;
-        }
-      }
-
-      return false;
+      await performRobustRefresh();
     };
 
     try {
       // 尝试正常导入
       await importProfile(url);
       await handleImportSuccess("Profile Imported Successfully");
-      return;
     } catch (initialErr) {
       console.warn("[订阅导入] 首次导入失败:", initialErr);
 
-      const alreadyImported = await waitForImportLanding();
-      if (alreadyImported) {
-        console.warn(
-          "[订阅导入] 接口返回失败，但检测到订阅已导入，跳过回退导入流程",
-        );
-        await handleImportSuccess("Profile Imported Successfully");
-        return;
-      }
-
-      // 首次导入失败且未检测到数据变更，尝试使用自身代理
       showNotice("info", t("Import failed, retrying with Clash proxy..."));
       try {
         // 使用自身代理尝试导入
@@ -454,10 +312,7 @@ const ProfilePage = () => {
   };
 
   // 强化的刷新策略
-  const performRobustRefresh = async (
-    importVerifier: ImportLandingVerifier,
-  ) => {
-    const { baselineCount, hasLanding } = importVerifier;
+  const performRobustRefresh = async () => {
     let retryCount = 0;
     const maxRetries = 5;
     const baseDelay = 200;
@@ -477,28 +332,8 @@ const ProfilePage = () => {
           setTimeout(resolve, baseDelay * (retryCount + 1)),
         );
 
-        // 验证刷新是否成功
-        const currentProfiles = await getProfiles();
-        const currentCount = currentProfiles?.items?.length || 0;
-
-        if (currentCount > baselineCount) {
-          console.log(
-            `[导入刷新] 配置刷新成功，配置数量 ${baselineCount} -> ${currentCount}`,
-          );
-          await onEnhance(false);
-          return;
-        }
-
-        if (hasLanding(currentProfiles)) {
-          console.log("[导入刷新] 检测到订阅内容更新，判定刷新成功");
-          await onEnhance(false);
-          return;
-        }
-
-        console.warn(
-          `[导入刷新] 配置数量未增加 (${currentCount}), 继续重试...`,
-        );
-        retryCount++;
+        await onEnhance(false);
+        return;
       } catch (error) {
         console.error(`[导入刷新] 第${retryCount + 1}次刷新失败:`, error);
         retryCount++;

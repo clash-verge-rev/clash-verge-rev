@@ -8,7 +8,6 @@ use anyhow::{Result, bail};
 use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
-use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
 
 /// Enum representing all available hotkey functions
@@ -105,66 +104,53 @@ impl Hotkey {
     }
 
     /// Execute the function associated with a hotkey function enum
-    fn execute_function(function: HotkeyFunction, app_handle: &AppHandle) {
-        let app_handle = app_handle.clone();
+    fn execute_function(function: HotkeyFunction) {
         match function {
             HotkeyFunction::OpenOrCloseDashboard => {
                 AsyncHandler::spawn(async move || {
                     crate::feat::open_or_close_dashboard().await;
-                    notify_event(app_handle, NotificationEvent::DashboardToggled).await;
+                    notify_event(NotificationEvent::DashboardToggled).await;
                 });
             }
             HotkeyFunction::ClashModeRule => {
                 AsyncHandler::spawn(async move || {
                     feat::change_clash_mode("rule".into()).await;
-                    notify_event(
-                        app_handle,
-                        NotificationEvent::ClashModeChanged { mode: "Rule" },
-                    )
-                    .await;
+                    notify_event(NotificationEvent::ClashModeChanged { mode: "Rule" }).await;
                 });
             }
             HotkeyFunction::ClashModeGlobal => {
                 AsyncHandler::spawn(async move || {
                     feat::change_clash_mode("global".into()).await;
-                    notify_event(
-                        app_handle,
-                        NotificationEvent::ClashModeChanged { mode: "Global" },
-                    )
-                    .await;
+                    notify_event(NotificationEvent::ClashModeChanged { mode: "Global" }).await;
                 });
             }
             HotkeyFunction::ClashModeDirect => {
                 AsyncHandler::spawn(async move || {
                     feat::change_clash_mode("direct".into()).await;
-                    notify_event(
-                        app_handle,
-                        NotificationEvent::ClashModeChanged { mode: "Direct" },
-                    )
-                    .await;
+                    notify_event(NotificationEvent::ClashModeChanged { mode: "Direct" }).await;
                 });
             }
             HotkeyFunction::ToggleSystemProxy => {
                 AsyncHandler::spawn(async move || {
                     feat::toggle_system_proxy().await;
-                    notify_event(app_handle, NotificationEvent::SystemProxyToggled).await;
+                    notify_event(NotificationEvent::SystemProxyToggled).await;
                 });
             }
             HotkeyFunction::ToggleTunMode => {
                 AsyncHandler::spawn(async move || {
                     feat::toggle_tun_mode(None).await;
-                    notify_event(app_handle, NotificationEvent::TunModeToggled).await;
+                    notify_event(NotificationEvent::TunModeToggled).await;
                 });
             }
             HotkeyFunction::EntryLightweightMode => {
                 AsyncHandler::spawn(async move || {
                     entry_lightweight_mode().await;
-                    notify_event(app_handle, NotificationEvent::LightweightModeEntered).await;
+                    notify_event(NotificationEvent::LightweightModeEntered).await;
                 });
             }
             HotkeyFunction::Quit => {
                 AsyncHandler::spawn(async move || {
-                    notify_event(app_handle, NotificationEvent::AppQuit).await;
+                    notify_event(NotificationEvent::AppQuit).await;
                     feat::quit().await;
                 });
             }
@@ -172,7 +158,7 @@ impl Hotkey {
             HotkeyFunction::Hide => {
                 AsyncHandler::spawn(async move || {
                     feat::hide().await;
-                    notify_event(app_handle, NotificationEvent::AppHidden).await;
+                    notify_event(NotificationEvent::AppHidden).await;
                 });
             }
         }
@@ -224,13 +210,11 @@ impl Hotkey {
 
         let is_quit = matches!(function, HotkeyFunction::Quit);
 
-        manager.on_shortcut(hotkey, move |app_handle, hotkey_event, event| {
+        manager.on_shortcut(hotkey, move |_app_handle, hotkey_event, event| {
             let hotkey_event_owned = *hotkey_event;
             let event_owned = event;
             let function_owned = function;
             let is_quit_owned = is_quit;
-
-            let app_handle_cloned = app_handle.clone();
 
             AsyncHandler::spawn(move || async move {
                 if event_owned.state == ShortcutState::Pressed {
@@ -242,11 +226,11 @@ impl Hotkey {
                     );
 
                     if hotkey_event_owned.key == Code::KeyQ && is_quit_owned {
-                        if let Some(window) = app_handle_cloned.get_webview_window("main")
+                        if let Some(window) = handle::Handle::get_window()
                             && window.is_focused().unwrap_or(false)
                         {
                             logging!(debug, Type::Hotkey, "Executing quit function");
-                            Self::execute_function(function_owned, &app_handle_cloned);
+                            Self::execute_function(function_owned);
                         }
                     } else {
                         logging!(debug, Type::Hotkey, "Executing function directly");
@@ -258,14 +242,14 @@ impl Hotkey {
                             .unwrap_or(true);
 
                         if is_enable_global_hotkey {
-                            Self::execute_function(function_owned, &app_handle_cloned);
+                            Self::execute_function(function_owned);
                         } else {
                             use crate::utils::window_manager::WindowManager;
                             let is_visible = WindowManager::is_main_window_visible();
                             let is_focused = WindowManager::is_main_window_focused();
 
                             if is_focused && is_visible {
-                                Self::execute_function(function_owned, &app_handle_cloned);
+                                Self::execute_function(function_owned);
                             }
                         }
                     }

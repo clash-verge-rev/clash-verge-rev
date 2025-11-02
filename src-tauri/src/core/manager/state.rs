@@ -2,7 +2,7 @@ use super::{CoreManager, RunningMode};
 use crate::{
     AsyncHandler,
     config::Config,
-    core::{handle, logger::ClashLogger, service},
+    core::{handle, logger::CLASH_LOGGER, service},
     logging,
     process::CommandChildGuard,
     utils::{
@@ -15,15 +15,15 @@ use anyhow::Result;
 use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;
-use std::collections::VecDeque;
+use scopeguard::defer;
 use tauri_plugin_shell::ShellExt;
 
 impl CoreManager {
-    pub async fn get_clash_logs(&self) -> Result<VecDeque<CompactString>> {
-        match self.get_running_mode() {
+    pub async fn get_clash_logs(&self) -> Result<Vec<CompactString>> {
+        match *self.get_running_mode() {
             RunningMode::Service => service::get_clash_logs_by_service().await,
-            RunningMode::Sidecar => Ok(ClashLogger::global().get_logs().clone()),
-            RunningMode::NotRunning => Ok(VecDeque::new()),
+            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs().await),
+            RunningMode::NotRunning => Ok(Vec::new()),
         }
     }
 
@@ -49,11 +49,8 @@ impl CoreManager {
         let pid = child.pid();
         logging!(trace, Type::Core, "Sidecar started with PID: {}", pid);
 
-        {
-            let mut state = self.state.lock();
-            state.child_sidecar = Some(CommandChildGuard::new(child));
-            state.running_mode = RunningMode::Sidecar;
-        }
+        self.set_running_child_sidecar(CommandChildGuard::new(child));
+        self.set_running_mode(RunningMode::Sidecar);
 
         let shared_writer: SharedWriter =
             std::sync::Arc::new(tokio::sync::Mutex::new(sidecar_writer().await?));
@@ -67,7 +64,7 @@ impl CoreManager {
                         let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Error, &message);
-                        ClashLogger::global().append_log(message);
+                        CLASH_LOGGER.append_log(message).await;
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let mut now = DeferredNow::default();
@@ -80,7 +77,7 @@ impl CoreManager {
                         };
                         let w = shared_writer.lock().await;
                         write_sidecar_log(w, &mut now, Level::Info, &message);
-                        ClashLogger::global().clear_logs();
+                        CLASH_LOGGER.clear_logs().await;
                         break;
                     }
                     _ => {}
@@ -93,14 +90,15 @@ impl CoreManager {
 
     pub(super) fn stop_core_by_sidecar(&self) -> Result<()> {
         logging!(info, Type::Core, "Stopping sidecar");
-
+        defer! {
+            self.set_running_mode(RunningMode::NotRunning);
+        }
         let mut state = self.state.lock();
         if let Some(child) = state.child_sidecar.take() {
             let pid = child.pid();
             drop(child);
             logging!(trace, Type::Core, "Sidecar stopped (PID: {:?})", pid);
         }
-        state.running_mode = RunningMode::NotRunning;
         Ok(())
     }
 
@@ -114,8 +112,10 @@ impl CoreManager {
 
     pub(super) async fn stop_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Stopping service");
+        defer! {
+            self.set_running_mode(RunningMode::NotRunning);
+        }
         service::stop_core_by_service().await?;
-        self.set_running_mode(RunningMode::NotRunning);
         Ok(())
     }
 }

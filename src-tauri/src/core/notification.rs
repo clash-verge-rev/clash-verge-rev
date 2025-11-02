@@ -96,10 +96,17 @@ impl NotificationSystem {
         let handle = Handle::global();
 
         while !handle.is_exiting() {
-            match rx.recv_timeout(std::time::Duration::from_millis(100)) {
+            match rx.recv() {
                 Ok(event) => Self::process_event(handle, event),
-                Err(mpsc::RecvTimeoutError::Disconnected) => break,
-                Err(mpsc::RecvTimeoutError::Timeout) => break,
+                Err(e) => {
+                    logging!(
+                        error,
+                        Type::System,
+                        "receive event error, stop notification worker: {}",
+                        e
+                    );
+                    break;
+                }
             }
         }
     }

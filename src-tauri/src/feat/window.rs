@@ -14,7 +14,7 @@ pub async fn open_or_close_dashboard() {
 async fn open_or_close_dashboard_internal() {
     let _ = lightweight::exit_lightweight_mode().await;
     let result = WindowManager::toggle_main_window().await;
-    log::info!(target: "app", "Window toggle result: {result:?}");
+    logging!(info, Type::Window, "Window toggle result: {result:?}");
 }
 
 pub async fn quit() {
@@ -47,7 +47,7 @@ pub async fn clean_async() -> bool {
     let tun_task = async {
         let tun_enabled = Config::verge()
             .await
-            .data_ref()
+            .latest_ref()
             .enable_tun_mode
             .unwrap_or(false);
 
@@ -71,16 +71,20 @@ pub async fn clean_async() -> bool {
         .await
         {
             Ok(Ok(_)) => {
-                log::info!(target: "app", "TUN模式已禁用");
+                logging!(info, Type::Window, "TUN模式已禁用");
                 true
             }
             Ok(Err(e)) => {
-                log::warn!(target: "app", "禁用TUN模式失败: {e}");
+                logging!(warn, Type::Window, "Warning: 禁用TUN模式失败: {e}");
                 // 超时不阻塞退出
                 true
             }
             Err(_) => {
-                log::warn!(target: "app", "禁用TUN模式超时（可能系统正在关机），继续退出流程");
+                logging!(
+                    warn,
+                    Type::Window,
+                    "Warning: 禁用TUN模式超时（可能系统正在关机），继续退出流程"
+                );
                 true
             }
         }
@@ -101,7 +105,7 @@ pub async fn clean_async() -> bool {
                 .unwrap_or(false);
 
             if !sys_proxy_enabled {
-                log::info!(target: "app", "系统代理未启用，跳过重置");
+                logging!(info, Type::Window, "系统代理未启用，跳过重置");
                 return true;
             }
 
@@ -110,19 +114,23 @@ pub async fn clean_async() -> bool {
 
             if is_shutting_down {
                 // sysproxy-rs 操作注册表(避免.exe的dll错误)
-                log::info!(target: "app", "检测到正在关机，syspro-rs操作注册表关闭系统代理");
+                logging!(
+                    info,
+                    Type::Window,
+                    "检测到正在关机，syspro-rs操作注册表关闭系统代理"
+                );
 
                 match Sysproxy::get_system_proxy() {
                     Ok(mut sysproxy) => {
                         sysproxy.enable = false;
                         if let Err(e) = sysproxy.set_system_proxy() {
-                            log::warn!(target: "app", "关机时关闭系统代理失败: {e}");
+                            logging!(warn, Type::Window, "Warning: 关机时关闭系统代理失败: {e}");
                         } else {
-                            log::info!(target: "app", "系统代理已关闭（通过注册表）");
+                            logging!(info, Type::Window, "系统代理已关闭（通过注册表）");
                         }
                     }
                     Err(e) => {
-                        log::warn!(target: "app", "关机时获取代理设置失败: {e}");
+                        logging!(warn, Type::Window, "Warning: 关机时获取代理设置失败: {e}");
                     }
                 }
 
@@ -136,7 +144,7 @@ pub async fn clean_async() -> bool {
             }
 
             // 正常退出：使用 sysproxy.exe 重置代理
-            log::info!(target: "app", "sysproxy.exe重置系统代理");
+            logging!(info, Type::Window, "sysproxy.exe重置系统代理");
 
             match timeout(
                 Duration::from_secs(2),
@@ -145,15 +153,19 @@ pub async fn clean_async() -> bool {
             .await
             {
                 Ok(Ok(_)) => {
-                    log::info!(target: "app", "系统代理已重置");
+                    logging!(info, Type::Window, "系统代理已重置");
                     true
                 }
                 Ok(Err(e)) => {
-                    log::warn!(target: "app", "重置系统代理失败: {e}");
+                    logging!(warn, Type::Window, "Warning: 重置系统代理失败: {e}");
                     true
                 }
                 Err(_) => {
-                    log::warn!(target: "app", "重置系统代理超时，继续退出流程");
+                    logging!(
+                        warn,
+                        Type::Window,
+                        "Warning: 重置系统代理超时，继续退出流程"
+                    );
                     true
                 }
             }
@@ -169,11 +181,11 @@ pub async fn clean_async() -> bool {
                 .unwrap_or(false);
 
             if !sys_proxy_enabled {
-                log::info!(target: "app", "系统代理未启用，跳过重置");
+                logging!(info, Type::Window, "系统代理未启用，跳过重置");
                 return true;
             }
 
-            log::info!(target: "app", "开始重置系统代理...");
+            logging!(info, Type::Window, "开始重置系统代理...");
 
             match timeout(
                 Duration::from_millis(1500),
@@ -182,15 +194,15 @@ pub async fn clean_async() -> bool {
             .await
             {
                 Ok(Ok(_)) => {
-                    log::info!(target: "app", "系统代理已重置");
+                    logging!(info, Type::Window, "系统代理已重置");
                     true
                 }
                 Ok(Err(e)) => {
-                    log::warn!(target: "app", "重置系统代理失败: {e}");
+                    logging!(warn, Type::Window, "Warning: 重置系统代理失败: {e}");
                     true
                 }
                 Err(_) => {
-                    log::warn!(target: "app", "重置系统代理超时，继续退出");
+                    logging!(warn, Type::Window, "Warning: 重置系统代理超时，继续退出");
                     true
                 }
             }
@@ -206,11 +218,15 @@ pub async fn clean_async() -> bool {
 
         match timeout(stop_timeout, CoreManager::global().stop_core()).await {
             Ok(_) => {
-                log::info!(target: "app", "core已停止");
+                logging!(info, Type::Window, "core已停止");
                 true
             }
             Err(_) => {
-                log::warn!(target: "app", "停止core超时（可能系统正在关机），继续退出");
+                logging!(
+                    warn,
+                    Type::Window,
+                    "Warning: 停止core超时（可能系统正在关机），继续退出"
+                );
                 true
             }
         }
@@ -226,11 +242,11 @@ pub async fn clean_async() -> bool {
         .await
         {
             Ok(_) => {
-                log::info!(target: "app", "DNS设置已恢复");
+                logging!(info, Type::Window, "DNS设置已恢复");
                 true
             }
             Err(_) => {
-                log::warn!(target: "app", "恢复DNS设置超时");
+                logging!(warn, Type::Window, "Warning: 恢复DNS设置超时");
                 false
             }
         }

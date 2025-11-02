@@ -506,7 +506,7 @@ export const CurrentProxyCard = () => {
 
   // 导航到代理页面
   const goToProxies = useCallback(() => {
-    navigate("/");
+    navigate("/proxies");
   }, [navigate]);
 
   // 获取要显示的代理节点

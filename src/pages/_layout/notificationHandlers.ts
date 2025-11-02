@@ -19,13 +19,13 @@ export const handleNoticeMessage = (
       showNotice("error", msg);
     },
     "set_config::error": () => showNotice("error", msg),
+    // 后端暂时没有启用相关通知， 批量更新可能造成扰人提醒
+    // update_success: () => showNotice("success", t("Update subscription successfully")),
     update_with_clash_proxy: () =>
       showNotice(
         "success",
         `${t("Update with Clash proxy successfully")} ${msg}`,
       ),
-    update_retry_with_clash: () =>
-      showNotice("info", t("Update failed, retrying with Clash proxy...")),
     update_failed_even_with_clash: () =>
       showNotice(
         "error",

@@ -11,7 +11,7 @@ use tokio::sync::{Mutex, MutexGuard};
 
 pub type SharedWriter = Arc<Mutex<FileLogWriter>>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Type {
     Cmd,
     Core,
@@ -29,7 +29,6 @@ pub enum Type {
     Lightweight,
     Network,
     ProxyMode,
-    // Cache,
     Validate,
     ClashVergeRev,
 }
@@ -53,7 +52,6 @@ impl fmt::Display for Type {
             Type::Lightweight => write!(f, "[Lightweight]"),
             Type::Network => write!(f, "[Network]"),
             Type::ProxyMode => write!(f, "[ProxMode]"),
-            // Type::Cache => write!(f, "[Cache]"),
             Type::Validate => write!(f, "[Validate]"),
             Type::ClashVergeRev => write!(f, "[ClashVergeRev]"),
         }
@@ -80,15 +78,6 @@ macro_rules! log_err {
             log::error!(target: "app", "{}", $err_str);
         }
     };
-}
-
-#[macro_export]
-macro_rules! trace_err {
-    ($result: expr, $err_str: expr) => {
-        if let Err(err) = $result {
-            log::trace!(target: "app", "{}, err {}", $err_str, err);
-        }
-    }
 }
 
 /// wrap the anyhow error

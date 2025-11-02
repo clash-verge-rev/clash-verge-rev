@@ -1,15 +1,16 @@
-use std::collections::VecDeque;
-
 use super::CmdResult;
+use crate::utils::dirs;
 use crate::{
     cmd::StringifyErr,
     config::Config,
+    constants,
     core::{CoreManager, handle, validate::CoreConfigValidator},
 };
 use crate::{config::*, feat, logging, utils::logging::Type};
 use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
+use tokio::fs;
 
 /// 复制Clash环境变量
 #[tauri::command]
@@ -42,10 +43,7 @@ pub async fn patch_clash_mode(payload: String) -> CmdResult {
 pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {
     logging!(info, Type::Config, "changing core to {clash_core}");
 
-    match CoreManager::global()
-        .change_core(Some(clash_core.clone()))
-        .await
-    {
+    match CoreManager::global().change_core(&clash_core).await {
         Ok(_) => {
             // 切换内核后重启内核
             match CoreManager::global().restart_core().await {
@@ -113,7 +111,7 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
     let result = match feat::test_delay(url).await {
         Ok(delay) => delay,
         Err(e) => {
-            log::error!(target: "app", "{}", e);
+            logging!(error, Type::Cmd, "{}", e);
             10000u32
         }
     };
@@ -130,7 +128,7 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     // 获取DNS配置文件路径
     let dns_path = dirs::app_home_dir()
         .stringify_err()?
-        .join("dns_config.yaml");
+        .join(constants::files::DNS_CONFIG);
 
     // 保存DNS配置到文件
     let yaml_str = serde_yaml_ng::to_string(&dns_config).stringify_err()?;
@@ -153,18 +151,16 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         // 读取DNS配置文件
         let dns_path = dirs::app_home_dir()
             .stringify_err()?
-            .join("dns_config.yaml");
+            .join(constants::files::DNS_CONFIG);
 
         if !dns_path.exists() {
             logging!(warn, Type::Config, "DNS config file not found");
             return Err("DNS config file not found".into());
         }
 
-        let dns_yaml = tokio::fs::read_to_string(&dns_path)
-            .await
-            .stringify_err_log(|e| {
-                logging!(error, Type::Config, "Failed to read DNS config: {e}");
-            })?;
+        let dns_yaml = fs::read_to_string(&dns_path).await.stringify_err_log(|e| {
+            logging!(error, Type::Config, "Failed to read DNS config: {e}");
+        })?;
 
         // 解析DNS配置
         let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
@@ -233,7 +229,7 @@ pub fn check_dns_config_exists() -> CmdResult<bool> {
 
     let dns_path = dirs::app_home_dir()
         .stringify_err()?
-        .join("dns_config.yaml");
+        .join(constants::files::DNS_CONFIG);
 
     Ok(dns_path.exists())
 }
@@ -246,7 +242,7 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
 
     let dns_path = dirs::app_home_dir()
         .stringify_err()?
-        .join("dns_config.yaml");
+        .join(constants::files::DNS_CONFIG);
 
     if !fs::try_exists(&dns_path).await.stringify_err()? {
         return Err("DNS config file not found".into());
@@ -259,10 +255,8 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
 /// 验证DNS配置文件
 #[tauri::command]
 pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
-    use crate::utils::dirs;
-
     let app_dir = dirs::app_home_dir().stringify_err()?;
-    let dns_path = app_dir.join("dns_config.yaml");
+    let dns_path = app_dir.join(constants::files::DNS_CONFIG);
     let dns_path_str = dns_path.to_str().unwrap_or_default();
 
     if !dns_path.exists() {
@@ -275,7 +269,7 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
 }
 
 #[tauri::command]
-pub async fn get_clash_logs() -> CmdResult<VecDeque<CompactString>> {
+pub async fn get_clash_logs() -> CmdResult<Vec<CompactString>> {
     let logs = CoreManager::global()
         .get_clash_logs()
         .await

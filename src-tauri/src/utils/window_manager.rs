@@ -58,7 +58,11 @@ fn get_window_operation_debounce() -> &'static Mutex<Instant> {
 
 fn should_handle_window_operation() -> bool {
     if WINDOW_OPERATION_IN_PROGRESS.load(Ordering::Acquire) {
-        log::warn!(target: "app", "[防抖] 窗口操作已在进行中，跳过重复调用");
+        logging!(
+            warn,
+            Type::Window,
+            "Warning: [防抖] 窗口操作已在进行中，跳过重复调用"
+        );
         return false;
     }
 
@@ -67,17 +71,27 @@ fn should_handle_window_operation() -> bool {
     let now = Instant::now();
     let elapsed = now.duration_since(*last_operation);
 
-    log::debug!(target: "app", "[防抖] 检查窗口操作间隔: {}ms (需要>={}ms)",
-              elapsed.as_millis(), WINDOW_OPERATION_DEBOUNCE_MS);
+    logging!(
+        debug,
+        Type::Window,
+        "[防抖] 检查窗口操作间隔: {}ms (需要>={}ms)",
+        elapsed.as_millis(),
+        WINDOW_OPERATION_DEBOUNCE_MS
+    );
 
     if elapsed >= Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS) {
         *last_operation = now;
         WINDOW_OPERATION_IN_PROGRESS.store(true, Ordering::Release);
-        log::info!(target: "app", "[防抖] 窗口操作被允许执行");
+        logging!(info, Type::Window, "[防抖] 窗口操作被允许执行");
         true
     } else {
-        log::warn!(target: "app", "[防抖] 窗口操作被防抖机制忽略，距离上次操作 {}ms < {}ms",
-                  elapsed.as_millis(), WINDOW_OPERATION_DEBOUNCE_MS);
+        logging!(
+            warn,
+            Type::Window,
+            "Warning: [防抖] 窗口操作被防抖机制忽略，距离上次操作 {}ms < {}ms",
+            elapsed.as_millis(),
+            WINDOW_OPERATION_DEBOUNCE_MS
+        );
         false
     }
 }
@@ -359,7 +373,6 @@ impl WindowManager {
             }
             return WindowOperationResult::Destroyed;
         }
-        logging!(warn, Type::Window, "窗口摧毁失败");
         WindowOperationResult::Failed
     }
 

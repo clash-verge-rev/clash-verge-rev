@@ -1,9 +1,10 @@
 use super::{IClashTemp, IProfiles, IRuntime, IVerge};
 use crate::{
+    cmd,
     config::{PrfItem, profiles_append_item_safe},
     constants::{files, timing},
-    core::{CoreManager, handle, validate::CoreConfigValidator},
-    enhance, logging,
+    core::{CoreManager, handle, service, tray, validate::CoreConfigValidator},
+    enhance, logging, logging_error,
     utils::{Draft, dirs, help, logging::Type},
 };
 use anyhow::{Result, anyhow};
@@ -53,24 +54,47 @@ impl Config {
 
     /// 初始化订阅
     pub async fn init_config() -> Result<()> {
-        if Self::profiles()
-            .await
-            .latest_ref()
-            .get_item(&"Merge".into())
-            .is_err()
+        Self::ensure_default_profile_items().await?;
+
+        // init Tun mode
+        if !cmd::system::is_admin().unwrap_or_default()
+            && service::is_service_available().await.is_err()
         {
-            let merge_item = PrfItem::from_merge(Some("Merge".into()))?;
-            profiles_append_item_safe(merge_item.clone()).await?;
+            let verge = Config::verge().await;
+            verge.draft_mut().enable_tun_mode = Some(false);
+            verge.apply();
+            let _ = tray::Tray::global().update_tray_display().await;
+
+            // 分离数据获取和异步调用避免Send问题
+            let verge_data = Config::verge().await.latest_ref().clone();
+            logging_error!(Type::Core, verge_data.save_file().await);
         }
-        if Self::profiles()
-            .await
-            .latest_ref()
-            .get_item(&"Script".into())
-            .is_err()
-        {
-            let script_item = PrfItem::from_script(Some("Script".into()))?;
-            profiles_append_item_safe(script_item.clone()).await?;
+
+        let validation_result = Self::generate_and_validate().await?;
+
+        if let Some((msg_type, msg_content)) = validation_result {
+            sleep(timing::STARTUP_ERROR_DELAY).await;
+            handle::Handle::notice_message(msg_type, msg_content);
         }
+
+        Ok(())
+    }
+
+    // Ensure "Merge" and "Script" profile items exist, adding them if missing.
+    async fn ensure_default_profile_items() -> Result<()> {
+        let profiles = Self::profiles().await;
+        if profiles.latest_ref().get_item("Merge").is_err() {
+            let merge_item = &mut PrfItem::from_merge(Some("Merge".into()))?;
+            profiles_append_item_safe(merge_item).await?;
+        }
+        if profiles.latest_ref().get_item("Script").is_err() {
+            let script_item = &mut PrfItem::from_script(Some("Script".into()))?;
+            profiles_append_item_safe(script_item).await?;
+        }
+        Ok(())
+    }
+
+    async fn generate_and_validate() -> Result<Option<(&'static str, String)>> {
         // 生成运行时配置
         if let Err(err) = Self::generate().await {
             logging!(error, Type::Config, "生成运行时配置失败: {}", err);
@@ -81,7 +105,7 @@ impl Config {
         // 生成运行时配置文件并验证
         let config_result = Self::generate_file(ConfigType::Run).await;
 
-        let validation_result = if config_result.is_ok() {
+        if config_result.is_ok() {
             // 验证配置文件
             logging!(info, Type::Config, "开始验证配置");
 
@@ -97,12 +121,12 @@ impl Config {
                         CoreManager::global()
                             .use_default_config("config_validate::boot_error", &error_msg)
                             .await?;
-                        Some(("config_validate::boot_error", error_msg))
+                        Ok(Some(("config_validate::boot_error", error_msg)))
                     } else {
                         logging!(info, Type::Config, "配置验证成功");
                         // 前端没有必要知道验证成功的消息，也没有事件驱动
                         // Some(("config_validate::success", String::new()))
-                        None
+                        Ok(None)
                     }
                 }
                 Err(err) => {
@@ -110,7 +134,7 @@ impl Config {
                     CoreManager::global()
                         .use_default_config("config_validate::process_terminated", "")
                         .await?;
-                    Some(("config_validate::process_terminated", String::new()))
+                    Ok(Some(("config_validate::process_terminated", String::new())))
                 }
             }
         } else {
@@ -118,15 +142,8 @@ impl Config {
             CoreManager::global()
                 .use_default_config("config_validate::error", "")
                 .await?;
-            Some(("config_validate::error", String::new()))
-        };
-
-        if let Some((msg_type, msg_content)) = validation_result {
-            sleep(timing::STARTUP_ERROR_DELAY).await;
-            handle::Handle::notice_message(msg_type, msg_content);
+            Ok(Some(("config_validate::error", String::new())))
         }
-
-        Ok(())
     }
 
     pub async fn generate_file(typ: ConfigType) -> Result<PathBuf> {
@@ -151,11 +168,11 @@ impl Config {
     pub async fn generate() -> Result<()> {
         let (config, exists_keys, logs) = enhance::enhance().await;
 
-        *Config::runtime().await.draft_mut() = Box::new(IRuntime {
+        **Config::runtime().await.draft_mut() = IRuntime {
             config: Some(config),
             exists_keys,
             chain_logs: logs,
-        });
+        };
 
         Ok(())
     }

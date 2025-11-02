@@ -12,6 +12,7 @@ use smartstring::alias::String;
 use std::path::Path;
 use tauri::{AppHandle, Manager};
 use tokio::fs;
+use tokio::io::AsyncWriteExt;
 
 /// 打开应用程序所在目录
 #[tauri::command]
@@ -39,6 +40,20 @@ pub async fn open_logs_dir() -> CmdResult<()> {
 #[tauri::command]
 pub fn open_web_url(url: String) -> CmdResult<()> {
     open::that(url.as_str()).stringify_err()
+}
+
+// TODO 后续可以为前端提供接口，当前作为托盘菜单使用
+/// 打开 Verge 最新日志
+#[tauri::command]
+pub async fn open_app_log() -> CmdResult<()> {
+    open::that(dirs::app_latest_log().stringify_err()?).stringify_err()
+}
+
+// TODO 后续可以为前端提供接口，当前作为托盘菜单使用
+/// 打开 Clash 最新日志
+#[tauri::command]
+pub async fn open_core_log() -> CmdResult<()> {
+    open::that(dirs::clash_latest_log().stringify_err()?).stringify_err()
 }
 
 /// 打开/关闭开发者工具
@@ -102,7 +117,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
     }
 
     if !icon_cache_dir.exists() {
-        let _ = std::fs::create_dir_all(&icon_cache_dir);
+        let _ = fs::create_dir_all(&icon_cache_dir).await;
     }
 
     let temp_path = icon_cache_dir.join(format!("{}.downloading", name.as_str()));
@@ -126,7 +141,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
 
     if is_image && !is_html {
         {
-            let mut file = match std::fs::File::create(&temp_path) {
+            let mut file = match fs::File::create(&temp_path).await {
                 Ok(file) => file,
                 Err(_) => {
                     if icon_path.exists() {
@@ -135,12 +150,12 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
                     return Err("Failed to create temporary file".into());
                 }
             };
-
-            std::io::copy(&mut content.as_ref(), &mut file).stringify_err()?;
+            file.write_all(content.as_ref()).await.stringify_err()?;
+            file.flush().await.stringify_err()?;
         }
 
         if !icon_path.exists() {
-            match std::fs::rename(&temp_path, &icon_path) {
+            match fs::rename(&temp_path, &icon_path).await {
                 Ok(_) => {}
                 Err(_) => {
                     let _ = temp_path.remove_if_exists().await;
@@ -226,7 +241,7 @@ pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<Stri
 /// 通知UI已准备就绪
 #[tauri::command]
 pub fn notify_ui_ready() -> CmdResult<()> {
-    log::info!(target: "app", "前端UI已准备就绪");
+    logging!(info, Type::Cmd, "前端UI已准备就绪");
     crate::utils::resolve::ui::mark_ui_ready();
     Ok(())
 }
@@ -234,7 +249,7 @@ pub fn notify_ui_ready() -> CmdResult<()> {
 /// UI加载阶段
 #[tauri::command]
 pub fn update_ui_stage(stage: String) -> CmdResult<()> {
-    log::info!(target: "app", "UI加载阶段更新: {}", stage.as_str());
+    logging!(info, Type::Cmd, "UI加载阶段更新: {}", stage.as_str());
 
     use crate::utils::resolve::ui::UiReadyStage;
 
@@ -245,7 +260,12 @@ pub fn update_ui_stage(stage: String) -> CmdResult<()> {
         "ResourcesLoaded" => UiReadyStage::ResourcesLoaded,
         "Ready" => UiReadyStage::Ready,
         _ => {
-            log::warn!(target: "app", "未知的UI加载阶段: {}", stage.as_str());
+            logging!(
+                warn,
+                Type::Cmd,
+                "Warning: 未知的UI加载阶段: {}",
+                stage.as_str()
+            );
             return Err(format!("未知的UI加载阶段: {}", stage.as_str()).into());
         }
     };

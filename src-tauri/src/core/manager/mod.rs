@@ -1,6 +1,5 @@
 mod config;
 mod lifecycle;
-mod process;
 mod state;
 
 use anyhow::Result;
@@ -11,7 +10,7 @@ use tokio::sync::Semaphore;
 use crate::process::CommandChildGuard;
 use crate::singleton_lazy;
 
-#[derive(Debug, Clone, Copy, serde::Serialize, PartialEq, Eq)]
+#[derive(Debug, serde::Serialize, PartialEq, Eq)]
 pub enum RunningMode {
     Service,
     Sidecar,
@@ -37,14 +36,14 @@ pub struct CoreManager {
 
 #[derive(Debug)]
 struct State {
-    running_mode: RunningMode,
+    running_mode: Arc<RunningMode>,
     child_sidecar: Option<CommandChildGuard>,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            running_mode: RunningMode::NotRunning,
+            running_mode: Arc::new(RunningMode::NotRunning),
             child_sidecar: None,
         }
     }
@@ -61,16 +60,19 @@ impl Default for CoreManager {
 }
 
 impl CoreManager {
-    pub fn get_running_mode(&self) -> RunningMode {
-        self.state.lock().running_mode
+    pub fn get_running_mode(&self) -> Arc<RunningMode> {
+        Arc::clone(&self.state.lock().running_mode)
     }
 
     pub fn set_running_mode(&self, mode: RunningMode) {
-        self.state.lock().running_mode = mode;
+        self.state.lock().running_mode = Arc::new(mode);
+    }
+
+    pub fn set_running_child_sidecar(&self, child: CommandChildGuard) {
+        self.state.lock().child_sidecar = Some(child);
     }
 
     pub async fn init(&self) -> Result<()> {
-        self.cleanup_orphaned_processes().await?;
         self.start_core().await?;
         Ok(())
     }

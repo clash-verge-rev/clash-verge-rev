@@ -59,9 +59,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          cache-all-crates: true
           save-if: false
-          cache-all-crates: false
-          shared-key: autobuild-shared
+          shared-key: autobuild-${{ runner.os }}-${{ matrix.target }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -72,3 +73,10 @@ jobs:
       - name: Run Clippy
         working-directory: ./src-tauri
         run: cargo clippy-all
+
+      - name: Run Logging Check
+        working-directory: ./src-tauri
+        shell: bash
+        run: |
+          cargo install --git https://github.com/clash-verge-rev/clash-verge-logging-check.git
+          clash-verge-logging-check

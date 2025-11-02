@@ -1,7 +1,8 @@
 use super::{CoreManager, RunningMode};
+use crate::config::{Config, ConfigType, IVerge};
 use crate::{
     core::{
-        logger::ClashLogger,
+        logger::CLASH_LOGGER,
         service::{SERVICE_MANAGER, ServiceStatus},
     },
     logging,
@@ -14,16 +15,16 @@ impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
         self.prepare_startup().await?;
 
-        match self.get_running_mode() {
+        match *self.get_running_mode() {
             RunningMode::Service => self.start_core_by_service().await,
             RunningMode::NotRunning | RunningMode::Sidecar => self.start_core_by_sidecar().await,
         }
     }
 
     pub async fn stop_core(&self) -> Result<()> {
-        ClashLogger::global().clear_logs();
+        CLASH_LOGGER.clear_logs().await;
 
-        match self.get_running_mode() {
+        match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar(),
             RunningMode::NotRunning => Ok(()),
@@ -41,18 +42,12 @@ impl CoreManager {
         self.start_core().await
     }
 
-    pub async fn change_core(&self, clash_core: Option<String>) -> Result<(), String> {
-        use crate::config::{Config, ConfigType, IVerge};
-
-        let core = clash_core
-            .as_ref()
-            .ok_or_else(|| "Clash core cannot be None".to_string())?;
-
-        if !IVerge::VALID_CLASH_CORES.contains(&core.as_str()) {
-            return Err(format!("Invalid clash core: {}", core).into());
+    pub async fn change_core(&self, clash_core: &String) -> Result<(), String> {
+        if !IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str()) {
+            return Err(format!("Invalid clash core: {}", clash_core).into());
         }
 
-        Config::verge().await.draft_mut().clash_core = clash_core;
+        Config::verge().await.draft_mut().clash_core = clash_core.to_owned().into();
         Config::verge().await.apply();
 
         let verge_data = Config::verge().await.latest_ref().clone();

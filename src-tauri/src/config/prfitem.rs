@@ -1,13 +1,17 @@
-use crate::utils::{
-    dirs, help,
-    network::{NetworkManager, ProxyType},
-    tmpl,
+use crate::{
+    config::profiles,
+    utils::{
+        dirs, help,
+        network::{NetworkManager, ProxyType},
+        tmpl,
+    },
 };
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::{fs, time::Duration};
+use std::time::Duration;
+use tokio::fs;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
@@ -118,26 +122,29 @@ pub struct PrfOption {
 }
 
 impl PrfOption {
-    pub fn merge(one: Option<Self>, other: Option<Self>) -> Option<Self> {
+    pub fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
         match (one, other) {
-            (Some(mut a), Some(b)) => {
-                a.user_agent = b.user_agent.or(a.user_agent);
-                a.with_proxy = b.with_proxy.or(a.with_proxy);
-                a.self_proxy = b.self_proxy.or(a.self_proxy);
-                a.danger_accept_invalid_certs = b
+            (Some(a_ref), Some(b_ref)) => {
+                let mut result = a_ref.clone();
+                result.user_agent = b_ref.user_agent.clone().or(result.user_agent);
+                result.with_proxy = b_ref.with_proxy.or(result.with_proxy);
+                result.self_proxy = b_ref.self_proxy.or(result.self_proxy);
+                result.danger_accept_invalid_certs = b_ref
                     .danger_accept_invalid_certs
-                    .or(a.danger_accept_invalid_certs);
-                a.allow_auto_update = b.allow_auto_update.or(a.allow_auto_update);
-                a.update_interval = b.update_interval.or(a.update_interval);
-                a.merge = b.merge.or(a.merge);
-                a.script = b.script.or(a.script);
-                a.rules = b.rules.or(a.rules);
-                a.proxies = b.proxies.or(a.proxies);
-                a.groups = b.groups.or(a.groups);
-                a.timeout_seconds = b.timeout_seconds.or(a.timeout_seconds);
-                Some(a)
+                    .or(result.danger_accept_invalid_certs);
+                result.allow_auto_update = b_ref.allow_auto_update.or(result.allow_auto_update);
+                result.update_interval = b_ref.update_interval.or(result.update_interval);
+                result.merge = b_ref.merge.clone().or(result.merge);
+                result.script = b_ref.script.clone().or(result.script);
+                result.rules = b_ref.rules.clone().or(result.rules);
+                result.proxies = b_ref.proxies.clone().or(result.proxies);
+                result.groups = b_ref.groups.clone().or(result.groups);
+                result.timeout_seconds = b_ref.timeout_seconds.or(result.timeout_seconds);
+                Some(result)
             }
-            t => t.0.or(t.1),
+            (Some(a_ref), None) => Some(a_ref.clone()),
+            (None, Some(b_ref)) => Some(b_ref.clone()),
+            (None, None) => None,
         }
     }
 }
@@ -145,13 +152,14 @@ impl PrfOption {
 impl PrfItem {
     /// From partial item
     /// must contain `itype`
-    pub async fn from(item: PrfItem, file_data: Option<String>) -> Result<PrfItem> {
+    pub async fn from(item: &PrfItem, file_data: Option<String>) -> Result<PrfItem> {
         if item.itype.is_none() {
             bail!("type should not be null");
         }
 
         let itype = item
             .itype
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("type should not be null"))?;
         match itype.as_str() {
             "remote" => {
@@ -159,14 +167,16 @@ impl PrfItem {
                     .url
                     .as_ref()
                     .ok_or_else(|| anyhow::anyhow!("url should not be null"))?;
-                let name = item.name;
-                let desc = item.desc;
-                PrfItem::from_url(url, name, desc, item.option).await
+                let name = item.name.as_ref();
+                let desc = item.desc.as_ref();
+                let option = item.option.as_ref();
+                PrfItem::from_url(url, name, desc, option).await
             }
             "local" => {
-                let name = item.name.unwrap_or_else(|| "Local File".into());
-                let desc = item.desc.unwrap_or_else(|| "".into());
-                PrfItem::from_local(name, desc, file_data, item.option).await
+                let name = item.name.clone().unwrap_or_else(|| "Local File".into());
+                let desc = item.desc.clone().unwrap_or_else(|| "".into());
+                let option = item.option.as_ref();
+                PrfItem::from_local(name, desc, file_data, option).await
             }
             typ => bail!("invalid profile item type \"{typ}\""),
         }
@@ -178,7 +188,7 @@ impl PrfItem {
         name: String,
         desc: String,
         file_data: Option<String>,
-        option: Option<PrfOption>,
+        option: Option<&PrfOption>,
     ) -> Result<PrfItem> {
         let uid = help::get_uid("L").into();
         let file = format!("{uid}.yaml").into();
@@ -191,29 +201,29 @@ impl PrfItem {
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
         if merge.is_none() {
-            let merge_item = PrfItem::from_merge(None)?;
-            crate::config::profiles::profiles_append_item_safe(merge_item.clone()).await?;
-            merge = merge_item.uid;
+            let merge_item = &mut PrfItem::from_merge(None)?;
+            profiles::profiles_append_item_safe(merge_item).await?;
+            merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = PrfItem::from_script(None)?;
-            crate::config::profiles::profiles_append_item_safe(script_item.clone()).await?;
-            script = script_item.uid;
+            let script_item = &mut PrfItem::from_script(None)?;
+            profiles::profiles_append_item_safe(script_item).await?;
+            script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = PrfItem::from_rules()?;
-            crate::config::profiles::profiles_append_item_safe(rules_item.clone()).await?;
-            rules = rules_item.uid;
+            let rules_item = &mut PrfItem::from_rules()?;
+            profiles::profiles_append_item_safe(rules_item).await?;
+            rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = PrfItem::from_proxies()?;
-            crate::config::profiles::profiles_append_item_safe(proxies_item.clone()).await?;
-            proxies = proxies_item.uid;
+            let proxies_item = &mut PrfItem::from_proxies()?;
+            profiles::profiles_append_item_safe(proxies_item).await?;
+            proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = PrfItem::from_groups()?;
-            crate::config::profiles::profiles_append_item_safe(groups_item.clone()).await?;
-            groups = groups_item.uid;
+            let groups_item = &mut PrfItem::from_groups()?;
+            profiles::profiles_append_item_safe(groups_item).await?;
+            groups = groups_item.uid.clone();
         }
         Ok(PrfItem {
             uid: Some(uid),
@@ -243,24 +253,23 @@ impl PrfItem {
     /// create a new item from url
     pub async fn from_url(
         url: &str,
-        name: Option<String>,
-        desc: Option<String>,
-        option: Option<PrfOption>,
+        name: Option<&String>,
+        desc: Option<&String>,
+        option: Option<&PrfOption>,
     ) -> Result<PrfItem> {
-        let opt_ref = option.as_ref();
-        let with_proxy = opt_ref.is_some_and(|o| o.with_proxy.unwrap_or(false));
-        let self_proxy = opt_ref.is_some_and(|o| o.self_proxy.unwrap_or(false));
+        let with_proxy = option.is_some_and(|o| o.with_proxy.unwrap_or(false));
+        let self_proxy = option.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs =
-            opt_ref.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
-        let allow_auto_update = opt_ref.map(|o| o.allow_auto_update.unwrap_or(true));
-        let user_agent = opt_ref.and_then(|o| o.user_agent.clone());
-        let update_interval = opt_ref.and_then(|o| o.update_interval);
-        let timeout = opt_ref.and_then(|o| o.timeout_seconds).unwrap_or(20);
-        let mut merge = opt_ref.and_then(|o| o.merge.clone());
-        let mut script = opt_ref.and_then(|o| o.script.clone());
-        let mut rules = opt_ref.and_then(|o| o.rules.clone());
-        let mut proxies = opt_ref.and_then(|o| o.proxies.clone());
-        let mut groups = opt_ref.and_then(|o| o.groups.clone());
+            option.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
+        let allow_auto_update = option.map(|o| o.allow_auto_update.unwrap_or(true));
+        let user_agent = option.and_then(|o| o.user_agent.clone());
+        let update_interval = option.and_then(|o| o.update_interval);
+        let timeout = option.and_then(|o| o.timeout_seconds).unwrap_or(20);
+        let mut merge = option.and_then(|o| o.merge.clone());
+        let mut script = option.and_then(|o| o.script.clone());
+        let mut rules = option.and_then(|o| o.rules.clone());
+        let mut proxies = option.and_then(|o| o.proxies.clone());
+        let mut groups = option.and_then(|o| o.groups.clone());
 
         // 选择代理类型
         let proxy_type = if self_proxy {
@@ -297,18 +306,27 @@ impl PrfItem {
         let header = resp.headers();
 
         // parse the Subscription UserInfo
-        let extra = match header.get("Subscription-Userinfo") {
-            Some(value) => {
-                let sub_info = value.to_str().unwrap_or("");
-                Some(PrfExtra {
-                    upload: help::parse_str(sub_info, "upload").unwrap_or(0),
-                    download: help::parse_str(sub_info, "download").unwrap_or(0),
-                    total: help::parse_str(sub_info, "total").unwrap_or(0),
-                    expire: help::parse_str(sub_info, "expire").unwrap_or(0),
-                })
+        let extra;
+        'extra: {
+            for (k, v) in header.iter() {
+                let key_lower = k.as_str().to_ascii_lowercase();
+                // Accept standard custom-metadata prefixes (x-amz-meta-, x-obs-meta-, x-cos-meta-, etc.).
+                if key_lower
+                    .strip_suffix("subscription-userinfo")
+                    .is_some_and(|prefix| prefix.is_empty() || prefix.ends_with('-'))
+                {
+                    let sub_info = v.to_str().unwrap_or("");
+                    extra = Some(PrfExtra {
+                        upload: help::parse_str(sub_info, "upload").unwrap_or(0),
+                        download: help::parse_str(sub_info, "download").unwrap_or(0),
+                        total: help::parse_str(sub_info, "total").unwrap_or(0),
+                        expire: help::parse_str(sub_info, "expire").unwrap_or(0),
+                    });
+                    break 'extra;
+                }
             }
-            None => None,
-        };
+            extra = None;
+        }
 
         // parse the Content-Disposition
         let filename = match header.get("Content-Disposition") {
@@ -356,7 +374,11 @@ impl PrfItem {
 
         let uid = help::get_uid("R").into();
         let file = format!("{uid}.yaml").into();
-        let name = name.unwrap_or_else(|| filename.unwrap_or_else(|| "Remote File".into()).into());
+        let name = name.map(|s| s.to_owned()).unwrap_or_else(|| {
+            filename
+                .map(|s| s.into())
+                .unwrap_or_else(|| "Remote File".into())
+        });
         let data = resp.text_with_charset()?;
 
         // process the charset "UTF-8 with BOM"
@@ -371,36 +393,36 @@ impl PrfItem {
         }
 
         if merge.is_none() {
-            let merge_item = PrfItem::from_merge(None)?;
-            crate::config::profiles::profiles_append_item_safe(merge_item.clone()).await?;
-            merge = merge_item.uid;
+            let merge_item = &mut PrfItem::from_merge(None)?;
+            profiles::profiles_append_item_safe(merge_item).await?;
+            merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = PrfItem::from_script(None)?;
-            crate::config::profiles::profiles_append_item_safe(script_item.clone()).await?;
-            script = script_item.uid;
+            let script_item = &mut PrfItem::from_script(None)?;
+            profiles::profiles_append_item_safe(script_item).await?;
+            script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = PrfItem::from_rules()?;
-            crate::config::profiles::profiles_append_item_safe(rules_item.clone()).await?;
-            rules = rules_item.uid;
+            let rules_item = &mut PrfItem::from_rules()?;
+            profiles::profiles_append_item_safe(rules_item).await?;
+            rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = PrfItem::from_proxies()?;
-            crate::config::profiles::profiles_append_item_safe(proxies_item.clone()).await?;
-            proxies = proxies_item.uid;
+            let proxies_item = &mut PrfItem::from_proxies()?;
+            profiles::profiles_append_item_safe(proxies_item).await?;
+            proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = PrfItem::from_groups()?;
-            crate::config::profiles::profiles_append_item_safe(groups_item.clone()).await?;
-            groups = groups_item.uid;
+            let groups_item = &mut PrfItem::from_groups()?;
+            profiles::profiles_append_item_safe(groups_item).await?;
+            groups = groups_item.uid.clone();
         }
 
         Ok(PrfItem {
             uid: Some(uid),
             itype: Some("remote".into()),
             name: Some(name),
-            desc,
+            desc: desc.cloned(),
             file: Some(file),
             url: Some(url.into()),
             selected: None,
@@ -537,24 +559,28 @@ impl PrfItem {
     }
 
     /// get the file data
-    pub fn read_file(&self) -> Result<String> {
+    pub async fn read_file(&self) -> Result<String> {
         let file = self
             .file
-            .clone()
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file.as_str());
-        let content = fs::read_to_string(path).context("failed to read the file")?;
+        let content = fs::read_to_string(path)
+            .await
+            .context("failed to read the file")?;
         Ok(content.into())
     }
 
     /// save the file data
-    pub fn save_file(&self, data: String) -> Result<()> {
+    pub async fn save_file(&self, data: String) -> Result<()> {
         let file = self
             .file
-            .clone()
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file.as_str());
-        fs::write(path, data.as_bytes()).context("failed to save the file")
+        fs::write(path, data.as_bytes())
+            .await
+            .context("failed to save the file")
     }
 }
 

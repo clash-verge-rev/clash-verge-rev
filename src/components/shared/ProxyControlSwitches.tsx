@@ -117,13 +117,8 @@ const ProxyControlSwitches = ({
   const { uninstallServiceAndRestartCore } = useServiceUninstaller();
   const { actualState: systemProxyActualState, toggleSystemProxy } =
     useSystemProxyState();
-  const {
-    isServiceMode,
-    isTunModeAvailable,
-    mutateRunningMode,
-    mutateServiceOk,
-    mutateTunModeAvailable,
-  } = useSystemState();
+  const { isServiceOk, isTunModeAvailable, mutateSystemState } =
+    useSystemState();
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
@@ -148,9 +143,7 @@ const ProxyControlSwitches = ({
   const onInstallService = useLockFn(async () => {
     try {
       await installServiceAndRestartCore();
-      await mutateRunningMode();
-      await mutateServiceOk();
-      await mutateTunModeAvailable();
+      await mutateSystemState();
     } catch (err) {
       showNotice("error", (err as Error).message || String(err));
     }
@@ -158,11 +151,11 @@ const ProxyControlSwitches = ({
 
   const onUninstallService = useLockFn(async () => {
     try {
-      await handleTunToggle(false);
+      if (verge?.enable_tun_mode) {
+        await handleTunToggle(false);
+      }
       await uninstallServiceAndRestartCore();
-      await mutateRunningMode();
-      await mutateServiceOk();
-      await mutateTunModeAvailable();
+      await mutateSystemState();
     } catch (err) {
       showNotice("error", (err as Error).message || String(err));
     }
@@ -198,22 +191,22 @@ const ProxyControlSwitches = ({
           extraIcons={
             <>
               {!isTunModeAvailable && (
-                <TooltipIcon
-                  title={t("TUN requires Service Mode or Admin Mode")}
-                  icon={WarningRounded}
-                  sx={{ color: "warning.main", ml: 1 }}
-                />
+                <>
+                  <TooltipIcon
+                    title={t("TUN requires Service Mode or Admin Mode")}
+                    icon={WarningRounded}
+                    sx={{ color: "warning.main", ml: 1 }}
+                  />
+                  <TooltipIcon
+                    title={t("Install Service")}
+                    icon={BuildRounded}
+                    color="primary"
+                    onClick={onInstallService}
+                    sx={{ ml: 1 }}
+                  />
+                </>
               )}
-              {!isTunModeAvailable && (
-                <TooltipIcon
-                  title={t("Install Service")}
-                  icon={BuildRounded}
-                  color="primary"
-                  onClick={onInstallService}
-                  sx={{ ml: 1 }}
-                />
-              )}
-              {isServiceMode && (
+              {isServiceOk && (
                 <TooltipIcon
                   title={t("Uninstall Service")}
                   icon={DeleteForeverRounded}
