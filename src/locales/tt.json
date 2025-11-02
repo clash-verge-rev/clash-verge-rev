@@ -314,16 +314,10 @@
   "PAC URL": "PAC адресы",
   "Auto Launch": "Автостарт",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
-  "Clash Setting": "Clash көйләүләре",
-  "Allow Lan": "Локаль челтәргә рөхсәт",
   "Network Interface": "Челтәр интерфейсы",
   "Ip Address": "IP адресы",
   "Mac Address": "MAC адресы",
   "IPv6": "IPv6",
-  "Unified Delay": "Бердәм задержка",
-  "Unified Delay Info": "Бердәм задержка актив булганда, төрле типтагы узеллар өчен икеләтә тест башкарыла, TCP установканы раслау аермаларын тигезләү максатында",
-  "Log Level": "Лог дәрәҗәсе",
-  "Log Level Info": "Бу фәкать сервис режимында эшләгән вакытта системалы журнал файлларына кагыла",
   "Port Config": "Порт көйләүләре",
   "Random Port": "Очраклы порт",
   "Mixed Port": "Катнаш прокси порты",
@@ -333,7 +327,6 @@
   "Tproxy Port": "Tproxy — үтә күренмәле прокси порты",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "Тышкы",
   "Open URL": "URL ачарга",
   "Replace host, port, secret with %host, %port, %secret": "Хост, порт, серсүзне %host, %port, %secret белән алмаштырыгыз",
   "Support %host, %port, %secret": "%host, %port, %secret макросларын хуплау",
@@ -343,9 +336,6 @@
   "Release Version": "Рәсми версия",
   "Alpha Version": "Альфа-версия",
   "Please enter your root password": "root паролен языгыз",
-  "Open UWP tool": "UWP инструментын ачу",
-  "Open UWP tool Info": "Windows 8'дән башлап UWP кушымталары (Microsoft Store кебек) локаль хосттагы челтәр хезмәтләренә турыдан-туры тоташа алмый. Бу инструмент әлеге чикләүне әйләнеп узарга ярдәм итә",
-  "Update GeoData": "GeoData яңарту",
   "theme.light": "Якты",
   "theme.dark": "Караңгы",
   "theme.system": "Система",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "Дөрес булмаган Bypass форматы",
   "Core Version Updated": "Ядро версиясе яңартылды",
   "Clash Core Restarted": "Clash ядросы яңадан башланды",
-  "GeoData Updated": "GeoData яңартылды",
   "Currently on the Latest Version": "Сездә иң соңгы версия урнаштырылган",
   "Import Subscription Successful": "Import subscription successful",
   "WebDAV Server URL": "WebDAV сервер URL-ы (http(s)://)",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "External Cors Settings"
+        }
+      },
+      "clash": {
+        "title": "Clash көйләүләре",
+        "items": {
+          "allowLan": "Локаль челтәргә рөхсәт",
+          "dnsOverwrite": "DNS Overwrite",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Бердәм задержка",
+          "logLevel": "Лог дәрәҗәсе",
+          "portConfig": "Порт көйләүләре",
+          "external": "Тышкы",
+          "webUI": "Веб-интерфейс",
+          "clashCore": "Clash ядросы",
+          "openUwpTool": "UWP инструментын ачу",
+          "updateGeoData": "GeoData яңарту"
+        },
+        "tooltips": {
+          "networkInterface": "Челтәр интерфейсы",
+          "unifiedDelay": "Бердәм задержка актив булганда, төрле типтагы узеллар өчен икеләтә тест башкарыла, TCP установканы раслау аермаларын тигезләү максатында",
+          "logLevel": "Бу фәкать сервис режимында эшләгән вакытта системалы журнал файлларына кагыла",
+          "openUwpTool": "Windows 8'дән башлап UWP кушымталары (Microsoft Store кебек) локаль хосттагы челтәр хезмәтләренә турыдан-туры тоташа алмый. Бу инструмент әлеге чикләүне әйләнеп узарга ярдәм итә"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "GeoData яңартылды"
         }
       },
       "verge": {

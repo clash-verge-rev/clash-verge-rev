@@ -314,16 +314,10 @@
   "PAC URL": "URL del PAC: ",
   "Auto Launch": "Inicio automático al arrancar el sistema",
   "Administrator mode may not support auto launch": "El modo de administrador puede no admitir el inicio automático.",
-  "Clash Setting": "Ajustes de Clash",
-  "Allow Lan": "Conexión a la red local",
   "Network Interface": "Interfaz de red",
   "Ip Address": "Dirección IP",
   "Mac Address": "Dirección MAC",
   "IPv6": "IPv6",
-  "Unified Delay": "Latencia unificada",
-  "Unified Delay Info": "Al habilitar la latencia unificada, se realizarán dos pruebas de latencia para eliminar las diferencias de latencia entre diferentes tipos de nodos causadas por el handshake de conexión, etc.",
-  "Log Level": "Nivel de registro",
-  "Log Level Info": "Solo se aplica al archivo de registro del núcleo en la carpeta Service del directorio de registros.",
   "Port Config": "Configuración de puerto",
   "Random Port": "Puerto aleatorio",
   "Mixed Port": "Puerto de proxy mixto",
@@ -333,7 +327,6 @@
   "Tproxy Port": "Puerto de proxy transparente TPROXY",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "Control externo",
   "Open URL": "Abrir enlace",
   "Replace host, port, secret with %host, %port, %secret": "Utilice %host, %port, %secret para representar el host, el puerto y la clave de acceso.",
   "Support %host, %port, %secret": "Soporta %host, %port, %secret",
@@ -343,9 +336,6 @@
   "Release Version": "Versión estable",
   "Alpha Version": "Versión de vista previa",
   "Please enter your root password": "Ingrese su contraseña de root",
-  "Open UWP tool": "Abrir herramienta UWP",
-  "Open UWP tool Info": "A partir de Windows 8, las aplicaciones UWP (como la Tienda de Microsoft) tienen restricciones para acceder directamente a los servicios de red del host local. Use esta herramienta para evitar esta restricción.",
-  "Update GeoData": "Actualizar GeoData",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "Formato de omisión de proxy no válido",
   "Core Version Updated": "Versión del núcleo actualizada",
   "Clash Core Restarted": "Núcleo de Clash reiniciado",
-  "GeoData Updated": "GeoData actualizado",
   "Currently on the Latest Version": "Actualmente está en la última versión",
   "Import Subscription Successful": "Suscripción importada con éxito",
   "WebDAV Server URL": "Dirección del servidor WebDAV http(s)://",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "Configuración de CORS externo"
+        }
+      },
+      "clash": {
+        "title": "Ajustes de Clash",
+        "items": {
+          "allowLan": "Conexión a la red local",
+          "dnsOverwrite": "Sobrescritura de DNS",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Latencia unificada",
+          "logLevel": "Nivel de registro",
+          "portConfig": "Configuración de puerto",
+          "external": "Control externo",
+          "webUI": "Interfaz web",
+          "clashCore": "Núcleo de Clash",
+          "openUwpTool": "Abrir herramienta UWP",
+          "updateGeoData": "Actualizar GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "Interfaz de red",
+          "unifiedDelay": "Al habilitar la latencia unificada, se realizarán dos pruebas de latencia para eliminar las diferencias de latencia entre diferentes tipos de nodos causadas por el handshake de conexión, etc.",
+          "logLevel": "Solo se aplica al archivo de registro del núcleo en la carpeta Service del directorio de registros.",
+          "openUwpTool": "A partir de Windows 8, las aplicaciones UWP (como la Tienda de Microsoft) tienen restricciones para acceder directamente a los servicios de red del host local. Use esta herramienta para evitar esta restricción."
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "GeoData actualizado"
         }
       },
       "verge": {

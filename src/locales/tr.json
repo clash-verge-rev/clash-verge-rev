@@ -314,16 +314,10 @@
   "PAC URL": "PAC URL'si: ",
   "Auto Launch": "Otomatik Başlatma",
   "Administrator mode may not support auto launch": "Yönetici modu otomatik başlatmayı desteklemeyebilir",
-  "Clash Setting": "Clash Ayarı",
-  "Allow Lan": "LAN'a İzin Ver",
   "Network Interface": "Ağ Arayüzü",
   "Ip Address": "IP Adresi",
   "Mac Address": "MAC Adresi",
   "IPv6": "IPv6",
-  "Unified Delay": "Birleşik Gecikme",
-  "Unified Delay Info": "Birleşik gecikme açıldığında, bağlantı el sıkışmaları vb. nedeniyle farklı tür düğümler arasındaki gecikme farklarını ortadan kaldırmak için iki gecikme testi gerçekleştirilir",
-  "Log Level": "Günlük Seviyesi",
-  "Log Level Info": "Bu parametre yalnızca günlük dizini Hizmet klasöründeki çekirdek günlük dosyaları için geçerlidir",
   "Port Config": "Port Yapılandırması",
   "Random Port": "Rastgele Port",
   "Mixed Port": "Karışık Port",
@@ -333,7 +327,6 @@
   "Tproxy Port": "Tvekil Portu",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "Harici",
   "Open URL": "URL Aç",
   "Replace host, port, secret with %host, %port, %secret": "Ana bilgisayar, port, sırrı %host, %port, %secret ile değiştirin",
   "Support %host, %port, %secret": "%host, %port, %secret destekler",
@@ -343,9 +336,6 @@
   "Release Version": "Sürüm Versiyonu",
   "Alpha Version": "Alfa Versiyonu",
   "Please enter your root password": "Lütfen root şifrenizi girin",
-  "Open UWP tool": "UWP Aracını Aç",
-  "Open UWP tool Info": "Windows 8'den beri, UWP uygulamaları (Microsoft Store gibi) yerel ana bilgisayar ağ hizmetlerine doğrudan erişmekten kısıtlanmıştır ve bu araç bu kısıtlamayı atlatmak için kullanılabilir",
-  "Update GeoData": "GeoData'yı Güncelle",
   "theme.light": "Açık",
   "theme.dark": "Koyu",
   "theme.system": "Sistem",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "Geçersiz Baypas Formatı",
   "Core Version Updated": "Çekirdek Sürümü Güncellendi",
   "Clash Core Restarted": "Clash Çekirdeği Yeniden Başlatıldı",
-  "GeoData Updated": "GeoData Güncellendi",
   "Currently on the Latest Version": "Şu Anda En Son Sürümdesiniz",
   "Import Subscription Successful": "Abonelik içe aktarımı başarılı",
   "WebDAV Server URL": "WebDAV Sunucu URL'si",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "Harici CORS ayarları"
+        }
+      },
+      "clash": {
+        "title": "Clash Ayarı",
+        "items": {
+          "allowLan": "LAN'a İzin Ver",
+          "dnsOverwrite": "DNS Üzerine Yazma",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Birleşik Gecikme",
+          "logLevel": "Günlük Seviyesi",
+          "portConfig": "Port Yapılandırması",
+          "external": "Harici",
+          "webUI": "Web Arayüzü",
+          "clashCore": "Clash Çekirdeği",
+          "openUwpTool": "UWP Aracını Aç",
+          "updateGeoData": "GeoData'yı Güncelle"
+        },
+        "tooltips": {
+          "networkInterface": "Ağ Arayüzü",
+          "unifiedDelay": "Birleşik gecikme açıldığında, bağlantı el sıkışmaları vb. nedeniyle farklı tür düğümler arasındaki gecikme farklarını ortadan kaldırmak için iki gecikme testi gerçekleştirilir",
+          "logLevel": "Bu parametre yalnızca günlük dizini Hizmet klasöründeki çekirdek günlük dosyaları için geçerlidir",
+          "openUwpTool": "Windows 8'den beri, UWP uygulamaları (Microsoft Store gibi) yerel ana bilgisayar ağ hizmetlerine doğrudan erişmekten kısıtlanmıştır ve bu araç bu kısıtlamayı atlatmak için kullanılabilir"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "GeoData Güncellendi"
         }
       },
       "verge": {

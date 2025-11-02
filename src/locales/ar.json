@@ -314,16 +314,10 @@
   "PAC URL": "رابط PAC:",
   "Auto Launch": "إطلاق تلقائي",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
-  "Clash Setting": "إعدادات Clash",
-  "Allow Lan": "السماح بالشبكة المحلية",
   "Network Interface": "واجهة الشبكة",
   "Ip Address": "عنوان IP",
   "Mac Address": "عنوان MAC",
   "IPv6": "IPv6",
-  "Unified Delay": "تأخير موحد",
-  "Unified Delay Info": "عند تفعيل التأخير الموحد، سيتم إجراء اختبارين للتأخير لتقليل الفروقات الناتجة عن مفاوضات الاتصال",
-  "Log Level": "مستوى السجلات",
-  "Log Level Info": "This parameter is valid only for kernel log files in the log directory Service folder",
   "Port Config": "تكوين المنافذ",
   "Random Port": "منفذ عشوائي",
   "Mixed Port": "منفذ مختلط",
@@ -333,7 +327,6 @@
   "Tproxy Port": "منفذ Tproxy",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "خارجي",
   "Open URL": "فتح الرابط",
   "Replace host, port, secret with %host, %port, %secret": "استبدل المضيف والمنفذ والمفتاح بـ %host و%port و%secret",
   "Support %host, %port, %secret": "يدعم %host و%port و%secret",
@@ -343,9 +336,6 @@
   "Release Version": "إصدار مستقر",
   "Alpha Version": "إصدار ألفا",
   "Please enter your root password": "يرجى إدخال كلمة مرور الرووت",
-  "Open UWP tool": "فتح أداة UWP",
-  "Open UWP tool Info": "منذ نظام ويندوز 8، يتم تقييد تطبيقات UWP من الوصول المباشر إلى المضيف المحلي. هذه الأداة تتيح تجاوز هذا التقييد",
-  "Update GeoData": "تحديث البيانات الجغرافية",
   "theme.light": "سمة فاتحة",
   "theme.dark": "سمة داكنة",
   "theme.system": "سمة النظام",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "تنسيق التخطي غير صالح",
   "Core Version Updated": "تم تحديث إصدار النواة",
   "Clash Core Restarted": "تم إعادة تشغيل نواة Clash",
-  "GeoData Updated": "تم تحديث البيانات الجغرافية",
   "Currently on the Latest Version": "أنت على أحدث إصدار حاليًا",
   "Import Subscription Successful": "تم استيراد الاشتراك بنجاح",
   "WebDAV Server URL": "عنوان خادم WebDAV",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "External Cors Settings"
+        }
+      },
+      "clash": {
+        "title": "إعدادات Clash",
+        "items": {
+          "allowLan": "السماح بالشبكة المحلية",
+          "dnsOverwrite": "DNS Overwrite",
+          "ipv6": "IPv6",
+          "unifiedDelay": "تأخير موحد",
+          "logLevel": "مستوى السجلات",
+          "portConfig": "تكوين المنافذ",
+          "external": "خارجي",
+          "webUI": "واجهة الويب",
+          "clashCore": "نواة Clash",
+          "openUwpTool": "فتح أداة UWP",
+          "updateGeoData": "تحديث البيانات الجغرافية"
+        },
+        "tooltips": {
+          "networkInterface": "واجهة الشبكة",
+          "unifiedDelay": "عند تفعيل التأخير الموحد، سيتم إجراء اختبارين للتأخير لتقليل الفروقات الناتجة عن مفاوضات الاتصال",
+          "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
+          "openUwpTool": "منذ نظام ويندوز 8، يتم تقييد تطبيقات UWP من الوصول المباشر إلى المضيف المحلي. هذه الأداة تتيح تجاوز هذا التقييد"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "تم تحديث البيانات الجغرافية"
         }
       },
       "verge": {

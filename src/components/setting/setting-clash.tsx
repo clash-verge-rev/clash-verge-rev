@@ -67,7 +67,10 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeo();
-      showNotice("success", t("GeoData Updated"));
+      showNotice(
+        "success",
+        t("components.settings.clash.messages.geoDataUpdated"),
+      );
     } catch (err: any) {
       showNotice("error", err.message || err.toString());
     }
@@ -93,7 +96,7 @@ const SettingClash = ({ onError }: Props) => {
   });
 
   return (
-    <SettingList title={t("Clash Setting")}>
+    <SettingList title={t("components.settings.clash.title")}>
       <WebUIViewer ref={webRef} />
       <ClashPortViewer ref={portRef} />
       <ControllerViewer ref={ctrlRef} />
@@ -103,10 +106,10 @@ const SettingClash = ({ onError }: Props) => {
       <HeaderConfiguration ref={corsRef} />
 
       <SettingItem
-        label={t("Allow Lan")}
+        label={t("components.settings.clash.items.allowLan")}
         extra={
           <TooltipIcon
-            title={t("Network Interface")}
+            title={t("components.settings.clash.tooltips.networkInterface")}
             color={"inherit"}
             icon={LanRounded}
             onClick={() => {
@@ -128,7 +131,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("DNS Overwrite")}
+        label={t("components.settings.clash.items.dnsOverwrite")}
         extra={
           <TooltipIcon
             icon={SettingsRounded}
@@ -143,7 +146,7 @@ const SettingClash = ({ onError }: Props) => {
         />
       </SettingItem>
 
-      <SettingItem label={t("IPv6")}>
+      <SettingItem label={t("components.settings.clash.items.ipv6")}>
         <GuardState
           value={ipv6 ?? false}
           valueProps="checked"
@@ -157,10 +160,10 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("Unified Delay")}
+        label={t("components.settings.clash.items.unifiedDelay")}
         extra={
           <TooltipIcon
-            title={t("Unified Delay Info")}
+            title={t("components.settings.clash.tooltips.unifiedDelay")}
             sx={{ opacity: "0.7" }}
           />
         }
@@ -178,9 +181,12 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("Log Level")}
+        label={t("components.settings.clash.items.logLevel")}
         extra={
-          <TooltipIcon title={t("Log Level Info")} sx={{ opacity: "0.7" }} />
+          <TooltipIcon
+            title={t("components.settings.clash.tooltips.logLevel")}
+            sx={{ opacity: "0.7" }}
+          />
         }
       >
         <GuardState
@@ -194,16 +200,26 @@ const SettingClash = ({ onError }: Props) => {
           }}
         >
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
-            <MenuItem value="debug">Debug</MenuItem>
-            <MenuItem value="info">Info</MenuItem>
-            <MenuItem value="warning">Warn</MenuItem>
-            <MenuItem value="error">Error</MenuItem>
-            <MenuItem value="silent">Silent</MenuItem>
+            <MenuItem value="debug">
+              {t("components.settings.clash.options.logLevel.debug")}
+            </MenuItem>
+            <MenuItem value="info">
+              {t("components.settings.clash.options.logLevel.info")}
+            </MenuItem>
+            <MenuItem value="warning">
+              {t("components.settings.clash.options.logLevel.warning")}
+            </MenuItem>
+            <MenuItem value="error">
+              {t("components.settings.clash.options.logLevel.error")}
+            </MenuItem>
+            <MenuItem value="silent">
+              {t("components.settings.clash.options.logLevel.silent")}
+            </MenuItem>
           </Select>
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Port Config")}>
+      <SettingItem label={t("components.settings.clash.items.portConfig")}>
         <TextField
           autoComplete="new-password"
           disabled={false}
@@ -218,7 +234,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={<>{t("External")}</>}
+        label={t("components.settings.clash.items.external")}
         extra={
           <TooltipIcon
             title={t("components.settings.externalCors.tooltips.open")}
@@ -234,10 +250,13 @@ const SettingClash = ({ onError }: Props) => {
         }}
       />
 
-      <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
+      <SettingItem
+        onClick={() => webRef.current?.open()}
+        label={t("components.settings.clash.items.webUI")}
+      />
 
       <SettingItem
-        label={t("Clash Core")}
+        label={t("components.settings.clash.items.clashCore")}
         extra={
           <TooltipIcon
             icon={SettingsRounded}
@@ -251,17 +270,20 @@ const SettingClash = ({ onError }: Props) => {
       {isWIN && (
         <SettingItem
           onClick={invoke_uwp_tool}
-          label={t("Open UWP tool")}
+          label={t("components.settings.clash.items.openUwpTool")}
           extra={
             <TooltipIcon
-              title={t("Open UWP tool Info")}
+              title={t("components.settings.clash.tooltips.openUwpTool")}
               sx={{ opacity: "0.7" }}
             />
           }
         />
       )}
 
-      <SettingItem onClick={onUpdateGeo} label={t("Update GeoData")} />
+      <SettingItem
+        onClick={onUpdateGeo}
+        label={t("components.settings.clash.items.updateGeoData")}
+      />
     </SettingList>
   );
 };

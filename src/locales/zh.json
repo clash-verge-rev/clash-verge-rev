@@ -314,16 +314,10 @@
   "PAC URL": "PAC 地址：",
   "Auto Launch": "开机自启",
   "Administrator mode may not support auto launch": "管理员模式可能不支持开机自启",
-  "Clash Setting": "Clash 设置",
-  "Allow Lan": "局域网连接",
   "Network Interface": "网络接口",
   "Ip Address": "IP 地址",
   "Mac Address": "MAC 地址",
   "IPv6": "IPv6",
-  "Unified Delay": "统一延迟",
-  "Unified Delay Info": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
-  "Log Level": "日志等级",
-  "Log Level Info": "仅对日志目录 Service 文件夹下的内核日志文件生效",
   "Port Config": "端口设置",
   "Random Port": "随机端口",
   "Mixed Port": "混合代理端口",
@@ -333,7 +327,6 @@
   "Tproxy Port": "Tproxy 透明代理端口",
   "Port settings saved": "端口设置已保存",
   "Failed to save port settings": "端口设置保存失败",
-  "External": "外部控制",
   "Open URL": "打开链接",
   "Replace host, port, secret with %host, %port, %secret": "使用 %host, %port, %secret 表示 主机, 端口, 访问密钥",
   "Support %host, %port, %secret": "支持 %host, %port, %secret",
@@ -343,9 +336,6 @@
   "Release Version": "正式版",
   "Alpha Version": "预览版",
   "Please enter your root password": "请输入您的 root 密码",
-  "Open UWP tool": "UWP 工具",
-  "Open UWP tool Info": "Windows 8 开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制",
-  "Update GeoData": "更新 GeoData",
   "theme.light": "浅色",
   "theme.dark": "深色",
   "theme.system": "系统",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "无效的代理绕过格式",
   "Core Version Updated": "内核版本已更新",
   "Clash Core Restarted": "已重启 Clash 内核",
-  "GeoData Updated": "已更新 GeoData",
   "Currently on the Latest Version": "当前已是最新版本",
   "Import Subscription Successful": "导入订阅成功",
   "WebDAV Server URL": "WebDAV 服务器地址 http(s)://",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "外部控制跨域设置"
+        }
+      },
+      "clash": {
+        "title": "Clash 设置",
+        "items": {
+          "allowLan": "局域网连接",
+          "dnsOverwrite": "DNS 覆写",
+          "ipv6": "IPv6",
+          "unifiedDelay": "统一延迟",
+          "logLevel": "日志等级",
+          "portConfig": "端口设置",
+          "external": "外部控制",
+          "webUI": "网页界面",
+          "clashCore": "Clash 内核",
+          "openUwpTool": "UWP 工具",
+          "updateGeoData": "更新 GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "网络接口",
+          "unifiedDelay": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
+          "logLevel": "仅对日志目录 Service 文件夹下的内核日志文件生效",
+          "openUwpTool": "Windows 8 开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "已更新 GeoData"
         }
       },
       "verge": {

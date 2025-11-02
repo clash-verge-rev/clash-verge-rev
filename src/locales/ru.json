@@ -314,16 +314,10 @@
   "PAC URL": "Адрес PAC: ",
   "Auto Launch": "Автозапуск",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
-  "Clash Setting": "Настройки Clash",
-  "Allow Lan": "Разрешить доступ из локальной сети",
   "Network Interface": "Сетевой интерфейс",
   "Ip Address": "IP адрес",
   "Mac Address": "MAC адрес",
   "IPv6": "IPv6",
-  "Unified Delay": "Точная задержка",
-  "Unified Delay Info": "Когда унифицированная(точная) задержка включена, будут выполнены два теста задержки, чтобы устранить различия в задержке между разными типами узлов, вызванные подтверждением соединения и т. д",
-  "Log Level": "Уровень логов",
-  "Log Level Info": "Это действует только на файлы журнала ядра в служебном файле в каталоге журналов.",
   "Port Config": "Настройка порта",
   "Random Port": "Случайный порт",
   "Mixed Port": "Смешанный прокси-порт",
@@ -333,7 +327,6 @@
   "Tproxy Port": "Порт прозрачного прокси Tproxy",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "Внешний контроллер",
   "Open URL": "Перейти по адресу",
   "Replace host, port, secret with %host, %port, %secret": "Замените хост, порт и секрет на %host, %port, %secret",
   "Support %host, %port, %secret": "Поддерживаются %host, %port, %secret",
@@ -343,9 +336,6 @@
   "Release Version": "Официальная версия",
   "Alpha Version": "Альфа-версия",
   "Please enter your root password": "Пожалуйста, введите ваш пароль root",
-  "Open UWP tool": "Открыть UWP инструмент",
-  "Open UWP tool Info": "С Windows 8 приложения UWP (такие как Microsoft Store) ограничены в прямом доступе к сетевым службам локального хоста, и этот инструмент позволяет обойти это ограничение",
-  "Update GeoData": "Обновить GeoData",
   "theme.light": "Светлая",
   "theme.dark": "Тёмная",
   "theme.system": "Системная",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "Неверный формат обхода",
   "Core Version Updated": "Ядро обновлено до последней версии",
   "Clash Core Restarted": "Ядро перезапущено",
-  "GeoData Updated": "Файлы GeoData обновлены",
   "Currently on the Latest Version": "Обновление не требуется",
   "Import Subscription Successful": "Подписка успешно импортирована",
   "WebDAV Server URL": "URL-адрес сервера WebDAV http(s)://",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "Настройки внешнего CORS"
+        }
+      },
+      "clash": {
+        "title": "Настройки Clash",
+        "items": {
+          "allowLan": "Разрешить доступ из локальной сети",
+          "dnsOverwrite": "Переопределение настроек DNS",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Точная задержка",
+          "logLevel": "Уровень логов",
+          "portConfig": "Настройка порта",
+          "external": "Внешний контроллер",
+          "webUI": "Веб-интерфейс",
+          "clashCore": "Ядро Clash",
+          "openUwpTool": "Открыть UWP инструмент",
+          "updateGeoData": "Обновить GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "Сетевой интерфейс",
+          "unifiedDelay": "Когда унифицированная(точная) задержка включена, будут выполнены два теста задержки, чтобы устранить различия в задержке между разными типами узлов, вызванные подтверждением соединения и т. д",
+          "logLevel": "Это действует только на файлы журнала ядра в служебном файле в каталоге журналов.",
+          "openUwpTool": "С Windows 8 приложения UWP (такие как Microsoft Store) ограничены в прямом доступе к сетевым службам локального хоста, и этот инструмент позволяет обойти это ограничение"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "Файлы GeoData обновлены"
         }
       },
       "verge": {

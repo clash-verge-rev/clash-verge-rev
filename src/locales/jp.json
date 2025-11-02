@@ -314,16 +314,10 @@
   "PAC URL": "PACアドレス：",
   "Auto Launch": "起動時に自動起動",
   "Administrator mode may not support auto launch": "管理者モードでは起動時の自動起動がサポートされない場合があります。",
-  "Clash Setting": "Clash設定",
-  "Allow Lan": "LAN接続を許可",
   "Network Interface": "ネットワークインターフェース",
   "Ip Address": "IPアドレス",
   "Mac Address": "MACアドレス",
   "IPv6": "IPv6",
-  "Unified Delay": "統一遅延",
-  "Unified Delay Info": "統一遅延を有効にすると、2回の遅延テストが行われ、接続ハンドシェイクなどによる異なるタイプのノードの遅延差を解消します。",
-  "Log Level": "ログレベル",
-  "Log Level Info": "ログディレクトリのServiceフォルダ内のコアログファイルにのみ適用されます。",
   "Port Config": "ポート設定",
   "Random Port": "ランダムポート",
   "Mixed Port": "混合プロキシポート",
@@ -333,7 +327,6 @@
   "Tproxy Port": "TPROXY透明プロキシポート",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "外部制御",
   "Open URL": "URLを開く",
   "Replace host, port, secret with %host, %port, %secret": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。",
   "Support %host, %port, %secret": "%host, %port, %secretをサポートします。",
@@ -343,9 +336,6 @@
   "Release Version": "正式版",
   "Alpha Version": "プレビュー版",
   "Please enter your root password": "ルートパスワードを入力してください。",
-  "Open UWP tool": "UWPツールを開く",
-  "Open UWP tool Info": "Windows 8以降では、UWPアプリケーション（Microsoft Storeなど）がローカルホストのネットワークサービスに直接アクセスすることが制限されています。このツールを使用すると、この制限を回避できます。",
-  "Update GeoData": "GeoDataを更新",
   "theme.light": "ライト",
   "theme.dark": "ダーク",
   "theme.system": "システム",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "無効なバイパス形式",
   "Core Version Updated": "コアバージョンが更新されました。",
   "Clash Core Restarted": "Clashコアが再起動されました。",
-  "GeoData Updated": "GeoDataが更新されました。",
   "Currently on the Latest Version": "現在は最新バージョンです。",
   "Import Subscription Successful": "サブスクリプションのインポートに成功しました。",
   "WebDAV Server URL": "WebDAVサーバーのURL http(s)://",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "外部 CORS 設定"
+        }
+      },
+      "clash": {
+        "title": "Clash設定",
+        "items": {
+          "allowLan": "LAN接続を許可",
+          "dnsOverwrite": "DNS上書き",
+          "ipv6": "IPv6",
+          "unifiedDelay": "統一遅延",
+          "logLevel": "ログレベル",
+          "portConfig": "ポート設定",
+          "external": "外部制御",
+          "webUI": "Webインターフェース",
+          "clashCore": "Clashコア",
+          "openUwpTool": "UWPツールを開く",
+          "updateGeoData": "GeoDataを更新"
+        },
+        "tooltips": {
+          "networkInterface": "ネットワークインターフェース",
+          "unifiedDelay": "統一遅延を有効にすると、2回の遅延テストが行われ、接続ハンドシェイクなどによる異なるタイプのノードの遅延差を解消します。",
+          "logLevel": "ログディレクトリのServiceフォルダ内のコアログファイルにのみ適用されます。",
+          "openUwpTool": "Windows 8以降では、UWPアプリケーション（Microsoft Storeなど）がローカルホストのネットワークサービスに直接アクセスすることが制限されています。このツールを使用すると、この制限を回避できます。"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "GeoDataが更新されました。"
         }
       },
       "verge": {

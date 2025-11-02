@@ -314,16 +314,10 @@
   "PAC URL": "PAC-Adresse: ",
   "Auto Launch": "Beim Start automatisch starten",
   "Administrator mode may not support auto launch": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion.",
-  "Clash Setting": "Clash-Einstellungen",
-  "Allow Lan": "Netzwerkverbindung im lokalen Netzwerk zulassen",
   "Network Interface": "Netzwerkschnittstelle",
   "Ip Address": "IP-Adresse",
   "Mac Address": "MAC-Adresse",
   "IPv6": "IPv6",
-  "Unified Delay": "Einheitliche Latenz",
-  "Unified Delay Info": "Wenn die einheitliche Latenz aktiviert ist, werden zwei Latenztests durchgeführt, um die Latenzunterschiede zwischen verschiedenen Knotentypen aufgrund von Verbindungsaufbau und anderen Faktoren zu eliminieren.",
-  "Log Level": "Protokolliergrad",
-  "Log Level Info": "Dies wirkt sich nur auf die Kernprotokolldateien im Verzeichnis Service im Protokollverzeichnis aus.",
   "Port Config": "Port-Konfiguration",
   "Random Port": "Zufälliger Port",
   "Mixed Port": "Mischter Proxy-Port",
@@ -333,7 +327,6 @@
   "Tproxy Port": "TPROXY-Transparenter Proxy-Port",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "Externe Steuerung",
   "Open URL": "Link öffnen",
   "Replace host, port, secret with %host, %port, %secret": "Verwenden Sie %host, %port, %secret für Host, Port und Zugangsschlüssel",
   "Support %host, %port, %secret": "Unterstützt %host, %port, %secret",
@@ -343,9 +336,6 @@
   "Release Version": "Stabile Version",
   "Alpha Version": "Vorschauversion",
   "Please enter your root password": "Bitte geben Sie Ihr Root-Passwort ein.",
-  "Open UWP tool": "UWP-Tool öffnen",
-  "Open UWP tool Info": "Ab Windows 8 wird die direkte Netzwerkverbindung von UWP-Anwendungen (z. B. Microsoft Store) zu lokalen Hosts eingeschränkt. Mit diesem Tool können Sie diese Einschränkung umgehen.",
-  "Update GeoData": "Geo-Daten aktualisieren",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "Ungültiges Format für die Proxy-Umgehung",
   "Core Version Updated": "Kernversion wurde aktualisiert",
   "Clash Core Restarted": "Clash-Kern wurde neu gestartet",
-  "GeoData Updated": "Geo-Daten wurden aktualisiert",
   "Currently on the Latest Version": "Sie verwenden bereits die neueste Version",
   "Import Subscription Successful": "Abonnement erfolgreich importiert",
   "WebDAV Server URL": "WebDAV-Serveradresse http(s)://",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "Einstellungen für externe CORS"
+        }
+      },
+      "clash": {
+        "title": "Clash-Einstellungen",
+        "items": {
+          "allowLan": "Netzwerkverbindung im lokalen Netzwerk zulassen",
+          "dnsOverwrite": "DNS-Überschreibung",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Einheitliche Latenz",
+          "logLevel": "Protokolliergrad",
+          "portConfig": "Port-Konfiguration",
+          "external": "Externe Steuerung",
+          "webUI": "Web-Oberfläche",
+          "clashCore": "Clash-Kern",
+          "openUwpTool": "UWP-Tool öffnen",
+          "updateGeoData": "Geo-Daten aktualisieren"
+        },
+        "tooltips": {
+          "networkInterface": "Netzwerkschnittstelle",
+          "unifiedDelay": "Wenn die einheitliche Latenz aktiviert ist, werden zwei Latenztests durchgeführt, um die Latenzunterschiede zwischen verschiedenen Knotentypen aufgrund von Verbindungsaufbau und anderen Faktoren zu eliminieren.",
+          "logLevel": "Dies wirkt sich nur auf die Kernprotokolldateien im Verzeichnis Service im Protokollverzeichnis aus.",
+          "openUwpTool": "Ab Windows 8 wird die direkte Netzwerkverbindung von UWP-Anwendungen (z. B. Microsoft Store) zu lokalen Hosts eingeschränkt. Mit diesem Tool können Sie diese Einschränkung umgehen."
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "Geo-Daten wurden aktualisiert"
         }
       },
       "verge": {

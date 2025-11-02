@@ -314,16 +314,10 @@
   "PAC URL": "PAC URL: ",
   "Auto Launch": "راه‌اندازی خودکار",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
-  "Clash Setting": "تنظیمات Clash",
-  "Allow Lan": "اجازه LAN",
   "Network Interface": "رابط شبکه",
   "Ip Address": "آدرس IP",
   "Mac Address": "آدرس MAC",
   "IPv6": "IPv6",
-  "Unified Delay": "معادلDELAY",
-  "Unified Delay Info": "معادلDELAY را فعال کنید تا ترافیک شبکه به سرعت رسید",
-  "Log Level": "سطح لاگ",
-  "Log Level Info": "این فقط روی فایل‌های لاگ هسته تحت فایل سرویس در فهرست ورود اثر می‌گذارد.",
   "Port Config": "پیکربندی پورت",
   "Random Port": "پورت تصادفی",
   "Mixed Port": "پورت پروکسی ترکیبی",
@@ -333,7 +327,6 @@
   "Tproxy Port": "پورت پروکسی شفاف Tproxy",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "خارجی",
   "Open URL": "باز کردن آدرس اینترنتی",
   "Replace host, port, secret with %host, %port, %secret": "جایگزین کردن میزبان، پورت و رمز با %host، %port، %secret",
   "Support %host, %port, %secret": "پشتیبانی از %host، %port و %secret",
@@ -343,9 +336,6 @@
   "Release Version": "نسخه نهایی",
   "Alpha Version": "نسخه آلفا",
   "Please enter your root password": "لطفاً رمز ریشه خود را وارد کنید",
-  "Open UWP tool": "باز کردن ابزار UWP",
-  "Open UWP tool Info": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود",
-  "Update GeoData": "به‌روزرسانی GeoData",
   "theme.light": "روشن",
   "theme.dark": "تاریک",
   "theme.system": "سیستم",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "فرمت عبور نامعتبر است",
   "Core Version Updated": "نسخه هسته به‌روزرسانی شد",
   "Clash Core Restarted": "هسته Clash مجدداً راه‌اندازی شد",
-  "GeoData Updated": "GeoData به‌روزرسانی شد",
   "Currently on the Latest Version": "در حال حاضر در آخرین نسخه",
   "Import Subscription Successful": "وارد کردن اشتراک با موفقیت انجام شد",
   "WebDAV Server URL": "http(s):// URL سرور WebDAV",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "External Cors Settings"
+        }
+      },
+      "clash": {
+        "title": "تنظیمات Clash",
+        "items": {
+          "allowLan": "اجازه LAN",
+          "dnsOverwrite": "DNS Overwrite",
+          "ipv6": "IPv6",
+          "unifiedDelay": "معادلDELAY",
+          "logLevel": "سطح لاگ",
+          "portConfig": "پیکربندی پورت",
+          "external": "خارجی",
+          "webUI": "رابط وب",
+          "clashCore": "هسته Clash",
+          "openUwpTool": "باز کردن ابزار UWP",
+          "updateGeoData": "به‌روزرسانی GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "رابط شبکه",
+          "unifiedDelay": "معادلDELAY را فعال کنید تا ترافیک شبکه به سرعت رسید",
+          "logLevel": "این فقط روی فایل‌های لاگ هسته تحت فایل سرویس در فهرست ورود اثر می‌گذارد.",
+          "openUwpTool": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "GeoData به‌روزرسانی شد"
         }
       },
       "verge": {

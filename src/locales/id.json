@@ -314,16 +314,10 @@
   "PAC URL": "URL PAC: ",
   "Auto Launch": "Peluncuran Otomatis",
   "Administrator mode may not support auto launch": "Administrator mode may not support auto launch",
-  "Clash Setting": "Pengaturan Clash",
-  "Allow Lan": "Izinkan LAN",
   "Network Interface": "Antarmuka Jaringan",
   "Ip Address": "Alamat IP",
   "Mac Address": "Alamat MAC",
   "IPv6": "IPv6",
-  "Unified Delay": "Keterlambatan Terpadu",
-  "Unified Delay Info": "Saat keterlambatan terpadu diaktifkan, dua tes keterlambatan akan dilakukan untuk menghilangkan perbedaan keterlambatan antara berbagai jenis node yang disebabkan oleh jabat tangan koneksi, dll.",
-  "Log Level": "Tingkat Log",
-  "Log Level Info": "Ini hanya berlaku untuk file log kernel di folder layanan di direktori log.",
   "Port Config": "Konfigurasi Port",
   "Random Port": "Port Acak",
   "Mixed Port": "Port Campuran",
@@ -333,7 +327,6 @@
   "Tproxy Port": "Port Tproxy",
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
-  "External": "Eksternal",
   "Open URL": "Buka URL",
   "Replace host, port, secret with %host, %port, %secret": "Ganti host, port, rahasia dengan %host, %port, %secret",
   "Support %host, %port, %secret": "Dukung %host, %port, %secret",
@@ -343,9 +336,6 @@
   "Release Version": "Versi Rilis",
   "Alpha Version": "Versi Alpha",
   "Please enter your root password": "Harap masukkan kata sandi root Anda",
-  "Open UWP tool": "Buka alat UWP",
-  "Open UWP tool Info": "Sejak Windows 8, aplikasi UWP (seperti Microsoft Store) dibatasi dari mengakses layanan jaringan host lokal secara langsung, dan alat ini dapat digunakan untuk melewati pembatasan ini",
-  "Update GeoData": "Perbarui GeoData",
   "theme.light": "Terang",
   "theme.dark": "Gelap",
   "theme.system": "Sistem",
@@ -401,7 +391,6 @@
   "Invalid Bypass Format": "Format Bypass Tidak Valid",
   "Core Version Updated": "Versi Core Diperbarui",
   "Clash Core Restarted": "Core Clash Dimulai Ulang",
-  "GeoData Updated": "GeoData Diperbarui",
   "Currently on the Latest Version": "Saat ini pada Versi Terbaru",
   "Import Subscription Successful": "Berlangganan Berhasil Diimpor",
   "WebDAV Server URL": "URL Server WebDAV",
@@ -857,6 +846,40 @@
         },
         "tooltips": {
           "open": "External Cors Settings"
+        }
+      },
+      "clash": {
+        "title": "Pengaturan Clash",
+        "items": {
+          "allowLan": "Izinkan LAN",
+          "dnsOverwrite": "DNS Overwrite",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Keterlambatan Terpadu",
+          "logLevel": "Tingkat Log",
+          "portConfig": "Konfigurasi Port",
+          "external": "Eksternal",
+          "webUI": "Antarmuka Web",
+          "clashCore": "Inti Clash",
+          "openUwpTool": "Buka alat UWP",
+          "updateGeoData": "Perbarui GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "Antarmuka Jaringan",
+          "unifiedDelay": "Saat keterlambatan terpadu diaktifkan, dua tes keterlambatan akan dilakukan untuk menghilangkan perbedaan keterlambatan antara berbagai jenis node yang disebabkan oleh jabat tangan koneksi, dll.",
+          "logLevel": "Ini hanya berlaku untuk file log kernel di folder layanan di direktori log.",
+          "openUwpTool": "Sejak Windows 8, aplikasi UWP (seperti Microsoft Store) dibatasi dari mengakses layanan jaringan host lokal secara langsung, dan alat ini dapat digunakan untuk melewati pembatasan ini"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "GeoData Diperbarui"
         }
       },
       "verge": {
