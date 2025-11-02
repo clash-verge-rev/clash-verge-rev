@@ -144,8 +144,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             }
           } catch {
             // 首次创建/更新失败，尝试使用自身代理
-            showNotice(
-              "info",
+            showNotice.info(
               t("components.profile.viewer.notifications.creationRetry"),
             );
 
@@ -170,8 +169,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               await patchProfile(form.uid, { option: originalOptions });
             }
 
-            showNotice(
-              "success",
+            showNotice.success(
               t("components.profile.viewer.notifications.creationSuccess"),
             );
           }
@@ -187,7 +185,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           onChange(isActivating);
         }, 0);
       } catch (err: any) {
-        showNotice("error", createRawNotice(err.message || err.toString()));
+        showNotice.error(createRawNotice(err.message || err.toString()));
       } finally {
         setLoading(false);
       }

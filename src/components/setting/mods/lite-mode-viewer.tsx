@@ -46,7 +46,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
       });
       setOpen(false);
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   });
 

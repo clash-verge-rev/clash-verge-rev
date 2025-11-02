@@ -263,13 +263,13 @@ export const ProxiesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice("success", {
+      showNotice.success({
         i18nKey: "components.profile.notifications.saved",
       });
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.toString()));
+      showNotice.error(createRawNotice(err.toString()));
     }
   });
 

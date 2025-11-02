@@ -428,7 +428,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       skipYamlSyncRef.current = true;
       updateValuesFromConfig(parsedYaml);
     } catch {
-      showNotice("error", { i18nKey: "Invalid YAML format" });
+      showNotice.error({ i18nKey: "Invalid YAML format" });
     }
   }, [yamlContent, updateValuesFromConfig]);
 
@@ -551,8 +551,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           }
         }
 
-        showNotice(
-          "error",
+        showNotice.error(
           createPrefixedNotice(
             `${t("DNS configuration error")}:`,
             cleanErrorMsg,
@@ -568,9 +567,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
 
       setOpen(false);
-      showNotice("success", { i18nKey: "DNS settings saved" });
+      showNotice.success({ i18nKey: "DNS settings saved" });
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   });
 

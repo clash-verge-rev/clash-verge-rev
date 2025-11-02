@@ -48,7 +48,7 @@ export const ProfileMore = (props: Props) => {
     try {
       await viewProfile(id);
     } catch (err: any) {
-      showNotice("error", createRawNotice(err?.message || err.toString()));
+      showNotice.error(createRawNotice(err?.message || err.toString()));
     }
   });
 

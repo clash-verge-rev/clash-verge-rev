@@ -16,7 +16,7 @@ const SettingPage = () => {
   const { t } = useTranslation();
 
   const onError = (err: any) => {
-    showNotice("error", createRawNotice(err?.message || err.toString()));
+    showNotice.error(createRawNotice(err?.message || err.toString()));
   };
 
   const toGithubRepo = useLockFn(() => {

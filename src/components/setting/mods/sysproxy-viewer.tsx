@@ -161,7 +161,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           ]);
         }
       } catch (err: any) {
-        showNotice("error", createRawNotice(err.toString()));
+        showNotice.error(createRawNotice(err.toString()));
       }
     };
 
@@ -277,15 +277,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
-      showNotice(
-        "error",
+      showNotice.error(
         t("components.settings.sysproxy.messages.durationTooShort"),
       );
       return;
     }
     if (value.bypass && !validReg.test(value.bypass)) {
-      showNotice(
-        "error",
+      showNotice.error(
         t("components.settings.sysproxy.messages.invalidBypass"),
       );
       return;
@@ -304,8 +302,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       !ipv6Regex.test(value.proxy_host) &&
       !hostnameRegex.test(value.proxy_host)
     ) {
-      showNotice(
-        "error",
+      showNotice.error(
         t("components.settings.sysproxy.messages.invalidProxyHost"),
       );
       return;
@@ -410,7 +407,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       } catch (err: any) {
         console.error("配置保存失败:", err);
         mutateVerge();
-        showNotice("error", createRawNotice(err.toString()));
+        showNotice.error(createRawNotice(err.toString()));
         // setOpen(true);
       }
     });

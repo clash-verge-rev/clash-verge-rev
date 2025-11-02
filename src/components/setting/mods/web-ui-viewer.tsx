@@ -92,7 +92,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       await openWebUrl(url);
     } catch (e: any) {
-      showNotice("error", createRawNotice(e.message || e.toString()));
+      showNotice.error(createRawNotice(e.message || e.toString()));
     }
   });
 

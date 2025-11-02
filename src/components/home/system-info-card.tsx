@@ -174,15 +174,15 @@ export const SystemInfoCard = () => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        showNotice("success", {
+        showNotice.success({
           i18nKey: "Currently on the Latest Version",
         });
       } else {
-        showNotice("info", { i18nKey: "Update Available" }, 2000);
+        showNotice.info({ i18nKey: "Update Available" }, 2000);
         goToSettings();
       }
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   });
 

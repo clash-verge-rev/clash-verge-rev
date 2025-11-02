@@ -47,22 +47,20 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        showNotice(
-          "success",
+        showNotice.success(
           t("components.settings.verge.advanced.notifications.latestVersion"),
         );
       } else {
         updateRef.current?.open();
       }
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   };
 
   const onExportDiagnosticInfo = useCallback(async () => {
     await exportDiagnosticInfo();
-    showNotice(
-      "success",
+    showNotice.success(
       t("components.settings.common.notifications.copySuccess"),
       1000,
     );
@@ -70,8 +68,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
 
   const copyVersion = useCallback(() => {
     navigator.clipboard.writeText(`v${version}`).then(() => {
-      showNotice(
-        "success",
+      showNotice.success(
         t("components.settings.verge.advanced.notifications.versionCopied"),
         1000,
       );

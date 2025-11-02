@@ -297,7 +297,7 @@ export const HomeProfileCard = ({
       // 刷新首页数据
       refreshAll();
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()), 3000);
+      showNotice.error(createRawNotice(err.message || err.toString()), 3000);
     } finally {
       setUpdating(false);
     }

@@ -56,7 +56,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       // 如果启用了外部控制器，则保存控制器地址和密钥
       if (enableController) {
         if (!controller.trim()) {
-          showNotice("error", {
+          showNotice.error({
             i18nKey:
               "components.settings.externalController.messages.addressRequired",
           });
@@ -64,7 +64,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         }
 
         if (!secret.trim()) {
-          showNotice("error", {
+          showNotice.error({
             i18nKey:
               "components.settings.externalController.messages.secretRequired",
           });
@@ -77,12 +77,11 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         await patchInfo({ "external-controller": "" });
       }
 
-      showNotice("success", { i18nKey: "Configuration saved successfully" });
+      showNotice.success({ i18nKey: "Configuration saved successfully" });
       setOpen(false);
     } catch (err: any) {
       const message = err?.message || err?.toString?.();
-      showNotice(
-        "error",
+      showNotice.error(
         message
           ? createPrefixedNotice(t("Failed to save configuration"), message)
           : { i18nKey: "Failed to save configuration" },
@@ -102,7 +101,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         setTimeout(() => setCopySuccess(null));
       } catch (err) {
         console.warn("[ControllerViewer] copy to clipboard failed:", err);
-        showNotice("error", {
+        showNotice.error({
           i18nKey: "components.settings.externalController.messages.copyFailed",
         });
       }

@@ -149,8 +149,7 @@ const ProfilePage = () => {
       }
 
       setActivatings((prev) => prev.filter((id) => id !== previousSwitching));
-      showNotice(
-        "info",
+      showNotice.info(
         createPrefixedNotice(
           t("pages.profiles.notifications.switchInterrupted"),
           `${previousSwitching} → ${newProfile}`,
@@ -198,7 +197,7 @@ const ProfilePage = () => {
 
           for (const file of paths) {
             if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-              showNotice("error", {
+              showNotice.error({
                 i18nKey: "pages.profiles.errors.onlyYaml",
               });
               continue;
@@ -248,16 +247,14 @@ const ProfilePage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       await onEnhance(false);
 
-      showNotice(
-        "success",
+      showNotice.success(
         { i18nKey: "pages.profiles.notices.forceRefreshCompleted" },
         2000,
       );
     } catch (error: any) {
       console.error("[紧急刷新] 失败:", error);
       const message = error?.message || String(error);
-      showNotice(
-        "error",
+      showNotice.error(
         {
           i18nKey: "pages.profiles.notices.emergencyRefreshFailed",
           params: { message },
@@ -292,7 +289,7 @@ const ProfilePage = () => {
     if (!url) return;
     // 校验url是否为http/https
     if (!/^https?:\/\//i.test(url)) {
-      showNotice("error", {
+      showNotice.error({
         i18nKey: "pages.profiles.errors.invalidUrl",
       });
       return;
@@ -300,7 +297,7 @@ const ProfilePage = () => {
     setLoading(true);
 
     const handleImportSuccess = async (noticeKey: string) => {
-      showNotice("success", { i18nKey: noticeKey });
+      showNotice.success({ i18nKey: noticeKey });
       setUrl("");
       await performRobustRefresh();
     };
@@ -312,7 +309,7 @@ const ProfilePage = () => {
     } catch (initialErr) {
       console.warn("[订阅导入] 首次导入失败:", initialErr);
 
-      showNotice("info", {
+      showNotice.info({
         i18nKey: "pages.profiles.notifications.importRetry",
       });
       try {
@@ -325,8 +322,7 @@ const ProfilePage = () => {
       } catch (retryErr: any) {
         // 回退导入也失败
         const retryErrmsg = retryErr?.message || retryErr.toString();
-        showNotice(
-          "error",
+        showNotice.error(
           `${t("pages.profiles.notifications.importFail")}: ${retryErrmsg}`,
         );
       }
@@ -374,18 +370,13 @@ const ProfilePage = () => {
       // 清除SWR缓存并重新获取
       await mutate("getProfiles", getProfiles(), { revalidate: true });
       await onEnhance(false);
-      showNotice(
-        "error",
+      showNotice.error(
         t("pages.profiles.notifications.importNeedsRefresh"),
         3000,
       );
     } catch (finalError) {
       console.error(`[导入刷新] 最终刷新尝试失败:`, finalError);
-      showNotice(
-        "error",
-        t("pages.profiles.notifications.importSuccess"),
-        5000,
-      );
+      showNotice.error(t("pages.profiles.notifications.importSuccess"), 5000);
     }
   };
 
@@ -502,8 +493,7 @@ const ProfilePage = () => {
         closeAllConnections();
 
         if (notifySuccess && success) {
-          showNotice(
-            "success",
+          showNotice.success(
             t("pages.profiles.notifications.profileSwitched"),
             1000,
           );
@@ -537,11 +527,7 @@ const ProfilePage = () => {
         }
 
         console.error(`[Profile] 切换失败:`, err);
-        showNotice(
-          "error",
-          createRawNotice(err?.message || err.toString()),
-          4000,
-        );
+        showNotice.error(createRawNotice(err?.message || err.toString()), 4000);
       } finally {
         // 只有当前profile仍然是正在切换的profile且序列号匹配时才清理状态
         if (
@@ -607,14 +593,13 @@ const ProfilePage = () => {
       await enhanceProfiles();
       mutateLogs();
       if (notifySuccess) {
-        showNotice(
-          "success",
+        showNotice.success(
           t("pages.profiles.notifications.profileReactivated"),
           1000,
         );
       }
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()), 3000);
+      showNotice.error(createRawNotice(err.message || err.toString()), 3000);
     } finally {
       // 保留正在切换的profile，清除其他状态
       setActivatings((prev) =>
@@ -634,7 +619,7 @@ const ProfilePage = () => {
         await onEnhance(false);
       }
     } catch (err: any) {
-      showNotice("error", createRawNotice(err?.message || err.toString()));
+      showNotice.error(createRawNotice(err?.message || err.toString()));
     } finally {
       setActivatings([]);
     }
@@ -750,11 +735,11 @@ const ProfilePage = () => {
       setSelectedProfiles(new Set());
       setBatchMode(false);
 
-      showNotice("success", {
+      showNotice.success({
         i18nKey: "pages.profiles.notifications.batchDeleted",
       });
     } catch (err: any) {
-      showNotice("error", createRawNotice(err?.message || err.toString()));
+      showNotice.error(createRawNotice(err?.message || err.toString()));
     } finally {
       setActivatings([]);
     }

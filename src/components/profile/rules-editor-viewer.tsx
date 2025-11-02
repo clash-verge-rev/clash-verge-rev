@@ -351,8 +351,7 @@ export const RulesEditorViewer = (props: Props) => {
           ),
         );
       } catch (e: any) {
-        showNotice(
-          "error",
+        showNotice.error(
           createRawNotice(e?.message || e?.toString() || "YAML dump error"),
         );
       }
@@ -482,13 +481,13 @@ export const RulesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice("success", {
+      showNotice.success({
         i18nKey: "components.profile.notifications.saved",
       });
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.toString()));
+      showNotice.error(createRawNotice(err.toString()));
     }
   });
 
@@ -631,8 +630,7 @@ export const RulesEditorViewer = (props: Props) => {
                       if (prependSeq.includes(raw)) return;
                       setPrependSeq([raw, ...prependSeq]);
                     } catch (err: any) {
-                      showNotice(
-                        "error",
+                      showNotice.error(
                         createRawNotice(err.message || err.toString()),
                       );
                     }
@@ -652,8 +650,7 @@ export const RulesEditorViewer = (props: Props) => {
                       if (appendSeq.includes(raw)) return;
                       setAppendSeq([...appendSeq, raw]);
                     } catch (err: any) {
-                      showNotice(
-                        "error",
+                      showNotice.error(
                         createRawNotice(err.message || err.toString()),
                       );
                     }

@@ -67,12 +67,11 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeo();
-      showNotice(
-        "success",
+      showNotice.success(
         t("components.settings.clash.messages.geoDataUpdated"),
       );
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   };
 
@@ -89,7 +88,7 @@ const SettingClash = ({ onError }: Props) => {
     } catch (err: any) {
       setDnsSettingsEnabled(!enable);
       localStorage.setItem("dns_settings_enabled", String(!enable));
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
       await patchVerge({ enable_dns_settings: !enable }).catch(() => {});
       throw err;
     }

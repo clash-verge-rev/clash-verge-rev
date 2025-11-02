@@ -321,7 +321,7 @@ export const ProfileItem = (props: Props) => {
     try {
       await viewProfile(itemData.uid);
     } catch (err: any) {
-      showNotice("error", createRawNotice(err?.message || err.toString()));
+      showNotice.error(createRawNotice(err?.message || err.toString()));
     }
   });
 

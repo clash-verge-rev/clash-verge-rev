@@ -315,19 +315,19 @@ export async function getAppDir() {
 
 export async function openAppDir() {
   return invoke<void>("open_app_dir").catch((err) =>
-    showNotice("error", createRawNotice(err?.message || err.toString())),
+    showNotice.error(createRawNotice(err?.message || err.toString())),
   );
 }
 
 export async function openCoreDir() {
   return invoke<void>("open_core_dir").catch((err) =>
-    showNotice("error", createRawNotice(err?.message || err.toString())),
+    showNotice.error(createRawNotice(err?.message || err.toString())),
   );
 }
 
 export async function openLogsDir() {
   return invoke<void>("open_logs_dir").catch((err) =>
-    showNotice("error", createRawNotice(err?.message || err.toString())),
+    showNotice.error(createRawNotice(err?.message || err.toString())),
   );
 }
 
@@ -335,7 +335,7 @@ export const openWebUrl = async (url: string) => {
   try {
     await invoke("open_web_url", { url });
   } catch (err: any) {
-    showNotice("error", createRawNotice(err.toString()));
+    showNotice.error(createRawNotice(err.toString()));
   }
 };
 
@@ -377,7 +377,7 @@ export async function cmdTestDelay(url: string) {
 
 export async function invoke_uwp_tool() {
   return invoke<void>("invoke_uwp_tool").catch((err) =>
-    showNotice("error", createRawNotice(err?.message || err.toString()), 1500),
+    showNotice.error(createRawNotice(err?.message || err.toString()), 1500),
   );
 }
 

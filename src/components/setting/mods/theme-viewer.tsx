@@ -51,7 +51,7 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
       await patchVerge({ theme_setting: theme });
       setOpen(false);
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.toString()));
+      showNotice.error(createRawNotice(err.toString()));
     }
   });
 

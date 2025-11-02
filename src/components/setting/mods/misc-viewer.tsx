@@ -70,7 +70,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       });
       setOpen(false);
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.toString()));
+      showNotice.error(createRawNotice(err.toString()));
     }
   });
 

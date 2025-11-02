@@ -140,12 +140,12 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         manual: true,
         onSuccess: () => {
           setOpen(false);
-          showNotice("success", {
+          showNotice.success({
             i18nKey: "Configuration saved successfully",
           });
         },
         onError: () => {
-          showNotice("error", { i18nKey: "Failed to save configuration" });
+          showNotice.error({ i18nKey: "Failed to save configuration" });
         },
       },
     );

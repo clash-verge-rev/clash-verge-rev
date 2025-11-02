@@ -80,15 +80,15 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       );
       try {
         await enhanceProfiles();
-        showNotice("success", {
+        showNotice.success({
           i18nKey: "components.settings.tun.messages.applied",
         });
       } catch (err: any) {
-        showNotice("error", createRawNotice(err.message || err.toString()));
+        showNotice.error(createRawNotice(err.message || err.toString()));
       }
       setOpen(false);
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   });
 

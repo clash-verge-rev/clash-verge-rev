@@ -11,14 +11,14 @@ const executeWithErrorHandling = async (
   successMessage?: string,
 ) => {
   try {
-    showNotice("info", { i18nKey: loadingMessage });
+    showNotice.info({ i18nKey: loadingMessage });
     await operation();
     if (successMessage) {
-      showNotice("success", { i18nKey: successMessage });
+      showNotice.success({ i18nKey: successMessage });
     }
   } catch (err) {
     const msg = (err as Error)?.message || String(err);
-    showNotice("error", createRawNotice(msg));
+    showNotice.error(createRawNotice(msg));
     throw err;
   }
 };

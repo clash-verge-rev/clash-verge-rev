@@ -66,13 +66,13 @@ export const ProviderButton = () => {
       await refreshProxy();
       await refreshProxyProviders();
 
-      showNotice("success", {
+      showNotice.success({
         i18nKey: "components.providers.notices.updateSuccess",
         params: { name },
       });
     } catch (err: any) {
       const message = err?.message || err?.toString?.() || String(err);
-      showNotice("error", {
+      showNotice.error({
         i18nKey: "components.providers.notices.updateFailed",
         params: { name, message },
       });
@@ -88,7 +88,7 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(proxyProviders || {});
       if (allProviders.length === 0) {
-        showNotice("info", {
+        showNotice.info({
           i18nKey: "components.providers.notices.none",
         });
         return;
@@ -120,12 +120,12 @@ export const ProviderButton = () => {
       await refreshProxy();
       await refreshProxyProviders();
 
-      showNotice("success", {
+      showNotice.success({
         i18nKey: "components.providers.notices.allUpdated",
       });
     } catch (err: any) {
       const message = err?.message || err?.toString?.() || String(err);
-      showNotice("error", {
+      showNotice.error({
         i18nKey: "components.providers.notices.genericError",
         params: { message },
       });

@@ -54,7 +54,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       const errorMsg = await changeClashCore(core);
 
       if (errorMsg) {
-        showNotice("error", createRawNotice(errorMsg));
+        showNotice.error(createRawNotice(errorMsg));
         setChangingCore(null);
         return;
       }
@@ -67,7 +67,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }, 500);
     } catch (err: any) {
       setChangingCore(null);
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   });
 
@@ -75,11 +75,11 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setRestarting(true);
       await restartCore();
-      showNotice("success", { i18nKey: "Clash Core Restarted" });
+      showNotice.success({ i18nKey: "Clash Core Restarted" });
       setRestarting(false);
     } catch (err: any) {
       setRestarting(false);
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   });
 
@@ -88,14 +88,14 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      showNotice("success", { i18nKey: "Core Version Updated" });
+      showNotice.success({ i18nKey: "Core Version Updated" });
     } catch (err: any) {
       setUpgrading(false);
       const errMsg = err.response?.data?.message || err.toString();
       const showMsg = errMsg.includes("already using latest version")
         ? "Already Using Latest Core Version"
         : errMsg;
-      showNotice("error", { i18nKey: showMsg, fallback: showMsg });
+      showNotice.error({ i18nKey: showMsg, fallback: showMsg });
     }
   });
 

@@ -384,14 +384,14 @@ export const GroupsEditorViewer = (props: Props) => {
       }
 
       await saveProfileFile(property, nextData);
-      showNotice("success", {
+      showNotice.success({
         i18nKey: "components.profile.notifications.saved",
       });
       setPrevData(nextData);
       onSave?.(prevData, nextData);
       onClose();
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.toString()));
+      showNotice.error(createRawNotice(err.toString()));
     }
   });
 
@@ -922,8 +922,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       }
                       setPrependSeq([formIns.getValues(), ...prependSeq]);
                     } catch (err: any) {
-                      showNotice(
-                        "error",
+                      showNotice.error(
                         createRawNotice(err.message || err.toString()),
                       );
                     }
@@ -951,8 +950,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       }
                       setAppendSeq([...appendSeq, formIns.getValues()]);
                     } catch (err: any) {
-                      showNotice(
-                        "error",
+                      showNotice.error(
                         createRawNotice(err.message || err.toString()),
                       );
                     }

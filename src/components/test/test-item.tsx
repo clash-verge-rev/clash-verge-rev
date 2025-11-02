@@ -82,7 +82,7 @@ export const TestItem = ({
     try {
       removeTest(uid);
     } catch (err: any) {
-      showNotice("error", createRawNotice(err.message || err.toString()));
+      showNotice.error(createRawNotice(err.message || err.toString()));
     }
   });
 

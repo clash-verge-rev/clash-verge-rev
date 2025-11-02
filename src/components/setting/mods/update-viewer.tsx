@@ -58,16 +58,12 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const onUpdate = useLockFn(async () => {
     if (portableFlag) {
-      showNotice(
-        "error",
-        t("components.settings.update.messages.portableError"),
-      );
+      showNotice.error(t("components.settings.update.messages.portableError"));
       return;
     }
     if (!updateInfo?.body) return;
     if (breakChangeFlag) {
-      showNotice(
-        "error",
+      showNotice.error(
         t("components.settings.update.messages.breakChangeError"),
       );
       return;
@@ -95,7 +91,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       await updateInfo.downloadAndInstall();
       await relaunch();
     } catch (err: any) {
-      showNotice("error", createRawNotice(err?.message || err.toString()));
+      showNotice.error(createRawNotice(err?.message || err.toString()));
     } finally {
       setUpdateState(false);
       if (progressListener) {

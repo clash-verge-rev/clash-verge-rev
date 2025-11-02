@@ -126,7 +126,7 @@ const ProxyControlSwitches = ({
   const { enable_tun_mode, enable_system_proxy } = verge ?? {};
 
   const showErrorNotice = useCallback(
-    (msg: string) => showNotice("error", { i18nKey: msg }),
+    (msg: string) => showNotice.error({ i18nKey: msg }),
     [],
   );
 
@@ -145,10 +145,7 @@ const ProxyControlSwitches = ({
       await installServiceAndRestartCore();
       await mutateSystemState();
     } catch (err) {
-      showNotice(
-        "error",
-        createRawNotice((err as Error).message || String(err)),
-      );
+      showNotice.error(createRawNotice((err as Error).message || String(err)));
     }
   });
 
@@ -160,10 +157,7 @@ const ProxyControlSwitches = ({
       await uninstallServiceAndRestartCore();
       await mutateSystemState();
     } catch (err) {
-      showNotice(
-        "error",
-        createRawNotice((err as Error).message || String(err)),
-      );
+      showNotice.error(createRawNotice((err as Error).message || String(err)));
     }
   });
 
