@@ -251,7 +251,6 @@
   "Timeout": "Таймаут",
   "Type": "Төр",
   "Name": "Исем",
-  "Update": "Яңарту",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "Tun режимын кабызу/сүндерү",
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "Агымдагы конфигурация",
-  "Go to Release Page": "Релизлар битенә күчү",
-  "Portable Updater Error": "Портатив версиядә кушымта эчендә яңарту хупланмый, кулдан төшереп алыгыз",
-  "Break Change Update Error": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала.",
   "Exit": "Чыгу",
   "Verge Version": "Verge версиясе",
   "ReadOnly": "Уку режимы гына",
@@ -1035,6 +1031,17 @@
             "never": "Беркайчан чистартмаска",
             "retainDays": "{{n}} көн саклау"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "Релизлар битенә күчү",
+          "update": "Яңарту"
+        },
+        "messages": {
+          "portableError": "Портатив версиядә кушымта эчендә яңарту хупланмый, кулдан төшереп алыгыз",
+          "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала."
         }
       }
     }

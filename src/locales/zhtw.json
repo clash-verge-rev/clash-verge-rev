@@ -251,7 +251,6 @@
   "Timeout": "逾時",
   "Type": "類型",
   "Name": "名稱",
-  "Update": "更新",
   "Close All Connections": "關閉全部連線",
   "Upload": "上傳",
   "Download": "下載",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "開啟/關閉 虛擬網路介面卡模式",
   "entry_lightweight_mode": "進入輕量模式",
   "Runtime Config": "執行期設定",
-  "Go to Release Page": "前往發佈頁面",
-  "Portable Updater Error": "可攜式版不支援應用程式內更新，請手動下載替換",
-  "Break Change Update Error": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝",
   "Exit": "離開",
   "Verge Version": "Verge 版本",
   "ReadOnly": "唯讀",
@@ -1035,6 +1031,17 @@
             "never": "不清理",
             "retainDays": "保留 {{n}} 天"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "前往發佈頁面",
+          "update": "更新"
+        },
+        "messages": {
+          "portableError": "可攜式版不支援應用程式內更新，請手動下載替換",
+          "breakChangeError": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝"
         }
       }
     }

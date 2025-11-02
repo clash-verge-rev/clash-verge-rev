@@ -251,7 +251,6 @@
   "Timeout": "مهلة",
   "Type": "النوع",
   "Name": "الاسم",
-  "Update": "تحديث",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "تفعيل/تعطيل وضع TUN",
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "تكوين وقت التشغيل",
-  "Go to Release Page": "الانتقال إلى صفحة الإصدارات",
-  "Portable Updater Error": "الإصدار المحمول لا يدعم التحديث داخل التطبيق. يرجى التنزيل والاستبدال يدويًا",
-  "Break Change Update Error": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا",
   "Exit": "خروج",
   "Verge Version": "إصدار Verge",
   "ReadOnly": "للقراءة فقط",
@@ -1035,6 +1031,17 @@
             "never": "عدم التنظيف أبدًا",
             "retainDays": "الاحتفاظ لمدة {{n}} يومًا"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "الانتقال إلى صفحة الإصدارات",
+          "update": "تحديث"
+        },
+        "messages": {
+          "portableError": "الإصدار المحمول لا يدعم التحديث داخل التطبيق. يرجى التنزيل والاستبدال يدويًا",
+          "breakChangeError": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا"
         }
       }
     }

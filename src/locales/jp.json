@@ -251,7 +251,6 @@
   "Timeout": "タイムアウト時間",
   "Type": "タイプ",
   "Name": "名前",
-  "Update": "更新",
   "Close All Connections": "Close All Connections",
   "Upload": "アップロード",
   "Download": "ダウンロード",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "TUNモードを開く/閉じる",
   "entry_lightweight_mode": "軽量モードに入る",
   "Runtime Config": "現在の設定",
-  "Go to Release Page": "リリースページに移動",
-  "Portable Updater Error": "ポータブル版ではアプリケーション内での更新はサポートされていません。手動でダウンロードして置き換えてください。",
-  "Break Change Update Error": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。",
   "Exit": "終了",
   "Verge Version": "Vergeバージョン",
   "ReadOnly": "読み取り専用",
@@ -1035,6 +1031,17 @@
             "never": "クリーンアップしない",
             "retainDays": "{{n}}日間保持"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "リリースページに移動",
+          "update": "更新"
+        },
+        "messages": {
+          "portableError": "ポータブル版ではアプリケーション内での更新はサポートされていません。手動でダウンロードして置き換えてください。",
+          "breakChangeError": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。"
         }
       }
     }

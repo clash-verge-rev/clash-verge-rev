@@ -251,7 +251,6 @@
   "Timeout": "Timeout",
   "Type": "Type",
   "Name": "Name",
-  "Update": "Update",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "Enable/Disable Tun Mode",
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "Runtime Config",
-  "Go to Release Page": "Go to Release Page",
-  "Portable Updater Error": "The portable version does not support in-app updates. Please manually download and replace it",
-  "Break Change Update Error": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version",
   "Exit": "Exit",
   "Verge Version": "Verge Version",
   "ReadOnly": "ReadOnly",
@@ -1035,6 +1031,17 @@
             "never": "Never Clean",
             "retainDays": "Retain {{n}} Days"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "Go to Release Page",
+          "update": "Update"
+        },
+        "messages": {
+          "portableError": "The portable version does not support in-app updates. Please manually download and replace it",
+          "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version"
         }
       }
     }

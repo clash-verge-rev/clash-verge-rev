@@ -251,7 +251,6 @@
   "Timeout": "Zaman Aşımı",
   "Type": "Tip",
   "Name": "İsim",
-  "Update": "Güncelle",
   "Close All Connections": "Close All Connections",
   "Upload": "Yükleme",
   "Download": "İndirme",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "Tun Modunu Etkinleştir/Devre Dışı Bırak",
   "entry_lightweight_mode": "Hafif Moda Gir",
   "Runtime Config": "Çalışma Zamanı Yapılandırması",
-  "Go to Release Page": "Sürüm Sayfasına Git",
-  "Portable Updater Error": "Taşınabilir sürüm uygulama içi güncellemeleri desteklemez. Lütfen manuel olarak indirip değiştirin",
-  "Break Change Update Error": "Bu sürüm büyük bir güncellemedir ve uygulama içi güncellemeleri desteklemez. Lütfen kaldırın ve yeni sürümü manuel olarak indirip kurun",
   "Exit": "Çıkış",
   "Verge Version": "Verge Sürümü",
   "ReadOnly": "Salt Okunur",
@@ -1035,6 +1031,17 @@
             "never": "Asla Temizleme",
             "retainDays": "{{n}} Gün Sakla"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "Sürüm Sayfasına Git",
+          "update": "Güncelle"
+        },
+        "messages": {
+          "portableError": "Taşınabilir sürüm uygulama içi güncellemeleri desteklemez. Lütfen manuel olarak indirip değiştirin",
+          "breakChangeError": "Bu sürüm büyük bir güncellemedir ve uygulama içi güncellemeleri desteklemez. Lütfen kaldırın ve yeni sürümü manuel olarak indirip kurun"
         }
       }
     }

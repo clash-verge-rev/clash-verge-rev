@@ -58,12 +58,18 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const onUpdate = useLockFn(async () => {
     if (portableFlag) {
-      showNotice("error", t("Portable Updater Error"));
+      showNotice(
+        "error",
+        t("components.settings.update.messages.portableError"),
+      );
       return;
     }
     if (!updateInfo?.body) return;
     if (breakChangeFlag) {
-      showNotice("error", t("Break Change Update Error"));
+      showNotice(
+        "error",
+        t("components.settings.update.messages.breakChangeError"),
+      );
       return;
     }
     if (updateState) return;
@@ -113,7 +119,9 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {`New Version v${updateInfo?.version}`}
+          {t("components.settings.update.title", {
+            version: updateInfo?.version ?? "",
+          })}
           <Box>
             <Button
               variant="contained"
@@ -124,13 +132,13 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 );
               }}
             >
-              {t("Go to Release Page")}
+              {t("components.settings.update.actions.goToRelease")}
             </Button>
           </Box>
         </Box>
       }
       contentSx={{ minWidth: 360, maxWidth: 400, height: "50vh" }}
-      okBtn={t("Update")}
+      okBtn={t("components.settings.update.actions.update")}
       cancelBtn={t("Cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}

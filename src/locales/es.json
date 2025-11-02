@@ -251,7 +251,6 @@
   "Timeout": "Tiempo de espera",
   "Type": "Tipo",
   "Name": "Nombre",
-  "Update": "Actualizar",
   "Close All Connections": "Close All Connections",
   "Upload": "Subir",
   "Download": "Descargar",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "Activar/desactivar el modo TUN",
   "entry_lightweight_mode": "Entrar en modo ligero",
   "Runtime Config": "Configuración actual",
-  "Go to Release Page": "Ir a la página de lanzamiento",
-  "Portable Updater Error": "La versión portátil no admite la actualización desde dentro de la aplicación. Descargue e instale manualmente la actualización.",
-  "Break Change Update Error": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión.",
   "Exit": "Salir",
   "Verge Version": "Versión de Verge",
   "ReadOnly": "Solo lectura",
@@ -1035,6 +1031,17 @@
             "never": "No limpiar",
             "retainDays": "Retener {{n}} días"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "Ir a la página de lanzamiento",
+          "update": "Actualizar"
+        },
+        "messages": {
+          "portableError": "La versión portátil no admite la actualización desde dentro de la aplicación. Descargue e instale manualmente la actualización.",
+          "breakChangeError": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión."
         }
       }
     }

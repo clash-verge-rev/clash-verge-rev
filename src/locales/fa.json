@@ -251,7 +251,6 @@
   "Timeout": "زمان قطع",
   "Type": "نوع",
   "Name": "نام",
-  "Update": "به‌روزرسانی",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "فعال/غیرفعال کردن حالت Tun",
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "پیکربندی زمان اجرا",
-  "Go to Release Page": "رفتن به صفحه انتشار",
-  "Portable Updater Error": "نسخه پرتابل از به‌روزرسانی درون برنامه‌ای پشتیبانی نمی‌کند. لطفاً به صورت دستی دانلود و جایگزین کنید",
-  "Break Change Update Error": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید.",
   "Exit": "خروج",
   "Verge Version": "نسخه Verge",
   "ReadOnly": "فقط خواندنی",
@@ -1035,6 +1031,17 @@
             "never": "هرگز پاک نکن",
             "retainDays": "نگهداری به مدت {{n}} روز"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "رفتن به صفحه انتشار",
+          "update": "به‌روزرسانی"
+        },
+        "messages": {
+          "portableError": "نسخه پرتابل از به‌روزرسانی درون برنامه‌ای پشتیبانی نمی‌کند. لطفاً به صورت دستی دانلود و جایگزین کنید",
+          "breakChangeError": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید."
         }
       }
     }

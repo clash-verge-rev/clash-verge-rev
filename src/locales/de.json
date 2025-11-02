@@ -251,7 +251,6 @@
   "Timeout": "Timeout",
   "Type": "Typ",
   "Name": "Name",
-  "Update": "Aktualisieren",
   "Close All Connections": "Close All Connections",
   "Upload": "Hochladen",
   "Download": "Herunterladen",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "TUN-Modus ein/ausschalten",
   "entry_lightweight_mode": "Leichtgewichtigen Modus betreten",
   "Runtime Config": "Aktuelle Konfiguration",
-  "Go to Release Page": "Zur Veröffentlichungsseite gehen",
-  "Portable Updater Error": "Die portable Version unterstützt keine In-App-Aktualisierung. Bitte laden Sie die Dateien manuell herunter und ersetzen Sie sie.",
-  "Break Change Update Error": "Dies ist eine wichtige Aktualisierung. Die In-App-Aktualisierung wird nicht unterstützt. Bitte deinstallieren Sie die Software und laden Sie die neue Version manuell herunter und installieren Sie sie.",
   "Exit": "Beenden",
   "Verge Version": "Verge-Version",
   "ReadOnly": "Schreibgeschützt",
@@ -1035,6 +1031,17 @@
             "never": "Nie bereinigen",
             "retainDays": "{{n}} Tage behalten"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "Zur Veröffentlichungsseite gehen",
+          "update": "Aktualisieren"
+        },
+        "messages": {
+          "portableError": "Die portable Version unterstützt keine In-App-Aktualisierung. Bitte laden Sie die Dateien manuell herunter und ersetzen Sie sie.",
+          "breakChangeError": "Dies ist eine wichtige Aktualisierung. Die In-App-Aktualisierung wird nicht unterstützt. Bitte deinstallieren Sie die Software und laden Sie die neue Version manuell herunter und installieren Sie sie."
         }
       }
     }

@@ -251,7 +251,6 @@
   "Timeout": "超时时间",
   "Type": "类型",
   "Name": "名称",
-  "Update": "更新",
   "Close All Connections": "关闭所有连接",
   "Upload": "上传",
   "Download": "下载",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "打开/关闭 TUN 模式",
   "entry_lightweight_mode": "进入轻量模式",
   "Runtime Config": "当前配置",
-  "Go to Release Page": "前往发布页",
-  "Portable Updater Error": "便携版不支持应用内更新，请手动下载替换",
-  "Break Change Update Error": "此版本为重大更新，不支持应用内更新，请卸载后手动下载安装",
   "Exit": "退出",
   "Verge Version": "Verge 版本",
   "ReadOnly": "只读",
@@ -1035,6 +1031,17 @@
             "never": "不清理",
             "retainDays": "保留 {{n}} 天"
           }
+        }
+      },
+      "update": {
+        "title": "新版本 v{{version}}",
+        "actions": {
+          "goToRelease": "前往发布页",
+          "update": "更新"
+        },
+        "messages": {
+          "portableError": "便携版不支持应用内更新，请手动下载替换",
+          "breakChangeError": "此版本为重大更新，不支持应用内更新，请卸载后手动下载安装"
         }
       }
     }

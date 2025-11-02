@@ -251,7 +251,6 @@
   "Timeout": "Waktu Habis",
   "Type": "Jenis",
   "Name": "Nama",
-  "Update": "Perbarui",
   "Close All Connections": "Close All Connections",
   "Upload": "Upload",
   "Download": "Download",
@@ -341,9 +340,6 @@
   "toggle_tun_mode": "Aktifkan/Nonaktifkan Mode Tun",
   "entry_lightweight_mode": "Entry Lightweight Mode",
   "Runtime Config": "Konfigurasi Runtime",
-  "Go to Release Page": "Pergi ke Halaman Rilis",
-  "Portable Updater Error": "Versi portabel tidak mendukung pembaruan dalam aplikasi. Harap unduh dan ganti secara manual",
-  "Break Change Update Error": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual",
   "Exit": "Keluar",
   "Verge Version": "Versi Verge",
   "ReadOnly": "Hanya Baca",
@@ -1035,6 +1031,17 @@
             "never": "Jangan Pernah Bersihkan",
             "retainDays": "Simpan {{n}} Hari"
           }
+        }
+      },
+      "update": {
+        "title": "New Version v{{version}}",
+        "actions": {
+          "goToRelease": "Pergi ke Halaman Rilis",
+          "update": "Perbarui"
+        },
+        "messages": {
+          "portableError": "Versi portabel tidak mendukung pembaruan dalam aplikasi. Harap unduh dan ganti secara manual",
+          "breakChangeError": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual"
         }
       }
     }
