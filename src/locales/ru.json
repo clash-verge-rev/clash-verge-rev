@@ -444,12 +444,6 @@
   "Enable Tray Speed": "Показывать скорость в трее",
   "Enable Tray Icon": "Показывать значок в трее",
   "LightWeight Mode": "LightWeight Mode",
-  "LightWeight Mode Settings": "Настройки LightWeight Mode",
-  "Enter LightWeight Mode Now": "Войти в LightWeight Mode",
-  "Auto Enter LightWeight Mode": "Автоматический вход в LightWeight Mode",
-  "Auto Enter LightWeight Mode Info": "Автоматически включать LightWeight Mode, если окно закрыто определенное время",
-  "Auto Enter LightWeight Mode Delay": "Задержка включения LightWeight Mode",
-  "When closing the window, LightWeight Mode will be automatically activated after _n minutes": "При закрытии окна LightWeight Mode будет автоматически активирован через {{n}} минут",
   "Config Validation Failed": "Ошибка проверки конфигурации подписки, проверьте файл конфигурации, изменения отменены, ошибка:",
   "Boot Config Validation Failed": "Ошибка проверки конфигурации при запуске, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
   "Core Change Config Validation Failed": "Ошибка проверки конфигурации при смене ядра, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
@@ -880,6 +874,24 @@
         },
         "messages": {
           "geoDataUpdated": "Файлы GeoData обновлены"
+        }
+      },
+      "liteMode": {
+        "title": "Настройки LightWeight Mode",
+        "actions": {
+          "enterNow": "Войти в LightWeight Mode"
+        },
+        "toggles": {
+          "autoEnter": "Автоматический вход в LightWeight Mode"
+        },
+        "tooltips": {
+          "autoEnter": "Автоматически включать LightWeight Mode, если окно закрыто определенное время"
+        },
+        "fields": {
+          "delay": "Задержка включения LightWeight Mode"
+        },
+        "messages": {
+          "autoEnterHint": "При закрытии окна LightWeight Mode будет автоматически активирован через {{n}} минут"
         }
       },
       "verge": {

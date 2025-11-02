@@ -444,12 +444,6 @@
   "Enable Tray Speed": "Habilitar velocidad en la bandeja",
   "Enable Tray Icon": "Habilitar icono de la bandeja",
   "LightWeight Mode": "Modo ligero",
-  "LightWeight Mode Settings": "Configuración del modo ligero",
-  "Enter LightWeight Mode Now": "Entrar en modo ligero ahora",
-  "Auto Enter LightWeight Mode": "Entrar automáticamente en modo ligero",
-  "Auto Enter LightWeight Mode Info": "Si se habilita, se activará automáticamente el modo ligero después de un tiempo de inactividad de la ventana.",
-  "Auto Enter LightWeight Mode Delay": "Retraso para entrar automáticamente en modo ligero",
-  "When closing the window, LightWeight Mode will be automatically activated after _n minutes": "Después de cerrar la ventana, el modo ligero se activará automáticamente después de {{n}} minutos",
   "Config Validation Failed": "Error de validación de la configuración de la suscripción. Compruebe el archivo de configuración de la suscripción. Los cambios se han deshecho. Detalles del error: ",
   "Boot Config Validation Failed": "Error de validación de la configuración de la suscripción de arranque. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
   "Core Change Config Validation Failed": "Error de validación de la configuración al cambiar el núcleo. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
@@ -880,6 +874,24 @@
         },
         "messages": {
           "geoDataUpdated": "GeoData actualizado"
+        }
+      },
+      "liteMode": {
+        "title": "Configuración del modo ligero",
+        "actions": {
+          "enterNow": "Entrar en modo ligero ahora"
+        },
+        "toggles": {
+          "autoEnter": "Entrar automáticamente en modo ligero"
+        },
+        "tooltips": {
+          "autoEnter": "Si se habilita, se activará automáticamente el modo ligero después de un tiempo de inactividad de la ventana."
+        },
+        "fields": {
+          "delay": "Retraso para entrar automáticamente en modo ligero"
+        },
+        "messages": {
+          "autoEnterHint": "Después de cerrar la ventana, el modo ligero se activará automáticamente después de {{n}} minutos"
         }
       },
       "verge": {

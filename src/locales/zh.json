@@ -444,12 +444,6 @@
   "Enable Tray Speed": "启用托盘速率",
   "Enable Tray Icon": "启用托盘图标",
   "LightWeight Mode": "轻量模式",
-  "LightWeight Mode Settings": "轻量模式设置",
-  "Enter LightWeight Mode Now": "立即进入轻量模式",
-  "Auto Enter LightWeight Mode": "自动进入轻量模式",
-  "Auto Enter LightWeight Mode Info": "启用后，将在窗口关闭一段时间后自动激活轻量模式",
-  "Auto Enter LightWeight Mode Delay": "自动进入轻量模式延迟",
-  "When closing the window, LightWeight Mode will be automatically activated after _n minutes": "关闭窗口后，轻量模式将在 {{n}} 分钟后自动激活",
   "Config Validation Failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
   "Boot Config Validation Failed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
   "Core Change Config Validation Failed": "切换内核时配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
@@ -880,6 +874,24 @@
         },
         "messages": {
           "geoDataUpdated": "已更新 GeoData"
+        }
+      },
+      "liteMode": {
+        "title": "轻量模式设置",
+        "actions": {
+          "enterNow": "立即进入轻量模式"
+        },
+        "toggles": {
+          "autoEnter": "自动进入轻量模式"
+        },
+        "tooltips": {
+          "autoEnter": "启用后，将在窗口关闭一段时间后自动激活轻量模式"
+        },
+        "fields": {
+          "delay": "自动进入轻量模式延迟"
+        },
+        "messages": {
+          "autoEnterHint": "关闭窗口后，轻量模式将在 {{n}} 分钟后自动激活"
         }
       },
       "verge": {

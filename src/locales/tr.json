@@ -444,12 +444,6 @@
   "Enable Tray Speed": "Tepsi Hızını Etkinleştir",
   "Enable Tray Icon": "Tepsi Simgesini Etkinleştir",
   "LightWeight Mode": "Hafif Mod",
-  "LightWeight Mode Settings": "Hafif Mod Ayarları",
-  "Enter LightWeight Mode Now": "Şimdi Hafif Moda Gir",
-  "Auto Enter LightWeight Mode": "Otomatik Hafif Moda Gir",
-  "Auto Enter LightWeight Mode Info": "Pencere belirli bir süre kapatıldıktan sonra Hafif Modun otomatik olarak etkinleştirilmesi için etkinleştirin",
-  "Auto Enter LightWeight Mode Delay": "Otomatik Hafif Mod Giriş Gecikmesi",
-  "When closing the window, LightWeight Mode will be automatically activated after _n minutes": "Pencere kapatıldığında, Hafif Mod {{n}} dakika sonra otomatik olarak etkinleştirilecek",
   "Config Validation Failed": "Abonelik yapılandırması doğrulaması başarısız oldu. Lütfen abonelik yapılandırma dosyasını kontrol edin; değişiklikler geri alındı.",
   "Boot Config Validation Failed": "Başlangıç abonelik yapılandırması doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
   "Core Change Config Validation Failed": "Çekirdek değiştirilirken yapılandırma doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
@@ -880,6 +874,24 @@
         },
         "messages": {
           "geoDataUpdated": "GeoData Güncellendi"
+        }
+      },
+      "liteMode": {
+        "title": "Hafif Mod Ayarları",
+        "actions": {
+          "enterNow": "Şimdi Hafif Moda Gir"
+        },
+        "toggles": {
+          "autoEnter": "Otomatik Hafif Moda Gir"
+        },
+        "tooltips": {
+          "autoEnter": "Pencere belirli bir süre kapatıldıktan sonra Hafif Modun otomatik olarak etkinleştirilmesi için etkinleştirin"
+        },
+        "fields": {
+          "delay": "Otomatik Hafif Mod Giriş Gecikmesi"
+        },
+        "messages": {
+          "autoEnterHint": "Pencere kapatıldığında, Hafif Mod {{n}} dakika sonra otomatik olarak etkinleştirilecek"
         }
       },
       "verge": {

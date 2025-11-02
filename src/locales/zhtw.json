@@ -444,12 +444,6 @@
   "Enable Tray Speed": "啟用系統匣速率",
   "Enable Tray Icon": "啟用系統匣圖示",
   "LightWeight Mode": "輕量模式",
-  "LightWeight Mode Settings": "輕量模式設定",
-  "Enter LightWeight Mode Now": "立即進入輕量模式",
-  "Auto Enter LightWeight Mode": "自動進入輕量模式",
-  "Auto Enter LightWeight Mode Info": "啟用後，將在視窗關閉一段時間後自動啟用輕量模式",
-  "Auto Enter LightWeight Mode Delay": "自動進入輕量模式延遲",
-  "When closing the window, LightWeight Mode will be automatically activated after _n minutes": "關閉視窗後，輕量模式將在 {{n}} 分鐘後自動啟用",
   "Config Validation Failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
   "Boot Config Validation Failed": "啟動訂閱配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
   "Core Change Config Validation Failed": "切換內核時配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
@@ -880,6 +874,24 @@
         },
         "messages": {
           "geoDataUpdated": "已更新 GeoData"
+        }
+      },
+      "liteMode": {
+        "title": "輕量模式設定",
+        "actions": {
+          "enterNow": "立即進入輕量模式"
+        },
+        "toggles": {
+          "autoEnter": "自動進入輕量模式"
+        },
+        "tooltips": {
+          "autoEnter": "啟用後，將在視窗關閉一段時間後自動啟用輕量模式"
+        },
+        "fields": {
+          "delay": "自動進入輕量模式延遲"
+        },
+        "messages": {
+          "autoEnterHint": "關閉視窗後，輕量模式將在 {{n}} 分鐘後自動啟用"
         }
       },
       "verge": {

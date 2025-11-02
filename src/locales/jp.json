@@ -444,12 +444,6 @@
   "Enable Tray Speed": "トレイの速度表示を有効にする",
   "Enable Tray Icon": "トレイアイコンを有効にする",
   "LightWeight Mode": "軽量モード",
-  "LightWeight Mode Settings": "軽量モード設定",
-  "Enter LightWeight Mode Now": "今すぐ軽量モードに入る",
-  "Auto Enter LightWeight Mode": "自動的に軽量モードに入る",
-  "Auto Enter LightWeight Mode Info": "有効にすると、ウィンドウを閉じてから一定時間後に自動的に軽量モードが有効になります。",
-  "Auto Enter LightWeight Mode Delay": "自動的に軽量モードに入るまでの遅延時間",
-  "When closing the window, LightWeight Mode will be automatically activated after _n minutes": "ウィンドウを閉じると、{{n}}分後に自動的に軽量モードが有効になります。",
   "Config Validation Failed": "プロファイル設定の検証に失敗しました。プロファイル設定ファイルを確認してください。変更は取り消されました。エラー詳細：",
   "Boot Config Validation Failed": "起動時のプロファイル設定の検証に失敗しました。デフォルト設定で起動しました。プロファイル設定ファイルを確認してください。エラー詳細：",
   "Core Change Config Validation Failed": "コアを切り替える際の設定検証に失敗しました。デフォルト設定で起動しました。プロファイル設定ファイルを確認してください。エラー詳細：",
@@ -880,6 +874,24 @@
         },
         "messages": {
           "geoDataUpdated": "GeoDataが更新されました。"
+        }
+      },
+      "liteMode": {
+        "title": "軽量モード設定",
+        "actions": {
+          "enterNow": "今すぐ軽量モードに入る"
+        },
+        "toggles": {
+          "autoEnter": "自動的に軽量モードに入る"
+        },
+        "tooltips": {
+          "autoEnter": "有効にすると、ウィンドウを閉じてから一定時間後に自動的に軽量モードが有効になります。"
+        },
+        "fields": {
+          "delay": "自動的に軽量モードに入るまでの遅延時間"
+        },
+        "messages": {
+          "autoEnterHint": "ウィンドウを閉じると、{{n}}分後に自動的に軽量モードが有効になります。"
         }
       },
       "verge": {

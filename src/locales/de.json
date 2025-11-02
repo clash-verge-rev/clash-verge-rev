@@ -444,12 +444,6 @@
   "Enable Tray Speed": "Tray-Geschwindigkeit aktivieren",
   "Enable Tray Icon": "Tray-Symbol aktivieren",
   "LightWeight Mode": "Leichtgewichtiger Modus",
-  "LightWeight Mode Settings": "Einstellungen für den Leichtgewichtigen Modus",
-  "Enter LightWeight Mode Now": "Sofort in den Leichtgewichtigen Modus wechseln",
-  "Auto Enter LightWeight Mode": "Automatisch in den Leichtgewichtigen Modus wechseln",
-  "Auto Enter LightWeight Mode Info": "Wenn diese Option aktiviert ist, wird der Leichtgewichtige Modus automatisch aktiviert, nachdem das Fenster für eine bestimmte Zeit geschlossen wurde.",
-  "Auto Enter LightWeight Mode Delay": "Verzögerung beim automatischen Wechsel in den Leichtgewichtigen Modus",
-  "When closing the window, LightWeight Mode will be automatically activated after _n minutes": "Nach dem Schließen des Fensters wird der Leichtgewichtige Modus automatisch nach {{n}} Minuten aktiviert.",
   "Config Validation Failed": "Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Die Änderungen wurden rückgängig gemacht. Fehlerdetails: ",
   "Boot Config Validation Failed": "Start-Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
   "Core Change Config Validation Failed": "Konfigurationsüberprüfung beim Wechsel des Kerns fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
@@ -880,6 +874,24 @@
         },
         "messages": {
           "geoDataUpdated": "Geo-Daten wurden aktualisiert"
+        }
+      },
+      "liteMode": {
+        "title": "Einstellungen für den Leichtgewichtigen Modus",
+        "actions": {
+          "enterNow": "Sofort in den Leichtgewichtigen Modus wechseln"
+        },
+        "toggles": {
+          "autoEnter": "Automatisch in den Leichtgewichtigen Modus wechseln"
+        },
+        "tooltips": {
+          "autoEnter": "Wenn diese Option aktiviert ist, wird der Leichtgewichtige Modus automatisch aktiviert, nachdem das Fenster für eine bestimmte Zeit geschlossen wurde."
+        },
+        "fields": {
+          "delay": "Verzögerung beim automatischen Wechsel in den Leichtgewichtigen Modus"
+        },
+        "messages": {
+          "autoEnterHint": "Nach dem Schließen des Fensters wird der Leichtgewichtige Modus automatisch nach {{n}} Minuten aktiviert."
         }
       },
       "verge": {
