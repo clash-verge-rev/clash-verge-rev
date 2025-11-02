@@ -527,7 +527,6 @@
   "Unknown": "不明",
   "Auto update disabled": "自動更新が無効になっています。",
   "Update subscription successfully": "サブスクリプションの更新に成功しました。",
-  "Update failed, retrying with Clash proxy...": "サブスクリプションの更新に失敗しました。Clashプロキシを使用して再試行します...",
   "Update with Clash proxy successfully": "Clashプロキシを使用して更新に成功しました。",
   "Update failed even with Clash proxy": "Clashプロキシを使用しても更新に失敗しました。",
   "Profile creation failed, retrying with Clash proxy...": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",

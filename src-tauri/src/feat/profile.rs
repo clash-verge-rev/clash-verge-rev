@@ -107,7 +107,6 @@ async fn perform_profile_update(
                 Type::Config,
                 "Warning: [订阅更新] 正常更新失败: {err}，尝试使用Clash代理更新"
             );
-            handle::Handle::notice_message("update_retry_with_clash", uid.clone());
 
             let original_with_proxy = merged_opt.as_ref().and_then(|o| o.with_proxy);
             let original_self_proxy = merged_opt.as_ref().and_then(|o| o.self_proxy);

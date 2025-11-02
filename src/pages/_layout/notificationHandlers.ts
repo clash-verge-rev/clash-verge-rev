@@ -24,8 +24,6 @@ export const handleNoticeMessage = (
         "success",
         `${t("Update with Clash proxy successfully")} ${msg}`,
       ),
-    update_retry_with_clash: () =>
-      showNotice("info", t("Update failed, retrying with Clash proxy...")),
     update_failed_even_with_clash: () =>
       showNotice(
         "error",

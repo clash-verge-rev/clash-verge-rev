@@ -524,7 +524,6 @@
   "Unknown": "Desconocido",
   "Auto update disabled": "La actualización automática está deshabilitada",
   "Update subscription successfully": "Suscripción actualizada con éxito",
-  "Update failed, retrying with Clash proxy...": "Error al actualizar la suscripción. Intentando con el proxy de Clash...",
   "Update with Clash proxy successfully": "Actualización con el proxy de Clash exitosa",
   "Update failed even with Clash proxy": "Error al actualizar incluso con el proxy de Clash",
   "Profile creation failed, retrying with Clash proxy...": "Error al crear la suscripción. Intentando con el proxy de Clash...",
