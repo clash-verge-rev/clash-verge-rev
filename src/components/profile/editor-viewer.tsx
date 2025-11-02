@@ -25,7 +25,7 @@ import { useTranslation } from "react-i18next";
 import MonacoEditor from "react-monaco-editor";
 import pac from "types-pac/pac.d.ts?raw";
 
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import debounce from "@/utils/debounce";
 import getSystem from "@/utils/get-system";
@@ -132,8 +132,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     try {
       currData.current = value;
       onChange?.(prevData.current, currData.current);
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.message || err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
@@ -143,16 +143,16 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
         onSave?.(prevData.current, currData.current);
       }
       onClose();
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.message || err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
   const handleClose = useLockFn(async () => {
     try {
       onClose();
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.message || err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 

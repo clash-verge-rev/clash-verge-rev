@@ -1,4 +1,5 @@
-import { ReactNode } from "react";
+import i18n from "i18next";
+import { ReactNode, isValidElement } from "react";
 
 type NoticeType = "success" | "error" | "info";
 
@@ -6,16 +7,13 @@ type NoticeType = "success" | "error" | "info";
  * Descriptor used when the notice content should be resolved through i18n.
  */
 export interface NoticeTranslationDescriptor {
-  i18nKey: string;
+  key: string;
   params?: Record<string, unknown>;
-  fallback?: string;
 }
 
 /**
- * Notification payload that either renders raw React content or defers to i18n.
+ * Runtime representation of a notice entry queued for rendering.
  */
-type NoticeMessage = ReactNode | NoticeTranslationDescriptor;
-
 interface NoticeItem {
   readonly id: number;
   readonly type: NoticeType;
@@ -25,12 +23,19 @@ interface NoticeItem {
   timerId?: ReturnType<typeof setTimeout>;
 }
 
-type NoticeShortcut = (message: NoticeMessage, duration?: number) => number;
+type NoticeContent = unknown;
+
+type NoticeExtra = unknown;
+
+type NoticeShortcut = (
+  message: NoticeContent,
+  ...extras: NoticeExtra[]
+) => number;
 
 type ShowNotice = ((
   type: NoticeType,
-  message: NoticeMessage,
-  duration?: number,
+  message: NoticeContent,
+  ...extras: NoticeExtra[]
 ) => number) & {
   success: NoticeShortcut;
   error: NoticeShortcut;
@@ -53,6 +58,54 @@ function notifySubscribers() {
   subscribers.forEach((subscriber) => subscriber());
 }
 
+interface ParsedNoticeExtras {
+  params?: Record<string, unknown>;
+  raw?: unknown;
+  duration?: number;
+}
+
+function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
+  let params: Record<string, unknown> | undefined;
+  let raw: unknown;
+  let duration: number | undefined;
+
+  for (const extra of extras) {
+    if (extra === undefined) continue;
+
+    if (typeof extra === "number" && duration === undefined) {
+      duration = extra;
+      continue;
+    }
+
+    if (isPlainRecord(extra)) {
+      if (!params) {
+        params = extra;
+        continue;
+      }
+      if (!raw) {
+        raw = extra;
+        continue;
+      }
+    }
+
+    if (!raw) {
+      raw = extra;
+      continue;
+    }
+
+    if (!params && isPlainRecord(extra)) {
+      params = extra;
+      continue;
+    }
+
+    if (duration === undefined && typeof extra === "number") {
+      duration = extra;
+    }
+  }
+
+  return { params, raw, duration };
+}
+
 function resolveDuration(type: NoticeType, override?: number) {
   return override ?? DEFAULT_DURATIONS[type];
 }
@@ -60,27 +113,176 @@ function resolveDuration(type: NoticeType, override?: number) {
 function buildNotice(
   id: number,
   type: NoticeType,
-  message: NoticeMessage,
   duration: number,
+  payload: { message?: ReactNode; i18n?: NoticeTranslationDescriptor },
   timerId?: ReturnType<typeof setTimeout>,
 ): NoticeItem {
-  if (isTranslationDescriptor(message)) {
-    return {
-      id,
-      type,
-      duration,
-      timerId,
-      i18n: message,
-    };
-  }
-
   return {
     id,
     type,
     duration,
     timerId,
-    message,
+    ...payload,
   };
+}
+
+function isMaybeTranslationDescriptor(
+  message: unknown,
+): message is NoticeTranslationDescriptor {
+  if (
+    typeof message === "object" &&
+    message !== null &&
+    !Array.isArray(message) &&
+    !isValidElement(message)
+  ) {
+    return typeof (message as Record<string, unknown>).key === "string";
+  }
+  return false;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    value instanceof Error ||
+    isValidElement(value)
+  ) {
+    return false;
+  }
+
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+function createRawDescriptor(message: string): NoticeTranslationDescriptor {
+  return {
+    key: "common.notices.raw",
+    params: { message },
+  };
+}
+
+function shouldUseTranslationKey(
+  key: string,
+  params?: Record<string, unknown>,
+) {
+  if (params && Object.keys(params).length > 0) return true;
+  if (i18n.isInitialized) {
+    return i18n.exists(key);
+  }
+  return false;
+}
+
+function extractDisplayText(input: unknown): string | undefined {
+  if (input === null || input === undefined) return undefined;
+  if (typeof input === "string") return input;
+  if (typeof input === "number" || typeof input === "boolean") {
+    return String(input);
+  }
+  if (input instanceof Error) {
+    return input.message || input.name;
+  }
+  if (
+    typeof input === "object" &&
+    input !== null &&
+    "message" in input &&
+    typeof (input as { message?: unknown }).message === "string"
+  ) {
+    return (input as { message?: string }).message;
+  }
+  try {
+    return JSON.stringify(input);
+  } catch {
+    return String(input);
+  }
+}
+
+function normalizeNoticeMessage(
+  message: NoticeContent,
+  params?: Record<string, unknown>,
+  raw?: unknown,
+): { message?: ReactNode; i18n?: NoticeTranslationDescriptor } {
+  const rawText = raw !== undefined ? extractDisplayText(raw) : undefined;
+
+  if (isValidElement(message)) {
+    return { message };
+  }
+
+  if (isMaybeTranslationDescriptor(message)) {
+    const originalParams = message.params ?? {};
+    const mergedParams = Object.keys(params ?? {}).length
+      ? { ...originalParams, ...params }
+      : { ...originalParams };
+
+    if (rawText !== undefined) {
+      return {
+        i18n: {
+          key: "common.notices.prefixedRaw",
+          params: {
+            ...mergedParams,
+            prefixKey: message.key,
+            prefixParams: originalParams,
+            message: rawText,
+          },
+        },
+      };
+    }
+
+    return {
+      i18n: {
+        key: message.key,
+        params: Object.keys(mergedParams).length ? mergedParams : undefined,
+      },
+    };
+  }
+
+  if (typeof message === "string") {
+    if (rawText !== undefined) {
+      if (shouldUseTranslationKey(message, params)) {
+        return {
+          i18n: {
+            key: "common.notices.prefixedRaw",
+            params: {
+              ...(params ?? {}),
+              prefixKey: message,
+              message: rawText,
+            },
+          },
+        };
+      }
+      return {
+        i18n: {
+          key: "common.notices.prefixedRaw",
+          params: {
+            ...(params ?? {}),
+            prefix: message,
+            message: rawText,
+          },
+        },
+      };
+    }
+
+    if (shouldUseTranslationKey(message, params)) {
+      return {
+        i18n: {
+          key: message,
+          params: params && Object.keys(params).length ? params : undefined,
+        },
+      };
+    }
+    return { i18n: createRawDescriptor(message) };
+  }
+
+  if (rawText !== undefined) {
+    return { i18n: createRawDescriptor(rawText) };
+  }
+
+  const extracted = extractDisplayText(message);
+  if (extracted !== undefined) {
+    return { i18n: createRawDescriptor(extracted) };
+  }
+
+  return { i18n: createRawDescriptor("") };
 }
 
 /**
@@ -88,16 +290,24 @@ function buildNotice(
  */
 const baseShowNotice = (
   type: NoticeType,
-  message: NoticeMessage,
-  duration?: number,
+  message: NoticeContent,
+  ...extras: NoticeExtra[]
 ): number => {
   const id = nextId++;
+  const { params, raw, duration } = parseNoticeExtras(extras);
   const effectiveDuration = resolveDuration(type, duration);
   const timerId =
     effectiveDuration > 0
       ? setTimeout(() => hideNotice(id), effectiveDuration)
       : undefined;
-  const notice = buildNotice(id, type, message, effectiveDuration, timerId);
+  const normalizedMessage = normalizeNoticeMessage(message, params, raw);
+  const notice = buildNotice(
+    id,
+    type,
+    effectiveDuration,
+    normalizedMessage,
+    timerId,
+  );
 
   notices = [...notices, notice];
   notifySubscribers();
@@ -105,31 +315,12 @@ const baseShowNotice = (
 };
 
 export const showNotice: ShowNotice = Object.assign(baseShowNotice, {
-  success: (message: NoticeMessage, duration?: number) =>
-    baseShowNotice("success", message, duration),
-  error: (message: NoticeMessage, duration?: number) =>
-    baseShowNotice("error", message, duration),
-  info: (message: NoticeMessage, duration?: number) =>
-    baseShowNotice("info", message, duration),
-});
-
-export const createRawNotice = (
-  message: string,
-  fallback?: string,
-): NoticeTranslationDescriptor => ({
-  i18nKey: "common.notices.raw",
-  params: { message },
-  fallback: fallback ?? message,
-});
-
-export const createPrefixedNotice = (
-  prefix: string,
-  message: string,
-  fallback?: string,
-): NoticeTranslationDescriptor => ({
-  i18nKey: "common.notices.prefixedRaw",
-  params: { prefix, message },
-  fallback: fallback ?? `${prefix} ${message}`,
+  success: (message: NoticeContent, ...extras: NoticeExtra[]) =>
+    baseShowNotice("success", message, ...extras),
+  error: (message: NoticeContent, ...extras: NoticeExtra[]) =>
+    baseShowNotice("error", message, ...extras),
+  info: (message: NoticeContent, ...extras: NoticeExtra[]) =>
+    baseShowNotice("info", message, ...extras),
 });
 
 export function hideNotice(id: number) {
@@ -158,18 +349,4 @@ export function clearAllNotices() {
   });
   notices = [];
   notifySubscribers();
-}
-
-function isTranslationDescriptor(
-  message: NoticeMessage,
-): message is NoticeTranslationDescriptor {
-  if (
-    typeof message === "object" &&
-    message !== null &&
-    Object.prototype.hasOwnProperty.call(message, "i18nKey")
-  ) {
-    const descriptor = message as NoticeTranslationDescriptor;
-    return typeof descriptor.i18nKey === "string";
-  }
-  return false;
 }

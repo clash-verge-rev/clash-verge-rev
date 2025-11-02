@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { BaseDialog } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 interface Props {
   onChange: (uid: string, patch?: Partial<IVergeTestItem>) => void;
@@ -101,7 +101,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         setLoading(false);
         setTimeout(() => formIns.reset(), 500);
       } catch (err: any) {
-        showNotice.error(createRawNotice(err.message || err.toString()));
+        showNotice.error(err.message || err.toString());
         setLoading(false);
       }
     }),

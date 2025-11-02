@@ -15,7 +15,7 @@ import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useVerge } from "@/hooks/use-verge";
 import { entry_lightweight_mode } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
@@ -45,8 +45,8 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
         auto_light_weight_minutes: values.autoEnterLiteModeDelay,
       });
       setOpen(false);
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.message || err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 

@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useVerge } from "@/hooks/use-verge";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -69,8 +69,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         auto_log_clean: values.autoLogClean as any,
       });
       setOpen(false);
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 

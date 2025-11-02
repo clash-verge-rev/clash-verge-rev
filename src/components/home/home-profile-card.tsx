@@ -26,7 +26,7 @@ import { useNavigate } from "react-router";
 
 import { useAppData } from "@/providers/app-data-context";
 import { openWebUrl, updateProfile } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
 
 import { EnhancedCard } from "./enhanced-card";
@@ -297,7 +297,7 @@ export const HomeProfileCard = ({
       // 刷新首页数据
       refreshAll();
     } catch (err: any) {
-      showNotice.error(createRawNotice(err.message || err.toString()), 3000);
+      showNotice.error(err.message || err.toString(), 3000);
     } finally {
       setUpdating(false);
     }

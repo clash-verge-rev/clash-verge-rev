@@ -63,10 +63,58 @@ export const NoticeManager: React.FC = () => {
             }
           >
             {notice.i18n
-              ? t(notice.i18n.i18nKey, {
-                  defaultValue: notice.i18n.fallback,
-                  ...(notice.i18n.params ?? {}),
-                })
+              ? (() => {
+                  const params = (notice.i18n.params ?? {}) as Record<
+                    string,
+                    unknown
+                  >;
+                  const {
+                    prefixKey,
+                    prefixParams,
+                    prefix,
+                    message,
+                    ...restParams
+                  } = params;
+
+                  const prefixKeyParams =
+                    prefixParams &&
+                    typeof prefixParams === "object" &&
+                    prefixParams !== null
+                      ? (prefixParams as Record<string, unknown>)
+                      : undefined;
+
+                  const resolvedPrefix =
+                    typeof prefixKey === "string"
+                      ? t(prefixKey, {
+                          defaultValue: prefixKey,
+                          ...(prefixKeyParams ?? {}),
+                        })
+                      : typeof prefix === "string"
+                        ? prefix
+                        : undefined;
+
+                  const finalParams: Record<string, unknown> = {
+                    ...restParams,
+                  };
+                  if (resolvedPrefix !== undefined) {
+                    finalParams.prefix = resolvedPrefix;
+                  }
+                  if (typeof message === "string") {
+                    finalParams.message = message;
+                  }
+
+                  const defaultValue =
+                    resolvedPrefix && typeof message === "string"
+                      ? `${resolvedPrefix} ${message}`
+                      : typeof message === "string"
+                        ? message
+                        : undefined;
+
+                  return t(notice.i18n.key, {
+                    defaultValue,
+                    ...finalParams,
+                  });
+                })()
               : notice.message}
           </Alert>
         </Snackbar>

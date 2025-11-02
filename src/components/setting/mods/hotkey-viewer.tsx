@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 import { HotkeyInput } from "./hotkey-input";
 
@@ -81,8 +81,8 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
         enable_global_hotkey: enableGlobalHotkey,
       });
       setOpen(false);
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.message || err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 

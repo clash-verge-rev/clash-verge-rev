@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { enhanceProfiles } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
 
 import { StackModeSwitch } from "./stack-mode-switch";
@@ -80,15 +80,13 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       );
       try {
         await enhanceProfiles();
-        showNotice.success({
-          i18nKey: "components.settings.tun.messages.applied",
-        });
+        showNotice.success("components.settings.tun.messages.applied");
       } catch (err: any) {
-        showNotice.error(createRawNotice(err.message || err.toString()));
+        showNotice.error(err);
       }
       setOpen(false);
     } catch (err: any) {
-      showNotice.error(createRawNotice(err.message || err.toString()));
+      showNotice.error(err);
     }
   });
 

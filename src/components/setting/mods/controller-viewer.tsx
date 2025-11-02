@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-import { createPrefixedNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
@@ -81,12 +81,11 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setOpen(false);
     } catch (err: any) {
       const message = err?.message || err?.toString?.();
-      showNotice.error(
-        message
-          ? createPrefixedNotice(t("Failed to save configuration"), message)
-          : { i18nKey: "Failed to save configuration" },
-        4000,
-      );
+      if (message) {
+        showNotice.error(t("Failed to save configuration"), message, 4000);
+      } else {
+        showNotice.error("Failed to save configuration", 4000);
+      }
     } finally {
       setIsSaving(false);
     }

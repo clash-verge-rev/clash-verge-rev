@@ -36,7 +36,7 @@ import {
   getSystemProxy,
   patchVergeConfig,
 } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
 
 const sleep = (ms: number) =>
@@ -160,8 +160,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             mutate("getAutotemProxy"),
           ]);
         }
-      } catch (err: any) {
-        showNotice.error(createRawNotice(err.toString()));
+      } catch (err) {
+        showNotice.error(err);
       }
     };
 
@@ -404,10 +404,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             console.warn("代理状态更新失败:", err);
           }
         }, 50);
-      } catch (err: any) {
+      } catch (err) {
         console.error("配置保存失败:", err);
         mutateVerge();
-        showNotice.error(createRawNotice(err.toString()));
+        showNotice.error(err);
         // setOpen(true);
       }
     });

@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog, Switch } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
 import { createProfile, patchProfile } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 import { version } from "@root/package.json";
 
 import { FileInput } from "./file-input";
@@ -184,8 +184,8 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         setTimeout(() => {
           onChange(isActivating);
         }, 0);
-      } catch (err: any) {
-        showNotice.error(createRawNotice(err.message || err.toString()));
+      } catch (err) {
+        showNotice.error(err);
       } finally {
         setLoading(false);
       }

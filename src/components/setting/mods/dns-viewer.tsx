@@ -29,11 +29,7 @@ import MonacoEditor from "react-monaco-editor";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
-import {
-  createPrefixedNotice,
-  createRawNotice,
-  showNotice,
-} from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
@@ -551,12 +547,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           }
         }
 
-        showNotice.error(
-          createPrefixedNotice(
-            `${t("DNS configuration error")}:`,
-            cleanErrorMsg,
-          ),
-        );
+        showNotice.error(`${t("DNS configuration error")}:`, cleanErrorMsg);
         return;
       }
 
@@ -568,8 +559,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       setOpen(false);
       showNotice.success({ i18nKey: "DNS settings saved" });
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.message || err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 

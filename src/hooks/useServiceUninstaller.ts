@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 import { restartCore, stopCore, uninstallService } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 import { useSystemState } from "./use-system-state";
 
@@ -11,14 +11,14 @@ const executeWithErrorHandling = async (
   successMessage?: string,
 ) => {
   try {
-    showNotice.info({ i18nKey: loadingMessage });
+    showNotice.info(loadingMessage);
     await operation();
     if (successMessage) {
-      showNotice.success({ i18nKey: successMessage });
+      showNotice.success(successMessage);
     }
   } catch (err) {
     const msg = (err as Error)?.message || String(err);
-    showNotice.error(createRawNotice(msg));
+    showNotice.error(msg);
     throw err;
   }
 };

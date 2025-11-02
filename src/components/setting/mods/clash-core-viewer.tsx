@@ -21,7 +21,7 @@ import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { changeClashCore, restartCore } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 const VALID_CORE = [
   { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
@@ -54,7 +54,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       const errorMsg = await changeClashCore(core);
 
       if (errorMsg) {
-        showNotice.error(createRawNotice(errorMsg));
+        showNotice.error(errorMsg);
         setChangingCore(null);
         return;
       }
@@ -65,9 +65,9 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
         mutate("getVersion");
         setChangingCore(null);
       }, 500);
-    } catch (err: any) {
+    } catch (err) {
       setChangingCore(null);
-      showNotice.error(createRawNotice(err.message || err.toString()));
+      showNotice.error(err);
     }
   });
 
@@ -77,9 +77,9 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       await restartCore();
       showNotice.success({ i18nKey: "Clash Core Restarted" });
       setRestarting(false);
-    } catch (err: any) {
+    } catch (err) {
       setRestarting(false);
-      showNotice.error(createRawNotice(err.message || err.toString()));
+      showNotice.error(err);
     }
   });
 
@@ -95,7 +95,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       const showMsg = errMsg.includes("already using latest version")
         ? "Already Using Latest Core Version"
         : errMsg;
-      showNotice.error({ i18nKey: showMsg, fallback: showMsg });
+      showNotice.error(showMsg);
     }
   });
 

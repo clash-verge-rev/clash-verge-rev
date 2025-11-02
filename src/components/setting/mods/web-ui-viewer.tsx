@@ -8,7 +8,7 @@ import { BaseDialog, BaseEmpty, DialogRef } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { openWebUrl } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 import { WebUIItem } from "./web-ui-item";
 
@@ -92,7 +92,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       await openWebUrl(url);
     } catch (e: any) {
-      showNotice.error(createRawNotice(e.message || e.toString()));
+      showNotice.error(e);
     }
   });
 

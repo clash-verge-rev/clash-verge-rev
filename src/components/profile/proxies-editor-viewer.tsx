@@ -42,7 +42,7 @@ import { Virtuoso } from "react-virtuoso";
 
 import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import parseUri from "@/utils/uri-parser";
@@ -263,13 +263,11 @@ export const ProxiesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice.success({
-        i18nKey: "components.profile.notifications.saved",
-      });
+      showNotice.success("components.profile.notifications.saved");
       onSave?.(prevData, currData);
       onClose();
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 

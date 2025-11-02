@@ -16,7 +16,7 @@ import { BaseDialog, DialogRef } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
-import { createRawNotice, showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/noticeService";
 
 export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
   const { ref } = props;
@@ -50,8 +50,8 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
     try {
       await patchVerge({ theme_setting: theme });
       setOpen(false);
-    } catch (err: any) {
-      showNotice.error(createRawNotice(err.toString()));
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
