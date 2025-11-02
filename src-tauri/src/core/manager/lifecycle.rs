@@ -47,10 +47,12 @@ impl CoreManager {
             return Err(format!("Invalid clash core: {}", clash_core).into());
         }
 
-        Config::verge().await.draft_mut().clash_core = clash_core.to_owned().into();
+        Config::verge().await.edit_draft(|d| {
+            d.clash_core = Some(clash_core.to_owned());
+        });
         Config::verge().await.apply();
 
-        let verge_data = Config::verge().await.latest_ref().clone();
+        let verge_data = Config::verge().await.latest_arc();
         verge_data.save_file().await.map_err(|e| e.to_string())?;
 
         let run_path = Config::generate_file(ConfigType::Run)
@@ -82,7 +84,7 @@ impl CoreManager {
 
         let needs_service = Config::verge()
             .await
-            .latest_ref()
+            .latest_arc()
             .enable_tun_mode
             .unwrap_or(false);
 

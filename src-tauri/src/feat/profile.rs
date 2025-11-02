@@ -28,7 +28,7 @@ async fn should_update_profile(
     ignore_auto_update: bool,
 ) -> Result<Option<(String, Option<PrfOption>)>> {
     let profiles = Config::profiles().await;
-    let profiles = profiles.latest_ref();
+    let profiles = profiles.latest_arc();
     let item = profiles.get_item(uid)?;
     let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
@@ -89,12 +89,12 @@ async fn perform_profile_update(
     let mut merged_opt = PrfOption::merge(opt, option);
     let is_current = {
         let profiles = Config::profiles().await;
-        profiles.latest_ref().is_current_profile_index(uid)
+        profiles.latest_arc().is_current_profile_index(uid)
     };
     let profile_name = {
         let profiles = Config::profiles().await;
         profiles
-            .latest_ref()
+            .latest_arc()
             .get_name_by_uid(uid)
             .unwrap_or_default()
     };

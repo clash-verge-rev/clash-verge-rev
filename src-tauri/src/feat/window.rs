@@ -47,7 +47,7 @@ pub async fn clean_async() -> bool {
     let tun_task = async {
         let tun_enabled = Config::verge()
             .await
-            .latest_ref()
+            .latest_arc()
             .enable_tun_mode
             .unwrap_or(false);
 
@@ -100,7 +100,7 @@ pub async fn clean_async() -> bool {
             // 检查系统代理是否开启
             let sys_proxy_enabled = Config::verge()
                 .await
-                .latest_ref()
+                .latest_arc()
                 .enable_system_proxy
                 .unwrap_or(false);
 
@@ -176,7 +176,7 @@ pub async fn clean_async() -> bool {
         {
             let sys_proxy_enabled = Config::verge()
                 .await
-                .latest_ref()
+                .latest_arc()
                 .enable_system_proxy
                 .unwrap_or(false);
 
@@ -316,7 +316,7 @@ pub async fn hide() {
 
     let enable_auto_light_weight_mode = Config::verge()
         .await
-        .data_mut()
+        .latest_arc()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
 

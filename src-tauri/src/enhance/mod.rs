@@ -45,11 +45,11 @@ struct ProfileItems {
 }
 
 async fn get_config_values() -> ConfigValues {
-    let clash_config = { Config::clash().await.latest_ref().0.clone() };
+    let clash_config = { Config::clash().await.latest_arc().0.clone() };
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         (
             Some(verge.get_valid_clash_core()),
             verge.enable_tun_mode.unwrap_or(false),
@@ -63,14 +63,14 @@ async fn get_config_values() -> ConfigValues {
     #[cfg(not(target_os = "windows"))]
     let redir_enabled = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         verge.verge_redir_enabled.unwrap_or(false)
     };
 
     #[cfg(target_os = "linux")]
     let tproxy_enabled = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         verge.verge_tproxy_enabled.unwrap_or(false)
     };
 
@@ -103,12 +103,12 @@ async fn collect_profile_items() -> ProfileItems {
     ) = {
         let current = {
             let profiles = Config::profiles().await;
-            let profiles_clone = profiles.latest_ref().clone();
+            let profiles_clone = profiles.latest_arc();
             profiles_clone.current_mapping().await.unwrap_or_default()
         };
 
         let profiles = Config::profiles().await;
-        let profiles_ref = profiles.latest_ref();
+        let profiles_ref = profiles.latest_arc();
 
         let merge_uid = profiles_ref.current_merge().unwrap_or_default();
         let script_uid = profiles_ref.current_script().unwrap_or_default();
@@ -139,7 +139,7 @@ async fn collect_profile_items() -> ProfileItems {
     let merge_item = {
         let item = {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles = profiles.latest_arc();
             profiles.get_item(merge_uid).ok().cloned()
         };
         if let Some(item) = item {
@@ -156,7 +156,7 @@ async fn collect_profile_items() -> ProfileItems {
     let script_item = {
         let item = {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles = profiles.latest_arc();
             profiles.get_item(script_uid).ok().cloned()
         };
         if let Some(item) = item {
@@ -173,7 +173,7 @@ async fn collect_profile_items() -> ProfileItems {
     let rules_item = {
         let item = {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles = profiles.latest_arc();
             profiles.get_item(rules_uid).ok().cloned()
         };
         if let Some(item) = item {
@@ -190,7 +190,7 @@ async fn collect_profile_items() -> ProfileItems {
     let proxies_item = {
         let item = {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles = profiles.latest_arc();
             profiles.get_item(proxies_uid).ok().cloned()
         };
         if let Some(item) = item {
@@ -207,7 +207,7 @@ async fn collect_profile_items() -> ProfileItems {
     let groups_item = {
         let item = {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles = profiles.latest_arc();
             profiles.get_item(groups_uid).ok().cloned()
         };
         if let Some(item) = item {
@@ -224,7 +224,7 @@ async fn collect_profile_items() -> ProfileItems {
     let global_merge = {
         let item = {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles = profiles.latest_arc();
             profiles.get_item("Merge").ok().cloned()
         };
         if let Some(item) = item {
@@ -241,7 +241,7 @@ async fn collect_profile_items() -> ProfileItems {
     let global_script = {
         let item = {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles = profiles.latest_arc();
             profiles.get_item("Script").ok().cloned()
         };
         if let Some(item) = item {
@@ -394,7 +394,7 @@ async fn merge_default_config(
             if key.as_str() == Some("external-controller") {
                 let enable_external_controller = Config::verge()
                     .await
-                    .latest_ref()
+                    .latest_arc()
                     .enable_external_controller
                     .unwrap_or(false);
 

@@ -7,13 +7,13 @@ use app_lib::config::IVerge;
 use app_lib::utils::Draft as DraftNew;
 
 /// 创建测试数据
-fn make_draft() -> DraftNew<Box<IVerge>> {
-    let verge = Box::new(IVerge {
+fn make_draft() -> DraftNew<IVerge> {
+    let verge = IVerge {
         enable_auto_launch: Some(true),
         enable_tun_mode: Some(false),
         ..Default::default()
-    });
-    DraftNew::from(verge)
+    };
+    DraftNew::new(verge)
 }
 
 pub fn bench_draft(c: &mut Criterion) {
@@ -30,18 +30,17 @@ pub fn bench_draft(c: &mut Criterion) {
     group.bench_function("data_mut", |b| {
         b.iter(|| {
             let draft = black_box(make_draft());
-            let mut data = draft.data_mut();
-            data.enable_tun_mode = Some(true);
-            black_box(&data.enable_tun_mode);
+            draft.edit_draft(|d| d.enable_tun_mode = Some(true));
+            black_box(&draft.latest_arc().enable_tun_mode);
         });
     });
 
     group.bench_function("draft_mut_first", |b| {
         b.iter(|| {
             let draft = black_box(make_draft());
-            let mut d = draft.draft_mut();
-            d.enable_auto_launch = Some(false);
-            black_box(&d.enable_auto_launch);
+            draft.edit_draft(|d| d.enable_auto_launch = Some(false));
+            let latest = draft.latest_arc();
+            black_box(&latest.enable_auto_launch);
         });
     });
 
@@ -49,20 +48,24 @@ pub fn bench_draft(c: &mut Criterion) {
         b.iter(|| {
             let draft = black_box(make_draft());
             {
-                let mut first = draft.draft_mut();
-                first.enable_tun_mode = Some(true);
-                black_box(&first.enable_tun_mode);
+                draft.edit_draft(|d| {
+                    d.enable_tun_mode = Some(true);
+                });
+                let latest1 = draft.latest_arc();
+                black_box(&latest1.enable_tun_mode);
             }
-            let mut second = draft.draft_mut();
-            second.enable_tun_mode = Some(false);
-            black_box(&second.enable_tun_mode);
+            draft.edit_draft(|d| {
+                d.enable_tun_mode = Some(false);
+            });
+            let latest2 = draft.latest_arc();
+            black_box(&latest2.enable_tun_mode);
         });
     });
 
-    group.bench_function("latest_ref", |b| {
+    group.bench_function("latest_arc", |b| {
         b.iter(|| {
             let draft = black_box(make_draft());
-            let latest = draft.latest_ref();
+            let latest = draft.latest_arc();
             black_box(&latest.enable_auto_launch);
         });
     });
@@ -71,8 +74,9 @@ pub fn bench_draft(c: &mut Criterion) {
         b.iter(|| {
             let draft = black_box(make_draft());
             {
-                let mut d = draft.draft_mut();
-                d.enable_auto_launch = Some(false);
+                draft.edit_draft(|d| {
+                    d.enable_auto_launch = Some(false);
+                });
             }
             draft.apply();
             black_box(&draft);
@@ -83,8 +87,9 @@ pub fn bench_draft(c: &mut Criterion) {
         b.iter(|| {
             let draft = black_box(make_draft());
             {
-                let mut d = draft.draft_mut();
-                d.enable_auto_launch = Some(false);
+                draft.edit_draft(|d| {
+                    d.enable_auto_launch = Some(false);
+                });
             }
             draft.discard();
             black_box(&draft);
@@ -95,7 +100,7 @@ pub fn bench_draft(c: &mut Criterion) {
         b.to_async(&rt).iter(|| async {
             let draft = black_box(make_draft());
             let _: Result<(), anyhow::Error> = draft
-                .with_data_modify::<_, _, _, anyhow::Error>(|mut box_data| async move {
+                .with_data_modify::<_, _, _>(|mut box_data| async move {
                     box_data.enable_auto_launch =
                         Some(!box_data.enable_auto_launch.unwrap_or(false));
                     Ok((box_data, ()))

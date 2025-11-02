@@ -89,15 +89,15 @@ pub fn embed_server() {
         let clash_config = Config::clash().await;
 
         let pac_content = verge_config
-            .latest_ref()
+            .latest_arc()
             .pac_file_content
             .clone()
             .unwrap_or_else(|| DEFAULT_PAC.into());
 
         let pac_port = verge_config
-            .latest_ref()
+            .latest_arc()
             .verge_mixed_port
-            .unwrap_or_else(|| clash_config.latest_ref().get_mixed_port());
+            .unwrap_or_else(|| clash_config.latest_arc().get_mixed_port());
 
         let pac = warp::path!("commands" / "pac").map(move || {
             let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
