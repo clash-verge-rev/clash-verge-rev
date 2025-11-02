@@ -317,15 +317,6 @@
   "Ip Address": "IP адресы",
   "Mac Address": "MAC адресы",
   "IPv6": "IPv6",
-  "Port Config": "Порт көйләүләре",
-  "Random Port": "Очраклы порт",
-  "Mixed Port": "Катнаш прокси порты",
-  "Socks Port": "Socks прокси порты",
-  "Http Port": "HTTP(s) прокси порты",
-  "Redir Port": "Redir — үтә күренмәле прокси порты",
-  "Tproxy Port": "Tproxy — үтә күренмәле прокси порты",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "URL ачарга",
   "Replace host, port, secret with %host, %port, %secret": "Хост, порт, серсүзне %host, %port, %secret белән алмаштырыгыз",
   "Support %host, %port, %secret": "%host, %port, %secret макросларын хуплау",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "GeoData яңартылды"
+        },
+        "port": {
+          "title": "Порт көйләүләре",
+          "fields": {
+            "mixed": "Катнаш прокси порты",
+            "socks": "Socks прокси порты",
+            "http": "HTTP(s) прокси порты",
+            "redir": "Redir — үтә күренмәле прокси порты",
+            "tproxy": "Tproxy — үтә күренмәле прокси порты"
+          },
+          "actions": {
+            "random": "Очраклы порт"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

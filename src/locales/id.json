@@ -317,15 +317,6 @@
   "Ip Address": "Alamat IP",
   "Mac Address": "Alamat MAC",
   "IPv6": "IPv6",
-  "Port Config": "Konfigurasi Port",
-  "Random Port": "Port Acak",
-  "Mixed Port": "Port Campuran",
-  "Socks Port": "Port Socks",
-  "Http Port": "Port Http(s)",
-  "Redir Port": "Port Redir",
-  "Tproxy Port": "Port Tproxy",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "Buka URL",
   "Replace host, port, secret with %host, %port, %secret": "Ganti host, port, rahasia dengan %host, %port, %secret",
   "Support %host, %port, %secret": "Dukung %host, %port, %secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "GeoData Diperbarui"
+        },
+        "port": {
+          "title": "Konfigurasi Port",
+          "fields": {
+            "mixed": "Port Campuran",
+            "socks": "Port Socks",
+            "http": "Port Http(s)",
+            "redir": "Port Redir",
+            "tproxy": "Port Tproxy"
+          },
+          "actions": {
+            "random": "Port Acak"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

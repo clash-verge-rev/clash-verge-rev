@@ -317,15 +317,6 @@
   "Ip Address": "IP Address",
   "Mac Address": "MAC Address",
   "IPv6": "IPv6",
-  "Port Config": "Port Config",
-  "Random Port": "Random Port",
-  "Mixed Port": "Mixed Port",
-  "Socks Port": "Socks Port",
-  "Http Port": "Http(s) Port",
-  "Redir Port": "Redir Port",
-  "Tproxy Port": "Tproxy Port",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "Open URL",
   "Replace host, port, secret with %host, %port, %secret": "Replace host, port, secret with %host, %port, %secret",
   "Support %host, %port, %secret": "Support %host, %port, %secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "GeoData Updated"
+        },
+        "port": {
+          "title": "Port Config",
+          "fields": {
+            "mixed": "Mixed Port",
+            "socks": "Socks Port",
+            "http": "Http(s) Port",
+            "redir": "Redir Port",
+            "tproxy": "Tproxy Port"
+          },
+          "actions": {
+            "random": "Random Port"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

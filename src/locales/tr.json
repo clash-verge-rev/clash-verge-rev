@@ -317,15 +317,6 @@
   "Ip Address": "IP Adresi",
   "Mac Address": "MAC Adresi",
   "IPv6": "IPv6",
-  "Port Config": "Port Yapılandırması",
-  "Random Port": "Rastgele Port",
-  "Mixed Port": "Karışık Port",
-  "Socks Port": "Socks Portu",
-  "Http Port": "Http(s) Portu",
-  "Redir Port": "Redir Portu",
-  "Tproxy Port": "Tvekil Portu",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "URL Aç",
   "Replace host, port, secret with %host, %port, %secret": "Ana bilgisayar, port, sırrı %host, %port, %secret ile değiştirin",
   "Support %host, %port, %secret": "%host, %port, %secret destekler",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "GeoData Güncellendi"
+        },
+        "port": {
+          "title": "Port Yapılandırması",
+          "fields": {
+            "mixed": "Karışık Port",
+            "socks": "Socks Portu",
+            "http": "Http(s) Portu",
+            "redir": "Redir Portu",
+            "tproxy": "Tvekil Portu"
+          },
+          "actions": {
+            "random": "Rastgele Port"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

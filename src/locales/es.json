@@ -317,15 +317,6 @@
   "Ip Address": "Dirección IP",
   "Mac Address": "Dirección MAC",
   "IPv6": "IPv6",
-  "Port Config": "Configuración de puerto",
-  "Random Port": "Puerto aleatorio",
-  "Mixed Port": "Puerto de proxy mixto",
-  "Socks Port": "Puerto de proxy SOCKS",
-  "Http Port": "Puerto de proxy HTTP(S)",
-  "Redir Port": "Puerto de proxy transparente Redir",
-  "Tproxy Port": "Puerto de proxy transparente TPROXY",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "Abrir enlace",
   "Replace host, port, secret with %host, %port, %secret": "Utilice %host, %port, %secret para representar el host, el puerto y la clave de acceso.",
   "Support %host, %port, %secret": "Soporta %host, %port, %secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "GeoData actualizado"
+        },
+        "port": {
+          "title": "Configuración de puerto",
+          "fields": {
+            "mixed": "Puerto de proxy mixto",
+            "socks": "Puerto de proxy SOCKS",
+            "http": "Puerto de proxy HTTP(S)",
+            "redir": "Puerto de proxy transparente Redir",
+            "tproxy": "Puerto de proxy transparente TPROXY"
+          },
+          "actions": {
+            "random": "Puerto aleatorio"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

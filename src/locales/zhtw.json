@@ -317,15 +317,6 @@
   "Ip Address": "IP 位址",
   "Mac Address": "MAC 位址",
   "IPv6": "IPv6",
-  "Port Config": "連接埠設定",
-  "Random Port": "隨機連接埠",
-  "Mixed Port": "混合代理連接埠",
-  "Socks Port": "SOCKS 代理連接埠",
-  "Http Port": "HTTP(S) 代理連接埠",
-  "Redir Port": "Redir 透明代理連接埠",
-  "Tproxy Port": "Tproxy Port",
-  "Port settings saved": "連結埠設定已儲存",
-  "Failed to save port settings": "連結埠設定儲存失敗",
   "Open URL": "開啟網址",
   "Replace host, port, secret with %host, %port, %secret": "使用 %host, %port, %secret 表示 主機, 連接埠, 存取金鑰",
   "Support %host, %port, %secret": "支援 %host, %port, %secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "已更新 GeoData"
+        },
+        "port": {
+          "title": "連接埠設定",
+          "fields": {
+            "mixed": "混合代理連接埠",
+            "socks": "SOCKS 代理連接埠",
+            "http": "HTTP(S) 代理連接埠",
+            "redir": "Redir 透明代理連接埠",
+            "tproxy": "Tproxy Port"
+          },
+          "actions": {
+            "random": "隨機連接埠"
+          },
+          "messages": {
+            "saved": "連結埠設定已儲存",
+            "saveFailed": "連結埠設定儲存失敗"
+          }
         }
       },
       "liteMode": {

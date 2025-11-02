@@ -317,15 +317,6 @@
   "Ip Address": "IP адрес",
   "Mac Address": "MAC адрес",
   "IPv6": "IPv6",
-  "Port Config": "Настройка порта",
-  "Random Port": "Случайный порт",
-  "Mixed Port": "Смешанный прокси-порт",
-  "Socks Port": "Порт Socks-прокси",
-  "Http Port": "Порт Http(s)-прокси",
-  "Redir Port": "Порт прозрачного прокси Redir",
-  "Tproxy Port": "Порт прозрачного прокси Tproxy",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "Перейти по адресу",
   "Replace host, port, secret with %host, %port, %secret": "Замените хост, порт и секрет на %host, %port, %secret",
   "Support %host, %port, %secret": "Поддерживаются %host, %port, %secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "Файлы GeoData обновлены"
+        },
+        "port": {
+          "title": "Настройка порта",
+          "fields": {
+            "mixed": "Смешанный прокси-порт",
+            "socks": "Порт Socks-прокси",
+            "http": "Порт Http(s)-прокси",
+            "redir": "Порт прозрачного прокси Redir",
+            "tproxy": "Порт прозрачного прокси Tproxy"
+          },
+          "actions": {
+            "random": "Случайный порт"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

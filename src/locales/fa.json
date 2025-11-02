@@ -317,15 +317,6 @@
   "Ip Address": "آدرس IP",
   "Mac Address": "آدرس MAC",
   "IPv6": "IPv6",
-  "Port Config": "پیکربندی پورت",
-  "Random Port": "پورت تصادفی",
-  "Mixed Port": "پورت پروکسی ترکیبی",
-  "Socks Port": "پورت پروکسی Socks",
-  "Http Port": "پورت پروکسی Http(s)",
-  "Redir Port": "پورت پروکسی شفاف Redir",
-  "Tproxy Port": "پورت پروکسی شفاف Tproxy",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "باز کردن آدرس اینترنتی",
   "Replace host, port, secret with %host, %port, %secret": "جایگزین کردن میزبان، پورت و رمز با %host، %port، %secret",
   "Support %host, %port, %secret": "پشتیبانی از %host، %port و %secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "GeoData به‌روزرسانی شد"
+        },
+        "port": {
+          "title": "پیکربندی پورت",
+          "fields": {
+            "mixed": "پورت پروکسی ترکیبی",
+            "socks": "پورت پروکسی Socks",
+            "http": "پورت پروکسی Http(s)",
+            "redir": "پورت پروکسی شفاف Redir",
+            "tproxy": "پورت پروکسی شفاف Tproxy"
+          },
+          "actions": {
+            "random": "پورت تصادفی"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

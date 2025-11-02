@@ -317,15 +317,6 @@
   "Ip Address": "IPアドレス",
   "Mac Address": "MACアドレス",
   "IPv6": "IPv6",
-  "Port Config": "ポート設定",
-  "Random Port": "ランダムポート",
-  "Mixed Port": "混合プロキシポート",
-  "Socks Port": "SOCKSプロキシポート",
-  "Http Port": "HTTP(S)プロキシポート",
-  "Redir Port": "Redir透明プロキシポート",
-  "Tproxy Port": "TPROXY透明プロキシポート",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "URLを開く",
   "Replace host, port, secret with %host, %port, %secret": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。",
   "Support %host, %port, %secret": "%host, %port, %secretをサポートします。",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "GeoDataが更新されました。"
+        },
+        "port": {
+          "title": "ポート設定",
+          "fields": {
+            "mixed": "混合プロキシポート",
+            "socks": "SOCKSプロキシポート",
+            "http": "HTTP(S)プロキシポート",
+            "redir": "Redir透明プロキシポート",
+            "tproxy": "TPROXY透明プロキシポート"
+          },
+          "actions": {
+            "random": "ランダムポート"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

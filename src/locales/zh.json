@@ -317,15 +317,6 @@
   "Ip Address": "IP 地址",
   "Mac Address": "MAC 地址",
   "IPv6": "IPv6",
-  "Port Config": "端口设置",
-  "Random Port": "随机端口",
-  "Mixed Port": "混合代理端口",
-  "Socks Port": "SOCKS 代理端口",
-  "Http Port": "HTTP(S) 代理端口",
-  "Redir Port": "Redir 透明代理端口",
-  "Tproxy Port": "Tproxy 透明代理端口",
-  "Port settings saved": "端口设置已保存",
-  "Failed to save port settings": "端口设置保存失败",
   "Open URL": "打开链接",
   "Replace host, port, secret with %host, %port, %secret": "使用 %host, %port, %secret 表示 主机, 端口, 访问密钥",
   "Support %host, %port, %secret": "支持 %host, %port, %secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "已更新 GeoData"
+        },
+        "port": {
+          "title": "端口设置",
+          "fields": {
+            "mixed": "混合代理端口",
+            "socks": "SOCKS 代理端口",
+            "http": "HTTP(S) 代理端口",
+            "redir": "Redir 透明代理端口",
+            "tproxy": "Tproxy 透明代理端口"
+          },
+          "actions": {
+            "random": "随机端口"
+          },
+          "messages": {
+            "saved": "端口设置已保存",
+            "saveFailed": "端口设置保存失败"
+          }
         }
       },
       "liteMode": {

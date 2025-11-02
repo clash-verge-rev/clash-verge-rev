@@ -317,15 +317,6 @@
   "Ip Address": "IP-Adresse",
   "Mac Address": "MAC-Adresse",
   "IPv6": "IPv6",
-  "Port Config": "Port-Konfiguration",
-  "Random Port": "Zufälliger Port",
-  "Mixed Port": "Mischter Proxy-Port",
-  "Socks Port": "SOCKS-Proxy-Port",
-  "Http Port": "HTTP(S)-Proxy-Port",
-  "Redir Port": "Redir-Transparenter Proxy-Port",
-  "Tproxy Port": "TPROXY-Transparenter Proxy-Port",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "Link öffnen",
   "Replace host, port, secret with %host, %port, %secret": "Verwenden Sie %host, %port, %secret für Host, Port und Zugangsschlüssel",
   "Support %host, %port, %secret": "Unterstützt %host, %port, %secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "Geo-Daten wurden aktualisiert"
+        },
+        "port": {
+          "title": "Port-Konfiguration",
+          "fields": {
+            "mixed": "Mischter Proxy-Port",
+            "socks": "SOCKS-Proxy-Port",
+            "http": "HTTP(S)-Proxy-Port",
+            "redir": "Redir-Transparenter Proxy-Port",
+            "tproxy": "TPROXY-Transparenter Proxy-Port"
+          },
+          "actions": {
+            "random": "Zufälliger Port"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {

@@ -317,15 +317,6 @@
   "Ip Address": "عنوان IP",
   "Mac Address": "عنوان MAC",
   "IPv6": "IPv6",
-  "Port Config": "تكوين المنافذ",
-  "Random Port": "منفذ عشوائي",
-  "Mixed Port": "منفذ مختلط",
-  "Socks Port": "منفذ SOCKS",
-  "Http Port": "منفذ HTTP(S)",
-  "Redir Port": "منفذ إعادة التوجيه",
-  "Tproxy Port": "منفذ Tproxy",
-  "Port settings saved": "Port settings saved",
-  "Failed to save port settings": "Failed to save port settings",
   "Open URL": "فتح الرابط",
   "Replace host, port, secret with %host, %port, %secret": "استبدل المضيف والمنفذ والمفتاح بـ %host و%port و%secret",
   "Support %host, %port, %secret": "يدعم %host و%port و%secret",
@@ -840,6 +831,23 @@
         },
         "messages": {
           "geoDataUpdated": "تم تحديث البيانات الجغرافية"
+        },
+        "port": {
+          "title": "تكوين المنافذ",
+          "fields": {
+            "mixed": "منفذ مختلط",
+            "socks": "منفذ SOCKS",
+            "http": "منفذ HTTP(S)",
+            "redir": "منفذ إعادة التوجيه",
+            "tproxy": "منفذ Tproxy"
+          },
+          "actions": {
+            "random": "منفذ عشوائي"
+          },
+          "messages": {
+            "saved": "Port settings saved",
+            "saveFailed": "Failed to save port settings"
+          }
         }
       },
       "liteMode": {
