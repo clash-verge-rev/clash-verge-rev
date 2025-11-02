@@ -297,7 +297,6 @@
   "Network Interface": "ネットワークインターフェース",
   "Ip Address": "IPアドレス",
   "Mac Address": "MACアドレス",
-  "IPv6": "IPv6",
   "Open URL": "URLを開く",
   "Replace host, port, secret with %host, %port, %secret": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。",
   "Support %host, %port, %secret": "%host, %port, %secretをサポートします。",
@@ -379,52 +378,6 @@
   "Merge File Key Error": "上書きファイルのキーエラーがあります。変更は取り消されました。",
   "Merge File Error": "上書きファイルにエラーがあります。変更は取り消されました。",
   "Service Administrator Prompt": "Clash Vergeはシステムサービスをインストールするために管理者権限が必要です。",
-  "DNS Settings": "DNS設定",
-  "DNS settings saved": "DNS設定が保存されました。",
-  "DNS configuration error:": "DNS configuration error:",
-  "DNS Overwrite": "DNS上書き",
-  "DNS Settings Warning": "ここの設定がわからない場合は、変更しないでください。DNS上書きを有効にしたままにしてください。",
-  "Enable DNS": "DNSを有効にする",
-  "DNS Listen": "DNS監視アドレス",
-  "Enhanced Mode": "拡張モード",
-  "Fake IP Range": "Fake IP範囲",
-  "Fake IP Filter Mode": "Fake IPフィルターモード",
-  "Enable IPv6 DNS resolution": "IPv6 DNS解決を有効にする",
-  "Prefer H3": "HTTP/3を優先する",
-  "DNS DOH使用HTTP/3": "DNS DOHでHTTP/3プロトコルを使用する",
-  "Respect Rules": "ルートルールに従う",
-  "DNS connections follow routing rules": "DNS接続はルートルールに従います。",
-  "Use Hosts": "Hostsファイルを使用する",
-  "Enable to resolve hosts through hosts file": "Hostsファイルを使用してホスト名を解決する",
-  "Use System Hosts": "システムのHostsファイルを使用する",
-  "Enable to resolve hosts through system hosts file": "システムのHostsファイルを使用してホスト名を解決する",
-  "Direct Nameserver Follow Policy": "直接接続の名前解決サーバーはポリシーに従う",
-  "Whether to follow nameserver policy": "名前解決サーバーのポリシーに従うかどうか",
-  "Default Nameserver": "デフォルトの名前解決サーバー",
-  "Default DNS servers used to resolve DNS servers": "名前解決サーバーを解決するために使用されるデフォルトのDNSサーバー",
-  "Nameserver": "名前解決サーバー",
-  "List of DNS servers": "DNSサーバーのリスト。カンマで区切って指定します。",
-  "Fallback": "フォールバックサーバー",
-  "List of fallback DNS servers": "フォールバックDNSサーバーのリスト。カンマで区切って指定します。",
-  "Proxy Server Nameserver": "プロキシサーバーの名前解決サーバー",
-  "Proxy Node Nameserver": "プロキシノードの名前解決サーバー。プロキシノードのドメイン名を解決するためにのみ使用されます。カンマで区切って指定します。",
-  "Direct Nameserver": "直接接続の名前解決サーバー",
-  "Direct outbound Nameserver": "直接接続の出口名前解決サーバー。systemキーワードをサポートします。カンマで区切って指定します。",
-  "Fake IP Filter": "Fake IPフィルター",
-  "Domains that skip fake IP resolution": "Fake IP解決をスキップするドメイン名。カンマで区切って指定します。",
-  "Nameserver Policy": "名前解決サーバーのポリシー",
-  "Domain-specific DNS server": "特定のドメインのDNSサーバー。複数のサーバーはセミコロンで区切って指定します。形式: domain=server1;server2",
-  "Fallback Filter Settings": "フォールバックフィルター設定",
-  "GeoIP Filtering": "GeoIPフィルタリング",
-  "Enable GeoIP filtering for fallback": "フォールバックのGeoIPフィルタリングを有効にする",
-  "GeoIP Code": "GeoIP国コード",
-  "Fallback IP CIDR": "フォールバックIP CIDR",
-  "IP CIDRs not using fallback servers": "フォールバックサーバーを使用しないIP CIDR。カンマで区切って指定します。",
-  "Fallback Domain": "フォールバックドメイン",
-  "Domains using fallback servers": "フォールバックサーバーを使用するドメイン名。カンマで区切って指定します。",
-  "Hosts Settings": "Hosts設定",
-  "Hosts": "Hosts",
-  "Custom domain to IP or domain mapping": "カスタムのドメイン名からIPまたはドメイン名へのマッピング。カンマで区切って指定します。",
   "Website Tests": "ウェブサイトテスト",
   "Clash Info": "Clash情報",
   "Core Version": "コアバージョン",
@@ -1072,6 +1025,100 @@
         },
         "messages": {
           "applied": "設定が適用されました。"
+        }
+      },
+      "dns": {
+        "dialog": {
+          "title": "DNS上書き",
+          "warning": "ここの設定がわからない場合は、変更しないでください。DNS上書きを有効にしたままにしてください。"
+        },
+        "sections": {
+          "general": "DNS設定",
+          "fallbackFilter": "フォールバックフィルター設定",
+          "hosts": "Hosts設定"
+        },
+        "fields": {
+          "enable": "DNSを有効にする",
+          "listen": "DNS監視アドレス",
+          "enhancedMode": "拡張モード",
+          "fakeIpRange": "Fake IP範囲",
+          "fakeIpFilterMode": "Fake IPフィルターモード",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "IPv6 DNS解決を有効にする"
+          },
+          "preferH3": {
+            "label": "HTTP/3を優先する",
+            "description": "DNS DOHでHTTP/3プロトコルを使用する"
+          },
+          "respectRules": {
+            "label": "ルートルールに従う",
+            "description": "DNS接続はルートルールに従います。"
+          },
+          "useHosts": {
+            "label": "Hostsファイルを使用する",
+            "description": "Hostsファイルを使用してホスト名を解決する"
+          },
+          "useSystemHosts": {
+            "label": "システムのHostsファイルを使用する",
+            "description": "システムのHostsファイルを使用してホスト名を解決する"
+          },
+          "directPolicy": {
+            "label": "直接接続の名前解決サーバーはポリシーに従う",
+            "description": "名前解決サーバーのポリシーに従うかどうか"
+          },
+          "defaultNameserver": {
+            "label": "デフォルトの名前解決サーバー",
+            "description": "名前解決サーバーを解決するために使用されるデフォルトのDNSサーバー"
+          },
+          "nameserver": {
+            "label": "名前解決サーバー",
+            "description": "DNSサーバーのリスト。カンマで区切って指定します。"
+          },
+          "fallback": {
+            "label": "フォールバックサーバー",
+            "description": "フォールバックDNSサーバーのリスト。カンマで区切って指定します。"
+          },
+          "proxy": {
+            "label": "プロキシサーバーの名前解決サーバー",
+            "description": "プロキシノードの名前解決サーバー。プロキシノードのドメイン名を解決するためにのみ使用されます。カンマで区切って指定します。"
+          },
+          "directNameserver": {
+            "label": "直接接続の名前解決サーバー",
+            "description": "直接接続の出口名前解決サーバー。systemキーワードをサポートします。カンマで区切って指定します。"
+          },
+          "fakeIpFilter": {
+            "label": "Fake IPフィルター",
+            "description": "Fake IP解決をスキップするドメイン名。カンマで区切って指定します。"
+          },
+          "nameserverPolicy": {
+            "label": "名前解決サーバーのポリシー",
+            "description": "特定のドメインのDNSサーバー。複数のサーバーはセミコロンで区切って指定します。形式: domain=server1;server2"
+          },
+          "geoipFiltering": {
+            "label": "GeoIPフィルタリング",
+            "description": "フォールバックのGeoIPフィルタリングを有効にする"
+          },
+          "geoipCode": "GeoIP国コード",
+          "fallbackIpCidr": {
+            "label": "フォールバックIP CIDR",
+            "description": "フォールバックサーバーを使用しないIP CIDR。カンマで区切って指定します。"
+          },
+          "fallbackDomain": {
+            "label": "フォールバックドメイン",
+            "description": "フォールバックサーバーを使用するドメイン名。カンマで区切って指定します。"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "カスタムのドメイン名からIPまたはドメイン名へのマッピング。カンマで区切って指定します。"
+          }
+        },
+        "messages": {
+          "saved": "DNS設定が保存されました。",
+          "configError": "DNS configuration error:"
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
         }
       }
     },

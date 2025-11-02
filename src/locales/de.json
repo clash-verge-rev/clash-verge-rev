@@ -297,7 +297,6 @@
   "Network Interface": "Netzwerkschnittstelle",
   "Ip Address": "IP-Adresse",
   "Mac Address": "MAC-Adresse",
-  "IPv6": "IPv6",
   "Open URL": "Link öffnen",
   "Replace host, port, secret with %host, %port, %secret": "Verwenden Sie %host, %port, %secret für Host, Port und Zugangsschlüssel",
   "Support %host, %port, %secret": "Unterstützt %host, %port, %secret",
@@ -379,52 +378,6 @@
   "Merge File Key Error": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
   "Merge File Error": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
   "Service Administrator Prompt": "Clash Verge benötigt Administratorrechte, um den Systemdienst zu installieren.",
-  "DNS Settings": "DNS-Einstellungen",
-  "DNS settings saved": "DNS-Einstellungen wurden gespeichert",
-  "DNS configuration error:": "DNS configuration error:",
-  "DNS Overwrite": "DNS-Überschreibung",
-  "DNS Settings Warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung aktiviert.",
-  "Enable DNS": "DNS aktivieren",
-  "DNS Listen": "DNS-Lauschangabe",
-  "Enhanced Mode": "Erweiterter Modus",
-  "Fake IP Range": "Fake-IP-Bereich",
-  "Fake IP Filter Mode": "Fake-IP-Filtermodus",
-  "Enable IPv6 DNS resolution": "IPv6-DNS-Auflösung aktivieren",
-  "Prefer H3": "HTTP/3 bevorzugen",
-  "DNS DOH使用HTTP/3": "DNS DOH verwendet HTTP/3-Protokoll",
-  "Respect Rules": "Routierungsregeln beachten",
-  "DNS connections follow routing rules": "DNS-Verbindungen folgen den Routierungsregeln",
-  "Use Hosts": "Hosts verwenden",
-  "Enable to resolve hosts through hosts file": "Aktivieren Sie die Auflösung von Hosts über die hosts-Datei",
-  "Use System Hosts": "System-Hosts verwenden",
-  "Enable to resolve hosts through system hosts file": "Aktivieren Sie die Auflösung von Hosts über die System-hosts-Datei",
-  "Direct Nameserver Follow Policy": "Direkte Namenserver folgen der Strategie",
-  "Whether to follow nameserver policy": "Ob die Namenserver-Strategie befolgt werden soll",
-  "Default Nameserver": "Standard-Namenserver",
-  "Default DNS servers used to resolve DNS servers": "Standard-DNS-Server, die zum Auflösen von DNS-Servern verwendet werden",
-  "Nameserver": "Namenserver",
-  "List of DNS servers": "Liste der DNS-Server, getrennt durch Kommas",
-  "Fallback": "Rückfallserver",
-  "List of fallback DNS servers": "Liste der Rückfall-DNS-Server, getrennt durch Kommas",
-  "Proxy Server Nameserver": "Proxy-Server-Namenserver",
-  "Proxy Node Nameserver": "Proxy-Knoten-Namenserver, nur für die Auflösung der Domains von Proxy-Knoten verwendet, getrennt durch Kommas",
-  "Direct Nameserver": "Direkter Namenserver",
-  "Direct outbound Nameserver": "Direkter Ausgangs-Namenserver, unterstützt das Schlüsselwort system, getrennt durch Kommas",
-  "Fake IP Filter": "Fake-IP-Filter",
-  "Domains that skip fake IP resolution": "Domains, die die Fake-IP-Auflösung überspringen, getrennt durch Kommas",
-  "Nameserver Policy": "Namenserver-Strategie",
-  "Domain-specific DNS server": "Domain-spezifischer DNS-Server, mehrere Server getrennt durch Semikolons, Format: domain=server1;server2",
-  "Fallback Filter Settings": "Rückfallfilter-Einstellungen",
-  "GeoIP Filtering": "GeoIP-Filterung",
-  "Enable GeoIP filtering for fallback": "GeoIP-Rückfallfilterung aktivieren",
-  "GeoIP Code": "GeoIP-Ländercode",
-  "Fallback IP CIDR": "Rückfall-IP-CIDR",
-  "IP CIDRs not using fallback servers": "IP-CIDRs, die keine Rückfallserver verwenden, getrennt durch Kommas",
-  "Fallback Domain": "Rückfall-Domäne",
-  "Domains using fallback servers": "Domains, die Rückfallserver verwenden, getrennt durch Kommas",
-  "Hosts Settings": "Hosts-Einstellungen",
-  "Hosts": "Hosts",
-  "Custom domain to IP or domain mapping": "Benutzerdefinierte Zuordnung von Domains zu IPs oder Domains, getrennt durch Kommas",
   "Website Tests": "Website-Tests",
   "Clash Info": "Clash-Informationen",
   "Core Version": "Kernversion",
@@ -1072,6 +1025,100 @@
         },
         "messages": {
           "applied": "Einstellungen angewendet"
+        }
+      },
+      "dns": {
+        "dialog": {
+          "title": "DNS-Überschreibung",
+          "warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung aktiviert."
+        },
+        "sections": {
+          "general": "DNS-Einstellungen",
+          "fallbackFilter": "Rückfallfilter-Einstellungen",
+          "hosts": "Hosts-Einstellungen"
+        },
+        "fields": {
+          "enable": "DNS aktivieren",
+          "listen": "DNS-Lauschangabe",
+          "enhancedMode": "Erweiterter Modus",
+          "fakeIpRange": "Fake-IP-Bereich",
+          "fakeIpFilterMode": "Fake-IP-Filtermodus",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "IPv6-DNS-Auflösung aktivieren"
+          },
+          "preferH3": {
+            "label": "HTTP/3 bevorzugen",
+            "description": "DNS DOH verwendet HTTP/3-Protokoll"
+          },
+          "respectRules": {
+            "label": "Routierungsregeln beachten",
+            "description": "DNS-Verbindungen folgen den Routierungsregeln"
+          },
+          "useHosts": {
+            "label": "Hosts verwenden",
+            "description": "Aktivieren Sie die Auflösung von Hosts über die hosts-Datei"
+          },
+          "useSystemHosts": {
+            "label": "System-Hosts verwenden",
+            "description": "Aktivieren Sie die Auflösung von Hosts über die System-hosts-Datei"
+          },
+          "directPolicy": {
+            "label": "Direkte Namenserver folgen der Strategie",
+            "description": "Ob die Namenserver-Strategie befolgt werden soll"
+          },
+          "defaultNameserver": {
+            "label": "Standard-Namenserver",
+            "description": "Standard-DNS-Server, die zum Auflösen von DNS-Servern verwendet werden"
+          },
+          "nameserver": {
+            "label": "Namenserver",
+            "description": "Liste der DNS-Server, getrennt durch Kommas"
+          },
+          "fallback": {
+            "label": "Rückfallserver",
+            "description": "Liste der Rückfall-DNS-Server, getrennt durch Kommas"
+          },
+          "proxy": {
+            "label": "Proxy-Server-Namenserver",
+            "description": "Proxy-Knoten-Namenserver, nur für die Auflösung der Domains von Proxy-Knoten verwendet, getrennt durch Kommas"
+          },
+          "directNameserver": {
+            "label": "Direkter Namenserver",
+            "description": "Direkter Ausgangs-Namenserver, unterstützt das Schlüsselwort system, getrennt durch Kommas"
+          },
+          "fakeIpFilter": {
+            "label": "Fake-IP-Filter",
+            "description": "Domains, die die Fake-IP-Auflösung überspringen, getrennt durch Kommas"
+          },
+          "nameserverPolicy": {
+            "label": "Namenserver-Strategie",
+            "description": "Domain-spezifischer DNS-Server, mehrere Server getrennt durch Semikolons, Format: domain=server1;server2"
+          },
+          "geoipFiltering": {
+            "label": "GeoIP-Filterung",
+            "description": "GeoIP-Rückfallfilterung aktivieren"
+          },
+          "geoipCode": "GeoIP-Ländercode",
+          "fallbackIpCidr": {
+            "label": "Rückfall-IP-CIDR",
+            "description": "IP-CIDRs, die keine Rückfallserver verwenden, getrennt durch Kommas"
+          },
+          "fallbackDomain": {
+            "label": "Rückfall-Domäne",
+            "description": "Domains, die Rückfallserver verwenden, getrennt durch Kommas"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "Benutzerdefinierte Zuordnung von Domains zu IPs oder Domains, getrennt durch Kommas"
+          }
+        },
+        "messages": {
+          "saved": "DNS-Einstellungen wurden gespeichert",
+          "configError": "DNS configuration error:"
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
         }
       }
     },

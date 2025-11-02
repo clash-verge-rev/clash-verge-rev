@@ -297,7 +297,6 @@
   "Network Interface": "Ağ Arayüzü",
   "Ip Address": "IP Adresi",
   "Mac Address": "MAC Adresi",
-  "IPv6": "IPv6",
   "Open URL": "URL Aç",
   "Replace host, port, secret with %host, %port, %secret": "Ana bilgisayar, port, sırrı %host, %port, %secret ile değiştirin",
   "Support %host, %port, %secret": "%host, %port, %secret destekler",
@@ -379,52 +378,6 @@
   "Merge File Key Error": "Birleştirme dosyası anahtar hatası, değişiklikler geri alındı",
   "Merge File Error": "Birleştirme dosyası hatası, değişiklikler geri alındı",
   "Service Administrator Prompt": "Clash Verge sistem hizmetini yeniden kurmak için yönetici ayrıcalıkları gerektiriyor",
-  "DNS Settings": "DNS Ayarları",
-  "DNS settings saved": "DNS ayarları kaydedildi",
-  "DNS configuration error:": "DNS configuration error:",
-  "DNS Overwrite": "DNS Üzerine Yazma",
-  "DNS Settings Warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı etkin tutun",
-  "Enable DNS": "DNS'i Etkinleştir",
-  "DNS Listen": "DNS Dinleme",
-  "Enhanced Mode": "Geliştirilmiş Mod",
-  "Fake IP Range": "Sahte IP Aralığı",
-  "Fake IP Filter Mode": "Sahte IP Filtre Modu",
-  "Enable IPv6 DNS resolution": "IPv6 DNS çözümlemesini etkinleştir",
-  "Prefer H3": "H3'ü Tercih Et",
-  "DNS DOH使用HTTP/3": "DNS DOH uses HTTP/3",
-  "Respect Rules": "Kurallara Uy",
-  "DNS connections follow routing rules": "DNS bağlantıları yönlendirme kurallarını takip eder",
-  "Use Hosts": "Hosts Kullan",
-  "Enable to resolve hosts through hosts file": "Ana bilgisayarları hosts dosyası aracılığıyla çözümlemek için etkinleştirin",
-  "Use System Hosts": "Sistem Hosts Dosyasını Kullan",
-  "Enable to resolve hosts through system hosts file": "Ana bilgisayarları sistem hosts dosyası aracılığıyla çözümlemek için etkinleştirin",
-  "Direct Nameserver Follow Policy": "Doğrudan İsim Sunucusu Politikasını Takip Et",
-  "Whether to follow nameserver policy": "İsim sunucusu politikasının takip edilip edilmeyeceği",
-  "Default Nameserver": "Varsayılan İsim Sunucusu",
-  "Default DNS servers used to resolve DNS servers": "DNS sunucularını çözümlemek için kullanılan varsayılan DNS sunucuları",
-  "Nameserver": "İsim Sunucusu",
-  "List of DNS servers": "DNS sunucuları listesi, virgülle ayrılmış",
-  "Fallback": "Yedek",
-  "List of fallback DNS servers": "Yedek DNS sunucuları listesi, virgülle ayrılmış",
-  "Proxy Server Nameserver": "Vekil Sunucusu İsim Sunucusu",
-  "Proxy Node Nameserver": "Vekil düğümü alan adı çözümlemesi için DNS sunucuları",
-  "Direct Nameserver": "Doğrudan İsim Sunucusu",
-  "Direct outbound Nameserver": "Doğrudan çıkış alan adı çözümlemesi için DNS sunucuları, 'system' anahtar kelimesini destekler, virgülle ayrılmış",
-  "Fake IP Filter": "Sahte IP Filtresi",
-  "Domains that skip fake IP resolution": "Sahte IP çözümlemesini atlayan alan adları, virgülle ayrılmış",
-  "Nameserver Policy": "İsim Sunucusu Politikası",
-  "Domain-specific DNS server": "Alana özgü DNS sunucusu, birden çok sunucu noktalı virgülle ayrılır, format: domain=server1;server2",
-  "Fallback Filter Settings": "Yedek Filtre Ayarları",
-  "GeoIP Filtering": "GeoIP Filtreleme",
-  "Enable GeoIP filtering for fallback": "Yedek için GeoIP filtrelemeyi etkinleştir",
-  "GeoIP Code": "GeoIP Kodu",
-  "Fallback IP CIDR": "Yedek IP CIDR",
-  "IP CIDRs not using fallback servers": "Yedek sunucuları kullanmayan IP CIDR'ları, virgülle ayrılmış",
-  "Fallback Domain": "Yedek Alan Adı",
-  "Domains using fallback servers": "Yedek sunucuları kullanan alan adları, virgülle ayrılmış",
-  "Hosts Settings": "Hosts Ayarları",
-  "Hosts": "Hosts",
-  "Custom domain to IP or domain mapping": "Özel alan adından IP'ye veya alan adına eşleme",
   "Website Tests": "Web Sitesi Testleri",
   "Clash Info": "Clash Bilgisi",
   "Core Version": "Çekirdek Sürümü",
@@ -1072,6 +1025,100 @@
         },
         "messages": {
           "applied": "Ayarlar Uygulandı"
+        }
+      },
+      "dns": {
+        "dialog": {
+          "title": "DNS Üzerine Yazma",
+          "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı etkin tutun"
+        },
+        "sections": {
+          "general": "DNS Ayarları",
+          "fallbackFilter": "Yedek Filtre Ayarları",
+          "hosts": "Hosts Ayarları"
+        },
+        "fields": {
+          "enable": "DNS'i Etkinleştir",
+          "listen": "DNS Dinleme",
+          "enhancedMode": "Geliştirilmiş Mod",
+          "fakeIpRange": "Sahte IP Aralığı",
+          "fakeIpFilterMode": "Sahte IP Filtre Modu",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "IPv6 DNS çözümlemesini etkinleştir"
+          },
+          "preferH3": {
+            "label": "H3'ü Tercih Et",
+            "description": "DNS DOH uses HTTP/3"
+          },
+          "respectRules": {
+            "label": "Kurallara Uy",
+            "description": "DNS bağlantıları yönlendirme kurallarını takip eder"
+          },
+          "useHosts": {
+            "label": "Hosts Kullan",
+            "description": "Ana bilgisayarları hosts dosyası aracılığıyla çözümlemek için etkinleştirin"
+          },
+          "useSystemHosts": {
+            "label": "Sistem Hosts Dosyasını Kullan",
+            "description": "Ana bilgisayarları sistem hosts dosyası aracılığıyla çözümlemek için etkinleştirin"
+          },
+          "directPolicy": {
+            "label": "Doğrudan İsim Sunucusu Politikasını Takip Et",
+            "description": "İsim sunucusu politikasının takip edilip edilmeyeceği"
+          },
+          "defaultNameserver": {
+            "label": "Varsayılan İsim Sunucusu",
+            "description": "DNS sunucularını çözümlemek için kullanılan varsayılan DNS sunucuları"
+          },
+          "nameserver": {
+            "label": "İsim Sunucusu",
+            "description": "DNS sunucuları listesi, virgülle ayrılmış"
+          },
+          "fallback": {
+            "label": "Yedek",
+            "description": "Yedek DNS sunucuları listesi, virgülle ayrılmış"
+          },
+          "proxy": {
+            "label": "Vekil Sunucusu İsim Sunucusu",
+            "description": "Vekil düğümü alan adı çözümlemesi için DNS sunucuları"
+          },
+          "directNameserver": {
+            "label": "Doğrudan İsim Sunucusu",
+            "description": "Doğrudan çıkış alan adı çözümlemesi için DNS sunucuları, 'system' anahtar kelimesini destekler, virgülle ayrılmış"
+          },
+          "fakeIpFilter": {
+            "label": "Sahte IP Filtresi",
+            "description": "Sahte IP çözümlemesini atlayan alan adları, virgülle ayrılmış"
+          },
+          "nameserverPolicy": {
+            "label": "İsim Sunucusu Politikası",
+            "description": "Alana özgü DNS sunucusu, birden çok sunucu noktalı virgülle ayrılır, format: domain=server1;server2"
+          },
+          "geoipFiltering": {
+            "label": "GeoIP Filtreleme",
+            "description": "Yedek için GeoIP filtrelemeyi etkinleştir"
+          },
+          "geoipCode": "GeoIP Kodu",
+          "fallbackIpCidr": {
+            "label": "Yedek IP CIDR",
+            "description": "Yedek sunucuları kullanmayan IP CIDR'ları, virgülle ayrılmış"
+          },
+          "fallbackDomain": {
+            "label": "Yedek Alan Adı",
+            "description": "Yedek sunucuları kullanan alan adları, virgülle ayrılmış"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "Özel alan adından IP'ye veya alan adına eşleme"
+          }
+        },
+        "messages": {
+          "saved": "DNS ayarları kaydedildi",
+          "configError": "DNS configuration error:"
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
         }
       }
     },

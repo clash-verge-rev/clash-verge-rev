@@ -297,7 +297,6 @@
   "Network Interface": "Interfaz de red",
   "Ip Address": "Dirección IP",
   "Mac Address": "Dirección MAC",
-  "IPv6": "IPv6",
   "Open URL": "Abrir enlace",
   "Replace host, port, secret with %host, %port, %secret": "Utilice %host, %port, %secret para representar el host, el puerto y la clave de acceso.",
   "Support %host, %port, %secret": "Soporta %host, %port, %secret",
@@ -379,52 +378,6 @@
   "Merge File Key Error": "Error de clave en el archivo de sobrescritura. Los cambios se han deshecho",
   "Merge File Error": "Error en el archivo de sobrescritura. Los cambios se han deshecho",
   "Service Administrator Prompt": "Clash Verge requiere permisos de administrador para instalar el servicio del sistema",
-  "DNS Settings": "Configuración de DNS",
-  "DNS settings saved": "Configuración de DNS guardada",
-  "DNS configuration error:": "DNS configuration error:",
-  "DNS Overwrite": "Sobrescritura de DNS",
-  "DNS Settings Warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga habilitada la sobrescritura de DNS.",
-  "Enable DNS": "Habilitar DNS",
-  "DNS Listen": "Dirección de escucha de DNS",
-  "Enhanced Mode": "Modo mejorado",
-  "Fake IP Range": "Rango de Fake IP",
-  "Fake IP Filter Mode": "Modo de filtrado de Fake IP",
-  "Enable IPv6 DNS resolution": "Habilitar resolución DNS IPv6",
-  "Prefer H3": "Prefiere HTTP/3",
-  "DNS DOH使用HTTP/3": "DNS DOH utiliza el protocolo HTTP/3",
-  "Respect Rules": "Seguir las reglas de enrutamiento",
-  "DNS connections follow routing rules": "Las conexiones DNS siguen las reglas de enrutamiento",
-  "Use Hosts": "Usar archivo hosts",
-  "Enable to resolve hosts through hosts file": "Habilitar la resolución de nombres de host a través del archivo hosts",
-  "Use System Hosts": "Usar archivo hosts del sistema",
-  "Enable to resolve hosts through system hosts file": "Habilitar la resolución de nombres de host a través del archivo hosts del sistema",
-  "Direct Nameserver Follow Policy": "Los servidores DNS de conexión directa siguen la política",
-  "Whether to follow nameserver policy": "Si seguir la configuración de la política de servidores DNS",
-  "Default Nameserver": "Servidor DNS predeterminado",
-  "Default DNS servers used to resolve DNS servers": "Servidores DNS predeterminados utilizados para resolver servidores DNS",
-  "Nameserver": "Servidor DNS",
-  "List of DNS servers": "Lista de servidores DNS, separados por comas",
-  "Fallback": "Servidor de respaldo",
-  "List of fallback DNS servers": "Lista de servidores DNS de respaldo, separados por comas",
-  "Proxy Server Nameserver": "DNS del servidor proxy",
-  "Proxy Node Nameserver": "Servidor de resolución de nombres de dominio del nodo de proxy, separados por comas",
-  "Direct Nameserver": "Servidor DNS de conexión directa",
-  "Direct outbound Nameserver": "Servidor de resolución de nombres de dominio de salida directa, admite la palabra clave 'system', separados por comas",
-  "Fake IP Filter": "Filtro de Fake IP",
-  "Domains that skip fake IP resolution": "Dominios que omiten la resolución de Fake IP, separados por comas",
-  "Nameserver Policy": "Política de servidores DNS",
-  "Domain-specific DNS server": "Servidor DNS específico de dominio, múltiples servidores separados por punto y coma, formato: dominio=server1;server2",
-  "Fallback Filter Settings": "Configuración de filtrado de respaldo",
-  "GeoIP Filtering": "Filtrado GeoIP",
-  "Enable GeoIP filtering for fallback": "Habilitar el filtrado GeoIP de respaldo",
-  "GeoIP Code": "Código de país GeoIP",
-  "Fallback IP CIDR": "IP CIDR de respaldo",
-  "IP CIDRs not using fallback servers": "IP CIDR que no utilizan servidores de respaldo, separados por comas",
-  "Fallback Domain": "Dominio de respaldo",
-  "Domains using fallback servers": "Dominios que utilizan servidores de respaldo, separados por comas",
-  "Hosts Settings": "Configuración de hosts",
-  "Hosts": "Hosts",
-  "Custom domain to IP or domain mapping": "Asignación personalizada de dominio a IP o dominio, separados por comas",
   "Website Tests": "Pruebas de sitios web",
   "Clash Info": "Información de Clash",
   "Core Version": "Versión del núcleo",
@@ -1072,6 +1025,100 @@
         },
         "messages": {
           "applied": "Ajustes aplicados"
+        }
+      },
+      "dns": {
+        "dialog": {
+          "title": "Sobrescritura de DNS",
+          "warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga habilitada la sobrescritura de DNS."
+        },
+        "sections": {
+          "general": "Configuración de DNS",
+          "fallbackFilter": "Configuración de filtrado de respaldo",
+          "hosts": "Configuración de hosts"
+        },
+        "fields": {
+          "enable": "Habilitar DNS",
+          "listen": "Dirección de escucha de DNS",
+          "enhancedMode": "Modo mejorado",
+          "fakeIpRange": "Rango de Fake IP",
+          "fakeIpFilterMode": "Modo de filtrado de Fake IP",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "Habilitar resolución DNS IPv6"
+          },
+          "preferH3": {
+            "label": "Prefiere HTTP/3",
+            "description": "DNS DOH utiliza el protocolo HTTP/3"
+          },
+          "respectRules": {
+            "label": "Seguir las reglas de enrutamiento",
+            "description": "Las conexiones DNS siguen las reglas de enrutamiento"
+          },
+          "useHosts": {
+            "label": "Usar archivo hosts",
+            "description": "Habilitar la resolución de nombres de host a través del archivo hosts"
+          },
+          "useSystemHosts": {
+            "label": "Usar archivo hosts del sistema",
+            "description": "Habilitar la resolución de nombres de host a través del archivo hosts del sistema"
+          },
+          "directPolicy": {
+            "label": "Los servidores DNS de conexión directa siguen la política",
+            "description": "Si seguir la configuración de la política de servidores DNS"
+          },
+          "defaultNameserver": {
+            "label": "Servidor DNS predeterminado",
+            "description": "Servidores DNS predeterminados utilizados para resolver servidores DNS"
+          },
+          "nameserver": {
+            "label": "Servidor DNS",
+            "description": "Lista de servidores DNS, separados por comas"
+          },
+          "fallback": {
+            "label": "Servidor de respaldo",
+            "description": "Lista de servidores DNS de respaldo, separados por comas"
+          },
+          "proxy": {
+            "label": "DNS del servidor proxy",
+            "description": "Servidor de resolución de nombres de dominio del nodo de proxy, separados por comas"
+          },
+          "directNameserver": {
+            "label": "Servidor DNS de conexión directa",
+            "description": "Servidor de resolución de nombres de dominio de salida directa, admite la palabra clave 'system', separados por comas"
+          },
+          "fakeIpFilter": {
+            "label": "Filtro de Fake IP",
+            "description": "Dominios que omiten la resolución de Fake IP, separados por comas"
+          },
+          "nameserverPolicy": {
+            "label": "Política de servidores DNS",
+            "description": "Servidor DNS específico de dominio, múltiples servidores separados por punto y coma, formato: dominio=server1;server2"
+          },
+          "geoipFiltering": {
+            "label": "Filtrado GeoIP",
+            "description": "Habilitar el filtrado GeoIP de respaldo"
+          },
+          "geoipCode": "Código de país GeoIP",
+          "fallbackIpCidr": {
+            "label": "IP CIDR de respaldo",
+            "description": "IP CIDR que no utilizan servidores de respaldo, separados por comas"
+          },
+          "fallbackDomain": {
+            "label": "Dominio de respaldo",
+            "description": "Dominios que utilizan servidores de respaldo, separados por comas"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "Asignación personalizada de dominio a IP o dominio, separados por comas"
+          }
+        },
+        "messages": {
+          "saved": "Configuración de DNS guardada",
+          "configError": "DNS configuration error:"
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
         }
       }
     },

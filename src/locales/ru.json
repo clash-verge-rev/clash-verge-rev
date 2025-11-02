@@ -297,7 +297,6 @@
   "Network Interface": "Сетевой интерфейс",
   "Ip Address": "IP адрес",
   "Mac Address": "MAC адрес",
-  "IPv6": "IPv6",
   "Open URL": "Перейти по адресу",
   "Replace host, port, secret with %host, %port, %secret": "Замените хост, порт и секрет на %host, %port, %secret",
   "Support %host, %port, %secret": "Поддерживаются %host, %port, %secret",
@@ -379,52 +378,6 @@
   "Merge File Key Error": "Ошибка ключа в Merge File, откат изменений",
   "Merge File Error": "Ошибка Merge File, откат изменений",
   "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы",
-  "DNS Settings": "Настройки DNS",
-  "DNS settings saved": "DNS settings saved",
-  "DNS configuration error:": "DNS configuration error:",
-  "DNS Overwrite": "Переопределение настроек DNS",
-  "DNS Settings Warning": "Если вы не знакомы с этими настройками, пожалуйста, не изменяйте и не отключайте их",
-  "Enable DNS": "Включить DNS",
-  "DNS Listen": "Прослушивание DNS",
-  "Enhanced Mode": "Enhanced Mode",
-  "Fake IP Range": "Диапазон FakeIP",
-  "Fake IP Filter Mode": "FakeIP Filter Mode",
-  "Enable IPv6 DNS resolution": "Enable IPv6 DNS resolution",
-  "Prefer H3": "Предпочитать H3",
-  "DNS DOH使用HTTP/3": "DNS DOH использует http/3",
-  "Respect Rules": "Приоритизировать правила",
-  "DNS connections follow routing rules": "Соединения DNS следуют правилам маршрутизации",
-  "Use Hosts": "Использовать файл Hosts",
-  "Enable to resolve hosts through hosts file": "Включить разрешение хостов через файл Hosts",
-  "Use System Hosts": "Использовать системный файл Hosts",
-  "Enable to resolve hosts through system hosts file": "Включить разрешение хостов через системный файл Hosts",
-  "Direct Nameserver Follow Policy": "Прямой сервер имен следует политике",
-  "Whether to follow nameserver policy": "Следовать ли политике DNS-серверов",
-  "Default Nameserver": "DNS-сервер по умолчанию",
-  "Default DNS servers used to resolve DNS servers": "DNS-серверы по умолчанию, используемые для разрешения адресов серверов DNS",
-  "Nameserver": "DNS-сервер",
-  "List of DNS servers": "Список DNS-серверов, разделенных запятой",
-  "Fallback": "Fallback",
-  "List of fallback DNS servers": "Список резервных DNS-серверов, разделенных запятой",
-  "Proxy Server Nameserver": "Proxy Server Nameserver",
-  "Proxy Node Nameserver": "DNS-серверы для разрешения домена прокси-узлов",
-  "Direct Nameserver": "DNS-сервер для прямых соединений",
-  "Direct outbound Nameserver": "Список DNS-серверов для прямых соединений, разделенных запятой",
-  "Fake IP Filter": "Фильтр FakeIP",
-  "Domains that skip fake IP resolution": "Домены, которые пропускают разрешение FakeIP, разделенные запятой",
-  "Nameserver Policy": "Политика серверов имен",
-  "Domain-specific DNS server": "DNS-сервер, специфичный для домена, несколько серверов разделяются знаком ';'",
-  "Fallback Filter Settings": "Настройки фильтра Fallback",
-  "GeoIP Filtering": "Фильтрация GeoIP",
-  "Enable GeoIP filtering for fallback": "Включить фильтрацию GeoIP",
-  "GeoIP Code": "Код GeoIP",
-  "Fallback IP CIDR": "Fallback IP CIDR",
-  "IP CIDRs not using fallback servers": "Диапазоны IP-адресов, не использующие резервные серверы, разделенные запятой",
-  "Fallback Domain": "Fallback домены",
-  "Domains using fallback servers": "Домены, использующие резервные серверы, разделенные запятой",
-  "Hosts Settings": "Hosts Settings",
-  "Hosts": "Hosts",
-  "Custom domain to IP or domain mapping": "Custom domain to IP or domain mapping",
   "Website Tests": "Проверка доступности веб-сайтов",
   "Clash Info": "Информация о Clash",
   "Core Version": "Версия ядра",
@@ -1072,6 +1025,100 @@
         },
         "messages": {
           "applied": "Настройки применены"
+        }
+      },
+      "dns": {
+        "dialog": {
+          "title": "Переопределение настроек DNS",
+          "warning": "Если вы не знакомы с этими настройками, пожалуйста, не изменяйте и не отключайте их"
+        },
+        "sections": {
+          "general": "Настройки DNS",
+          "fallbackFilter": "Настройки фильтра Fallback",
+          "hosts": "Hosts Settings"
+        },
+        "fields": {
+          "enable": "Включить DNS",
+          "listen": "Прослушивание DNS",
+          "enhancedMode": "Enhanced Mode",
+          "fakeIpRange": "Диапазон FakeIP",
+          "fakeIpFilterMode": "FakeIP Filter Mode",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "Enable IPv6 DNS resolution"
+          },
+          "preferH3": {
+            "label": "Предпочитать H3",
+            "description": "DNS DOH использует http/3"
+          },
+          "respectRules": {
+            "label": "Приоритизировать правила",
+            "description": "Соединения DNS следуют правилам маршрутизации"
+          },
+          "useHosts": {
+            "label": "Использовать файл Hosts",
+            "description": "Включить разрешение хостов через файл Hosts"
+          },
+          "useSystemHosts": {
+            "label": "Использовать системный файл Hosts",
+            "description": "Включить разрешение хостов через системный файл Hosts"
+          },
+          "directPolicy": {
+            "label": "Прямой сервер имен следует политике",
+            "description": "Следовать ли политике DNS-серверов"
+          },
+          "defaultNameserver": {
+            "label": "DNS-сервер по умолчанию",
+            "description": "DNS-серверы по умолчанию, используемые для разрешения адресов серверов DNS"
+          },
+          "nameserver": {
+            "label": "DNS-сервер",
+            "description": "Список DNS-серверов, разделенных запятой"
+          },
+          "fallback": {
+            "label": "Fallback",
+            "description": "Список резервных DNS-серверов, разделенных запятой"
+          },
+          "proxy": {
+            "label": "Proxy Server Nameserver",
+            "description": "DNS-серверы для разрешения домена прокси-узлов"
+          },
+          "directNameserver": {
+            "label": "DNS-сервер для прямых соединений",
+            "description": "Список DNS-серверов для прямых соединений, разделенных запятой"
+          },
+          "fakeIpFilter": {
+            "label": "Фильтр FakeIP",
+            "description": "Домены, которые пропускают разрешение FakeIP, разделенные запятой"
+          },
+          "nameserverPolicy": {
+            "label": "Политика серверов имен",
+            "description": "DNS-сервер, специфичный для домена, несколько серверов разделяются знаком ';'"
+          },
+          "geoipFiltering": {
+            "label": "Фильтрация GeoIP",
+            "description": "Включить фильтрацию GeoIP"
+          },
+          "geoipCode": "Код GeoIP",
+          "fallbackIpCidr": {
+            "label": "Fallback IP CIDR",
+            "description": "Диапазоны IP-адресов, не использующие резервные серверы, разделенные запятой"
+          },
+          "fallbackDomain": {
+            "label": "Fallback домены",
+            "description": "Домены, использующие резервные серверы, разделенные запятой"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "Custom domain to IP or domain mapping"
+          }
+        },
+        "messages": {
+          "saved": "DNS settings saved",
+          "configError": "DNS configuration error:"
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
         }
       }
     },

@@ -297,7 +297,6 @@
   "Network Interface": "网络接口",
   "Ip Address": "IP 地址",
   "Mac Address": "MAC 地址",
-  "IPv6": "IPv6",
   "Open URL": "打开链接",
   "Replace host, port, secret with %host, %port, %secret": "使用 %host, %port, %secret 表示 主机, 端口, 访问密钥",
   "Support %host, %port, %secret": "支持 %host, %port, %secret",
@@ -379,52 +378,6 @@
   "Merge File Key Error": "覆写文件键错误，变更已撤销",
   "Merge File Error": "覆写文件错误，变更已撤销",
   "Service Administrator Prompt": "Clash Verge 需要管理员权限安装系统服务",
-  "DNS Settings": "DNS 设置",
-  "DNS settings saved": "DNS 设置已保存",
-  "DNS configuration error:": "DNS 配置错误：",
-  "DNS Overwrite": "DNS 覆写",
-  "DNS Settings Warning": "如果你不清楚这里的设置请不要修改，并保持 DNS 覆写开启",
-  "Enable DNS": "启用 DNS",
-  "DNS Listen": "DNS 监听地址",
-  "Enhanced Mode": "增强模式",
-  "Fake IP Range": "Fake IP 范围",
-  "Fake IP Filter Mode": "Fake IP 过滤模式",
-  "Enable IPv6 DNS resolution": "启用 IPv6 DNS 解析",
-  "Prefer H3": "优先使用 HTTP/3",
-  "DNS DOH使用HTTP/3": "DNS DOH 使用 HTTP/3 协议",
-  "Respect Rules": "遵循路由规则",
-  "DNS connections follow routing rules": "DNS 连接遵循路由规则",
-  "Use Hosts": "使用 Hosts",
-  "Enable to resolve hosts through hosts file": "启用通过 hosts 文件解析域名",
-  "Use System Hosts": "使用系统 Hosts",
-  "Enable to resolve hosts through system hosts file": "启用通过系统 hosts 文件解析域名",
-  "Direct Nameserver Follow Policy": "直连域名服务器遵循策略",
-  "Whether to follow nameserver policy": "是否遵循 nameserver-policy 设置",
-  "Default Nameserver": "默认域名服务器",
-  "Default DNS servers used to resolve DNS servers": "用于解析 DNS 服务器的默认 DNS 服务器",
-  "Nameserver": "域名服务器",
-  "List of DNS servers": "DNS 服务器列表，用逗号分隔",
-  "Fallback": "回退服务器",
-  "List of fallback DNS servers": "回退 DNS 服务器列表，用逗号分隔",
-  "Proxy Server Nameserver": "代理节点DNS",
-  "Proxy Node Nameserver": "代理节点域名解析服务器，仅用于解析代理节点的域名，用逗号分隔",
-  "Direct Nameserver": "直连域名服务器",
-  "Direct outbound Nameserver": "直连出口域名解析服务器，支持 system 关键字，用逗号分隔",
-  "Fake IP Filter": "Fake IP 过滤",
-  "Domains that skip fake IP resolution": "跳过 Fake IP 解析的域名，用逗号分隔",
-  "Nameserver Policy": "域名服务器策略",
-  "Domain-specific DNS server": "特定域名的 DNS 服务器，多个服务器使用分号分隔，格式: domain=server1;server2",
-  "Fallback Filter Settings": "回退过滤设置",
-  "GeoIP Filtering": "GeoIP 过滤",
-  "Enable GeoIP filtering for fallback": "启用 GeoIP 回退过滤",
-  "GeoIP Code": "GeoIP 国家代码",
-  "Fallback IP CIDR": "回退 IP CIDR",
-  "IP CIDRs not using fallback servers": "不使用回退服务器的 IP CIDR，用逗号分隔",
-  "Fallback Domain": "回退域名",
-  "Domains using fallback servers": "使用回退服务器的域名，用逗号分隔",
-  "Hosts Settings": "Hosts 设置",
-  "Hosts": "Hosts",
-  "Custom domain to IP or domain mapping": "自定义域名到 IP 或域名的映射，用逗号分隔",
   "Website Tests": "网站测试",
   "Clash Info": "Clash 信息",
   "Core Version": "内核版本",
@@ -1072,6 +1025,100 @@
         },
         "messages": {
           "applied": "设置已应用"
+        }
+      },
+      "dns": {
+        "dialog": {
+          "title": "DNS 覆写",
+          "warning": "如果你不清楚这里的设置请不要修改，并保持 DNS 覆写开启"
+        },
+        "sections": {
+          "general": "DNS 设置",
+          "fallbackFilter": "回退过滤设置",
+          "hosts": "Hosts 设置"
+        },
+        "fields": {
+          "enable": "启用 DNS",
+          "listen": "DNS 监听地址",
+          "enhancedMode": "增强模式",
+          "fakeIpRange": "Fake IP 范围",
+          "fakeIpFilterMode": "Fake IP 过滤模式",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "启用 IPv6 DNS 解析"
+          },
+          "preferH3": {
+            "label": "优先使用 HTTP/3",
+            "description": "DNS DOH 使用 HTTP/3 协议"
+          },
+          "respectRules": {
+            "label": "遵循路由规则",
+            "description": "DNS 连接遵循路由规则"
+          },
+          "useHosts": {
+            "label": "使用 Hosts",
+            "description": "启用通过 hosts 文件解析域名"
+          },
+          "useSystemHosts": {
+            "label": "使用系统 Hosts",
+            "description": "启用通过系统 hosts 文件解析域名"
+          },
+          "directPolicy": {
+            "label": "直连域名服务器遵循策略",
+            "description": "是否遵循 nameserver-policy 设置"
+          },
+          "defaultNameserver": {
+            "label": "默认域名服务器",
+            "description": "用于解析 DNS 服务器的默认 DNS 服务器"
+          },
+          "nameserver": {
+            "label": "域名服务器",
+            "description": "DNS 服务器列表，用逗号分隔"
+          },
+          "fallback": {
+            "label": "回退服务器",
+            "description": "回退 DNS 服务器列表，用逗号分隔"
+          },
+          "proxy": {
+            "label": "代理节点DNS",
+            "description": "代理节点域名解析服务器，仅用于解析代理节点的域名，用逗号分隔"
+          },
+          "directNameserver": {
+            "label": "直连域名服务器",
+            "description": "直连出口域名解析服务器，支持 system 关键字，用逗号分隔"
+          },
+          "fakeIpFilter": {
+            "label": "Fake IP 过滤",
+            "description": "跳过 Fake IP 解析的域名，用逗号分隔"
+          },
+          "nameserverPolicy": {
+            "label": "域名服务器策略",
+            "description": "特定域名的 DNS 服务器，多个服务器使用分号分隔，格式: domain=server1;server2"
+          },
+          "geoipFiltering": {
+            "label": "GeoIP 过滤",
+            "description": "启用 GeoIP 回退过滤"
+          },
+          "geoipCode": "GeoIP 国家代码",
+          "fallbackIpCidr": {
+            "label": "回退 IP CIDR",
+            "description": "不使用回退服务器的 IP CIDR，用逗号分隔"
+          },
+          "fallbackDomain": {
+            "label": "回退域名",
+            "description": "使用回退服务器的域名，用逗号分隔"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "自定义域名到 IP 或域名的映射，用逗号分隔"
+          }
+        },
+        "messages": {
+          "saved": "DNS 设置已保存",
+          "configError": "DNS 配置错误："
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
         }
       }
     },

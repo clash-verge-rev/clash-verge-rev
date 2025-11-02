@@ -297,7 +297,6 @@
   "Network Interface": "網路介面",
   "Ip Address": "IP 位址",
   "Mac Address": "MAC 位址",
-  "IPv6": "IPv6",
   "Open URL": "開啟網址",
   "Replace host, port, secret with %host, %port, %secret": "使用 %host, %port, %secret 表示 主機, 連接埠, 存取金鑰",
   "Support %host, %port, %secret": "支援 %host, %port, %secret",
@@ -379,52 +378,6 @@
   "Merge File Key Error": "覆寫檔案鍵錯誤，變更已撤銷",
   "Merge File Error": "覆寫檔案錯誤，變更已撤銷",
   "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
-  "DNS Settings": "DNS 設定",
-  "DNS settings saved": "DNS 設定已儲存",
-  "DNS configuration error:": "DNS 設定錯誤：",
-  "DNS Overwrite": "DNS 覆寫",
-  "DNS Settings Warning": "如果你不清楚這裡的設定請不要修改，並保持 DNS 覆寫開啟",
-  "Enable DNS": "啟用 DNS",
-  "DNS Listen": "DNS 監聽位址",
-  "Enhanced Mode": "增強模式",
-  "Fake IP Range": "Fake IP 範圍",
-  "Fake IP Filter Mode": "Fake IP 篩選模式",
-  "Enable IPv6 DNS resolution": "啟用 IPv6 DNS 解析",
-  "Prefer H3": "優先使用 HTTP/3",
-  "DNS DOH使用HTTP/3": "DNS DOH 使用 HTTP/3 協定",
-  "Respect Rules": "遵循路由規則",
-  "DNS connections follow routing rules": "DNS 連線遵循路由規則",
-  "Use Hosts": "使用 Hosts",
-  "Enable to resolve hosts through hosts file": "啟用透過 hosts 檔案解析網域",
-  "Use System Hosts": "使用系統 Hosts",
-  "Enable to resolve hosts through system hosts file": "啟用透過系統 hosts 檔案解析網域",
-  "Direct Nameserver Follow Policy": "直連域名伺服器遵循策略",
-  "Whether to follow nameserver policy": "是否遵循 nameserver-policy 設定",
-  "Default Nameserver": "預設域名伺服器",
-  "Default DNS servers used to resolve DNS servers": "用於解析 DNS 伺服器的預設 DNS 伺服器",
-  "Nameserver": "域名伺服器",
-  "List of DNS servers": "DNS 伺服器列表，用逗號分隔",
-  "Fallback": "備援伺服器",
-  "List of fallback DNS servers": "備援 DNS 伺服器列表，用逗號分隔",
-  "Proxy Server Nameserver": "代理節點 DNS",
-  "Proxy Node Nameserver": "代理節點網域解析伺服器，僅用於解析代理節點的網域，用逗號分隔",
-  "Direct Nameserver": "直連域名伺服器",
-  "Direct outbound Nameserver": "直連輸出網域解析伺服器，支援 system 關鍵字，用逗號分隔",
-  "Fake IP Filter": "Fake IP 篩選",
-  "Domains that skip fake IP resolution": "跳過 Fake IP 解析的網域，用逗號分隔",
-  "Nameserver Policy": "域名伺服器策略",
-  "Domain-specific DNS server": "特定網域的 DNS 伺服器，多個伺服器使用分號分隔，格式: domain=server1;server2",
-  "Fallback Filter Settings": "備援篩選設定",
-  "GeoIP Filtering": "GeoIP 篩選",
-  "Enable GeoIP filtering for fallback": "啟用 GeoIP 備援篩選",
-  "GeoIP Code": "GeoIP 國家代碼",
-  "Fallback IP CIDR": "備援 IP CIDR",
-  "IP CIDRs not using fallback servers": "不使用備援伺服器的 IP CIDR，用逗號分隔",
-  "Fallback Domain": "備援網域",
-  "Domains using fallback servers": "使用備援伺服器的網域，用逗號分隔",
-  "Hosts Settings": "Hosts 設定",
-  "Hosts": "Hosts",
-  "Custom domain to IP or domain mapping": "自訂網域到 IP 或網域的映射，用逗號分隔",
   "Website Tests": "網站測試",
   "Clash Info": "Clash 資訊",
   "Core Version": "內核版本",
@@ -1072,6 +1025,100 @@
         },
         "messages": {
           "applied": "設定已套用"
+        }
+      },
+      "dns": {
+        "dialog": {
+          "title": "DNS 覆寫",
+          "warning": "如果你不清楚這裡的設定請不要修改，並保持 DNS 覆寫開啟"
+        },
+        "sections": {
+          "general": "DNS 設定",
+          "fallbackFilter": "備援篩選設定",
+          "hosts": "Hosts 設定"
+        },
+        "fields": {
+          "enable": "啟用 DNS",
+          "listen": "DNS 監聽位址",
+          "enhancedMode": "增強模式",
+          "fakeIpRange": "Fake IP 範圍",
+          "fakeIpFilterMode": "Fake IP 篩選模式",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "啟用 IPv6 DNS 解析"
+          },
+          "preferH3": {
+            "label": "優先使用 HTTP/3",
+            "description": "DNS DOH 使用 HTTP/3 協定"
+          },
+          "respectRules": {
+            "label": "遵循路由規則",
+            "description": "DNS 連線遵循路由規則"
+          },
+          "useHosts": {
+            "label": "使用 Hosts",
+            "description": "啟用透過 hosts 檔案解析網域"
+          },
+          "useSystemHosts": {
+            "label": "使用系統 Hosts",
+            "description": "啟用透過系統 hosts 檔案解析網域"
+          },
+          "directPolicy": {
+            "label": "直連域名伺服器遵循策略",
+            "description": "是否遵循 nameserver-policy 設定"
+          },
+          "defaultNameserver": {
+            "label": "預設域名伺服器",
+            "description": "用於解析 DNS 伺服器的預設 DNS 伺服器"
+          },
+          "nameserver": {
+            "label": "域名伺服器",
+            "description": "DNS 伺服器列表，用逗號分隔"
+          },
+          "fallback": {
+            "label": "備援伺服器",
+            "description": "備援 DNS 伺服器列表，用逗號分隔"
+          },
+          "proxy": {
+            "label": "代理節點 DNS",
+            "description": "代理節點網域解析伺服器，僅用於解析代理節點的網域，用逗號分隔"
+          },
+          "directNameserver": {
+            "label": "直連域名伺服器",
+            "description": "直連輸出網域解析伺服器，支援 system 關鍵字，用逗號分隔"
+          },
+          "fakeIpFilter": {
+            "label": "Fake IP 篩選",
+            "description": "跳過 Fake IP 解析的網域，用逗號分隔"
+          },
+          "nameserverPolicy": {
+            "label": "域名伺服器策略",
+            "description": "特定網域的 DNS 伺服器，多個伺服器使用分號分隔，格式: domain=server1;server2"
+          },
+          "geoipFiltering": {
+            "label": "GeoIP 篩選",
+            "description": "啟用 GeoIP 備援篩選"
+          },
+          "geoipCode": "GeoIP 國家代碼",
+          "fallbackIpCidr": {
+            "label": "備援 IP CIDR",
+            "description": "不使用備援伺服器的 IP CIDR，用逗號分隔"
+          },
+          "fallbackDomain": {
+            "label": "備援網域",
+            "description": "使用備援伺服器的網域，用逗號分隔"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "自訂網域到 IP 或網域的映射，用逗號分隔"
+          }
+        },
+        "messages": {
+          "saved": "DNS 設定已儲存",
+          "configError": "DNS 設定錯誤："
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
         }
       }
     },
