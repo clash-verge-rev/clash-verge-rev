@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "Prueba",
+      "actions": {
+        "testAll": "Probar todo",
+        "new": "Nuevo"
+      }
+    },
+    "unlock": {
+      "title": "Prueba de desbloqueo",
+      "actions": {
+        "testing": "Probando..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "Hogar",
@@ -264,13 +278,7 @@
   "Uploaded": "Subido",
   "Active Connections": "Conexiones activas",
   "Rule": "Regla",
-  "Test": "Prueba",
-  "Test All": "Probar todo",
-  "Testing...": "Probando...",
-  "Create Test": "Crear prueba",
-  "Edit Test": "Editar prueba",
   "Icon": "Icono",
-  "Test URL": "URL de prueba",
   "Settings": "Ajustes",
   "Reset to Default": "Restablecer a los valores predeterminados",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Verge requiere permisos de administrador para instalar el servicio del sistema",
   "DNS Settings": "Configuración de DNS",
   "DNS settings saved": "Configuración de DNS guardada",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "Sobrescritura de DNS",
   "DNS Settings Warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga habilitada la sobrescritura de DNS.",
   "Enable DNS": "Habilitar DNS",
@@ -447,7 +456,6 @@
   "Location": "Ubicación",
   "Timezone": "Zona horaria",
   "Auto refresh": "Actualización automática",
-  "Unlock Test": "Prueba de desbloqueo",
   "Pending": "Pendiente de detección",
   "Yes": "Soportado",
   "No": "No soportado",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "Prueba"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "Crear prueba",
+          "edit": "Editar prueba"
+        },
+        "fields": {
+          "url": "URL de prueba"
+        }
       }
     }
   },

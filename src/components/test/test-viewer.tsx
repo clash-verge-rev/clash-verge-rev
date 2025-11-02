@@ -124,7 +124,11 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={openType === "new" ? t("Create Test") : t("Edit Test")}
+      title={
+        openType === "new"
+          ? t("components.test.viewer.title.create")
+          : t("components.test.viewer.title.edit")
+      }
       contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
       okBtn={t("Save")}
       cancelBtn={t("Cancel")}
@@ -162,7 +166,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
             {...field}
             multiline
             maxRows={3}
-            label={t("Test URL")}
+            label={t("components.test.viewer.fields.url")}
           />
         )}
       />

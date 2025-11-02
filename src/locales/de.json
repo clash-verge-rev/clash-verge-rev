@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "Testen",
+      "actions": {
+        "testAll": "Alle testen",
+        "new": "Neu"
+      }
+    },
+    "unlock": {
+      "title": "Entsperrungstest",
+      "actions": {
+        "testing": "Wird getestet..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "Startseite",
@@ -264,13 +278,7 @@
   "Uploaded": "Hochgeladen",
   "Active Connections": "Aktive Verbindungen",
   "Rule": "Regel",
-  "Test": "Testen",
-  "Test All": "Alle testen",
-  "Testing...": "Wird getestet...",
-  "Create Test": "Neuen Test erstellen",
-  "Edit Test": "Test bearbeiten",
   "Icon": "Symbol",
-  "Test URL": "Test-URL",
   "Settings": "Einstellungen",
   "Reset to Default": "Auf Standardwerte zurücksetzen",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Verge benötigt Administratorrechte, um den Systemdienst zu installieren.",
   "DNS Settings": "DNS-Einstellungen",
   "DNS settings saved": "DNS-Einstellungen wurden gespeichert",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS-Überschreibung",
   "DNS Settings Warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung aktiviert.",
   "Enable DNS": "DNS aktivieren",
@@ -447,7 +456,6 @@
   "Location": "Standort",
   "Timezone": "Zeitzone",
   "Auto refresh": "Automatische Aktualisierung",
-  "Unlock Test": "Entsperrungstest",
   "Pending": "Wartend auf Prüfung",
   "Yes": "Unterstützt",
   "No": "Nicht unterstützt",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "Testen"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "Neuen Test erstellen",
+          "edit": "Test bearbeiten"
+        },
+        "fields": {
+          "url": "Test-URL"
+        }
       }
     }
   },

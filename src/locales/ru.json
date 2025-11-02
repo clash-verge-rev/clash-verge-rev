@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "Тест",
+      "actions": {
+        "testAll": "Тестировать все",
+        "new": "Новый"
+      }
+    },
+    "unlock": {
+      "title": "Тест доступности веб-сайтов",
+      "actions": {
+        "testing": "Тестирование ..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "Главная",
@@ -264,13 +278,7 @@
   "Uploaded": "Загружено",
   "Active Connections": "Активные соединения",
   "Rule": "Правило",
-  "Test": "Тест",
-  "Test All": "Тестировать все",
-  "Testing...": "Тестирование ...",
-  "Create Test": "Создать тест",
-  "Edit Test": "Редактировать тест",
   "Icon": "Иконка",
-  "Test URL": "URL проверка",
   "Settings": "Настройки",
   "Reset to Default": "Сбросить настройки",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы",
   "DNS Settings": "Настройки DNS",
   "DNS settings saved": "DNS settings saved",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "Переопределение настроек DNS",
   "DNS Settings Warning": "Если вы не знакомы с этими настройками, пожалуйста, не изменяйте и не отключайте их",
   "Enable DNS": "Включить DNS",
@@ -447,7 +456,6 @@
   "Location": "Location",
   "Timezone": "Timezone",
   "Auto refresh": "Автоматическое обновление через",
-  "Unlock Test": "Тест доступности веб-сайтов",
   "Pending": "В ожидании",
   "Yes": "Да",
   "No": "Нет",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "Тест"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "Создать тест",
+          "edit": "Редактировать тест"
+        },
+        "fields": {
+          "url": "URL проверка"
+        }
       }
     }
   },

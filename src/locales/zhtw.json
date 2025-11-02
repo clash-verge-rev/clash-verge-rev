@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "測試",
+      "actions": {
+        "testAll": "測試全部",
+        "new": "新增"
+      }
+    },
+    "unlock": {
+      "title": "解鎖測試",
+      "actions": {
+        "testing": "測試中..."
+      },
+      "empty": "目前沒有解鎖測試項目"
     }
   },
   "Label-Home": "首 頁",
@@ -264,13 +278,7 @@
   "Uploaded": "上傳量",
   "Active Connections": "作用中連線",
   "Rule": "規則",
-  "Test": "測試",
-  "Test All": "測試全部",
-  "Testing...": "測試中...",
-  "Create Test": "新增測試",
-  "Edit Test": "編輯測試",
   "Icon": "圖示",
-  "Test URL": "測試網址",
   "Settings": "設定",
   "Reset to Default": "重設為預設值",
   "TUN Mode automatically disabled due to service unavailable": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
@@ -448,7 +456,6 @@
   "Location": "位置",
   "Timezone": "時區",
   "Auto refresh": "自動重整",
-  "Unlock Test": "解鎖測試",
   "Pending": "待檢測",
   "Yes": "支援",
   "No": "不支援",
@@ -1075,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "測試"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "新增測試",
+          "edit": "編輯測試"
+        },
+        "fields": {
+          "url": "測試網址"
+        }
       }
     }
   },

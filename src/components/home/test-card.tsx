@@ -177,12 +177,12 @@ export const TestCard = () => {
       icon={<NetworkCheck />}
       action={
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title={t("Test All")} arrow>
+          <Tooltip title={t("pages.test.actions.testAll")} arrow>
             <IconButton size="small" onClick={handleTestAll}>
               <NetworkCheck fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t("Create Test")} arrow>
+          <Tooltip title={t("components.test.viewer.title.create")} arrow>
             <IconButton size="small" onClick={handleCreateTest}>
               <Add fontSize="small" />
             </IconButton>

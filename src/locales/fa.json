@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "آزمون",
+      "actions": {
+        "testAll": "آزمون همه",
+        "new": "جدید"
+      }
+    },
+    "unlock": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "Home",
@@ -264,13 +278,7 @@
   "Uploaded": "بارگذاری شده",
   "Active Connections": "Active Connections",
   "Rule": "قانون",
-  "Test": "آزمون",
-  "Test All": "آزمون همه",
-  "Testing...": "Testing...",
-  "Create Test": "ایجاد آزمون",
-  "Edit Test": "ویرایش آزمون",
   "Icon": "آیکون",
-  "Test URL": "آدرس آزمون",
   "Settings": "تنظیمات",
   "Reset to Default": "بازنشانی به پیش‌فرض",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Verge برای نصب مجدد سرویس سیستم به امتیازات مدیر نیاز دارد",
   "DNS Settings": "DNS Settings",
   "DNS settings saved": "DNS settings saved",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS Overwrite",
   "DNS Settings Warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled",
   "Enable DNS": "Enable DNS",
@@ -447,7 +456,6 @@
   "Location": "Location",
   "Timezone": "Timezone",
   "Auto refresh": "Auto refresh",
-  "Unlock Test": "Unlock Test",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "آزمون"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "ایجاد آزمون",
+          "edit": "ویرایش آزمون"
+        },
+        "fields": {
+          "url": "آدرس آزمون"
+        }
       }
     }
   },

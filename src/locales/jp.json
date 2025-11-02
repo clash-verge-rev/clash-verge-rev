@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "テスト",
+      "actions": {
+        "testAll": "すべてテスト",
+        "new": "新規作成"
+      }
+    },
+    "unlock": {
+      "title": "ロック解除テスト",
+      "actions": {
+        "testing": "テスト中..."
+      },
+      "empty": "アンロックテスト項目はありません"
     }
   },
   "Label-Home": "ホーム",
@@ -264,13 +278,7 @@
   "Uploaded": "アップロード量",
   "Active Connections": "アクティブな接続",
   "Rule": "ルール",
-  "Test": "テスト",
-  "Test All": "すべてテスト",
-  "Testing...": "テスト中...",
-  "Create Test": "新規テストを作成",
-  "Edit Test": "テストを編集",
   "Icon": "アイコン",
-  "Test URL": "テストURL",
   "Settings": "設定",
   "Reset to Default": "デフォルト値にリセット",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Vergeはシステムサービスをインストールするために管理者権限が必要です。",
   "DNS Settings": "DNS設定",
   "DNS settings saved": "DNS設定が保存されました。",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS上書き",
   "DNS Settings Warning": "ここの設定がわからない場合は、変更しないでください。DNS上書きを有効にしたままにしてください。",
   "Enable DNS": "DNSを有効にする",
@@ -447,7 +456,6 @@
   "Location": "位置",
   "Timezone": "タイムゾーン",
   "Auto refresh": "自動更新",
-  "Unlock Test": "ロック解除テスト",
   "Pending": "検査待ち",
   "Yes": "サポートする",
   "No": "サポートしない",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "テスト"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "新規テストを作成",
+          "edit": "テストを編集"
+        },
+        "fields": {
+          "url": "テストURL"
+        }
       }
     }
   },

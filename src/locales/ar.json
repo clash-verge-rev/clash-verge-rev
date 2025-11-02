@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "اختبار",
+      "actions": {
+        "testAll": "اختبار الكل",
+        "new": "جديد"
+      }
+    },
+    "unlock": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "Home",
@@ -264,13 +278,7 @@
   "Uploaded": "تم الرفع",
   "Active Connections": "Active Connections",
   "Rule": "قاعدة",
-  "Test": "اختبار",
-  "Test All": "اختبار الكل",
-  "Testing...": "Testing...",
-  "Create Test": "إنشاء اختبار",
-  "Edit Test": "تعديل الاختبار",
   "Icon": "أيقونة",
-  "Test URL": "رابط الاختبار",
   "Settings": "الإعدادات",
   "Reset to Default": "إعادة تعيين إلى الافتراضي",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "يتطلب Clash Verge امتيازات المسؤول لإعادة تثبيت خدمة النظام",
   "DNS Settings": "DNS Settings",
   "DNS settings saved": "DNS settings saved",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS Overwrite",
   "DNS Settings Warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled",
   "Enable DNS": "Enable DNS",
@@ -447,7 +456,6 @@
   "Location": "Location",
   "Timezone": "Timezone",
   "Auto refresh": "Auto refresh",
-  "Unlock Test": "Unlock Test",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "اختبار"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "إنشاء اختبار",
+          "edit": "تعديل الاختبار"
+        },
+        "fields": {
+          "url": "رابط الاختبار"
+        }
       }
     }
   },

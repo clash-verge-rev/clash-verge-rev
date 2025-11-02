@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "Tes",
+      "actions": {
+        "testAll": "Tes Semua",
+        "new": "Baru"
+      }
+    },
+    "unlock": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "Home",
@@ -264,13 +278,7 @@
   "Uploaded": "Diunggah",
   "Active Connections": "Active Connections",
   "Rule": "Aturan",
-  "Test": "Tes",
-  "Test All": "Tes Semua",
-  "Testing...": "Testing...",
-  "Create Test": "Buat Tes",
-  "Edit Test": "Ubah Tes",
   "Icon": "Ikon",
-  "Test URL": "URL Tes",
   "Settings": "Pengaturan",
   "Reset to Default": "Setel Ulang ke Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Verge memerlukan hak administrator untuk menginstal ulang layanan sistem",
   "DNS Settings": "DNS Settings",
   "DNS settings saved": "DNS settings saved",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS Overwrite",
   "DNS Settings Warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled",
   "Enable DNS": "Enable DNS",
@@ -447,7 +456,6 @@
   "Location": "Location",
   "Timezone": "Timezone",
   "Auto refresh": "Auto refresh",
-  "Unlock Test": "Unlock Test",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "Tes"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "Buat Tes",
+          "edit": "Ubah Tes"
+        },
+        "fields": {
+          "url": "URL Tes"
+        }
       }
     }
   },

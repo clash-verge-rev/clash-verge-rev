@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "测试",
+      "actions": {
+        "testAll": "测试全部",
+        "new": "新建"
+      }
+    },
+    "unlock": {
+      "title": "解锁测试",
+      "actions": {
+        "testing": "测试中..."
+      },
+      "empty": "暂无解锁测试项目"
     }
   },
   "Label-Home": "首 页",
@@ -264,13 +278,7 @@
   "Uploaded": "上传量",
   "Active Connections": "活跃连接",
   "Rule": "规则",
-  "Test": "测试",
-  "Test All": "测试全部",
-  "Testing...": "测试中...",
-  "Create Test": "新建测试",
-  "Edit Test": "编辑测试",
   "Icon": "图标",
-  "Test URL": "测试地址",
   "Settings": "设置",
   "Reset to Default": "重置为默认值",
   "TUN Mode automatically disabled due to service unavailable": "由于服务不可用，TUN 模式已自动关闭",
@@ -448,7 +456,6 @@
   "Location": "位置",
   "Timezone": "时区",
   "Auto refresh": "自动刷新",
-  "Unlock Test": "解锁测试",
   "Pending": "待检测",
   "Yes": "支持",
   "No": "不支持",
@@ -1075,6 +1082,22 @@
         "genericError": "更新失败: {{message}}",
         "none": "没有可更新的提供者",
         "allUpdated": "全部提供者更新成功"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "测试"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "新建测试",
+          "edit": "编辑测试"
+        },
+        "fields": {
+          "url": "测试地址"
+        }
       }
     }
   },

@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "Test",
+      "actions": {
+        "testAll": "Tümünü Test Et",
+        "new": "Yeni"
+      }
+    },
+    "unlock": {
+      "title": "Kilit Açma Testi",
+      "actions": {
+        "testing": "Test Ediliyor..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "Ana Sayfa",
@@ -264,13 +278,7 @@
   "Uploaded": "Yüklenen",
   "Active Connections": "Aktif Bağlantılar",
   "Rule": "Kural",
-  "Test": "Test",
-  "Test All": "Tümünü Test Et",
-  "Testing...": "Test Ediliyor...",
-  "Create Test": "Test Oluştur",
-  "Edit Test": "Testi Düzenle",
   "Icon": "Simge",
-  "Test URL": "Test URL'si",
   "Settings": "Ayarlar",
   "Reset to Default": "Varsayılana Sıfırla",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Verge sistem hizmetini yeniden kurmak için yönetici ayrıcalıkları gerektiriyor",
   "DNS Settings": "DNS Ayarları",
   "DNS settings saved": "DNS ayarları kaydedildi",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS Üzerine Yazma",
   "DNS Settings Warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı etkin tutun",
   "Enable DNS": "DNS'i Etkinleştir",
@@ -447,7 +456,6 @@
   "Location": "Konum",
   "Timezone": "Saat Dilimi",
   "Auto refresh": "Otomatik yenile",
-  "Unlock Test": "Kilit Açma Testi",
   "Pending": "Beklemede",
   "Yes": "Evet",
   "No": "Hayır",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "Test"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "Test Oluştur",
+          "edit": "Testi Düzenle"
+        },
+        "fields": {
+          "url": "Test URL'si"
+        }
       }
     }
   },

@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "테스트",
+      "actions": {
+        "testAll": "모두 테스트",
+        "new": "새로 만들기"
+      }
+    },
+    "unlock": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "테스트 중..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "홈",
@@ -264,13 +278,7 @@
   "Uploaded": "업로드됨",
   "Active Connections": "활성 연결",
   "Rule": "규칙",
-  "Test": "테스트",
-  "Test All": "모두 테스트",
-  "Testing...": "테스트 중...",
-  "Create Test": "테스트 생성",
-  "Edit Test": "테스트 편집",
   "Icon": "아이콘",
-  "Test URL": "테스트 URL",
   "Settings": "설정",
   "Reset to Default": "Reset to Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
   "DNS Settings": "DNS Settings",
   "DNS settings saved": "DNS settings saved",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS Overwrite",
   "DNS Settings Warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled",
   "Enable DNS": "Enable DNS",
@@ -447,7 +456,6 @@
   "Location": "Location",
   "Timezone": "Timezone",
   "Auto refresh": "Auto refresh",
-  "Unlock Test": "Unlock Test",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "테스트"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "테스트 생성",
+          "edit": "테스트 편집"
+        },
+        "fields": {
+          "url": "테스트 URL"
+        }
       }
     }
   },

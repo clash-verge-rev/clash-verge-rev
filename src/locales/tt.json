@@ -183,6 +183,20 @@
         "warn": "WARN",
         "error": "ERROR"
       }
+    },
+    "test": {
+      "title": "Тест",
+      "actions": {
+        "testAll": "Барчасын тестлау",
+        "new": "Яңа"
+      }
+    },
+    "unlock": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items"
     }
   },
   "Label-Home": "Home",
@@ -264,13 +278,7 @@
   "Uploaded": "Чыгарылган",
   "Active Connections": "Active Connections",
   "Rule": "Кагыйдә",
-  "Test": "Тест",
-  "Test All": "Барчасын тестлау",
-  "Testing...": "Testing...",
-  "Create Test": "Тест булдыру",
-  "Edit Test": "Тестны үзгәртү",
   "Icon": "Иконка",
-  "Test URL": "Тест URL-ы",
   "Settings": "Көйләүләр",
   "Reset to Default": "Башлангычка кайтару",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
@@ -373,6 +381,7 @@
   "Service Administrator Prompt": "Clash Verge система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә",
   "DNS Settings": "DNS Settings",
   "DNS settings saved": "DNS settings saved",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS Overwrite",
   "DNS Settings Warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled",
   "Enable DNS": "Enable DNS",
@@ -447,7 +456,6 @@
   "Location": "Location",
   "Timezone": "Timezone",
   "Auto refresh": "Auto refresh",
-  "Unlock Test": "Unlock Test",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -1074,6 +1082,22 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
+      }
+    },
+    "test": {
+      "item": {
+        "actions": {
+          "test": "Тест"
+        }
+      },
+      "viewer": {
+        "title": {
+          "create": "Тест булдыру",
+          "edit": "Тестны үзгәртү"
+        },
+        "fields": {
+          "url": "Тест URL-ы"
+        }
       }
     }
   },
