@@ -99,7 +99,7 @@ impl Sysopt {
         let proxy_manager = EventDrivenProxyManager::global();
         proxy_manager.notify_app_started();
 
-        log::info!(target: "app", "已启用事件驱动代理守卫");
+        logging!(info, Type::Core, "已启用事件驱动代理守卫");
         Ok(())
     }
 
@@ -224,14 +224,22 @@ impl Sysopt {
             let mut sysproxy: Sysproxy = match Sysproxy::get_system_proxy() {
                 Ok(sp) => sp,
                 Err(e) => {
-                    log::warn!(target: "app", "重置代理时获取系统代理配置失败: {e}, 使用默认配置");
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "Warning: 重置代理时获取系统代理配置失败: {e}, 使用默认配置"
+                    );
                     Sysproxy::default()
                 }
             };
             let mut autoproxy = match Autoproxy::get_auto_proxy() {
                 Ok(ap) => ap,
                 Err(e) => {
-                    log::warn!(target: "app", "重置代理时获取自动代理配置失败: {e}, 使用默认配置");
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "Warning: 重置代理时获取自动代理配置失败: {e}, 使用默认配置"
+                    );
                     Autoproxy::default()
                 }
             };
@@ -265,14 +273,14 @@ impl Sysopt {
         {
             if is_enable {
                 if let Err(e) = startup_shortcut::create_shortcut().await {
-                    log::error!(target: "app", "创建启动快捷方式失败: {e}");
+                    logging!(error, Type::Setup, "创建启动快捷方式失败: {e}");
                     // 如果快捷方式创建失败，回退到原来的方法
                     self.try_original_autostart_method(is_enable);
                 } else {
                     return Ok(());
                 }
             } else if let Err(e) = startup_shortcut::remove_shortcut().await {
-                log::error!(target: "app", "删除启动快捷方式失败: {e}");
+                logging!(error, Type::Setup, "删除启动快捷方式失败: {e}");
                 self.try_original_autostart_method(is_enable);
             } else {
                 return Ok(());
@@ -307,11 +315,11 @@ impl Sysopt {
         {
             match startup_shortcut::is_shortcut_enabled() {
                 Ok(enabled) => {
-                    log::info!(target: "app", "快捷方式自启动状态: {enabled}");
+                    logging!(info, Type::System, "快捷方式自启动状态: {enabled}");
                     return Ok(enabled);
                 }
                 Err(e) => {
-                    log::error!(target: "app", "检查快捷方式失败，尝试原来的方法: {e}");
+                    logging!(error, Type::System, "检查快捷方式失败，尝试原来的方法: {e}");
                 }
             }
         }
@@ -322,11 +330,11 @@ impl Sysopt {
 
         match autostart_manager.is_enabled() {
             Ok(status) => {
-                log::info!(target: "app", "Auto launch status: {status}");
+                logging!(info, Type::System, "Auto launch status: {status}");
                 Ok(status)
             }
             Err(e) => {
-                log::error!(target: "app", "Failed to get auto launch status: {e}");
+                logging!(error, Type::System, "Failed to get auto launch status: {e}");
                 Err(anyhow::anyhow!("Failed to get auto launch status: {}", e))
             }
         }

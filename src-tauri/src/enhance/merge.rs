@@ -1,3 +1,5 @@
+use crate::{logging, utils::logging::Type};
+
 use super::use_lowercase;
 use serde_yaml_ng::{self, Mapping, Value};
 
@@ -19,7 +21,11 @@ pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
     deep_merge(&mut config, &Value::from(merge));
 
     config.as_mapping().cloned().unwrap_or_else(|| {
-        log::error!("Failed to convert merged config to mapping, using empty mapping");
+        logging!(
+            error,
+            Type::Core,
+            "Failed to convert merged config to mapping, using empty mapping"
+        );
         Mapping::new()
     })
 }

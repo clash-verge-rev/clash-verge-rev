@@ -6,10 +6,14 @@ pub mod seq;
 mod tun;
 
 use self::{chain::*, field::*, merge::*, script::*, seq::*, tun::*};
+use crate::constants;
+use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
+use crate::{logging, utils::logging::Type};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
+use tokio::fs;
 
 type ResultLog = Vec<(String, String)>;
 #[derive(Debug)]
@@ -136,7 +140,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&merge_uid).ok().cloned()
+            profiles.get_item(merge_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -153,7 +157,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&script_uid).ok().cloned()
+            profiles.get_item(script_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -170,7 +174,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&rules_uid).ok().cloned()
+            profiles.get_item(rules_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -187,7 +191,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&proxies_uid).ok().cloned()
+            profiles.get_item(proxies_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -204,7 +208,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&groups_uid).ok().cloned()
+            profiles.get_item(groups_uid).ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -221,7 +225,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&"Merge".into()).ok().cloned()
+            profiles.get_item("Merge").ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -238,7 +242,7 @@ async fn collect_profile_items() -> ProfileItems {
         let item = {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_ref();
-            profiles.get_item(&"Script".into()).ok().cloned()
+            profiles.get_item("Script").ok().cloned()
         };
         if let Some(item) = item {
             <Option<ChainItem>>::from_async(&item).await
@@ -420,14 +424,14 @@ fn apply_builtin_scripts(
             .filter(|(s, _)| s.is_support(clash_core.as_ref()))
             .map(|(_, c)| c)
             .for_each(|item| {
-                log::debug!(target: "app", "run builtin script {}", item.uid);
+                logging!(debug, Type::Core, "run builtin script {}", item.uid);
                 if let ChainType::Script(script) = item.data {
                     match use_script(script, config.to_owned(), "".into()) {
                         Ok((res_config, _)) => {
                             config = res_config;
                         }
                         Err(err) => {
-                            log::error!(target: "app", "builtin script error `{err}`");
+                            logging!(error, Type::Core, "builtin script error `{err}`");
                         }
                     }
                 }
@@ -437,34 +441,29 @@ fn apply_builtin_scripts(
     config
 }
 
-fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
-    if enable_dns_settings {
-        use crate::utils::dirs;
-        use std::fs;
+async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
+    if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
+        let dns_path = app_dir.join(constants::files::DNS_CONFIG);
 
-        if let Ok(app_dir) = dirs::app_home_dir() {
-            let dns_path = app_dir.join("dns_config.yaml");
-
-            if dns_path.exists()
-                && let Ok(dns_yaml) = fs::read_to_string(&dns_path)
-                && let Ok(dns_config) = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+        if dns_path.exists()
+            && let Ok(dns_yaml) = fs::read_to_string(&dns_path).await
+            && let Ok(dns_config) = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+        {
+            if let Some(hosts_value) = dns_config.get("hosts")
+                && hosts_value.is_mapping()
             {
-                if let Some(hosts_value) = dns_config.get("hosts")
-                    && hosts_value.is_mapping()
-                {
-                    config.insert("hosts".into(), hosts_value.clone());
-                    log::info!(target: "app", "apply hosts configuration");
-                }
+                config.insert("hosts".into(), hosts_value.clone());
+                logging!(info, Type::Core, "apply hosts configuration");
+            }
 
-                if let Some(dns_value) = dns_config.get("dns") {
-                    if let Some(dns_mapping) = dns_value.as_mapping() {
-                        config.insert("dns".into(), dns_mapping.clone().into());
-                        log::info!(target: "app", "apply dns_config.yaml (dns section)");
-                    }
-                } else {
-                    config.insert("dns".into(), dns_config.into());
-                    log::info!(target: "app", "apply dns_config.yaml");
+            if let Some(dns_value) = dns_config.get("dns") {
+                if let Some(dns_mapping) = dns_value.as_mapping() {
+                    config.insert("dns".into(), dns_mapping.clone().into());
+                    logging!(info, Type::Core, "apply dns_config.yaml (dns section)");
                 }
+            } else {
+                config.insert("dns".into(), dns_config.into());
+                logging!(info, Type::Core, "apply dns_config.yaml");
             }
         }
     }
@@ -540,7 +539,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     config = use_sort(config);
 
     // dns settings
-    config = apply_dns_settings(config, enable_dns_settings);
+    config = apply_dns_settings(config, enable_dns_settings).await;
 
     let mut exists_set = HashSet::new();
     exists_set.extend(exists_keys);

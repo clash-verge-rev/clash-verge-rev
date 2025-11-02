@@ -42,7 +42,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 reqwest = { version = "0.12.24", features = ["json", "cookies"] }
 regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-tauri = { version = "2.9.1", features = [
+tauri = { version = "2.9.2", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -77,7 +77,7 @@ backoff = { version = "0.4.0", features = ["tokio"] }
 compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.4"
 flexi_logger = "0.31.7"
-console-subscriber = { version = "0.4.1", optional = true }
+console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }

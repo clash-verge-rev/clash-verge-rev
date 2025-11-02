@@ -3,6 +3,7 @@ use crate::utils::{
     dirs::{self, PathBufExec},
     help,
 };
+use crate::{logging, utils::logging::Type};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
@@ -31,7 +32,7 @@ pub struct CleanupResult {
 macro_rules! patch {
     ($lv: expr, $rv: expr, $key: tt) => {
         if ($rv.$key).is_some() {
-            $lv.$key = $rv.$key;
+            $lv.$key = $rv.$key.clone();
         }
     };
 }
@@ -67,12 +68,12 @@ impl IProfiles {
                     profiles
                 }
                 Err(err) => {
-                    log::error!(target: "app", "{err}");
+                    logging!(error, Type::Config, "{err}");
                     Self::template()
                 }
             },
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                logging!(error, Type::Config, "{err}");
                 Self::template()
             }
         }
@@ -122,28 +123,30 @@ impl IProfiles {
     }
 
     /// find the item by the uid
-    pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
-        if let Some(items) = self.items.as_ref() {
-            let some_uid = Some(uid.clone());
+    pub fn get_item(&self, uid: impl AsRef<str>) -> Result<&PrfItem> {
+        let uid_str = uid.as_ref();
 
+        if let Some(items) = self.items.as_ref() {
             for each in items.iter() {
-                if each.uid == some_uid {
+                if let Some(uid_val) = &each.uid
+                    && uid_val.as_str() == uid_str
+                {
                     return Ok(each);
                 }
             }
         }
 
-        bail!("failed to get the profile item \"uid:{uid}\"");
+        bail!("failed to get the profile item \"uid:{}\"", uid_str);
     }
 
     /// append new item
     /// if the file_data is some
     /// then should save the data to file
-    pub async fn append_item(&mut self, mut item: PrfItem) -> Result<()> {
-        if item.uid.is_none() {
+    pub async fn append_item(&mut self, item: &mut PrfItem) -> Result<()> {
+        let uid = &item.uid;
+        if uid.is_none() {
             bail!("the uid should not be null");
         }
-        let uid = item.uid.clone();
 
         // save the file data
         // move the field value after save
@@ -165,7 +168,7 @@ impl IProfiles {
         if self.current.is_none()
             && (item.itype == Some("remote".into()) || item.itype == Some("local".into()))
         {
-            self.current = uid;
+            self.current = uid.to_owned();
         }
 
         if self.items.is_none() {
@@ -173,24 +176,23 @@ impl IProfiles {
         }
 
         if let Some(items) = self.items.as_mut() {
-            items.push(item)
+            items.push(item.to_owned());
         }
 
-        // self.save_file().await
         Ok(())
     }
 
     /// reorder items
-    pub async fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
+    pub async fn reorder(&mut self, active_id: &String, over_id: &String) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
         let mut new_index = None;
 
         for (i, _) in items.iter().enumerate() {
-            if items[i].uid == Some(active_id.clone()) {
+            if items[i].uid.as_ref() == Some(active_id) {
                 old_index = Some(i);
             }
-            if items[i].uid == Some(over_id.clone()) {
+            if items[i].uid.as_ref() == Some(over_id) {
                 new_index = Some(i);
             }
         }
@@ -206,11 +208,11 @@ impl IProfiles {
     }
 
     /// update the item value
-    pub async fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
+    pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
-            if each.uid == Some(uid.clone()) {
+            if each.uid.as_ref() == Some(uid) {
                 patch!(each, item, itype);
                 patch!(each, item, name);
                 patch!(each, item, desc);
@@ -232,13 +234,13 @@ impl IProfiles {
 
     /// be used to update the remote item
     /// only patch `updated` `extra` `file_data`
-    pub async fn update_item(&mut self, uid: String, mut item: PrfItem) -> Result<()> {
+    pub async fn update_item(&mut self, uid: &String, item: &mut PrfItem) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
         // find the item
-        let _ = self.get_item(&uid)?;
+        let _ = self.get_item(uid)?;
 
         if let Some(items) = self.items.as_mut() {
             let some_uid = Some(uid.clone());
@@ -247,8 +249,8 @@ impl IProfiles {
                 if each.uid == some_uid {
                     each.extra = item.extra;
                     each.updated = item.updated;
-                    each.home = item.home;
-                    each.option = PrfOption::merge(each.option.clone(), item.option);
+                    each.home = item.home.to_owned();
+                    each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
                     // save the file data
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
@@ -279,10 +281,10 @@ impl IProfiles {
 
     /// delete item
     /// if delete the current then return true
-    pub async fn delete_item(&mut self, uid: String) -> Result<bool> {
-        let current = self.current.as_ref().unwrap_or(&uid);
+    pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
+        let current = self.current.as_ref().unwrap_or(uid);
         let current = current.clone();
-        let item = self.get_item(&uid)?;
+        let item = self.get_item(uid)?;
         let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
         let script_uid = item.option.as_ref().and_then(|e| e.script.clone());
         let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
@@ -330,7 +332,7 @@ impl IProfiles {
                 .await;
         }
         // delete the original uid
-        if current == uid {
+        if current == *uid {
             self.current = None;
             for item in items.iter() {
                 if item.itype == Some("remote".into()) || item.itype == Some("local".into()) {
@@ -342,7 +344,7 @@ impl IProfiles {
 
         self.items = Some(items);
         self.save_file().await?;
-        Ok(current == uid)
+        Ok(current == *uid)
     }
 
     /// 获取current指向的订阅内容
@@ -491,7 +493,7 @@ impl IProfiles {
             {
                 // 检查是否为全局扩展文件
                 if protected_files.contains(file_name) {
-                    log::debug!(target: "app", "保护全局扩展配置文件: {file_name}");
+                    logging!(debug, Type::Config, "保护全局扩展配置文件: {file_name}");
                     continue;
                 }
 
@@ -500,11 +502,15 @@ impl IProfiles {
                     match path.to_path_buf().remove_if_exists().await {
                         Ok(_) => {
                             deleted_files.push(file_name.into());
-                            log::info!(target: "app", "已清理冗余文件: {file_name}");
+                            logging!(info, Type::Config, "已清理冗余文件: {file_name}");
                         }
                         Err(e) => {
                             failed_deletions.push(format!("{file_name}: {e}").into());
-                            log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
+                            logging!(
+                                warn,
+                                Type::Config,
+                                "Warning: 清理文件失败: {file_name} - {e}"
+                            );
                         }
                     }
                 }
@@ -517,8 +523,9 @@ impl IProfiles {
             failed_deletions,
         };
 
-        log::info!(
-            target: "app",
+        logging!(
+            info,
+            Type::Config,
             "Profile 文件清理完成: 总文件数={}, 删除文件数={}, 失败数={}",
             result.total_files,
             result.deleted_files.len(),
@@ -626,14 +633,14 @@ impl IProfiles {
 use crate::config::Config;
 
 pub async fn profiles_append_item_with_filedata_safe(
-    item: PrfItem,
+    item: &PrfItem,
     file_data: Option<String>,
 ) -> Result<()> {
-    let item = PrfItem::from(item, file_data).await?;
+    let item = &mut PrfItem::from(item, file_data).await?;
     profiles_append_item_safe(item).await
 }
 
-pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
+pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -643,7 +650,7 @@ pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
         .await
 }
 
-pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()> {
+pub async fn profiles_patch_item_safe(index: &String, item: &PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -653,7 +660,7 @@ pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()
         .await
 }
 
-pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
+pub async fn profiles_delete_item_safe(index: &String) -> Result<bool> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -663,7 +670,7 @@ pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
         .await
 }
 
-pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result<()> {
+pub async fn profiles_reorder_safe(active_id: &String, over_id: &String) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -683,7 +690,7 @@ pub async fn profiles_save_file_safe() -> Result<()> {
         .await
 }
 
-pub async fn profiles_draft_update_item_safe(index: String, item: PrfItem) -> Result<()> {
+pub async fn profiles_draft_update_item_safe(index: &String, item: &mut PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {

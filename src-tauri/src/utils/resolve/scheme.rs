@@ -3,17 +3,22 @@ use percent_encoding::percent_decode_str;
 use smartstring::alias::String;
 use tauri::Url;
 
-use crate::{config::PrfItem, core::handle, logging, logging_error, utils::logging::Type};
+use crate::{
+    config::{PrfItem, profiles},
+    core::handle,
+    logging, logging_error,
+    utils::logging::Type,
+};
 
-pub(super) async fn resolve_scheme(param: String) -> Result<()> {
-    log::info!(target:"app", "received deep link: {param}");
+pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
+    logging!(info, Type::Config, "received deep link: {param}");
 
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param
             .get(2..param.len() - 2)
             .ok_or_else(|| anyhow::anyhow!("Invalid string slice boundaries"))?
     } else {
-        param.as_str()
+        param
     };
 
     // 解析 URL
@@ -25,10 +30,11 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
     };
 
     if link_parsed.scheme() == "clash" || link_parsed.scheme() == "clash-verge" {
-        let name = link_parsed
+        let name_owned: Option<String> = link_parsed
             .query_pairs()
             .find(|(key, _)| key == "name")
-            .map(|(_, value)| value.into());
+            .map(|(_, value)| value.into_owned().into());
+        let name = name_owned.as_ref();
 
         let url_param = if let Some(query) = link_parsed.query() {
             let prefix = "url=";
@@ -43,10 +49,10 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
         };
 
         match url_param {
-            Some(url) => {
-                log::info!(target:"app", "decoded subscription url: {url}");
+            Some(ref url) => {
+                logging!(info, Type::Config, "decoded subscription url: {url}");
                 match PrfItem::from_url(url.as_ref(), name, None, None).await {
-                    Ok(item) => {
+                    Ok(mut item) => {
                         let uid = match item.uid.clone() {
                             Some(uid) => uid,
                             None => {
@@ -58,7 +64,7 @@ pub(super) async fn resolve_scheme(param: String) -> Result<()> {
                                 return Ok(());
                             }
                         };
-                        let result = crate::config::profiles::profiles_append_item_safe(item).await;
+                        let result = profiles::profiles_append_item_safe(&mut item).await;
                         logging_error!(
                             Type::Config,
                             "failed to import subscription url: {:?}",

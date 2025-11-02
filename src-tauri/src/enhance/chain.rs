@@ -5,7 +5,7 @@ use crate::{
 };
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::fs;
+use tokio::fs;
 
 #[derive(Debug, Clone)]
 pub struct ChainItem {
@@ -83,7 +83,7 @@ impl AsyncChainItemFrom for Option<ChainItem> {
         match itype {
             "script" => Some(ChainItem {
                 uid,
-                data: ChainType::Script(fs::read_to_string(path).ok()?.into()),
+                data: ChainType::Script(fs::read_to_string(path).await.ok()?.into()),
             }),
             "merge" => Some(ChainItem {
                 uid,

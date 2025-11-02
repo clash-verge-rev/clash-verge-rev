@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::{
     config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
     logging,
@@ -304,18 +305,16 @@ impl IVerge {
 
     /// 配置修正后重新加载配置
     async fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
-        use crate::config::Config;
-
-        let config_draft = Config::verge().await;
-        *config_draft.draft_mut() = Box::new(updated_config.clone());
-        config_draft.apply();
-
         logging!(
             info,
             Type::Config,
             "内存配置已强制更新，新的clash_core: {:?}",
-            updated_config.clash_core
+            &updated_config.clash_core
         );
+
+        let config_draft = Config::verge().await;
+        **config_draft.draft_mut() = updated_config;
+        config_draft.apply();
 
         Ok(())
     }
@@ -354,12 +353,12 @@ impl IVerge {
                     config
                 }
                 Err(err) => {
-                    log::error!(target: "app", "{err}");
+                    logging!(error, Type::Config, "{err}");
                     Self::template()
                 }
             },
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                logging!(error, Type::Config, "{err}");
                 Self::template()
             }
         }
@@ -438,11 +437,11 @@ impl IVerge {
     /// patch verge config
     /// only save to file
     #[allow(clippy::cognitive_complexity)]
-    pub fn patch_config(&mut self, patch: IVerge) {
+    pub fn patch_config(&mut self, patch: &IVerge) {
         macro_rules! patch {
             ($key: tt) => {
                 if patch.$key.is_some() {
-                    self.$key = patch.$key;
+                    self.$key = patch.$key.clone();
                 }
             };
         }
@@ -695,5 +694,11 @@ impl From<IVerge> for IVergeResponse {
             hover_jump_navigator_delay: verge.hover_jump_navigator_delay,
             enable_external_controller: verge.enable_external_controller,
         }
+    }
+}
+
+impl From<Box<IVerge>> for IVergeResponse {
+    fn from(verge: Box<IVerge>) -> Self {
+        IVergeResponse::from(*verge)
     }
 }

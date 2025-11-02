@@ -51,7 +51,11 @@ pub async fn check_singleton() -> Result<()> {
                 .send()
                 .await?;
         }
-        log::error!("failed to setup singleton listen server");
+        logging!(
+            error,
+            Type::Window,
+            "failed to setup singleton listen server"
+        );
         bail!("app exists");
     }
     Ok(())
@@ -107,9 +111,8 @@ pub fn embed_server() {
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
             .map(|query: QueryParam| {
-                let param = query.param.clone();
                 tokio::task::spawn_local(async move {
-                    logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
+                    logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
                 });
                 warp::reply::with_status::<std::string::String>(
                     "ok".to_string(),
@@ -130,7 +133,7 @@ pub fn embed_server() {
 }
 
 pub fn shutdown_embedded_server() {
-    log::info!("shutting down embedded server");
+    logging!(info, Type::Window, "shutting down embedded server");
     if let Some(sender) = SHUTDOWN_SENDER.get()
         && let Some(sender) = sender.lock().take()
     {

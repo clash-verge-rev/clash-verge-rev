@@ -85,7 +85,7 @@ pub async fn enhance_profiles() -> CmdResult {
     match feat::enhance_profiles().await {
         Ok(_) => {}
         Err(e) => {
-            log::error!(target: "app", "{}", e);
+            logging!(error, Type::Cmd, "{}", e);
             return Err(e.to_string().into());
         }
     }
@@ -99,7 +99,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
     logging!(info, Type::Cmd, "[导入订阅] 开始导入: {}", url);
 
     // 直接依赖 PrfItem::from_url 自身的超时/重试逻辑，不再使用 tokio::time::timeout 包裹
-    let item = match PrfItem::from_url(&url, None, None, option).await {
+    let item = &mut match PrfItem::from_url(&url, None, None, option.as_ref()).await {
         Ok(it) => {
             logging!(info, Type::Cmd, "[导入订阅] 下载完成，开始保存配置");
             it
@@ -110,7 +110,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
         }
     };
 
-    match profiles_append_item_safe(item.clone()).await {
+    match profiles_append_item_safe(item).await {
         Ok(_) => match profiles_save_file_safe().await {
             Ok(_) => {
                 logging!(info, Type::Cmd, "[导入订阅] 配置文件保存成功");
@@ -145,13 +145,13 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
 /// 调整profile的顺序
 #[tauri::command]
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
-    match profiles_reorder_safe(active_id, over_id).await {
+    match profiles_reorder_safe(&active_id, &over_id).await {
         Ok(_) => {
-            log::info!(target: "app", "重新排序配置文件");
+            logging!(info, Type::Cmd, "重新排序配置文件");
             Ok(())
         }
         Err(err) => {
-            log::error!(target: "app", "重新排序配置文件失败: {}", err);
+            logging!(error, Type::Cmd, "重新排序配置文件失败: {}", err);
             Err(format!("重新排序配置文件失败: {}", err).into())
         }
     }
@@ -161,7 +161,7 @@ pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
 /// 创建一个新的配置文件
 #[tauri::command]
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
-    match profiles_append_item_with_filedata_safe(item.clone(), file_data).await {
+    match profiles_append_item_with_filedata_safe(&item, file_data).await {
         Ok(_) => {
             // 发送配置变更通知
             if let Some(uid) = &item.uid {
@@ -180,10 +180,10 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 /// 更新配置文件
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    match feat::update_profile(index, option, Some(true)).await {
+    match feat::update_profile(&index, option.as_ref(), true, true).await {
         Ok(_) => Ok(()),
         Err(e) => {
-            log::error!(target: "app", "{}", e);
+            logging!(error, Type::Cmd, "{}", e);
             Err(e.to_string().into())
         }
     }
@@ -194,9 +194,7 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 pub async fn delete_profile(index: String) -> CmdResult {
     println!("delete_profile: {}", index);
     // 使用Send-safe helper函数
-    let should_update = profiles_delete_item_safe(index.clone())
-        .await
-        .stringify_err()?;
+    let should_update = profiles_delete_item_safe(&index).await.stringify_err()?;
     profiles_save_file_safe().await.stringify_err()?;
 
     if should_update {
@@ -208,7 +206,7 @@ pub async fn delete_profile(index: String) -> CmdResult {
                 handle::Handle::notify_profile_changed(index);
             }
             Err(e) => {
-                log::error!(target: "app", "{}", e);
+                logging!(error, Type::Cmd, "{}", e);
                 return Err(e.to_string().into());
             }
         }
@@ -339,7 +337,7 @@ async fn restore_previous_profile(prev_profile: String) -> CmdResult<()> {
     Config::profiles().await.apply();
     crate::process::AsyncHandler::spawn(|| async move {
         if let Err(e) = profiles_save_file_safe().await {
-            log::warn!(target: "app", "异步保存恢复配置文件失败: {e}");
+            logging!(warn, Type::Cmd, "Warning: 异步保存恢复配置文件失败: {e}");
         }
     });
     logging!(info, Type::Cmd, "成功恢复到之前的配置");
@@ -370,15 +368,15 @@ async fn handle_success(current_sequence: u64, current_value: Option<String>) ->
     handle::Handle::refresh_clash();
 
     if let Err(e) = Tray::global().update_tooltip().await {
-        log::warn!(target: "app", "异步更新托盘提示失败: {e}");
+        logging!(warn, Type::Cmd, "Warning: 异步更新托盘提示失败: {e}");
     }
 
     if let Err(e) = Tray::global().update_menu().await {
-        log::warn!(target: "app", "异步更新托盘菜单失败: {e}");
+        logging!(warn, Type::Cmd, "Warning: 异步更新托盘菜单失败: {e}");
     }
 
     if let Err(e) = profiles_save_file_safe().await {
-        log::warn!(target: "app", "异步保存配置文件失败: {e}");
+        logging!(warn, Type::Cmd, "Warning: 异步保存配置文件失败: {e}");
     }
 
     if let Some(current) = &current_value {
@@ -587,7 +585,7 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         false
     };
 
-    profiles_patch_item_safe(index.clone(), profile)
+    profiles_patch_item_safe(&index, &profile)
         .await
         .stringify_err()?;
 
@@ -632,10 +630,15 @@ pub async fn view_profile(index: String) -> CmdResult {
 /// 读取配置文件内容
 #[tauri::command]
 pub async fn read_profile_file(index: String) -> CmdResult<String> {
-    let profiles = Config::profiles().await;
-    let profiles_ref = profiles.latest_ref();
-    let item = profiles_ref.get_item(&index).stringify_err()?;
-    let data = item.read_file().stringify_err()?;
+    let item = {
+        let profiles = Config::profiles().await;
+        let profiles_ref = profiles.latest_ref();
+        PrfItem {
+            file: profiles_ref.get_item(&index).stringify_err()?.file.clone(),
+            ..Default::default()
+        }
+    };
+    let data = item.read_file().await.stringify_err()?;
     Ok(data)
 }
 

@@ -155,7 +155,7 @@ impl Timer {
             .set_maximum_parallel_runnable_num(1)
             .set_frequency_count_down_by_seconds(3, 3)
             .spawn_async_routine(|| async move {
-                logging!(info, Type::Timer, "Updating tray menu");
+                logging!(debug, Type::Timer, "Updating tray menu");
                 crate::core::tray::Tray::global()
                     .update_tray_display()
                     .await
@@ -390,7 +390,7 @@ impl Timer {
             .spawn_async_routine(move || {
                 let uid = uid.clone();
                 Box::pin(async move {
-                    Self::async_task(uid).await;
+                    Self::async_task(&uid).await;
                 }) as Pin<Box<dyn std::future::Future<Output = ()> + Send>>
             })
             .context("failed to create timer task")?;
@@ -419,13 +419,15 @@ impl Timer {
         };
 
         // Get the profile updated timestamp - now safe to await
-        let config_profiles = Config::profiles().await;
-        let profiles = config_profiles.data_ref().clone();
-        let items = match profiles.get_items() {
-            Some(i) => i,
-            None => {
-                logging!(warn, Type::Timer, "获取配置列表失败");
-                return None;
+        let items = {
+            let profiles = Config::profiles().await;
+            let profiles_guard = profiles.latest_ref();
+            match profiles_guard.get_items() {
+                Some(i) => i.clone(),
+                None => {
+                    logging!(warn, Type::Timer, "获取配置列表失败");
+                    return None;
+                }
             }
         };
 
@@ -474,14 +476,14 @@ impl Timer {
     }
 
     /// Async task with better error handling and logging
-    async fn async_task(uid: String) {
+    async fn async_task(uid: &String) {
         let task_start = std::time::Instant::now();
         logging!(info, Type::Timer, "Running timer task for profile: {}", uid);
 
         match tokio::time::timeout(std::time::Duration::from_secs(40), async {
-            Self::emit_update_event(&uid, true);
+            Self::emit_update_event(uid, true);
 
-            let is_current = Config::profiles().await.latest_ref().current.as_ref() == Some(&uid);
+            let is_current = Config::profiles().await.latest_ref().current.as_ref() == Some(uid);
             logging!(
                 info,
                 Type::Timer,
@@ -490,7 +492,7 @@ impl Timer {
                 is_current
             );
 
-            feat::update_profile(uid.clone(), None, Some(is_current)).await
+            feat::update_profile(uid, None, is_current, false).await
         })
         .await
         {
@@ -515,7 +517,7 @@ impl Timer {
         }
 
         // Emit completed event
-        Self::emit_update_event(&uid, false);
+        Self::emit_update_event(uid, false);
     }
 }
 

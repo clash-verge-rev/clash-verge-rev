@@ -2,6 +2,7 @@ use once_cell::sync::OnceCell;
 use tauri::Emitter;
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_mihomo::models::Proxies;
+use tokio::fs;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
 use crate::config::PrfSelected;
@@ -26,7 +27,6 @@ use smartstring::alias::String;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::{
-    fs,
     sync::atomic::{AtomicBool, Ordering},
     time::{Duration, Instant},
 };
@@ -62,8 +62,12 @@ fn should_handle_tray_click() -> bool {
         *last_click = now;
         true
     } else {
-        log::debug!(target: "app", "托盘点击被防抖机制忽略，距离上次点击 {:?}ms",
-                  now.duration_since(*last_click).as_millis());
+        logging!(
+            debug,
+            Type::Tray,
+            "托盘点击被防抖机制忽略，距离上次点击 {}ms",
+            now.duration_since(*last_click).as_millis()
+        );
         false
     }
 }
@@ -86,7 +90,7 @@ impl TrayState {
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
         if is_common_tray_icon
             && let Ok(Some(common_icon_path)) = find_target_icons("common")
-            && let Ok(icon_data) = fs::read(common_icon_path)
+            && let Ok(icon_data) = fs::read(common_icon_path).await
         {
             return (true, icon_data);
         }
@@ -123,7 +127,7 @@ impl TrayState {
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
         if is_sysproxy_tray_icon
             && let Ok(Some(sysproxy_icon_path)) = find_target_icons("sysproxy")
-            && let Ok(icon_data) = fs::read(sysproxy_icon_path)
+            && let Ok(icon_data) = fs::read(sysproxy_icon_path).await
         {
             return (true, icon_data);
         }
@@ -160,7 +164,7 @@ impl TrayState {
         let is_tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
         if is_tun_tray_icon
             && let Ok(Some(tun_icon_path)) = find_target_icons("tun")
-            && let Ok(icon_data) = fs::read(tun_icon_path)
+            && let Ok(icon_data) = fs::read(tun_icon_path).await
         {
             return (true, icon_data);
         }
@@ -207,7 +211,7 @@ singleton_lazy!(Tray, TRAY, Tray::default);
 impl Tray {
     pub async fn init(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘初始化");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘初始化");
             return Ok(());
         }
 
@@ -215,11 +219,15 @@ impl Tray {
 
         match self.create_tray_from_handle(app_handle).await {
             Ok(_) => {
-                log::info!(target: "app", "System tray created successfully");
+                logging!(info, Type::Tray, "System tray created successfully");
             }
             Err(e) => {
                 // Don't return error, let application continue running without tray
-                log::warn!(target: "app", "System tray creation failed: {}, Application will continue running without tray icon", e);
+                logging!(
+                    warn,
+                    Type::Tray,
+                    "System tray creation failed: {e}, Application will continue running without tray icon",
+                );
             }
         }
         // TODO: 初始化时，暂时使用此方法更新系统托盘菜单，有效避免代理节点菜单空白
@@ -230,7 +238,7 @@ impl Tray {
     /// 更新托盘点击行为
     pub async fn update_click_behavior(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘点击行为更新");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘点击行为更新");
             return Ok(());
         }
 
@@ -250,7 +258,7 @@ impl Tray {
     /// 更新托盘菜单
     pub async fn update_menu(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘菜单更新");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘菜单更新");
             return Ok(());
         }
         // 调整最小更新间隔，确保状态及时刷新
@@ -331,11 +339,15 @@ impl Tray {
                     )
                     .await?,
                 ));
-                log::debug!(target: "app", "托盘菜单更新成功");
+                logging!(debug, Type::Tray, "托盘菜单更新成功");
                 Ok(())
             }
             None => {
-                log::warn!(target: "app", "更新托盘菜单失败: 托盘不存在");
+                logging!(
+                    warn,
+                    Type::Tray,
+                    "Failed to update tray menu: tray not found"
+                );
                 Ok(())
             }
         }
@@ -345,7 +357,7 @@ impl Tray {
     #[cfg(target_os = "macos")]
     pub async fn update_icon(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘图标更新");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
             return Ok(());
         }
 
@@ -354,7 +366,11 @@ impl Tray {
         let tray = match app_handle.tray_by_id("main") {
             Some(tray) => tray,
             None => {
-                log::warn!(target: "app", "更新托盘图标失败: 托盘不存在");
+                logging!(
+                    warn,
+                    Type::Tray,
+                    "Failed to update tray icon: tray not found"
+                );
                 return Ok(());
             }
         };
@@ -384,7 +400,7 @@ impl Tray {
     #[cfg(not(target_os = "macos"))]
     pub async fn update_icon(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘图标更新");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
             return Ok(());
         }
 
@@ -393,7 +409,11 @@ impl Tray {
         let tray = match app_handle.tray_by_id("main") {
             Some(tray) => tray,
             None => {
-                log::warn!(target: "app", "更新托盘图标失败: 托盘不存在");
+                logging!(
+                    warn,
+                    Type::Tray,
+                    "Failed to update tray icon: tray not found"
+                );
                 return Ok(());
             }
         };
@@ -416,7 +436,7 @@ impl Tray {
     /// 更新托盘显示状态的函数
     pub async fn update_tray_display(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘显示状态更新");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘显示状态更新");
             return Ok(());
         }
 
@@ -434,7 +454,7 @@ impl Tray {
     /// 更新托盘提示
     pub async fn update_tooltip(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘提示更新");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘提示更新");
             return Ok(());
         }
 
@@ -490,7 +510,11 @@ impl Tray {
         if let Some(tray) = app_handle.tray_by_id("main") {
             let _ = tray.set_tooltip(Some(&tooltip));
         } else {
-            log::warn!(target: "app", "更新托盘提示失败: 托盘不存在");
+            logging!(
+                warn,
+                Type::Tray,
+                "Failed to update tray tooltip: tray not found"
+            );
         }
 
         Ok(())
@@ -498,7 +522,7 @@ impl Tray {
 
     pub async fn update_part(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘局部更新");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘局部更新");
             return Ok(());
         }
         // self.update_menu().await?;
@@ -511,11 +535,11 @@ impl Tray {
 
     pub async fn create_tray_from_handle(&self, app_handle: &AppHandle) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘创建");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘创建");
             return Ok(());
         }
 
-        log::info!(target: "app", "正在从AppHandle创建系统托盘");
+        logging!(info, Type::Tray, "正在从AppHandle创建系统托盘");
 
         // 获取图标
         let icon_bytes = TrayState::get_common_tray_icon().await.1;
@@ -561,7 +585,7 @@ impl Tray {
             AsyncHandler::spawn(|| async move {
                 let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
                 let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
-                log::debug!(target: "app", "tray event: {tray_event:?}");
+                logging!(debug, Type::Tray, "tray event: {tray_event:?}");
 
                 if let TrayIconEvent::Click {
                     button: MouseButton::Left,
@@ -596,14 +620,13 @@ impl Tray {
             });
         });
         tray.on_menu_event(on_menu_event);
-        log::info!(target: "app", "系统托盘创建成功");
         Ok(())
     }
 
     // 托盘统一的状态更新函数
     pub async fn update_all_states(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
-            log::debug!(target: "app", "应用正在退出，跳过托盘状态更新");
+            logging!(debug, Type::Tray, "应用正在退出，跳过托盘状态更新");
             return Ok(());
         }
 
@@ -730,7 +753,9 @@ fn create_subcreate_proxy_menu_item(
                             is_selected,
                             None::<&str>,
                         )
-                        .map_err(|e| log::warn!(target: "app", "创建代理菜单项失败: {}", e))
+                        .map_err(|e| {
+                            logging!(warn, Type::Tray, "Failed to create proxy menu item: {}", e)
+                        })
                         .ok()
                     })
                     .collect();
@@ -772,7 +797,12 @@ fn create_subcreate_proxy_menu_item(
                     let insertion_index = submenus.len();
                     submenus.push((group_name.into(), insertion_index, submenu));
                 } else {
-                    log::warn!(target: "app", "创建代理组子菜单失败: {}", group_name);
+                    logging!(
+                        warn,
+                        Type::Tray,
+                        "Failed to create proxy group submenu: {}",
+                        group_name
+                    );
                 }
             }
         }
@@ -1165,7 +1195,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 feat::change_clash_mode(mode.into()).await;
             }
             MenuIds::DASHBOARD => {
-                log::info!(target: "app", "托盘菜单点击: 打开窗口");
+                logging!(info, Type::Tray, "托盘菜单点击: 打开窗口");
 
                 if !should_handle_tray_click() {
                     return;
@@ -1182,7 +1212,11 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             MenuIds::CLOSE_ALL_CONNECTIONS => {
                 if let Err(err) = handle::Handle::mihomo().await.close_all_connections().await {
-                    log::error!(target: "app", "Failed to close all connections from tray: {err}");
+                    logging!(
+                        error,
+                        Type::Tray,
+                        "Failed to close all connections from tray: {err}"
+                    );
                 }
             }
             MenuIds::COPY_ENV => feat::copy_clash_env().await,
@@ -1235,12 +1269,25 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                         .await
                     {
                         Ok(_) => {
-                            log::info!(target: "app", "切换代理成功: {} -> {}", group_name, proxy_name);
+                            logging!(
+                                info,
+                                Type::Tray,
+                                "切换代理成功: {} -> {}",
+                                group_name,
+                                proxy_name
+                            );
                             let _ = handle::Handle::app_handle()
                                 .emit("verge://refresh-proxy-config", ());
                         }
                         Err(e) => {
-                            log::error!(target: "app", "切换代理失败: {} -> {}, 错误: {:?}", group_name, proxy_name, e);
+                            logging!(
+                                error,
+                                Type::Tray,
+                                "切换代理失败: {} -> {}, 错误: {:?}",
+                                group_name,
+                                proxy_name,
+                                e
+                            );
 
                             // Fallback to IPC update
                             if (handle::Handle::mihomo()
@@ -1249,7 +1296,13 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                                 .await)
                                 .is_ok()
                             {
-                                log::info!(target: "app", "代理切换回退成功: {} -> {}", group_name, proxy_name);
+                                logging!(
+                                    info,
+                                    Type::Tray,
+                                    "代理切换回退成功: {} -> {}",
+                                    group_name,
+                                    proxy_name
+                                );
 
                                 let app_handle = handle::Handle::app_handle();
                                 let _ = app_handle.emit("verge://force-refresh-proxies", ());
@@ -1263,7 +1316,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
 
         // Ensure tray state update is awaited and properly handled
         if let Err(e) = Tray::global().update_all_states().await {
-            log::warn!(target: "app", "更新托盘状态失败: {e}");
+            logging!(warn, Type::Tray, "Failed to update tray state: {e}");
         }
     });
 }

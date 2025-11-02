@@ -24,20 +24,19 @@ impl<T: Clone + ToOwned> From<T> for Draft<T> {
 ///
 /// # Methods
 /// - `data_mut`: Returns a mutable reference to the committed data.
-/// - `data_ref`: Returns an immutable reference to the committed data.
 /// - `draft_mut`: Creates or retrieves a mutable reference to the draft data, cloning the committed data if no draft exists.
 /// - `latest_ref`: Returns an immutable reference to the draft data if it exists, otherwise to the committed data.
 /// - `apply`: Commits the draft data, replacing the committed data and returning the old committed value if a draft existed.
 /// - `discard`: Discards the draft data and returns it if it existed.
 impl<T: Clone + ToOwned> Draft<Box<T>> {
+    /// 正式数据视图
+    pub fn data_ref(&self) -> MappedRwLockReadGuard<'_, Box<T>> {
+        RwLockReadGuard::map(self.inner.read(), |inner| &inner.0)
+    }
+
     /// 可写正式数据
     pub fn data_mut(&self) -> MappedRwLockWriteGuard<'_, Box<T>> {
         RwLockWriteGuard::map(self.inner.write(), |inner| &mut inner.0)
-    }
-
-    /// 返回正式数据的只读视图（不包含草稿）
-    pub fn data_ref(&self) -> MappedRwLockReadGuard<'_, Box<T>> {
-        RwLockReadGuard::map(self.inner.read(), |inner| &inner.0)
     }
 
     /// 创建或获取草稿并返回可写引用
@@ -69,17 +68,21 @@ impl<T: Clone + ToOwned> Draft<Box<T>> {
     }
 
     /// 提交草稿，返回旧正式数据
-    pub fn apply(&self) -> Option<Box<T>> {
-        let mut inner = self.inner.write();
-        inner
-            .1
-            .take()
-            .map(|draft| std::mem::replace(&mut inner.0, draft))
+    pub fn apply(&self) {
+        let guard = self.inner.upgradable_read();
+        if guard.1.is_none() {
+            return;
+        }
+
+        let mut guard = RwLockUpgradableReadGuard::upgrade(guard);
+        if let Some(draft) = guard.1.take() {
+            guard.0 = draft;
+        }
     }
 
     /// 丢弃草稿，返回被丢弃的草稿
-    pub fn discard(&self) -> Option<Box<T>> {
-        self.inner.write().1.take()
+    pub fn discard(&self) {
+        self.inner.write().1.take();
     }
 
     /// 异步修改正式数据，闭包直接获得 Box<T> 所有权
@@ -152,8 +155,7 @@ fn test_draft_box() {
     }
 
     // 5. 提交草稿
-    assert!(draft.apply().is_some()); // 第一次提交应有返回
-    assert!(draft.apply().is_none()); // 第二次提交返回 None
+    draft.apply();
 
     // 正式数据已更新
     {
@@ -170,8 +172,7 @@ fn test_draft_box() {
     assert_eq!(draft.draft_mut().enable_auto_launch, Some(true));
 
     // 7. 丢弃草稿
-    assert!(draft.discard().is_some()); // 第一次丢弃返回 Some
-    assert!(draft.discard().is_none()); // 再次丢弃返回 None
+    draft.discard();
 
     // 8. 草稿已被丢弃，新的 draft_mut() 会重新 clone
     assert_eq!(draft.draft_mut().enable_auto_launch, Some(false));

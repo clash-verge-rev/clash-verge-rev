@@ -1,13 +1,20 @@
 use anyhow::Result;
 use tauri_plugin_shell::process::CommandChild;
 
+use crate::{logging, utils::logging::Type};
+
 #[derive(Debug)]
 pub struct CommandChildGuard(Option<CommandChild>);
 
 impl Drop for CommandChildGuard {
     fn drop(&mut self) {
         if let Err(err) = self.kill() {
-            log::error!(target: "app", "Failed to kill child process: {}", err);
+            logging!(
+                error,
+                Type::Service,
+                "Failed to kill child process: {}",
+                err
+            );
         }
     }
 }
