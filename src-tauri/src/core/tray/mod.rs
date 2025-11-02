@@ -673,17 +673,15 @@ async fn create_profile_menu_item(
         .iter()
         .map(|(profile_uid, profile_name)| {
             let app_handle = app_handle.clone();
-            let profile_uid = profile_uid.clone();
-            let profile_name = profile_name.clone();
             async move {
                 let is_current_profile = Config::profiles()
                     .await
                     .latest_ref()
-                    .is_current_profile_index(profile_uid.clone());
+                    .is_current_profile_index(profile_uid);
                 CheckMenuItem::with_id(
                     &app_handle,
                     format!("profiles_{profile_uid}"),
-                    t(&profile_name).await,
+                    t(profile_name).await,
                     true,
                     is_current_profile,
                     None::<&str>,

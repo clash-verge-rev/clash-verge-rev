@@ -435,8 +435,8 @@ impl IProfiles {
     }
 
     /// 判断profile是否是current指向的
-    pub fn is_current_profile_index(&self, index: String) -> bool {
-        self.current == Some(index)
+    pub fn is_current_profile_index(&self, index: &String) -> bool {
+        self.current.as_ref() == Some(index)
     }
 
     /// 获取所有的profiles(uid，名称)
@@ -453,6 +453,18 @@ impl IProfiles {
                 })
                 .collect()
         })
+    }
+
+    /// 通过 uid 获取名称
+    pub fn get_name_by_uid(&self, uid: &String) -> Option<String> {
+        if let Some(items) = &self.items {
+            for item in items {
+                if item.uid.as_ref() == Some(uid) {
+                    return item.name.clone();
+                }
+            }
+        }
+        None
     }
 
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
