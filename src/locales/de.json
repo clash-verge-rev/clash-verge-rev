@@ -334,10 +334,6 @@
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
   "External": "Externe Steuerung",
-  "Enable External Controller": "Enable External Controller",
-  "External Controller": "Adresse des externen Controllers",
-  "Core Secret": "API-Zugangsschlüssel",
-  "Recommended": "Empfohlene Einstellung",
   "Open URL": "Link öffnen",
   "Replace host, port, secret with %host, %port, %secret": "Verwenden Sie %host, %port, %secret für Host, Port und Zugangsschlüssel",
   "Support %host, %port, %secret": "Unterstützt %host, %port, %secret",
@@ -586,20 +582,9 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "External Cors Settings": "External Cors Settings",
-  "External Cors Configuration": "External Cors Configuration",
-  "Allow private network access": "Allow private network access",
-  "Allowed Origins": "Allowed Origins",
-  "Please enter a valid url": "Please enter a valid url",
-  "Add": "Add",
-  "Always included origins: {{urls}}": "Always included origins: {{urls}}",
   "Invalid regular expression": "Invalid regular expression",
-  "Controller address cannot be empty": "Controller address cannot be empty",
-  "Secret cannot be empty": "Secret cannot be empty",
   "Configuration saved successfully": "Zufalls-Konfiguration erfolgreich gespeichert",
   "Failed to save configuration": "Failed to save configuration",
-  "Controller address copied to clipboard": "API-Port in die Zwischenablage kopiert",
-  "Secret copied to clipboard": "API-Schlüssel in die Zwischenablage kopiert",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
   "App Log Max Size": "App Log Max Size",
@@ -831,6 +816,47 @@
         "actions": {
           "installService": "Service installieren",
           "uninstallService": "Dienst deinstallieren"
+        }
+      },
+      "externalController": {
+        "title": "Adresse des externen Controllers",
+        "fields": {
+          "enable": "Enable External Controller",
+          "address": "Adresse des externen Controllers",
+          "secret": "API-Zugangsschlüssel"
+        },
+        "placeholders": {
+          "address": "Erforderlich",
+          "secret": "Empfohlene Einstellung"
+        },
+        "tooltips": {
+          "copy": "In die Zwischenablage kopieren"
+        },
+        "messages": {
+          "addressRequired": "Controller address cannot be empty",
+          "secretRequired": "Secret cannot be empty",
+          "copyFailed": "Kopieren fehlgeschlagen",
+          "controllerCopied": "API-Port in die Zwischenablage kopiert",
+          "secretCopied": "API-Schlüssel in die Zwischenablage kopiert"
+        }
+      },
+      "externalCors": {
+        "title": "Externe CORS-Konfiguration",
+        "fields": {
+          "allowPrivateNetwork": "Zugriff auf privates Netzwerk erlauben",
+          "allowedOrigins": "Erlaubte Ursprünge"
+        },
+        "placeholders": {
+          "origin": "Bitte eine gültige URL eingeben"
+        },
+        "actions": {
+          "add": "Hinzufügen"
+        },
+        "messages": {
+          "alwaysIncluded": "Immer enthaltene Ursprünge: {{urls}}"
+        },
+        "tooltips": {
+          "open": "Einstellungen für externe CORS"
         }
       },
       "verge": {

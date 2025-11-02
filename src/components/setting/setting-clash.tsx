@@ -221,7 +221,7 @@ const SettingClash = ({ onError }: Props) => {
         label={<>{t("External")}</>}
         extra={
           <TooltipIcon
-            title={t("External Cors Settings")}
+            title={t("components.settings.externalCors.tooltips.open")}
             icon={SettingsRounded}
             onClick={(e) => {
               e.stopPropagation();

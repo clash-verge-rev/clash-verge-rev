@@ -334,10 +334,6 @@
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
   "External": "خارجی",
-  "Enable External Controller": "Enable External Controller",
-  "External Controller": "کنترل‌کننده خارجی",
-  "Core Secret": "رمز اصلی",
-  "Recommended": "توصیه شده",
   "Open URL": "باز کردن آدرس اینترنتی",
   "Replace host, port, secret with %host, %port, %secret": "جایگزین کردن میزبان، پورت و رمز با %host، %port، %secret",
   "Support %host, %port, %secret": "پشتیبانی از %host، %port و %secret",
@@ -586,20 +582,9 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "External Cors Settings": "External Cors Settings",
-  "External Cors Configuration": "External Cors Configuration",
-  "Allow private network access": "Allow private network access",
-  "Allowed Origins": "Allowed Origins",
-  "Please enter a valid url": "Please enter a valid url",
-  "Add": "Add",
-  "Always included origins: {{urls}}": "Always included origins: {{urls}}",
   "Invalid regular expression": "Invalid regular expression",
-  "Controller address cannot be empty": "Controller address cannot be empty",
-  "Secret cannot be empty": "Secret cannot be empty",
   "Configuration saved successfully": "Configuration saved successfully",
   "Failed to save configuration": "Failed to save configuration",
-  "Controller address copied to clipboard": "Controller address copied to clipboard",
-  "Secret copied to clipboard": "Secret copied to clipboard",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
   "App Log Max Size": "App Log Max Size",
@@ -831,6 +816,47 @@
         "actions": {
           "installService": "نصب سرویس",
           "uninstallService": "Uninstall Service"
+        }
+      },
+      "externalController": {
+        "title": "کنترل‌کننده خارجی",
+        "fields": {
+          "enable": "Enable External Controller",
+          "address": "کنترل‌کننده خارجی",
+          "secret": "رمز اصلی"
+        },
+        "placeholders": {
+          "address": "Required",
+          "secret": "توصیه شده"
+        },
+        "tooltips": {
+          "copy": "Copy to clipboard"
+        },
+        "messages": {
+          "addressRequired": "Controller address cannot be empty",
+          "secretRequired": "Secret cannot be empty",
+          "copyFailed": "Failed to copy",
+          "controllerCopied": "Controller address copied to clipboard",
+          "secretCopied": "Secret copied to clipboard"
+        }
+      },
+      "externalCors": {
+        "title": "External Cors Configuration",
+        "fields": {
+          "allowPrivateNetwork": "Allow private network access",
+          "allowedOrigins": "Allowed Origins"
+        },
+        "placeholders": {
+          "origin": "Please enter a valid url"
+        },
+        "actions": {
+          "add": "Add"
+        },
+        "messages": {
+          "alwaysIncluded": "Always included origins: {{urls}}"
+        },
+        "tooltips": {
+          "open": "External Cors Settings"
         }
       },
       "verge": {

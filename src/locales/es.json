@@ -334,10 +334,6 @@
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
   "External": "Control externo",
-  "Enable External Controller": "Enable External Controller",
-  "External Controller": "Dirección de escucha del controlador externo",
-  "Core Secret": "Clave de acceso a la API",
-  "Recommended": "Configuración recomendada",
   "Open URL": "Abrir enlace",
   "Replace host, port, secret with %host, %port, %secret": "Utilice %host, %port, %secret para representar el host, el puerto y la clave de acceso.",
   "Support %host, %port, %secret": "Soporta %host, %port, %secret",
@@ -586,20 +582,9 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "External Cors Settings": "External Cors Settings",
-  "External Cors Configuration": "External Cors Configuration",
-  "Allow private network access": "Allow private network access",
-  "Allowed Origins": "Allowed Origins",
-  "Please enter a valid url": "Please enter a valid url",
-  "Add": "Add",
-  "Always included origins: {{urls}}": "Always included origins: {{urls}}",
   "Invalid regular expression": "Invalid regular expression",
-  "Controller address cannot be empty": "Controller address cannot be empty",
-  "Secret cannot be empty": "Secret cannot be empty",
   "Configuration saved successfully": "Configuración aleatoria guardada correctamente",
   "Failed to save configuration": "Failed to save configuration",
-  "Controller address copied to clipboard": "El puerto API se copió al portapapeles",
-  "Secret copied to clipboard": "La clave API se copió al portapapeles",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
   "App Log Max Size": "App Log Max Size",
@@ -831,6 +816,47 @@
         "actions": {
           "installService": "Instalar servicio",
           "uninstallService": "Desinstalar servicio"
+        }
+      },
+      "externalController": {
+        "title": "Dirección de escucha del controlador externo",
+        "fields": {
+          "enable": "Habilitar controlador externo",
+          "address": "Dirección de escucha del controlador externo",
+          "secret": "Clave de acceso a la API"
+        },
+        "placeholders": {
+          "address": "Requerido",
+          "secret": "Configuración recomendada"
+        },
+        "tooltips": {
+          "copy": "Copiar al portapapeles"
+        },
+        "messages": {
+          "addressRequired": "La dirección del controlador no puede estar vacía",
+          "secretRequired": "La clave secreta no puede estar vacía",
+          "copyFailed": "Error al copiar",
+          "controllerCopied": "El puerto API se copió al portapapeles",
+          "secretCopied": "La clave API se copió al portapapeles"
+        }
+      },
+      "externalCors": {
+        "title": "Configuración de CORS externo",
+        "fields": {
+          "allowPrivateNetwork": "Permitir acceso a red privada",
+          "allowedOrigins": "Orígenes permitidos"
+        },
+        "placeholders": {
+          "origin": "Introduce una URL válida"
+        },
+        "actions": {
+          "add": "Agregar"
+        },
+        "messages": {
+          "alwaysIncluded": "Orígenes siempre incluidos: {{urls}}"
+        },
+        "tooltips": {
+          "open": "Configuración de CORS externo"
         }
       },
       "verge": {

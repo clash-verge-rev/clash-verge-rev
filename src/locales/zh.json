@@ -334,10 +334,6 @@
   "Port settings saved": "端口设置已保存",
   "Failed to save port settings": "端口设置保存失败",
   "External": "外部控制",
-  "Enable External Controller": "启用外部控制器",
-  "External Controller": "外部控制器监听地址",
-  "Core Secret": "API 访问密钥",
-  "Recommended": "建议设置",
   "Open URL": "打开链接",
   "Replace host, port, secret with %host, %port, %secret": "使用 %host, %port, %secret 表示 主机, 端口, 访问密钥",
   "Support %host, %port, %secret": "支持 %host, %port, %secret",
@@ -586,20 +582,9 @@
   "AppQuitBody": "已通过快捷键退出应用",
   "AppHiddenTitle": "应用隐藏",
   "AppHiddenBody": "已通过快捷键隐藏应用窗口",
-  "External Cors Settings": "外部控制跨域设置",
-  "External Cors Configuration": "外部控制跨域配置",
-  "Allow private network access": "允许专用网络访问",
-  "Allowed Origins": "允许的来源",
-  "Please enter a valid url": "请输入有效的网址",
-  "Add": "添加",
-  "Always included origins: {{urls}}": "始终包含来源：{{urls}}",
   "Invalid regular expression": "无效的正则表达式",
-  "Controller address cannot be empty": "控制器地址不能为空",
-  "Secret cannot be empty": "访问密钥不能为空",
   "Configuration saved successfully": "配置保存成功",
   "Failed to save configuration": "配置保存失败",
-  "Controller address copied to clipboard": "控制器地址已复制到剪贴板",
-  "Secret copied to clipboard": "访问密钥已复制到剪贴板",
   "Saving...": "保存中...",
   "Detection timeout or failed": "检测超时或失败",
   "App Log Max Size": "应用日志最大大小",
@@ -831,6 +816,47 @@
         "actions": {
           "installService": "安装服务",
           "uninstallService": "卸载服务"
+        }
+      },
+      "externalController": {
+        "title": "外部控制器监听地址",
+        "fields": {
+          "enable": "启用外部控制器",
+          "address": "外部控制器监听地址",
+          "secret": "API 访问密钥"
+        },
+        "placeholders": {
+          "address": "必填",
+          "secret": "建议设置"
+        },
+        "tooltips": {
+          "copy": "复制到剪贴板"
+        },
+        "messages": {
+          "addressRequired": "控制器地址不能为空",
+          "secretRequired": "访问密钥不能为空",
+          "copyFailed": "复制失败",
+          "controllerCopied": "控制器地址已复制到剪贴板",
+          "secretCopied": "访问密钥已复制到剪贴板"
+        }
+      },
+      "externalCors": {
+        "title": "外部控制跨域设置",
+        "fields": {
+          "allowPrivateNetwork": "允许专用网络访问",
+          "allowedOrigins": "允许的来源"
+        },
+        "placeholders": {
+          "origin": "请输入有效的网址"
+        },
+        "actions": {
+          "add": "添加"
+        },
+        "messages": {
+          "alwaysIncluded": "始终包含来源：{{urls}}"
+        },
+        "tooltips": {
+          "open": "外部控制跨域设置"
         }
       },
       "verge": {

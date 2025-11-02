@@ -334,10 +334,6 @@
   "Port settings saved": "Port settings saved",
   "Failed to save port settings": "Failed to save port settings",
   "External": "外部制御",
-  "Enable External Controller": "Enable External Controller",
-  "External Controller": "外部コントローラーの監視アドレス",
-  "Core Secret": "APIアクセスキー",
-  "Recommended": "推奨設定",
   "Open URL": "URLを開く",
   "Replace host, port, secret with %host, %port, %secret": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。",
   "Support %host, %port, %secret": "%host, %port, %secretをサポートします。",
@@ -586,20 +582,9 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "External Cors Settings": "External Cors Settings",
-  "External Cors Configuration": "External Cors Configuration",
-  "Allow private network access": "Allow private network access",
-  "Allowed Origins": "Allowed Origins",
-  "Please enter a valid url": "Please enter a valid url",
-  "Add": "Add",
-  "Always included origins: {{urls}}": "Always included origins: {{urls}}",
   "Invalid regular expression": "Invalid regular expression",
-  "Controller address cannot be empty": "Controller address cannot be empty",
-  "Secret cannot be empty": "Secret cannot be empty",
   "Configuration saved successfully": "ランダム設定を保存完了",
   "Failed to save configuration": "Failed to save configuration",
-  "Controller address copied to clipboard": "API ポートがクリップボードにコピーされました",
-  "Secret copied to clipboard": "API キーがクリップボードにコピーされました",
   "Saving...": "Saving...",
   "Detection timeout or failed": "Detection timeout or failed",
   "App Log Max Size": "App Log Max Size",
@@ -831,6 +816,47 @@
         "actions": {
           "installService": "サービスをインストール",
           "uninstallService": "サービスのアンインストール"
+        }
+      },
+      "externalController": {
+        "title": "外部コントローラーの監視アドレス",
+        "fields": {
+          "enable": "外部コントローラーを有効化",
+          "address": "外部コントローラーの監視アドレス",
+          "secret": "APIアクセスキー"
+        },
+        "placeholders": {
+          "address": "必須",
+          "secret": "推奨設定"
+        },
+        "tooltips": {
+          "copy": "クリップボードにコピー"
+        },
+        "messages": {
+          "addressRequired": "コントローラーのアドレスは空にできません",
+          "secretRequired": "シークレットを空にすることはできません",
+          "copyFailed": "コピーに失敗しました",
+          "controllerCopied": "API ポートがクリップボードにコピーされました",
+          "secretCopied": "API キーがクリップボードにコピーされました"
+        }
+      },
+      "externalCors": {
+        "title": "外部 CORS 設定",
+        "fields": {
+          "allowPrivateNetwork": "プライベートネットワークへのアクセスを許可",
+          "allowedOrigins": "許可されたオリジン"
+        },
+        "placeholders": {
+          "origin": "有効なURLを入力してください"
+        },
+        "actions": {
+          "add": "追加"
+        },
+        "messages": {
+          "alwaysIncluded": "常に含まれるオリジン: {{urls}}"
+        },
+        "tooltips": {
+          "open": "外部 CORS 設定"
         }
       },
       "verge": {

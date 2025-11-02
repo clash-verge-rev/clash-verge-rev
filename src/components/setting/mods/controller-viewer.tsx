@@ -56,12 +56,20 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       // 如果启用了外部控制器，则保存控制器地址和密钥
       if (enableController) {
         if (!controller.trim()) {
-          showNotice("error", t("Controller address cannot be empty"));
+          showNotice(
+            "error",
+            t(
+              "components.settings.externalController.messages.addressRequired",
+            ),
+          );
           return;
         }
 
         if (!secret.trim()) {
-          showNotice("error", t("Secret cannot be empty"));
+          showNotice(
+            "error",
+            t("components.settings.externalController.messages.secretRequired"),
+          );
           return;
         }
 
@@ -93,7 +101,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         setTimeout(() => setCopySuccess(null));
       } catch (err) {
         console.warn("[ControllerViewer] copy to clipboard failed:", err);
-        showNotice("error", t("Failed to copy"));
+        showNotice(
+          "error",
+          t("components.settings.externalController.messages.copyFailed"),
+        );
       }
     },
   );
@@ -101,7 +112,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t("External Controller")}
+      title={t("components.settings.externalController.title")}
       contentSx={{ width: 400 }}
       okBtn={
         isSaving ? (
@@ -126,7 +137,9 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
             justifyContent: "space-between",
           }}
         >
-          <ListItemText primary={t("Enable External Controller")} />
+          <ListItemText
+            primary={t("components.settings.externalController.fields.enable")}
+          />
           <Switch
             edge="end"
             checked={enableController}
@@ -142,7 +155,9 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
             justifyContent: "space-between",
           }}
         >
-          <ListItemText primary={t("External Controller")} />
+          <ListItemText
+            primary={t("components.settings.externalController.fields.address")}
+          />
           <Box display="flex" alignItems="center" gap={1}>
             <TextField
               size="small"
@@ -152,11 +167,15 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 pointerEvents: enableController ? "auto" : "none",
               }}
               value={controller}
-              placeholder="Required"
+              placeholder={t(
+                "components.settings.externalController.placeholders.address",
+              )}
               onChange={(e) => setController(e.target.value)}
               disabled={isSaving || !enableController}
             />
-            <Tooltip title={t("Copy to clipboard")}>
+            <Tooltip
+              title={t("components.settings.externalController.tooltips.copy")}
+            >
               <IconButton
                 size="small"
                 onClick={() => handleCopyToClipboard(controller, "controller")}
@@ -176,7 +195,9 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
             justifyContent: "space-between",
           }}
         >
-          <ListItemText primary={t("Core Secret")} />
+          <ListItemText
+            primary={t("components.settings.externalController.fields.secret")}
+          />
           <Box display="flex" alignItems="center" gap={1}>
             <TextField
               size="small"
@@ -186,11 +207,15 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 pointerEvents: enableController ? "auto" : "none",
               }}
               value={secret}
-              placeholder={t("Recommended")}
+              placeholder={t(
+                "components.settings.externalController.placeholders.secret",
+              )}
               onChange={(e) => setSecret(e.target.value)}
               disabled={isSaving || !enableController}
             />
-            <Tooltip title={t("Copy to clipboard")}>
+            <Tooltip
+              title={t("components.settings.externalController.tooltips.copy")}
+            >
               <IconButton
                 size="small"
                 onClick={() => handleCopyToClipboard(secret, "secret")}
@@ -211,8 +236,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       >
         <Alert severity="success">
           {copySuccess === "controller"
-            ? t("Controller address copied to clipboard")
-            : t("Secret copied to clipboard")}
+            ? t(
+                "components.settings.externalController.messages.controllerCopied",
+              )
+            : t("components.settings.externalController.messages.secretCopied")}
         </Alert>
       </Snackbar>
     </BaseDialog>
