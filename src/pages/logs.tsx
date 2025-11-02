@@ -60,7 +60,7 @@ const LogPage = () => {
   return (
     <BasePage
       full
-      title={t("pages.logs.title")}
+      title={t("logs.page.title")}
       contentStyle={{
         height: "100%",
         display: "flex",
@@ -72,13 +72,13 @@ const LogPage = () => {
           <IconButton
             title={t(
               enableLog
-                ? "pages.logs.actions.pause"
-                : "pages.logs.actions.resume",
+                ? "logs.page.actions.pause"
+                : "logs.page.actions.resume",
             )}
             aria-label={t(
               enableLog
-                ? "pages.logs.actions.pause"
-                : "pages.logs.actions.resume",
+                ? "logs.page.actions.pause"
+                : "logs.page.actions.resume",
             )}
             size="small"
             color="inherit"
@@ -98,7 +98,7 @@ const LogPage = () => {
               refreshGetClashLog(true);
             }}
           >
-            {t("pages.logs.actions.clear")}
+            {t("logs.page.actions.clear")}
           </Button>
         </Box>
       }
@@ -117,11 +117,11 @@ const LogPage = () => {
           value={logState}
           onChange={(e) => handleLogLevelChange(e.target.value as LogFilter)}
         >
-          <MenuItem value="all">{t("pages.logs.filters.all")}</MenuItem>
-          <MenuItem value="debug">{t("pages.logs.filters.debug")}</MenuItem>
-          <MenuItem value="info">{t("pages.logs.filters.info")}</MenuItem>
-          <MenuItem value="warn">{t("pages.logs.filters.warn")}</MenuItem>
-          <MenuItem value="err">{t("pages.logs.filters.error")}</MenuItem>
+          <MenuItem value="all">{t("logs.page.filters.all")}</MenuItem>
+          <MenuItem value="debug">{t("logs.page.filters.debug")}</MenuItem>
+          <MenuItem value="info">{t("logs.page.filters.info")}</MenuItem>
+          <MenuItem value="warn">{t("logs.page.filters.warn")}</MenuItem>
+          <MenuItem value="err">{t("logs.page.filters.error")}</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox
           onSearch={(matcher, state) => {

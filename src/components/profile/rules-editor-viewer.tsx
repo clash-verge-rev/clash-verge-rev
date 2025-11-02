@@ -462,12 +462,10 @@ export const RulesEditorViewer = (props: Props) => {
 
   const validateRule = () => {
     if ((ruleType.required ?? true) && !ruleContent) {
-      throw new Error(
-        t("components.ruleEditor.form.validation.conditionRequired"),
-      );
+      throw new Error(t("ruleEditor.form.validation.conditionRequired"));
     }
     if (ruleType.validator && !ruleType.validator(ruleContent)) {
-      throw new Error(t("components.ruleEditor.form.validation.invalidRule"));
+      throw new Error(t("ruleEditor.form.validation.invalidRule"));
     }
 
     const condition = (ruleType.required ?? true) ? ruleContent : "";
@@ -479,7 +477,7 @@ export const RulesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice.success("components.profile.notifications.saved");
+      showNotice.success("profile.notifications.saved");
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {
@@ -492,7 +490,7 @@ export const RulesEditorViewer = (props: Props) => {
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">
-            {t("components.ruleEditor.title")}
+            {t("ruleEditor.title")}
             <Box>
               <Button
                 variant="contained"
@@ -522,9 +520,7 @@ export const RulesEditorViewer = (props: Props) => {
               }}
             >
               <Item>
-                <ListItemText
-                  primary={t("components.ruleEditor.form.labels.type")}
-                />
+                <ListItemText primary={t("ruleEditor.form.labels.type")} />
                 <Autocomplete
                   size="small"
                   sx={{ minWidth: "240px" }}
@@ -535,9 +531,7 @@ export const RulesEditorViewer = (props: Props) => {
                   renderOption={(props, option) => (
                     <li
                       {...props}
-                      title={t(
-                        `components.ruleEditor.ruleTypes.${option.name}`,
-                      )}
+                      title={t(`ruleEditor.ruleTypes.${option.name}`)}
                     >
                       {option.name}
                     </li>
@@ -548,9 +542,7 @@ export const RulesEditorViewer = (props: Props) => {
               <Item
                 sx={{ display: !(ruleType.required ?? true) ? "none" : "" }}
               >
-                <ListItemText
-                  primary={t("components.ruleEditor.form.labels.content")}
-                />
+                <ListItemText primary={t("ruleEditor.form.labels.content")} />
 
                 {ruleType.name === "RULE-SET" && (
                   <Autocomplete
@@ -588,7 +580,7 @@ export const RulesEditorViewer = (props: Props) => {
               </Item>
               <Item>
                 <ListItemText
-                  primary={t("components.ruleEditor.form.labels.proxyPolicy")}
+                  primary={t("ruleEditor.form.labels.proxyPolicy")}
                 />
                 <Autocomplete
                   size="small"
@@ -607,7 +599,7 @@ export const RulesEditorViewer = (props: Props) => {
               {ruleType.noResolve && (
                 <Item>
                   <ListItemText
-                    primary={t("components.ruleEditor.form.toggles.noResolve")}
+                    primary={t("ruleEditor.form.toggles.noResolve")}
                   />
                   <Switch
                     checked={noResolve}
@@ -630,7 +622,7 @@ export const RulesEditorViewer = (props: Props) => {
                     }
                   }}
                 >
-                  {t("components.ruleEditor.form.actions.prependRule")}
+                  {t("ruleEditor.form.actions.prependRule")}
                 </Button>
               </Item>
               <Item>
@@ -648,7 +640,7 @@ export const RulesEditorViewer = (props: Props) => {
                     }
                   }}
                 >
-                  {t("components.ruleEditor.form.actions.appendRule")}
+                  {t("ruleEditor.form.actions.appendRule")}
                 </Button>
               </Item>
             </List>

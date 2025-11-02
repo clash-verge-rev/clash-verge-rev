@@ -13,192 +13,6 @@
   "Save": "Саклау",
   "Delete": "Бетерү",
   "Enable": "Кушу",
-  "pages": {
-    "home": {
-      "title": "Home",
-      "tooltips": {
-        "lightweightMode": "Җиңел Режим",
-        "manual": "Документация",
-        "settings": "Home Settings"
-      },
-      "cards": {
-        "trafficStats": "Traffic Stats",
-        "networkSettings": "Network Settings",
-        "proxyMode": "Proxy Mode"
-      },
-      "settings": {
-        "title": "Home Settings",
-        "cards": {
-          "profile": "Profile Card",
-          "currentProxy": "Current Proxy Card",
-          "network": "Network Settings Card",
-          "proxyMode": "Proxy Mode Card",
-          "traffic": "Traffic Stats Card",
-          "tests": "Website Tests Card",
-          "ip": "IP Information Card",
-          "clashInfo": "Clash Info Cards",
-          "systemInfo": "System Info Cards"
-        }
-      }
-    },
-    "proxies": {
-      "title": {
-        "default": "Прокси төркемнәре",
-        "chainMode": "Proxy Chain Mode"
-      },
-      "actions": {
-        "toggleChain": "🔗 Чылбыр прокси",
-        "connect": "Connect",
-        "disconnect": "Disconnect",
-        "connecting": "Connecting...",
-        "clearChainConfig": "Delete Chain Config"
-      },
-      "provider": {
-        "title": "Прокси провайдеры",
-        "actions": {
-          "updateAll": "Барысын да яңарту",
-          "update": "Яңарту"
-        }
-      },
-      "rules": {
-        "title": "Proxy Rules",
-        "select": "Select Rules"
-      },
-      "labels": {
-        "proxyCount": "Proxy Count",
-        "delayCheckReset": "Беркетелгәнне гамәлдән чыгару өчен задержканы тикшерү"
-      },
-      "tooltips": {
-        "locate": "Урын",
-        "delayCheck": "Задержканы тикшерү",
-        "sortDefault": "Башлангыч итеп сортлау",
-        "sortDelay": "Задержка буенча сортлау",
-        "sortName": "Исем буенча сортлау",
-        "delayCheckUrl": "Задержканы тикшерү URL-ы",
-        "showBasic": "Прокси турында кыскача мәгълүмат",
-        "showDetail": "Прокси турында тулы мәгълүмат",
-        "filter": "Фильтр"
-      },
-      "placeholders": {
-        "filter": "Фильтр шартлары",
-        "delayCheckUrl": "Задержканы тикшерү URL-ы"
-      },
-      "chain": {
-        "header": "Chain Proxy Config",
-        "empty": "No proxy chain configured",
-        "instruction": "Click nodes in order to add to proxy chain",
-        "minimumNodes": "Chain proxy requires at least 2 nodes",
-        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-        "connectFailed": "Failed to connect to proxy chain",
-        "disconnectFailed": "Failed to disconnect from proxy chain",
-        "duplicateNode": "Proxy node already exists in chain"
-      }
-    },
-    "rules": {
-      "title": "Кагыйдәләр",
-      "provider": {
-        "trigger": "Кагыйдә провайдеры",
-        "dialogTitle": "Кагыйдә провайдеры",
-        "actions": {
-          "updateAll": "Барысын да яңарту",
-          "update": "Яңарту"
-        }
-      }
-    },
-    "profiles": {
-      "title": "Профильләр",
-      "actions": {
-        "updateAll": "Барлык профильләрне яңарту",
-        "viewRuntimeConfig": "Кулланылган конфигурацияне карау",
-        "reactivate": "Профильләрне янәдән активлаштыру",
-        "import": "Импорт",
-        "new": "Яңа"
-      },
-      "batch": {
-        "title": "Batch Operations",
-        "delete": "Delete Selected Profiles",
-        "selectAll": "Select All",
-        "deselectAll": "Deselect All",
-        "done": "Done",
-        "selected": "Selected",
-        "items": "items"
-      },
-      "import": {
-        "placeholder": "Профиль URL-ы",
-        "paste": "Кую",
-        "clear": "Чистарту"
-      },
-      "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Фәкать YAML-файллар гына хуплана"
-      },
-      "notifications": {
-        "importRetry": "Import failed, retrying with Clash proxy...",
-        "importFail": "Import failed even with Clash proxy",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
-        "profileSwitched": "Профиль алмаштырылды",
-        "profileReactivated": "Профиль яңадан активлаштырылды",
-        "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Selected profiles deleted successfully"
-      },
-      "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
-      }
-    },
-    "connections": {
-      "title": "Тоташулар",
-      "summary": {
-        "downloaded": "Йөкләнгән",
-        "uploaded": "Чыгарылган"
-      },
-      "actions": {
-        "listView": "Исемлек күзаллау",
-        "tableView": "Таблица күзаллау",
-        "pause": "Туктау",
-        "resume": "Дәвам",
-        "closeAll": "Барысын да ябу"
-      }
-    },
-    "settings": {
-      "title": "Көйләүләр",
-      "actions": {
-        "manual": "Документация",
-        "telegram": "Telegram каналы",
-        "github": "GitHub репозиториясе"
-      }
-    },
-    "logs": {
-      "title": "Логлар",
-      "actions": {
-        "pause": "Туктау",
-        "resume": "Дәвам",
-        "clear": "Чистарту"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      }
-    },
-    "test": {
-      "title": "Тест",
-      "actions": {
-        "testAll": "Барчасын тестлау",
-        "new": "Яңа"
-      }
-    },
-    "unlock": {
-      "title": "Unlock Test",
-      "actions": {
-        "testing": "Testing..."
-      },
-      "empty": "No unlock test items"
-    }
-  },
   "Proxies": "Прокси",
   "Update At": "Яңартылган вакыт",
   "rule": "кагыйдә",
@@ -380,807 +194,6 @@
   "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
-  "components": {
-    "ruleEditor": {
-      "title": "Кагыйдәләрне үзгәртү",
-      "form": {
-        "labels": {
-          "type": "Кагыйдә төре",
-          "content": "Кагыйдә эчтәлеге",
-          "proxyPolicy": "Прокси сәясәте"
-        },
-        "toggles": {
-          "noResolve": "Резолвсыз"
-        },
-        "actions": {
-          "prependRule": "Кагыйдәне өскә өстәү",
-          "appendRule": "Кагыйдәне аска өстәү"
-        },
-        "validation": {
-          "conditionRequired": "Кагыйдә шарты кирәк",
-          "invalidRule": "Яраксыз кагыйдә"
-        }
-      }
-    },
-    "profile": {
-      "viewer": {
-        "title": {
-          "create": "Профиль булдыру",
-          "edit": "Профильне үзгәртү"
-        },
-        "buttons": {
-          "save": "Саклау",
-          "cancel": "Баш тарту"
-        },
-        "fields": {
-          "type": "Төр",
-          "name": "Исем",
-          "description": "Тасвирламалар",
-          "subscriptionUrl": "Подписка URL-ы",
-          "httpTimeout": "HTTP Request Timeout",
-          "updateInterval": "Яңарту интервалы",
-          "useSystemProxy": "Системалы проксины кулланып яңарту",
-          "useClashProxy": "Clash прокси кулланып яңарту",
-          "acceptInvalidCerts": "Дөрес булмаган сертификатларны кабул итү (Куркыныч)",
-          "allowAutoUpdate": "Allow Auto Update"
-        },
-        "notifications": {
-          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
-        }
-      },
-      "fileInput": {
-        "chooseFile": "Файл сайлау"
-      },
-      "notifications": {
-        "saved": "Saved successfully"
-      },
-      "proxiesEditor": {
-        "title": "Проксины үзгәртү",
-        "placeholders": {
-          "multiUri": "Берничә URI өчен яңа юл символын кулланыгыз (Base64 кодлавы ярдәм ителә)"
-        },
-        "actions": {
-          "prepend": "Проксины өскә өстәү",
-          "append": "Проксины аска өстәү"
-        }
-      },
-      "groupsEditor": {
-        "title": "Прокси төркемнәрен үзгәртү",
-        "errors": {
-          "nameRequired": "Төркем исеме кирәк",
-          "nameExists": "Әлеге төркем исеме бар инде"
-        },
-        "fields": {
-          "type": "Төркем төре",
-          "name": "Төркем исеме",
-          "icon": "Прокси төркеме иконкасы",
-          "proxies": "Прокси куллану",
-          "provider": "Провайдер куллану",
-          "healthCheckUrl": "Сәламәтлекне тикшерү URL-ы",
-          "expectedStatus": "Көтелгән статус коды",
-          "interval": "Интервал",
-          "timeout": "Таймаут",
-          "maxFailedTimes": "Иң күп хаталы тикшерү саны",
-          "interfaceName": "Интерфейс исеме",
-          "routingMark": "Маршрут билгесе",
-          "filter": "Фильтр",
-          "excludeFilter": "Фильтр аша чыгару",
-          "excludeType": "Чыгару төре",
-          "includeAll": "Барлык прокси һәм провайдерларны кертү",
-          "includeAllProxies": "Барлык проксины кертү",
-          "includeAllProviders": "Барлык провайдерларны кертү"
-        },
-        "toggles": {
-          "lazy": "Сак режим (lazy)",
-          "disableUdp": "UDP'ны сүндерү",
-          "hidden": "Яшерен"
-        },
-        "actions": {
-          "prepend": "Төркемне өскә өстәү",
-          "append": "Төркемне аска өстәү"
-        }
-      },
-      "menu": {
-        "home": "Home",
-        "select": "Сайлау",
-        "editInfo": "Мәгълүматны үзгәртү",
-        "editFile": "Файлны үзгәртү",
-        "editRules": "Кагыйдәләрне үзгәртү",
-        "editProxies": "Проксины үзгәртү",
-        "editGroups": "Прокси төркемнәрен үзгәртү",
-        "extendConfig": "Merge-ны үзгәртергә",
-        "extendScript": "Script-ны үзгәртергә",
-        "openFile": "Файлны ачу",
-        "update": "Яңарту",
-        "updateViaProxy": "Update via proxy",
-        "delete": "Бетерү"
-      },
-      "item": {
-        "tooltips": {
-          "showLast": "Click to show last update time",
-          "showNext": "Click to show next update"
-        },
-        "status": {
-          "lastUpdateFailed": "Last Update failed",
-          "nextUp": "Next Up",
-          "noSchedule": "No schedule",
-          "unknown": "Unknown",
-          "autoUpdateDisabled": "Auto update disabled"
-        }
-      },
-      "confirm": {
-        "delete": {
-          "title": "Бетерүне раслагыз",
-          "message": "Бу гамәлне кире кайтарып булмый"
-        }
-      },
-      "logViewer": {
-        "title": "Скрипт консоле"
-      },
-      "more": {
-        "global": {
-          "merge": "Global Merge",
-          "script": "Global Script"
-        },
-        "chips": {
-          "merge": "Merge",
-          "script": "Script"
-        }
-      },
-      "editor": {
-        "format": "Документны форматлау",
-        "readOnlyMessage": "Уку режимында үзгәртү мөмкин түгел"
-      }
-    },
-    "home": {
-      "proxyTunCard": {
-        "status": {
-          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
-          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
-          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
-          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
-          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
-        },
-        "tooltips": {
-          "systemProxy": "Системалы прокси көйләүләрен үзгәртү рөхсәтен бирегез. Әгәр рөхсәт алу мөмкин түгел икән, прокси көйләүләрен кулдан үзгәртегез",
-          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
-        }
-      },
-      "clashInfo": {
-        "title": "Clash Info",
-        "fields": {
-          "coreVersion": "Core Version",
-          "systemProxyAddress": "System Proxy Address",
-          "mixedPort": "Mixed Port",
-          "uptime": "Uptime",
-          "rulesCount": "Rules Count"
-        }
-      },
-      "systemInfo": {
-        "title": "System Info",
-        "fields": {
-          "osInfo": "OS Info",
-          "autoLaunch": "Автостарт",
-          "runningMode": "Running Mode",
-          "lastCheckUpdate": "Last Check Update",
-          "vergeVersion": "Verge версиясе"
-        },
-        "actions": {
-          "settings": "Көйләүләр"
-        },
-        "labels": {
-          "enabled": "Кушылган",
-          "disabled": "Сүнгән"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "Administrator mode may not support auto launch"
-        },
-        "badges": {
-          "adminMode": "Administrator Mode",
-          "serviceMode": "Сервис режимы",
-          "sidecarMode": "User Mode",
-          "adminServiceMode": "Admin + Service Mode"
-        }
-      },
-      "ipInfo": {
-        "title": "IP Information",
-        "errors": {
-          "load": "Failed to get IP info"
-        },
-        "labels": {
-          "retry": "Retry",
-          "ip": "IP",
-          "asn": "ASN",
-          "isp": "ISP",
-          "org": "ORG",
-          "location": "Location",
-          "timezone": "Timezone",
-          "autoRefresh": "Auto refresh",
-          "unknown": "Unknown"
-        }
-      },
-      "traffic": {
-        "metrics": {
-          "uploadSpeed": "Йөкләү (чыгару) тизлеге",
-          "downloadSpeed": "Йөкләү тизлеге",
-          "activeConnections": "Active Connections",
-          "uploaded": "Чыгарылган",
-          "downloaded": "Йөкләнгән",
-          "memoryUsage": "Хәтер куллану"
-        },
-        "legends": {
-          "upload": "Upload",
-          "download": "Download"
-        },
-        "patterns": {
-          "minutes": "{{time}} Minutes"
-        }
-      },
-      "currentProxy": {
-        "title": "Current Node",
-        "actions": {
-          "refreshDelay": "Задержканы тикшерү"
-        },
-        "labels": {
-          "globalMode": "Глобаль режим",
-          "directMode": "Туры режим",
-          "group": "Group",
-          "proxy": "Proxy",
-          "noActiveNode": "No active proxy node"
-        }
-      },
-      "profile": {
-        "title": "Профильләр",
-        "actions": {
-          "import": "Импорт"
-        },
-        "labels": {
-          "from": "Каян",
-          "updateTime": "Яңарту вакыты",
-          "usedTotal": "Кулланылган / Барлыгы",
-          "expireTime": "Тамамлану вакыты",
-          "clickToImport": "Click to import subscription"
-        }
-      }
-    },
-    "connection": {
-      "fields": {
-        "host": "Хост",
-        "downloaded": "Йөкләнгән",
-        "uploaded": "Чыгарылган",
-        "dlSpeed": "Йөкләү тизл.",
-        "ulSpeed": "Чыгару тизл.",
-        "chains": "Чылбырлар",
-        "rule": "Кагыйдә",
-        "process": "Процесс",
-        "time": "Тоташу вакыты",
-        "source": "Чыганак адресы",
-        "destination": "Максат IP-адресы",
-        "destinationPort": "Барасы порты",
-        "type": "Төр"
-      },
-      "actions": {
-        "closeConnection": "Тоташуны ябу"
-      },
-      "order": {
-        "default": "Default",
-        "uploadSpeed": "Йөкләү (чыгару) тизлеге",
-        "downloadSpeed": "Йөкләү тизлеге"
-      }
-    },
-    "settings": {
-      "system": {
-        "title": "Система көйләүләре",
-        "toggles": {
-          "tunMode": "Tun режимы (виртуаль челтәр адаптеры)",
-          "systemProxy": "Системалы прокси"
-        },
-        "labels": {
-          "autoLaunch": "Автостарт",
-          "silentStart": "Фон режимында башлау"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "Administrator mode may not support auto launch",
-          "silentStart": "Программаны фоновый режимда, тәрәзәсез эшләтеп җибәрү"
-        }
-      },
-      "proxyControl": {
-        "labels": {
-          "systemProxy": "Системалы прокси",
-          "tunMode": "Tun режимы (виртуаль челтәр адаптеры)"
-        },
-        "tooltips": {
-          "systemProxy": "Системалы прокси көйләүләрен үзгәртү рөхсәтен бирегез. Әгәр рөхсәт алу мөмкин түгел икән, прокси көйләүләрен кулдан үзгәртегез",
-          "tunMode": "Tun режимы бөтен системаның трафигын тотып ала. Аны кабызган очракта системалы проксины аерым кабызу таләп ителми.",
-          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
-        },
-        "actions": {
-          "installService": "Хезмәтне урнаштыру",
-          "uninstallService": "Uninstall Service"
-        }
-      },
-      "externalController": {
-        "title": "Тышкы контроллер адресы",
-        "fields": {
-          "enable": "Enable External Controller",
-          "address": "Тышкы контроллер адресы",
-          "secret": "Серсүз"
-        },
-        "placeholders": {
-          "address": "Required",
-          "secret": "Тавсия ителә"
-        },
-        "tooltips": {
-          "copy": "Copy to clipboard"
-        },
-        "messages": {
-          "addressRequired": "Controller address cannot be empty",
-          "secretRequired": "Secret cannot be empty",
-          "copyFailed": "Failed to copy",
-          "controllerCopied": "Controller address copied to clipboard",
-          "secretCopied": "Secret copied to clipboard"
-        }
-      },
-      "externalCors": {
-        "title": "External Cors Configuration",
-        "fields": {
-          "allowPrivateNetwork": "Allow private network access",
-          "allowedOrigins": "Allowed Origins"
-        },
-        "placeholders": {
-          "origin": "Please enter a valid url"
-        },
-        "actions": {
-          "add": "Add"
-        },
-        "messages": {
-          "alwaysIncluded": "Always included origins: {{urls}}"
-        },
-        "tooltips": {
-          "open": "External Cors Settings"
-        }
-      },
-      "clash": {
-        "title": "Clash көйләүләре",
-        "items": {
-          "allowLan": "Локаль челтәргә рөхсәт",
-          "dnsOverwrite": "DNS Overwrite",
-          "ipv6": "IPv6",
-          "unifiedDelay": "Бердәм задержка",
-          "logLevel": "Лог дәрәҗәсе",
-          "portConfig": "Порт көйләүләре",
-          "external": "Тышкы",
-          "webUI": "Веб-интерфейс",
-          "clashCore": "Clash ядросы",
-          "openUwpTool": "UWP инструментын ачу",
-          "updateGeoData": "GeoData яңарту"
-        },
-        "tooltips": {
-          "networkInterface": "Челтәр интерфейсы",
-          "unifiedDelay": "Бердәм задержка актив булганда, төрле типтагы узеллар өчен икеләтә тест башкарыла, TCP установканы раслау аермаларын тигезләү максатында",
-          "logLevel": "Бу фәкать сервис режимында эшләгән вакытта системалы журнал файлларына кагыла",
-          "openUwpTool": "Windows 8'дән башлап UWP кушымталары (Microsoft Store кебек) локаль хосттагы челтәр хезмәтләренә турыдан-туры тоташа алмый. Бу инструмент әлеге чикләүне әйләнеп узарга ярдәм итә"
-        },
-        "options": {
-          "logLevel": {
-            "debug": "Debug",
-            "info": "Info",
-            "warning": "Warn",
-            "error": "Error",
-            "silent": "Silent"
-          }
-        },
-        "messages": {
-          "geoDataUpdated": "GeoData яңартылды"
-        },
-        "port": {
-          "title": "Порт көйләүләре",
-          "fields": {
-            "mixed": "Катнаш прокси порты",
-            "socks": "Socks прокси порты",
-            "http": "HTTP(s) прокси порты",
-            "redir": "Redir — үтә күренмәле прокси порты",
-            "tproxy": "Tproxy — үтә күренмәле прокси порты"
-          },
-          "actions": {
-            "random": "Очраклы порт"
-          },
-          "messages": {
-            "saved": "Port settings saved",
-            "saveFailed": "Failed to save port settings"
-          }
-        }
-      },
-      "liteMode": {
-        "title": "LightWeight Mode Settings",
-        "actions": {
-          "enterNow": "Enter LightWeight Mode Now"
-        },
-        "toggles": {
-          "autoEnter": "Auto Enter LightWeight Mode"
-        },
-        "tooltips": {
-          "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
-        },
-        "fields": {
-          "delay": "Auto Enter LightWeight Mode Delay"
-        },
-        "messages": {
-          "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
-        }
-      },
-      "backup": {
-        "title": "Резерв копия көйләүләре",
-        "tabs": {
-          "local": "Local backup",
-          "webdav": "WebDAV backup"
-        },
-        "actions": {
-          "selectTarget": "Select backup target",
-          "backup": "Резерв копия",
-          "refresh": "Яңарту",
-          "save": "Саклау",
-          "export": "Export",
-          "exportBackup": "Export Backup",
-          "delete": "Бетерү",
-          "deleteBackup": "Резерв копияне бетерү",
-          "restore": "Кайтару",
-          "restoreBackup": "Резерв копияне кайтару"
-        },
-        "fields": {
-          "webdavUrl": "WebDAV сервер URL-ы (http(s)://)",
-          "username": "Кулланучы исеме",
-          "password": "Пароль",
-          "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
-        },
-        "messages": {
-          "webdavUrlRequired": "WebDAV адресы буш булырга тиеш түгел",
-          "invalidWebdavUrl": "WebDAV адресы дөрес түгел",
-          "usernameRequired": "Кулланучы исеме буш булмаска тиеш",
-          "passwordRequired": "Пароль буш булмаска тиеш",
-          "webdavConfigSaved": "WebDAV көйләүләре сакланды",
-          "webdavConfigSaveFailed": "WebDAV көйләүләрен саклап булмады: {{error}}",
-          "backupCreated": "Резерв копия уңышлы ясалды",
-          "backupFailed": "Резерв копия хата белән төгәлләнде: {{error}}",
-          "localBackupCreated": "Local backup created successfully",
-          "localBackupFailed": "Local backup failed",
-          "restoreSuccess": "Уңышлы кайтарылды, кушымта 1 секундтан яңадан башланачак",
-          "localBackupExported": "Local backup exported successfully",
-          "localBackupExportFailed": "Failed to export local backup",
-          "confirmDelete": "Бу резерв копия файлын бетерергә телисезме?",
-          "confirmRestore": "Бу резерв копия файлын кире кайтарырга телисезме?"
-        },
-        "table": {
-          "filename": "Файл исеме",
-          "backupTime": "Резерв копия вакыты",
-          "actions": "Гамәлләр",
-          "noBackups": "Резерв копияләр юк",
-          "rowsPerPage": "Rows per page"
-        }
-      },
-      "verge": {
-        "basic": {
-          "title": "Verge Төп көйләүләр",
-          "items": {
-            "language": "Тел",
-            "themeMode": "Теманың режимы",
-            "trayClickEvent": "Трейдагы басу вакыйгасы",
-            "copyEnvType": "Env төрен күчереп алу",
-            "startPage": "Баш бит",
-            "startupScript": "Башлану скрипты",
-            "themeSetting": "Тема көйләүләре",
-            "layoutSetting": "Расположение көйләүләре",
-            "misc": "Өстәмә көйләүләр",
-            "hotkeySetting": "Клавиатура төймәләре (hotkey) көйләүләре"
-          },
-          "actions": {
-            "browse": "Карау",
-            "clear": "Чистарту"
-          },
-          "trayOptions": {
-            "showMainWindow": "Төп тәрәзәне күрсәтү",
-            "showTrayMenu": "Show Tray Menu",
-            "disable": "Сүндерү"
-          }
-        },
-        "advanced": {
-          "title": "Verge Киңәйтелгән көйләүләр",
-          "items": {
-            "backupSetting": "Резерв копия көйләүләре",
-            "runtimeConfig": "Агымдагы конфигурация",
-            "openConfDir": "Кушымта папкасын ачу",
-            "openCoreDir": "Ядро сакланган папканы ачу",
-            "openLogsDir": "Логлар папкасын ачу",
-            "checkUpdates": "Яңартуларны тикшерү",
-            "openDevTools": "Разработчик коралларын ачу",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "Чыгу",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "Verge версиясе"
-          },
-          "tooltips": {
-            "backupInfo": "WebDAV аша конфигурация файлын саклауны хуплый",
-            "openConfDir": "Әгәр программада хаталар чыкса, бу папкадагы файлларны саклап калыгыз да, аннары барысын да бетереп, программаны яңадан башлагыз",
-            "liteMode": "GUI-ны ябыгыз һәм бары тик төшне генә эшләтеп калдырыгыз"
-          },
-          "actions": {
-            "copyVersion": "Copy Version"
-          },
-          "notifications": {
-            "latestVersion": "Сездә иң соңгы версия урнаштырылган",
-            "versionCopied": "Version copied to clipboard"
-          }
-        },
-        "theme": {
-          "title": "Тема көйләүләре",
-          "fields": {
-            "primaryColor": "Төп төс",
-            "secondaryColor": "Икенче төс",
-            "primaryText": "Primary Text",
-            "secondaryText": "Secondary Text",
-            "infoColor": "Мәгълүмат төсе",
-            "warningColor": "Кисәтү төсе",
-            "errorColor": "Хата төсе",
-            "successColor": "Уңыш төсе",
-            "fontFamily": "Шрифтлар гаиләсе",
-            "cssInjection": "CSS кертү"
-          },
-          "actions": {
-            "editCss": "Edit CSS"
-          },
-          "dialogs": {
-            "editCssTitle": "Edit CSS"
-          }
-        },
-        "layout": {
-          "title": "Расположение көйләүләре",
-          "fields": {
-            "preferSystemTitlebar": "Prefer System Titlebar",
-            "trafficGraph": "Трафик графигы",
-            "memoryUsage": "Хәтер куллану",
-            "proxyGroupIcon": "Прокси төркеме иконкасы",
-            "hoverNavigator": "Hover Jump Navigator",
-            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
-            "navIcon": "Навигация иконкасы",
-            "trayIcon": "Трей иконкасы",
-            "showProxyGroupsInline": "Show Proxy Groups Inline",
-            "commonTrayIcon": "Гомуми трей иконкасы",
-            "systemProxyTrayIcon": "Системалы прокси иконкасы",
-            "tunTrayIcon": "Tun (виртуаль адаптер) иконкасы"
-          },
-          "tooltips": {
-            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
-          },
-          "options": {
-            "icon": {
-              "monochrome": "Монохром",
-              "colorful": "Төсле",
-              "disable": "Сүндерү"
-            }
-          }
-        }
-      },
-      "common": {
-        "notifications": {
-          "copySuccess": "Күчерелде"
-        }
-      },
-      "misc": {
-        "title": "Өстәмә көйләүләр",
-        "fields": {
-          "appLogLevel": "Кушымта журналы дәрәҗәсе",
-          "appLogMaxSize": "App Log Max Size",
-          "appLogMaxCount": "App Log Max Count",
-          "autoCloseConnections": "Тоташуларны автоматик ябу",
-          "autoCheckUpdate": "Яңартуларны автоматик тикшерү",
-          "enableBuiltinEnhanced": "Эчке камилләштерүне кабызу",
-          "proxyLayoutColumns": "Прокси күрсәтү баганалары саны",
-          "autoLogClean": "Логларны автоматик чистарту",
-          "autoDelayDetection": "Автоматик тоткарлык ачыклау",
-          "defaultLatencyTest": "Тоткарлануны тикшерү сылтамасы (defaults)",
-          "defaultLatencyTimeout": "Тоткарлануның стандарт таймауты"
-        },
-        "tooltips": {
-          "autoCloseConnections": "Прокси төркеме яисә режимын үзгәрткәндә актив тоташуларны өзү",
-          "enableBuiltinEnhanced": "Конфигурация файлы белән туры килә торган өстәмә оптимизация",
-          "autoDelayDetection": "Фон режимында хәзерге төен тоткарлыгын периодик тикшерә",
-          "defaultLatencyTest": "Бу фәкать клиентның HTTP сораулары тесты өчен кулланыла, конфигурация файлына йогынты ясамый"
-        },
-        "options": {
-          "proxyLayoutColumns": {
-            "auto": "Авто баганалар"
-          },
-          "autoLogClean": {
-            "never": "Беркайчан чистартмаска",
-            "retainDays": "{{n}} көн саклау"
-          }
-        }
-      },
-      "update": {
-        "title": "New Version v{{version}}",
-        "actions": {
-          "goToRelease": "Релизлар битенә күчү",
-          "update": "Яңарту"
-        },
-        "messages": {
-          "portableError": "Портатив версиядә кушымта эчендә яңарту хупланмый, кулдан төшереп алыгыз",
-          "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала."
-        }
-      },
-      "sysproxy": {
-        "title": "Системалы прокси көйләүләре",
-        "fieldsets": {
-          "currentStatus": "Агымдагы системалы прокси"
-        },
-        "fields": {
-          "enableStatus": "Активлаштыру статусы",
-          "serverAddr": "Сервер адресы",
-          "pacUrl": "PAC адресы",
-          "proxyHost": "Прокси хосты",
-          "usePacMode": "PAC режимын куллану",
-          "proxyGuard": "Прокси саклаучы",
-          "guardDuration": "Саклау вакыты",
-          "alwaysUseDefaultBypass": "Һәрвакыт төп Bypass-ны куллану",
-          "proxyBypass": "Проксины әйләнеп узу:",
-          "bypass": "Әйләнеп узу:",
-          "pacScriptContent": "PAC скрипты эчтәлеге"
-        },
-        "tooltips": {
-          "proxyGuard": "Системалы прокси көйләүләрен чит программа үзгәртмәсен өчен шушы функцияне кабызыгыз"
-        },
-        "messages": {
-          "durationTooShort": "Прокси-демон эш вакыты 1 секундтан ким була алмый",
-          "invalidBypass": "Дөрес булмаган Bypass форматы",
-          "invalidProxyHost": "Прокси хосты форматы дөрес түгел"
-        },
-        "actions": {
-          "editPac": "Үзгәртү PAC"
-        }
-      },
-      "tun": {
-        "title": "Tun режимы (виртуаль челтәр адаптеры)",
-        "actions": {
-          "reset": "Башлангычка кайтару"
-        },
-        "fields": {
-          "stack": "Стек",
-          "device": "Device Name",
-          "autoRoute": "Авто-маршрутлау",
-          "strictRoute": "Катгый маршрутлау",
-          "autoDetectInterface": "Интерфейсны автоматик ачыклау",
-          "dnsHijack": "DNS'ны үзгәртеп тоту (hijack)",
-          "mtu": "MTU (макс. тапшыру берәмлеге)"
-        },
-        "tooltips": {
-          "dnsHijack": "Please use , to separate multiple DNS servers"
-        },
-        "messages": {
-          "applied": "Көйләүләр кулланылды"
-        }
-      },
-      "dns": {
-        "dialog": {
-          "title": "DNS Overwrite",
-          "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
-        },
-        "sections": {
-          "general": "DNS Settings",
-          "fallbackFilter": "Fallback Filter Settings",
-          "hosts": "Hosts Settings"
-        },
-        "fields": {
-          "enable": "Enable DNS",
-          "listen": "DNS Listen",
-          "enhancedMode": "Enhanced Mode",
-          "fakeIpRange": "Fake IP Range",
-          "fakeIpFilterMode": "Fake IP Filter Mode",
-          "ipv6": {
-            "label": "IPv6",
-            "description": "Enable IPv6 DNS resolution"
-          },
-          "preferH3": {
-            "label": "Prefer H3",
-            "description": "DNS DOH uses HTTP/3"
-          },
-          "respectRules": {
-            "label": "Respect Rules",
-            "description": "DNS connections follow routing rules"
-          },
-          "useHosts": {
-            "label": "Use Hosts",
-            "description": "Enable to resolve hosts through hosts file"
-          },
-          "useSystemHosts": {
-            "label": "Use System Hosts",
-            "description": "Enable to resolve hosts through system hosts file"
-          },
-          "directPolicy": {
-            "label": "Direct Nameserver Follow Policy",
-            "description": "Whether to follow nameserver policy"
-          },
-          "defaultNameserver": {
-            "label": "Default Nameserver",
-            "description": "Default DNS servers used to resolve DNS servers"
-          },
-          "nameserver": {
-            "label": "Nameserver",
-            "description": "List of DNS servers, comma separated"
-          },
-          "fallback": {
-            "label": "Fallback",
-            "description": "List of fallback DNS servers, comma separated"
-          },
-          "proxy": {
-            "label": "Proxy Server Nameserver",
-            "description": "DNS servers for proxy node domain resolution"
-          },
-          "directNameserver": {
-            "label": "Direct Nameserver",
-            "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
-          },
-          "fakeIpFilter": {
-            "label": "Fake IP Filter",
-            "description": "Domains that skip fake IP resolution, comma separated"
-          },
-          "nameserverPolicy": {
-            "label": "Nameserver Policy",
-            "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
-          },
-          "geoipFiltering": {
-            "label": "GeoIP Filtering",
-            "description": "Enable GeoIP filtering for fallback"
-          },
-          "geoipCode": "GeoIP Code",
-          "fallbackIpCidr": {
-            "label": "Fallback IP CIDR",
-            "description": "IP CIDRs not using fallback servers, comma separated"
-          },
-          "fallbackDomain": {
-            "label": "Fallback Domain",
-            "description": "Domains using fallback servers, comma separated"
-          },
-          "hosts": {
-            "label": "Hosts",
-            "description": "Custom domain to IP or domain mapping"
-          }
-        },
-        "messages": {
-          "saved": "DNS settings saved",
-          "configError": "DNS configuration error:"
-        },
-        "errors": {
-          "invalid": "Invalid configuration"
-        }
-      }
-    },
-    "providers": {
-      "notices": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
-      }
-    },
-    "test": {
-      "item": {
-        "actions": {
-          "test": "Тест"
-        }
-      },
-      "viewer": {
-        "title": {
-          "create": "Тест булдыру",
-          "edit": "Тестны үзгәртү"
-        },
-        "fields": {
-          "url": "Тест URL-ы"
-        }
-      }
-    }
-  },
   "common": {
     "editorModes": {
       "visualization": "Визуализация",
@@ -1206,6 +219,1001 @@
       "reorderMode": "Menu reorder mode",
       "unlock": "Unlock menu order",
       "lock": "Lock menu order"
+    }
+  },
+  "ruleEditor": {
+    "title": "Кагыйдәләрне үзгәртү",
+    "form": {
+      "labels": {
+        "type": "Кагыйдә төре",
+        "content": "Кагыйдә эчтәлеге",
+        "proxyPolicy": "Прокси сәясәте"
+      },
+      "toggles": {
+        "noResolve": "Резолвсыз"
+      },
+      "actions": {
+        "prependRule": "Кагыйдәне өскә өстәү",
+        "appendRule": "Кагыйдәне аска өстәү"
+      },
+      "validation": {
+        "conditionRequired": "Кагыйдә шарты кирәк",
+        "invalidRule": "Яраксыз кагыйдә"
+      }
+    }
+  },
+  "profile": {
+    "viewer": {
+      "title": {
+        "create": "Профиль булдыру",
+        "edit": "Профильне үзгәртү"
+      },
+      "buttons": {
+        "save": "Саклау",
+        "cancel": "Баш тарту"
+      },
+      "fields": {
+        "type": "Төр",
+        "name": "Исем",
+        "description": "Тасвирламалар",
+        "subscriptionUrl": "Подписка URL-ы",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Яңарту интервалы",
+        "useSystemProxy": "Системалы проксины кулланып яңарту",
+        "useClashProxy": "Clash прокси кулланып яңарту",
+        "acceptInvalidCerts": "Дөрес булмаган сертификатларны кабул итү (Куркыныч)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Файл сайлау"
+    },
+    "notifications": {
+      "saved": "Saved successfully"
+    },
+    "proxiesEditor": {
+      "title": "Проксины үзгәртү",
+      "placeholders": {
+        "multiUri": "Берничә URI өчен яңа юл символын кулланыгыз (Base64 кодлавы ярдәм ителә)"
+      },
+      "actions": {
+        "prepend": "Проксины өскә өстәү",
+        "append": "Проксины аска өстәү"
+      }
+    },
+    "groupsEditor": {
+      "title": "Прокси төркемнәрен үзгәртү",
+      "errors": {
+        "nameRequired": "Төркем исеме кирәк",
+        "nameExists": "Әлеге төркем исеме бар инде"
+      },
+      "fields": {
+        "type": "Төркем төре",
+        "name": "Төркем исеме",
+        "icon": "Прокси төркеме иконкасы",
+        "proxies": "Прокси куллану",
+        "provider": "Провайдер куллану",
+        "healthCheckUrl": "Сәламәтлекне тикшерү URL-ы",
+        "expectedStatus": "Көтелгән статус коды",
+        "interval": "Интервал",
+        "timeout": "Таймаут",
+        "maxFailedTimes": "Иң күп хаталы тикшерү саны",
+        "interfaceName": "Интерфейс исеме",
+        "routingMark": "Маршрут билгесе",
+        "filter": "Фильтр",
+        "excludeFilter": "Фильтр аша чыгару",
+        "excludeType": "Чыгару төре",
+        "includeAll": "Барлык прокси һәм провайдерларны кертү",
+        "includeAllProxies": "Барлык проксины кертү",
+        "includeAllProviders": "Барлык провайдерларны кертү"
+      },
+      "toggles": {
+        "lazy": "Сак режим (lazy)",
+        "disableUdp": "UDP'ны сүндерү",
+        "hidden": "Яшерен"
+      },
+      "actions": {
+        "prepend": "Төркемне өскә өстәү",
+        "append": "Төркемне аска өстәү"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "Сайлау",
+      "editInfo": "Мәгълүматны үзгәртү",
+      "editFile": "Файлны үзгәртү",
+      "editRules": "Кагыйдәләрне үзгәртү",
+      "editProxies": "Проксины үзгәртү",
+      "editGroups": "Прокси төркемнәрен үзгәртү",
+      "extendConfig": "Merge-ны үзгәртергә",
+      "extendScript": "Script-ны үзгәртергә",
+      "openFile": "Файлны ачу",
+      "update": "Яңарту",
+      "updateViaProxy": "Update via proxy",
+      "delete": "Бетерү"
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Бетерүне раслагыз",
+        "message": "Бу гамәлне кире кайтарып булмый"
+      }
+    },
+    "logViewer": {
+      "title": "Скрипт консоле"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "editor": {
+      "format": "Документны форматлау",
+      "readOnlyMessage": "Уку режимында үзгәртү мөмкин түгел"
+    }
+  },
+  "home": {
+    "proxyTunCard": {
+      "status": {
+        "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+        "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+        "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+        "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+        "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+      },
+      "tooltips": {
+        "systemProxy": "Системалы прокси көйләүләрен үзгәртү рөхсәтен бирегез. Әгәр рөхсәт алу мөмкин түгел икән, прокси көйләүләрен кулдан үзгәртегез",
+        "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash Info",
+      "fields": {
+        "coreVersion": "Core Version",
+        "systemProxyAddress": "System Proxy Address",
+        "mixedPort": "Mixed Port",
+        "uptime": "Uptime",
+        "rulesCount": "Rules Count"
+      }
+    },
+    "systemInfo": {
+      "title": "System Info",
+      "fields": {
+        "osInfo": "OS Info",
+        "autoLaunch": "Автостарт",
+        "runningMode": "Running Mode",
+        "lastCheckUpdate": "Last Check Update",
+        "vergeVersion": "Verge версиясе"
+      },
+      "actions": {
+        "settings": "Көйләүләр"
+      },
+      "labels": {
+        "enabled": "Кушылган",
+        "disabled": "Сүнгән"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch"
+      },
+      "badges": {
+        "adminMode": "Administrator Mode",
+        "serviceMode": "Сервис режимы",
+        "sidecarMode": "User Mode",
+        "adminServiceMode": "Admin + Service Mode"
+      }
+    },
+    "ipInfo": {
+      "title": "IP Information",
+      "errors": {
+        "load": "Failed to get IP info"
+      },
+      "labels": {
+        "retry": "Retry",
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "ISP",
+        "org": "ORG",
+        "location": "Location",
+        "timezone": "Timezone",
+        "autoRefresh": "Auto refresh",
+        "unknown": "Unknown"
+      }
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+        "downloadSpeed": "Йөкләү тизлеге",
+        "activeConnections": "Active Connections",
+        "uploaded": "Чыгарылган",
+        "downloaded": "Йөкләнгән",
+        "memoryUsage": "Хәтер куллану"
+      },
+      "legends": {
+        "upload": "Upload",
+        "download": "Download"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "currentProxy": {
+      "title": "Current Node",
+      "actions": {
+        "refreshDelay": "Задержканы тикшерү"
+      },
+      "labels": {
+        "globalMode": "Глобаль режим",
+        "directMode": "Туры режим",
+        "group": "Group",
+        "proxy": "Proxy",
+        "noActiveNode": "No active proxy node"
+      }
+    },
+    "profile": {
+      "title": "Профильләр",
+      "actions": {
+        "import": "Импорт"
+      },
+      "labels": {
+        "from": "Каян",
+        "updateTime": "Яңарту вакыты",
+        "usedTotal": "Кулланылган / Барлыгы",
+        "expireTime": "Тамамлану вакыты",
+        "clickToImport": "Click to import subscription"
+      }
+    },
+    "page": {
+      "title": "Home",
+      "tooltips": {
+        "lightweightMode": "Җиңел Режим",
+        "manual": "Документация",
+        "settings": "Home Settings"
+      },
+      "cards": {
+        "trafficStats": "Traffic Stats",
+        "networkSettings": "Network Settings",
+        "proxyMode": "Proxy Mode"
+      },
+      "settings": {
+        "title": "Home Settings",
+        "cards": {
+          "profile": "Profile Card",
+          "currentProxy": "Current Proxy Card",
+          "network": "Network Settings Card",
+          "proxyMode": "Proxy Mode Card",
+          "traffic": "Traffic Stats Card",
+          "tests": "Website Tests Card",
+          "ip": "IP Information Card",
+          "clashInfo": "Clash Info Cards",
+          "systemInfo": "System Info Cards"
+        }
+      }
+    }
+  },
+  "connection": {
+    "fields": {
+      "host": "Хост",
+      "downloaded": "Йөкләнгән",
+      "uploaded": "Чыгарылган",
+      "dlSpeed": "Йөкләү тизл.",
+      "ulSpeed": "Чыгару тизл.",
+      "chains": "Чылбырлар",
+      "rule": "Кагыйдә",
+      "process": "Процесс",
+      "time": "Тоташу вакыты",
+      "source": "Чыганак адресы",
+      "destination": "Максат IP-адресы",
+      "destinationPort": "Барасы порты",
+      "type": "Төр"
+    },
+    "actions": {
+      "closeConnection": "Тоташуны ябу"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+      "downloadSpeed": "Йөкләү тизлеге"
+    }
+  },
+  "settings": {
+    "system": {
+      "title": "Система көйләүләре",
+      "toggles": {
+        "tunMode": "Tun режимы (виртуаль челтәр адаптеры)",
+        "systemProxy": "Системалы прокси"
+      },
+      "labels": {
+        "autoLaunch": "Автостарт",
+        "silentStart": "Фон режимында башлау"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch",
+        "silentStart": "Программаны фоновый режимда, тәрәзәсез эшләтеп җибәрү"
+      }
+    },
+    "proxyControl": {
+      "labels": {
+        "systemProxy": "Системалы прокси",
+        "tunMode": "Tun режимы (виртуаль челтәр адаптеры)"
+      },
+      "tooltips": {
+        "systemProxy": "Системалы прокси көйләүләрен үзгәртү рөхсәтен бирегез. Әгәр рөхсәт алу мөмкин түгел икән, прокси көйләүләрен кулдан үзгәртегез",
+        "tunMode": "Tun режимы бөтен системаның трафигын тотып ала. Аны кабызган очракта системалы проксины аерым кабызу таләп ителми.",
+        "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+      },
+      "actions": {
+        "installService": "Хезмәтне урнаштыру",
+        "uninstallService": "Uninstall Service"
+      }
+    },
+    "externalController": {
+      "title": "Тышкы контроллер адресы",
+      "fields": {
+        "enable": "Enable External Controller",
+        "address": "Тышкы контроллер адресы",
+        "secret": "Серсүз"
+      },
+      "placeholders": {
+        "address": "Required",
+        "secret": "Тавсия ителә"
+      },
+      "tooltips": {
+        "copy": "Copy to clipboard"
+      },
+      "messages": {
+        "addressRequired": "Controller address cannot be empty",
+        "secretRequired": "Secret cannot be empty",
+        "copyFailed": "Failed to copy",
+        "controllerCopied": "Controller address copied to clipboard",
+        "secretCopied": "Secret copied to clipboard"
+      }
+    },
+    "externalCors": {
+      "title": "External Cors Configuration",
+      "fields": {
+        "allowPrivateNetwork": "Allow private network access",
+        "allowedOrigins": "Allowed Origins"
+      },
+      "placeholders": {
+        "origin": "Please enter a valid url"
+      },
+      "actions": {
+        "add": "Add"
+      },
+      "messages": {
+        "alwaysIncluded": "Always included origins: {{urls}}"
+      },
+      "tooltips": {
+        "open": "External Cors Settings"
+      }
+    },
+    "clash": {
+      "title": "Clash көйләүләре",
+      "items": {
+        "allowLan": "Локаль челтәргә рөхсәт",
+        "dnsOverwrite": "DNS Overwrite",
+        "ipv6": "IPv6",
+        "unifiedDelay": "Бердәм задержка",
+        "logLevel": "Лог дәрәҗәсе",
+        "portConfig": "Порт көйләүләре",
+        "external": "Тышкы",
+        "webUI": "Веб-интерфейс",
+        "clashCore": "Clash ядросы",
+        "openUwpTool": "UWP инструментын ачу",
+        "updateGeoData": "GeoData яңарту"
+      },
+      "tooltips": {
+        "networkInterface": "Челтәр интерфейсы",
+        "unifiedDelay": "Бердәм задержка актив булганда, төрле типтагы узеллар өчен икеләтә тест башкарыла, TCP установканы раслау аермаларын тигезләү максатында",
+        "logLevel": "Бу фәкать сервис режимында эшләгән вакытта системалы журнал файлларына кагыла",
+        "openUwpTool": "Windows 8'дән башлап UWP кушымталары (Microsoft Store кебек) локаль хосттагы челтәр хезмәтләренә турыдан-туры тоташа алмый. Бу инструмент әлеге чикләүне әйләнеп узарга ярдәм итә"
+      },
+      "options": {
+        "logLevel": {
+          "debug": "Debug",
+          "info": "Info",
+          "warning": "Warn",
+          "error": "Error",
+          "silent": "Silent"
+        }
+      },
+      "messages": {
+        "geoDataUpdated": "GeoData яңартылды"
+      },
+      "port": {
+        "title": "Порт көйләүләре",
+        "fields": {
+          "mixed": "Катнаш прокси порты",
+          "socks": "Socks прокси порты",
+          "http": "HTTP(s) прокси порты",
+          "redir": "Redir — үтә күренмәле прокси порты",
+          "tproxy": "Tproxy — үтә күренмәле прокси порты"
+        },
+        "actions": {
+          "random": "Очраклы порт"
+        },
+        "messages": {
+          "saved": "Port settings saved",
+          "saveFailed": "Failed to save port settings"
+        }
+      }
+    },
+    "liteMode": {
+      "title": "LightWeight Mode Settings",
+      "actions": {
+        "enterNow": "Enter LightWeight Mode Now"
+      },
+      "toggles": {
+        "autoEnter": "Auto Enter LightWeight Mode"
+      },
+      "tooltips": {
+        "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
+      },
+      "fields": {
+        "delay": "Auto Enter LightWeight Mode Delay"
+      },
+      "messages": {
+        "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
+      }
+    },
+    "backup": {
+      "title": "Резерв копия көйләүләре",
+      "tabs": {
+        "local": "Local backup",
+        "webdav": "WebDAV backup"
+      },
+      "actions": {
+        "selectTarget": "Select backup target",
+        "backup": "Резерв копия",
+        "refresh": "Яңарту",
+        "save": "Саклау",
+        "export": "Export",
+        "exportBackup": "Export Backup",
+        "delete": "Бетерү",
+        "deleteBackup": "Резерв копияне бетерү",
+        "restore": "Кайтару",
+        "restoreBackup": "Резерв копияне кайтару"
+      },
+      "fields": {
+        "webdavUrl": "WebDAV сервер URL-ы (http(s)://)",
+        "username": "Кулланучы исеме",
+        "password": "Пароль",
+        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "WebDAV адресы буш булырга тиеш түгел",
+        "invalidWebdavUrl": "WebDAV адресы дөрес түгел",
+        "usernameRequired": "Кулланучы исеме буш булмаска тиеш",
+        "passwordRequired": "Пароль буш булмаска тиеш",
+        "webdavConfigSaved": "WebDAV көйләүләре сакланды",
+        "webdavConfigSaveFailed": "WebDAV көйләүләрен саклап булмады: {{error}}",
+        "backupCreated": "Резерв копия уңышлы ясалды",
+        "backupFailed": "Резерв копия хата белән төгәлләнде: {{error}}",
+        "localBackupCreated": "Local backup created successfully",
+        "localBackupFailed": "Local backup failed",
+        "restoreSuccess": "Уңышлы кайтарылды, кушымта 1 секундтан яңадан башланачак",
+        "localBackupExported": "Local backup exported successfully",
+        "localBackupExportFailed": "Failed to export local backup",
+        "confirmDelete": "Бу резерв копия файлын бетерергә телисезме?",
+        "confirmRestore": "Бу резерв копия файлын кире кайтарырга телисезме?"
+      },
+      "table": {
+        "filename": "Файл исеме",
+        "backupTime": "Резерв копия вакыты",
+        "actions": "Гамәлләр",
+        "noBackups": "Резерв копияләр юк",
+        "rowsPerPage": "Rows per page"
+      }
+    },
+    "verge": {
+      "basic": {
+        "title": "Verge Төп көйләүләр",
+        "items": {
+          "language": "Тел",
+          "themeMode": "Теманың режимы",
+          "trayClickEvent": "Трейдагы басу вакыйгасы",
+          "copyEnvType": "Env төрен күчереп алу",
+          "startPage": "Баш бит",
+          "startupScript": "Башлану скрипты",
+          "themeSetting": "Тема көйләүләре",
+          "layoutSetting": "Расположение көйләүләре",
+          "misc": "Өстәмә көйләүләр",
+          "hotkeySetting": "Клавиатура төймәләре (hotkey) көйләүләре"
+        },
+        "actions": {
+          "browse": "Карау",
+          "clear": "Чистарту"
+        },
+        "trayOptions": {
+          "showMainWindow": "Төп тәрәзәне күрсәтү",
+          "showTrayMenu": "Show Tray Menu",
+          "disable": "Сүндерү"
+        }
+      },
+      "advanced": {
+        "title": "Verge Киңәйтелгән көйләүләр",
+        "items": {
+          "backupSetting": "Резерв копия көйләүләре",
+          "runtimeConfig": "Агымдагы конфигурация",
+          "openConfDir": "Кушымта папкасын ачу",
+          "openCoreDir": "Ядро сакланган папканы ачу",
+          "openLogsDir": "Логлар папкасын ачу",
+          "checkUpdates": "Яңартуларны тикшерү",
+          "openDevTools": "Разработчик коралларын ачу",
+          "liteModeSettings": "LightWeight Mode Settings",
+          "exit": "Чыгу",
+          "exportDiagnostics": "Export Diagnostic Info",
+          "vergeVersion": "Verge версиясе"
+        },
+        "tooltips": {
+          "backupInfo": "WebDAV аша конфигурация файлын саклауны хуплый",
+          "openConfDir": "Әгәр программада хаталар чыкса, бу папкадагы файлларны саклап калыгыз да, аннары барысын да бетереп, программаны яңадан башлагыз",
+          "liteMode": "GUI-ны ябыгыз һәм бары тик төшне генә эшләтеп калдырыгыз"
+        },
+        "actions": {
+          "copyVersion": "Copy Version"
+        },
+        "notifications": {
+          "latestVersion": "Сездә иң соңгы версия урнаштырылган",
+          "versionCopied": "Version copied to clipboard"
+        }
+      },
+      "theme": {
+        "title": "Тема көйләүләре",
+        "fields": {
+          "primaryColor": "Төп төс",
+          "secondaryColor": "Икенче төс",
+          "primaryText": "Primary Text",
+          "secondaryText": "Secondary Text",
+          "infoColor": "Мәгълүмат төсе",
+          "warningColor": "Кисәтү төсе",
+          "errorColor": "Хата төсе",
+          "successColor": "Уңыш төсе",
+          "fontFamily": "Шрифтлар гаиләсе",
+          "cssInjection": "CSS кертү"
+        },
+        "actions": {
+          "editCss": "Edit CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Edit CSS"
+        }
+      },
+      "layout": {
+        "title": "Расположение көйләүләре",
+        "fields": {
+          "preferSystemTitlebar": "Prefer System Titlebar",
+          "trafficGraph": "Трафик графигы",
+          "memoryUsage": "Хәтер куллану",
+          "proxyGroupIcon": "Прокси төркеме иконкасы",
+          "hoverNavigator": "Hover Jump Navigator",
+          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "navIcon": "Навигация иконкасы",
+          "trayIcon": "Трей иконкасы",
+          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "commonTrayIcon": "Гомуми трей иконкасы",
+          "systemProxyTrayIcon": "Системалы прокси иконкасы",
+          "tunTrayIcon": "Tun (виртуаль адаптер) иконкасы"
+        },
+        "tooltips": {
+          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "Монохром",
+            "colorful": "Төсле",
+            "disable": "Сүндерү"
+          }
+        }
+      }
+    },
+    "common": {
+      "notifications": {
+        "copySuccess": "Күчерелде"
+      }
+    },
+    "misc": {
+      "title": "Өстәмә көйләүләр",
+      "fields": {
+        "appLogLevel": "Кушымта журналы дәрәҗәсе",
+        "appLogMaxSize": "App Log Max Size",
+        "appLogMaxCount": "App Log Max Count",
+        "autoCloseConnections": "Тоташуларны автоматик ябу",
+        "autoCheckUpdate": "Яңартуларны автоматик тикшерү",
+        "enableBuiltinEnhanced": "Эчке камилләштерүне кабызу",
+        "proxyLayoutColumns": "Прокси күрсәтү баганалары саны",
+        "autoLogClean": "Логларны автоматик чистарту",
+        "autoDelayDetection": "Автоматик тоткарлык ачыклау",
+        "defaultLatencyTest": "Тоткарлануны тикшерү сылтамасы (defaults)",
+        "defaultLatencyTimeout": "Тоткарлануның стандарт таймауты"
+      },
+      "tooltips": {
+        "autoCloseConnections": "Прокси төркеме яисә режимын үзгәрткәндә актив тоташуларны өзү",
+        "enableBuiltinEnhanced": "Конфигурация файлы белән туры килә торган өстәмә оптимизация",
+        "autoDelayDetection": "Фон режимында хәзерге төен тоткарлыгын периодик тикшерә",
+        "defaultLatencyTest": "Бу фәкать клиентның HTTP сораулары тесты өчен кулланыла, конфигурация файлына йогынты ясамый"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "Авто баганалар"
+        },
+        "autoLogClean": {
+          "never": "Беркайчан чистартмаска",
+          "retainDays": "{{n}} көн саклау"
+        }
+      }
+    },
+    "update": {
+      "title": "New Version v{{version}}",
+      "actions": {
+        "goToRelease": "Релизлар битенә күчү",
+        "update": "Яңарту"
+      },
+      "messages": {
+        "portableError": "Портатив версиядә кушымта эчендә яңарту хупланмый, кулдан төшереп алыгыз",
+        "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала."
+      }
+    },
+    "sysproxy": {
+      "title": "Системалы прокси көйләүләре",
+      "fieldsets": {
+        "currentStatus": "Агымдагы системалы прокси"
+      },
+      "fields": {
+        "enableStatus": "Активлаштыру статусы",
+        "serverAddr": "Сервер адресы",
+        "pacUrl": "PAC адресы",
+        "proxyHost": "Прокси хосты",
+        "usePacMode": "PAC режимын куллану",
+        "proxyGuard": "Прокси саклаучы",
+        "guardDuration": "Саклау вакыты",
+        "alwaysUseDefaultBypass": "Һәрвакыт төп Bypass-ны куллану",
+        "proxyBypass": "Проксины әйләнеп узу:",
+        "bypass": "Әйләнеп узу:",
+        "pacScriptContent": "PAC скрипты эчтәлеге"
+      },
+      "tooltips": {
+        "proxyGuard": "Системалы прокси көйләүләрен чит программа үзгәртмәсен өчен шушы функцияне кабызыгыз"
+      },
+      "messages": {
+        "durationTooShort": "Прокси-демон эш вакыты 1 секундтан ким була алмый",
+        "invalidBypass": "Дөрес булмаган Bypass форматы",
+        "invalidProxyHost": "Прокси хосты форматы дөрес түгел"
+      },
+      "actions": {
+        "editPac": "Үзгәртү PAC"
+      }
+    },
+    "tun": {
+      "title": "Tun режимы (виртуаль челтәр адаптеры)",
+      "actions": {
+        "reset": "Башлангычка кайтару"
+      },
+      "fields": {
+        "stack": "Стек",
+        "device": "Device Name",
+        "autoRoute": "Авто-маршрутлау",
+        "strictRoute": "Катгый маршрутлау",
+        "autoDetectInterface": "Интерфейсны автоматик ачыклау",
+        "dnsHijack": "DNS'ны үзгәртеп тоту (hijack)",
+        "mtu": "MTU (макс. тапшыру берәмлеге)"
+      },
+      "tooltips": {
+        "dnsHijack": "Please use , to separate multiple DNS servers"
+      },
+      "messages": {
+        "applied": "Көйләүләр кулланылды"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS Overwrite",
+        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+      },
+      "sections": {
+        "general": "DNS Settings",
+        "fallbackFilter": "Fallback Filter Settings",
+        "hosts": "Hosts Settings"
+      },
+      "fields": {
+        "enable": "Enable DNS",
+        "listen": "DNS Listen",
+        "enhancedMode": "Enhanced Mode",
+        "fakeIpRange": "Fake IP Range",
+        "fakeIpFilterMode": "Fake IP Filter Mode",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Enable IPv6 DNS resolution"
+        },
+        "preferH3": {
+          "label": "Prefer H3",
+          "description": "DNS DOH uses HTTP/3"
+        },
+        "respectRules": {
+          "label": "Respect Rules",
+          "description": "DNS connections follow routing rules"
+        },
+        "useHosts": {
+          "label": "Use Hosts",
+          "description": "Enable to resolve hosts through hosts file"
+        },
+        "useSystemHosts": {
+          "label": "Use System Hosts",
+          "description": "Enable to resolve hosts through system hosts file"
+        },
+        "directPolicy": {
+          "label": "Direct Nameserver Follow Policy",
+          "description": "Whether to follow nameserver policy"
+        },
+        "defaultNameserver": {
+          "label": "Default Nameserver",
+          "description": "Default DNS servers used to resolve DNS servers"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "List of DNS servers, comma separated"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "List of fallback DNS servers, comma separated"
+        },
+        "proxy": {
+          "label": "Proxy Server Nameserver",
+          "description": "DNS servers for proxy node domain resolution"
+        },
+        "directNameserver": {
+          "label": "Direct Nameserver",
+          "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP Filter",
+          "description": "Domains that skip fake IP resolution, comma separated"
+        },
+        "nameserverPolicy": {
+          "label": "Nameserver Policy",
+          "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP Filtering",
+          "description": "Enable GeoIP filtering for fallback"
+        },
+        "geoipCode": "GeoIP Code",
+        "fallbackIpCidr": {
+          "label": "Fallback IP CIDR",
+          "description": "IP CIDRs not using fallback servers, comma separated"
+        },
+        "fallbackDomain": {
+          "label": "Fallback Domain",
+          "description": "Domains using fallback servers, comma separated"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Custom domain to IP or domain mapping"
+        }
+      },
+      "messages": {
+        "saved": "DNS settings saved",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration"
+      }
+    },
+    "page": {
+      "title": "Көйләүләр",
+      "actions": {
+        "manual": "Документация",
+        "telegram": "Telegram каналы",
+        "github": "GitHub репозиториясе"
+      }
+    }
+  },
+  "providers": {
+    "notices": {
+      "updateSuccess": "{{name}} updated successfully",
+      "updateFailed": "Failed to update {{name}}: {{message}}",
+      "genericError": "Update failed: {{message}}",
+      "none": "No providers available to update",
+      "allUpdated": "All providers updated successfully"
+    }
+  },
+  "test": {
+    "item": {
+      "actions": {
+        "test": "Тест"
+      }
+    },
+    "viewer": {
+      "title": {
+        "create": "Тест булдыру",
+        "edit": "Тестны үзгәртү"
+      },
+      "fields": {
+        "url": "Тест URL-ы"
+      }
+    },
+    "page": {
+      "title": "Тест",
+      "actions": {
+        "testAll": "Барчасын тестлау",
+        "new": "Яңа"
+      }
+    }
+  },
+  "proxies": {
+    "page": {
+      "title": {
+        "default": "Прокси төркемнәре",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Чылбыр прокси",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Прокси провайдеры",
+        "actions": {
+          "updateAll": "Барысын да яңарту",
+          "update": "Яңарту"
+        }
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "Беркетелгәнне гамәлдән чыгару өчен задержканы тикшерү"
+      },
+      "tooltips": {
+        "locate": "Урын",
+        "delayCheck": "Задержканы тикшерү",
+        "sortDefault": "Башлангыч итеп сортлау",
+        "sortDelay": "Задержка буенча сортлау",
+        "sortName": "Исем буенча сортлау",
+        "delayCheckUrl": "Задержканы тикшерү URL-ы",
+        "showBasic": "Прокси турында кыскача мәгълүмат",
+        "showDetail": "Прокси турында тулы мәгълүмат",
+        "filter": "Фильтр"
+      },
+      "placeholders": {
+        "filter": "Фильтр шартлары",
+        "delayCheckUrl": "Задержканы тикшерү URL-ы"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
+  "rules": {
+    "page": {
+      "title": "Кагыйдәләр",
+      "provider": {
+        "trigger": "Кагыйдә провайдеры",
+        "dialogTitle": "Кагыйдә провайдеры",
+        "actions": {
+          "updateAll": "Барысын да яңарту",
+          "update": "Яңарту"
+        }
+      }
+    }
+  },
+  "profiles": {
+    "page": {
+      "title": "Профильләр",
+      "actions": {
+        "updateAll": "Барлык профильләрне яңарту",
+        "viewRuntimeConfig": "Кулланылган конфигурацияне карау",
+        "reactivate": "Профильләрне янәдән активлаштыру",
+        "import": "Импорт",
+        "new": "Яңа"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "Профиль URL-ы",
+        "paste": "Кую",
+        "clear": "Чистарту"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Фәкать YAML-файллар гына хуплана"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Профиль алмаштырылды",
+        "profileReactivated": "Профиль яңадан активлаштырылды",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    }
+  },
+  "connections": {
+    "page": {
+      "title": "Тоташулар",
+      "summary": {
+        "downloaded": "Йөкләнгән",
+        "uploaded": "Чыгарылган"
+      },
+      "actions": {
+        "listView": "Исемлек күзаллау",
+        "tableView": "Таблица күзаллау",
+        "pause": "Туктау",
+        "resume": "Дәвам",
+        "closeAll": "Барысын да ябу"
+      }
+    }
+  },
+  "logs": {
+    "page": {
+      "title": "Логлар",
+      "actions": {
+        "pause": "Туктау",
+        "resume": "Дәвам",
+        "clear": "Чистарту"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
+    }
+  },
+  "unlock": {
+    "page": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items"
     }
   }
 }

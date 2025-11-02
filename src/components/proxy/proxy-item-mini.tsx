@@ -272,7 +272,7 @@ export const ProxyItemMini = (props: Props) => {
           className={proxy.name === group.now ? "the-pin" : "the-unpin"}
           title={
             group.type === "URLTest"
-              ? t("pages.proxies.labels.delayCheckReset")
+              ? t("proxies.page.labels.delayCheckReset")
               : ""
           }
         >

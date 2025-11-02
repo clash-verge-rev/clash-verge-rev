@@ -42,7 +42,7 @@ export const FileInput = (props: Props) => {
         sx={{ flex: "none" }}
         onClick={() => inputRef.current?.click()}
       >
-        {t("components.profile.fileInput.chooseFile")}
+        {t("profile.fileInput.chooseFile")}
       </Button>
 
       <input

@@ -66,11 +66,11 @@ export const ProviderButton = () => {
       await refreshProxy();
       await refreshProxyProviders();
 
-      showNotice.success("components.providers.notices.updateSuccess", {
+      showNotice.success("providers.notices.updateSuccess", {
         name,
       });
     } catch (err) {
-      showNotice.error("components.providers.notices.updateFailed", {
+      showNotice.error("providers.notices.updateFailed", {
         name,
         message: String(err),
       });
@@ -86,7 +86,7 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(proxyProviders || {});
       if (allProviders.length === 0) {
-        showNotice.info("components.providers.notices.none");
+        showNotice.info("providers.notices.none");
         return;
       }
 
@@ -116,9 +116,9 @@ export const ProviderButton = () => {
       await refreshProxy();
       await refreshProxyProviders();
 
-      showNotice.success("components.providers.notices.allUpdated");
+      showNotice.success("providers.notices.allUpdated");
     } catch (err) {
-      showNotice.error("components.providers.notices.genericError", {
+      showNotice.error("providers.notices.genericError", {
         message: String(err),
       });
     } finally {
@@ -142,7 +142,7 @@ export const ProviderButton = () => {
         onClick={() => setOpen(true)}
         sx={{ mr: 1 }}
       >
-        {t("pages.proxies.provider.title")}
+        {t("proxies.page.provider.title")}
       </Button>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -153,16 +153,16 @@ export const ProviderButton = () => {
             alignItems="center"
           >
             <Typography variant="h6">
-              {t("pages.proxies.provider.title")}
+              {t("proxies.page.provider.title")}
             </Typography>
             <Box>
               <Button
                 variant="contained"
                 size="small"
                 onClick={updateAllProviders}
-                aria-label={t("pages.proxies.provider.actions.updateAll")}
+                aria-label={t("proxies.page.provider.actions.updateAll")}
               >
-                {t("pages.proxies.provider.actions.updateAll")}
+                {t("proxies.page.provider.actions.updateAll")}
               </Button>
             </Box>
           </Box>
@@ -320,8 +320,8 @@ export const ProviderButton = () => {
                             "100%": { transform: "rotate(360deg)" },
                           },
                         }}
-                        title={t("pages.proxies.provider.actions.update")}
-                        aria-label={t("pages.proxies.provider.actions.update")}
+                        title={t("proxies.page.provider.actions.update")}
+                        aria-label={t("proxies.page.provider.actions.update")}
                       >
                         <RefreshRounded />
                       </IconButton>

@@ -250,7 +250,7 @@ const UnlockPage = () => {
 
   return (
     <BasePage
-      title={t("pages.unlock.title")}
+      title={t("unlock.page.title")}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
@@ -267,8 +267,8 @@ const UnlockPage = () => {
             }
           >
             {isCheckingAll
-              ? t("pages.unlock.actions.testing")
-              : t("pages.test.actions.testAll")}
+              ? t("unlock.page.actions.testing")
+              : t("test.page.actions.testAll")}
           </Button>
         </Box>
       }
@@ -282,7 +282,7 @@ const UnlockPage = () => {
             height: "50%",
           }}
         >
-          <BaseEmpty text={t("pages.unlock.empty")} />
+          <BaseEmpty text={t("unlock.page.empty")} />
         </Box>
       ) : (
         <Grid container spacing={1.5} columns={{ xs: 1, sm: 2, md: 3 }}>
@@ -324,7 +324,7 @@ const UnlockPage = () => {
                     >
                       {item.name}
                     </Typography>
-                    <Tooltip title={t("components.test.item.actions.test")}>
+                    <Tooltip title={t("test.item.actions.test")}>
                       <span>
                         <Button
                           size="small"

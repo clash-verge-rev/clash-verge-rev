@@ -13,192 +13,6 @@
   "Save": "Guardar",
   "Delete": "Eliminar",
   "Enable": "Habilitar",
-  "pages": {
-    "home": {
-      "title": "Hogar",
-      "tooltips": {
-        "lightweightMode": "Modo ligero",
-        "manual": "Manual de uso",
-        "settings": "Configuración de la página de inicio"
-      },
-      "cards": {
-        "trafficStats": "Estadísticas de tráfico",
-        "networkSettings": "Configuración de red",
-        "proxyMode": "Modo de proxy"
-      },
-      "settings": {
-        "title": "Configuración de la página de inicio",
-        "cards": {
-          "profile": "Tarjeta de suscripción",
-          "currentProxy": "Tarjeta de proxy actual",
-          "network": "Tarjeta de configuración de red",
-          "proxyMode": "Tarjeta de modo de proxy",
-          "traffic": "Tarjeta de estadísticas de tráfico",
-          "tests": "Tarjeta de pruebas de sitios web",
-          "ip": "Tarjeta de información de IP",
-          "clashInfo": "Tarjetas de información de Clash",
-          "systemInfo": "Tarjetas de información del sistema"
-        }
-      }
-    },
-    "proxies": {
-      "title": {
-        "default": "Grupos de proxies",
-        "chainMode": "Proxy Chain Mode"
-      },
-      "actions": {
-        "toggleChain": "🔗 Proxy en cadena",
-        "connect": "Connect",
-        "disconnect": "Disconnect",
-        "connecting": "Connecting...",
-        "clearChainConfig": "Delete Chain Config"
-      },
-      "provider": {
-        "title": "Proveedor de proxies",
-        "actions": {
-          "updateAll": "Actualizar todo",
-          "update": "Actualizar"
-        }
-      },
-      "rules": {
-        "title": "Proxy Rules",
-        "select": "Select Rules"
-      },
-      "labels": {
-        "proxyCount": "Número de nodos",
-        "delayCheckReset": "Realizar prueba de latencia para cancelar la fijación"
-      },
-      "tooltips": {
-        "locate": "Nodo actual",
-        "delayCheck": "Prueba de latencia",
-        "sortDefault": "Ordenación predeterminada",
-        "sortDelay": "Ordenar por latencia",
-        "sortName": "Ordenar por nombre",
-        "delayCheckUrl": "URL de prueba de latencia",
-        "showBasic": "Ocultar detalles del nodo",
-        "showDetail": "Mostrar detalles del nodo",
-        "filter": "Filtrar nodos"
-      },
-      "placeholders": {
-        "filter": "Condiciones de filtrado",
-        "delayCheckUrl": "URL de prueba de latencia"
-      },
-      "chain": {
-        "header": "Chain Proxy Config",
-        "empty": "No proxy chain configured",
-        "instruction": "Click nodes in order to add to proxy chain",
-        "minimumNodes": "Chain proxy requires at least 2 nodes",
-        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-        "connectFailed": "Failed to connect to proxy chain",
-        "disconnectFailed": "Failed to disconnect from proxy chain",
-        "duplicateNode": "Proxy node already exists in chain"
-      }
-    },
-    "rules": {
-      "title": "Reglas",
-      "provider": {
-        "trigger": "Proveedor de reglas",
-        "dialogTitle": "Proveedor de reglas",
-        "actions": {
-          "updateAll": "Actualizar todo",
-          "update": "Actualizar"
-        }
-      }
-    },
-    "profiles": {
-      "title": "Suscripciones",
-      "actions": {
-        "updateAll": "Actualizar todas las suscripciones",
-        "viewRuntimeConfig": "Ver configuración en tiempo de ejecución",
-        "reactivate": "Reactivar suscripciones",
-        "import": "Importar",
-        "new": "Nuevo"
-      },
-      "batch": {
-        "title": "Batch Operations",
-        "delete": "Delete Selected Profiles",
-        "selectAll": "Select All",
-        "deselectAll": "Deselect All",
-        "done": "Done",
-        "selected": "Selected",
-        "items": "items"
-      },
-      "import": {
-        "placeholder": "Enlace del archivo de suscripción",
-        "paste": "Pegar",
-        "clear": "Limpiar"
-      },
-      "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Solo se admiten archivos YAML"
-      },
-      "notifications": {
-        "importRetry": "Error al importar la suscripción. Intentando con el proxy de Clash...",
-        "importFail": "Error al importar incluso con el proxy de Clash",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
-        "profileSwitched": "Suscripción cambiada",
-        "profileReactivated": "Suscripción reactivada",
-        "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Selected profiles deleted successfully"
-      },
-      "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
-      }
-    },
-    "connections": {
-      "title": "Conexiones",
-      "summary": {
-        "downloaded": "Descargado",
-        "uploaded": "Subido"
-      },
-      "actions": {
-        "listView": "Vista de lista",
-        "tableView": "Vista de tabla",
-        "pause": "Pausar",
-        "resume": "Reanudar",
-        "closeAll": "Cerrar todas"
-      }
-    },
-    "settings": {
-      "title": "Ajustes",
-      "actions": {
-        "manual": "Manual de uso",
-        "telegram": "Canal de Telegram",
-        "github": "Dirección del proyecto en GitHub"
-      }
-    },
-    "logs": {
-      "title": "Registros",
-      "actions": {
-        "pause": "Pausar",
-        "resume": "Reanudar",
-        "clear": "Limpiar"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      }
-    },
-    "test": {
-      "title": "Prueba",
-      "actions": {
-        "testAll": "Probar todo",
-        "new": "Nuevo"
-      }
-    },
-    "unlock": {
-      "title": "Prueba de desbloqueo",
-      "actions": {
-        "testing": "Probando..."
-      },
-      "empty": "No unlock test items"
-    }
-  },
   "Proxies": "Proxies",
   "Update At": "Actualizado el",
   "rule": "Regla",
@@ -380,807 +194,6 @@
   "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
-  "components": {
-    "ruleEditor": {
-      "title": "Editar reglas",
-      "form": {
-        "labels": {
-          "type": "Tipo de regla",
-          "content": "Contenido de la regla",
-          "proxyPolicy": "Política de proxy"
-        },
-        "toggles": {
-          "noResolve": "Omitir resolución DNS"
-        },
-        "actions": {
-          "prependRule": "Agregar regla previa",
-          "appendRule": "Agregar regla posterior"
-        },
-        "validation": {
-          "conditionRequired": "Falta la condición de la regla",
-          "invalidRule": "Regla no válida"
-        }
-      }
-    },
-    "profile": {
-      "viewer": {
-        "title": {
-          "create": "Crear configuración",
-          "edit": "Editar configuración"
-        },
-        "buttons": {
-          "save": "Guardar",
-          "cancel": "Cancelar"
-        },
-        "fields": {
-          "type": "Tipo",
-          "name": "Nombre",
-          "description": "Descripción",
-          "subscriptionUrl": "Enlace de suscripción",
-          "httpTimeout": "HTTP Request Timeout",
-          "updateInterval": "Intervalo de actualización",
-          "useSystemProxy": "Usar proxy del sistema para actualizar",
-          "useClashProxy": "Usar proxy del núcleo para actualizar",
-          "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-          "allowAutoUpdate": "Allow Auto Update"
-        },
-        "notifications": {
-          "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
-          "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
-        }
-      },
-      "fileInput": {
-        "chooseFile": "Elegir archivo"
-      },
-      "notifications": {
-        "saved": "Saved successfully"
-      },
-      "proxiesEditor": {
-        "title": "Editar nodos",
-        "placeholders": {
-          "multiUri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)"
-        },
-        "actions": {
-          "prepend": "Agregar nodo de proxy previo",
-          "append": "Agregar nodo de proxy posterior"
-        }
-      },
-      "groupsEditor": {
-        "title": "Editar grupos de proxy",
-        "errors": {
-          "nameRequired": "El nombre del grupo de proxy no puede estar vacío",
-          "nameExists": "El nombre del grupo de proxy ya existe"
-        },
-        "fields": {
-          "type": "Tipo de grupo de proxy",
-          "name": "Nombre del grupo de proxy",
-          "icon": "Icono del grupo de proxy",
-          "proxies": "Incluir proxies",
-          "provider": "Incluir proveedor de proxies",
-          "healthCheckUrl": "URL de prueba de salud",
-          "expectedStatus": "Código de estado esperado",
-          "interval": "Intervalo de comprobación",
-          "timeout": "Tiempo de espera",
-          "maxFailedTimes": "Número máximo de fallos",
-          "interfaceName": "Nombre de la interfaz de salida",
-          "routingMark": "Marca de enrutamiento",
-          "filter": "Filtrar nodos",
-          "excludeFilter": "Excluir nodos",
-          "excludeType": "Tipo de nodo a excluir",
-          "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
-          "includeAllProxies": "Incluir todos los proxies de salida",
-          "includeAllProviders": "Incluir todos los proveedores de proxies"
-        },
-        "toggles": {
-          "lazy": "Estado de inactividad",
-          "disableUdp": "Deshabilitar UDP",
-          "hidden": "Ocultar grupo de proxy"
-        },
-        "actions": {
-          "prepend": "Agregar grupo de proxy previo",
-          "append": "Agregar grupo de proxy posterior"
-        }
-      },
-      "menu": {
-        "home": "Hogar",
-        "select": "Usar",
-        "editInfo": "Editar información",
-        "editFile": "Editar archivo",
-        "editRules": "Editar reglas",
-        "editProxies": "Editar nodos",
-        "editGroups": "Editar grupos de proxy",
-        "extendConfig": "Configurar sobrescritura extendida",
-        "extendScript": "Script extendido",
-        "openFile": "Abrir archivo",
-        "update": "Actualizar",
-        "updateViaProxy": "Update via proxy",
-        "delete": "Eliminar"
-      },
-      "item": {
-        "tooltips": {
-          "showLast": "Click to show last update time",
-          "showNext": "Click to show next update"
-        },
-        "status": {
-          "lastUpdateFailed": "La última actualización falló",
-          "nextUp": "Próxima actualización",
-          "noSchedule": "Sin programación",
-          "unknown": "Desconocido",
-          "autoUpdateDisabled": "La actualización automática está deshabilitada"
-        }
-      },
-      "confirm": {
-        "delete": {
-          "title": "Confirmar eliminación",
-          "message": "Esta operación no se puede deshacer"
-        }
-      },
-      "logViewer": {
-        "title": "Salida de la consola del script"
-      },
-      "more": {
-        "global": {
-          "merge": "Global Merge",
-          "script": "Global Script"
-        },
-        "chips": {
-          "merge": "Merge",
-          "script": "Script"
-        }
-      },
-      "editor": {
-        "format": "Formatear documento",
-        "readOnlyMessage": "No se puede editar en modo de solo lectura"
-      }
-    },
-    "home": {
-      "proxyTunCard": {
-        "status": {
-          "systemProxyEnabled": "El proxy del sistema está habilitado. Sus aplicaciones accederán a Internet a través del proxy.",
-          "systemProxyDisabled": "El proxy del sistema está deshabilitado. Se recomienda a la mayoría de los usuarios habilitar esta opción.",
-          "tunModeServiceRequired": "El modo TUN requiere el modo de servicio. Instale el servicio primero.",
-          "tunModeEnabled": "El modo TUN está habilitado. Las aplicaciones accederán a Internet a través de la interfaz virtual.",
-          "tunModeDisabled": "El modo TUN está deshabilitado. Este modo es adecuado para aplicaciones especiales."
-        },
-        "tooltips": {
-          "systemProxy": "Modifica la configuración del proxy del sistema operativo. Si no se puede habilitar, puede modificar manualmente la configuración del proxy del sistema operativo.",
-          "tunMode": "El modo TUN puede gestionar todo el tráfico de las aplicaciones. Es adecuado para aplicaciones que no siguen la configuración del proxy del sistema."
-        }
-      },
-      "clashInfo": {
-        "title": "Información de Clash",
-        "fields": {
-          "coreVersion": "Versión del núcleo",
-          "systemProxyAddress": "Dirección del proxy del sistema",
-          "mixedPort": "Mixed Port",
-          "uptime": "Tiempo de actividad",
-          "rulesCount": "Número de reglas"
-        }
-      },
-      "systemInfo": {
-        "title": "Información del sistema",
-        "fields": {
-          "osInfo": "Información del sistema operativo",
-          "autoLaunch": "Inicio automático al arrancar el sistema",
-          "runningMode": "Modo de ejecución",
-          "lastCheckUpdate": "Última comprobación de actualizaciones",
-          "vergeVersion": "Versión de Verge"
-        },
-        "actions": {
-          "settings": "Ajustes"
-        },
-        "labels": {
-          "enabled": "Habilitado",
-          "disabled": "Deshabilitado"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático."
-        },
-        "badges": {
-          "adminMode": "Modo de administrador",
-          "serviceMode": "Modo de servicio",
-          "sidecarMode": "Modo de usuario",
-          "adminServiceMode": "Admin + Service Mode"
-        }
-      },
-      "ipInfo": {
-        "title": "Información de IP",
-        "errors": {
-          "load": "Error al obtener información de IP"
-        },
-        "labels": {
-          "retry": "Retry",
-          "ip": "IP",
-          "asn": "Número de sistema autónomo",
-          "isp": "Proveedor de servicios de Internet",
-          "org": "Organización",
-          "location": "Ubicación",
-          "timezone": "Zona horaria",
-          "autoRefresh": "Actualización automática",
-          "unknown": "Desconocido"
-        }
-      },
-      "traffic": {
-        "metrics": {
-          "uploadSpeed": "Velocidad de subida",
-          "downloadSpeed": "Velocidad de descarga",
-          "activeConnections": "Conexiones activas",
-          "uploaded": "Subido",
-          "downloaded": "Descargado",
-          "memoryUsage": "Uso de memoria del núcleo"
-        },
-        "legends": {
-          "upload": "Subir",
-          "download": "Descargar"
-        },
-        "patterns": {
-          "minutes": "{{time}} Minutes"
-        }
-      },
-      "currentProxy": {
-        "title": "Nodo actual",
-        "actions": {
-          "refreshDelay": "Prueba de latencia"
-        },
-        "labels": {
-          "globalMode": "Global Mode",
-          "directMode": "Direct Mode",
-          "group": "Grupo de proxy",
-          "proxy": "Nodo",
-          "noActiveNode": "No hay nodos de proxy activos"
-        }
-      },
-      "profile": {
-        "title": "Suscripciones",
-        "actions": {
-          "import": "Importar"
-        },
-        "labels": {
-          "from": "De",
-          "updateTime": "Hora de actualización",
-          "usedTotal": "Utilizado / Total",
-          "expireTime": "Tiempo de expiración",
-          "clickToImport": "Haga clic para importar una suscripción"
-        }
-      }
-    },
-    "connection": {
-      "fields": {
-        "host": "Host",
-        "downloaded": "Descargado",
-        "uploaded": "Subido",
-        "dlSpeed": "Velocidad de descarga",
-        "ulSpeed": "Velocidad de subida",
-        "chains": "Cadenas",
-        "rule": "Regla",
-        "process": "Proceso",
-        "time": "Tiempo de conexión",
-        "source": "Dirección de origen",
-        "destination": "Dirección de destino",
-        "destinationPort": "Puerto de destino",
-        "type": "Tipo"
-      },
-      "actions": {
-        "closeConnection": "Cerrar conexión"
-      },
-      "order": {
-        "default": "Default",
-        "uploadSpeed": "Velocidad de subida",
-        "downloadSpeed": "Velocidad de descarga"
-      }
-    },
-    "settings": {
-      "system": {
-        "title": "Ajustes del sistema",
-        "toggles": {
-          "tunMode": "Modo de interfaz virtual (TUN)",
-          "systemProxy": "Proxy del sistema"
-        },
-        "labels": {
-          "autoLaunch": "Inicio automático al arrancar el sistema",
-          "silentStart": "Inicio silencioso"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático.",
-          "silentStart": "El programa se ejecutará en segundo plano al iniciarse y no mostrará el panel."
-        }
-      },
-      "proxyControl": {
-        "labels": {
-          "systemProxy": "Proxy del sistema",
-          "tunMode": "Modo de interfaz virtual (TUN)"
-        },
-        "tooltips": {
-          "systemProxy": "Modifica la configuración del proxy del sistema operativo. Si no se puede habilitar, puede modificar manualmente la configuración del proxy del sistema operativo.",
-          "tunMode": "El modo TUN (interfaz virtual) gestiona todo el tráfico del sistema. No es necesario habilitar el proxy del sistema cuando está activado.",
-          "tunUnavailable": "El modo TUN requiere el modo de servicio o el modo de administrador"
-        },
-        "actions": {
-          "installService": "Instalar servicio",
-          "uninstallService": "Desinstalar servicio"
-        }
-      },
-      "externalController": {
-        "title": "Dirección de escucha del controlador externo",
-        "fields": {
-          "enable": "Habilitar controlador externo",
-          "address": "Dirección de escucha del controlador externo",
-          "secret": "Clave de acceso a la API"
-        },
-        "placeholders": {
-          "address": "Requerido",
-          "secret": "Configuración recomendada"
-        },
-        "tooltips": {
-          "copy": "Copiar al portapapeles"
-        },
-        "messages": {
-          "addressRequired": "La dirección del controlador no puede estar vacía",
-          "secretRequired": "La clave secreta no puede estar vacía",
-          "copyFailed": "Error al copiar",
-          "controllerCopied": "El puerto API se copió al portapapeles",
-          "secretCopied": "La clave API se copió al portapapeles"
-        }
-      },
-      "externalCors": {
-        "title": "Configuración de CORS externo",
-        "fields": {
-          "allowPrivateNetwork": "Permitir acceso a red privada",
-          "allowedOrigins": "Orígenes permitidos"
-        },
-        "placeholders": {
-          "origin": "Introduce una URL válida"
-        },
-        "actions": {
-          "add": "Agregar"
-        },
-        "messages": {
-          "alwaysIncluded": "Orígenes siempre incluidos: {{urls}}"
-        },
-        "tooltips": {
-          "open": "Configuración de CORS externo"
-        }
-      },
-      "clash": {
-        "title": "Ajustes de Clash",
-        "items": {
-          "allowLan": "Conexión a la red local",
-          "dnsOverwrite": "Sobrescritura de DNS",
-          "ipv6": "IPv6",
-          "unifiedDelay": "Latencia unificada",
-          "logLevel": "Nivel de registro",
-          "portConfig": "Configuración de puerto",
-          "external": "Control externo",
-          "webUI": "Interfaz web",
-          "clashCore": "Núcleo de Clash",
-          "openUwpTool": "Abrir herramienta UWP",
-          "updateGeoData": "Actualizar GeoData"
-        },
-        "tooltips": {
-          "networkInterface": "Interfaz de red",
-          "unifiedDelay": "Al habilitar la latencia unificada, se realizarán dos pruebas de latencia para eliminar las diferencias de latencia entre diferentes tipos de nodos causadas por el handshake de conexión, etc.",
-          "logLevel": "Solo se aplica al archivo de registro del núcleo en la carpeta Service del directorio de registros.",
-          "openUwpTool": "A partir de Windows 8, las aplicaciones UWP (como la Tienda de Microsoft) tienen restricciones para acceder directamente a los servicios de red del host local. Use esta herramienta para evitar esta restricción."
-        },
-        "options": {
-          "logLevel": {
-            "debug": "Debug",
-            "info": "Info",
-            "warning": "Warn",
-            "error": "Error",
-            "silent": "Silent"
-          }
-        },
-        "messages": {
-          "geoDataUpdated": "GeoData actualizado"
-        },
-        "port": {
-          "title": "Configuración de puerto",
-          "fields": {
-            "mixed": "Puerto de proxy mixto",
-            "socks": "Puerto de proxy SOCKS",
-            "http": "Puerto de proxy HTTP(S)",
-            "redir": "Puerto de proxy transparente Redir",
-            "tproxy": "Puerto de proxy transparente TPROXY"
-          },
-          "actions": {
-            "random": "Puerto aleatorio"
-          },
-          "messages": {
-            "saved": "Port settings saved",
-            "saveFailed": "Failed to save port settings"
-          }
-        }
-      },
-      "liteMode": {
-        "title": "Configuración del modo ligero",
-        "actions": {
-          "enterNow": "Entrar en modo ligero ahora"
-        },
-        "toggles": {
-          "autoEnter": "Entrar automáticamente en modo ligero"
-        },
-        "tooltips": {
-          "autoEnter": "Si se habilita, se activará automáticamente el modo ligero después de un tiempo de inactividad de la ventana."
-        },
-        "fields": {
-          "delay": "Retraso para entrar automáticamente en modo ligero"
-        },
-        "messages": {
-          "autoEnterHint": "Después de cerrar la ventana, el modo ligero se activará automáticamente después de {{n}} minutos"
-        }
-      },
-      "backup": {
-        "title": "Configuración de copia de seguridad",
-        "tabs": {
-          "local": "Local backup",
-          "webdav": "WebDAV backup"
-        },
-        "actions": {
-          "selectTarget": "Select backup target",
-          "backup": "Copia de seguridad",
-          "refresh": "Actualizar",
-          "save": "Guardar",
-          "export": "Export",
-          "exportBackup": "Export Backup",
-          "delete": "Eliminar",
-          "deleteBackup": "Eliminar copia de seguridad",
-          "restore": "Restaurar",
-          "restoreBackup": "Restaurar copia de seguridad"
-        },
-        "fields": {
-          "webdavUrl": "Dirección del servidor WebDAV http(s)://",
-          "username": "Nombre de usuario",
-          "password": "Contraseña",
-          "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
-        },
-        "messages": {
-          "webdavUrlRequired": "La dirección del servidor WebDAV no puede estar vacía",
-          "invalidWebdavUrl": "Formato de dirección del servidor WebDAV no válido",
-          "usernameRequired": "El nombre de usuario no puede estar vacío",
-          "passwordRequired": "La contraseña no puede estar vacía",
-          "webdavConfigSaved": "Configuración de WebDAV guardada con éxito",
-          "webdavConfigSaveFailed": "Error al guardar la configuración de WebDAV: {{error}}",
-          "backupCreated": "Copia de seguridad creada con éxito",
-          "backupFailed": "Error al crear la copia de seguridad: {{error}}",
-          "localBackupCreated": "Local backup created successfully",
-          "localBackupFailed": "Local backup failed",
-          "restoreSuccess": "Restauración exitosa. La aplicación se reiniciará en 1 segundo",
-          "localBackupExported": "Local backup exported successfully",
-          "localBackupExportFailed": "Failed to export local backup",
-          "confirmDelete": "Confirm to delete this backup file?",
-          "confirmRestore": "Confirm to restore this backup file?"
-        },
-        "table": {
-          "filename": "Nombre del archivo",
-          "backupTime": "Tiempo de copia de seguridad",
-          "actions": "Acciones",
-          "noBackups": "No hay copias de seguridad",
-          "rowsPerPage": "Rows per page"
-        }
-      },
-      "verge": {
-        "basic": {
-          "title": "Ajustes básicos de Verge",
-          "items": {
-            "language": "Configuración de idioma",
-            "themeMode": "Modo de tema",
-            "trayClickEvent": "Evento de clic en el icono de la bandeja",
-            "copyEnvType": "Copiar tipo de variable de entorno",
-            "startPage": "Página de inicio",
-            "startupScript": "Script de inicio",
-            "themeSetting": "Configuración de tema",
-            "layoutSetting": "Configuración de la interfaz",
-            "misc": "Ajustes varios",
-            "hotkeySetting": "Configuración de atajos de teclado"
-          },
-          "actions": {
-            "browse": "Examinar",
-            "clear": "Limpiar"
-          },
-          "trayOptions": {
-            "showMainWindow": "Mostrar ventana principal",
-            "showTrayMenu": "Mostrar menú de la bandeja",
-            "disable": "Deshabilitar"
-          }
-        },
-        "advanced": {
-          "title": "Ajustes avanzados de Verge",
-          "items": {
-            "backupSetting": "Configuración de copia de seguridad",
-            "runtimeConfig": "Configuración actual",
-            "openConfDir": "Directorio de configuración",
-            "openCoreDir": "Directorio del núcleo",
-            "openLogsDir": "Directorio de registros",
-            "checkUpdates": "Comprobar actualizaciones",
-            "openDevTools": "Abrir herramientas de desarrollo",
-            "liteModeSettings": "Configuración del modo ligero",
-            "exit": "Salir",
-            "exportDiagnostics": "Exportar información de diagnóstico",
-            "vergeVersion": "Versión de Verge"
-          },
-          "tooltips": {
-            "backupInfo": "Soporte para la copia de seguridad de archivos de configuración a través de WebDAV",
-            "openConfDir": "Si el software no funciona correctamente, !realice una copia de seguridad! y elimine todos los archivos de esta carpeta, luego reinicie el software.",
-            "liteMode": "Cierra la interfaz gráfica y solo mantiene el núcleo en ejecución"
-          },
-          "actions": {
-            "copyVersion": "Copy Version"
-          },
-          "notifications": {
-            "latestVersion": "Actualmente está en la última versión",
-            "versionCopied": "Version copied to clipboard"
-          }
-        },
-        "theme": {
-          "title": "Configuración de tema",
-          "fields": {
-            "primaryColor": "Color principal",
-            "secondaryColor": "Color secundario",
-            "primaryText": "Color principal del texto",
-            "secondaryText": "Color secundario del texto",
-            "infoColor": "Color de información",
-            "warningColor": "Color de advertencia",
-            "errorColor": "Color de error",
-            "successColor": "Color de éxito",
-            "fontFamily": "Familia tipográfica",
-            "cssInjection": "Inyección de CSS"
-          },
-          "actions": {
-            "editCss": "Edit CSS"
-          },
-          "dialogs": {
-            "editCssTitle": "Edit CSS"
-          }
-        },
-        "layout": {
-          "title": "Configuración de la interfaz",
-          "fields": {
-            "preferSystemTitlebar": "Prefer System Titlebar",
-            "trafficGraph": "Gráfico de tráfico",
-            "memoryUsage": "Uso de memoria del núcleo",
-            "proxyGroupIcon": "Icono del grupo de proxy",
-            "hoverNavigator": "Hover Jump Navigator",
-            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
-            "navIcon": "Icono de la barra de navegación",
-            "trayIcon": "Icono de la bandeja",
-            "showProxyGroupsInline": "Show Proxy Groups Inline",
-            "commonTrayIcon": "Icono de bandeja común",
-            "systemProxyTrayIcon": "Icono de bandeja del proxy del sistema",
-            "tunTrayIcon": "Icono de bandeja del modo TUN"
-          },
-          "tooltips": {
-            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
-          },
-          "options": {
-            "icon": {
-              "monochrome": "Icono monocromo",
-              "colorful": "Icono colorido",
-              "disable": "Deshabilitar"
-            }
-          }
-        }
-      },
-      "common": {
-        "notifications": {
-          "copySuccess": "Copia exitosa"
-        }
-      },
-      "misc": {
-        "title": "Ajustes varios",
-        "fields": {
-          "appLogLevel": "Nivel de registro de la aplicación",
-          "appLogMaxSize": "App Log Max Size",
-          "appLogMaxCount": "App Log Max Count",
-          "autoCloseConnections": "Cerrar conexiones automáticamente",
-          "autoCheckUpdate": "Comprobar actualizaciones automáticamente",
-          "enableBuiltinEnhanced": "Habilitar funciones mejoradas integradas",
-          "proxyLayoutColumns": "Número de columnas en la disposición de la página de proxy",
-          "autoLogClean": "Limpiar registros automáticamente",
-          "autoDelayDetection": "Detección automática de latencia",
-          "defaultLatencyTest": "Enlace de prueba de latencia predeterminado",
-          "defaultLatencyTimeout": "Tiempo de espera de la prueba de latencia"
-        },
-        "tooltips": {
-          "autoCloseConnections": "Cierra las conexiones establecidas cuando se cambia el nodo seleccionado en el grupo de proxy o el modo de proxy.",
-          "enableBuiltinEnhanced": "Procesamiento de compatibilidad de archivos de configuración",
-          "autoDelayDetection": "Prueba periódicamente la latencia del nodo actual en segundo plano",
-          "defaultLatencyTest": "Solo se utiliza para pruebas de solicitudes de clientes HTTP y no afectará al archivo de configuración."
-        },
-        "options": {
-          "proxyLayoutColumns": {
-            "auto": "Número de columnas automático"
-          },
-          "autoLogClean": {
-            "never": "No limpiar",
-            "retainDays": "Retener {{n}} días"
-          }
-        }
-      },
-      "update": {
-        "title": "New Version v{{version}}",
-        "actions": {
-          "goToRelease": "Ir a la página de lanzamiento",
-          "update": "Actualizar"
-        },
-        "messages": {
-          "portableError": "La versión portátil no admite la actualización desde dentro de la aplicación. Descargue e instale manualmente la actualización.",
-          "breakChangeError": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión."
-        }
-      },
-      "sysproxy": {
-        "title": "Configuración del proxy del sistema",
-        "fieldsets": {
-          "currentStatus": "Proxy del sistema actual"
-        },
-        "fields": {
-          "enableStatus": "Estado de habilitación: ",
-          "serverAddr": "Dirección del servidor: ",
-          "pacUrl": "URL del PAC: ",
-          "proxyHost": "Host del proxy",
-          "usePacMode": "Usar modo PAC",
-          "proxyGuard": "Guardia del proxy del sistema",
-          "guardDuration": "Intervalo de guardia del proxy",
-          "alwaysUseDefaultBypass": "Siempre usar la lista de omisión predeterminada",
-          "proxyBypass": "Configuración de omisión del proxy: ",
-          "bypass": "Omisión actual: ",
-          "pacScriptContent": "Contenido del script PAC"
-        },
-        "tooltips": {
-          "proxyGuard": "Habilite esta opción para evitar que otros programas modifiquen la configuración del proxy del sistema operativo."
-        },
-        "messages": {
-          "durationTooShort": "El intervalo de tiempo del daemon de proxy no puede ser menor de 1 segundo",
-          "invalidBypass": "Formato de omisión de proxy no válido",
-          "invalidProxyHost": "Formato de host del proxy no válido"
-        },
-        "actions": {
-          "editPac": "Editar PAC"
-        }
-      },
-      "tun": {
-        "title": "Modo de interfaz virtual (TUN)",
-        "actions": {
-          "reset": "Restablecer a los valores predeterminados"
-        },
-        "fields": {
-          "stack": "Pila del modo TUN",
-          "device": "Device Name",
-          "autoRoute": "Configurar enrutamiento global automáticamente",
-          "strictRoute": "Enrutamiento estricto",
-          "autoDetectInterface": "Detectar automáticamente la interfaz de salida del tráfico",
-          "dnsHijack": "Secuestro de DNS",
-          "mtu": "Unidad máxima de transmisión"
-        },
-        "tooltips": {
-          "dnsHijack": "Please use , to separate multiple DNS servers"
-        },
-        "messages": {
-          "applied": "Ajustes aplicados"
-        }
-      },
-      "dns": {
-        "dialog": {
-          "title": "Sobrescritura de DNS",
-          "warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga habilitada la sobrescritura de DNS."
-        },
-        "sections": {
-          "general": "Configuración de DNS",
-          "fallbackFilter": "Configuración de filtrado de respaldo",
-          "hosts": "Configuración de hosts"
-        },
-        "fields": {
-          "enable": "Habilitar DNS",
-          "listen": "Dirección de escucha de DNS",
-          "enhancedMode": "Modo mejorado",
-          "fakeIpRange": "Rango de Fake IP",
-          "fakeIpFilterMode": "Modo de filtrado de Fake IP",
-          "ipv6": {
-            "label": "IPv6",
-            "description": "Habilitar resolución DNS IPv6"
-          },
-          "preferH3": {
-            "label": "Prefiere HTTP/3",
-            "description": "DNS DOH utiliza el protocolo HTTP/3"
-          },
-          "respectRules": {
-            "label": "Seguir las reglas de enrutamiento",
-            "description": "Las conexiones DNS siguen las reglas de enrutamiento"
-          },
-          "useHosts": {
-            "label": "Usar archivo hosts",
-            "description": "Habilitar la resolución de nombres de host a través del archivo hosts"
-          },
-          "useSystemHosts": {
-            "label": "Usar archivo hosts del sistema",
-            "description": "Habilitar la resolución de nombres de host a través del archivo hosts del sistema"
-          },
-          "directPolicy": {
-            "label": "Los servidores DNS de conexión directa siguen la política",
-            "description": "Si seguir la configuración de la política de servidores DNS"
-          },
-          "defaultNameserver": {
-            "label": "Servidor DNS predeterminado",
-            "description": "Servidores DNS predeterminados utilizados para resolver servidores DNS"
-          },
-          "nameserver": {
-            "label": "Servidor DNS",
-            "description": "Lista de servidores DNS, separados por comas"
-          },
-          "fallback": {
-            "label": "Servidor de respaldo",
-            "description": "Lista de servidores DNS de respaldo, separados por comas"
-          },
-          "proxy": {
-            "label": "DNS del servidor proxy",
-            "description": "Servidor de resolución de nombres de dominio del nodo de proxy, separados por comas"
-          },
-          "directNameserver": {
-            "label": "Servidor DNS de conexión directa",
-            "description": "Servidor de resolución de nombres de dominio de salida directa, admite la palabra clave 'system', separados por comas"
-          },
-          "fakeIpFilter": {
-            "label": "Filtro de Fake IP",
-            "description": "Dominios que omiten la resolución de Fake IP, separados por comas"
-          },
-          "nameserverPolicy": {
-            "label": "Política de servidores DNS",
-            "description": "Servidor DNS específico de dominio, múltiples servidores separados por punto y coma, formato: dominio=server1;server2"
-          },
-          "geoipFiltering": {
-            "label": "Filtrado GeoIP",
-            "description": "Habilitar el filtrado GeoIP de respaldo"
-          },
-          "geoipCode": "Código de país GeoIP",
-          "fallbackIpCidr": {
-            "label": "IP CIDR de respaldo",
-            "description": "IP CIDR que no utilizan servidores de respaldo, separados por comas"
-          },
-          "fallbackDomain": {
-            "label": "Dominio de respaldo",
-            "description": "Dominios que utilizan servidores de respaldo, separados por comas"
-          },
-          "hosts": {
-            "label": "Hosts",
-            "description": "Asignación personalizada de dominio a IP o dominio, separados por comas"
-          }
-        },
-        "messages": {
-          "saved": "Configuración de DNS guardada",
-          "configError": "DNS configuration error:"
-        },
-        "errors": {
-          "invalid": "Invalid configuration"
-        }
-      }
-    },
-    "providers": {
-      "notices": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
-      }
-    },
-    "test": {
-      "item": {
-        "actions": {
-          "test": "Prueba"
-        }
-      },
-      "viewer": {
-        "title": {
-          "create": "Crear prueba",
-          "edit": "Editar prueba"
-        },
-        "fields": {
-          "url": "URL de prueba"
-        }
-      }
-    }
-  },
   "common": {
     "editorModes": {
       "visualization": "Visualización",
@@ -1206,6 +219,1001 @@
       "reorderMode": "Menu reorder mode",
       "unlock": "Unlock menu order",
       "lock": "Lock menu order"
+    }
+  },
+  "ruleEditor": {
+    "title": "Editar reglas",
+    "form": {
+      "labels": {
+        "type": "Tipo de regla",
+        "content": "Contenido de la regla",
+        "proxyPolicy": "Política de proxy"
+      },
+      "toggles": {
+        "noResolve": "Omitir resolución DNS"
+      },
+      "actions": {
+        "prependRule": "Agregar regla previa",
+        "appendRule": "Agregar regla posterior"
+      },
+      "validation": {
+        "conditionRequired": "Falta la condición de la regla",
+        "invalidRule": "Regla no válida"
+      }
+    }
+  },
+  "profile": {
+    "viewer": {
+      "title": {
+        "create": "Crear configuración",
+        "edit": "Editar configuración"
+      },
+      "buttons": {
+        "save": "Guardar",
+        "cancel": "Cancelar"
+      },
+      "fields": {
+        "type": "Tipo",
+        "name": "Nombre",
+        "description": "Descripción",
+        "subscriptionUrl": "Enlace de suscripción",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Intervalo de actualización",
+        "useSystemProxy": "Usar proxy del sistema para actualizar",
+        "useClashProxy": "Usar proxy del núcleo para actualizar",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
+        "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Elegir archivo"
+    },
+    "notifications": {
+      "saved": "Saved successfully"
+    },
+    "proxiesEditor": {
+      "title": "Editar nodos",
+      "placeholders": {
+        "multiUri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)"
+      },
+      "actions": {
+        "prepend": "Agregar nodo de proxy previo",
+        "append": "Agregar nodo de proxy posterior"
+      }
+    },
+    "groupsEditor": {
+      "title": "Editar grupos de proxy",
+      "errors": {
+        "nameRequired": "El nombre del grupo de proxy no puede estar vacío",
+        "nameExists": "El nombre del grupo de proxy ya existe"
+      },
+      "fields": {
+        "type": "Tipo de grupo de proxy",
+        "name": "Nombre del grupo de proxy",
+        "icon": "Icono del grupo de proxy",
+        "proxies": "Incluir proxies",
+        "provider": "Incluir proveedor de proxies",
+        "healthCheckUrl": "URL de prueba de salud",
+        "expectedStatus": "Código de estado esperado",
+        "interval": "Intervalo de comprobación",
+        "timeout": "Tiempo de espera",
+        "maxFailedTimes": "Número máximo de fallos",
+        "interfaceName": "Nombre de la interfaz de salida",
+        "routingMark": "Marca de enrutamiento",
+        "filter": "Filtrar nodos",
+        "excludeFilter": "Excluir nodos",
+        "excludeType": "Tipo de nodo a excluir",
+        "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
+        "includeAllProxies": "Incluir todos los proxies de salida",
+        "includeAllProviders": "Incluir todos los proveedores de proxies"
+      },
+      "toggles": {
+        "lazy": "Estado de inactividad",
+        "disableUdp": "Deshabilitar UDP",
+        "hidden": "Ocultar grupo de proxy"
+      },
+      "actions": {
+        "prepend": "Agregar grupo de proxy previo",
+        "append": "Agregar grupo de proxy posterior"
+      }
+    },
+    "menu": {
+      "home": "Hogar",
+      "select": "Usar",
+      "editInfo": "Editar información",
+      "editFile": "Editar archivo",
+      "editRules": "Editar reglas",
+      "editProxies": "Editar nodos",
+      "editGroups": "Editar grupos de proxy",
+      "extendConfig": "Configurar sobrescritura extendida",
+      "extendScript": "Script extendido",
+      "openFile": "Abrir archivo",
+      "update": "Actualizar",
+      "updateViaProxy": "Update via proxy",
+      "delete": "Eliminar"
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "La última actualización falló",
+        "nextUp": "Próxima actualización",
+        "noSchedule": "Sin programación",
+        "unknown": "Desconocido",
+        "autoUpdateDisabled": "La actualización automática está deshabilitada"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Confirmar eliminación",
+        "message": "Esta operación no se puede deshacer"
+      }
+    },
+    "logViewer": {
+      "title": "Salida de la consola del script"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "editor": {
+      "format": "Formatear documento",
+      "readOnlyMessage": "No se puede editar en modo de solo lectura"
+    }
+  },
+  "home": {
+    "proxyTunCard": {
+      "status": {
+        "systemProxyEnabled": "El proxy del sistema está habilitado. Sus aplicaciones accederán a Internet a través del proxy.",
+        "systemProxyDisabled": "El proxy del sistema está deshabilitado. Se recomienda a la mayoría de los usuarios habilitar esta opción.",
+        "tunModeServiceRequired": "El modo TUN requiere el modo de servicio. Instale el servicio primero.",
+        "tunModeEnabled": "El modo TUN está habilitado. Las aplicaciones accederán a Internet a través de la interfaz virtual.",
+        "tunModeDisabled": "El modo TUN está deshabilitado. Este modo es adecuado para aplicaciones especiales."
+      },
+      "tooltips": {
+        "systemProxy": "Modifica la configuración del proxy del sistema operativo. Si no se puede habilitar, puede modificar manualmente la configuración del proxy del sistema operativo.",
+        "tunMode": "El modo TUN puede gestionar todo el tráfico de las aplicaciones. Es adecuado para aplicaciones que no siguen la configuración del proxy del sistema."
+      }
+    },
+    "clashInfo": {
+      "title": "Información de Clash",
+      "fields": {
+        "coreVersion": "Versión del núcleo",
+        "systemProxyAddress": "Dirección del proxy del sistema",
+        "mixedPort": "Mixed Port",
+        "uptime": "Tiempo de actividad",
+        "rulesCount": "Número de reglas"
+      }
+    },
+    "systemInfo": {
+      "title": "Información del sistema",
+      "fields": {
+        "osInfo": "Información del sistema operativo",
+        "autoLaunch": "Inicio automático al arrancar el sistema",
+        "runningMode": "Modo de ejecución",
+        "lastCheckUpdate": "Última comprobación de actualizaciones",
+        "vergeVersion": "Versión de Verge"
+      },
+      "actions": {
+        "settings": "Ajustes"
+      },
+      "labels": {
+        "enabled": "Habilitado",
+        "disabled": "Deshabilitado"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático."
+      },
+      "badges": {
+        "adminMode": "Modo de administrador",
+        "serviceMode": "Modo de servicio",
+        "sidecarMode": "Modo de usuario",
+        "adminServiceMode": "Admin + Service Mode"
+      }
+    },
+    "ipInfo": {
+      "title": "Información de IP",
+      "errors": {
+        "load": "Error al obtener información de IP"
+      },
+      "labels": {
+        "retry": "Retry",
+        "ip": "IP",
+        "asn": "Número de sistema autónomo",
+        "isp": "Proveedor de servicios de Internet",
+        "org": "Organización",
+        "location": "Ubicación",
+        "timezone": "Zona horaria",
+        "autoRefresh": "Actualización automática",
+        "unknown": "Desconocido"
+      }
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Velocidad de subida",
+        "downloadSpeed": "Velocidad de descarga",
+        "activeConnections": "Conexiones activas",
+        "uploaded": "Subido",
+        "downloaded": "Descargado",
+        "memoryUsage": "Uso de memoria del núcleo"
+      },
+      "legends": {
+        "upload": "Subir",
+        "download": "Descargar"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "currentProxy": {
+      "title": "Nodo actual",
+      "actions": {
+        "refreshDelay": "Prueba de latencia"
+      },
+      "labels": {
+        "globalMode": "Global Mode",
+        "directMode": "Direct Mode",
+        "group": "Grupo de proxy",
+        "proxy": "Nodo",
+        "noActiveNode": "No hay nodos de proxy activos"
+      }
+    },
+    "profile": {
+      "title": "Suscripciones",
+      "actions": {
+        "import": "Importar"
+      },
+      "labels": {
+        "from": "De",
+        "updateTime": "Hora de actualización",
+        "usedTotal": "Utilizado / Total",
+        "expireTime": "Tiempo de expiración",
+        "clickToImport": "Haga clic para importar una suscripción"
+      }
+    },
+    "page": {
+      "title": "Hogar",
+      "tooltips": {
+        "lightweightMode": "Modo ligero",
+        "manual": "Manual de uso",
+        "settings": "Configuración de la página de inicio"
+      },
+      "cards": {
+        "trafficStats": "Estadísticas de tráfico",
+        "networkSettings": "Configuración de red",
+        "proxyMode": "Modo de proxy"
+      },
+      "settings": {
+        "title": "Configuración de la página de inicio",
+        "cards": {
+          "profile": "Tarjeta de suscripción",
+          "currentProxy": "Tarjeta de proxy actual",
+          "network": "Tarjeta de configuración de red",
+          "proxyMode": "Tarjeta de modo de proxy",
+          "traffic": "Tarjeta de estadísticas de tráfico",
+          "tests": "Tarjeta de pruebas de sitios web",
+          "ip": "Tarjeta de información de IP",
+          "clashInfo": "Tarjetas de información de Clash",
+          "systemInfo": "Tarjetas de información del sistema"
+        }
+      }
+    }
+  },
+  "connection": {
+    "fields": {
+      "host": "Host",
+      "downloaded": "Descargado",
+      "uploaded": "Subido",
+      "dlSpeed": "Velocidad de descarga",
+      "ulSpeed": "Velocidad de subida",
+      "chains": "Cadenas",
+      "rule": "Regla",
+      "process": "Proceso",
+      "time": "Tiempo de conexión",
+      "source": "Dirección de origen",
+      "destination": "Dirección de destino",
+      "destinationPort": "Puerto de destino",
+      "type": "Tipo"
+    },
+    "actions": {
+      "closeConnection": "Cerrar conexión"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Velocidad de subida",
+      "downloadSpeed": "Velocidad de descarga"
+    }
+  },
+  "settings": {
+    "system": {
+      "title": "Ajustes del sistema",
+      "toggles": {
+        "tunMode": "Modo de interfaz virtual (TUN)",
+        "systemProxy": "Proxy del sistema"
+      },
+      "labels": {
+        "autoLaunch": "Inicio automático al arrancar el sistema",
+        "silentStart": "Inicio silencioso"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático.",
+        "silentStart": "El programa se ejecutará en segundo plano al iniciarse y no mostrará el panel."
+      }
+    },
+    "proxyControl": {
+      "labels": {
+        "systemProxy": "Proxy del sistema",
+        "tunMode": "Modo de interfaz virtual (TUN)"
+      },
+      "tooltips": {
+        "systemProxy": "Modifica la configuración del proxy del sistema operativo. Si no se puede habilitar, puede modificar manualmente la configuración del proxy del sistema operativo.",
+        "tunMode": "El modo TUN (interfaz virtual) gestiona todo el tráfico del sistema. No es necesario habilitar el proxy del sistema cuando está activado.",
+        "tunUnavailable": "El modo TUN requiere el modo de servicio o el modo de administrador"
+      },
+      "actions": {
+        "installService": "Instalar servicio",
+        "uninstallService": "Desinstalar servicio"
+      }
+    },
+    "externalController": {
+      "title": "Dirección de escucha del controlador externo",
+      "fields": {
+        "enable": "Habilitar controlador externo",
+        "address": "Dirección de escucha del controlador externo",
+        "secret": "Clave de acceso a la API"
+      },
+      "placeholders": {
+        "address": "Requerido",
+        "secret": "Configuración recomendada"
+      },
+      "tooltips": {
+        "copy": "Copiar al portapapeles"
+      },
+      "messages": {
+        "addressRequired": "La dirección del controlador no puede estar vacía",
+        "secretRequired": "La clave secreta no puede estar vacía",
+        "copyFailed": "Error al copiar",
+        "controllerCopied": "El puerto API se copió al portapapeles",
+        "secretCopied": "La clave API se copió al portapapeles"
+      }
+    },
+    "externalCors": {
+      "title": "Configuración de CORS externo",
+      "fields": {
+        "allowPrivateNetwork": "Permitir acceso a red privada",
+        "allowedOrigins": "Orígenes permitidos"
+      },
+      "placeholders": {
+        "origin": "Introduce una URL válida"
+      },
+      "actions": {
+        "add": "Agregar"
+      },
+      "messages": {
+        "alwaysIncluded": "Orígenes siempre incluidos: {{urls}}"
+      },
+      "tooltips": {
+        "open": "Configuración de CORS externo"
+      }
+    },
+    "clash": {
+      "title": "Ajustes de Clash",
+      "items": {
+        "allowLan": "Conexión a la red local",
+        "dnsOverwrite": "Sobrescritura de DNS",
+        "ipv6": "IPv6",
+        "unifiedDelay": "Latencia unificada",
+        "logLevel": "Nivel de registro",
+        "portConfig": "Configuración de puerto",
+        "external": "Control externo",
+        "webUI": "Interfaz web",
+        "clashCore": "Núcleo de Clash",
+        "openUwpTool": "Abrir herramienta UWP",
+        "updateGeoData": "Actualizar GeoData"
+      },
+      "tooltips": {
+        "networkInterface": "Interfaz de red",
+        "unifiedDelay": "Al habilitar la latencia unificada, se realizarán dos pruebas de latencia para eliminar las diferencias de latencia entre diferentes tipos de nodos causadas por el handshake de conexión, etc.",
+        "logLevel": "Solo se aplica al archivo de registro del núcleo en la carpeta Service del directorio de registros.",
+        "openUwpTool": "A partir de Windows 8, las aplicaciones UWP (como la Tienda de Microsoft) tienen restricciones para acceder directamente a los servicios de red del host local. Use esta herramienta para evitar esta restricción."
+      },
+      "options": {
+        "logLevel": {
+          "debug": "Debug",
+          "info": "Info",
+          "warning": "Warn",
+          "error": "Error",
+          "silent": "Silent"
+        }
+      },
+      "messages": {
+        "geoDataUpdated": "GeoData actualizado"
+      },
+      "port": {
+        "title": "Configuración de puerto",
+        "fields": {
+          "mixed": "Puerto de proxy mixto",
+          "socks": "Puerto de proxy SOCKS",
+          "http": "Puerto de proxy HTTP(S)",
+          "redir": "Puerto de proxy transparente Redir",
+          "tproxy": "Puerto de proxy transparente TPROXY"
+        },
+        "actions": {
+          "random": "Puerto aleatorio"
+        },
+        "messages": {
+          "saved": "Port settings saved",
+          "saveFailed": "Failed to save port settings"
+        }
+      }
+    },
+    "liteMode": {
+      "title": "Configuración del modo ligero",
+      "actions": {
+        "enterNow": "Entrar en modo ligero ahora"
+      },
+      "toggles": {
+        "autoEnter": "Entrar automáticamente en modo ligero"
+      },
+      "tooltips": {
+        "autoEnter": "Si se habilita, se activará automáticamente el modo ligero después de un tiempo de inactividad de la ventana."
+      },
+      "fields": {
+        "delay": "Retraso para entrar automáticamente en modo ligero"
+      },
+      "messages": {
+        "autoEnterHint": "Después de cerrar la ventana, el modo ligero se activará automáticamente después de {{n}} minutos"
+      }
+    },
+    "backup": {
+      "title": "Configuración de copia de seguridad",
+      "tabs": {
+        "local": "Local backup",
+        "webdav": "WebDAV backup"
+      },
+      "actions": {
+        "selectTarget": "Select backup target",
+        "backup": "Copia de seguridad",
+        "refresh": "Actualizar",
+        "save": "Guardar",
+        "export": "Export",
+        "exportBackup": "Export Backup",
+        "delete": "Eliminar",
+        "deleteBackup": "Eliminar copia de seguridad",
+        "restore": "Restaurar",
+        "restoreBackup": "Restaurar copia de seguridad"
+      },
+      "fields": {
+        "webdavUrl": "Dirección del servidor WebDAV http(s)://",
+        "username": "Nombre de usuario",
+        "password": "Contraseña",
+        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "La dirección del servidor WebDAV no puede estar vacía",
+        "invalidWebdavUrl": "Formato de dirección del servidor WebDAV no válido",
+        "usernameRequired": "El nombre de usuario no puede estar vacío",
+        "passwordRequired": "La contraseña no puede estar vacía",
+        "webdavConfigSaved": "Configuración de WebDAV guardada con éxito",
+        "webdavConfigSaveFailed": "Error al guardar la configuración de WebDAV: {{error}}",
+        "backupCreated": "Copia de seguridad creada con éxito",
+        "backupFailed": "Error al crear la copia de seguridad: {{error}}",
+        "localBackupCreated": "Local backup created successfully",
+        "localBackupFailed": "Local backup failed",
+        "restoreSuccess": "Restauración exitosa. La aplicación se reiniciará en 1 segundo",
+        "localBackupExported": "Local backup exported successfully",
+        "localBackupExportFailed": "Failed to export local backup",
+        "confirmDelete": "Confirm to delete this backup file?",
+        "confirmRestore": "Confirm to restore this backup file?"
+      },
+      "table": {
+        "filename": "Nombre del archivo",
+        "backupTime": "Tiempo de copia de seguridad",
+        "actions": "Acciones",
+        "noBackups": "No hay copias de seguridad",
+        "rowsPerPage": "Rows per page"
+      }
+    },
+    "verge": {
+      "basic": {
+        "title": "Ajustes básicos de Verge",
+        "items": {
+          "language": "Configuración de idioma",
+          "themeMode": "Modo de tema",
+          "trayClickEvent": "Evento de clic en el icono de la bandeja",
+          "copyEnvType": "Copiar tipo de variable de entorno",
+          "startPage": "Página de inicio",
+          "startupScript": "Script de inicio",
+          "themeSetting": "Configuración de tema",
+          "layoutSetting": "Configuración de la interfaz",
+          "misc": "Ajustes varios",
+          "hotkeySetting": "Configuración de atajos de teclado"
+        },
+        "actions": {
+          "browse": "Examinar",
+          "clear": "Limpiar"
+        },
+        "trayOptions": {
+          "showMainWindow": "Mostrar ventana principal",
+          "showTrayMenu": "Mostrar menú de la bandeja",
+          "disable": "Deshabilitar"
+        }
+      },
+      "advanced": {
+        "title": "Ajustes avanzados de Verge",
+        "items": {
+          "backupSetting": "Configuración de copia de seguridad",
+          "runtimeConfig": "Configuración actual",
+          "openConfDir": "Directorio de configuración",
+          "openCoreDir": "Directorio del núcleo",
+          "openLogsDir": "Directorio de registros",
+          "checkUpdates": "Comprobar actualizaciones",
+          "openDevTools": "Abrir herramientas de desarrollo",
+          "liteModeSettings": "Configuración del modo ligero",
+          "exit": "Salir",
+          "exportDiagnostics": "Exportar información de diagnóstico",
+          "vergeVersion": "Versión de Verge"
+        },
+        "tooltips": {
+          "backupInfo": "Soporte para la copia de seguridad de archivos de configuración a través de WebDAV",
+          "openConfDir": "Si el software no funciona correctamente, !realice una copia de seguridad! y elimine todos los archivos de esta carpeta, luego reinicie el software.",
+          "liteMode": "Cierra la interfaz gráfica y solo mantiene el núcleo en ejecución"
+        },
+        "actions": {
+          "copyVersion": "Copy Version"
+        },
+        "notifications": {
+          "latestVersion": "Actualmente está en la última versión",
+          "versionCopied": "Version copied to clipboard"
+        }
+      },
+      "theme": {
+        "title": "Configuración de tema",
+        "fields": {
+          "primaryColor": "Color principal",
+          "secondaryColor": "Color secundario",
+          "primaryText": "Color principal del texto",
+          "secondaryText": "Color secundario del texto",
+          "infoColor": "Color de información",
+          "warningColor": "Color de advertencia",
+          "errorColor": "Color de error",
+          "successColor": "Color de éxito",
+          "fontFamily": "Familia tipográfica",
+          "cssInjection": "Inyección de CSS"
+        },
+        "actions": {
+          "editCss": "Edit CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Edit CSS"
+        }
+      },
+      "layout": {
+        "title": "Configuración de la interfaz",
+        "fields": {
+          "preferSystemTitlebar": "Prefer System Titlebar",
+          "trafficGraph": "Gráfico de tráfico",
+          "memoryUsage": "Uso de memoria del núcleo",
+          "proxyGroupIcon": "Icono del grupo de proxy",
+          "hoverNavigator": "Hover Jump Navigator",
+          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "navIcon": "Icono de la barra de navegación",
+          "trayIcon": "Icono de la bandeja",
+          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "commonTrayIcon": "Icono de bandeja común",
+          "systemProxyTrayIcon": "Icono de bandeja del proxy del sistema",
+          "tunTrayIcon": "Icono de bandeja del modo TUN"
+        },
+        "tooltips": {
+          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "Icono monocromo",
+            "colorful": "Icono colorido",
+            "disable": "Deshabilitar"
+          }
+        }
+      }
+    },
+    "common": {
+      "notifications": {
+        "copySuccess": "Copia exitosa"
+      }
+    },
+    "misc": {
+      "title": "Ajustes varios",
+      "fields": {
+        "appLogLevel": "Nivel de registro de la aplicación",
+        "appLogMaxSize": "App Log Max Size",
+        "appLogMaxCount": "App Log Max Count",
+        "autoCloseConnections": "Cerrar conexiones automáticamente",
+        "autoCheckUpdate": "Comprobar actualizaciones automáticamente",
+        "enableBuiltinEnhanced": "Habilitar funciones mejoradas integradas",
+        "proxyLayoutColumns": "Número de columnas en la disposición de la página de proxy",
+        "autoLogClean": "Limpiar registros automáticamente",
+        "autoDelayDetection": "Detección automática de latencia",
+        "defaultLatencyTest": "Enlace de prueba de latencia predeterminado",
+        "defaultLatencyTimeout": "Tiempo de espera de la prueba de latencia"
+      },
+      "tooltips": {
+        "autoCloseConnections": "Cierra las conexiones establecidas cuando se cambia el nodo seleccionado en el grupo de proxy o el modo de proxy.",
+        "enableBuiltinEnhanced": "Procesamiento de compatibilidad de archivos de configuración",
+        "autoDelayDetection": "Prueba periódicamente la latencia del nodo actual en segundo plano",
+        "defaultLatencyTest": "Solo se utiliza para pruebas de solicitudes de clientes HTTP y no afectará al archivo de configuración."
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "Número de columnas automático"
+        },
+        "autoLogClean": {
+          "never": "No limpiar",
+          "retainDays": "Retener {{n}} días"
+        }
+      }
+    },
+    "update": {
+      "title": "New Version v{{version}}",
+      "actions": {
+        "goToRelease": "Ir a la página de lanzamiento",
+        "update": "Actualizar"
+      },
+      "messages": {
+        "portableError": "La versión portátil no admite la actualización desde dentro de la aplicación. Descargue e instale manualmente la actualización.",
+        "breakChangeError": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión."
+      }
+    },
+    "sysproxy": {
+      "title": "Configuración del proxy del sistema",
+      "fieldsets": {
+        "currentStatus": "Proxy del sistema actual"
+      },
+      "fields": {
+        "enableStatus": "Estado de habilitación: ",
+        "serverAddr": "Dirección del servidor: ",
+        "pacUrl": "URL del PAC: ",
+        "proxyHost": "Host del proxy",
+        "usePacMode": "Usar modo PAC",
+        "proxyGuard": "Guardia del proxy del sistema",
+        "guardDuration": "Intervalo de guardia del proxy",
+        "alwaysUseDefaultBypass": "Siempre usar la lista de omisión predeterminada",
+        "proxyBypass": "Configuración de omisión del proxy: ",
+        "bypass": "Omisión actual: ",
+        "pacScriptContent": "Contenido del script PAC"
+      },
+      "tooltips": {
+        "proxyGuard": "Habilite esta opción para evitar que otros programas modifiquen la configuración del proxy del sistema operativo."
+      },
+      "messages": {
+        "durationTooShort": "El intervalo de tiempo del daemon de proxy no puede ser menor de 1 segundo",
+        "invalidBypass": "Formato de omisión de proxy no válido",
+        "invalidProxyHost": "Formato de host del proxy no válido"
+      },
+      "actions": {
+        "editPac": "Editar PAC"
+      }
+    },
+    "tun": {
+      "title": "Modo de interfaz virtual (TUN)",
+      "actions": {
+        "reset": "Restablecer a los valores predeterminados"
+      },
+      "fields": {
+        "stack": "Pila del modo TUN",
+        "device": "Device Name",
+        "autoRoute": "Configurar enrutamiento global automáticamente",
+        "strictRoute": "Enrutamiento estricto",
+        "autoDetectInterface": "Detectar automáticamente la interfaz de salida del tráfico",
+        "dnsHijack": "Secuestro de DNS",
+        "mtu": "Unidad máxima de transmisión"
+      },
+      "tooltips": {
+        "dnsHijack": "Please use , to separate multiple DNS servers"
+      },
+      "messages": {
+        "applied": "Ajustes aplicados"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "Sobrescritura de DNS",
+        "warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga habilitada la sobrescritura de DNS."
+      },
+      "sections": {
+        "general": "Configuración de DNS",
+        "fallbackFilter": "Configuración de filtrado de respaldo",
+        "hosts": "Configuración de hosts"
+      },
+      "fields": {
+        "enable": "Habilitar DNS",
+        "listen": "Dirección de escucha de DNS",
+        "enhancedMode": "Modo mejorado",
+        "fakeIpRange": "Rango de Fake IP",
+        "fakeIpFilterMode": "Modo de filtrado de Fake IP",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Habilitar resolución DNS IPv6"
+        },
+        "preferH3": {
+          "label": "Prefiere HTTP/3",
+          "description": "DNS DOH utiliza el protocolo HTTP/3"
+        },
+        "respectRules": {
+          "label": "Seguir las reglas de enrutamiento",
+          "description": "Las conexiones DNS siguen las reglas de enrutamiento"
+        },
+        "useHosts": {
+          "label": "Usar archivo hosts",
+          "description": "Habilitar la resolución de nombres de host a través del archivo hosts"
+        },
+        "useSystemHosts": {
+          "label": "Usar archivo hosts del sistema",
+          "description": "Habilitar la resolución de nombres de host a través del archivo hosts del sistema"
+        },
+        "directPolicy": {
+          "label": "Los servidores DNS de conexión directa siguen la política",
+          "description": "Si seguir la configuración de la política de servidores DNS"
+        },
+        "defaultNameserver": {
+          "label": "Servidor DNS predeterminado",
+          "description": "Servidores DNS predeterminados utilizados para resolver servidores DNS"
+        },
+        "nameserver": {
+          "label": "Servidor DNS",
+          "description": "Lista de servidores DNS, separados por comas"
+        },
+        "fallback": {
+          "label": "Servidor de respaldo",
+          "description": "Lista de servidores DNS de respaldo, separados por comas"
+        },
+        "proxy": {
+          "label": "DNS del servidor proxy",
+          "description": "Servidor de resolución de nombres de dominio del nodo de proxy, separados por comas"
+        },
+        "directNameserver": {
+          "label": "Servidor DNS de conexión directa",
+          "description": "Servidor de resolución de nombres de dominio de salida directa, admite la palabra clave 'system', separados por comas"
+        },
+        "fakeIpFilter": {
+          "label": "Filtro de Fake IP",
+          "description": "Dominios que omiten la resolución de Fake IP, separados por comas"
+        },
+        "nameserverPolicy": {
+          "label": "Política de servidores DNS",
+          "description": "Servidor DNS específico de dominio, múltiples servidores separados por punto y coma, formato: dominio=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "Filtrado GeoIP",
+          "description": "Habilitar el filtrado GeoIP de respaldo"
+        },
+        "geoipCode": "Código de país GeoIP",
+        "fallbackIpCidr": {
+          "label": "IP CIDR de respaldo",
+          "description": "IP CIDR que no utilizan servidores de respaldo, separados por comas"
+        },
+        "fallbackDomain": {
+          "label": "Dominio de respaldo",
+          "description": "Dominios que utilizan servidores de respaldo, separados por comas"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Asignación personalizada de dominio a IP o dominio, separados por comas"
+        }
+      },
+      "messages": {
+        "saved": "Configuración de DNS guardada",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration"
+      }
+    },
+    "page": {
+      "title": "Ajustes",
+      "actions": {
+        "manual": "Manual de uso",
+        "telegram": "Canal de Telegram",
+        "github": "Dirección del proyecto en GitHub"
+      }
+    }
+  },
+  "providers": {
+    "notices": {
+      "updateSuccess": "{{name}} updated successfully",
+      "updateFailed": "Failed to update {{name}}: {{message}}",
+      "genericError": "Update failed: {{message}}",
+      "none": "No providers available to update",
+      "allUpdated": "All providers updated successfully"
+    }
+  },
+  "test": {
+    "item": {
+      "actions": {
+        "test": "Prueba"
+      }
+    },
+    "viewer": {
+      "title": {
+        "create": "Crear prueba",
+        "edit": "Editar prueba"
+      },
+      "fields": {
+        "url": "URL de prueba"
+      }
+    },
+    "page": {
+      "title": "Prueba",
+      "actions": {
+        "testAll": "Probar todo",
+        "new": "Nuevo"
+      }
+    }
+  },
+  "proxies": {
+    "page": {
+      "title": {
+        "default": "Grupos de proxies",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Proxy en cadena",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Proveedor de proxies",
+        "actions": {
+          "updateAll": "Actualizar todo",
+          "update": "Actualizar"
+        }
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Número de nodos",
+        "delayCheckReset": "Realizar prueba de latencia para cancelar la fijación"
+      },
+      "tooltips": {
+        "locate": "Nodo actual",
+        "delayCheck": "Prueba de latencia",
+        "sortDefault": "Ordenación predeterminada",
+        "sortDelay": "Ordenar por latencia",
+        "sortName": "Ordenar por nombre",
+        "delayCheckUrl": "URL de prueba de latencia",
+        "showBasic": "Ocultar detalles del nodo",
+        "showDetail": "Mostrar detalles del nodo",
+        "filter": "Filtrar nodos"
+      },
+      "placeholders": {
+        "filter": "Condiciones de filtrado",
+        "delayCheckUrl": "URL de prueba de latencia"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
+  "rules": {
+    "page": {
+      "title": "Reglas",
+      "provider": {
+        "trigger": "Proveedor de reglas",
+        "dialogTitle": "Proveedor de reglas",
+        "actions": {
+          "updateAll": "Actualizar todo",
+          "update": "Actualizar"
+        }
+      }
+    }
+  },
+  "profiles": {
+    "page": {
+      "title": "Suscripciones",
+      "actions": {
+        "updateAll": "Actualizar todas las suscripciones",
+        "viewRuntimeConfig": "Ver configuración en tiempo de ejecución",
+        "reactivate": "Reactivar suscripciones",
+        "import": "Importar",
+        "new": "Nuevo"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "Enlace del archivo de suscripción",
+        "paste": "Pegar",
+        "clear": "Limpiar"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Solo se admiten archivos YAML"
+      },
+      "notifications": {
+        "importRetry": "Error al importar la suscripción. Intentando con el proxy de Clash...",
+        "importFail": "Error al importar incluso con el proxy de Clash",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Suscripción cambiada",
+        "profileReactivated": "Suscripción reactivada",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    }
+  },
+  "connections": {
+    "page": {
+      "title": "Conexiones",
+      "summary": {
+        "downloaded": "Descargado",
+        "uploaded": "Subido"
+      },
+      "actions": {
+        "listView": "Vista de lista",
+        "tableView": "Vista de tabla",
+        "pause": "Pausar",
+        "resume": "Reanudar",
+        "closeAll": "Cerrar todas"
+      }
+    }
+  },
+  "logs": {
+    "page": {
+      "title": "Registros",
+      "actions": {
+        "pause": "Pausar",
+        "resume": "Reanudar",
+        "clear": "Limpiar"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
+    }
+  },
+  "unlock": {
+    "page": {
+      "title": "Prueba de desbloqueo",
+      "actions": {
+        "testing": "Probando..."
+      },
+      "empty": "No unlock test items"
     }
   }
 }

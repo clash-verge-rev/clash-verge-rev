@@ -32,7 +32,7 @@ export const ClashInfoCard = () => {
       <Stack spacing={1.5}>
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("components.home.clashInfo.fields.coreVersion")}
+            {t("home.clashInfo.fields.coreVersion")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {clashVersion || "-"}
@@ -41,7 +41,7 @@ export const ClashInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("components.home.clashInfo.fields.systemProxyAddress")}
+            {t("home.clashInfo.fields.systemProxyAddress")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {systemProxyAddress}
@@ -50,7 +50,7 @@ export const ClashInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("components.home.clashInfo.fields.mixedPort")}
+            {t("home.clashInfo.fields.mixedPort")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {clashConfig.mixedPort || "-"}
@@ -59,7 +59,7 @@ export const ClashInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("components.home.clashInfo.fields.uptime")}
+            {t("home.clashInfo.fields.uptime")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {formattedUptime}
@@ -68,7 +68,7 @@ export const ClashInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("components.home.clashInfo.fields.rulesCount")}
+            {t("home.clashInfo.fields.rulesCount")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {rules.length}
@@ -87,7 +87,7 @@ export const ClashInfoCard = () => {
 
   return (
     <EnhancedCard
-      title={t("components.home.clashInfo.title")}
+      title={t("home.clashInfo.title")}
       icon={<DeveloperBoardOutlined />}
       iconColor="warning"
       action={null}

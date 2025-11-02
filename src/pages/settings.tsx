@@ -36,13 +36,13 @@ const SettingPage = () => {
 
   return (
     <BasePage
-      title={t("pages.settings.title")}
+      title={t("settings.page.title")}
       header={
         <ButtonGroup variant="contained" aria-label="Basic button group">
           <IconButton
             size="medium"
             color="inherit"
-            title={t("pages.settings.actions.manual")}
+            title={t("settings.page.actions.manual")}
             onClick={toGithubDoc}
           >
             <HelpOutlineRounded fontSize="inherit" />
@@ -50,7 +50,7 @@ const SettingPage = () => {
           <IconButton
             size="medium"
             color="inherit"
-            title={t("pages.settings.actions.telegram")}
+            title={t("settings.page.actions.telegram")}
             onClick={toTelegramChannel}
           >
             <Telegram fontSize="inherit" />
@@ -59,7 +59,7 @@ const SettingPage = () => {
           <IconButton
             size="medium"
             color="inherit"
-            title={t("pages.settings.actions.github")}
+            title={t("settings.page.actions.github")}
             onClick={toGithubRepo}
           >
             <GitHub fontSize="inherit" />

@@ -120,42 +120,38 @@ export const ProfileItem = (props: Props) => {
 
           // 如果已经过期，显示"更新失败"
           if (nextUpdateDate.isBefore(now)) {
-            setNextUpdateTime(
-              t("components.profile.item.status.lastUpdateFailed"),
-            );
+            setNextUpdateTime(t("profile.item.status.lastUpdateFailed"));
           } else {
             // 否则显示剩余时间
             const diffMinutes = nextUpdateDate.diff(now, "minute");
 
             if (diffMinutes < 60) {
               if (diffMinutes <= 0) {
-                setNextUpdateTime(
-                  `${t("components.profile.item.status.nextUp")} <1m`,
-                );
+                setNextUpdateTime(`${t("profile.item.status.nextUp")} <1m`);
               } else {
                 setNextUpdateTime(
-                  `${t("components.profile.item.status.nextUp")} ${diffMinutes}m`,
+                  `${t("profile.item.status.nextUp")} ${diffMinutes}m`,
                 );
               }
             } else {
               const hours = Math.floor(diffMinutes / 60);
               const mins = diffMinutes % 60;
               setNextUpdateTime(
-                `${t("components.profile.item.status.nextUp")} ${hours}h ${mins}m`,
+                `${t("profile.item.status.nextUp")} ${hours}h ${mins}m`,
               );
             }
           }
         } else {
           console.log(`返回的下次更新时间为空`);
-          setNextUpdateTime(t("components.profile.item.status.noSchedule"));
+          setNextUpdateTime(t("profile.item.status.noSchedule"));
         }
       } catch (err) {
         console.error(`获取下次更新时间出错:`, err);
-        setNextUpdateTime(t("components.profile.item.status.unknown"));
+        setNextUpdateTime(t("profile.item.status.unknown"));
       }
     } else {
       console.log(`该配置未设置更新间隔或间隔为0`);
-      setNextUpdateTime(t("components.profile.item.status.autoUpdateDisabled"));
+      setNextUpdateTime(t("profile.item.status.autoUpdateDisabled"));
     }
   });
 
@@ -369,19 +365,19 @@ export const ProfileItem = (props: Props) => {
   };
 
   const menuLabels = {
-    home: "components.profile.menu.home",
-    select: "components.profile.menu.select",
-    editInfo: "components.profile.menu.editInfo",
-    editFile: "components.profile.menu.editFile",
-    editRules: "components.profile.menu.editRules",
-    editProxies: "components.profile.menu.editProxies",
-    editGroups: "components.profile.menu.editGroups",
-    extendConfig: "components.profile.menu.extendConfig",
-    extendScript: "components.profile.menu.extendScript",
-    openFile: "components.profile.menu.openFile",
-    update: "components.profile.menu.update",
-    updateViaProxy: "components.profile.menu.updateViaProxy",
-    delete: "components.profile.menu.delete",
+    home: "profile.menu.home",
+    select: "profile.menu.select",
+    editInfo: "profile.menu.editInfo",
+    editFile: "profile.menu.editFile",
+    editRules: "profile.menu.editRules",
+    editProxies: "profile.menu.editProxies",
+    editGroups: "profile.menu.editGroups",
+    extendConfig: "profile.menu.extendConfig",
+    extendScript: "profile.menu.extendScript",
+    openFile: "profile.menu.openFile",
+    update: "profile.menu.update",
+    updateViaProxy: "profile.menu.updateViaProxy",
+    delete: "profile.menu.delete",
   } as const;
 
   const urlModeMenu: ContextMenuItem[] = [
@@ -734,8 +730,8 @@ export const ProfileItem = (props: Props) => {
                     textAlign="right"
                     title={
                       showNextUpdate
-                        ? t("components.profile.item.tooltips.showLast")
-                        : `${t("Update Time")}: ${parseExpire(updated)}\n${t("components.profile.item.tooltips.showNext")}`
+                        ? t("profile.item.tooltips.showLast")
+                        : `${t("Update Time")}: ${parseExpire(updated)}\n${t("profile.item.tooltips.showNext")}`
                     }
                     sx={{
                       cursor: "pointer",
@@ -890,8 +886,8 @@ export const ProfileItem = (props: Props) => {
       )}
 
       <ConfirmViewer
-        title={t("components.profile.confirm.delete.title")}
-        message={t("components.profile.confirm.delete.message")}
+        title={t("profile.confirm.delete.title")}
+        message={t("profile.confirm.delete.message")}
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={() => {

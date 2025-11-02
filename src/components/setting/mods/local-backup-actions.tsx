@@ -20,15 +20,11 @@ export const LocalBackupActions = memo(
       try {
         setLoading(true);
         await createLocalBackup();
-        showNotice.success(
-          "components.settings.backup.messages.localBackupCreated",
-        );
+        showNotice.success("settings.backup.messages.localBackupCreated");
         await onBackupSuccess();
       } catch (error) {
         console.error(error);
-        showNotice.error(
-          "components.settings.backup.messages.localBackupFailed",
-        );
+        showNotice.error("settings.backup.messages.localBackupFailed");
       } finally {
         setLoading(false);
       }
@@ -47,7 +43,7 @@ export const LocalBackupActions = memo(
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 9 }}>
           <Typography variant="body2" color="text.secondary">
-            {t("components.settings.backup.fields.info")}
+            {t("settings.backup.fields.info")}
           </Typography>
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }}>
@@ -64,7 +60,7 @@ export const LocalBackupActions = memo(
               type="button"
               size="large"
             >
-              {t("components.settings.backup.actions.backup")}
+              {t("settings.backup.actions.backup")}
             </Button>
             <Button
               variant="outlined"
@@ -72,7 +68,7 @@ export const LocalBackupActions = memo(
               type="button"
               size="large"
             >
-              {t("components.settings.backup.actions.refresh")}
+              {t("settings.backup.actions.refresh")}
             </Button>
           </Stack>
         </Grid>

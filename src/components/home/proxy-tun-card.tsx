@@ -160,18 +160,18 @@ export const ProxyTunCard: FC = () => {
     if (activeTab === "system") {
       return {
         text: systemProxyActualState
-          ? t("components.home.proxyTunCard.status.systemProxyEnabled")
-          : t("components.home.proxyTunCard.status.systemProxyDisabled"),
-        tooltip: t("components.home.proxyTunCard.tooltips.systemProxy"),
+          ? t("home.proxyTunCard.status.systemProxyEnabled")
+          : t("home.proxyTunCard.status.systemProxyDisabled"),
+        tooltip: t("home.proxyTunCard.tooltips.systemProxy"),
       };
     } else {
       return {
         text: !isTunModeAvailable
-          ? t("components.home.proxyTunCard.status.tunModeServiceRequired")
+          ? t("home.proxyTunCard.status.tunModeServiceRequired")
           : enable_tun_mode
-            ? t("components.home.proxyTunCard.status.tunModeEnabled")
-            : t("components.home.proxyTunCard.status.tunModeDisabled"),
-        tooltip: t("components.home.proxyTunCard.tooltips.tunMode"),
+            ? t("home.proxyTunCard.status.tunModeEnabled")
+            : t("home.proxyTunCard.status.tunModeDisabled"),
+        tooltip: t("home.proxyTunCard.tooltips.tunMode"),
       };
     }
   }, [
@@ -198,14 +198,14 @@ export const ProxyTunCard: FC = () => {
           isActive={activeTab === "system"}
           onClick={() => handleTabChange("system")}
           icon={ComputerRounded}
-          label={t("components.settings.system.toggles.systemProxy")}
+          label={t("settings.system.toggles.systemProxy")}
           hasIndicator={systemProxyActualState}
         />
         <TabButton
           isActive={activeTab === "tun"}
           onClick={() => handleTabChange("tun")}
           icon={TroubleshootRounded}
-          label={t("components.settings.system.toggles.tunMode")}
+          label={t("settings.system.toggles.tunMode")}
           hasIndicator={enable_tun_mode && isTunModeAvailable}
         />
       </Stack>
@@ -238,8 +238,8 @@ export const ProxyTunCard: FC = () => {
           onError={handleError}
           label={
             activeTab === "system"
-              ? t("components.settings.system.toggles.systemProxy")
-              : t("components.settings.system.toggles.tunMode")
+              ? t("settings.system.toggles.systemProxy")
+              : t("settings.system.toggles.tunMode")
           }
           noRightPadding={true}
         />

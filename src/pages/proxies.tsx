@@ -142,8 +142,8 @@ const ProxyPage = () => {
       contentStyle={{ height: "101.5%" }}
       title={
         isChainMode
-          ? t("pages.proxies.title.chainMode")
-          : t("pages.proxies.title.default")
+          ? t("proxies.page.title.chainMode")
+          : t("proxies.page.title.default")
       }
       header={
         <Box display="flex" alignItems="center" gap={1}>
@@ -157,7 +157,7 @@ const ProxyPage = () => {
                 onClick={() => onChangeMode(mode)}
                 sx={{ textTransform: "capitalize" }}
               >
-                {t(`pages.proxies.modes.${mode}`)}
+                {t(`proxies.page.modes.${mode}`)}
               </Button>
             ))}
           </ButtonGroup>
@@ -168,7 +168,7 @@ const ProxyPage = () => {
             onClick={onToggleChainMode}
             sx={{ ml: 1 }}
           >
-            {t("pages.proxies.actions.toggleChain")}
+            {t("proxies.page.actions.toggleChain")}
           </Button>
         </Box>
       }

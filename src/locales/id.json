@@ -13,192 +13,6 @@
   "Save": "Simpan",
   "Delete": "Hapus",
   "Enable": "Aktifkan",
-  "pages": {
-    "home": {
-      "title": "Home",
-      "tooltips": {
-        "lightweightMode": "Mode Ringan",
-        "manual": "Manual",
-        "settings": "Home Settings"
-      },
-      "cards": {
-        "trafficStats": "Traffic Stats",
-        "networkSettings": "Network Settings",
-        "proxyMode": "Proxy Mode"
-      },
-      "settings": {
-        "title": "Home Settings",
-        "cards": {
-          "profile": "Profile Card",
-          "currentProxy": "Current Proxy Card",
-          "network": "Network Settings Card",
-          "proxyMode": "Proxy Mode Card",
-          "traffic": "Traffic Stats Card",
-          "tests": "Website Tests Card",
-          "ip": "IP Information Card",
-          "clashInfo": "Clash Info Cards",
-          "systemInfo": "System Info Cards"
-        }
-      }
-    },
-    "proxies": {
-      "title": {
-        "default": "Grup Proksi",
-        "chainMode": "Proxy Chain Mode"
-      },
-      "actions": {
-        "toggleChain": "🔗 Proxy Rantai",
-        "connect": "Connect",
-        "disconnect": "Disconnect",
-        "connecting": "Connecting...",
-        "clearChainConfig": "Delete Chain Config"
-      },
-      "provider": {
-        "title": "Penyedia Proksi",
-        "actions": {
-          "updateAll": "Perbarui Semua",
-          "update": "Perbarui"
-        }
-      },
-      "rules": {
-        "title": "Proxy Rules",
-        "select": "Select Rules"
-      },
-      "labels": {
-        "proxyCount": "Proxy Count",
-        "delayCheckReset": "Periksa keterlambatan untuk membatalkan tetap"
-      },
-      "tooltips": {
-        "locate": "Lokasi",
-        "delayCheck": "Periksa Keterlambatan",
-        "sortDefault": "Urutkan secara default",
-        "sortDelay": "Urutkan berdasarkan keterlambatan",
-        "sortName": "Urutkan berdasarkan nama",
-        "delayCheckUrl": "URL Periksa Keterlambatan",
-        "showBasic": "Dasar Proksi",
-        "showDetail": "Detail Proksi",
-        "filter": "Filter"
-      },
-      "placeholders": {
-        "filter": "Kondisi Filter",
-        "delayCheckUrl": "URL Periksa Keterlambatan"
-      },
-      "chain": {
-        "header": "Chain Proxy Config",
-        "empty": "No proxy chain configured",
-        "instruction": "Click nodes in order to add to proxy chain",
-        "minimumNodes": "Chain proxy requires at least 2 nodes",
-        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-        "connectFailed": "Failed to connect to proxy chain",
-        "disconnectFailed": "Failed to disconnect from proxy chain",
-        "duplicateNode": "Proxy node already exists in chain"
-      }
-    },
-    "rules": {
-      "title": "Aturan",
-      "provider": {
-        "trigger": "Penyedia Aturan",
-        "dialogTitle": "Penyedia Aturan",
-        "actions": {
-          "updateAll": "Perbarui Semua",
-          "update": "Perbarui"
-        }
-      }
-    },
-    "profiles": {
-      "title": "Profil",
-      "actions": {
-        "updateAll": "Perbarui Semua Profil",
-        "viewRuntimeConfig": "Lihat Konfigurasi Runtime",
-        "reactivate": "Reaktivasi Profil",
-        "import": "Impor",
-        "new": "Baru"
-      },
-      "batch": {
-        "title": "Batch Operations",
-        "delete": "Delete Selected Profiles",
-        "selectAll": "Select All",
-        "deselectAll": "Deselect All",
-        "done": "Done",
-        "selected": "Selected",
-        "items": "items"
-      },
-      "import": {
-        "placeholder": "URL Profil",
-        "paste": "Tempel",
-        "clear": "Bersihkan"
-      },
-      "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Hanya File YAML yang Didukung"
-      },
-      "notifications": {
-        "importRetry": "Import failed, retrying with Clash proxy...",
-        "importFail": "Import failed even with Clash proxy",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
-        "profileSwitched": "Profil Beralih",
-        "profileReactivated": "Profil Diaktifkan Kembali",
-        "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Selected profiles deleted successfully"
-      },
-      "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
-      }
-    },
-    "connections": {
-      "title": "Koneksi",
-      "summary": {
-        "downloaded": "Diunduh",
-        "uploaded": "Diunggah"
-      },
-      "actions": {
-        "listView": "Tampilan Daftar",
-        "tableView": "Tampilan Tabel",
-        "pause": "Jeda",
-        "resume": "Lanjut",
-        "closeAll": "Tutup Semua"
-      }
-    },
-    "settings": {
-      "title": "Pengaturan",
-      "actions": {
-        "manual": "Manual",
-        "telegram": "Saluran Telegram",
-        "github": "Repositori Github"
-      }
-    },
-    "logs": {
-      "title": "Log",
-      "actions": {
-        "pause": "Jeda",
-        "resume": "Lanjut",
-        "clear": "Bersihkan"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      }
-    },
-    "test": {
-      "title": "Tes",
-      "actions": {
-        "testAll": "Tes Semua",
-        "new": "Baru"
-      }
-    },
-    "unlock": {
-      "title": "Unlock Test",
-      "actions": {
-        "testing": "Testing..."
-      },
-      "empty": "No unlock test items"
-    }
-  },
   "Proxies": "Proksi",
   "Update At": "Diperbarui Pada",
   "rule": "aturan",
@@ -380,807 +194,6 @@
   "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
-  "components": {
-    "ruleEditor": {
-      "title": "Ubah Aturan",
-      "form": {
-        "labels": {
-          "type": "Jenis Aturan",
-          "content": "Konten Aturan",
-          "proxyPolicy": "Kebijakan Proksi"
-        },
-        "toggles": {
-          "noResolve": "Tidak Menyelesaikan"
-        },
-        "actions": {
-          "prependRule": "Tambahkan Aturan di Awal",
-          "appendRule": "Tambahkan Aturan di Akhir"
-        },
-        "validation": {
-          "conditionRequired": "Kondisi Aturan Diperlukan",
-          "invalidRule": "Aturan Tidak Valid"
-        }
-      }
-    },
-    "profile": {
-      "viewer": {
-        "title": {
-          "create": "Buat Profil",
-          "edit": "Ubah Profil"
-        },
-        "buttons": {
-          "save": "Simpan",
-          "cancel": "Batal"
-        },
-        "fields": {
-          "type": "Jenis",
-          "name": "Nama",
-          "description": "Deskripsi",
-          "subscriptionUrl": "URL Langganan",
-          "httpTimeout": "HTTP Request Timeout",
-          "updateInterval": "Interval Pembaruan",
-          "useSystemProxy": "Gunakan Proksi Sistem",
-          "useClashProxy": "Gunakan Proksi Clash",
-          "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
-          "allowAutoUpdate": "Allow Auto Update"
-        },
-        "notifications": {
-          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
-        }
-      },
-      "fileInput": {
-        "chooseFile": "Pilih Berkas"
-      },
-      "notifications": {
-        "saved": "Saved successfully"
-      },
-      "proxiesEditor": {
-        "title": "Ubah Proksi",
-        "placeholders": {
-          "multiUri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)"
-        },
-        "actions": {
-          "prepend": "Tambahkan Proksi di Awal",
-          "append": "Tambahkan Proksi di Akhir"
-        }
-      },
-      "groupsEditor": {
-        "title": "Ubah Grup Proksi",
-        "errors": {
-          "nameRequired": "Nama Grup Diperlukan",
-          "nameExists": "Nama Grup Sudah Ada"
-        },
-        "fields": {
-          "type": "Jenis Grup",
-          "name": "Nama Grup",
-          "icon": "Ikon Grup Proksi",
-          "proxies": "Gunakan Proksi",
-          "provider": "Gunakan Penyedia",
-          "healthCheckUrl": "URL Pemeriksaan Kesehatan",
-          "expectedStatus": "Status yang Diharapkan",
-          "interval": "Interval",
-          "timeout": "Waktu Habis",
-          "maxFailedTimes": "Jumlah Gagal Maksimal",
-          "interfaceName": "Nama Antarmuka",
-          "routingMark": "Tanda Routing",
-          "filter": "Filter",
-          "excludeFilter": "Kecualikan Filter",
-          "excludeType": "Kecualikan Jenis",
-          "includeAll": "Sertakan Semua Proksi dan Penyedia",
-          "includeAllProxies": "Sertakan Semua Proksi",
-          "includeAllProviders": "Sertakan Semua Penyedia"
-        },
-        "toggles": {
-          "lazy": "Malas",
-          "disableUdp": "Nonaktifkan UDP",
-          "hidden": "Tersembunyi"
-        },
-        "actions": {
-          "prepend": "Tambahkan Grup di Awal",
-          "append": "Tambahkan Grup di Akhir"
-        }
-      },
-      "menu": {
-        "home": "Home",
-        "select": "Pilih",
-        "editInfo": "Ubah Info",
-        "editFile": "Ubah Berkas",
-        "editRules": "Ubah Aturan",
-        "editProxies": "Ubah Proksi",
-        "editGroups": "Ubah Grup Proksi",
-        "extendConfig": "Perluas Konfigurasi",
-        "extendScript": "Perluas Skrip",
-        "openFile": "Buka Berkas",
-        "update": "Perbarui",
-        "updateViaProxy": "Update via proxy",
-        "delete": "Hapus"
-      },
-      "item": {
-        "tooltips": {
-          "showLast": "Click to show last update time",
-          "showNext": "Click to show next update"
-        },
-        "status": {
-          "lastUpdateFailed": "Last Update failed",
-          "nextUp": "Next Up",
-          "noSchedule": "No schedule",
-          "unknown": "Unknown",
-          "autoUpdateDisabled": "Auto update disabled"
-        }
-      },
-      "confirm": {
-        "delete": {
-          "title": "Konfirmasi penghapusan",
-          "message": "Operasi ini tidak dapat dibatalkan"
-        }
-      },
-      "logViewer": {
-        "title": "Konsol Skrip"
-      },
-      "more": {
-        "global": {
-          "merge": "Global Merge",
-          "script": "Global Script"
-        },
-        "chips": {
-          "merge": "Merge",
-          "script": "Script"
-        }
-      },
-      "editor": {
-        "format": "Format dokumen",
-        "readOnlyMessage": "Tidak dapat mengedit di editor hanya baca"
-      }
-    },
-    "home": {
-      "proxyTunCard": {
-        "status": {
-          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
-          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
-          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
-          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
-          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
-        },
-        "tooltips": {
-          "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
-          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
-        }
-      },
-      "clashInfo": {
-        "title": "Clash Info",
-        "fields": {
-          "coreVersion": "Core Version",
-          "systemProxyAddress": "System Proxy Address",
-          "mixedPort": "Mixed Port",
-          "uptime": "Uptime",
-          "rulesCount": "Rules Count"
-        }
-      },
-      "systemInfo": {
-        "title": "System Info",
-        "fields": {
-          "osInfo": "OS Info",
-          "autoLaunch": "Peluncuran Otomatis",
-          "runningMode": "Running Mode",
-          "lastCheckUpdate": "Last Check Update",
-          "vergeVersion": "Versi Verge"
-        },
-        "actions": {
-          "settings": "Pengaturan"
-        },
-        "labels": {
-          "enabled": "Diaktifkan",
-          "disabled": "Dinonaktifkan"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "Administrator mode may not support auto launch"
-        },
-        "badges": {
-          "adminMode": "Administrator Mode",
-          "serviceMode": "Mode Layanan",
-          "sidecarMode": "User Mode",
-          "adminServiceMode": "Admin + Service Mode"
-        }
-      },
-      "ipInfo": {
-        "title": "IP Information",
-        "errors": {
-          "load": "Failed to get IP info"
-        },
-        "labels": {
-          "retry": "Retry",
-          "ip": "IP",
-          "asn": "ASN",
-          "isp": "ISP",
-          "org": "ORG",
-          "location": "Location",
-          "timezone": "Timezone",
-          "autoRefresh": "Auto refresh",
-          "unknown": "Unknown"
-        }
-      },
-      "traffic": {
-        "metrics": {
-          "uploadSpeed": "Kecepatan Unggah",
-          "downloadSpeed": "Kecepatan Unduh",
-          "activeConnections": "Active Connections",
-          "uploaded": "Diunggah",
-          "downloaded": "Diunduh",
-          "memoryUsage": "Penggunaan Memori"
-        },
-        "legends": {
-          "upload": "Upload",
-          "download": "Download"
-        },
-        "patterns": {
-          "minutes": "{{time}} Minutes"
-        }
-      },
-      "currentProxy": {
-        "title": "Current Node",
-        "actions": {
-          "refreshDelay": "Periksa Keterlambatan"
-        },
-        "labels": {
-          "globalMode": "Mode Global",
-          "directMode": "Mode Langsung",
-          "group": "Group",
-          "proxy": "Proxy",
-          "noActiveNode": "No active proxy node"
-        }
-      },
-      "profile": {
-        "title": "Profil",
-        "actions": {
-          "import": "Impor"
-        },
-        "labels": {
-          "from": "Dari",
-          "updateTime": "Waktu Pembaruan",
-          "usedTotal": "Digunakan / Total",
-          "expireTime": "Waktu Kedaluwarsa",
-          "clickToImport": "Click to import subscription"
-        }
-      }
-    },
-    "connection": {
-      "fields": {
-        "host": "Host",
-        "downloaded": "Diunduh",
-        "uploaded": "Diunggah",
-        "dlSpeed": "Kecepatan Unduh",
-        "ulSpeed": "Kecepatan Unggah",
-        "chains": "Rantai",
-        "rule": "Aturan",
-        "process": "Proses",
-        "time": "Waktu",
-        "source": "Sumber",
-        "destination": "IP Tujuan",
-        "destinationPort": "Port Tujuan",
-        "type": "Jenis"
-      },
-      "actions": {
-        "closeConnection": "Tutup Koneksi"
-      },
-      "order": {
-        "default": "Default",
-        "uploadSpeed": "Kecepatan Unggah",
-        "downloadSpeed": "Kecepatan Unduh"
-      }
-    },
-    "settings": {
-      "system": {
-        "title": "Pengaturan Sistem",
-        "toggles": {
-          "tunMode": "Mode Tun (NIC Virtual)",
-          "systemProxy": "Proksi Sistem"
-        },
-        "labels": {
-          "autoLaunch": "Peluncuran Otomatis",
-          "silentStart": "Mulai Senyap"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "Administrator mode may not support auto launch",
-          "silentStart": "Mulai program dalam mode latar belakang tanpa menampilkan panel"
-        }
-      },
-      "proxyControl": {
-        "labels": {
-          "systemProxy": "Proksi Sistem",
-          "tunMode": "Mode Tun (NIC Virtual)"
-        },
-        "tooltips": {
-          "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
-          "tunMode": "Mode Tun (NIC Virtual): Menangkap semua lalu lintas sistem, saat diaktifkan, tidak perlu mengaktifkan proksi sistem.",
-          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
-        },
-        "actions": {
-          "installService": "Instal Layanan",
-          "uninstallService": "Uninstall Service"
-        }
-      },
-      "externalController": {
-        "title": "Alamat Pengendali Eksternal",
-        "fields": {
-          "enable": "Enable External Controller",
-          "address": "Alamat Pengendali Eksternal",
-          "secret": "Rahasia Inti"
-        },
-        "placeholders": {
-          "address": "Required",
-          "secret": "Direkomendasikan"
-        },
-        "tooltips": {
-          "copy": "Copy to clipboard"
-        },
-        "messages": {
-          "addressRequired": "Controller address cannot be empty",
-          "secretRequired": "Secret cannot be empty",
-          "copyFailed": "Failed to copy",
-          "controllerCopied": "Controller address copied to clipboard",
-          "secretCopied": "Secret copied to clipboard"
-        }
-      },
-      "externalCors": {
-        "title": "External Cors Configuration",
-        "fields": {
-          "allowPrivateNetwork": "Allow private network access",
-          "allowedOrigins": "Allowed Origins"
-        },
-        "placeholders": {
-          "origin": "Please enter a valid url"
-        },
-        "actions": {
-          "add": "Add"
-        },
-        "messages": {
-          "alwaysIncluded": "Always included origins: {{urls}}"
-        },
-        "tooltips": {
-          "open": "External Cors Settings"
-        }
-      },
-      "clash": {
-        "title": "Pengaturan Clash",
-        "items": {
-          "allowLan": "Izinkan LAN",
-          "dnsOverwrite": "DNS Overwrite",
-          "ipv6": "IPv6",
-          "unifiedDelay": "Keterlambatan Terpadu",
-          "logLevel": "Tingkat Log",
-          "portConfig": "Konfigurasi Port",
-          "external": "Eksternal",
-          "webUI": "Antarmuka Web",
-          "clashCore": "Inti Clash",
-          "openUwpTool": "Buka alat UWP",
-          "updateGeoData": "Perbarui GeoData"
-        },
-        "tooltips": {
-          "networkInterface": "Antarmuka Jaringan",
-          "unifiedDelay": "Saat keterlambatan terpadu diaktifkan, dua tes keterlambatan akan dilakukan untuk menghilangkan perbedaan keterlambatan antara berbagai jenis node yang disebabkan oleh jabat tangan koneksi, dll.",
-          "logLevel": "Ini hanya berlaku untuk file log kernel di folder layanan di direktori log.",
-          "openUwpTool": "Sejak Windows 8, aplikasi UWP (seperti Microsoft Store) dibatasi dari mengakses layanan jaringan host lokal secara langsung, dan alat ini dapat digunakan untuk melewati pembatasan ini"
-        },
-        "options": {
-          "logLevel": {
-            "debug": "Debug",
-            "info": "Info",
-            "warning": "Warn",
-            "error": "Error",
-            "silent": "Silent"
-          }
-        },
-        "messages": {
-          "geoDataUpdated": "GeoData Diperbarui"
-        },
-        "port": {
-          "title": "Konfigurasi Port",
-          "fields": {
-            "mixed": "Port Campuran",
-            "socks": "Port Socks",
-            "http": "Port Http(s)",
-            "redir": "Port Redir",
-            "tproxy": "Port Tproxy"
-          },
-          "actions": {
-            "random": "Port Acak"
-          },
-          "messages": {
-            "saved": "Port settings saved",
-            "saveFailed": "Failed to save port settings"
-          }
-        }
-      },
-      "liteMode": {
-        "title": "LightWeight Mode Settings",
-        "actions": {
-          "enterNow": "Enter LightWeight Mode Now"
-        },
-        "toggles": {
-          "autoEnter": "Auto Enter LightWeight Mode"
-        },
-        "tooltips": {
-          "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
-        },
-        "fields": {
-          "delay": "Auto Enter LightWeight Mode Delay"
-        },
-        "messages": {
-          "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
-        }
-      },
-      "backup": {
-        "title": "Pengaturan Cadangan",
-        "tabs": {
-          "local": "Local backup",
-          "webdav": "WebDAV backup"
-        },
-        "actions": {
-          "selectTarget": "Select backup target",
-          "backup": "Cadangan",
-          "refresh": "Segarkan",
-          "save": "Simpan",
-          "export": "Export",
-          "exportBackup": "Export Backup",
-          "delete": "Hapus",
-          "deleteBackup": "Hapus Cadangan",
-          "restore": "Pulihkan",
-          "restoreBackup": "Pulihkan Cadangan"
-        },
-        "fields": {
-          "webdavUrl": "URL Server WebDAV",
-          "username": "Nama Pengguna",
-          "password": "Kata Sandi",
-          "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
-        },
-        "messages": {
-          "webdavUrlRequired": "URL WebDAV tidak boleh kosong",
-          "invalidWebdavUrl": "Format URL WebDAV tidak valid",
-          "usernameRequired": "Nama pengguna tidak boleh kosong",
-          "passwordRequired": "Kata sandi tidak boleh kosong",
-          "webdavConfigSaved": "Konfigurasi WebDAV berhasil disimpan",
-          "webdavConfigSaveFailed": "Gagal menyimpan konfigurasi WebDAV: {{error}}",
-          "backupCreated": "Cadangan berhasil dibuat",
-          "backupFailed": "Cadangan gagal: {{error}}",
-          "localBackupCreated": "Local backup created successfully",
-          "localBackupFailed": "Local backup failed",
-          "restoreSuccess": "Pemulihan Berhasil, Aplikasi akan dimulai ulang dalam 1 detik",
-          "localBackupExported": "Local backup exported successfully",
-          "localBackupExportFailed": "Failed to export local backup",
-          "confirmDelete": "Konfirmasi untuk menghapus file cadangan ini?",
-          "confirmRestore": "Konfirmasi untuk memulihkan file cadangan ini?"
-        },
-        "table": {
-          "filename": "Nama Berkas",
-          "backupTime": "Waktu Cadangan",
-          "actions": "Tindakan",
-          "noBackups": "Tidak ada cadangan yang tersedia",
-          "rowsPerPage": "Rows per page"
-        }
-      },
-      "verge": {
-        "basic": {
-          "title": "Pengaturan Dasar Verge",
-          "items": {
-            "language": "Bahasa",
-            "themeMode": "Mode Tema",
-            "trayClickEvent": "Acara Klik Tray",
-            "copyEnvType": "Salin Jenis Env",
-            "startPage": "Halaman Mulai",
-            "startupScript": "Skrip Startup",
-            "themeSetting": "Pengaturan Tema",
-            "layoutSetting": "Pengaturan Tata Letak",
-            "misc": "Lain-lain",
-            "hotkeySetting": "Pengaturan Pintasan"
-          },
-          "actions": {
-            "browse": "Jelajahi",
-            "clear": "Bersihkan"
-          },
-          "trayOptions": {
-            "showMainWindow": "Tampilkan Jendela Utama",
-            "showTrayMenu": "Show Tray Menu",
-            "disable": "Nonaktifkan"
-          }
-        },
-        "advanced": {
-          "title": "Pengaturan Lanjutan Verge",
-          "items": {
-            "backupSetting": "Pengaturan Cadangan",
-            "runtimeConfig": "Konfigurasi Runtime",
-            "openConfDir": "Buka Direktori Konfigurasi",
-            "openCoreDir": "Buka Direktori Core",
-            "openLogsDir": "Buka Direktori Log",
-            "checkUpdates": "Periksa Pembaruan",
-            "openDevTools": "Buka Alat Pengembang",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "Keluar",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "Versi Verge"
-          },
-          "tooltips": {
-            "backupInfo": "Mendukung file konfigurasi cadangan WebDAV",
-            "openConfDir": "Jika perangkat lunak berjalan tidak normal, CADANGKAN dan hapus semua file di folder ini lalu mulai ulang perangkat lunak",
-            "liteMode": "Tutup GUI dan biarkan hanya kernel yang berjalan"
-          },
-          "actions": {
-            "copyVersion": "Copy Version"
-          },
-          "notifications": {
-            "latestVersion": "Saat ini pada Versi Terbaru",
-            "versionCopied": "Version copied to clipboard"
-          }
-        },
-        "theme": {
-          "title": "Pengaturan Tema",
-          "fields": {
-            "primaryColor": "Warna Utama",
-            "secondaryColor": "Warna Sekunder",
-            "primaryText": "Teks Utama",
-            "secondaryText": "Teks Sekunder",
-            "infoColor": "Warna Info",
-            "warningColor": "Warna Peringatan",
-            "errorColor": "Warna Kesalahan",
-            "successColor": "Warna Keberhasilan",
-            "fontFamily": "Keluarga Font",
-            "cssInjection": "Injeksi CSS"
-          },
-          "actions": {
-            "editCss": "Edit CSS"
-          },
-          "dialogs": {
-            "editCssTitle": "Edit CSS"
-          }
-        },
-        "layout": {
-          "title": "Pengaturan Tata Letak",
-          "fields": {
-            "preferSystemTitlebar": "Prefer System Titlebar",
-            "trafficGraph": "Grafik Lalu Lintas",
-            "memoryUsage": "Penggunaan Memori",
-            "proxyGroupIcon": "Ikon Grup Proksi",
-            "hoverNavigator": "Hover Jump Navigator",
-            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
-            "navIcon": "Ikon Navigasi",
-            "trayIcon": "Ikon Tray",
-            "showProxyGroupsInline": "Show Proxy Groups Inline",
-            "commonTrayIcon": "Ikon Tray Umum",
-            "systemProxyTrayIcon": "Ikon Tray Proksi Sistem",
-            "tunTrayIcon": "Ikon Tray Tun"
-          },
-          "tooltips": {
-            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
-          },
-          "options": {
-            "icon": {
-              "monochrome": "Monokrom",
-              "colorful": "Berwarna",
-              "disable": "Nonaktifkan"
-            }
-          }
-        }
-      },
-      "common": {
-        "notifications": {
-          "copySuccess": "Salin Berhasil"
-        }
-      },
-      "misc": {
-        "title": "Lain-lain",
-        "fields": {
-          "appLogLevel": "Tingkat Log Aplikasi",
-          "appLogMaxSize": "App Log Max Size",
-          "appLogMaxCount": "App Log Max Count",
-          "autoCloseConnections": "Tutup Koneksi Otomatis",
-          "autoCheckUpdate": "Periksa Pembaruan Otomatis",
-          "enableBuiltinEnhanced": "Aktifkan Peningkatan Bawaan",
-          "proxyLayoutColumns": "Kolom Tata Letak Proksi",
-          "autoLogClean": "Pembersihan Log Otomatis",
-          "autoDelayDetection": "Deteksi Latensi Otomatis",
-          "defaultLatencyTest": "Tes Latensi Default",
-          "defaultLatencyTimeout": "Waktu Habis Latensi Default"
-        },
-        "tooltips": {
-          "autoCloseConnections": "Hentikan koneksi yang sudah ada saat pemilihan grup proksi atau mode proksi berubah",
-          "enableBuiltinEnhanced": "Penanganan kompatibilitas untuk file konfigurasi",
-          "autoDelayDetection": "Secara berkala menguji latensi node saat ini di latar belakang",
-          "defaultLatencyTest": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi"
-        },
-        "options": {
-          "proxyLayoutColumns": {
-            "auto": "Kolom Otomatis"
-          },
-          "autoLogClean": {
-            "never": "Jangan Pernah Bersihkan",
-            "retainDays": "Simpan {{n}} Hari"
-          }
-        }
-      },
-      "update": {
-        "title": "New Version v{{version}}",
-        "actions": {
-          "goToRelease": "Pergi ke Halaman Rilis",
-          "update": "Perbarui"
-        },
-        "messages": {
-          "portableError": "Versi portabel tidak mendukung pembaruan dalam aplikasi. Harap unduh dan ganti secara manual",
-          "breakChangeError": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual"
-        }
-      },
-      "sysproxy": {
-        "title": "Pengaturan Proksi Sistem",
-        "fieldsets": {
-          "currentStatus": "Proksi Sistem Saat Ini"
-        },
-        "fields": {
-          "enableStatus": "Status Pengaktifan:",
-          "serverAddr": "Alamat Server: ",
-          "pacUrl": "URL PAC: ",
-          "proxyHost": "Host Proksi",
-          "usePacMode": "Gunakan Mode PAC",
-          "proxyGuard": "Penjaga Proksi",
-          "guardDuration": "Durasi Penjagaan",
-          "alwaysUseDefaultBypass": "Selalu gunakan Bypass Default",
-          "proxyBypass": "Pengaturan Bypass Proksi: ",
-          "bypass": "Bypass: ",
-          "pacScriptContent": "Konten Skrip PAC"
-        },
-        "tooltips": {
-          "proxyGuard": "Aktifkan untuk mencegah perangkat lunak lain mengubah pengaturan proksi sistem operasi"
-        },
-        "messages": {
-          "durationTooShort": "Durasi Daemon Proksi Tidak Boleh Kurang dari 1 Detik",
-          "invalidBypass": "Format Bypass Tidak Valid",
-          "invalidProxyHost": "Format Host Proksi Tidak Valid"
-        },
-        "actions": {
-          "editPac": "Ubah PAC"
-        }
-      },
-      "tun": {
-        "title": "Mode Tun (NIC Virtual)",
-        "actions": {
-          "reset": "Setel Ulang ke Default"
-        },
-        "fields": {
-          "stack": "Tumpukan Tun",
-          "device": "Device Name",
-          "autoRoute": "Rute Otomatis",
-          "strictRoute": "Rute Ketat",
-          "autoDetectInterface": "Deteksi Antarmuka Otomatis",
-          "dnsHijack": "Pembajakan DNS",
-          "mtu": "Unit Transmisi Maksimum"
-        },
-        "tooltips": {
-          "dnsHijack": "Please use , to separate multiple DNS servers"
-        },
-        "messages": {
-          "applied": "Pengaturan Diterapkan"
-        }
-      },
-      "dns": {
-        "dialog": {
-          "title": "DNS Overwrite",
-          "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
-        },
-        "sections": {
-          "general": "DNS Settings",
-          "fallbackFilter": "Fallback Filter Settings",
-          "hosts": "Hosts Settings"
-        },
-        "fields": {
-          "enable": "Enable DNS",
-          "listen": "DNS Listen",
-          "enhancedMode": "Enhanced Mode",
-          "fakeIpRange": "Fake IP Range",
-          "fakeIpFilterMode": "Fake IP Filter Mode",
-          "ipv6": {
-            "label": "IPv6",
-            "description": "Enable IPv6 DNS resolution"
-          },
-          "preferH3": {
-            "label": "Prefer H3",
-            "description": "DNS DOH uses HTTP/3"
-          },
-          "respectRules": {
-            "label": "Respect Rules",
-            "description": "DNS connections follow routing rules"
-          },
-          "useHosts": {
-            "label": "Use Hosts",
-            "description": "Enable to resolve hosts through hosts file"
-          },
-          "useSystemHosts": {
-            "label": "Use System Hosts",
-            "description": "Enable to resolve hosts through system hosts file"
-          },
-          "directPolicy": {
-            "label": "Direct Nameserver Follow Policy",
-            "description": "Whether to follow nameserver policy"
-          },
-          "defaultNameserver": {
-            "label": "Default Nameserver",
-            "description": "Default DNS servers used to resolve DNS servers"
-          },
-          "nameserver": {
-            "label": "Nameserver",
-            "description": "List of DNS servers, comma separated"
-          },
-          "fallback": {
-            "label": "Fallback",
-            "description": "List of fallback DNS servers, comma separated"
-          },
-          "proxy": {
-            "label": "Proxy Server Nameserver",
-            "description": "DNS servers for proxy node domain resolution"
-          },
-          "directNameserver": {
-            "label": "Direct Nameserver",
-            "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
-          },
-          "fakeIpFilter": {
-            "label": "Fake IP Filter",
-            "description": "Domains that skip fake IP resolution, comma separated"
-          },
-          "nameserverPolicy": {
-            "label": "Nameserver Policy",
-            "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
-          },
-          "geoipFiltering": {
-            "label": "GeoIP Filtering",
-            "description": "Enable GeoIP filtering for fallback"
-          },
-          "geoipCode": "GeoIP Code",
-          "fallbackIpCidr": {
-            "label": "Fallback IP CIDR",
-            "description": "IP CIDRs not using fallback servers, comma separated"
-          },
-          "fallbackDomain": {
-            "label": "Fallback Domain",
-            "description": "Domains using fallback servers, comma separated"
-          },
-          "hosts": {
-            "label": "Hosts",
-            "description": "Custom domain to IP or domain mapping"
-          }
-        },
-        "messages": {
-          "saved": "DNS settings saved",
-          "configError": "DNS configuration error:"
-        },
-        "errors": {
-          "invalid": "Invalid configuration"
-        }
-      }
-    },
-    "providers": {
-      "notices": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
-      }
-    },
-    "test": {
-      "item": {
-        "actions": {
-          "test": "Tes"
-        }
-      },
-      "viewer": {
-        "title": {
-          "create": "Buat Tes",
-          "edit": "Ubah Tes"
-        },
-        "fields": {
-          "url": "URL Tes"
-        }
-      }
-    }
-  },
   "common": {
     "editorModes": {
       "visualization": "Visualisasi",
@@ -1206,6 +219,1001 @@
       "reorderMode": "Menu reorder mode",
       "unlock": "Unlock menu order",
       "lock": "Lock menu order"
+    }
+  },
+  "ruleEditor": {
+    "title": "Ubah Aturan",
+    "form": {
+      "labels": {
+        "type": "Jenis Aturan",
+        "content": "Konten Aturan",
+        "proxyPolicy": "Kebijakan Proksi"
+      },
+      "toggles": {
+        "noResolve": "Tidak Menyelesaikan"
+      },
+      "actions": {
+        "prependRule": "Tambahkan Aturan di Awal",
+        "appendRule": "Tambahkan Aturan di Akhir"
+      },
+      "validation": {
+        "conditionRequired": "Kondisi Aturan Diperlukan",
+        "invalidRule": "Aturan Tidak Valid"
+      }
+    }
+  },
+  "profile": {
+    "viewer": {
+      "title": {
+        "create": "Buat Profil",
+        "edit": "Ubah Profil"
+      },
+      "buttons": {
+        "save": "Simpan",
+        "cancel": "Batal"
+      },
+      "fields": {
+        "type": "Jenis",
+        "name": "Nama",
+        "description": "Deskripsi",
+        "subscriptionUrl": "URL Langganan",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Interval Pembaruan",
+        "useSystemProxy": "Gunakan Proksi Sistem",
+        "useClashProxy": "Gunakan Proksi Clash",
+        "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Pilih Berkas"
+    },
+    "notifications": {
+      "saved": "Saved successfully"
+    },
+    "proxiesEditor": {
+      "title": "Ubah Proksi",
+      "placeholders": {
+        "multiUri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)"
+      },
+      "actions": {
+        "prepend": "Tambahkan Proksi di Awal",
+        "append": "Tambahkan Proksi di Akhir"
+      }
+    },
+    "groupsEditor": {
+      "title": "Ubah Grup Proksi",
+      "errors": {
+        "nameRequired": "Nama Grup Diperlukan",
+        "nameExists": "Nama Grup Sudah Ada"
+      },
+      "fields": {
+        "type": "Jenis Grup",
+        "name": "Nama Grup",
+        "icon": "Ikon Grup Proksi",
+        "proxies": "Gunakan Proksi",
+        "provider": "Gunakan Penyedia",
+        "healthCheckUrl": "URL Pemeriksaan Kesehatan",
+        "expectedStatus": "Status yang Diharapkan",
+        "interval": "Interval",
+        "timeout": "Waktu Habis",
+        "maxFailedTimes": "Jumlah Gagal Maksimal",
+        "interfaceName": "Nama Antarmuka",
+        "routingMark": "Tanda Routing",
+        "filter": "Filter",
+        "excludeFilter": "Kecualikan Filter",
+        "excludeType": "Kecualikan Jenis",
+        "includeAll": "Sertakan Semua Proksi dan Penyedia",
+        "includeAllProxies": "Sertakan Semua Proksi",
+        "includeAllProviders": "Sertakan Semua Penyedia"
+      },
+      "toggles": {
+        "lazy": "Malas",
+        "disableUdp": "Nonaktifkan UDP",
+        "hidden": "Tersembunyi"
+      },
+      "actions": {
+        "prepend": "Tambahkan Grup di Awal",
+        "append": "Tambahkan Grup di Akhir"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "Pilih",
+      "editInfo": "Ubah Info",
+      "editFile": "Ubah Berkas",
+      "editRules": "Ubah Aturan",
+      "editProxies": "Ubah Proksi",
+      "editGroups": "Ubah Grup Proksi",
+      "extendConfig": "Perluas Konfigurasi",
+      "extendScript": "Perluas Skrip",
+      "openFile": "Buka Berkas",
+      "update": "Perbarui",
+      "updateViaProxy": "Update via proxy",
+      "delete": "Hapus"
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Konfirmasi penghapusan",
+        "message": "Operasi ini tidak dapat dibatalkan"
+      }
+    },
+    "logViewer": {
+      "title": "Konsol Skrip"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "editor": {
+      "format": "Format dokumen",
+      "readOnlyMessage": "Tidak dapat mengedit di editor hanya baca"
+    }
+  },
+  "home": {
+    "proxyTunCard": {
+      "status": {
+        "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+        "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+        "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+        "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+        "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+      },
+      "tooltips": {
+        "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
+        "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash Info",
+      "fields": {
+        "coreVersion": "Core Version",
+        "systemProxyAddress": "System Proxy Address",
+        "mixedPort": "Mixed Port",
+        "uptime": "Uptime",
+        "rulesCount": "Rules Count"
+      }
+    },
+    "systemInfo": {
+      "title": "System Info",
+      "fields": {
+        "osInfo": "OS Info",
+        "autoLaunch": "Peluncuran Otomatis",
+        "runningMode": "Running Mode",
+        "lastCheckUpdate": "Last Check Update",
+        "vergeVersion": "Versi Verge"
+      },
+      "actions": {
+        "settings": "Pengaturan"
+      },
+      "labels": {
+        "enabled": "Diaktifkan",
+        "disabled": "Dinonaktifkan"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch"
+      },
+      "badges": {
+        "adminMode": "Administrator Mode",
+        "serviceMode": "Mode Layanan",
+        "sidecarMode": "User Mode",
+        "adminServiceMode": "Admin + Service Mode"
+      }
+    },
+    "ipInfo": {
+      "title": "IP Information",
+      "errors": {
+        "load": "Failed to get IP info"
+      },
+      "labels": {
+        "retry": "Retry",
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "ISP",
+        "org": "ORG",
+        "location": "Location",
+        "timezone": "Timezone",
+        "autoRefresh": "Auto refresh",
+        "unknown": "Unknown"
+      }
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Kecepatan Unggah",
+        "downloadSpeed": "Kecepatan Unduh",
+        "activeConnections": "Active Connections",
+        "uploaded": "Diunggah",
+        "downloaded": "Diunduh",
+        "memoryUsage": "Penggunaan Memori"
+      },
+      "legends": {
+        "upload": "Upload",
+        "download": "Download"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "currentProxy": {
+      "title": "Current Node",
+      "actions": {
+        "refreshDelay": "Periksa Keterlambatan"
+      },
+      "labels": {
+        "globalMode": "Mode Global",
+        "directMode": "Mode Langsung",
+        "group": "Group",
+        "proxy": "Proxy",
+        "noActiveNode": "No active proxy node"
+      }
+    },
+    "profile": {
+      "title": "Profil",
+      "actions": {
+        "import": "Impor"
+      },
+      "labels": {
+        "from": "Dari",
+        "updateTime": "Waktu Pembaruan",
+        "usedTotal": "Digunakan / Total",
+        "expireTime": "Waktu Kedaluwarsa",
+        "clickToImport": "Click to import subscription"
+      }
+    },
+    "page": {
+      "title": "Home",
+      "tooltips": {
+        "lightweightMode": "Mode Ringan",
+        "manual": "Manual",
+        "settings": "Home Settings"
+      },
+      "cards": {
+        "trafficStats": "Traffic Stats",
+        "networkSettings": "Network Settings",
+        "proxyMode": "Proxy Mode"
+      },
+      "settings": {
+        "title": "Home Settings",
+        "cards": {
+          "profile": "Profile Card",
+          "currentProxy": "Current Proxy Card",
+          "network": "Network Settings Card",
+          "proxyMode": "Proxy Mode Card",
+          "traffic": "Traffic Stats Card",
+          "tests": "Website Tests Card",
+          "ip": "IP Information Card",
+          "clashInfo": "Clash Info Cards",
+          "systemInfo": "System Info Cards"
+        }
+      }
+    }
+  },
+  "connection": {
+    "fields": {
+      "host": "Host",
+      "downloaded": "Diunduh",
+      "uploaded": "Diunggah",
+      "dlSpeed": "Kecepatan Unduh",
+      "ulSpeed": "Kecepatan Unggah",
+      "chains": "Rantai",
+      "rule": "Aturan",
+      "process": "Proses",
+      "time": "Waktu",
+      "source": "Sumber",
+      "destination": "IP Tujuan",
+      "destinationPort": "Port Tujuan",
+      "type": "Jenis"
+    },
+    "actions": {
+      "closeConnection": "Tutup Koneksi"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Kecepatan Unggah",
+      "downloadSpeed": "Kecepatan Unduh"
+    }
+  },
+  "settings": {
+    "system": {
+      "title": "Pengaturan Sistem",
+      "toggles": {
+        "tunMode": "Mode Tun (NIC Virtual)",
+        "systemProxy": "Proksi Sistem"
+      },
+      "labels": {
+        "autoLaunch": "Peluncuran Otomatis",
+        "silentStart": "Mulai Senyap"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch",
+        "silentStart": "Mulai program dalam mode latar belakang tanpa menampilkan panel"
+      }
+    },
+    "proxyControl": {
+      "labels": {
+        "systemProxy": "Proksi Sistem",
+        "tunMode": "Mode Tun (NIC Virtual)"
+      },
+      "tooltips": {
+        "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
+        "tunMode": "Mode Tun (NIC Virtual): Menangkap semua lalu lintas sistem, saat diaktifkan, tidak perlu mengaktifkan proksi sistem.",
+        "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+      },
+      "actions": {
+        "installService": "Instal Layanan",
+        "uninstallService": "Uninstall Service"
+      }
+    },
+    "externalController": {
+      "title": "Alamat Pengendali Eksternal",
+      "fields": {
+        "enable": "Enable External Controller",
+        "address": "Alamat Pengendali Eksternal",
+        "secret": "Rahasia Inti"
+      },
+      "placeholders": {
+        "address": "Required",
+        "secret": "Direkomendasikan"
+      },
+      "tooltips": {
+        "copy": "Copy to clipboard"
+      },
+      "messages": {
+        "addressRequired": "Controller address cannot be empty",
+        "secretRequired": "Secret cannot be empty",
+        "copyFailed": "Failed to copy",
+        "controllerCopied": "Controller address copied to clipboard",
+        "secretCopied": "Secret copied to clipboard"
+      }
+    },
+    "externalCors": {
+      "title": "External Cors Configuration",
+      "fields": {
+        "allowPrivateNetwork": "Allow private network access",
+        "allowedOrigins": "Allowed Origins"
+      },
+      "placeholders": {
+        "origin": "Please enter a valid url"
+      },
+      "actions": {
+        "add": "Add"
+      },
+      "messages": {
+        "alwaysIncluded": "Always included origins: {{urls}}"
+      },
+      "tooltips": {
+        "open": "External Cors Settings"
+      }
+    },
+    "clash": {
+      "title": "Pengaturan Clash",
+      "items": {
+        "allowLan": "Izinkan LAN",
+        "dnsOverwrite": "DNS Overwrite",
+        "ipv6": "IPv6",
+        "unifiedDelay": "Keterlambatan Terpadu",
+        "logLevel": "Tingkat Log",
+        "portConfig": "Konfigurasi Port",
+        "external": "Eksternal",
+        "webUI": "Antarmuka Web",
+        "clashCore": "Inti Clash",
+        "openUwpTool": "Buka alat UWP",
+        "updateGeoData": "Perbarui GeoData"
+      },
+      "tooltips": {
+        "networkInterface": "Antarmuka Jaringan",
+        "unifiedDelay": "Saat keterlambatan terpadu diaktifkan, dua tes keterlambatan akan dilakukan untuk menghilangkan perbedaan keterlambatan antara berbagai jenis node yang disebabkan oleh jabat tangan koneksi, dll.",
+        "logLevel": "Ini hanya berlaku untuk file log kernel di folder layanan di direktori log.",
+        "openUwpTool": "Sejak Windows 8, aplikasi UWP (seperti Microsoft Store) dibatasi dari mengakses layanan jaringan host lokal secara langsung, dan alat ini dapat digunakan untuk melewati pembatasan ini"
+      },
+      "options": {
+        "logLevel": {
+          "debug": "Debug",
+          "info": "Info",
+          "warning": "Warn",
+          "error": "Error",
+          "silent": "Silent"
+        }
+      },
+      "messages": {
+        "geoDataUpdated": "GeoData Diperbarui"
+      },
+      "port": {
+        "title": "Konfigurasi Port",
+        "fields": {
+          "mixed": "Port Campuran",
+          "socks": "Port Socks",
+          "http": "Port Http(s)",
+          "redir": "Port Redir",
+          "tproxy": "Port Tproxy"
+        },
+        "actions": {
+          "random": "Port Acak"
+        },
+        "messages": {
+          "saved": "Port settings saved",
+          "saveFailed": "Failed to save port settings"
+        }
+      }
+    },
+    "liteMode": {
+      "title": "LightWeight Mode Settings",
+      "actions": {
+        "enterNow": "Enter LightWeight Mode Now"
+      },
+      "toggles": {
+        "autoEnter": "Auto Enter LightWeight Mode"
+      },
+      "tooltips": {
+        "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
+      },
+      "fields": {
+        "delay": "Auto Enter LightWeight Mode Delay"
+      },
+      "messages": {
+        "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
+      }
+    },
+    "backup": {
+      "title": "Pengaturan Cadangan",
+      "tabs": {
+        "local": "Local backup",
+        "webdav": "WebDAV backup"
+      },
+      "actions": {
+        "selectTarget": "Select backup target",
+        "backup": "Cadangan",
+        "refresh": "Segarkan",
+        "save": "Simpan",
+        "export": "Export",
+        "exportBackup": "Export Backup",
+        "delete": "Hapus",
+        "deleteBackup": "Hapus Cadangan",
+        "restore": "Pulihkan",
+        "restoreBackup": "Pulihkan Cadangan"
+      },
+      "fields": {
+        "webdavUrl": "URL Server WebDAV",
+        "username": "Nama Pengguna",
+        "password": "Kata Sandi",
+        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "URL WebDAV tidak boleh kosong",
+        "invalidWebdavUrl": "Format URL WebDAV tidak valid",
+        "usernameRequired": "Nama pengguna tidak boleh kosong",
+        "passwordRequired": "Kata sandi tidak boleh kosong",
+        "webdavConfigSaved": "Konfigurasi WebDAV berhasil disimpan",
+        "webdavConfigSaveFailed": "Gagal menyimpan konfigurasi WebDAV: {{error}}",
+        "backupCreated": "Cadangan berhasil dibuat",
+        "backupFailed": "Cadangan gagal: {{error}}",
+        "localBackupCreated": "Local backup created successfully",
+        "localBackupFailed": "Local backup failed",
+        "restoreSuccess": "Pemulihan Berhasil, Aplikasi akan dimulai ulang dalam 1 detik",
+        "localBackupExported": "Local backup exported successfully",
+        "localBackupExportFailed": "Failed to export local backup",
+        "confirmDelete": "Konfirmasi untuk menghapus file cadangan ini?",
+        "confirmRestore": "Konfirmasi untuk memulihkan file cadangan ini?"
+      },
+      "table": {
+        "filename": "Nama Berkas",
+        "backupTime": "Waktu Cadangan",
+        "actions": "Tindakan",
+        "noBackups": "Tidak ada cadangan yang tersedia",
+        "rowsPerPage": "Rows per page"
+      }
+    },
+    "verge": {
+      "basic": {
+        "title": "Pengaturan Dasar Verge",
+        "items": {
+          "language": "Bahasa",
+          "themeMode": "Mode Tema",
+          "trayClickEvent": "Acara Klik Tray",
+          "copyEnvType": "Salin Jenis Env",
+          "startPage": "Halaman Mulai",
+          "startupScript": "Skrip Startup",
+          "themeSetting": "Pengaturan Tema",
+          "layoutSetting": "Pengaturan Tata Letak",
+          "misc": "Lain-lain",
+          "hotkeySetting": "Pengaturan Pintasan"
+        },
+        "actions": {
+          "browse": "Jelajahi",
+          "clear": "Bersihkan"
+        },
+        "trayOptions": {
+          "showMainWindow": "Tampilkan Jendela Utama",
+          "showTrayMenu": "Show Tray Menu",
+          "disable": "Nonaktifkan"
+        }
+      },
+      "advanced": {
+        "title": "Pengaturan Lanjutan Verge",
+        "items": {
+          "backupSetting": "Pengaturan Cadangan",
+          "runtimeConfig": "Konfigurasi Runtime",
+          "openConfDir": "Buka Direktori Konfigurasi",
+          "openCoreDir": "Buka Direktori Core",
+          "openLogsDir": "Buka Direktori Log",
+          "checkUpdates": "Periksa Pembaruan",
+          "openDevTools": "Buka Alat Pengembang",
+          "liteModeSettings": "LightWeight Mode Settings",
+          "exit": "Keluar",
+          "exportDiagnostics": "Export Diagnostic Info",
+          "vergeVersion": "Versi Verge"
+        },
+        "tooltips": {
+          "backupInfo": "Mendukung file konfigurasi cadangan WebDAV",
+          "openConfDir": "Jika perangkat lunak berjalan tidak normal, CADANGKAN dan hapus semua file di folder ini lalu mulai ulang perangkat lunak",
+          "liteMode": "Tutup GUI dan biarkan hanya kernel yang berjalan"
+        },
+        "actions": {
+          "copyVersion": "Copy Version"
+        },
+        "notifications": {
+          "latestVersion": "Saat ini pada Versi Terbaru",
+          "versionCopied": "Version copied to clipboard"
+        }
+      },
+      "theme": {
+        "title": "Pengaturan Tema",
+        "fields": {
+          "primaryColor": "Warna Utama",
+          "secondaryColor": "Warna Sekunder",
+          "primaryText": "Teks Utama",
+          "secondaryText": "Teks Sekunder",
+          "infoColor": "Warna Info",
+          "warningColor": "Warna Peringatan",
+          "errorColor": "Warna Kesalahan",
+          "successColor": "Warna Keberhasilan",
+          "fontFamily": "Keluarga Font",
+          "cssInjection": "Injeksi CSS"
+        },
+        "actions": {
+          "editCss": "Edit CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Edit CSS"
+        }
+      },
+      "layout": {
+        "title": "Pengaturan Tata Letak",
+        "fields": {
+          "preferSystemTitlebar": "Prefer System Titlebar",
+          "trafficGraph": "Grafik Lalu Lintas",
+          "memoryUsage": "Penggunaan Memori",
+          "proxyGroupIcon": "Ikon Grup Proksi",
+          "hoverNavigator": "Hover Jump Navigator",
+          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "navIcon": "Ikon Navigasi",
+          "trayIcon": "Ikon Tray",
+          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "commonTrayIcon": "Ikon Tray Umum",
+          "systemProxyTrayIcon": "Ikon Tray Proksi Sistem",
+          "tunTrayIcon": "Ikon Tray Tun"
+        },
+        "tooltips": {
+          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "Monokrom",
+            "colorful": "Berwarna",
+            "disable": "Nonaktifkan"
+          }
+        }
+      }
+    },
+    "common": {
+      "notifications": {
+        "copySuccess": "Salin Berhasil"
+      }
+    },
+    "misc": {
+      "title": "Lain-lain",
+      "fields": {
+        "appLogLevel": "Tingkat Log Aplikasi",
+        "appLogMaxSize": "App Log Max Size",
+        "appLogMaxCount": "App Log Max Count",
+        "autoCloseConnections": "Tutup Koneksi Otomatis",
+        "autoCheckUpdate": "Periksa Pembaruan Otomatis",
+        "enableBuiltinEnhanced": "Aktifkan Peningkatan Bawaan",
+        "proxyLayoutColumns": "Kolom Tata Letak Proksi",
+        "autoLogClean": "Pembersihan Log Otomatis",
+        "autoDelayDetection": "Deteksi Latensi Otomatis",
+        "defaultLatencyTest": "Tes Latensi Default",
+        "defaultLatencyTimeout": "Waktu Habis Latensi Default"
+      },
+      "tooltips": {
+        "autoCloseConnections": "Hentikan koneksi yang sudah ada saat pemilihan grup proksi atau mode proksi berubah",
+        "enableBuiltinEnhanced": "Penanganan kompatibilitas untuk file konfigurasi",
+        "autoDelayDetection": "Secara berkala menguji latensi node saat ini di latar belakang",
+        "defaultLatencyTest": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "Kolom Otomatis"
+        },
+        "autoLogClean": {
+          "never": "Jangan Pernah Bersihkan",
+          "retainDays": "Simpan {{n}} Hari"
+        }
+      }
+    },
+    "update": {
+      "title": "New Version v{{version}}",
+      "actions": {
+        "goToRelease": "Pergi ke Halaman Rilis",
+        "update": "Perbarui"
+      },
+      "messages": {
+        "portableError": "Versi portabel tidak mendukung pembaruan dalam aplikasi. Harap unduh dan ganti secara manual",
+        "breakChangeError": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual"
+      }
+    },
+    "sysproxy": {
+      "title": "Pengaturan Proksi Sistem",
+      "fieldsets": {
+        "currentStatus": "Proksi Sistem Saat Ini"
+      },
+      "fields": {
+        "enableStatus": "Status Pengaktifan:",
+        "serverAddr": "Alamat Server: ",
+        "pacUrl": "URL PAC: ",
+        "proxyHost": "Host Proksi",
+        "usePacMode": "Gunakan Mode PAC",
+        "proxyGuard": "Penjaga Proksi",
+        "guardDuration": "Durasi Penjagaan",
+        "alwaysUseDefaultBypass": "Selalu gunakan Bypass Default",
+        "proxyBypass": "Pengaturan Bypass Proksi: ",
+        "bypass": "Bypass: ",
+        "pacScriptContent": "Konten Skrip PAC"
+      },
+      "tooltips": {
+        "proxyGuard": "Aktifkan untuk mencegah perangkat lunak lain mengubah pengaturan proksi sistem operasi"
+      },
+      "messages": {
+        "durationTooShort": "Durasi Daemon Proksi Tidak Boleh Kurang dari 1 Detik",
+        "invalidBypass": "Format Bypass Tidak Valid",
+        "invalidProxyHost": "Format Host Proksi Tidak Valid"
+      },
+      "actions": {
+        "editPac": "Ubah PAC"
+      }
+    },
+    "tun": {
+      "title": "Mode Tun (NIC Virtual)",
+      "actions": {
+        "reset": "Setel Ulang ke Default"
+      },
+      "fields": {
+        "stack": "Tumpukan Tun",
+        "device": "Device Name",
+        "autoRoute": "Rute Otomatis",
+        "strictRoute": "Rute Ketat",
+        "autoDetectInterface": "Deteksi Antarmuka Otomatis",
+        "dnsHijack": "Pembajakan DNS",
+        "mtu": "Unit Transmisi Maksimum"
+      },
+      "tooltips": {
+        "dnsHijack": "Please use , to separate multiple DNS servers"
+      },
+      "messages": {
+        "applied": "Pengaturan Diterapkan"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS Overwrite",
+        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+      },
+      "sections": {
+        "general": "DNS Settings",
+        "fallbackFilter": "Fallback Filter Settings",
+        "hosts": "Hosts Settings"
+      },
+      "fields": {
+        "enable": "Enable DNS",
+        "listen": "DNS Listen",
+        "enhancedMode": "Enhanced Mode",
+        "fakeIpRange": "Fake IP Range",
+        "fakeIpFilterMode": "Fake IP Filter Mode",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Enable IPv6 DNS resolution"
+        },
+        "preferH3": {
+          "label": "Prefer H3",
+          "description": "DNS DOH uses HTTP/3"
+        },
+        "respectRules": {
+          "label": "Respect Rules",
+          "description": "DNS connections follow routing rules"
+        },
+        "useHosts": {
+          "label": "Use Hosts",
+          "description": "Enable to resolve hosts through hosts file"
+        },
+        "useSystemHosts": {
+          "label": "Use System Hosts",
+          "description": "Enable to resolve hosts through system hosts file"
+        },
+        "directPolicy": {
+          "label": "Direct Nameserver Follow Policy",
+          "description": "Whether to follow nameserver policy"
+        },
+        "defaultNameserver": {
+          "label": "Default Nameserver",
+          "description": "Default DNS servers used to resolve DNS servers"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "List of DNS servers, comma separated"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "List of fallback DNS servers, comma separated"
+        },
+        "proxy": {
+          "label": "Proxy Server Nameserver",
+          "description": "DNS servers for proxy node domain resolution"
+        },
+        "directNameserver": {
+          "label": "Direct Nameserver",
+          "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP Filter",
+          "description": "Domains that skip fake IP resolution, comma separated"
+        },
+        "nameserverPolicy": {
+          "label": "Nameserver Policy",
+          "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP Filtering",
+          "description": "Enable GeoIP filtering for fallback"
+        },
+        "geoipCode": "GeoIP Code",
+        "fallbackIpCidr": {
+          "label": "Fallback IP CIDR",
+          "description": "IP CIDRs not using fallback servers, comma separated"
+        },
+        "fallbackDomain": {
+          "label": "Fallback Domain",
+          "description": "Domains using fallback servers, comma separated"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Custom domain to IP or domain mapping"
+        }
+      },
+      "messages": {
+        "saved": "DNS settings saved",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration"
+      }
+    },
+    "page": {
+      "title": "Pengaturan",
+      "actions": {
+        "manual": "Manual",
+        "telegram": "Saluran Telegram",
+        "github": "Repositori Github"
+      }
+    }
+  },
+  "providers": {
+    "notices": {
+      "updateSuccess": "{{name}} updated successfully",
+      "updateFailed": "Failed to update {{name}}: {{message}}",
+      "genericError": "Update failed: {{message}}",
+      "none": "No providers available to update",
+      "allUpdated": "All providers updated successfully"
+    }
+  },
+  "test": {
+    "item": {
+      "actions": {
+        "test": "Tes"
+      }
+    },
+    "viewer": {
+      "title": {
+        "create": "Buat Tes",
+        "edit": "Ubah Tes"
+      },
+      "fields": {
+        "url": "URL Tes"
+      }
+    },
+    "page": {
+      "title": "Tes",
+      "actions": {
+        "testAll": "Tes Semua",
+        "new": "Baru"
+      }
+    }
+  },
+  "proxies": {
+    "page": {
+      "title": {
+        "default": "Grup Proksi",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "actions": {
+        "toggleChain": "🔗 Proxy Rantai",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Penyedia Proksi",
+        "actions": {
+          "updateAll": "Perbarui Semua",
+          "update": "Perbarui"
+        }
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "Periksa keterlambatan untuk membatalkan tetap"
+      },
+      "tooltips": {
+        "locate": "Lokasi",
+        "delayCheck": "Periksa Keterlambatan",
+        "sortDefault": "Urutkan secara default",
+        "sortDelay": "Urutkan berdasarkan keterlambatan",
+        "sortName": "Urutkan berdasarkan nama",
+        "delayCheckUrl": "URL Periksa Keterlambatan",
+        "showBasic": "Dasar Proksi",
+        "showDetail": "Detail Proksi",
+        "filter": "Filter"
+      },
+      "placeholders": {
+        "filter": "Kondisi Filter",
+        "delayCheckUrl": "URL Periksa Keterlambatan"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    }
+  },
+  "rules": {
+    "page": {
+      "title": "Aturan",
+      "provider": {
+        "trigger": "Penyedia Aturan",
+        "dialogTitle": "Penyedia Aturan",
+        "actions": {
+          "updateAll": "Perbarui Semua",
+          "update": "Perbarui"
+        }
+      }
+    }
+  },
+  "profiles": {
+    "page": {
+      "title": "Profil",
+      "actions": {
+        "updateAll": "Perbarui Semua Profil",
+        "viewRuntimeConfig": "Lihat Konfigurasi Runtime",
+        "reactivate": "Reaktivasi Profil",
+        "import": "Impor",
+        "new": "Baru"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "URL Profil",
+        "paste": "Tempel",
+        "clear": "Bersihkan"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Hanya File YAML yang Didukung"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Profil Beralih",
+        "profileReactivated": "Profil Diaktifkan Kembali",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    }
+  },
+  "connections": {
+    "page": {
+      "title": "Koneksi",
+      "summary": {
+        "downloaded": "Diunduh",
+        "uploaded": "Diunggah"
+      },
+      "actions": {
+        "listView": "Tampilan Daftar",
+        "tableView": "Tampilan Tabel",
+        "pause": "Jeda",
+        "resume": "Lanjut",
+        "closeAll": "Tutup Semua"
+      }
+    }
+  },
+  "logs": {
+    "page": {
+      "title": "Log",
+      "actions": {
+        "pause": "Jeda",
+        "resume": "Lanjut",
+        "clear": "Bersihkan"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
+    }
+  },
+  "unlock": {
+    "page": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items"
     }
   }
 }

@@ -48,8 +48,8 @@ export const ConnectionItem = (props: Props) => {
           edge="end"
           color="inherit"
           onClick={onDelete}
-          title={t("components.connection.actions.closeConnection")}
-          aria-label={t("components.connection.actions.closeConnection")}
+          title={t("connection.actions.closeConnection")}
+          aria-label={t("connection.actions.closeConnection")}
         >
           <CloseRounded />
         </IconButton>

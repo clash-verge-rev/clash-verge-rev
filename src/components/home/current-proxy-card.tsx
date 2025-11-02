@@ -823,7 +823,7 @@ export const CurrentProxyCard = () => {
 
   return (
     <EnhancedCard
-      title={t("components.home.currentProxy.title")}
+      title={t("home.currentProxy.title")}
       icon={
         <Tooltip
           title={
@@ -840,9 +840,7 @@ export const CurrentProxyCard = () => {
       iconColor={currentProxy ? "primary" : undefined}
       action={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Tooltip
-            title={t("components.home.currentProxy.actions.refreshDelay")}
-          >
+          <Tooltip title={t("home.currentProxy.actions.refreshDelay")}>
             <span>
               <IconButton
                 size="small"
@@ -908,7 +906,7 @@ export const CurrentProxyCard = () => {
                 {isGlobalMode && (
                   <Chip
                     size="small"
-                    label={t("components.home.currentProxy.labels.globalMode")}
+                    label={t("home.currentProxy.labels.globalMode")}
                     color="primary"
                     sx={{ mr: 0.5 }}
                   />
@@ -916,7 +914,7 @@ export const CurrentProxyCard = () => {
                 {isDirectMode && (
                   <Chip
                     size="small"
-                    label={t("components.home.currentProxy.labels.directMode")}
+                    label={t("home.currentProxy.labels.directMode")}
                     color="success"
                     sx={{ mr: 0.5 }}
                   />
@@ -957,13 +955,13 @@ export const CurrentProxyCard = () => {
             sx={{ mb: 1.5 }}
           >
             <InputLabel id="proxy-group-select-label">
-              {t("components.home.currentProxy.labels.group")}
+              {t("home.currentProxy.labels.group")}
             </InputLabel>
             <Select
               labelId="proxy-group-select-label"
               value={state.selection.group}
               onChange={handleGroupChange}
-              label={t("components.home.currentProxy.labels.group")}
+              label={t("home.currentProxy.labels.group")}
               disabled={isGlobalMode || isDirectMode}
             >
               {state.proxyData.groups.map((group) => (
@@ -977,13 +975,13 @@ export const CurrentProxyCard = () => {
           {/* 代理节点选择器 */}
           <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 0 }}>
             <InputLabel id="proxy-select-label">
-              {t("components.home.currentProxy.labels.proxy")}
+              {t("home.currentProxy.labels.proxy")}
             </InputLabel>
             <Select
               labelId="proxy-select-label"
               value={state.selection.proxy}
               onChange={handleProxyChange}
-              label={t("components.home.currentProxy.labels.proxy")}
+              label={t("home.currentProxy.labels.proxy")}
               disabled={isDirectMode}
               renderValue={renderProxyValue}
               MenuProps={{
@@ -1039,7 +1037,7 @@ export const CurrentProxyCard = () => {
       ) : (
         <Box sx={{ textAlign: "center", py: 4 }}>
           <Typography variant="body1" color="text.secondary">
-            {t("components.home.currentProxy.labels.noActiveNode")}
+            {t("home.currentProxy.labels.noActiveNode")}
           </Typography>
         </Box>
       )}
