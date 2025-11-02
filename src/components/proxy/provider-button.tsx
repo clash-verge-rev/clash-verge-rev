@@ -253,7 +253,7 @@ export const ProviderButton = () => {
                             color="text.secondary"
                             noWrap
                           >
-                            <small>{t("Update At")}: </small>
+                            <small>{t("common.labels.updateAt")}: </small>
                             {time.fromNow()}
                           </Typography>
                         </Box>
@@ -271,11 +271,17 @@ export const ProviderButton = () => {
                                   justifyContent: "space-between",
                                 }}
                               >
-                                <span title={t("Used / Total") as string}>
+                                <span
+                                  title={t("common.labels.usedTotal") as string}
+                                >
                                   {parseTraffic(upload + download)} /{" "}
                                   {parseTraffic(total)}
                                 </span>
-                                <span title={t("Expire Time") as string}>
+                                <span
+                                  title={
+                                    t("common.labels.expireTime") as string
+                                  }
+                                >
                                   {parseExpire(expire)}
                                 </span>
                               </Box>
@@ -334,7 +340,7 @@ export const ProviderButton = () => {
 
         <DialogActions>
           <Button onClick={handleClose} variant="outlined">
-            {t("Close")}
+            {t("common.actions.close")}
           </Button>
         </DialogActions>
       </Dialog>

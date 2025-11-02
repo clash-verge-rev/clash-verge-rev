@@ -811,11 +811,11 @@ export const CurrentProxyCard = () => {
   const getSortTooltip = (): string => {
     switch (sortType) {
       case 0:
-        return t("Sort by default");
+        return t("proxies.page.tooltips.sortDefault");
       case 1:
-        return t("Sort by delay");
+        return t("proxies.page.tooltips.sortDelay");
       case 2:
-        return t("Sort by name");
+        return t("proxies.page.tooltips.sortName");
       default:
         return "";
     }

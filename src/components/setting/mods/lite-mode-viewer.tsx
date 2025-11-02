@@ -55,8 +55,8 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={t("settings.liteMode.title")}
       contentSx={{ width: 450 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
@@ -73,7 +73,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
             }}
             onClick={async () => await entry_lightweight_mode()}
           >
-            {t("Enable")}
+            {t("common.actions.enable")}
           </Typography>
         </ListItem>
 
@@ -119,7 +119,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
                   input: {
                     endAdornment: (
                       <InputAdornment position="end">
-                        {t("mins")}
+                        {t("common.units.minutes")}
                       </InputAdornment>
                     ),
                   },

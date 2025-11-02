@@ -116,7 +116,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
       title={t("settings.verge.layout.title")}
       contentSx={{ width: 450 }}
       disableOk
-      cancelBtn={t("Close")}
+      cancelBtn={t("common.actions.close")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
@@ -253,7 +253,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                 input: {
                   endAdornment: (
                     <InputAdornment position="end">
-                      {t("millis")}
+                      {t("common.units.milliseconds")}
                     </InputAdornment>
                   ),
                 },
@@ -318,7 +318,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         )}
         {/* {OS === "macos" && (
           <Item>
-            <ListItemText primary={t("Enable Tray Speed")} />
+            <ListItemText primary={t("settings.verge.layout.fields.enableTraySpeed")} />
             <GuardState
               value={verge?.enable_tray_speed ?? false}
               valueProps="checked"
@@ -333,7 +333,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         )} */}
         {/* {OS === "macos" && (
           <Item>
-            <ListItemText primary={t("Enable Tray Icon")} />
+            <ListItemText primary={t("settings.verge.layout.fields.enableTrayIcon")} />
             <GuardState
               value={
                 verge?.enable_tray_icon === false &&

@@ -156,7 +156,11 @@ const SortableItem = ({ proxy, index, onRemove }: SortableItemProps) => {
 
       {proxy.delay !== undefined && (
         <Chip
-          label={proxy.delay > 0 ? `${proxy.delay}ms` : t("timeout") || "超时"}
+          label={
+            proxy.delay > 0
+              ? `${proxy.delay}ms`
+              : t("common.labels.timeout") || "超时"
+          }
           size="small"
           color={
             proxy.delay > 0 && proxy.delay < 200

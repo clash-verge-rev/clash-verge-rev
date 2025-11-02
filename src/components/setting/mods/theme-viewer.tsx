@@ -121,8 +121,8 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={t("settings.verge.theme.title")}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       contentSx={{ width: 400, maxHeight: 505, overflow: "auto", pb: 0 }}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}

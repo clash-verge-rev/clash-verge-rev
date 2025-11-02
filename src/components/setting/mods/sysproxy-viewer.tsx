@@ -412,8 +412,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       open={open}
       title={t("settings.sysproxy.title")}
       contentSx={{ width: 450, maxHeight: 565 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
@@ -432,11 +432,11 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             <Typography className="value">
               {value.pac
                 ? autoproxy?.enable
-                  ? t("Enabled")
-                  : t("Disabled")
+                  ? t("common.status.enabled")
+                  : t("common.status.disabled")
                 : sysproxy?.enable
-                  ? t("Enabled")
-                  : t("Disabled")}
+                  ? t("common.status.enabled")
+                  : t("common.status.disabled")}
             </Typography>
           </FlexBox>
           {!value.pac && (

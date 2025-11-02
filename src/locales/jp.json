@@ -1,28 +1,12 @@
 {
-  "millis": "ミリ秒",
-  "seconds": "秒",
-  "mins": "分",
-  "Close": "閉じる",
-  "Cancel": "キャンセル",
-  "Confirm": "確認",
   "Maximize": "最大化",
   "Minimize": "最小化",
   "Empty": "空っぽ",
-  "New": "新規作成",
-  "Edit": "編集",
-  "Save": "保存",
-  "Delete": "削除",
-  "Enable": "有効にする",
   "Proxies": "Proxies",
-  "Update At": "更新日時",
   "rule": "ルール",
   "global": "グローバル",
   "direct": "直接接続",
-  "timeout": "Timeout",
   "script": "スクリプト",
-  "Sort by default": "デフォルトでソート",
-  "Sort by delay": "遅延でソート",
-  "Sort by name": "名前でソート",
   "DOMAIN": "完全なドメイン名を一致させる",
   "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
   "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
@@ -67,51 +51,28 @@
   "relay": "定義されたプロキシチェーンに沿って転送する",
   "Timeout": "タイムアウト時間",
   "Type": "タイプ",
-  "Name": "名前",
   "Close All Connections": "Close All Connections",
   "Rule": "ルール",
-  "Icon": "アイコン",
-  "Reset to Default": "デフォルト値にリセット",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "Core communication error": "Core communication error",
   "active": "アクティブ",
   "unknown": "不明",
   "Install": "インストール",
   "Uninstall": "アンインストール",
   "System Proxy": "システムプロキシ",
-  "Network Interface": "ネットワークインターフェース",
-  "Ip Address": "IPアドレス",
-  "Mac Address": "MACアドレス",
-  "Open URL": "URLを開く",
-  "Replace host, port, secret with %host, %port, %secret": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。",
-  "Support %host, %port, %secret": "%host, %port, %secretをサポートします。",
-  "Clash Core": "Clashコア",
-  "Upgrade": "コアをアップグレード",
-  "Restart": "コアを再起動",
   "Release Version": "正式版",
   "Alpha Version": "プレビュー版",
-  "Please enter your root password": "ルートパスワードを入力してください。",
   "theme.light": "ライト",
   "theme.dark": "ダーク",
   "theme.system": "システム",
   "Copy Success": "コピー成功",
-  "Hotkey Setting": "ホットキー設定",
-  "Enable Global Hotkey": "グローバルホットキーを有効にする",
   "open_or_close_dashboard": "ダッシュボードを開く/閉じる",
   "clash_mode_rule": "ルールモード",
   "clash_mode_global": "グローバルモード",
-  "clash_mode_direct": "直接接続モード",
   "toggle_system_proxy": "システムプロキシを開く/閉じる",
   "toggle_tun_mode": "TUNモードを開く/閉じる",
   "entry_lightweight_mode": "軽量モードに入る",
-  "Runtime Config": "現在の設定",
   "Exit": "終了",
-  "ReadOnly": "読み取り専用",
-  "Filter conditions": "フィルタリング条件",
-  "Match Case": "大文字小文字を区別する",
-  "Match Whole Word": "完全一致",
-  "Use Regular Expression": "正規表現を使用する",
   "Profile Imported Successfully": "プロファイルのインポートに成功しました。",
   "Stopping Core...": "コアを停止中...",
   "Restarting Core...": "コアを再起動中...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "サービスのインストールに成功しました。",
   "Service Uninstalled Successfully": "サービスのアンインストールに成功しました。",
   "Core Version Updated": "コアバージョンが更新されました。",
-  "Clash Core Restarted": "Clashコアが再起動されました。",
   "Currently on the Latest Version": "現在は最新バージョンです。",
   "Import Subscription Successful": "サブスクリプションのインポートに成功しました。",
-  "Failed to fetch backup files": "バックアップファイルの取得に失敗しました。",
   "Profile": "プロファイル",
-  "Web UI": "Webインターフェース",
   "Dashboard": "ダッシュボード",
   "Restart App": "アプリケーションを再起動",
   "Restart Clash Core": "Clashコアを再起動",
@@ -136,8 +94,6 @@
   "Logs Dir": "ログディレクトリ",
   "Open Dir": "ディレクトリを開く",
   "More": "もっと見る",
-  "Enable Tray Speed": "トレイの速度表示を有効にする",
-  "Enable Tray Icon": "トレイアイコンを有効にする",
   "LightWeight Mode": "軽量モード",
   "Config Validation Failed": "プロファイル設定の検証に失敗しました。プロファイル設定ファイルを確認してください。変更は取り消されました。エラー詳細：",
   "Boot Config Validation Failed": "起動時のプロファイル設定の検証に失敗しました。デフォルト設定で起動しました。プロファイル設定ファイルを確認してください。エラー詳細：",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "上書きファイルのキーエラーがあります。変更は取り消されました。",
   "Merge File Error": "上書きファイルにエラーがあります。変更は取り消されました。",
   "Service Administrator Prompt": "Clash Vergeはシステムサービスをインストールするために管理者権限が必要です。",
-  "Website Tests": "ウェブサイトテスト",
   "Update with Clash proxy successfully": "Clashプロキシを使用して更新に成功しました。",
   "Update failed even with Clash proxy": "Clashプロキシを使用しても更新に失敗しました。",
   "Profile Imported with Clash proxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",
@@ -187,11 +142,8 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid regular expression": "Invalid regular expression",
   "Configuration saved successfully": "ランダム設定を保存完了",
   "Failed to save configuration": "Failed to save configuration",
-  "Saving...": "Saving...",
-  "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "キャンセル",
+      "close": "閉じる",
+      "confirm": "確認",
+      "save": "保存",
+      "delete": "削除",
+      "edit": "編集",
+      "new": "新規作成",
+      "enable": "有効にする",
+      "upgrade": "コアをアップグレード",
+      "restart": "コアを再起動",
+      "resetToDefault": "デフォルト値にリセット",
+      "refresh": "更新",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "更新日時",
+      "timeout": "Timeout",
+      "icon": "アイコン",
+      "name": "名前",
+      "readOnly": "読み取り専用",
+      "expireTime": "有効期限",
+      "updateTime": "更新時間",
+      "usedTotal": "使用済み / 合計",
+      "from": "から",
+      "password": "パスワード",
+      "retryAttempts": "Retry attempts"
+    },
+    "units": {
+      "milliseconds": "ミリ秒",
+      "seconds": "秒",
+      "minutes": "分",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "search": {
+      "placeholder": "フィルタリング条件",
+      "matchCase": "大文字小文字を区別する",
+      "matchWholeWord": "完全一致",
+      "useRegex": "正規表現を使用する",
+      "invalidRegex": "Invalid regular expression"
+    },
+    "status": {
+      "enabled": "有効",
+      "disabled": "無効"
+    },
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "states": {
+      "saving": "Saving..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "システム情報カード"
         }
       }
+    },
+    "tests": {
+      "title": "ウェブサイトテスト"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "Port settings saved",
           "saveFailed": "Failed to save port settings"
         }
+      },
+      "notifications": {
+        "restartSuccess": "Clashコアが再起動されました。"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "通常のトレイアイコン",
           "systemProxyTrayIcon": "システムプロキシトレイアイコン",
-          "tunTrayIcon": "TUNモードトレイアイコン"
+          "tunTrayIcon": "TUNモードトレイアイコン",
+          "enableTrayIcon": "トレイアイコンを有効にする",
+          "enableTraySpeed": "トレイの速度表示を有効にする"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
@@ -1028,6 +1049,34 @@
         "telegram": "Telegramチャンネル",
         "github": "GitHubリポジトリ"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "URLを開く"
+      },
+      "title": "Webインターフェース",
+      "messages": {
+        "supportedPlaceholders": "%host, %port, %secretをサポートします。",
+        "placeholderInstruction": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "グローバルホットキーを有効にする"
+      },
+      "title": "ホットキー設定"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "ルートパスワードを入力してください。"
+      }
+    },
+    "networkInterface": {
+      "title": "ネットワークインターフェース",
+      "labels": {
+        "ipAddress": "IPアドレス",
+        "macAddress": "MACアドレス"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "Failed to connect to proxy chain",
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "直接接続モード"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "テスト中..."
       },
-      "empty": "アンロックテスト項目はありません"
+      "empty": "アンロックテスト項目はありません",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "アップロード速度",
+        "downloadSpeed": "ダウンロード速度",
+        "memoryUsage": "コアメモリ使用量"
+      }
     }
   }
 }

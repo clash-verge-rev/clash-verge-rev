@@ -173,7 +173,7 @@ export const TestCard = () => {
 
   return (
     <EnhancedCard
-      title={t("Website Tests")}
+      title={t("home.tests.title")}
       icon={<NetworkCheck />}
       action={
         <Box sx={{ display: "flex", gap: 1 }}>

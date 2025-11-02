@@ -30,7 +30,7 @@ export const ClashModeCard = () => {
         `${currentMode[0].toLocaleUpperCase()}${currentMode.slice(1)} Mode Description`,
       );
     }
-    return t("Core communication error");
+    return t("home.clashMode.errors.communication");
   }, [currentMode, t]);
 
   // 模式图标映射

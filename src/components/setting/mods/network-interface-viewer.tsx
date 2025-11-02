@@ -35,7 +35,7 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("Network Interface")}
+          {t("settings.networkInterface.title")}
           <Box>
             <Button
               variant="contained"
@@ -51,7 +51,7 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
       contentSx={{ width: 450 }}
       disableOk
-      cancelBtn={t("Close")}
+      cancelBtn={t("common.actions.close")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
@@ -66,13 +66,13 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V4 && (
                       <AddressDisplay
                         key={address.V4.ip}
-                        label={t("Ip Address")}
+                        label={t("settings.networkInterface.labels.ipAddress")}
                         content={address.V4.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("Mac Address")}
+                  label={t("settings.networkInterface.labels.macAddress")}
                   content={item.mac_addr ?? ""}
                 />
               </>
@@ -84,13 +84,13 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V6 && (
                       <AddressDisplay
                         key={address.V6.ip}
-                        label={t("Ip Address")}
+                        label={t("settings.networkInterface.labels.ipAddress")}
                         content={address.V6.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("Mac Address")}
+                  label={t("settings.networkInterface.labels.macAddress")}
                   content={item.mac_addr ?? ""}
                 />
               </>

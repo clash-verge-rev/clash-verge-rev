@@ -672,7 +672,7 @@ export const ProfileItem = (props: Props) => {
           {/* only if has url can it be updated */}
           {hasUrl && (
             <IconButton
-              title={t("Refresh")}
+              title={t("common.actions.refresh")}
               sx={{
                 position: "absolute",
                 p: "3px",
@@ -710,7 +710,10 @@ export const ProfileItem = (props: Props) => {
                 </Typography>
               ) : (
                 hasUrl && (
-                  <Typography noWrap title={`${t("From")} ${from}`}>
+                  <Typography
+                    noWrap
+                    title={`${t("common.labels.from")} ${from}`}
+                  >
                     {from}
                   </Typography>
                 )
@@ -731,7 +734,7 @@ export const ProfileItem = (props: Props) => {
                     title={
                       showNextUpdate
                         ? t("profile.item.tooltips.showLast")
-                        : `${t("Update Time")}: ${parseExpire(updated)}\n${t("profile.item.tooltips.showNext")}`
+                        : `${t("common.labels.updateTime")}: ${parseExpire(updated)}\n${t("profile.item.tooltips.showNext")}`
                     }
                     sx={{
                       cursor: "pointer",
@@ -759,14 +762,16 @@ export const ProfileItem = (props: Props) => {
         {/* the third line show extra info or last updated time */}
         {hasExtra ? (
           <Box sx={{ ...boxStyle, fontSize: 14 }}>
-            <span title={t("Used / Total")}>
+            <span title={t("common.labels.usedTotal")}>
               {parseTraffic(upload + download)} / {parseTraffic(total)}
             </span>
-            <span title={t("Expire Time")}>{expire}</span>
+            <span title={t("common.labels.expireTime")}>{expire}</span>
           </Box>
         ) : (
           <Box sx={{ ...boxStyle, fontSize: 12, justifyContent: "flex-end" }}>
-            <span title={t("Update Time")}>{parseExpire(updated)}</span>
+            <span title={t("common.labels.updateTime")}>
+              {parseExpire(updated)}
+            </span>
           </Box>
         )}
         <LinearProgress

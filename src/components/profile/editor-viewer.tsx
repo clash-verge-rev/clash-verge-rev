@@ -259,7 +259,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
         </Button>
         {!readOnly && (
           <Button onClick={handleSave} variant="contained">
-            {t("Save")}
+            {t("common.actions.save")}
           </Button>
         )}
       </DialogActions>

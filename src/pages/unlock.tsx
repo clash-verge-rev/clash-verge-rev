@@ -150,7 +150,7 @@ const UnlockPage = () => {
       invoke<T>(cmd, args),
       new Promise<T>((_, reject) =>
         setTimeout(
-          () => reject(new Error(t("Detection timeout or failed"))),
+          () => reject(new Error(t("unlock.page.messages.detectionTimeout"))),
           timeout,
         ),
       ),

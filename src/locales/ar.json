@@ -1,28 +1,12 @@
 {
-  "millis": "ميلي ثانية",
-  "seconds": "ثواني",
-  "mins": "دقائق",
-  "Close": "إغلاق",
-  "Cancel": "إلغاء",
-  "Confirm": "تأكيد",
   "Maximize": "تكبير",
   "Minimize": "تصغير",
   "Empty": "فارغ",
-  "New": "جديد",
-  "Edit": "تعديل",
-  "Save": "حفظ",
-  "Delete": "حذف",
-  "Enable": "تمكين",
   "Proxies": "الوكلاء",
-  "Update At": "التحديث عند",
   "rule": "قاعدة",
   "global": "عالمي",
   "direct": "مباشر",
-  "timeout": "Timeout",
   "script": "سكريبت",
-  "Sort by default": "الترتيب الافتراضي",
-  "Sort by delay": "الترتيب حسب التأخير",
-  "Sort by name": "الترتيب حسب الاسم",
   "DOMAIN": "مطابقة اسم المجال الكامل",
   "DOMAIN-SUFFIX": "مطابقة لاحقة المجال",
   "DOMAIN-KEYWORD": "مطابقة كلمة مفتاحية في المجال",
@@ -67,51 +51,28 @@
   "relay": "التمرير عبر سلسلة الوكلاء المحددة",
   "Timeout": "مهلة",
   "Type": "النوع",
-  "Name": "الاسم",
   "Close All Connections": "Close All Connections",
   "Rule": "قاعدة",
-  "Icon": "أيقونة",
-  "Reset to Default": "إعادة تعيين إلى الافتراضي",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "Core communication error": "Core communication error",
   "active": "نشط",
   "unknown": "غير معروف",
   "Install": "تثبيت",
   "Uninstall": "إلغاء التثبيت",
   "System Proxy": "وكيل النظام",
-  "Network Interface": "واجهة الشبكة",
-  "Ip Address": "عنوان IP",
-  "Mac Address": "عنوان MAC",
-  "Open URL": "فتح الرابط",
-  "Replace host, port, secret with %host, %port, %secret": "استبدل المضيف والمنفذ والمفتاح بـ %host و%port و%secret",
-  "Support %host, %port, %secret": "يدعم %host و%port و%secret",
-  "Clash Core": "نواة Clash",
-  "Upgrade": "ترقية",
-  "Restart": "إعادة التشغيل",
   "Release Version": "إصدار مستقر",
   "Alpha Version": "إصدار ألفا",
-  "Please enter your root password": "يرجى إدخال كلمة مرور الرووت",
   "theme.light": "سمة فاتحة",
   "theme.dark": "سمة داكنة",
   "theme.system": "سمة النظام",
   "Copy Success": "تم النسخ بنجاح",
-  "Hotkey Setting": "إعدادات الاختصارات",
-  "Enable Global Hotkey": "تمكين مفتاح التشغيل السريع العالمي",
   "open_or_close_dashboard": "فتح/إغلاق لوحة التحكم",
   "clash_mode_rule": "وضع القواعد",
   "clash_mode_global": "الوضع العالمي",
-  "clash_mode_direct": "الوضع المباشر",
   "toggle_system_proxy": "تفعيل/تعطيل وكيل النظام",
   "toggle_tun_mode": "تفعيل/تعطيل وضع TUN",
   "entry_lightweight_mode": "Entry Lightweight Mode",
-  "Runtime Config": "تكوين وقت التشغيل",
   "Exit": "خروج",
-  "ReadOnly": "للقراءة فقط",
-  "Filter conditions": "شروط التصفية",
-  "Match Case": "مطابقة الحالة",
-  "Match Whole Word": "مطابقة الكلمة بأكملها",
-  "Use Regular Expression": "استخدام التعبيرات العادية",
   "Profile Imported Successfully": "تم استيراد الملف الشخصي بنجاح",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "تم تثبيت الخدمة بنجاح",
   "Service Uninstalled Successfully": "تم إلغاء تثبيت الخدمة بنجاح",
   "Core Version Updated": "تم تحديث إصدار النواة",
-  "Clash Core Restarted": "تم إعادة تشغيل نواة Clash",
   "Currently on the Latest Version": "أنت على أحدث إصدار حاليًا",
   "Import Subscription Successful": "تم استيراد الاشتراك بنجاح",
-  "Failed to fetch backup files": "فشل في جلب ملفات النسخ الاحتياطي",
   "Profile": "الملف الشخصي",
-  "Web UI": "واجهة الويب",
   "Dashboard": "لوحة التحكم",
   "Restart App": "إعادة تشغيل التطبيق",
   "Restart Clash Core": "إعادة تشغيل نواة Clash",
@@ -136,8 +94,6 @@
   "Logs Dir": "مجلد السجلات",
   "Open Dir": "فتح المجلد",
   "More": "المزيد",
-  "Enable Tray Speed": "تفعيل سرعة التراي",
-  "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "وضع الأداء الخفيف",
   "Config Validation Failed": "فشل التحقق من تكوين الاشتراك، يرجى فحص ملف التكوين، تم التراجع عن التغييرات، تفاصيل الخطأ:",
   "Boot Config Validation Failed": "فشل التحقق من التكوين عند الإقلاع، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "Merge file key error, changes reverted",
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "يتطلب Clash Verge امتيازات المسؤول لإعادة تثبيت خدمة النظام",
-  "Website Tests": "Website Tests",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -187,11 +142,8 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid regular expression": "Invalid regular expression",
   "Configuration saved successfully": "Configuration saved successfully",
   "Failed to save configuration": "Failed to save configuration",
-  "Saving...": "Saving...",
-  "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "إلغاء",
+      "close": "إغلاق",
+      "confirm": "تأكيد",
+      "save": "حفظ",
+      "delete": "حذف",
+      "edit": "تعديل",
+      "new": "جديد",
+      "enable": "تمكين",
+      "upgrade": "ترقية",
+      "restart": "إعادة التشغيل",
+      "resetToDefault": "إعادة تعيين إلى الافتراضي",
+      "refresh": "تحديث",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "التحديث عند",
+      "timeout": "Timeout",
+      "icon": "أيقونة",
+      "name": "الاسم",
+      "readOnly": "للقراءة فقط",
+      "expireTime": "وقت الانتهاء",
+      "updateTime": "وقت التحديث",
+      "usedTotal": "المستخدم / الإجمالي",
+      "from": "من",
+      "password": "كلمة المرور",
+      "retryAttempts": "Retry attempts"
+    },
+    "units": {
+      "milliseconds": "ميلي ثانية",
+      "seconds": "ثواني",
+      "minutes": "دقائق",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "search": {
+      "placeholder": "شروط التصفية",
+      "matchCase": "مطابقة الحالة",
+      "matchWholeWord": "مطابقة الكلمة بأكملها",
+      "useRegex": "استخدام التعبيرات العادية",
+      "invalidRegex": "Invalid regular expression"
+    },
+    "status": {
+      "enabled": "ممكّن",
+      "disabled": "معطّل"
+    },
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "states": {
+      "saving": "Saving..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "System Info Cards"
         }
       }
+    },
+    "tests": {
+      "title": "Website Tests"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "Port settings saved",
           "saveFailed": "Failed to save port settings"
         }
+      },
+      "notifications": {
+        "restartSuccess": "تم إعادة تشغيل نواة Clash"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "أيقونة شريط مهام عامة",
           "systemProxyTrayIcon": "أيقونة شريط المهام لوكيل النظام",
-          "tunTrayIcon": "أيقونة شريط المهام لـ TUN"
+          "tunTrayIcon": "أيقونة شريط المهام لـ TUN",
+          "enableTrayIcon": "Enable Tray Icon",
+          "enableTraySpeed": "تفعيل سرعة التراي"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
@@ -1028,6 +1049,34 @@
         "telegram": "قناة تيليجرام",
         "github": "مستودع Github"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "فتح الرابط"
+      },
+      "title": "واجهة الويب",
+      "messages": {
+        "supportedPlaceholders": "يدعم %host و%port و%secret",
+        "placeholderInstruction": "استبدل المضيف والمنفذ والمفتاح بـ %host و%port و%secret"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "تمكين مفتاح التشغيل السريع العالمي"
+      },
+      "title": "إعدادات الاختصارات"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "يرجى إدخال كلمة مرور الرووت"
+      }
+    },
+    "networkInterface": {
+      "title": "واجهة الشبكة",
+      "labels": {
+        "ipAddress": "عنوان IP",
+        "macAddress": "عنوان MAC"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "Failed to connect to proxy chain",
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "الوضع المباشر"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "Testing..."
       },
-      "empty": "No unlock test items"
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "سرعة الرفع",
+        "downloadSpeed": "سرعة التنزيل",
+        "memoryUsage": "استهلاك الذاكرة"
+      }
     }
   }
 }

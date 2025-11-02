@@ -107,13 +107,13 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         isSaving ? (
           <Box display="flex" alignItems="center" gap={1}>
             <CircularProgress size={16} color="inherit" />
-            {t("Saving...")}
+            {t("common.states.saving")}
           </Box>
         ) : (
-          t("Save")
+          t("common.actions.save")
         )
       }
-      cancelBtn={t("Cancel")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}

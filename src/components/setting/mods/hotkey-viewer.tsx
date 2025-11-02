@@ -89,16 +89,16 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("Hotkey Setting")}
+      title={t("settings.hotkey.title")}
       contentSx={{ width: 450, maxHeight: 380 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <ItemWrapper style={{ marginBottom: 16 }}>
-        <Typography>{t("Enable Global Hotkey")}</Typography>
+        <Typography>{t("settings.hotkey.toggles.enableGlobal")}</Typography>
         <Switch
           edge="end"
           checked={enableGlobalHotkey}

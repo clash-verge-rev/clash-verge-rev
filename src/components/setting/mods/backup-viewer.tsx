@@ -127,7 +127,6 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setBackupFiles([]);
       setTotal(0);
       console.error(error);
-      // Notice.error(t("Failed to fetch backup files"));
     } finally {
       setIsLoading(false);
     }
@@ -342,7 +341,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 backgroundColor: (theme) => theme.palette.background.paper,
               }}
             >
-              {t("Close")}
+              {t("common.actions.close")}
             </Button>
           </Box>,
           dialogPaper,

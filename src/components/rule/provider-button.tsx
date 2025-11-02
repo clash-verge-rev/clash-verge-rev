@@ -222,7 +222,7 @@ export const ProviderButton = () => {
                             color="text.secondary"
                             noWrap
                           >
-                            <small>{t("Update At")}: </small>
+                            <small>{t("common.labels.updateAt")}: </small>
                             {time.fromNow()}
                           </Typography>
                         </Box>
@@ -275,7 +275,7 @@ export const ProviderButton = () => {
 
         <DialogActions>
           <Button onClick={handleClose} variant="outlined">
-            {t("Close")}
+            {t("common.actions.close")}
           </Button>
         </DialogActions>
       </Dialog>

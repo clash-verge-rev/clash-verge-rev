@@ -199,9 +199,9 @@ const HomeSettingsDialog = ({
         </FormGroup>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t("Cancel")}</Button>
+        <Button onClick={onClose}>{t("common.actions.cancel")}</Button>
         <Button onClick={handleSave} color="primary">
-          {t("Save")}
+          {t("common.actions.save")}
         </Button>
       </DialogActions>
     </Dialog>

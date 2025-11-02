@@ -501,11 +501,11 @@ export const ProxiesEditorViewer = (props: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
-          {t("Cancel")}
+          {t("common.actions.cancel")}
         </Button>
 
         <Button onClick={handleSave} variant="contained">
-          {t("Save")}
+          {t("common.actions.save")}
         </Button>
       </DialogActions>
     </Dialog>

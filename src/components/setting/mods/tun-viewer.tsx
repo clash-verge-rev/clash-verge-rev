@@ -133,8 +133,8 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </Box>
       }
       contentSx={{ width: 450 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}

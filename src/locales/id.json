@@ -1,28 +1,12 @@
 {
-  "millis": "milidetik",
-  "seconds": "detik",
-  "mins": "menit",
-  "Close": "Tutup",
-  "Cancel": "Batal",
-  "Confirm": "Konfirmasi",
   "Maximize": "Maksimalkan",
   "Minimize": "Minimalkan",
   "Empty": "Kosong",
-  "New": "Baru",
-  "Edit": "Ubah",
-  "Save": "Simpan",
-  "Delete": "Hapus",
-  "Enable": "Aktifkan",
   "Proxies": "Proksi",
-  "Update At": "Diperbarui Pada",
   "rule": "aturan",
   "global": "global",
   "direct": "langsung",
-  "timeout": "Timeout",
   "script": "skrip",
-  "Sort by default": "Urutkan secara default",
-  "Sort by delay": "Urutkan berdasarkan keterlambatan",
-  "Sort by name": "Urutkan berdasarkan nama",
   "DOMAIN": "Cocok dengan nama domain lengkap",
   "DOMAIN-SUFFIX": "Cocok dengan sufiks domain",
   "DOMAIN-KEYWORD": "Cocok dengan kata kunci domain",
@@ -67,51 +51,28 @@
   "relay": "Lewatkan melalui rantai proksi yang ditentukan",
   "Timeout": "Waktu Habis",
   "Type": "Jenis",
-  "Name": "Nama",
   "Close All Connections": "Close All Connections",
   "Rule": "Aturan",
-  "Icon": "Ikon",
-  "Reset to Default": "Setel Ulang ke Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "Core communication error": "Core communication error",
   "active": "aktif",
   "unknown": "tidak diketahui",
   "Install": "Instal",
   "Uninstall": "Copot",
   "System Proxy": "Proksi Sistem",
-  "Network Interface": "Antarmuka Jaringan",
-  "Ip Address": "Alamat IP",
-  "Mac Address": "Alamat MAC",
-  "Open URL": "Buka URL",
-  "Replace host, port, secret with %host, %port, %secret": "Ganti host, port, rahasia dengan %host, %port, %secret",
-  "Support %host, %port, %secret": "Dukung %host, %port, %secret",
-  "Clash Core": "Inti Clash",
-  "Upgrade": "Tingkatkan",
-  "Restart": "Mulai Ulang",
   "Release Version": "Versi Rilis",
   "Alpha Version": "Versi Alpha",
-  "Please enter your root password": "Harap masukkan kata sandi root Anda",
   "theme.light": "Terang",
   "theme.dark": "Gelap",
   "theme.system": "Sistem",
   "Copy Success": "Salin Berhasil",
-  "Hotkey Setting": "Pengaturan Pintasan",
-  "Enable Global Hotkey": "Aktifkan Hotkey Global",
   "open_or_close_dashboard": "Buka/Tutup Dasbor",
   "clash_mode_rule": "Mode Aturan",
   "clash_mode_global": "Mode Global",
-  "clash_mode_direct": "Mode Langsung",
   "toggle_system_proxy": "Aktifkan/Nonaktifkan Proksi Sistem",
   "toggle_tun_mode": "Aktifkan/Nonaktifkan Mode Tun",
   "entry_lightweight_mode": "Entry Lightweight Mode",
-  "Runtime Config": "Konfigurasi Runtime",
   "Exit": "Keluar",
-  "ReadOnly": "Hanya Baca",
-  "Filter conditions": "Kondisi Filter",
-  "Match Case": "Cocokkan Kasus",
-  "Match Whole Word": "Cocokkan Kata Utuh",
-  "Use Regular Expression": "Gunakan Ekspresi Reguler",
   "Profile Imported Successfully": "Profil Berhasil Diimpor",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "Layanan Berhasil Diinstal",
   "Service Uninstalled Successfully": "Layanan Berhasil Dicopot",
   "Core Version Updated": "Versi Core Diperbarui",
-  "Clash Core Restarted": "Core Clash Dimulai Ulang",
   "Currently on the Latest Version": "Saat ini pada Versi Terbaru",
   "Import Subscription Successful": "Berlangganan Berhasil Diimpor",
-  "Failed to fetch backup files": "Gagal mengambil file cadangan",
   "Profile": "Profil",
-  "Web UI": "Antarmuka Web",
   "Dashboard": "Dasbor",
   "Restart App": "Mulai Ulang Aplikasi",
   "Restart Clash Core": "Mulai Ulang Core Clash",
@@ -136,8 +94,6 @@
   "Logs Dir": "Direktori Log",
   "Open Dir": "Buka Direktori",
   "More": "Lainnya",
-  "Enable Tray Speed": "Aktifkan Tray Speed",
-  "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "Mode Ringan",
   "Config Validation Failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
   "Boot Config Validation Failed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "Merge file key error, changes reverted",
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge memerlukan hak administrator untuk menginstal ulang layanan sistem",
-  "Website Tests": "Website Tests",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -187,11 +142,8 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid regular expression": "Invalid regular expression",
   "Configuration saved successfully": "Configuration saved successfully",
   "Failed to save configuration": "Failed to save configuration",
-  "Saving...": "Saving...",
-  "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "Batal",
+      "close": "Tutup",
+      "confirm": "Konfirmasi",
+      "save": "Simpan",
+      "delete": "Hapus",
+      "edit": "Ubah",
+      "new": "Baru",
+      "enable": "Aktifkan",
+      "upgrade": "Tingkatkan",
+      "restart": "Mulai Ulang",
+      "resetToDefault": "Setel Ulang ke Default",
+      "refresh": "Segarkan",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "Diperbarui Pada",
+      "timeout": "Timeout",
+      "icon": "Ikon",
+      "name": "Nama",
+      "readOnly": "Hanya Baca",
+      "expireTime": "Waktu Kedaluwarsa",
+      "updateTime": "Waktu Pembaruan",
+      "usedTotal": "Digunakan / Total",
+      "from": "Dari",
+      "password": "Kata Sandi",
+      "retryAttempts": "Retry attempts"
+    },
+    "units": {
+      "milliseconds": "milidetik",
+      "seconds": "detik",
+      "minutes": "menit",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "search": {
+      "placeholder": "Kondisi Filter",
+      "matchCase": "Cocokkan Kasus",
+      "matchWholeWord": "Cocokkan Kata Utuh",
+      "useRegex": "Gunakan Ekspresi Reguler",
+      "invalidRegex": "Invalid regular expression"
+    },
+    "status": {
+      "enabled": "Diaktifkan",
+      "disabled": "Dinonaktifkan"
+    },
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "states": {
+      "saving": "Saving..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "System Info Cards"
         }
       }
+    },
+    "tests": {
+      "title": "Website Tests"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "Port settings saved",
           "saveFailed": "Failed to save port settings"
         }
+      },
+      "notifications": {
+        "restartSuccess": "Core Clash Dimulai Ulang"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Ikon Tray Umum",
           "systemProxyTrayIcon": "Ikon Tray Proksi Sistem",
-          "tunTrayIcon": "Ikon Tray Tun"
+          "tunTrayIcon": "Ikon Tray Tun",
+          "enableTrayIcon": "Enable Tray Icon",
+          "enableTraySpeed": "Aktifkan Tray Speed"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
@@ -1028,6 +1049,34 @@
         "telegram": "Saluran Telegram",
         "github": "Repositori Github"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "Buka URL"
+      },
+      "title": "Antarmuka Web",
+      "messages": {
+        "supportedPlaceholders": "Dukung %host, %port, %secret",
+        "placeholderInstruction": "Ganti host, port, rahasia dengan %host, %port, %secret"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Aktifkan Hotkey Global"
+      },
+      "title": "Pengaturan Pintasan"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "Harap masukkan kata sandi root Anda"
+      }
+    },
+    "networkInterface": {
+      "title": "Antarmuka Jaringan",
+      "labels": {
+        "ipAddress": "Alamat IP",
+        "macAddress": "Alamat MAC"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "Failed to connect to proxy chain",
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "Mode Langsung"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "Testing..."
       },
-      "empty": "No unlock test items"
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "Kecepatan Unggah",
+        "downloadSpeed": "Kecepatan Unduh",
+        "memoryUsage": "Penggunaan Memori"
+      }
     }
   }
 }

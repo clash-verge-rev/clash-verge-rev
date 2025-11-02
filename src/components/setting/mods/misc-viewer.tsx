@@ -79,8 +79,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       open={open}
       title={t("settings.misc.title")}
       contentSx={{ width: 450 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
@@ -130,7 +130,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             slotProps={{
               input: {
                 endAdornment: (
-                  <InputAdornment position="end">{t("KB")}</InputAdornment>
+                  <InputAdornment position="end">
+                    {t("common.units.kilobytes")}
+                  </InputAdornment>
                 ),
               },
             }}
@@ -160,7 +162,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             slotProps={{
               input: {
                 endAdornment: (
-                  <InputAdornment position="end">{t("Files")}</InputAdornment>
+                  <InputAdornment position="end">
+                    {t("common.units.files")}
+                  </InputAdornment>
                 ),
               },
             }}
@@ -359,7 +363,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             slotProps={{
               input: {
                 endAdornment: (
-                  <InputAdornment position="end">{t("millis")}</InputAdornment>
+                  <InputAdornment position="end">
+                    {t("common.units.milliseconds")}
+                  </InputAdornment>
                 ),
               },
             }}

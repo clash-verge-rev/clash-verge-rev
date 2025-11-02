@@ -183,8 +183,8 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         open={open}
         title={t("settings.externalCors.title")}
         contentSx={{ width: 500 }}
-        okBtn={loading ? t("Saving...") : t("Save")}
-        cancelBtn={t("Cancel")}
+        okBtn={loading ? t("common.states.saving") : t("common.actions.save")}
+        cancelBtn={t("common.actions.cancel")}
         onClose={() => setOpen(false)}
         onCancel={() => setOpen(false)}
         onOk={handleSave}

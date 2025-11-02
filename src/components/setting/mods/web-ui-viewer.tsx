@@ -101,14 +101,14 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("Web UI")}
+          {t("settings.webUI.title")}
           <Button
             variant="contained"
             size="small"
             disabled={editing}
             onClick={() => setEditing(true)}
           >
-            {t("New")}
+            {t("common.actions.new")}
           </Button>
         </Box>
       }
@@ -119,7 +119,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
         overflowY: "auto",
         userSelect: "text",
       }}
-      cancelBtn={t("Close")}
+      cancelBtn={t("common.actions.close")}
       disableOk
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
@@ -128,7 +128,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
         <BaseEmpty
           extra={
             <Typography mt={2} sx={{ fontSize: "12px" }}>
-              {t("Replace host, port, secret with %host, %port, %secret")}
+              {t("settings.webUI.messages.placeholderInstruction")}
             </Typography>
           }
         />

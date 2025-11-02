@@ -27,8 +27,8 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
       open={true}
       title={
         <Box display="flex" alignItems="center" gap={2}>
-          {t("Runtime Config")}
-          <Chip label={t("ReadOnly")} size="small" />
+          {t("settings.verge.advanced.items.runtimeConfig")}
+          <Chip label={t("common.labels.readOnly")} size="small" />
         </Box>
       }
       initialData={Promise.resolve(runtimeConfig)}

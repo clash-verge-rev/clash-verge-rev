@@ -1,28 +1,12 @@
 {
-  "millis": "毫秒",
-  "seconds": "秒",
-  "mins": "分钟",
-  "Close": "关闭",
-  "Cancel": "取消",
-  "Confirm": "确认",
   "Maximize": "最大化",
   "Minimize": "最小化",
   "Empty": "空空如也",
-  "New": "新建",
-  "Edit": "编辑",
-  "Save": "保存",
-  "Delete": "删除",
-  "Enable": "启用",
   "Proxies": "代理",
-  "Update At": "更新于",
   "rule": "规则",
   "global": "全局",
   "direct": "直连",
-  "timeout": "超时",
   "script": "脚本",
-  "Sort by default": "默认排序",
-  "Sort by delay": "按延迟排序",
-  "Sort by name": "按名称排序",
   "DOMAIN": "匹配完整域名",
   "DOMAIN-SUFFIX": "匹配域名后缀",
   "DOMAIN-KEYWORD": "匹配域名关键字",
@@ -67,51 +51,28 @@
   "relay": "根据定义的代理链传递",
   "Timeout": "超时时间",
   "Type": "类型",
-  "Name": "名称",
   "Close All Connections": "关闭所有连接",
   "Rule": "规则",
-  "Icon": "图标",
-  "Reset to Default": "重置为默认值",
   "TUN Mode automatically disabled due to service unavailable": "由于服务不可用，TUN 模式已自动关闭",
   "Failed to disable TUN Mode automatically": "自动关闭 TUN 模式失败",
-  "Core communication error": "内核通信错误",
   "active": "已激活",
   "unknown": "未知",
   "Install": "安装",
   "Uninstall": "卸载",
   "System Proxy": "系统代理",
-  "Network Interface": "网络接口",
-  "Ip Address": "IP 地址",
-  "Mac Address": "MAC 地址",
-  "Open URL": "打开链接",
-  "Replace host, port, secret with %host, %port, %secret": "使用 %host, %port, %secret 表示 主机, 端口, 访问密钥",
-  "Support %host, %port, %secret": "支持 %host, %port, %secret",
-  "Clash Core": "Clash 内核",
-  "Upgrade": "升级内核",
-  "Restart": "重启内核",
   "Release Version": "正式版",
   "Alpha Version": "预览版",
-  "Please enter your root password": "请输入您的 root 密码",
   "theme.light": "浅色",
   "theme.dark": "深色",
   "theme.system": "系统",
   "Copy Success": "复制成功",
-  "Hotkey Setting": "热键设置",
-  "Enable Global Hotkey": "启用全局热键",
   "open_or_close_dashboard": "打开/关闭面板",
   "clash_mode_rule": "规则模式",
   "clash_mode_global": "全局模式",
-  "clash_mode_direct": "直连模式",
   "toggle_system_proxy": "打开/关闭系统代理",
   "toggle_tun_mode": "打开/关闭 TUN 模式",
   "entry_lightweight_mode": "进入轻量模式",
-  "Runtime Config": "当前配置",
   "Exit": "退出",
-  "ReadOnly": "只读",
-  "Filter conditions": "过滤条件",
-  "Match Case": "区分大小写",
-  "Match Whole Word": "全字匹配",
-  "Use Regular Expression": "使用正则表达式",
   "Profile Imported Successfully": "导入订阅成功",
   "Stopping Core...": "停止内核中...",
   "Restarting Core...": "重启内核中...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "已成功安装服务",
   "Service Uninstalled Successfully": "已成功卸载服务",
   "Core Version Updated": "内核版本已更新",
-  "Clash Core Restarted": "已重启 Clash 内核",
   "Currently on the Latest Version": "当前已是最新版本",
   "Import Subscription Successful": "导入订阅成功",
-  "Failed to fetch backup files": "获取备份文件失败",
   "Profile": "配置",
-  "Web UI": "网页界面",
   "Dashboard": "仪表板",
   "Restart App": "重启应用",
   "Restart Clash Core": "重启 Clash 核心",
@@ -136,8 +94,6 @@
   "Logs Dir": "日志目录",
   "Open Dir": "打开目录",
   "More": "更多",
-  "Enable Tray Speed": "启用托盘速率",
-  "Enable Tray Icon": "启用托盘图标",
   "LightWeight Mode": "轻量模式",
   "Config Validation Failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
   "Boot Config Validation Failed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "覆写文件键错误，变更已撤销",
   "Merge File Error": "覆写文件错误，变更已撤销",
   "Service Administrator Prompt": "Clash Verge 需要管理员权限安装系统服务",
-  "Website Tests": "网站测试",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失败",
   "Profile Imported with Clash proxy": "使用 Clash 代理导入订阅成功",
@@ -187,11 +142,8 @@
   "AppQuitBody": "已通过快捷键退出应用",
   "AppHiddenTitle": "应用隐藏",
   "AppHiddenBody": "已通过快捷键隐藏应用窗口",
-  "Invalid regular expression": "无效的正则表达式",
   "Configuration saved successfully": "配置保存成功",
   "Failed to save configuration": "配置保存失败",
-  "Saving...": "保存中...",
-  "Detection timeout or failed": "检测超时或失败",
   "Open App Log": "应用日志",
   "Open Core Log": "内核日志",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "取消",
+      "close": "关闭",
+      "confirm": "确认",
+      "save": "保存",
+      "delete": "删除",
+      "edit": "编辑",
+      "new": "新建",
+      "enable": "启用",
+      "upgrade": "升级内核",
+      "restart": "重启内核",
+      "resetToDefault": "重置为默认值",
+      "refresh": "刷新",
+      "retry": "重试",
+      "refreshPage": "刷新页面",
+      "showDetails": "显示详情",
+      "hideDetails": "隐藏详情"
+    },
+    "labels": {
+      "updateAt": "更新于",
+      "timeout": "超时",
+      "icon": "图标",
+      "name": "名称",
+      "readOnly": "只读",
+      "expireTime": "到期时间",
+      "updateTime": "更新时间",
+      "usedTotal": "已使用 / 总量",
+      "from": "来自",
+      "password": "密码",
+      "retryAttempts": "重试次数"
+    },
+    "units": {
+      "milliseconds": "毫秒",
+      "seconds": "秒",
+      "minutes": "分钟",
+      "kilobytes": "KB",
+      "files": "文件"
+    },
+    "search": {
+      "placeholder": "过滤条件",
+      "matchCase": "区分大小写",
+      "matchWholeWord": "全字匹配",
+      "useRegex": "使用正则表达式",
+      "invalidRegex": "无效的正则表达式"
+    },
+    "status": {
+      "enabled": "已启用",
+      "disabled": "未启用"
+    },
+    "errors": {
+      "trafficStats": "流量统计错误",
+      "trafficStatsDescription": "流量统计组件发生错误，为防止崩溃已暂时停用。"
+    },
+    "states": {
+      "saving": "保存中..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "系统信息卡"
         }
       }
+    },
+    "tests": {
+      "title": "网站测试"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "内核通信错误"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "端口设置已保存",
           "saveFailed": "端口设置保存失败"
         }
+      },
+      "notifications": {
+        "restartSuccess": "已重启 Clash 内核"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "将代理组显示在托盘一级菜单",
           "commonTrayIcon": "常规托盘图标",
           "systemProxyTrayIcon": "系统代理托盘图标",
-          "tunTrayIcon": "TUN 模式托盘图标"
+          "tunTrayIcon": "TUN 模式托盘图标",
+          "enableTrayIcon": "启用托盘图标",
+          "enableTraySpeed": "启用托盘速率"
         },
         "tooltips": {
           "hoverNavigator": "鼠标悬停在字母上时自动滚动到对应代理组",
@@ -1028,6 +1049,34 @@
         "telegram": "Telegram 频道",
         "github": "GitHub 项目地址"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "打开链接"
+      },
+      "title": "网页界面",
+      "messages": {
+        "supportedPlaceholders": "支持 %host, %port, %secret",
+        "placeholderInstruction": "使用 %host, %port, %secret 表示 主机, 端口, 访问密钥"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "启用全局热键"
+      },
+      "title": "热键设置"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "请输入您的 root 密码"
+      }
+    },
+    "networkInterface": {
+      "title": "网络接口",
+      "labels": {
+        "ipAddress": "IP 地址",
+        "macAddress": "MAC 地址"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "连接链式代理失败",
         "disconnectFailed": "断开链式代理失败",
         "duplicateNode": "该节点已在链式代理表中"
+      },
+      "messages": {
+        "directMode": "直连模式"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "测试中..."
       },
-      "empty": "暂无解锁测试项目"
+      "empty": "暂无解锁测试项目",
+      "messages": {
+        "detectionTimeout": "检测超时或失败"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "上传速度",
+        "downloadSpeed": "下载速度",
+        "memoryUsage": "内核占用"
+      }
     }
   }
 }

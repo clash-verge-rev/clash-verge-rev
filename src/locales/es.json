@@ -1,28 +1,12 @@
 {
-  "millis": "Milisegundos",
-  "seconds": "Segundos",
-  "mins": "Minutos",
-  "Close": "Cerrar",
-  "Cancel": "Cancelar",
-  "Confirm": "Confirmar",
   "Maximize": "Maximizar",
   "Minimize": "Minimizar",
   "Empty": "Vacío",
-  "New": "Nuevo",
-  "Edit": "Editar",
-  "Save": "Guardar",
-  "Delete": "Eliminar",
-  "Enable": "Habilitar",
   "Proxies": "Proxies",
-  "Update At": "Actualizado el",
   "rule": "Regla",
   "global": "Global",
   "direct": "Conexión directa",
-  "timeout": "Timeout",
   "script": "Script",
-  "Sort by default": "Ordenación predeterminada",
-  "Sort by delay": "Ordenar por latencia",
-  "Sort by name": "Ordenar por nombre",
   "DOMAIN": "Coincidir con el nombre de dominio completo",
   "DOMAIN-SUFFIX": "Coincidir con el sufijo del nombre de dominio",
   "DOMAIN-KEYWORD": "Coincidir con la palabra clave del nombre de dominio",
@@ -67,51 +51,28 @@
   "relay": "Transferir según la cadena de proxy definida",
   "Timeout": "Tiempo de espera",
   "Type": "Tipo",
-  "Name": "Nombre",
   "Close All Connections": "Close All Connections",
   "Rule": "Regla",
-  "Icon": "Icono",
-  "Reset to Default": "Restablecer a los valores predeterminados",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "Core communication error": "Core communication error",
   "active": "Activado",
   "unknown": "Desconocido",
   "Install": "Instalar",
   "Uninstall": "Desinstalar",
   "System Proxy": "Proxy del sistema",
-  "Network Interface": "Interfaz de red",
-  "Ip Address": "Dirección IP",
-  "Mac Address": "Dirección MAC",
-  "Open URL": "Abrir enlace",
-  "Replace host, port, secret with %host, %port, %secret": "Utilice %host, %port, %secret para representar el host, el puerto y la clave de acceso.",
-  "Support %host, %port, %secret": "Soporta %host, %port, %secret",
-  "Clash Core": "Núcleo de Clash",
-  "Upgrade": "Actualizar núcleo",
-  "Restart": "Reiniciar núcleo",
   "Release Version": "Versión estable",
   "Alpha Version": "Versión de vista previa",
-  "Please enter your root password": "Ingrese su contraseña de root",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
   "Copy Success": "Copia exitosa",
-  "Hotkey Setting": "Configuración de atajos de teclado",
-  "Enable Global Hotkey": "Habilitar atajos de teclado globales",
   "open_or_close_dashboard": "Abrir/cerrar panel",
   "clash_mode_rule": "Modo de reglas",
   "clash_mode_global": "Modo global",
-  "clash_mode_direct": "Modo de conexión directa",
   "toggle_system_proxy": "Activar/desactivar el proxy del sistema",
   "toggle_tun_mode": "Activar/desactivar el modo TUN",
   "entry_lightweight_mode": "Entrar en modo ligero",
-  "Runtime Config": "Configuración actual",
   "Exit": "Salir",
-  "ReadOnly": "Solo lectura",
-  "Filter conditions": "Condiciones de filtrado",
-  "Match Case": "Distinguir mayúsculas y minúsculas",
-  "Match Whole Word": "Coincidencia exacta de palabras",
-  "Use Regular Expression": "Usar expresiones regulares",
   "Profile Imported Successfully": "Suscripción importada con éxito",
   "Stopping Core...": "Deteniendo núcleo...",
   "Restarting Core...": "Reiniciando núcleo...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "Servicio instalado con éxito",
   "Service Uninstalled Successfully": "Servicio desinstalado con éxito",
   "Core Version Updated": "Versión del núcleo actualizada",
-  "Clash Core Restarted": "Núcleo de Clash reiniciado",
   "Currently on the Latest Version": "Actualmente está en la última versión",
   "Import Subscription Successful": "Suscripción importada con éxito",
-  "Failed to fetch backup files": "Error al obtener las copias de seguridad",
   "Profile": "Configuración",
-  "Web UI": "Interfaz web",
   "Dashboard": "Panel de control",
   "Restart App": "Reiniciar aplicación",
   "Restart Clash Core": "Reiniciar el núcleo de Clash",
@@ -136,8 +94,6 @@
   "Logs Dir": "Directorio de registros",
   "Open Dir": "Abrir directorio",
   "More": "Más",
-  "Enable Tray Speed": "Habilitar velocidad en la bandeja",
-  "Enable Tray Icon": "Habilitar icono de la bandeja",
   "LightWeight Mode": "Modo ligero",
   "Config Validation Failed": "Error de validación de la configuración de la suscripción. Compruebe el archivo de configuración de la suscripción. Los cambios se han deshecho. Detalles del error: ",
   "Boot Config Validation Failed": "Error de validación de la configuración de la suscripción de arranque. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "Error de clave en el archivo de sobrescritura. Los cambios se han deshecho",
   "Merge File Error": "Error en el archivo de sobrescritura. Los cambios se han deshecho",
   "Service Administrator Prompt": "Clash Verge requiere permisos de administrador para instalar el servicio del sistema",
-  "Website Tests": "Pruebas de sitios web",
   "Update with Clash proxy successfully": "Actualización con el proxy de Clash exitosa",
   "Update failed even with Clash proxy": "Error al actualizar incluso con el proxy de Clash",
   "Profile Imported with Clash proxy": "Suscripción importada con el proxy de Clash",
@@ -187,11 +142,8 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid regular expression": "Invalid regular expression",
   "Configuration saved successfully": "Configuración aleatoria guardada correctamente",
   "Failed to save configuration": "Failed to save configuration",
-  "Saving...": "Saving...",
-  "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "close": "Cerrar",
+      "confirm": "Confirmar",
+      "save": "Guardar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "new": "Nuevo",
+      "enable": "Habilitar",
+      "upgrade": "Actualizar núcleo",
+      "restart": "Reiniciar núcleo",
+      "resetToDefault": "Restablecer a los valores predeterminados",
+      "refresh": "Actualizar",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "Actualizado el",
+      "timeout": "Timeout",
+      "icon": "Icono",
+      "name": "Nombre",
+      "readOnly": "Solo lectura",
+      "expireTime": "Tiempo de expiración",
+      "updateTime": "Hora de actualización",
+      "usedTotal": "Utilizado / Total",
+      "from": "De",
+      "password": "Contraseña",
+      "retryAttempts": "Retry attempts"
+    },
+    "units": {
+      "milliseconds": "Milisegundos",
+      "seconds": "Segundos",
+      "minutes": "Minutos",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "search": {
+      "placeholder": "Condiciones de filtrado",
+      "matchCase": "Distinguir mayúsculas y minúsculas",
+      "matchWholeWord": "Coincidencia exacta de palabras",
+      "useRegex": "Usar expresiones regulares",
+      "invalidRegex": "Invalid regular expression"
+    },
+    "status": {
+      "enabled": "Habilitado",
+      "disabled": "Deshabilitado"
+    },
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "states": {
+      "saving": "Saving..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "Tarjetas de información del sistema"
         }
       }
+    },
+    "tests": {
+      "title": "Pruebas de sitios web"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "Port settings saved",
           "saveFailed": "Failed to save port settings"
         }
+      },
+      "notifications": {
+        "restartSuccess": "Núcleo de Clash reiniciado"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Icono de bandeja común",
           "systemProxyTrayIcon": "Icono de bandeja del proxy del sistema",
-          "tunTrayIcon": "Icono de bandeja del modo TUN"
+          "tunTrayIcon": "Icono de bandeja del modo TUN",
+          "enableTrayIcon": "Habilitar icono de la bandeja",
+          "enableTraySpeed": "Habilitar velocidad en la bandeja"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
@@ -1028,6 +1049,34 @@
         "telegram": "Canal de Telegram",
         "github": "Dirección del proyecto en GitHub"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "Abrir enlace"
+      },
+      "title": "Interfaz web",
+      "messages": {
+        "supportedPlaceholders": "Soporta %host, %port, %secret",
+        "placeholderInstruction": "Utilice %host, %port, %secret para representar el host, el puerto y la clave de acceso."
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Habilitar atajos de teclado globales"
+      },
+      "title": "Configuración de atajos de teclado"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "Ingrese su contraseña de root"
+      }
+    },
+    "networkInterface": {
+      "title": "Interfaz de red",
+      "labels": {
+        "ipAddress": "Dirección IP",
+        "macAddress": "Dirección MAC"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "Failed to connect to proxy chain",
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "Modo de conexión directa"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "Probando..."
       },
-      "empty": "No unlock test items"
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "Velocidad de subida",
+        "downloadSpeed": "Velocidad de descarga",
+        "memoryUsage": "Uso de memoria del núcleo"
+      }
     }
   }
 }

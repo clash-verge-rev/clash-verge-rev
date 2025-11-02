@@ -177,7 +177,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
       <ErrorOutlineRounded sx={{ fontSize: 48, mb: 2, color: "error.main" }} />
 
       <Typography variant="h6" gutterBottom>
-        {t("Traffic Statistics Error")}
+        {t("common.errors.trafficStats")}
       </Typography>
 
       <Typography
@@ -186,9 +186,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
         textAlign="center"
         sx={{ mb: 2 }}
       >
-        {t(
-          "The traffic statistics component encountered an error and has been disabled to prevent crashes.",
-        )}
+        {t("common.errors.trafficStatsDescription")}
       </Typography>
 
       <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>
@@ -198,7 +196,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
         </Typography>
         {retryCount > 0 && (
           <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-            {t("Retry attempts")}: {retryCount}/{maxRetries}
+            {t("common.labels.retryAttempts")}: {retryCount}/{maxRetries}
           </Typography>
         )}
       </Alert>
@@ -212,12 +210,12 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
             onClick={onRetry}
             size="small"
           >
-            {t("Retry")}
+            {t("common.actions.retry")}
           </Button>
         )}
 
         <Button variant="outlined" onClick={onRefresh} size="small">
-          {t("Refresh Page")}
+          {t("common.actions.refreshPage")}
         </Button>
 
         <Button
@@ -226,7 +224,9 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
           onClick={onToggleDetails}
           size="small"
         >
-          {showDetails ? t("Hide Details") : t("Show Details")}
+          {showDetails
+            ? t("common.actions.hideDetails")
+            : t("common.actions.showDetails")}
         </Button>
       </Box>
 

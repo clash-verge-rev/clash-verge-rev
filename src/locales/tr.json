@@ -1,28 +1,12 @@
 {
-  "millis": "ms",
-  "seconds": "saniye",
-  "mins": "dakika",
-  "Close": "Kapat",
-  "Cancel": "İptal",
-  "Confirm": "Onayla",
   "Maximize": "Büyüt",
   "Minimize": "Küçült",
   "Empty": "Boş",
-  "New": "Yeni",
-  "Edit": "Düzenle",
-  "Save": "Kaydet",
-  "Delete": "Sil",
-  "Enable": "Etkinleştir",
   "Proxies": "Vekil'ler",
-  "Update At": "Güncelleme Zamanı",
   "rule": "kural",
   "global": "küresel",
   "direct": "doğrudan",
-  "timeout": "Timeout",
   "script": "betik",
-  "Sort by default": "Varsayılana göre sırala",
-  "Sort by delay": "Gecikmeye göre sırala",
-  "Sort by name": "İsme göre sırala",
   "DOMAIN": "Tam alan adıyla eşleşir",
   "DOMAIN-SUFFIX": "Alan adı sonekiyle eşleşir",
   "DOMAIN-KEYWORD": "Alan adı anahtar kelimesiyle eşleşir",
@@ -67,51 +51,28 @@
   "relay": "Tanımlanan vekil zincirinden geçirin",
   "Timeout": "Zaman Aşımı",
   "Type": "Tip",
-  "Name": "İsim",
   "Close All Connections": "Close All Connections",
   "Rule": "Kural",
-  "Icon": "Simge",
-  "Reset to Default": "Varsayılana Sıfırla",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "Core communication error": "Core communication error",
   "active": "aktif",
   "unknown": "bilinmiyor",
   "Install": "Kur",
   "Uninstall": "Kaldır",
   "System Proxy": "Sistem Vekil'i",
-  "Network Interface": "Ağ Arayüzü",
-  "Ip Address": "IP Adresi",
-  "Mac Address": "MAC Adresi",
-  "Open URL": "URL Aç",
-  "Replace host, port, secret with %host, %port, %secret": "Ana bilgisayar, port, sırrı %host, %port, %secret ile değiştirin",
-  "Support %host, %port, %secret": "%host, %port, %secret destekler",
-  "Clash Core": "Clash Çekirdeği",
-  "Upgrade": "Yükselt",
-  "Restart": "Yeniden Başlat",
   "Release Version": "Sürüm Versiyonu",
   "Alpha Version": "Alfa Versiyonu",
-  "Please enter your root password": "Lütfen root şifrenizi girin",
   "theme.light": "Açık",
   "theme.dark": "Koyu",
   "theme.system": "Sistem",
   "Copy Success": "Kopyalama Başarılı",
-  "Hotkey Setting": "Kısayol Tuşu Ayarı",
-  "Enable Global Hotkey": "Küresel Kısayol Tuşunu Etkinleştir",
   "open_or_close_dashboard": "Kontrol Panelini Aç/Kapat",
   "clash_mode_rule": "Kural Modu",
   "clash_mode_global": "Küresel Mod",
-  "clash_mode_direct": "Doğrudan Mod",
   "toggle_system_proxy": "Sistem Vekil'ini Etkinleştir/Devre Dışı Bırak",
   "toggle_tun_mode": "Tun Modunu Etkinleştir/Devre Dışı Bırak",
   "entry_lightweight_mode": "Hafif Moda Gir",
-  "Runtime Config": "Çalışma Zamanı Yapılandırması",
   "Exit": "Çıkış",
-  "ReadOnly": "Salt Okunur",
-  "Filter conditions": "Filtre koşulları",
-  "Match Case": "Büyük/Küçük Harf Eşleştir",
-  "Match Whole Word": "Tam Kelime Eşleştir",
-  "Use Regular Expression": "Düzenli İfade Kullan",
   "Profile Imported Successfully": "Profil Başarıyla İçe Aktarıldı",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "Hizmet Başarıyla Kuruldu",
   "Service Uninstalled Successfully": "Hizmet Başarıyla Kaldırıldı",
   "Core Version Updated": "Çekirdek Sürümü Güncellendi",
-  "Clash Core Restarted": "Clash Çekirdeği Yeniden Başlatıldı",
   "Currently on the Latest Version": "Şu Anda En Son Sürümdesiniz",
   "Import Subscription Successful": "Abonelik içe aktarımı başarılı",
-  "Failed to fetch backup files": "Yedek dosyaları alınamadı",
   "Profile": "Profil",
-  "Web UI": "Web Arayüzü",
   "Dashboard": "Kontrol Paneli",
   "Restart App": "Uygulamayı Yeniden Başlat",
   "Restart Clash Core": "Clash Çekirdeğini Yeniden Başlat",
@@ -136,8 +94,6 @@
   "Logs Dir": "Günlük Dizini",
   "Open Dir": "Dizin Aç",
   "More": "Daha Fazla",
-  "Enable Tray Speed": "Tepsi Hızını Etkinleştir",
-  "Enable Tray Icon": "Tepsi Simgesini Etkinleştir",
   "LightWeight Mode": "Hafif Mod",
   "Config Validation Failed": "Abonelik yapılandırması doğrulaması başarısız oldu. Lütfen abonelik yapılandırma dosyasını kontrol edin; değişiklikler geri alındı.",
   "Boot Config Validation Failed": "Başlangıç abonelik yapılandırması doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "Birleştirme dosyası anahtar hatası, değişiklikler geri alındı",
   "Merge File Error": "Birleştirme dosyası hatası, değişiklikler geri alındı",
   "Service Administrator Prompt": "Clash Verge sistem hizmetini yeniden kurmak için yönetici ayrıcalıkları gerektiriyor",
-  "Website Tests": "Web Sitesi Testleri",
   "Update with Clash proxy successfully": "Clash vekil ile güncelleme başarılı",
   "Update failed even with Clash proxy": "Clash vekil ile bile güncelleme başarısız oldu",
   "Profile Imported with Clash proxy": "Profil Clash vekil ile içe aktarıldı",
@@ -187,11 +142,8 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid regular expression": "Invalid regular expression",
   "Configuration saved successfully": "Configuration saved successfully",
   "Failed to save configuration": "Failed to save configuration",
-  "Saving...": "Saving...",
-  "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "İptal",
+      "close": "Kapat",
+      "confirm": "Onayla",
+      "save": "Kaydet",
+      "delete": "Sil",
+      "edit": "Düzenle",
+      "new": "Yeni",
+      "enable": "Etkinleştir",
+      "upgrade": "Yükselt",
+      "restart": "Yeniden Başlat",
+      "resetToDefault": "Varsayılana Sıfırla",
+      "refresh": "Yenile",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "Güncelleme Zamanı",
+      "timeout": "Timeout",
+      "icon": "Simge",
+      "name": "İsim",
+      "readOnly": "Salt Okunur",
+      "expireTime": "Sona Erme Zamanı",
+      "updateTime": "Güncelleme Zamanı",
+      "usedTotal": "Kullanılan / Toplam",
+      "from": "Kaynak",
+      "password": "Şifre",
+      "retryAttempts": "Retry attempts"
+    },
+    "units": {
+      "milliseconds": "ms",
+      "seconds": "saniye",
+      "minutes": "dakika",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "search": {
+      "placeholder": "Filtre koşulları",
+      "matchCase": "Büyük/Küçük Harf Eşleştir",
+      "matchWholeWord": "Tam Kelime Eşleştir",
+      "useRegex": "Düzenli İfade Kullan",
+      "invalidRegex": "Invalid regular expression"
+    },
+    "status": {
+      "enabled": "Etkin",
+      "disabled": "Devre Dışı"
+    },
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "states": {
+      "saving": "Saving..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "Sistem Bilgi Kartları"
         }
       }
+    },
+    "tests": {
+      "title": "Web Sitesi Testleri"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "Port settings saved",
           "saveFailed": "Failed to save port settings"
         }
+      },
+      "notifications": {
+        "restartSuccess": "Clash Çekirdeği Yeniden Başlatıldı"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Genel Tepsi Simgesi",
           "systemProxyTrayIcon": "Sistem Vekil Tepsi Simgesi",
-          "tunTrayIcon": "Tun Tepsi Simgesi"
+          "tunTrayIcon": "Tun Tepsi Simgesi",
+          "enableTrayIcon": "Tepsi Simgesini Etkinleştir",
+          "enableTraySpeed": "Tepsi Hızını Etkinleştir"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
@@ -1028,6 +1049,34 @@
         "telegram": "Telegram Kanalı",
         "github": "Github Repo"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "URL Aç"
+      },
+      "title": "Web Arayüzü",
+      "messages": {
+        "supportedPlaceholders": "%host, %port, %secret destekler",
+        "placeholderInstruction": "Ana bilgisayar, port, sırrı %host, %port, %secret ile değiştirin"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Küresel Kısayol Tuşunu Etkinleştir"
+      },
+      "title": "Kısayol Tuşu Ayarı"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "Lütfen root şifrenizi girin"
+      }
+    },
+    "networkInterface": {
+      "title": "Ağ Arayüzü",
+      "labels": {
+        "ipAddress": "IP Adresi",
+        "macAddress": "MAC Adresi"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "Failed to connect to proxy chain",
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "Doğrudan Mod"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "Test Ediliyor..."
       },
-      "empty": "No unlock test items"
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "Yükleme Hızı",
+        "downloadSpeed": "İndirme Hızı",
+        "memoryUsage": "Çekirdek Kullanımı"
+      }
     }
   }
 }

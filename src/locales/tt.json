@@ -1,28 +1,12 @@
 {
-  "millis": "Миллисекундлар",
-  "seconds": "Секундлар",
-  "mins": "Минутлар",
-  "Close": "Ябу",
-  "Cancel": "Баш тарту",
-  "Confirm": "Растау",
   "Maximize": "Зурайту",
   "Minimize": "Кечерәйтү",
   "Empty": "Буш",
-  "New": "Яңа",
-  "Edit": "Үзгәртү",
-  "Save": "Саклау",
-  "Delete": "Бетерү",
-  "Enable": "Кушу",
   "Proxies": "Прокси",
-  "Update At": "Яңартылган вакыт",
   "rule": "кагыйдә",
   "global": "глобаль",
   "direct": "туры",
-  "timeout": "Timeout",
   "script": "скриптлы",
-  "Sort by default": "Башлангыч итеп сортлау",
-  "Sort by delay": "Задержка буенча сортлау",
-  "Sort by name": "Исем буенча сортлау",
   "DOMAIN": "Домен исеменең тулы туры килүе",
   "DOMAIN-SUFFIX": "Домен суффиксына туры килү",
   "DOMAIN-KEYWORD": "Доменда төп сүзгә туры килү",
@@ -67,51 +51,28 @@
   "relay": "Билгеле прокси чылбыры аша тапшыру",
   "Timeout": "Таймаут",
   "Type": "Төр",
-  "Name": "Исем",
   "Close All Connections": "Close All Connections",
   "Rule": "Кагыйдә",
-  "Icon": "Иконка",
-  "Reset to Default": "Башлангычка кайтару",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "Core communication error": "Core communication error",
   "active": "Актив",
   "unknown": "Билгесез",
   "Install": "Урнаштыру",
   "Uninstall": "Салдыру",
   "System Proxy": "Системалы прокси",
-  "Network Interface": "Челтәр интерфейсы",
-  "Ip Address": "IP адресы",
-  "Mac Address": "MAC адресы",
-  "Open URL": "URL ачарга",
-  "Replace host, port, secret with %host, %port, %secret": "Хост, порт, серсүзне %host, %port, %secret белән алмаштырыгыз",
-  "Support %host, %port, %secret": "%host, %port, %secret макросларын хуплау",
-  "Clash Core": "Clash ядросы",
-  "Upgrade": "Яңарту",
-  "Restart": "Перезапуск",
   "Release Version": "Рәсми версия",
   "Alpha Version": "Альфа-версия",
-  "Please enter your root password": "root паролен языгыз",
   "theme.light": "Якты",
   "theme.dark": "Караңгы",
   "theme.system": "Система",
   "Copy Success": "Күчерелде",
-  "Hotkey Setting": "Клавиатура төймәләре (hotkey) көйләүләре",
-  "Enable Global Hotkey": "Глобаль Хоткейны кушу",
   "open_or_close_dashboard": "Панельне ачу/ябу",
   "clash_mode_rule": "Кагыйдәләр режимы",
   "clash_mode_global": "Глобаль режим",
-  "clash_mode_direct": "Туры режим",
   "toggle_system_proxy": "Системалы проксины кабызу/сүндерү",
   "toggle_tun_mode": "Tun режимын кабызу/сүндерү",
   "entry_lightweight_mode": "Entry Lightweight Mode",
-  "Runtime Config": "Агымдагы конфигурация",
   "Exit": "Чыгу",
-  "ReadOnly": "Уку режимы гына",
-  "Filter conditions": "Фильтр шартлары",
-  "Match Case": "Регистрны исәпкә алу",
-  "Match Whole Word": "Сүзнең тулы туры килүе",
-  "Use Regular Expression": "Регуляр выражениеләр куллану",
   "Profile Imported Successfully": "Профиль уңышлы импортланды",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "Сервис уңышлы урнаштырылды",
   "Service Uninstalled Successfully": "Сервис уңышлы салдырылды",
   "Core Version Updated": "Ядро версиясе яңартылды",
-  "Clash Core Restarted": "Clash ядросы яңадан башланды",
   "Currently on the Latest Version": "Сездә иң соңгы версия урнаштырылган",
   "Import Subscription Successful": "Import subscription successful",
-  "Failed to fetch backup files": "Резерв копия файлларын алуда хата",
   "Profile": "Профиль",
-  "Web UI": "Веб-интерфейс",
   "Dashboard": "Панель",
   "Restart App": "Кушымтаны яңадан ачу",
   "Restart Clash Core": "Clash ядрони яңадан башлап ачу",
@@ -136,8 +94,6 @@
   "Logs Dir": "Логлар папкасы",
   "Open Dir": "Папканы ачу",
   "More": "Башҡа",
-  "Enable Tray Speed": "Трей скоростьне үстерү",
-  "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "Җиңел Режим",
   "Config Validation Failed": "Язылу көйләү тикшерүе уңышсыз, көйләү файлын тикшерегез, үзгәрешләр кире кайтарылды, хата:",
   "Boot Config Validation Failed": "Йөкләү вакытында көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "Merge file key error, changes reverted",
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә",
-  "Website Tests": "Website Tests",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -187,11 +142,8 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid regular expression": "Invalid regular expression",
   "Configuration saved successfully": "Configuration saved successfully",
   "Failed to save configuration": "Failed to save configuration",
-  "Saving...": "Saving...",
-  "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "Баш тарту",
+      "close": "Ябу",
+      "confirm": "Растау",
+      "save": "Саклау",
+      "delete": "Бетерү",
+      "edit": "Үзгәртү",
+      "new": "Яңа",
+      "enable": "Кушу",
+      "upgrade": "Яңарту",
+      "restart": "Перезапуск",
+      "resetToDefault": "Башлангычка кайтару",
+      "refresh": "Яңарту",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "Яңартылган вакыт",
+      "timeout": "Timeout",
+      "icon": "Иконка",
+      "name": "Исем",
+      "readOnly": "Уку режимы гына",
+      "expireTime": "Тамамлану вакыты",
+      "updateTime": "Яңарту вакыты",
+      "usedTotal": "Кулланылган / Барлыгы",
+      "from": "Каян",
+      "password": "Пароль",
+      "retryAttempts": "Retry attempts"
+    },
+    "units": {
+      "milliseconds": "Миллисекундлар",
+      "seconds": "Секундлар",
+      "minutes": "Минутлар",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "search": {
+      "placeholder": "Фильтр шартлары",
+      "matchCase": "Регистрны исәпкә алу",
+      "matchWholeWord": "Сүзнең тулы туры килүе",
+      "useRegex": "Регуляр выражениеләр куллану",
+      "invalidRegex": "Invalid regular expression"
+    },
+    "status": {
+      "enabled": "Кушылган",
+      "disabled": "Сүнгән"
+    },
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "states": {
+      "saving": "Saving..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "System Info Cards"
         }
       }
+    },
+    "tests": {
+      "title": "Website Tests"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "Port settings saved",
           "saveFailed": "Failed to save port settings"
         }
+      },
+      "notifications": {
+        "restartSuccess": "Clash ядросы яңадан башланды"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Гомуми трей иконкасы",
           "systemProxyTrayIcon": "Системалы прокси иконкасы",
-          "tunTrayIcon": "Tun (виртуаль адаптер) иконкасы"
+          "tunTrayIcon": "Tun (виртуаль адаптер) иконкасы",
+          "enableTrayIcon": "Enable Tray Icon",
+          "enableTraySpeed": "Трей скоростьне үстерү"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
@@ -1028,6 +1049,34 @@
         "telegram": "Telegram каналы",
         "github": "GitHub репозиториясе"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "URL ачарга"
+      },
+      "title": "Веб-интерфейс",
+      "messages": {
+        "supportedPlaceholders": "%host, %port, %secret макросларын хуплау",
+        "placeholderInstruction": "Хост, порт, серсүзне %host, %port, %secret белән алмаштырыгыз"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Глобаль Хоткейны кушу"
+      },
+      "title": "Клавиатура төймәләре (hotkey) көйләүләре"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "root паролен языгыз"
+      }
+    },
+    "networkInterface": {
+      "title": "Челтәр интерфейсы",
+      "labels": {
+        "ipAddress": "IP адресы",
+        "macAddress": "MAC адресы"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "Failed to connect to proxy chain",
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "Туры режим"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "Testing..."
       },
-      "empty": "No unlock test items"
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+        "downloadSpeed": "Йөкләү тизлеге",
+        "memoryUsage": "Хәтер куллану"
+      }
     }
   }
 }

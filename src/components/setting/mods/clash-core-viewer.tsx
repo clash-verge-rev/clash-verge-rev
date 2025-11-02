@@ -104,7 +104,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("Clash Core")}
+          {t("settings.clash.items.clashCore")}
           <Box>
             <LoadingButton
               variant="contained"
@@ -116,7 +116,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               sx={{ marginRight: "8px" }}
               onClick={onUpgrade}
             >
-              {t("Upgrade")}
+              {t("common.actions.upgrade")}
             </LoadingButton>
             <LoadingButton
               variant="contained"
@@ -127,7 +127,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               disabled={upgrading}
               onClick={onRestart}
             >
-              {t("Restart")}
+              {t("common.actions.restart")}
             </LoadingButton>
           </Box>
         </Box>
@@ -141,7 +141,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
         marginTop: "-8px",
       }}
       disableOk
-      cancelBtn={t("Close")}
+      cancelBtn={t("common.actions.close")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >

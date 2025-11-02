@@ -619,7 +619,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               startIcon={<RestartAltRounded />}
               onClick={resetToDefaults}
             >
-              {t("Reset to Default")}
+              {t("common.actions.resetToDefault")}
             </Button>
             <Button
               variant="contained"
@@ -642,8 +642,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           ? {}
           : { padding: "0 24px", display: "flex", flexDirection: "column" }),
       }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}

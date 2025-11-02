@@ -1,28 +1,12 @@
 {
-  "millis": "밀리초",
-  "seconds": "초",
-  "mins": "분",
-  "Close": "닫기",
-  "Cancel": "취소",
-  "Confirm": "확인",
   "Maximize": "최대화",
   "Minimize": "최소화",
   "Empty": "비어있음",
-  "New": "새로 만들기",
-  "Edit": "편집",
-  "Save": "저장",
-  "Delete": "삭제",
-  "Enable": "활성화",
   "Proxies": "프록시",
-  "Update At": "업데이트 시간",
   "rule": "규칙",
   "global": "전역",
   "direct": "직접",
-  "timeout": "Timeout",
   "script": "스크립트",
-  "Sort by default": "기본값으로 정렬",
-  "Sort by delay": "지연시간으로 정렬",
-  "Sort by name": "이름으로 정렬",
   "DOMAIN": "전체 도메인 이름과 일치",
   "DOMAIN-SUFFIX": "도메인 접미사와 일치",
   "DOMAIN-KEYWORD": "도메인 키워드와 일치",
@@ -67,51 +51,28 @@
   "relay": "정의된 프록시 체인을 통과",
   "Timeout": "타임아웃",
   "Type": "유형",
-  "Name": "이름",
   "Close All Connections": "Close All Connections",
   "Rule": "규칙",
-  "Icon": "아이콘",
-  "Reset to Default": "Reset to Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "Core communication error": "Core communication error",
   "active": "active",
   "unknown": "unknown",
   "Install": "Install",
   "Uninstall": "Uninstall",
   "System Proxy": "시스템 프록시",
-  "Network Interface": "Network Interface",
-  "Ip Address": "IP Address",
-  "Mac Address": "MAC Address",
-  "Open URL": "Open URL",
-  "Replace host, port, secret with %host, %port, %secret": "Replace host, port, secret with %host, %port, %secret",
-  "Support %host, %port, %secret": "Support %host, %port, %secret",
-  "Clash Core": "Clash Core",
-  "Upgrade": "Upgrade",
-  "Restart": "Restart",
   "Release Version": "Release Version",
   "Alpha Version": "Alpha Version",
-  "Please enter your root password": "Please enter your root password",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
   "Copy Success": "복사 성공",
-  "Hotkey Setting": "단축키 설정",
-  "Enable Global Hotkey": "Enable Global Hotkey",
   "open_or_close_dashboard": "Open/Close Dashboard",
   "clash_mode_rule": "Rule Mode",
   "clash_mode_global": "Global Mode",
-  "clash_mode_direct": "Direct Mode",
   "toggle_system_proxy": "Enable/Disable System Proxy",
   "toggle_tun_mode": "Enable/Disable Tun Mode",
   "entry_lightweight_mode": "Entry Lightweight Mode",
-  "Runtime Config": "Runtime Config",
   "Exit": "Exit",
-  "ReadOnly": "ReadOnly",
-  "Filter conditions": "Filter conditions",
-  "Match Case": "Match Case",
-  "Match Whole Word": "Match Whole Word",
-  "Use Regular Expression": "Use Regular Expression",
   "Profile Imported Successfully": "Profile Imported Successfully",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "Service Installed Successfully",
   "Service Uninstalled Successfully": "Service Uninstalled Successfully",
   "Core Version Updated": "Core Version Updated",
-  "Clash Core Restarted": "Clash Core Restarted",
   "Currently on the Latest Version": "Currently on the Latest Version",
   "Import Subscription Successful": "구독 가져오기 성공",
-  "Failed to fetch backup files": "Failed to fetch backup files",
   "Profile": "Profile",
-  "Web UI": "Web UI",
   "Dashboard": "Dashboard",
   "Restart App": "Restart App",
   "Restart Clash Core": "Restart Clash Core",
@@ -136,8 +94,6 @@
   "Logs Dir": "Logs Dir",
   "Open Dir": "Open Dir",
   "More": "More",
-  "Enable Tray Speed": "Enable Tray Speed",
-  "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "Lightweight Mode",
   "Config Validation Failed": "설정 검증 실패",
   "Boot Config Validation Failed": "부팅 설정 검증 실패",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "병합 파일 키 오류",
   "Merge File Error": "병합 파일 오류",
   "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
-  "Website Tests": "Website Tests",
   "Update with Clash proxy successfully": "Clash 프록시로 업데이트 성공",
   "Update failed even with Clash proxy": "Clash 프록시로도 업데이트 실패",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -187,11 +142,8 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid regular expression": "Invalid regular expression",
   "Configuration saved successfully": "Configuration saved successfully",
   "Failed to save configuration": "Failed to save configuration",
-  "Saving...": "Saving...",
-  "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "취소",
+      "close": "닫기",
+      "confirm": "확인",
+      "save": "저장",
+      "delete": "삭제",
+      "edit": "편집",
+      "new": "새로 만들기",
+      "enable": "활성화",
+      "upgrade": "Upgrade",
+      "restart": "Restart",
+      "resetToDefault": "Reset to Default",
+      "refresh": "새로고침",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "업데이트 시간",
+      "timeout": "Timeout",
+      "icon": "아이콘",
+      "name": "이름",
+      "readOnly": "ReadOnly",
+      "expireTime": "만료 시간",
+      "updateTime": "업데이트 시간",
+      "usedTotal": "사용됨 / 전체",
+      "from": "출처",
+      "password": "비밀번호",
+      "retryAttempts": "Retry attempts"
+    },
+    "units": {
+      "milliseconds": "밀리초",
+      "seconds": "초",
+      "minutes": "분",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "search": {
+      "placeholder": "Filter conditions",
+      "matchCase": "Match Case",
+      "matchWholeWord": "Match Whole Word",
+      "useRegex": "Use Regular Expression",
+      "invalidRegex": "Invalid regular expression"
+    },
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "states": {
+      "saving": "Saving..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "System Info Cards"
         }
       }
+    },
+    "tests": {
+      "title": "Website Tests"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "Port settings saved",
           "saveFailed": "Failed to save port settings"
         }
+      },
+      "notifications": {
+        "restartSuccess": "Clash Core Restarted"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Common Tray Icon",
           "systemProxyTrayIcon": "System Proxy Tray Icon",
-          "tunTrayIcon": "Tun Tray Icon"
+          "tunTrayIcon": "Tun Tray Icon",
+          "enableTrayIcon": "Enable Tray Icon",
+          "enableTraySpeed": "Enable Tray Speed"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
@@ -1028,6 +1049,34 @@
         "telegram": "Telegram Channel",
         "github": "Github Repo"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "Open URL"
+      },
+      "title": "Web UI",
+      "messages": {
+        "supportedPlaceholders": "Support %host, %port, %secret",
+        "placeholderInstruction": "Replace host, port, secret with %host, %port, %secret"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Enable Global Hotkey"
+      },
+      "title": "단축키 설정"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "Please enter your root password"
+      }
+    },
+    "networkInterface": {
+      "title": "Network Interface",
+      "labels": {
+        "ipAddress": "IP Address",
+        "macAddress": "MAC Address"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "Failed to connect to proxy chain",
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "Direct Mode"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "테스트 중..."
       },
-      "empty": "No unlock test items"
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "업로드 속도",
+        "downloadSpeed": "다운로드 속도",
+        "memoryUsage": "메모리 사용량"
+      }
     }
   }
 }

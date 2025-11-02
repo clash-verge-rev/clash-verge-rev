@@ -1,28 +1,12 @@
 {
-  "millis": "毫秒",
-  "seconds": "秒",
-  "mins": "分鐘",
-  "Close": "關閉",
-  "Cancel": "取消",
-  "Confirm": "確認",
   "Maximize": "最大化",
   "Minimize": "最小化",
   "Empty": "空空如也",
-  "New": "新增",
-  "Edit": "編輯",
-  "Save": "儲存",
-  "Delete": "刪除",
-  "Enable": "啟用",
   "Proxies": "代理",
-  "Update At": "更新於",
   "rule": "規則",
   "global": "全域",
   "direct": "直連",
-  "timeout": "逾時",
   "script": "指令碼",
-  "Sort by default": "預設排序",
-  "Sort by delay": "按延遲排序",
-  "Sort by name": "按名稱排序",
   "DOMAIN": "配對完整網域",
   "DOMAIN-SUFFIX": "配對網域後綴",
   "DOMAIN-KEYWORD": "配對網域關鍵字",
@@ -67,51 +51,28 @@
   "relay": "根據定義的代理鏈傳送",
   "Timeout": "逾時",
   "Type": "類型",
-  "Name": "名稱",
   "Close All Connections": "關閉全部連線",
   "Rule": "規則",
-  "Icon": "圖示",
-  "Reset to Default": "重設為預設值",
   "TUN Mode automatically disabled due to service unavailable": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
   "Failed to disable TUN Mode automatically": "自動停用虛擬網路介面卡模式失敗",
-  "Core communication error": "內核通信錯誤",
   "active": "作用中",
   "unknown": "未知",
   "Install": "安裝",
   "Uninstall": "解除安裝",
   "System Proxy": "系統代理",
-  "Network Interface": "網路介面",
-  "Ip Address": "IP 位址",
-  "Mac Address": "MAC 位址",
-  "Open URL": "開啟網址",
-  "Replace host, port, secret with %host, %port, %secret": "使用 %host, %port, %secret 表示 主機, 連接埠, 存取金鑰",
-  "Support %host, %port, %secret": "支援 %host, %port, %secret",
-  "Clash Core": "Clash 內核",
-  "Upgrade": "升級內核",
-  "Restart": "重啟內核",
   "Release Version": "正式版",
   "Alpha Version": "預覽版",
-  "Please enter your root password": "請輸入您的 root 密碼",
   "theme.light": "淺色",
   "theme.dark": "深色",
   "theme.system": "系統",
   "Copy Success": "複製成功",
-  "Hotkey Setting": "快速鍵設定",
-  "Enable Global Hotkey": "啟用全域快速鍵",
   "open_or_close_dashboard": "開啟/關閉儀表板",
   "clash_mode_rule": "規則模式",
   "clash_mode_global": "全域模式",
-  "clash_mode_direct": "直連模式",
   "toggle_system_proxy": "開啟/關閉系統代理",
   "toggle_tun_mode": "開啟/關閉 虛擬網路介面卡模式",
   "entry_lightweight_mode": "進入輕量模式",
-  "Runtime Config": "執行期設定",
   "Exit": "離開",
-  "ReadOnly": "唯讀",
-  "Filter conditions": "篩選條件",
-  "Match Case": "區分大小寫",
-  "Match Whole Word": "完整字詞配對",
-  "Use Regular Expression": "使用正規表示式",
   "Profile Imported Successfully": "匯入設定檔成功",
   "Stopping Core...": "內核停止中...",
   "Restarting Core...": "內核重啟中...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "已成功安裝服務",
   "Service Uninstalled Successfully": "已成功解除安裝服務",
   "Core Version Updated": "內核版本已更新",
-  "Clash Core Restarted": "已重啟 Clash 內核",
   "Currently on the Latest Version": "目前已是最新版本",
   "Import Subscription Successful": "匯入訂閱成功",
-  "Failed to fetch backup files": "取得備份檔案失敗",
   "Profile": "配置",
-  "Web UI": "網頁介面",
   "Dashboard": "儀表板",
   "Restart App": "重啟應用程式",
   "Restart Clash Core": "重啟 Clash 內核",
@@ -136,8 +94,6 @@
   "Logs Dir": "日誌目錄",
   "Open Dir": "開啟目錄",
   "More": "更多",
-  "Enable Tray Speed": "啟用系統匣速率",
-  "Enable Tray Icon": "啟用系統匣圖示",
   "LightWeight Mode": "輕量模式",
   "Config Validation Failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
   "Boot Config Validation Failed": "啟動訂閱配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "覆寫檔案鍵錯誤，變更已撤銷",
   "Merge File Error": "覆寫檔案錯誤，變更已撤銷",
   "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
-  "Website Tests": "網站測試",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失敗",
   "Profile Imported with Clash proxy": "使用 Clash 代理匯入訂閱成功",
@@ -187,11 +142,8 @@
   "AppQuitBody": "已透過快速鍵退出應用程式",
   "AppHiddenTitle": "應用程式隱藏",
   "AppHiddenBody": "已透過快速鍵隱藏應用程式視窗",
-  "Invalid regular expression": "無效的正規表示式",
   "Configuration saved successfully": "設定儲存完成",
   "Failed to save configuration": "設定儲存失敗",
-  "Saving...": "儲存中...",
-  "Detection timeout or failed": "檢測逾時或失敗",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "取消",
+      "close": "關閉",
+      "confirm": "確認",
+      "save": "儲存",
+      "delete": "刪除",
+      "edit": "編輯",
+      "new": "新增",
+      "enable": "啟用",
+      "upgrade": "升級內核",
+      "restart": "重啟內核",
+      "resetToDefault": "重設為預設值",
+      "refresh": "重整",
+      "retry": "重試",
+      "refreshPage": "重新整理頁面",
+      "showDetails": "顯示詳情",
+      "hideDetails": "隱藏詳情"
+    },
+    "labels": {
+      "updateAt": "更新於",
+      "timeout": "逾時",
+      "icon": "圖示",
+      "name": "名稱",
+      "readOnly": "唯讀",
+      "expireTime": "到期時間",
+      "updateTime": "更新時間",
+      "usedTotal": "已使用 / 總量",
+      "from": "來自",
+      "password": "密碼",
+      "retryAttempts": "重試次數"
+    },
+    "units": {
+      "milliseconds": "毫秒",
+      "seconds": "秒",
+      "minutes": "分鐘",
+      "kilobytes": "KB",
+      "files": "檔案"
+    },
+    "search": {
+      "placeholder": "篩選條件",
+      "matchCase": "區分大小寫",
+      "matchWholeWord": "完整字詞配對",
+      "useRegex": "使用正規表示式",
+      "invalidRegex": "無效的正規表示式"
+    },
+    "status": {
+      "enabled": "已啟用",
+      "disabled": "已停用"
+    },
+    "errors": {
+      "trafficStats": "流量統計錯誤",
+      "trafficStatsDescription": "流量統計元件發生錯誤，已停用以避免當機。"
+    },
+    "states": {
+      "saving": "儲存中..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "系統資訊卡"
         }
       }
+    },
+    "tests": {
+      "title": "網站測試"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "內核通信錯誤"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "連結埠設定已儲存",
           "saveFailed": "連結埠設定儲存失敗"
         }
+      },
+      "notifications": {
+        "restartSuccess": "已重啟 Clash 內核"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "將代理組顯示在系統匣一級選單",
           "commonTrayIcon": "一般系統匣圖示",
           "systemProxyTrayIcon": "系統代理系統匣圖示",
-          "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示"
+          "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示",
+          "enableTrayIcon": "啟用系統匣圖示",
+          "enableTraySpeed": "啟用系統匣速率"
         },
         "tooltips": {
           "hoverNavigator": "滑鼠懸停在字母上時自動捲動到對應代理組",
@@ -1028,6 +1049,34 @@
         "telegram": "Telegram 頻道",
         "github": "GitHub 專案位址"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "開啟網址"
+      },
+      "title": "網頁介面",
+      "messages": {
+        "supportedPlaceholders": "支援 %host, %port, %secret",
+        "placeholderInstruction": "使用 %host, %port, %secret 表示 主機, 連接埠, 存取金鑰"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "啟用全域快速鍵"
+      },
+      "title": "快速鍵設定"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "請輸入您的 root 密碼"
+      }
+    },
+    "networkInterface": {
+      "title": "網路介面",
+      "labels": {
+        "ipAddress": "IP 位址",
+        "macAddress": "MAC 位址"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "連線鏈式代理失敗",
         "disconnectFailed": "中斷鏈式代理失敗",
         "duplicateNode": "該節點已在鏈式代理表中"
+      },
+      "messages": {
+        "directMode": "直連模式"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "測試中..."
       },
-      "empty": "目前沒有解鎖測試項目"
+      "empty": "目前沒有解鎖測試項目",
+      "messages": {
+        "detectionTimeout": "檢測逾時或失敗"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "上傳速度",
+        "downloadSpeed": "下載速度",
+        "memoryUsage": "內核佔用"
+      }
     }
   }
 }

@@ -130,8 +130,8 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
           : t("test.viewer.title.edit")
       }
       contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={handleClose}
       onCancel={handleClose}
       onOk={handleOk}
@@ -141,7 +141,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         name="name"
         control={control}
         render={({ field }) => (
-          <TextField {...text} {...field} label={t("Name")} />
+          <TextField {...text} {...field} label={t("common.labels.name")} />
         )}
       />
       <Controller
@@ -153,7 +153,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
             {...field}
             multiline
             maxRows={5}
-            label={t("Icon")}
+            label={t("common.labels.icon")}
           />
         )}
       />

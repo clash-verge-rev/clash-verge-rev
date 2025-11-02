@@ -157,13 +157,13 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         loading ? (
           <Stack direction="row" alignItems="center" spacing={1}>
             <CircularProgress size={20} />
-            {t("Saving...")}
+            {t("common.states.saving")}
           </Stack>
         ) : (
-          t("Save")
+          t("common.actions.save")
         )
       }
-      cancelBtn={t("Cancel")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}

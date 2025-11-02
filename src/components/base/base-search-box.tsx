@@ -135,7 +135,7 @@ export const BaseSearchBox = ({
     if (useRegularExpression && value) {
       const isValid = validateRegex(value);
       if (!isValid) {
-        setErrorMessage(t("Invalid regular expression"));
+        setErrorMessage(t("common.search.invalidRegex"));
       }
     }
 
@@ -156,7 +156,7 @@ export const BaseSearchBox = ({
       } else {
         const value = inputRef.current?.value ?? "";
         if (value && !validateRegex(value)) {
-          setErrorMessage(t("Invalid regular expression"));
+          setErrorMessage(t("common.search.invalidRegex"));
         }
       }
       return next;
@@ -173,7 +173,7 @@ export const BaseSearchBox = ({
         size="small"
         variant="outlined"
         spellCheck="false"
-        placeholder={placeholder ?? t("Filter conditions")}
+        placeholder={placeholder ?? t("common.search.placeholder")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
         error={!!errorMessage}
@@ -182,7 +182,7 @@ export const BaseSearchBox = ({
             sx: { pr: 1 },
             endAdornment: (
               <Box display="flex">
-                <Tooltip title={t("Match Case")}>
+                <Tooltip title={t("common.search.matchCase")}>
                   <div>
                     <SvgIcon
                       component={matchCaseIcon}
@@ -192,7 +192,7 @@ export const BaseSearchBox = ({
                     />
                   </div>
                 </Tooltip>
-                <Tooltip title={t("Match Whole Word")}>
+                <Tooltip title={t("common.search.matchWholeWord")}>
                   <div>
                     <SvgIcon
                       component={matchWholeWordIcon}
@@ -202,7 +202,7 @@ export const BaseSearchBox = ({
                     />
                   </div>
                 </Tooltip>
-                <Tooltip title={t("Use Regular Expression")}>
+                <Tooltip title={t("common.search.useRegex")}>
                   <div>
                     <SvgIcon
                       component={useRegularExpressionIcon}

@@ -609,7 +609,7 @@ export const GroupsEditorViewer = (props: Props) => {
                           input: {
                             endAdornment: (
                               <InputAdornment position="end">
-                                {t("seconds")}
+                                {t("common.units.seconds")}
                               </InputAdornment>
                             ),
                           },
@@ -639,7 +639,7 @@ export const GroupsEditorViewer = (props: Props) => {
                           input: {
                             endAdornment: (
                               <InputAdornment position="end">
-                                {t("millis")}
+                                {t("common.units.milliseconds")}
                               </InputAdornment>
                             ),
                           },
@@ -1065,11 +1065,11 @@ export const GroupsEditorViewer = (props: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
-          {t("Cancel")}
+          {t("common.actions.cancel")}
         </Button>
 
         <Button onClick={handleSave} variant="contained">
-          {t("Save")}
+          {t("common.actions.save")}
         </Button>
       </DialogActions>
     </Dialog>

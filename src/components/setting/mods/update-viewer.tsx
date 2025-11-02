@@ -133,7 +133,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
       contentSx={{ minWidth: 360, maxWidth: 400, height: "50vh" }}
       okBtn={t("settings.update.actions.update")}
-      cancelBtn={t("Cancel")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onUpdate}

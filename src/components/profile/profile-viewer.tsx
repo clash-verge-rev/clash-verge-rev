@@ -311,7 +311,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                   input: {
                     endAdornment: (
                       <InputAdornment position="end">
-                        {t("seconds")}
+                        {t("common.units.seconds")}
                       </InputAdornment>
                     ),
                   },
@@ -335,7 +335,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               slotProps={{
                 input: {
                   endAdornment: (
-                    <InputAdornment position="end">{t("mins")}</InputAdornment>
+                    <InputAdornment position="end">
+                      {t("common.units.minutes")}
+                    </InputAdornment>
                   ),
                 },
               }}

@@ -1,28 +1,12 @@
 {
-  "millis": "ms",
-  "seconds": "seconds",
-  "mins": "mins",
-  "Close": "Close",
-  "Cancel": "Cancel",
-  "Confirm": "Confirm",
   "Maximize": "Maximize",
   "Minimize": "Minimize",
   "Empty": "Empty",
-  "New": "New",
-  "Edit": "Edit",
-  "Save": "Save",
-  "Delete": "Delete",
-  "Enable": "Enable",
   "Proxies": "Proxies",
-  "Update At": "Update At",
   "rule": "rule",
   "global": "global",
   "direct": "direct",
-  "timeout": "Timeout",
   "script": "script",
-  "Sort by default": "Sort by default",
-  "Sort by delay": "Sort by delay",
-  "Sort by name": "Sort by name",
   "DOMAIN": "Matches the full domain name",
   "DOMAIN-SUFFIX": "Matches the domain suffix",
   "DOMAIN-KEYWORD": "Matches the domain keyword",
@@ -67,51 +51,28 @@
   "relay": "Pass through the defined proxy chain",
   "Timeout": "Timeout",
   "Type": "Type",
-  "Name": "Name",
   "Close All Connections": "Close All Connections",
   "Rule": "Rule",
-  "Icon": "Icon",
-  "Reset to Default": "Reset to Default",
   "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
   "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "Core communication error": "Core communication error",
   "active": "active",
   "unknown": "unknown",
   "Install": "Install",
   "Uninstall": "Uninstall",
   "System Proxy": "System Proxy",
-  "Network Interface": "Network Interface",
-  "Ip Address": "IP Address",
-  "Mac Address": "MAC Address",
-  "Open URL": "Open URL",
-  "Replace host, port, secret with %host, %port, %secret": "Replace host, port, secret with %host, %port, %secret",
-  "Support %host, %port, %secret": "Support %host, %port, %secret",
-  "Clash Core": "Clash Core",
-  "Upgrade": "Upgrade",
-  "Restart": "Restart",
   "Release Version": "Release Version",
   "Alpha Version": "Alpha Version",
-  "Please enter your root password": "Please enter your root password",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
   "Copy Success": "Copy Success",
-  "Hotkey Setting": "Hotkey Setting",
-  "Enable Global Hotkey": "Enable Global Hotkey",
   "open_or_close_dashboard": "Open/Close Dashboard",
   "clash_mode_rule": "Rule Mode",
   "clash_mode_global": "Global Mode",
-  "clash_mode_direct": "Direct Mode",
   "toggle_system_proxy": "Enable/Disable System Proxy",
   "toggle_tun_mode": "Enable/Disable Tun Mode",
   "entry_lightweight_mode": "Entry Lightweight Mode",
-  "Runtime Config": "Runtime Config",
   "Exit": "Exit",
-  "ReadOnly": "ReadOnly",
-  "Filter conditions": "Filter conditions",
-  "Match Case": "Match Case",
-  "Match Whole Word": "Match Whole Word",
-  "Use Regular Expression": "Use Regular Expression",
   "Profile Imported Successfully": "Profile Imported Successfully",
   "Stopping Core...": "Stopping Core...",
   "Restarting Core...": "Restarting Core...",
@@ -120,12 +81,9 @@
   "Service Installed Successfully": "Service Installed Successfully",
   "Service Uninstalled Successfully": "Service Uninstalled Successfully",
   "Core Version Updated": "Core Version Updated",
-  "Clash Core Restarted": "Clash Core Restarted",
   "Currently on the Latest Version": "Currently on the Latest Version",
   "Import Subscription Successful": "Import subscription successful",
-  "Failed to fetch backup files": "Failed to fetch backup files",
   "Profile": "Profile",
-  "Web UI": "Web UI",
   "Dashboard": "Dashboard",
   "Restart App": "Restart App",
   "Restart Clash Core": "Restart Clash Core",
@@ -136,8 +94,6 @@
   "Logs Dir": "Logs Dir",
   "Open Dir": "Open Dir",
   "More": "More",
-  "Enable Tray Speed": "Enable Tray Speed",
-  "Enable Tray Icon": "Enable Tray Icon",
   "LightWeight Mode": "Lightweight Mode",
   "Config Validation Failed": "Subscription configuration validation failed. Please check the subscription configuration file; modifications have been rolled back.",
   "Boot Config Validation Failed": "Boot subscription configuration validation failed. Started with the default configuration; please check the subscription configuration file.",
@@ -159,7 +115,6 @@
   "Merge File Key Error": "Merge file key error, changes reverted",
   "Merge File Error": "Merge file error, changes reverted",
   "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
-  "Website Tests": "Website Tests",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -187,11 +142,8 @@
   "AppQuitBody": "APP quit by hotkey",
   "AppHiddenTitle": "APP Hidden",
   "AppHiddenBody": "APP window hidden by hotkey",
-  "Invalid regular expression": "Invalid regular expression",
   "Configuration saved successfully": "Configuration saved successfully",
   "Failed to save configuration": "Failed to save configuration",
-  "Saving...": "Saving...",
-  "Detection timeout or failed": "Detection timeout or failed",
   "Open App Log": "Open App Log",
   "Open Core Log": "Open Core Log",
   "common": {
@@ -202,6 +154,62 @@
     "notices": {
       "raw": "{{message}}",
       "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "close": "Close",
+      "confirm": "Confirm",
+      "save": "Save",
+      "delete": "Delete",
+      "edit": "Edit",
+      "new": "New",
+      "enable": "Enable",
+      "upgrade": "Upgrade",
+      "restart": "Restart",
+      "resetToDefault": "Reset to Default",
+      "refresh": "Refresh",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "Update At",
+      "timeout": "Timeout",
+      "icon": "Icon",
+      "name": "Name",
+      "readOnly": "ReadOnly",
+      "expireTime": "Expire Time",
+      "updateTime": "Update Time",
+      "usedTotal": "Used / Total",
+      "from": "From",
+      "password": "Password",
+      "retryAttempts": "Retry attempts"
+    },
+    "units": {
+      "milliseconds": "ms",
+      "seconds": "seconds",
+      "minutes": "mins",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "search": {
+      "placeholder": "Filter conditions",
+      "matchCase": "Match Case",
+      "matchWholeWord": "Match Whole Word",
+      "useRegex": "Use Regular Expression",
+      "invalidRegex": "Invalid regular expression"
+    },
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "states": {
+      "saving": "Saving..."
     }
   },
   "navigation": {
@@ -509,6 +517,14 @@
           "systemInfo": "System Info Cards"
         }
       }
+    },
+    "tests": {
+      "title": "Website Tests"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      }
     }
   },
   "connection": {
@@ -657,6 +673,9 @@
           "saved": "Port settings saved",
           "saveFailed": "Failed to save port settings"
         }
+      },
+      "notifications": {
+        "restartSuccess": "Clash Core Restarted"
       }
     },
     "liteMode": {
@@ -814,7 +833,9 @@
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Common Tray Icon",
           "systemProxyTrayIcon": "System Proxy Tray Icon",
-          "tunTrayIcon": "Tun Tray Icon"
+          "tunTrayIcon": "Tun Tray Icon",
+          "enableTrayIcon": "Enable Tray Icon",
+          "enableTraySpeed": "Enable Tray Speed"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
@@ -1028,6 +1049,34 @@
         "telegram": "Telegram Channel",
         "github": "Github Repo"
       }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "Open URL"
+      },
+      "title": "Web UI",
+      "messages": {
+        "supportedPlaceholders": "Support %host, %port, %secret",
+        "placeholderInstruction": "Replace host, port, secret with %host, %port, %secret"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Enable Global Hotkey"
+      },
+      "title": "Hotkey Setting"
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "Please enter your root password"
+      }
+    },
+    "networkInterface": {
+      "title": "Network Interface",
+      "labels": {
+        "ipAddress": "IP Address",
+        "macAddress": "MAC Address"
+      }
     }
   },
   "providers": {
@@ -1114,6 +1163,9 @@
         "connectFailed": "Failed to connect to proxy chain",
         "disconnectFailed": "Failed to disconnect from proxy chain",
         "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "Direct Mode"
       }
     }
   },
@@ -1213,7 +1265,19 @@
       "actions": {
         "testing": "Testing..."
       },
-      "empty": "No unlock test items"
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "layout": {
+    "traffic": {
+      "labels": {
+        "uploadSpeed": "Upload Speed",
+        "downloadSpeed": "Download Speed",
+        "memoryUsage": "Memory Usage"
+      }
     }
   }
 }
