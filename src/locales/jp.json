@@ -270,13 +270,6 @@
   "Type": "タイプ",
   "Name": "名前",
   "Close All Connections": "Close All Connections",
-  "Upload": "アップロード",
-  "Download": "ダウンロード",
-  "Download Speed": "ダウンロード速度",
-  "Upload Speed": "アップロード速度",
-  "Downloaded": "ダウンロード量",
-  "Uploaded": "アップロード量",
-  "Active Connections": "アクティブな接続",
   "Rule": "ルール",
   "Icon": "アイコン",
   "Reset to Default": "デフォルト値にリセット",
@@ -304,7 +297,6 @@
   "theme.dark": "ダーク",
   "theme.system": "システム",
   "Copy Success": "コピー成功",
-  "Memory Usage": "コアメモリ使用量",
   "Hotkey Setting": "ホットキー設定",
   "Enable Global Hotkey": "グローバルホットキーを有効にする",
   "open_or_close_dashboard": "ダッシュボードを開く/閉じる",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Vergeはシステムサービスをインストールするために管理者権限が必要です。",
   "Website Tests": "ウェブサイトテスト",
   "Click to import subscription": "クリックしてサブスクリプションをインポート",
-  "Unknown": "不明",
   "Update with Clash proxy successfully": "Clashプロキシを使用して更新に成功しました。",
   "Update failed even with Clash proxy": "Clashプロキシを使用しても更新に失敗しました。",
   "Profile Imported with Clash proxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",
@@ -381,14 +372,6 @@
   "No active proxy node": "アクティブなプロキシノードがありません。",
   "Group": "プロキシグループ",
   "Proxy": "ノード",
-  "IP Information": "IP情報",
-  "Failed to get IP info": "IP情報の取得に失敗しました。",
-  "ISP": "インターネットサービスプロバイダー",
-  "ASN": "自治システム番号",
-  "ORG": "組織",
-  "Location": "位置",
-  "Timezone": "タイムゾーン",
-  "Auto refresh": "自動更新",
   "Pending": "検査待ち",
   "Yes": "サポートする",
   "No": "サポートしない",
@@ -624,6 +607,40 @@
           "serviceMode": "サービスモード",
           "sidecarMode": "ユーザーモード",
           "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP情報",
+        "errors": {
+          "load": "IP情報の取得に失敗しました。"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "自治システム番号",
+          "isp": "インターネットサービスプロバイダー",
+          "org": "組織",
+          "location": "位置",
+          "timezone": "タイムゾーン",
+          "autoRefresh": "自動更新",
+          "unknown": "不明"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "アップロード速度",
+          "downloadSpeed": "ダウンロード速度",
+          "activeConnections": "アクティブな接続",
+          "uploaded": "アップロード量",
+          "downloaded": "ダウンロード量",
+          "memoryUsage": "コアメモリ使用量"
+        },
+        "legends": {
+          "upload": "アップロード",
+          "download": "ダウンロード"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

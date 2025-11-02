@@ -270,13 +270,6 @@
   "Type": "Төр",
   "Name": "Исем",
   "Close All Connections": "Close All Connections",
-  "Upload": "Upload",
-  "Download": "Download",
-  "Download Speed": "Йөкләү тизлеге",
-  "Upload Speed": "Йөкләү (чыгару) тизлеге",
-  "Downloaded": "Йөкләнгән",
-  "Uploaded": "Чыгарылган",
-  "Active Connections": "Active Connections",
   "Rule": "Кагыйдә",
   "Icon": "Иконка",
   "Reset to Default": "Башлангычка кайтару",
@@ -304,7 +297,6 @@
   "theme.dark": "Караңгы",
   "theme.system": "Система",
   "Copy Success": "Күчерелде",
-  "Memory Usage": "Хәтер куллану",
   "Hotkey Setting": "Клавиатура төймәләре (hotkey) көйләүләре",
   "Enable Global Hotkey": "Глобаль Хоткейны кушу",
   "open_or_close_dashboard": "Панельне ачу/ябу",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Verge система хезмәтен яңадан урнаштыру өчен администратор хокукларын таләп итә",
   "Website Tests": "Website Tests",
   "Click to import subscription": "Click to import subscription",
-  "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -381,14 +372,6 @@
   "No active proxy node": "No active proxy node",
   "Group": "Group",
   "Proxy": "Proxy",
-  "IP Information": "IP Information",
-  "Failed to get IP info": "Failed to get IP info",
-  "ISP": "ISP",
-  "ASN": "ASN",
-  "ORG": "ORG",
-  "Location": "Location",
-  "Timezone": "Timezone",
-  "Auto refresh": "Auto refresh",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -624,6 +607,40 @@
           "serviceMode": "Сервис режимы",
           "sidecarMode": "User Mode",
           "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "errors": {
+          "load": "Failed to get IP info"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+          "downloadSpeed": "Йөкләү тизлеге",
+          "activeConnections": "Active Connections",
+          "uploaded": "Чыгарылган",
+          "downloaded": "Йөкләнгән",
+          "memoryUsage": "Хәтер куллану"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

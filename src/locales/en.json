@@ -270,13 +270,6 @@
   "Type": "Type",
   "Name": "Name",
   "Close All Connections": "Close All Connections",
-  "Upload": "Upload",
-  "Download": "Download",
-  "Download Speed": "Download Speed",
-  "Upload Speed": "Upload Speed",
-  "Downloaded": "Downloaded",
-  "Uploaded": "Uploaded",
-  "Active Connections": "Active Connections",
   "Rule": "Rule",
   "Icon": "Icon",
   "Reset to Default": "Reset to Default",
@@ -304,7 +297,6 @@
   "theme.dark": "Dark",
   "theme.system": "System",
   "Copy Success": "Copy Success",
-  "Memory Usage": "Core Usage",
   "Hotkey Setting": "Hotkey Setting",
   "Enable Global Hotkey": "Enable Global Hotkey",
   "open_or_close_dashboard": "Open/Close Dashboard",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
   "Website Tests": "Website Tests",
   "Click to import subscription": "Click to import subscription",
-  "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -381,14 +372,6 @@
   "No active proxy node": "No active proxy node",
   "Group": "Group",
   "Proxy": "Proxy",
-  "IP Information": "IP Information",
-  "Failed to get IP info": "Failed to get IP info",
-  "ISP": "ISP",
-  "ASN": "ASN",
-  "ORG": "ORG",
-  "Location": "Location",
-  "Timezone": "Timezone",
-  "Auto refresh": "Auto refresh",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -624,6 +607,40 @@
           "serviceMode": "Service Mode",
           "sidecarMode": "User Mode",
           "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "errors": {
+          "load": "Failed to get IP info"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Upload Speed",
+          "downloadSpeed": "Download Speed",
+          "activeConnections": "Active Connections",
+          "uploaded": "Uploaded",
+          "downloaded": "Downloaded",
+          "memoryUsage": "Core Usage"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

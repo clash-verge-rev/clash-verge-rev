@@ -69,7 +69,11 @@ export const IpInfoCard = () => {
       setIpInfo(data);
       setCountdown(IP_REFRESH_SECONDS);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("Failed to get IP info"));
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("components.home.ipInfo.errors.load"),
+      );
     } finally {
       setLoading(false);
     }
@@ -114,7 +118,7 @@ export const IpInfoCard = () => {
   if (loading) {
     return (
       <EnhancedCard
-        title={t("IP Information")}
+        title={t("components.home.ipInfo.title")}
         icon={<LocationOnOutlined />}
         iconColor="info"
         action={
@@ -137,7 +141,7 @@ export const IpInfoCard = () => {
   if (error) {
     return (
       <EnhancedCard
-        title={t("IP Information")}
+        title={t("components.home.ipInfo.title")}
         icon={<LocationOnOutlined />}
         iconColor="info"
         action={
@@ -160,7 +164,7 @@ export const IpInfoCard = () => {
             {error}
           </Typography>
           <Button onClick={fetchIpInfo} sx={{ mt: 2 }}>
-            {t("Retry")}
+            {t("components.home.ipInfo.labels.retry")}
           </Button>
         </Box>
       </EnhancedCard>
@@ -170,7 +174,7 @@ export const IpInfoCard = () => {
   // 渲染正常数据
   return (
     <EnhancedCard
-      title={t("IP Information")}
+      title={t("components.home.ipInfo.title")}
       icon={<LocationOnOutlined />}
       iconColor="info"
       action={
@@ -222,7 +226,7 @@ export const IpInfoCard = () => {
                   maxWidth: "100%",
                 }}
               >
-                {ipInfo?.country || t("Unknown")}
+                {ipInfo?.country || t("components.home.ipInfo.labels.unknown")}
               </Typography>
             </Box>
 
@@ -232,7 +236,7 @@ export const IpInfoCard = () => {
                 color="text.secondary"
                 sx={{ flexShrink: 0 }}
               >
-                {t("IP")}:
+                {t("components.home.ipInfo.labels.ip")}:
               </Typography>
               <Box
                 sx={{
@@ -266,20 +270,29 @@ export const IpInfoCard = () => {
             </Box>
 
             <InfoItem
-              label={t("ASN")}
+              label={t("components.home.ipInfo.labels.asn")}
               value={ipInfo?.asn ? `AS${ipInfo.asn}` : "N/A"}
             />
           </Box>
 
           {/* 右侧：组织、ISP和位置信息 */}
           <Box sx={{ width: "60%", overflow: "auto" }}>
-            <InfoItem label={t("ISP")} value={ipInfo?.isp} />
-            <InfoItem label={t("ORG")} value={ipInfo?.asn_organization} />
             <InfoItem
-              label={t("Location")}
+              label={t("components.home.ipInfo.labels.isp")}
+              value={ipInfo?.isp}
+            />
+            <InfoItem
+              label={t("components.home.ipInfo.labels.org")}
+              value={ipInfo?.asn_organization}
+            />
+            <InfoItem
+              label={t("components.home.ipInfo.labels.location")}
               value={[ipInfo?.city, ipInfo?.region].filter(Boolean).join(", ")}
             />
-            <InfoItem label={t("Timezone")} value={ipInfo?.timezone} />
+            <InfoItem
+              label={t("components.home.ipInfo.labels.timezone")}
+              value={ipInfo?.timezone}
+            />
           </Box>
         </Box>
 
@@ -297,7 +310,7 @@ export const IpInfoCard = () => {
           }}
         >
           <Typography variant="caption">
-            {t("Auto refresh")}: {countdown}s
+            {t("components.home.ipInfo.labels.autoRefresh")}: {countdown}s
           </Typography>
           <Typography
             variant="caption"

@@ -270,13 +270,6 @@
   "Type": "類型",
   "Name": "名稱",
   "Close All Connections": "關閉全部連線",
-  "Upload": "上傳",
-  "Download": "下載",
-  "Download Speed": "下載速度",
-  "Upload Speed": "上傳速度",
-  "Downloaded": "下載量",
-  "Uploaded": "上傳量",
-  "Active Connections": "作用中連線",
   "Rule": "規則",
   "Icon": "圖示",
   "Reset to Default": "重設為預設值",
@@ -304,7 +297,6 @@
   "theme.dark": "深色",
   "theme.system": "系統",
   "Copy Success": "複製成功",
-  "Memory Usage": "內核佔用",
   "Hotkey Setting": "快速鍵設定",
   "Enable Global Hotkey": "啟用全域快速鍵",
   "open_or_close_dashboard": "開啟/關閉儀表板",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
   "Website Tests": "網站測試",
   "Click to import subscription": "點擊匯入訂閱",
-  "Unknown": "未知",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失敗",
   "Profile Imported with Clash proxy": "使用 Clash 代理匯入訂閱成功",
@@ -381,14 +372,6 @@
   "No active proxy node": "暫無作用中的代理節點",
   "Group": "代理組",
   "Proxy": "節點",
-  "IP Information": "IP資訊",
-  "Failed to get IP info": "取得IP資訊失敗",
-  "ISP": "網際網路服務供應商",
-  "ASN": "自治系統",
-  "ORG": "組織",
-  "Location": "位置",
-  "Timezone": "時區",
-  "Auto refresh": "自動重整",
   "Pending": "待檢測",
   "Yes": "支援",
   "No": "不支援",
@@ -624,6 +607,40 @@
           "serviceMode": "服務模式",
           "sidecarMode": "使用者模式",
           "adminServiceMode": "系統管理員 + 服務模式"
+        }
+      },
+      "ipInfo": {
+        "title": "IP資訊",
+        "errors": {
+          "load": "取得IP資訊失敗"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "自治系統",
+          "isp": "網際網路服務供應商",
+          "org": "組織",
+          "location": "位置",
+          "timezone": "時區",
+          "autoRefresh": "自動重整",
+          "unknown": "未知"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "上傳速度",
+          "downloadSpeed": "下載速度",
+          "activeConnections": "作用中連線",
+          "uploaded": "上傳量",
+          "downloaded": "下載量",
+          "memoryUsage": "內核佔用"
+        },
+        "legends": {
+          "upload": "上傳",
+          "download": "下載"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

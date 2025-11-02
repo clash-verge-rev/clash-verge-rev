@@ -270,13 +270,6 @@
   "Type": "유형",
   "Name": "이름",
   "Close All Connections": "Close All Connections",
-  "Upload": "업로드",
-  "Download": "다운로드",
-  "Download Speed": "다운로드 속도",
-  "Upload Speed": "업로드 속도",
-  "Downloaded": "다운로드됨",
-  "Uploaded": "업로드됨",
-  "Active Connections": "활성 연결",
   "Rule": "규칙",
   "Icon": "아이콘",
   "Reset to Default": "Reset to Default",
@@ -304,7 +297,6 @@
   "theme.dark": "Dark",
   "theme.system": "System",
   "Copy Success": "복사 성공",
-  "Memory Usage": "메모리 사용량",
   "Hotkey Setting": "단축키 설정",
   "Enable Global Hotkey": "Enable Global Hotkey",
   "open_or_close_dashboard": "Open/Close Dashboard",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
   "Website Tests": "Website Tests",
   "Click to import subscription": "Click to import subscription",
-  "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Clash 프록시로 업데이트 성공",
   "Update failed even with Clash proxy": "Clash 프록시로도 업데이트 실패",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -381,14 +372,6 @@
   "No active proxy node": "No active proxy node",
   "Group": "Group",
   "Proxy": "Proxy",
-  "IP Information": "IP Information",
-  "Failed to get IP info": "Failed to get IP info",
-  "ISP": "ISP",
-  "ASN": "ASN",
-  "ORG": "ORG",
-  "Location": "Location",
-  "Timezone": "Timezone",
-  "Auto refresh": "Auto refresh",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -624,6 +607,40 @@
           "serviceMode": "서비스 모드",
           "sidecarMode": "User Mode",
           "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "errors": {
+          "load": "Failed to get IP info"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "업로드 속도",
+          "downloadSpeed": "다운로드 속도",
+          "activeConnections": "활성 연결",
+          "uploaded": "업로드됨",
+          "downloaded": "다운로드됨",
+          "memoryUsage": "메모리 사용량"
+        },
+        "legends": {
+          "upload": "업로드",
+          "download": "다운로드"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

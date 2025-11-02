@@ -270,13 +270,6 @@
   "Type": "Tip",
   "Name": "İsim",
   "Close All Connections": "Close All Connections",
-  "Upload": "Yükleme",
-  "Download": "İndirme",
-  "Download Speed": "İndirme Hızı",
-  "Upload Speed": "Yükleme Hızı",
-  "Downloaded": "İndirilen",
-  "Uploaded": "Yüklenen",
-  "Active Connections": "Aktif Bağlantılar",
   "Rule": "Kural",
   "Icon": "Simge",
   "Reset to Default": "Varsayılana Sıfırla",
@@ -304,7 +297,6 @@
   "theme.dark": "Koyu",
   "theme.system": "Sistem",
   "Copy Success": "Kopyalama Başarılı",
-  "Memory Usage": "Çekirdek Kullanımı",
   "Hotkey Setting": "Kısayol Tuşu Ayarı",
   "Enable Global Hotkey": "Küresel Kısayol Tuşunu Etkinleştir",
   "open_or_close_dashboard": "Kontrol Panelini Aç/Kapat",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Verge sistem hizmetini yeniden kurmak için yönetici ayrıcalıkları gerektiriyor",
   "Website Tests": "Web Sitesi Testleri",
   "Click to import subscription": "Abonelik içe aktarmak için tıklayın",
-  "Unknown": "Bilinmiyor",
   "Update with Clash proxy successfully": "Clash vekil ile güncelleme başarılı",
   "Update failed even with Clash proxy": "Clash vekil ile bile güncelleme başarısız oldu",
   "Profile Imported with Clash proxy": "Profil Clash vekil ile içe aktarıldı",
@@ -381,14 +372,6 @@
   "No active proxy node": "Aktif vekil düğümü yok",
   "Group": "Grup",
   "Proxy": "Vekil",
-  "IP Information": "IP Bilgisi",
-  "Failed to get IP info": "IP bilgisi alınamadı",
-  "ISP": "ISP",
-  "ASN": "ASN",
-  "ORG": "Kuruluş",
-  "Location": "Konum",
-  "Timezone": "Saat Dilimi",
-  "Auto refresh": "Otomatik yenile",
   "Pending": "Beklemede",
   "Yes": "Evet",
   "No": "Hayır",
@@ -624,6 +607,40 @@
           "serviceMode": "Hizmet Modu",
           "sidecarMode": "Kullanıcı Modu",
           "adminServiceMode": "Yönetici + Hizmet Modu"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Bilgisi",
+        "errors": {
+          "load": "IP bilgisi alınamadı"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "Kuruluş",
+          "location": "Konum",
+          "timezone": "Saat Dilimi",
+          "autoRefresh": "Otomatik yenile",
+          "unknown": "Bilinmiyor"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Yükleme Hızı",
+          "downloadSpeed": "İndirme Hızı",
+          "activeConnections": "Aktif Bağlantılar",
+          "uploaded": "Yüklenen",
+          "downloaded": "İndirilen",
+          "memoryUsage": "Çekirdek Kullanımı"
+        },
+        "legends": {
+          "upload": "Yükleme",
+          "download": "İndirme"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

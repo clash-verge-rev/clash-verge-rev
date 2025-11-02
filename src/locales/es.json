@@ -270,13 +270,6 @@
   "Type": "Tipo",
   "Name": "Nombre",
   "Close All Connections": "Close All Connections",
-  "Upload": "Subir",
-  "Download": "Descargar",
-  "Download Speed": "Velocidad de descarga",
-  "Upload Speed": "Velocidad de subida",
-  "Downloaded": "Descargado",
-  "Uploaded": "Subido",
-  "Active Connections": "Conexiones activas",
   "Rule": "Regla",
   "Icon": "Icono",
   "Reset to Default": "Restablecer a los valores predeterminados",
@@ -304,7 +297,6 @@
   "theme.dark": "Dark",
   "theme.system": "System",
   "Copy Success": "Copia exitosa",
-  "Memory Usage": "Uso de memoria del núcleo",
   "Hotkey Setting": "Configuración de atajos de teclado",
   "Enable Global Hotkey": "Habilitar atajos de teclado globales",
   "open_or_close_dashboard": "Abrir/cerrar panel",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Verge requiere permisos de administrador para instalar el servicio del sistema",
   "Website Tests": "Pruebas de sitios web",
   "Click to import subscription": "Haga clic para importar una suscripción",
-  "Unknown": "Desconocido",
   "Update with Clash proxy successfully": "Actualización con el proxy de Clash exitosa",
   "Update failed even with Clash proxy": "Error al actualizar incluso con el proxy de Clash",
   "Profile Imported with Clash proxy": "Suscripción importada con el proxy de Clash",
@@ -381,14 +372,6 @@
   "No active proxy node": "No hay nodos de proxy activos",
   "Group": "Grupo de proxy",
   "Proxy": "Nodo",
-  "IP Information": "Información de IP",
-  "Failed to get IP info": "Error al obtener información de IP",
-  "ISP": "Proveedor de servicios de Internet",
-  "ASN": "Número de sistema autónomo",
-  "ORG": "Organización",
-  "Location": "Ubicación",
-  "Timezone": "Zona horaria",
-  "Auto refresh": "Actualización automática",
   "Pending": "Pendiente de detección",
   "Yes": "Soportado",
   "No": "No soportado",
@@ -624,6 +607,40 @@
           "serviceMode": "Modo de servicio",
           "sidecarMode": "Modo de usuario",
           "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "Información de IP",
+        "errors": {
+          "load": "Error al obtener información de IP"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "Número de sistema autónomo",
+          "isp": "Proveedor de servicios de Internet",
+          "org": "Organización",
+          "location": "Ubicación",
+          "timezone": "Zona horaria",
+          "autoRefresh": "Actualización automática",
+          "unknown": "Desconocido"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Velocidad de subida",
+          "downloadSpeed": "Velocidad de descarga",
+          "activeConnections": "Conexiones activas",
+          "uploaded": "Subido",
+          "downloaded": "Descargado",
+          "memoryUsage": "Uso de memoria del núcleo"
+        },
+        "legends": {
+          "upload": "Subir",
+          "download": "Descargar"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

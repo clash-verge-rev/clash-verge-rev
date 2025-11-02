@@ -270,13 +270,6 @@
   "Type": "Тип",
   "Name": "Название",
   "Close All Connections": "Close All Connections",
-  "Upload": "Загрузка",
-  "Download": "Скачивание",
-  "Download Speed": "Скорость скачивания",
-  "Upload Speed": "Скорость загрузки",
-  "Downloaded": "Скачано",
-  "Uploaded": "Загружено",
-  "Active Connections": "Активные соединения",
   "Rule": "Правило",
   "Icon": "Иконка",
   "Reset to Default": "Сбросить настройки",
@@ -304,7 +297,6 @@
   "theme.dark": "Тёмная",
   "theme.system": "Системная",
   "Copy Success": "Скопировано",
-  "Memory Usage": "Использование памяти",
   "Hotkey Setting": "Настройки сочетаний клавиш",
   "Enable Global Hotkey": "Включить глобальную горячую клавишу",
   "open_or_close_dashboard": "Открыть/Закрыть панель управления",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы",
   "Website Tests": "Проверка доступности веб-сайтов",
   "Click to import subscription": "Нажмите, чтобы импортировать подписку",
-  "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -381,14 +372,6 @@
   "No active proxy node": "Нет активного прокси-узла",
   "Group": "Группа",
   "Proxy": "Прокси",
-  "IP Information": "Информация об IP",
-  "Failed to get IP info": "Не удалось получить информацию об IP",
-  "ISP": "ISP",
-  "ASN": "ASN",
-  "ORG": "ORG",
-  "Location": "Location",
-  "Timezone": "Timezone",
-  "Auto refresh": "Автоматическое обновление через",
   "Pending": "В ожидании",
   "Yes": "Да",
   "No": "Нет",
@@ -624,6 +607,40 @@
           "serviceMode": "Режим системной службы",
           "sidecarMode": "Пользовательский режим",
           "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "Информация об IP",
+        "errors": {
+          "load": "Не удалось получить информацию об IP"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Автоматическое обновление через",
+          "unknown": "Unknown"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Скорость загрузки",
+          "downloadSpeed": "Скорость скачивания",
+          "activeConnections": "Активные соединения",
+          "uploaded": "Загружено",
+          "downloaded": "Скачано",
+          "memoryUsage": "Использование памяти"
+        },
+        "legends": {
+          "upload": "Загрузка",
+          "download": "Скачивание"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

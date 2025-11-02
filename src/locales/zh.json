@@ -270,13 +270,6 @@
   "Type": "类型",
   "Name": "名称",
   "Close All Connections": "关闭所有连接",
-  "Upload": "上传",
-  "Download": "下载",
-  "Download Speed": "下载速度",
-  "Upload Speed": "上传速度",
-  "Downloaded": "下载量",
-  "Uploaded": "上传量",
-  "Active Connections": "活跃连接",
   "Rule": "规则",
   "Icon": "图标",
   "Reset to Default": "重置为默认值",
@@ -304,7 +297,6 @@
   "theme.dark": "深色",
   "theme.system": "系统",
   "Copy Success": "复制成功",
-  "Memory Usage": "内核占用",
   "Hotkey Setting": "热键设置",
   "Enable Global Hotkey": "启用全局热键",
   "open_or_close_dashboard": "打开/关闭面板",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "Clash Verge 需要管理员权限安装系统服务",
   "Website Tests": "网站测试",
   "Click to import subscription": "点击导入订阅",
-  "Unknown": "未知",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失败",
   "Profile Imported with Clash proxy": "使用 Clash 代理导入订阅成功",
@@ -381,14 +372,6 @@
   "No active proxy node": "暂无激活的代理节点",
   "Group": "代理组",
   "Proxy": "节点",
-  "IP Information": "IP 信息",
-  "Failed to get IP info": "获取IP信息失败",
-  "ISP": "服务商",
-  "ASN": "自治域",
-  "ORG": "组织",
-  "Location": "位置",
-  "Timezone": "时区",
-  "Auto refresh": "自动刷新",
   "Pending": "待检测",
   "Yes": "支持",
   "No": "不支持",
@@ -624,6 +607,40 @@
           "serviceMode": "服务模式",
           "sidecarMode": "用户模式",
           "adminServiceMode": "管理员 + 服务模式"
+        }
+      },
+      "ipInfo": {
+        "title": "IP 信息",
+        "errors": {
+          "load": "获取IP信息失败"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "自治域",
+          "isp": "服务商",
+          "org": "组织",
+          "location": "位置",
+          "timezone": "时区",
+          "autoRefresh": "自动刷新",
+          "unknown": "未知"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "上传速度",
+          "downloadSpeed": "下载速度",
+          "activeConnections": "活跃连接",
+          "uploaded": "上传量",
+          "downloaded": "下载量",
+          "memoryUsage": "内核占用"
+        },
+        "legends": {
+          "upload": "上传",
+          "download": "下载"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },

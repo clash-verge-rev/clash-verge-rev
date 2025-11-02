@@ -270,13 +270,6 @@
   "Type": "النوع",
   "Name": "الاسم",
   "Close All Connections": "Close All Connections",
-  "Upload": "Upload",
-  "Download": "Download",
-  "Download Speed": "سرعة التنزيل",
-  "Upload Speed": "سرعة الرفع",
-  "Downloaded": "تم التنزيل",
-  "Uploaded": "تم الرفع",
-  "Active Connections": "Active Connections",
   "Rule": "قاعدة",
   "Icon": "أيقونة",
   "Reset to Default": "إعادة تعيين إلى الافتراضي",
@@ -304,7 +297,6 @@
   "theme.dark": "سمة داكنة",
   "theme.system": "سمة النظام",
   "Copy Success": "تم النسخ بنجاح",
-  "Memory Usage": "استهلاك الذاكرة",
   "Hotkey Setting": "إعدادات الاختصارات",
   "Enable Global Hotkey": "تمكين مفتاح التشغيل السريع العالمي",
   "open_or_close_dashboard": "فتح/إغلاق لوحة التحكم",
@@ -373,7 +365,6 @@
   "Service Administrator Prompt": "يتطلب Clash Verge امتيازات المسؤول لإعادة تثبيت خدمة النظام",
   "Website Tests": "Website Tests",
   "Click to import subscription": "Click to import subscription",
-  "Unknown": "Unknown",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
@@ -381,14 +372,6 @@
   "No active proxy node": "No active proxy node",
   "Group": "Group",
   "Proxy": "Proxy",
-  "IP Information": "IP Information",
-  "Failed to get IP info": "Failed to get IP info",
-  "ISP": "ISP",
-  "ASN": "ASN",
-  "ORG": "ORG",
-  "Location": "Location",
-  "Timezone": "Timezone",
-  "Auto refresh": "Auto refresh",
   "Pending": "Pending",
   "Yes": "Yes",
   "No": "No",
@@ -624,6 +607,40 @@
           "serviceMode": "وضع الخدمة",
           "sidecarMode": "User Mode",
           "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "errors": {
+          "load": "Failed to get IP info"
+        },
+        "labels": {
+          "retry": "Retry",
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        }
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "سرعة الرفع",
+          "downloadSpeed": "سرعة التنزيل",
+          "activeConnections": "Active Connections",
+          "uploaded": "تم الرفع",
+          "downloaded": "تم التنزيل",
+          "memoryUsage": "استهلاك الذاكرة"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
         }
       }
     },
