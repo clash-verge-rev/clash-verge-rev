@@ -48,7 +48,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       const info = await checkUpdate();
       if (!info?.available) {
         showNotice.success(
-          t("components.settings.verge.advanced.notifications.latestVersion"),
+          "components.settings.verge.advanced.notifications.latestVersion",
         );
       } else {
         updateRef.current?.open();
@@ -61,19 +61,19 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const onExportDiagnosticInfo = useCallback(async () => {
     await exportDiagnosticInfo();
     showNotice.success(
-      t("components.settings.common.notifications.copySuccess"),
+      "components.settings.common.notifications.copySuccess",
       1000,
     );
-  }, [t]);
+  }, []);
 
   const copyVersion = useCallback(() => {
     navigator.clipboard.writeText(`v${version}`).then(() => {
       showNotice.success(
-        t("components.settings.verge.advanced.notifications.versionCopied"),
+        "components.settings.verge.advanced.notifications.versionCopied",
         1000,
       );
     });
-  }, [t]);
+  }, []);
 
   return (
     <SettingList title={t("components.settings.verge.advanced.title")}>

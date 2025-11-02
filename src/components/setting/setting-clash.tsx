@@ -67,9 +67,7 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeo();
-      showNotice.success(
-        t("components.settings.clash.messages.geoDataUpdated"),
-      );
+      showNotice.success("components.settings.clash.messages.geoDataUpdated");
     } catch (err: any) {
       showNotice.error(err);
     }

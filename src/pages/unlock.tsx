@@ -173,10 +173,7 @@ const UnlockPage = () => {
       setIsCheckingAll(false);
     } catch (err: any) {
       setIsCheckingAll(false);
-      showNotice(
-        "error",
-        err?.message || err?.toString() || t("Detection timeout or failed"),
-      );
+      showNotice.error("Detection timeout or failed", err);
       console.error("Failed to check media unlock:", err);
     }
   });
@@ -206,12 +203,7 @@ const UnlockPage = () => {
       setLoadingItems((prev) => prev.filter((item) => item !== name));
     } catch (err: any) {
       setLoadingItems((prev) => prev.filter((item) => item !== name));
-      showNotice(
-        "error",
-        err?.message ||
-          err?.toString() ||
-          t("Detection failed for {name}").replace("{name}", name),
-      );
+      showNotice.error("Detection failed for {name}", { name }, err);
       console.error(`Failed to check ${name}:`, err);
     }
   });

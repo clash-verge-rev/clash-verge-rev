@@ -3,17 +3,11 @@ import { ReactNode, isValidElement } from "react";
 
 type NoticeType = "success" | "error" | "info";
 
-/**
- * Descriptor used when the notice content should be resolved through i18n.
- */
 export interface NoticeTranslationDescriptor {
   key: string;
   params?: Record<string, unknown>;
 }
 
-/**
- * Runtime representation of a notice entry queued for rendering.
- */
 interface NoticeItem {
   readonly id: number;
   readonly type: NoticeType;
@@ -69,6 +63,7 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
   let raw: unknown;
   let duration: number | undefined;
 
+  // Prioritize objects as translation params, then as raw payloads, while the first number wins as duration.
   for (const extra of extras) {
     if (extra === undefined) continue;
 
@@ -182,13 +177,9 @@ function extractDisplayText(input: unknown): string | undefined {
   if (input instanceof Error) {
     return input.message || input.name;
   }
-  if (
-    typeof input === "object" &&
-    input !== null &&
-    "message" in input &&
-    typeof (input as { message?: unknown }).message === "string"
-  ) {
-    return (input as { message?: string }).message;
+  if (typeof input === "object" && input !== null) {
+    const maybeMessage = (input as { message?: unknown }).message;
+    if (typeof maybeMessage === "string") return maybeMessage;
   }
   try {
     return JSON.stringify(input);
@@ -250,6 +241,7 @@ function normalizeNoticeMessage(
           },
         };
       }
+      // Prefer showing the original string while still surfacing the raw details below.
       return {
         i18n: {
           key: "common.notices.prefixedRaw",
@@ -285,9 +277,6 @@ function normalizeNoticeMessage(
   return { i18n: createRawDescriptor("") };
 }
 
-/**
- * Imperative entry point for users to display new notices.
- */
 const baseShowNotice = (
   type: NoticeType,
   message: NoticeContent,
@@ -300,6 +289,7 @@ const baseShowNotice = (
     effectiveDuration > 0
       ? setTimeout(() => hideNotice(id), effectiveDuration)
       : undefined;
+
   const normalizedMessage = normalizeNoticeMessage(message, params, raw);
   const notice = buildNotice(
     id,
@@ -341,12 +331,4 @@ export function subscribeNotices(subscriber: NoticeSubscriber) {
 
 export function getSnapshotNotices() {
   return notices;
-}
-
-export function clearAllNotices() {
-  notices.forEach((notice) => {
-    if (notice.timerId) clearTimeout(notice.timerId);
-  });
-  notices = [];
-  notifySubscribers();
 }

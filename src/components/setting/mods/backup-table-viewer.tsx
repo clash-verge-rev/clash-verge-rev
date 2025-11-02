@@ -75,9 +75,8 @@ export const BackupTableViewer = memo(
 
     const handleRestore = useLockFn(async (filename: string) => {
       await onRestore(filename).then(() => {
-        showNotice(
-          "success",
-          t("components.settings.backup.messages.restoreSuccess"),
+        showNotice.success(
+          "components.settings.backup.messages.restoreSuccess",
         );
       });
       await restartApp();
@@ -95,15 +94,13 @@ export const BackupTableViewer = memo(
           return;
         }
         await onExport(filename, savePath);
-        showNotice(
-          "success",
-          t("components.settings.backup.messages.localBackupExported"),
+        showNotice.success(
+          "components.settings.backup.messages.localBackupExported",
         );
       } catch (error) {
         console.error(error);
-        showNotice(
-          "error",
-          t("components.settings.backup.messages.localBackupExportFailed"),
+        showNotice.error(
+          "components.settings.backup.messages.localBackupExportFailed",
         );
       }
     });

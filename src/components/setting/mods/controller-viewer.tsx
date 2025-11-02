@@ -56,18 +56,16 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       // 如果启用了外部控制器，则保存控制器地址和密钥
       if (enableController) {
         if (!controller.trim()) {
-          showNotice.error({
-            i18nKey:
-              "components.settings.externalController.messages.addressRequired",
-          });
+          showNotice.error(
+            "components.settings.externalController.messages.addressRequired",
+          );
           return;
         }
 
         if (!secret.trim()) {
-          showNotice.error({
-            i18nKey:
-              "components.settings.externalController.messages.secretRequired",
-          });
+          showNotice.error(
+            "components.settings.externalController.messages.secretRequired",
+          );
           return;
         }
 
@@ -77,15 +75,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         await patchInfo({ "external-controller": "" });
       }
 
-      showNotice.success({ i18nKey: "Configuration saved successfully" });
+      showNotice.success("Configuration saved successfully");
       setOpen(false);
-    } catch (err: any) {
-      const message = err?.message || err?.toString?.();
-      if (message) {
-        showNotice.error(t("Failed to save configuration"), message, 4000);
-      } else {
-        showNotice.error("Failed to save configuration", 4000);
-      }
+    } catch (err) {
+      showNotice.error("Failed to save configuration", err, 4000);
     } finally {
       setIsSaving(false);
     }
@@ -100,9 +93,9 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         setTimeout(() => setCopySuccess(null));
       } catch (err) {
         console.warn("[ControllerViewer] copy to clipboard failed:", err);
-        showNotice.error({
-          i18nKey: "components.settings.externalController.messages.copyFailed",
-        });
+        showNotice.error(
+          "components.settings.externalController.messages.copyFailed",
+        );
       }
     },
   );

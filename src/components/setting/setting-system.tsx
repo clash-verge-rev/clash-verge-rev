@@ -78,9 +78,8 @@ const SettingSystem = ({ onError }: Props) => {
           }}
           onGuard={async (e) => {
             if (isAdminMode) {
-              showNotice(
-                "info",
-                t("components.settings.system.tooltips.autoLaunchAdmin"),
+              showNotice.info(
+                "components.settings.system.tooltips.autoLaunchAdmin",
               );
             }
 

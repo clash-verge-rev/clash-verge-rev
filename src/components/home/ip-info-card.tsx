@@ -68,8 +68,8 @@ export const IpInfoCard = () => {
       const data = await getIpInfo();
       setIpInfo(data);
       setCountdown(IP_REFRESH_SECONDS);
-    } catch (err: any) {
-      setError(err.message || t("Failed to get IP info"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("Failed to get IP info"));
     } finally {
       setLoading(false);
     }

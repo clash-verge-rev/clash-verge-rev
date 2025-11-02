@@ -76,12 +76,11 @@ const SettingVergeBasic = ({ onError }: Props) => {
 
   const onCopyClashEnv = useCallback(async () => {
     await copyClashEnv();
-    showNotice(
-      "success",
-      t("components.settings.common.notifications.copySuccess"),
+    showNotice.success(
+      "components.settings.common.notifications.copySuccess",
       1000,
     );
-  }, [t]);
+  }, []);
 
   return (
     <SettingList title={t("components.settings.verge.basic.title")}>

@@ -179,8 +179,8 @@ export const SystemInfoCard = () => {
         showNotice.info("Update Available", 2000);
         goToSettings();
       }
-    } catch (err: any) {
-      showNotice.error(err.message || err.toString());
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 

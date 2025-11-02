@@ -373,6 +373,7 @@
   "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
   "DNS Settings": "DNS 設定",
   "DNS settings saved": "DNS 設定已儲存",
+  "DNS configuration error:": "DNS 設定錯誤：",
   "DNS Overwrite": "DNS 覆寫",
   "DNS Settings Warning": "如果你不清楚這裡的設定請不要修改，並保持 DNS 覆寫開啟",
   "Enable DNS": "啟用 DNS",

@@ -163,11 +163,11 @@ export const ProxiesEditorViewer = (props: Props) => {
             proxies.push(proxy);
             names.push(proxy.name);
           }
-        } catch (err: any) {
+        } catch (err) {
           console.warn(
             "[ProxiesEditorViewer] parseUri failed for line:",
             uri,
-            err?.message || err,
+            err,
           );
           // 不阻塞主流程
         }

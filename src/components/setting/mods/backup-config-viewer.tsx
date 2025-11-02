@@ -84,18 +84,16 @@ export const BackupConfigViewer = memo(
 
       if (!url) {
         urlRef.current?.focus();
-        showNotice(
-          "error",
-          t("components.settings.backup.messages.webdavUrlRequired"),
+        showNotice.error(
+          "components.settings.backup.messages.webdavUrlRequired",
         );
         throw new Error(
           t("components.settings.backup.messages.webdavUrlRequired"),
         );
       } else if (!isValidUrl(url)) {
         urlRef.current?.focus();
-        showNotice(
-          "error",
-          t("components.settings.backup.messages.invalidWebdavUrl"),
+        showNotice.error(
+          "components.settings.backup.messages.invalidWebdavUrl",
         );
         throw new Error(
           t("components.settings.backup.messages.invalidWebdavUrl"),
@@ -103,9 +101,8 @@ export const BackupConfigViewer = memo(
       }
       if (!username) {
         usernameRef.current?.focus();
-        showNotice(
-          "error",
-          t("components.settings.backup.messages.usernameRequired"),
+        showNotice.error(
+          "components.settings.backup.messages.usernameRequired",
         );
         throw new Error(
           t("components.settings.backup.messages.usernameRequired"),
@@ -113,9 +110,8 @@ export const BackupConfigViewer = memo(
       }
       if (!password) {
         passwordRef.current?.focus();
-        showNotice(
-          "error",
-          t("components.settings.backup.messages.passwordRequired"),
+        showNotice.error(
+          "components.settings.backup.messages.passwordRequired",
         );
         throw new Error(
           t("components.settings.backup.messages.passwordRequired"),
@@ -132,18 +128,15 @@ export const BackupConfigViewer = memo(
           data.username.trim(),
           data.password,
         ).then(() => {
-          showNotice(
-            "success",
-            t("components.settings.backup.messages.webdavConfigSaved"),
+          showNotice.success(
+            "components.settings.backup.messages.webdavConfigSaved",
           );
           onSaveSuccess();
         });
       } catch (error) {
-        showNotice(
-          "error",
-          t("components.settings.backup.messages.webdavConfigSaveFailed", {
-            error,
-          }),
+        showNotice.error(
+          "components.settings.backup.messages.webdavConfigSaveFailed",
+          { error },
           3000,
         );
       } finally {
@@ -156,17 +149,15 @@ export const BackupConfigViewer = memo(
       try {
         setLoading(true);
         await createWebdavBackup().then(async () => {
-          showNotice(
-            "success",
-            t("components.settings.backup.messages.backupCreated"),
+          showNotice.success(
+            "components.settings.backup.messages.backupCreated",
           );
           await onBackupSuccess();
         });
       } catch (error) {
-        showNotice(
-          "error",
-          t("components.settings.backup.messages.backupFailed", { error }),
-        );
+        showNotice.error("components.settings.backup.messages.backupFailed", {
+          error,
+        });
       } finally {
         setLoading(false);
       }

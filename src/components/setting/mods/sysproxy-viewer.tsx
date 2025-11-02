@@ -278,14 +278,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
       showNotice.error(
-        t("components.settings.sysproxy.messages.durationTooShort"),
+        "components.settings.sysproxy.messages.durationTooShort",
       );
       return;
     }
     if (value.bypass && !validReg.test(value.bypass)) {
-      showNotice.error(
-        t("components.settings.sysproxy.messages.invalidBypass"),
-      );
+      showNotice.error("components.settings.sysproxy.messages.invalidBypass");
       return;
     }
 
@@ -303,7 +301,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       !hostnameRegex.test(value.proxy_host)
     ) {
       showNotice.error(
-        t("components.settings.sysproxy.messages.invalidProxyHost"),
+        "components.settings.sysproxy.messages.invalidProxyHost",
       );
       return;
     }

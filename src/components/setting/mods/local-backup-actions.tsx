@@ -20,16 +20,14 @@ export const LocalBackupActions = memo(
       try {
         setLoading(true);
         await createLocalBackup();
-        showNotice(
-          "success",
-          t("components.settings.backup.messages.localBackupCreated"),
+        showNotice.success(
+          "components.settings.backup.messages.localBackupCreated",
         );
         await onBackupSuccess();
       } catch (error) {
         console.error(error);
-        showNotice(
-          "error",
-          t("components.settings.backup.messages.localBackupFailed"),
+        showNotice.error(
+          "components.settings.backup.messages.localBackupFailed",
         );
       } finally {
         setLoading(false);

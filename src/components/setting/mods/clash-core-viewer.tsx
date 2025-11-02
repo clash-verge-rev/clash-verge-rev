@@ -75,7 +75,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setRestarting(true);
       await restartCore();
-      showNotice.success({ i18nKey: "Clash Core Restarted" });
+      showNotice.success("Clash Core Restarted");
       setRestarting(false);
     } catch (err) {
       setRestarting(false);
@@ -88,10 +88,10 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      showNotice.success({ i18nKey: "Core Version Updated" });
+      showNotice.success("Core Version Updated");
     } catch (err: any) {
       setUpgrading(false);
-      const errMsg = err.response?.data?.message || err.toString();
+      const errMsg = err?.response?.data?.message ?? String(err);
       const showMsg = errMsg.includes("already using latest version")
         ? "Already Using Latest Core Version"
         : errMsg;

@@ -58,15 +58,13 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
 
-      showNotice.success({
-        i18nKey: "components.notices.providers.updateSuccess",
-        params: { name },
+      showNotice.success("components.notices.providers.updateSuccess", {
+        name,
       });
-    } catch (err: any) {
-      const message = err?.message || err?.toString?.() || String(err);
-      showNotice.error({
-        i18nKey: "components.notices.providers.updateFailed",
-        params: { name, message },
+    } catch (err) {
+      showNotice.error("components.notices.providers.updateFailed", {
+        name,
+        message: String(err),
       });
     } finally {
       // 清除更新状态
@@ -80,9 +78,7 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(ruleProviders || {});
       if (allProviders.length === 0) {
-        showNotice.info({
-          i18nKey: "components.notices.providers.none",
-        });
+        showNotice.info("components.notices.providers.none");
         return;
       }
 
@@ -112,14 +108,10 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
 
-      showNotice.success({
-        i18nKey: "components.notices.providers.allUpdated",
-      });
-    } catch (err: any) {
-      const message = err?.message || err?.toString?.() || String(err);
-      showNotice.error({
-        i18nKey: "components.notices.providers.genericError",
-        params: { message },
+      showNotice.success("components.notices.providers.allUpdated");
+    } catch (err) {
+      showNotice.error("components.notices.providers.genericError", {
+        message: String(err),
       });
     } finally {
       // 清除所有更新状态

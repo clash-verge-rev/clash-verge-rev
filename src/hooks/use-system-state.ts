@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
 import { getRunningMode, isAdmin, isServiceAvailable } from "@/services/cmds";
@@ -26,7 +25,6 @@ let disablingTunMode = false;
  * 包括运行模式、管理员状态、系统服务是否可用
  */
 export function useSystemState() {
-  const { t } = useTranslation();
   const { verge, patchVerge } = useVerge();
 
   const {
@@ -67,16 +65,13 @@ export function useSystemState() {
       disablingTunMode = true;
       patchVerge({ enable_tun_mode: false })
         .then(() => {
-          showNotice.info({
-            i18nKey:
-              "TUN Mode automatically disabled due to service unavailable",
-          });
+          showNotice.info(
+            "TUN Mode automatically disabled due to service unavailable",
+          );
         })
         .catch((err) => {
           console.error("[useVerge] 自动关闭TUN模式失败:", err);
-          showNotice.error({
-            i18nKey: "Failed to disable TUN Mode automatically",
-          });
+          showNotice.error("Failed to disable TUN Mode automatically");
         })
         .finally(() => {
           const tid = setTimeout(() => {
@@ -86,7 +81,7 @@ export function useSystemState() {
           }, 1000);
         });
     }
-  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading, t]);
+  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading]);
 
   return {
     runningMode: systemState.runningMode,

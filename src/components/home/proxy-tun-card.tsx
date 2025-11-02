@@ -147,8 +147,8 @@ export const ProxyTunCard: FC = () => {
 
   const { enable_tun_mode } = verge ?? {};
 
-  const handleError = (err: Error) => {
-    showNotice.error(err.message || err.toString());
+  const handleError = (err: unknown) => {
+    showNotice.error(err);
   };
 
   const handleTabChange = (tab: string) => {

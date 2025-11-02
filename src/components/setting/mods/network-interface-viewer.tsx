@@ -133,7 +133,7 @@ const AddressDisplay = ({
           size="small"
           onClick={async () => {
             await writeText(content);
-            showNotice.success({ i18nKey: "Copy Success" });
+            showNotice.success("Copy Success");
           }}
         >
           <ContentCopyRounded sx={{ fontSize: "18px" }} />

@@ -146,12 +146,12 @@ const ProfilePage = () => {
 
       setActivatings((prev) => prev.filter((id) => id !== previousSwitching));
       showNotice.info(
-        t("pages.profiles.notifications.switchInterrupted"),
+        "pages.profiles.notifications.switchInterrupted",
         `${previousSwitching} → ${newProfile}`,
         3000,
       );
     },
-    [t],
+    [],
   );
 
   // 清理切换状态
@@ -240,12 +240,11 @@ const ProfilePage = () => {
       await onEnhance(false);
 
       showNotice.success("pages.profiles.notices.forceRefreshCompleted", 2000);
-    } catch (error: any) {
+    } catch (error) {
       console.error("[紧急刷新] 失败:", error);
-      const message = error?.message || String(error);
       showNotice.error(
         "pages.profiles.notices.emergencyRefreshFailed",
-        { message },
+        { message: String(error) },
         4000,
       );
     }
@@ -302,11 +301,11 @@ const ProfilePage = () => {
           self_proxy: true,
         });
         await handleImportSuccess("Profile Imported with Clash proxy");
-      } catch (retryErr: any) {
+      } catch (retryErr) {
         // 回退导入也失败
-        const retryErrmsg = retryErr?.message || retryErr.toString();
         showNotice.error(
-          `${t("pages.profiles.notifications.importFail")}: ${retryErrmsg}`,
+          "pages.profiles.notifications.importFail",
+          String(retryErr),
         );
       }
     } finally {
@@ -353,13 +352,10 @@ const ProfilePage = () => {
       // 清除SWR缓存并重新获取
       await mutate("getProfiles", getProfiles(), { revalidate: true });
       await onEnhance(false);
-      showNotice.error(
-        t("pages.profiles.notifications.importNeedsRefresh"),
-        3000,
-      );
+      showNotice.error("pages.profiles.notifications.importNeedsRefresh", 3000);
     } catch (finalError) {
       console.error(`[导入刷新] 最终刷新尝试失败:`, finalError);
-      showNotice.error(t("pages.profiles.notifications.importSuccess"), 5000);
+      showNotice.error("pages.profiles.notifications.importSuccess", 5000);
     }
   };
 
@@ -477,7 +473,7 @@ const ProfilePage = () => {
 
         if (notifySuccess && success) {
           showNotice.success(
-            t("pages.profiles.notifications.profileSwitched"),
+            "pages.profiles.notifications.profileSwitched",
             1000,
           );
         }
@@ -531,7 +527,6 @@ const ProfilePage = () => {
       profiles,
       patchProfiles,
       mutateLogs,
-      t,
       executeBackgroundTasks,
       handleProfileInterrupt,
       cleanupSwitchState,
@@ -577,7 +572,7 @@ const ProfilePage = () => {
       mutateLogs();
       if (notifySuccess) {
         showNotice.success(
-          t("pages.profiles.notifications.profileReactivated"),
+          "pages.profiles.notifications.profileReactivated",
           1000,
         );
       }
@@ -718,9 +713,7 @@ const ProfilePage = () => {
       setSelectedProfiles(new Set());
       setBatchMode(false);
 
-      showNotice.success({
-        i18nKey: "pages.profiles.notifications.batchDeleted",
-      });
+      showNotice.success("pages.profiles.notifications.batchDeleted");
     } catch (err: any) {
       showNotice.error(err);
     } finally {
@@ -729,8 +722,8 @@ const ProfilePage = () => {
   });
 
   const mode = useThemeMode();
-  const islight = mode === "light" ? true : false;
-  const dividercolor = islight
+  const isLight = mode === "light";
+  const dividercolor = isLight
     ? "rgba(0, 0, 0, 0.06)"
     : "rgba(255, 255, 255, 0.06)";
 

@@ -373,6 +373,7 @@
   "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
   "DNS Settings": "DNS Settings",
   "DNS settings saved": "DNS settings saved",
+  "DNS configuration error:": "DNS configuration error:",
   "DNS Overwrite": "DNS Overwrite",
   "DNS Settings Warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled",
   "Enable DNS": "Enable DNS",

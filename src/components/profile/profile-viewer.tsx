@@ -145,7 +145,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           } catch {
             // 首次创建/更新失败，尝试使用自身代理
             showNotice.info(
-              t("components.profile.viewer.notifications.creationRetry"),
+              "components.profile.viewer.notifications.creationRetry",
             );
 
             // 使用自身代理的配置
@@ -170,7 +170,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             }
 
             showNotice.success(
-              t("components.profile.viewer.notifications.creationSuccess"),
+              "components.profile.viewer.notifications.creationSuccess",
             );
           }
         }

@@ -193,7 +193,8 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
 
       <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>
         <Typography variant="body2">
-          <strong>Error:</strong> {error?.message || "Unknown error"}
+          <strong>Error:</strong>{" "}
+          {error instanceof Error ? error.message : "Unknown error"}
         </Typography>
         {retryCount > 0 && (
           <Typography variant="caption" display="block" sx={{ mt: 1 }}>

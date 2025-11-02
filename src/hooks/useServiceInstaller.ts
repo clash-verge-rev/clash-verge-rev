@@ -17,8 +17,7 @@ const executeWithErrorHandling = async (
       showNotice.success(successMessage);
     }
   } catch (err) {
-    const msg = (err as Error)?.message || String(err);
-    showNotice.error(msg);
+    showNotice.error(err);
     throw err;
   }
 };
