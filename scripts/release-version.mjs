@@ -5,12 +5,12 @@
  *   pnpm release-version <version>
  *
  * <version> can be:
- *   - A full semver version (e.g., 1.2.3, v1.2.3, 1.2.3-beta, v1.2.3+build)
+ *   - A full semver version (e.g., 1.2.3, v1.2.3, 1.2.3-beta, v1.2.3-rc.1)
  *   - A tag: "alpha", "beta", "rc", "autobuild", "autobuild-latest", or "deploytest"
  *     - "alpha", "beta", "rc": Appends the tag to the current base version (e.g., 1.2.3-beta)
- *     - "autobuild": Appends a timestamped autobuild tag (e.g., 1.2.3+autobuild.2406101530)
- *     - "autobuild-latest": Appends an autobuild tag with latest Tauri commit (e.g., 1.2.3+autobuild.0614.a1b2c3d)
- *     - "deploytest": Appends a timestamped deploytest tag (e.g., 1.2.3+deploytest.2406101530)
+ *     - "autobuild": Appends a timestamped autobuild tag (e.g., 1.2.3-autobuild.0610.cc39b2.r2)
+ *     - "autobuild-latest": Appends an autobuild tag with latest Tauri commit (e.g., 1.2.3-autobuild.0610.a1b2c3d.r2)
+ *     - "deploytest": Appends a timestamped deploytest tag (e.g., 1.2.3-deploytest.0610.cc39b2.r2)
  *
  * Examples:
  *   pnpm release-version 1.2.3
@@ -30,9 +30,11 @@
  */
 
 import { execSync } from "child_process";
-import { program } from "commander";
 import fs from "fs/promises";
+import process from "node:process";
 import path from "path";
+
+import { program } from "commander";
 
 /**
  * 获取当前 git 短 commit hash
@@ -73,32 +75,82 @@ function getLatestTauriCommit() {
 }
 
 /**
- * 生成短时间戳（格式：MMDD）或带 commit（格式：MMDD.cc39b27）
- * 使用 Asia/Shanghai 时区
- * @param {boolean} withCommit 是否带 commit
- * @param {boolean} useTauriCommit 是否使用 Tauri 相关的 commit（仅当 withCommit 为 true 时有效）
+ * 获取 Asia/Shanghai 时区的日期片段
  * @returns {string}
  */
-function generateShortTimestamp(withCommit = false, useTauriCommit = false) {
+function getLocalDatePart() {
   const now = new Date();
 
-  const formatter = new Intl.DateTimeFormat("en-CA", {
+  const dateFormatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
     month: "2-digit",
     day: "2-digit",
   });
+  const dateParts = Object.fromEntries(
+    dateFormatter.formatToParts(now).map((part) => [part.type, part.value]),
+  );
 
-  const parts = formatter.formatToParts(now);
-  const month = parts.find((part) => part.type === "month").value;
-  const day = parts.find((part) => part.type === "day").value;
+  const month = dateParts.month ?? "00";
+  const day = dateParts.day ?? "00";
 
-  if (withCommit) {
-    const gitShort = useTauriCommit
-      ? getLatestTauriCommit()
-      : getGitShortCommit();
-    return `${month}${day}.${gitShort}`;
-  }
   return `${month}${day}`;
+}
+
+/**
+ * 获取 GitHub Actions 运行编号（若存在）
+ * @returns {string|null}
+ */
+function getRunIdentifier() {
+  const attempt = process.env.GITHUB_RUN_ATTEMPT;
+  if (attempt && /^[0-9]+$/.test(attempt)) {
+    const attemptNumber = Number.parseInt(attempt, 10);
+    if (!Number.isNaN(attemptNumber)) {
+      return `r${attemptNumber.toString(36)}`;
+    }
+  }
+
+  const runNumber = process.env.GITHUB_RUN_NUMBER;
+  if (runNumber && /^[0-9]+$/.test(runNumber)) {
+    const runNum = Number.parseInt(runNumber, 10);
+    if (!Number.isNaN(runNum)) {
+      return `r${runNum.toString(36)}`;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 生成用于自动构建类渠道的版本后缀
+ * @param {Object} options
+ * @param {boolean} [options.includeCommit=false]
+ * @param {"current"|"tauri"} [options.commitSource="current"]
+ * @param {boolean} [options.includeRun=true]
+ * @returns {string}
+ */
+function generateChannelSuffix({
+  includeCommit = false,
+  commitSource = "current",
+  includeRun = true,
+} = {}) {
+  const segments = [];
+  const date = getLocalDatePart();
+  segments.push(date);
+
+  if (includeCommit) {
+    const commit =
+      commitSource === "tauri" ? getLatestTauriCommit() : getGitShortCommit();
+    segments.push(commit);
+  }
+
+  if (includeRun) {
+    const run = getRunIdentifier();
+    if (run) {
+      segments.push(run);
+    }
+  }
+
+  return segments.join(".");
 }
 
 /**
@@ -107,7 +159,7 @@ function generateShortTimestamp(withCommit = false, useTauriCommit = false) {
  * @returns {boolean}
  */
 function isValidVersion(version) {
-  return /^v?\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/i.test(
+  return /^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(
     version,
   );
 }
@@ -122,13 +174,14 @@ function normalizeVersion(version) {
 }
 
 /**
- * 提取基础版本号（去掉所有 -tag 和 +build 部分）
+ * 提取基础版本号（去掉所有 pre-release 和 build metadata）
  * @param {string} version
  * @returns {string}
  */
 function getBaseVersion(version) {
-  let base = version.replace(/-(alpha|beta|rc)(\.\d+)?/i, "");
-  base = base.replace(/\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*/g, "");
+  const cleaned = version.startsWith("v") ? version.slice(1) : version;
+  const withoutBuild = cleaned.split("+")[0];
+  const [base] = withoutBuild.split("-");
   return base;
 }
 
@@ -273,17 +326,23 @@ async function main(versionArg) {
       const baseVersion = getBaseVersion(currentVersion);
 
       if (versionArg.toLowerCase() === "autobuild") {
-        // 格式: 2.3.0+autobuild.1004.cc39b27
-        // 使用 Tauri 相关的最新 commit hash
-        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp(true, true)}`;
+        // 格式: 2.3.0-autobuild.0610.cc39b2.r2
+        newVersion = `${baseVersion}-autobuild.${generateChannelSuffix({
+          includeCommit: true,
+          commitSource: "tauri",
+        })}`;
       } else if (versionArg.toLowerCase() === "autobuild-latest") {
-        // 格式: 2.3.0+autobuild.1004.a1b2c3d (使用最新 Tauri 提交)
-        const latestTauriCommit = getLatestTauriCommit();
-        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp()}.${latestTauriCommit}`;
+        // 格式: 2.3.0-autobuild.0610.a1b2c3d.r2 (使用最新 Tauri 提交)
+        newVersion = `${baseVersion}-autobuild.${generateChannelSuffix({
+          includeCommit: true,
+          commitSource: "tauri",
+        })}`;
       } else if (versionArg.toLowerCase() === "deploytest") {
-        // 格式: 2.3.0+deploytest.1004.cc39b27
-        // 使用 Tauri 相关的最新 commit hash
-        newVersion = `${baseVersion}+deploytest.${generateShortTimestamp(true, true)}`;
+        // 格式: 2.3.0-deploytest.0610.cc39b2.r2
+        newVersion = `${baseVersion}-deploytest.${generateChannelSuffix({
+          includeCommit: true,
+          commitSource: "tauri",
+        })}`;
       } else {
         newVersion = `${baseVersion}-${versionArg.toLowerCase()}`;
       }

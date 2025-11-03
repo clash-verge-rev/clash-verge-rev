@@ -26,6 +26,7 @@ import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 import { getSystemInfo } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
+import { useUpdateChannel } from "@/services/updateChannel";
 import { version as appVersion } from "@root/package.json";
 
 import { EnhancedCard } from "./enhanced-card";
@@ -59,6 +60,7 @@ export const SystemInfoCard = () => {
   const navigate = useNavigate();
   const { isAdminMode, isSidecarMode } = useSystemState();
   const { installServiceAndRestartCore } = useServiceInstaller();
+  const [updateChannel] = useUpdateChannel();
 
   // 系统信息状态
   const [systemState, dispatchSystemState] = useReducer(systemStateReducer, {
@@ -117,7 +119,7 @@ export const SystemInfoCard = () => {
 
       timeoutId = window.setTimeout(() => {
         if (verge?.auto_check_update) {
-          checkUpdate().catch(console.error);
+          checkUpdate(updateChannel).catch(console.error);
         }
       }, 5000);
     }
@@ -126,11 +128,11 @@ export const SystemInfoCard = () => {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [verge?.auto_check_update, dispatchSystemState]);
+  }, [verge?.auto_check_update, dispatchSystemState, updateChannel]);
 
   // 自动检查更新逻辑
   useSWR(
-    verge?.auto_check_update ? "checkUpdate" : null,
+    verge?.auto_check_update ? ["checkUpdate", updateChannel] : null,
     async () => {
       const now = Date.now();
       localStorage.setItem("last_check_update", now.toString());
@@ -138,7 +140,7 @@ export const SystemInfoCard = () => {
         type: "set-last-check-update",
         payload: new Date(now).toLocaleString(),
       });
-      return await checkUpdate();
+      return await checkUpdate(updateChannel);
     },
     {
       revalidateOnFocus: false,
@@ -172,7 +174,7 @@ export const SystemInfoCard = () => {
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {
     try {
-      const info = await checkUpdate();
+      const info = await checkUpdate(updateChannel);
       if (!info?.available) {
         showNotice("success", t("Currently on the Latest Version"));
       } else {

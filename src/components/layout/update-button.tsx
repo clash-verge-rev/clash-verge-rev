@@ -4,6 +4,7 @@ import useSWR from "swr";
 
 import { useVerge } from "@/hooks/use-verge";
 import { checkUpdateSafe } from "@/services/update";
+import { useUpdateChannel } from "@/services/updateChannel";
 
 import { DialogRef } from "../base";
 import { UpdateViewer } from "../setting/mods/update-viewer";
@@ -16,12 +17,14 @@ export const UpdateButton = (props: Props) => {
   const { className } = props;
   const { verge } = useVerge();
   const { auto_check_update } = verge || {};
+  const [updateChannel] = useUpdateChannel();
 
   const viewerRef = useRef<DialogRef>(null);
 
+  const shouldCheck = auto_check_update || auto_check_update === null;
   const { data: updateInfo } = useSWR(
-    auto_check_update || auto_check_update === null ? "checkUpdate" : null,
-    checkUpdateSafe,
+    shouldCheck ? ["checkUpdate", updateChannel] : null,
+    () => checkUpdateSafe(updateChannel),
     {
       errorRetryCount: 2,
       revalidateIfStale: false,
