@@ -107,7 +107,9 @@ pub async fn check_update_channel<R: Runtime>(
         builder = builder.proxy(proxy_url);
     }
 
-    if allow_downgrades.unwrap_or(false) {
+    let allow_downgrades = allow_downgrades.unwrap_or(channel_enum != UpdateChannel::Stable);
+
+    if allow_downgrades {
         builder = builder.version_comparator(|current, update| update.version != current);
     }
 

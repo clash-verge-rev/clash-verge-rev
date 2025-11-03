@@ -142,6 +142,32 @@ export const resolveRemoteVersion = (update: Update): string | null => {
 
 const localVersionNormalized = normalizeVersion(appVersion);
 
+export const isPrereleaseVersion = (version: string | null): boolean => {
+  const parts = splitVersion(version);
+  return Boolean(parts?.pre.length);
+};
+
+export const shouldRejectUpdate = (
+  channel: UpdateChannel,
+  comparison: number | null,
+  remoteVersion: string | null,
+  localVersion: string | null,
+): boolean => {
+  if (comparison === null) return false;
+  if (comparison === 0) return true;
+  if (comparison > 0) return false;
+
+  if (channel !== "stable") {
+    const remoteIsPrerelease = isPrereleaseVersion(remoteVersion);
+    const localIsPrerelease = isPrereleaseVersion(localVersion);
+    if (remoteIsPrerelease && !localIsPrerelease) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const normalizeHeaders = (
   headers?: HeadersInit,
 ): Array<[string, string]> | undefined => {
@@ -154,6 +180,8 @@ export const checkUpdateForChannel = async (
   channel: UpdateChannel = DEFAULT_UPDATE_CHANNEL,
   options?: CheckOptions,
 ): Promise<Update | null> => {
+  const allowDowngrades = channel !== "stable";
+
   const metadata = await invoke<NativeUpdateMetadata | null>(
     "check_update_channel",
     {
@@ -161,7 +189,7 @@ export const checkUpdateForChannel = async (
       headers: normalizeHeaders(options?.headers),
       timeout: options?.timeout,
       proxy: options?.proxy,
-      allowDowngrades: false,
+      allowDowngrades,
     },
   );
 
@@ -181,8 +209,14 @@ export const checkUpdateForChannel = async (
 
   const remoteVersion = resolveRemoteVersion(result);
   const comparison = compareVersions(remoteVersion, localVersionNormalized);
-
-  if (comparison !== null && comparison <= 0) {
+  if (
+    shouldRejectUpdate(
+      channel,
+      comparison,
+      remoteVersion,
+      localVersionNormalized,
+    )
+  ) {
     try {
       await result.close();
     } catch (err) {
