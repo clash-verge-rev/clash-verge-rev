@@ -214,9 +214,6 @@ jobs:
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
-      - name: Configure updater channel
-        run: node scripts/set-updater-channel.mjs autobuild
-
       - name: Tauri build for Windows-macOS-Linux
         uses: tauri-apps/tauri-action@v0
         env:
@@ -300,9 +297,6 @@ jobs:
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
-
-      - name: Configure updater channel
-        run: node scripts/set-updater-channel.mjs autobuild
 
       - name: Setup for linux
         run: |
@@ -445,9 +439,6 @@ jobs:
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
-      - name: Configure updater channel
-        run: node scripts/set-updater-channel.mjs autobuild
-
       - name: Download WebView2 Runtime
         run: |
           invoke-webrequest -uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/109.0.1518.78/Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -outfile Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab
@@ -502,6 +493,44 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  publish-updater-manifests:
+    name: Publish Updater Manifests
+    runs-on: ubuntu-latest
+    needs:
+      [
+        update_tag,
+        autobuild-x86-windows-macos-linux,
+        autobuild-arm-linux,
+        autobuild-x86-arm-windows_webview2,
+      ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Publish updater manifests
+        run: pnpm updater
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish WebView2 updater manifests
+        run: pnpm updater-fixed-webview2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
@@ -511,6 +540,7 @@ jobs:
         autobuild-x86-windows-macos-linux,
         autobuild-arm-linux,
         autobuild-x86-arm-windows_webview2,
+        publish-updater-manifests,
       ]
     steps:
       - name: Checkout repository

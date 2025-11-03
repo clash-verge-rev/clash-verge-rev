@@ -1,8 +1,5 @@
-import {
-  check,
-  type CheckOptions,
-  type Update,
-} from "@tauri-apps/plugin-updater";
+import { invoke } from "@tauri-apps/api/core";
+import { Update, type CheckOptions } from "@tauri-apps/plugin-updater";
 
 import {
   DEFAULT_UPDATE_CHANNEL,
@@ -10,6 +7,15 @@ import {
   type UpdateChannel,
 } from "@/services/updateChannel";
 import { version as appVersion } from "@root/package.json";
+
+type NativeUpdateMetadata = {
+  rid: number;
+  currentVersion: string;
+  version: string;
+  date?: string;
+  body?: string | null;
+  rawJson: Record<string, unknown>;
+};
 
 export type VersionParts = {
   main: number[];
@@ -136,38 +142,41 @@ export const resolveRemoteVersion = (update: Update): string | null => {
 
 const localVersionNormalized = normalizeVersion(appVersion);
 
-const CHANNEL_TARGET_MAP: Record<UpdateChannel, string | null> = {
-  stable: null,
-  autobuild: "autobuild",
-};
-
-const buildCheckOptions = (
-  channel: UpdateChannel,
-  options?: CheckOptions,
-): CheckOptions => {
-  const {
-    allowDowngrades: _ignoredAllowDowngrades,
-    target: _ignoredTarget,
-    ...rest
-  } = options ?? {};
-  const result: CheckOptions = {
-    ...rest,
-    allowDowngrades: false,
-  };
-
-  const nextTarget = CHANNEL_TARGET_MAP[channel] ?? null;
-  if (nextTarget) {
-    result.target = nextTarget;
-  }
-
-  return result;
+const normalizeHeaders = (
+  headers?: HeadersInit,
+): Array<[string, string]> | undefined => {
+  if (!headers) return undefined;
+  const pairs = Array.from(new Headers(headers).entries());
+  return pairs.length > 0 ? pairs : undefined;
 };
 
 export const checkUpdateForChannel = async (
   channel: UpdateChannel = DEFAULT_UPDATE_CHANNEL,
   options?: CheckOptions,
 ): Promise<Update | null> => {
-  const result = await check(buildCheckOptions(channel, options));
+  const metadata = await invoke<NativeUpdateMetadata | null>(
+    "check_update_channel",
+    {
+      channel,
+      headers: normalizeHeaders(options?.headers),
+      timeout: options?.timeout,
+      proxy: options?.proxy,
+      allowDowngrades: false,
+    },
+  );
+
+  if (!metadata) return null;
+
+  const result = new Update({
+    ...metadata,
+    body:
+      typeof metadata.body === "string"
+        ? metadata.body
+        : metadata.body === null
+          ? undefined
+          : metadata.body,
+  });
+
   if (!result) return null;
 
   const remoteVersion = resolveRemoteVersion(result);
