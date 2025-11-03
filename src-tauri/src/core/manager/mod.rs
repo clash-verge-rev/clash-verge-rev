@@ -5,7 +5,6 @@ mod state;
 use anyhow::Result;
 use parking_lot::Mutex;
 use std::{fmt, sync::Arc, time::Instant};
-use tokio::sync::Semaphore;
 
 use crate::process::CommandChildGuard;
 use crate::singleton_lazy;
@@ -30,7 +29,6 @@ impl fmt::Display for RunningMode {
 #[derive(Debug)]
 pub struct CoreManager {
     state: Arc<Mutex<State>>,
-    update_semaphore: Arc<Semaphore>,
     last_update: Arc<Mutex<Option<Instant>>>,
 }
 
@@ -53,7 +51,6 @@ impl Default for CoreManager {
     fn default() -> Self {
         Self {
             state: Arc::new(Mutex::new(State::default())),
-            update_semaphore: Arc::new(Semaphore::new(1)),
             last_update: Arc::new(Mutex::new(None)),
         }
     }

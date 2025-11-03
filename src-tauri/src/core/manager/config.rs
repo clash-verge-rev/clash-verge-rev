@@ -39,11 +39,6 @@ impl CoreManager {
             return Ok((true, String::new()));
         }
 
-        let _permit = self
-            .update_semaphore
-            .try_acquire()
-            .map_err(|_| anyhow!("Config update already in progress"))?;
-
         self.perform_config_update().await
     }
 
