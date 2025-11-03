@@ -1,6 +1,6 @@
 ## v2.4.3
 
-感谢 @Slinetrac, @oomeow 以及 @Lythrilla 的出色贡献
+感谢 @Slinetrac, @oomeow, @Lythrilla, @Dragon1573 的出色贡献
 
 ### 🐞 修复问题
 
