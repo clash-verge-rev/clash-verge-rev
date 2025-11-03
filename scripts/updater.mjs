@@ -5,6 +5,55 @@ import fetch from "node-fetch";
 
 import { resolveUpdateLog, resolveUpdateLogDefault } from "./updatelog.mjs";
 
+const SEMVER_REGEX =
+  /v?\d+(?:\.\d+){2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?/g;
+
+const stripLeadingV = (version) =>
+  typeof version === "string" && version.startsWith("v")
+    ? version.slice(1)
+    : version;
+
+const preferCandidate = (current, candidate) => {
+  if (!candidate) return current;
+  if (!current) return candidate;
+
+  const candidateHasPre = /[-+]/.test(candidate);
+  const currentHasPre = /[-+]/.test(current);
+
+  if (candidateHasPre && !currentHasPre) return candidate;
+  if (candidateHasPre === currentHasPre && candidate.length > current.length) {
+    return candidate;
+  }
+
+  return current;
+};
+
+const extractBestSemver = (input) => {
+  if (typeof input !== "string") return null;
+  const matches = input.match(SEMVER_REGEX);
+  if (!matches) return null;
+
+  return matches
+    .map(stripLeadingV)
+    .reduce((best, candidate) => preferCandidate(best, candidate), null);
+};
+
+const resolveReleaseVersion = (release) => {
+  const sources = [
+    release?.name,
+    release?.tag_name,
+    release?.body,
+    ...(Array.isArray(release?.assets)
+      ? release.assets.map((asset) => asset?.name)
+      : []),
+  ];
+
+  return sources.reduce((best, source) => {
+    const candidate = extractBestSemver(source);
+    return preferCandidate(best, candidate);
+  }, null);
+};
+
 // Add stable update JSON filenames
 const UPDATE_TAG_NAME = "updater";
 const UPDATE_JSON_FILE = "update.json";
@@ -134,12 +183,23 @@ async function processRelease(github, options, channelConfig) {
     });
 
     const releaseTagName = release.tag_name ?? tagName;
+    const resolvedVersion = resolveReleaseVersion(release);
+
+    if (!resolvedVersion) {
+      throw new Error(
+        `[${channelName}] Failed to determine semver version from release "${releaseTagName}"`,
+      );
+    }
 
     console.log(
       `[${channelName}] Preparing update metadata from release "${releaseTagName}"`,
     );
+    console.log(
+      `[${channelName}] Resolved release version: ${resolvedVersion}`,
+    );
 
     const updateData = {
+      version: resolvedVersion,
       name: releaseTagName,
       notes: await resolveUpdateLog(releaseTagName).catch(() =>
         resolveUpdateLogDefault().catch(() => "No changelog available"),
