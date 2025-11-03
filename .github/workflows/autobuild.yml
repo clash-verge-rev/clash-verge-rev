@@ -214,6 +214,9 @@ jobs:
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
+      - name: Configure updater channel
+        run: node scripts/set-updater-channel.mjs autobuild
+
       - name: Tauri build for Windows-macOS-Linux
         uses: tauri-apps/tauri-action@v0
         env:
@@ -297,6 +300,9 @@ jobs:
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
+
+      - name: Configure updater channel
+        run: node scripts/set-updater-channel.mjs autobuild
 
       - name: Setup for linux
         run: |
@@ -438,6 +444,9 @@ jobs:
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
+
+      - name: Configure updater channel
+        run: node scripts/set-updater-channel.mjs autobuild
 
       - name: Download WebView2 Runtime
         run: |
