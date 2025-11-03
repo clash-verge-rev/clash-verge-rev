@@ -1,5 +1,11 @@
 import { ContentCopyRounded } from "@mui/icons-material";
-import { Button, Input, MenuItem, Select } from "@mui/material";
+import {
+  Button,
+  Input,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+} from "@mui/material";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +17,11 @@ import { navItems } from "@/pages/_routers";
 import { copyClashEnv } from "@/services/cmds";
 import { supportedLanguages } from "@/services/i18n";
 import { showNotice } from "@/services/noticeService";
+import {
+  UPDATE_CHANNEL_OPTIONS,
+  type UpdateChannel,
+  useUpdateChannel,
+} from "@/services/updateChannel";
 import getSystem from "@/utils/get-system";
 
 import { BackupViewer } from "./mods/backup-viewer";
@@ -69,6 +80,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
   const layoutRef = useRef<DialogRef>(null);
   const updateRef = useRef<DialogRef>(null);
   const backupRef = useRef<DialogRef>(null);
+  const [updateChannel, setUpdateChannel] = useUpdateChannel();
 
   const onChangeData = (patch: any) => {
     mutateVerge({ ...verge, ...patch }, false);
@@ -79,6 +91,14 @@ const SettingVergeBasic = ({ onError }: Props) => {
     showNotice("success", t("Copy Success"), 1000);
   }, [t]);
 
+  const onUpdateChannelChange = useCallback(
+    (event: SelectChangeEvent<UpdateChannel>) => {
+      const nextChannel = event.target.value as UpdateChannel;
+      setUpdateChannel(nextChannel);
+    },
+    [setUpdateChannel],
+  );
+
   return (
     <SettingList title={t("Verge Basic Setting")}>
       <ThemeViewer ref={themeRef} />
@@ -88,6 +108,21 @@ const SettingVergeBasic = ({ onError }: Props) => {
       <LayoutViewer ref={layoutRef} />
       <UpdateViewer ref={updateRef} />
       <BackupViewer ref={backupRef} />
+
+      <SettingItem label={t("Update Channel")}>
+        <Select
+          size="small"
+          value={updateChannel}
+          onChange={onUpdateChannelChange}
+          sx={{ width: 160, "> div": { py: "7.5px" } }}
+        >
+          {UPDATE_CHANNEL_OPTIONS.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {t(option.labelKey)}
+            </MenuItem>
+          ))}
+        </Select>
+      </SettingItem>
 
       <SettingItem label={t("Language")}>
         <GuardState

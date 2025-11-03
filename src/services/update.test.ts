@@ -5,8 +5,10 @@ import {
   compareVersions,
   ensureSemver,
   extractSemver,
+  isPrereleaseVersion,
   normalizeVersion,
   resolveRemoteVersion,
+  shouldRejectUpdate,
   splitVersion,
 } from "@/services/update";
 import type { VersionParts } from "@/services/update";
@@ -136,5 +138,55 @@ describe("resolveRemoteVersion", () => {
       },
     });
     expect(resolveRemoteVersion(update)).toBeNull();
+  });
+});
+
+describe("isPrereleaseVersion", () => {
+  it("returns true when version has prerelease identifiers", () => {
+    expect(isPrereleaseVersion("1.2.3-beta.1")).toBe(true);
+  });
+
+  it("returns false for release versions or missing input", () => {
+    expect(isPrereleaseVersion("1.2.3")).toBe(false);
+    expect(isPrereleaseVersion(null)).toBe(false);
+  });
+});
+
+describe("shouldRejectUpdate", () => {
+  const localStable = "2.4.3";
+  const remoteAutobuild = "2.4.3-autobuild.1122.qwerty.r1a";
+
+  it("rejects when comparison cannot proceed in downgrade-safe way on stable channel", () => {
+    expect(shouldRejectUpdate("stable", -1, "2.4.2", localStable)).toBe(true);
+    expect(shouldRejectUpdate("stable", 0, "2.4.3", localStable)).toBe(true);
+  });
+
+  it("allows prerelease downgrade on autobuild channel", () => {
+    expect(
+      shouldRejectUpdate("autobuild", -1, remoteAutobuild, localStable),
+    ).toBe(false);
+  });
+
+  it("rejects prerelease downgrade when base version is older", () => {
+    expect(
+      shouldRejectUpdate("autobuild", -1, "2.3.0-autobuild.1", localStable),
+    ).toBe(true);
+  });
+
+  it("rejects downgrade when both versions are prereleases", () => {
+    expect(
+      shouldRejectUpdate(
+        "autobuild",
+        -1,
+        "2.4.3-autobuild.1122.qwerty.r1a",
+        "2.4.3-autobuild.1127.qwerty.r1a",
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects downgrade when remote release is older even on autobuild channel", () => {
+    expect(shouldRejectUpdate("autobuild", -1, "2.4.2", localStable)).toBe(
+      true,
+    );
   });
 });

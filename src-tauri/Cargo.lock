@@ -1158,6 +1158,7 @@ dependencies = [
  "tauri-plugin-window-state",
  "tokio",
  "tokio-stream",
+ "url",
  "users",
  "warp",
  "winapi",
