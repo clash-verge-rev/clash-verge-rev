@@ -365,7 +365,7 @@ async fn initialize_config_files() -> Result<()> {
     if let Ok(path) = dirs::profiles_path()
         && !path.exists()
     {
-        let template = IProfiles::template();
+        let template = IProfiles::default();
         help::save_yaml(&path, &template, Some("# Clash Verge"))
             .await
             .map_err(|e| anyhow::anyhow!("Failed to create profiles config: {}", e))?;

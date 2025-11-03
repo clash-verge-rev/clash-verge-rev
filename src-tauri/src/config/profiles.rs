@@ -69,20 +69,13 @@ impl IProfiles {
                 }
                 Err(err) => {
                     logging!(error, Type::Config, "{err}");
-                    Self::template()
+                    Self::default()
                 }
             },
             Err(err) => {
                 logging!(error, Type::Config, "{err}");
-                Self::template()
+                Self::default()
             }
-        }
-    }
-
-    pub fn template() -> Self {
-        Self {
-            items: Some(vec![]),
-            ..Self::default()
         }
     }
 
@@ -96,17 +89,17 @@ impl IProfiles {
     }
 
     /// 只修改current，valid和chain
-    pub fn patch_config(&mut self, patch: IProfiles) -> Result<()> {
+    pub fn patch_config(&mut self, patch: &IProfiles) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
-        if let Some(current) = patch.current
+        if let Some(current) = &patch.current
             && let Some(items) = self.items.as_ref()
         {
             let some_uid = Some(current);
-            if items.iter().any(|e| e.uid == some_uid) {
-                self.current = some_uid;
+            if items.iter().any(|e| e.uid.as_ref() == some_uid) {
+                self.current = some_uid.cloned();
             }
         }
 

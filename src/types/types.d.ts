@@ -280,7 +280,6 @@ interface IProfileOption {
 
 interface IProfilesConfig {
   current?: string;
-  valid?: string[];
   items?: IProfileItem[];
 }
 

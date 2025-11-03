@@ -334,10 +334,7 @@ pub fn run() {
                             .register_system_hotkey(SystemHotkey::CmdW)
                             .await;
                     }
-
-                    if !is_enable_global_hotkey {
-                        let _ = hotkey::Hotkey::global().init().await;
-                    }
+                    let _ = hotkey::Hotkey::global().init(true).await;
                     return;
                 }
 
@@ -358,8 +355,18 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             {
                 use crate::core::hotkey::SystemHotkey;
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                AsyncHandler::spawn(move || async move {
+                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                    let is_enable_global_hotkey = Config::verge()
+                        .await
+                        .latest_ref()
+                        .enable_global_hotkey
+                        .unwrap_or(true);
+                    if !is_enable_global_hotkey {
+                        let _ = hotkey::Hotkey::global().reset();
+                    }
+                });
             }
         }
     }

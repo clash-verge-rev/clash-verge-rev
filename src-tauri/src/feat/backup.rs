@@ -241,11 +241,15 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
         return Err(anyhow!("Backup file not found: {}", filename));
     }
 
-    let verge = Config::verge().await;
-    let verge_data = verge.latest_ref().clone();
-    let webdav_url = verge_data.webdav_url.clone();
-    let webdav_username = verge_data.webdav_username.clone();
-    let webdav_password = verge_data.webdav_password.clone();
+    let (webdav_url, webdav_username, webdav_password) = {
+        let verge = Config::verge().await;
+        let verge = verge.latest_ref();
+        (
+            verge.webdav_url.clone(),
+            verge.webdav_username.clone(),
+            verge.webdav_password.clone(),
+        )
+    };
 
     let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&target_path)).await??;
     let mut zip = zip::ZipArchive::new(file)?;

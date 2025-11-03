@@ -1,6 +1,6 @@
 ## v2.4.3
 
-感谢 @Slinetrac, @oomeow 以及 @Lythrilla 的出色贡献
+感谢 @Slinetrac, @oomeow, @Lythrilla, @Dragon1573 的出色贡献
 
 ### 🐞 修复问题
 
@@ -36,6 +36,7 @@
 - 修复 macOS 从 Dock 栏退出轻量模式状态不同步
 - 修复 Linux 系统主题切换不生效
 - 修复 `允许自动更新` 字段使手动订阅刷新失效
+- 修复轻量模式托盘状态不同步
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
