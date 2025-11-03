@@ -93,8 +93,7 @@ impl CoreManager {
         defer! {
             self.set_running_mode(RunningMode::NotRunning);
         }
-        let mut state = self.state.lock();
-        if let Some(child) = state.child_sidecar.take() {
+        if let Some(child) = self.take_child_sidecar() {
             let pid = child.pid();
             drop(child);
             logging!(trace, Type::Core, "Sidecar stopped (PID: {:?})", pid);

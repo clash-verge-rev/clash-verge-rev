@@ -120,7 +120,7 @@ pub(super) async fn init_timer() {
 }
 
 pub(super) async fn init_hotkey() {
-    logging_error!(Type::Setup, Hotkey::global().init().await);
+    logging_error!(Type::Setup, Hotkey::global().init(false).await);
 }
 
 pub(super) async fn init_auto_lightweight_boot() {
