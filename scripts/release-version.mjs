@@ -101,19 +101,27 @@ function getLocalDatePart() {
  * @returns {string|null}
  */
 function getRunIdentifier() {
+  const runNumber = process.env.GITHUB_RUN_NUMBER;
+  if (runNumber && /^[0-9]+$/.test(runNumber)) {
+    const runNum = Number.parseInt(runNumber, 10);
+    if (!Number.isNaN(runNum)) {
+      const base = `r${runNum.toString(36)}`;
+      const attempt = process.env.GITHUB_RUN_ATTEMPT;
+      if (attempt && /^[0-9]+$/.test(attempt)) {
+        const attemptNumber = Number.parseInt(attempt, 10);
+        if (!Number.isNaN(attemptNumber) && attemptNumber > 1) {
+          return `${base}${attemptNumber.toString(36)}`;
+        }
+      }
+      return base;
+    }
+  }
+
   const attempt = process.env.GITHUB_RUN_ATTEMPT;
   if (attempt && /^[0-9]+$/.test(attempt)) {
     const attemptNumber = Number.parseInt(attempt, 10);
     if (!Number.isNaN(attemptNumber)) {
       return `r${attemptNumber.toString(36)}`;
-    }
-  }
-
-  const runNumber = process.env.GITHUB_RUN_NUMBER;
-  if (runNumber && /^[0-9]+$/.test(runNumber)) {
-    const runNum = Number.parseInt(runNumber, 10);
-    if (!Number.isNaN(runNum)) {
-      return `r${runNum.toString(36)}`;
     }
   }
 
