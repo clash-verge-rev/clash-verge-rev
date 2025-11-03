@@ -7,6 +7,8 @@ import { resolveUpdateLog, resolveUpdateLogDefault } from "./updatelog.mjs";
 
 const SEMVER_REGEX =
   /v?\d+(?:\.\d+){2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?/g;
+const STRICT_SEMVER_REGEX =
+  /^\d+(?:\.\d+){2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
 const stripLeadingV = (version) =>
   typeof version === "string" && version.startsWith("v")
@@ -36,6 +38,50 @@ const extractBestSemver = (input) => {
   return matches
     .map(stripLeadingV)
     .reduce((best, candidate) => preferCandidate(best, candidate), null);
+};
+
+const splitIdentifiers = (segment) =>
+  segment
+    .split(/[^0-9A-Za-z-]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+const sanitizeSuffix = (value, fallbackLabel) => {
+  if (!value) return fallbackLabel;
+
+  const trimmed = value.trim();
+  if (!trimmed) return fallbackLabel;
+
+  const [preRelease = "", metadata] = trimmed.split("+", 2);
+  const normalizedPre = splitIdentifiers(preRelease).join(".") || fallbackLabel;
+  const normalizedMeta = metadata ? splitIdentifiers(metadata).join(".") : "";
+
+  return normalizedMeta ? `${normalizedPre}+${normalizedMeta}` : normalizedPre;
+};
+
+const ensureSemverCompatibleVersion = (
+  version,
+  { channel, releaseTag, fallbackLabel },
+) => {
+  const trimmed = stripLeadingV(version ?? "").trim();
+  if (!trimmed) return null;
+
+  if (STRICT_SEMVER_REGEX.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (channel === "autobuild") {
+    const normalizedSuffix = sanitizeSuffix(trimmed, fallbackLabel ?? channel);
+    const fallback = `0.0.0-${normalizedSuffix}`;
+    console.warn(
+      `[${channel}] Normalized non-semver version "${trimmed}" from release "${releaseTag}" to "${fallback}"`,
+    );
+    return fallback;
+  }
+
+  throw new Error(
+    `[${channel}] Derived version "${trimmed}" is not semver compatible for release "${releaseTag}"`,
+  );
 };
 
 const resolveReleaseVersion = (release) => {
@@ -198,8 +244,24 @@ async function processRelease(github, options, channelConfig) {
       `[${channelName}] Resolved release version: ${resolvedVersion}`,
     );
 
+    const semverCompatibleVersion = ensureSemverCompatibleVersion(
+      resolvedVersion,
+      {
+        channel: channelName,
+        releaseTag: releaseTagName,
+        fallbackLabel: channelName,
+      },
+    );
+
+    if (semverCompatibleVersion !== resolvedVersion) {
+      console.log(
+        `[${channelName}] Normalized updater version: ${semverCompatibleVersion}`,
+      );
+    }
+
     const updateData = {
-      version: resolvedVersion,
+      version: semverCompatibleVersion,
+      original_version: resolvedVersion,
       tag_name: releaseTagName,
       notes: await resolveUpdateLog(releaseTagName).catch(() =>
         resolveUpdateLogDefault().catch(() => "No changelog available"),
