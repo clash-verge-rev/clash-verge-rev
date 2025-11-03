@@ -3,7 +3,7 @@ mod lifecycle;
 mod state;
 
 use anyhow::Result;
-use parking_lot::Mutex;
+use arc_swap::{ArcSwap, ArcSwapOption};
 use std::{fmt, sync::Arc, time::Instant};
 
 use crate::process::CommandChildGuard;
@@ -28,21 +28,21 @@ impl fmt::Display for RunningMode {
 
 #[derive(Debug)]
 pub struct CoreManager {
-    state: Arc<Mutex<State>>,
-    last_update: Arc<Mutex<Option<Instant>>>,
+    state: ArcSwap<State>,
+    last_update: ArcSwapOption<Instant>,
 }
 
 #[derive(Debug)]
 struct State {
-    running_mode: Arc<RunningMode>,
-    child_sidecar: Option<CommandChildGuard>,
+    running_mode: ArcSwap<RunningMode>,
+    child_sidecar: ArcSwapOption<CommandChildGuard>,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            running_mode: Arc::new(RunningMode::NotRunning),
-            child_sidecar: None,
+            running_mode: ArcSwap::new(Arc::new(RunningMode::NotRunning)),
+            child_sidecar: ArcSwapOption::new(None),
         }
     }
 }
@@ -50,23 +50,41 @@ impl Default for State {
 impl Default for CoreManager {
     fn default() -> Self {
         Self {
-            state: Arc::new(Mutex::new(State::default())),
-            last_update: Arc::new(Mutex::new(None)),
+            state: ArcSwap::new(Arc::new(State::default())),
+            last_update: ArcSwapOption::new(None),
         }
     }
 }
 
 impl CoreManager {
     pub fn get_running_mode(&self) -> Arc<RunningMode> {
-        Arc::clone(&self.state.lock().running_mode)
+        Arc::clone(&self.state.load().running_mode.load())
+    }
+
+    pub fn take_child_sidecar(&self) -> Option<CommandChildGuard> {
+        self.state
+            .load()
+            .child_sidecar
+            .swap(None)
+            .and_then(|arc| Arc::try_unwrap(arc).ok())
+    }
+
+    pub fn get_last_update(&self) -> Option<Arc<Instant>> {
+        self.last_update.load_full()
     }
 
     pub fn set_running_mode(&self, mode: RunningMode) {
-        self.state.lock().running_mode = Arc::new(mode);
+        let state = self.state.load();
+        state.running_mode.store(Arc::new(mode));
     }
 
     pub fn set_running_child_sidecar(&self, child: CommandChildGuard) {
-        self.state.lock().child_sidecar = Some(child);
+        let state = self.state.load();
+        state.child_sidecar.store(Some(Arc::new(child)));
+    }
+
+    pub fn set_last_update(&self, time: Instant) {
+        self.last_update.store(Some(Arc::new(time)));
     }
 
     pub async fn init(&self) -> Result<()> {

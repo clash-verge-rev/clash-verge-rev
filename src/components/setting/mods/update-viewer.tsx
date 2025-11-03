@@ -15,6 +15,7 @@ import { portableFlag } from "@/pages/_layout";
 import { showNotice } from "@/services/noticeService";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
+import { useUpdateChannel } from "@/services/updateChannel";
 
 export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
@@ -26,12 +27,17 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
   const { addListener } = useListen();
+  const [updateChannel] = useUpdateChannel();
 
-  const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
-    errorRetryCount: 2,
-    revalidateIfStale: false,
-    focusThrottleInterval: 36e5, // 1 hour
-  });
+  const { data: updateInfo } = useSWR(
+    ["checkUpdate", updateChannel],
+    () => checkUpdate(updateChannel),
+    {
+      errorRetryCount: 2,
+      revalidateIfStale: false,
+      focusThrottleInterval: 36e5, // 1 hour
+    },
+  );
 
   const [downloaded, setDownloaded] = useState(0);
   const [buffer, setBuffer] = useState(0);

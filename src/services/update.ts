@@ -1,10 +1,21 @@
-import {
-  check,
-  type CheckOptions,
-  type Update,
-} from "@tauri-apps/plugin-updater";
+import { invoke } from "@tauri-apps/api/core";
+import { Update, type CheckOptions } from "@tauri-apps/plugin-updater";
 
+import {
+  DEFAULT_UPDATE_CHANNEL,
+  getStoredUpdateChannel,
+  type UpdateChannel,
+} from "@/services/updateChannel";
 import { version as appVersion } from "@root/package.json";
+
+type NativeUpdateMetadata = {
+  rid: number;
+  currentVersion: string;
+  version: string;
+  date?: string;
+  body?: string | null;
+  rawJson: Record<string, unknown>;
+};
 
 export type VersionParts = {
   main: number[];
@@ -131,16 +142,92 @@ export const resolveRemoteVersion = (update: Update): string | null => {
 
 const localVersionNormalized = normalizeVersion(appVersion);
 
-export const checkUpdateSafe = async (
+export const isPrereleaseVersion = (version: string | null): boolean => {
+  const parts = splitVersion(version);
+  return Boolean(parts?.pre.length);
+};
+
+export const shouldRejectUpdate = (
+  channel: UpdateChannel,
+  comparison: number | null,
+  remoteVersion: string | null,
+  localVersion: string | null,
+): boolean => {
+  if (comparison === null) return false;
+  if (comparison === 0) return true;
+  if (comparison > 0) return false;
+
+  if (channel !== "stable") {
+    const remoteIsPrerelease = isPrereleaseVersion(remoteVersion);
+    const localIsPrerelease = isPrereleaseVersion(localVersion);
+    if (remoteIsPrerelease && !localIsPrerelease) {
+      const remoteParts = splitVersion(remoteVersion);
+      const localParts = splitVersion(localVersion);
+      if (!remoteParts || !localParts) return true;
+
+      const mainComparison = compareVersionParts(
+        { main: remoteParts.main, pre: [] },
+        { main: localParts.main, pre: [] },
+      );
+
+      if (mainComparison < 0) return true;
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const normalizeHeaders = (
+  headers?: HeadersInit,
+): Array<[string, string]> | undefined => {
+  if (!headers) return undefined;
+  const pairs = Array.from(new Headers(headers).entries());
+  return pairs.length > 0 ? pairs : undefined;
+};
+
+export const checkUpdateForChannel = async (
+  channel: UpdateChannel = DEFAULT_UPDATE_CHANNEL,
   options?: CheckOptions,
 ): Promise<Update | null> => {
-  const result = await check({ ...(options ?? {}), allowDowngrades: false });
+  const allowDowngrades = channel !== "stable";
+
+  const metadata = await invoke<NativeUpdateMetadata | null>(
+    "check_update_channel",
+    {
+      channel,
+      headers: normalizeHeaders(options?.headers),
+      timeout: options?.timeout,
+      proxy: options?.proxy,
+      target: options?.target,
+      allowDowngrades,
+    },
+  );
+
+  if (!metadata) return null;
+
+  const result = new Update({
+    ...metadata,
+    body:
+      typeof metadata.body === "string"
+        ? metadata.body
+        : metadata.body === null
+          ? undefined
+          : metadata.body,
+  });
+
   if (!result) return null;
 
   const remoteVersion = resolveRemoteVersion(result);
   const comparison = compareVersions(remoteVersion, localVersionNormalized);
-
-  if (comparison !== null && comparison <= 0) {
+  if (
+    shouldRejectUpdate(
+      channel,
+      comparison,
+      remoteVersion,
+      localVersionNormalized,
+    )
+  ) {
     try {
       await result.close();
     } catch (err) {
@@ -152,4 +239,13 @@ export const checkUpdateSafe = async (
   return result;
 };
 
+export const checkUpdateSafe = async (
+  channel?: UpdateChannel,
+  options?: CheckOptions,
+): Promise<Update | null> => {
+  const resolvedChannel = channel ?? getStoredUpdateChannel();
+  return checkUpdateForChannel(resolvedChannel, options);
+};
+
 export type { CheckOptions };
+export type { UpdateChannel } from "@/services/updateChannel";

@@ -174,6 +174,7 @@ mod app_init {
             cmd::get_runtime_logs,
             cmd::get_runtime_proxy_chain_config,
             cmd::update_proxy_chain_config_in_runtime,
+            cmd::check_update_channel,
             cmd::invoke_uwp_tool,
             cmd::copy_clash_env,
             cmd::sync_tray_proxy_selection,
@@ -334,10 +335,7 @@ pub fn run() {
                             .register_system_hotkey(SystemHotkey::CmdW)
                             .await;
                     }
-
-                    if !is_enable_global_hotkey {
-                        let _ = hotkey::Hotkey::global().init().await;
-                    }
+                    let _ = hotkey::Hotkey::global().init(true).await;
                     return;
                 }
 
@@ -358,8 +356,18 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             {
                 use crate::core::hotkey::SystemHotkey;
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                AsyncHandler::spawn(move || async move {
+                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                    let is_enable_global_hotkey = Config::verge()
+                        .await
+                        .latest_arc()
+                        .enable_global_hotkey
+                        .unwrap_or(true);
+                    if !is_enable_global_hotkey {
+                        let _ = hotkey::Hotkey::global().reset();
+                    }
+                });
             }
         }
     }

@@ -153,6 +153,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arc-swap"
+version = "1.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
+
+[[package]]
 name = "arraydeque"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1093,6 +1099,7 @@ version = "2.4.3"
 dependencies = [
  "aes-gcm",
  "anyhow",
+ "arc-swap",
  "async-trait",
  "backoff",
  "base64 0.22.1",
@@ -1151,6 +1158,7 @@ dependencies = [
  "tauri-plugin-window-state",
  "tokio",
  "tokio-stream",
+ "url",
  "users",
  "warp",
  "winapi",

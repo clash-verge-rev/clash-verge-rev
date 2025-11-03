@@ -86,6 +86,8 @@ smartstring = { version = "1.0.1", features = ["serde"] }
 clash_verge_service_ipc = { version = "2.0.21", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+arc-swap = "1.7.1"
+url = "2.5.4"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"

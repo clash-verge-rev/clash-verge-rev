@@ -15,6 +15,7 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
+import { useUpdateChannel } from "@/services/updateChannel";
 import { version } from "@root/package.json";
 
 import { BackupViewer } from "./mods/backup-viewer";
@@ -42,10 +43,11 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const updateRef = useRef<DialogRef>(null);
   const backupRef = useRef<DialogRef>(null);
   const liteModeRef = useRef<DialogRef>(null);
+  const [updateChannel] = useUpdateChannel();
 
   const onCheckUpdate = async () => {
     try {
-      const info = await checkUpdate();
+      const info = await checkUpdate(updateChannel);
       if (!info?.available) {
         showNotice("success", t("Currently on the Latest Version"));
       } else {

@@ -46,15 +46,15 @@ impl CoreManager {
 
     fn should_update_config(&self) -> Result<bool> {
         let now = Instant::now();
-        let mut last = self.last_update.lock();
+        let last = self.get_last_update();
 
-        if let Some(last_time) = *last
-            && now.duration_since(last_time) < timing::CONFIG_UPDATE_DEBOUNCE
+        if let Some(last_time) = last
+            && now.duration_since(*last_time) < timing::CONFIG_UPDATE_DEBOUNCE
         {
             return Ok(false);
         }
 
-        *last = Some(now);
+        self.set_last_update(now);
         Ok(true)
     }
 

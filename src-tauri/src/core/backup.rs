@@ -6,8 +6,8 @@ use crate::{
     utils::{dirs, logging::Type},
 };
 use anyhow::Error;
+use arc_swap::{ArcSwap, ArcSwapOption};
 use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
 use reqwest_dav::list_cmd::{ListEntity, ListFile};
 use smartstring::alias::String;
 use std::{
@@ -56,24 +56,24 @@ impl Operation {
 }
 
 pub struct WebDavClient {
-    config: Arc<Mutex<Option<WebDavConfig>>>,
-    clients: Arc<Mutex<HashMap<Operation, reqwest_dav::Client>>>,
+    config: Arc<ArcSwapOption<WebDavConfig>>,
+    clients: Arc<ArcSwap<HashMap<Operation, reqwest_dav::Client>>>,
 }
 
 impl WebDavClient {
     pub fn global() -> &'static WebDavClient {
         static WEBDAV_CLIENT: OnceCell<WebDavClient> = OnceCell::new();
         WEBDAV_CLIENT.get_or_init(|| WebDavClient {
-            config: Arc::new(Mutex::new(None)),
-            clients: Arc::new(Mutex::new(HashMap::new())),
+            config: Arc::new(ArcSwapOption::new(None)),
+            clients: Arc::new(ArcSwap::new(Arc::new(HashMap::new()))),
         })
     }
 
     async fn get_client(&self, op: Operation) -> Result<reqwest_dav::Client, Error> {
         // 先尝试从缓存获取
         {
-            let clients = self.clients.lock();
-            if let Some(client) = clients.get(&op) {
+            let clients_map = self.clients.load();
+            if let Some(client) = clients_map.get(&op) {
                 return Ok(client.clone());
             }
         }
@@ -81,10 +81,10 @@ impl WebDavClient {
         // 获取或创建配置
         let config = {
             // 首先检查是否已有配置
-            let existing_config = self.config.lock().as_ref().cloned();
+            let existing_config = self.config.load();
 
-            if let Some(cfg) = existing_config {
-                cfg
+            if let Some(cfg_arc) = existing_config.clone() {
+                (*cfg_arc).clone()
             } else {
                 // 释放锁后获取异步配置
                 let verge = Config::verge().await.latest_arc();
@@ -108,8 +108,8 @@ impl WebDavClient {
                     password: verge.webdav_password.as_ref().cloned().unwrap_or_default(),
                 };
 
-                // 重新获取锁并存储配置
-                *self.config.lock() = Some(config.clone());
+                // 存储配置到 ArcSwapOption
+                self.config.store(Some(Arc::new(config.clone())));
                 config
             }
         };
@@ -163,18 +163,19 @@ impl WebDavClient {
             }
         }
 
-        // 缓存客户端
+        // 缓存客户端（替换 Arc<Mutex<HashMap<...>>> 的写法）
         {
-            let mut clients = self.clients.lock();
-            clients.insert(op, client.clone());
+            let mut map = (**self.clients.load()).clone();
+            map.insert(op, client.clone());
+            self.clients.store(map.into());
         }
 
         Ok(client)
     }
 
     pub fn reset(&self) {
-        *self.config.lock() = None;
-        self.clients.lock().clear();
+        self.config.store(None);
+        self.clients.store(Arc::new(HashMap::new()));
     }
 
     pub async fn upload(&self, file_path: PathBuf, file_name: String) -> Result<(), Error> {

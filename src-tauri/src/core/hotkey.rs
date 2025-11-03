@@ -5,7 +5,7 @@ use crate::{
     singleton_with_logging, utils::logging::Type,
 };
 use anyhow::{Result, bail};
-use parking_lot::Mutex;
+use arc_swap::ArcSwap;
 use smartstring::alias::String;
 use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
@@ -93,13 +93,13 @@ impl SystemHotkey {
 }
 
 pub struct Hotkey {
-    current: Arc<Mutex<Vec<String>>>,
+    current: ArcSwap<Vec<String>>,
 }
 
 impl Hotkey {
     fn new() -> Self {
         Self {
-            current: Arc::new(Mutex::new(Vec::new())),
+            current: ArcSwap::new(Arc::new(Vec::new())),
         }
     }
 
@@ -272,9 +272,9 @@ impl Hotkey {
 singleton_with_logging!(Hotkey, INSTANCE, "Hotkey");
 
 impl Hotkey {
-    pub async fn init(&self) -> Result<()> {
+    pub async fn init(&self, skip: bool) -> Result<()> {
         let verge = Config::verge().await;
-        let enable_global_hotkey = verge.latest_arc().enable_global_hotkey.unwrap_or(true);
+        let enable_global_hotkey = !skip && verge.latest_arc().enable_global_hotkey.unwrap_or(true);
 
         logging!(
             debug,
@@ -282,10 +282,6 @@ impl Hotkey {
             "Initializing global hotkeys: {}",
             enable_global_hotkey
         );
-
-        if !enable_global_hotkey {
-            return Ok(());
-        }
 
         // Extract hotkeys data before async operations
         let hotkeys = verge.latest_arc().hotkeys.as_ref().cloned();
@@ -344,7 +340,7 @@ impl Hotkey {
                     }
                 }
             }
-            self.current.lock().clone_from(&hotkeys);
+            self.current.store(Arc::new(hotkeys));
         } else {
             logging!(debug, Type::Hotkey, "No hotkeys configured");
         }
@@ -375,8 +371,8 @@ impl Hotkey {
 
     pub async fn update(&self, new_hotkeys: Vec<String>) -> Result<()> {
         // Extract current hotkeys before async operations
-        let current_hotkeys = self.current.lock().clone();
-        let old_map = Self::get_map_from_vec(&current_hotkeys);
+        let current_hotkeys = &*self.current.load();
+        let old_map = Self::get_map_from_vec(current_hotkeys);
         let new_map = Self::get_map_from_vec(&new_hotkeys);
 
         let (del, add) = Self::get_diff(old_map, new_map);
@@ -390,7 +386,7 @@ impl Hotkey {
         }
 
         // Update the current hotkeys after all async operations
-        *self.current.lock() = new_hotkeys;
+        self.current.store(Arc::new(new_hotkeys));
         Ok(())
     }
 
