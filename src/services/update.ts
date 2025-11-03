@@ -161,6 +161,16 @@ export const shouldRejectUpdate = (
     const remoteIsPrerelease = isPrereleaseVersion(remoteVersion);
     const localIsPrerelease = isPrereleaseVersion(localVersion);
     if (remoteIsPrerelease && !localIsPrerelease) {
+      const remoteParts = splitVersion(remoteVersion);
+      const localParts = splitVersion(localVersion);
+      if (!remoteParts || !localParts) return true;
+
+      const mainComparison = compareVersionParts(
+        { main: remoteParts.main, pre: [] },
+        { main: localParts.main, pre: [] },
+      );
+
+      if (mainComparison < 0) return true;
       return false;
     }
   }
@@ -189,6 +199,7 @@ export const checkUpdateForChannel = async (
       headers: normalizeHeaders(options?.headers),
       timeout: options?.timeout,
       proxy: options?.proxy,
+      target: options?.target,
       allowDowngrades,
     },
   );

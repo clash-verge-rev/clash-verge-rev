@@ -167,6 +167,12 @@ describe("shouldRejectUpdate", () => {
     ).toBe(false);
   });
 
+  it("rejects prerelease downgrade when base version is older", () => {
+    expect(
+      shouldRejectUpdate("autobuild", -1, "2.3.0-autobuild.1", localStable),
+    ).toBe(true);
+  });
+
   it("rejects downgrade when both versions are prereleases", () => {
     expect(
       shouldRejectUpdate(

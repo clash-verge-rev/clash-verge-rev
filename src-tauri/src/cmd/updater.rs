@@ -79,6 +79,7 @@ pub async fn check_update_channel<R: Runtime>(
     headers: Option<Vec<(String, String)>>,
     timeout: Option<u64>,
     proxy: Option<String>,
+    target: Option<String>,
     allow_downgrades: Option<bool>,
 ) -> CmdResult<Option<UpdateMetadata>> {
     let channel_enum = UpdateChannel::try_from(channel.as_str())?;
@@ -105,6 +106,10 @@ pub async fn check_update_channel<R: Runtime>(
         let proxy_url = Url::parse(&proxy)
             .map_err(|err| String::from(format!("Invalid proxy URL \"{proxy}\": {err}")))?;
         builder = builder.proxy(proxy_url);
+    }
+
+    if let Some(target) = target {
+        builder = builder.target(target);
     }
 
     let allow_downgrades = allow_downgrades.unwrap_or(channel_enum != UpdateChannel::Stable);
