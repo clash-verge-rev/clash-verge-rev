@@ -530,7 +530,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest

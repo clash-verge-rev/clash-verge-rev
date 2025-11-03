@@ -139,9 +139,7 @@ function generateChannelSuffix({
 
   if (includeCommit) {
     const commit =
-      commitSource === "tauri"
-        ? getLatestTauriCommit()
-        : getGitShortCommit();
+      commitSource === "tauri" ? getLatestTauriCommit() : getGitShortCommit();
     segments.push(commit);
   }
 
