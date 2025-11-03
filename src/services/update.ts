@@ -4,6 +4,11 @@ import {
   type Update,
 } from "@tauri-apps/plugin-updater";
 
+import {
+  DEFAULT_UPDATE_CHANNEL,
+  getStoredUpdateChannel,
+  type UpdateChannel,
+} from "@/services/updateChannel";
 import { version as appVersion } from "@root/package.json";
 
 export type VersionParts = {
@@ -131,10 +136,38 @@ export const resolveRemoteVersion = (update: Update): string | null => {
 
 const localVersionNormalized = normalizeVersion(appVersion);
 
-export const checkUpdateSafe = async (
+const CHANNEL_TARGET_MAP: Record<UpdateChannel, string | null> = {
+  stable: null,
+  autobuild: "autobuild",
+};
+
+const buildCheckOptions = (
+  channel: UpdateChannel,
+  options?: CheckOptions,
+): CheckOptions => {
+  const {
+    allowDowngrades: _ignoredAllowDowngrades,
+    target: _ignoredTarget,
+    ...rest
+  } = options ?? {};
+  const result: CheckOptions = {
+    ...rest,
+    allowDowngrades: false,
+  };
+
+  const nextTarget = CHANNEL_TARGET_MAP[channel] ?? null;
+  if (nextTarget) {
+    result.target = nextTarget;
+  }
+
+  return result;
+};
+
+export const checkUpdateForChannel = async (
+  channel: UpdateChannel = DEFAULT_UPDATE_CHANNEL,
   options?: CheckOptions,
 ): Promise<Update | null> => {
-  const result = await check({ ...(options ?? {}), allowDowngrades: false });
+  const result = await check(buildCheckOptions(channel, options));
   if (!result) return null;
 
   const remoteVersion = resolveRemoteVersion(result);
@@ -152,4 +185,13 @@ export const checkUpdateSafe = async (
   return result;
 };
 
+export const checkUpdateSafe = async (
+  channel?: UpdateChannel,
+  options?: CheckOptions,
+): Promise<Update | null> => {
+  const resolvedChannel = channel ?? getStoredUpdateChannel();
+  return checkUpdateForChannel(resolvedChannel, options);
+};
+
 export type { CheckOptions };
+export type { UpdateChannel } from "@/services/updateChannel";
