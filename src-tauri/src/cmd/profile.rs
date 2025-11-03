@@ -15,12 +15,10 @@ use crate::{
     ret_err,
     utils::{dirs, help, logging::Type},
 };
+use scopeguard::defer;
 use smartstring::alias::String;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
-
-// 全局请求序列号跟踪，用于避免队列化执行
-static CURRENT_REQUEST_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
@@ -285,7 +283,7 @@ async fn restore_previous_profile(prev_profile: String) -> CmdResult<()> {
     Config::profiles()
         .await
         .draft_mut()
-        .patch_config(restore_profiles)
+        .patch_config(&restore_profiles)
         .stringify_err()?;
     Config::profiles().await.apply();
     crate::process::AsyncHandler::spawn(|| async move {
@@ -297,26 +295,7 @@ async fn restore_previous_profile(prev_profile: String) -> CmdResult<()> {
     Ok(())
 }
 
-async fn handle_success(current_sequence: u64, current_value: Option<String>) -> CmdResult<bool> {
-    let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-    if current_sequence < latest_sequence {
-        logging!(
-            info,
-            Type::Cmd,
-            "内核操作后发现更新的请求 (序列号: {} < {})，忽略当前结果",
-            current_sequence,
-            latest_sequence
-        );
-        Config::profiles().await.discard();
-        return Ok(false);
-    }
-
-    logging!(
-        info,
-        Type::Cmd,
-        "配置更新成功，序列号: {}",
-        current_sequence
-    );
+async fn handle_success(current_value: Option<String>) -> CmdResult<bool> {
     Config::profiles().await.apply();
     handle::Handle::refresh_clash();
 
@@ -333,17 +312,10 @@ async fn handle_success(current_sequence: u64, current_value: Option<String>) ->
     }
 
     if let Some(current) = &current_value {
-        logging!(
-            info,
-            Type::Cmd,
-            "向前端发送配置变更事件: {}, 序列号: {}",
-            current,
-            current_sequence
-        );
+        logging!(info, Type::Cmd, "向前端发送配置变更事件: {}", current,);
         handle::Handle::notify_profile_changed(current.clone());
     }
 
-    CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
     Ok(true)
 }
 
@@ -357,53 +329,31 @@ async fn handle_validation_failure(
         restore_previous_profile(prev_profile).await?;
     }
     handle::Handle::notice_message("config_validate::error", error_msg);
-    CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
     Ok(false)
 }
 
-async fn handle_update_error<E: std::fmt::Display>(e: E, current_sequence: u64) -> CmdResult<bool> {
-    logging!(
-        warn,
-        Type::Cmd,
-        "更新过程发生错误: {}, 序列号: {}",
-        e,
-        current_sequence
-    );
+async fn handle_update_error<E: std::fmt::Display>(e: E) -> CmdResult<bool> {
+    logging!(warn, Type::Cmd, "更新过程发生错误: {}", e,);
     Config::profiles().await.discard();
     handle::Handle::notice_message("config_validate::boot_error", e.to_string());
-    CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
     Ok(false)
 }
 
-async fn handle_timeout(current_profile: Option<String>, current_sequence: u64) -> CmdResult<bool> {
+async fn handle_timeout(current_profile: Option<String>) -> CmdResult<bool> {
     let timeout_msg = "配置更新超时(30秒)，可能是配置验证或核心通信阻塞";
-    logging!(
-        error,
-        Type::Cmd,
-        "{}, 序列号: {}",
-        timeout_msg,
-        current_sequence
-    );
+    logging!(error, Type::Cmd, "{}", timeout_msg);
     Config::profiles().await.discard();
     if let Some(prev_profile) = current_profile {
         restore_previous_profile(prev_profile).await?;
     }
     handle::Handle::notice_message("config_validate::timeout", timeout_msg);
-    CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
     Ok(false)
 }
 
 async fn perform_config_update(
-    current_sequence: u64,
     current_value: Option<String>,
     current_profile: Option<String>,
 ) -> CmdResult<bool> {
-    logging!(
-        info,
-        Type::Cmd,
-        "开始内核配置更新，序列号: {}",
-        current_sequence
-    );
     let update_result = tokio::time::timeout(
         Duration::from_secs(30),
         CoreManager::global().update_config(),
@@ -411,45 +361,35 @@ async fn perform_config_update(
     .await;
 
     match update_result {
-        Ok(Ok((true, _))) => handle_success(current_sequence, current_value).await,
+        Ok(Ok((true, _))) => handle_success(current_value).await,
         Ok(Ok((false, error_msg))) => handle_validation_failure(error_msg, current_profile).await,
-        Ok(Err(e)) => handle_update_error(e, current_sequence).await,
-        Err(_) => handle_timeout(current_profile, current_sequence).await,
+        Ok(Err(e)) => handle_update_error(e).await,
+        Err(_) => handle_timeout(current_profile).await,
     }
 }
 
 /// 修改profiles的配置
 #[tauri::command]
 pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
-    if CURRENT_SWITCHING_PROFILE.load(Ordering::SeqCst) {
+    if CURRENT_SWITCHING_PROFILE
+        .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
+        .is_err()
+    {
         logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
-        return Ok(false);
+        return Err("switch_in_progress".into());
     }
-    CURRENT_SWITCHING_PROFILE.store(true, Ordering::SeqCst);
 
-    // 为当前请求分配序列号
-    let current_sequence = CURRENT_REQUEST_SEQUENCE.fetch_add(1, Ordering::SeqCst) + 1;
+    defer! {
+        CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
+    }
     let target_profile = profiles.current.clone();
 
     logging!(
         info,
         Type::Cmd,
-        "开始修改配置文件，请求序列号: {}, 目标profile: {:?}",
-        current_sequence,
+        "开始修改配置文件，目标profile: {:?}",
         target_profile
     );
-
-    let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-    if current_sequence < latest_sequence {
-        logging!(
-            info,
-            Type::Cmd,
-            "获取锁后发现更新的请求 (序列号: {} < {})，放弃当前请求",
-            current_sequence,
-            latest_sequence
-        );
-        return Ok(false);
-    }
 
     // 保存当前配置，以便在验证失败时恢复
     let current_profile = Config::profiles().await.latest_ref().current.clone();
@@ -460,50 +400,13 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         && current_profile.as_ref() != Some(new_profile)
         && validate_new_profile(new_profile).await.is_err()
     {
-        CURRENT_SWITCHING_PROFILE.store(false, Ordering::SeqCst);
         return Ok(false);
     }
 
-    // 检查请求有效性
-    let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-    if current_sequence < latest_sequence {
-        logging!(
-            info,
-            Type::Cmd,
-            "在核心操作前发现更新的请求 (序列号: {} < {})，放弃当前请求",
-            current_sequence,
-            latest_sequence
-        );
-        return Ok(false);
-    }
-
-    // 更新profiles配置
-    logging!(
-        info,
-        Type::Cmd,
-        "正在更新配置草稿，序列号: {}",
-        current_sequence
-    );
-
+    let _ = Config::profiles().await.draft_mut().patch_config(&profiles);
     let current_value = profiles.current.clone();
 
-    let _ = Config::profiles().await.draft_mut().patch_config(profiles);
-
-    // 在调用内核前再次验证请求有效性
-    let latest_sequence = CURRENT_REQUEST_SEQUENCE.load(Ordering::SeqCst);
-    if current_sequence < latest_sequence {
-        logging!(
-            info,
-            Type::Cmd,
-            "在内核交互前发现更新的请求 (序列号: {} < {})，放弃当前请求",
-            current_sequence,
-            latest_sequence
-        );
-        Config::profiles().await.discard();
-        return Ok(false);
-    }
-
-    perform_config_update(current_sequence, current_value, current_profile).await
+    perform_config_update(current_value, current_profile).await
 }
 
 /// 根据profile name修改profiles
