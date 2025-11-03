@@ -200,7 +200,7 @@ async function processRelease(github, options, channelConfig) {
 
     const updateData = {
       version: resolvedVersion,
-      name: releaseTagName,
+      tag_name: releaseTagName,
       notes: await resolveUpdateLog(releaseTagName).catch(() =>
         resolveUpdateLogDefault().catch(() => "No changelog available"),
       ),

@@ -8,9 +8,9 @@
  *   - A full semver version (e.g., 1.2.3, v1.2.3, 1.2.3-beta, v1.2.3-rc.1)
  *   - A tag: "alpha", "beta", "rc", "autobuild", "autobuild-latest", or "deploytest"
  *     - "alpha", "beta", "rc": Appends the tag to the current base version (e.g., 1.2.3-beta)
- *     - "autobuild": Appends a timestamped autobuild tag (e.g., 1.2.3-autobuild.0610.cc39b2.r2)
- *     - "autobuild-latest": Appends an autobuild tag with latest Tauri commit (e.g., 1.2.3-autobuild.0610.a1b2c3d.r2)
- *     - "deploytest": Appends a timestamped deploytest tag (e.g., 1.2.3-deploytest.0610.cc39b2.r2)
+ *     - "autobuild": Appends a timestamped autobuild tag (e.g., 1.2.3-autobuild.1022.r2+cc39b2)
+ *     - "autobuild-latest": Appends an autobuild tag with latest Tauri commit (e.g., 1.2.3-autobuild.1022.r2+a1b2c3d)
+ *     - "deploytest": Appends a timestamped deploytest tag (e.g., 1.2.3-deploytest.1022.r2+cc39b2)
  *
  * Examples:
  *   pnpm release-version 1.2.3
@@ -159,6 +159,25 @@ function generateChannelSuffix({
   }
 
   return segments.join(".");
+}
+
+/**
+ * 为 autobuild 渠道构建版本片段
+ * @param {Object} options
+ * @param {"current"|"tauri"} [options.commitSource="current"]
+ * @returns {{date: string, run: string, metadata: string}}
+ */
+function generateAutobuildComponents({ commitSource = "current" } = {}) {
+  const date = getLocalDatePart();
+  const run = getRunIdentifier() ?? `manual${Date.now().toString(36)}`;
+  const commitHash =
+    commitSource === "tauri" ? getLatestTauriCommit() : getGitShortCommit();
+
+  return {
+    date,
+    run,
+    metadata: commitHash || "nogit",
+  };
 }
 
 /**
@@ -334,23 +353,17 @@ async function main(versionArg) {
       const baseVersion = getBaseVersion(currentVersion);
 
       if (versionArg.toLowerCase() === "autobuild") {
-        // 格式: 2.3.0-autobuild.0610.cc39b2.r2
-        newVersion = `${baseVersion}-autobuild.${generateChannelSuffix({
-          includeCommit: true,
-          commitSource: "tauri",
-        })}`;
+        // 格式: 2.3.0-autobuild.1022.r2+cc39b2
+        const parts = generateAutobuildComponents({ commitSource: "tauri" });
+        newVersion = `${baseVersion}-autobuild.${parts.date}.${parts.run}+${parts.metadata}`;
       } else if (versionArg.toLowerCase() === "autobuild-latest") {
-        // 格式: 2.3.0-autobuild.0610.a1b2c3d.r2 (使用最新 Tauri 提交)
-        newVersion = `${baseVersion}-autobuild.${generateChannelSuffix({
-          includeCommit: true,
-          commitSource: "tauri",
-        })}`;
+        // 格式: 2.3.0-autobuild.1022.r2+a1b2c3d (使用最新 Tauri 提交)
+        const parts = generateAutobuildComponents({ commitSource: "tauri" });
+        newVersion = `${baseVersion}-autobuild.${parts.date}.${parts.run}+${parts.metadata}`;
       } else if (versionArg.toLowerCase() === "deploytest") {
-        // 格式: 2.3.0-deploytest.0610.cc39b2.r2
-        newVersion = `${baseVersion}-deploytest.${generateChannelSuffix({
-          includeCommit: true,
-          commitSource: "tauri",
-        })}`;
+        // 格式: 2.3.0-deploytest.1022.r2+cc39b2
+        const parts = generateAutobuildComponents({ commitSource: "tauri" });
+        newVersion = `${baseVersion}-deploytest.${parts.date}.${parts.run}+${parts.metadata}`;
       } else {
         newVersion = `${baseVersion}-${versionArg.toLowerCase()}`;
       }
