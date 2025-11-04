@@ -1,139 +1,4 @@
 {
-  "Proxies": "Proksi",
-  "rule": "aturan",
-  "global": "global",
-  "direct": "langsung",
-  "script": "skrip",
-  "DOMAIN": "Cocok dengan nama domain lengkap",
-  "DOMAIN-SUFFIX": "Cocok dengan sufiks domain",
-  "DOMAIN-KEYWORD": "Cocok dengan kata kunci domain",
-  "DOMAIN-REGEX": "Cocok dengan domain menggunakan ekspresi reguler",
-  "GEOSITE": "Cocok dengan domain dalam Geosite",
-  "GEOIP": "Cocok dengan kode negara alamat IP",
-  "SRC-GEOIP": "Cocok dengan kode negara alamat IP sumber",
-  "IP-ASN": "Cocok dengan ASN alamat IP",
-  "SRC-IP-ASN": "Cocok dengan ASN alamat IP sumber",
-  "IP-CIDR": "Cocok dengan rentang alamat IP",
-  "IP-CIDR6": "Cocok dengan rentang alamat IPv6",
-  "SRC-IP-CIDR": "Cocok dengan rentang alamat IP sumber",
-  "IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP",
-  "SRC-IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP sumber",
-  "SRC-PORT": "Cocok dengan rentang port sumber",
-  "DST-PORT": "Cocok dengan rentang port tujuan",
-  "IN-PORT": "Cocok dengan port masuk",
-  "DSCP": "Penandaan DSCP (hanya untuk tproxy UDP masuk)",
-  "PROCESS-NAME": "Cocok dengan nama proses (nama paket Android)",
-  "PROCESS-PATH": "Cocok dengan jalur proses lengkap",
-  "PROCESS-NAME-REGEX": "Cocok dengan nama proses lengkap menggunakan ekspresi reguler (nama paket Android)",
-  "PROCESS-PATH-REGEX": "Cocok dengan jalur proses lengkap menggunakan ekspresi reguler",
-  "NETWORK": "Cocok dengan protokol transportasi (tcp/udp)",
-  "UID": "Cocok dengan ID PENGGUNA Linux",
-  "IN-TYPE": "Cocok dengan jenis masuk",
-  "IN-USER": "Cocok dengan nama pengguna masuk",
-  "IN-NAME": "Cocok dengan nama masuk",
-  "SUB-RULE": "Sub-aturan",
-  "RULE-SET": "Cocok dengan set aturan",
-  "AND": "Logika DAN",
-  "OR": "Logika ATAU",
-  "NOT": "Logika TIDAK",
-  "MATCH": "Cocok dengan semua permintaan",
-  "DIRECT": "Data langsung keluar",
-  "REJECT": "Mencegat permintaan",
-  "REJECT-DROP": "Membuang permintaan",
-  "PASS": "Lewati aturan ini saat cocok",
-  "select": "Pilih proksi secara manual",
-  "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
-  "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
-  "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
-  "relay": "Lewatkan melalui rantai proksi yang ditentukan",
-  "Timeout": "Waktu Habis",
-  "Type": "Jenis",
-  "Close All Connections": "Close All Connections",
-  "Rule": "Aturan",
-  "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
-  "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "active": "aktif",
-  "unknown": "tidak diketahui",
-  "Install": "Instal",
-  "Uninstall": "Copot",
-  "System Proxy": "Proksi Sistem",
-  "Release Version": "Versi Rilis",
-  "Alpha Version": "Versi Alpha",
-  "theme.light": "Terang",
-  "theme.dark": "Gelap",
-  "theme.system": "Sistem",
-  "Exit": "Keluar",
-  "Profile Imported Successfully": "Profil Berhasil Diimpor",
-  "Stopping Core...": "Stopping Core...",
-  "Restarting Core...": "Restarting Core...",
-  "Installing Service...": "Memasang Layanan...",
-  "Uninstalling Service...": "Uninstalling Service...",
-  "Service Installed Successfully": "Layanan Berhasil Diinstal",
-  "Service Uninstalled Successfully": "Layanan Berhasil Dicopot",
-  "Import Subscription Successful": "Berlangganan Berhasil Diimpor",
-  "Profile": "Profil",
-  "Dashboard": "Dasbor",
-  "Restart App": "Mulai Ulang Aplikasi",
-  "Restart Clash Core": "Mulai Ulang Core Clash",
-  "TUN Mode": "Mode TUN",
-  "Copy Env": "Salin Env",
-  "Conf Dir": "Direktori Konfigurasi",
-  "Core Dir": "Direktori Core",
-  "Logs Dir": "Direktori Log",
-  "Open Dir": "Buka Direktori",
-  "More": "Lainnya",
-  "LightWeight Mode": "Mode Ringan",
-  "Config Validation Failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
-  "Boot Config Validation Failed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
-  "Core Change Config Validation Failed": "Validasi konfigurasi saat ganti inti gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
-  "Config Validation Process Terminated": "Proses validasi dihentikan",
-  "Script Syntax Error": "Kesalahan sintaks skrip, perubahan dibatalkan",
-  "Script Missing Main": "Kesalahan skrip, perubahan dibatalkan",
-  "File Not Found": "File tidak ditemukan, perubahan dibatalkan",
-  "Script File Error": "Kesalahan file skrip, perubahan dibatalkan",
-  "Core Changed Successfully": "Inti berhasil diubah",
-  "Failed to Change Core": "Gagal mengubah inti",
-  "YAML Syntax Error": "YAML syntax error, changes reverted",
-  "YAML Read Error": "YAML read error, changes reverted",
-  "YAML Mapping Error": "YAML mapping error, changes reverted",
-  "YAML Key Error": "YAML key error, changes reverted",
-  "YAML Error": "YAML error, changes reverted",
-  "Merge File Syntax Error": "Merge file syntax error, changes reverted",
-  "Merge File Mapping Error": "Merge file mapping error, changes reverted",
-  "Merge File Key Error": "Merge file key error, changes reverted",
-  "Merge File Error": "Merge file error, changes reverted",
-  "Service Administrator Prompt": "Clash Verge memerlukan hak administrator untuk menginstal ulang layanan sistem",
-  "Update with Clash proxy successfully": "Update with Clash proxy successfully",
-  "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Pending": "Pending",
-  "Yes": "Yes",
-  "No": "No",
-  "Failed": "Failed",
-  "Completed": "Completed",
-  "Disallowed ISP": "Disallowed ISP",
-  "Originals Only": "Originals Only",
-  "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
-  "Unsupported Country/Region": "Unsupported Country/Region",
-  "Failed (Network Connection)": "Failed (Network Connection)",
-  "DashboardToggledTitle": "Dashboard Toggled",
-  "DashboardToggledBody": "Dashboard visibility toggled by hotkey",
-  "ClashModeChangedTitle": "Clash Mode Changed",
-  "ClashModeChangedBody": "Switched to {mode} mode",
-  "SystemProxyToggledTitle": "System Proxy Toggled",
-  "SystemProxyToggledBody": "System proxy state toggled by hotkey",
-  "TunModeToggledTitle": "TUN Mode Toggled",
-  "TunModeToggledBody": "TUN mode toggled by hotkey",
-  "LightweightModeEnteredTitle": "Lightweight Mode",
-  "LightweightModeEnteredBody": "Entered lightweight mode by hotkey",
-  "AppQuitTitle": "APP Quit",
-  "AppQuitBody": "APP quit by hotkey",
-  "AppHiddenTitle": "APP Hidden",
-  "AppHiddenBody": "APP window hidden by hotkey",
-  "Configuration saved successfully": "Configuration saved successfully",
-  "Failed to save configuration": "Failed to save configuration",
-  "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
   "common": {
     "editorModes": {
       "visualization": "Visualisasi",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "Salin Berhasil"
+        "copySuccess": "Salin Berhasil",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "Tes Semua",
         "new": "Baru"
       }
+    },
+    "statuses": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "Profil Berhasil Diimpor",
+      "importSubscriptionSuccess": "Berlangganan Berhasil Diimpor",
+      "importWithClashProxy": "Profile Imported with Clash proxy"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "Kecepatan Unduh",
         "memoryUsage": "Penggunaan Memori"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "Pilih proksi secara manual",
+      "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
+      "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
+      "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
+      "relay": "Lewatkan melalui rantai proksi yang ditentukan"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+        "autoDisableFailed": "Failed to disable TUN Mode automatically"
+      }
+    },
+    "labels": {
+      "releaseVersion": "Versi Rilis",
+      "alphaVersion": "Versi Alpha"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "Stopping Core...",
+      "restarting": "Restarting Core..."
+    },
+    "notifications": {
+      "changeSuccess": "Inti berhasil diubah",
+      "changeFailed": "Gagal mengubah inti"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "Memasang Layanan...",
+      "uninstalling": "Uninstalling Service..."
+    },
+    "notifications": {
+      "installSuccess": "Layanan Berhasil Diinstal",
+      "uninstallSuccess": "Layanan Berhasil Dicopot"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
+      "bootFailed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
+      "coreChangeFailed": "Validasi konfigurasi saat ganti inti gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
+      "processTerminated": "Proses validasi dihentikan"
+    },
+    "script": {
+      "syntaxError": "Kesalahan sintaks skrip, perubahan dibatalkan",
+      "missingMain": "Kesalahan skrip, perubahan dibatalkan",
+      "fileNotFound": "File tidak ditemukan, perubahan dibatalkan",
+      "fileError": "Kesalahan file skrip, perubahan dibatalkan"
+    },
+    "yaml": {
+      "syntaxError": "YAML syntax error, changes reverted",
+      "readError": "YAML read error, changes reverted",
+      "mappingError": "YAML mapping error, changes reverted",
+      "keyError": "YAML key error, changes reverted",
+      "generalError": "YAML error, changes reverted"
+    },
+    "merge": {
+      "syntaxError": "Merge file syntax error, changes reverted",
+      "mappingError": "Merge file mapping error, changes reverted",
+      "keyError": "Merge file key error, changes reverted",
+      "generalError": "Merge file error, changes reverted"
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "Update with Clash proxy successfully",
+      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

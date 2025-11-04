@@ -7,14 +7,14 @@ import { useSystemState } from "./use-system-state";
 
 const executeWithErrorHandling = async (
   operation: () => Promise<void>,
-  loadingMessage: string,
-  successMessage?: string,
+  loadingKey: string,
+  successKey?: string,
 ) => {
   try {
-    showNotice.info(loadingMessage);
+    showNotice.info(loadingKey);
     await operation();
-    if (successMessage) {
-      showNotice.success(successMessage);
+    if (successKey) {
+      showNotice.success(successKey);
     }
   } catch (err) {
     showNotice.error(err);
@@ -28,14 +28,14 @@ export const useServiceInstaller = () => {
   const installServiceAndRestartCore = useCallback(async () => {
     await executeWithErrorHandling(
       () => installService(),
-      "Installing Service...",
-      "Service Installed Successfully",
+      "service.status.installing",
+      "service.notifications.installSuccess",
     );
 
     await executeWithErrorHandling(
       () => restartCore(),
-      "Restarting Core...",
-      "Clash Core Restarted",
+      "core.status.restarting",
+      "settings.clash.notifications.restartSuccess",
     );
 
     await mutateSystemState();

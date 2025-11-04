@@ -73,6 +73,23 @@ interface Props {
 
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
+const PROXY_STRATEGY_LABEL_KEYS: Record<string, string> = {
+  select: "proxy.strategies.select",
+  "url-test": "proxy.strategies.url-test",
+  fallback: "proxy.strategies.fallback",
+  "load-balance": "proxy.strategies.load-balance",
+  relay: "proxy.strategies.relay",
+};
+
+const PROXY_POLICY_LABEL_KEYS: Record<string, string> =
+  builtinProxyPolicies.reduce(
+    (acc, policy) => {
+      acc[policy] = `proxy.policies.${policy}`;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+
 const normalizeDeleteSeq = (input?: unknown): string[] => {
   if (!Array.isArray(input)) {
     return [];
@@ -121,6 +138,20 @@ export const GroupsEditorViewer = (props: Props) => {
   const { mergeUid, proxiesUid, profileUid, property, open, onClose, onSave } =
     props;
   const { t } = useTranslation();
+  const translateStrategy = useCallback(
+    (value: string) =>
+      PROXY_STRATEGY_LABEL_KEYS[value]
+        ? t(PROXY_STRATEGY_LABEL_KEYS[value])
+        : value,
+    [t],
+  );
+  const translatePolicy = useCallback(
+    (value: string) =>
+      PROXY_POLICY_LABEL_KEYS[value]
+        ? t(PROXY_POLICY_LABEL_KEYS[value])
+        : value,
+    [t],
+  );
   const themeMode = useThemeMode();
   const [prevData, setPrevData] = useState("");
   const [currData, setCurrData] = useState("");
@@ -452,9 +483,10 @@ export const GroupsEditorViewer = (props: Props) => {
                           "relay",
                         ]}
                         value={field.value}
+                        getOptionLabel={translateStrategy}
                         renderOption={(props, option) => (
-                          <li {...props} title={t(option)}>
-                            {option}
+                          <li {...props} title={translateStrategy(option)}>
+                            {translateStrategy(option)}
                           </li>
                         )}
                         onChange={(_, value) => value && field.onChange(value)}
@@ -518,10 +550,11 @@ export const GroupsEditorViewer = (props: Props) => {
                         onChange={(_, value) => value && field.onChange(value)}
                         renderInput={(params) => <TextField {...params} />}
                         renderOption={(props, option) => (
-                          <li {...props} title={t(option)}>
-                            {option}
+                          <li {...props} title={translatePolicy(option)}>
+                            {translatePolicy(option)}
                           </li>
                         )}
+                        getOptionLabel={translatePolicy}
                       />
                     </Item>
                   )}

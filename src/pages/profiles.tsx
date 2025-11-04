@@ -289,7 +289,7 @@ const ProfilePage = () => {
     try {
       // 尝试正常导入
       await importProfile(url);
-      await handleImportSuccess("Profile Imported Successfully");
+      await handleImportSuccess("profiles.notifications.importSuccess");
     } catch (initialErr) {
       console.warn("[订阅导入] 首次导入失败:", initialErr);
 
@@ -300,7 +300,9 @@ const ProfilePage = () => {
           with_proxy: false,
           self_proxy: true,
         });
-        await handleImportSuccess("Profile Imported with Clash proxy");
+        await handleImportSuccess(
+          "profiles.notifications.importWithClashProxy",
+        );
       } catch (retryErr) {
         // 回退导入也失败
         showNotice.error(

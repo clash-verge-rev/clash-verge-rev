@@ -7,14 +7,14 @@ import { useSystemState } from "./use-system-state";
 
 const executeWithErrorHandling = async (
   operation: () => Promise<void>,
-  loadingMessage: string,
-  successMessage?: string,
+  loadingKey: string,
+  successKey?: string,
 ) => {
   try {
-    showNotice.info(loadingMessage);
+    showNotice.info(loadingKey);
     await operation();
-    if (successMessage) {
-      showNotice.success(successMessage);
+    if (successKey) {
+      showNotice.success(successKey);
     }
   } catch (err) {
     showNotice.error(err);
@@ -27,18 +27,18 @@ export const useServiceUninstaller = () => {
 
   const uninstallServiceAndRestartCore = useCallback(async () => {
     try {
-      await executeWithErrorHandling(() => stopCore(), "Stopping Core...");
+      await executeWithErrorHandling(() => stopCore(), "core.status.stopping");
       await executeWithErrorHandling(
         () => uninstallService(),
-        "Uninstalling Service...",
-        "Service Uninstalled Successfully",
+        "service.status.uninstalling",
+        "service.notifications.uninstallSuccess",
       );
     } catch (ignore) {
     } finally {
       await executeWithErrorHandling(
         () => restartCore(),
-        "Restarting Core...",
-        "Clash Core Restarted",
+        "core.status.restarting",
+        "settings.clash.notifications.restartSuccess",
       );
       await mutateSystemState();
     }

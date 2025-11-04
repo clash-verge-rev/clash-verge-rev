@@ -1,139 +1,4 @@
 {
-  "Proxies": "الوكلاء",
-  "rule": "قاعدة",
-  "global": "عالمي",
-  "direct": "مباشر",
-  "script": "سكريبت",
-  "DOMAIN": "مطابقة اسم المجال الكامل",
-  "DOMAIN-SUFFIX": "مطابقة لاحقة المجال",
-  "DOMAIN-KEYWORD": "مطابقة كلمة مفتاحية في المجال",
-  "DOMAIN-REGEX": "مطابقة المجال باستخدام التعبيرات العادية",
-  "GEOSITE": "مطابقة المجالات ضمن Geosite",
-  "GEOIP": "مطابقة رمز البلد لعنوان IP",
-  "SRC-GEOIP": "مطابقة رمز البلد لعنوان IP المصدر",
-  "IP-ASN": "مطابقة ASN لعنوان IP",
-  "SRC-IP-ASN": "مطابقة ASN لعنوان IP المصدر",
-  "IP-CIDR": "مطابقة نطاق عنوان IP",
-  "IP-CIDR6": "مطابقة نطاق عناوين IPv6",
-  "SRC-IP-CIDR": "مطابقة نطاق عنوان IP المصدر",
-  "IP-SUFFIX": "مطابقة لاحقة عنوان IP",
-  "SRC-IP-SUFFIX": "مطابقة لاحقة عنوان IP المصدر",
-  "SRC-PORT": "مطابقة نطاق المنفذ المصدر",
-  "DST-PORT": "مطابقة نطاق المنفذ الوجهة",
-  "IN-PORT": "مطابقة المنفذ الوارد",
-  "DSCP": "علامة DSCP (لـ tproxy على UDP فقط)",
-  "PROCESS-NAME": "مطابقة اسم العملية (اسم حزمة Android)",
-  "PROCESS-PATH": "مطابقة المسار الكامل للعملية",
-  "PROCESS-NAME-REGEX": "مطابقة اسم العملية باستخدام التعبيرات العادية (اسم حزمة Android)",
-  "PROCESS-PATH-REGEX": "مطابقة المسار الكامل للعملية باستخدام التعبيرات العادية",
-  "NETWORK": "مطابقة بروتوكول النقل (TCP/UDP)",
-  "UID": "مطابقة معرف المستخدم في Linux",
-  "IN-TYPE": "مطابقة نوع الإدخال",
-  "IN-USER": "مطابقة اسم المستخدم للإدخال",
-  "IN-NAME": "مطابقة اسم الإدخال",
-  "SUB-RULE": "قاعدة فرعية",
-  "RULE-SET": "مطابقة مجموعة القواعد",
-  "AND": "منطقي AND",
-  "OR": "منطقي OR",
-  "NOT": "منطقي NOT",
-  "MATCH": "مطابقة جميع الطلبات",
-  "DIRECT": "البيانات تخرج مباشرة",
-  "REJECT": "رفض الطلبات",
-  "REJECT-DROP": "تجاهل الطلبات",
-  "PASS": "تخطي هذه القاعدة عند المطابقة",
-  "select": "اختيار الوكيل يدويًا",
-  "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
-  "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
-  "load-balance": "توزيع التحميل بين الوكلاء",
-  "relay": "التمرير عبر سلسلة الوكلاء المحددة",
-  "Timeout": "مهلة",
-  "Type": "النوع",
-  "Close All Connections": "Close All Connections",
-  "Rule": "قاعدة",
-  "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
-  "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "active": "نشط",
-  "unknown": "غير معروف",
-  "Install": "تثبيت",
-  "Uninstall": "إلغاء التثبيت",
-  "System Proxy": "وكيل النظام",
-  "Release Version": "إصدار مستقر",
-  "Alpha Version": "إصدار ألفا",
-  "theme.light": "سمة فاتحة",
-  "theme.dark": "سمة داكنة",
-  "theme.system": "سمة النظام",
-  "Exit": "خروج",
-  "Profile Imported Successfully": "تم استيراد الملف الشخصي بنجاح",
-  "Stopping Core...": "Stopping Core...",
-  "Restarting Core...": "Restarting Core...",
-  "Installing Service...": "جاري تثبيت الخدمة...",
-  "Uninstalling Service...": "Uninstalling Service...",
-  "Service Installed Successfully": "تم تثبيت الخدمة بنجاح",
-  "Service Uninstalled Successfully": "تم إلغاء تثبيت الخدمة بنجاح",
-  "Import Subscription Successful": "تم استيراد الاشتراك بنجاح",
-  "Profile": "الملف الشخصي",
-  "Dashboard": "لوحة التحكم",
-  "Restart App": "إعادة تشغيل التطبيق",
-  "Restart Clash Core": "إعادة تشغيل نواة Clash",
-  "TUN Mode": "وضع TUN",
-  "Copy Env": "نسخ البيئة",
-  "Conf Dir": "مجلد الإعدادات",
-  "Core Dir": "مجلد النواة",
-  "Logs Dir": "مجلد السجلات",
-  "Open Dir": "فتح المجلد",
-  "More": "المزيد",
-  "LightWeight Mode": "وضع الأداء الخفيف",
-  "Config Validation Failed": "فشل التحقق من تكوين الاشتراك، يرجى فحص ملف التكوين، تم التراجع عن التغييرات، تفاصيل الخطأ:",
-  "Boot Config Validation Failed": "فشل التحقق من التكوين عند الإقلاع، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
-  "Core Change Config Validation Failed": "فشل التحقق من التكوين عند تغيير النواة، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
-  "Config Validation Process Terminated": "تم إنهاء عملية التحقق",
-  "Script Syntax Error": "خطأ في بناء جملة السكريبت، تم التراجع عن التغييرات",
-  "Script Missing Main": "خطأ في السكريبت، تم التراجع عن التغييرات",
-  "File Not Found": "الملف غير موجود، تم التراجع عن التغييرات",
-  "Script File Error": "خطأ في ملف السكريبت، تم التراجع عن التغييرات",
-  "Core Changed Successfully": "تم تغيير النواة بنجاح",
-  "Failed to Change Core": "فشل تغيير النواة",
-  "YAML Syntax Error": "YAML syntax error, changes reverted",
-  "YAML Read Error": "YAML read error, changes reverted",
-  "YAML Mapping Error": "YAML mapping error, changes reverted",
-  "YAML Key Error": "YAML key error, changes reverted",
-  "YAML Error": "YAML error, changes reverted",
-  "Merge File Syntax Error": "Merge file syntax error, changes reverted",
-  "Merge File Mapping Error": "Merge file mapping error, changes reverted",
-  "Merge File Key Error": "Merge file key error, changes reverted",
-  "Merge File Error": "Merge file error, changes reverted",
-  "Service Administrator Prompt": "يتطلب Clash Verge امتيازات المسؤول لإعادة تثبيت خدمة النظام",
-  "Update with Clash proxy successfully": "Update with Clash proxy successfully",
-  "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Pending": "Pending",
-  "Yes": "Yes",
-  "No": "No",
-  "Failed": "Failed",
-  "Completed": "Completed",
-  "Disallowed ISP": "Disallowed ISP",
-  "Originals Only": "Originals Only",
-  "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
-  "Unsupported Country/Region": "Unsupported Country/Region",
-  "Failed (Network Connection)": "Failed (Network Connection)",
-  "DashboardToggledTitle": "Dashboard Toggled",
-  "DashboardToggledBody": "Dashboard visibility toggled by hotkey",
-  "ClashModeChangedTitle": "Clash Mode Changed",
-  "ClashModeChangedBody": "Switched to {mode} mode",
-  "SystemProxyToggledTitle": "System Proxy Toggled",
-  "SystemProxyToggledBody": "System proxy state toggled by hotkey",
-  "TunModeToggledTitle": "TUN Mode Toggled",
-  "TunModeToggledBody": "TUN mode toggled by hotkey",
-  "LightweightModeEnteredTitle": "Lightweight Mode",
-  "LightweightModeEnteredBody": "Entered lightweight mode by hotkey",
-  "AppQuitTitle": "APP Quit",
-  "AppQuitBody": "APP quit by hotkey",
-  "AppHiddenTitle": "APP Hidden",
-  "AppHiddenBody": "APP window hidden by hotkey",
-  "Configuration saved successfully": "Configuration saved successfully",
-  "Failed to save configuration": "Failed to save configuration",
-  "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
   "common": {
     "editorModes": {
       "visualization": "تصور",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "تم النسخ بنجاح"
+        "copySuccess": "تم النسخ بنجاح",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "اختبار الكل",
         "new": "جديد"
       }
+    },
+    "statuses": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "تم استيراد الملف الشخصي بنجاح",
+      "importSubscriptionSuccess": "تم استيراد الاشتراك بنجاح",
+      "importWithClashProxy": "Profile Imported with Clash proxy"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "سرعة التنزيل",
         "memoryUsage": "استهلاك الذاكرة"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "اختيار الوكيل يدويًا",
+      "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
+      "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
+      "load-balance": "توزيع التحميل بين الوكلاء",
+      "relay": "التمرير عبر سلسلة الوكلاء المحددة"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+        "autoDisableFailed": "Failed to disable TUN Mode automatically"
+      }
+    },
+    "labels": {
+      "releaseVersion": "إصدار مستقر",
+      "alphaVersion": "إصدار ألفا"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "Stopping Core...",
+      "restarting": "Restarting Core..."
+    },
+    "notifications": {
+      "changeSuccess": "تم تغيير النواة بنجاح",
+      "changeFailed": "فشل تغيير النواة"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "جاري تثبيت الخدمة...",
+      "uninstalling": "Uninstalling Service..."
+    },
+    "notifications": {
+      "installSuccess": "تم تثبيت الخدمة بنجاح",
+      "uninstallSuccess": "تم إلغاء تثبيت الخدمة بنجاح"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "فشل التحقق من تكوين الاشتراك، يرجى فحص ملف التكوين، تم التراجع عن التغييرات، تفاصيل الخطأ:",
+      "bootFailed": "فشل التحقق من التكوين عند الإقلاع، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
+      "coreChangeFailed": "فشل التحقق من التكوين عند تغيير النواة، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
+      "processTerminated": "تم إنهاء عملية التحقق"
+    },
+    "script": {
+      "syntaxError": "خطأ في بناء جملة السكريبت، تم التراجع عن التغييرات",
+      "missingMain": "خطأ في السكريبت، تم التراجع عن التغييرات",
+      "fileNotFound": "الملف غير موجود، تم التراجع عن التغييرات",
+      "fileError": "خطأ في ملف السكريبت، تم التراجع عن التغييرات"
+    },
+    "yaml": {
+      "syntaxError": "YAML syntax error, changes reverted",
+      "readError": "YAML read error, changes reverted",
+      "mappingError": "YAML mapping error, changes reverted",
+      "keyError": "YAML key error, changes reverted",
+      "generalError": "YAML error, changes reverted"
+    },
+    "merge": {
+      "syntaxError": "Merge file syntax error, changes reverted",
+      "mappingError": "Merge file mapping error, changes reverted",
+      "keyError": "Merge file key error, changes reverted",
+      "generalError": "Merge file error, changes reverted"
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "Update with Clash proxy successfully",
+      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

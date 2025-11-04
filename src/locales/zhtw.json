@@ -1,139 +1,4 @@
 {
-  "Proxies": "代理",
-  "rule": "規則",
-  "global": "全域",
-  "direct": "直連",
-  "script": "指令碼",
-  "DOMAIN": "配對完整網域",
-  "DOMAIN-SUFFIX": "配對網域後綴",
-  "DOMAIN-KEYWORD": "配對網域關鍵字",
-  "DOMAIN-REGEX": "配對網域正規表示式",
-  "GEOSITE": "配對 Geosite 內的網域",
-  "GEOIP": "配對 IP 所屬國家代碼",
-  "SRC-GEOIP": "配對來源 IP 所屬國家代碼",
-  "IP-ASN": "配對 IP 所屬 ASN",
-  "SRC-IP-ASN": "配對來源 IP 所屬 ASN",
-  "IP-CIDR": "配對 IP 位址範圍",
-  "IP-CIDR6": "配對 IP 位址範圍",
-  "SRC-IP-CIDR": "配對來源 IP 位址範圍",
-  "IP-SUFFIX": "配對 IP 後綴範圍",
-  "SRC-IP-SUFFIX": "配對來源 IP 後綴範圍",
-  "SRC-PORT": "配對請求來源連接埠範圍",
-  "DST-PORT": "配對請求目標連接埠範圍",
-  "IN-PORT": "配對傳入連接埠",
-  "DSCP": "DSCP標記（僅限 TPROXY UDP 傳入）",
-  "PROCESS-NAME": "配對程序名稱（Android 應用程式套件名稱）",
-  "PROCESS-PATH": "配對完整程序路徑",
-  "PROCESS-NAME-REGEX": "正規表示式配對完整程序名稱（Android 應用程式套件名稱）",
-  "PROCESS-PATH-REGEX": "正規表示式配對完整程序路徑",
-  "NETWORK": "配對傳輸協定 (TCP/UDP)",
-  "UID": "配對 Linux 使用者 ID",
-  "IN-TYPE": "配對傳入類型",
-  "IN-USER": "配對傳入使用者名稱",
-  "IN-NAME": "配對傳入名稱",
-  "SUB-RULE": "子規則",
-  "RULE-SET": "配對規則集",
-  "AND": "邏輯 AND",
-  "OR": "邏輯 OR",
-  "NOT": "邏輯 NOT",
-  "MATCH": "配對所有請求",
-  "DIRECT": "直連",
-  "REJECT": "拒絕請求",
-  "REJECT-DROP": "丟棄請求",
-  "PASS": "跳過此規則",
-  "select": "手動選擇代理",
-  "url-test": "根據網址測試延遲選擇代理",
-  "fallback": "切換至另一個備用代理",
-  "load-balance": "根據負載平衡分配代理",
-  "relay": "根據定義的代理鏈傳送",
-  "Timeout": "逾時",
-  "Type": "類型",
-  "Close All Connections": "關閉全部連線",
-  "Rule": "規則",
-  "TUN Mode automatically disabled due to service unavailable": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
-  "Failed to disable TUN Mode automatically": "自動停用虛擬網路介面卡模式失敗",
-  "active": "作用中",
-  "unknown": "未知",
-  "Install": "安裝",
-  "Uninstall": "解除安裝",
-  "System Proxy": "系統代理",
-  "Release Version": "正式版",
-  "Alpha Version": "預覽版",
-  "theme.light": "淺色",
-  "theme.dark": "深色",
-  "theme.system": "系統",
-  "Exit": "離開",
-  "Profile Imported Successfully": "匯入設定檔成功",
-  "Stopping Core...": "內核停止中...",
-  "Restarting Core...": "內核重啟中...",
-  "Installing Service...": "安裝服務中...",
-  "Uninstalling Service...": "服務解除安裝中...",
-  "Service Installed Successfully": "已成功安裝服務",
-  "Service Uninstalled Successfully": "已成功解除安裝服務",
-  "Import Subscription Successful": "匯入訂閱成功",
-  "Profile": "配置",
-  "Dashboard": "儀表板",
-  "Restart App": "重啟應用程式",
-  "Restart Clash Core": "重啟 Clash 內核",
-  "TUN Mode": "虛擬網路介面卡模式",
-  "Copy Env": "複製環境變數",
-  "Conf Dir": "配置目錄",
-  "Core Dir": "內核目錄",
-  "Logs Dir": "日誌目錄",
-  "Open Dir": "開啟目錄",
-  "More": "更多",
-  "LightWeight Mode": "輕量模式",
-  "Config Validation Failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
-  "Boot Config Validation Failed": "啟動訂閱配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
-  "Core Change Config Validation Failed": "切換內核時配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
-  "Config Validation Process Terminated": "驗證程序被終止",
-  "Script Syntax Error": "指令碼語法錯誤，變更已撤銷",
-  "Script Missing Main": "指令碼錯誤，變更已撤銷",
-  "File Not Found": "檔案遺失，變更已撤銷",
-  "Script File Error": "指令碼檔案錯誤，變更已撤銷",
-  "Core Changed Successfully": "內核切換成功",
-  "Failed to Change Core": "無法切換內核",
-  "YAML Syntax Error": "YAML 語法錯誤，變更已撤銷",
-  "YAML Read Error": "YAML 讀取錯誤，變更已撤銷",
-  "YAML Mapping Error": "YAML 映射錯誤，變更已撤銷",
-  "YAML Key Error": "YAML 鍵錯誤，變更已撤銷",
-  "YAML Error": "YAML 錯誤，變更已撤銷",
-  "Merge File Syntax Error": "覆寫檔案語法錯誤，變更已撤銷",
-  "Merge File Mapping Error": "覆寫檔案映射錯誤，變更已撤銷",
-  "Merge File Key Error": "覆寫檔案鍵錯誤，變更已撤銷",
-  "Merge File Error": "覆寫檔案錯誤，變更已撤銷",
-  "Service Administrator Prompt": "Clash Verge 需要管理員權限安裝系統服務",
-  "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
-  "Update failed even with Clash proxy": "使用 Clash 代理更新也失敗",
-  "Profile Imported with Clash proxy": "使用 Clash 代理匯入訂閱成功",
-  "Pending": "待檢測",
-  "Yes": "支援",
-  "No": "不支援",
-  "Failed": "測試失敗",
-  "Completed": "檢測完成",
-  "Disallowed ISP": "不允許的網際網路服務供應商",
-  "Originals Only": "僅限原創",
-  "No (IP Banned By Disney+)": "不支援（IP被Disney+禁止）",
-  "Unsupported Country/Region": "不支援的國家/地區",
-  "Failed (Network Connection)": "測試失敗（網路連線問題）",
-  "DashboardToggledTitle": "儀錶板已切換",
-  "DashboardToggledBody": "已透過快速鍵切換儀錶板顯示狀態",
-  "ClashModeChangedTitle": "Clash模式切換",
-  "ClashModeChangedBody": "已切換為 {mode} 模式",
-  "SystemProxyToggledTitle": "系統代理切換",
-  "SystemProxyToggledBody": "已透過快速鍵切換系統代理狀態",
-  "TunModeToggledTitle": "TUN模式切換",
-  "TunModeToggledBody": "已透過快速鍵切換TUN模式",
-  "LightweightModeEnteredTitle": "輕量模式",
-  "LightweightModeEnteredBody": "已透過快速鍵進入輕量模式",
-  "AppQuitTitle": "應用程式退出",
-  "AppQuitBody": "已透過快速鍵退出應用程式",
-  "AppHiddenTitle": "應用程式隱藏",
-  "AppHiddenBody": "已透過快速鍵隱藏應用程式視窗",
-  "Configuration saved successfully": "設定儲存完成",
-  "Failed to save configuration": "設定儲存失敗",
-  "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
   "common": {
     "editorModes": {
       "visualization": "視覺化",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "複製成功"
+        "copySuccess": "複製成功",
+        "saveSuccess": "設定儲存完成",
+        "saveFailed": "設定儲存失敗"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "測試全部",
         "new": "新增"
       }
+    },
+    "statuses": {
+      "pending": "待檢測",
+      "yes": "支援",
+      "no": "不支援",
+      "failed": "測試失敗",
+      "completed": "檢測完成",
+      "disallowedIsp": "不允許的網際網路服務供應商",
+      "originalsOnly": "僅限原創",
+      "noDisney": "不支援（IP被Disney+禁止）",
+      "unsupportedRegion": "不支援的國家/地區",
+      "failedNetwork": "測試失敗（網路連線問題）"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "匯入設定檔成功",
+      "importSubscriptionSuccess": "匯入訂閱成功",
+      "importWithClashProxy": "使用 Clash 代理匯入訂閱成功"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "下載速度",
         "memoryUsage": "內核佔用"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "手動選擇代理",
+      "url-test": "根據網址測試延遲選擇代理",
+      "fallback": "切換至另一個備用代理",
+      "load-balance": "根據負載平衡分配代理",
+      "relay": "根據定義的代理鏈傳送"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
+        "autoDisableFailed": "自動停用虛擬網路介面卡模式失敗"
+      }
+    },
+    "labels": {
+      "releaseVersion": "正式版",
+      "alphaVersion": "預覽版"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "內核停止中...",
+      "restarting": "內核重啟中..."
+    },
+    "notifications": {
+      "changeSuccess": "內核切換成功",
+      "changeFailed": "無法切換內核"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "安裝服務中...",
+      "uninstalling": "服務解除安裝中..."
+    },
+    "notifications": {
+      "installSuccess": "已成功安裝服務",
+      "uninstallSuccess": "已成功解除安裝服務"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
+      "bootFailed": "啟動訂閱配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
+      "coreChangeFailed": "切換內核時配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
+      "processTerminated": "驗證程序被終止"
+    },
+    "script": {
+      "syntaxError": "指令碼語法錯誤，變更已撤銷",
+      "missingMain": "指令碼錯誤，變更已撤銷",
+      "fileNotFound": "檔案遺失，變更已撤銷",
+      "fileError": "指令碼檔案錯誤，變更已撤銷"
+    },
+    "yaml": {
+      "syntaxError": "YAML 語法錯誤，變更已撤銷",
+      "readError": "YAML 讀取錯誤，變更已撤銷",
+      "mappingError": "YAML 映射錯誤，變更已撤銷",
+      "keyError": "YAML 鍵錯誤，變更已撤銷",
+      "generalError": "YAML 錯誤，變更已撤銷"
+    },
+    "merge": {
+      "syntaxError": "覆寫檔案語法錯誤，變更已撤銷",
+      "mappingError": "覆寫檔案映射錯誤，變更已撤銷",
+      "keyError": "覆寫檔案鍵錯誤，變更已撤銷",
+      "generalError": "覆寫檔案錯誤，變更已撤銷"
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "使用 Clash 代理更新成功",
+      "withClashProxyFailed": "使用 Clash 代理更新也失敗"
     }
   }
 }

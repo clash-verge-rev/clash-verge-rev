@@ -24,8 +24,16 @@ import { changeClashCore, restartCore } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
 const VALID_CORE = [
-  { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
-  { name: "Mihomo Alpha", core: "verge-mihomo-alpha", chip: "Alpha Version" },
+  {
+    name: "Mihomo",
+    core: "verge-mihomo",
+    chipKey: "system.labels.releaseVersion",
+  },
+  {
+    name: "Mihomo Alpha",
+    core: "verge-mihomo-alpha",
+    chipKey: "system.labels.alphaVersion",
+  },
 ];
 
 export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
@@ -157,7 +165,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
             {changingCore === each.core ? (
               <CircularProgress size={20} sx={{ mr: 1 }} />
             ) : (
-              <Chip label={t(`${each.chip}`)} size="small" />
+              <Chip label={t(each.chipKey)} size="small" />
             )}
           </ListItemButton>
         ))}

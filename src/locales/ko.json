@@ -1,139 +1,4 @@
 {
-  "Proxies": "프록시",
-  "rule": "규칙",
-  "global": "전역",
-  "direct": "직접",
-  "script": "스크립트",
-  "DOMAIN": "전체 도메인 이름과 일치",
-  "DOMAIN-SUFFIX": "도메인 접미사와 일치",
-  "DOMAIN-KEYWORD": "도메인 키워드와 일치",
-  "DOMAIN-REGEX": "정규 표현식을 사용한 도메인 일치",
-  "GEOSITE": "Geosite 내의 도메인과 일치",
-  "GEOIP": "IP 주소의 국가 코드와 일치",
-  "SRC-GEOIP": "소스 IP 주소의 국가 코드와 일치",
-  "IP-ASN": "IP 주소의 ASN과 일치",
-  "SRC-IP-ASN": "소스 IP 주소의 ASN과 일치",
-  "IP-CIDR": "IP 주소 범위와 일치",
-  "IP-CIDR6": "IPv6 주소 범위와 일치",
-  "SRC-IP-CIDR": "소스 IP 주소 범위와 일치",
-  "IP-SUFFIX": "IP 주소 접미사 범위와 일치",
-  "SRC-IP-SUFFIX": "소스 IP 주소 접미사 범위와 일치",
-  "SRC-PORT": "소스 포트 범위와 일치",
-  "DST-PORT": "대상 포트 범위와 일치",
-  "IN-PORT": "인바운드 포트와 일치",
-  "DSCP": "DSCP 마킹(tproxy UDP 인바운드만 해당)",
-  "PROCESS-NAME": "프로세스 이름과 일치(안드로이드 패키지 이름)",
-  "PROCESS-PATH": "전체 프로세스 경로와 일치",
-  "PROCESS-NAME-REGEX": "정규 표현식을 사용한 전체 프로세스 이름 일치(안드로이드 패키지 이름)",
-  "PROCESS-PATH-REGEX": "정규 표현식을 사용한 전체 프로세스 경로 일치",
-  "NETWORK": "전송 프로토콜과 일치(tcp/udp)",
-  "UID": "Linux 사용자 ID와 일치",
-  "IN-TYPE": "인바운드 유형과 일치",
-  "IN-USER": "인바운드 사용자 이름과 일치",
-  "IN-NAME": "인바운드 이름과 일치",
-  "SUB-RULE": "하위 규칙",
-  "RULE-SET": "규칙 세트와 일치",
-  "AND": "논리 AND",
-  "OR": "논리 OR",
-  "NOT": "논리 NOT",
-  "MATCH": "모든 요청과 일치",
-  "DIRECT": "데이터가 직접 아웃바운드로 이동",
-  "REJECT": "요청 차단",
-  "REJECT-DROP": "요청 폐기",
-  "PASS": "일치할 경우 이 규칙 건너뛰기",
-  "select": "수동으로 프록시 선택",
-  "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
-  "fallback": "오류 발생 시 다른 프록시로 전환",
-  "load-balance": "부하 분산에 따라 프록시 분배",
-  "relay": "정의된 프록시 체인을 통과",
-  "Timeout": "타임아웃",
-  "Type": "유형",
-  "Close All Connections": "Close All Connections",
-  "Rule": "규칙",
-  "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
-  "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "active": "active",
-  "unknown": "unknown",
-  "Install": "Install",
-  "Uninstall": "Uninstall",
-  "System Proxy": "시스템 프록시",
-  "Release Version": "Release Version",
-  "Alpha Version": "Alpha Version",
-  "theme.light": "Light",
-  "theme.dark": "Dark",
-  "theme.system": "System",
-  "Exit": "Exit",
-  "Profile Imported Successfully": "Profile Imported Successfully",
-  "Stopping Core...": "Stopping Core...",
-  "Restarting Core...": "Restarting Core...",
-  "Installing Service...": "Installing Service...",
-  "Uninstalling Service...": "Uninstalling Service...",
-  "Service Installed Successfully": "Service Installed Successfully",
-  "Service Uninstalled Successfully": "Service Uninstalled Successfully",
-  "Import Subscription Successful": "구독 가져오기 성공",
-  "Profile": "Profile",
-  "Dashboard": "Dashboard",
-  "Restart App": "Restart App",
-  "Restart Clash Core": "Restart Clash Core",
-  "TUN Mode": "TUN Mode",
-  "Copy Env": "Copy Env",
-  "Conf Dir": "Conf Dir",
-  "Core Dir": "Core Dir",
-  "Logs Dir": "Logs Dir",
-  "Open Dir": "Open Dir",
-  "More": "More",
-  "LightWeight Mode": "Lightweight Mode",
-  "Config Validation Failed": "설정 검증 실패",
-  "Boot Config Validation Failed": "부팅 설정 검증 실패",
-  "Core Change Config Validation Failed": "코어 변경 설정 검증 실패",
-  "Config Validation Process Terminated": "설정 검증 프로세스 종료됨",
-  "Script Syntax Error": "스크립트 구문 오류",
-  "Script Missing Main": "스크립트 메인 없음",
-  "File Not Found": "파일을 찾을 수 없음",
-  "Script File Error": "스크립트 파일 오류",
-  "Core Changed Successfully": "코어 변경 성공",
-  "Failed to Change Core": "코어 변경 실패",
-  "YAML Syntax Error": "YAML 구문 오류",
-  "YAML Read Error": "YAML 읽기 오류",
-  "YAML Mapping Error": "YAML 매핑 오류",
-  "YAML Key Error": "YAML 키 오류",
-  "YAML Error": "YAML 오류",
-  "Merge File Syntax Error": "병합 파일 구문 오류",
-  "Merge File Mapping Error": "병합 파일 매핑 오류",
-  "Merge File Key Error": "병합 파일 키 오류",
-  "Merge File Error": "병합 파일 오류",
-  "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
-  "Update with Clash proxy successfully": "Clash 프록시로 업데이트 성공",
-  "Update failed even with Clash proxy": "Clash 프록시로도 업데이트 실패",
-  "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Pending": "Pending",
-  "Yes": "Yes",
-  "No": "No",
-  "Failed": "실패",
-  "Completed": "Completed",
-  "Disallowed ISP": "Disallowed ISP",
-  "Originals Only": "Originals Only",
-  "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
-  "Unsupported Country/Region": "Unsupported Country/Region",
-  "Failed (Network Connection)": "Failed (Network Connection)",
-  "DashboardToggledTitle": "Dashboard Toggled",
-  "DashboardToggledBody": "Dashboard visibility toggled by hotkey",
-  "ClashModeChangedTitle": "Clash Mode Changed",
-  "ClashModeChangedBody": "Switched to {mode} mode",
-  "SystemProxyToggledTitle": "System Proxy Toggled",
-  "SystemProxyToggledBody": "System proxy state toggled by hotkey",
-  "TunModeToggledTitle": "TUN Mode Toggled",
-  "TunModeToggledBody": "TUN mode toggled by hotkey",
-  "LightweightModeEnteredTitle": "Lightweight Mode",
-  "LightweightModeEnteredBody": "Entered lightweight mode by hotkey",
-  "AppQuitTitle": "APP Quit",
-  "AppQuitBody": "APP quit by hotkey",
-  "AppHiddenTitle": "APP Hidden",
-  "AppHiddenBody": "APP window hidden by hotkey",
-  "Configuration saved successfully": "Configuration saved successfully",
-  "Failed to save configuration": "Failed to save configuration",
-  "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
   "common": {
     "editorModes": {
       "visualization": "시각화",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "복사 성공"
+        "copySuccess": "복사 성공",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "모두 테스트",
         "new": "새로 만들기"
       }
+    },
+    "statuses": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "실패",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "Profile Imported Successfully",
+      "importSubscriptionSuccess": "구독 가져오기 성공",
+      "importWithClashProxy": "Profile Imported with Clash proxy"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "다운로드 속도",
         "memoryUsage": "메모리 사용량"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "수동으로 프록시 선택",
+      "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
+      "fallback": "오류 발생 시 다른 프록시로 전환",
+      "load-balance": "부하 분산에 따라 프록시 분배",
+      "relay": "정의된 프록시 체인을 통과"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+        "autoDisableFailed": "Failed to disable TUN Mode automatically"
+      }
+    },
+    "labels": {
+      "releaseVersion": "Release Version",
+      "alphaVersion": "Alpha Version"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "Stopping Core...",
+      "restarting": "Restarting Core..."
+    },
+    "notifications": {
+      "changeSuccess": "코어 변경 성공",
+      "changeFailed": "코어 변경 실패"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "Installing Service...",
+      "uninstalling": "Uninstalling Service..."
+    },
+    "notifications": {
+      "installSuccess": "Service Installed Successfully",
+      "uninstallSuccess": "Service Uninstalled Successfully"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "설정 검증 실패",
+      "bootFailed": "부팅 설정 검증 실패",
+      "coreChangeFailed": "코어 변경 설정 검증 실패",
+      "processTerminated": "설정 검증 프로세스 종료됨"
+    },
+    "script": {
+      "syntaxError": "스크립트 구문 오류",
+      "missingMain": "스크립트 메인 없음",
+      "fileNotFound": "파일을 찾을 수 없음",
+      "fileError": "스크립트 파일 오류"
+    },
+    "yaml": {
+      "syntaxError": "YAML 구문 오류",
+      "readError": "YAML 읽기 오류",
+      "mappingError": "YAML 매핑 오류",
+      "keyError": "YAML 키 오류",
+      "generalError": "YAML 오류"
+    },
+    "merge": {
+      "syntaxError": "병합 파일 구문 오류",
+      "mappingError": "병합 파일 매핑 오류",
+      "keyError": "병합 파일 키 오류",
+      "generalError": "병합 파일 오류"
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "Clash 프록시로 업데이트 성공",
+      "withClashProxyFailed": "Clash 프록시로도 업데이트 실패"
     }
   }
 }

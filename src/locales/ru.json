@@ -1,139 +1,4 @@
 {
-  "Proxies": "Прокси",
-  "rule": "правила",
-  "global": "глобальный",
-  "direct": "прямой",
-  "script": "скриптовый",
-  "DOMAIN": "Соответствует полному доменному имени",
-  "DOMAIN-SUFFIX": "Соответствует суффиксу домена",
-  "DOMAIN-KEYWORD": "Соответствует ключевому слову домена",
-  "DOMAIN-REGEX": "Соответствует домену с использованием регулярных выражений",
-  "GEOSITE": "Соответствует доменам в Geosite",
-  "GEOIP": "Соответствует коду страны IP-адреса",
-  "SRC-GEOIP": "Соответствует коду страны исходного IP-адреса",
-  "IP-ASN": "Соответствует ASN IP-адреса",
-  "SRC-IP-ASN": "Соответствует ASN исходного IP-адреса",
-  "IP-CIDR": "Соответствует диапазону IP-адресов",
-  "IP-CIDR6": "Соответствует диапазону IPv6-адресов",
-  "SRC-IP-CIDR": "Соответствует диапазону исходных IP-адресов",
-  "IP-SUFFIX": "Соответствует диапазону суффиксов IP-адресов",
-  "SRC-IP-SUFFIX": "Соответствует диапазону суффиксов исходных IP-адресов",
-  "SRC-PORT": "Соответствует диапазону исходных портов",
-  "DST-PORT": "Соответствует диапазону целевых портов",
-  "IN-PORT": "Соответствует входящему порту",
-  "DSCP": "Маркировка DSCP (только для tproxy UDP входящего)",
-  "PROCESS-NAME": "Соответствует имени процесса (имя пакета Android)",
-  "PROCESS-PATH": "Соответствует полному пути процесса",
-  "PROCESS-NAME-REGEX": "Соответствует имени процесса с использованием регулярных выражений (имя пакета Android)",
-  "PROCESS-PATH-REGEX": "Соответствует полному пути процесса с использованием регулярных выражений",
-  "NETWORK": "Соответствует транспортному протоколу (tcp/udp)",
-  "UID": "Соответствует USER ID в Linux",
-  "IN-TYPE": "Соответствует типу входящего соединения",
-  "IN-USER": "Соответствует имени пользователя входящего соединения",
-  "IN-NAME": "Соответствует имени входящего соединения",
-  "SUB-RULE": "Подправило",
-  "RULE-SET": "Соответствует набору правил",
-  "AND": "Логическое И",
-  "OR": "Логическое ИЛИ",
-  "NOT": "Логическое НЕ",
-  "MATCH": "Соответствует всем запросам",
-  "DIRECT": "Данные направляются напрямую наружу",
-  "REJECT": "Перехватывает запросы",
-  "REJECT-DROP": "Отклоняет запросы",
-  "PASS": "Пропускает это правило при совпадении",
-  "select": "Выбор прокси вручную",
-  "url-test": "Выбор прокси на основе задержки теста URL",
-  "fallback": "Переключение на другой прокси при ошибке",
-  "load-balance": "Распределение прокси на основе балансировки нагрузки",
-  "relay": "Передача через определенную цепочку прокси",
-  "Timeout": "Таймаут",
-  "Type": "Тип",
-  "Close All Connections": "Close All Connections",
-  "Rule": "Правило",
-  "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
-  "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "active": "Активированный",
-  "unknown": "неизвестный",
-  "Install": "Установить",
-  "Uninstall": "Удалить",
-  "System Proxy": "Системный прокси",
-  "Release Version": "Официальная версия",
-  "Alpha Version": "Альфа-версия",
-  "theme.light": "Светлая",
-  "theme.dark": "Тёмная",
-  "theme.system": "Системная",
-  "Exit": "Выход",
-  "Profile Imported Successfully": "Профиль успешно импортирован",
-  "Stopping Core...": "Stopping Core...",
-  "Restarting Core...": "Restarting Core...",
-  "Installing Service...": "Установка службы...",
-  "Uninstalling Service...": "Uninstalling Service...",
-  "Service Installed Successfully": "Служба успешно установлена",
-  "Service Uninstalled Successfully": "Служба успешно удалена",
-  "Import Subscription Successful": "Подписка успешно импортирована",
-  "Profile": "Профиль",
-  "Dashboard": "Панель управления",
-  "Restart App": "Перезапустить приложение",
-  "Restart Clash Core": "Перезапустить ядро Clash",
-  "TUN Mode": "Режим TUN",
-  "Copy Env": "Копировать переменные окружения",
-  "Conf Dir": "Директория конфигурации",
-  "Core Dir": "Директория ядра",
-  "Logs Dir": "Директория логов",
-  "Open Dir": "Открыть директорию",
-  "More": "Ещё",
-  "LightWeight Mode": "LightWeight Mode",
-  "Config Validation Failed": "Ошибка проверки конфигурации подписки, проверьте файл конфигурации, изменения отменены, ошибка:",
-  "Boot Config Validation Failed": "Ошибка проверки конфигурации при запуске, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
-  "Core Change Config Validation Failed": "Ошибка проверки конфигурации при смене ядра, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
-  "Config Validation Process Terminated": "Процесс проверки прерван",
-  "Script Syntax Error": "Ошибка синтаксиса скрипта, изменения отменены",
-  "Script Missing Main": "Ошибка скрипта, изменения отменены",
-  "File Not Found": "Файл не найден, изменения отменены",
-  "Script File Error": "Ошибка файла скрипта, изменения отменены",
-  "Core Changed Successfully": "Ядро успешно изменено",
-  "Failed to Change Core": "Не удалось сменить ядро",
-  "YAML Syntax Error": "Ошибка синтаксиса YAML, откат изменений",
-  "YAML Read Error": "Ошибка чтения YAML, откат изменений",
-  "YAML Mapping Error": "Ошибка YAML Mapping, откат изменений",
-  "YAML Key Error": "Ошибка ключа YAML, откат изменений",
-  "YAML Error": "Ошибка YAML, откат изменений",
-  "Merge File Syntax Error": "Ошибка синтаксиса Merge File, откат изменений",
-  "Merge File Mapping Error": "Ошибка сопоставления в Merge File, откат изменений",
-  "Merge File Key Error": "Ошибка ключа в Merge File, откат изменений",
-  "Merge File Error": "Ошибка Merge File, откат изменений",
-  "Service Administrator Prompt": "Clash Verge требует прав администратора для переустановки системной службы",
-  "Update with Clash proxy successfully": "Update with Clash proxy successfully",
-  "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Pending": "В ожидании",
-  "Yes": "Да",
-  "No": "Нет",
-  "Failed": "Ошибка",
-  "Completed": "Завершено",
-  "Disallowed ISP": "ISP заблокирован",
-  "Originals Only": "Только Originals",
-  "No (IP Banned By Disney+)": "Нет (IP забанен Disney+)",
-  "Unsupported Country/Region": "Страна/регион не поддерживается",
-  "Failed (Network Connection)": "Ошибка подключения",
-  "DashboardToggledTitle": "Dashboard Toggled",
-  "DashboardToggledBody": "Dashboard visibility toggled by hotkey",
-  "ClashModeChangedTitle": "Clash Mode Changed",
-  "ClashModeChangedBody": "Switched to {mode} mode",
-  "SystemProxyToggledTitle": "System Proxy Toggled",
-  "SystemProxyToggledBody": "System proxy state toggled by hotkey",
-  "TunModeToggledTitle": "TUN Mode Toggled",
-  "TunModeToggledBody": "TUN mode toggled by hotkey",
-  "LightweightModeEnteredTitle": "Lightweight Mode",
-  "LightweightModeEnteredBody": "Entered lightweight mode by hotkey",
-  "AppQuitTitle": "APP Quit",
-  "AppQuitBody": "APP quit by hotkey",
-  "AppHiddenTitle": "APP Hidden",
-  "AppHiddenBody": "APP window hidden by hotkey",
-  "Configuration saved successfully": "Configuration saved successfully",
-  "Failed to save configuration": "Failed to save configuration",
-  "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
   "common": {
     "editorModes": {
       "visualization": "Визуализация",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "Скопировано"
+        "copySuccess": "Скопировано",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "Тестировать все",
         "new": "Новый"
       }
+    },
+    "statuses": {
+      "pending": "В ожидании",
+      "yes": "Да",
+      "no": "Нет",
+      "failed": "Ошибка",
+      "completed": "Завершено",
+      "disallowedIsp": "ISP заблокирован",
+      "originalsOnly": "Только Originals",
+      "noDisney": "Нет (IP забанен Disney+)",
+      "unsupportedRegion": "Страна/регион не поддерживается",
+      "failedNetwork": "Ошибка подключения"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "Профиль успешно импортирован",
+      "importSubscriptionSuccess": "Подписка успешно импортирована",
+      "importWithClashProxy": "Profile Imported with Clash proxy"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "Скорость скачивания",
         "memoryUsage": "Использование памяти"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "Выбор прокси вручную",
+      "url-test": "Выбор прокси на основе задержки теста URL",
+      "fallback": "Переключение на другой прокси при ошибке",
+      "load-balance": "Распределение прокси на основе балансировки нагрузки",
+      "relay": "Передача через определенную цепочку прокси"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+        "autoDisableFailed": "Failed to disable TUN Mode automatically"
+      }
+    },
+    "labels": {
+      "releaseVersion": "Официальная версия",
+      "alphaVersion": "Альфа-версия"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "Stopping Core...",
+      "restarting": "Restarting Core..."
+    },
+    "notifications": {
+      "changeSuccess": "Ядро успешно изменено",
+      "changeFailed": "Не удалось сменить ядро"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "Установка службы...",
+      "uninstalling": "Uninstalling Service..."
+    },
+    "notifications": {
+      "installSuccess": "Служба успешно установлена",
+      "uninstallSuccess": "Служба успешно удалена"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "Ошибка проверки конфигурации подписки, проверьте файл конфигурации, изменения отменены, ошибка:",
+      "bootFailed": "Ошибка проверки конфигурации при запуске, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
+      "coreChangeFailed": "Ошибка проверки конфигурации при смене ядра, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
+      "processTerminated": "Процесс проверки прерван"
+    },
+    "script": {
+      "syntaxError": "Ошибка синтаксиса скрипта, изменения отменены",
+      "missingMain": "Ошибка скрипта, изменения отменены",
+      "fileNotFound": "Файл не найден, изменения отменены",
+      "fileError": "Ошибка файла скрипта, изменения отменены"
+    },
+    "yaml": {
+      "syntaxError": "Ошибка синтаксиса YAML, откат изменений",
+      "readError": "Ошибка чтения YAML, откат изменений",
+      "mappingError": "Ошибка YAML Mapping, откат изменений",
+      "keyError": "Ошибка ключа YAML, откат изменений",
+      "generalError": "Ошибка YAML, откат изменений"
+    },
+    "merge": {
+      "syntaxError": "Ошибка синтаксиса Merge File, откат изменений",
+      "mappingError": "Ошибка сопоставления в Merge File, откат изменений",
+      "keyError": "Ошибка ключа в Merge File, откат изменений",
+      "generalError": "Ошибка Merge File, откат изменений"
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "Update with Clash proxy successfully",
+      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

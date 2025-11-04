@@ -240,7 +240,20 @@ const rules: {
   },
 ];
 
+const RULE_TYPE_LABEL_KEYS: Record<string, string> = Object.fromEntries(
+  rules.map((rule) => [rule.name, `ruleEditor.ruleTypes.${rule.name}`]),
+);
+
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
+
+const PROXY_POLICY_LABEL_KEYS: Record<string, string> =
+  builtinProxyPolicies.reduce(
+    (acc, policy) => {
+      acc[policy] = `proxy.policies.${policy}`;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
 export const RulesEditorViewer = (props: Props) => {
   const { groupsUid, mergeUid, profileUid, property, open, onClose, onSave } =
@@ -527,15 +540,19 @@ export const RulesEditorViewer = (props: Props) => {
                   renderInput={(params) => <TextField {...params} />}
                   options={rules}
                   value={ruleType}
-                  getOptionLabel={(option) => option.name}
-                  renderOption={(props, option) => (
-                    <li
-                      {...props}
-                      title={t(`ruleEditor.ruleTypes.${option.name}`)}
-                    >
-                      {option.name}
-                    </li>
-                  )}
+                  getOptionLabel={(option) =>
+                    t(RULE_TYPE_LABEL_KEYS[option.name] ?? option.name)
+                  }
+                  renderOption={(props, option) => {
+                    const label = t(
+                      RULE_TYPE_LABEL_KEYS[option.name] ?? option.name,
+                    );
+                    return (
+                      <li {...props} title={label}>
+                        {label}
+                      </li>
+                    );
+                  }}
                   onChange={(_, value) => value && setRuleType(value)}
                 />
               </Item>
@@ -588,11 +605,17 @@ export const RulesEditorViewer = (props: Props) => {
                   renderInput={(params) => <TextField {...params} />}
                   options={proxyPolicyList}
                   value={proxyPolicy}
-                  renderOption={(props, option) => (
-                    <li {...props} title={t(option)}>
-                      {option}
-                    </li>
-                  )}
+                  getOptionLabel={(option) =>
+                    t(PROXY_POLICY_LABEL_KEYS[option] ?? option)
+                  }
+                  renderOption={(props, option) => {
+                    const label = t(PROXY_POLICY_LABEL_KEYS[option] ?? option);
+                    return (
+                      <li {...props} title={label}>
+                        {label}
+                      </li>
+                    );
+                  }}
                   onChange={(_, value) => value && setProxyPolicy(value)}
                 />
               </Item>

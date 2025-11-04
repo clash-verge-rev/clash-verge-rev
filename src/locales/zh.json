@@ -1,139 +1,4 @@
 {
-  "Proxies": "代理",
-  "rule": "规则",
-  "global": "全局",
-  "direct": "直连",
-  "script": "脚本",
-  "DOMAIN": "匹配完整域名",
-  "DOMAIN-SUFFIX": "匹配域名后缀",
-  "DOMAIN-KEYWORD": "匹配域名关键字",
-  "DOMAIN-REGEX": "匹配域名正则表达式",
-  "GEOSITE": "匹配 Geosite 内的域名",
-  "GEOIP": "匹配 IP 所属国家代码",
-  "SRC-GEOIP": "匹配来源 IP 所属国家代码",
-  "IP-ASN": "匹配 IP 所属 ASN",
-  "SRC-IP-ASN": "匹配来源 IP 所属 ASN",
-  "IP-CIDR": "匹配 IP 地址范围",
-  "IP-CIDR6": "匹配 IP 地址范围",
-  "SRC-IP-CIDR": "匹配来源 IP 地址范围",
-  "IP-SUFFIX": "匹配 IP 后缀范围",
-  "SRC-IP-SUFFIX": "匹配来源 IP 后缀范围",
-  "SRC-PORT": "匹配请求来源端口范围",
-  "DST-PORT": "匹配请求目标端口范围",
-  "IN-PORT": "匹配入站端口",
-  "DSCP": "DSCP标记（仅限 TPROXY UDP 入站）",
-  "PROCESS-NAME": "匹配进程名称（Android 包名）",
-  "PROCESS-PATH": "匹配完整进程路径",
-  "PROCESS-NAME-REGEX": "正则匹配完整进程名称（Android 包名）",
-  "PROCESS-PATH-REGEX": "正则匹配完整进程路径",
-  "NETWORK": "匹配传输协议 (TCP/UDP)",
-  "UID": "匹配 Linux USER ID",
-  "IN-TYPE": "匹配入站类型",
-  "IN-USER": "匹配入站用户名",
-  "IN-NAME": "匹配入站名称",
-  "SUB-RULE": "子规则",
-  "RULE-SET": "匹配规则集",
-  "AND": "逻辑和",
-  "OR": "逻辑或",
-  "NOT": "逻辑非",
-  "MATCH": "匹配所有请求",
-  "DIRECT": "直连",
-  "REJECT": "拦截请求",
-  "REJECT-DROP": "抛弃请求",
-  "PASS": "跳过此规则",
-  "select": "手动选择代理",
-  "url-test": "根据URL测试延迟选择代理",
-  "fallback": "不可用时切换到另一个代理",
-  "load-balance": "根据负载均衡分配代理",
-  "relay": "根据定义的代理链传递",
-  "Timeout": "超时时间",
-  "Type": "类型",
-  "Close All Connections": "关闭所有连接",
-  "Rule": "规则",
-  "TUN Mode automatically disabled due to service unavailable": "由于服务不可用，TUN 模式已自动关闭",
-  "Failed to disable TUN Mode automatically": "自动关闭 TUN 模式失败",
-  "active": "已激活",
-  "unknown": "未知",
-  "Install": "安装",
-  "Uninstall": "卸载",
-  "System Proxy": "系统代理",
-  "Release Version": "正式版",
-  "Alpha Version": "预览版",
-  "theme.light": "浅色",
-  "theme.dark": "深色",
-  "theme.system": "系统",
-  "Exit": "退出",
-  "Profile Imported Successfully": "导入订阅成功",
-  "Stopping Core...": "停止内核中...",
-  "Restarting Core...": "重启内核中...",
-  "Installing Service...": "安装服务中...",
-  "Uninstalling Service...": "卸载服务中...",
-  "Service Installed Successfully": "已成功安装服务",
-  "Service Uninstalled Successfully": "已成功卸载服务",
-  "Import Subscription Successful": "导入订阅成功",
-  "Profile": "配置",
-  "Dashboard": "仪表板",
-  "Restart App": "重启应用",
-  "Restart Clash Core": "重启 Clash 核心",
-  "TUN Mode": "TUN 模式",
-  "Copy Env": "复制环境变量",
-  "Conf Dir": "配置目录",
-  "Core Dir": "核心目录",
-  "Logs Dir": "日志目录",
-  "Open Dir": "打开目录",
-  "More": "更多",
-  "LightWeight Mode": "轻量模式",
-  "Config Validation Failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
-  "Boot Config Validation Failed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
-  "Core Change Config Validation Failed": "切换内核时配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
-  "Config Validation Process Terminated": "验证进程被终止",
-  "Script Syntax Error": "脚本语法错误，变更已撤销",
-  "Script Missing Main": "脚本错误，变更已撤销",
-  "File Not Found": "文件丢失，变更已撤销",
-  "Script File Error": "脚本文件错误，变更已撤销",
-  "Core Changed Successfully": "内核切换成功",
-  "Failed to Change Core": "无法切换内核",
-  "YAML Syntax Error": "YAML语法错误，变更已撤销",
-  "YAML Read Error": "YAML读取错误，变更已撤销",
-  "YAML Mapping Error": "YAML映射错误，变更已撤销",
-  "YAML Key Error": "YAML键错误，变更已撤销",
-  "YAML Error": "YAML错误，变更已撤销",
-  "Merge File Syntax Error": "覆写文件语法错误，变更已撤销",
-  "Merge File Mapping Error": "覆写文件映射错误，变更已撤销",
-  "Merge File Key Error": "覆写文件键错误，变更已撤销",
-  "Merge File Error": "覆写文件错误，变更已撤销",
-  "Service Administrator Prompt": "Clash Verge 需要管理员权限安装系统服务",
-  "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
-  "Update failed even with Clash proxy": "使用 Clash 代理更新也失败",
-  "Profile Imported with Clash proxy": "使用 Clash 代理导入订阅成功",
-  "Pending": "待检测",
-  "Yes": "支持",
-  "No": "不支持",
-  "Failed": "测试失败",
-  "Completed": "检测完成",
-  "Disallowed ISP": "不允许的 ISP",
-  "Originals Only": "仅限原创",
-  "No (IP Banned By Disney+)": "不支持（IP被Disney+禁止）",
-  "Unsupported Country/Region": "不支持的国家/地区",
-  "Failed (Network Connection)": "测试失败（网络连接问题）",
-  "DashboardToggledTitle": "仪表盘已切换",
-  "DashboardToggledBody": "已通过快捷键切换仪表盘显示状态",
-  "ClashModeChangedTitle": "Clash 模式切换",
-  "ClashModeChangedBody": "已切换为 {mode} 模式",
-  "SystemProxyToggledTitle": "系统代理切换",
-  "SystemProxyToggledBody": "已通过快捷键切换系统代理状态",
-  "TunModeToggledTitle": "TUN 模式切换",
-  "TunModeToggledBody": "已通过快捷键切换 TUN 模式",
-  "LightweightModeEnteredTitle": "轻量模式",
-  "LightweightModeEnteredBody": "已通过快捷键进入轻量模式",
-  "AppQuitTitle": "应用退出",
-  "AppQuitBody": "已通过快捷键退出应用",
-  "AppHiddenTitle": "应用隐藏",
-  "AppHiddenBody": "已通过快捷键隐藏应用窗口",
-  "Configuration saved successfully": "配置保存成功",
-  "Failed to save configuration": "配置保存失败",
-  "Open App Log": "应用日志",
-  "Open Core Log": "内核日志",
   "common": {
     "editorModes": {
       "visualization": "可视化",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "复制成功"
+        "copySuccess": "复制成功",
+        "saveSuccess": "配置保存成功",
+        "saveFailed": "配置保存失败"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "测试全部",
         "new": "新建"
       }
+    },
+    "statuses": {
+      "pending": "待检测",
+      "yes": "支持",
+      "no": "不支持",
+      "failed": "测试失败",
+      "completed": "检测完成",
+      "disallowedIsp": "不允许的 ISP",
+      "originalsOnly": "仅限原创",
+      "noDisney": "不支持（IP被Disney+禁止）",
+      "unsupportedRegion": "不支持的国家/地区",
+      "failedNetwork": "测试失败（网络连接问题）"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "数据已强制刷新",
         "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "导入订阅成功",
+      "importSubscriptionSuccess": "导入订阅成功",
+      "importWithClashProxy": "使用 Clash 代理导入订阅成功"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "下载速度",
         "memoryUsage": "内核占用"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "手动选择代理",
+      "url-test": "根据URL测试延迟选择代理",
+      "fallback": "不可用时切换到另一个代理",
+      "load-balance": "根据负载均衡分配代理",
+      "relay": "根据定义的代理链传递"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "由于服务不可用，TUN 模式已自动关闭",
+        "autoDisableFailed": "自动关闭 TUN 模式失败"
+      }
+    },
+    "labels": {
+      "releaseVersion": "正式版",
+      "alphaVersion": "预览版"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "停止内核中...",
+      "restarting": "重启内核中..."
+    },
+    "notifications": {
+      "changeSuccess": "内核切换成功",
+      "changeFailed": "无法切换内核"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "安装服务中...",
+      "uninstalling": "卸载服务中..."
+    },
+    "notifications": {
+      "installSuccess": "已成功安装服务",
+      "uninstallSuccess": "已成功卸载服务"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
+      "bootFailed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
+      "coreChangeFailed": "切换内核时配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
+      "processTerminated": "验证进程被终止"
+    },
+    "script": {
+      "syntaxError": "脚本语法错误，变更已撤销",
+      "missingMain": "脚本错误，变更已撤销",
+      "fileNotFound": "文件丢失，变更已撤销",
+      "fileError": "脚本文件错误，变更已撤销"
+    },
+    "yaml": {
+      "syntaxError": "YAML语法错误，变更已撤销",
+      "readError": "YAML读取错误，变更已撤销",
+      "mappingError": "YAML映射错误，变更已撤销",
+      "keyError": "YAML键错误，变更已撤销",
+      "generalError": "YAML错误，变更已撤销"
+    },
+    "merge": {
+      "syntaxError": "覆写文件语法错误，变更已撤销",
+      "mappingError": "覆写文件映射错误，变更已撤销",
+      "keyError": "覆写文件键错误，变更已撤销",
+      "generalError": "覆写文件错误，变更已撤销"
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "使用 Clash 代理更新成功",
+      "withClashProxyFailed": "使用 Clash 代理更新也失败"
     }
   }
 }

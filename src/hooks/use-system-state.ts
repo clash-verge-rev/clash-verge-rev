@@ -65,13 +65,11 @@ export function useSystemState() {
       disablingTunMode = true;
       patchVerge({ enable_tun_mode: false })
         .then(() => {
-          showNotice.info(
-            "TUN Mode automatically disabled due to service unavailable",
-          );
+          showNotice.info("system.notifications.tunMode.autoDisabled");
         })
         .catch((err) => {
           console.error("[useVerge] 自动关闭TUN模式失败:", err);
-          showNotice.error("Failed to disable TUN Mode automatically");
+          showNotice.error("system.notifications.tunMode.autoDisableFailed");
         })
         .finally(() => {
           const tid = setTimeout(() => {

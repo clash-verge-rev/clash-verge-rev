@@ -1,139 +1,4 @@
 {
-  "Proxies": "Proxies",
-  "rule": "rule",
-  "global": "global",
-  "direct": "direct",
-  "script": "script",
-  "DOMAIN": "Matches the full domain name",
-  "DOMAIN-SUFFIX": "Matches the domain suffix",
-  "DOMAIN-KEYWORD": "Matches the domain keyword",
-  "DOMAIN-REGEX": "Matches the domain using regular expressions",
-  "GEOSITE": "Matches domains within the Geosite",
-  "GEOIP": "Matches the country code of the IP address",
-  "SRC-GEOIP": "Matches the country code of the source IP address",
-  "IP-ASN": "Matches the IP address's ASN",
-  "SRC-IP-ASN": "Matches the source IP address's ASN",
-  "IP-CIDR": "Matches the IP address range",
-  "IP-CIDR6": "Matches the IPv6 address range",
-  "SRC-IP-CIDR": "Matches the source IP address range",
-  "IP-SUFFIX": "Matches the IP address suffix range",
-  "SRC-IP-SUFFIX": "Matches the source IP address suffix range",
-  "SRC-PORT": "Matches the source port range",
-  "DST-PORT": "Matches the destination port range",
-  "IN-PORT": "Matches the inbound port",
-  "DSCP": "DSCP marking (only for tproxy UDP inbound)",
-  "PROCESS-NAME": "Matches the process name (Android package name)",
-  "PROCESS-PATH": "Matches the full process path",
-  "PROCESS-NAME-REGEX": "Matches the full process name using regular expressions (Android package name)",
-  "PROCESS-PATH-REGEX": "Matches the full process path using regular expressions",
-  "NETWORK": "Matches the transport protocol (tcp/udp)",
-  "UID": "Matches the Linux USER ID",
-  "IN-TYPE": "Matches the inbound type",
-  "IN-USER": "Matches the inbound username",
-  "IN-NAME": "Matches the inbound name",
-  "SUB-RULE": "Sub-rule",
-  "RULE-SET": "Matches the rule set",
-  "AND": "Logical AND",
-  "OR": "Logical OR",
-  "NOT": "Logical NOT",
-  "MATCH": "Matches all requests",
-  "DIRECT": "Data goes directly outbound",
-  "REJECT": "Intercepts requests",
-  "REJECT-DROP": "Discards requests",
-  "PASS": "Skips this rule when matched",
-  "select": "Select proxy manually",
-  "url-test": "Select proxy based on URL test delay",
-  "fallback": "Switch to another proxy on error",
-  "load-balance": "Distribute proxy based on load balancing",
-  "relay": "Pass through the defined proxy chain",
-  "Timeout": "Timeout",
-  "Type": "Type",
-  "Close All Connections": "Close All Connections",
-  "Rule": "Rule",
-  "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
-  "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "active": "active",
-  "unknown": "unknown",
-  "Install": "Install",
-  "Uninstall": "Uninstall",
-  "System Proxy": "System Proxy",
-  "Release Version": "Release Version",
-  "Alpha Version": "Alpha Version",
-  "theme.light": "Light",
-  "theme.dark": "Dark",
-  "theme.system": "System",
-  "Exit": "Exit",
-  "Profile Imported Successfully": "Profile Imported Successfully",
-  "Stopping Core...": "Stopping Core...",
-  "Restarting Core...": "Restarting Core...",
-  "Installing Service...": "Installing Service...",
-  "Uninstalling Service...": "Uninstalling Service...",
-  "Service Installed Successfully": "Service Installed Successfully",
-  "Service Uninstalled Successfully": "Service Uninstalled Successfully",
-  "Import Subscription Successful": "Import subscription successful",
-  "Profile": "Profile",
-  "Dashboard": "Dashboard",
-  "Restart App": "Restart App",
-  "Restart Clash Core": "Restart Clash Core",
-  "TUN Mode": "TUN Mode",
-  "Copy Env": "Copy Env",
-  "Conf Dir": "Conf Dir",
-  "Core Dir": "Core Dir",
-  "Logs Dir": "Logs Dir",
-  "Open Dir": "Open Dir",
-  "More": "More",
-  "LightWeight Mode": "Lightweight Mode",
-  "Config Validation Failed": "Subscription configuration validation failed. Please check the subscription configuration file; modifications have been rolled back.",
-  "Boot Config Validation Failed": "Boot subscription configuration validation failed. Started with the default configuration; please check the subscription configuration file.",
-  "Core Change Config Validation Failed": "Configuration validation failed when switching the kernel. Started with the default configuration; please check the subscription configuration file.",
-  "Config Validation Process Terminated": "The validation process has been terminated.",
-  "Script Syntax Error": "Script syntax error, changes reverted",
-  "Script Missing Main": "Script error, changes reverted",
-  "File Not Found": "File missing, changes reverted",
-  "Script File Error": "Script file error, changes reverted",
-  "Core Changed Successfully": "Core changed successfully",
-  "Failed to Change Core": "Failed to change core",
-  "YAML Syntax Error": "YAML syntax error, changes reverted",
-  "YAML Read Error": "YAML read error, changes reverted",
-  "YAML Mapping Error": "YAML mapping error, changes reverted",
-  "YAML Key Error": "YAML key error, changes reverted",
-  "YAML Error": "YAML error, changes reverted",
-  "Merge File Syntax Error": "Merge file syntax error, changes reverted",
-  "Merge File Mapping Error": "Merge file mapping error, changes reverted",
-  "Merge File Key Error": "Merge file key error, changes reverted",
-  "Merge File Error": "Merge file error, changes reverted",
-  "Service Administrator Prompt": "Clash Verge requires administrator privileges to reinstall the system service",
-  "Update with Clash proxy successfully": "Update with Clash proxy successfully",
-  "Update failed even with Clash proxy": "Update failed even with Clash proxy",
-  "Profile Imported with Clash proxy": "Profile Imported with Clash proxy",
-  "Pending": "Pending",
-  "Yes": "Yes",
-  "No": "No",
-  "Failed": "Failed",
-  "Completed": "Completed",
-  "Disallowed ISP": "Disallowed ISP",
-  "Originals Only": "Originals Only",
-  "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
-  "Unsupported Country/Region": "Unsupported Country/Region",
-  "Failed (Network Connection)": "Failed (Network Connection)",
-  "DashboardToggledTitle": "Dashboard Toggled",
-  "DashboardToggledBody": "Dashboard visibility toggled by hotkey",
-  "ClashModeChangedTitle": "Clash Mode Changed",
-  "ClashModeChangedBody": "Switched to {mode} mode",
-  "SystemProxyToggledTitle": "System Proxy Toggled",
-  "SystemProxyToggledBody": "System proxy state toggled by hotkey",
-  "TunModeToggledTitle": "TUN Mode Toggled",
-  "TunModeToggledBody": "TUN mode toggled by hotkey",
-  "LightweightModeEnteredTitle": "Lightweight Mode",
-  "LightweightModeEnteredBody": "Entered lightweight mode by hotkey",
-  "AppQuitTitle": "APP Quit",
-  "AppQuitBody": "APP quit by hotkey",
-  "AppHiddenTitle": "APP Hidden",
-  "AppHiddenBody": "APP window hidden by hotkey",
-  "Configuration saved successfully": "Configuration saved successfully",
-  "Failed to save configuration": "Failed to save configuration",
-  "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
   "common": {
     "editorModes": {
       "visualization": "Visualization",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "Copy Success"
+        "copySuccess": "Copy Success",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "Test All",
         "new": "New"
       }
+    },
+    "statuses": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "Profile Imported Successfully",
+      "importSubscriptionSuccess": "Import subscription successful",
+      "importWithClashProxy": "Profile Imported with Clash proxy"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "Download Speed",
         "memoryUsage": "Memory Usage"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "Select proxy manually",
+      "url-test": "Select proxy based on URL test delay",
+      "fallback": "Switch to another proxy on error",
+      "load-balance": "Distribute proxy based on load balancing",
+      "relay": "Pass through the defined proxy chain"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+        "autoDisableFailed": "Failed to disable TUN Mode automatically"
+      }
+    },
+    "labels": {
+      "releaseVersion": "Release Version",
+      "alphaVersion": "Alpha Version"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "Stopping Core...",
+      "restarting": "Restarting Core..."
+    },
+    "notifications": {
+      "changeSuccess": "Core changed successfully",
+      "changeFailed": "Failed to change core"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "Installing Service...",
+      "uninstalling": "Uninstalling Service..."
+    },
+    "notifications": {
+      "installSuccess": "Service Installed Successfully",
+      "uninstallSuccess": "Service Uninstalled Successfully"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "Subscription configuration validation failed. Please check the subscription configuration file; modifications have been rolled back.",
+      "bootFailed": "Boot subscription configuration validation failed. Started with the default configuration; please check the subscription configuration file.",
+      "coreChangeFailed": "Configuration validation failed when switching the kernel. Started with the default configuration; please check the subscription configuration file.",
+      "processTerminated": "The validation process has been terminated."
+    },
+    "script": {
+      "syntaxError": "Script syntax error, changes reverted",
+      "missingMain": "Script error, changes reverted",
+      "fileNotFound": "File missing, changes reverted",
+      "fileError": "Script file error, changes reverted"
+    },
+    "yaml": {
+      "syntaxError": "YAML syntax error, changes reverted",
+      "readError": "YAML read error, changes reverted",
+      "mappingError": "YAML mapping error, changes reverted",
+      "keyError": "YAML key error, changes reverted",
+      "generalError": "YAML error, changes reverted"
+    },
+    "merge": {
+      "syntaxError": "Merge file syntax error, changes reverted",
+      "mappingError": "Merge file mapping error, changes reverted",
+      "keyError": "Merge file key error, changes reverted",
+      "generalError": "Merge file error, changes reverted"
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "Update with Clash proxy successfully",
+      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

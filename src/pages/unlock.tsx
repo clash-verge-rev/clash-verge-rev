@@ -37,6 +37,19 @@ interface UnlockItem {
 const UNLOCK_RESULTS_STORAGE_KEY = "clash_verge_unlock_results";
 const UNLOCK_RESULTS_TIME_KEY = "clash_verge_unlock_time";
 
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  Pending: "test.statuses.pending",
+  Yes: "test.statuses.yes",
+  No: "test.statuses.no",
+  Failed: "test.statuses.failed",
+  Completed: "test.statuses.completed",
+  "Disallowed ISP": "test.statuses.disallowedIsp",
+  "Originals Only": "test.statuses.originalsOnly",
+  "No (IP Banned By Disney+)": "test.statuses.noDisney",
+  "Unsupported Country/Region": "test.statuses.unsupportedRegion",
+  "Failed (Network Connection)": "test.statuses.failedNetwork",
+};
+
 const UnlockPage = () => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -366,7 +379,7 @@ const UnlockPage = () => {
                     }}
                   >
                     <Chip
-                      label={t(item.status)}
+                      label={t(STATUS_LABEL_KEYS[item.status] ?? item.status)}
                       color={getStatusColor(item.status)}
                       size="small"
                       icon={getStatusIcon(item.status)}

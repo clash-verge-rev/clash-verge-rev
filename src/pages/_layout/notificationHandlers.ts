@@ -12,7 +12,7 @@ export const handleNoticeMessage = (
   const handlers: Record<string, () => void> = {
     "import_sub_url::ok": () => {
       navigate("/profile", { state: { current: msg } });
-      showNotice.success("Import Subscription Successful");
+      showNotice.success("profiles.notifications.importSubscriptionSuccess");
     },
     "import_sub_url::error": () => {
       navigate("/profile");
@@ -20,49 +20,50 @@ export const handleNoticeMessage = (
     },
     "set_config::error": () => showNotice.error(msg),
     update_with_clash_proxy: () =>
-      showNotice.success("Update with Clash proxy successfully", msg),
+      showNotice.success("updates.notifications.withClashProxySuccess", msg),
     update_failed_even_with_clash: () =>
-      showNotice.error("Update failed even with Clash proxy", msg),
+      showNotice.error("updates.notifications.withClashProxyFailed", msg),
     update_failed: () => showNotice.error(msg),
     "config_validate::boot_error": () =>
-      showNotice.error("Boot Config Validation Failed", msg),
+      showNotice.error("validation.config.bootFailed", msg),
     "config_validate::core_change": () =>
-      showNotice.error("Core Change Config Validation Failed", msg),
+      showNotice.error("validation.config.coreChangeFailed", msg),
     "config_validate::error": () =>
-      showNotice.error("Config Validation Failed", msg),
+      showNotice.error("validation.config.failed", msg),
     "config_validate::process_terminated": () =>
-      showNotice.error("Config Validation Process Terminated"),
+      showNotice.error("validation.config.processTerminated"),
     "config_validate::stdout_error": () =>
-      showNotice.error("Config Validation Failed", msg),
+      showNotice.error("validation.config.failed", msg),
     "config_validate::script_error": () =>
-      showNotice.error("Script File Error", msg),
+      showNotice.error("validation.script.fileError", msg),
     "config_validate::script_syntax_error": () =>
-      showNotice.error("Script Syntax Error", msg),
+      showNotice.error("validation.script.syntaxError", msg),
     "config_validate::script_missing_main": () =>
-      showNotice.error("Script Missing Main", msg),
+      showNotice.error("validation.script.missingMain", msg),
     "config_validate::file_not_found": () =>
-      showNotice.error("File Not Found", msg),
+      showNotice.error("validation.script.fileNotFound", msg),
     "config_validate::yaml_syntax_error": () =>
-      showNotice.error("YAML Syntax Error", msg),
+      showNotice.error("validation.yaml.syntaxError", msg),
     "config_validate::yaml_read_error": () =>
-      showNotice.error("YAML Read Error", msg),
+      showNotice.error("validation.yaml.readError", msg),
     "config_validate::yaml_mapping_error": () =>
-      showNotice.error("YAML Mapping Error", msg),
+      showNotice.error("validation.yaml.mappingError", msg),
     "config_validate::yaml_key_error": () =>
-      showNotice.error("YAML Key Error", msg),
-    "config_validate::yaml_error": () => showNotice.error("YAML Error", msg),
+      showNotice.error("validation.yaml.keyError", msg),
+    "config_validate::yaml_error": () =>
+      showNotice.error("validation.yaml.generalError", msg),
     "config_validate::merge_syntax_error": () =>
-      showNotice.error("Merge File Syntax Error", msg),
+      showNotice.error("validation.merge.syntaxError", msg),
     "config_validate::merge_mapping_error": () =>
-      showNotice.error("Merge File Mapping Error", msg),
+      showNotice.error("validation.merge.mappingError", msg),
     "config_validate::merge_key_error": () =>
-      showNotice.error("Merge File Key Error", msg),
+      showNotice.error("validation.merge.keyError", msg),
     "config_validate::merge_error": () =>
-      showNotice.error("Merge File Error", msg),
+      showNotice.error("validation.merge.generalError", msg),
     "config_core::change_success": () =>
-      showNotice.success("Core Changed Successfully", msg),
+      showNotice.success("core.notifications.changeSuccess", msg),
     "config_core::change_error": () =>
-      showNotice.error("Failed to Change Core", msg),
+      showNotice.error("core.notifications.changeFailed", msg),
   };
 
   const handler = handlers[status];

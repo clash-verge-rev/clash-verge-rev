@@ -1,139 +1,4 @@
 {
-  "Proxies": "Vekil'ler",
-  "rule": "kural",
-  "global": "küresel",
-  "direct": "doğrudan",
-  "script": "betik",
-  "DOMAIN": "Tam alan adıyla eşleşir",
-  "DOMAIN-SUFFIX": "Alan adı sonekiyle eşleşir",
-  "DOMAIN-KEYWORD": "Alan adı anahtar kelimesiyle eşleşir",
-  "DOMAIN-REGEX": "Alan adını düzenli ifadeler kullanarak eşleştirir",
-  "GEOSITE": "Geosite içindeki alan adlarıyla eşleşir",
-  "GEOIP": "IP adresinin ülke koduyla eşleşir",
-  "SRC-GEOIP": "Kaynak IP adresinin ülke koduyla eşleşir",
-  "IP-ASN": "IP adresinin ASN'siyle eşleşir",
-  "SRC-IP-ASN": "Kaynak IP adresinin ASN'siyle eşleşir",
-  "IP-CIDR": "IP adresi aralığıyla eşleşir",
-  "IP-CIDR6": "IPv6 adresi aralığıyla eşleşir",
-  "SRC-IP-CIDR": "Kaynak IP adresi aralığıyla eşleşir",
-  "IP-SUFFIX": "IP adresi sonek aralığıyla eşleşir",
-  "SRC-IP-SUFFIX": "Kaynak IP adresi sonek aralığıyla eşleşir",
-  "SRC-PORT": "Kaynak port aralığıyla eşleşir",
-  "DST-PORT": "Hedef port aralığıyla eşleşir",
-  "IN-PORT": "Gelen port ile eşleşir",
-  "DSCP": "DSCP işaretlemesi (sadece tvekil UDP girişi için)",
-  "PROCESS-NAME": "İşlem adıyla eşleşir (Android paket adı)",
-  "PROCESS-PATH": "Tam işlem yoluyla eşleşir",
-  "PROCESS-NAME-REGEX": "Tam işlem adını düzenli ifadeler kullanarak eşleştirir (Android paket adı)",
-  "PROCESS-PATH-REGEX": "Tam işlem yolunu düzenli ifadeler kullanarak eşleştirir",
-  "NETWORK": "Taşıma protokolüyle eşleşir (tcp/udp)",
-  "UID": "Linux KULLANICI ID'siyle eşleşir",
-  "IN-TYPE": "Gelen bağlantı tipiyle eşleşir",
-  "IN-USER": "Gelen bağlantı kullanıcı adıyla eşleşir",
-  "IN-NAME": "Gelen bağlantı adıyla eşleşir",
-  "SUB-RULE": "Alt kural",
-  "RULE-SET": "Kural setiyle eşleşir",
-  "AND": "Mantıksal VE",
-  "OR": "Mantıksal VEYA",
-  "NOT": "Mantıksal DEĞİL",
-  "MATCH": "Tüm isteklerle eşleşir",
-  "DIRECT": "Veri doğrudan dışarı gider",
-  "REJECT": "İstekleri engeller",
-  "REJECT-DROP": "İstekleri atar",
-  "PASS": "Eşleştiğinde bu kuralı atlar",
-  "select": "Vekil'i manuel olarak seçin",
-  "url-test": "URL testi gecikmesine göre vekil seçin",
-  "fallback": "Hata durumunda başka bir vekil'e geçin",
-  "load-balance": "Yük dengelemeye göre vekil dağıtın",
-  "relay": "Tanımlanan vekil zincirinden geçirin",
-  "Timeout": "Zaman Aşımı",
-  "Type": "Tip",
-  "Close All Connections": "Close All Connections",
-  "Rule": "Kural",
-  "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
-  "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "active": "aktif",
-  "unknown": "bilinmiyor",
-  "Install": "Kur",
-  "Uninstall": "Kaldır",
-  "System Proxy": "Sistem Vekil'i",
-  "Release Version": "Sürüm Versiyonu",
-  "Alpha Version": "Alfa Versiyonu",
-  "theme.light": "Açık",
-  "theme.dark": "Koyu",
-  "theme.system": "Sistem",
-  "Exit": "Çıkış",
-  "Profile Imported Successfully": "Profil Başarıyla İçe Aktarıldı",
-  "Stopping Core...": "Stopping Core...",
-  "Restarting Core...": "Restarting Core...",
-  "Installing Service...": "Hizmet Kuruluyor...",
-  "Uninstalling Service...": "Uninstalling Service...",
-  "Service Installed Successfully": "Hizmet Başarıyla Kuruldu",
-  "Service Uninstalled Successfully": "Hizmet Başarıyla Kaldırıldı",
-  "Import Subscription Successful": "Abonelik içe aktarımı başarılı",
-  "Profile": "Profil",
-  "Dashboard": "Kontrol Paneli",
-  "Restart App": "Uygulamayı Yeniden Başlat",
-  "Restart Clash Core": "Clash Çekirdeğini Yeniden Başlat",
-  "TUN Mode": "TUN Modu",
-  "Copy Env": "Env Kopyala",
-  "Conf Dir": "Yapılandırma Dizini",
-  "Core Dir": "Çekirdek Dizini",
-  "Logs Dir": "Günlük Dizini",
-  "Open Dir": "Dizin Aç",
-  "More": "Daha Fazla",
-  "LightWeight Mode": "Hafif Mod",
-  "Config Validation Failed": "Abonelik yapılandırması doğrulaması başarısız oldu. Lütfen abonelik yapılandırma dosyasını kontrol edin; değişiklikler geri alındı.",
-  "Boot Config Validation Failed": "Başlangıç abonelik yapılandırması doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
-  "Core Change Config Validation Failed": "Çekirdek değiştirilirken yapılandırma doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
-  "Config Validation Process Terminated": "Doğrulama işlemi sonlandırıldı.",
-  "Script Syntax Error": "Betik sözdizimi hatası, değişiklikler geri alındı",
-  "Script Missing Main": "Betik hatası, değişiklikler geri alındı",
-  "File Not Found": "Dosya eksik, değişiklikler geri alındı",
-  "Script File Error": "Betik dosyası hatası, değişiklikler geri alındı",
-  "Core Changed Successfully": "Çekirdek başarıyla değiştirildi",
-  "Failed to Change Core": "Çekirdek değiştirilemedi",
-  "YAML Syntax Error": "YAML sözdizimi hatası, değişiklikler geri alındı",
-  "YAML Read Error": "YAML okuma hatası, değişiklikler geri alındı",
-  "YAML Mapping Error": "YAML eşleme hatası, değişiklikler geri alındı",
-  "YAML Key Error": "YAML anahtar hatası, değişiklikler geri alındı",
-  "YAML Error": "YAML hatası, değişiklikler geri alındı",
-  "Merge File Syntax Error": "Birleştirme dosyası sözdizimi hatası, değişiklikler geri alındı",
-  "Merge File Mapping Error": "Birleştirme dosyası eşleme hatası, değişiklikler geri alındı",
-  "Merge File Key Error": "Birleştirme dosyası anahtar hatası, değişiklikler geri alındı",
-  "Merge File Error": "Birleştirme dosyası hatası, değişiklikler geri alındı",
-  "Service Administrator Prompt": "Clash Verge sistem hizmetini yeniden kurmak için yönetici ayrıcalıkları gerektiriyor",
-  "Update with Clash proxy successfully": "Clash vekil ile güncelleme başarılı",
-  "Update failed even with Clash proxy": "Clash vekil ile bile güncelleme başarısız oldu",
-  "Profile Imported with Clash proxy": "Profil Clash vekil ile içe aktarıldı",
-  "Pending": "Beklemede",
-  "Yes": "Evet",
-  "No": "Hayır",
-  "Failed": "Başarısız",
-  "Completed": "Tamamlandı",
-  "Disallowed ISP": "İzin Verilmeyen ISP",
-  "Originals Only": "Yalnızca Orijinaller",
-  "No (IP Banned By Disney+)": "Hayır (IP Disney+ Tarafından Yasaklandı)",
-  "Unsupported Country/Region": "Desteklenmeyen Ülke/Bölge",
-  "Failed (Network Connection)": "Başarısız (Ağ Bağlantısı)",
-  "DashboardToggledTitle": "Dashboard Toggled",
-  "DashboardToggledBody": "Dashboard visibility toggled by hotkey",
-  "ClashModeChangedTitle": "Clash Mode Changed",
-  "ClashModeChangedBody": "Switched to {mode} mode",
-  "SystemProxyToggledTitle": "System Proxy Toggled",
-  "SystemProxyToggledBody": "System proxy state toggled by hotkey",
-  "TunModeToggledTitle": "TUN Mode Toggled",
-  "TunModeToggledBody": "TUN mode toggled by hotkey",
-  "LightweightModeEnteredTitle": "Lightweight Mode",
-  "LightweightModeEnteredBody": "Entered lightweight mode by hotkey",
-  "AppQuitTitle": "APP Quit",
-  "AppQuitBody": "APP quit by hotkey",
-  "AppHiddenTitle": "APP Hidden",
-  "AppHiddenBody": "APP window hidden by hotkey",
-  "Configuration saved successfully": "Configuration saved successfully",
-  "Failed to save configuration": "Failed to save configuration",
-  "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
   "common": {
     "editorModes": {
       "visualization": "Görselleştirme",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "Kopyalama Başarılı"
+        "copySuccess": "Kopyalama Başarılı",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "Tümünü Test Et",
         "new": "Yeni"
       }
+    },
+    "statuses": {
+      "pending": "Beklemede",
+      "yes": "Evet",
+      "no": "Hayır",
+      "failed": "Başarısız",
+      "completed": "Tamamlandı",
+      "disallowedIsp": "İzin Verilmeyen ISP",
+      "originalsOnly": "Yalnızca Orijinaller",
+      "noDisney": "Hayır (IP Disney+ Tarafından Yasaklandı)",
+      "unsupportedRegion": "Desteklenmeyen Ülke/Bölge",
+      "failedNetwork": "Başarısız (Ağ Bağlantısı)"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "Profil Başarıyla İçe Aktarıldı",
+      "importSubscriptionSuccess": "Abonelik içe aktarımı başarılı",
+      "importWithClashProxy": "Profil Clash vekil ile içe aktarıldı"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "İndirme Hızı",
         "memoryUsage": "Çekirdek Kullanımı"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "Vekil'i manuel olarak seçin",
+      "url-test": "URL testi gecikmesine göre vekil seçin",
+      "fallback": "Hata durumunda başka bir vekil'e geçin",
+      "load-balance": "Yük dengelemeye göre vekil dağıtın",
+      "relay": "Tanımlanan vekil zincirinden geçirin"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+        "autoDisableFailed": "Failed to disable TUN Mode automatically"
+      }
+    },
+    "labels": {
+      "releaseVersion": "Sürüm Versiyonu",
+      "alphaVersion": "Alfa Versiyonu"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "Stopping Core...",
+      "restarting": "Restarting Core..."
+    },
+    "notifications": {
+      "changeSuccess": "Çekirdek başarıyla değiştirildi",
+      "changeFailed": "Çekirdek değiştirilemedi"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "Hizmet Kuruluyor...",
+      "uninstalling": "Uninstalling Service..."
+    },
+    "notifications": {
+      "installSuccess": "Hizmet Başarıyla Kuruldu",
+      "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "Abonelik yapılandırması doğrulaması başarısız oldu. Lütfen abonelik yapılandırma dosyasını kontrol edin; değişiklikler geri alındı.",
+      "bootFailed": "Başlangıç abonelik yapılandırması doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
+      "coreChangeFailed": "Çekirdek değiştirilirken yapılandırma doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
+      "processTerminated": "Doğrulama işlemi sonlandırıldı."
+    },
+    "script": {
+      "syntaxError": "Betik sözdizimi hatası, değişiklikler geri alındı",
+      "missingMain": "Betik hatası, değişiklikler geri alındı",
+      "fileNotFound": "Dosya eksik, değişiklikler geri alındı",
+      "fileError": "Betik dosyası hatası, değişiklikler geri alındı"
+    },
+    "yaml": {
+      "syntaxError": "YAML sözdizimi hatası, değişiklikler geri alındı",
+      "readError": "YAML okuma hatası, değişiklikler geri alındı",
+      "mappingError": "YAML eşleme hatası, değişiklikler geri alındı",
+      "keyError": "YAML anahtar hatası, değişiklikler geri alındı",
+      "generalError": "YAML hatası, değişiklikler geri alındı"
+    },
+    "merge": {
+      "syntaxError": "Birleştirme dosyası sözdizimi hatası, değişiklikler geri alındı",
+      "mappingError": "Birleştirme dosyası eşleme hatası, değişiklikler geri alındı",
+      "keyError": "Birleştirme dosyası anahtar hatası, değişiklikler geri alındı",
+      "generalError": "Birleştirme dosyası hatası, değişiklikler geri alındı"
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "Clash vekil ile güncelleme başarılı",
+      "withClashProxyFailed": "Clash vekil ile bile güncelleme başarısız oldu"
     }
   }
 }

@@ -1,139 +1,4 @@
 {
-  "Proxies": "Proxies",
-  "rule": "Regel",
-  "global": "Global",
-  "direct": "Direktverbindung",
-  "script": "Skript",
-  "DOMAIN": "Vollständigen Domainnamen übereinstimmen",
-  "DOMAIN-SUFFIX": "Domain-Suffix übereinstimmen",
-  "DOMAIN-KEYWORD": "Domain-Schlüsselwort übereinstimmen",
-  "DOMAIN-REGEX": "Domain-Regulärer Ausdruck übereinstimmen",
-  "GEOSITE": "Domainnamen in Geosite übereinstimmen",
-  "GEOIP": "IP-Ländercode übereinstimmen",
-  "SRC-GEOIP": "Quell-IP-Ländercode übereinstimmen",
-  "IP-ASN": "IP-ASN übereinstimmen",
-  "SRC-IP-ASN": "Quell-IP-ASN übereinstimmen",
-  "IP-CIDR": "IP-Adressbereich übereinstimmen",
-  "IP-CIDR6": "IP-Adressbereich übereinstimmen",
-  "SRC-IP-CIDR": "Quell-IP-Adressbereich übereinstimmen",
-  "IP-SUFFIX": "IP-Suffix-Bereich übereinstimmen",
-  "SRC-IP-SUFFIX": "Quell-IP-Suffix-Bereich übereinstimmen",
-  "SRC-PORT": "Quellportbereich der Anfrage übereinstimmen",
-  "DST-PORT": "Zielportbereich der Anfrage übereinstimmen",
-  "IN-PORT": "Eingangsport übereinstimmen",
-  "DSCP": "DSCP-Markierung (nur für TPROXY UDP-Eingang)",
-  "PROCESS-NAME": "Prozessnamen übereinstimmen (Android-Paketname)",
-  "PROCESS-PATH": "Vollständigen Prozesspfad übereinstimmen",
-  "PROCESS-NAME-REGEX": "Regulärer Ausdruck für vollständigen Prozessnamen übereinstimmen (Android-Paketname)",
-  "PROCESS-PATH-REGEX": "Regulärer Ausdruck für vollständigen Prozesspfad übereinstimmen",
-  "NETWORK": "Übertragungsprotokoll übereinstimmen (TCP/UDP)",
-  "UID": "Linux-USER-ID übereinstimmen",
-  "IN-TYPE": "Eingangstyp übereinstimmen",
-  "IN-USER": "Eingangsbenutzername übereinstimmen",
-  "IN-NAME": "Eingangsname übereinstimmen",
-  "SUB-RULE": "Unterregel",
-  "RULE-SET": "Regelsatz übereinstimmen",
-  "AND": "Logisches UND",
-  "OR": "Logisches ODER",
-  "NOT": "Logisches NICHT",
-  "MATCH": "Alle Anfragen übereinstimmen",
-  "DIRECT": "Direktverbindung",
-  "REJECT": "Anfrage ablehnen",
-  "REJECT-DROP": "Anfrage verwerfen",
-  "PASS": "Diese Regel überspringen",
-  "select": "Proxy manuell auswählen",
-  "url-test": "Proxy basierend auf URL-Latenztest auswählen",
-  "fallback": "Bei Nichtverfügbarkeit zu einem anderen Proxy wechseln",
-  "load-balance": "Proxy basierend auf Lastverteilung zuweisen",
-  "relay": "Basierend auf definiertem Proxy-Kette weiterleiten",
-  "Timeout": "Timeout",
-  "Type": "Typ",
-  "Close All Connections": "Close All Connections",
-  "Rule": "Regel",
-  "TUN Mode automatically disabled due to service unavailable": "TUN Mode automatically disabled due to service unavailable",
-  "Failed to disable TUN Mode automatically": "Failed to disable TUN Mode automatically",
-  "active": "Aktiviert",
-  "unknown": "Unbekannt",
-  "Install": "Installieren",
-  "Uninstall": "Deinstallieren",
-  "System Proxy": "Systemproxy",
-  "Release Version": "Stabile Version",
-  "Alpha Version": "Vorschauversion",
-  "theme.light": "Light",
-  "theme.dark": "Dark",
-  "theme.system": "System",
-  "Exit": "Beenden",
-  "Profile Imported Successfully": "Abonnement erfolgreich importiert",
-  "Stopping Core...": "Kern wird gestoppt...",
-  "Restarting Core...": "Kern wird neu gestartet...",
-  "Installing Service...": "Service wird installiert...",
-  "Uninstalling Service...": "Service wird deinstalliert...",
-  "Service Installed Successfully": "Service erfolgreich installiert",
-  "Service Uninstalled Successfully": "Service erfolgreich deinstalliert",
-  "Import Subscription Successful": "Abonnement erfolgreich importiert",
-  "Profile": "Konfiguration",
-  "Dashboard": "Dashboard",
-  "Restart App": "App neu starten",
-  "Restart Clash Core": "Clash-Kern neu starten",
-  "TUN Mode": "TUN-Modus",
-  "Copy Env": "Umgebungsvariablen kopieren",
-  "Conf Dir": "Konfigurationsverzeichnis",
-  "Core Dir": "Kernverzeichnis",
-  "Logs Dir": "Protokollverzeichnis",
-  "Open Dir": "Verzeichnis öffnen",
-  "More": "Mehr",
-  "LightWeight Mode": "Leichtgewichtiger Modus",
-  "Config Validation Failed": "Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Die Änderungen wurden rückgängig gemacht. Fehlerdetails: ",
-  "Boot Config Validation Failed": "Start-Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
-  "Core Change Config Validation Failed": "Konfigurationsüberprüfung beim Wechsel des Kerns fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
-  "Config Validation Process Terminated": "Validierungsprozess abgebrochen",
-  "Script Syntax Error": "Skript-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
-  "Script Missing Main": "Skriptfehler. Die Änderungen wurden rückgängig gemacht.",
-  "File Not Found": "Datei nicht gefunden. Die Änderungen wurden rückgängig gemacht.",
-  "Script File Error": "Skript-Dateifehler. Die Änderungen wurden rückgängig gemacht.",
-  "Core Changed Successfully": "Kern erfolgreich gewechselt",
-  "Failed to Change Core": "Kernwechsel fehlgeschlagen",
-  "YAML Syntax Error": "YAML-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
-  "YAML Read Error": "YAML-Lesefehler. Die Änderungen wurden rückgängig gemacht.",
-  "YAML Mapping Error": "YAML-Mappingfehler. Die Änderungen wurden rückgängig gemacht.",
-  "YAML Key Error": "YAML-Schlüsselfehler. Die Änderungen wurden rückgängig gemacht.",
-  "YAML Error": "YAML-Fehler. Die Änderungen wurden rückgängig gemacht.",
-  "Merge File Syntax Error": "Syntaxfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-  "Merge File Mapping Error": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-  "Merge File Key Error": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-  "Merge File Error": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-  "Service Administrator Prompt": "Clash Verge benötigt Administratorrechte, um den Systemdienst zu installieren.",
-  "Update with Clash proxy successfully": "Aktualisierung mit Clash-Proxy erfolgreich",
-  "Update failed even with Clash proxy": "Aktualisierung auch mit Clash-Proxy fehlgeschlagen",
-  "Profile Imported with Clash proxy": "Abonnement mit Clash-Proxy importiert",
-  "Pending": "Wartend auf Prüfung",
-  "Yes": "Unterstützt",
-  "No": "Nicht unterstützt",
-  "Failed": "Test fehlgeschlagen",
-  "Completed": "Prüfung abgeschlossen",
-  "Disallowed ISP": "Nicht zugelassener Internetdienstanbieter",
-  "Originals Only": "Nur Original",
-  "No (IP Banned By Disney+)": "No (IP Banned By Disney+)",
-  "Unsupported Country/Region": "Nicht unterstütztes Land/Region",
-  "Failed (Network Connection)": "Failed (Network Connection)",
-  "DashboardToggledTitle": "Dashboard Toggled",
-  "DashboardToggledBody": "Dashboard visibility toggled by hotkey",
-  "ClashModeChangedTitle": "Clash Mode Changed",
-  "ClashModeChangedBody": "Switched to {mode} mode",
-  "SystemProxyToggledTitle": "System Proxy Toggled",
-  "SystemProxyToggledBody": "System proxy state toggled by hotkey",
-  "TunModeToggledTitle": "TUN Mode Toggled",
-  "TunModeToggledBody": "TUN mode toggled by hotkey",
-  "LightweightModeEnteredTitle": "Lightweight Mode",
-  "LightweightModeEnteredBody": "Entered lightweight mode by hotkey",
-  "AppQuitTitle": "APP Quit",
-  "AppQuitBody": "APP quit by hotkey",
-  "AppHiddenTitle": "APP Hidden",
-  "AppHiddenBody": "APP window hidden by hotkey",
-  "Configuration saved successfully": "Zufalls-Konfiguration erfolgreich gespeichert",
-  "Failed to save configuration": "Failed to save configuration",
-  "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
   "common": {
     "editorModes": {
       "visualization": "Visualisierung",
@@ -856,7 +721,9 @@
     },
     "common": {
       "notifications": {
-        "copySuccess": "Kopieren erfolgreich"
+        "copySuccess": "Kopieren erfolgreich",
+        "saveSuccess": "Zufalls-Konfiguration erfolgreich gespeichert",
+        "saveFailed": "Failed to save configuration"
       }
     },
     "misc": {
@@ -1122,6 +989,18 @@
         "testAll": "Alle testen",
         "new": "Neu"
       }
+    },
+    "statuses": {
+      "pending": "Wartend auf Prüfung",
+      "yes": "Unterstützt",
+      "no": "Nicht unterstützt",
+      "failed": "Test fehlgeschlagen",
+      "completed": "Prüfung abgeschlossen",
+      "disallowedIsp": "Nicht zugelassener Internetdienstanbieter",
+      "originalsOnly": "Nur Original",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Nicht unterstütztes Land/Region",
+      "failedNetwork": "Failed (Network Connection)"
     }
   },
   "proxies": {
@@ -1237,6 +1116,11 @@
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       }
+    },
+    "notifications": {
+      "importSuccess": "Abonnement erfolgreich importiert",
+      "importSubscriptionSuccess": "Abonnement erfolgreich importiert",
+      "importWithClashProxy": "Abonnement mit Clash-Proxy importiert"
     }
   },
   "connections": {
@@ -1291,6 +1175,80 @@
         "downloadSpeed": "Download-Geschwindigkeit",
         "memoryUsage": "Kern-Speichernutzung"
       }
+    }
+  },
+  "proxy": {
+    "strategies": {
+      "select": "Proxy manuell auswählen",
+      "url-test": "Proxy basierend auf URL-Latenztest auswählen",
+      "fallback": "Bei Nichtverfügbarkeit zu einem anderen Proxy wechseln",
+      "load-balance": "Proxy basierend auf Lastverteilung zuweisen",
+      "relay": "Basierend auf definiertem Proxy-Kette weiterleiten"
+    }
+  },
+  "system": {
+    "notifications": {
+      "tunMode": {
+        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+        "autoDisableFailed": "Failed to disable TUN Mode automatically"
+      }
+    },
+    "labels": {
+      "releaseVersion": "Stabile Version",
+      "alphaVersion": "Vorschauversion"
+    }
+  },
+  "core": {
+    "status": {
+      "stopping": "Kern wird gestoppt...",
+      "restarting": "Kern wird neu gestartet..."
+    },
+    "notifications": {
+      "changeSuccess": "Kern erfolgreich gewechselt",
+      "changeFailed": "Kernwechsel fehlgeschlagen"
+    }
+  },
+  "service": {
+    "status": {
+      "installing": "Service wird installiert...",
+      "uninstalling": "Service wird deinstalliert..."
+    },
+    "notifications": {
+      "installSuccess": "Service erfolgreich installiert",
+      "uninstallSuccess": "Service erfolgreich deinstalliert"
+    }
+  },
+  "validation": {
+    "config": {
+      "failed": "Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Die Änderungen wurden rückgängig gemacht. Fehlerdetails: ",
+      "bootFailed": "Start-Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
+      "coreChangeFailed": "Konfigurationsüberprüfung beim Wechsel des Kerns fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
+      "processTerminated": "Validierungsprozess abgebrochen"
+    },
+    "script": {
+      "syntaxError": "Skript-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
+      "missingMain": "Skriptfehler. Die Änderungen wurden rückgängig gemacht.",
+      "fileNotFound": "Datei nicht gefunden. Die Änderungen wurden rückgängig gemacht.",
+      "fileError": "Skript-Dateifehler. Die Änderungen wurden rückgängig gemacht."
+    },
+    "yaml": {
+      "syntaxError": "YAML-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
+      "readError": "YAML-Lesefehler. Die Änderungen wurden rückgängig gemacht.",
+      "mappingError": "YAML-Mappingfehler. Die Änderungen wurden rückgängig gemacht.",
+      "keyError": "YAML-Schlüsselfehler. Die Änderungen wurden rückgängig gemacht.",
+      "generalError": "YAML-Fehler. Die Änderungen wurden rückgängig gemacht."
+    },
+    "merge": {
+      "syntaxError": "Syntaxfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
+      "mappingError": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
+      "keyError": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
+      "generalError": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
+    }
+  },
+  "updates": {
+    "notifications": {
+      "withClashProxySuccess": "Aktualisierung mit Clash-Proxy erfolgreich",
+      "withClashProxyFailed": "Aktualisierung auch mit Clash-Proxy fehlgeschlagen"
     }
   }
 }

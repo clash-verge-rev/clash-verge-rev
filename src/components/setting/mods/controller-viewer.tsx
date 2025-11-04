@@ -75,10 +75,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         await patchInfo({ "external-controller": "" });
       }
 
-      showNotice.success("Configuration saved successfully");
+      showNotice.success("settings.common.notifications.saveSuccess");
       setOpen(false);
     } catch (err) {
-      showNotice.error("Failed to save configuration", err, 4000);
+      showNotice.error("settings.common.notifications.saveFailed", err, 4000);
     } finally {
       setIsSaving(false);
     }
