@@ -87,7 +87,7 @@ impl IProfiles {
     }
 
     /// 只修改current，valid和chain
-    pub fn patch_config(&mut self, patch: &IProfiles) -> Result<()> {
+    pub fn patch_config(&mut self, patch: &IProfiles) {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
@@ -100,8 +100,6 @@ impl IProfiles {
                 self.current = some_uid.cloned();
             }
         }
-
-        Ok(())
     }
 
     pub fn get_current(&self) -> Option<&String> {

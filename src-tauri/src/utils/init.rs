@@ -1,4 +1,4 @@
-#[cfg(not(feature = "tracing"))]
+// #[cfg(not(feature = "tracing"))]
 #[cfg(not(feature = "tauri-dev"))]
 use crate::utils::logging::NoModuleFilter;
 use crate::{
@@ -49,7 +49,9 @@ pub async fn init_logger() -> Result<()> {
     #[cfg(feature = "tracing")]
     spec.module("tauri", log::LevelFilter::Debug);
     #[cfg(feature = "tracing")]
-    spec.module("wry", log::LevelFilter::Debug);
+    spec.module("wry", log::LevelFilter::Off);
+    #[cfg(feature = "tracing")]
+    spec.module("tauri_plugin_mihomo", log::LevelFilter::Off);
     let spec = spec.build();
 
     let logger = Logger::with(spec)
@@ -67,6 +69,12 @@ pub async fn init_logger() -> Result<()> {
         );
     #[cfg(not(feature = "tracing"))]
     let logger = logger.filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
+    #[cfg(feature = "tracing")]
+    let logger = logger.filter(Box::new(NoModuleFilter(&[
+        "wry",
+        "tauri_plugin_mihomo",
+        "kode_bridge",
+    ])));
 
     let _handle = logger.start()?;
 
