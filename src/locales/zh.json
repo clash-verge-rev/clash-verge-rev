@@ -715,5 +715,7 @@
   "Lock menu order": "锁定菜单排序",
   "Open App Log": "应用日志",
   "Open Core Log": "内核日志",
-  "TPROXY Port": "TPROXY 透明代理端口"
+  "TPROXY Port": "TPROXY 透明代理端口",
+  "Profile switching is already in progress": "配置文件切换已在进行中",
+  "Target profile validation failed": "目标配置文件验证失败"
 }
