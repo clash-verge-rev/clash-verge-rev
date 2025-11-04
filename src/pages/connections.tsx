@@ -36,7 +36,7 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ORDER_OPTIONS = [
   {
     id: "default",
-    labelKey: "connections.order.default",
+    labelKey: "entities.connection.order.default",
     fn: (list: IConnectionsItem[]) =>
       list.sort(
         (a, b) =>
@@ -46,13 +46,13 @@ const ORDER_OPTIONS = [
   },
   {
     id: "uploadSpeed",
-    labelKey: "connections.order.uploadSpeed",
+    labelKey: "entities.connection.order.uploadSpeed",
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curUpload! - a.curUpload!),
   },
   {
     id: "downloadSpeed",
-    labelKey: "connections.order.downloadSpeed",
+    labelKey: "entities.connection.order.downloadSpeed",
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   },
@@ -150,7 +150,7 @@ const ConnectionsPage = () => {
       full
       title={
         <span style={{ whiteSpace: "nowrap" }}>
-          {t("connections.page.title")}
+          {t("entities.connection.page.title")}
         </span>
       }
       contentStyle={{
@@ -163,11 +163,11 @@ const ConnectionsPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ mx: 1 }}>
-            {t("connections.page.summary.downloaded")}:{" "}
+            {t("entities.connection.page.summary.downloaded")}:{" "}
             {parseTraffic(displayData.downloadTotal)}
           </Box>
           <Box sx={{ mx: 1 }}>
-            {t("connections.page.summary.uploaded")}:{" "}
+            {t("entities.connection.page.summary.uploaded")}:{" "}
             {parseTraffic(displayData.uploadTotal)}
           </Box>
           <IconButton
@@ -183,11 +183,11 @@ const ConnectionsPage = () => {
           >
             {isTableLayout ? (
               <TableRowsRounded
-                titleAccess={t("connections.page.actions.listView")}
+                titleAccess={t("entities.connection.page.actions.listView")}
               />
             ) : (
               <TableChartRounded
-                titleAccess={t("connections.page.actions.tableView")}
+                titleAccess={t("entities.connection.page.actions.tableView")}
               />
             )}
           </IconButton>
@@ -197,8 +197,8 @@ const ConnectionsPage = () => {
             onClick={handlePauseToggle}
             title={
               isPaused
-                ? t("connections.page.actions.resume")
-                : t("connections.page.actions.pause")
+                ? t("entities.connection.page.actions.resume")
+                : t("entities.connection.page.actions.pause")
             }
           >
             {isPaused ? (
@@ -209,7 +209,7 @@ const ConnectionsPage = () => {
           </IconButton>
           <Button size="small" variant="contained" onClick={onCloseAll}>
             <span style={{ whiteSpace: "nowrap" }}>
-              {t("connections.page.actions.closeAll")}
+              {t("entities.connection.page.actions.closeAll")}
             </span>
           </Button>
         </Box>

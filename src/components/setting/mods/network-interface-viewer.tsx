@@ -35,7 +35,7 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("settings.networkInterface.title")}
+          {t("entities.settings.networkInterface.title")}
           <Box>
             <Button
               variant="contained"
@@ -51,7 +51,7 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
       contentSx={{ width: 450 }}
       disableOk
-      cancelBtn={t("common.actions.close")}
+      cancelBtn={t("shared.actions.close")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
@@ -66,13 +66,17 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V4 && (
                       <AddressDisplay
                         key={address.V4.ip}
-                        label={t("settings.networkInterface.fields.ipAddress")}
+                        label={t(
+                          "entities.settings.networkInterface.fields.ipAddress",
+                        )}
                         content={address.V4.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("settings.networkInterface.fields.macAddress")}
+                  label={t(
+                    "entities.settings.networkInterface.fields.macAddress",
+                  )}
                   content={item.mac_addr ?? ""}
                 />
               </>
@@ -84,13 +88,17 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V6 && (
                       <AddressDisplay
                         key={address.V6.ip}
-                        label={t("settings.networkInterface.fields.ipAddress")}
+                        label={t(
+                          "entities.settings.networkInterface.fields.ipAddress",
+                        )}
                         content={address.V6.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("settings.networkInterface.fields.macAddress")}
+                  label={t(
+                    "entities.settings.networkInterface.fields.macAddress",
+                  )}
                   content={item.mac_addr ?? ""}
                 />
               </>
@@ -133,7 +141,9 @@ const AddressDisplay = ({
           size="small"
           onClick={async () => {
             await writeText(content);
-            showNotice.success("settings.common.notifications.copySuccess");
+            showNotice.success(
+              "entities.settings.common.notifications.copySuccess",
+            );
           }}
         >
           <ContentCopyRounded sx={{ fontSize: "18px" }} />

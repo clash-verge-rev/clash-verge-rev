@@ -160,18 +160,18 @@ export const ProxyTunCard: FC = () => {
     if (activeTab === "system") {
       return {
         text: systemProxyActualState
-          ? t("home.cards.proxyTun.status.systemProxyEnabled")
-          : t("home.cards.proxyTun.status.systemProxyDisabled"),
-        tooltip: t("home.cards.proxyTun.tooltips.systemProxy"),
+          ? t("entities.home.cards.proxyTun.status.systemProxyEnabled")
+          : t("entities.home.cards.proxyTun.status.systemProxyDisabled"),
+        tooltip: t("entities.home.cards.proxyTun.tooltips.systemProxy"),
       };
     } else {
       return {
         text: !isTunModeAvailable
-          ? t("home.cards.proxyTun.status.tunModeServiceRequired")
+          ? t("entities.home.cards.proxyTun.status.tunModeServiceRequired")
           : enable_tun_mode
-            ? t("home.cards.proxyTun.status.tunModeEnabled")
-            : t("home.cards.proxyTun.status.tunModeDisabled"),
-        tooltip: t("home.cards.proxyTun.tooltips.tunMode"),
+            ? t("entities.home.cards.proxyTun.status.tunModeEnabled")
+            : t("entities.home.cards.proxyTun.status.tunModeDisabled"),
+        tooltip: t("entities.home.cards.proxyTun.tooltips.tunMode"),
       };
     }
   }, [
@@ -198,14 +198,14 @@ export const ProxyTunCard: FC = () => {
           isActive={activeTab === "system"}
           onClick={() => handleTabChange("system")}
           icon={ComputerRounded}
-          label={t("settings.system.toggles.systemProxy")}
+          label={t("entities.settings.system.toggles.systemProxy")}
           hasIndicator={systemProxyActualState}
         />
         <TabButton
           isActive={activeTab === "tun"}
           onClick={() => handleTabChange("tun")}
           icon={TroubleshootRounded}
-          label={t("settings.system.toggles.tunMode")}
+          label={t("entities.settings.system.toggles.tunMode")}
           hasIndicator={enable_tun_mode && isTunModeAvailable}
         />
       </Stack>
@@ -238,8 +238,8 @@ export const ProxyTunCard: FC = () => {
           onError={handleError}
           label={
             activeTab === "system"
-              ? t("settings.system.toggles.systemProxy")
-              : t("settings.system.toggles.tunMode")
+              ? t("entities.settings.system.toggles.systemProxy")
+              : t("entities.settings.system.toggles.tunMode")
           }
           noRightPadding={true}
         />

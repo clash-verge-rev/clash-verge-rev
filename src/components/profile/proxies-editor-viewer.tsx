@@ -263,7 +263,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice.success("profiles.notifications.saved");
+      showNotice.success("entities.profile.notifications.saved");
       onSave?.(prevData, currData);
       onClose();
     } catch (err) {
@@ -276,7 +276,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">
-            {t("profiles.proxiesEditor.title")}
+            {t("entities.profile.proxiesEditor.title")}
             <Box>
               <Button
                 variant="contained"
@@ -315,7 +315,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                   <TextField
                     autoComplete="new-password"
                     placeholder={t(
-                      "profiles.proxiesEditor.placeholders.multiUri",
+                      "entities.profile.proxiesEditor.placeholders.multiUri",
                     )}
                     fullWidth
                     rows={9}
@@ -336,7 +336,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                     });
                   }}
                 >
-                  {t("profiles.proxiesEditor.actions.prepend")}
+                  {t("entities.profile.proxiesEditor.actions.prepend")}
                 </Button>
               </Item>
               <Item>
@@ -350,7 +350,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                     });
                   }}
                 >
-                  {t("profiles.proxiesEditor.actions.append")}
+                  {t("entities.profile.proxiesEditor.actions.append")}
                 </Button>
               </Item>
             </List>
@@ -501,11 +501,11 @@ export const ProxiesEditorViewer = (props: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
-          {t("common.actions.cancel")}
+          {t("shared.actions.cancel")}
         </Button>
 
         <Button onClick={handleSave} variant="contained">
-          {t("common.actions.save")}
+          {t("shared.actions.save")}
         </Button>
       </DialogActions>
     </Dialog>

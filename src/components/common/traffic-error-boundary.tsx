@@ -177,7 +177,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
       <ErrorOutlineRounded sx={{ fontSize: 48, mb: 2, color: "error.main" }} />
 
       <Typography variant="h6" gutterBottom>
-        {t("common.errors.trafficStats")}
+        {t("shared.messages.errors.trafficStats")}
       </Typography>
 
       <Typography
@@ -186,7 +186,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
         textAlign="center"
         sx={{ mb: 2 }}
       >
-        {t("common.errors.trafficStatsDescription")}
+        {t("shared.messages.errors.trafficStatsDescription")}
       </Typography>
 
       <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>
@@ -196,7 +196,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
         </Typography>
         {retryCount > 0 && (
           <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-            {t("common.labels.retryAttempts")}: {retryCount}/{maxRetries}
+            {t("shared.labels.retryAttempts")}: {retryCount}/{maxRetries}
           </Typography>
         )}
       </Alert>
@@ -210,12 +210,12 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
             onClick={onRetry}
             size="small"
           >
-            {t("common.actions.retry")}
+            {t("shared.actions.retry")}
           </Button>
         )}
 
         <Button variant="outlined" onClick={onRefresh} size="small">
-          {t("common.actions.refreshPage")}
+          {t("shared.actions.refreshPage")}
         </Button>
 
         <Button
@@ -225,8 +225,8 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
           size="small"
         >
           {showDetails
-            ? t("common.actions.hideDetails")
-            : t("common.actions.showDetails")}
+            ? t("shared.actions.hideDetails")
+            : t("shared.actions.showDetails")}
         </Button>
       </Box>
 

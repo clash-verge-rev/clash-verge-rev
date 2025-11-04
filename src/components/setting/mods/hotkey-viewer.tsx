@@ -27,13 +27,15 @@ const HOTKEY_FUNC = [
 ] as const;
 
 const HOTKEY_FUNC_LABELS: Record<(typeof HOTKEY_FUNC)[number], string> = {
-  open_or_close_dashboard: "settings.hotkey.functions.openOrCloseDashboard",
-  clash_mode_rule: "settings.hotkey.functions.rule",
-  clash_mode_global: "settings.hotkey.functions.global",
-  clash_mode_direct: "settings.hotkey.functions.direct",
-  toggle_system_proxy: "settings.hotkey.functions.toggleSystemProxy",
-  toggle_tun_mode: "settings.hotkey.functions.toggleTunMode",
-  entry_lightweight_mode: "settings.hotkey.functions.entryLightweightMode",
+  open_or_close_dashboard:
+    "entities.settings.hotkey.functions.openOrCloseDashboard",
+  clash_mode_rule: "entities.settings.hotkey.functions.rule",
+  clash_mode_global: "entities.settings.hotkey.functions.global",
+  clash_mode_direct: "entities.settings.hotkey.functions.direct",
+  toggle_system_proxy: "entities.settings.hotkey.functions.toggleSystemProxy",
+  toggle_tun_mode: "entities.settings.hotkey.functions.toggleTunMode",
+  entry_lightweight_mode:
+    "entities.settings.hotkey.functions.entryLightweightMode",
 };
 
 export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
@@ -99,16 +101,18 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("settings.hotkey.title")}
+      title={t("entities.settings.hotkey.title")}
       contentSx={{ width: 450, maxHeight: 380 }}
-      okBtn={t("common.actions.save")}
-      cancelBtn={t("common.actions.cancel")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <ItemWrapper style={{ marginBottom: 16 }}>
-        <Typography>{t("settings.hotkey.toggles.enableGlobal")}</Typography>
+        <Typography>
+          {t("entities.settings.hotkey.toggles.enableGlobal")}
+        </Typography>
         <Switch
           edge="end"
           checked={enableGlobalHotkey}

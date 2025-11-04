@@ -65,35 +65,35 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
   const fieldDefinitions: Array<{ labelKey: string; key: ThemeKey }> = useMemo(
     () => [
       {
-        labelKey: "settings.verge.theme.fields.primaryColor",
+        labelKey: "entities.settings.verge.theme.fields.primaryColor",
         key: "primary_color",
       },
       {
-        labelKey: "settings.verge.theme.fields.secondaryColor",
+        labelKey: "entities.settings.verge.theme.fields.secondaryColor",
         key: "secondary_color",
       },
       {
-        labelKey: "settings.verge.theme.fields.primaryText",
+        labelKey: "entities.settings.verge.theme.fields.primaryText",
         key: "primary_text",
       },
       {
-        labelKey: "settings.verge.theme.fields.secondaryText",
+        labelKey: "entities.settings.verge.theme.fields.secondaryText",
         key: "secondary_text",
       },
       {
-        labelKey: "settings.verge.theme.fields.infoColor",
+        labelKey: "entities.settings.verge.theme.fields.infoColor",
         key: "info_color",
       },
       {
-        labelKey: "settings.verge.theme.fields.warningColor",
+        labelKey: "entities.settings.verge.theme.fields.warningColor",
         key: "warning_color",
       },
       {
-        labelKey: "settings.verge.theme.fields.errorColor",
+        labelKey: "entities.settings.verge.theme.fields.errorColor",
         key: "error_color",
       },
       {
-        labelKey: "settings.verge.theme.fields.successColor",
+        labelKey: "entities.settings.verge.theme.fields.successColor",
         key: "success_color",
       },
     ],
@@ -120,9 +120,9 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t("settings.verge.theme.title")}
-      okBtn={t("common.actions.save")}
-      cancelBtn={t("common.actions.cancel")}
+      title={t("entities.settings.verge.theme.title")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       contentSx={{ width: 400, maxHeight: 505, overflow: "auto", pb: 0 }}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
@@ -132,7 +132,9 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
         {fieldDefinitions.map((field) => renderItem(field.labelKey, field.key))}
 
         <Item>
-          <ListItemText primary={t("settings.verge.theme.fields.fontFamily")} />
+          <ListItemText
+            primary={t("entities.settings.verge.theme.fields.fontFamily")}
+          />
           <TextField
             {...textProps}
             value={theme.font_family ?? ""}
@@ -142,7 +144,7 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
         </Item>
         <Item>
           <ListItemText
-            primary={t("settings.verge.theme.fields.cssInjection")}
+            primary={t("entities.settings.verge.theme.fields.cssInjection")}
           />
           <Button
             startIcon={<EditRounded />}
@@ -151,12 +153,12 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
               setEditorOpen(true);
             }}
           >
-            {t("settings.verge.theme.actions.editCss")}
+            {t("entities.settings.verge.theme.actions.editCss")}
           </Button>
           {editorOpen && (
             <EditorViewer
               open={true}
-              title={t("settings.verge.theme.dialogs.editCssTitle")}
+              title={t("entities.settings.verge.theme.dialogs.editCssTitle")}
               initialData={Promise.resolve(theme.css_injection ?? "")}
               language="css"
               onSave={(_prev, curr) => {

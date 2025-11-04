@@ -152,7 +152,7 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 
 function createRawDescriptor(message: string): NoticeTranslationDescriptor {
   return {
-    key: "common.notices.raw",
+    key: "shared.messages.notices.raw",
     params: { message },
   };
 }
@@ -208,7 +208,7 @@ function normalizeNoticeMessage(
     if (rawText !== undefined) {
       return {
         i18n: {
-          key: "common.notices.prefixedRaw",
+          key: "shared.messages.notices.prefixedRaw",
           params: {
             ...mergedParams,
             prefixKey: message.key,
@@ -232,7 +232,7 @@ function normalizeNoticeMessage(
       if (shouldUseTranslationKey(message, params)) {
         return {
           i18n: {
-            key: "common.notices.prefixedRaw",
+            key: "shared.messages.notices.prefixedRaw",
             params: {
               ...(params ?? {}),
               prefixKey: message,
@@ -244,7 +244,7 @@ function normalizeNoticeMessage(
       // Prefer showing the original string while still surfacing the raw details below.
       return {
         i18n: {
-          key: "common.notices.prefixedRaw",
+          key: "shared.messages.notices.prefixedRaw",
           params: {
             ...(params ?? {}),
             prefix: message,

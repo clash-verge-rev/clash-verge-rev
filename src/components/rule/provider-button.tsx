@@ -58,11 +58,11 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
 
-      showNotice.success("rules.page.provider.notices.updateSuccess", {
+      showNotice.success("entities.rule.page.provider.notices.updateSuccess", {
         name,
       });
     } catch (err) {
-      showNotice.error("rules.page.provider.notices.updateFailed", {
+      showNotice.error("entities.rule.page.provider.notices.updateFailed", {
         name,
         message: String(err),
       });
@@ -78,7 +78,7 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(ruleProviders || {});
       if (allProviders.length === 0) {
-        showNotice.info("rules.page.provider.notices.none");
+        showNotice.info("entities.rule.page.provider.notices.none");
         return;
       }
 
@@ -108,9 +108,9 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
 
-      showNotice.success("rules.page.provider.notices.allUpdated");
+      showNotice.success("entities.rule.page.provider.notices.allUpdated");
     } catch (err) {
-      showNotice.error("rules.page.provider.notices.genericError", {
+      showNotice.error("entities.rule.page.provider.notices.genericError", {
         message: String(err),
       });
     } finally {
@@ -133,7 +133,7 @@ export const ProviderButton = () => {
         startIcon={<StorageOutlined />}
         onClick={() => setOpen(true)}
       >
-        {t("rules.page.provider.trigger")}
+        {t("entities.rule.page.provider.trigger")}
       </Button>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -144,14 +144,14 @@ export const ProviderButton = () => {
             alignItems="center"
           >
             <Typography variant="h6">
-              {t("rules.page.provider.dialogTitle")}
+              {t("entities.rule.page.provider.dialogTitle")}
             </Typography>
             <Button
               variant="contained"
               size="small"
               onClick={updateAllProviders}
             >
-              {t("rules.page.provider.actions.updateAll")}
+              {t("entities.rule.page.provider.actions.updateAll")}
             </Button>
           </Box>
         </DialogTitle>
@@ -222,7 +222,7 @@ export const ProviderButton = () => {
                             color="text.secondary"
                             noWrap
                           >
-                            <small>{t("common.labels.updateAt")}: </small>
+                            <small>{t("shared.labels.updateAt")}: </small>
                             {time.fromNow()}
                           </Typography>
                         </Box>
@@ -252,7 +252,9 @@ export const ProviderButton = () => {
                         color="primary"
                         onClick={() => updateProvider(key)}
                         disabled={isUpdating}
-                        aria-label={t("rules.page.provider.actions.update")}
+                        aria-label={t(
+                          "entities.rule.page.provider.actions.update",
+                        )}
                         sx={{
                           animation: isUpdating
                             ? "spin 1s linear infinite"
@@ -262,7 +264,7 @@ export const ProviderButton = () => {
                             "100%": { transform: "rotate(360deg)" },
                           },
                         }}
-                        title={t("rules.page.provider.actions.update")}
+                        title={t("entities.rule.page.provider.actions.update")}
                       >
                         <RefreshRounded />
                       </IconButton>
@@ -275,7 +277,7 @@ export const ProviderButton = () => {
 
         <DialogActions>
           <Button onClick={handleClose} variant="outlined">
-            {t("common.actions.close")}
+            {t("shared.actions.close")}
           </Button>
         </DialogActions>
       </Dialog>

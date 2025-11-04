@@ -135,7 +135,7 @@ export const BaseSearchBox = ({
     if (useRegularExpression && value) {
       const isValid = validateRegex(value);
       if (!isValid) {
-        setErrorMessage(t("common.search.invalidRegex"));
+        setErrorMessage(t("shared.validation.invalidRegex"));
       }
     }
 
@@ -156,7 +156,7 @@ export const BaseSearchBox = ({
       } else {
         const value = inputRef.current?.value ?? "";
         if (value && !validateRegex(value)) {
-          setErrorMessage(t("common.search.invalidRegex"));
+          setErrorMessage(t("shared.validation.invalidRegex"));
         }
       }
       return next;
@@ -173,7 +173,7 @@ export const BaseSearchBox = ({
         size="small"
         variant="outlined"
         spellCheck="false"
-        placeholder={placeholder ?? t("common.search.placeholder")}
+        placeholder={placeholder ?? t("shared.placeholders.filter")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
         error={!!errorMessage}
@@ -182,7 +182,7 @@ export const BaseSearchBox = ({
             sx: { pr: 1 },
             endAdornment: (
               <Box display="flex">
-                <Tooltip title={t("common.search.matchCase")}>
+                <Tooltip title={t("shared.placeholders.matchCase")}>
                   <div>
                     <SvgIcon
                       component={matchCaseIcon}
@@ -192,7 +192,7 @@ export const BaseSearchBox = ({
                     />
                   </div>
                 </Tooltip>
-                <Tooltip title={t("common.search.matchWholeWord")}>
+                <Tooltip title={t("shared.placeholders.matchWholeWord")}>
                   <div>
                     <SvgIcon
                       component={matchWholeWordIcon}
@@ -202,7 +202,7 @@ export const BaseSearchBox = ({
                     />
                   </div>
                 </Tooltip>
-                <Tooltip title={t("common.search.useRegex")}>
+                <Tooltip title={t("shared.placeholders.useRegex")}>
                   <div>
                     <SvgIcon
                       component={useRegularExpressionIcon}

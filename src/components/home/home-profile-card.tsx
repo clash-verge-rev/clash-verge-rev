@@ -112,7 +112,7 @@ const ProfileDetails = ({
               sx={{ display: "flex", alignItems: "center" }}
             >
               <span style={{ flexShrink: 0 }}>
-                {t("profiles.card.labels.from")}:{" "}
+                {t("entities.profile.card.labels.from")}:{" "}
               </span>
               {current.home ? (
                 <Link
@@ -188,7 +188,7 @@ const ProfileDetails = ({
               sx={{ cursor: "pointer" }}
               onClick={onUpdateProfile}
             >
-              {t("profiles.card.labels.updateTime")}:{" "}
+              {t("entities.profile.card.labels.updateTime")}:{" "}
               <Box component="span" fontWeight="medium">
                 {dayjs(current.updated * 1000).format("YYYY-MM-DD HH:mm")}
               </Box>
@@ -201,7 +201,7 @@ const ProfileDetails = ({
             <Stack direction="row" alignItems="center" spacing={1}>
               <SpeedOutlined fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
-                {t("profiles.card.labels.usedTotal")}:{" "}
+                {t("entities.profile.card.labels.usedTotal")}:{" "}
                 <Box component="span" fontWeight="medium">
                   {parseTraffic(usedTraffic)} /{" "}
                   {parseTraffic(current.extra.total)}
@@ -213,7 +213,7 @@ const ProfileDetails = ({
               <Stack direction="row" alignItems="center" spacing={1}>
                 <EventOutlined fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">
-                  {t("profiles.card.labels.expireTime")}:{" "}
+                  {t("entities.profile.card.labels.expireTime")}:{" "}
                   <Box component="span" fontWeight="medium">
                     {parseExpire(current.extra.expire)}
                   </Box>
@@ -268,10 +268,11 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
         sx={{ fontSize: 60, color: "primary.main", mb: 2 }}
       />
       <Typography variant="h6" gutterBottom>
-        {t("profiles.page.actions.import")} {t("profiles.page.title")}
+        {t("entities.profile.page.actions.import")}{" "}
+        {t("entities.profile.page.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        {t("profiles.card.labels.clickToImport")}
+        {t("entities.profile.card.labels.clickToImport")}
       </Typography>
     </Box>
   );
@@ -312,7 +313,7 @@ export const HomeProfileCard = ({
 
   // 卡片标题
   const cardTitle = useMemo(() => {
-    if (!current) return t("profiles.page.title");
+    if (!current) return t("entities.profile.page.title");
 
     if (!current.home) return current.name;
 
@@ -365,7 +366,7 @@ export const HomeProfileCard = ({
         endIcon={<StorageOutlined fontSize="small" />}
         sx={{ borderRadius: 1.5 }}
       >
-        {t("navigation.tabs.proxies")}
+        {t("entities.navigation.tabs.proxies")}
       </Button>
     );
   }, [current, goToProfiles, t]);

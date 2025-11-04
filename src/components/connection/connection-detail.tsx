@@ -68,50 +68,50 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     : metadata.remoteDestination;
 
   const information = [
-    { label: t("connections.fields.host"), value: host },
+    { label: t("entities.connection.fields.host"), value: host },
     {
-      label: t("connections.fields.downloaded"),
+      label: t("entities.connection.fields.downloaded"),
       value: parseTraffic(data.download).join(" "),
     },
     {
-      label: t("connections.fields.uploaded"),
+      label: t("entities.connection.fields.uploaded"),
       value: parseTraffic(data.upload).join(" "),
     },
     {
-      label: t("connections.fields.dlSpeed"),
+      label: t("entities.connection.fields.dlSpeed"),
       value: parseTraffic(data.curDownload ?? -1).join(" ") + "/s",
     },
     {
-      label: t("connections.fields.ulSpeed"),
+      label: t("entities.connection.fields.ulSpeed"),
       value: parseTraffic(data.curUpload ?? -1).join(" ") + "/s",
     },
     {
-      label: t("connections.fields.chains"),
+      label: t("entities.connection.fields.chains"),
       value: chains,
     },
-    { label: t("connections.fields.rule"), value: rule },
+    { label: t("entities.connection.fields.rule"), value: rule },
     {
-      label: t("connections.fields.process"),
+      label: t("entities.connection.fields.process"),
       value: `${metadata.process}${metadata.processPath ? `(${metadata.processPath})` : ""}`,
     },
     {
-      label: t("connections.fields.time"),
+      label: t("entities.connection.fields.time"),
       value: dayjs(data.start).fromNow(),
     },
     {
-      label: t("connections.fields.source"),
+      label: t("entities.connection.fields.source"),
       value: `${metadata.sourceIP}:${metadata.sourcePort}`,
     },
     {
-      label: t("connections.fields.destination"),
+      label: t("entities.connection.fields.destination"),
       value: Destination,
     },
     {
-      label: t("connections.fields.destinationPort"),
+      label: t("entities.connection.fields.destinationPort"),
       value: `${metadata.destinationPort}`,
     },
     {
-      label: t("connections.fields.type"),
+      label: t("entities.connection.fields.type"),
       value: `${metadata.type}(${metadata.network})`,
     },
   ];
@@ -137,13 +137,13 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
       <Box sx={{ textAlign: "right" }}>
         <Button
           variant="contained"
-          title={t("connections.actions.closeConnection")}
+          title={t("entities.connection.actions.closeConnection")}
           onClick={() => {
             onDelete();
             onClose?.();
           }}
         >
-          {t("connections.actions.closeConnection")}
+          {t("entities.connection.actions.closeConnection")}
         </Button>
       </Box>
     </Box>

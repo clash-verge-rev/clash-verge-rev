@@ -53,17 +53,19 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t("settings.liteMode.title")}
+      title={t("entities.settings.liteMode.title")}
       contentSx={{ width: 450 }}
-      okBtn={t("common.actions.save")}
-      cancelBtn={t("common.actions.cancel")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.liteMode.actions.enterNow")} />
+          <ListItemText
+            primary={t("entities.settings.liteMode.actions.enterNow")}
+          />
           <Typography
             variant="button"
             sx={{
@@ -73,17 +75,17 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
             }}
             onClick={async () => await entry_lightweight_mode()}
           >
-            {t("common.actions.enable")}
+            {t("shared.actions.enable")}
           </Typography>
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("settings.liteMode.toggles.autoEnter")}
+            primary={t("entities.settings.liteMode.toggles.autoEnter")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("settings.liteMode.tooltips.autoEnter")}
+            title={t("entities.settings.liteMode.tooltips.autoEnter")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -99,7 +101,9 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
         {values.autoEnterLiteMode && (
           <>
             <ListItem sx={{ padding: "5px 2px" }}>
-              <ListItemText primary={t("settings.liteMode.fields.delay")} />
+              <ListItemText
+                primary={t("entities.settings.liteMode.fields.delay")}
+              />
               <TextField
                 autoComplete="off"
                 size="small"
@@ -119,7 +123,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
                   input: {
                     endAdornment: (
                       <InputAdornment position="end">
-                        {t("common.units.minutes")}
+                        {t("shared.units.minutes")}
                       </InputAdornment>
                     ),
                   },
@@ -133,7 +137,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 color="text.secondary"
                 sx={{ fontStyle: "italic" }}
               >
-                {t("settings.liteMode.messages.autoEnterHint", {
+                {t("entities.settings.liteMode.messages.autoEnterHint", {
                   n: values.autoEnterLiteModeDelay,
                 })}
               </Typography>

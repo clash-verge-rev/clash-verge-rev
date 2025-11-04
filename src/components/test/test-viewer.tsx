@@ -126,12 +126,12 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
       open={open}
       title={
         openType === "new"
-          ? t("test.viewer.title.create")
-          : t("test.viewer.title.edit")
+          ? t("entities.test.viewer.title.create")
+          : t("entities.test.viewer.title.edit")
       }
       contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
-      okBtn={t("common.actions.save")}
-      cancelBtn={t("common.actions.cancel")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={handleClose}
       onCancel={handleClose}
       onOk={handleOk}
@@ -141,7 +141,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
         name="name"
         control={control}
         render={({ field }) => (
-          <TextField {...text} {...field} label={t("common.labels.name")} />
+          <TextField {...text} {...field} label={t("shared.labels.name")} />
         )}
       />
       <Controller
@@ -153,7 +153,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
             {...field}
             multiline
             maxRows={5}
-            label={t("common.labels.icon")}
+            label={t("shared.labels.icon")}
           />
         )}
       />
@@ -166,7 +166,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
             {...field}
             multiline
             maxRows={3}
-            label={t("test.viewer.fields.url")}
+            label={t("entities.test.viewer.fields.url")}
           />
         )}
       />

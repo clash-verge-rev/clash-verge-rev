@@ -239,7 +239,7 @@ export const ProxyGroups = (props: Props) => {
         setProxyChain((prev) => {
           // 检查是否已经存在相同名称的代理，防止重复添加
           if (prev.some((item) => item.name === proxy.name)) {
-            const warningMessage = t("proxies.page.chain.duplicateNode");
+            const warningMessage = t("entities.proxy.page.chain.duplicateNode");
             setDuplicateWarning({
               open: true,
               message: warningMessage,
@@ -372,7 +372,7 @@ export const ProxyGroups = (props: Props) => {
   }, [renderList]);
 
   if (mode === "direct") {
-    return <BaseEmpty textKey="proxies.page.messages.directMode" />;
+    return <BaseEmpty textKey="entities.proxy.page.messages.directMode" />;
   }
 
   if (isChainMode) {
@@ -403,7 +403,7 @@ export const ProxyGroups = (props: Props) => {
                       variant="h6"
                       sx={{ fontWeight: 600, fontSize: "16px" }}
                     >
-                      {t("proxies.page.rules.title")}
+                      {t("entities.proxy.page.rules.title")}
                     </Typography>
                     {currentGroup && (
                       <Box
@@ -442,7 +442,7 @@ export const ProxyGroups = (props: Props) => {
                         variant="body2"
                         sx={{ mr: 0.5, fontSize: "12px" }}
                       >
-                        {t("proxies.page.rules.select")}
+                        {t("entities.proxy.page.rules.select")}
                       </Typography>
                       <ExpandMoreRounded fontSize="small" />
                     </IconButton>

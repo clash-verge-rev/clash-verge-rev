@@ -80,7 +80,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       );
       try {
         await enhanceProfiles();
-        showNotice.success("settings.tun.messages.applied");
+        showNotice.success("entities.settings.tun.messages.applied");
       } catch (err: any) {
         showNotice.error(err);
       }
@@ -95,7 +95,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between" gap={1}>
-          <Typography variant="h6">{t("settings.tun.title")}</Typography>
+          <Typography variant="h6">
+            {t("entities.settings.tun.title")}
+          </Typography>
           <Button
             variant="outlined"
             size="small"
@@ -128,20 +130,20 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               );
             }}
           >
-            {t("settings.tun.actions.reset")}
+            {t("entities.settings.tun.actions.reset")}
           </Button>
         </Box>
       }
       contentSx={{ width: 450 }}
-      okBtn={t("common.actions.save")}
-      cancelBtn={t("common.actions.cancel")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.stack")} />
+          <ListItemText primary={t("entities.settings.tun.fields.stack")} />
           <StackModeSwitch
             value={values.stack}
             onChange={(value) => {
@@ -154,7 +156,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.device")} />
+          <ListItemText primary={t("entities.settings.tun.fields.device")} />
           <TextField
             autoComplete="new-password"
             size="small"
@@ -171,7 +173,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.autoRoute")} />
+          <ListItemText primary={t("entities.settings.tun.fields.autoRoute")} />
           <Switch
             edge="end"
             checked={values.autoRoute}
@@ -180,7 +182,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.strictRoute")} />
+          <ListItemText
+            primary={t("entities.settings.tun.fields.strictRoute")}
+          />
           <Switch
             edge="end"
             checked={values.strictRoute}
@@ -190,7 +194,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("settings.tun.fields.autoDetectInterface")}
+            primary={t("entities.settings.tun.fields.autoDetectInterface")}
           />
           <Switch
             edge="end"
@@ -202,7 +206,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.dnsHijack")} />
+          <ListItemText primary={t("entities.settings.tun.fields.dnsHijack")} />
           <TextField
             autoComplete="new-password"
             size="small"
@@ -211,7 +215,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             spellCheck="false"
             sx={{ width: 250 }}
             value={values.dnsHijack.join(",")}
-            placeholder={t("settings.tun.tooltips.dnsHijack")}
+            placeholder={t("entities.settings.tun.tooltips.dnsHijack")}
             onChange={(e) =>
               setValues((v) => ({ ...v, dnsHijack: e.target.value.split(",") }))
             }
@@ -219,7 +223,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.mtu")} />
+          <ListItemText primary={t("entities.settings.tun.fields.mtu")} />
           <TextField
             autoComplete="new-password"
             size="small"

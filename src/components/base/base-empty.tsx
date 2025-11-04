@@ -11,7 +11,7 @@ interface Props {
 
 export const BaseEmpty = ({
   text,
-  textKey = "common.states.empty",
+  textKey = "shared.statuses.empty",
   extra,
 }: Props) => {
   const { t } = useTranslation();

@@ -12,7 +12,9 @@ export const handleNoticeMessage = (
   const handlers: Record<string, () => void> = {
     "import_sub_url::ok": () => {
       navigate("/profile", { state: { current: msg } });
-      showNotice.success("profiles.notifications.importSubscriptionSuccess");
+      showNotice.success(
+        "entities.profile.notifications.importSubscriptionSuccess",
+      );
     },
     "import_sub_url::error": () => {
       navigate("/profile");
@@ -21,12 +23,12 @@ export const handleNoticeMessage = (
     "set_config::error": () => showNotice.error(msg),
     update_with_clash_proxy: () =>
       showNotice.success(
-        "settings.updater.notifications.withClashProxySuccess",
+        "entities.settings.updater.notifications.withClashProxySuccess",
         msg,
       ),
     update_failed_even_with_clash: () =>
       showNotice.error(
-        "settings.updater.notifications.withClashProxyFailed",
+        "entities.settings.updater.notifications.withClashProxyFailed",
         msg,
       ),
     update_failed: () => showNotice.error(msg),
@@ -67,9 +69,15 @@ export const handleNoticeMessage = (
     "config_validate::merge_error": () =>
       showNotice.error("validation.merge.generalError", msg),
     "config_core::change_success": () =>
-      showNotice.success("settings.clash.notifications.changeSuccess", msg),
+      showNotice.success(
+        "entities.settings.clash.notifications.changeSuccess",
+        msg,
+      ),
     "config_core::change_error": () =>
-      showNotice.error("settings.clash.notifications.changeFailed", msg),
+      showNotice.error(
+        "entities.settings.clash.notifications.changeFailed",
+        msg,
+      ),
   };
 
   const handler = handlers[status];

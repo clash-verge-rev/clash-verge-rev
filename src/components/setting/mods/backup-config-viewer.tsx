@@ -84,22 +84,30 @@ export const BackupConfigViewer = memo(
 
       if (!url) {
         urlRef.current?.focus();
-        showNotice.error("settings.backup.messages.webdavUrlRequired");
-        throw new Error(t("settings.backup.messages.webdavUrlRequired"));
+        showNotice.error("entities.settings.backup.messages.webdavUrlRequired");
+        throw new Error(
+          t("entities.settings.backup.messages.webdavUrlRequired"),
+        );
       } else if (!isValidUrl(url)) {
         urlRef.current?.focus();
-        showNotice.error("settings.backup.messages.invalidWebdavUrl");
-        throw new Error(t("settings.backup.messages.invalidWebdavUrl"));
+        showNotice.error("entities.settings.backup.messages.invalidWebdavUrl");
+        throw new Error(
+          t("entities.settings.backup.messages.invalidWebdavUrl"),
+        );
       }
       if (!username) {
         usernameRef.current?.focus();
-        showNotice.error("settings.backup.messages.usernameRequired");
-        throw new Error(t("settings.backup.messages.usernameRequired"));
+        showNotice.error("entities.settings.backup.messages.usernameRequired");
+        throw new Error(
+          t("entities.settings.backup.messages.usernameRequired"),
+        );
       }
       if (!password) {
         passwordRef.current?.focus();
-        showNotice.error("settings.backup.messages.passwordRequired");
-        throw new Error(t("settings.backup.messages.passwordRequired"));
+        showNotice.error("entities.settings.backup.messages.passwordRequired");
+        throw new Error(
+          t("entities.settings.backup.messages.passwordRequired"),
+        );
       }
     };
 
@@ -112,12 +120,14 @@ export const BackupConfigViewer = memo(
           data.username.trim(),
           data.password,
         ).then(() => {
-          showNotice.success("settings.backup.messages.webdavConfigSaved");
+          showNotice.success(
+            "entities.settings.backup.messages.webdavConfigSaved",
+          );
           onSaveSuccess();
         });
       } catch (error) {
         showNotice.error(
-          "settings.backup.messages.webdavConfigSaveFailed",
+          "entities.settings.backup.messages.webdavConfigSaveFailed",
           { error },
           3000,
         );
@@ -131,11 +141,11 @@ export const BackupConfigViewer = memo(
       try {
         setLoading(true);
         await createWebdavBackup().then(async () => {
-          showNotice.success("settings.backup.messages.backupCreated");
+          showNotice.success("entities.settings.backup.messages.backupCreated");
           await onBackupSuccess();
         });
       } catch (error) {
-        showNotice.error("settings.backup.messages.backupFailed", {
+        showNotice.error("entities.settings.backup.messages.backupFailed", {
           error,
         });
       } finally {
@@ -151,7 +161,7 @@ export const BackupConfigViewer = memo(
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label={t("settings.backup.fields.webdavUrl")}
+                  label={t("entities.settings.backup.fields.webdavUrl")}
                   variant="outlined"
                   size="small"
                   {...register("url")}
@@ -163,7 +173,7 @@ export const BackupConfigViewer = memo(
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <TextField
-                  label={t("settings.backup.fields.username")}
+                  label={t("entities.settings.backup.fields.username")}
                   variant="outlined"
                   size="small"
                   {...register("username")}
@@ -175,7 +185,7 @@ export const BackupConfigViewer = memo(
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <TextField
-                  label={t("settings.backup.fields.password")}
+                  label={t("entities.settings.backup.fields.password")}
                   type={showPassword ? "text" : "password"}
                   variant="outlined"
                   size="small"
@@ -220,7 +230,7 @@ export const BackupConfigViewer = memo(
                   type="button"
                   onClick={handleSubmit(save)}
                 >
-                  {t("common.actions.save")}
+                  {t("shared.actions.save")}
                 </Button>
               ) : (
                 <>
@@ -231,7 +241,7 @@ export const BackupConfigViewer = memo(
                     type="button"
                     size="large"
                   >
-                    {t("settings.backup.actions.backup")}
+                    {t("entities.settings.backup.actions.backup")}
                   </Button>
                   <Button
                     variant="outlined"
@@ -239,7 +249,7 @@ export const BackupConfigViewer = memo(
                     type="button"
                     size="large"
                   >
-                    {t("common.actions.refresh")}
+                    {t("shared.actions.refresh")}
                   </Button>
                 </>
               )}

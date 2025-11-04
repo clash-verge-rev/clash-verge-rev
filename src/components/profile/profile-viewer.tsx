@@ -144,7 +144,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             }
           } catch {
             // 首次创建/更新失败，尝试使用自身代理
-            showNotice.info("profiles.viewer.notifications.creationRetry");
+            showNotice.info(
+              "entities.profile.viewer.notifications.creationRetry",
+            );
 
             // 使用自身代理的配置
             const retryItem = {
@@ -167,7 +169,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               await patchProfile(form.uid, { option: originalOptions });
             }
 
-            showNotice.success("profiles.viewer.notifications.creationSuccess");
+            showNotice.success(
+              "entities.profile.viewer.notifications.creationSuccess",
+            );
           }
         }
 
@@ -216,12 +220,12 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
       open={open}
       title={
         openType === "new"
-          ? t("profiles.viewer.title.create")
-          : t("profiles.viewer.title.edit")
+          ? t("entities.profile.viewer.title.create")
+          : t("entities.profile.viewer.title.edit")
       }
       contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
-      okBtn={t("common.actions.save")}
-      cancelBtn={t("common.actions.cancel")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={handleClose}
       onCancel={handleClose}
       onOk={handleOk}
@@ -232,11 +236,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         control={control}
         render={({ field }) => (
           <FormControl size="small" fullWidth sx={{ mt: 1, mb: 1 }}>
-            <InputLabel>{t("profiles.viewer.fields.type")}</InputLabel>
+            <InputLabel>{t("entities.profile.viewer.fields.type")}</InputLabel>
             <Select
               {...field}
               autoFocus
-              label={t("profiles.viewer.fields.type")}
+              label={t("entities.profile.viewer.fields.type")}
             >
               <MenuItem value="remote">Remote</MenuItem>
               <MenuItem value="local">Local</MenuItem>
@@ -252,7 +256,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           <TextField
             {...text}
             {...field}
-            label={t("profiles.viewer.fields.name")}
+            label={t("entities.profile.viewer.fields.name")}
           />
         )}
       />
@@ -264,7 +268,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           <TextField
             {...text}
             {...field}
-            label={t("profiles.viewer.fields.description")}
+            label={t("entities.profile.viewer.fields.description")}
           />
         )}
       />
@@ -279,7 +283,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...text}
                 {...field}
                 multiline
-                label={t("profiles.viewer.fields.subscriptionUrl")}
+                label={t("entities.profile.viewer.fields.subscriptionUrl")}
               />
             )}
           />
@@ -306,12 +310,12 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...field}
                 type="number"
                 placeholder="60"
-                label={t("profiles.viewer.fields.httpTimeout")}
+                label={t("entities.profile.viewer.fields.httpTimeout")}
                 slotProps={{
                   input: {
                     endAdornment: (
                       <InputAdornment position="end">
-                        {t("common.units.seconds")}
+                        {t("shared.units.seconds")}
                       </InputAdornment>
                     ),
                   },
@@ -331,12 +335,12 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               {...text}
               {...field}
               type="number"
-              label={t("profiles.viewer.fields.updateInterval")}
+              label={t("entities.profile.viewer.fields.updateInterval")}
               slotProps={{
                 input: {
                   endAdornment: (
                     <InputAdornment position="end">
-                      {t("common.units.minutes")}
+                      {t("shared.units.minutes")}
                     </InputAdornment>
                   ),
                 },
@@ -363,7 +367,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>
-                  {t("profiles.viewer.fields.useSystemProxy")}
+                  {t("entities.profile.viewer.fields.useSystemProxy")}
                 </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
@@ -376,7 +380,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>
-                  {t("profiles.viewer.fields.useClashProxy")}
+                  {t("entities.profile.viewer.fields.useClashProxy")}
                 </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
@@ -389,7 +393,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>
-                  {t("profiles.viewer.fields.acceptInvalidCerts")}
+                  {t("entities.profile.viewer.fields.acceptInvalidCerts")}
                 </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
@@ -402,7 +406,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>
-                  {t("profiles.viewer.fields.allowAutoUpdate")}
+                  {t("entities.profile.viewer.fields.allowAutoUpdate")}
                 </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>

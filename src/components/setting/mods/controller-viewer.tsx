@@ -57,14 +57,14 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       if (enableController) {
         if (!controller.trim()) {
           showNotice.error(
-            "settings.externalController.messages.addressRequired",
+            "entities.settings.externalController.messages.addressRequired",
           );
           return;
         }
 
         if (!secret.trim()) {
           showNotice.error(
-            "settings.externalController.messages.secretRequired",
+            "entities.settings.externalController.messages.secretRequired",
           );
           return;
         }
@@ -75,10 +75,14 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         await patchInfo({ "external-controller": "" });
       }
 
-      showNotice.success("settings.common.notifications.saveSuccess");
+      showNotice.success("entities.settings.common.notifications.saveSuccess");
       setOpen(false);
     } catch (err) {
-      showNotice.error("settings.common.notifications.saveFailed", err, 4000);
+      showNotice.error(
+        "entities.settings.common.notifications.saveFailed",
+        err,
+        4000,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -93,7 +97,9 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         setTimeout(() => setCopySuccess(null));
       } catch (err) {
         console.warn("[ControllerViewer] copy to clipboard failed:", err);
-        showNotice.error("settings.externalController.messages.copyFailed");
+        showNotice.error(
+          "entities.settings.externalController.messages.copyFailed",
+        );
       }
     },
   );
@@ -101,19 +107,19 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t("settings.externalController.title")}
+      title={t("entities.settings.externalController.title")}
       contentSx={{ width: 400 }}
       okBtn={
         isSaving ? (
           <Box display="flex" alignItems="center" gap={1}>
             <CircularProgress size={16} color="inherit" />
-            {t("common.states.saving")}
+            {t("shared.statuses.saving")}
           </Box>
         ) : (
-          t("common.actions.save")
+          t("shared.actions.save")
         )
       }
-      cancelBtn={t("common.actions.cancel")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
@@ -127,7 +133,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
           }}
         >
           <ListItemText
-            primary={t("settings.externalController.fields.enable")}
+            primary={t("entities.settings.externalController.fields.enable")}
           />
           <Switch
             edge="end"
@@ -145,7 +151,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
           }}
         >
           <ListItemText
-            primary={t("settings.externalController.fields.address")}
+            primary={t("entities.settings.externalController.fields.address")}
           />
           <Box display="flex" alignItems="center" gap={1}>
             <TextField
@@ -157,12 +163,14 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
               }}
               value={controller}
               placeholder={t(
-                "settings.externalController.placeholders.address",
+                "entities.settings.externalController.placeholders.address",
               )}
               onChange={(e) => setController(e.target.value)}
               disabled={isSaving || !enableController}
             />
-            <Tooltip title={t("settings.externalController.tooltips.copy")}>
+            <Tooltip
+              title={t("entities.settings.externalController.tooltips.copy")}
+            >
               <IconButton
                 size="small"
                 onClick={() => handleCopyToClipboard(controller, "controller")}
@@ -183,7 +191,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
           }}
         >
           <ListItemText
-            primary={t("settings.externalController.fields.secret")}
+            primary={t("entities.settings.externalController.fields.secret")}
           />
           <Box display="flex" alignItems="center" gap={1}>
             <TextField
@@ -194,11 +202,15 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 pointerEvents: enableController ? "auto" : "none",
               }}
               value={secret}
-              placeholder={t("settings.externalController.placeholders.secret")}
+              placeholder={t(
+                "entities.settings.externalController.placeholders.secret",
+              )}
               onChange={(e) => setSecret(e.target.value)}
               disabled={isSaving || !enableController}
             />
-            <Tooltip title={t("settings.externalController.tooltips.copy")}>
+            <Tooltip
+              title={t("entities.settings.externalController.tooltips.copy")}
+            >
               <IconButton
                 size="small"
                 onClick={() => handleCopyToClipboard(secret, "secret")}
@@ -219,8 +231,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       >
         <Alert severity="success">
           {copySuccess === "controller"
-            ? t("settings.externalController.messages.controllerCopied")
-            : t("settings.externalController.messages.secretCopied")}
+            ? t(
+                "entities.settings.externalController.messages.controllerCopied",
+              )
+            : t("entities.settings.externalController.messages.secretCopied")}
         </Alert>
       </Snackbar>
     </BaseDialog>

@@ -38,16 +38,16 @@ const UNLOCK_RESULTS_STORAGE_KEY = "clash_verge_unlock_results";
 const UNLOCK_RESULTS_TIME_KEY = "clash_verge_unlock_time";
 
 const STATUS_LABEL_KEYS: Record<string, string> = {
-  Pending: "test.statuses.pending",
-  Yes: "test.statuses.yes",
-  No: "test.statuses.no",
-  Failed: "test.statuses.failed",
-  Completed: "test.statuses.completed",
-  "Disallowed ISP": "test.statuses.disallowedIsp",
-  "Originals Only": "test.statuses.originalsOnly",
-  "No (IP Banned By Disney+)": "test.statuses.noDisney",
-  "Unsupported Country/Region": "test.statuses.unsupportedRegion",
-  "Failed (Network Connection)": "test.statuses.failedNetwork",
+  Pending: "entities.test.statuses.pending",
+  Yes: "entities.test.statuses.yes",
+  No: "entities.test.statuses.no",
+  Failed: "entities.test.statuses.failed",
+  Completed: "entities.test.statuses.completed",
+  "Disallowed ISP": "entities.test.statuses.disallowedIsp",
+  "Originals Only": "entities.test.statuses.originalsOnly",
+  "No (IP Banned By Disney+)": "entities.test.statuses.noDisney",
+  "Unsupported Country/Region": "entities.test.statuses.unsupportedRegion",
+  "Failed (Network Connection)": "entities.test.statuses.failedNetwork",
 };
 
 const UnlockPage = () => {
@@ -281,7 +281,7 @@ const UnlockPage = () => {
           >
             {isCheckingAll
               ? t("unlock.page.actions.testing")
-              : t("test.page.actions.testAll")}
+              : t("entities.test.page.actions.testAll")}
           </Button>
         </Box>
       }
@@ -337,7 +337,7 @@ const UnlockPage = () => {
                     >
                       {item.name}
                     </Typography>
-                    <Tooltip title={t("test.item.actions.test")}>
+                    <Tooltip title={t("entities.test.item.actions.test")}>
                       <span>
                         <Button
                           size="small"

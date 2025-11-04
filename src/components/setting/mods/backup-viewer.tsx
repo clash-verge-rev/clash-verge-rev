@@ -246,7 +246,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t("settings.backup.title")}
+      title={t("entities.settings.backup.title")}
       contentSx={{
         minWidth: { xs: 320, sm: 620 },
         maxWidth: "unset",
@@ -277,11 +277,17 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
           <Tabs
             value={source}
             onChange={handleChangeSource}
-            aria-label={t("settings.backup.actions.selectTarget")}
+            aria-label={t("entities.settings.backup.actions.selectTarget")}
             sx={{ mb: 2 }}
           >
-            <Tab value="local" label={t("settings.backup.tabs.local")} />
-            <Tab value="webdav" label={t("settings.backup.tabs.webdav")} />
+            <Tab
+              value="local"
+              label={t("entities.settings.backup.tabs.local")}
+            />
+            <Tab
+              value="webdav"
+              label={t("entities.settings.backup.tabs.webdav")}
+            />
           </Tabs>
           {source === "local" ? (
             <LocalBackupActions
@@ -341,7 +347,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 backgroundColor: (theme) => theme.palette.background.paper,
               }}
             >
-              {t("common.actions.close")}
+              {t("shared.actions.close")}
             </Button>
           </Box>,
           dialogPaper,
