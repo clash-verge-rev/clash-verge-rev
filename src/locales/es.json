@@ -154,10 +154,6 @@
         "create": "Crear configuración",
         "edit": "Editar configuración"
       },
-      "buttons": {
-        "save": "Guardar",
-        "cancel": "Cancelar"
-      },
       "fields": {
         "type": "Tipo",
         "name": "Nombre",
@@ -239,8 +235,7 @@
       "extendScript": "Script extendido",
       "openFile": "Abrir archivo",
       "update": "Actualizar",
-      "updateViaProxy": "Update via proxy",
-      "delete": "Eliminar"
+      "updateViaProxy": "Update via proxy"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "Ajustes"
       },
-      "labels": {
-        "enabled": "Habilitado",
-        "disabled": "Deshabilitado"
-      },
       "tooltips": {
         "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático."
       },
@@ -335,7 +326,6 @@
         "load": "Error al obtener información de IP"
       },
       "labels": {
-        "retry": "Retry",
         "ip": "IP",
         "asn": "Número de sistema autónomo",
         "isp": "Proveedor de servicios de Internet",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "Select backup target",
         "backup": "Copia de seguridad",
-        "refresh": "Actualizar",
-        "save": "Guardar",
         "export": "Export",
         "exportBackup": "Export Backup",
-        "delete": "Eliminar",
         "deleteBackup": "Eliminar copia de seguridad",
         "restore": "Restaurar",
         "restoreBackup": "Restaurar copia de seguridad"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "Prueba",
       "actions": {
-        "testAll": "Probar todo",
-        "new": "Nuevo"
+        "testAll": "Probar todo"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "Actualizar todas las suscripciones",
         "viewRuntimeConfig": "Ver configuración en tiempo de ejecución",
         "reactivate": "Reactivar suscripciones",
-        "import": "Importar",
-        "new": "Nuevo"
+        "import": "Importar"
       },
       "batch": {
         "title": "Batch Operations",

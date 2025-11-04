@@ -162,7 +162,7 @@ export const IpInfoCard = () => {
             {error}
           </Typography>
           <Button onClick={fetchIpInfo} sx={{ mt: 2 }}>
-            {t("home.ipInfo.labels.retry")}
+            {t("common.actions.retry")}
           </Button>
         </Box>
       </EnhancedCard>

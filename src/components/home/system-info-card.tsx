@@ -312,8 +312,8 @@ export const SystemInfoCard = () => {
               size="small"
               label={
                 autoLaunchEnabled
-                  ? t("home.systemInfo.labels.enabled")
-                  : t("home.systemInfo.labels.disabled")
+                  ? t("common.status.enabled")
+                  : t("common.status.disabled")
               }
               color={autoLaunchEnabled ? "success" : "default"}
               variant={autoLaunchEnabled ? "filled" : "outlined"}

@@ -154,10 +154,6 @@
         "create": "Профиль булдыру",
         "edit": "Профильне үзгәртү"
       },
-      "buttons": {
-        "save": "Саклау",
-        "cancel": "Баш тарту"
-      },
       "fields": {
         "type": "Төр",
         "name": "Исем",
@@ -239,8 +235,7 @@
       "extendScript": "Script-ны үзгәртергә",
       "openFile": "Файлны ачу",
       "update": "Яңарту",
-      "updateViaProxy": "Update via proxy",
-      "delete": "Бетерү"
+      "updateViaProxy": "Update via proxy"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "Көйләүләр"
       },
-      "labels": {
-        "enabled": "Кушылган",
-        "disabled": "Сүнгән"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch"
       },
@@ -335,7 +326,6 @@
         "load": "Failed to get IP info"
       },
       "labels": {
-        "retry": "Retry",
         "ip": "IP",
         "asn": "ASN",
         "isp": "ISP",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "Select backup target",
         "backup": "Резерв копия",
-        "refresh": "Яңарту",
-        "save": "Саклау",
         "export": "Export",
         "exportBackup": "Export Backup",
-        "delete": "Бетерү",
         "deleteBackup": "Резерв копияне бетерү",
         "restore": "Кайтару",
         "restoreBackup": "Резерв копияне кайтару"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "Тест",
       "actions": {
-        "testAll": "Барчасын тестлау",
-        "new": "Яңа"
+        "testAll": "Барчасын тестлау"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "Барлык профильләрне яңарту",
         "viewRuntimeConfig": "Кулланылган конфигурацияне карау",
         "reactivate": "Профильләрне янәдән активлаштыру",
-        "import": "Импорт",
-        "new": "Яңа"
+        "import": "Импорт"
       },
       "batch": {
         "title": "Batch Operations",

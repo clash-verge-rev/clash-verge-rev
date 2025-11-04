@@ -156,7 +156,7 @@ const TestPage = () => {
             size="small"
             onClick={() => viewerRef.current?.create()}
           >
-            {t("test.page.actions.new")}
+            {t("common.actions.new")}
           </Button>
         </Box>
       }

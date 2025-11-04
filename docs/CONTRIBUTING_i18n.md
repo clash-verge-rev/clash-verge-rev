@@ -76,7 +76,6 @@ Notes
       "description": "Manage subscription sources"
     },
     "actions": {
-      "new": "@:common.actions.new",
       "import": "Import"
     },
     "notifications": {
@@ -91,21 +90,7 @@ Notes
 }
 ```
 
-Referencing `@:common.actions.new` helps reuse shared strings through the i18n loader.
-
-### Pending Cleanup — Reuse `common.actions`
-
-- `profile.viewer.buttons.save` → `@:common.actions.save`
-- `profile.viewer.buttons.cancel` → `@:common.actions.cancel`
-- `profile.menu.delete` → `@:common.actions.delete`
-- `profiles.page.actions.new` → `@:common.actions.new`
-- `test.page.actions.new` → `@:common.actions.new`
-- `home.ipInfo.labels.retry` → `@:common.actions.retry`
-- `settings.backup.actions.refresh` → `@:common.actions.refresh`
-- `settings.backup.actions.save` → `@:common.actions.save`
-- `settings.backup.actions.delete` → `@:common.actions.delete`
-- `home.systemInfo.labels.enabled` → `@:common.status.enabled`
-- `home.systemInfo.labels.disabled` → `@:common.status.disabled`
+Reuse shared verbs (e.g., “New”, “Save”) directly from `common.actions.*` in the application code rather than duplicating them inside feature namespaces.
 
 ## Feedback & Contributions
 

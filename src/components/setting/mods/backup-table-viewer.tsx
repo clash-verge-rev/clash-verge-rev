@@ -161,7 +161,7 @@ export const BackupTableViewer = memo(
                         )}
                         <IconButton
                           color="secondary"
-                          aria-label={t("settings.backup.actions.delete")}
+                          aria-label={t("common.actions.delete")}
                           size="small"
                           title={t("settings.backup.actions.deleteBackup")}
                           onClick={async (e: React.MouseEvent) => {

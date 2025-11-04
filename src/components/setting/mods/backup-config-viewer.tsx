@@ -220,7 +220,7 @@ export const BackupConfigViewer = memo(
                   type="button"
                   onClick={handleSubmit(save)}
                 >
-                  {t("settings.backup.actions.save")}
+                  {t("common.actions.save")}
                 </Button>
               ) : (
                 <>
@@ -239,7 +239,7 @@ export const BackupConfigViewer = memo(
                     type="button"
                     size="large"
                   >
-                    {t("settings.backup.actions.refresh")}
+                    {t("common.actions.refresh")}
                   </Button>
                 </>
               )}

@@ -68,7 +68,7 @@ export const LocalBackupActions = memo(
               type="button"
               size="large"
             >
-              {t("settings.backup.actions.refresh")}
+              {t("common.actions.refresh")}
             </Button>
           </Stack>
         </Grid>

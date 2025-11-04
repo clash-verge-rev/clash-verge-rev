@@ -154,10 +154,6 @@
         "create": "ایجاد پروفایل",
         "edit": "ویرایش پروفایل"
       },
-      "buttons": {
-        "save": "ذخیره",
-        "cancel": "لغو"
-      },
       "fields": {
         "type": "نوع",
         "name": "نام",
@@ -239,8 +235,7 @@
       "extendScript": "ادغام اسکریپت",
       "openFile": "باز کردن فایل",
       "update": "به‌روزرسانی",
-      "updateViaProxy": "Update via proxy",
-      "delete": "حذف"
+      "updateViaProxy": "Update via proxy"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "تنظیمات"
       },
-      "labels": {
-        "enabled": "توانایی فعال شد",
-        "disabled": "غیرفعال شد"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch"
       },
@@ -335,7 +326,6 @@
         "load": "Failed to get IP info"
       },
       "labels": {
-        "retry": "Retry",
         "ip": "IP",
         "asn": "ASN",
         "isp": "ISP",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "Select backup target",
         "backup": "پشتیبان‌گیری",
-        "refresh": "بازنشانی",
-        "save": "ذخیره",
         "export": "Export",
         "exportBackup": "Export Backup",
-        "delete": "حذف",
         "deleteBackup": "حذف پشتیبان",
         "restore": "بازیابی",
         "restoreBackup": "بازیابی پشتیبان"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "آزمون",
       "actions": {
-        "testAll": "آزمون همه",
-        "new": "جدید"
+        "testAll": "آزمون همه"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "به‌روزرسانی همه پروفایل‌ها",
         "viewRuntimeConfig": "مشاهده پیکربندی زمان اجرا",
         "reactivate": "فعال‌سازی مجدد پروفایل‌ها",
-        "import": "وارد کردن",
-        "new": "جدید"
+        "import": "وارد کردن"
       },
       "batch": {
         "title": "Batch Operations",

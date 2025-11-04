@@ -154,10 +154,6 @@
         "create": "Buat Profil",
         "edit": "Ubah Profil"
       },
-      "buttons": {
-        "save": "Simpan",
-        "cancel": "Batal"
-      },
       "fields": {
         "type": "Jenis",
         "name": "Nama",
@@ -239,8 +235,7 @@
       "extendScript": "Perluas Skrip",
       "openFile": "Buka Berkas",
       "update": "Perbarui",
-      "updateViaProxy": "Update via proxy",
-      "delete": "Hapus"
+      "updateViaProxy": "Update via proxy"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "Pengaturan"
       },
-      "labels": {
-        "enabled": "Diaktifkan",
-        "disabled": "Dinonaktifkan"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch"
       },
@@ -335,7 +326,6 @@
         "load": "Failed to get IP info"
       },
       "labels": {
-        "retry": "Retry",
         "ip": "IP",
         "asn": "ASN",
         "isp": "ISP",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "Select backup target",
         "backup": "Cadangan",
-        "refresh": "Segarkan",
-        "save": "Simpan",
         "export": "Export",
         "exportBackup": "Export Backup",
-        "delete": "Hapus",
         "deleteBackup": "Hapus Cadangan",
         "restore": "Pulihkan",
         "restoreBackup": "Pulihkan Cadangan"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "Tes",
       "actions": {
-        "testAll": "Tes Semua",
-        "new": "Baru"
+        "testAll": "Tes Semua"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "Perbarui Semua Profil",
         "viewRuntimeConfig": "Lihat Konfigurasi Runtime",
         "reactivate": "Reaktivasi Profil",
-        "import": "Impor",
-        "new": "Baru"
+        "import": "Impor"
       },
       "batch": {
         "title": "Batch Operations",

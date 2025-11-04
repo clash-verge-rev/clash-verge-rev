@@ -154,10 +154,6 @@
         "create": "新建配置",
         "edit": "编辑配置"
       },
-      "buttons": {
-        "save": "保存",
-        "cancel": "取消"
-      },
       "fields": {
         "type": "类型",
         "name": "名称",
@@ -239,8 +235,7 @@
       "extendScript": "扩展脚本",
       "openFile": "打开文件",
       "update": "更新",
-      "updateViaProxy": "更新（代理）",
-      "delete": "删除"
+      "updateViaProxy": "更新（代理）"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "设置"
       },
-      "labels": {
-        "enabled": "已启用",
-        "disabled": "未启用"
-      },
       "tooltips": {
         "autoLaunchAdmin": "管理员模式可能不支持开机自启"
       },
@@ -335,7 +326,6 @@
         "load": "获取 IP 信息失败"
       },
       "labels": {
-        "retry": "重试",
         "ip": "IP",
         "asn": "自治域",
         "isp": "服务商",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "选择备份目标",
         "backup": "备份",
-        "refresh": "刷新",
-        "save": "保存",
         "export": "导出",
         "exportBackup": "导出备份",
-        "delete": "删除",
         "deleteBackup": "删除备份",
         "restore": "恢复",
         "restoreBackup": "恢复备份"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "测试",
       "actions": {
-        "testAll": "测试全部",
-        "new": "新建"
+        "testAll": "测试全部"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "更新所有订阅",
         "viewRuntimeConfig": "查看运行时订阅",
         "reactivate": "重新激活订阅",
-        "import": "导入",
-        "new": "新建"
+        "import": "导入"
       },
       "batch": {
         "title": "批量操作",

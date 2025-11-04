@@ -154,10 +154,6 @@
         "create": "Создать профиль",
         "edit": "Изменить профиль"
       },
-      "buttons": {
-        "save": "Сохранить",
-        "cancel": "Отмена"
-      },
       "fields": {
         "type": "Тип",
         "name": "Название",
@@ -239,8 +235,7 @@
       "extendScript": "Изменить Script",
       "openFile": "Открыть файл",
       "update": "Обновить",
-      "updateViaProxy": "Update via proxy",
-      "delete": "Удалить"
+      "updateViaProxy": "Update via proxy"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "Настройки"
       },
-      "labels": {
-        "enabled": "Включено",
-        "disabled": "Отключено"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch"
       },
@@ -335,7 +326,6 @@
         "load": "Не удалось получить информацию об IP"
       },
       "labels": {
-        "retry": "Retry",
         "ip": "IP",
         "asn": "ASN",
         "isp": "ISP",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "Select backup target",
         "backup": "Резервное копирование",
-        "refresh": "Обновить",
-        "save": "Сохранить",
         "export": "Export",
         "exportBackup": "Export Backup",
-        "delete": "Удалить",
         "deleteBackup": "Удалить резервную копию",
         "restore": "Восстановить",
         "restoreBackup": "Восстановить резервную копию"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "Тест",
       "actions": {
-        "testAll": "Тестировать все",
-        "new": "Новый"
+        "testAll": "Тестировать все"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "Обновить все профили",
         "viewRuntimeConfig": "Просмотреть используемый конфиг",
         "reactivate": "Перезапустить профиль",
-        "import": "Импорт",
-        "new": "Новый"
+        "import": "Импорт"
       },
       "batch": {
         "title": "Пакетные операции",

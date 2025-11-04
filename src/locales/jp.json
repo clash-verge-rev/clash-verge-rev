@@ -154,10 +154,6 @@
         "create": "新規プロファイルを作成",
         "edit": "プロファイルを編集"
       },
-      "buttons": {
-        "save": "保存",
-        "cancel": "キャンセル"
-      },
       "fields": {
         "type": "タイプ",
         "name": "名前",
@@ -239,8 +235,7 @@
       "extendScript": "拡張スクリプト",
       "openFile": "ファイルを開く",
       "update": "更新",
-      "updateViaProxy": "Update via proxy",
-      "delete": "削除"
+      "updateViaProxy": "Update via proxy"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "設定"
       },
-      "labels": {
-        "enabled": "有効",
-        "disabled": "無効"
-      },
       "tooltips": {
         "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。"
       },
@@ -335,7 +326,6 @@
         "load": "IP情報の取得に失敗しました。"
       },
       "labels": {
-        "retry": "Retry",
         "ip": "IP",
         "asn": "自治システム番号",
         "isp": "インターネットサービスプロバイダー",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "Select backup target",
         "backup": "バックアップ",
-        "refresh": "更新",
-        "save": "保存",
         "export": "Export",
         "exportBackup": "Export Backup",
-        "delete": "削除",
         "deleteBackup": "バックアップを削除",
         "restore": "復元",
         "restoreBackup": "バックアップを復元"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "テスト",
       "actions": {
-        "testAll": "すべてテスト",
-        "new": "新規作成"
+        "testAll": "すべてテスト"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "すべてのプロファイルを更新",
         "viewRuntimeConfig": "実行時のプロファイルを表示",
         "reactivate": "プロファイルを再アクティブ化",
-        "import": "インポート",
-        "new": "新規作成"
+        "import": "インポート"
       },
       "batch": {
         "title": "バッチ操作",

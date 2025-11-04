@@ -220,8 +220,8 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           : t("profile.viewer.title.edit")
       }
       contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
-      okBtn={t("profile.viewer.buttons.save")}
-      cancelBtn={t("profile.viewer.buttons.cancel")}
+      okBtn={t("common.actions.save")}
+      cancelBtn={t("common.actions.cancel")}
       onClose={handleClose}
       onCancel={handleClose}
       onOk={handleOk}

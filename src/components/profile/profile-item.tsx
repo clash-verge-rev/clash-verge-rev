@@ -377,7 +377,7 @@ export const ProfileItem = (props: Props) => {
     openFile: "profile.menu.openFile",
     update: "profile.menu.update",
     updateViaProxy: "profile.menu.updateViaProxy",
-    delete: "profile.menu.delete",
+    delete: "common.actions.delete",
   } as const;
 
   const urlModeMenu: ContextMenuItem[] = [

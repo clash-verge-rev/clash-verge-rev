@@ -972,7 +972,7 @@ const ProfilePage = () => {
           sx={{ borderRadius: "6px" }}
           onClick={() => viewerRef.current?.create()}
         >
-          {t("profiles.page.actions.new")}
+          {t("common.actions.new")}
         </Button>
       </Stack>
 

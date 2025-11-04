@@ -154,10 +154,6 @@
         "create": "إنشاء ملف شخصي",
         "edit": "تعديل الملف الشخصي"
       },
-      "buttons": {
-        "save": "حفظ",
-        "cancel": "إلغاء"
-      },
       "fields": {
         "type": "النوع",
         "name": "الاسم",
@@ -239,8 +235,7 @@
       "extendScript": "توسيع السكربت",
       "openFile": "فتح الملف",
       "update": "تحديث",
-      "updateViaProxy": "Update via proxy",
-      "delete": "حذف"
+      "updateViaProxy": "Update via proxy"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "الإعدادات"
       },
-      "labels": {
-        "enabled": "ممكّن",
-        "disabled": "معطّل"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch"
       },
@@ -335,7 +326,6 @@
         "load": "Failed to get IP info"
       },
       "labels": {
-        "retry": "Retry",
         "ip": "IP",
         "asn": "ASN",
         "isp": "ISP",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "Select backup target",
         "backup": "نسخ احتياطي",
-        "refresh": "تحديث",
-        "save": "حفظ",
         "export": "Export",
         "exportBackup": "Export Backup",
-        "delete": "حذف",
         "deleteBackup": "حذف النسخة الاحتياطية",
         "restore": "استعادة",
         "restoreBackup": "استعادة النسخة الاحتياطية"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "اختبار",
       "actions": {
-        "testAll": "اختبار الكل",
-        "new": "جديد"
+        "testAll": "اختبار الكل"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "تحديث جميع الملفات الشخصية",
         "viewRuntimeConfig": "عرض تكوين وقت التشغيل",
         "reactivate": "إعادة تنشيط الملفات الشخصية",
-        "import": "استيراد",
-        "new": "جديد"
+        "import": "استيراد"
       },
       "batch": {
         "title": "Batch Operations",

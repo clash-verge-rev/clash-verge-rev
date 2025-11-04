@@ -154,10 +154,6 @@
         "create": "Profil Oluştur",
         "edit": "Profili Düzenle"
       },
-      "buttons": {
-        "save": "Kaydet",
-        "cancel": "İptal"
-      },
       "fields": {
         "type": "Tip",
         "name": "İsim",
@@ -239,8 +235,7 @@
       "extendScript": "Betik Genişletme",
       "openFile": "Dosyayı Aç",
       "update": "Güncelle",
-      "updateViaProxy": "Update via proxy",
-      "delete": "Sil"
+      "updateViaProxy": "Update via proxy"
     },
     "item": {
       "tooltips": {
@@ -315,10 +310,6 @@
       "actions": {
         "settings": "Ayarlar"
       },
-      "labels": {
-        "enabled": "Etkin",
-        "disabled": "Devre Dışı"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir"
       },
@@ -335,7 +326,6 @@
         "load": "IP bilgisi alınamadı"
       },
       "labels": {
-        "retry": "Retry",
         "ip": "IP",
         "asn": "ASN",
         "isp": "ISP",
@@ -614,11 +604,8 @@
       "actions": {
         "selectTarget": "Select backup target",
         "backup": "Yedekle",
-        "refresh": "Yenile",
-        "save": "Kaydet",
         "export": "Export",
         "exportBackup": "Export Backup",
-        "delete": "Sil",
         "deleteBackup": "Yedeği Sil",
         "restore": "Geri Yükle",
         "restoreBackup": "Yedeği Geri Yükle"
@@ -1026,8 +1013,7 @@
     "page": {
       "title": "Test",
       "actions": {
-        "testAll": "Tümünü Test Et",
-        "new": "Yeni"
+        "testAll": "Tümünü Test Et"
       }
     },
     "statuses": {
@@ -1126,8 +1112,7 @@
         "updateAll": "Tüm Profilleri Güncelle",
         "viewRuntimeConfig": "Çalışma Zamanı Yapılandırmasını Görüntüle",
         "reactivate": "Profilleri Yeniden Etkinleştir",
-        "import": "İçe Aktar",
-        "new": "Yeni"
+        "import": "İçe Aktar"
       },
       "batch": {
         "title": "Toplu İşlemler",
