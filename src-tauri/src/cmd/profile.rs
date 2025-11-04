@@ -385,7 +385,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         .is_err()
     {
         logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
-        return Err("switch_in_progress".into());
+        return Ok(false);
     }
 
     defer! {
