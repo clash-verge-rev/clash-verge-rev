@@ -363,6 +363,9 @@ async fn perform_config_update(
     current_value: Option<&String>,
     current_profile: Option<&String>,
 ) -> CmdResult<bool> {
+    defer! {
+        CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
+    }
     let update_result = tokio::time::timeout(
         Duration::from_secs(30),
         CoreManager::global().update_config(),
@@ -385,11 +388,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         .is_err()
     {
         logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
-        return Err("switch_in_progress".into());
-    }
-
-    defer! {
-        CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
+        return Ok(false);
     }
 
     let target_profile = profiles.current.as_ref();
@@ -410,6 +409,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         && previous_profile.as_ref() != Some(switch_to_profile)
         && validate_new_profile(switch_to_profile).await.is_err()
     {
+        CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
         return Ok(false);
     }
     let _ = Config::profiles()
