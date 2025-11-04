@@ -32,7 +32,7 @@ pub struct CleanupResult {
 macro_rules! patch {
     ($lv: expr, $rv: expr, $key: tt) => {
         if ($rv.$key).is_some() {
-            $lv.$key = $rv.$key.clone();
+            $lv.$key = $rv.$key.to_owned();
         }
     };
 }
