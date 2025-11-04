@@ -46,19 +46,24 @@ pub struct IVerge {
     pub enable_memory_usage: Option<bool>,
 
     /// enable group icon
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub enable_group_icon: Option<bool>,
 
     /// common tray icon
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub common_tray_icon: Option<bool>,
 
     /// tray icon
     #[cfg(target_os = "macos")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tray_icon: Option<String>,
 
     /// menu icon
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub menu_icon: Option<String>,
 
     /// menu order
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub menu_order: Option<Vec<String>>,
 
     /// sysproxy tray icon
@@ -115,6 +120,7 @@ pub struct IVerge {
 
     /// hotkey map
     /// format: {func},{key}
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hotkeys: Option<Vec<String>>,
 
     /// enable global hotkey
@@ -134,7 +140,7 @@ pub struct IVerge {
     pub default_latency_test: Option<String>,
 
     /// 默认的延迟测试超时时间
-    pub default_latency_timeout: Option<i32>,
+    pub default_latency_timeout: Option<i16>,
 
     /// 是否自动检测当前节点延迟
     pub enable_auto_delay_detection: Option<bool>,
@@ -143,7 +149,7 @@ pub struct IVerge {
     pub enable_builtin_enhanced: Option<bool>,
 
     /// proxy 页面布局 列数
-    pub proxy_layout_column: Option<i32>,
+    pub proxy_layout_column: Option<u8>,
 
     /// 测试站列表
     pub test_list: Option<Vec<IVergeTestItem>>,
@@ -202,6 +208,7 @@ pub struct IVerge {
     )]
     pub webdav_password: Option<String>,
 
+    #[serde(skip)]
     pub enable_tray_speed: Option<bool>,
 
     // pub enable_tray_icon: Option<bool>,
@@ -586,10 +593,10 @@ pub struct IVergeResponse {
     pub auto_close_connection: Option<bool>,
     pub auto_check_update: Option<bool>,
     pub default_latency_test: Option<String>,
-    pub default_latency_timeout: Option<i32>,
+    pub default_latency_timeout: Option<i16>,
     pub enable_auto_delay_detection: Option<bool>,
     pub enable_builtin_enhanced: Option<bool>,
-    pub proxy_layout_column: Option<i32>,
+    pub proxy_layout_column: Option<u8>,
     pub test_list: Option<Vec<IVergeTestItem>>,
     pub auto_log_clean: Option<i32>,
     #[cfg(not(target_os = "windows"))]
