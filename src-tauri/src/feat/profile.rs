@@ -2,7 +2,7 @@ use crate::{
     cmd,
     config::{Config, PrfItem, PrfOption, profiles::profiles_draft_update_item_safe},
     core::{CoreManager, handle, tray},
-    logging,
+    logging, logging_error,
     utils::logging::Type,
 };
 use anyhow::{Result, bail};
@@ -11,17 +11,10 @@ use tauri::Emitter;
 
 /// Toggle proxy profile
 pub async fn toggle_proxy_profile(profile_index: String) {
-    match cmd::patch_profiles_config_by_profile_index(profile_index).await {
-        Ok(_) => {
-            let result = tray::Tray::global().update_menu().await;
-            if let Err(err) = result {
-                logging!(error, Type::Tray, "更新菜单失败: {}", err);
-            }
-        }
-        Err(err) => {
-            logging!(error, Type::Tray, "{err}");
-        }
-    }
+    logging_error!(
+        Type::Config,
+        cmd::patch_profiles_config_by_profile_index(profile_index).await
+    );
 }
 
 pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
