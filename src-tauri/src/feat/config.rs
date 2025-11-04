@@ -3,7 +3,7 @@ use crate::{
     core::{CoreManager, handle, hotkey, sysopt, tray},
     logging_error,
     module::lightweight,
-    utils::logging::Type,
+    utils::{draft::SharedBox, logging::Type},
 };
 use anyhow::Result;
 use serde_yaml_ng::Mapping;
@@ -249,4 +249,10 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
         verge_data.save_file().await?;
     }
     Ok(())
+}
+
+pub async fn fetch_verge_config() -> Result<SharedBox<IVerge>> {
+    let draft = Config::verge().await;
+    let data = draft.data_arc();
+    Ok(data)
 }
