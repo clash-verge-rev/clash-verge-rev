@@ -714,7 +714,5 @@
   "Unlock menu order": "Unlock menu order",
   "Lock menu order": "Lock menu order",
   "Open App Log": "Open App Log",
-  "Open Core Log": "Open Core Log",
-  "Profile switching is already in progress": "Profile switching is already in progress",
-  "Target profile validation failed": "Target profile validation failed" 
+  "Open Core Log": "Open Core Log"
 }

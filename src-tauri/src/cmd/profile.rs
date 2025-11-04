@@ -388,7 +388,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         .is_err()
     {
         logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
-        return Err("Profile switching is already in progress".into());
+        return Ok(false);
     }
 
     let target_profile = profiles.current.as_ref();
@@ -410,7 +410,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         && validate_new_profile(switch_to_profile).await.is_err()
     {
         CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
-        return Err("Target profile validation failed".into());
+        return Ok(false);
     }
     let _ = Config::profiles()
         .await
