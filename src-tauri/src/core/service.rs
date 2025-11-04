@@ -532,7 +532,7 @@ impl ServiceManager {
                 return Err(anyhow::anyhow!("服务不可用: {}", reason));
             }
         }
-        let _ = tray::Tray::global().update_tray_display().await;
+        let _ = tray::Tray::global().update_menu().await;
         Ok(())
     }
 }

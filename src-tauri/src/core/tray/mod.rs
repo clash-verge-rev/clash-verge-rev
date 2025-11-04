@@ -1,5 +1,4 @@
 use once_cell::sync::OnceCell;
-use tauri::Emitter;
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_mihomo::models::Proxies;
 use tokio::fs;
@@ -431,24 +430,6 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘显示状态的函数
-    pub async fn update_tray_display(&self) -> Result<()> {
-        if handle::Handle::global().is_exiting() {
-            logging!(debug, Type::Tray, "应用正在退出，跳过托盘显示状态更新");
-            return Ok(());
-        }
-
-        let app_handle = handle::Handle::app_handle();
-        let _tray = app_handle
-            .tray_by_id("main")
-            .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
-
-        // 更新菜单
-        self.update_menu().await?;
-
-        Ok(())
-    }
-
     /// 更新托盘提示
     pub async fn update_tooltip(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
@@ -523,9 +504,7 @@ impl Tray {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘局部更新");
             return Ok(());
         }
-        // self.update_menu().await?;
-        // 更新轻量模式显示状态
-        self.update_tray_display().await?;
+        self.update_menu().await?;
         self.update_icon().await?;
         self.update_tooltip().await?;
         Ok(())
@@ -618,22 +597,6 @@ impl Tray {
             });
         });
         tray.on_menu_event(on_menu_event);
-        Ok(())
-    }
-
-    // 托盘统一的状态更新函数
-    pub async fn update_all_states(&self) -> Result<()> {
-        if handle::Handle::global().is_exiting() {
-            logging!(debug, Type::Tray, "应用正在退出，跳过托盘状态更新");
-            return Ok(());
-        }
-
-        // 确保所有状态更新完成
-        self.update_tray_display().await?;
-        // self.update_menu().await?;
-        self.update_icon().await?;
-        self.update_tooltip().await?;
-
         Ok(())
     }
 }
@@ -1253,66 +1216,20 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             id if id.starts_with("proxy_") => {
                 // proxy_{group_name}_{proxy_name}
-                let parts: Vec<&str> = id.splitn(3, '_').collect();
-
-                if parts.len() == 3 && parts[0] == "proxy" {
-                    let group_name = parts[1];
-                    let proxy_name = parts[2];
-
-                    match handle::Handle::mihomo()
-                        .await
-                        .select_node_for_group(group_name, proxy_name)
-                        .await
-                    {
-                        Ok(_) => {
-                            logging!(
-                                info,
-                                Type::Tray,
-                                "切换代理成功: {} -> {}",
-                                group_name,
-                                proxy_name
-                            );
-                            let _ = handle::Handle::app_handle()
-                                .emit("verge://refresh-proxy-config", ());
-                        }
-                        Err(e) => {
-                            logging!(
-                                error,
-                                Type::Tray,
-                                "切换代理失败: {} -> {}, 错误: {:?}",
-                                group_name,
-                                proxy_name,
-                                e
-                            );
-
-                            // Fallback to IPC update
-                            if (handle::Handle::mihomo()
-                                .await
-                                .select_node_for_group(group_name, proxy_name)
-                                .await)
-                                .is_ok()
-                            {
-                                logging!(
-                                    info,
-                                    Type::Tray,
-                                    "代理切换回退成功: {} -> {}",
-                                    group_name,
-                                    proxy_name
-                                );
-
-                                let app_handle = handle::Handle::app_handle();
-                                let _ = app_handle.emit("verge://force-refresh-proxies", ());
-                            }
-                        }
-                    }
-                }
+                let rest = match id.strip_prefix("proxy_") {
+                    Some(r) => r,
+                    None => return,
+                };
+                let (group_name, proxy_name) = match rest.split_once('_') {
+                    Some((g, p)) => (g, p),
+                    None => return,
+                };
+                feat::switch_proxy_node(group_name, proxy_name).await;
             }
             _ => {}
         }
 
-        // Ensure tray state update is awaited and properly handled
-        if let Err(e) = Tray::global().update_all_states().await {
-            logging!(warn, Type::Tray, "Failed to update tray state: {e}");
-        }
+        // We dont expected to refresh tray state here
+        // as the inner handle function (SHOULD) already takes care of it
     });
 }

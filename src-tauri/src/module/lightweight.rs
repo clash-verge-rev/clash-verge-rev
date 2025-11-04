@@ -79,7 +79,7 @@ pub fn is_in_lightweight_mode() -> bool {
 }
 
 async fn refresh_lightweight_tray_state() {
-    if let Err(err) = Tray::global().update_tray_display().await {
+    if let Err(err) = Tray::global().update_menu().await {
         logging!(warn, Type::Lightweight, "更新托盘轻量模式状态失败: {err}");
     }
 }

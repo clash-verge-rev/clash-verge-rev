@@ -161,9 +161,7 @@ impl Timer {
             .set_frequency_count_down_by_seconds(3, 3)
             .spawn_async_routine(|| async move {
                 logging!(debug, Type::Timer, "Updating tray menu");
-                crate::core::tray::Tray::global()
-                    .update_tray_display()
-                    .await
+                crate::core::tray::Tray::global().update_menu().await
             })
             .context("failed to create update tray menu timer task")?;
         delay_timer

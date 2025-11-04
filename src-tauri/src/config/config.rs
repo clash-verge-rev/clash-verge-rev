@@ -65,7 +65,7 @@ impl Config {
                 d.enable_tun_mode = Some(false);
             });
             verge.apply();
-            let _ = tray::Tray::global().update_tray_display().await;
+            let _ = tray::Tray::global().update_menu().await;
 
             // 分离数据获取和异步调用避免Send问题
             let verge_data = Config::verge().await.latest_arc();
