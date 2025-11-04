@@ -56,7 +56,7 @@ const SettingSystem = ({ onError }: Props) => {
       />
 
       <SettingItem
-        label={t("settings.system.labels.autoLaunch")}
+        label={t("settings.system.fields.autoLaunch")}
         extra={
           isAdminMode && (
             <Tooltip title={t("settings.system.tooltips.autoLaunchAdmin")}>
@@ -97,7 +97,7 @@ const SettingSystem = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("settings.system.labels.silentStart")}
+        label={t("settings.system.fields.silentStart")}
         extra={
           <TooltipIcon
             title={t("settings.system.tooltips.silentStart")}

@@ -169,7 +169,7 @@ const ProxyControlSwitches = ({
     <Box sx={{ width: "100%", pr: noRightPadding ? 1 : 2 }}>
       {isSystemProxyMode && (
         <SwitchRow
-          label={t("settings.proxyControl.labels.systemProxy")}
+          label={t("settings.proxyControl.fields.systemProxy")}
           active={systemProxyActualState}
           infoTitle={t("settings.proxyControl.tooltips.systemProxy")}
           onInfoClick={() => sysproxyRef.current?.open()}
@@ -181,7 +181,7 @@ const ProxyControlSwitches = ({
 
       {isTunMode && (
         <SwitchRow
-          label={t("settings.proxyControl.labels.tunMode")}
+          label={t("settings.proxyControl.fields.tunMode")}
           active={enable_tun_mode || false}
           infoTitle={t("settings.proxyControl.tooltips.tunMode")}
           onInfoClick={() => tunRef.current?.open()}

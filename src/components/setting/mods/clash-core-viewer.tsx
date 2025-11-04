@@ -27,12 +27,12 @@ const VALID_CORE = [
   {
     name: "Mihomo",
     core: "verge-mihomo",
-    chipKey: "system.labels.releaseVersion",
+    chipKey: "settings.clash.variants.release",
   },
   {
     name: "Mihomo Alpha",
     core: "verge-mihomo-alpha",
-    chipKey: "system.labels.alphaVersion",
+    chipKey: "settings.clash.variants.alpha",
   },
 ];
 

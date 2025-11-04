@@ -66,11 +66,11 @@ export const ProviderButton = () => {
       await refreshProxy();
       await refreshProxyProviders();
 
-      showNotice.success("providers.notices.updateSuccess", {
+      showNotice.success("proxies.page.provider.notices.updateSuccess", {
         name,
       });
     } catch (err) {
-      showNotice.error("providers.notices.updateFailed", {
+      showNotice.error("proxies.page.provider.notices.updateFailed", {
         name,
         message: String(err),
       });
@@ -86,7 +86,7 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(proxyProviders || {});
       if (allProviders.length === 0) {
-        showNotice.info("providers.notices.none");
+        showNotice.info("proxies.page.provider.notices.none");
         return;
       }
 
@@ -116,9 +116,9 @@ export const ProviderButton = () => {
       await refreshProxy();
       await refreshProxyProviders();
 
-      showNotice.success("providers.notices.allUpdated");
+      showNotice.success("proxies.page.provider.notices.allUpdated");
     } catch (err) {
-      showNotice.error("providers.notices.genericError", {
+      showNotice.error("proxies.page.provider.notices.genericError", {
         message: String(err),
       });
     } finally {

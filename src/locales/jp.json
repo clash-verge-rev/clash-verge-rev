@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "ルールを編集",
-    "form": {
-      "labels": {
-        "type": "ルールタイプ",
-        "content": "ルール内容",
-        "proxyPolicy": "プロキシポリシー"
-      },
-      "toggles": {
-        "noResolve": "DNS解決をスキップ"
-      },
-      "actions": {
-        "prependRule": "前置ルールを追加",
-        "appendRule": "後置ルールを追加"
-      },
-      "validation": {
-        "conditionRequired": "ルール条件が必要です",
-        "invalidRule": "無効なルール"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "完全なドメイン名を一致させる",
-      "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
-      "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
-      "DOMAIN-REGEX": "ドメイン正規表現を一致させる",
-      "GEOSITE": "Geosite内のドメインを一致させる",
-      "GEOIP": "IPの所属国コードを一致させる",
-      "SRC-GEOIP": "送信元IPの所属国コードを一致させる",
-      "IP-ASN": "IPの所属ASNを一致させる",
-      "SRC-IP-ASN": "送信元IPの所属ASNを一致させる",
-      "IP-CIDR": "IPアドレス範囲を一致させる",
-      "IP-CIDR6": "IPアドレス範囲を一致させる",
-      "SRC-IP-CIDR": "送信元IPアドレス範囲を一致させる",
-      "IP-SUFFIX": "IPサフィックス範囲を一致させる",
-      "SRC-IP-SUFFIX": "送信元IPサフィックス範囲を一致させる",
-      "SRC-PORT": "送信元ポート範囲を一致させる",
-      "DST-PORT": "宛先ポート範囲を一致させる",
-      "IN-PORT": "入力ポートを一致させる",
-      "DSCP": "DSCPマーク（TPROXY UDP入力のみ）",
-      "PROCESS-NAME": "プロセス名を一致させる（Androidパッケージ名）",
-      "PROCESS-PATH": "完全なプロセスパスを一致させる",
-      "PROCESS-NAME-REGEX": "完全なプロセス名を正規表現で一致させる（Androidパッケージ名）",
-      "PROCESS-PATH-REGEX": "完全なプロセスパスを正規表現で一致させる",
-      "NETWORK": "トランスポートプロトコルを一致させる (TCP/UDP)",
-      "UID": "LinuxユーザーIDを一致させる",
-      "IN-TYPE": "入力タイプを一致させる",
-      "IN-USER": "入力ユーザー名を一致させる",
-      "IN-NAME": "入力名を一致させる",
-      "SUB-RULE": "サブルール",
-      "RULE-SET": "ルールセットを一致させる",
-      "AND": "論理積",
-      "OR": "論理和",
-      "NOT": "論理否定",
-      "MATCH": "すべてのリクエストを一致させる"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "システムプロキシが有効になっています。アプリケーションはプロキシを通じてネットワークにアクセスします。",
-        "systemProxyDisabled": "システムプロキシが無効になっています。ほとんどのユーザーはこのオプションをオンにすることをお勧めします。",
-        "tunModeServiceRequired": "TUNモードはサービスモードが必要です。まずサービスをインストールしてください。",
-        "tunModeEnabled": "TUNモードが有効になっています。アプリケーションは仮想ネットワークカードを通じてネットワークにアクセスします。",
-        "tunModeDisabled": "TUNモードが無効になっています。特殊なアプリケーションに適しています。"
-      },
-      "tooltips": {
-        "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
-        "tunMode": "TUNモードは全てのアプリケーションのトラフィックを制御できます。システムプロキシ設定に従わない特殊なアプリケーションに適しています。"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash情報",
-      "fields": {
-        "coreVersion": "コアバージョン",
-        "systemProxyAddress": "システムプロキシアドレス",
-        "mixedPort": "Mixed Port",
-        "uptime": "稼働時間",
-        "rulesCount": "ルール数"
-      }
-    },
-    "systemInfo": {
-      "title": "システム情報",
-      "fields": {
-        "osInfo": "オペレーティングシステム情報",
-        "autoLaunch": "起動時に自動起動",
-        "runningMode": "実行モード",
-        "lastCheckUpdate": "最後の更新チェック",
-        "vergeVersion": "Vergeバージョン"
-      },
-      "actions": {
-        "settings": "設定"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。"
-      },
-      "badges": {
-        "adminMode": "管理者モード",
-        "serviceMode": "サービスモード",
-        "sidecarMode": "ユーザーモード",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "IP情報",
-      "errors": {
-        "load": "IP情報の取得に失敗しました。"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "自治システム番号",
-        "isp": "インターネットサービスプロバイダー",
-        "org": "組織",
-        "location": "位置",
-        "timezone": "タイムゾーン",
-        "autoRefresh": "自動更新",
-        "unknown": "不明"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "アップロード速度",
-        "downloadSpeed": "ダウンロード速度",
-        "activeConnections": "アクティブな接続",
-        "uploaded": "アップロード量",
-        "downloaded": "ダウンロード量",
-        "memoryUsage": "コアメモリ使用量"
-      },
-      "legends": {
-        "upload": "アップロード",
-        "download": "ダウンロード"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "現在のノード",
-      "actions": {
-        "refreshDelay": "遅延テスト"
-      },
-      "labels": {
-        "globalMode": "グローバルモード",
-        "directMode": "直接接続モード",
-        "group": "プロキシグループ",
-        "proxy": "ノード",
-        "noActiveNode": "アクティブなプロキシノードがありません。"
-      }
-    },
-    "profile": {
-      "title": "プロファイル",
-      "actions": {
-        "import": "インポート"
-      },
-      "labels": {
-        "from": "から",
-        "updateTime": "更新時間",
-        "usedTotal": "使用済み / 合計",
-        "expireTime": "有効期限",
-        "clickToImport": "クリックしてサブスクリプションをインポート"
-      }
-    },
     "page": {
       "title": "ホーム",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "ウェブサイトテスト"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "システムプロキシが有効になっています。アプリケーションはプロキシを通じてネットワークにアクセスします。",
+          "systemProxyDisabled": "システムプロキシが無効になっています。ほとんどのユーザーはこのオプションをオンにすることをお勧めします。",
+          "tunModeServiceRequired": "TUNモードはサービスモードが必要です。まずサービスをインストールしてください。",
+          "tunModeEnabled": "TUNモードが有効になっています。アプリケーションは仮想ネットワークカードを通じてネットワークにアクセスします。",
+          "tunModeDisabled": "TUNモードが無効になっています。特殊なアプリケーションに適しています。"
+        },
+        "tooltips": {
+          "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
+          "tunMode": "TUNモードは全てのアプリケーションのトラフィックを制御できます。システムプロキシ設定に従わない特殊なアプリケーションに適しています。"
+        }
       },
-      "labels": {
-        "rule": "ルールモード",
-        "global": "グローバルモード",
-        "direct": "直接接続モード"
+      "clashInfo": {
+        "title": "Clash情報",
+        "fields": {
+          "coreVersion": "コアバージョン",
+          "systemProxyAddress": "システムプロキシアドレス",
+          "mixedPort": "Mixed Port",
+          "uptime": "稼働時間",
+          "rulesCount": "ルール数"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "システム情報",
+        "fields": {
+          "osInfo": "オペレーティングシステム情報",
+          "autoLaunch": "起動時に自動起動",
+          "runningMode": "実行モード",
+          "lastCheckUpdate": "最後の更新チェック",
+          "vergeVersion": "Vergeバージョン"
+        },
+        "actions": {
+          "settings": "設定"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。"
+        },
+        "badges": {
+          "adminMode": "管理者モード",
+          "serviceMode": "サービスモード",
+          "sidecarMode": "ユーザーモード",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP情報",
+        "labels": {
+          "ip": "IP",
+          "asn": "自治システム番号",
+          "isp": "インターネットサービスプロバイダー",
+          "org": "組織",
+          "location": "位置",
+          "timezone": "タイムゾーン",
+          "autoRefresh": "自動更新",
+          "unknown": "不明"
+        },
+        "errors": {
+          "load": "IP情報の取得に失敗しました"
+        }
+      },
+      "currentProxy": {
+        "title": "現在のノード",
+        "actions": {
+          "refreshDelay": "遅延テスト"
+        },
+        "labels": {
+          "globalMode": "グローバルモード",
+          "directMode": "直接接続モード",
+          "group": "プロキシグループ",
+          "proxy": "ノード",
+          "noActiveNode": "アクティブなプロキシノードがありません。"
+        }
+      },
+      "tests": {
+        "title": "ウェブサイトテスト"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "アップロード速度",
+          "downloadSpeed": "ダウンロード速度",
+          "activeConnections": "アクティブな接続",
+          "uploaded": "アップロード量",
+          "downloaded": "ダウンロード量",
+          "memoryUsage": "コアメモリ使用量"
+        },
+        "legends": {
+          "upload": "アップロード",
+          "download": "ダウンロード"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "ルールモード",
+          "global": "グローバルモード",
+          "direct": "直接接続モード"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "仮想ネットワークカードモード",
         "systemProxy": "システムプロキシ"
       },
-      "labels": {
-        "autoLaunch": "起動時に自動起動",
-        "silentStart": "サイレント起動"
-      },
       "tooltips": {
         "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。",
         "silentStart": "アプリケーションを起動すると、バックグラウンドモードで実行され、アプリケーションパネルは表示されません。"
+      },
+      "fields": {
+        "autoLaunch": "自動起動",
+        "silentStart": "サイレント起動"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "システムプロキシ",
-        "tunMode": "仮想ネットワークカードモード"
-      },
       "tooltips": {
         "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
         "tunMode": "TUN（仮想ネットワークカード）モードはシステムのすべてのトラフィックを制御します。有効にすると、システムプロキシを開く必要はありません。",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "サービスをインストール",
         "uninstallService": "サービスのアンインストール"
+      },
+      "fields": {
+        "systemProxy": "システムプロキシ",
+        "tunMode": "仮想ネットワークカードモード"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "Clashコアが再起動されました。",
-        "versionUpdated": "コアバージョンが更新されました。"
+        "versionUpdated": "コアバージョンが更新されました。",
+        "changeSuccess": "コアの切り替えに成功しました。",
+        "changeFailed": "コアの切り替えに失敗しました。"
+      },
+      "status": {
+        "stopping": "コアを停止中...",
+        "restarting": "コアを再起動中..."
+      },
+      "service": {
+        "status": {
+          "installing": "サービスをインストール中...",
+          "uninstalling": "サービスをアンインストール中..."
+        },
+        "notifications": {
+          "installSuccess": "サービスのインストールに成功しました。",
+          "uninstallSuccess": "サービスのアンインストールに成功しました。"
+        }
+      },
+      "variants": {
+        "release": "正式版",
+        "alpha": "アルファ版"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "ネットワークインターフェース",
-      "labels": {
+      "fields": {
         "ipAddress": "IPアドレス",
         "macAddress": "MACアドレス"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Clashプロキシを使用して更新に成功しました。",
+        "withClashProxyFailed": "Clashプロキシを使用しても更新に失敗しました。"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "すべて更新",
           "update": "更新"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "直接接続モード"
       }
     },
-    "strategies": {
-      "select": "手動でプロキシを選択",
-      "url-test": "URLテストによる遅延でプロキシを選択",
-      "fallback": "利用不可の場合は別のプロキシに切り替える",
-      "load-balance": "負荷分散によりプロキシを割り当てる",
-      "relay": "定義されたプロキシチェーンに沿って転送する"
-    },
-    "policies": {
-      "DIRECT": "直接接続",
-      "REJECT": "リクエストを拒否",
-      "REJECT-DROP": "リクエストを破棄",
-      "PASS": "このルールをスキップ"
+    "enums": {
+      "strategies": {
+        "select": "手動でプロキシを選択",
+        "url-test": "URLテストによる遅延でプロキシを選択",
+        "fallback": "利用不可の場合は別のプロキシに切り替える",
+        "load-balance": "負荷分散によりプロキシを割り当てる",
+        "relay": "定義されたプロキシチェーンに沿って転送する"
+      },
+      "policies": {
+        "DIRECT": "直接接続",
+        "REJECT": "リクエストを拒否",
+        "REJECT-DROP": "リクエストを破棄",
+        "PASS": "このルールをスキップ"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "すべて更新",
           "update": "更新"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "ルールを編集",
+      "form": {
+        "labels": {
+          "type": "ルールタイプ",
+          "content": "ルール内容",
+          "proxyPolicy": "プロキシポリシー"
+        },
+        "toggles": {
+          "noResolve": "DNS解決をスキップ"
+        },
+        "actions": {
+          "prependRule": "前置ルールを追加",
+          "appendRule": "後置ルールを追加"
+        },
+        "validation": {
+          "conditionRequired": "ルール条件が必要です",
+          "invalidRule": "無効なルール"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "完全なドメイン名を一致させる",
+        "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
+        "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
+        "DOMAIN-REGEX": "ドメイン正規表現を一致させる",
+        "GEOSITE": "Geosite内のドメインを一致させる",
+        "GEOIP": "IPの所属国コードを一致させる",
+        "SRC-GEOIP": "送信元IPの所属国コードを一致させる",
+        "IP-ASN": "IPの所属ASNを一致させる",
+        "SRC-IP-ASN": "送信元IPの所属ASNを一致させる",
+        "IP-CIDR": "IPアドレス範囲を一致させる",
+        "IP-CIDR6": "IPアドレス範囲を一致させる",
+        "SRC-IP-CIDR": "送信元IPアドレス範囲を一致させる",
+        "IP-SUFFIX": "IPサフィックス範囲を一致させる",
+        "SRC-IP-SUFFIX": "送信元IPサフィックス範囲を一致させる",
+        "SRC-PORT": "送信元ポート範囲を一致させる",
+        "DST-PORT": "宛先ポート範囲を一致させる",
+        "IN-PORT": "入力ポートを一致させる",
+        "DSCP": "DSCPマーク（TPROXY UDP入力のみ）",
+        "PROCESS-NAME": "プロセス名を一致させる（Androidパッケージ名）",
+        "PROCESS-PATH": "完全なプロセスパスを一致させる",
+        "PROCESS-NAME-REGEX": "完全なプロセス名を正規表現で一致させる（Androidパッケージ名）",
+        "PROCESS-PATH-REGEX": "完全なプロセスパスを正規表現で一致させる",
+        "NETWORK": "トランスポートプロトコルを一致させる (TCP/UDP)",
+        "UID": "LinuxユーザーIDを一致させる",
+        "IN-TYPE": "入力タイプを一致させる",
+        "IN-USER": "入力ユーザー名を一致させる",
+        "IN-NAME": "入力名を一致させる",
+        "SUB-RULE": "サブルール",
+        "RULE-SET": "ルールセットを一致させる",
+        "AND": "論理積",
+        "OR": "論理和",
+        "NOT": "論理否定",
+        "MATCH": "すべてのリクエストを一致させる"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "スクリプトコンソール出力"
+    },
+    "card": {
+      "labels": {
+        "from": "から",
+        "updateTime": "更新時間",
+        "usedTotal": "使用済み / 合計",
+        "expireTime": "有効期限",
+        "clickToImport": "クリックしてサブスクリプションをインポート"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "アップロード速度",
-        "downloadSpeed": "ダウンロード速度",
-        "memoryUsage": "コアメモリ使用量"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "正式版",
-      "alphaVersion": "プレビュー版"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "コアを停止中...",
-      "restarting": "コアを再起動中..."
-    },
-    "notifications": {
-      "changeSuccess": "コアの切り替えに成功しました。",
-      "changeFailed": "コアの切り替えに失敗しました。"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "サービスをインストール中...",
-      "uninstalling": "サービスをアンインストール中..."
-    },
-    "notifications": {
-      "installSuccess": "サービスのインストールに成功しました。",
-      "uninstallSuccess": "サービスのアンインストールに成功しました。"
-    }
-  },
   "validation": {
     "config": {
       "failed": "プロファイル設定の検証に失敗しました。プロファイル設定ファイルを確認してください。変更は取り消されました。エラー詳細：",
@@ -1271,12 +1267,6 @@
       "mappingError": "上書きファイルのマッピングエラーがあります。変更は取り消されました。",
       "keyError": "上書きファイルのキーエラーがあります。変更は取り消されました。",
       "generalError": "上書きファイルにエラーがあります。変更は取り消されました。"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Clashプロキシを使用して更新に成功しました。",
-      "withClashProxyFailed": "Clashプロキシを使用しても更新に失敗しました。"
     }
   }
 }

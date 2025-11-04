@@ -20,9 +20,15 @@ export const handleNoticeMessage = (
     },
     "set_config::error": () => showNotice.error(msg),
     update_with_clash_proxy: () =>
-      showNotice.success("updates.notifications.withClashProxySuccess", msg),
+      showNotice.success(
+        "settings.updater.notifications.withClashProxySuccess",
+        msg,
+      ),
     update_failed_even_with_clash: () =>
-      showNotice.error("updates.notifications.withClashProxyFailed", msg),
+      showNotice.error(
+        "settings.updater.notifications.withClashProxyFailed",
+        msg,
+      ),
     update_failed: () => showNotice.error(msg),
     "config_validate::boot_error": () =>
       showNotice.error("validation.config.bootFailed", msg),
@@ -61,9 +67,9 @@ export const handleNoticeMessage = (
     "config_validate::merge_error": () =>
       showNotice.error("validation.merge.generalError", msg),
     "config_core::change_success": () =>
-      showNotice.success("core.notifications.changeSuccess", msg),
+      showNotice.success("settings.clash.notifications.changeSuccess", msg),
     "config_core::change_error": () =>
-      showNotice.error("core.notifications.changeFailed", msg),
+      showNotice.error("settings.clash.notifications.changeFailed", msg),
   };
 
   const handler = handlers[status];

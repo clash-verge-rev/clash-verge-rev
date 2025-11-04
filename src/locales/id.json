@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "Ubah Aturan",
-    "form": {
-      "labels": {
-        "type": "Jenis Aturan",
-        "content": "Konten Aturan",
-        "proxyPolicy": "Kebijakan Proksi"
-      },
-      "toggles": {
-        "noResolve": "Tidak Menyelesaikan"
-      },
-      "actions": {
-        "prependRule": "Tambahkan Aturan di Awal",
-        "appendRule": "Tambahkan Aturan di Akhir"
-      },
-      "validation": {
-        "conditionRequired": "Kondisi Aturan Diperlukan",
-        "invalidRule": "Aturan Tidak Valid"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "Cocok dengan nama domain lengkap",
-      "DOMAIN-SUFFIX": "Cocok dengan sufiks domain",
-      "DOMAIN-KEYWORD": "Cocok dengan kata kunci domain",
-      "DOMAIN-REGEX": "Cocok dengan domain menggunakan ekspresi reguler",
-      "GEOSITE": "Cocok dengan domain dalam Geosite",
-      "GEOIP": "Cocok dengan kode negara alamat IP",
-      "SRC-GEOIP": "Cocok dengan kode negara alamat IP sumber",
-      "IP-ASN": "Cocok dengan ASN alamat IP",
-      "SRC-IP-ASN": "Cocok dengan ASN alamat IP sumber",
-      "IP-CIDR": "Cocok dengan rentang alamat IP",
-      "IP-CIDR6": "Cocok dengan rentang alamat IPv6",
-      "SRC-IP-CIDR": "Cocok dengan rentang alamat IP sumber",
-      "IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP",
-      "SRC-IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP sumber",
-      "SRC-PORT": "Cocok dengan rentang port sumber",
-      "DST-PORT": "Cocok dengan rentang port tujuan",
-      "IN-PORT": "Cocok dengan port masuk",
-      "DSCP": "Penandaan DSCP (hanya untuk tproxy UDP masuk)",
-      "PROCESS-NAME": "Cocok dengan nama proses (nama paket Android)",
-      "PROCESS-PATH": "Cocok dengan jalur proses lengkap",
-      "PROCESS-NAME-REGEX": "Cocok dengan nama proses lengkap menggunakan ekspresi reguler (nama paket Android)",
-      "PROCESS-PATH-REGEX": "Cocok dengan jalur proses lengkap menggunakan ekspresi reguler",
-      "NETWORK": "Cocok dengan protokol transportasi (tcp/udp)",
-      "UID": "Cocok dengan ID PENGGUNA Linux",
-      "IN-TYPE": "Cocok dengan jenis masuk",
-      "IN-USER": "Cocok dengan nama pengguna masuk",
-      "IN-NAME": "Cocok dengan nama masuk",
-      "SUB-RULE": "Sub-aturan",
-      "RULE-SET": "Cocok dengan set aturan",
-      "AND": "Logika DAN",
-      "OR": "Logika ATAU",
-      "NOT": "Logika TIDAK",
-      "MATCH": "Cocok dengan semua permintaan"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
-        "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
-        "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
-        "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
-        "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
-      },
-      "tooltips": {
-        "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
-        "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash Info",
-      "fields": {
-        "coreVersion": "Core Version",
-        "systemProxyAddress": "System Proxy Address",
-        "mixedPort": "Mixed Port",
-        "uptime": "Uptime",
-        "rulesCount": "Rules Count"
-      }
-    },
-    "systemInfo": {
-      "title": "System Info",
-      "fields": {
-        "osInfo": "OS Info",
-        "autoLaunch": "Peluncuran Otomatis",
-        "runningMode": "Running Mode",
-        "lastCheckUpdate": "Last Check Update",
-        "vergeVersion": "Versi Verge"
-      },
-      "actions": {
-        "settings": "Pengaturan"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch"
-      },
-      "badges": {
-        "adminMode": "Administrator Mode",
-        "serviceMode": "Mode Layanan",
-        "sidecarMode": "User Mode",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "IP Information",
-      "errors": {
-        "load": "Failed to get IP info"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "ASN",
-        "isp": "ISP",
-        "org": "ORG",
-        "location": "Location",
-        "timezone": "Timezone",
-        "autoRefresh": "Auto refresh",
-        "unknown": "Unknown"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "Kecepatan Unggah",
-        "downloadSpeed": "Kecepatan Unduh",
-        "activeConnections": "Active Connections",
-        "uploaded": "Diunggah",
-        "downloaded": "Diunduh",
-        "memoryUsage": "Penggunaan Memori"
-      },
-      "legends": {
-        "upload": "Upload",
-        "download": "Download"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Current Node",
-      "actions": {
-        "refreshDelay": "Periksa Keterlambatan"
-      },
-      "labels": {
-        "globalMode": "Mode Global",
-        "directMode": "Mode Langsung",
-        "group": "Group",
-        "proxy": "Proxy",
-        "noActiveNode": "No active proxy node"
-      }
-    },
-    "profile": {
-      "title": "Profil",
-      "actions": {
-        "import": "Impor"
-      },
-      "labels": {
-        "from": "Dari",
-        "updateTime": "Waktu Pembaruan",
-        "usedTotal": "Digunakan / Total",
-        "expireTime": "Waktu Kedaluwarsa",
-        "clickToImport": "Click to import subscription"
-      }
-    },
     "page": {
       "title": "Home",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Website Tests"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+        },
+        "tooltips": {
+          "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
+          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+        }
       },
-      "labels": {
-        "rule": "Mode Aturan",
-        "global": "Mode Global",
-        "direct": "Mode Langsung"
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "Peluncuran Otomatis",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "Versi Verge"
+        },
+        "actions": {
+          "settings": "Pengaturan"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "Mode Layanan",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "Gagal mendapatkan informasi IP"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "Periksa Keterlambatan"
+        },
+        "labels": {
+          "globalMode": "Mode Global",
+          "directMode": "Mode Langsung",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "tests": {
+        "title": "Website Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Kecepatan Unggah",
+          "downloadSpeed": "Kecepatan Unduh",
+          "activeConnections": "Active Connections",
+          "uploaded": "Diunggah",
+          "downloaded": "Diunduh",
+          "memoryUsage": "Penggunaan Memori"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "Mode Aturan",
+          "global": "Mode Global",
+          "direct": "Mode Langsung"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "Mode Tun (NIC Virtual)",
         "systemProxy": "Proksi Sistem"
       },
-      "labels": {
-        "autoLaunch": "Peluncuran Otomatis",
-        "silentStart": "Mulai Senyap"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "Mulai program dalam mode latar belakang tanpa menampilkan panel"
+      },
+      "fields": {
+        "autoLaunch": "Mulai otomatis",
+        "silentStart": "Mulai senyap"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "Proksi Sistem",
-        "tunMode": "Mode Tun (NIC Virtual)"
-      },
       "tooltips": {
         "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
         "tunMode": "Mode Tun (NIC Virtual): Menangkap semua lalu lintas sistem, saat diaktifkan, tidak perlu mengaktifkan proksi sistem.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "Instal Layanan",
         "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "Proksi Sistem",
+        "tunMode": "Mode Tun (NIC Virtual)"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "Core Clash Dimulai Ulang",
-        "versionUpdated": "Versi Core Diperbarui"
+        "versionUpdated": "Versi Core Diperbarui",
+        "changeSuccess": "Inti berhasil diubah",
+        "changeFailed": "Gagal mengubah inti"
+      },
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "Memasang Layanan...",
+          "uninstalling": "Uninstalling Service..."
+        },
+        "notifications": {
+          "installSuccess": "Layanan Berhasil Diinstal",
+          "uninstallSuccess": "Layanan Berhasil Dicopot"
+        }
+      },
+      "variants": {
+        "release": "Versi Rilis",
+        "alpha": "Versi Alpha"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "Antarmuka Jaringan",
-      "labels": {
+      "fields": {
         "ipAddress": "Alamat IP",
         "macAddress": "Alamat MAC"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "Perbarui Semua",
           "update": "Perbarui"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "Mode Langsung"
       }
     },
-    "strategies": {
-      "select": "Pilih proksi secara manual",
-      "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
-      "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
-      "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
-      "relay": "Lewatkan melalui rantai proksi yang ditentukan"
-    },
-    "policies": {
-      "DIRECT": "Data langsung keluar",
-      "REJECT": "Mencegat permintaan",
-      "REJECT-DROP": "Membuang permintaan",
-      "PASS": "Lewati aturan ini saat cocok"
+    "enums": {
+      "strategies": {
+        "select": "Pilih proksi secara manual",
+        "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
+        "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
+        "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
+        "relay": "Lewatkan melalui rantai proksi yang ditentukan"
+      },
+      "policies": {
+        "DIRECT": "Data langsung keluar",
+        "REJECT": "Mencegat permintaan",
+        "REJECT-DROP": "Membuang permintaan",
+        "PASS": "Lewati aturan ini saat cocok"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "Perbarui Semua",
           "update": "Perbarui"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "Ubah Aturan",
+      "form": {
+        "labels": {
+          "type": "Jenis Aturan",
+          "content": "Konten Aturan",
+          "proxyPolicy": "Kebijakan Proksi"
+        },
+        "toggles": {
+          "noResolve": "Tidak Menyelesaikan"
+        },
+        "actions": {
+          "prependRule": "Tambahkan Aturan di Awal",
+          "appendRule": "Tambahkan Aturan di Akhir"
+        },
+        "validation": {
+          "conditionRequired": "Kondisi Aturan Diperlukan",
+          "invalidRule": "Aturan Tidak Valid"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Cocok dengan nama domain lengkap",
+        "DOMAIN-SUFFIX": "Cocok dengan sufiks domain",
+        "DOMAIN-KEYWORD": "Cocok dengan kata kunci domain",
+        "DOMAIN-REGEX": "Cocok dengan domain menggunakan ekspresi reguler",
+        "GEOSITE": "Cocok dengan domain dalam Geosite",
+        "GEOIP": "Cocok dengan kode negara alamat IP",
+        "SRC-GEOIP": "Cocok dengan kode negara alamat IP sumber",
+        "IP-ASN": "Cocok dengan ASN alamat IP",
+        "SRC-IP-ASN": "Cocok dengan ASN alamat IP sumber",
+        "IP-CIDR": "Cocok dengan rentang alamat IP",
+        "IP-CIDR6": "Cocok dengan rentang alamat IPv6",
+        "SRC-IP-CIDR": "Cocok dengan rentang alamat IP sumber",
+        "IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP",
+        "SRC-IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP sumber",
+        "SRC-PORT": "Cocok dengan rentang port sumber",
+        "DST-PORT": "Cocok dengan rentang port tujuan",
+        "IN-PORT": "Cocok dengan port masuk",
+        "DSCP": "Penandaan DSCP (hanya untuk tproxy UDP masuk)",
+        "PROCESS-NAME": "Cocok dengan nama proses (nama paket Android)",
+        "PROCESS-PATH": "Cocok dengan jalur proses lengkap",
+        "PROCESS-NAME-REGEX": "Cocok dengan nama proses lengkap menggunakan ekspresi reguler (nama paket Android)",
+        "PROCESS-PATH-REGEX": "Cocok dengan jalur proses lengkap menggunakan ekspresi reguler",
+        "NETWORK": "Cocok dengan protokol transportasi (tcp/udp)",
+        "UID": "Cocok dengan ID PENGGUNA Linux",
+        "IN-TYPE": "Cocok dengan jenis masuk",
+        "IN-USER": "Cocok dengan nama pengguna masuk",
+        "IN-NAME": "Cocok dengan nama masuk",
+        "SUB-RULE": "Sub-aturan",
+        "RULE-SET": "Cocok dengan set aturan",
+        "AND": "Logika DAN",
+        "OR": "Logika ATAU",
+        "NOT": "Logika TIDAK",
+        "MATCH": "Cocok dengan semua permintaan"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "Konsol Skrip"
+    },
+    "card": {
+      "labels": {
+        "from": "Dari",
+        "updateTime": "Waktu Pembaruan",
+        "usedTotal": "Digunakan / Total",
+        "expireTime": "Waktu Kedaluwarsa",
+        "clickToImport": "Click to import subscription"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "Kecepatan Unggah",
-        "downloadSpeed": "Kecepatan Unduh",
-        "memoryUsage": "Penggunaan Memori"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "Versi Rilis",
-      "alphaVersion": "Versi Alpha"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
-    },
-    "notifications": {
-      "changeSuccess": "Inti berhasil diubah",
-      "changeFailed": "Gagal mengubah inti"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "Memasang Layanan...",
-      "uninstalling": "Uninstalling Service..."
-    },
-    "notifications": {
-      "installSuccess": "Layanan Berhasil Diinstal",
-      "uninstallSuccess": "Layanan Berhasil Dicopot"
-    }
-  },
   "validation": {
     "config": {
       "failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
@@ -1271,12 +1267,6 @@
       "mappingError": "Merge file mapping error, changes reverted",
       "keyError": "Merge file key error, changes reverted",
       "generalError": "Merge file error, changes reverted"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Update with Clash proxy successfully",
-      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

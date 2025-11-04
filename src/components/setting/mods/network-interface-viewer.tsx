@@ -66,13 +66,13 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V4 && (
                       <AddressDisplay
                         key={address.V4.ip}
-                        label={t("settings.networkInterface.labels.ipAddress")}
+                        label={t("settings.networkInterface.fields.ipAddress")}
                         content={address.V4.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("settings.networkInterface.labels.macAddress")}
+                  label={t("settings.networkInterface.fields.macAddress")}
                   content={item.mac_addr ?? ""}
                 />
               </>
@@ -84,13 +84,13 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V6 && (
                       <AddressDisplay
                         key={address.V6.ip}
-                        label={t("settings.networkInterface.labels.ipAddress")}
+                        label={t("settings.networkInterface.fields.ipAddress")}
                         content={address.V6.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("settings.networkInterface.labels.macAddress")}
+                  label={t("settings.networkInterface.fields.macAddress")}
                   content={item.mac_addr ?? ""}
                 />
               </>

@@ -74,17 +74,17 @@ interface Props {
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
 const PROXY_STRATEGY_LABEL_KEYS: Record<string, string> = {
-  select: "proxies.strategies.select",
-  "url-test": "proxies.strategies.url-test",
-  fallback: "proxies.strategies.fallback",
-  "load-balance": "proxies.strategies.load-balance",
-  relay: "proxies.strategies.relay",
+  select: "proxies.enums.strategies.select",
+  "url-test": "proxies.enums.strategies.url-test",
+  fallback: "proxies.enums.strategies.fallback",
+  "load-balance": "proxies.enums.strategies.load-balance",
+  relay: "proxies.enums.strategies.relay",
 };
 
 const PROXY_POLICY_LABEL_KEYS: Record<string, string> =
   builtinProxyPolicies.reduce(
     (acc, policy) => {
-      acc[policy] = `proxies.policies.${policy}`;
+      acc[policy] = `proxies.enums.policies.${policy}`;
       return acc;
     },
     {} as Record<string, string>,

@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "Кагыйдәләрне үзгәртү",
-    "form": {
-      "labels": {
-        "type": "Кагыйдә төре",
-        "content": "Кагыйдә эчтәлеге",
-        "proxyPolicy": "Прокси сәясәте"
-      },
-      "toggles": {
-        "noResolve": "Резолвсыз"
-      },
-      "actions": {
-        "prependRule": "Кагыйдәне өскә өстәү",
-        "appendRule": "Кагыйдәне аска өстәү"
-      },
-      "validation": {
-        "conditionRequired": "Кагыйдә шарты кирәк",
-        "invalidRule": "Яраксыз кагыйдә"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "Домен исеменең тулы туры килүе",
-      "DOMAIN-SUFFIX": "Домен суффиксына туры килү",
-      "DOMAIN-KEYWORD": "Доменда төп сүзгә туры килү",
-      "DOMAIN-REGEX": "Доменны регекс аша туры китерү",
-      "GEOSITE": "Geosite исемлегендәге доменга туры килү",
-      "GEOIP": "IP-адресның ил коды буенча туры килү",
-      "SRC-GEOIP": "Чыганак IP-адресның ил коды буенча туры килү",
-      "IP-ASN": "IP-адрес ASN'ы буенча туры килү",
-      "SRC-IP-ASN": "Чыганак IP-адрес ASN'ы буенча туры килү",
-      "IP-CIDR": "IP-адреслар диапазонына туры килү",
-      "IP-CIDR6": "IPv6 адреслар диапазонына туры килү",
-      "SRC-IP-CIDR": "Чыганак IP-адреслар диапазонына туры килү",
-      "IP-SUFFIX": "IP-адрес суффиксына туры килү",
-      "SRC-IP-SUFFIX": "Чыганак IP-адрес суффиксына туры килү",
-      "SRC-PORT": "Чыганак портлар диапазонына туры килү",
-      "DST-PORT": "Максат портлар диапазонына туры килү",
-      "IN-PORT": "Керүче портка туры килү",
-      "DSCP": "DSCP тамгалавы (tproxy UDP өчен)",
-      "PROCESS-NAME": "Процесс исеменә туры килү (Android пакет исеме)",
-      "PROCESS-PATH": "Процесс юлына туры килү",
-      "PROCESS-NAME-REGEX": "Процесс исемен регекс белән туры китерү (Android пакет исеме)",
-      "PROCESS-PATH-REGEX": "Процесс юлын регекс белән туры китерү",
-      "NETWORK": "Транспорт протоколына (tcp/udp) туры килү",
-      "UID": "Linux USER ID'га туры килү",
-      "IN-TYPE": "Керүче тоташу төренә туры килү",
-      "IN-USER": "Керүче тоташу кулланучысына туры килү",
-      "IN-NAME": "Керүче тоташу исеменә туры килү",
-      "SUB-RULE": "Кушымча кагыйдә",
-      "RULE-SET": "Кагыйдәләр тупланмасына туры килү",
-      "AND": "Логик ҺӘМ",
-      "OR": "Логик ЯКИ",
-      "NOT": "Логик ТҮГЕЛ",
-      "MATCH": "Барлык сорауларга туры килә"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
-        "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
-        "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
-        "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
-        "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
-      },
-      "tooltips": {
-        "systemProxy": "Системалы прокси көйләүләрен үзгәртү рөхсәтен бирегез. Әгәр рөхсәт алу мөмкин түгел икән, прокси көйләүләрен кулдан үзгәртегез",
-        "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash Info",
-      "fields": {
-        "coreVersion": "Core Version",
-        "systemProxyAddress": "System Proxy Address",
-        "mixedPort": "Mixed Port",
-        "uptime": "Uptime",
-        "rulesCount": "Rules Count"
-      }
-    },
-    "systemInfo": {
-      "title": "System Info",
-      "fields": {
-        "osInfo": "OS Info",
-        "autoLaunch": "Автостарт",
-        "runningMode": "Running Mode",
-        "lastCheckUpdate": "Last Check Update",
-        "vergeVersion": "Verge версиясе"
-      },
-      "actions": {
-        "settings": "Көйләүләр"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch"
-      },
-      "badges": {
-        "adminMode": "Administrator Mode",
-        "serviceMode": "Сервис режимы",
-        "sidecarMode": "User Mode",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "IP Information",
-      "errors": {
-        "load": "Failed to get IP info"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "ASN",
-        "isp": "ISP",
-        "org": "ORG",
-        "location": "Location",
-        "timezone": "Timezone",
-        "autoRefresh": "Auto refresh",
-        "unknown": "Unknown"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "Йөкләү (чыгару) тизлеге",
-        "downloadSpeed": "Йөкләү тизлеге",
-        "activeConnections": "Active Connections",
-        "uploaded": "Чыгарылган",
-        "downloaded": "Йөкләнгән",
-        "memoryUsage": "Хәтер куллану"
-      },
-      "legends": {
-        "upload": "Upload",
-        "download": "Download"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Current Node",
-      "actions": {
-        "refreshDelay": "Задержканы тикшерү"
-      },
-      "labels": {
-        "globalMode": "Глобаль режим",
-        "directMode": "Туры режим",
-        "group": "Group",
-        "proxy": "Proxy",
-        "noActiveNode": "No active proxy node"
-      }
-    },
-    "profile": {
-      "title": "Профильләр",
-      "actions": {
-        "import": "Импорт"
-      },
-      "labels": {
-        "from": "Каян",
-        "updateTime": "Яңарту вакыты",
-        "usedTotal": "Кулланылган / Барлыгы",
-        "expireTime": "Тамамлану вакыты",
-        "clickToImport": "Click to import subscription"
-      }
-    },
     "page": {
       "title": "Home",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Website Tests"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+        },
+        "tooltips": {
+          "systemProxy": "Системалы прокси көйләүләрен үзгәртү рөхсәтен бирегез. Әгәр рөхсәт алу мөмкин түгел икән, прокси көйләүләрен кулдан үзгәртегез",
+          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+        }
       },
-      "labels": {
-        "rule": "Кагыйдәләр режимы",
-        "global": "Глобаль режим",
-        "direct": "Туры режим"
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "Автостарт",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "Verge версиясе"
+        },
+        "actions": {
+          "settings": "Көйләүләр"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "Сервис режимы",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "IP мәгълүматын алу мөмкин булмады"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "Задержканы тикшерү"
+        },
+        "labels": {
+          "globalMode": "Глобаль режим",
+          "directMode": "Туры режим",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "tests": {
+        "title": "Website Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+          "downloadSpeed": "Йөкләү тизлеге",
+          "activeConnections": "Active Connections",
+          "uploaded": "Чыгарылган",
+          "downloaded": "Йөкләнгән",
+          "memoryUsage": "Хәтер куллану"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "Кагыйдәләр режимы",
+          "global": "Глобаль режим",
+          "direct": "Туры режим"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "Tun режимы (виртуаль челтәр адаптеры)",
         "systemProxy": "Системалы прокси"
       },
-      "labels": {
-        "autoLaunch": "Автостарт",
-        "silentStart": "Фон режимында башлау"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "Программаны фоновый режимда, тәрәзәсез эшләтеп җибәрү"
+      },
+      "fields": {
+        "autoLaunch": "Автоматик башлау",
+        "silentStart": "Тын башлау"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "Системалы прокси",
-        "tunMode": "Tun режимы (виртуаль челтәр адаптеры)"
-      },
       "tooltips": {
         "systemProxy": "Системалы прокси көйләүләрен үзгәртү рөхсәтен бирегез. Әгәр рөхсәт алу мөмкин түгел икән, прокси көйләүләрен кулдан үзгәртегез",
         "tunMode": "Tun режимы бөтен системаның трафигын тотып ала. Аны кабызган очракта системалы проксины аерым кабызу таләп ителми.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "Хезмәтне урнаштыру",
         "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "Системалы прокси",
+        "tunMode": "Tun режимы (виртуаль челтәр адаптеры)"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "Clash ядросы яңадан башланды",
-        "versionUpdated": "Ядро версиясе яңартылды"
+        "versionUpdated": "Ядро версиясе яңартылды",
+        "changeSuccess": "Ядро уңышлы алыштырылды",
+        "changeFailed": "Ядро алыштыру уңышсыз булды"
+      },
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "Хезмәт урнаштырыла...",
+          "uninstalling": "Uninstalling Service..."
+        },
+        "notifications": {
+          "installSuccess": "Сервис уңышлы урнаштырылды",
+          "uninstallSuccess": "Сервис уңышлы салдырылды"
+        }
+      },
+      "variants": {
+        "release": "Рәсми версия",
+        "alpha": "Альфа-версия"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "Челтәр интерфейсы",
-      "labels": {
+      "fields": {
         "ipAddress": "IP адресы",
         "macAddress": "MAC адресы"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "Барысын да яңарту",
           "update": "Яңарту"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "Туры режим"
       }
     },
-    "strategies": {
-      "select": "Проксины кулдан сайлау",
-      "url-test": "URL-тест задержкасына карап прокси сайлау",
-      "fallback": "Хата булган очракта башка проксига күчү",
-      "load-balance": "Трафикны баланслау нигезендә прокси тарату",
-      "relay": "Билгеле прокси чылбыры аша тапшыру"
-    },
-    "policies": {
-      "DIRECT": "Туры чыгу",
-      "REJECT": "Сорауларны тоткарлау",
-      "REJECT-DROP": "Сорауларны кире кагу",
-      "PASS": "Туры килсә дә, бу кагыйдәне урап узу"
+    "enums": {
+      "strategies": {
+        "select": "Проксины кулдан сайлау",
+        "url-test": "URL-тест задержкасына карап прокси сайлау",
+        "fallback": "Хата булган очракта башка проксига күчү",
+        "load-balance": "Трафикны баланслау нигезендә прокси тарату",
+        "relay": "Билгеле прокси чылбыры аша тапшыру"
+      },
+      "policies": {
+        "DIRECT": "Туры чыгу",
+        "REJECT": "Сорауларны тоткарлау",
+        "REJECT-DROP": "Сорауларны кире кагу",
+        "PASS": "Туры килсә дә, бу кагыйдәне урап узу"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "Барысын да яңарту",
           "update": "Яңарту"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "Кагыйдәләрне үзгәртү",
+      "form": {
+        "labels": {
+          "type": "Кагыйдә төре",
+          "content": "Кагыйдә эчтәлеге",
+          "proxyPolicy": "Прокси сәясәте"
+        },
+        "toggles": {
+          "noResolve": "Резолвсыз"
+        },
+        "actions": {
+          "prependRule": "Кагыйдәне өскә өстәү",
+          "appendRule": "Кагыйдәне аска өстәү"
+        },
+        "validation": {
+          "conditionRequired": "Кагыйдә шарты кирәк",
+          "invalidRule": "Яраксыз кагыйдә"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Домен исеменең тулы туры килүе",
+        "DOMAIN-SUFFIX": "Домен суффиксына туры килү",
+        "DOMAIN-KEYWORD": "Доменда төп сүзгә туры килү",
+        "DOMAIN-REGEX": "Доменны регекс аша туры китерү",
+        "GEOSITE": "Geosite исемлегендәге доменга туры килү",
+        "GEOIP": "IP-адресның ил коды буенча туры килү",
+        "SRC-GEOIP": "Чыганак IP-адресның ил коды буенча туры килү",
+        "IP-ASN": "IP-адрес ASN'ы буенча туры килү",
+        "SRC-IP-ASN": "Чыганак IP-адрес ASN'ы буенча туры килү",
+        "IP-CIDR": "IP-адреслар диапазонына туры килү",
+        "IP-CIDR6": "IPv6 адреслар диапазонына туры килү",
+        "SRC-IP-CIDR": "Чыганак IP-адреслар диапазонына туры килү",
+        "IP-SUFFIX": "IP-адрес суффиксына туры килү",
+        "SRC-IP-SUFFIX": "Чыганак IP-адрес суффиксына туры килү",
+        "SRC-PORT": "Чыганак портлар диапазонына туры килү",
+        "DST-PORT": "Максат портлар диапазонына туры килү",
+        "IN-PORT": "Керүче портка туры килү",
+        "DSCP": "DSCP тамгалавы (tproxy UDP өчен)",
+        "PROCESS-NAME": "Процесс исеменә туры килү (Android пакет исеме)",
+        "PROCESS-PATH": "Процесс юлына туры килү",
+        "PROCESS-NAME-REGEX": "Процесс исемен регекс белән туры китерү (Android пакет исеме)",
+        "PROCESS-PATH-REGEX": "Процесс юлын регекс белән туры китерү",
+        "NETWORK": "Транспорт протоколына (tcp/udp) туры килү",
+        "UID": "Linux USER ID'га туры килү",
+        "IN-TYPE": "Керүче тоташу төренә туры килү",
+        "IN-USER": "Керүче тоташу кулланучысына туры килү",
+        "IN-NAME": "Керүче тоташу исеменә туры килү",
+        "SUB-RULE": "Кушымча кагыйдә",
+        "RULE-SET": "Кагыйдәләр тупланмасына туры килү",
+        "AND": "Логик ҺӘМ",
+        "OR": "Логик ЯКИ",
+        "NOT": "Логик ТҮГЕЛ",
+        "MATCH": "Барлык сорауларга туры килә"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "Скрипт консоле"
+    },
+    "card": {
+      "labels": {
+        "from": "Каян",
+        "updateTime": "Яңарту вакыты",
+        "usedTotal": "Кулланылган / Барлыгы",
+        "expireTime": "Тамамлану вакыты",
+        "clickToImport": "Click to import subscription"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "Йөкләү (чыгару) тизлеге",
-        "downloadSpeed": "Йөкләү тизлеге",
-        "memoryUsage": "Хәтер куллану"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "Рәсми версия",
-      "alphaVersion": "Альфа-версия"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
-    },
-    "notifications": {
-      "changeSuccess": "Ядро уңышлы алыштырылды",
-      "changeFailed": "Ядро алыштыру уңышсыз булды"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "Хезмәт урнаштырыла...",
-      "uninstalling": "Uninstalling Service..."
-    },
-    "notifications": {
-      "installSuccess": "Сервис уңышлы урнаштырылды",
-      "uninstallSuccess": "Сервис уңышлы салдырылды"
-    }
-  },
   "validation": {
     "config": {
       "failed": "Язылу көйләү тикшерүе уңышсыз, көйләү файлын тикшерегез, үзгәрешләр кире кайтарылды, хата:",
@@ -1271,12 +1267,6 @@
       "mappingError": "Merge file mapping error, changes reverted",
       "keyError": "Merge file key error, changes reverted",
       "generalError": "Merge file error, changes reverted"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Update with Clash proxy successfully",
-      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "Kuralları Düzenle",
-    "form": {
-      "labels": {
-        "type": "Kural Tipi",
-        "content": "Kural İçeriği",
-        "proxyPolicy": "Vekil Politikası"
-      },
-      "toggles": {
-        "noResolve": "Çözümleme Yok"
-      },
-      "actions": {
-        "prependRule": "Kuralın Başına Ekle",
-        "appendRule": "Kuralın Sonuna Ekle"
-      },
-      "validation": {
-        "conditionRequired": "Kural Koşulu Gerekli",
-        "invalidRule": "Geçersiz Kural"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "Tam alan adıyla eşleşir",
-      "DOMAIN-SUFFIX": "Alan adı sonekiyle eşleşir",
-      "DOMAIN-KEYWORD": "Alan adı anahtar kelimesiyle eşleşir",
-      "DOMAIN-REGEX": "Alan adını düzenli ifadeler kullanarak eşleştirir",
-      "GEOSITE": "Geosite içindeki alan adlarıyla eşleşir",
-      "GEOIP": "IP adresinin ülke koduyla eşleşir",
-      "SRC-GEOIP": "Kaynak IP adresinin ülke koduyla eşleşir",
-      "IP-ASN": "IP adresinin ASN'siyle eşleşir",
-      "SRC-IP-ASN": "Kaynak IP adresinin ASN'siyle eşleşir",
-      "IP-CIDR": "IP adresi aralığıyla eşleşir",
-      "IP-CIDR6": "IPv6 adresi aralığıyla eşleşir",
-      "SRC-IP-CIDR": "Kaynak IP adresi aralığıyla eşleşir",
-      "IP-SUFFIX": "IP adresi sonek aralığıyla eşleşir",
-      "SRC-IP-SUFFIX": "Kaynak IP adresi sonek aralığıyla eşleşir",
-      "SRC-PORT": "Kaynak port aralığıyla eşleşir",
-      "DST-PORT": "Hedef port aralığıyla eşleşir",
-      "IN-PORT": "Gelen port ile eşleşir",
-      "DSCP": "DSCP işaretlemesi (sadece tvekil UDP girişi için)",
-      "PROCESS-NAME": "İşlem adıyla eşleşir (Android paket adı)",
-      "PROCESS-PATH": "Tam işlem yoluyla eşleşir",
-      "PROCESS-NAME-REGEX": "Tam işlem adını düzenli ifadeler kullanarak eşleştirir (Android paket adı)",
-      "PROCESS-PATH-REGEX": "Tam işlem yolunu düzenli ifadeler kullanarak eşleştirir",
-      "NETWORK": "Taşıma protokolüyle eşleşir (tcp/udp)",
-      "UID": "Linux KULLANICI ID'siyle eşleşir",
-      "IN-TYPE": "Gelen bağlantı tipiyle eşleşir",
-      "IN-USER": "Gelen bağlantı kullanıcı adıyla eşleşir",
-      "IN-NAME": "Gelen bağlantı adıyla eşleşir",
-      "SUB-RULE": "Alt kural",
-      "RULE-SET": "Kural setiyle eşleşir",
-      "AND": "Mantıksal VE",
-      "OR": "Mantıksal VEYA",
-      "NOT": "Mantıksal DEĞİL",
-      "MATCH": "Tüm isteklerle eşleşir"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "Sistem vekil'i etkinleştirildi, uygulamalarınız vekil üzerinden ağa erişecek",
-        "systemProxyDisabled": "Sistem vekil'i devre dışı, çoğu kullanıcı için bu seçeneği açmanız önerilir",
-        "tunModeServiceRequired": "TUN modu hizmet modu gerektirir, lütfen önce hizmeti kurun",
-        "tunModeEnabled": "TUN modu etkinleştirildi, uygulamalar sanal ağ kartı üzerinden ağa erişecek",
-        "tunModeDisabled": "TUN modu devre dışı, özel uygulamalar için uygundur"
-      },
-      "tooltips": {
-        "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
-        "tunMode": "TUN modu tüm uygulama trafiğini ele alabilir, sistem vekil ayarlarını takip etmeyen özel uygulamalar için uygundur"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash Bilgisi",
-      "fields": {
-        "coreVersion": "Çekirdek Sürümü",
-        "systemProxyAddress": "Sistem Vekil Adresi",
-        "mixedPort": "Mixed Port",
-        "uptime": "Çalışma Süresi",
-        "rulesCount": "Kural Sayısı"
-      }
-    },
-    "systemInfo": {
-      "title": "Sistem Bilgisi",
-      "fields": {
-        "osInfo": "İşletim Sistemi Bilgisi",
-        "autoLaunch": "Otomatik Başlatma",
-        "runningMode": "Çalışma Modu",
-        "lastCheckUpdate": "Son Güncelleme Kontrolü",
-        "vergeVersion": "Verge Sürümü"
-      },
-      "actions": {
-        "settings": "Ayarlar"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir"
-      },
-      "badges": {
-        "adminMode": "Yönetici Modu",
-        "serviceMode": "Hizmet Modu",
-        "sidecarMode": "Kullanıcı Modu",
-        "adminServiceMode": "Yönetici + Hizmet Modu"
-      }
-    },
-    "ipInfo": {
-      "title": "IP Bilgisi",
-      "errors": {
-        "load": "IP bilgisi alınamadı"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "ASN",
-        "isp": "ISP",
-        "org": "Kuruluş",
-        "location": "Konum",
-        "timezone": "Saat Dilimi",
-        "autoRefresh": "Otomatik yenile",
-        "unknown": "Bilinmiyor"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "Yükleme Hızı",
-        "downloadSpeed": "İndirme Hızı",
-        "activeConnections": "Aktif Bağlantılar",
-        "uploaded": "Yüklenen",
-        "downloaded": "İndirilen",
-        "memoryUsage": "Çekirdek Kullanımı"
-      },
-      "legends": {
-        "upload": "Yükleme",
-        "download": "İndirme"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Geçerli Düğüm",
-      "actions": {
-        "refreshDelay": "Gecikme kontrolü"
-      },
-      "labels": {
-        "globalMode": "Küresel Mod",
-        "directMode": "Doğrudan Mod",
-        "group": "Grup",
-        "proxy": "Vekil",
-        "noActiveNode": "Aktif vekil düğümü yok"
-      }
-    },
-    "profile": {
-      "title": "Profiller",
-      "actions": {
-        "import": "İçe Aktar"
-      },
-      "labels": {
-        "from": "Kaynak",
-        "updateTime": "Güncelleme Zamanı",
-        "usedTotal": "Kullanılan / Toplam",
-        "expireTime": "Sona Erme Zamanı",
-        "clickToImport": "Abonelik içe aktarmak için tıklayın"
-      }
-    },
     "page": {
       "title": "Ana Sayfa",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Web Sitesi Testleri"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "Sistem vekil'i etkinleştirildi, uygulamalarınız vekil üzerinden ağa erişecek",
+          "systemProxyDisabled": "Sistem vekil'i devre dışı, çoğu kullanıcı için bu seçeneği açmanız önerilir",
+          "tunModeServiceRequired": "TUN modu hizmet modu gerektirir, lütfen önce hizmeti kurun",
+          "tunModeEnabled": "TUN modu etkinleştirildi, uygulamalar sanal ağ kartı üzerinden ağa erişecek",
+          "tunModeDisabled": "TUN modu devre dışı, özel uygulamalar için uygundur"
+        },
+        "tooltips": {
+          "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
+          "tunMode": "TUN modu tüm uygulama trafiğini ele alabilir, sistem vekil ayarlarını takip etmeyen özel uygulamalar için uygundur"
+        }
       },
-      "labels": {
-        "rule": "Kural Modu",
-        "global": "Küresel Mod",
-        "direct": "Doğrudan Mod"
+      "clashInfo": {
+        "title": "Clash Bilgisi",
+        "fields": {
+          "coreVersion": "Çekirdek Sürümü",
+          "systemProxyAddress": "Sistem Vekil Adresi",
+          "mixedPort": "Mixed Port",
+          "uptime": "Çalışma Süresi",
+          "rulesCount": "Kural Sayısı"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "Sistem Bilgisi",
+        "fields": {
+          "osInfo": "İşletim Sistemi Bilgisi",
+          "autoLaunch": "Otomatik Başlatma",
+          "runningMode": "Çalışma Modu",
+          "lastCheckUpdate": "Son Güncelleme Kontrolü",
+          "vergeVersion": "Verge Sürümü"
+        },
+        "actions": {
+          "settings": "Ayarlar"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir"
+        },
+        "badges": {
+          "adminMode": "Yönetici Modu",
+          "serviceMode": "Hizmet Modu",
+          "sidecarMode": "Kullanıcı Modu",
+          "adminServiceMode": "Yönetici + Hizmet Modu"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Bilgisi",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "Kuruluş",
+          "location": "Konum",
+          "timezone": "Saat Dilimi",
+          "autoRefresh": "Otomatik yenile",
+          "unknown": "Bilinmiyor"
+        },
+        "errors": {
+          "load": "IP bilgisi alınamadı"
+        }
+      },
+      "currentProxy": {
+        "title": "Geçerli Düğüm",
+        "actions": {
+          "refreshDelay": "Gecikme kontrolü"
+        },
+        "labels": {
+          "globalMode": "Küresel Mod",
+          "directMode": "Doğrudan Mod",
+          "group": "Grup",
+          "proxy": "Vekil",
+          "noActiveNode": "Aktif vekil düğümü yok"
+        }
+      },
+      "tests": {
+        "title": "Web Sitesi Testleri"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Yükleme Hızı",
+          "downloadSpeed": "İndirme Hızı",
+          "activeConnections": "Aktif Bağlantılar",
+          "uploaded": "Yüklenen",
+          "downloaded": "İndirilen",
+          "memoryUsage": "Çekirdek Kullanımı"
+        },
+        "legends": {
+          "upload": "Yükleme",
+          "download": "İndirme"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "Kural Modu",
+          "global": "Küresel Mod",
+          "direct": "Doğrudan Mod"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "Tun Modu",
         "systemProxy": "Sistem Vekil'i"
       },
-      "labels": {
-        "autoLaunch": "Otomatik Başlatma",
-        "silentStart": "Sessiz Başlatma"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir",
         "silentStart": "Programı paneli görüntülemeden arka plan modunda başlatır"
+      },
+      "fields": {
+        "autoLaunch": "Otomatik Başlat",
+        "silentStart": "Sessiz Başlatma"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "Sistem Vekil'i",
-        "tunMode": "Tun Modu"
-      },
       "tooltips": {
         "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
         "tunMode": "Tun (Sanal Ağ Kartı) modu: Tüm sistem trafiğini yakalar, etkinleştirildiğinde sistem vekil'ini etkinleştirmeye gerek yoktur.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "Hizmeti Kur",
         "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "Sistem Vekil'i",
+        "tunMode": "Tun Modu"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "Clash Çekirdeği Yeniden Başlatıldı",
-        "versionUpdated": "Çekirdek Sürümü Güncellendi"
+        "versionUpdated": "Çekirdek Sürümü Güncellendi",
+        "changeSuccess": "Çekirdek başarıyla değiştirildi",
+        "changeFailed": "Çekirdek değiştirilemedi"
+      },
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "Hizmet Kuruluyor...",
+          "uninstalling": "Uninstalling Service..."
+        },
+        "notifications": {
+          "installSuccess": "Hizmet Başarıyla Kuruldu",
+          "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
+        }
+      },
+      "variants": {
+        "release": "Kararlı Sürüm",
+        "alpha": "Alfa Sürümü"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "Ağ Arayüzü",
-      "labels": {
+      "fields": {
         "ipAddress": "IP Adresi",
         "macAddress": "MAC Adresi"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Clash vekil ile güncelleme başarılı",
+        "withClashProxyFailed": "Clash vekil ile bile güncelleme başarısız oldu"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "Tümünü Güncelle",
           "update": "Güncelle"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "Doğrudan Mod"
       }
     },
-    "strategies": {
-      "select": "Vekil'i manuel olarak seçin",
-      "url-test": "URL testi gecikmesine göre vekil seçin",
-      "fallback": "Hata durumunda başka bir vekil'e geçin",
-      "load-balance": "Yük dengelemeye göre vekil dağıtın",
-      "relay": "Tanımlanan vekil zincirinden geçirin"
-    },
-    "policies": {
-      "DIRECT": "Veri doğrudan dışarı gider",
-      "REJECT": "İstekleri engeller",
-      "REJECT-DROP": "İstekleri atar",
-      "PASS": "Eşleştiğinde bu kuralı atlar"
+    "enums": {
+      "strategies": {
+        "select": "Vekil'i manuel olarak seçin",
+        "url-test": "URL testi gecikmesine göre vekil seçin",
+        "fallback": "Hata durumunda başka bir vekil'e geçin",
+        "load-balance": "Yük dengelemeye göre vekil dağıtın",
+        "relay": "Tanımlanan vekil zincirinden geçirin"
+      },
+      "policies": {
+        "DIRECT": "Veri doğrudan dışarı gider",
+        "REJECT": "İstekleri engeller",
+        "REJECT-DROP": "İstekleri atar",
+        "PASS": "Eşleştiğinde bu kuralı atlar"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "Tümünü Güncelle",
           "update": "Güncelle"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "Kuralları Düzenle",
+      "form": {
+        "labels": {
+          "type": "Kural Tipi",
+          "content": "Kural İçeriği",
+          "proxyPolicy": "Vekil Politikası"
+        },
+        "toggles": {
+          "noResolve": "Çözümleme Yok"
+        },
+        "actions": {
+          "prependRule": "Kuralın Başına Ekle",
+          "appendRule": "Kuralın Sonuna Ekle"
+        },
+        "validation": {
+          "conditionRequired": "Kural Koşulu Gerekli",
+          "invalidRule": "Geçersiz Kural"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Tam alan adıyla eşleşir",
+        "DOMAIN-SUFFIX": "Alan adı sonekiyle eşleşir",
+        "DOMAIN-KEYWORD": "Alan adı anahtar kelimesiyle eşleşir",
+        "DOMAIN-REGEX": "Alan adını düzenli ifadeler kullanarak eşleştirir",
+        "GEOSITE": "Geosite içindeki alan adlarıyla eşleşir",
+        "GEOIP": "IP adresinin ülke koduyla eşleşir",
+        "SRC-GEOIP": "Kaynak IP adresinin ülke koduyla eşleşir",
+        "IP-ASN": "IP adresinin ASN'siyle eşleşir",
+        "SRC-IP-ASN": "Kaynak IP adresinin ASN'siyle eşleşir",
+        "IP-CIDR": "IP adresi aralığıyla eşleşir",
+        "IP-CIDR6": "IPv6 adresi aralığıyla eşleşir",
+        "SRC-IP-CIDR": "Kaynak IP adresi aralığıyla eşleşir",
+        "IP-SUFFIX": "IP adresi sonek aralığıyla eşleşir",
+        "SRC-IP-SUFFIX": "Kaynak IP adresi sonek aralığıyla eşleşir",
+        "SRC-PORT": "Kaynak port aralığıyla eşleşir",
+        "DST-PORT": "Hedef port aralığıyla eşleşir",
+        "IN-PORT": "Gelen port ile eşleşir",
+        "DSCP": "DSCP işaretlemesi (sadece tvekil UDP girişi için)",
+        "PROCESS-NAME": "İşlem adıyla eşleşir (Android paket adı)",
+        "PROCESS-PATH": "Tam işlem yoluyla eşleşir",
+        "PROCESS-NAME-REGEX": "Tam işlem adını düzenli ifadeler kullanarak eşleştirir (Android paket adı)",
+        "PROCESS-PATH-REGEX": "Tam işlem yolunu düzenli ifadeler kullanarak eşleştirir",
+        "NETWORK": "Taşıma protokolüyle eşleşir (tcp/udp)",
+        "UID": "Linux KULLANICI ID'siyle eşleşir",
+        "IN-TYPE": "Gelen bağlantı tipiyle eşleşir",
+        "IN-USER": "Gelen bağlantı kullanıcı adıyla eşleşir",
+        "IN-NAME": "Gelen bağlantı adıyla eşleşir",
+        "SUB-RULE": "Alt kural",
+        "RULE-SET": "Kural setiyle eşleşir",
+        "AND": "Mantıksal VE",
+        "OR": "Mantıksal VEYA",
+        "NOT": "Mantıksal DEĞİL",
+        "MATCH": "Tüm isteklerle eşleşir"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "Betik Konsolu"
+    },
+    "card": {
+      "labels": {
+        "from": "Kaynak",
+        "updateTime": "Güncelleme Zamanı",
+        "usedTotal": "Kullanılan / Toplam",
+        "expireTime": "Sona Erme Zamanı",
+        "clickToImport": "Abonelik içe aktarmak için tıklayın"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "Yükleme Hızı",
-        "downloadSpeed": "İndirme Hızı",
-        "memoryUsage": "Çekirdek Kullanımı"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "Sürüm Versiyonu",
-      "alphaVersion": "Alfa Versiyonu"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
-    },
-    "notifications": {
-      "changeSuccess": "Çekirdek başarıyla değiştirildi",
-      "changeFailed": "Çekirdek değiştirilemedi"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "Hizmet Kuruluyor...",
-      "uninstalling": "Uninstalling Service..."
-    },
-    "notifications": {
-      "installSuccess": "Hizmet Başarıyla Kuruldu",
-      "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
-    }
-  },
   "validation": {
     "config": {
       "failed": "Abonelik yapılandırması doğrulaması başarısız oldu. Lütfen abonelik yapılandırma dosyasını kontrol edin; değişiklikler geri alındı.",
@@ -1271,12 +1267,6 @@
       "mappingError": "Birleştirme dosyası eşleme hatası, değişiklikler geri alındı",
       "keyError": "Birleştirme dosyası anahtar hatası, değişiklikler geri alındı",
       "generalError": "Birleştirme dosyası hatası, değişiklikler geri alındı"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Clash vekil ile güncelleme başarılı",
-      "withClashProxyFailed": "Clash vekil ile bile güncelleme başarısız oldu"
     }
   }
 }

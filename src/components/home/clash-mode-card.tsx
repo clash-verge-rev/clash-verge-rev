@@ -21,16 +21,16 @@ const isClashMode = (mode: string): mode is ClashMode =>
 
 const MODE_META: Record<ClashMode, { label: string; description: string }> = {
   rule: {
-    label: "home.clashMode.labels.rule",
-    description: "home.clashMode.descriptions.rule",
+    label: "home.cards.clashMode.labels.rule",
+    description: "home.cards.clashMode.descriptions.rule",
   },
   global: {
-    label: "home.clashMode.labels.global",
-    description: "home.clashMode.descriptions.global",
+    label: "home.cards.clashMode.labels.global",
+    description: "home.cards.clashMode.descriptions.global",
   },
   direct: {
-    label: "home.clashMode.labels.direct",
-    description: "home.clashMode.descriptions.direct",
+    label: "home.cards.clashMode.labels.direct",
+    description: "home.cards.clashMode.descriptions.direct",
   },
 };
 
@@ -53,7 +53,7 @@ export const ClashModeCard = () => {
     if (currentModeKey) {
       return t(MODE_META[currentModeKey].description);
     }
-    return t("home.clashMode.errors.communication");
+    return t("home.cards.clashMode.errors.communication");
   }, [currentModeKey, t]);
 
   // 模式图标映射

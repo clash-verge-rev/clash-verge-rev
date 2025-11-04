@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "Редактировать правила",
-    "form": {
-      "labels": {
-        "type": "Тип правила",
-        "content": "Содержимое правила",
-        "proxyPolicy": "Политика прокси"
-      },
-      "toggles": {
-        "noResolve": "Без разрешения"
-      },
-      "actions": {
-        "prependRule": "Добавить правило в начало",
-        "appendRule": "Добавить правило в конец"
-      },
-      "validation": {
-        "conditionRequired": "Требуется условие правила",
-        "invalidRule": "Недействительное правило"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "Соответствует полному доменному имени",
-      "DOMAIN-SUFFIX": "Соответствует суффиксу домена",
-      "DOMAIN-KEYWORD": "Соответствует ключевому слову домена",
-      "DOMAIN-REGEX": "Соответствует домену с использованием регулярных выражений",
-      "GEOSITE": "Соответствует доменам в Geosite",
-      "GEOIP": "Соответствует коду страны IP-адреса",
-      "SRC-GEOIP": "Соответствует коду страны исходного IP-адреса",
-      "IP-ASN": "Соответствует ASN IP-адреса",
-      "SRC-IP-ASN": "Соответствует ASN исходного IP-адреса",
-      "IP-CIDR": "Соответствует диапазону IP-адресов",
-      "IP-CIDR6": "Соответствует диапазону IPv6-адресов",
-      "SRC-IP-CIDR": "Соответствует диапазону исходных IP-адресов",
-      "IP-SUFFIX": "Соответствует диапазону суффиксов IP-адресов",
-      "SRC-IP-SUFFIX": "Соответствует диапазону суффиксов исходных IP-адресов",
-      "SRC-PORT": "Соответствует диапазону исходных портов",
-      "DST-PORT": "Соответствует диапазону целевых портов",
-      "IN-PORT": "Соответствует входящему порту",
-      "DSCP": "Маркировка DSCP (только для tproxy UDP входящего)",
-      "PROCESS-NAME": "Соответствует имени процесса (имя пакета Android)",
-      "PROCESS-PATH": "Соответствует полному пути процесса",
-      "PROCESS-NAME-REGEX": "Соответствует имени процесса с использованием регулярных выражений (имя пакета Android)",
-      "PROCESS-PATH-REGEX": "Соответствует полному пути процесса с использованием регулярных выражений",
-      "NETWORK": "Соответствует транспортному протоколу (tcp/udp)",
-      "UID": "Соответствует USER ID в Linux",
-      "IN-TYPE": "Соответствует типу входящего соединения",
-      "IN-USER": "Соответствует имени пользователя входящего соединения",
-      "IN-NAME": "Соответствует имени входящего соединения",
-      "SUB-RULE": "Подправило",
-      "RULE-SET": "Соответствует набору правил",
-      "AND": "Логическое И",
-      "OR": "Логическое ИЛИ",
-      "NOT": "Логическое НЕ",
-      "MATCH": "Соответствует всем запросам"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "Системный прокси включен, ваши приложения будут получать доступ к сети через него",
-        "systemProxyDisabled": "Системный прокси отключен, большинству пользователей рекомендуется включить эту опцию",
-        "tunModeServiceRequired": "Режим TUN требует установленную службу Clash Verge",
-        "tunModeEnabled": "Режим TUN включен, приложения будут получать доступ к сети через виртуальную сетевую карту",
-        "tunModeDisabled": "Режим TUN отключен"
-      },
-      "tooltips": {
-        "systemProxy": "Разрешить изменение настроек прокси-сервера операционной системы. Если разрешение не удастся, измените настройки прокси-сервера операционной системы вручную",
-        "tunMode": "Режим TUN может перехватить трафик всех приложений, подходит для приложений, которые не работают в режиме системного прокси."
-      }
-    },
-    "clashInfo": {
-      "title": "Информация о Clash",
-      "fields": {
-        "coreVersion": "Версия ядра",
-        "systemProxyAddress": "Адрес системного прокси",
-        "mixedPort": "Mixed Port",
-        "uptime": "Время работы",
-        "rulesCount": "Количество правил"
-      }
-    },
-    "systemInfo": {
-      "title": "Информация о системе",
-      "fields": {
-        "osInfo": "Версия ОС",
-        "autoLaunch": "Автозапуск",
-        "runningMode": "Режим работы",
-        "lastCheckUpdate": "Последняя проверка обновлений",
-        "vergeVersion": "Версия Clash Verge Rev"
-      },
-      "actions": {
-        "settings": "Настройки"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch"
-      },
-      "badges": {
-        "adminMode": "Administrator Mode",
-        "serviceMode": "Режим системной службы",
-        "sidecarMode": "Пользовательский режим",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "Информация об IP",
-      "errors": {
-        "load": "Не удалось получить информацию об IP"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "ASN",
-        "isp": "ISP",
-        "org": "ORG",
-        "location": "Location",
-        "timezone": "Timezone",
-        "autoRefresh": "Автоматическое обновление через",
-        "unknown": "Unknown"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "Скорость загрузки",
-        "downloadSpeed": "Скорость скачивания",
-        "activeConnections": "Активные соединения",
-        "uploaded": "Загружено",
-        "downloaded": "Скачано",
-        "memoryUsage": "Использование памяти"
-      },
-      "legends": {
-        "upload": "Загрузка",
-        "download": "Скачивание"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Текущий сервер",
-      "actions": {
-        "refreshDelay": "Проверка задержки"
-      },
-      "labels": {
-        "globalMode": "Глобальный режим",
-        "directMode": "Прямой режим",
-        "group": "Группа",
-        "proxy": "Прокси",
-        "noActiveNode": "Нет активного прокси-узла"
-      }
-    },
-    "profile": {
-      "title": "Профили",
-      "actions": {
-        "import": "Импорт"
-      },
-      "labels": {
-        "from": "От",
-        "updateTime": "Время обновления",
-        "usedTotal": "Использовано / Всего",
-        "expireTime": "Время окончания",
-        "clickToImport": "Нажмите, чтобы импортировать подписку"
-      }
-    },
     "page": {
       "title": "Главная",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Проверка доступности веб-сайтов"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "Системный прокси включен, ваши приложения будут получать доступ к сети через него",
+          "systemProxyDisabled": "Системный прокси отключен, большинству пользователей рекомендуется включить эту опцию",
+          "tunModeServiceRequired": "Режим TUN требует установленную службу Clash Verge",
+          "tunModeEnabled": "Режим TUN включен, приложения будут получать доступ к сети через виртуальную сетевую карту",
+          "tunModeDisabled": "Режим TUN отключен"
+        },
+        "tooltips": {
+          "systemProxy": "Разрешить изменение настроек прокси-сервера операционной системы. Если разрешение не удастся, измените настройки прокси-сервера операционной системы вручную",
+          "tunMode": "Режим TUN может перехватить трафик всех приложений, подходит для приложений, которые не работают в режиме системного прокси."
+        }
       },
-      "labels": {
-        "rule": "Режим правил",
-        "global": "Глобальный режим",
-        "direct": "Прямой режим"
+      "clashInfo": {
+        "title": "Информация о Clash",
+        "fields": {
+          "coreVersion": "Версия ядра",
+          "systemProxyAddress": "Адрес системного прокси",
+          "mixedPort": "Mixed Port",
+          "uptime": "Время работы",
+          "rulesCount": "Количество правил"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "Информация о системе",
+        "fields": {
+          "osInfo": "Версия ОС",
+          "autoLaunch": "Автозапуск",
+          "runningMode": "Режим работы",
+          "lastCheckUpdate": "Последняя проверка обновлений",
+          "vergeVersion": "Версия Clash Verge Rev"
+        },
+        "actions": {
+          "settings": "Настройки"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "Режим системной службы",
+          "sidecarMode": "Пользовательский режим",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "Информация об IP",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Автоматическое обновление через",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "Не удалось получить данные IP"
+        }
+      },
+      "currentProxy": {
+        "title": "Текущий сервер",
+        "actions": {
+          "refreshDelay": "Проверка задержки"
+        },
+        "labels": {
+          "globalMode": "Глобальный режим",
+          "directMode": "Прямой режим",
+          "group": "Группа",
+          "proxy": "Прокси",
+          "noActiveNode": "Нет активного прокси-узла"
+        }
+      },
+      "tests": {
+        "title": "Проверка доступности веб-сайтов"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Скорость загрузки",
+          "downloadSpeed": "Скорость скачивания",
+          "activeConnections": "Активные соединения",
+          "uploaded": "Загружено",
+          "downloaded": "Скачано",
+          "memoryUsage": "Использование памяти"
+        },
+        "legends": {
+          "upload": "Загрузка",
+          "download": "Скачивание"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "Режим правил",
+          "global": "Глобальный режим",
+          "direct": "Прямой режим"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "Режим TUN",
         "systemProxy": "Системный прокси"
       },
-      "labels": {
-        "autoLaunch": "Автозапуск",
-        "silentStart": "Тихий запуск"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "Запускать программу в фоновом режиме без отображения панели"
+      },
+      "fields": {
+        "autoLaunch": "Автозапуск",
+        "silentStart": "Тихий запуск"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "Системный прокси",
-        "tunMode": "Режим TUN"
-      },
       "tooltips": {
         "systemProxy": "Разрешить изменение настроек прокси-сервера операционной системы. Если разрешение не удастся, измените настройки прокси-сервера операционной системы вручную",
         "tunMode": "Режим Tun: захватывает весь системный трафик, при включении нет необходимости включать системный прокси-сервер.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "Установить службу",
         "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "Системный прокси",
+        "tunMode": "Режим TUN"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "Ядро перезапущено",
-        "versionUpdated": "Ядро обновлено до последней версии"
+        "versionUpdated": "Ядро обновлено до последней версии",
+        "changeSuccess": "Ядро успешно изменено",
+        "changeFailed": "Не удалось сменить ядро"
+      },
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "Установка службы...",
+          "uninstalling": "Uninstalling Service..."
+        },
+        "notifications": {
+          "installSuccess": "Служба успешно установлена",
+          "uninstallSuccess": "Служба успешно удалена"
+        }
+      },
+      "variants": {
+        "release": "Официальная версия",
+        "alpha": "Альфа-версия"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "Сетевой интерфейс",
-      "labels": {
+      "fields": {
         "ipAddress": "IP адрес",
         "macAddress": "MAC адрес"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "Обновить все",
           "update": "Обновить"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "Прямой режим"
       }
     },
-    "strategies": {
-      "select": "Выбор прокси вручную",
-      "url-test": "Выбор прокси на основе задержки теста URL",
-      "fallback": "Переключение на другой прокси при ошибке",
-      "load-balance": "Распределение прокси на основе балансировки нагрузки",
-      "relay": "Передача через определенную цепочку прокси"
-    },
-    "policies": {
-      "DIRECT": "Данные направляются напрямую наружу",
-      "REJECT": "Перехватывает запросы",
-      "REJECT-DROP": "Отклоняет запросы",
-      "PASS": "Пропускает это правило при совпадении"
+    "enums": {
+      "strategies": {
+        "select": "Выбор прокси вручную",
+        "url-test": "Выбор прокси на основе задержки теста URL",
+        "fallback": "Переключение на другой прокси при ошибке",
+        "load-balance": "Распределение прокси на основе балансировки нагрузки",
+        "relay": "Передача через определенную цепочку прокси"
+      },
+      "policies": {
+        "DIRECT": "Данные направляются напрямую наружу",
+        "REJECT": "Перехватывает запросы",
+        "REJECT-DROP": "Отклоняет запросы",
+        "PASS": "Пропускает это правило при совпадении"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "Обновить все",
           "update": "Обновить"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "Редактировать правила",
+      "form": {
+        "labels": {
+          "type": "Тип правила",
+          "content": "Содержимое правила",
+          "proxyPolicy": "Политика прокси"
+        },
+        "toggles": {
+          "noResolve": "Без разрешения"
+        },
+        "actions": {
+          "prependRule": "Добавить правило в начало",
+          "appendRule": "Добавить правило в конец"
+        },
+        "validation": {
+          "conditionRequired": "Требуется условие правила",
+          "invalidRule": "Недействительное правило"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Соответствует полному доменному имени",
+        "DOMAIN-SUFFIX": "Соответствует суффиксу домена",
+        "DOMAIN-KEYWORD": "Соответствует ключевому слову домена",
+        "DOMAIN-REGEX": "Соответствует домену с использованием регулярных выражений",
+        "GEOSITE": "Соответствует доменам в Geosite",
+        "GEOIP": "Соответствует коду страны IP-адреса",
+        "SRC-GEOIP": "Соответствует коду страны исходного IP-адреса",
+        "IP-ASN": "Соответствует ASN IP-адреса",
+        "SRC-IP-ASN": "Соответствует ASN исходного IP-адреса",
+        "IP-CIDR": "Соответствует диапазону IP-адресов",
+        "IP-CIDR6": "Соответствует диапазону IPv6-адресов",
+        "SRC-IP-CIDR": "Соответствует диапазону исходных IP-адресов",
+        "IP-SUFFIX": "Соответствует диапазону суффиксов IP-адресов",
+        "SRC-IP-SUFFIX": "Соответствует диапазону суффиксов исходных IP-адресов",
+        "SRC-PORT": "Соответствует диапазону исходных портов",
+        "DST-PORT": "Соответствует диапазону целевых портов",
+        "IN-PORT": "Соответствует входящему порту",
+        "DSCP": "Маркировка DSCP (только для tproxy UDP входящего)",
+        "PROCESS-NAME": "Соответствует имени процесса (имя пакета Android)",
+        "PROCESS-PATH": "Соответствует полному пути процесса",
+        "PROCESS-NAME-REGEX": "Соответствует имени процесса с использованием регулярных выражений (имя пакета Android)",
+        "PROCESS-PATH-REGEX": "Соответствует полному пути процесса с использованием регулярных выражений",
+        "NETWORK": "Соответствует транспортному протоколу (tcp/udp)",
+        "UID": "Соответствует USER ID в Linux",
+        "IN-TYPE": "Соответствует типу входящего соединения",
+        "IN-USER": "Соответствует имени пользователя входящего соединения",
+        "IN-NAME": "Соответствует имени входящего соединения",
+        "SUB-RULE": "Подправило",
+        "RULE-SET": "Соответствует набору правил",
+        "AND": "Логическое И",
+        "OR": "Логическое ИЛИ",
+        "NOT": "Логическое НЕ",
+        "MATCH": "Соответствует всем запросам"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "Консоль скрипта"
+    },
+    "card": {
+      "labels": {
+        "from": "От",
+        "updateTime": "Время обновления",
+        "usedTotal": "Использовано / Всего",
+        "expireTime": "Время окончания",
+        "clickToImport": "Нажмите, чтобы импортировать подписку"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "Скорость загрузки",
-        "downloadSpeed": "Скорость скачивания",
-        "memoryUsage": "Использование памяти"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "Официальная версия",
-      "alphaVersion": "Альфа-версия"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
-    },
-    "notifications": {
-      "changeSuccess": "Ядро успешно изменено",
-      "changeFailed": "Не удалось сменить ядро"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "Установка службы...",
-      "uninstalling": "Uninstalling Service..."
-    },
-    "notifications": {
-      "installSuccess": "Служба успешно установлена",
-      "uninstallSuccess": "Служба успешно удалена"
-    }
-  },
   "validation": {
     "config": {
       "failed": "Ошибка проверки конфигурации подписки, проверьте файл конфигурации, изменения отменены, ошибка:",
@@ -1271,12 +1267,6 @@
       "mappingError": "Ошибка сопоставления в Merge File, откат изменений",
       "keyError": "Ошибка ключа в Merge File, откат изменений",
       "generalError": "Ошибка Merge File, откат изменений"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Update with Clash proxy successfully",
-      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

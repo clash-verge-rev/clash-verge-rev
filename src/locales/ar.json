@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "تعديل القواعد",
-    "form": {
-      "labels": {
-        "type": "نوع القاعدة",
-        "content": "محتوى القاعدة",
-        "proxyPolicy": "سياسة الوكيل"
-      },
-      "toggles": {
-        "noResolve": "لا يوجد حل"
-      },
-      "actions": {
-        "prependRule": "إضافة قاعدة في البداية",
-        "appendRule": "إضافة قاعدة في النهاية"
-      },
-      "validation": {
-        "conditionRequired": "شرط القاعدة مطلوب",
-        "invalidRule": "قاعدة غير صالحة"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "مطابقة اسم المجال الكامل",
-      "DOMAIN-SUFFIX": "مطابقة لاحقة المجال",
-      "DOMAIN-KEYWORD": "مطابقة كلمة مفتاحية في المجال",
-      "DOMAIN-REGEX": "مطابقة المجال باستخدام التعبيرات العادية",
-      "GEOSITE": "مطابقة المجالات ضمن Geosite",
-      "GEOIP": "مطابقة رمز البلد لعنوان IP",
-      "SRC-GEOIP": "مطابقة رمز البلد لعنوان IP المصدر",
-      "IP-ASN": "مطابقة ASN لعنوان IP",
-      "SRC-IP-ASN": "مطابقة ASN لعنوان IP المصدر",
-      "IP-CIDR": "مطابقة نطاق عنوان IP",
-      "IP-CIDR6": "مطابقة نطاق عناوين IPv6",
-      "SRC-IP-CIDR": "مطابقة نطاق عنوان IP المصدر",
-      "IP-SUFFIX": "مطابقة لاحقة عنوان IP",
-      "SRC-IP-SUFFIX": "مطابقة لاحقة عنوان IP المصدر",
-      "SRC-PORT": "مطابقة نطاق المنفذ المصدر",
-      "DST-PORT": "مطابقة نطاق المنفذ الوجهة",
-      "IN-PORT": "مطابقة المنفذ الوارد",
-      "DSCP": "علامة DSCP (لـ tproxy على UDP فقط)",
-      "PROCESS-NAME": "مطابقة اسم العملية (اسم حزمة Android)",
-      "PROCESS-PATH": "مطابقة المسار الكامل للعملية",
-      "PROCESS-NAME-REGEX": "مطابقة اسم العملية باستخدام التعبيرات العادية (اسم حزمة Android)",
-      "PROCESS-PATH-REGEX": "مطابقة المسار الكامل للعملية باستخدام التعبيرات العادية",
-      "NETWORK": "مطابقة بروتوكول النقل (TCP/UDP)",
-      "UID": "مطابقة معرف المستخدم في Linux",
-      "IN-TYPE": "مطابقة نوع الإدخال",
-      "IN-USER": "مطابقة اسم المستخدم للإدخال",
-      "IN-NAME": "مطابقة اسم الإدخال",
-      "SUB-RULE": "قاعدة فرعية",
-      "RULE-SET": "مطابقة مجموعة القواعد",
-      "AND": "منطقي AND",
-      "OR": "منطقي OR",
-      "NOT": "منطقي NOT",
-      "MATCH": "مطابقة جميع الطلبات"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
-        "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
-        "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
-        "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
-        "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
-      },
-      "tooltips": {
-        "systemProxy": "عند التمكين، سيتم تعديل إعدادات الوكيل في نظام التشغيل. إذا فشل التمكين، فقم بتعديل إعدادات الوكيل في النظام يدويًا.",
-        "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash Info",
-      "fields": {
-        "coreVersion": "Core Version",
-        "systemProxyAddress": "System Proxy Address",
-        "mixedPort": "Mixed Port",
-        "uptime": "Uptime",
-        "rulesCount": "Rules Count"
-      }
-    },
-    "systemInfo": {
-      "title": "System Info",
-      "fields": {
-        "osInfo": "OS Info",
-        "autoLaunch": "إطلاق تلقائي",
-        "runningMode": "Running Mode",
-        "lastCheckUpdate": "Last Check Update",
-        "vergeVersion": "إصدار Verge"
-      },
-      "actions": {
-        "settings": "الإعدادات"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch"
-      },
-      "badges": {
-        "adminMode": "Administrator Mode",
-        "serviceMode": "وضع الخدمة",
-        "sidecarMode": "User Mode",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "IP Information",
-      "errors": {
-        "load": "Failed to get IP info"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "ASN",
-        "isp": "ISP",
-        "org": "ORG",
-        "location": "Location",
-        "timezone": "Timezone",
-        "autoRefresh": "Auto refresh",
-        "unknown": "Unknown"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "سرعة الرفع",
-        "downloadSpeed": "سرعة التنزيل",
-        "activeConnections": "Active Connections",
-        "uploaded": "تم الرفع",
-        "downloaded": "تم التنزيل",
-        "memoryUsage": "استهلاك الذاكرة"
-      },
-      "legends": {
-        "upload": "Upload",
-        "download": "Download"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Current Node",
-      "actions": {
-        "refreshDelay": "فحص التأخير"
-      },
-      "labels": {
-        "globalMode": "الوضع العالمي",
-        "directMode": "الوضع المباشر",
-        "group": "Group",
-        "proxy": "Proxy",
-        "noActiveNode": "No active proxy node"
-      }
-    },
-    "profile": {
-      "title": "الملفات الشخصية",
-      "actions": {
-        "import": "استيراد"
-      },
-      "labels": {
-        "from": "من",
-        "updateTime": "وقت التحديث",
-        "usedTotal": "المستخدم / الإجمالي",
-        "expireTime": "وقت الانتهاء",
-        "clickToImport": "Click to import subscription"
-      }
-    },
     "page": {
       "title": "Home",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Website Tests"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+        },
+        "tooltips": {
+          "systemProxy": "عند التمكين، سيتم تعديل إعدادات الوكيل في نظام التشغيل. إذا فشل التمكين، فقم بتعديل إعدادات الوكيل في النظام يدويًا.",
+          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+        }
       },
-      "labels": {
-        "rule": "وضع القواعد",
-        "global": "الوضع العالمي",
-        "direct": "الوضع المباشر"
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "إطلاق تلقائي",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "إصدار Verge"
+        },
+        "actions": {
+          "settings": "الإعدادات"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "وضع الخدمة",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "فشل الحصول على معلومات الـ IP"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "فحص التأخير"
+        },
+        "labels": {
+          "globalMode": "الوضع العالمي",
+          "directMode": "الوضع المباشر",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "tests": {
+        "title": "Website Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "سرعة الرفع",
+          "downloadSpeed": "سرعة التنزيل",
+          "activeConnections": "Active Connections",
+          "uploaded": "تم الرفع",
+          "downloaded": "تم التنزيل",
+          "memoryUsage": "استهلاك الذاكرة"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "وضع القواعد",
+          "global": "الوضع العالمي",
+          "direct": "الوضع المباشر"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "وضع TUN",
         "systemProxy": "وكيل النظام"
       },
-      "labels": {
-        "autoLaunch": "إطلاق تلقائي",
-        "silentStart": "بدء صامت"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "بدء البرنامج في الخلفية دون عرض الواجهة"
+      },
+      "fields": {
+        "autoLaunch": "تشغيل تلقائي",
+        "silentStart": "تشغيل صامت"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "وكيل النظام",
-        "tunMode": "وضع TUN"
-      },
       "tooltips": {
         "systemProxy": "عند التمكين، سيتم تعديل إعدادات الوكيل في نظام التشغيل. إذا فشل التمكين، فقم بتعديل إعدادات الوكيل في النظام يدويًا.",
         "tunMode": "وضع TUN (بطاقة شبكة افتراضية): يلتقط كل حركة المرور في النظام. عند تمكينه، لا حاجة لتفعيل وكيل النظام.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "تثبيت الخدمة ",
         "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "وكيل النظام",
+        "tunMode": "وضع TUN"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "تم إعادة تشغيل نواة Clash",
-        "versionUpdated": "تم تحديث إصدار النواة"
+        "versionUpdated": "تم تحديث إصدار النواة",
+        "changeSuccess": "تم تغيير النواة بنجاح",
+        "changeFailed": "فشل تغيير النواة"
+      },
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "جاري تثبيت الخدمة...",
+          "uninstalling": "Uninstalling Service..."
+        },
+        "notifications": {
+          "installSuccess": "تم تثبيت الخدمة بنجاح",
+          "uninstallSuccess": "تم إلغاء تثبيت الخدمة بنجاح"
+        }
+      },
+      "variants": {
+        "release": "الإصدار المستقر",
+        "alpha": "الإصدار التجريبي"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "واجهة الشبكة",
-      "labels": {
+      "fields": {
         "ipAddress": "عنوان IP",
         "macAddress": "عنوان MAC"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "تحديث الكل",
           "update": "تحديث"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "الوضع المباشر"
       }
     },
-    "strategies": {
-      "select": "اختيار الوكيل يدويًا",
-      "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
-      "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
-      "load-balance": "توزيع التحميل بين الوكلاء",
-      "relay": "التمرير عبر سلسلة الوكلاء المحددة"
-    },
-    "policies": {
-      "DIRECT": "البيانات تخرج مباشرة",
-      "REJECT": "رفض الطلبات",
-      "REJECT-DROP": "تجاهل الطلبات",
-      "PASS": "تخطي هذه القاعدة عند المطابقة"
+    "enums": {
+      "strategies": {
+        "select": "اختيار الوكيل يدويًا",
+        "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
+        "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
+        "load-balance": "توزيع التحميل بين الوكلاء",
+        "relay": "التمرير عبر سلسلة الوكلاء المحددة"
+      },
+      "policies": {
+        "DIRECT": "البيانات تخرج مباشرة",
+        "REJECT": "رفض الطلبات",
+        "REJECT-DROP": "تجاهل الطلبات",
+        "PASS": "تخطي هذه القاعدة عند المطابقة"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "تحديث الكل",
           "update": "تحديث"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "تعديل القواعد",
+      "form": {
+        "labels": {
+          "type": "نوع القاعدة",
+          "content": "محتوى القاعدة",
+          "proxyPolicy": "سياسة الوكيل"
+        },
+        "toggles": {
+          "noResolve": "لا يوجد حل"
+        },
+        "actions": {
+          "prependRule": "إضافة قاعدة في البداية",
+          "appendRule": "إضافة قاعدة في النهاية"
+        },
+        "validation": {
+          "conditionRequired": "شرط القاعدة مطلوب",
+          "invalidRule": "قاعدة غير صالحة"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "مطابقة اسم المجال الكامل",
+        "DOMAIN-SUFFIX": "مطابقة لاحقة المجال",
+        "DOMAIN-KEYWORD": "مطابقة كلمة مفتاحية في المجال",
+        "DOMAIN-REGEX": "مطابقة المجال باستخدام التعبيرات العادية",
+        "GEOSITE": "مطابقة المجالات ضمن Geosite",
+        "GEOIP": "مطابقة رمز البلد لعنوان IP",
+        "SRC-GEOIP": "مطابقة رمز البلد لعنوان IP المصدر",
+        "IP-ASN": "مطابقة ASN لعنوان IP",
+        "SRC-IP-ASN": "مطابقة ASN لعنوان IP المصدر",
+        "IP-CIDR": "مطابقة نطاق عنوان IP",
+        "IP-CIDR6": "مطابقة نطاق عناوين IPv6",
+        "SRC-IP-CIDR": "مطابقة نطاق عنوان IP المصدر",
+        "IP-SUFFIX": "مطابقة لاحقة عنوان IP",
+        "SRC-IP-SUFFIX": "مطابقة لاحقة عنوان IP المصدر",
+        "SRC-PORT": "مطابقة نطاق المنفذ المصدر",
+        "DST-PORT": "مطابقة نطاق المنفذ الوجهة",
+        "IN-PORT": "مطابقة المنفذ الوارد",
+        "DSCP": "علامة DSCP (لـ tproxy على UDP فقط)",
+        "PROCESS-NAME": "مطابقة اسم العملية (اسم حزمة Android)",
+        "PROCESS-PATH": "مطابقة المسار الكامل للعملية",
+        "PROCESS-NAME-REGEX": "مطابقة اسم العملية باستخدام التعبيرات العادية (اسم حزمة Android)",
+        "PROCESS-PATH-REGEX": "مطابقة المسار الكامل للعملية باستخدام التعبيرات العادية",
+        "NETWORK": "مطابقة بروتوكول النقل (TCP/UDP)",
+        "UID": "مطابقة معرف المستخدم في Linux",
+        "IN-TYPE": "مطابقة نوع الإدخال",
+        "IN-USER": "مطابقة اسم المستخدم للإدخال",
+        "IN-NAME": "مطابقة اسم الإدخال",
+        "SUB-RULE": "قاعدة فرعية",
+        "RULE-SET": "مطابقة مجموعة القواعد",
+        "AND": "منطقي AND",
+        "OR": "منطقي OR",
+        "NOT": "منطقي NOT",
+        "MATCH": "مطابقة جميع الطلبات"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "وحدة التحكم للسكريبت"
+    },
+    "card": {
+      "labels": {
+        "from": "من",
+        "updateTime": "وقت التحديث",
+        "usedTotal": "المستخدم / الإجمالي",
+        "expireTime": "وقت الانتهاء",
+        "clickToImport": "Click to import subscription"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "سرعة الرفع",
-        "downloadSpeed": "سرعة التنزيل",
-        "memoryUsage": "استهلاك الذاكرة"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "إصدار مستقر",
-      "alphaVersion": "إصدار ألفا"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
-    },
-    "notifications": {
-      "changeSuccess": "تم تغيير النواة بنجاح",
-      "changeFailed": "فشل تغيير النواة"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "جاري تثبيت الخدمة...",
-      "uninstalling": "Uninstalling Service..."
-    },
-    "notifications": {
-      "installSuccess": "تم تثبيت الخدمة بنجاح",
-      "uninstallSuccess": "تم إلغاء تثبيت الخدمة بنجاح"
-    }
-  },
   "validation": {
     "config": {
       "failed": "فشل التحقق من تكوين الاشتراك، يرجى فحص ملف التكوين، تم التراجع عن التغييرات، تفاصيل الخطأ:",
@@ -1271,12 +1267,6 @@
       "mappingError": "Merge file mapping error, changes reverted",
       "keyError": "Merge file key error, changes reverted",
       "generalError": "Merge file error, changes reverted"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Update with Clash proxy successfully",
-      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

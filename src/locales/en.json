@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "Edit Rules",
-    "form": {
-      "labels": {
-        "type": "Rule Type",
-        "content": "Rule Content",
-        "proxyPolicy": "Proxy Policy"
-      },
-      "toggles": {
-        "noResolve": "No Resolve"
-      },
-      "actions": {
-        "prependRule": "Prepend Rule",
-        "appendRule": "Append Rule"
-      },
-      "validation": {
-        "conditionRequired": "Rule Condition Required",
-        "invalidRule": "Invalid Rule"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "Match full domain (DOMAIN)",
-      "DOMAIN-SUFFIX": "Match domain suffix (DOMAIN-SUFFIX)",
-      "DOMAIN-KEYWORD": "Match domain keyword (DOMAIN-KEYWORD)",
-      "DOMAIN-REGEX": "Match domain using regex (DOMAIN-REGEX)",
-      "GEOSITE": "Match domains in Geosite (GEOSITE)",
-      "GEOIP": "Match IP country code (GEOIP)",
-      "SRC-GEOIP": "Match source IP country code (SRC-GEOIP)",
-      "IP-ASN": "Match IP ASN (IP-ASN)",
-      "SRC-IP-ASN": "Match source IP ASN (SRC-IP-ASN)",
-      "IP-CIDR": "Match IP address range (IP-CIDR)",
-      "IP-CIDR6": "Match IPv6 address range (IP-CIDR6)",
-      "SRC-IP-CIDR": "Match source IP address range (SRC-IP-CIDR)",
-      "IP-SUFFIX": "Match IP suffix range (IP-SUFFIX)",
-      "SRC-IP-SUFFIX": "Match source IP suffix range (SRC-IP-SUFFIX)",
-      "SRC-PORT": "Match source port range (SRC-PORT)",
-      "DST-PORT": "Match destination port range (DST-PORT)",
-      "IN-PORT": "Match inbound port (IN-PORT)",
-      "DSCP": "DSCP tag (TPROXY UDP inbound only) (DSCP)",
-      "PROCESS-NAME": "Match process name (PROCESS-NAME)",
-      "PROCESS-PATH": "Match full process path (PROCESS-PATH)",
-      "PROCESS-NAME-REGEX": "Match process name using regex (PROCESS-NAME-REGEX)",
-      "PROCESS-PATH-REGEX": "Match full process path using regex (PROCESS-PATH-REGEX)",
-      "NETWORK": "Match network protocol (TCP/UDP) (NETWORK)",
-      "UID": "Match Linux user ID (UID)",
-      "IN-TYPE": "Match inbound type (IN-TYPE)",
-      "IN-USER": "Match inbound username (IN-USER)",
-      "IN-NAME": "Match inbound name (IN-NAME)",
-      "SUB-RULE": "Sub-rule (SUB-RULE)",
-      "RULE-SET": "Match rule set (RULE-SET)",
-      "AND": "Logical AND (AND)",
-      "OR": "Logical OR (OR)",
-      "NOT": "Logical NOT (NOT)",
-      "MATCH": "Match all requests (MATCH)"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "System Proxy Enabled",
-        "systemProxyDisabled": "System Proxy Disabled",
-        "tunModeServiceRequired": "TUN Mode Service Required",
-        "tunModeEnabled": "TUN Mode Enabled",
-        "tunModeDisabled": "TUN Mode Disabled"
-      },
-      "tooltips": {
-        "systemProxy": "System Proxy Info",
-        "tunMode": "TUN Mode Intercept Info"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash Info",
-      "fields": {
-        "coreVersion": "Core Version",
-        "systemProxyAddress": "System Proxy Address",
-        "mixedPort": "Mixed Port",
-        "uptime": "Uptime",
-        "rulesCount": "Rules Count"
-      }
-    },
-    "systemInfo": {
-      "title": "System Info",
-      "fields": {
-        "osInfo": "OS Info",
-        "autoLaunch": "Auto Launch",
-        "runningMode": "Running Mode",
-        "lastCheckUpdate": "Last Check Update",
-        "vergeVersion": "Verge Version"
-      },
-      "actions": {
-        "settings": "Settings"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch"
-      },
-      "badges": {
-        "adminMode": "Administrator Mode",
-        "serviceMode": "Service Mode",
-        "sidecarMode": "User Mode",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "IP Information",
-      "errors": {
-        "load": "Failed to get IP info"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "ASN",
-        "isp": "ISP",
-        "org": "ORG",
-        "location": "Location",
-        "timezone": "Timezone",
-        "autoRefresh": "Auto refresh",
-        "unknown": "Unknown"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "Upload Speed",
-        "downloadSpeed": "Download Speed",
-        "activeConnections": "Active Connections",
-        "uploaded": "Uploaded",
-        "downloaded": "Downloaded",
-        "memoryUsage": "Core Usage"
-      },
-      "legends": {
-        "upload": "Upload",
-        "download": "Download"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Current Node",
-      "actions": {
-        "refreshDelay": "Delay check"
-      },
-      "labels": {
-        "globalMode": "Global Mode",
-        "directMode": "Direct Mode",
-        "group": "Group",
-        "proxy": "Proxy",
-        "noActiveNode": "No active proxy node"
-      }
-    },
-    "profile": {
-      "title": "Profiles",
-      "actions": {
-        "import": "Import"
-      },
-      "labels": {
-        "from": "From",
-        "updateTime": "Update Time",
-        "usedTotal": "Used / Total",
-        "expireTime": "Expire Time",
-        "clickToImport": "Click to import subscription"
-      }
-    },
     "page": {
       "title": "Home",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Website Tests"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "System Proxy Enabled",
+          "systemProxyDisabled": "System Proxy Disabled",
+          "tunModeServiceRequired": "TUN Mode Service Required",
+          "tunModeEnabled": "TUN Mode Enabled",
+          "tunModeDisabled": "TUN Mode Disabled"
+        },
+        "tooltips": {
+          "systemProxy": "System Proxy Info",
+          "tunMode": "TUN Mode Intercept Info"
+        }
       },
-      "labels": {
-        "rule": "Rule Mode",
-        "global": "Global Mode",
-        "direct": "Direct Mode"
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "Auto Launch",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "Verge Version"
+        },
+        "actions": {
+          "settings": "Settings"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "Service Mode",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "Failed to get IP info"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "Delay check"
+        },
+        "labels": {
+          "globalMode": "Global Mode",
+          "directMode": "Direct Mode",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "tests": {
+        "title": "Website Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Upload Speed",
+          "downloadSpeed": "Download Speed",
+          "activeConnections": "Active Connections",
+          "uploaded": "Uploaded",
+          "downloaded": "Downloaded",
+          "memoryUsage": "Core Usage"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "Rule Mode",
+          "global": "Global Mode",
+          "direct": "Direct Mode"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "Tun Mode",
         "systemProxy": "System Proxy"
       },
-      "labels": {
-        "autoLaunch": "Auto Launch",
-        "silentStart": "Silent Start"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "Start the program in background mode without displaying the panel"
+      },
+      "fields": {
+        "autoLaunch": "Auto Launch",
+        "silentStart": "Silent Start"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "System Proxy",
-        "tunMode": "Tun Mode"
-      },
       "tooltips": {
         "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
         "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "Install Service",
         "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "System Proxy",
+        "tunMode": "Tun Mode"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "Clash Core Restarted",
-        "versionUpdated": "Core Version Updated"
+        "versionUpdated": "Core Version Updated",
+        "changeSuccess": "Core changed successfully",
+        "changeFailed": "Failed to change core"
+      },
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "Installing Service...",
+          "uninstalling": "Uninstalling Service..."
+        },
+        "notifications": {
+          "installSuccess": "Service Installed Successfully",
+          "uninstallSuccess": "Service Uninstalled Successfully"
+        }
+      },
+      "variants": {
+        "release": "Release Version",
+        "alpha": "Alpha Version"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "Network Interface",
-      "labels": {
+      "fields": {
         "ipAddress": "IP Address",
         "macAddress": "MAC Address"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "Update All",
           "update": "Update"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "Direct Mode"
       }
     },
-    "strategies": {
-      "select": "Select proxy manually",
-      "url-test": "Select proxy based on URL test delay",
-      "fallback": "Switch to another proxy on error",
-      "load-balance": "Distribute proxy based on load balancing",
-      "relay": "Pass through the defined proxy chain"
-    },
-    "policies": {
-      "DIRECT": "Data goes directly outbound (DIRECT)",
-      "REJECT": "Intercepts requests (REJECT)",
-      "REJECT-DROP": "Discards requests (REJECT-DROP)",
-      "PASS": "Skips this rule when matched (PASS)"
+    "enums": {
+      "strategies": {
+        "select": "Select proxy manually",
+        "url-test": "Select proxy based on URL test delay",
+        "fallback": "Switch to another proxy on error",
+        "load-balance": "Distribute proxy based on load balancing",
+        "relay": "Pass through the defined proxy chain"
+      },
+      "policies": {
+        "DIRECT": "Data goes directly outbound (DIRECT)",
+        "REJECT": "Intercepts requests (REJECT)",
+        "REJECT-DROP": "Discards requests (REJECT-DROP)",
+        "PASS": "Skips this rule when matched (PASS)"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "Update All",
           "update": "Update"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "Edit Rules",
+      "form": {
+        "labels": {
+          "type": "Rule Type",
+          "content": "Rule Content",
+          "proxyPolicy": "Proxy Policy"
+        },
+        "toggles": {
+          "noResolve": "No Resolve"
+        },
+        "actions": {
+          "prependRule": "Prepend Rule",
+          "appendRule": "Append Rule"
+        },
+        "validation": {
+          "conditionRequired": "Rule Condition Required",
+          "invalidRule": "Invalid Rule"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Match full domain (DOMAIN)",
+        "DOMAIN-SUFFIX": "Match domain suffix (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "Match domain keyword (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "Match domain using regex (DOMAIN-REGEX)",
+        "GEOSITE": "Match domains in Geosite (GEOSITE)",
+        "GEOIP": "Match IP country code (GEOIP)",
+        "SRC-GEOIP": "Match source IP country code (SRC-GEOIP)",
+        "IP-ASN": "Match IP ASN (IP-ASN)",
+        "SRC-IP-ASN": "Match source IP ASN (SRC-IP-ASN)",
+        "IP-CIDR": "Match IP address range (IP-CIDR)",
+        "IP-CIDR6": "Match IPv6 address range (IP-CIDR6)",
+        "SRC-IP-CIDR": "Match source IP address range (SRC-IP-CIDR)",
+        "IP-SUFFIX": "Match IP suffix range (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "Match source IP suffix range (SRC-IP-SUFFIX)",
+        "SRC-PORT": "Match source port range (SRC-PORT)",
+        "DST-PORT": "Match destination port range (DST-PORT)",
+        "IN-PORT": "Match inbound port (IN-PORT)",
+        "DSCP": "DSCP tag (TPROXY UDP inbound only) (DSCP)",
+        "PROCESS-NAME": "Match process name (PROCESS-NAME)",
+        "PROCESS-PATH": "Match full process path (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "Match process name using regex (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "Match full process path using regex (PROCESS-PATH-REGEX)",
+        "NETWORK": "Match network protocol (TCP/UDP) (NETWORK)",
+        "UID": "Match Linux user ID (UID)",
+        "IN-TYPE": "Match inbound type (IN-TYPE)",
+        "IN-USER": "Match inbound username (IN-USER)",
+        "IN-NAME": "Match inbound name (IN-NAME)",
+        "SUB-RULE": "Sub-rule (SUB-RULE)",
+        "RULE-SET": "Match rule set (RULE-SET)",
+        "AND": "Logical AND (AND)",
+        "OR": "Logical OR (OR)",
+        "NOT": "Logical NOT (NOT)",
+        "MATCH": "Match all requests (MATCH)"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "Script Console"
+    },
+    "card": {
+      "labels": {
+        "from": "From",
+        "updateTime": "Update Time",
+        "usedTotal": "Used / Total",
+        "expireTime": "Expire Time",
+        "clickToImport": "Click to import subscription"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "Upload Speed",
-        "downloadSpeed": "Download Speed",
-        "memoryUsage": "Memory Usage"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "Release Version",
-      "alphaVersion": "Alpha Version"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
-    },
-    "notifications": {
-      "changeSuccess": "Core changed successfully",
-      "changeFailed": "Failed to change core"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "Installing Service...",
-      "uninstalling": "Uninstalling Service..."
-    },
-    "notifications": {
-      "installSuccess": "Service Installed Successfully",
-      "uninstallSuccess": "Service Uninstalled Successfully"
-    }
-  },
   "validation": {
     "config": {
       "failed": "Subscription configuration validation failed. Please check the subscription configuration file; modifications have been rolled back.",
@@ -1271,12 +1267,6 @@
       "mappingError": "Merge file mapping error, changes reverted",
       "keyError": "Merge file key error, changes reverted",
       "generalError": "Merge file error, changes reverted"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Update with Clash proxy successfully",
-      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

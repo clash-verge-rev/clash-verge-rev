@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "ویرایش قوانین",
-    "form": {
-      "labels": {
-        "type": "نوع قانون",
-        "content": "محتوای قانون",
-        "proxyPolicy": "سیاست پروکسی"
-      },
-      "toggles": {
-        "noResolve": "بدون حل"
-      },
-      "actions": {
-        "prependRule": "اضافه کردن قانون به ابتدا",
-        "appendRule": "اضافه کردن قانون به انتها"
-      },
-      "validation": {
-        "conditionRequired": "شرط قانون الزامی است",
-        "invalidRule": "قانون نامعتبر"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "مطابقت با نام کامل دامنه",
-      "DOMAIN-SUFFIX": "مطابقت با پسوند دامنه",
-      "DOMAIN-KEYWORD": "مطابقت با کلمه کلیدی دامنه",
-      "DOMAIN-REGEX": "مطابقت با دامنه با استفاده از عبارات منظم",
-      "GEOSITE": "مطابقت با دامنه‌های درون Geosite",
-      "GEOIP": "مطابقت با کد کشور IP",
-      "SRC-GEOIP": "مطابقت با کد کشور IP مبدا",
-      "IP-ASN": "مطابقت با ASN آدرس IP",
-      "SRC-IP-ASN": "مطابقت با ASN آدرس IP مبدا",
-      "IP-CIDR": "مطابقت با محدوده آدرس IP",
-      "IP-CIDR6": "مطابقت با محدوده آدرس IPv6",
-      "SRC-IP-CIDR": "مطابقت با محدوده آدرس IP مبدا",
-      "IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP",
-      "SRC-IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP مبدا",
-      "SRC-PORT": "مطابقت با محدوده پورت مبدا",
-      "DST-PORT": "مطابقت با محدوده پورت مقصد",
-      "IN-PORT": "مطابقت با پورت ورودی",
-      "DSCP": "علامت‌گذاری DSCP (فقط برای tproxy UDP ورودی)",
-      "PROCESS-NAME": "مطابقت با نام فرآیند (نام بسته Android)",
-      "PROCESS-PATH": "مطابقت با مسیر کامل فرآیند",
-      "PROCESS-NAME-REGEX": "مطابقت با نام فرآیند با استفاده از عبارات منظم (نام بسته Android)",
-      "PROCESS-PATH-REGEX": "مطابقت با مسیر کامل فرآیند با استفاده از عبارات منظم",
-      "NETWORK": "مطابقت با پروتکل انتقال (tcp/udp)",
-      "UID": "مطابقت با شناسه کاربری Linux",
-      "IN-TYPE": "مطابقت با نوع ورودی",
-      "IN-USER": "مطابقت با نام کاربری ورودی",
-      "IN-NAME": "مطابقت با نام ورودی",
-      "SUB-RULE": "قانون فرعی",
-      "RULE-SET": "مطابقت با مجموعه قوانین",
-      "AND": "منطق AND",
-      "OR": "منطق OR",
-      "NOT": "منطق NOT",
-      "MATCH": "مطابقت با تمام درخواست‌ها"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
-        "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
-        "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
-        "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
-        "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
-      },
-      "tooltips": {
-        "systemProxy": "به امکانات تنظیم پروکسی سیستم عامل دسترسی پیدا کنید. اگر فعال‌سازی ناموفق بود، پروکسی سیستم عامل را به‌صورت دستی تغییر دهید",
-        "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash Info",
-      "fields": {
-        "coreVersion": "Core Version",
-        "systemProxyAddress": "System Proxy Address",
-        "mixedPort": "Mixed Port",
-        "uptime": "Uptime",
-        "rulesCount": "Rules Count"
-      }
-    },
-    "systemInfo": {
-      "title": "System Info",
-      "fields": {
-        "osInfo": "OS Info",
-        "autoLaunch": "راه‌اندازی خودکار",
-        "runningMode": "Running Mode",
-        "lastCheckUpdate": "Last Check Update",
-        "vergeVersion": "نسخه Verge"
-      },
-      "actions": {
-        "settings": "تنظیمات"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch"
-      },
-      "badges": {
-        "adminMode": "Administrator Mode",
-        "serviceMode": "حالت سرویس",
-        "sidecarMode": "User Mode",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "IP Information",
-      "errors": {
-        "load": "Failed to get IP info"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "ASN",
-        "isp": "ISP",
-        "org": "ORG",
-        "location": "Location",
-        "timezone": "Timezone",
-        "autoRefresh": "Auto refresh",
-        "unknown": "Unknown"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "سرعت بارگذاری",
-        "downloadSpeed": "سرعت دانلود",
-        "activeConnections": "Active Connections",
-        "uploaded": "بارگذاری شده",
-        "downloaded": "دانلود شده",
-        "memoryUsage": "استفاده از حافظه"
-      },
-      "legends": {
-        "upload": "Upload",
-        "download": "Download"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Current Node",
-      "actions": {
-        "refreshDelay": "بررسی تأخیر"
-      },
-      "labels": {
-        "globalMode": "حالت جهانی",
-        "directMode": "حالت مستقیم",
-        "group": "Group",
-        "proxy": "Proxy",
-        "noActiveNode": "No active proxy node"
-      }
-    },
-    "profile": {
-      "title": "پروفایل‌ها",
-      "actions": {
-        "import": "وارد کردن"
-      },
-      "labels": {
-        "from": "از",
-        "updateTime": "زمان به‌روزرسانی",
-        "usedTotal": "استفاده‌شده / کل",
-        "expireTime": "زمان انقضا",
-        "clickToImport": "Click to import subscription"
-      }
-    },
     "page": {
       "title": "Home",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Website Tests"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+        },
+        "tooltips": {
+          "systemProxy": "به امکانات تنظیم پروکسی سیستم عامل دسترسی پیدا کنید. اگر فعال‌سازی ناموفق بود، پروکسی سیستم عامل را به‌صورت دستی تغییر دهید",
+          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+        }
       },
-      "labels": {
-        "rule": "حالت قانون",
-        "global": "حالت جهانی",
-        "direct": "حالت مستقیم"
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "راه‌اندازی خودکار",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "نسخه Verge"
+        },
+        "actions": {
+          "settings": "تنظیمات"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "حالت سرویس",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "دریافت اطلاعات IP با خطا مواجه شد"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "بررسی تأخیر"
+        },
+        "labels": {
+          "globalMode": "حالت جهانی",
+          "directMode": "حالت مستقیم",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "tests": {
+        "title": "Website Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "سرعت بارگذاری",
+          "downloadSpeed": "سرعت دانلود",
+          "activeConnections": "Active Connections",
+          "uploaded": "بارگذاری شده",
+          "downloaded": "دانلود شده",
+          "memoryUsage": "استفاده از حافظه"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "حالت قانون",
+          "global": "حالت جهانی",
+          "direct": "حالت مستقیم"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "Tun (کارت شبکه مجازی)",
         "systemProxy": "پراکسی سیستم"
       },
-      "labels": {
-        "autoLaunch": "راه‌اندازی خودکار",
-        "silentStart": "شروع بی‌صدا"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "برنامه را در حالت پس‌زمینه بدون نمایش پانل اجرا کنید"
+      },
+      "fields": {
+        "autoLaunch": "اجرای خودکار",
+        "silentStart": "اجرای بی‌صدا"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "پراکسی سیستم",
-        "tunMode": "Tun (کارت شبکه مجازی)"
-      },
       "tooltips": {
         "systemProxy": "به امکانات تنظیم پروکسی سیستم عامل دسترسی پیدا کنید. اگر فعال‌سازی ناموفق بود، پروکسی سیستم عامل را به‌صورت دستی تغییر دهید",
         "tunMode": "حالت Tun (NIC مجازی): تمام ترافیک سیستم را ضبط می کند، وقتی فعال باشد، نیازی به فعال کردن پروکسی سیستم نیست.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "نصب سرویس",
         "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "پراکسی سیستم",
+        "tunMode": "Tun (کارت شبکه مجازی)"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "هسته Clash مجدداً راه‌اندازی شد",
-        "versionUpdated": "نسخه هسته به‌روزرسانی شد"
+        "versionUpdated": "نسخه هسته به‌روزرسانی شد",
+        "changeSuccess": "هسته با موفقیت تغییر کرد",
+        "changeFailed": "تغییر هسته ناموفق بود"
+      },
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "در حال نصب سرویس...",
+          "uninstalling": "Uninstalling Service..."
+        },
+        "notifications": {
+          "installSuccess": "سرویس با موفقیت نصب شد",
+          "uninstallSuccess": "سرویس با موفقیت حذف نصب شد"
+        }
+      },
+      "variants": {
+        "release": "نسخه نهایی",
+        "alpha": "نسخه آلفا"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "رابط شبکه",
-      "labels": {
+      "fields": {
         "ipAddress": "آدرس IP",
         "macAddress": "آدرس MAC"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "به‌روزرسانی همه",
           "update": "به‌روزرسانی"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "حالت مستقیم"
       }
     },
-    "strategies": {
-      "select": "انتخاب پروکسی به صورت دستی",
-      "url-test": "انتخاب پروکسی بر اساس تأخیر آزمایش URL",
-      "fallback": "تعویض به پروکسی دیگر در صورت بروز خطا",
-      "load-balance": "توزیع پراکسی بر اساس توازن بار",
-      "relay": "عبور از زنجیره پروکسی تعریف شده"
-    },
-    "policies": {
-      "DIRECT": "داده‌ها به صورت مستقیم خروجی می‌شوند",
-      "REJECT": "درخواست‌ها را متوقف می‌کند",
-      "REJECT-DROP": "درخواست‌ها را نادیده می‌گیرد",
-      "PASS": "این قانون را در صورت تطابق نادیده می‌گیرد"
+    "enums": {
+      "strategies": {
+        "select": "انتخاب پروکسی به صورت دستی",
+        "url-test": "انتخاب پروکسی بر اساس تأخیر آزمایش URL",
+        "fallback": "تعویض به پروکسی دیگر در صورت بروز خطا",
+        "load-balance": "توزیع پراکسی بر اساس توازن بار",
+        "relay": "عبور از زنجیره پروکسی تعریف شده"
+      },
+      "policies": {
+        "DIRECT": "داده‌ها به صورت مستقیم خروجی می‌شوند",
+        "REJECT": "درخواست‌ها را متوقف می‌کند",
+        "REJECT-DROP": "درخواست‌ها را نادیده می‌گیرد",
+        "PASS": "این قانون را در صورت تطابق نادیده می‌گیرد"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "به‌روزرسانی همه",
           "update": "به‌روزرسانی"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "ویرایش قوانین",
+      "form": {
+        "labels": {
+          "type": "نوع قانون",
+          "content": "محتوای قانون",
+          "proxyPolicy": "سیاست پروکسی"
+        },
+        "toggles": {
+          "noResolve": "بدون حل"
+        },
+        "actions": {
+          "prependRule": "اضافه کردن قانون به ابتدا",
+          "appendRule": "اضافه کردن قانون به انتها"
+        },
+        "validation": {
+          "conditionRequired": "شرط قانون الزامی است",
+          "invalidRule": "قانون نامعتبر"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "مطابقت با نام کامل دامنه",
+        "DOMAIN-SUFFIX": "مطابقت با پسوند دامنه",
+        "DOMAIN-KEYWORD": "مطابقت با کلمه کلیدی دامنه",
+        "DOMAIN-REGEX": "مطابقت با دامنه با استفاده از عبارات منظم",
+        "GEOSITE": "مطابقت با دامنه‌های درون Geosite",
+        "GEOIP": "مطابقت با کد کشور IP",
+        "SRC-GEOIP": "مطابقت با کد کشور IP مبدا",
+        "IP-ASN": "مطابقت با ASN آدرس IP",
+        "SRC-IP-ASN": "مطابقت با ASN آدرس IP مبدا",
+        "IP-CIDR": "مطابقت با محدوده آدرس IP",
+        "IP-CIDR6": "مطابقت با محدوده آدرس IPv6",
+        "SRC-IP-CIDR": "مطابقت با محدوده آدرس IP مبدا",
+        "IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP",
+        "SRC-IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP مبدا",
+        "SRC-PORT": "مطابقت با محدوده پورت مبدا",
+        "DST-PORT": "مطابقت با محدوده پورت مقصد",
+        "IN-PORT": "مطابقت با پورت ورودی",
+        "DSCP": "علامت‌گذاری DSCP (فقط برای tproxy UDP ورودی)",
+        "PROCESS-NAME": "مطابقت با نام فرآیند (نام بسته Android)",
+        "PROCESS-PATH": "مطابقت با مسیر کامل فرآیند",
+        "PROCESS-NAME-REGEX": "مطابقت با نام فرآیند با استفاده از عبارات منظم (نام بسته Android)",
+        "PROCESS-PATH-REGEX": "مطابقت با مسیر کامل فرآیند با استفاده از عبارات منظم",
+        "NETWORK": "مطابقت با پروتکل انتقال (tcp/udp)",
+        "UID": "مطابقت با شناسه کاربری Linux",
+        "IN-TYPE": "مطابقت با نوع ورودی",
+        "IN-USER": "مطابقت با نام کاربری ورودی",
+        "IN-NAME": "مطابقت با نام ورودی",
+        "SUB-RULE": "قانون فرعی",
+        "RULE-SET": "مطابقت با مجموعه قوانین",
+        "AND": "منطق AND",
+        "OR": "منطق OR",
+        "NOT": "منطق NOT",
+        "MATCH": "مطابقت با تمام درخواست‌ها"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "کنسول اسکریپت"
+    },
+    "card": {
+      "labels": {
+        "from": "از",
+        "updateTime": "زمان به‌روزرسانی",
+        "usedTotal": "استفاده‌شده / کل",
+        "expireTime": "زمان انقضا",
+        "clickToImport": "Click to import subscription"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "سرعت بارگذاری",
-        "downloadSpeed": "سرعت دانلود",
-        "memoryUsage": "استفاده از حافظه"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "نسخه نهایی",
-      "alphaVersion": "نسخه آلفا"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
-    },
-    "notifications": {
-      "changeSuccess": "هسته با موفقیت تغییر کرد",
-      "changeFailed": "تغییر هسته ناموفق بود"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "در حال نصب سرویس...",
-      "uninstalling": "Uninstalling Service..."
-    },
-    "notifications": {
-      "installSuccess": "سرویس با موفقیت نصب شد",
-      "uninstallSuccess": "سرویس با موفقیت حذف نصب شد"
-    }
-  },
   "validation": {
     "config": {
       "failed": "اعتبارسنجی پیکربندی اشتراک ناموفق بود، فایل پیکربندی را بررسی کنید، تغییرات برگشت داده شد، جزئیات خطا:",
@@ -1271,12 +1267,6 @@
       "mappingError": "Merge file mapping error, changes reverted",
       "keyError": "Merge file key error, changes reverted",
       "generalError": "Merge file error, changes reverted"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Update with Clash proxy successfully",
-      "withClashProxyFailed": "Update failed even with Clash proxy"
     }
   }
 }

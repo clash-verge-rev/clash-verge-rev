@@ -92,167 +92,7 @@
     "dark": "深色",
     "system": "系統"
   },
-  "ruleEditor": {
-    "title": "編輯規則",
-    "form": {
-      "labels": {
-        "type": "規則類型",
-        "content": "規則內容",
-        "proxyPolicy": "代理策略"
-      },
-      "toggles": {
-        "noResolve": "跳過 DNS 解析"
-      },
-      "actions": {
-        "prependRule": "新增前置規則",
-        "appendRule": "新增後置規則"
-      },
-      "validation": {
-        "conditionRequired": "規則條件為必填",
-        "invalidRule": "無效規則"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "配對完整網域 (DOMAIN)",
-      "DOMAIN-SUFFIX": "配對網域後綴 (DOMAIN-SUFFIX)",
-      "DOMAIN-KEYWORD": "配對網域關鍵字 (DOMAIN-KEYWORD)",
-      "DOMAIN-REGEX": "配對網域正規表示式 (DOMAIN-REGEX)",
-      "GEOSITE": "配對 Geosite 內的網域 (GEOSITE)",
-      "GEOIP": "配對 IP 所屬國家代碼 (GEOIP)",
-      "SRC-GEOIP": "配對來源 IP 所屬國家代碼 (SRC-GEOIP)",
-      "IP-ASN": "配對 IP 所屬 ASN (IP-ASN)",
-      "SRC-IP-ASN": "配對來源 IP 所屬 ASN (SRC-IP-ASN)",
-      "IP-CIDR": "配對 IP 位址範圍 (IP-CIDR)",
-      "IP-CIDR6": "配對 IP 位址範圍 (IP-CIDR6)",
-      "SRC-IP-CIDR": "配對來源 IP 位址範圍 (SRC-IP-CIDR)",
-      "IP-SUFFIX": "配對 IP 後綴範圍 (IP-SUFFIX)",
-      "SRC-IP-SUFFIX": "配對來源 IP 後綴範圍 (SRC-IP-SUFFIX)",
-      "SRC-PORT": "配對請求來源連接埠範圍 (SRC-PORT)",
-      "DST-PORT": "配對請求目標連接埠範圍 (DST-PORT)",
-      "IN-PORT": "配對傳入連接埠 (IN-PORT)",
-      "DSCP": "DSCP標記（僅限 TPROXY UDP 傳入）(DSCP)",
-      "PROCESS-NAME": "配對程序名稱 (PROCESS-NAME)",
-      "PROCESS-PATH": "配對完整程序路徑 (PROCESS-PATH)",
-      "PROCESS-NAME-REGEX": "正規表示式配對完整程序名稱 (PROCESS-NAME-REGEX)",
-      "PROCESS-PATH-REGEX": "正規表示式配對完整程序路徑 (PROCESS-PATH-REGEX)",
-      "NETWORK": "配對傳輸協定 (TCP/UDP) (NETWORK)",
-      "UID": "配對 Linux 使用者 ID (UID)",
-      "IN-TYPE": "配對傳入類型 (IN-TYPE)",
-      "IN-USER": "配對傳入使用者名稱 (IN-USER)",
-      "IN-NAME": "配對傳入名稱 (IN-NAME)",
-      "SUB-RULE": "子規則 (SUB-RULE)",
-      "RULE-SET": "配對規則集 (RULE-SET)",
-      "AND": "邏輯與 (AND)",
-      "OR": "邏輯或 (OR)",
-      "NOT": "邏輯非 (NOT)",
-      "MATCH": "配對所有請求 (MATCH)"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "系統代理已啟用，您的應用程式將透過代理存取網路",
-        "systemProxyDisabled": "系統代理已關閉，建議大多數使用者開啟此選項",
-        "tunModeServiceRequired": "虛擬網路介面卡模式需要服務模式，請先安裝服務",
-        "tunModeEnabled": "虛擬網路介面卡模式已啟用，應用程式將透過虛擬網路介面卡存取網路",
-        "tunModeDisabled": "虛擬網路介面卡模式已關閉，適用於特殊應用程式"
-      },
-      "tooltips": {
-        "systemProxy": "修改作業系統的代理設定，如果開啟失敗，可手動修改作業系統的代理設定",
-        "tunMode": "虛擬網路介面卡模式可以接管所有應用程式流量，適用於不遵循系統代理設定的特殊應用程式"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash 資訊",
-      "fields": {
-        "coreVersion": "內核版本",
-        "systemProxyAddress": "系統代理位址",
-        "mixedPort": "Mixed Port",
-        "uptime": "執行時間",
-        "rulesCount": "規則數量"
-      }
-    },
-    "systemInfo": {
-      "title": "系統資訊",
-      "fields": {
-        "osInfo": "作業系統資訊",
-        "autoLaunch": "開機自啟",
-        "runningMode": "執行模式",
-        "lastCheckUpdate": "最後檢查更新",
-        "vergeVersion": "Verge 版本"
-      },
-      "actions": {
-        "settings": "設定"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "管理員模式可能不支援開機自啟"
-      },
-      "badges": {
-        "adminMode": "管理員模式",
-        "serviceMode": "服務模式",
-        "sidecarMode": "使用者模式",
-        "adminServiceMode": "系統管理員 + 服務模式"
-      }
-    },
-    "ipInfo": {
-      "title": "IP資訊",
-      "errors": {
-        "load": "取得IP資訊失敗"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "自治系統",
-        "isp": "網際網路服務供應商",
-        "org": "組織",
-        "location": "位置",
-        "timezone": "時區",
-        "autoRefresh": "自動重整",
-        "unknown": "未知"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "上傳速度",
-        "downloadSpeed": "下載速度",
-        "activeConnections": "作用中連線",
-        "uploaded": "上傳量",
-        "downloaded": "下載量",
-        "memoryUsage": "內核佔用"
-      },
-      "legends": {
-        "upload": "上傳",
-        "download": "下載"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "目前節點",
-      "actions": {
-        "refreshDelay": "延遲測試"
-      },
-      "labels": {
-        "globalMode": "全域模式",
-        "directMode": "直連模式",
-        "group": "代理組",
-        "proxy": "節點",
-        "noActiveNode": "暫無作用中的代理節點"
-      }
-    },
-    "profile": {
-      "title": "訂閱",
-      "actions": {
-        "import": "匯入"
-      },
-      "labels": {
-        "from": "來自",
-        "updateTime": "更新時間",
-        "usedTotal": "已使用 / 總量",
-        "expireTime": "到期時間",
-        "clickToImport": "點擊匯入訂閱"
-      }
-    },
     "page": {
       "title": "首頁",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "網站測試"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "內核通信錯誤"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "系統代理已啟用，您的應用程式將透過代理存取網路",
+          "systemProxyDisabled": "系統代理已關閉，建議大多數使用者開啟此選項",
+          "tunModeServiceRequired": "虛擬網路介面卡模式需要服務模式，請先安裝服務",
+          "tunModeEnabled": "虛擬網路介面卡模式已啟用，應用程式將透過虛擬網路介面卡存取網路",
+          "tunModeDisabled": "虛擬網路介面卡模式已關閉，適用於特殊應用程式"
+        },
+        "tooltips": {
+          "systemProxy": "修改作業系統的代理設定，如果開啟失敗，可手動修改作業系統的代理設定",
+          "tunMode": "虛擬網路介面卡模式可以接管所有應用程式流量，適用於不遵循系統代理設定的特殊應用程式"
+        }
       },
-      "labels": {
-        "rule": "規則模式",
-        "global": "全域模式",
-        "direct": "直連模式"
+      "clashInfo": {
+        "title": "Clash 資訊",
+        "fields": {
+          "coreVersion": "內核版本",
+          "systemProxyAddress": "系統代理位址",
+          "mixedPort": "Mixed Port",
+          "uptime": "執行時間",
+          "rulesCount": "規則數量"
+        }
       },
-      "descriptions": {
-        "rule": "依照規則自動選擇代理。",
-        "global": "將所有網路請求轉送至所選代理。",
-        "direct": "略過代理，直接連線至網際網路。"
+      "systemInfo": {
+        "title": "系統資訊",
+        "fields": {
+          "osInfo": "作業系統資訊",
+          "autoLaunch": "開機自啟",
+          "runningMode": "執行模式",
+          "lastCheckUpdate": "最後檢查更新",
+          "vergeVersion": "Verge 版本"
+        },
+        "actions": {
+          "settings": "設定"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理員模式可能不支援開機自啟"
+        },
+        "badges": {
+          "adminMode": "管理員模式",
+          "serviceMode": "服務模式",
+          "sidecarMode": "使用者模式",
+          "adminServiceMode": "系統管理員 + 服務模式"
+        }
+      },
+      "ipInfo": {
+        "title": "IP資訊",
+        "labels": {
+          "ip": "IP",
+          "asn": "自治系統",
+          "isp": "網際網路服務供應商",
+          "org": "組織",
+          "location": "位置",
+          "timezone": "時區",
+          "autoRefresh": "自動重整",
+          "unknown": "未知"
+        },
+        "errors": {
+          "load": "獲取 IP 資訊失敗"
+        }
+      },
+      "currentProxy": {
+        "title": "目前節點",
+        "actions": {
+          "refreshDelay": "延遲測試"
+        },
+        "labels": {
+          "globalMode": "全域模式",
+          "directMode": "直連模式",
+          "group": "代理組",
+          "proxy": "節點",
+          "noActiveNode": "暫無作用中的代理節點"
+        }
+      },
+      "tests": {
+        "title": "網站測試"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "上傳速度",
+          "downloadSpeed": "下載速度",
+          "activeConnections": "作用中連線",
+          "uploaded": "上傳量",
+          "downloaded": "下載量",
+          "memoryUsage": "內核佔用"
+        },
+        "legends": {
+          "upload": "上傳",
+          "download": "下載"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "內核通信錯誤"
+        },
+        "labels": {
+          "rule": "規則模式",
+          "global": "全域模式",
+          "direct": "直連模式"
+        },
+        "descriptions": {
+          "rule": "依照規則自動選擇代理。",
+          "global": "將所有網路請求轉送至所選代理。",
+          "direct": "略過代理，直接連線至網際網路。"
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "虛擬網路介面卡模式",
         "systemProxy": "系統代理"
       },
-      "labels": {
-        "autoLaunch": "開機自啟",
-        "silentStart": "靜默啟動"
-      },
       "tooltips": {
         "autoLaunchAdmin": "管理員模式可能不支援開機自啟",
         "silentStart": "程序啟動時以後台模式執行，不顯示程序面板"
+      },
+      "fields": {
+        "autoLaunch": "開機自啟",
+        "silentStart": "靜默啟動"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
+          "autoDisableFailed": "自動停用虛擬網路介面卡模式失敗"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "系統代理",
-        "tunMode": "虛擬網路介面卡模式"
-      },
       "tooltips": {
         "systemProxy": "修改作業系統的代理設定，如果開啟失敗，可手動修改作業系統的代理設定",
         "tunMode": "TUN（虛擬網路介面卡）模式接管系統所有流量，啟用時無需開啟系統代理",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "安裝服務",
         "uninstallService": "解除安裝服務"
+      },
+      "fields": {
+        "systemProxy": "系統代理",
+        "tunMode": "虛擬網路介面卡模式"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "已重啟 Clash 內核",
-        "versionUpdated": "內核版本已更新"
+        "versionUpdated": "內核版本已更新",
+        "changeSuccess": "內核切換成功",
+        "changeFailed": "無法切換內核"
+      },
+      "status": {
+        "stopping": "內核停止中...",
+        "restarting": "內核重啟中..."
+      },
+      "service": {
+        "status": {
+          "installing": "安裝服務中...",
+          "uninstalling": "服務解除安裝中..."
+        },
+        "notifications": {
+          "installSuccess": "已成功安裝服務",
+          "uninstallSuccess": "已成功解除安裝服務"
+        }
+      },
+      "variants": {
+        "release": "正式版",
+        "alpha": "預覽版"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "網路介面",
-      "labels": {
+      "fields": {
         "ipAddress": "IP 位址",
         "macAddress": "MAC 位址"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "使用 Clash 代理更新成功",
+        "withClashProxyFailed": "使用 Clash 代理更新也失敗"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "全部更新",
           "update": "更新"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "直連模式"
       }
     },
-    "strategies": {
-      "select": "手動選擇代理",
-      "url-test": "根據網址測試延遲選擇代理",
-      "fallback": "切換至另一個備用代理",
-      "load-balance": "根據負載平衡分配代理",
-      "relay": "根據定義的代理鏈傳送"
-    },
-    "policies": {
-      "DIRECT": "直連 (DIRECT)",
-      "REJECT": "拒絕請求 (REJECT)",
-      "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
-      "PASS": "跳過此規則 (PASS)"
+    "enums": {
+      "strategies": {
+        "select": "手動選擇代理",
+        "url-test": "根據網址測試延遲選擇代理",
+        "fallback": "切換至另一個備用代理",
+        "load-balance": "根據負載平衡分配代理",
+        "relay": "根據定義的代理鏈傳送"
+      },
+      "policies": {
+        "DIRECT": "直連 (DIRECT)",
+        "REJECT": "拒絕請求 (REJECT)",
+        "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
+        "PASS": "跳過此規則 (PASS)"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "全部更新",
           "update": "更新"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "編輯規則",
+      "form": {
+        "labels": {
+          "type": "規則類型",
+          "content": "規則內容",
+          "proxyPolicy": "代理策略"
+        },
+        "toggles": {
+          "noResolve": "跳過 DNS 解析"
+        },
+        "actions": {
+          "prependRule": "新增前置規則",
+          "appendRule": "新增後置規則"
+        },
+        "validation": {
+          "conditionRequired": "規則條件為必填",
+          "invalidRule": "無效規則"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "配對完整網域 (DOMAIN)",
+        "DOMAIN-SUFFIX": "配對網域後綴 (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "配對網域關鍵字 (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "配對網域正規表示式 (DOMAIN-REGEX)",
+        "GEOSITE": "配對 Geosite 內的網域 (GEOSITE)",
+        "GEOIP": "配對 IP 所屬國家代碼 (GEOIP)",
+        "SRC-GEOIP": "配對來源 IP 所屬國家代碼 (SRC-GEOIP)",
+        "IP-ASN": "配對 IP 所屬 ASN (IP-ASN)",
+        "SRC-IP-ASN": "配對來源 IP 所屬 ASN (SRC-IP-ASN)",
+        "IP-CIDR": "配對 IP 位址範圍 (IP-CIDR)",
+        "IP-CIDR6": "配對 IP 位址範圍 (IP-CIDR6)",
+        "SRC-IP-CIDR": "配對來源 IP 位址範圍 (SRC-IP-CIDR)",
+        "IP-SUFFIX": "配對 IP 後綴範圍 (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "配對來源 IP 後綴範圍 (SRC-IP-SUFFIX)",
+        "SRC-PORT": "配對請求來源連接埠範圍 (SRC-PORT)",
+        "DST-PORT": "配對請求目標連接埠範圍 (DST-PORT)",
+        "IN-PORT": "配對傳入連接埠 (IN-PORT)",
+        "DSCP": "DSCP標記（僅限 TPROXY UDP 傳入）(DSCP)",
+        "PROCESS-NAME": "配對程序名稱 (PROCESS-NAME)",
+        "PROCESS-PATH": "配對完整程序路徑 (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "正規表示式配對完整程序名稱 (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "正規表示式配對完整程序路徑 (PROCESS-PATH-REGEX)",
+        "NETWORK": "配對傳輸協定 (TCP/UDP) (NETWORK)",
+        "UID": "配對 Linux 使用者 ID (UID)",
+        "IN-TYPE": "配對傳入類型 (IN-TYPE)",
+        "IN-USER": "配對傳入使用者名稱 (IN-USER)",
+        "IN-NAME": "配對傳入名稱 (IN-NAME)",
+        "SUB-RULE": "子規則 (SUB-RULE)",
+        "RULE-SET": "配對規則集 (RULE-SET)",
+        "AND": "邏輯與 (AND)",
+        "OR": "邏輯或 (OR)",
+        "NOT": "邏輯非 (NOT)",
+        "MATCH": "配對所有請求 (MATCH)"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "指令碼控制台輸出"
+    },
+    "card": {
+      "labels": {
+        "from": "來自",
+        "updateTime": "更新時間",
+        "usedTotal": "已使用 / 總量",
+        "expireTime": "到期時間",
+        "clickToImport": "點擊匯入訂閱"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "上傳速度",
-        "downloadSpeed": "下載速度",
-        "memoryUsage": "內核佔用"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
-        "autoDisableFailed": "自動停用虛擬網路介面卡模式失敗"
-      }
-    },
-    "labels": {
-      "releaseVersion": "正式版",
-      "alphaVersion": "預覽版"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "內核停止中...",
-      "restarting": "內核重啟中..."
-    },
-    "notifications": {
-      "changeSuccess": "內核切換成功",
-      "changeFailed": "無法切換內核"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "安裝服務中...",
-      "uninstalling": "服務解除安裝中..."
-    },
-    "notifications": {
-      "installSuccess": "已成功安裝服務",
-      "uninstallSuccess": "已成功解除安裝服務"
-    }
-  },
   "validation": {
     "config": {
       "failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
@@ -1271,12 +1267,6 @@
       "mappingError": "覆寫檔案映射錯誤，變更已撤銷",
       "keyError": "覆寫檔案鍵錯誤，變更已撤銷",
       "generalError": "覆寫檔案錯誤，變更已撤銷"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "使用 Clash 代理更新成功",
-      "withClashProxyFailed": "使用 Clash 代理更新也失敗"
     }
   }
 }

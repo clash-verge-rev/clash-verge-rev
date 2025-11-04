@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "규칙 편집",
-    "form": {
-      "labels": {
-        "type": "규칙 유형",
-        "content": "규칙 내용",
-        "proxyPolicy": "프록시 정책"
-      },
-      "toggles": {
-        "noResolve": "해석 안함"
-      },
-      "actions": {
-        "prependRule": "규칙 앞에 추가",
-        "appendRule": "규칙 뒤에 추가"
-      },
-      "validation": {
-        "conditionRequired": "규칙 조건 필요",
-        "invalidRule": "잘못된 규칙"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "전체 도메인 이름과 일치",
-      "DOMAIN-SUFFIX": "도메인 접미사와 일치",
-      "DOMAIN-KEYWORD": "도메인 키워드와 일치",
-      "DOMAIN-REGEX": "정규 표현식을 사용한 도메인 일치",
-      "GEOSITE": "Geosite 내의 도메인과 일치",
-      "GEOIP": "IP 주소의 국가 코드와 일치",
-      "SRC-GEOIP": "소스 IP 주소의 국가 코드와 일치",
-      "IP-ASN": "IP 주소의 ASN과 일치",
-      "SRC-IP-ASN": "소스 IP 주소의 ASN과 일치",
-      "IP-CIDR": "IP 주소 범위와 일치",
-      "IP-CIDR6": "IPv6 주소 범위와 일치",
-      "SRC-IP-CIDR": "소스 IP 주소 범위와 일치",
-      "IP-SUFFIX": "IP 주소 접미사 범위와 일치",
-      "SRC-IP-SUFFIX": "소스 IP 주소 접미사 범위와 일치",
-      "SRC-PORT": "소스 포트 범위와 일치",
-      "DST-PORT": "대상 포트 범위와 일치",
-      "IN-PORT": "인바운드 포트와 일치",
-      "DSCP": "DSCP 마킹(tproxy UDP 인바운드만 해당)",
-      "PROCESS-NAME": "프로세스 이름과 일치(안드로이드 패키지 이름)",
-      "PROCESS-PATH": "전체 프로세스 경로와 일치",
-      "PROCESS-NAME-REGEX": "정규 표현식을 사용한 전체 프로세스 이름 일치(안드로이드 패키지 이름)",
-      "PROCESS-PATH-REGEX": "정규 표현식을 사용한 전체 프로세스 경로 일치",
-      "NETWORK": "전송 프로토콜과 일치(tcp/udp)",
-      "UID": "Linux 사용자 ID와 일치",
-      "IN-TYPE": "인바운드 유형과 일치",
-      "IN-USER": "인바운드 사용자 이름과 일치",
-      "IN-NAME": "인바운드 이름과 일치",
-      "SUB-RULE": "하위 규칙",
-      "RULE-SET": "규칙 세트와 일치",
-      "AND": "논리 AND",
-      "OR": "논리 OR",
-      "NOT": "논리 NOT",
-      "MATCH": "모든 요청과 일치"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
-        "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
-        "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
-        "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
-        "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
-      },
-      "tooltips": {
-        "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
-        "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
-      }
-    },
-    "clashInfo": {
-      "title": "Clash Info",
-      "fields": {
-        "coreVersion": "Core Version",
-        "systemProxyAddress": "System Proxy Address",
-        "mixedPort": "Mixed Port",
-        "uptime": "Uptime",
-        "rulesCount": "Rules Count"
-      }
-    },
-    "systemInfo": {
-      "title": "System Info",
-      "fields": {
-        "osInfo": "OS Info",
-        "autoLaunch": "Auto Launch",
-        "runningMode": "Running Mode",
-        "lastCheckUpdate": "Last Check Update",
-        "vergeVersion": "Verge Version"
-      },
-      "actions": {
-        "settings": "설정"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch"
-      },
-      "badges": {
-        "adminMode": "Administrator Mode",
-        "serviceMode": "서비스 모드",
-        "sidecarMode": "User Mode",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "IP Information",
-      "errors": {
-        "load": "Failed to get IP info"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "ASN",
-        "isp": "ISP",
-        "org": "ORG",
-        "location": "Location",
-        "timezone": "Timezone",
-        "autoRefresh": "Auto refresh",
-        "unknown": "Unknown"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "업로드 속도",
-        "downloadSpeed": "다운로드 속도",
-        "activeConnections": "활성 연결",
-        "uploaded": "업로드됨",
-        "downloaded": "다운로드됨",
-        "memoryUsage": "메모리 사용량"
-      },
-      "legends": {
-        "upload": "업로드",
-        "download": "다운로드"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Current Node",
-      "actions": {
-        "refreshDelay": "지연 확인"
-      },
-      "labels": {
-        "globalMode": "Global Mode",
-        "directMode": "Direct Mode",
-        "group": "Group",
-        "proxy": "Proxy",
-        "noActiveNode": "No active proxy node"
-      }
-    },
-    "profile": {
-      "title": "프로필",
-      "actions": {
-        "import": "가져오기"
-      },
-      "labels": {
-        "from": "출처",
-        "updateTime": "업데이트 시간",
-        "usedTotal": "사용됨 / 전체",
-        "expireTime": "만료 시간",
-        "clickToImport": "Click to import subscription"
-      }
-    },
     "page": {
       "title": "홈",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Website Tests"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+        },
+        "tooltips": {
+          "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
+          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+        }
       },
-      "labels": {
-        "rule": "Rule Mode",
-        "global": "Global Mode",
-        "direct": "Direct Mode"
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "Auto Launch",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "Verge Version"
+        },
+        "actions": {
+          "settings": "설정"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "서비스 모드",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "IP 정보를 가져오지 못했습니다"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "지연 확인"
+        },
+        "labels": {
+          "globalMode": "Global Mode",
+          "directMode": "Direct Mode",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "tests": {
+        "title": "Website Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "업로드 속도",
+          "downloadSpeed": "다운로드 속도",
+          "activeConnections": "활성 연결",
+          "uploaded": "업로드됨",
+          "downloaded": "다운로드됨",
+          "memoryUsage": "메모리 사용량"
+        },
+        "legends": {
+          "upload": "업로드",
+          "download": "다운로드"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "Rule Mode",
+          "global": "Global Mode",
+          "direct": "Direct Mode"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "Tun 모드",
         "systemProxy": "시스템 프록시"
       },
-      "labels": {
-        "autoLaunch": "Auto Launch",
-        "silentStart": "자동 시작"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "Start the program in background mode without displaying the panel"
+      },
+      "fields": {
+        "autoLaunch": "자동 실행",
+        "silentStart": "백그라운드 시작"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "시스템 프록시",
-        "tunMode": "Tun 모드"
-      },
       "tooltips": {
         "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
         "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "Install Service",
         "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "시스템 프록시",
+        "tunMode": "Tun 모드"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "Clash Core Restarted",
-        "versionUpdated": "Core Version Updated"
+        "versionUpdated": "Core Version Updated",
+        "changeSuccess": "코어 변경 성공",
+        "changeFailed": "코어 변경 실패"
+      },
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "Installing Service...",
+          "uninstalling": "Uninstalling Service..."
+        },
+        "notifications": {
+          "installSuccess": "Service Installed Successfully",
+          "uninstallSuccess": "Service Uninstalled Successfully"
+        }
+      },
+      "variants": {
+        "release": "안정 버전",
+        "alpha": "알파 버전"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "Network Interface",
-      "labels": {
+      "fields": {
         "ipAddress": "IP Address",
         "macAddress": "MAC Address"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Clash 프록시로 업데이트 성공",
+        "withClashProxyFailed": "Clash 프록시로도 업데이트 실패"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "모두 업데이트",
           "update": "업데이트"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "Direct Mode"
       }
     },
-    "strategies": {
-      "select": "수동으로 프록시 선택",
-      "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
-      "fallback": "오류 발생 시 다른 프록시로 전환",
-      "load-balance": "부하 분산에 따라 프록시 분배",
-      "relay": "정의된 프록시 체인을 통과"
-    },
-    "policies": {
-      "DIRECT": "데이터가 직접 아웃바운드로 이동",
-      "REJECT": "요청 차단",
-      "REJECT-DROP": "요청 폐기",
-      "PASS": "일치할 경우 이 규칙 건너뛰기"
+    "enums": {
+      "strategies": {
+        "select": "수동으로 프록시 선택",
+        "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
+        "fallback": "오류 발생 시 다른 프록시로 전환",
+        "load-balance": "부하 분산에 따라 프록시 분배",
+        "relay": "정의된 프록시 체인을 통과"
+      },
+      "policies": {
+        "DIRECT": "데이터가 직접 아웃바운드로 이동",
+        "REJECT": "요청 차단",
+        "REJECT-DROP": "요청 폐기",
+        "PASS": "일치할 경우 이 규칙 건너뛰기"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "모두 업데이트",
           "update": "업데이트"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "규칙 편집",
+      "form": {
+        "labels": {
+          "type": "규칙 유형",
+          "content": "규칙 내용",
+          "proxyPolicy": "프록시 정책"
+        },
+        "toggles": {
+          "noResolve": "해석 안함"
+        },
+        "actions": {
+          "prependRule": "규칙 앞에 추가",
+          "appendRule": "규칙 뒤에 추가"
+        },
+        "validation": {
+          "conditionRequired": "규칙 조건 필요",
+          "invalidRule": "잘못된 규칙"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "전체 도메인 이름과 일치",
+        "DOMAIN-SUFFIX": "도메인 접미사와 일치",
+        "DOMAIN-KEYWORD": "도메인 키워드와 일치",
+        "DOMAIN-REGEX": "정규 표현식을 사용한 도메인 일치",
+        "GEOSITE": "Geosite 내의 도메인과 일치",
+        "GEOIP": "IP 주소의 국가 코드와 일치",
+        "SRC-GEOIP": "소스 IP 주소의 국가 코드와 일치",
+        "IP-ASN": "IP 주소의 ASN과 일치",
+        "SRC-IP-ASN": "소스 IP 주소의 ASN과 일치",
+        "IP-CIDR": "IP 주소 범위와 일치",
+        "IP-CIDR6": "IPv6 주소 범위와 일치",
+        "SRC-IP-CIDR": "소스 IP 주소 범위와 일치",
+        "IP-SUFFIX": "IP 주소 접미사 범위와 일치",
+        "SRC-IP-SUFFIX": "소스 IP 주소 접미사 범위와 일치",
+        "SRC-PORT": "소스 포트 범위와 일치",
+        "DST-PORT": "대상 포트 범위와 일치",
+        "IN-PORT": "인바운드 포트와 일치",
+        "DSCP": "DSCP 마킹(tproxy UDP 인바운드만 해당)",
+        "PROCESS-NAME": "프로세스 이름과 일치(안드로이드 패키지 이름)",
+        "PROCESS-PATH": "전체 프로세스 경로와 일치",
+        "PROCESS-NAME-REGEX": "정규 표현식을 사용한 전체 프로세스 이름 일치(안드로이드 패키지 이름)",
+        "PROCESS-PATH-REGEX": "정규 표현식을 사용한 전체 프로세스 경로 일치",
+        "NETWORK": "전송 프로토콜과 일치(tcp/udp)",
+        "UID": "Linux 사용자 ID와 일치",
+        "IN-TYPE": "인바운드 유형과 일치",
+        "IN-USER": "인바운드 사용자 이름과 일치",
+        "IN-NAME": "인바운드 이름과 일치",
+        "SUB-RULE": "하위 규칙",
+        "RULE-SET": "규칙 세트와 일치",
+        "AND": "논리 AND",
+        "OR": "논리 OR",
+        "NOT": "논리 NOT",
+        "MATCH": "모든 요청과 일치"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "스크립트 콘솔"
+    },
+    "card": {
+      "labels": {
+        "from": "출처",
+        "updateTime": "업데이트 시간",
+        "usedTotal": "사용됨 / 전체",
+        "expireTime": "만료 시간",
+        "clickToImport": "Click to import subscription"
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "업로드 속도",
-        "downloadSpeed": "다운로드 속도",
-        "memoryUsage": "메모리 사용량"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "Release Version",
-      "alphaVersion": "Alpha Version"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
-    },
-    "notifications": {
-      "changeSuccess": "코어 변경 성공",
-      "changeFailed": "코어 변경 실패"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "Installing Service...",
-      "uninstalling": "Uninstalling Service..."
-    },
-    "notifications": {
-      "installSuccess": "Service Installed Successfully",
-      "uninstallSuccess": "Service Uninstalled Successfully"
-    }
-  },
   "validation": {
     "config": {
       "failed": "설정 검증 실패",
@@ -1271,12 +1267,6 @@
       "mappingError": "병합 파일 매핑 오류",
       "keyError": "병합 파일 키 오류",
       "generalError": "병합 파일 오류"
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Clash 프록시로 업데이트 성공",
-      "withClashProxyFailed": "Clash 프록시로도 업데이트 실패"
     }
   }
 }

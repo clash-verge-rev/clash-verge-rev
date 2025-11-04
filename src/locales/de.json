@@ -92,167 +92,7 @@
     "dark": "Dark",
     "system": "System"
   },
-  "ruleEditor": {
-    "title": "Regeln bearbeiten",
-    "form": {
-      "labels": {
-        "type": "Regeltyp",
-        "content": "Regelinhalt",
-        "proxyPolicy": "Proxy-Strategie"
-      },
-      "toggles": {
-        "noResolve": "DNS-Auflösung überspringen"
-      },
-      "actions": {
-        "prependRule": "Vorherige Regel hinzufügen",
-        "appendRule": "Nachfolgende Regel hinzufügen"
-      },
-      "validation": {
-        "conditionRequired": "Regelbedingung fehlt",
-        "invalidRule": "Ungültige Regel"
-      }
-    },
-    "ruleTypes": {
-      "DOMAIN": "Vollständigen Domainnamen übereinstimmen",
-      "DOMAIN-SUFFIX": "Domain-Suffix übereinstimmen",
-      "DOMAIN-KEYWORD": "Domain-Schlüsselwort übereinstimmen",
-      "DOMAIN-REGEX": "Domain-Regulärer Ausdruck übereinstimmen",
-      "GEOSITE": "Domainnamen in Geosite übereinstimmen",
-      "GEOIP": "IP-Ländercode übereinstimmen",
-      "SRC-GEOIP": "Quell-IP-Ländercode übereinstimmen",
-      "IP-ASN": "IP-ASN übereinstimmen",
-      "SRC-IP-ASN": "Quell-IP-ASN übereinstimmen",
-      "IP-CIDR": "IP-Adressbereich übereinstimmen",
-      "IP-CIDR6": "IP-Adressbereich übereinstimmen",
-      "SRC-IP-CIDR": "Quell-IP-Adressbereich übereinstimmen",
-      "IP-SUFFIX": "IP-Suffix-Bereich übereinstimmen",
-      "SRC-IP-SUFFIX": "Quell-IP-Suffix-Bereich übereinstimmen",
-      "SRC-PORT": "Quellportbereich der Anfrage übereinstimmen",
-      "DST-PORT": "Zielportbereich der Anfrage übereinstimmen",
-      "IN-PORT": "Eingangsport übereinstimmen",
-      "DSCP": "DSCP-Markierung (nur für TPROXY UDP-Eingang)",
-      "PROCESS-NAME": "Prozessnamen übereinstimmen (Android-Paketname)",
-      "PROCESS-PATH": "Vollständigen Prozesspfad übereinstimmen",
-      "PROCESS-NAME-REGEX": "Regulärer Ausdruck für vollständigen Prozessnamen übereinstimmen (Android-Paketname)",
-      "PROCESS-PATH-REGEX": "Regulärer Ausdruck für vollständigen Prozesspfad übereinstimmen",
-      "NETWORK": "Übertragungsprotokoll übereinstimmen (TCP/UDP)",
-      "UID": "Linux-USER-ID übereinstimmen",
-      "IN-TYPE": "Eingangstyp übereinstimmen",
-      "IN-USER": "Eingangsbenutzername übereinstimmen",
-      "IN-NAME": "Eingangsname übereinstimmen",
-      "SUB-RULE": "Unterregel",
-      "RULE-SET": "Regelsatz übereinstimmen",
-      "AND": "Logisches UND",
-      "OR": "Logisches ODER",
-      "NOT": "Logisches NICHT",
-      "MATCH": "Alle Anfragen übereinstimmen"
-    }
-  },
   "home": {
-    "proxyTunCard": {
-      "status": {
-        "systemProxyEnabled": "Der Systemproxy ist aktiviert. Ihre Anwendungen werden über den Proxy auf das Netzwerk zugreifen.",
-        "systemProxyDisabled": "Der Systemproxy ist deaktiviert. Es wird empfohlen, diesen Eintrag für die meisten Benutzer zu aktivieren.",
-        "tunModeServiceRequired": "Der TUN-Modus erfordert den Service-Modus. Bitte installieren Sie zuerst den Service.",
-        "tunModeEnabled": "Der TUN-Modus ist aktiviert. Die Anwendungen werden über die virtuelle Netzwerkschnittstelle auf das Netzwerk zugreifen.",
-        "tunModeDisabled": "Der TUN-Modus ist deaktiviert. Dies ist für spezielle Anwendungen geeignet."
-      },
-      "tooltips": {
-        "systemProxy": "Ändern Sie die Proxy-Einstellungen des Betriebssystems. Wenn die Aktivierung fehlschlägt, können Sie die Proxy-Einstellungen des Betriebssystems manuell ändern.",
-        "tunMode": "Der TUN-Modus kann den gesamten Anwendungsverkehr übernehmen und eignet sich für spezielle Anwendungen, die die Systemproxy-Einstellungen nicht befolgen."
-      }
-    },
-    "clashInfo": {
-      "title": "Clash-Informationen",
-      "fields": {
-        "coreVersion": "Kernversion",
-        "systemProxyAddress": "Systemproxy-Adresse",
-        "mixedPort": "Mixed Port",
-        "uptime": "Laufzeit",
-        "rulesCount": "Anzahl der Regeln"
-      }
-    },
-    "systemInfo": {
-      "title": "Systeminformationen",
-      "fields": {
-        "osInfo": "Betriebssysteminformationen",
-        "autoLaunch": "Beim Start automatisch starten",
-        "runningMode": "Betriebsmodus",
-        "lastCheckUpdate": "Letzte Aktualitätsprüfung",
-        "vergeVersion": "Verge-Version"
-      },
-      "actions": {
-        "settings": "Einstellungen"
-      },
-      "tooltips": {
-        "autoLaunchAdmin": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion."
-      },
-      "badges": {
-        "adminMode": "Administrator-Modus",
-        "serviceMode": "Service-Modus",
-        "sidecarMode": "Benutzermodus",
-        "adminServiceMode": "Admin + Service Mode"
-      }
-    },
-    "ipInfo": {
-      "title": "IP-Informationen",
-      "errors": {
-        "load": "Abrufen der IP-Informationen fehlgeschlagen"
-      },
-      "labels": {
-        "ip": "IP",
-        "asn": "Autonomes Systemnummer",
-        "isp": "Internetdienstanbieter",
-        "org": "Organisation",
-        "location": "Standort",
-        "timezone": "Zeitzone",
-        "autoRefresh": "Automatische Aktualisierung",
-        "unknown": "Unbekannt"
-      }
-    },
-    "traffic": {
-      "metrics": {
-        "uploadSpeed": "Upload-Geschwindigkeit",
-        "downloadSpeed": "Download-Geschwindigkeit",
-        "activeConnections": "Aktive Verbindungen",
-        "uploaded": "Hochgeladen",
-        "downloaded": "Heruntergeladen",
-        "memoryUsage": "Kern-Speichernutzung"
-      },
-      "legends": {
-        "upload": "Hochladen",
-        "download": "Herunterladen"
-      },
-      "patterns": {
-        "minutes": "{{time}} Minutes"
-      }
-    },
-    "currentProxy": {
-      "title": "Aktueller Knoten",
-      "actions": {
-        "refreshDelay": "Latenztest"
-      },
-      "labels": {
-        "globalMode": "Global Mode",
-        "directMode": "Direct Mode",
-        "group": "Proxy-Gruppe",
-        "proxy": "Knoten",
-        "noActiveNode": "Kein aktiver Proxy-Knoten"
-      }
-    },
-    "profile": {
-      "title": "Abonnement",
-      "actions": {
-        "import": "Importieren"
-      },
-      "labels": {
-        "from": "Von",
-        "updateTime": "Aktualisierungszeit",
-        "usedTotal": "Verwendet / Gesamt",
-        "expireTime": "Ablaufzeit",
-        "clickToImport": "Klicken Sie hier, um ein Abonnement zu importieren."
-      }
-    },
     "page": {
       "title": "Startseite",
       "tooltips": {
@@ -280,22 +120,115 @@
         }
       }
     },
-    "tests": {
-      "title": "Website-Tests"
-    },
-    "clashMode": {
-      "errors": {
-        "communication": "Core communication error"
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "Der Systemproxy ist aktiviert. Ihre Anwendungen werden über den Proxy auf das Netzwerk zugreifen.",
+          "systemProxyDisabled": "Der Systemproxy ist deaktiviert. Es wird empfohlen, diesen Eintrag für die meisten Benutzer zu aktivieren.",
+          "tunModeServiceRequired": "Der TUN-Modus erfordert den Service-Modus. Bitte installieren Sie zuerst den Service.",
+          "tunModeEnabled": "Der TUN-Modus ist aktiviert. Die Anwendungen werden über die virtuelle Netzwerkschnittstelle auf das Netzwerk zugreifen.",
+          "tunModeDisabled": "Der TUN-Modus ist deaktiviert. Dies ist für spezielle Anwendungen geeignet."
+        },
+        "tooltips": {
+          "systemProxy": "Ändern Sie die Proxy-Einstellungen des Betriebssystems. Wenn die Aktivierung fehlschlägt, können Sie die Proxy-Einstellungen des Betriebssystems manuell ändern.",
+          "tunMode": "Der TUN-Modus kann den gesamten Anwendungsverkehr übernehmen und eignet sich für spezielle Anwendungen, die die Systemproxy-Einstellungen nicht befolgen."
+        }
       },
-      "labels": {
-        "rule": "Regel-Modus",
-        "global": "Globaler Modus",
-        "direct": "Direktverbindungs-Modus"
+      "clashInfo": {
+        "title": "Clash-Informationen",
+        "fields": {
+          "coreVersion": "Kernversion",
+          "systemProxyAddress": "Systemproxy-Adresse",
+          "mixedPort": "Mixed Port",
+          "uptime": "Laufzeit",
+          "rulesCount": "Anzahl der Regeln"
+        }
       },
-      "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+      "systemInfo": {
+        "title": "Systeminformationen",
+        "fields": {
+          "osInfo": "Betriebssysteminformationen",
+          "autoLaunch": "Beim Start automatisch starten",
+          "runningMode": "Betriebsmodus",
+          "lastCheckUpdate": "Letzte Aktualitätsprüfung",
+          "vergeVersion": "Verge-Version"
+        },
+        "actions": {
+          "settings": "Einstellungen"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion."
+        },
+        "badges": {
+          "adminMode": "Administrator-Modus",
+          "serviceMode": "Service-Modus",
+          "sidecarMode": "Benutzermodus",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP-Informationen",
+        "labels": {
+          "ip": "IP",
+          "asn": "Autonomes Systemnummer",
+          "isp": "Internetdienstanbieter",
+          "org": "Organisation",
+          "location": "Standort",
+          "timezone": "Zeitzone",
+          "autoRefresh": "Automatische Aktualisierung",
+          "unknown": "Unbekannt"
+        },
+        "errors": {
+          "load": "IP-Informationen konnten nicht abgerufen werden"
+        }
+      },
+      "currentProxy": {
+        "title": "Aktueller Knoten",
+        "actions": {
+          "refreshDelay": "Latenztest"
+        },
+        "labels": {
+          "globalMode": "Global Mode",
+          "directMode": "Direct Mode",
+          "group": "Proxy-Gruppe",
+          "proxy": "Knoten",
+          "noActiveNode": "Kein aktiver Proxy-Knoten"
+        }
+      },
+      "tests": {
+        "title": "Website-Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Upload-Geschwindigkeit",
+          "downloadSpeed": "Download-Geschwindigkeit",
+          "activeConnections": "Aktive Verbindungen",
+          "uploaded": "Hochgeladen",
+          "downloaded": "Heruntergeladen",
+          "memoryUsage": "Kern-Speichernutzung"
+        },
+        "legends": {
+          "upload": "Hochladen",
+          "download": "Herunterladen"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "Regel-Modus",
+          "global": "Globaler Modus",
+          "direct": "Direktverbindungs-Modus"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
       }
     }
   },
@@ -306,20 +239,22 @@
         "tunMode": "Virtual Network Interface-Modus",
         "systemProxy": "Systemproxy"
       },
-      "labels": {
-        "autoLaunch": "Beim Start automatisch starten",
-        "silentStart": "Stillstart"
-      },
       "tooltips": {
         "autoLaunchAdmin": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion.",
         "silentStart": "Die Anwendung wird im Hintergrund gestartet, ohne dass das Programmfenster angezeigt wird."
+      },
+      "fields": {
+        "autoLaunch": "Automatischer Start",
+        "silentStart": "Leiser Start"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
       }
     },
     "proxyControl": {
-      "labels": {
-        "systemProxy": "Systemproxy",
-        "tunMode": "Virtual Network Interface-Modus"
-      },
       "tooltips": {
         "systemProxy": "Ändern Sie die Proxy-Einstellungen des Betriebssystems. Wenn die Aktivierung fehlschlägt, können Sie die Proxy-Einstellungen des Betriebssystems manuell ändern.",
         "tunMode": "Der TUN-Modus (Virtual Network Interface) übernimmt den gesamten Systemverkehr. Wenn dieser Modus aktiviert ist, muss der Systemproxy nicht geöffnet werden.",
@@ -328,6 +263,10 @@
       "actions": {
         "installService": "Service installieren",
         "uninstallService": "Dienst deinstallieren"
+      },
+      "fields": {
+        "systemProxy": "Systemproxy",
+        "tunMode": "Virtual Network Interface-Modus"
       }
     },
     "externalController": {
@@ -423,7 +362,27 @@
       },
       "notifications": {
         "restartSuccess": "Clash-Kern wurde neu gestartet",
-        "versionUpdated": "Kernversion wurde aktualisiert"
+        "versionUpdated": "Kernversion wurde aktualisiert",
+        "changeSuccess": "Kern erfolgreich gewechselt",
+        "changeFailed": "Kernwechsel fehlgeschlagen"
+      },
+      "status": {
+        "stopping": "Kern wird gestoppt...",
+        "restarting": "Kern wird neu gestartet..."
+      },
+      "service": {
+        "status": {
+          "installing": "Service wird installiert...",
+          "uninstalling": "Service wird deinstalliert..."
+        },
+        "notifications": {
+          "installSuccess": "Service erfolgreich installiert",
+          "uninstallSuccess": "Service erfolgreich deinstalliert"
+        }
+      },
+      "variants": {
+        "release": "Stabile Version",
+        "alpha": "Alpha-Version"
       }
     },
     "liteMode": {
@@ -829,19 +788,16 @@
     },
     "networkInterface": {
       "title": "Netzwerkschnittstelle",
-      "labels": {
+      "fields": {
         "ipAddress": "IP-Adresse",
         "macAddress": "MAC-Adresse"
       }
-    }
-  },
-  "providers": {
-    "notices": {
-      "updateSuccess": "{{name}} updated successfully",
-      "updateFailed": "Failed to update {{name}}: {{message}}",
-      "genericError": "Update failed: {{message}}",
-      "none": "No providers available to update",
-      "allUpdated": "All providers updated successfully"
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Aktualisierung mit Clash-Proxy erfolgreich",
+        "withClashProxyFailed": "Aktualisierung auch mit Clash-Proxy fehlgeschlagen"
+      }
     }
   },
   "test": {
@@ -901,6 +857,13 @@
         "actions": {
           "updateAll": "Alle aktualisieren",
           "update": "Aktualisieren"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -940,18 +903,20 @@
         "directMode": "Direktverbindungs-Modus"
       }
     },
-    "strategies": {
-      "select": "Proxy manuell auswählen",
-      "url-test": "Proxy basierend auf URL-Latenztest auswählen",
-      "fallback": "Bei Nichtverfügbarkeit zu einem anderen Proxy wechseln",
-      "load-balance": "Proxy basierend auf Lastverteilung zuweisen",
-      "relay": "Basierend auf definiertem Proxy-Kette weiterleiten"
-    },
-    "policies": {
-      "DIRECT": "Direktverbindung",
-      "REJECT": "Anfrage ablehnen",
-      "REJECT-DROP": "Anfrage verwerfen",
-      "PASS": "Diese Regel überspringen"
+    "enums": {
+      "strategies": {
+        "select": "Proxy manuell auswählen",
+        "url-test": "Proxy basierend auf URL-Latenztest auswählen",
+        "fallback": "Bei Nichtverfügbarkeit zu einem anderen Proxy wechseln",
+        "load-balance": "Proxy basierend auf Lastverteilung zuweisen",
+        "relay": "Basierend auf definiertem Proxy-Kette weiterleiten"
+      },
+      "policies": {
+        "DIRECT": "Direktverbindung",
+        "REJECT": "Anfrage ablehnen",
+        "REJECT-DROP": "Anfrage verwerfen",
+        "PASS": "Diese Regel überspringen"
+      }
     }
   },
   "rules": {
@@ -963,7 +928,70 @@
         "actions": {
           "updateAll": "Alle aktualisieren",
           "update": "Aktualisieren"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
         }
+      }
+    },
+    "editor": {
+      "title": "Regeln bearbeiten",
+      "form": {
+        "labels": {
+          "type": "Regeltyp",
+          "content": "Regelinhalt",
+          "proxyPolicy": "Proxy-Strategie"
+        },
+        "toggles": {
+          "noResolve": "DNS-Auflösung überspringen"
+        },
+        "actions": {
+          "prependRule": "Vorherige Regel hinzufügen",
+          "appendRule": "Nachfolgende Regel hinzufügen"
+        },
+        "validation": {
+          "conditionRequired": "Regelbedingung fehlt",
+          "invalidRule": "Ungültige Regel"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Vollständigen Domainnamen übereinstimmen",
+        "DOMAIN-SUFFIX": "Domain-Suffix übereinstimmen",
+        "DOMAIN-KEYWORD": "Domain-Schlüsselwort übereinstimmen",
+        "DOMAIN-REGEX": "Domain-Regulärer Ausdruck übereinstimmen",
+        "GEOSITE": "Domainnamen in Geosite übereinstimmen",
+        "GEOIP": "IP-Ländercode übereinstimmen",
+        "SRC-GEOIP": "Quell-IP-Ländercode übereinstimmen",
+        "IP-ASN": "IP-ASN übereinstimmen",
+        "SRC-IP-ASN": "Quell-IP-ASN übereinstimmen",
+        "IP-CIDR": "IP-Adressbereich übereinstimmen",
+        "IP-CIDR6": "IP-Adressbereich übereinstimmen",
+        "SRC-IP-CIDR": "Quell-IP-Adressbereich übereinstimmen",
+        "IP-SUFFIX": "IP-Suffix-Bereich übereinstimmen",
+        "SRC-IP-SUFFIX": "Quell-IP-Suffix-Bereich übereinstimmen",
+        "SRC-PORT": "Quellportbereich der Anfrage übereinstimmen",
+        "DST-PORT": "Zielportbereich der Anfrage übereinstimmen",
+        "IN-PORT": "Eingangsport übereinstimmen",
+        "DSCP": "DSCP-Markierung (nur für TPROXY UDP-Eingang)",
+        "PROCESS-NAME": "Prozessnamen übereinstimmen (Android-Paketname)",
+        "PROCESS-PATH": "Vollständigen Prozesspfad übereinstimmen",
+        "PROCESS-NAME-REGEX": "Regulärer Ausdruck für vollständigen Prozessnamen übereinstimmen (Android-Paketname)",
+        "PROCESS-PATH-REGEX": "Regulärer Ausdruck für vollständigen Prozesspfad übereinstimmen",
+        "NETWORK": "Übertragungsprotokoll übereinstimmen (TCP/UDP)",
+        "UID": "Linux-USER-ID übereinstimmen",
+        "IN-TYPE": "Eingangstyp übereinstimmen",
+        "IN-USER": "Eingangsbenutzername übereinstimmen",
+        "IN-NAME": "Eingangsname übereinstimmen",
+        "SUB-RULE": "Unterregel",
+        "RULE-SET": "Regelsatz übereinstimmen",
+        "AND": "Logisches UND",
+        "OR": "Logisches ODER",
+        "NOT": "Logisches NICHT",
+        "MATCH": "Alle Anfragen übereinstimmen"
       }
     }
   },
@@ -1135,6 +1163,15 @@
     },
     "logViewer": {
       "title": "Skript-Konsole-Ausgabe"
+    },
+    "card": {
+      "labels": {
+        "from": "Von",
+        "updateTime": "Aktualisierungszeit",
+        "usedTotal": "Verwendet / Gesamt",
+        "expireTime": "Ablaufzeit",
+        "clickToImport": "Klicken Sie hier, um ein Abonnement zu importieren."
+      }
     }
   },
   "connections": {
@@ -1205,47 +1242,6 @@
       }
     }
   },
-  "layout": {
-    "traffic": {
-      "labels": {
-        "uploadSpeed": "Upload-Geschwindigkeit",
-        "downloadSpeed": "Download-Geschwindigkeit",
-        "memoryUsage": "Kern-Speichernutzung"
-      }
-    }
-  },
-  "system": {
-    "notifications": {
-      "tunMode": {
-        "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-        "autoDisableFailed": "Failed to disable TUN Mode automatically"
-      }
-    },
-    "labels": {
-      "releaseVersion": "Stabile Version",
-      "alphaVersion": "Vorschauversion"
-    }
-  },
-  "core": {
-    "status": {
-      "stopping": "Kern wird gestoppt...",
-      "restarting": "Kern wird neu gestartet..."
-    },
-    "notifications": {
-      "changeSuccess": "Kern erfolgreich gewechselt",
-      "changeFailed": "Kernwechsel fehlgeschlagen"
-    }
-  },
-  "service": {
-    "status": {
-      "installing": "Service wird installiert...",
-      "uninstalling": "Service wird deinstalliert..."
-    },
-    "notifications": {
-      "installSuccess": "Service erfolgreich installiert",
-      "uninstallSuccess": "Service erfolgreich deinstalliert"
-    }
-  },
   "validation": {
     "config": {
       "failed": "Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Die Änderungen wurden rückgängig gemacht. Fehlerdetails: ",
@@ -1271,12 +1267,6 @@
       "mappingError": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
       "keyError": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
       "generalError": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
-    }
-  },
-  "updates": {
-    "notifications": {
-      "withClashProxySuccess": "Aktualisierung mit Clash-Proxy erfolgreich",
-      "withClashProxyFailed": "Aktualisierung auch mit Clash-Proxy fehlgeschlagen"
     }
   }
 }

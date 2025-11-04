@@ -27,17 +27,20 @@ export const useServiceUninstaller = () => {
 
   const uninstallServiceAndRestartCore = useCallback(async () => {
     try {
-      await executeWithErrorHandling(() => stopCore(), "core.status.stopping");
+      await executeWithErrorHandling(
+        () => stopCore(),
+        "settings.clash.status.stopping",
+      );
       await executeWithErrorHandling(
         () => uninstallService(),
-        "service.status.uninstalling",
-        "service.notifications.uninstallSuccess",
+        "settings.clash.service.status.uninstalling",
+        "settings.clash.service.notifications.uninstallSuccess",
       );
     } catch (ignore) {
     } finally {
       await executeWithErrorHandling(
         () => restartCore(),
-        "core.status.restarting",
+        "settings.clash.status.restarting",
         "settings.clash.notifications.restartSuccess",
       );
       await mutateSystemState();
