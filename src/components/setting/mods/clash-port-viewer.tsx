@@ -71,8 +71,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         setOpen(false);
         showNotice.success("settings.clash.port.messages.saved");
       },
-      onError: () => {
-        showNotice.error("settings.clash.port.messages.saveFailed");
+      onError: (error) => {
+        showNotice.error("settings.clash.port.messages.saveFailed", error);
       },
     },
   );

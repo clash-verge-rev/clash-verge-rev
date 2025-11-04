@@ -43,7 +43,7 @@ pub fn get_supported_languages() -> Vec<String> {
 pub async fn current_language() -> String {
     Config::verge()
         .await
-        .latest_ref()
+        .latest_arc()
         .language
         .as_deref()
         .map(String::from)

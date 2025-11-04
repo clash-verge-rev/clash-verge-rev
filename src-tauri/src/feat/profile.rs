@@ -7,6 +7,7 @@ use crate::{
 };
 use anyhow::{Result, bail};
 use smartstring::alias::String;
+use tauri::Emitter;
 
 /// Toggle proxy profile
 pub async fn toggle_proxy_profile(profile_index: String) {
@@ -23,12 +24,72 @@ pub async fn toggle_proxy_profile(profile_index: String) {
     }
 }
 
+pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
+    match handle::Handle::mihomo()
+        .await
+        .select_node_for_group(group_name, proxy_name)
+        .await
+    {
+        Ok(_) => {
+            logging!(
+                info,
+                Type::Tray,
+                "切换代理成功: {} -> {}",
+                group_name,
+                proxy_name
+            );
+            let _ = handle::Handle::app_handle().emit("verge://refresh-proxy-config", ());
+            let _ = tray::Tray::global().update_menu().await;
+            return;
+        }
+        Err(err) => {
+            logging!(
+                error,
+                Type::Tray,
+                "切换代理失败: {} -> {}, 错误: {:?}",
+                group_name,
+                proxy_name,
+                err
+            );
+        }
+    }
+
+    match handle::Handle::mihomo()
+        .await
+        .select_node_for_group(group_name, proxy_name)
+        .await
+    {
+        Ok(_) => {
+            logging!(
+                info,
+                Type::Tray,
+                "代理切换回退成功: {} -> {}",
+                group_name,
+                proxy_name
+            );
+            let _ = handle::Handle::app_handle().emit("verge://force-refresh-proxies", ());
+            let _ = tray::Tray::global().update_menu().await;
+        }
+        Err(err) => {
+            logging!(
+                error,
+                Type::Tray,
+                "代理切换最终失败: {} -> {}, 错误: {:?}",
+                group_name,
+                proxy_name,
+                err
+            );
+            let _ = handle::Handle::app_handle().emit("verge://force-refresh-proxies", ());
+        }
+    }
+}
+
 async fn should_update_profile(
     uid: &String,
     ignore_auto_update: bool,
 ) -> Result<Option<(String, Option<PrfOption>)>> {
     let profiles = Config::profiles().await;
-    let profiles = profiles.latest_ref();
+    let profiles = profiles.latest_arc();
     let item = profiles.get_item(uid)?;
     let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
@@ -89,15 +150,15 @@ async fn perform_profile_update(
     let mut merged_opt = PrfOption::merge(opt, option);
     let is_current = {
         let profiles = Config::profiles().await;
-        profiles.latest_ref().is_current_profile_index(uid)
+        profiles.latest_arc().is_current_profile_index(uid)
     };
-    let profile_name = {
-        let profiles = Config::profiles().await;
-        profiles
-            .latest_ref()
-            .get_name_by_uid(uid)
-            .unwrap_or_default()
-    };
+    let profiles = Config::profiles().await;
+    let profiles_arc = profiles.latest_arc();
+    let profile_name = profiles_arc
+        .get_name_by_uid(uid)
+        .cloned()
+        .unwrap_or_else(|| String::from("UnKown Profile"));
+
     let mut last_err;
 
     match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {

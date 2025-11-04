@@ -353,7 +353,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     logging!(info, Type::Service, "尝试使用现有服务启动核心");
 
     let verge_config = Config::verge().await;
-    let clash_core = verge_config.latest_ref().get_valid_clash_core();
+    let clash_core = verge_config.latest_arc().get_valid_clash_core();
     drop(verge_config);
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
@@ -532,7 +532,7 @@ impl ServiceManager {
                 return Err(anyhow::anyhow!("服务不可用: {}", reason));
             }
         }
-        let _ = tray::Tray::global().update_tray_display().await;
+        let _ = tray::Tray::global().update_menu().await;
         Ok(())
     }
 }

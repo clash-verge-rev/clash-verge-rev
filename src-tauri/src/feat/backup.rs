@@ -78,7 +78,7 @@ pub async fn delete_webdav_backup(filename: String) -> Result<()> {
 /// Restore WebDAV backup
 pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let verge = Config::verge().await;
-    let verge_data = verge.latest_ref().clone();
+    let verge_data = verge.latest_arc();
     let webdav_url = verge_data.webdav_url.clone();
     let webdav_username = verge_data.webdav_username.clone();
     let webdav_password = verge_data.webdav_password.clone();
@@ -243,7 +243,7 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
 
     let (webdav_url, webdav_username, webdav_password) = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         (
             verge.webdav_url.clone(),
             verge.webdav_username.clone(),

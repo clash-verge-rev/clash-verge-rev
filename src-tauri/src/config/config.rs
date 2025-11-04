@@ -15,10 +15,10 @@ use tokio::sync::OnceCell;
 use tokio::time::sleep;
 
 pub struct Config {
-    clash_config: Draft<Box<IClashTemp>>,
-    verge_config: Draft<Box<IVerge>>,
-    profiles_config: Draft<Box<IProfiles>>,
-    runtime_config: Draft<Box<IRuntime>>,
+    clash_config: Draft<IClashTemp>,
+    verge_config: Draft<IVerge>,
+    profiles_config: Draft<IProfiles>,
+    runtime_config: Draft<IRuntime>,
 }
 
 impl Config {
@@ -27,28 +27,28 @@ impl Config {
         CONFIG
             .get_or_init(|| async {
                 Config {
-                    clash_config: Draft::from(Box::new(IClashTemp::new().await)),
-                    verge_config: Draft::from(Box::new(IVerge::new().await)),
-                    profiles_config: Draft::from(Box::new(IProfiles::new().await)),
-                    runtime_config: Draft::from(Box::new(IRuntime::new())),
+                    clash_config: Draft::new(IClashTemp::new().await),
+                    verge_config: Draft::new(IVerge::new().await),
+                    profiles_config: Draft::new(IProfiles::new().await),
+                    runtime_config: Draft::new(IRuntime::new()),
                 }
             })
             .await
     }
 
-    pub async fn clash() -> Draft<Box<IClashTemp>> {
+    pub async fn clash() -> Draft<IClashTemp> {
         Self::global().await.clash_config.clone()
     }
 
-    pub async fn verge() -> Draft<Box<IVerge>> {
+    pub async fn verge() -> Draft<IVerge> {
         Self::global().await.verge_config.clone()
     }
 
-    pub async fn profiles() -> Draft<Box<IProfiles>> {
+    pub async fn profiles() -> Draft<IProfiles> {
         Self::global().await.profiles_config.clone()
     }
 
-    pub async fn runtime() -> Draft<Box<IRuntime>> {
+    pub async fn runtime() -> Draft<IRuntime> {
         Self::global().await.runtime_config.clone()
     }
 
@@ -61,12 +61,14 @@ impl Config {
             && service::is_service_available().await.is_err()
         {
             let verge = Config::verge().await;
-            verge.draft_mut().enable_tun_mode = Some(false);
+            verge.edit_draft(|d| {
+                d.enable_tun_mode = Some(false);
+            });
             verge.apply();
-            let _ = tray::Tray::global().update_tray_display().await;
+            let _ = tray::Tray::global().update_menu().await;
 
             // 分离数据获取和异步调用避免Send问题
-            let verge_data = Config::verge().await.latest_ref().clone();
+            let verge_data = Config::verge().await.latest_arc();
             logging_error!(Type::Core, verge_data.save_file().await);
         }
 
@@ -83,11 +85,11 @@ impl Config {
     // Ensure "Merge" and "Script" profile items exist, adding them if missing.
     async fn ensure_default_profile_items() -> Result<()> {
         let profiles = Self::profiles().await;
-        if profiles.latest_ref().get_item("Merge").is_err() {
+        if profiles.latest_arc().get_item("Merge").is_err() {
             let merge_item = &mut PrfItem::from_merge(Some("Merge".into()))?;
             profiles_append_item_safe(merge_item).await?;
         }
-        if profiles.latest_ref().get_item("Script").is_err() {
+        if profiles.latest_arc().get_item("Script").is_err() {
             let script_item = &mut PrfItem::from_script(Some("Script".into()))?;
             profiles_append_item_safe(script_item).await?;
         }
@@ -154,7 +156,7 @@ impl Config {
 
         let runtime = Config::runtime().await;
         let config = runtime
-            .latest_ref()
+            .latest_arc()
             .config
             .as_ref()
             .ok_or_else(|| anyhow!("failed to get runtime config"))?
@@ -168,11 +170,13 @@ impl Config {
     pub async fn generate() -> Result<()> {
         let (config, exists_keys, logs) = enhance::enhance().await;
 
-        **Config::runtime().await.draft_mut() = IRuntime {
-            config: Some(config),
-            exists_keys,
-            chain_logs: logs,
-        };
+        Config::runtime().await.edit_draft(|d| {
+            *d = IRuntime {
+                config: Some(config),
+                exists_keys,
+                chain_logs: logs,
+            }
+        });
 
         Ok(())
     }
@@ -187,7 +191,7 @@ impl Config {
         };
 
         let operation = || async {
-            if Config::runtime().await.latest_ref().config.is_some() {
+            if Config::runtime().await.latest_arc().config.is_some() {
                 return Ok::<(), BackoffError<anyhow::Error>>(());
             }
 
@@ -228,7 +232,7 @@ mod tests {
     #[test]
     #[allow(unused_variables)]
     fn test_draft_size_non_boxed() {
-        let draft = Draft::from(IRuntime::new());
+        let draft = Draft::new(IRuntime::new());
         let iruntime_size = std::mem::size_of_val(&draft);
         assert_eq!(iruntime_size, std::mem::size_of::<Draft<IRuntime>>());
     }
@@ -236,7 +240,7 @@ mod tests {
     #[test]
     #[allow(unused_variables)]
     fn test_draft_size_boxed() {
-        let draft = Draft::from(Box::new(IRuntime::new()));
+        let draft = Draft::new(Box::new(IRuntime::new()));
         let box_iruntime_size = std::mem::size_of_val(&draft);
         assert_eq!(
             box_iruntime_size,

@@ -31,7 +31,7 @@ pub async fn init_logger() -> Result<()> {
     // TODO 提供 runtime 级别实时修改
     let (log_level, log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge = verge_guard.latest_arc();
         (
             verge.get_log_level(),
             verge.app_log_max_size.unwrap_or(128),
@@ -81,7 +81,7 @@ pub async fn init_logger() -> Result<()> {
 pub async fn sidecar_writer() -> Result<FileLogWriter> {
     let (log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge = verge_guard.latest_arc();
         (
             verge.app_log_max_size.unwrap_or(128),
             verge.app_log_max_count.unwrap_or(8),
@@ -109,7 +109,7 @@ pub async fn sidecar_writer() -> Result<FileLogWriter> {
 pub async fn service_writer_config() -> Result<WriterConfig> {
     let (log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge = verge_guard.latest_arc();
         (
             verge.app_log_max_size.unwrap_or(128),
             verge.app_log_max_count.unwrap_or(8),
@@ -134,7 +134,7 @@ pub async fn delete_log() -> Result<()> {
 
     let auto_log_clean = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         verge.auto_log_clean.unwrap_or(0)
     };
 
@@ -509,7 +509,7 @@ pub async fn startup_script() -> Result<()> {
     let app_handle = handle::Handle::app_handle();
     let script_path = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         verge.startup_script.clone().unwrap_or_else(|| "".into())
     };
 

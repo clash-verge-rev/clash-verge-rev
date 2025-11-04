@@ -100,7 +100,7 @@ impl Timer {
 
         // Collect profiles that need immediate update
         let profiles_to_update =
-            if let Some(items) = Config::profiles().await.latest_ref().get_items() {
+            if let Some(items) = Config::profiles().await.latest_arc().get_items() {
                 items
                     .iter()
                     .filter_map(|item| {
@@ -161,9 +161,7 @@ impl Timer {
             .set_frequency_count_down_by_seconds(3, 3)
             .spawn_async_routine(|| async move {
                 logging!(debug, Type::Timer, "Updating tray menu");
-                crate::core::tray::Tray::global()
-                    .update_tray_display()
-                    .await
+                crate::core::tray::Tray::global().update_menu().await
             })
             .context("failed to create update tray menu timer task")?;
         delay_timer
@@ -273,7 +271,7 @@ impl Timer {
     async fn gen_map(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
-        if let Some(items) = Config::profiles().await.latest_ref().get_items() {
+        if let Some(items) = Config::profiles().await.latest_arc().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref()
                     && let Some(allow_auto_update) = option.allow_auto_update
@@ -427,7 +425,7 @@ impl Timer {
         // Get the profile updated timestamp - now safe to await
         let items = {
             let profiles = Config::profiles().await;
-            let profiles_guard = profiles.latest_ref();
+            let profiles_guard = profiles.latest_arc();
             match profiles_guard.get_items() {
                 Some(i) => i.clone(),
                 None => {
@@ -489,7 +487,7 @@ impl Timer {
         match tokio::time::timeout(std::time::Duration::from_secs(40), async {
             Self::emit_update_event(uid, true);
 
-            let is_current = Config::profiles().await.latest_ref().current.as_ref() == Some(uid);
+            let is_current = Config::profiles().await.latest_arc().current.as_ref() == Some(uid);
             logging!(
                 info,
                 Type::Timer,
