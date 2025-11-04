@@ -148,132 +148,6 @@
       "MATCH": "모든 요청과 일치"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "프로필 생성",
-        "edit": "프로필 편집"
-      },
-      "fields": {
-        "type": "유형",
-        "name": "이름",
-        "description": "설명",
-        "subscriptionUrl": "구독 URL",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "업데이트 간격",
-        "useSystemProxy": "시스템 프록시 사용",
-        "useClashProxy": "Clash 프록시 사용",
-        "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "파일 선택"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "프록시 편집",
-      "placeholders": {
-        "multiUri": "여러 URI의 경우 줄바꿈 사용(Base64 인코딩 지원)"
-      },
-      "actions": {
-        "prepend": "프록시 앞에 추가",
-        "append": "프록시 뒤에 추가"
-      }
-    },
-    "groupsEditor": {
-      "title": "프록시 그룹 편집",
-      "errors": {
-        "nameRequired": "그룹 이름 필수",
-        "nameExists": "그룹 이름이 이미 존재함"
-      },
-      "fields": {
-        "type": "그룹 유형",
-        "name": "그룹 이름",
-        "icon": "Proxy Group Icon",
-        "proxies": "프록시 사용",
-        "provider": "제공자 사용",
-        "healthCheckUrl": "상태 확인 URL",
-        "expectedStatus": "예상 상태",
-        "interval": "간격",
-        "timeout": "타임아웃",
-        "maxFailedTimes": "최대 실패 횟수",
-        "interfaceName": "인터페이스 이름",
-        "routingMark": "라우팅 마크",
-        "filter": "필터",
-        "excludeFilter": "제외 필터",
-        "excludeType": "제외 유형",
-        "includeAll": "모든 프록시 및 제공자 포함",
-        "includeAllProxies": "모든 프록시 포함",
-        "includeAllProviders": "모든 제공자 포함"
-      },
-      "toggles": {
-        "lazy": "지연 로딩",
-        "disableUdp": "UDP 비활성화",
-        "hidden": "숨김"
-      },
-      "actions": {
-        "prepend": "그룹 앞에 추가",
-        "append": "그룹 뒤에 추가"
-      }
-    },
-    "menu": {
-      "home": "홈",
-      "select": "선택",
-      "editInfo": "정보 편집",
-      "editFile": "파일 편집",
-      "editRules": "규칙 편집",
-      "editProxies": "프록시 편집",
-      "editGroups": "프록시 그룹 편집",
-      "extendConfig": "설정 확장",
-      "extendScript": "스크립트 확장",
-      "openFile": "파일 열기",
-      "update": "업데이트",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "삭제 확인",
-        "message": "이 작업은 되돌릴 수 없습니다"
-      }
-    },
-    "logViewer": {
-      "title": "스크립트 콘솔"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "문서 포맷",
-      "readOnlyMessage": "Cannot edit in read-only editor"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "호스트",
-      "downloaded": "다운로드됨",
-      "uploaded": "업로드됨",
-      "dlSpeed": "다운로드 속도",
-      "ulSpeed": "업로드 속도",
-      "chains": "체인",
-      "rule": "규칙",
-      "process": "프로세스",
-      "time": "시간",
-      "source": "소스",
-      "destination": "목적지",
-      "destinationPort": "목적지 포트",
-      "type": "유형"
-    },
-    "actions": {
-      "closeConnection": "연결 닫기"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "업로드 속도",
-      "downloadSpeed": "다운로드 속도"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "Direct Mode"
       }
+    },
+    "strategies": {
+      "select": "수동으로 프록시 선택",
+      "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
+      "fallback": "오류 발생 시 다른 프록시로 전환",
+      "load-balance": "부하 분산에 따라 프록시 분배",
+      "relay": "정의된 프록시 체인을 통과"
+    },
+    "policies": {
+      "DIRECT": "데이터가 직접 아웃바운드로 이동",
+      "REJECT": "요청 차단",
+      "REJECT-DROP": "요청 폐기",
+      "PASS": "일치할 경우 이 규칙 건너뛰기"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "Profile Imported Successfully",
       "importSubscriptionSuccess": "구독 가져오기 성공",
-      "importWithClashProxy": "Profile Imported with Clash proxy"
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "프로필 생성",
+        "edit": "프로필 편집"
+      },
+      "fields": {
+        "type": "유형",
+        "name": "이름",
+        "description": "설명",
+        "subscriptionUrl": "구독 URL",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "업데이트 간격",
+        "useSystemProxy": "시스템 프록시 사용",
+        "useClashProxy": "Clash 프록시 사용",
+        "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "홈",
+      "select": "선택",
+      "editInfo": "정보 편집",
+      "editFile": "파일 편집",
+      "editRules": "규칙 편집",
+      "editProxies": "프록시 편집",
+      "editGroups": "프록시 그룹 편집",
+      "extendConfig": "설정 확장",
+      "extendScript": "스크립트 확장",
+      "openFile": "파일 열기",
+      "update": "업데이트",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "프록시 편집",
+      "placeholders": {
+        "multiUri": "여러 URI의 경우 줄바꿈 사용(Base64 인코딩 지원)"
+      },
+      "actions": {
+        "prepend": "프록시 앞에 추가",
+        "append": "프록시 뒤에 추가"
+      }
+    },
+    "groupsEditor": {
+      "title": "프록시 그룹 편집",
+      "errors": {
+        "nameRequired": "그룹 이름 필수",
+        "nameExists": "그룹 이름이 이미 존재함"
+      },
+      "fields": {
+        "type": "그룹 유형",
+        "name": "그룹 이름",
+        "icon": "Proxy Group Icon",
+        "proxies": "프록시 사용",
+        "provider": "제공자 사용",
+        "healthCheckUrl": "상태 확인 URL",
+        "expectedStatus": "예상 상태",
+        "interval": "간격",
+        "timeout": "타임아웃",
+        "maxFailedTimes": "최대 실패 횟수",
+        "interfaceName": "인터페이스 이름",
+        "routingMark": "라우팅 마크",
+        "filter": "필터",
+        "excludeFilter": "제외 필터",
+        "excludeType": "제외 유형",
+        "includeAll": "모든 프록시 및 제공자 포함",
+        "includeAllProxies": "모든 프록시 포함",
+        "includeAllProviders": "모든 제공자 포함"
+      },
+      "toggles": {
+        "lazy": "지연 로딩",
+        "disableUdp": "UDP 비활성화",
+        "hidden": "숨김"
+      },
+      "actions": {
+        "prepend": "그룹 앞에 추가",
+        "append": "그룹 뒤에 추가"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "파일 선택"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "삭제 확인",
+        "message": "이 작업은 되돌릴 수 없습니다"
+      }
+    },
+    "editor": {
+      "format": "문서 포맷",
+      "readOnlyMessage": "Cannot edit in read-only editor"
+    },
+    "logViewer": {
+      "title": "스크립트 콘솔"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "재개",
         "closeAll": "모두 닫기"
       }
+    },
+    "fields": {
+      "host": "호스트",
+      "downloaded": "다운로드됨",
+      "uploaded": "업로드됨",
+      "dlSpeed": "다운로드 속도",
+      "ulSpeed": "업로드 속도",
+      "chains": "체인",
+      "rule": "규칙",
+      "process": "프로세스",
+      "time": "시간",
+      "source": "소스",
+      "destination": "목적지",
+      "destinationPort": "목적지 포트",
+      "type": "유형"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "업로드 속도",
+      "downloadSpeed": "다운로드 속도"
+    },
+    "actions": {
+      "closeConnection": "연결 닫기"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "다운로드 속도",
         "memoryUsage": "메모리 사용량"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "수동으로 프록시 선택",
-      "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
-      "fallback": "오류 발생 시 다른 프록시로 전환",
-      "load-balance": "부하 분산에 따라 프록시 분배",
-      "relay": "정의된 프록시 체인을 통과"
-    },
-    "policies": {
-      "DIRECT": "데이터가 직접 아웃바운드로 이동",
-      "REJECT": "요청 차단",
-      "REJECT-DROP": "요청 폐기",
-      "PASS": "일치할 경우 이 규칙 건너뛰기"
     }
   },
   "system": {

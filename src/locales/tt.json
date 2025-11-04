@@ -148,132 +148,6 @@
       "MATCH": "Барлык сорауларга туры килә"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "Профиль булдыру",
-        "edit": "Профильне үзгәртү"
-      },
-      "fields": {
-        "type": "Төр",
-        "name": "Исем",
-        "description": "Тасвирламалар",
-        "subscriptionUrl": "Подписка URL-ы",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "Яңарту интервалы",
-        "useSystemProxy": "Системалы проксины кулланып яңарту",
-        "useClashProxy": "Clash прокси кулланып яңарту",
-        "acceptInvalidCerts": "Дөрес булмаган сертификатларны кабул итү (Куркыныч)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "Файл сайлау"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "Проксины үзгәртү",
-      "placeholders": {
-        "multiUri": "Берничә URI өчен яңа юл символын кулланыгыз (Base64 кодлавы ярдәм ителә)"
-      },
-      "actions": {
-        "prepend": "Проксины өскә өстәү",
-        "append": "Проксины аска өстәү"
-      }
-    },
-    "groupsEditor": {
-      "title": "Прокси төркемнәрен үзгәртү",
-      "errors": {
-        "nameRequired": "Төркем исеме кирәк",
-        "nameExists": "Әлеге төркем исеме бар инде"
-      },
-      "fields": {
-        "type": "Төркем төре",
-        "name": "Төркем исеме",
-        "icon": "Прокси төркеме иконкасы",
-        "proxies": "Прокси куллану",
-        "provider": "Провайдер куллану",
-        "healthCheckUrl": "Сәламәтлекне тикшерү URL-ы",
-        "expectedStatus": "Көтелгән статус коды",
-        "interval": "Интервал",
-        "timeout": "Таймаут",
-        "maxFailedTimes": "Иң күп хаталы тикшерү саны",
-        "interfaceName": "Интерфейс исеме",
-        "routingMark": "Маршрут билгесе",
-        "filter": "Фильтр",
-        "excludeFilter": "Фильтр аша чыгару",
-        "excludeType": "Чыгару төре",
-        "includeAll": "Барлык прокси һәм провайдерларны кертү",
-        "includeAllProxies": "Барлык проксины кертү",
-        "includeAllProviders": "Барлык провайдерларны кертү"
-      },
-      "toggles": {
-        "lazy": "Сак режим (lazy)",
-        "disableUdp": "UDP'ны сүндерү",
-        "hidden": "Яшерен"
-      },
-      "actions": {
-        "prepend": "Төркемне өскә өстәү",
-        "append": "Төркемне аска өстәү"
-      }
-    },
-    "menu": {
-      "home": "Home",
-      "select": "Сайлау",
-      "editInfo": "Мәгълүматны үзгәртү",
-      "editFile": "Файлны үзгәртү",
-      "editRules": "Кагыйдәләрне үзгәртү",
-      "editProxies": "Проксины үзгәртү",
-      "editGroups": "Прокси төркемнәрен үзгәртү",
-      "extendConfig": "Merge-ны үзгәртергә",
-      "extendScript": "Script-ны үзгәртергә",
-      "openFile": "Файлны ачу",
-      "update": "Яңарту",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "Бетерүне раслагыз",
-        "message": "Бу гамәлне кире кайтарып булмый"
-      }
-    },
-    "logViewer": {
-      "title": "Скрипт консоле"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "Документны форматлау",
-      "readOnlyMessage": "Уку режимында үзгәртү мөмкин түгел"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "Хост",
-      "downloaded": "Йөкләнгән",
-      "uploaded": "Чыгарылган",
-      "dlSpeed": "Йөкләү тизл.",
-      "ulSpeed": "Чыгару тизл.",
-      "chains": "Чылбырлар",
-      "rule": "Кагыйдә",
-      "process": "Процесс",
-      "time": "Тоташу вакыты",
-      "source": "Чыганак адресы",
-      "destination": "Максат IP-адресы",
-      "destinationPort": "Барасы порты",
-      "type": "Төр"
-    },
-    "actions": {
-      "closeConnection": "Тоташуны ябу"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Йөкләү (чыгару) тизлеге",
-      "downloadSpeed": "Йөкләү тизлеге"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "Туры режим"
       }
+    },
+    "strategies": {
+      "select": "Проксины кулдан сайлау",
+      "url-test": "URL-тест задержкасына карап прокси сайлау",
+      "fallback": "Хата булган очракта башка проксига күчү",
+      "load-balance": "Трафикны баланслау нигезендә прокси тарату",
+      "relay": "Билгеле прокси чылбыры аша тапшыру"
+    },
+    "policies": {
+      "DIRECT": "Туры чыгу",
+      "REJECT": "Сорауларны тоткарлау",
+      "REJECT-DROP": "Сорауларны кире кагу",
+      "PASS": "Туры килсә дә, бу кагыйдәне урап узу"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "Профиль уңышлы импортланды",
       "importSubscriptionSuccess": "Import subscription successful",
-      "importWithClashProxy": "Profile Imported with Clash proxy"
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "Профиль булдыру",
+        "edit": "Профильне үзгәртү"
+      },
+      "fields": {
+        "type": "Төр",
+        "name": "Исем",
+        "description": "Тасвирламалар",
+        "subscriptionUrl": "Подписка URL-ы",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Яңарту интервалы",
+        "useSystemProxy": "Системалы проксины кулланып яңарту",
+        "useClashProxy": "Clash прокси кулланып яңарту",
+        "acceptInvalidCerts": "Дөрес булмаган сертификатларны кабул итү (Куркыныч)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "Сайлау",
+      "editInfo": "Мәгълүматны үзгәртү",
+      "editFile": "Файлны үзгәртү",
+      "editRules": "Кагыйдәләрне үзгәртү",
+      "editProxies": "Проксины үзгәртү",
+      "editGroups": "Прокси төркемнәрен үзгәртү",
+      "extendConfig": "Merge-ны үзгәртергә",
+      "extendScript": "Script-ны үзгәртергә",
+      "openFile": "Файлны ачу",
+      "update": "Яңарту",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "Проксины үзгәртү",
+      "placeholders": {
+        "multiUri": "Берничә URI өчен яңа юл символын кулланыгыз (Base64 кодлавы ярдәм ителә)"
+      },
+      "actions": {
+        "prepend": "Проксины өскә өстәү",
+        "append": "Проксины аска өстәү"
+      }
+    },
+    "groupsEditor": {
+      "title": "Прокси төркемнәрен үзгәртү",
+      "errors": {
+        "nameRequired": "Төркем исеме кирәк",
+        "nameExists": "Әлеге төркем исеме бар инде"
+      },
+      "fields": {
+        "type": "Төркем төре",
+        "name": "Төркем исеме",
+        "icon": "Прокси төркеме иконкасы",
+        "proxies": "Прокси куллану",
+        "provider": "Провайдер куллану",
+        "healthCheckUrl": "Сәламәтлекне тикшерү URL-ы",
+        "expectedStatus": "Көтелгән статус коды",
+        "interval": "Интервал",
+        "timeout": "Таймаут",
+        "maxFailedTimes": "Иң күп хаталы тикшерү саны",
+        "interfaceName": "Интерфейс исеме",
+        "routingMark": "Маршрут билгесе",
+        "filter": "Фильтр",
+        "excludeFilter": "Фильтр аша чыгару",
+        "excludeType": "Чыгару төре",
+        "includeAll": "Барлык прокси һәм провайдерларны кертү",
+        "includeAllProxies": "Барлык проксины кертү",
+        "includeAllProviders": "Барлык провайдерларны кертү"
+      },
+      "toggles": {
+        "lazy": "Сак режим (lazy)",
+        "disableUdp": "UDP'ны сүндерү",
+        "hidden": "Яшерен"
+      },
+      "actions": {
+        "prepend": "Төркемне өскә өстәү",
+        "append": "Төркемне аска өстәү"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Файл сайлау"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Бетерүне раслагыз",
+        "message": "Бу гамәлне кире кайтарып булмый"
+      }
+    },
+    "editor": {
+      "format": "Документны форматлау",
+      "readOnlyMessage": "Уку режимында үзгәртү мөмкин түгел"
+    },
+    "logViewer": {
+      "title": "Скрипт консоле"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "Дәвам",
         "closeAll": "Барысын да ябу"
       }
+    },
+    "fields": {
+      "host": "Хост",
+      "downloaded": "Йөкләнгән",
+      "uploaded": "Чыгарылган",
+      "dlSpeed": "Йөкләү тизл.",
+      "ulSpeed": "Чыгару тизл.",
+      "chains": "Чылбырлар",
+      "rule": "Кагыйдә",
+      "process": "Процесс",
+      "time": "Тоташу вакыты",
+      "source": "Чыганак адресы",
+      "destination": "Максат IP-адресы",
+      "destinationPort": "Барасы порты",
+      "type": "Төр"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+      "downloadSpeed": "Йөкләү тизлеге"
+    },
+    "actions": {
+      "closeConnection": "Тоташуны ябу"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "Йөкләү тизлеге",
         "memoryUsage": "Хәтер куллану"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "Проксины кулдан сайлау",
-      "url-test": "URL-тест задержкасына карап прокси сайлау",
-      "fallback": "Хата булган очракта башка проксига күчү",
-      "load-balance": "Трафикны баланслау нигезендә прокси тарату",
-      "relay": "Билгеле прокси чылбыры аша тапшыру"
-    },
-    "policies": {
-      "DIRECT": "Туры чыгу",
-      "REJECT": "Сорауларны тоткарлау",
-      "REJECT-DROP": "Сорауларны кире кагу",
-      "PASS": "Туры килсә дә, бу кагыйдәне урап узу"
     }
   },
   "system": {

@@ -490,7 +490,7 @@ export const RulesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice.success("profile.notifications.saved");
+      showNotice.success("profiles.notifications.saved");
       onSave?.(prevData, currData);
       onClose();
     } catch (err: any) {

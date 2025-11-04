@@ -148,132 +148,6 @@
       "MATCH": "配對所有請求 (MATCH)"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "新增設定檔",
-        "edit": "編輯設定檔"
-      },
-      "fields": {
-        "type": "類型",
-        "name": "名稱",
-        "description": "描述",
-        "subscriptionUrl": "訂閱網址",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "更新間隔",
-        "useSystemProxy": "使用系統代理更新",
-        "useClashProxy": "使用內核代理更新",
-        "acceptInvalidCerts": "允許無效憑證（危險）",
-        "allowAutoUpdate": "允許自動更新"
-      },
-      "notifications": {
-        "creationRetry": "訂閱建立失敗，嘗試使用 Clash 代理建立",
-        "creationSuccess": "使用 Clash 代理建立訂閱成功"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "選擇檔案"
-    },
-    "notifications": {
-      "saved": "儲存成功"
-    },
-    "proxiesEditor": {
-      "title": "編輯節點",
-      "placeholders": {
-        "multiUri": "多條網址，請使用換行分隔（支援 Base64 編碼）"
-      },
-      "actions": {
-        "prepend": "新增前置代理節點",
-        "append": "新增後置代理節點"
-      }
-    },
-    "groupsEditor": {
-      "title": "編輯代理組",
-      "errors": {
-        "nameRequired": "代理組名稱為必填",
-        "nameExists": "代理組名稱已存在"
-      },
-      "fields": {
-        "type": "代理組類型",
-        "name": "代理組名稱",
-        "icon": "代理組圖示",
-        "proxies": "使用代理",
-        "provider": "使用代理集合",
-        "healthCheckUrl": "健康檢查網址",
-        "expectedStatus": "預期狀態碼",
-        "interval": "檢查間隔",
-        "timeout": "逾時",
-        "maxFailedTimes": "最大失敗次數",
-        "interfaceName": "輸出介面",
-        "routingMark": "路由標記",
-        "filter": "篩選節點",
-        "excludeFilter": "排除節點",
-        "excludeType": "排除節點類型",
-        "includeAll": "包含所有輸出代理、代理集合",
-        "includeAllProxies": "包含所有輸出代理",
-        "includeAllProviders": "包含所有代理集合"
-      },
-      "toggles": {
-        "lazy": "延遲載入",
-        "disableUdp": "停用 UDP",
-        "hidden": "隱藏代理組"
-      },
-      "actions": {
-        "prepend": "新增前置代理組",
-        "append": "新增後置代理組"
-      }
-    },
-    "menu": {
-      "home": "首 頁",
-      "select": "使用",
-      "editInfo": "編輯資訊",
-      "editFile": "編輯檔案",
-      "editRules": "編輯規則",
-      "editProxies": "編輯節點",
-      "editGroups": "編輯代理組",
-      "extendConfig": "擴充覆寫設定",
-      "extendScript": "擴充指令碼",
-      "openFile": "開啟檔案",
-      "update": "更新",
-      "updateViaProxy": "更新（代理）"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "上次更新失敗",
-        "nextUp": "下次更新",
-        "noSchedule": "沒有排程",
-        "unknown": "未知",
-        "autoUpdateDisabled": "自動更新已停用"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "確認刪除",
-        "message": "此操作無法復原"
-      }
-    },
-    "logViewer": {
-      "title": "指令碼控制台輸出"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "格式化文件",
-      "readOnlyMessage": "無法在唯讀模式下編輯"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "將所有網路請求轉送至所選代理。",
         "direct": "略過代理，直接連線至網際網路。"
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "主機",
-      "downloaded": "下載量",
-      "uploaded": "上傳量",
-      "dlSpeed": "下載速度",
-      "ulSpeed": "上傳速度",
-      "chains": "鏈路",
-      "rule": "規則",
-      "process": "處理程序",
-      "time": "連線時間",
-      "source": "來源位址",
-      "destination": "目標位址",
-      "destinationPort": "目標連接埠",
-      "type": "類型"
-    },
-    "actions": {
-      "closeConnection": "關閉連線"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "上傳速度",
-      "downloadSpeed": "下載速度"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "直連模式"
       }
+    },
+    "strategies": {
+      "select": "手動選擇代理",
+      "url-test": "根據網址測試延遲選擇代理",
+      "fallback": "切換至另一個備用代理",
+      "load-balance": "根據負載平衡分配代理",
+      "relay": "根據定義的代理鏈傳送"
+    },
+    "policies": {
+      "DIRECT": "直連 (DIRECT)",
+      "REJECT": "拒絕請求 (REJECT)",
+      "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
+      "PASS": "跳過此規則 (PASS)"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "匯入設定檔成功",
       "importSubscriptionSuccess": "匯入訂閱成功",
-      "importWithClashProxy": "使用 Clash 代理匯入訂閱成功"
+      "importWithClashProxy": "使用 Clash 代理匯入訂閱成功",
+      "saved": "儲存成功"
+    },
+    "viewer": {
+      "title": {
+        "create": "新增設定檔",
+        "edit": "編輯設定檔"
+      },
+      "fields": {
+        "type": "類型",
+        "name": "名稱",
+        "description": "描述",
+        "subscriptionUrl": "訂閱網址",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "更新間隔",
+        "useSystemProxy": "使用系統代理更新",
+        "useClashProxy": "使用內核代理更新",
+        "acceptInvalidCerts": "允許無效憑證（危險）",
+        "allowAutoUpdate": "允許自動更新"
+      },
+      "notifications": {
+        "creationRetry": "訂閱建立失敗，嘗試使用 Clash 代理建立",
+        "creationSuccess": "使用 Clash 代理建立訂閱成功"
+      }
+    },
+    "menu": {
+      "home": "首 頁",
+      "select": "使用",
+      "editInfo": "編輯資訊",
+      "editFile": "編輯檔案",
+      "editRules": "編輯規則",
+      "editProxies": "編輯節點",
+      "editGroups": "編輯代理組",
+      "extendConfig": "擴充覆寫設定",
+      "extendScript": "擴充指令碼",
+      "openFile": "開啟檔案",
+      "update": "更新",
+      "updateViaProxy": "更新（代理）"
+    },
+    "proxiesEditor": {
+      "title": "編輯節點",
+      "placeholders": {
+        "multiUri": "多條網址，請使用換行分隔（支援 Base64 編碼）"
+      },
+      "actions": {
+        "prepend": "新增前置代理節點",
+        "append": "新增後置代理節點"
+      }
+    },
+    "groupsEditor": {
+      "title": "編輯代理組",
+      "errors": {
+        "nameRequired": "代理組名稱為必填",
+        "nameExists": "代理組名稱已存在"
+      },
+      "fields": {
+        "type": "代理組類型",
+        "name": "代理組名稱",
+        "icon": "代理組圖示",
+        "proxies": "使用代理",
+        "provider": "使用代理集合",
+        "healthCheckUrl": "健康檢查網址",
+        "expectedStatus": "預期狀態碼",
+        "interval": "檢查間隔",
+        "timeout": "逾時",
+        "maxFailedTimes": "最大失敗次數",
+        "interfaceName": "輸出介面",
+        "routingMark": "路由標記",
+        "filter": "篩選節點",
+        "excludeFilter": "排除節點",
+        "excludeType": "排除節點類型",
+        "includeAll": "包含所有輸出代理、代理集合",
+        "includeAllProxies": "包含所有輸出代理",
+        "includeAllProviders": "包含所有代理集合"
+      },
+      "toggles": {
+        "lazy": "延遲載入",
+        "disableUdp": "停用 UDP",
+        "hidden": "隱藏代理組"
+      },
+      "actions": {
+        "prepend": "新增前置代理組",
+        "append": "新增後置代理組"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "選擇檔案"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "上次更新失敗",
+        "nextUp": "下次更新",
+        "noSchedule": "沒有排程",
+        "unknown": "未知",
+        "autoUpdateDisabled": "自動更新已停用"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "確認刪除",
+        "message": "此操作無法復原"
+      }
+    },
+    "editor": {
+      "format": "格式化文件",
+      "readOnlyMessage": "無法在唯讀模式下編輯"
+    },
+    "logViewer": {
+      "title": "指令碼控制台輸出"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "繼續",
         "closeAll": "關閉全部"
       }
+    },
+    "fields": {
+      "host": "主機",
+      "downloaded": "下載量",
+      "uploaded": "上傳量",
+      "dlSpeed": "下載速度",
+      "ulSpeed": "上傳速度",
+      "chains": "鏈路",
+      "rule": "規則",
+      "process": "處理程序",
+      "time": "連線時間",
+      "source": "來源位址",
+      "destination": "目標位址",
+      "destinationPort": "目標連接埠",
+      "type": "類型"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "上傳速度",
+      "downloadSpeed": "下載速度"
+    },
+    "actions": {
+      "closeConnection": "關閉連線"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "下載速度",
         "memoryUsage": "內核佔用"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "手動選擇代理",
-      "url-test": "根據網址測試延遲選擇代理",
-      "fallback": "切換至另一個備用代理",
-      "load-balance": "根據負載平衡分配代理",
-      "relay": "根據定義的代理鏈傳送"
-    },
-    "policies": {
-      "DIRECT": "直連 (DIRECT)",
-      "REJECT": "拒絕請求 (REJECT)",
-      "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
-      "PASS": "跳過此規則 (PASS)"
     }
   },
   "system": {

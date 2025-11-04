@@ -263,7 +263,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice.success("profile.notifications.saved");
+      showNotice.success("profiles.notifications.saved");
       onSave?.(prevData, currData);
       onClose();
     } catch (err) {
@@ -276,7 +276,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">
-            {t("profile.proxiesEditor.title")}
+            {t("profiles.proxiesEditor.title")}
             <Box>
               <Button
                 variant="contained"
@@ -315,7 +315,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                   <TextField
                     autoComplete="new-password"
                     placeholder={t(
-                      "profile.proxiesEditor.placeholders.multiUri",
+                      "profiles.proxiesEditor.placeholders.multiUri",
                     )}
                     fullWidth
                     rows={9}
@@ -336,7 +336,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                     });
                   }}
                 >
-                  {t("profile.proxiesEditor.actions.prepend")}
+                  {t("profiles.proxiesEditor.actions.prepend")}
                 </Button>
               </Item>
               <Item>
@@ -350,7 +350,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                     });
                   }}
                 >
-                  {t("profile.proxiesEditor.actions.append")}
+                  {t("profiles.proxiesEditor.actions.append")}
                 </Button>
               </Item>
             </List>

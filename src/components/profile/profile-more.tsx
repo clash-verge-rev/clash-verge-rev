@@ -55,18 +55,18 @@ export const ProfileMore = (props: Props) => {
   const hasError = entries.some(([level]) => level === "exception");
 
   const globalTitles: Record<Props["id"], string> = {
-    Merge: "profile.more.global.merge",
-    Script: "profile.more.global.script",
+    Merge: "profiles.more.global.merge",
+    Script: "profiles.more.global.script",
   };
 
   const chipLabels: Record<Props["id"], string> = {
-    Merge: "profile.more.chips.merge",
-    Script: "profile.more.chips.script",
+    Merge: "profiles.more.chips.merge",
+    Script: "profiles.more.chips.script",
   };
 
   const itemMenu = [
-    { label: "profile.menu.editFile", handler: onEditFile },
-    { label: "profile.menu.openFile", handler: onOpenFile },
+    { label: "profiles.menu.editFile", handler: onEditFile },
+    { label: "profiles.menu.openFile", handler: onOpenFile },
   ];
 
   const boxStyle = {
@@ -121,7 +121,7 @@ export const ProfileMore = (props: Props) => {
                   size="small"
                   edge="start"
                   color="error"
-                  title={t("profile.logViewer.title")}
+                  title={t("profiles.logViewer.title")}
                   onClick={() => setLogOpen(true)}
                 >
                   <FeaturedPlayListRounded fontSize="inherit" />
@@ -132,7 +132,7 @@ export const ProfileMore = (props: Props) => {
                 size="small"
                 edge="start"
                 color="inherit"
-                title={t("profile.logViewer.title")}
+                title={t("profiles.logViewer.title")}
                 onClick={() => setLogOpen(true)}
               >
                 <FeaturedPlayListRounded fontSize="inherit" />

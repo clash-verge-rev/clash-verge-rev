@@ -148,132 +148,6 @@
       "MATCH": "Coincidir con todas las solicitudes"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "Crear configuración",
-        "edit": "Editar configuración"
-      },
-      "fields": {
-        "type": "Tipo",
-        "name": "Nombre",
-        "description": "Descripción",
-        "subscriptionUrl": "Enlace de suscripción",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "Intervalo de actualización",
-        "useSystemProxy": "Usar proxy del sistema para actualizar",
-        "useClashProxy": "Usar proxy del núcleo para actualizar",
-        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
-        "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "Elegir archivo"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "Editar nodos",
-      "placeholders": {
-        "multiUri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)"
-      },
-      "actions": {
-        "prepend": "Agregar nodo de proxy previo",
-        "append": "Agregar nodo de proxy posterior"
-      }
-    },
-    "groupsEditor": {
-      "title": "Editar grupos de proxy",
-      "errors": {
-        "nameRequired": "El nombre del grupo de proxy no puede estar vacío",
-        "nameExists": "El nombre del grupo de proxy ya existe"
-      },
-      "fields": {
-        "type": "Tipo de grupo de proxy",
-        "name": "Nombre del grupo de proxy",
-        "icon": "Icono del grupo de proxy",
-        "proxies": "Incluir proxies",
-        "provider": "Incluir proveedor de proxies",
-        "healthCheckUrl": "URL de prueba de salud",
-        "expectedStatus": "Código de estado esperado",
-        "interval": "Intervalo de comprobación",
-        "timeout": "Tiempo de espera",
-        "maxFailedTimes": "Número máximo de fallos",
-        "interfaceName": "Nombre de la interfaz de salida",
-        "routingMark": "Marca de enrutamiento",
-        "filter": "Filtrar nodos",
-        "excludeFilter": "Excluir nodos",
-        "excludeType": "Tipo de nodo a excluir",
-        "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
-        "includeAllProxies": "Incluir todos los proxies de salida",
-        "includeAllProviders": "Incluir todos los proveedores de proxies"
-      },
-      "toggles": {
-        "lazy": "Estado de inactividad",
-        "disableUdp": "Deshabilitar UDP",
-        "hidden": "Ocultar grupo de proxy"
-      },
-      "actions": {
-        "prepend": "Agregar grupo de proxy previo",
-        "append": "Agregar grupo de proxy posterior"
-      }
-    },
-    "menu": {
-      "home": "Hogar",
-      "select": "Usar",
-      "editInfo": "Editar información",
-      "editFile": "Editar archivo",
-      "editRules": "Editar reglas",
-      "editProxies": "Editar nodos",
-      "editGroups": "Editar grupos de proxy",
-      "extendConfig": "Configurar sobrescritura extendida",
-      "extendScript": "Script extendido",
-      "openFile": "Abrir archivo",
-      "update": "Actualizar",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "La última actualización falló",
-        "nextUp": "Próxima actualización",
-        "noSchedule": "Sin programación",
-        "unknown": "Desconocido",
-        "autoUpdateDisabled": "La actualización automática está deshabilitada"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "Confirmar eliminación",
-        "message": "Esta operación no se puede deshacer"
-      }
-    },
-    "logViewer": {
-      "title": "Salida de la consola del script"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "Formatear documento",
-      "readOnlyMessage": "No se puede editar en modo de solo lectura"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "Host",
-      "downloaded": "Descargado",
-      "uploaded": "Subido",
-      "dlSpeed": "Velocidad de descarga",
-      "ulSpeed": "Velocidad de subida",
-      "chains": "Cadenas",
-      "rule": "Regla",
-      "process": "Proceso",
-      "time": "Tiempo de conexión",
-      "source": "Dirección de origen",
-      "destination": "Dirección de destino",
-      "destinationPort": "Puerto de destino",
-      "type": "Tipo"
-    },
-    "actions": {
-      "closeConnection": "Cerrar conexión"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Velocidad de subida",
-      "downloadSpeed": "Velocidad de descarga"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "Modo de conexión directa"
       }
+    },
+    "strategies": {
+      "select": "Seleccionar proxy manualmente",
+      "url-test": "Seleccionar proxy según la prueba de latencia de la URL",
+      "fallback": "Cambiar a otro proxy cuando no esté disponible",
+      "load-balance": "Asignar proxy según el equilibrio de carga",
+      "relay": "Transferir según la cadena de proxy definida"
+    },
+    "policies": {
+      "DIRECT": "Conexión directa",
+      "REJECT": "Rechazar solicitud",
+      "REJECT-DROP": "Descartar solicitud",
+      "PASS": "Saltar esta regla"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "Suscripción importada con éxito",
       "importSubscriptionSuccess": "Suscripción importada con éxito",
-      "importWithClashProxy": "Suscripción importada con el proxy de Clash"
+      "importWithClashProxy": "Suscripción importada con el proxy de Clash",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "Crear configuración",
+        "edit": "Editar configuración"
+      },
+      "fields": {
+        "type": "Tipo",
+        "name": "Nombre",
+        "description": "Descripción",
+        "subscriptionUrl": "Enlace de suscripción",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Intervalo de actualización",
+        "useSystemProxy": "Usar proxy del sistema para actualizar",
+        "useClashProxy": "Usar proxy del núcleo para actualizar",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
+        "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
+      }
+    },
+    "menu": {
+      "home": "Hogar",
+      "select": "Usar",
+      "editInfo": "Editar información",
+      "editFile": "Editar archivo",
+      "editRules": "Editar reglas",
+      "editProxies": "Editar nodos",
+      "editGroups": "Editar grupos de proxy",
+      "extendConfig": "Configurar sobrescritura extendida",
+      "extendScript": "Script extendido",
+      "openFile": "Abrir archivo",
+      "update": "Actualizar",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "Editar nodos",
+      "placeholders": {
+        "multiUri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)"
+      },
+      "actions": {
+        "prepend": "Agregar nodo de proxy previo",
+        "append": "Agregar nodo de proxy posterior"
+      }
+    },
+    "groupsEditor": {
+      "title": "Editar grupos de proxy",
+      "errors": {
+        "nameRequired": "El nombre del grupo de proxy no puede estar vacío",
+        "nameExists": "El nombre del grupo de proxy ya existe"
+      },
+      "fields": {
+        "type": "Tipo de grupo de proxy",
+        "name": "Nombre del grupo de proxy",
+        "icon": "Icono del grupo de proxy",
+        "proxies": "Incluir proxies",
+        "provider": "Incluir proveedor de proxies",
+        "healthCheckUrl": "URL de prueba de salud",
+        "expectedStatus": "Código de estado esperado",
+        "interval": "Intervalo de comprobación",
+        "timeout": "Tiempo de espera",
+        "maxFailedTimes": "Número máximo de fallos",
+        "interfaceName": "Nombre de la interfaz de salida",
+        "routingMark": "Marca de enrutamiento",
+        "filter": "Filtrar nodos",
+        "excludeFilter": "Excluir nodos",
+        "excludeType": "Tipo de nodo a excluir",
+        "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
+        "includeAllProxies": "Incluir todos los proxies de salida",
+        "includeAllProviders": "Incluir todos los proveedores de proxies"
+      },
+      "toggles": {
+        "lazy": "Estado de inactividad",
+        "disableUdp": "Deshabilitar UDP",
+        "hidden": "Ocultar grupo de proxy"
+      },
+      "actions": {
+        "prepend": "Agregar grupo de proxy previo",
+        "append": "Agregar grupo de proxy posterior"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Elegir archivo"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "La última actualización falló",
+        "nextUp": "Próxima actualización",
+        "noSchedule": "Sin programación",
+        "unknown": "Desconocido",
+        "autoUpdateDisabled": "La actualización automática está deshabilitada"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Confirmar eliminación",
+        "message": "Esta operación no se puede deshacer"
+      }
+    },
+    "editor": {
+      "format": "Formatear documento",
+      "readOnlyMessage": "No se puede editar en modo de solo lectura"
+    },
+    "logViewer": {
+      "title": "Salida de la consola del script"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "Reanudar",
         "closeAll": "Cerrar todas"
       }
+    },
+    "fields": {
+      "host": "Host",
+      "downloaded": "Descargado",
+      "uploaded": "Subido",
+      "dlSpeed": "Velocidad de descarga",
+      "ulSpeed": "Velocidad de subida",
+      "chains": "Cadenas",
+      "rule": "Regla",
+      "process": "Proceso",
+      "time": "Tiempo de conexión",
+      "source": "Dirección de origen",
+      "destination": "Dirección de destino",
+      "destinationPort": "Puerto de destino",
+      "type": "Tipo"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Velocidad de subida",
+      "downloadSpeed": "Velocidad de descarga"
+    },
+    "actions": {
+      "closeConnection": "Cerrar conexión"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "Velocidad de descarga",
         "memoryUsage": "Uso de memoria del núcleo"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "Seleccionar proxy manualmente",
-      "url-test": "Seleccionar proxy según la prueba de latencia de la URL",
-      "fallback": "Cambiar a otro proxy cuando no esté disponible",
-      "load-balance": "Asignar proxy según el equilibrio de carga",
-      "relay": "Transferir según la cadena de proxy definida"
-    },
-    "policies": {
-      "DIRECT": "Conexión directa",
-      "REJECT": "Rechazar solicitud",
-      "REJECT-DROP": "Descartar solicitud",
-      "PASS": "Saltar esta regla"
     }
   },
   "system": {

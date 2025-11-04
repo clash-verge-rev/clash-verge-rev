@@ -36,7 +36,7 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ORDER_OPTIONS = [
   {
     id: "default",
-    labelKey: "connection.order.default",
+    labelKey: "connections.order.default",
     fn: (list: IConnectionsItem[]) =>
       list.sort(
         (a, b) =>
@@ -46,13 +46,13 @@ const ORDER_OPTIONS = [
   },
   {
     id: "uploadSpeed",
-    labelKey: "connection.order.uploadSpeed",
+    labelKey: "connections.order.uploadSpeed",
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curUpload! - a.curUpload!),
   },
   {
     id: "downloadSpeed",
-    labelKey: "connection.order.downloadSpeed",
+    labelKey: "connections.order.downloadSpeed",
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   },

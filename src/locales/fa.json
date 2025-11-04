@@ -148,132 +148,6 @@
       "MATCH": "مطابقت با تمام درخواست‌ها"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "ایجاد پروفایل",
-        "edit": "ویرایش پروفایل"
-      },
-      "fields": {
-        "type": "نوع",
-        "name": "نام",
-        "description": "توضیحات",
-        "subscriptionUrl": "آدرس اشتراک",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "فاصله زمانی به‌روزرسانی",
-        "useSystemProxy": "استفاده از پراکسی سیستم",
-        "useClashProxy": "استفاده از پراکسی Clash",
-        "acceptInvalidCerts": "پذیرش گواهی‌نامه‌های نامعتبر (خطرناک)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "انتخاب فایل"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "ویرایش پروکسی‌ها",
-      "placeholders": {
-        "multiUri": "استفاده از خطوط جدید برای چندین آدرس (پشتیبانی از رمزگذاری Base64)"
-      },
-      "actions": {
-        "prepend": "پیش‌افزودن پراکسی",
-        "append": "پس‌افزودن پراکسی"
-      }
-    },
-    "groupsEditor": {
-      "title": "ویرایش گروه‌های پروکسی",
-      "errors": {
-        "nameRequired": "نام گروه مورد نیاز است",
-        "nameExists": "نام گروه قبلا وجود دارد"
-      },
-      "fields": {
-        "type": "نوع گروه",
-        "name": "نام گروه",
-        "icon": "آیکون گروه پراکسی",
-        "proxies": "استفاده از پروکسی‌ها",
-        "provider": "استفاده از ارائه‌دهنده",
-        "healthCheckUrl": "آدرس بررسی سلامت",
-        "expectedStatus": "وضعیت مورد انتظار",
-        "interval": "فاصله زمانی",
-        "timeout": "زمان قطع",
-        "maxFailedTimes": "حداکثر تعداد شکست‌ها",
-        "interfaceName": "نام رابط",
-        "routingMark": "علامت مسیریابی",
-        "filter": "فیلتر",
-        "excludeFilter": "فیلتر استثناء",
-        "excludeType": "نوع استثناء",
-        "includeAll": "شامل همه پروکسی‌ها و ارائه‌دهنده‌ها",
-        "includeAllProxies": "شامل همه پروکسی‌ها",
-        "includeAllProviders": "شامل همه ارائه‌دهنده‌ها"
-      },
-      "toggles": {
-        "lazy": "تنبل",
-        "disableUdp": "غیرفعال کردن UDP",
-        "hidden": "مخفی"
-      },
-      "actions": {
-        "prepend": "اضافه کردن گروه به ابتدا",
-        "append": "اضافه کردن گروه به انتها"
-      }
-    },
-    "menu": {
-      "home": "Home",
-      "select": "انتخاب",
-      "editInfo": "ویرایش اطلاعات",
-      "editFile": "ویرایش فایل",
-      "editRules": "ویرایش قوانین",
-      "editProxies": "ویرایش پروکسی‌ها",
-      "editGroups": "ویرایش گروه‌های پروکسی",
-      "extendConfig": "توسعه پیکربندی",
-      "extendScript": "ادغام اسکریپت",
-      "openFile": "باز کردن فایل",
-      "update": "به‌روزرسانی",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "تأیید حذف",
-        "message": "این عملیات قابل برگشت نیست"
-      }
-    },
-    "logViewer": {
-      "title": "کنسول اسکریپت"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "فرمت‌بندی سند",
-      "readOnlyMessage": "نمی‌توان در ویرایشگر فقط خواندنی ویرایش کرد"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "میزبان",
-      "downloaded": "دانلود شده",
-      "uploaded": "بارگذاری شده",
-      "dlSpeed": "سرعت دانلود",
-      "ulSpeed": "سرعت بارگذاری",
-      "chains": "زنجیره‌ها",
-      "rule": "قانون",
-      "process": "فرآیند",
-      "time": "زمان",
-      "source": "منبع",
-      "destination": "آدرس IP مقصد",
-      "destinationPort": "بندر هدف",
-      "type": "نوع"
-    },
-    "actions": {
-      "closeConnection": "بستن اتصال"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "سرعت بارگذاری",
-      "downloadSpeed": "سرعت دانلود"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "حالت مستقیم"
       }
+    },
+    "strategies": {
+      "select": "انتخاب پروکسی به صورت دستی",
+      "url-test": "انتخاب پروکسی بر اساس تأخیر آزمایش URL",
+      "fallback": "تعویض به پروکسی دیگر در صورت بروز خطا",
+      "load-balance": "توزیع پراکسی بر اساس توازن بار",
+      "relay": "عبور از زنجیره پروکسی تعریف شده"
+    },
+    "policies": {
+      "DIRECT": "داده‌ها به صورت مستقیم خروجی می‌شوند",
+      "REJECT": "درخواست‌ها را متوقف می‌کند",
+      "REJECT-DROP": "درخواست‌ها را نادیده می‌گیرد",
+      "PASS": "این قانون را در صورت تطابق نادیده می‌گیرد"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "پروفایل با موفقیت وارد شد",
       "importSubscriptionSuccess": "وارد کردن اشتراک با موفقیت انجام شد",
-      "importWithClashProxy": "Profile Imported with Clash proxy"
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "ایجاد پروفایل",
+        "edit": "ویرایش پروفایل"
+      },
+      "fields": {
+        "type": "نوع",
+        "name": "نام",
+        "description": "توضیحات",
+        "subscriptionUrl": "آدرس اشتراک",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "فاصله زمانی به‌روزرسانی",
+        "useSystemProxy": "استفاده از پراکسی سیستم",
+        "useClashProxy": "استفاده از پراکسی Clash",
+        "acceptInvalidCerts": "پذیرش گواهی‌نامه‌های نامعتبر (خطرناک)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "انتخاب",
+      "editInfo": "ویرایش اطلاعات",
+      "editFile": "ویرایش فایل",
+      "editRules": "ویرایش قوانین",
+      "editProxies": "ویرایش پروکسی‌ها",
+      "editGroups": "ویرایش گروه‌های پروکسی",
+      "extendConfig": "توسعه پیکربندی",
+      "extendScript": "ادغام اسکریپت",
+      "openFile": "باز کردن فایل",
+      "update": "به‌روزرسانی",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "ویرایش پروکسی‌ها",
+      "placeholders": {
+        "multiUri": "استفاده از خطوط جدید برای چندین آدرس (پشتیبانی از رمزگذاری Base64)"
+      },
+      "actions": {
+        "prepend": "پیش‌افزودن پراکسی",
+        "append": "پس‌افزودن پراکسی"
+      }
+    },
+    "groupsEditor": {
+      "title": "ویرایش گروه‌های پروکسی",
+      "errors": {
+        "nameRequired": "نام گروه مورد نیاز است",
+        "nameExists": "نام گروه قبلا وجود دارد"
+      },
+      "fields": {
+        "type": "نوع گروه",
+        "name": "نام گروه",
+        "icon": "آیکون گروه پراکسی",
+        "proxies": "استفاده از پروکسی‌ها",
+        "provider": "استفاده از ارائه‌دهنده",
+        "healthCheckUrl": "آدرس بررسی سلامت",
+        "expectedStatus": "وضعیت مورد انتظار",
+        "interval": "فاصله زمانی",
+        "timeout": "زمان قطع",
+        "maxFailedTimes": "حداکثر تعداد شکست‌ها",
+        "interfaceName": "نام رابط",
+        "routingMark": "علامت مسیریابی",
+        "filter": "فیلتر",
+        "excludeFilter": "فیلتر استثناء",
+        "excludeType": "نوع استثناء",
+        "includeAll": "شامل همه پروکسی‌ها و ارائه‌دهنده‌ها",
+        "includeAllProxies": "شامل همه پروکسی‌ها",
+        "includeAllProviders": "شامل همه ارائه‌دهنده‌ها"
+      },
+      "toggles": {
+        "lazy": "تنبل",
+        "disableUdp": "غیرفعال کردن UDP",
+        "hidden": "مخفی"
+      },
+      "actions": {
+        "prepend": "اضافه کردن گروه به ابتدا",
+        "append": "اضافه کردن گروه به انتها"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "انتخاب فایل"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "تأیید حذف",
+        "message": "این عملیات قابل برگشت نیست"
+      }
+    },
+    "editor": {
+      "format": "فرمت‌بندی سند",
+      "readOnlyMessage": "نمی‌توان در ویرایشگر فقط خواندنی ویرایش کرد"
+    },
+    "logViewer": {
+      "title": "کنسول اسکریپت"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "از سرگیری",
         "closeAll": "بستن همه"
       }
+    },
+    "fields": {
+      "host": "میزبان",
+      "downloaded": "دانلود شده",
+      "uploaded": "بارگذاری شده",
+      "dlSpeed": "سرعت دانلود",
+      "ulSpeed": "سرعت بارگذاری",
+      "chains": "زنجیره‌ها",
+      "rule": "قانون",
+      "process": "فرآیند",
+      "time": "زمان",
+      "source": "منبع",
+      "destination": "آدرس IP مقصد",
+      "destinationPort": "بندر هدف",
+      "type": "نوع"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "سرعت بارگذاری",
+      "downloadSpeed": "سرعت دانلود"
+    },
+    "actions": {
+      "closeConnection": "بستن اتصال"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "سرعت دانلود",
         "memoryUsage": "استفاده از حافظه"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "انتخاب پروکسی به صورت دستی",
-      "url-test": "انتخاب پروکسی بر اساس تأخیر آزمایش URL",
-      "fallback": "تعویض به پروکسی دیگر در صورت بروز خطا",
-      "load-balance": "توزیع پراکسی بر اساس توازن بار",
-      "relay": "عبور از زنجیره پروکسی تعریف شده"
-    },
-    "policies": {
-      "DIRECT": "داده‌ها به صورت مستقیم خروجی می‌شوند",
-      "REJECT": "درخواست‌ها را متوقف می‌کند",
-      "REJECT-DROP": "درخواست‌ها را نادیده می‌گیرد",
-      "PASS": "این قانون را در صورت تطابق نادیده می‌گیرد"
     }
   },
   "system": {

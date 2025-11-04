@@ -148,132 +148,6 @@
       "MATCH": "匹配所有请求 (MATCH)"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "新建配置",
-        "edit": "编辑配置"
-      },
-      "fields": {
-        "type": "类型",
-        "name": "名称",
-        "description": "描述",
-        "subscriptionUrl": "订阅链接",
-        "httpTimeout": "HTTP 请求超时",
-        "updateInterval": "更新间隔",
-        "useSystemProxy": "使用系统代理更新",
-        "useClashProxy": "使用内核代理更新",
-        "acceptInvalidCerts": "允许无效证书（危险）",
-        "allowAutoUpdate": "允许自动更新"
-      },
-      "notifications": {
-        "creationRetry": "订阅创建失败，尝试使用 Clash 代理创建",
-        "creationSuccess": "使用 Clash 代理创建订阅成功"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "选择文件"
-    },
-    "notifications": {
-      "saved": "保存成功"
-    },
-    "proxiesEditor": {
-      "title": "编辑节点",
-      "placeholders": {
-        "multiUri": "多条 URI 请使用换行分隔（支持 Base64 编码）"
-      },
-      "actions": {
-        "prepend": "添加前置代理节点",
-        "append": "添加后置代理节点"
-      }
-    },
-    "groupsEditor": {
-      "title": "编辑代理组",
-      "errors": {
-        "nameRequired": "代理组名称不能为空",
-        "nameExists": "代理组名称已存在"
-      },
-      "fields": {
-        "type": "代理组类型",
-        "name": "代理组组名",
-        "icon": "代理组图标",
-        "proxies": "引入代理",
-        "provider": "引入代理集合",
-        "healthCheckUrl": "健康检查测试地址",
-        "expectedStatus": "期望状态码",
-        "interval": "检查间隔",
-        "timeout": "超时时间",
-        "maxFailedTimes": "最大失败次数",
-        "interfaceName": "出站接口",
-        "routingMark": "路由标记",
-        "filter": "过滤节点",
-        "excludeFilter": "排除节点",
-        "excludeType": "排除节点类型",
-        "includeAll": "引入所有出站代理、代理集合",
-        "includeAllProxies": "引入所有出站代理",
-        "includeAllProviders": "引入所有代理集合"
-      },
-      "toggles": {
-        "lazy": "懒惰状态",
-        "disableUdp": "禁用 UDP",
-        "hidden": "隐藏代理组"
-      },
-      "actions": {
-        "prepend": "添加前置代理组",
-        "append": "添加后置代理组"
-      }
-    },
-    "menu": {
-      "home": "首 页",
-      "select": "使用",
-      "editInfo": "编辑信息",
-      "editFile": "编辑文件",
-      "editRules": "编辑规则",
-      "editProxies": "编辑节点",
-      "editGroups": "编辑代理组",
-      "extendConfig": "扩展覆写配置",
-      "extendScript": "扩展脚本",
-      "openFile": "打开文件",
-      "update": "更新",
-      "updateViaProxy": "更新（代理）"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "点击查看上次更新时间",
-        "showNext": "点击查看下一次更新"
-      },
-      "status": {
-        "lastUpdateFailed": "上次更新失败",
-        "nextUp": "下次更新",
-        "noSchedule": "没有计划",
-        "unknown": "未知",
-        "autoUpdateDisabled": "自动更新已禁用"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "确认删除",
-        "message": "此操作不可逆"
-      }
-    },
-    "logViewer": {
-      "title": "脚本控制台输出"
-    },
-    "more": {
-      "global": {
-        "merge": "全局扩展覆写配置",
-        "script": "全局扩展脚本"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "格式化文档",
-      "readOnlyMessage": "无法在只读模式下编辑"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "所有流量均通过代理服务器，适用于需要全局科学上网的场景",
         "direct": "所有流量不经过代理节点，但经过Clash内核转发连接目标服务器，适用于需要通过内核进行分流的特定场景"
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "主机",
-      "downloaded": "下载量",
-      "uploaded": "上传量",
-      "dlSpeed": "下载速度",
-      "ulSpeed": "上传速度",
-      "chains": "链路",
-      "rule": "规则",
-      "process": "进程",
-      "time": "连接时间",
-      "source": "源地址",
-      "destination": "目标地址",
-      "destinationPort": "目标端口",
-      "type": "类型"
-    },
-    "actions": {
-      "closeConnection": "关闭连接"
-    },
-    "order": {
-      "default": "默认",
-      "uploadSpeed": "上传速度",
-      "downloadSpeed": "下载速度"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "直连模式"
       }
+    },
+    "strategies": {
+      "select": "手动选择代理",
+      "url-test": "根据 URL 测试延迟选择代理",
+      "fallback": "不可用时切换到另一个代理",
+      "load-balance": "根据负载均衡分配代理",
+      "relay": "根据定义的代理链传递"
+    },
+    "policies": {
+      "DIRECT": "直连 (DIRECT)",
+      "REJECT": "拦截请求 (REJECT)",
+      "REJECT-DROP": "抛弃请求 (REJECT-DROP)",
+      "PASS": "跳过此规则 (PASS)"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "导入订阅成功",
       "importSubscriptionSuccess": "导入订阅成功",
-      "importWithClashProxy": "使用 Clash 代理导入订阅成功"
+      "importWithClashProxy": "使用 Clash 代理导入订阅成功",
+      "saved": "保存成功"
+    },
+    "viewer": {
+      "title": {
+        "create": "新建配置",
+        "edit": "编辑配置"
+      },
+      "fields": {
+        "type": "类型",
+        "name": "名称",
+        "description": "描述",
+        "subscriptionUrl": "订阅链接",
+        "httpTimeout": "HTTP 请求超时",
+        "updateInterval": "更新间隔",
+        "useSystemProxy": "使用系统代理更新",
+        "useClashProxy": "使用内核代理更新",
+        "acceptInvalidCerts": "允许无效证书（危险）",
+        "allowAutoUpdate": "允许自动更新"
+      },
+      "notifications": {
+        "creationRetry": "订阅创建失败，尝试使用 Clash 代理创建",
+        "creationSuccess": "使用 Clash 代理创建订阅成功"
+      }
+    },
+    "menu": {
+      "home": "首 页",
+      "select": "使用",
+      "editInfo": "编辑信息",
+      "editFile": "编辑文件",
+      "editRules": "编辑规则",
+      "editProxies": "编辑节点",
+      "editGroups": "编辑代理组",
+      "extendConfig": "扩展覆写配置",
+      "extendScript": "扩展脚本",
+      "openFile": "打开文件",
+      "update": "更新",
+      "updateViaProxy": "更新（代理）"
+    },
+    "proxiesEditor": {
+      "title": "编辑节点",
+      "placeholders": {
+        "multiUri": "多条 URI 请使用换行分隔（支持 Base64 编码）"
+      },
+      "actions": {
+        "prepend": "添加前置代理节点",
+        "append": "添加后置代理节点"
+      }
+    },
+    "groupsEditor": {
+      "title": "编辑代理组",
+      "errors": {
+        "nameRequired": "代理组名称不能为空",
+        "nameExists": "代理组名称已存在"
+      },
+      "fields": {
+        "type": "代理组类型",
+        "name": "代理组组名",
+        "icon": "代理组图标",
+        "proxies": "引入代理",
+        "provider": "引入代理集合",
+        "healthCheckUrl": "健康检查测试地址",
+        "expectedStatus": "期望状态码",
+        "interval": "检查间隔",
+        "timeout": "超时时间",
+        "maxFailedTimes": "最大失败次数",
+        "interfaceName": "出站接口",
+        "routingMark": "路由标记",
+        "filter": "过滤节点",
+        "excludeFilter": "排除节点",
+        "excludeType": "排除节点类型",
+        "includeAll": "引入所有出站代理、代理集合",
+        "includeAllProxies": "引入所有出站代理",
+        "includeAllProviders": "引入所有代理集合"
+      },
+      "toggles": {
+        "lazy": "懒惰状态",
+        "disableUdp": "禁用 UDP",
+        "hidden": "隐藏代理组"
+      },
+      "actions": {
+        "prepend": "添加前置代理组",
+        "append": "添加后置代理组"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "选择文件"
+    },
+    "more": {
+      "global": {
+        "merge": "全局扩展覆写配置",
+        "script": "全局扩展脚本"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "点击查看上次更新时间",
+        "showNext": "点击查看下一次更新"
+      },
+      "status": {
+        "lastUpdateFailed": "上次更新失败",
+        "nextUp": "下次更新",
+        "noSchedule": "没有计划",
+        "unknown": "未知",
+        "autoUpdateDisabled": "自动更新已禁用"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "确认删除",
+        "message": "此操作不可逆"
+      }
+    },
+    "editor": {
+      "format": "格式化文档",
+      "readOnlyMessage": "无法在只读模式下编辑"
+    },
+    "logViewer": {
+      "title": "脚本控制台输出"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "继续",
         "closeAll": "关闭全部"
       }
+    },
+    "fields": {
+      "host": "主机",
+      "downloaded": "下载量",
+      "uploaded": "上传量",
+      "dlSpeed": "下载速度",
+      "ulSpeed": "上传速度",
+      "chains": "链路",
+      "rule": "规则",
+      "process": "进程",
+      "time": "连接时间",
+      "source": "源地址",
+      "destination": "目标地址",
+      "destinationPort": "目标端口",
+      "type": "类型"
+    },
+    "order": {
+      "default": "默认",
+      "uploadSpeed": "上传速度",
+      "downloadSpeed": "下载速度"
+    },
+    "actions": {
+      "closeConnection": "关闭连接"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "下载速度",
         "memoryUsage": "内核占用"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "手动选择代理",
-      "url-test": "根据 URL 测试延迟选择代理",
-      "fallback": "不可用时切换到另一个代理",
-      "load-balance": "根据负载均衡分配代理",
-      "relay": "根据定义的代理链传递"
-    },
-    "policies": {
-      "DIRECT": "直连 (DIRECT)",
-      "REJECT": "拦截请求 (REJECT)",
-      "REJECT-DROP": "抛弃请求 (REJECT-DROP)",
-      "PASS": "跳过此规则 (PASS)"
     }
   },
   "system": {

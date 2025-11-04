@@ -148,132 +148,6 @@
       "MATCH": "Match all requests (MATCH)"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "Create Profile",
-        "edit": "Edit Profile"
-      },
-      "fields": {
-        "type": "Type",
-        "name": "Name",
-        "description": "Descriptions",
-        "subscriptionUrl": "Subscription URL",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "Update Interval",
-        "useSystemProxy": "Use System Proxy",
-        "useClashProxy": "Use Clash Proxy",
-        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "Choose File"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "Edit Proxies",
-      "placeholders": {
-        "multiUri": "Use newlines for multiple uri(Base64 encoding supported)"
-      },
-      "actions": {
-        "prepend": "Prepend Proxy",
-        "append": "Append Proxy"
-      }
-    },
-    "groupsEditor": {
-      "title": "Edit Proxy Groups",
-      "errors": {
-        "nameRequired": "Group Name Required",
-        "nameExists": "Group Name Already Exists"
-      },
-      "fields": {
-        "type": "Group Type",
-        "name": "Group Name",
-        "icon": "Proxy Group Icon",
-        "proxies": "Use Proxies",
-        "provider": "Use Provider",
-        "healthCheckUrl": "Health Check Url",
-        "expectedStatus": "Expected Status",
-        "interval": "Interval",
-        "timeout": "Timeout",
-        "maxFailedTimes": "Max Failed Times",
-        "interfaceName": "Interface Name",
-        "routingMark": "Routing Mark",
-        "filter": "Filter",
-        "excludeFilter": "Exclude Filter",
-        "excludeType": "Exclude Type",
-        "includeAll": "Include All Proxies and Providers",
-        "includeAllProxies": "Include All Proxies",
-        "includeAllProviders": "Include All Providers"
-      },
-      "toggles": {
-        "lazy": "Lazy",
-        "disableUdp": "Disable UDP",
-        "hidden": "Hidden"
-      },
-      "actions": {
-        "prepend": "Prepend Group",
-        "append": "Append Group"
-      }
-    },
-    "menu": {
-      "home": "Home",
-      "select": "Select",
-      "editInfo": "Edit Info",
-      "editFile": "Edit File",
-      "editRules": "Edit Rules",
-      "editProxies": "Edit Proxies",
-      "editGroups": "Edit Proxy Groups",
-      "extendConfig": "Extend Config",
-      "extendScript": "Extend Script",
-      "openFile": "Open File",
-      "update": "Update",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "Confirm deletion",
-        "message": "This operation is not reversible"
-      }
-    },
-    "logViewer": {
-      "title": "Script Console"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "Format document",
-      "readOnlyMessage": "Cannot edit in read-only editor"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "Host",
-      "downloaded": "Downloaded",
-      "uploaded": "Uploaded",
-      "dlSpeed": "DL Speed",
-      "ulSpeed": "UL Speed",
-      "chains": "Chains",
-      "rule": "Rule",
-      "process": "Process",
-      "time": "Time",
-      "source": "Source",
-      "destination": "Destination",
-      "destinationPort": "Destination Port",
-      "type": "Type"
-    },
-    "actions": {
-      "closeConnection": "Close Connection"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Upload Speed",
-      "downloadSpeed": "Download Speed"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "Direct Mode"
       }
+    },
+    "strategies": {
+      "select": "Select proxy manually",
+      "url-test": "Select proxy based on URL test delay",
+      "fallback": "Switch to another proxy on error",
+      "load-balance": "Distribute proxy based on load balancing",
+      "relay": "Pass through the defined proxy chain"
+    },
+    "policies": {
+      "DIRECT": "Data goes directly outbound (DIRECT)",
+      "REJECT": "Intercepts requests (REJECT)",
+      "REJECT-DROP": "Discards requests (REJECT-DROP)",
+      "PASS": "Skips this rule when matched (PASS)"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "Profile Imported Successfully",
       "importSubscriptionSuccess": "Import subscription successful",
-      "importWithClashProxy": "Profile Imported with Clash proxy"
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "Create Profile",
+        "edit": "Edit Profile"
+      },
+      "fields": {
+        "type": "Type",
+        "name": "Name",
+        "description": "Descriptions",
+        "subscriptionUrl": "Subscription URL",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Update Interval",
+        "useSystemProxy": "Use System Proxy",
+        "useClashProxy": "Use Clash Proxy",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "Select",
+      "editInfo": "Edit Info",
+      "editFile": "Edit File",
+      "editRules": "Edit Rules",
+      "editProxies": "Edit Proxies",
+      "editGroups": "Edit Proxy Groups",
+      "extendConfig": "Extend Config",
+      "extendScript": "Extend Script",
+      "openFile": "Open File",
+      "update": "Update",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "Edit Proxies",
+      "placeholders": {
+        "multiUri": "Use newlines for multiple uri(Base64 encoding supported)"
+      },
+      "actions": {
+        "prepend": "Prepend Proxy",
+        "append": "Append Proxy"
+      }
+    },
+    "groupsEditor": {
+      "title": "Edit Proxy Groups",
+      "errors": {
+        "nameRequired": "Group Name Required",
+        "nameExists": "Group Name Already Exists"
+      },
+      "fields": {
+        "type": "Group Type",
+        "name": "Group Name",
+        "icon": "Proxy Group Icon",
+        "proxies": "Use Proxies",
+        "provider": "Use Provider",
+        "healthCheckUrl": "Health Check Url",
+        "expectedStatus": "Expected Status",
+        "interval": "Interval",
+        "timeout": "Timeout",
+        "maxFailedTimes": "Max Failed Times",
+        "interfaceName": "Interface Name",
+        "routingMark": "Routing Mark",
+        "filter": "Filter",
+        "excludeFilter": "Exclude Filter",
+        "excludeType": "Exclude Type",
+        "includeAll": "Include All Proxies and Providers",
+        "includeAllProxies": "Include All Proxies",
+        "includeAllProviders": "Include All Providers"
+      },
+      "toggles": {
+        "lazy": "Lazy",
+        "disableUdp": "Disable UDP",
+        "hidden": "Hidden"
+      },
+      "actions": {
+        "prepend": "Prepend Group",
+        "append": "Append Group"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Choose File"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Confirm deletion",
+        "message": "This operation is not reversible"
+      }
+    },
+    "editor": {
+      "format": "Format document",
+      "readOnlyMessage": "Cannot edit in read-only editor"
+    },
+    "logViewer": {
+      "title": "Script Console"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "Resume",
         "closeAll": "Close All"
       }
+    },
+    "fields": {
+      "host": "Host",
+      "downloaded": "Downloaded",
+      "uploaded": "Uploaded",
+      "dlSpeed": "DL Speed",
+      "ulSpeed": "UL Speed",
+      "chains": "Chains",
+      "rule": "Rule",
+      "process": "Process",
+      "time": "Time",
+      "source": "Source",
+      "destination": "Destination",
+      "destinationPort": "Destination Port",
+      "type": "Type"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Upload Speed",
+      "downloadSpeed": "Download Speed"
+    },
+    "actions": {
+      "closeConnection": "Close Connection"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "Download Speed",
         "memoryUsage": "Memory Usage"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "Select proxy manually",
-      "url-test": "Select proxy based on URL test delay",
-      "fallback": "Switch to another proxy on error",
-      "load-balance": "Distribute proxy based on load balancing",
-      "relay": "Pass through the defined proxy chain"
-    },
-    "policies": {
-      "DIRECT": "Data goes directly outbound (DIRECT)",
-      "REJECT": "Intercepts requests (REJECT)",
-      "REJECT-DROP": "Discards requests (REJECT-DROP)",
-      "PASS": "Skips this rule when matched (PASS)"
     }
   },
   "system": {

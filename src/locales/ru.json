@@ -148,132 +148,6 @@
       "MATCH": "Соответствует всем запросам"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "Создать профиль",
-        "edit": "Изменить профиль"
-      },
-      "fields": {
-        "type": "Тип",
-        "name": "Название",
-        "description": "Описание",
-        "subscriptionUrl": "URL подписки",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "Интервал обновления",
-        "useSystemProxy": "Использовать системный прокси для обновления",
-        "useClashProxy": "Использовать прокси Clash для обновления",
-        "acceptInvalidCerts": "Принимать недействительные сертификаты (ОПАСНО)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "Выбрать файл"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "Редактировать прокси",
-      "placeholders": {
-        "multiUri": "Используйте символы новой строки для нескольких URI (поддерживается кодировка Base64)"
-      },
-      "actions": {
-        "prepend": "Добавить прокси в начало",
-        "append": "Добавить прокси в конец"
-      }
-    },
-    "groupsEditor": {
-      "title": "Редактировать группы прокси",
-      "errors": {
-        "nameRequired": "Требуется имя группы",
-        "nameExists": "Имя группы уже существует"
-      },
-      "fields": {
-        "type": "Тип группы",
-        "name": "Имя группы",
-        "icon": "Иконка Группы прокси",
-        "proxies": "Использовать прокси",
-        "provider": "Использовать провайдера",
-        "healthCheckUrl": "URL проверки здоровья",
-        "expectedStatus": "Ожидаемый статус",
-        "interval": "Интервал",
-        "timeout": "Таймаут",
-        "maxFailedTimes": "Максимальное количество неудач",
-        "interfaceName": "Имя интерфейса",
-        "routingMark": "Марка маршрутизации",
-        "filter": "Фильтр",
-        "excludeFilter": "Исключить фильтр",
-        "excludeType": "Тип исключения",
-        "includeAll": "Включить все прокси и провайдеры",
-        "includeAllProxies": "Включить все прокси",
-        "includeAllProviders": "Включить всех провайдеров"
-      },
-      "toggles": {
-        "lazy": "Ленивый",
-        "disableUdp": "Отключить UDP",
-        "hidden": "Скрытый"
-      },
-      "actions": {
-        "prepend": "Добавить группу в начало",
-        "append": "Добавить группу в конец"
-      }
-    },
-    "menu": {
-      "home": "Главная",
-      "select": "Выбрать",
-      "editInfo": "Изменить информацию",
-      "editFile": "Изменить файл",
-      "editRules": "Редактировать правила",
-      "editProxies": "Редактировать прокси",
-      "editGroups": "Редактировать группы прокси",
-      "extendConfig": "Изменить Merge",
-      "extendScript": "Изменить Script",
-      "openFile": "Открыть файл",
-      "update": "Обновить",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "Подтвердите удаление",
-        "message": "Эта операция необратима"
-      }
-    },
-    "logViewer": {
-      "title": "Консоль скрипта"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "Форматировать документ",
-      "readOnlyMessage": "Невозможно редактировать в режиме только для чтения"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "Хост",
-      "downloaded": "Скачано",
-      "uploaded": "Загружено",
-      "dlSpeed": "Скорость скачивания",
-      "ulSpeed": "Скорость загрузки",
-      "chains": "Цепочки",
-      "rule": "Правило",
-      "process": "Процесс",
-      "time": "Время подключения",
-      "source": "Исходный адрес",
-      "destination": "IP-адрес назначения",
-      "destinationPort": "Целевой порт",
-      "type": "Тип"
-    },
-    "actions": {
-      "closeConnection": "Закрыть соединение"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Скорость загрузки",
-      "downloadSpeed": "Скорость скачивания"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "Прямой режим"
       }
+    },
+    "strategies": {
+      "select": "Выбор прокси вручную",
+      "url-test": "Выбор прокси на основе задержки теста URL",
+      "fallback": "Переключение на другой прокси при ошибке",
+      "load-balance": "Распределение прокси на основе балансировки нагрузки",
+      "relay": "Передача через определенную цепочку прокси"
+    },
+    "policies": {
+      "DIRECT": "Данные направляются напрямую наружу",
+      "REJECT": "Перехватывает запросы",
+      "REJECT-DROP": "Отклоняет запросы",
+      "PASS": "Пропускает это правило при совпадении"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "Профиль успешно импортирован",
       "importSubscriptionSuccess": "Подписка успешно импортирована",
-      "importWithClashProxy": "Profile Imported with Clash proxy"
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "Создать профиль",
+        "edit": "Изменить профиль"
+      },
+      "fields": {
+        "type": "Тип",
+        "name": "Название",
+        "description": "Описание",
+        "subscriptionUrl": "URL подписки",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Интервал обновления",
+        "useSystemProxy": "Использовать системный прокси для обновления",
+        "useClashProxy": "Использовать прокси Clash для обновления",
+        "acceptInvalidCerts": "Принимать недействительные сертификаты (ОПАСНО)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "Главная",
+      "select": "Выбрать",
+      "editInfo": "Изменить информацию",
+      "editFile": "Изменить файл",
+      "editRules": "Редактировать правила",
+      "editProxies": "Редактировать прокси",
+      "editGroups": "Редактировать группы прокси",
+      "extendConfig": "Изменить Merge",
+      "extendScript": "Изменить Script",
+      "openFile": "Открыть файл",
+      "update": "Обновить",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "Редактировать прокси",
+      "placeholders": {
+        "multiUri": "Используйте символы новой строки для нескольких URI (поддерживается кодировка Base64)"
+      },
+      "actions": {
+        "prepend": "Добавить прокси в начало",
+        "append": "Добавить прокси в конец"
+      }
+    },
+    "groupsEditor": {
+      "title": "Редактировать группы прокси",
+      "errors": {
+        "nameRequired": "Требуется имя группы",
+        "nameExists": "Имя группы уже существует"
+      },
+      "fields": {
+        "type": "Тип группы",
+        "name": "Имя группы",
+        "icon": "Иконка Группы прокси",
+        "proxies": "Использовать прокси",
+        "provider": "Использовать провайдера",
+        "healthCheckUrl": "URL проверки здоровья",
+        "expectedStatus": "Ожидаемый статус",
+        "interval": "Интервал",
+        "timeout": "Таймаут",
+        "maxFailedTimes": "Максимальное количество неудач",
+        "interfaceName": "Имя интерфейса",
+        "routingMark": "Марка маршрутизации",
+        "filter": "Фильтр",
+        "excludeFilter": "Исключить фильтр",
+        "excludeType": "Тип исключения",
+        "includeAll": "Включить все прокси и провайдеры",
+        "includeAllProxies": "Включить все прокси",
+        "includeAllProviders": "Включить всех провайдеров"
+      },
+      "toggles": {
+        "lazy": "Ленивый",
+        "disableUdp": "Отключить UDP",
+        "hidden": "Скрытый"
+      },
+      "actions": {
+        "prepend": "Добавить группу в начало",
+        "append": "Добавить группу в конец"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Выбрать файл"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Подтвердите удаление",
+        "message": "Эта операция необратима"
+      }
+    },
+    "editor": {
+      "format": "Форматировать документ",
+      "readOnlyMessage": "Невозможно редактировать в режиме только для чтения"
+    },
+    "logViewer": {
+      "title": "Консоль скрипта"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "Возобновить",
         "closeAll": "Закрыть всё"
       }
+    },
+    "fields": {
+      "host": "Хост",
+      "downloaded": "Скачано",
+      "uploaded": "Загружено",
+      "dlSpeed": "Скорость скачивания",
+      "ulSpeed": "Скорость загрузки",
+      "chains": "Цепочки",
+      "rule": "Правило",
+      "process": "Процесс",
+      "time": "Время подключения",
+      "source": "Исходный адрес",
+      "destination": "IP-адрес назначения",
+      "destinationPort": "Целевой порт",
+      "type": "Тип"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Скорость загрузки",
+      "downloadSpeed": "Скорость скачивания"
+    },
+    "actions": {
+      "closeConnection": "Закрыть соединение"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "Скорость скачивания",
         "memoryUsage": "Использование памяти"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "Выбор прокси вручную",
-      "url-test": "Выбор прокси на основе задержки теста URL",
-      "fallback": "Переключение на другой прокси при ошибке",
-      "load-balance": "Распределение прокси на основе балансировки нагрузки",
-      "relay": "Передача через определенную цепочку прокси"
-    },
-    "policies": {
-      "DIRECT": "Данные направляются напрямую наружу",
-      "REJECT": "Перехватывает запросы",
-      "REJECT-DROP": "Отклоняет запросы",
-      "PASS": "Пропускает это правило при совпадении"
     }
   },
   "system": {

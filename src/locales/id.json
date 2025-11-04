@@ -148,132 +148,6 @@
       "MATCH": "Cocok dengan semua permintaan"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "Buat Profil",
-        "edit": "Ubah Profil"
-      },
-      "fields": {
-        "type": "Jenis",
-        "name": "Nama",
-        "description": "Deskripsi",
-        "subscriptionUrl": "URL Langganan",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "Interval Pembaruan",
-        "useSystemProxy": "Gunakan Proksi Sistem",
-        "useClashProxy": "Gunakan Proksi Clash",
-        "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "Pilih Berkas"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "Ubah Proksi",
-      "placeholders": {
-        "multiUri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)"
-      },
-      "actions": {
-        "prepend": "Tambahkan Proksi di Awal",
-        "append": "Tambahkan Proksi di Akhir"
-      }
-    },
-    "groupsEditor": {
-      "title": "Ubah Grup Proksi",
-      "errors": {
-        "nameRequired": "Nama Grup Diperlukan",
-        "nameExists": "Nama Grup Sudah Ada"
-      },
-      "fields": {
-        "type": "Jenis Grup",
-        "name": "Nama Grup",
-        "icon": "Ikon Grup Proksi",
-        "proxies": "Gunakan Proksi",
-        "provider": "Gunakan Penyedia",
-        "healthCheckUrl": "URL Pemeriksaan Kesehatan",
-        "expectedStatus": "Status yang Diharapkan",
-        "interval": "Interval",
-        "timeout": "Waktu Habis",
-        "maxFailedTimes": "Jumlah Gagal Maksimal",
-        "interfaceName": "Nama Antarmuka",
-        "routingMark": "Tanda Routing",
-        "filter": "Filter",
-        "excludeFilter": "Kecualikan Filter",
-        "excludeType": "Kecualikan Jenis",
-        "includeAll": "Sertakan Semua Proksi dan Penyedia",
-        "includeAllProxies": "Sertakan Semua Proksi",
-        "includeAllProviders": "Sertakan Semua Penyedia"
-      },
-      "toggles": {
-        "lazy": "Malas",
-        "disableUdp": "Nonaktifkan UDP",
-        "hidden": "Tersembunyi"
-      },
-      "actions": {
-        "prepend": "Tambahkan Grup di Awal",
-        "append": "Tambahkan Grup di Akhir"
-      }
-    },
-    "menu": {
-      "home": "Home",
-      "select": "Pilih",
-      "editInfo": "Ubah Info",
-      "editFile": "Ubah Berkas",
-      "editRules": "Ubah Aturan",
-      "editProxies": "Ubah Proksi",
-      "editGroups": "Ubah Grup Proksi",
-      "extendConfig": "Perluas Konfigurasi",
-      "extendScript": "Perluas Skrip",
-      "openFile": "Buka Berkas",
-      "update": "Perbarui",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "Konfirmasi penghapusan",
-        "message": "Operasi ini tidak dapat dibatalkan"
-      }
-    },
-    "logViewer": {
-      "title": "Konsol Skrip"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "Format dokumen",
-      "readOnlyMessage": "Tidak dapat mengedit di editor hanya baca"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "Host",
-      "downloaded": "Diunduh",
-      "uploaded": "Diunggah",
-      "dlSpeed": "Kecepatan Unduh",
-      "ulSpeed": "Kecepatan Unggah",
-      "chains": "Rantai",
-      "rule": "Aturan",
-      "process": "Proses",
-      "time": "Waktu",
-      "source": "Sumber",
-      "destination": "IP Tujuan",
-      "destinationPort": "Port Tujuan",
-      "type": "Jenis"
-    },
-    "actions": {
-      "closeConnection": "Tutup Koneksi"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Kecepatan Unggah",
-      "downloadSpeed": "Kecepatan Unduh"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "Mode Langsung"
       }
+    },
+    "strategies": {
+      "select": "Pilih proksi secara manual",
+      "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
+      "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
+      "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
+      "relay": "Lewatkan melalui rantai proksi yang ditentukan"
+    },
+    "policies": {
+      "DIRECT": "Data langsung keluar",
+      "REJECT": "Mencegat permintaan",
+      "REJECT-DROP": "Membuang permintaan",
+      "PASS": "Lewati aturan ini saat cocok"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "Profil Berhasil Diimpor",
       "importSubscriptionSuccess": "Berlangganan Berhasil Diimpor",
-      "importWithClashProxy": "Profile Imported with Clash proxy"
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "Buat Profil",
+        "edit": "Ubah Profil"
+      },
+      "fields": {
+        "type": "Jenis",
+        "name": "Nama",
+        "description": "Deskripsi",
+        "subscriptionUrl": "URL Langganan",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Interval Pembaruan",
+        "useSystemProxy": "Gunakan Proksi Sistem",
+        "useClashProxy": "Gunakan Proksi Clash",
+        "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "Pilih",
+      "editInfo": "Ubah Info",
+      "editFile": "Ubah Berkas",
+      "editRules": "Ubah Aturan",
+      "editProxies": "Ubah Proksi",
+      "editGroups": "Ubah Grup Proksi",
+      "extendConfig": "Perluas Konfigurasi",
+      "extendScript": "Perluas Skrip",
+      "openFile": "Buka Berkas",
+      "update": "Perbarui",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "Ubah Proksi",
+      "placeholders": {
+        "multiUri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)"
+      },
+      "actions": {
+        "prepend": "Tambahkan Proksi di Awal",
+        "append": "Tambahkan Proksi di Akhir"
+      }
+    },
+    "groupsEditor": {
+      "title": "Ubah Grup Proksi",
+      "errors": {
+        "nameRequired": "Nama Grup Diperlukan",
+        "nameExists": "Nama Grup Sudah Ada"
+      },
+      "fields": {
+        "type": "Jenis Grup",
+        "name": "Nama Grup",
+        "icon": "Ikon Grup Proksi",
+        "proxies": "Gunakan Proksi",
+        "provider": "Gunakan Penyedia",
+        "healthCheckUrl": "URL Pemeriksaan Kesehatan",
+        "expectedStatus": "Status yang Diharapkan",
+        "interval": "Interval",
+        "timeout": "Waktu Habis",
+        "maxFailedTimes": "Jumlah Gagal Maksimal",
+        "interfaceName": "Nama Antarmuka",
+        "routingMark": "Tanda Routing",
+        "filter": "Filter",
+        "excludeFilter": "Kecualikan Filter",
+        "excludeType": "Kecualikan Jenis",
+        "includeAll": "Sertakan Semua Proksi dan Penyedia",
+        "includeAllProxies": "Sertakan Semua Proksi",
+        "includeAllProviders": "Sertakan Semua Penyedia"
+      },
+      "toggles": {
+        "lazy": "Malas",
+        "disableUdp": "Nonaktifkan UDP",
+        "hidden": "Tersembunyi"
+      },
+      "actions": {
+        "prepend": "Tambahkan Grup di Awal",
+        "append": "Tambahkan Grup di Akhir"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Pilih Berkas"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Konfirmasi penghapusan",
+        "message": "Operasi ini tidak dapat dibatalkan"
+      }
+    },
+    "editor": {
+      "format": "Format dokumen",
+      "readOnlyMessage": "Tidak dapat mengedit di editor hanya baca"
+    },
+    "logViewer": {
+      "title": "Konsol Skrip"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "Lanjut",
         "closeAll": "Tutup Semua"
       }
+    },
+    "fields": {
+      "host": "Host",
+      "downloaded": "Diunduh",
+      "uploaded": "Diunggah",
+      "dlSpeed": "Kecepatan Unduh",
+      "ulSpeed": "Kecepatan Unggah",
+      "chains": "Rantai",
+      "rule": "Aturan",
+      "process": "Proses",
+      "time": "Waktu",
+      "source": "Sumber",
+      "destination": "IP Tujuan",
+      "destinationPort": "Port Tujuan",
+      "type": "Jenis"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Kecepatan Unggah",
+      "downloadSpeed": "Kecepatan Unduh"
+    },
+    "actions": {
+      "closeConnection": "Tutup Koneksi"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "Kecepatan Unduh",
         "memoryUsage": "Penggunaan Memori"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "Pilih proksi secara manual",
-      "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
-      "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
-      "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
-      "relay": "Lewatkan melalui rantai proksi yang ditentukan"
-    },
-    "policies": {
-      "DIRECT": "Data langsung keluar",
-      "REJECT": "Mencegat permintaan",
-      "REJECT-DROP": "Membuang permintaan",
-      "PASS": "Lewati aturan ini saat cocok"
     }
   },
   "system": {

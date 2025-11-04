@@ -148,132 +148,6 @@
       "MATCH": "すべてのリクエストを一致させる"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "新規プロファイルを作成",
-        "edit": "プロファイルを編集"
-      },
-      "fields": {
-        "type": "タイプ",
-        "name": "名前",
-        "description": "説明",
-        "subscriptionUrl": "サブスクリプションURL",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "更新間隔",
-        "useSystemProxy": "システムプロキシを使用して更新",
-        "useClashProxy": "クラッシュプロキシを使用して更新",
-        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",
-        "creationSuccess": "Clashプロキシを使用してプロファイルの作成に成功しました。"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "ファイルを選択"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "ノードを編集",
-      "placeholders": {
-        "multiUri": "複数のURIは改行で区切ってください（Base64エンコードに対応）"
-      },
-      "actions": {
-        "prepend": "前置プロキシノードを追加",
-        "append": "後置プロキシノードを追加"
-      }
-    },
-    "groupsEditor": {
-      "title": "プロキシグループを編集",
-      "errors": {
-        "nameRequired": "プロキシグループ名は必須です",
-        "nameExists": "プロキシグループ名はすでに存在します"
-      },
-      "fields": {
-        "type": "プロキシグループタイプ",
-        "name": "プロキシグループ名",
-        "icon": "プロキシグループアイコン",
-        "proxies": "プロキシを導入",
-        "provider": "プロキシプロバイダーを導入",
-        "healthCheckUrl": "ヘルスチェックURL",
-        "expectedStatus": "期待するステータスコード",
-        "interval": "チェック間隔",
-        "timeout": "タイムアウト時間",
-        "maxFailedTimes": "最大失敗回数",
-        "interfaceName": "出力インターフェース",
-        "routingMark": "ルーティングマーク",
-        "filter": "ノードをフィルタリング",
-        "excludeFilter": "除外ノード",
-        "excludeType": "除外ノードタイプ",
-        "includeAll": "すべての出力プロキシ、プロキシプロバイダーを導入",
-        "includeAllProxies": "すべての出力プロキシを導入",
-        "includeAllProviders": "すべてのプロキシプロバイダーを導入"
-      },
-      "toggles": {
-        "lazy": "遅延モード",
-        "disableUdp": "UDPを無効にする",
-        "hidden": "プロキシグループを隠す"
-      },
-      "actions": {
-        "prepend": "前置プロキシグループを追加",
-        "append": "後置プロキシグループを追加"
-      }
-    },
-    "menu": {
-      "home": "ホーム",
-      "select": "使用する",
-      "editInfo": "情報を編集",
-      "editFile": "ファイルを編集",
-      "editRules": "ルールを編集",
-      "editProxies": "ノードを編集",
-      "editGroups": "プロキシグループを編集",
-      "extendConfig": "拡張上書き設定",
-      "extendScript": "拡張スクリプト",
-      "openFile": "ファイルを開く",
-      "update": "更新",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "前回の更新に失敗しました。",
-        "nextUp": "次回の更新",
-        "noSchedule": "予定がありません。",
-        "unknown": "不明",
-        "autoUpdateDisabled": "自動更新が無効になっています。"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "削除を確認",
-        "message": "この操作は元に戻せません"
-      }
-    },
-    "logViewer": {
-      "title": "スクリプトコンソール出力"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "文書を整形する",
-      "readOnlyMessage": "読み取り専用モードでは編集できません。"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "ホスト",
-      "downloaded": "ダウンロード量",
-      "uploaded": "アップロード量",
-      "dlSpeed": "ダウンロード速度",
-      "ulSpeed": "アップロード速度",
-      "chains": "チェーン",
-      "rule": "ルール",
-      "process": "プロセス",
-      "time": "接続時間",
-      "source": "送信元アドレス",
-      "destination": "宛先アドレス",
-      "destinationPort": "宛先ポート",
-      "type": "タイプ"
-    },
-    "actions": {
-      "closeConnection": "接続を閉じる"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "アップロード速度",
-      "downloadSpeed": "ダウンロード速度"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "直接接続モード"
       }
+    },
+    "strategies": {
+      "select": "手動でプロキシを選択",
+      "url-test": "URLテストによる遅延でプロキシを選択",
+      "fallback": "利用不可の場合は別のプロキシに切り替える",
+      "load-balance": "負荷分散によりプロキシを割り当てる",
+      "relay": "定義されたプロキシチェーンに沿って転送する"
+    },
+    "policies": {
+      "DIRECT": "直接接続",
+      "REJECT": "リクエストを拒否",
+      "REJECT-DROP": "リクエストを破棄",
+      "PASS": "このルールをスキップ"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "プロファイルのインポートに成功しました。",
       "importSubscriptionSuccess": "サブスクリプションのインポートに成功しました。",
-      "importWithClashProxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。"
+      "importWithClashProxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "新規プロファイルを作成",
+        "edit": "プロファイルを編集"
+      },
+      "fields": {
+        "type": "タイプ",
+        "name": "名前",
+        "description": "説明",
+        "subscriptionUrl": "サブスクリプションURL",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "更新間隔",
+        "useSystemProxy": "システムプロキシを使用して更新",
+        "useClashProxy": "クラッシュプロキシを使用して更新",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",
+        "creationSuccess": "Clashプロキシを使用してプロファイルの作成に成功しました。"
+      }
+    },
+    "menu": {
+      "home": "ホーム",
+      "select": "使用する",
+      "editInfo": "情報を編集",
+      "editFile": "ファイルを編集",
+      "editRules": "ルールを編集",
+      "editProxies": "ノードを編集",
+      "editGroups": "プロキシグループを編集",
+      "extendConfig": "拡張上書き設定",
+      "extendScript": "拡張スクリプト",
+      "openFile": "ファイルを開く",
+      "update": "更新",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "ノードを編集",
+      "placeholders": {
+        "multiUri": "複数のURIは改行で区切ってください（Base64エンコードに対応）"
+      },
+      "actions": {
+        "prepend": "前置プロキシノードを追加",
+        "append": "後置プロキシノードを追加"
+      }
+    },
+    "groupsEditor": {
+      "title": "プロキシグループを編集",
+      "errors": {
+        "nameRequired": "プロキシグループ名は必須です",
+        "nameExists": "プロキシグループ名はすでに存在します"
+      },
+      "fields": {
+        "type": "プロキシグループタイプ",
+        "name": "プロキシグループ名",
+        "icon": "プロキシグループアイコン",
+        "proxies": "プロキシを導入",
+        "provider": "プロキシプロバイダーを導入",
+        "healthCheckUrl": "ヘルスチェックURL",
+        "expectedStatus": "期待するステータスコード",
+        "interval": "チェック間隔",
+        "timeout": "タイムアウト時間",
+        "maxFailedTimes": "最大失敗回数",
+        "interfaceName": "出力インターフェース",
+        "routingMark": "ルーティングマーク",
+        "filter": "ノードをフィルタリング",
+        "excludeFilter": "除外ノード",
+        "excludeType": "除外ノードタイプ",
+        "includeAll": "すべての出力プロキシ、プロキシプロバイダーを導入",
+        "includeAllProxies": "すべての出力プロキシを導入",
+        "includeAllProviders": "すべてのプロキシプロバイダーを導入"
+      },
+      "toggles": {
+        "lazy": "遅延モード",
+        "disableUdp": "UDPを無効にする",
+        "hidden": "プロキシグループを隠す"
+      },
+      "actions": {
+        "prepend": "前置プロキシグループを追加",
+        "append": "後置プロキシグループを追加"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "ファイルを選択"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "前回の更新に失敗しました。",
+        "nextUp": "次回の更新",
+        "noSchedule": "予定がありません。",
+        "unknown": "不明",
+        "autoUpdateDisabled": "自動更新が無効になっています。"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "削除を確認",
+        "message": "この操作は元に戻せません"
+      }
+    },
+    "editor": {
+      "format": "文書を整形する",
+      "readOnlyMessage": "読み取り専用モードでは編集できません。"
+    },
+    "logViewer": {
+      "title": "スクリプトコンソール出力"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "再開",
         "closeAll": "すべて閉じる"
       }
+    },
+    "fields": {
+      "host": "ホスト",
+      "downloaded": "ダウンロード量",
+      "uploaded": "アップロード量",
+      "dlSpeed": "ダウンロード速度",
+      "ulSpeed": "アップロード速度",
+      "chains": "チェーン",
+      "rule": "ルール",
+      "process": "プロセス",
+      "time": "接続時間",
+      "source": "送信元アドレス",
+      "destination": "宛先アドレス",
+      "destinationPort": "宛先ポート",
+      "type": "タイプ"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "アップロード速度",
+      "downloadSpeed": "ダウンロード速度"
+    },
+    "actions": {
+      "closeConnection": "接続を閉じる"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "ダウンロード速度",
         "memoryUsage": "コアメモリ使用量"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "手動でプロキシを選択",
-      "url-test": "URLテストによる遅延でプロキシを選択",
-      "fallback": "利用不可の場合は別のプロキシに切り替える",
-      "load-balance": "負荷分散によりプロキシを割り当てる",
-      "relay": "定義されたプロキシチェーンに沿って転送する"
-    },
-    "policies": {
-      "DIRECT": "直接接続",
-      "REJECT": "リクエストを拒否",
-      "REJECT-DROP": "リクエストを破棄",
-      "PASS": "このルールをスキップ"
     }
   },
   "system": {

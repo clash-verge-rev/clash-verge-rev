@@ -148,132 +148,6 @@
       "MATCH": "مطابقة جميع الطلبات"
     }
   },
-  "profile": {
-    "viewer": {
-      "title": {
-        "create": "إنشاء ملف شخصي",
-        "edit": "تعديل الملف الشخصي"
-      },
-      "fields": {
-        "type": "النوع",
-        "name": "الاسم",
-        "description": "الوصف",
-        "subscriptionUrl": "رابط الاشتراك",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "فاصل التحديث",
-        "useSystemProxy": "استخدام وكيل النظام",
-        "useClashProxy": "استخدام وكيل Clash",
-        "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
-        "allowAutoUpdate": "Allow Auto Update"
-      },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "اختر ملف"
-    },
-    "notifications": {
-      "saved": "Saved successfully"
-    },
-    "proxiesEditor": {
-      "title": "تعديل الوكلاء",
-      "placeholders": {
-        "multiUri": "استخدم أسطرًا جديدة لعدّة عناوين URI (يدعم التشفير Base64)"
-      },
-      "actions": {
-        "prepend": "إضافة وكيل في البداية",
-        "append": "إضافة وكيل في النهاية"
-      }
-    },
-    "groupsEditor": {
-      "title": "تعديل مجموعات الوكلاء",
-      "errors": {
-        "nameRequired": "اسم المجموعة مطلوب",
-        "nameExists": "اسم المجموعة موجود بالفعل"
-      },
-      "fields": {
-        "type": "نوع المجموعة",
-        "name": "اسم المجموعة",
-        "icon": "أيقونة مجموعة الوكلاء",
-        "proxies": "استخدام الوكلاء",
-        "provider": "استخدام المزود",
-        "healthCheckUrl": "رابط فحص الصحة",
-        "expectedStatus": "الحالة المتوقعة",
-        "interval": "الفاصل الزمني",
-        "timeout": "مهلة",
-        "maxFailedTimes": "الحد الأقصى لمحاولات الفشل",
-        "interfaceName": "اسم الواجهة",
-        "routingMark": "علامة التوجيه",
-        "filter": "تصفية",
-        "excludeFilter": "استبعاد المرشح",
-        "excludeType": "استبعاد النوع",
-        "includeAll": "تضمين جميع الوكلاء والمزودين",
-        "includeAllProxies": "تضمين جميع الوكلاء",
-        "includeAllProviders": "تضمين جميع المزودين"
-      },
-      "toggles": {
-        "lazy": "كسول",
-        "disableUdp": "تعطيل UDP",
-        "hidden": "مخفي"
-      },
-      "actions": {
-        "prepend": "إضافة مجموعة في البداية",
-        "append": "إضافة مجموعة في النهاية"
-      }
-    },
-    "menu": {
-      "home": "Home",
-      "select": "اختيار",
-      "editInfo": "تعديل المعلومات",
-      "editFile": "تعديل الملف",
-      "editRules": "تعديل القواعد",
-      "editProxies": "تعديل الوكلاء",
-      "editGroups": "تعديل مجموعات الوكلاء",
-      "extendConfig": "توسيع الإعدادات",
-      "extendScript": "توسيع السكربت",
-      "openFile": "فتح الملف",
-      "update": "تحديث",
-      "updateViaProxy": "Update via proxy"
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
-        "title": "تأكيد الحذف",
-        "message": "لا يمكن التراجع عن هذه العملية"
-      }
-    },
-    "logViewer": {
-      "title": "وحدة التحكم للسكريبت"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "editor": {
-      "format": "تنسيق المستند",
-      "readOnlyMessage": "لا يمكن التعديل في محرر القراءة فقط"
-    }
-  },
   "home": {
     "proxyTunCard": {
       "status": {
@@ -423,31 +297,6 @@
         "global": "Forward all network requests through the selected proxy.",
         "direct": "Bypass the proxy and connect to the internet directly."
       }
-    }
-  },
-  "connection": {
-    "fields": {
-      "host": "المضيف",
-      "downloaded": "تم التنزيل",
-      "uploaded": "تم الرفع",
-      "dlSpeed": "سرعة التنزيل",
-      "ulSpeed": "سرعة الرفع",
-      "chains": "السلاسل",
-      "rule": "قاعدة",
-      "process": "عملية",
-      "time": "الوقت",
-      "source": "المصدر",
-      "destination": "عنوان IP الوجهة",
-      "destinationPort": "ميناء الوجهة",
-      "type": "النوع"
-    },
-    "actions": {
-      "closeConnection": "إغلاق الاتصال"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "سرعة الرفع",
-      "downloadSpeed": "سرعة التنزيل"
     }
   },
   "settings": {
@@ -1090,6 +939,19 @@
       "messages": {
         "directMode": "الوضع المباشر"
       }
+    },
+    "strategies": {
+      "select": "اختيار الوكيل يدويًا",
+      "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
+      "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
+      "load-balance": "توزيع التحميل بين الوكلاء",
+      "relay": "التمرير عبر سلسلة الوكلاء المحددة"
+    },
+    "policies": {
+      "DIRECT": "البيانات تخرج مباشرة",
+      "REJECT": "رفض الطلبات",
+      "REJECT-DROP": "تجاهل الطلبات",
+      "PASS": "تخطي هذه القاعدة عند المطابقة"
     }
   },
   "rules": {
@@ -1150,7 +1012,129 @@
     "notifications": {
       "importSuccess": "تم استيراد الملف الشخصي بنجاح",
       "importSubscriptionSuccess": "تم استيراد الاشتراك بنجاح",
-      "importWithClashProxy": "Profile Imported with Clash proxy"
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "إنشاء ملف شخصي",
+        "edit": "تعديل الملف الشخصي"
+      },
+      "fields": {
+        "type": "النوع",
+        "name": "الاسم",
+        "description": "الوصف",
+        "subscriptionUrl": "رابط الاشتراك",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "فاصل التحديث",
+        "useSystemProxy": "استخدام وكيل النظام",
+        "useClashProxy": "استخدام وكيل Clash",
+        "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "اختيار",
+      "editInfo": "تعديل المعلومات",
+      "editFile": "تعديل الملف",
+      "editRules": "تعديل القواعد",
+      "editProxies": "تعديل الوكلاء",
+      "editGroups": "تعديل مجموعات الوكلاء",
+      "extendConfig": "توسيع الإعدادات",
+      "extendScript": "توسيع السكربت",
+      "openFile": "فتح الملف",
+      "update": "تحديث",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "تعديل الوكلاء",
+      "placeholders": {
+        "multiUri": "استخدم أسطرًا جديدة لعدّة عناوين URI (يدعم التشفير Base64)"
+      },
+      "actions": {
+        "prepend": "إضافة وكيل في البداية",
+        "append": "إضافة وكيل في النهاية"
+      }
+    },
+    "groupsEditor": {
+      "title": "تعديل مجموعات الوكلاء",
+      "errors": {
+        "nameRequired": "اسم المجموعة مطلوب",
+        "nameExists": "اسم المجموعة موجود بالفعل"
+      },
+      "fields": {
+        "type": "نوع المجموعة",
+        "name": "اسم المجموعة",
+        "icon": "أيقونة مجموعة الوكلاء",
+        "proxies": "استخدام الوكلاء",
+        "provider": "استخدام المزود",
+        "healthCheckUrl": "رابط فحص الصحة",
+        "expectedStatus": "الحالة المتوقعة",
+        "interval": "الفاصل الزمني",
+        "timeout": "مهلة",
+        "maxFailedTimes": "الحد الأقصى لمحاولات الفشل",
+        "interfaceName": "اسم الواجهة",
+        "routingMark": "علامة التوجيه",
+        "filter": "تصفية",
+        "excludeFilter": "استبعاد المرشح",
+        "excludeType": "استبعاد النوع",
+        "includeAll": "تضمين جميع الوكلاء والمزودين",
+        "includeAllProxies": "تضمين جميع الوكلاء",
+        "includeAllProviders": "تضمين جميع المزودين"
+      },
+      "toggles": {
+        "lazy": "كسول",
+        "disableUdp": "تعطيل UDP",
+        "hidden": "مخفي"
+      },
+      "actions": {
+        "prepend": "إضافة مجموعة في البداية",
+        "append": "إضافة مجموعة في النهاية"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "اختر ملف"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "تأكيد الحذف",
+        "message": "لا يمكن التراجع عن هذه العملية"
+      }
+    },
+    "editor": {
+      "format": "تنسيق المستند",
+      "readOnlyMessage": "لا يمكن التعديل في محرر القراءة فقط"
+    },
+    "logViewer": {
+      "title": "وحدة التحكم للسكريبت"
     }
   },
   "connections": {
@@ -1167,6 +1151,29 @@
         "resume": "استأنف",
         "closeAll": "إغلاق الكل"
       }
+    },
+    "fields": {
+      "host": "المضيف",
+      "downloaded": "تم التنزيل",
+      "uploaded": "تم الرفع",
+      "dlSpeed": "سرعة التنزيل",
+      "ulSpeed": "سرعة الرفع",
+      "chains": "السلاسل",
+      "rule": "قاعدة",
+      "process": "عملية",
+      "time": "الوقت",
+      "source": "المصدر",
+      "destination": "عنوان IP الوجهة",
+      "destinationPort": "ميناء الوجهة",
+      "type": "النوع"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "سرعة الرفع",
+      "downloadSpeed": "سرعة التنزيل"
+    },
+    "actions": {
+      "closeConnection": "إغلاق الاتصال"
     }
   },
   "logs": {
@@ -1205,21 +1212,6 @@
         "downloadSpeed": "سرعة التنزيل",
         "memoryUsage": "استهلاك الذاكرة"
       }
-    }
-  },
-  "proxy": {
-    "strategies": {
-      "select": "اختيار الوكيل يدويًا",
-      "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
-      "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
-      "load-balance": "توزيع التحميل بين الوكلاء",
-      "relay": "التمرير عبر سلسلة الوكلاء المحددة"
-    },
-    "policies": {
-      "DIRECT": "البيانات تخرج مباشرة",
-      "REJECT": "رفض الطلبات",
-      "REJECT-DROP": "تجاهل الطلبات",
-      "PASS": "تخطي هذه القاعدة عند المطابقة"
     }
   },
   "system": {
