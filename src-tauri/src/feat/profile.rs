@@ -152,13 +152,13 @@ async fn perform_profile_update(
         let profiles = Config::profiles().await;
         profiles.latest_arc().is_current_profile_index(uid)
     };
-    let profile_name = {
-        let profiles = Config::profiles().await;
-        profiles
-            .latest_arc()
-            .get_name_by_uid(uid)
-            .unwrap_or_default()
-    };
+    let profiles = Config::profiles().await;
+    let profiles_arc = profiles.latest_arc();
+    let profile_name = profiles_arc
+        .get_name_by_uid(uid)
+        .cloned()
+        .unwrap_or_else(|| String::from("UnKown Profile"));
+
     let mut last_err;
 
     match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {

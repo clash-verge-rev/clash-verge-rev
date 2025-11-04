@@ -455,7 +455,7 @@ impl Tray {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_arc();
             if let Some(current_profile_uid) = profiles.get_current()
-                && let Ok(profile) = profiles.get_item(&current_profile_uid)
+                && let Ok(profile) = profiles.get_item(current_profile_uid)
             {
                 current_profile_name = match &profile.name {
                     Some(profile_name) => profile_name.to_string(),
@@ -842,7 +842,7 @@ async fn create_tray_menu(
         let profiles_ref = profiles_config.latest_arc();
         profiles_ref
             .get_current()
-            .and_then(|uid| profiles_ref.get_item(&uid).ok())
+            .and_then(|uid| profiles_ref.get_item(uid).ok())
             .and_then(|profile| profile.selected.clone())
             .unwrap_or_default()
     };
