@@ -318,11 +318,9 @@ impl Tray {
                 .unwrap_or("rule")
                 .to_owned()
         };
-        let profile_uid_and_name = Config::profiles()
-            .await
-            .latest_arc()
-            .all_profile_uid_and_name()
-            .unwrap_or_default();
+        let profiles_config = Config::profiles().await;
+        let profiles_arc = profiles_config.latest_arc();
+        let profile_uid_and_name = profiles_arc.all_profile_uid_and_name().unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
         match app_handle.tray_by_id("main") {
@@ -666,7 +664,7 @@ fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<String, String> {
 
 async fn create_profile_menu_item(
     app_handle: &AppHandle,
-    profile_uid_and_name: Vec<(String, String)>,
+    profile_uid_and_name: Vec<(&String, &String)>,
 ) -> Result<Vec<CheckMenuItem<Wry>>> {
     let futures = profile_uid_and_name
         .iter()
@@ -870,7 +868,7 @@ async fn create_tray_menu(
     system_proxy_enabled: bool,
     tun_mode_enabled: bool,
     tun_mode_available: bool,
-    profile_uid_and_name: Vec<(String, String)>,
+    profile_uid_and_name: Vec<(&String, &String)>,
     is_lightweight_mode: bool,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let current_proxy_mode = mode.unwrap_or("");

@@ -284,10 +284,10 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
 }
 
 /// 执行配置更新并处理结果
-async fn restore_previous_profile(prev_profile: String) -> CmdResult<()> {
+async fn restore_previous_profile(prev_profile: &String) -> CmdResult<()> {
     logging!(info, Type::Cmd, "尝试恢复到之前的配置: {}", prev_profile);
     let restore_profiles = IProfiles {
-        current: Some(prev_profile),
+        current: Some(prev_profile.to_owned()),
         items: None,
     };
     Config::profiles()
@@ -304,7 +304,7 @@ async fn restore_previous_profile(prev_profile: String) -> CmdResult<()> {
     Ok(())
 }
 
-async fn handle_success(current_value: Option<String>) -> CmdResult<bool> {
+async fn handle_success(current_value: Option<&String>) -> CmdResult<bool> {
     Config::profiles().await.apply();
     handle::Handle::refresh_clash();
 
@@ -320,9 +320,9 @@ async fn handle_success(current_value: Option<String>) -> CmdResult<bool> {
         logging!(warn, Type::Cmd, "Warning: 异步保存配置文件失败: {e}");
     }
 
-    if let Some(current) = &current_value {
-        logging!(info, Type::Cmd, "向前端发送配置变更事件: {}", current,);
-        handle::Handle::notify_profile_changed(current.clone());
+    if let Some(current) = current_value {
+        logging!(info, Type::Cmd, "向前端发送配置变更事件: {}", current);
+        handle::Handle::notify_profile_changed(current.to_owned());
     }
 
     Ok(true)
@@ -330,7 +330,7 @@ async fn handle_success(current_value: Option<String>) -> CmdResult<bool> {
 
 async fn handle_validation_failure(
     error_msg: String,
-    current_profile: Option<String>,
+    current_profile: Option<&String>,
 ) -> CmdResult<bool> {
     logging!(warn, Type::Cmd, "配置验证失败: {}", error_msg);
     Config::profiles().await.discard();
@@ -348,7 +348,7 @@ async fn handle_update_error<E: std::fmt::Display>(e: E) -> CmdResult<bool> {
     Ok(false)
 }
 
-async fn handle_timeout(current_profile: Option<String>) -> CmdResult<bool> {
+async fn handle_timeout(current_profile: Option<&String>) -> CmdResult<bool> {
     let timeout_msg = "配置更新超时(30秒)，可能是配置验证或核心通信阻塞";
     logging!(error, Type::Cmd, "{}", timeout_msg);
     Config::profiles().await.discard();
@@ -360,8 +360,8 @@ async fn handle_timeout(current_profile: Option<String>) -> CmdResult<bool> {
 }
 
 async fn perform_config_update(
-    current_value: Option<String>,
-    current_profile: Option<String>,
+    current_value: Option<&String>,
+    current_profile: Option<&String>,
 ) -> CmdResult<bool> {
     let update_result = tokio::time::timeout(
         Duration::from_secs(30),
@@ -391,7 +391,8 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     defer! {
         CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
     }
-    let target_profile = profiles.current.clone();
+
+    let target_profile = profiles.current.as_ref();
 
     logging!(
         info,
@@ -401,24 +402,21 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     );
 
     // 保存当前配置，以便在验证失败时恢复
-    let current_profile = Config::profiles().await.latest_arc().current.clone();
-    logging!(info, Type::Cmd, "当前配置: {:?}", current_profile);
+    let previous_profile = Config::profiles().await.data_arc().current.clone();
+    logging!(info, Type::Cmd, "当前配置: {:?}", previous_profile);
 
     // 如果要切换配置，先检查目标配置文件是否有语法错误
-    if let Some(new_profile) = profiles.current.as_ref()
-        && current_profile.as_ref() != Some(new_profile)
-        && validate_new_profile(new_profile).await.is_err()
+    if let Some(switch_to_profile) = target_profile
+        && previous_profile.as_ref() != Some(switch_to_profile)
+        && validate_new_profile(switch_to_profile).await.is_err()
     {
         return Ok(false);
     }
-
     let _ = Config::profiles()
         .await
         .edit_draft(|d| d.patch_config(&profiles));
 
-    let current_value = profiles.current.clone();
-
-    perform_config_update(current_value, current_profile).await
+    perform_config_update(target_profile, previous_profile.as_ref()).await
 }
 
 /// 根据profile name修改profiles

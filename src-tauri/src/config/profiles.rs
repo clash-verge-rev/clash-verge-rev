@@ -50,28 +50,26 @@ impl IProfiles {
         }
         None
     }
+
     pub async fn new() -> Self {
-        match dirs::profiles_path() {
-            Ok(path) => match help::read_yaml::<Self>(&path).await {
-                Ok(mut profiles) => {
-                    if profiles.items.is_none() {
-                        profiles.items = Some(vec![]);
+        let path = match dirs::profiles_path() {
+            Ok(p) => p,
+            Err(err) => {
+                logging!(error, Type::Config, "{err}");
+                return Self::default();
+            }
+        };
+
+        match help::read_yaml::<Self>(&path).await {
+            Ok(mut profiles) => {
+                let items = profiles.items.get_or_insert_with(Vec::new);
+                for item in items.iter_mut() {
+                    if item.uid.is_none() {
+                        item.uid = Some(help::get_uid("d").into());
                     }
-                    // compatible with the old old old version
-                    if let Some(items) = profiles.items.as_mut() {
-                        for item in items.iter_mut() {
-                            if item.uid.is_none() {
-                                item.uid = Some(help::get_uid("d").into());
-                            }
-                        }
-                    }
-                    profiles
                 }
-                Err(err) => {
-                    logging!(error, Type::Config, "{err}");
-                    Self::default()
-                }
-            },
+                profiles
+            }
             Err(err) => {
                 logging!(error, Type::Config, "{err}");
                 Self::default()
@@ -433,12 +431,12 @@ impl IProfiles {
     }
 
     /// 获取所有的profiles(uid，名称)
-    pub fn all_profile_uid_and_name(&self) -> Option<Vec<(String, String)>> {
+    pub fn all_profile_uid_and_name(&self) -> Option<Vec<(&String, &String)>> {
         self.items.as_ref().map(|items| {
             items
                 .iter()
                 .filter_map(|e| {
-                    if let (Some(uid), Some(name)) = (e.uid.clone(), e.name.clone()) {
+                    if let (Some(uid), Some(name)) = (e.uid.as_ref(), e.name.as_ref()) {
                         Some((uid, name))
                     } else {
                         None
