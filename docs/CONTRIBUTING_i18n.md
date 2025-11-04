@@ -2,80 +2,113 @@
 
 Thank you for considering contributing to our localization work — your help is appreciated.
 
-Quick overview
-
-- cvr-i18 is a CLI that helps manage simple top-level JSON locale files:
-  - Detect duplicated top-level keys
-  - Find keys missing versus a base file (default: en.json)
-  - Export missing entries for translators
-  - Reorder keys to match the base file for predictable diffs
-  - Operate on a directory or a single file
-
-Get the CLI (No binary provided yet)
-
-```bash
-git clone https://github.com/clash-verge-rev/clash-verge-rev-i18n-cli
-cd clash-verge-rev-i18n-cli
-cargo install --path .
-# or
-cargo install --git https://github.com/clash-verge-rev/clash-verge-rev-i18n-cli
-```
-
-Common commands
-
-- Show help: `cvr-i18`
-- Directory (auto-detects `./locales` or `./src/locales`): `cvr-i18 -d /path/to/locales`
-- Check duplicates: `cvr-i18 -k`
-- Check missing keys: `cvr-i18 -m`
-- Export missing keys: `cvr-i18 -m -e ./exports`
-- Sort keys to base file: `cvr-i18 -s`
-- Use a base file: `cvr-i18 -b base.json`
-- Single file: `cvr-i18 -f locales/zh.json`
-
-Options (short)
-
-- `-d, --directory <DIR>`
-- `-f, --file <FILE>`
-- `-k, --duplicated-key`
-- `-m, --missing-key`
-- `-e, --export <DIR>`
-- `-s, --sort`
-- `-b, --base <FILE>`
-
-Exit codes
-
-- `0` — success (no issues)
-- `1` — issues found (duplicates/missing)
-- `2` — error (IO/parse/runtime)
-
-How to contribute (recommended steps)
+## Quick workflow
 
 - Start small: fix typos, improve phrasing, or refine tone and consistency.
-- Run the CLI against your locale files to detect duplicates or missing keys.
-- Export starter JSONs for translators with `-m -e <DIR>`.
+- Use `scripts/cleanup-unused-i18n.mjs` (see below) to keep locale files aligned and free of dead keys.
 - Prefer incremental PRs or draft PRs; leave a comment on the issue if you want guidance.
 - Open an issue to report missing strings, UI context, or localization bugs.
 - Add or improve docs and tests to make future contributions easier.
+
+## Locale maintenance script
+
+The repository ships with `scripts/cleanup-unused-i18n.mjs`, a TypeScript-aware analyzer that:
+
+- Scans `src/` and `src-tauri/` for `t("...")` usages (including dynamic prefixes) to identify which locale keys are referenced.
+- Reports unused keys per locale and optionally removes them.
+- Compares every locale against the baseline (default: `en.json`) to produce missing/extra key lists.
+- Aligns locale structure/order with the baseline so diffs stay predictable.
+- Emits optional JSON reports for CI or manual review.
+
+### Typical commands
+
+```bash
+# Dry-run audit (recommended before opening a PR)
+pnpm node scripts/cleanup-unused-i18n.mjs
+
+# Apply removals and align to the baseline structure (same as pnpm format:i18n)
+pnpm node scripts/cleanup-unused-i18n.mjs --apply --align
+
+# Generate a machine-readable report
+pnpm node scripts/cleanup-unused-i18n.mjs --report ./i18n-report.json
+```
+
+Shorthand task runner aliases:
+
+- `pnpm format:i18n` → `node scripts/cleanup-unused-i18n.mjs --align --apply`
+- `pnpm node scripts/cleanup-unused-i18n.mjs -- --help` — view all flags (`--baseline`, `--src`, `--keep-extra`, `--no-backup`, `--report`, `--apply`, `--align`).
+
+### Recommended steps before submitting translations
+
+1. Run the script in dry-run mode to review unused/missing key output.
+2. Apply removals/alignment locally if your changes introduce new keys or delete UI.
+3. Inspect `.bak` backups (created by default) when applying changes to confirm nothing important disappeared.
+4. For dynamic key patterns, add explicit references or update the whitelist if the script misidentifies usage.
 
 PR checklist
 
 - Keep JSON files UTF-8 encoded.
 - Follow the repo’s locale file structure and naming conventions.
-- Reorder keys to match the base file (`-s`) for minimal diffs.
+- Run `pnpm format:i18n` to align with the baseline file for minimal diffs.
 - Test translations in a local dev build before opening a PR.
 - Reference related issues and explain any context for translations or changes.
 
 Notes
 
-- The tool expects simple top-level JSON key/value maps.
-- Exported JSONs are starter files for translators (fill in values, keep keys).
-- Sorting keeps diffs consistent and reviewable.
+- The script expects simple top-level JSON key/value maps in each locale file.
+- `.bak` snapshots are created automatically when applying fixes; remove them once you confirm the changes.
+- Alignment keeps key order stable across locales, which makes reviews easier.
 
-Repository
-https://github.com/clash-verge-rev/clash-verge-rev-i18n-cli
+## Locale Key Structure Guidelines
+
+- **Top-level scope** — Map each locale namespace to a route-level feature or domain module, mirroring folder names in `src/pages`/`src/services`. Prefer plural nouns for resource pages (`profiles`, `connections`) and reuse existing slugs where possible (`home`, `settings`).
+- **Common strings** — Put reusable actions, statuses, and units in `common.*`. Before adding a new key elsewhere, check whether an equivalent entry already lives under `common`.
+- **Feature layout** — Inside a namespace, group strings by their UI role using consistent buckets such as `page`, `actions`, `labels`, `tooltips`, `notifications`, `errors`, and `placeholders`. Avoid duplicating the same bucket at multiple levels.
+- **Components and dialogs** — When a feature needs component-specific copy, nest it under `components.<ComponentName>` or `dialogs.<DialogName>` instead of leaking implementation names like `proxyTunCard`.
+- **Naming style** — Use lower camelCase for keys, align with the feature’s UI wording, and keep names semantic (`systemProxy` rather than `switch1`). Reserve template placeholders for dynamic values (e.g., `{{name}}`).
+- **Example**
+
+```json
+{
+  "profiles": {
+    "page": {
+      "title": "Profiles",
+      "description": "Manage subscription sources"
+    },
+    "actions": {
+      "new": "@:common.actions.new",
+      "import": "Import"
+    },
+    "notifications": {
+      "importSuccess": "Profile imported successfully"
+    },
+    "components": {
+      "batchDialog": {
+        "title": "Batch Operations"
+      }
+    }
+  }
+}
+```
+
+Referencing `@:common.actions.new` helps reuse shared strings through the i18n loader.
+
+### Pending Cleanup — Reuse `common.actions`
+
+- `profile.viewer.buttons.save` → `@:common.actions.save`
+- `profile.viewer.buttons.cancel` → `@:common.actions.cancel`
+- `profile.menu.delete` → `@:common.actions.delete`
+- `profiles.page.actions.new` → `@:common.actions.new`
+- `test.page.actions.new` → `@:common.actions.new`
+- `home.ipInfo.labels.retry` → `@:common.actions.retry`
+- `settings.backup.actions.refresh` → `@:common.actions.refresh`
+- `settings.backup.actions.save` → `@:common.actions.save`
+- `settings.backup.actions.delete` → `@:common.actions.delete`
+- `home.systemInfo.labels.enabled` → `@:common.status.enabled`
+- `home.systemInfo.labels.disabled` → `@:common.status.disabled`
 
 ## Feedback & Contributions
 
-- For tool usage issues or feedback: please open an Issue in the [repository](https://github.com/clash-verge-rev/clash-verge-rev-i18n-cli) so it can be tracked and addressed.
+- For tool usage issues or feedback: please open an Issue in this repository so it can be tracked and addressed.
 - For localization contributions (translations, fixes, context notes, etc.): submit a PR or Issue in this repository and include examples, context, and testing instructions when possible.
 - If you need help or a review, leave a comment on your submission requesting assistance.
