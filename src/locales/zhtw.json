@@ -87,6 +87,11 @@
       "lock": "鎖定選單排序"
     }
   },
+  "theme": {
+    "light": "淺色",
+    "dark": "深色",
+    "system": "系統"
+  },
   "ruleEditor": {
     "title": "編輯規則",
     "form": {
@@ -106,6 +111,41 @@
         "conditionRequired": "規則條件為必填",
         "invalidRule": "無效規則"
       }
+    },
+    "ruleTypes": {
+      "DOMAIN": "配對完整網域",
+      "DOMAIN-SUFFIX": "配對網域後綴",
+      "DOMAIN-KEYWORD": "配對網域關鍵字",
+      "DOMAIN-REGEX": "配對網域正規表示式",
+      "GEOSITE": "配對 Geosite 內的網域",
+      "GEOIP": "配對 IP 所屬國家代碼",
+      "SRC-GEOIP": "配對來源 IP 所屬國家代碼",
+      "IP-ASN": "配對 IP 所屬 ASN",
+      "SRC-IP-ASN": "配對來源 IP 所屬 ASN",
+      "IP-CIDR": "配對 IP 位址範圍",
+      "IP-CIDR6": "配對 IP 位址範圍",
+      "SRC-IP-CIDR": "配對來源 IP 位址範圍",
+      "IP-SUFFIX": "配對 IP 後綴範圍",
+      "SRC-IP-SUFFIX": "配對來源 IP 後綴範圍",
+      "SRC-PORT": "配對請求來源連接埠範圍",
+      "DST-PORT": "配對請求目標連接埠範圍",
+      "IN-PORT": "配對傳入連接埠",
+      "DSCP": "DSCP標記（僅限 TPROXY UDP 傳入）",
+      "PROCESS-NAME": "配對程序名稱（Android 應用程式套件名稱）",
+      "PROCESS-PATH": "配對完整程序路徑",
+      "PROCESS-NAME-REGEX": "正規表示式配對完整程序名稱（Android 應用程式套件名稱）",
+      "PROCESS-PATH-REGEX": "正規表示式配對完整程序路徑",
+      "NETWORK": "配對傳輸協定 (TCP/UDP)",
+      "UID": "配對 Linux 使用者 ID",
+      "IN-TYPE": "配對傳入類型",
+      "IN-USER": "配對傳入使用者名稱",
+      "IN-NAME": "配對傳入名稱",
+      "SUB-RULE": "子規則",
+      "RULE-SET": "配對規則集",
+      "AND": "邏輯 AND",
+      "OR": "邏輯 OR",
+      "NOT": "邏輯 NOT",
+      "MATCH": "配對所有請求"
     }
   },
   "profile": {
@@ -1009,6 +1049,11 @@
         "default": "代理組",
         "chainMode": "鏈式代理模式"
       },
+      "modes": {
+        "rule": "規則",
+        "global": "全局",
+        "direct": "直連"
+      },
       "actions": {
         "toggleChain": "🔗 鏈式代理",
         "connect": "連線",
@@ -1184,6 +1229,12 @@
       "fallback": "切換至另一個備用代理",
       "load-balance": "根據負載平衡分配代理",
       "relay": "根據定義的代理鏈傳送"
+    },
+    "policies": {
+      "DIRECT": "直連",
+      "REJECT": "拒絕請求",
+      "REJECT-DROP": "丟棄請求",
+      "PASS": "跳過此規則"
     }
   },
   "system": {

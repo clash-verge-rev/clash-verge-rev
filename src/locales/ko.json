@@ -87,6 +87,11 @@
       "lock": "Lock menu order"
     }
   },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "ruleEditor": {
     "title": "규칙 편집",
     "form": {
@@ -106,6 +111,41 @@
         "conditionRequired": "규칙 조건 필요",
         "invalidRule": "잘못된 규칙"
       }
+    },
+    "ruleTypes": {
+      "DOMAIN": "전체 도메인 이름과 일치",
+      "DOMAIN-SUFFIX": "도메인 접미사와 일치",
+      "DOMAIN-KEYWORD": "도메인 키워드와 일치",
+      "DOMAIN-REGEX": "정규 표현식을 사용한 도메인 일치",
+      "GEOSITE": "Geosite 내의 도메인과 일치",
+      "GEOIP": "IP 주소의 국가 코드와 일치",
+      "SRC-GEOIP": "소스 IP 주소의 국가 코드와 일치",
+      "IP-ASN": "IP 주소의 ASN과 일치",
+      "SRC-IP-ASN": "소스 IP 주소의 ASN과 일치",
+      "IP-CIDR": "IP 주소 범위와 일치",
+      "IP-CIDR6": "IPv6 주소 범위와 일치",
+      "SRC-IP-CIDR": "소스 IP 주소 범위와 일치",
+      "IP-SUFFIX": "IP 주소 접미사 범위와 일치",
+      "SRC-IP-SUFFIX": "소스 IP 주소 접미사 범위와 일치",
+      "SRC-PORT": "소스 포트 범위와 일치",
+      "DST-PORT": "대상 포트 범위와 일치",
+      "IN-PORT": "인바운드 포트와 일치",
+      "DSCP": "DSCP 마킹(tproxy UDP 인바운드만 해당)",
+      "PROCESS-NAME": "프로세스 이름과 일치(안드로이드 패키지 이름)",
+      "PROCESS-PATH": "전체 프로세스 경로와 일치",
+      "PROCESS-NAME-REGEX": "정규 표현식을 사용한 전체 프로세스 이름 일치(안드로이드 패키지 이름)",
+      "PROCESS-PATH-REGEX": "정규 표현식을 사용한 전체 프로세스 경로 일치",
+      "NETWORK": "전송 프로토콜과 일치(tcp/udp)",
+      "UID": "Linux 사용자 ID와 일치",
+      "IN-TYPE": "인바운드 유형과 일치",
+      "IN-USER": "인바운드 사용자 이름과 일치",
+      "IN-NAME": "인바운드 이름과 일치",
+      "SUB-RULE": "하위 규칙",
+      "RULE-SET": "규칙 세트와 일치",
+      "AND": "논리 AND",
+      "OR": "논리 OR",
+      "NOT": "논리 NOT",
+      "MATCH": "모든 요청과 일치"
     }
   },
   "profile": {
@@ -1009,6 +1049,11 @@
         "default": "프록시 그룹",
         "chainMode": "Proxy Chain Mode"
       },
+      "modes": {
+        "rule": "Rule",
+        "global": "Global",
+        "direct": "Direct"
+      },
       "actions": {
         "toggleChain": "🔗 체인 프록시",
         "connect": "Connect",
@@ -1184,6 +1229,12 @@
       "fallback": "오류 발생 시 다른 프록시로 전환",
       "load-balance": "부하 분산에 따라 프록시 분배",
       "relay": "정의된 프록시 체인을 통과"
+    },
+    "policies": {
+      "DIRECT": "데이터가 직접 아웃바운드로 이동",
+      "REJECT": "요청 차단",
+      "REJECT-DROP": "요청 폐기",
+      "PASS": "일치할 경우 이 규칙 건너뛰기"
     }
   },
   "system": {

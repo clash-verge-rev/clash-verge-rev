@@ -87,6 +87,11 @@
       "lock": "Lock menu order"
     }
   },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "ruleEditor": {
     "title": "Regeln bearbeiten",
     "form": {
@@ -106,6 +111,41 @@
         "conditionRequired": "Regelbedingung fehlt",
         "invalidRule": "Ungültige Regel"
       }
+    },
+    "ruleTypes": {
+      "DOMAIN": "Vollständigen Domainnamen übereinstimmen",
+      "DOMAIN-SUFFIX": "Domain-Suffix übereinstimmen",
+      "DOMAIN-KEYWORD": "Domain-Schlüsselwort übereinstimmen",
+      "DOMAIN-REGEX": "Domain-Regulärer Ausdruck übereinstimmen",
+      "GEOSITE": "Domainnamen in Geosite übereinstimmen",
+      "GEOIP": "IP-Ländercode übereinstimmen",
+      "SRC-GEOIP": "Quell-IP-Ländercode übereinstimmen",
+      "IP-ASN": "IP-ASN übereinstimmen",
+      "SRC-IP-ASN": "Quell-IP-ASN übereinstimmen",
+      "IP-CIDR": "IP-Adressbereich übereinstimmen",
+      "IP-CIDR6": "IP-Adressbereich übereinstimmen",
+      "SRC-IP-CIDR": "Quell-IP-Adressbereich übereinstimmen",
+      "IP-SUFFIX": "IP-Suffix-Bereich übereinstimmen",
+      "SRC-IP-SUFFIX": "Quell-IP-Suffix-Bereich übereinstimmen",
+      "SRC-PORT": "Quellportbereich der Anfrage übereinstimmen",
+      "DST-PORT": "Zielportbereich der Anfrage übereinstimmen",
+      "IN-PORT": "Eingangsport übereinstimmen",
+      "DSCP": "DSCP-Markierung (nur für TPROXY UDP-Eingang)",
+      "PROCESS-NAME": "Prozessnamen übereinstimmen (Android-Paketname)",
+      "PROCESS-PATH": "Vollständigen Prozesspfad übereinstimmen",
+      "PROCESS-NAME-REGEX": "Regulärer Ausdruck für vollständigen Prozessnamen übereinstimmen (Android-Paketname)",
+      "PROCESS-PATH-REGEX": "Regulärer Ausdruck für vollständigen Prozesspfad übereinstimmen",
+      "NETWORK": "Übertragungsprotokoll übereinstimmen (TCP/UDP)",
+      "UID": "Linux-USER-ID übereinstimmen",
+      "IN-TYPE": "Eingangstyp übereinstimmen",
+      "IN-USER": "Eingangsbenutzername übereinstimmen",
+      "IN-NAME": "Eingangsname übereinstimmen",
+      "SUB-RULE": "Unterregel",
+      "RULE-SET": "Regelsatz übereinstimmen",
+      "AND": "Logisches UND",
+      "OR": "Logisches ODER",
+      "NOT": "Logisches NICHT",
+      "MATCH": "Alle Anfragen übereinstimmen"
     }
   },
   "profile": {
@@ -1009,6 +1049,11 @@
         "default": "Proxy-Gruppen",
         "chainMode": "Proxy Chain Mode"
       },
+      "modes": {
+        "rule": "Rule",
+        "global": "Global",
+        "direct": "Direct"
+      },
       "actions": {
         "toggleChain": "🔗 Ketten-Proxy",
         "connect": "Connect",
@@ -1184,6 +1229,12 @@
       "fallback": "Bei Nichtverfügbarkeit zu einem anderen Proxy wechseln",
       "load-balance": "Proxy basierend auf Lastverteilung zuweisen",
       "relay": "Basierend auf definiertem Proxy-Kette weiterleiten"
+    },
+    "policies": {
+      "DIRECT": "Direktverbindung",
+      "REJECT": "Anfrage ablehnen",
+      "REJECT-DROP": "Anfrage verwerfen",
+      "PASS": "Diese Regel überspringen"
     }
   },
   "system": {

@@ -87,6 +87,11 @@
       "lock": "锁定菜单排序"
     }
   },
+  "theme": {
+    "light": "浅色",
+    "dark": "深色",
+    "system": "系统"
+  },
   "ruleEditor": {
     "title": "编辑规则",
     "form": {
@@ -106,6 +111,41 @@
         "conditionRequired": "规则条件缺失",
         "invalidRule": "无效规则"
       }
+    },
+    "ruleTypes": {
+      "DOMAIN": "匹配完整域名",
+      "DOMAIN-SUFFIX": "匹配域名后缀",
+      "DOMAIN-KEYWORD": "匹配域名关键字",
+      "DOMAIN-REGEX": "匹配域名正则表达式",
+      "GEOSITE": "匹配 Geosite 内的域名",
+      "GEOIP": "匹配 IP 所属国家代码",
+      "SRC-GEOIP": "匹配来源 IP 所属国家代码",
+      "IP-ASN": "匹配 IP 所属 ASN",
+      "SRC-IP-ASN": "匹配来源 IP 所属 ASN",
+      "IP-CIDR": "匹配 IP 地址范围",
+      "IP-CIDR6": "匹配 IP 地址范围",
+      "SRC-IP-CIDR": "匹配来源 IP 地址范围",
+      "IP-SUFFIX": "匹配 IP 后缀范围",
+      "SRC-IP-SUFFIX": "匹配来源 IP 后缀范围",
+      "SRC-PORT": "匹配请求来源端口范围",
+      "DST-PORT": "匹配请求目标端口范围",
+      "IN-PORT": "匹配入站端口",
+      "DSCP": "DSCP标记（仅限 TPROXY UDP 入站）",
+      "PROCESS-NAME": "匹配进程名称（Android 包名）",
+      "PROCESS-PATH": "匹配完整进程路径",
+      "PROCESS-NAME-REGEX": "正则匹配完整进程名称（Android 包名）",
+      "PROCESS-PATH-REGEX": "正则匹配完整进程路径",
+      "NETWORK": "匹配传输协议 (TCP/UDP)",
+      "UID": "匹配 Linux USER ID",
+      "IN-TYPE": "匹配入站类型",
+      "IN-USER": "匹配入站用户名",
+      "IN-NAME": "匹配入站名称",
+      "SUB-RULE": "子规则",
+      "RULE-SET": "匹配规则集",
+      "AND": "逻辑和",
+      "OR": "逻辑或",
+      "NOT": "逻辑非",
+      "MATCH": "匹配所有请求"
     }
   },
   "profile": {
@@ -123,7 +163,7 @@
         "name": "名称",
         "description": "描述",
         "subscriptionUrl": "订阅链接",
-        "httpTimeout": "HTTP Request Timeout",
+        "httpTimeout": "HTTP 请求超时",
         "updateInterval": "更新间隔",
         "useSystemProxy": "使用系统代理更新",
         "useClashProxy": "使用内核代理更新",
@@ -204,8 +244,8 @@
     },
     "item": {
       "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
+        "showLast": "点击查看上次更新时间",
+        "showNext": "点击查看下一次更新"
       },
       "status": {
         "lastUpdateFailed": "上次更新失败",
@@ -226,8 +266,8 @@
     },
     "more": {
       "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
+        "merge": "全局扩展覆写配置",
+        "script": "全局扩展脚本"
       },
       "chips": {
         "merge": "Merge",
@@ -258,7 +298,7 @@
       "fields": {
         "coreVersion": "内核版本",
         "systemProxyAddress": "系统代理地址",
-        "mixedPort": "Mixed Port",
+        "mixedPort": "混合代理端口",
         "uptime": "运行时间",
         "rulesCount": "规则数量"
       }
@@ -292,10 +332,10 @@
     "ipInfo": {
       "title": "IP 信息",
       "errors": {
-        "load": "获取IP信息失败"
+        "load": "获取 IP 信息失败"
       },
       "labels": {
-        "retry": "Retry",
+        "retry": "重试",
         "ip": "IP",
         "asn": "自治域",
         "isp": "服务商",
@@ -320,7 +360,7 @@
         "download": "下载"
       },
       "patterns": {
-        "minutes": "{{time}} Minutes"
+        "minutes": "{{time}} 分钟"
       }
     },
     "currentProxy": {
@@ -384,14 +424,14 @@
         "communication": "内核通信错误"
       },
       "labels": {
-        "rule": "规则模式",
-        "global": "全局模式",
-        "direct": "直连模式"
+        "rule": "规则",
+        "global": "全局",
+        "direct": "直连"
       },
       "descriptions": {
-        "rule": "按照规则自动选择代理。",
-        "global": "将所有网络请求转发到选定的代理。",
-        "direct": "绕过代理，直接连接互联网。"
+        "rule": "基于预设规则智能判断流量走向，提供灵活的代理策略",
+        "global": "所有流量均通过代理服务器，适用于需要全局科学上网的场景",
+        "direct": "所有流量不经过代理节点，但经过Clash内核转发连接目标服务器，适用于需要通过内核进行分流的特定场景"
       }
     }
   },
@@ -415,7 +455,7 @@
       "closeConnection": "关闭连接"
     },
     "order": {
-      "default": "Default",
+      "default": "默认",
       "uploadSpeed": "上传速度",
       "downloadSpeed": "下载速度"
     }
@@ -611,7 +651,7 @@
         "backupTime": "备份时间",
         "actions": "操作",
         "noBackups": "暂无备份",
-        "rowsPerPage": "Rows per page"
+        "rowsPerPage": "每页行数"
       }
     },
     "verge": {
@@ -664,7 +704,7 @@
         },
         "notifications": {
           "latestVersion": "当前已是最新版本",
-          "versionCopied": "Verge版本已复制到剪贴板"
+          "versionCopied": "Verge 版本已复制到剪贴板"
         }
       },
       "theme": {
@@ -682,10 +722,10 @@
           "cssInjection": "CSS 注入"
         },
         "actions": {
-          "editCss": "Edit CSS"
+          "editCss": "编辑 CSS"
         },
         "dialogs": {
-          "editCssTitle": "Edit CSS"
+          "editCssTitle": "编辑 CSS"
         }
       },
       "layout": {
@@ -910,7 +950,7 @@
         "configError": "DNS 配置错误："
       },
       "errors": {
-        "invalid": "Invalid configuration"
+        "invalid": "配置无效"
       }
     },
     "page": {
@@ -964,8 +1004,8 @@
       "updateSuccess": "{{name}} 更新成功",
       "updateFailed": "{{name}} 更新失败: {{message}}",
       "genericError": "更新失败: {{message}}",
-      "none": "没有可更新的提供者",
-      "allUpdated": "全部提供者更新成功"
+      "none": "没有可更新的 provider",
+      "allUpdated": "所有 provider 均已更新"
     }
   },
   "test": {
@@ -1008,6 +1048,11 @@
       "title": {
         "default": "代理组",
         "chainMode": "链式代理模式"
+      },
+      "modes": {
+        "rule": "规则",
+        "global": "全局",
+        "direct": "直连"
       },
       "actions": {
         "toggleChain": "🔗 链式代理",
@@ -1105,11 +1150,11 @@
       "notifications": {
         "importRetry": "订阅导入失败，尝试使用 Clash 代理导入",
         "importFail": "使用 Clash 代理导入订阅也失败",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "importNeedsRefresh": "订阅已导入，但可能需要手动刷新",
+        "importSuccess": "订阅已成功导入，如未显示请重启应用",
         "profileSwitched": "订阅已切换",
         "profileReactivated": "订阅已激活",
-        "switchInterrupted": "配置切换被新选择中断",
+        "switchInterrupted": "订阅切换被新选择中断",
         "batchDeleted": "选中的订阅已成功删除"
       },
       "notices": {
@@ -1180,10 +1225,16 @@
   "proxy": {
     "strategies": {
       "select": "手动选择代理",
-      "url-test": "根据URL测试延迟选择代理",
+      "url-test": "根据 URL 测试延迟选择代理",
       "fallback": "不可用时切换到另一个代理",
       "load-balance": "根据负载均衡分配代理",
       "relay": "根据定义的代理链传递"
+    },
+    "policies": {
+      "DIRECT": "直连",
+      "REJECT": "拦截请求",
+      "REJECT-DROP": "抛弃请求",
+      "PASS": "跳过此规则"
     }
   },
   "system": {
@@ -1232,11 +1283,11 @@
       "fileError": "脚本文件错误，变更已撤销"
     },
     "yaml": {
-      "syntaxError": "YAML语法错误，变更已撤销",
-      "readError": "YAML读取错误，变更已撤销",
-      "mappingError": "YAML映射错误，变更已撤销",
-      "keyError": "YAML键错误，变更已撤销",
-      "generalError": "YAML错误，变更已撤销"
+      "syntaxError": "YAML 语法错误，变更已撤销",
+      "readError": "YAML 读取错误，变更已撤销",
+      "mappingError": "YAML 映射错误，变更已撤销",
+      "keyError": "YAML 键错误，变更已撤销",
+      "generalError": "YAML 错误，变更已撤销"
     },
     "merge": {
       "syntaxError": "覆写文件语法错误，变更已撤销",
