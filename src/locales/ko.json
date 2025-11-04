@@ -70,6 +70,75 @@
       "minimize": "최소화"
     }
   },
+  "shared": {
+    "actions": {
+      "cancel": "취소",
+      "close": "닫기",
+      "confirm": "확인",
+      "save": "저장",
+      "delete": "삭제",
+      "edit": "편집",
+      "new": "새로 만들기",
+      "enable": "활성화",
+      "upgrade": "Upgrade",
+      "restart": "Restart",
+      "resetToDefault": "Reset to Default",
+      "refresh": "새로고침",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "업데이트 시간",
+      "timeout": "Timeout",
+      "icon": "아이콘",
+      "name": "이름",
+      "readOnly": "ReadOnly",
+      "expireTime": "만료 시간",
+      "updateTime": "업데이트 시간",
+      "usedTotal": "사용됨 / 전체",
+      "from": "출처",
+      "password": "비밀번호",
+      "retryAttempts": "Retry attempts"
+    },
+    "statuses": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "saving": "Saving...",
+      "empty": "비어있음"
+    },
+    "units": {
+      "milliseconds": "밀리초",
+      "seconds": "초",
+      "minutes": "분",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "placeholders": {
+      "filter": "Filter conditions",
+      "matchCase": "Match Case",
+      "matchWholeWord": "Match Whole Word",
+      "useRegex": "Use Regular Expression"
+    },
+    "validation": {
+      "invalidRegex": "Invalid regular expression"
+    },
+    "messages": {
+      "errors": {
+        "trafficStats": "Traffic Statistics Error",
+        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+      },
+      "notices": {
+        "raw": "{{message}}",
+        "prefixedRaw": "{{prefix}} {{message}}"
+      }
+    },
+    "window": {
+      "maximize": "최대화",
+      "minimize": "최소화"
+    }
+  },
   "navigation": {
     "tabs": {
       "home": "홈",
@@ -85,6 +154,796 @@
       "reorderMode": "Menu reorder mode",
       "unlock": "Unlock menu order",
       "lock": "Lock menu order"
+    }
+  },
+  "entities": {
+    "profile": {
+      "fields": {
+        "type": "유형",
+        "name": "이름",
+        "description": "설명",
+        "subscriptionUrl": "구독 URL",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "업데이트 간격",
+        "useSystemProxy": "시스템 프록시 사용",
+        "useClashProxy": "Clash 프록시 사용",
+        "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      },
+      "page": {
+        "title": "프로필",
+        "actions": {
+          "updateAll": "모든 프로필 업데이트",
+          "viewRuntimeConfig": "런타임 설정 보기",
+          "reactivate": "프로필 재활성화",
+          "import": "가져오기"
+        },
+        "batch": {
+          "title": "Batch Operations",
+          "delete": "Delete Selected Profiles",
+          "selectAll": "Select All",
+          "deselectAll": "Deselect All",
+          "done": "Done",
+          "selected": "Selected",
+          "items": "items"
+        },
+        "import": {
+          "placeholder": "프로필 URL",
+          "paste": "붙여넣기",
+          "clear": "지우기"
+        },
+        "errors": {
+          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+          "onlyYaml": "Only YAML Files Supported"
+        },
+        "notifications": {
+          "importRetry": "Import failed, retrying with Clash proxy...",
+          "importFail": "Import failed even with Clash proxy",
+          "importNeedsRefresh": "Profile imported but may need manual refresh",
+          "importSuccess": "Profile imported successfully, please restart if not visible",
+          "profileSwitched": "Profile Switched",
+          "profileReactivated": "Profile Reactivated",
+          "switchInterrupted": "Profile switch interrupted by new selection",
+          "batchDeleted": "Selected profiles deleted successfully"
+        },
+        "notices": {
+          "forceRefreshCompleted": "Force refresh completed",
+          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        }
+      },
+      "menu": {
+        "home": "홈",
+        "select": "선택",
+        "editInfo": "정보 편집",
+        "editFile": "파일 편집",
+        "editRules": "규칙 편집",
+        "editProxies": "프록시 편집",
+        "editGroups": "프록시 그룹 편집",
+        "extendConfig": "설정 확장",
+        "extendScript": "스크립트 확장",
+        "openFile": "파일 열기",
+        "update": "업데이트",
+        "updateViaProxy": "Update via proxy"
+      }
+    },
+    "proxy": {
+      "actions": {
+        "toggleChain": "🔗 체인 프록시",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "labels": {
+        "globalMode": "Global Mode",
+        "directMode": "Direct Mode",
+        "group": "Group",
+        "proxy": "Proxy",
+        "noActiveNode": "No active proxy node"
+      },
+      "messages": {
+        "directMode": "Direct Mode"
+      },
+      "tooltips": {
+        "locate": "로케이트",
+        "delayCheck": "지연 확인",
+        "sortDefault": "기본값으로 정렬",
+        "sortDelay": "지연시간으로 정렬",
+        "sortName": "이름으로 정렬",
+        "delayCheckUrl": "지연 확인 URL",
+        "showBasic": "프록시 기본",
+        "showDetail": "프록시 상세",
+        "filter": "필터"
+      },
+      "placeholders": {
+        "filter": "Filter conditions",
+        "delayCheckUrl": "지연 확인 URL"
+      },
+      "enums": {
+        "strategies": {
+          "select": "수동으로 프록시 선택",
+          "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
+          "fallback": "오류 발생 시 다른 프록시로 전환",
+          "load-balance": "부하 분산에 따라 프록시 분배",
+          "relay": "정의된 프록시 체인을 통과"
+        },
+        "policies": {
+          "DIRECT": "데이터가 직접 아웃바운드로 이동",
+          "REJECT": "요청 차단",
+          "REJECT-DROP": "요청 폐기",
+          "PASS": "일치할 경우 이 규칙 건너뛰기"
+        }
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    },
+    "dns": {
+      "fields": {
+        "enable": "Enable DNS",
+        "listen": "DNS Listen",
+        "enhancedMode": "Enhanced Mode",
+        "fakeIpRange": "Fake IP Range",
+        "fakeIpFilterMode": "Fake IP Filter Mode",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Enable IPv6 DNS resolution"
+        },
+        "preferH3": {
+          "label": "Prefer H3",
+          "description": "DNS DOH uses HTTP/3"
+        },
+        "respectRules": {
+          "label": "Respect Rules",
+          "description": "DNS connections follow routing rules"
+        },
+        "useHosts": {
+          "label": "Use Hosts",
+          "description": "Enable to resolve hosts through hosts file"
+        },
+        "useSystemHosts": {
+          "label": "Use System Hosts",
+          "description": "Enable to resolve hosts through system hosts file"
+        },
+        "directPolicy": {
+          "label": "Direct Nameserver Follow Policy",
+          "description": "Whether to follow nameserver policy"
+        },
+        "defaultNameserver": {
+          "label": "Default Nameserver",
+          "description": "Default DNS servers used to resolve DNS servers"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "List of DNS servers, comma separated"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "List of fallback DNS servers, comma separated"
+        },
+        "proxy": {
+          "label": "Proxy Server Nameserver",
+          "description": "DNS servers for proxy node domain resolution"
+        },
+        "directNameserver": {
+          "label": "Direct Nameserver",
+          "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP Filter",
+          "description": "Domains that skip fake IP resolution, comma separated"
+        },
+        "nameserverPolicy": {
+          "label": "Nameserver Policy",
+          "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP Filtering",
+          "description": "Enable GeoIP filtering for fallback"
+        },
+        "geoipCode": "GeoIP Code",
+        "fallbackIpCidr": {
+          "label": "Fallback IP CIDR",
+          "description": "IP CIDRs not using fallback servers, comma separated"
+        },
+        "fallbackDomain": {
+          "label": "Fallback Domain",
+          "description": "Domains using fallback servers, comma separated"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Custom domain to IP or domain mapping"
+        }
+      },
+      "sections": {
+        "general": "DNS Settings",
+        "fallbackFilter": "Fallback Filter Settings",
+        "hosts": "Hosts Settings"
+      },
+      "messages": {
+        "saved": "DNS settings saved",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration"
+      },
+      "dialog": {
+        "title": "DNS Overwrite",
+        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "호스트",
+        "downloaded": "다운로드됨",
+        "uploaded": "업로드됨",
+        "dlSpeed": "다운로드 속도",
+        "ulSpeed": "업로드 속도",
+        "chains": "체인",
+        "rule": "규칙",
+        "process": "프로세스",
+        "time": "시간",
+        "source": "소스",
+        "destination": "목적지",
+        "destinationPort": "목적지 포트",
+        "type": "유형"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "업로드 속도",
+        "downloadSpeed": "다운로드 속도"
+      }
+    },
+    "test": {
+      "statuses": {
+        "pending": "Pending",
+        "yes": "Yes",
+        "no": "No",
+        "failed": "실패",
+        "completed": "Completed",
+        "disallowedIsp": "Disallowed ISP",
+        "originalsOnly": "Originals Only",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "Unsupported Country/Region",
+        "failedNetwork": "Failed (Network Connection)"
+      },
+      "fields": {
+        "url": "테스트 URL"
+      },
+      "actions": {
+        "testAll": "모두 테스트"
+      },
+      "titles": {
+        "create": "테스트 생성",
+        "edit": "테스트 편집"
+      },
+      "itemActions": {
+        "test": "테스트"
+      }
+    },
+    "theme": {
+      "modes": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      }
+    },
+    "log": {
+      "actions": {
+        "pause": "일시 정지",
+        "resume": "재개",
+        "clear": "지우기"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      },
+      "title": "로그"
+    },
+    "navigation": {
+      "tabs": {
+        "home": "홈",
+        "proxies": "프록시",
+        "profiles": "프로필",
+        "connections": "연결",
+        "rules": "규칙",
+        "logs": "로그",
+        "unlock": "테스트",
+        "settings": "설정"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "시스템 설정",
+        "fields": {
+          "autoLaunch": "자동 실행",
+          "silentStart": "백그라운드 시작"
+        },
+        "toggles": {
+          "tunMode": "Tun 모드",
+          "systemProxy": "시스템 프록시"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "Start the program in background mode without displaying the panel"
+        },
+        "notifications": {
+          "tunMode": {
+            "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+            "autoDisableFailed": "Failed to disable TUN Mode automatically"
+          }
+        }
+      },
+      "proxyControl": {
+        "actions": {
+          "installService": "Install Service",
+          "uninstallService": "Uninstall Service"
+        },
+        "fields": {
+          "systemProxy": "시스템 프록시",
+          "tunMode": "Tun 모드"
+        },
+        "tooltips": {
+          "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
+          "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        }
+      },
+      "externalController": {
+        "title": "External Controller",
+        "fields": {
+          "enable": "Enable External Controller",
+          "address": "External Controller",
+          "secret": "Core Secret"
+        },
+        "placeholders": {
+          "address": "Required",
+          "secret": "Recommended"
+        },
+        "tooltips": {
+          "copy": "Copy to clipboard"
+        },
+        "messages": {
+          "addressRequired": "Controller address cannot be empty",
+          "secretRequired": "Secret cannot be empty",
+          "copyFailed": "Failed to copy",
+          "controllerCopied": "Controller address copied to clipboard",
+          "secretCopied": "Secret copied to clipboard"
+        }
+      },
+      "externalCors": {
+        "title": "External Cors Configuration",
+        "fields": {
+          "allowPrivateNetwork": "Allow private network access",
+          "allowedOrigins": "Allowed Origins"
+        },
+        "placeholders": {
+          "origin": "Please enter a valid url"
+        },
+        "actions": {
+          "add": "Add"
+        },
+        "messages": {
+          "alwaysIncluded": "Always included origins: {{urls}}"
+        },
+        "tooltips": {
+          "open": "External Cors Settings"
+        }
+      },
+      "clash": {
+        "title": "Clash 설정",
+        "items": {
+          "allowLan": "Allow LAN",
+          "dnsOverwrite": "DNS Overwrite",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Unified Delay",
+          "logLevel": "로그 레벨",
+          "portConfig": "Port Config",
+          "external": "External",
+          "webUI": "Web UI",
+          "clashCore": "Clash Core",
+          "openUwpTool": "Open UWP tool",
+          "updateGeoData": "Update GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "Network Interface",
+          "unifiedDelay": "When unified delay is turned on, two delay tests will be performed to eliminate the delay differences between different types of nodes caused by connection handshakes, etc",
+          "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
+          "openUwpTool": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "GeoData Updated"
+        },
+        "notifications": {
+          "restartSuccess": "Clash Core Restarted",
+          "versionUpdated": "Core Version Updated",
+          "changeSuccess": "코어 변경 성공",
+          "changeFailed": "코어 변경 실패"
+        }
+      },
+      "clashPort": {
+        "title": "Port Config",
+        "fields": {
+          "mixed": "혼합 포트",
+          "socks": "Socks Port",
+          "http": "Http(s) Port",
+          "redir": "Redir Port",
+          "tproxy": "Tproxy Port"
+        },
+        "actions": {
+          "random": "Random Port"
+        },
+        "messages": {
+          "saved": "Port settings saved",
+          "saveFailed": "Failed to save port settings"
+        }
+      },
+      "dns": {
+        "fields": {
+          "enable": "Enable DNS",
+          "listen": "DNS Listen",
+          "enhancedMode": "Enhanced Mode",
+          "fakeIpRange": "Fake IP Range",
+          "fakeIpFilterMode": "Fake IP Filter Mode",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "Enable IPv6 DNS resolution"
+          },
+          "preferH3": {
+            "label": "Prefer H3",
+            "description": "DNS DOH uses HTTP/3"
+          },
+          "respectRules": {
+            "label": "Respect Rules",
+            "description": "DNS connections follow routing rules"
+          },
+          "useHosts": {
+            "label": "Use Hosts",
+            "description": "Enable to resolve hosts through hosts file"
+          },
+          "useSystemHosts": {
+            "label": "Use System Hosts",
+            "description": "Enable to resolve hosts through system hosts file"
+          },
+          "directPolicy": {
+            "label": "Direct Nameserver Follow Policy",
+            "description": "Whether to follow nameserver policy"
+          },
+          "defaultNameserver": {
+            "label": "Default Nameserver",
+            "description": "Default DNS servers used to resolve DNS servers"
+          },
+          "nameserver": {
+            "label": "Nameserver",
+            "description": "List of DNS servers, comma separated"
+          },
+          "fallback": {
+            "label": "Fallback",
+            "description": "List of fallback DNS servers, comma separated"
+          },
+          "proxy": {
+            "label": "Proxy Server Nameserver",
+            "description": "DNS servers for proxy node domain resolution"
+          },
+          "directNameserver": {
+            "label": "Direct Nameserver",
+            "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+          },
+          "fakeIpFilter": {
+            "label": "Fake IP Filter",
+            "description": "Domains that skip fake IP resolution, comma separated"
+          },
+          "nameserverPolicy": {
+            "label": "Nameserver Policy",
+            "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+          },
+          "geoipFiltering": {
+            "label": "GeoIP Filtering",
+            "description": "Enable GeoIP filtering for fallback"
+          },
+          "geoipCode": "GeoIP Code",
+          "fallbackIpCidr": {
+            "label": "Fallback IP CIDR",
+            "description": "IP CIDRs not using fallback servers, comma separated"
+          },
+          "fallbackDomain": {
+            "label": "Fallback Domain",
+            "description": "Domains using fallback servers, comma separated"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "Custom domain to IP or domain mapping"
+          }
+        },
+        "sections": {
+          "general": "DNS Settings",
+          "fallbackFilter": "Fallback Filter Settings",
+          "hosts": "Hosts Settings"
+        },
+        "messages": {
+          "saved": "DNS settings saved",
+          "configError": "DNS configuration error:"
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
+        },
+        "dialog": {
+          "title": "DNS Overwrite",
+          "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+        }
+      },
+      "webUI": {
+        "title": "Web UI",
+        "actions": {
+          "openUrl": "Open URL"
+        },
+        "messages": {
+          "supportedPlaceholders": "Support %host, %port, %secret",
+          "placeholderInstruction": "Replace host, port, secret with %host, %port, %secret"
+        }
+      },
+      "hotkey": {
+        "title": "단축키 설정",
+        "toggles": {
+          "enableGlobal": "Enable Global Hotkey"
+        },
+        "functions": {
+          "rule": "Rule Mode",
+          "global": "Global Mode",
+          "openOrCloseDashboard": "Open/Close Dashboard",
+          "toggleSystemProxy": "Enable/Disable System Proxy",
+          "toggleTunMode": "Enable/Disable Tun Mode",
+          "entryLightweightMode": "Entry Lightweight Mode",
+          "direct": "Direct Mode"
+        }
+      },
+      "networkInterface": {
+        "title": "Network Interface",
+        "fields": {
+          "ipAddress": "IP Address",
+          "macAddress": "MAC Address"
+        }
+      },
+      "password": {
+        "prompts": {
+          "enterRoot": "Please enter your root password"
+        }
+      },
+      "updater": {
+        "notifications": {
+          "withClashProxySuccess": "Clash 프록시로 업데이트 성공",
+          "withClashProxyFailed": "Clash 프록시로도 업데이트 실패"
+        }
+      },
+      "liteMode": {
+        "title": "LightWeight Mode Settings",
+        "tooltips": {
+          "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
+        },
+        "fields": {
+          "delay": "Auto Enter LightWeight Mode Delay"
+        },
+        "messages": {
+          "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
+        }
+      },
+      "backup": {
+        "title": "Backup Setting",
+        "tabs": {
+          "local": "Local backup",
+          "webdav": "WebDAV backup"
+        },
+        "actions": {
+          "selectTarget": "Select backup target",
+          "backup": "Backup",
+          "export": "Export",
+          "exportBackup": "Export Backup",
+          "deleteBackup": "Delete Backup",
+          "restore": "Restore",
+          "restoreBackup": "Restore Backup"
+        },
+        "fields": {
+          "webdavUrl": "WebDAV Server URL",
+          "username": "사용자 이름",
+          "password": "비밀번호",
+          "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+        },
+        "messages": {
+          "webdavUrlRequired": "WebDAV URL cannot be empty",
+          "invalidWebdavUrl": "Invalid WebDAV URL format",
+          "usernameRequired": "Username cannot be empty",
+          "passwordRequired": "Password cannot be empty",
+          "webdavConfigSaved": "WebDAV configuration saved successfully",
+          "webdavConfigSaveFailed": "Failed to save WebDAV configuration: {{error}}",
+          "backupCreated": "Backup created successfully",
+          "backupFailed": "Backup failed: {{error}}",
+          "localBackupCreated": "Local backup created successfully",
+          "localBackupFailed": "Local backup failed",
+          "restoreSuccess": "Restore Success, App will restart in 1s",
+          "localBackupExported": "Local backup exported successfully",
+          "localBackupExportFailed": "Failed to export local backup",
+          "confirmDelete": "Confirm to delete this backup file?",
+          "confirmRestore": "Confirm to restore this backup file?"
+        },
+        "table": {
+          "filename": "Filename",
+          "backupTime": "Backup Time",
+          "actions": "Actions",
+          "noBackups": "No backups available",
+          "rowsPerPage": "Rows per page"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Verge 기본 설정",
+          "items": {
+            "language": "언어",
+            "themeMode": "테마 모드",
+            "trayClickEvent": "트레이 클릭 이벤트",
+            "copyEnvType": "환경 유형 복사",
+            "startPage": "시작 페이지",
+            "startupScript": "시작 스크립트",
+            "themeSetting": "Theme Setting",
+            "layoutSetting": "레이아웃 설정",
+            "misc": "Miscellaneous",
+            "hotkeySetting": "단축키 설정"
+          },
+          "actions": {
+            "browse": "Browse",
+            "clear": "지우기"
+          },
+          "trayOptions": {
+            "showMainWindow": "메인 창 표시",
+            "showTrayMenu": "트레이 메뉴 표시",
+            "disable": "비활성화"
+          }
+        },
+        "advanced": {
+          "title": "Verge Advanced Setting",
+          "items": {
+            "backupSetting": "Backup Setting",
+            "runtimeConfig": "Runtime Config",
+            "openConfDir": "Open Conf Dir",
+            "openCoreDir": "Open Core Dir",
+            "openLogsDir": "Open Logs Dir",
+            "checkUpdates": "Check for Updates",
+            "openDevTools": "Dev Tools",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Exit",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Verge Version"
+          },
+          "tooltips": {
+            "backupInfo": "Support local or WebDAV backup of configuration files",
+            "openConfDir": "If the software runs abnormally, BACKUP and delete all files in this folder then restart the software",
+            "liteMode": "Close the GUI and keep only the kernel running"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Currently on the Latest Version",
+            "versionCopied": "Version copied to clipboard"
+          }
+        },
+        "theme": {
+          "title": "Theme Setting",
+          "fields": {
+            "primaryColor": "기본 색상",
+            "secondaryColor": "Secondary Color",
+            "primaryText": "Primary Text",
+            "secondaryText": "Secondary Text",
+            "infoColor": "Info Color",
+            "warningColor": "Warning Color",
+            "errorColor": "Error Color",
+            "successColor": "Success Color",
+            "fontFamily": "Font Family",
+            "cssInjection": "CSS Injection"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
+        }
+      },
+      "sysproxy": {
+        "title": "System Proxy Setting",
+        "fields": {
+          "enableStatus": "Enable Status:",
+          "serverAddr": "Server Addr: ",
+          "pacUrl": "PAC URL: ",
+          "proxyHost": "Proxy Host",
+          "usePacMode": "Use PAC Mode",
+          "proxyGuard": "Proxy Guard",
+          "guardDuration": "Guard Duration",
+          "alwaysUseDefaultBypass": "Always use Default Bypass",
+          "proxyBypass": "Proxy Bypass Settings: ",
+          "bypass": "Bypass: ",
+          "pacScriptContent": "PAC Script Content"
+        },
+        "messages": {
+          "durationTooShort": "Proxy Daemon Duration Cannot be Less than 1 Second",
+          "invalidBypass": "Invalid Bypass Format",
+          "invalidProxyHost": "Invalid Proxy Host Format"
+        },
+        "actions": {
+          "editPac": "편집 PAC"
+        }
+      },
+      "tun": {
+        "title": "Tun 모드",
+        "fields": {
+          "stack": "스택",
+          "device": "Device Name",
+          "autoRoute": "자동 라우팅",
+          "strictRoute": "Strict Route",
+          "autoDetectInterface": "인터페이스 자동 감지",
+          "dnsHijack": "DNS Hijack",
+          "mtu": "MTU"
+        },
+        "messages": {
+          "applied": "Settings Applied"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        }
+      },
+      "update": {
+        "actions": {
+          "goToRelease": "Go to Release Page",
+          "update": "업데이트"
+        },
+        "messages": {
+          "portableError": "The portable version does not support in-app updates. Please manually download and replace it",
+          "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version"
+        }
+      },
+      "misc": {
+        "title": "Miscellaneous",
+        "fields": {
+          "appLogLevel": "App Log Level",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "Auto Close Connections",
+          "autoCheckUpdate": "Auto Check Update",
+          "enableBuiltinEnhanced": "Enable Builtin Enhanced",
+          "proxyLayoutColumns": "Proxy Layout Columns",
+          "autoLogClean": "Auto Log Clean",
+          "autoDelayDetection": "자동 지연 감지",
+          "defaultLatencyTest": "Default Latency Test",
+          "defaultLatencyTimeout": "Default Latency Timeout"
+        }
+      }
     }
   },
   "theme": {

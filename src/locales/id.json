@@ -70,6 +70,75 @@
       "minimize": "Minimalkan"
     }
   },
+  "shared": {
+    "actions": {
+      "cancel": "Batal",
+      "close": "Tutup",
+      "confirm": "Konfirmasi",
+      "save": "Simpan",
+      "delete": "Hapus",
+      "edit": "Ubah",
+      "new": "Baru",
+      "enable": "Aktifkan",
+      "upgrade": "Tingkatkan",
+      "restart": "Mulai Ulang",
+      "resetToDefault": "Setel Ulang ke Default",
+      "refresh": "Segarkan",
+      "retry": "Retry",
+      "refreshPage": "Refresh Page",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details"
+    },
+    "labels": {
+      "updateAt": "Diperbarui Pada",
+      "timeout": "Timeout",
+      "icon": "Ikon",
+      "name": "Nama",
+      "readOnly": "Hanya Baca",
+      "expireTime": "Waktu Kedaluwarsa",
+      "updateTime": "Waktu Pembaruan",
+      "usedTotal": "Digunakan / Total",
+      "from": "Dari",
+      "password": "Kata Sandi",
+      "retryAttempts": "Retry attempts"
+    },
+    "statuses": {
+      "enabled": "Diaktifkan",
+      "disabled": "Dinonaktifkan",
+      "saving": "Saving...",
+      "empty": "Kosong"
+    },
+    "units": {
+      "milliseconds": "milidetik",
+      "seconds": "detik",
+      "minutes": "menit",
+      "kilobytes": "KB",
+      "files": "Files"
+    },
+    "placeholders": {
+      "filter": "Kondisi Filter",
+      "matchCase": "Cocokkan Kasus",
+      "matchWholeWord": "Cocokkan Kata Utuh",
+      "useRegex": "Gunakan Ekspresi Reguler"
+    },
+    "validation": {
+      "invalidRegex": "Invalid regular expression"
+    },
+    "messages": {
+      "errors": {
+        "trafficStats": "Traffic Statistics Error",
+        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+      },
+      "notices": {
+        "raw": "{{message}}",
+        "prefixedRaw": "{{prefix}} {{message}}"
+      }
+    },
+    "window": {
+      "maximize": "Maksimalkan",
+      "minimize": "Minimalkan"
+    }
+  },
   "navigation": {
     "tabs": {
       "home": "Home",
@@ -85,6 +154,796 @@
       "reorderMode": "Menu reorder mode",
       "unlock": "Unlock menu order",
       "lock": "Lock menu order"
+    }
+  },
+  "entities": {
+    "profile": {
+      "fields": {
+        "type": "Jenis",
+        "name": "Nama",
+        "description": "Deskripsi",
+        "subscriptionUrl": "URL Langganan",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Interval Pembaruan",
+        "useSystemProxy": "Gunakan Proksi Sistem",
+        "useClashProxy": "Gunakan Proksi Clash",
+        "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      },
+      "page": {
+        "title": "Profil",
+        "actions": {
+          "updateAll": "Perbarui Semua Profil",
+          "viewRuntimeConfig": "Lihat Konfigurasi Runtime",
+          "reactivate": "Reaktivasi Profil",
+          "import": "Impor"
+        },
+        "batch": {
+          "title": "Batch Operations",
+          "delete": "Delete Selected Profiles",
+          "selectAll": "Select All",
+          "deselectAll": "Deselect All",
+          "done": "Done",
+          "selected": "Selected",
+          "items": "items"
+        },
+        "import": {
+          "placeholder": "URL Profil",
+          "paste": "Tempel",
+          "clear": "Bersihkan"
+        },
+        "errors": {
+          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+          "onlyYaml": "Hanya File YAML yang Didukung"
+        },
+        "notifications": {
+          "importRetry": "Import failed, retrying with Clash proxy...",
+          "importFail": "Import failed even with Clash proxy",
+          "importNeedsRefresh": "Profile imported but may need manual refresh",
+          "importSuccess": "Profile imported successfully, please restart if not visible",
+          "profileSwitched": "Profil Beralih",
+          "profileReactivated": "Profil Diaktifkan Kembali",
+          "switchInterrupted": "Profile switch interrupted by new selection",
+          "batchDeleted": "Selected profiles deleted successfully"
+        },
+        "notices": {
+          "forceRefreshCompleted": "Force refresh completed",
+          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        }
+      },
+      "menu": {
+        "home": "Home",
+        "select": "Pilih",
+        "editInfo": "Ubah Info",
+        "editFile": "Ubah Berkas",
+        "editRules": "Ubah Aturan",
+        "editProxies": "Ubah Proksi",
+        "editGroups": "Ubah Grup Proksi",
+        "extendConfig": "Perluas Konfigurasi",
+        "extendScript": "Perluas Skrip",
+        "openFile": "Buka Berkas",
+        "update": "Perbarui",
+        "updateViaProxy": "Update via proxy"
+      }
+    },
+    "proxy": {
+      "actions": {
+        "toggleChain": "🔗 Proxy Rantai",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "labels": {
+        "globalMode": "Mode Global",
+        "directMode": "Mode Langsung",
+        "group": "Group",
+        "proxy": "Proxy",
+        "noActiveNode": "No active proxy node"
+      },
+      "messages": {
+        "directMode": "Mode Langsung"
+      },
+      "tooltips": {
+        "locate": "Lokasi",
+        "delayCheck": "Periksa Keterlambatan",
+        "sortDefault": "Urutkan secara default",
+        "sortDelay": "Urutkan berdasarkan keterlambatan",
+        "sortName": "Urutkan berdasarkan nama",
+        "delayCheckUrl": "URL Periksa Keterlambatan",
+        "showBasic": "Dasar Proksi",
+        "showDetail": "Detail Proksi",
+        "filter": "Filter"
+      },
+      "placeholders": {
+        "filter": "Kondisi Filter",
+        "delayCheckUrl": "URL Periksa Keterlambatan"
+      },
+      "enums": {
+        "strategies": {
+          "select": "Pilih proksi secara manual",
+          "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
+          "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
+          "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
+          "relay": "Lewatkan melalui rantai proksi yang ditentukan"
+        },
+        "policies": {
+          "DIRECT": "Data langsung keluar",
+          "REJECT": "Mencegat permintaan",
+          "REJECT-DROP": "Membuang permintaan",
+          "PASS": "Lewati aturan ini saat cocok"
+        }
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      }
+    },
+    "dns": {
+      "fields": {
+        "enable": "Enable DNS",
+        "listen": "DNS Listen",
+        "enhancedMode": "Enhanced Mode",
+        "fakeIpRange": "Fake IP Range",
+        "fakeIpFilterMode": "Fake IP Filter Mode",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Enable IPv6 DNS resolution"
+        },
+        "preferH3": {
+          "label": "Prefer H3",
+          "description": "DNS DOH uses HTTP/3"
+        },
+        "respectRules": {
+          "label": "Respect Rules",
+          "description": "DNS connections follow routing rules"
+        },
+        "useHosts": {
+          "label": "Use Hosts",
+          "description": "Enable to resolve hosts through hosts file"
+        },
+        "useSystemHosts": {
+          "label": "Use System Hosts",
+          "description": "Enable to resolve hosts through system hosts file"
+        },
+        "directPolicy": {
+          "label": "Direct Nameserver Follow Policy",
+          "description": "Whether to follow nameserver policy"
+        },
+        "defaultNameserver": {
+          "label": "Default Nameserver",
+          "description": "Default DNS servers used to resolve DNS servers"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "List of DNS servers, comma separated"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "List of fallback DNS servers, comma separated"
+        },
+        "proxy": {
+          "label": "Proxy Server Nameserver",
+          "description": "DNS servers for proxy node domain resolution"
+        },
+        "directNameserver": {
+          "label": "Direct Nameserver",
+          "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP Filter",
+          "description": "Domains that skip fake IP resolution, comma separated"
+        },
+        "nameserverPolicy": {
+          "label": "Nameserver Policy",
+          "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP Filtering",
+          "description": "Enable GeoIP filtering for fallback"
+        },
+        "geoipCode": "GeoIP Code",
+        "fallbackIpCidr": {
+          "label": "Fallback IP CIDR",
+          "description": "IP CIDRs not using fallback servers, comma separated"
+        },
+        "fallbackDomain": {
+          "label": "Fallback Domain",
+          "description": "Domains using fallback servers, comma separated"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Custom domain to IP or domain mapping"
+        }
+      },
+      "sections": {
+        "general": "DNS Settings",
+        "fallbackFilter": "Fallback Filter Settings",
+        "hosts": "Hosts Settings"
+      },
+      "messages": {
+        "saved": "DNS settings saved",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration"
+      },
+      "dialog": {
+        "title": "DNS Overwrite",
+        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+      }
+    },
+    "connection": {
+      "fields": {
+        "host": "Host",
+        "downloaded": "Diunduh",
+        "uploaded": "Diunggah",
+        "dlSpeed": "Kecepatan Unduh",
+        "ulSpeed": "Kecepatan Unggah",
+        "chains": "Rantai",
+        "rule": "Aturan",
+        "process": "Proses",
+        "time": "Waktu",
+        "source": "Sumber",
+        "destination": "IP Tujuan",
+        "destinationPort": "Port Tujuan",
+        "type": "Jenis"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Kecepatan Unggah",
+        "downloadSpeed": "Kecepatan Unduh"
+      }
+    },
+    "test": {
+      "statuses": {
+        "pending": "Pending",
+        "yes": "Yes",
+        "no": "No",
+        "failed": "Failed",
+        "completed": "Completed",
+        "disallowedIsp": "Disallowed ISP",
+        "originalsOnly": "Originals Only",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "Unsupported Country/Region",
+        "failedNetwork": "Failed (Network Connection)"
+      },
+      "fields": {
+        "url": "URL Tes"
+      },
+      "actions": {
+        "testAll": "Tes Semua"
+      },
+      "titles": {
+        "create": "Buat Tes",
+        "edit": "Ubah Tes"
+      },
+      "itemActions": {
+        "test": "Tes"
+      }
+    },
+    "theme": {
+      "modes": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      }
+    },
+    "log": {
+      "actions": {
+        "pause": "Jeda",
+        "resume": "Lanjut",
+        "clear": "Bersihkan"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      },
+      "title": "Log"
+    },
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "Proksi",
+        "profiles": "Profil",
+        "connections": "Koneksi",
+        "rules": "Aturan",
+        "logs": "Log",
+        "unlock": "Test",
+        "settings": "Pengaturan"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
+      }
+    },
+    "settings": {
+      "system": {
+        "title": "Pengaturan Sistem",
+        "fields": {
+          "autoLaunch": "Mulai otomatis",
+          "silentStart": "Mulai senyap"
+        },
+        "toggles": {
+          "tunMode": "Mode Tun (NIC Virtual)",
+          "systemProxy": "Proksi Sistem"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch",
+          "silentStart": "Mulai program dalam mode latar belakang tanpa menampilkan panel"
+        },
+        "notifications": {
+          "tunMode": {
+            "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+            "autoDisableFailed": "Failed to disable TUN Mode automatically"
+          }
+        }
+      },
+      "proxyControl": {
+        "actions": {
+          "installService": "Instal Layanan",
+          "uninstallService": "Uninstall Service"
+        },
+        "fields": {
+          "systemProxy": "Proksi Sistem",
+          "tunMode": "Mode Tun (NIC Virtual)"
+        },
+        "tooltips": {
+          "systemProxy": "Aktifkan untuk mengubah pengaturan proksi sistem operasi. Jika pengaktifan gagal, ubah pengaturan proksi sistem operasi secara manual",
+          "tunMode": "Mode Tun (NIC Virtual): Menangkap semua lalu lintas sistem, saat diaktifkan, tidak perlu mengaktifkan proksi sistem.",
+          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        }
+      },
+      "externalController": {
+        "title": "Alamat Pengendali Eksternal",
+        "fields": {
+          "enable": "Enable External Controller",
+          "address": "Alamat Pengendali Eksternal",
+          "secret": "Rahasia Inti"
+        },
+        "placeholders": {
+          "address": "Required",
+          "secret": "Direkomendasikan"
+        },
+        "tooltips": {
+          "copy": "Copy to clipboard"
+        },
+        "messages": {
+          "addressRequired": "Controller address cannot be empty",
+          "secretRequired": "Secret cannot be empty",
+          "copyFailed": "Failed to copy",
+          "controllerCopied": "Controller address copied to clipboard",
+          "secretCopied": "Secret copied to clipboard"
+        }
+      },
+      "externalCors": {
+        "title": "External Cors Configuration",
+        "fields": {
+          "allowPrivateNetwork": "Allow private network access",
+          "allowedOrigins": "Allowed Origins"
+        },
+        "placeholders": {
+          "origin": "Please enter a valid url"
+        },
+        "actions": {
+          "add": "Add"
+        },
+        "messages": {
+          "alwaysIncluded": "Always included origins: {{urls}}"
+        },
+        "tooltips": {
+          "open": "External Cors Settings"
+        }
+      },
+      "clash": {
+        "title": "Pengaturan Clash",
+        "items": {
+          "allowLan": "Izinkan LAN",
+          "dnsOverwrite": "DNS Overwrite",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Keterlambatan Terpadu",
+          "logLevel": "Tingkat Log",
+          "portConfig": "Konfigurasi Port",
+          "external": "Eksternal",
+          "webUI": "Antarmuka Web",
+          "clashCore": "Inti Clash",
+          "openUwpTool": "Buka alat UWP",
+          "updateGeoData": "Perbarui GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "Antarmuka Jaringan",
+          "unifiedDelay": "Saat keterlambatan terpadu diaktifkan, dua tes keterlambatan akan dilakukan untuk menghilangkan perbedaan keterlambatan antara berbagai jenis node yang disebabkan oleh jabat tangan koneksi, dll.",
+          "logLevel": "Ini hanya berlaku untuk file log kernel di folder layanan di direktori log.",
+          "openUwpTool": "Sejak Windows 8, aplikasi UWP (seperti Microsoft Store) dibatasi dari mengakses layanan jaringan host lokal secara langsung, dan alat ini dapat digunakan untuk melewati pembatasan ini"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        },
+        "messages": {
+          "geoDataUpdated": "GeoData Diperbarui"
+        },
+        "notifications": {
+          "restartSuccess": "Core Clash Dimulai Ulang",
+          "versionUpdated": "Versi Core Diperbarui",
+          "changeSuccess": "Inti berhasil diubah",
+          "changeFailed": "Gagal mengubah inti"
+        }
+      },
+      "clashPort": {
+        "title": "Konfigurasi Port",
+        "fields": {
+          "mixed": "Port Campuran",
+          "socks": "Port Socks",
+          "http": "Port Http(s)",
+          "redir": "Port Redir",
+          "tproxy": "Port Tproxy"
+        },
+        "actions": {
+          "random": "Port Acak"
+        },
+        "messages": {
+          "saved": "Port settings saved",
+          "saveFailed": "Failed to save port settings"
+        }
+      },
+      "dns": {
+        "fields": {
+          "enable": "Enable DNS",
+          "listen": "DNS Listen",
+          "enhancedMode": "Enhanced Mode",
+          "fakeIpRange": "Fake IP Range",
+          "fakeIpFilterMode": "Fake IP Filter Mode",
+          "ipv6": {
+            "label": "IPv6",
+            "description": "Enable IPv6 DNS resolution"
+          },
+          "preferH3": {
+            "label": "Prefer H3",
+            "description": "DNS DOH uses HTTP/3"
+          },
+          "respectRules": {
+            "label": "Respect Rules",
+            "description": "DNS connections follow routing rules"
+          },
+          "useHosts": {
+            "label": "Use Hosts",
+            "description": "Enable to resolve hosts through hosts file"
+          },
+          "useSystemHosts": {
+            "label": "Use System Hosts",
+            "description": "Enable to resolve hosts through system hosts file"
+          },
+          "directPolicy": {
+            "label": "Direct Nameserver Follow Policy",
+            "description": "Whether to follow nameserver policy"
+          },
+          "defaultNameserver": {
+            "label": "Default Nameserver",
+            "description": "Default DNS servers used to resolve DNS servers"
+          },
+          "nameserver": {
+            "label": "Nameserver",
+            "description": "List of DNS servers, comma separated"
+          },
+          "fallback": {
+            "label": "Fallback",
+            "description": "List of fallback DNS servers, comma separated"
+          },
+          "proxy": {
+            "label": "Proxy Server Nameserver",
+            "description": "DNS servers for proxy node domain resolution"
+          },
+          "directNameserver": {
+            "label": "Direct Nameserver",
+            "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+          },
+          "fakeIpFilter": {
+            "label": "Fake IP Filter",
+            "description": "Domains that skip fake IP resolution, comma separated"
+          },
+          "nameserverPolicy": {
+            "label": "Nameserver Policy",
+            "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+          },
+          "geoipFiltering": {
+            "label": "GeoIP Filtering",
+            "description": "Enable GeoIP filtering for fallback"
+          },
+          "geoipCode": "GeoIP Code",
+          "fallbackIpCidr": {
+            "label": "Fallback IP CIDR",
+            "description": "IP CIDRs not using fallback servers, comma separated"
+          },
+          "fallbackDomain": {
+            "label": "Fallback Domain",
+            "description": "Domains using fallback servers, comma separated"
+          },
+          "hosts": {
+            "label": "Hosts",
+            "description": "Custom domain to IP or domain mapping"
+          }
+        },
+        "sections": {
+          "general": "DNS Settings",
+          "fallbackFilter": "Fallback Filter Settings",
+          "hosts": "Hosts Settings"
+        },
+        "messages": {
+          "saved": "DNS settings saved",
+          "configError": "DNS configuration error:"
+        },
+        "errors": {
+          "invalid": "Invalid configuration"
+        },
+        "dialog": {
+          "title": "DNS Overwrite",
+          "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+        }
+      },
+      "webUI": {
+        "title": "Antarmuka Web",
+        "actions": {
+          "openUrl": "Buka URL"
+        },
+        "messages": {
+          "supportedPlaceholders": "Dukung %host, %port, %secret",
+          "placeholderInstruction": "Ganti host, port, rahasia dengan %host, %port, %secret"
+        }
+      },
+      "hotkey": {
+        "title": "Pengaturan Pintasan",
+        "toggles": {
+          "enableGlobal": "Aktifkan Hotkey Global"
+        },
+        "functions": {
+          "rule": "Mode Aturan",
+          "global": "Mode Global",
+          "openOrCloseDashboard": "Buka/Tutup Dasbor",
+          "toggleSystemProxy": "Aktifkan/Nonaktifkan Proksi Sistem",
+          "toggleTunMode": "Aktifkan/Nonaktifkan Mode Tun",
+          "entryLightweightMode": "Entry Lightweight Mode",
+          "direct": "Mode Langsung"
+        }
+      },
+      "networkInterface": {
+        "title": "Antarmuka Jaringan",
+        "fields": {
+          "ipAddress": "Alamat IP",
+          "macAddress": "Alamat MAC"
+        }
+      },
+      "password": {
+        "prompts": {
+          "enterRoot": "Harap masukkan kata sandi root Anda"
+        }
+      },
+      "updater": {
+        "notifications": {
+          "withClashProxySuccess": "Update with Clash proxy successfully",
+          "withClashProxyFailed": "Update failed even with Clash proxy"
+        }
+      },
+      "liteMode": {
+        "title": "LightWeight Mode Settings",
+        "tooltips": {
+          "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
+        },
+        "fields": {
+          "delay": "Auto Enter LightWeight Mode Delay"
+        },
+        "messages": {
+          "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
+        }
+      },
+      "backup": {
+        "title": "Pengaturan Cadangan",
+        "tabs": {
+          "local": "Local backup",
+          "webdav": "WebDAV backup"
+        },
+        "actions": {
+          "selectTarget": "Select backup target",
+          "backup": "Cadangan",
+          "export": "Export",
+          "exportBackup": "Export Backup",
+          "deleteBackup": "Hapus Cadangan",
+          "restore": "Pulihkan",
+          "restoreBackup": "Pulihkan Cadangan"
+        },
+        "fields": {
+          "webdavUrl": "URL Server WebDAV",
+          "username": "Nama Pengguna",
+          "password": "Kata Sandi",
+          "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+        },
+        "messages": {
+          "webdavUrlRequired": "URL WebDAV tidak boleh kosong",
+          "invalidWebdavUrl": "Format URL WebDAV tidak valid",
+          "usernameRequired": "Nama pengguna tidak boleh kosong",
+          "passwordRequired": "Kata sandi tidak boleh kosong",
+          "webdavConfigSaved": "Konfigurasi WebDAV berhasil disimpan",
+          "webdavConfigSaveFailed": "Gagal menyimpan konfigurasi WebDAV: {{error}}",
+          "backupCreated": "Cadangan berhasil dibuat",
+          "backupFailed": "Cadangan gagal: {{error}}",
+          "localBackupCreated": "Local backup created successfully",
+          "localBackupFailed": "Local backup failed",
+          "restoreSuccess": "Pemulihan Berhasil, Aplikasi akan dimulai ulang dalam 1 detik",
+          "localBackupExported": "Local backup exported successfully",
+          "localBackupExportFailed": "Failed to export local backup",
+          "confirmDelete": "Konfirmasi untuk menghapus file cadangan ini?",
+          "confirmRestore": "Konfirmasi untuk memulihkan file cadangan ini?"
+        },
+        "table": {
+          "filename": "Nama Berkas",
+          "backupTime": "Waktu Cadangan",
+          "actions": "Tindakan",
+          "noBackups": "Tidak ada cadangan yang tersedia",
+          "rowsPerPage": "Rows per page"
+        }
+      },
+      "verge": {
+        "basic": {
+          "title": "Pengaturan Dasar Verge",
+          "items": {
+            "language": "Bahasa",
+            "themeMode": "Mode Tema",
+            "trayClickEvent": "Acara Klik Tray",
+            "copyEnvType": "Salin Jenis Env",
+            "startPage": "Halaman Mulai",
+            "startupScript": "Skrip Startup",
+            "themeSetting": "Pengaturan Tema",
+            "layoutSetting": "Pengaturan Tata Letak",
+            "misc": "Lain-lain",
+            "hotkeySetting": "Pengaturan Pintasan"
+          },
+          "actions": {
+            "browse": "Jelajahi",
+            "clear": "Bersihkan"
+          },
+          "trayOptions": {
+            "showMainWindow": "Tampilkan Jendela Utama",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "Nonaktifkan"
+          }
+        },
+        "advanced": {
+          "title": "Pengaturan Lanjutan Verge",
+          "items": {
+            "backupSetting": "Pengaturan Cadangan",
+            "runtimeConfig": "Konfigurasi Runtime",
+            "openConfDir": "Buka Direktori Konfigurasi",
+            "openCoreDir": "Buka Direktori Core",
+            "openLogsDir": "Buka Direktori Log",
+            "checkUpdates": "Periksa Pembaruan",
+            "openDevTools": "Buka Alat Pengembang",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Keluar",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Versi Verge"
+          },
+          "tooltips": {
+            "backupInfo": "Mendukung file konfigurasi cadangan WebDAV",
+            "openConfDir": "Jika perangkat lunak berjalan tidak normal, CADANGKAN dan hapus semua file di folder ini lalu mulai ulang perangkat lunak",
+            "liteMode": "Tutup GUI dan biarkan hanya kernel yang berjalan"
+          },
+          "actions": {
+            "copyVersion": "Copy Version"
+          },
+          "notifications": {
+            "latestVersion": "Saat ini pada Versi Terbaru",
+            "versionCopied": "Version copied to clipboard"
+          }
+        },
+        "theme": {
+          "title": "Pengaturan Tema",
+          "fields": {
+            "primaryColor": "Warna Utama",
+            "secondaryColor": "Warna Sekunder",
+            "primaryText": "Teks Utama",
+            "secondaryText": "Teks Sekunder",
+            "infoColor": "Warna Info",
+            "warningColor": "Warna Peringatan",
+            "errorColor": "Warna Kesalahan",
+            "successColor": "Warna Keberhasilan",
+            "fontFamily": "Keluarga Font",
+            "cssInjection": "Injeksi CSS"
+          },
+          "actions": {
+            "editCss": "Edit CSS"
+          },
+          "dialogs": {
+            "editCssTitle": "Edit CSS"
+          }
+        }
+      },
+      "sysproxy": {
+        "title": "Pengaturan Proksi Sistem",
+        "fields": {
+          "enableStatus": "Status Pengaktifan:",
+          "serverAddr": "Alamat Server: ",
+          "pacUrl": "URL PAC: ",
+          "proxyHost": "Host Proksi",
+          "usePacMode": "Gunakan Mode PAC",
+          "proxyGuard": "Penjaga Proksi",
+          "guardDuration": "Durasi Penjagaan",
+          "alwaysUseDefaultBypass": "Selalu gunakan Bypass Default",
+          "proxyBypass": "Pengaturan Bypass Proksi: ",
+          "bypass": "Bypass: ",
+          "pacScriptContent": "Konten Skrip PAC"
+        },
+        "messages": {
+          "durationTooShort": "Durasi Daemon Proksi Tidak Boleh Kurang dari 1 Detik",
+          "invalidBypass": "Format Bypass Tidak Valid",
+          "invalidProxyHost": "Format Host Proksi Tidak Valid"
+        },
+        "actions": {
+          "editPac": "Ubah PAC"
+        }
+      },
+      "tun": {
+        "title": "Mode Tun (NIC Virtual)",
+        "fields": {
+          "stack": "Tumpukan Tun",
+          "device": "Device Name",
+          "autoRoute": "Rute Otomatis",
+          "strictRoute": "Rute Ketat",
+          "autoDetectInterface": "Deteksi Antarmuka Otomatis",
+          "dnsHijack": "Pembajakan DNS",
+          "mtu": "Unit Transmisi Maksimum"
+        },
+        "messages": {
+          "applied": "Pengaturan Diterapkan"
+        },
+        "tooltips": {
+          "dnsHijack": "Please use , to separate multiple DNS servers"
+        }
+      },
+      "update": {
+        "actions": {
+          "goToRelease": "Pergi ke Halaman Rilis",
+          "update": "Perbarui"
+        },
+        "messages": {
+          "portableError": "Versi portabel tidak mendukung pembaruan dalam aplikasi. Harap unduh dan ganti secara manual",
+          "breakChangeError": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual"
+        }
+      },
+      "misc": {
+        "title": "Lain-lain",
+        "fields": {
+          "appLogLevel": "Tingkat Log Aplikasi",
+          "appLogMaxSize": "App Log Max Size",
+          "appLogMaxCount": "App Log Max Count",
+          "autoCloseConnections": "Tutup Koneksi Otomatis",
+          "autoCheckUpdate": "Periksa Pembaruan Otomatis",
+          "enableBuiltinEnhanced": "Aktifkan Peningkatan Bawaan",
+          "proxyLayoutColumns": "Kolom Tata Letak Proksi",
+          "autoLogClean": "Pembersihan Log Otomatis",
+          "autoDelayDetection": "Deteksi Latensi Otomatis",
+          "defaultLatencyTest": "Tes Latensi Default",
+          "defaultLatencyTimeout": "Waktu Habis Latensi Default"
+        }
+      }
     }
   },
   "theme": {
